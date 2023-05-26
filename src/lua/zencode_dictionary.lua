@@ -219,6 +219,7 @@ local function create_copy_f(root, in1, in2)
 	   ACK.copy = _extract(ACK.copy, in2, in1)
 	end
 	new_codec('copy', nil, root)
+	ZEN.CODEC['copy'].name = in2 or in1
 end
 When("create the copy of '' from dictionary ''", function(name, dict) create_copy_f(dict, name) end)
 When("create the copy of '' from ''", function(name, dict) create_copy_f(dict, name) end)
@@ -279,17 +280,16 @@ end)
 
 local function move_or_copy_in(src_value, src_name, dest)
    local d = have(dest)
-   ZEN.assert(luatype(d) == 'table', "Object is not a table: "..dest)
-   if ZEN.CODEC[dest].zentype == 'd'
-      or ZEN.CODEC[dest].zentype == 'schema' then
-      ZEN.assert(not d[src_name], "Dictionary already contains: "..src_name)
+   if luatype(d) ~= 'table' then error("Object is not a table: "..dest, 2) end
+   local cdest = ZEN.CODEC[dest]
+   if cdest.zentype == 'd' then
+      if d[src_name] then error("Dictionary already contains: "..src_name,2) end
       d[src_name] = src_value
       ACK[dest] = d
-   elseif ZEN.CODEC[dest].zentype == 'a' then
+   elseif cdest.zentype == 'a' then
       table.insert(ACK[dest], src_value)
    else
-      ZEN.assert(false, "Invalid destination type: "
-		 ..ZEN.CODEC[dest].zentype)
+      error("Invalid destination type: "..cdest.zentype,2)
    end
 end
 

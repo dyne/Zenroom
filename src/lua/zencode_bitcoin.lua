@@ -96,9 +96,11 @@ local function _address_import(obj)
    local raw, version, network
    raw, version = O.from_segwit(tostring(obj))
    network = obj:sub(0,2)
-   return { raw = raw, version = F.new(version), network = O.from_string(network) }
+   return
+	  { raw = raw, version = F.new(version), network = O.from_string(network) }
 end
 local function _address_export(obj)
+   if not obj.raw then error("Cannot export invalid bitcoin address",2) end
    return O.to_segwit(obj.raw, tonumber(obj.version), O.to_string(obj.network))
 end
 
@@ -109,24 +111,30 @@ local function _wif_testnet_export(obj)	return O.to_base58( BTC.sk_to_wif( obj, 
 ZEN.add_schema(
    {
       bitcoin_key = { import = _wif_import,
-		      export = _wif_bitcoin_export },
+					  export = _wif_bitcoin_export },
       testnet_key = { import = _wif_import,
-		      export = _wif_testnet_export },
+					  export = _wif_testnet_export },
 
-      satoshi_amount            = function(obj)
-	 return ZEN.get(obj, '.', BIG.from_decimal, tostring) end,
-      satoshi_fee               = function(obj)
-	 return ZEN.get(obj, '.', BIG.from_decimal, tostring) end,
+      satoshi_amount            = {
+		 import = function(obj)
+			return ZEN.get(obj, '.', BIG.from_decimal, tostring) end,
+		 export = BIG.to_decimal
+	  },
+      satoshi_fee               = {
+		 import = function(obj)
+			return ZEN.get(obj, '.', BIG.from_decimal, tostring) end,
+		 export = BIG.to_decimal
+	  },
       satoshi_unspent = { import = _satoshi_unspent_import,
-			  export = _satoshi_unspent_export },
+						  export = _satoshi_unspent_export },
       bitcoin_unspent = { import = _bitcoin_unspent_import,
-			  export = _bitcoin_unspent_export },
+						  export = _bitcoin_unspent_export },
       testnet_unspent = { import = _bitcoin_unspent_import,
-			  export = _bitcoin_unspent_export },
+						  export = _bitcoin_unspent_export },
       bitcoin_address = { import = _address_import,
-			  export = _address_export },
+						  export = _address_export },
       testnet_address = { import = _address_import,
-			  export = _address_export },
+						  export = _address_export },
       -- TODO: { schema = 'transaction' })
 })
 

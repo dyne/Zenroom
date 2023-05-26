@@ -52,7 +52,8 @@ ZEN.add_schema(
                     res.owner = ZEN.get(obj, 'owner', ECP.new)
                 end
                 if obj.issuer_public_key then
-                    res.issuer_public_key = key_import_issuer_verifier_f(obj.issuer_public_key)
+				   local f = ZEN.schemas['issuer_public_key'].import
+				   res.issuer_public_key = f(obj.issuer_public_key)
                 end
                 if obj.list then
                     res.list =

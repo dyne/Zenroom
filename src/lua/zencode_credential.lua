@@ -26,7 +26,7 @@ local CRED = require_once('crypto_credential')
 -- local G1 = ECP.generator()
 local G2 = ECP2.generator()
 
-function key_import_issuer_verifier_f(obj)
+local function import_issuer_pk_f(obj)
 	return {
 		alpha = ZEN.get(obj, 'alpha', ECP2.new),
 		beta = ZEN.get(obj, 'beta', ECP2.new)
@@ -89,21 +89,15 @@ local function import_credential_request_f(obj)
    return req
 end
 
-local function export_credential_request_f(obj)
-    obj.pi_s.rr = obj.pi_s.rr:octet()
-    obj.pi_s.rm = obj.pi_s.rm:octet()
-    obj.pi_s.rk = obj.pi_s.rk:octet()
-    obj.pi_s.commit = obj.pi_s.commit:octet()
-    return obj
-end
-
 -- request credential signatures
 ZEN.add_schema(
    {
-      issuer_public_key = key_import_issuer_verifier_f,
+      issuer_public_key = {
+		 import = import_issuer_pk_f,
+		 export = export_issuer_pk_f
+	  },
       credential_request = {
-          import = import_credential_request_f,
-          export = export_credential_request_f,
+          import = import_credential_request_f
       }
    }
 )
@@ -118,20 +112,24 @@ end)
 ZEN.add_schema(
    {
       -- sigmatilde
-      credential_signature = function(obj)
-	 return {
-	    h = ZEN.get(obj, 'h', ECP.new),
-	    b_tilde = ZEN.get(obj, 'b_tilde', ECP.new),
-	    a_tilde = ZEN.get(obj, 'a_tilde', ECP.new)
-	 }
-      end,
+      credential_signature = {
+		 import = function(obj)
+			return {
+			   h = ZEN.get(obj, 'h', ECP.new),
+			   b_tilde = ZEN.get(obj, 'b_tilde', ECP.new),
+			   a_tilde = ZEN.get(obj, 'a_tilde', ECP.new)
+			}
+		 end
+	  },
       -- aggsigma: aggregated signatures of ca issuers
-      credentials = function(obj)
-	 return {
-	    h = ZEN.get(obj, 'h', ECP.new),
-	    s = ZEN.get(obj, 's', ECP.new)
-	 }
-      end
+	  credentials = {
+		 import = function(obj)
+			return {
+			   h = ZEN.get(obj, 'h', ECP.new),
+			   s = ZEN.get(obj, 's', ECP.new)
+			}
+		 end
+	  }
    }
 )
 When(

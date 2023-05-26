@@ -85,6 +85,6 @@ When("compose the secret using ''", function(shares)
         ACK.secret = LAG.compose_shared_secret(sh):octet()
         new_codec('secret', {
             encoding="base64",
-            zentype="element",
+            zentype='e',
         })
 end)

@@ -1,7 +1,7 @@
 Foreach("'' in ''", function(name, collection)
     local info = ZEN.ITER
     local col = have(collection)
-    ZEN.assert(ZEN.CODEC[collection].zentype == "array", "Can only iterate over arrays")
+    ZEN.assert(ZEN.CODEC[collection].zentype == "a", "Can only iterate over arrays")
     -- in the first itaration decale the index variable
     if info.pos == 1 or not ACK[name] then
         empty(name)

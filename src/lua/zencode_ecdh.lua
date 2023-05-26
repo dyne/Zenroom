@@ -45,18 +45,28 @@ end
 ZEN.add_schema(
 	{
 		-- keypair (ECDH)
-		public_key = public_key_f,
-		ecdh_public_key = public_key_f,
-		secret_message = function(obj)
-			return {
-				checksum = ZEN.get(obj, 'checksum'),
-				header = ZEN.get(obj, 'header'),
-				iv = ZEN.get(obj, 'iv'),
-				text = ZEN.get(obj, 'text')
-			}
-		end,
-		signature = signature_f,
-		ecdh_signature = signature_f
+		public_key = {
+		   import = public_key_f
+		},
+		ecdh_public_key = {
+		   import = public_key_f
+		},
+		secret_message = {
+		   import = function(obj)
+			  return {
+				 checksum = ZEN.get(obj, 'checksum'),
+				 header = ZEN.get(obj, 'header'),
+				 iv = ZEN.get(obj, 'iv'),
+				 text = ZEN.get(obj, 'text')
+			  }
+		   end
+		},
+		signature = {
+		   import = signature_f
+		},
+		ecdh_signature = {
+		   import = signature_f
+		}
 	}
 )
 

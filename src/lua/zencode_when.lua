@@ -98,7 +98,7 @@ When("append '' to ''", function(src, dest)
 		if isnumber(dst) then
 		   dst = O.from_string( tostring(dst) )
 		   ZEN.CODEC[dest].encoding = "string"
-		   ZEN.CODEC[dest].zentype = "element"
+		   ZEN.CODEC[dest].zentype = 'e'
         end
         if isnumber(val) then
 		   val = O.from_string( tostring(val) )
@@ -114,7 +114,7 @@ When("append the string '' to ''", function(hstr, dest)
 	if isnumber(dst) then
 	   dst = O.from_string( tostring(dst) )
 	   ZEN.CODEC[dest].encoding = "string"
-	   ZEN.CODEC[dest].zentype = "element"
+	   ZEN.CODEC[dest].zentype = 'e'
 	end
 	dst = dst:octet() .. O.from_string(hstr)
 	ACK[dest] = dst

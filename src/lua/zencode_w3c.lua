@@ -322,8 +322,7 @@ When(
                 ACK.verificationMethod[pub_key_name] = O.from_base58(pub_key)
             end
         end
-        new_codec('verificationMethod', { zentype = 'schema',
-                                          encoding = 'complex' })
+        new_codec('verificationMethod', { encoding = 'complex' })
     end
 )
 
