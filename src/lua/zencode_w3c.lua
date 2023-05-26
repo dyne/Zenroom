@@ -105,7 +105,7 @@ ZEN.add_schema(
             new_codec('verifiable_credential', {
                 encoding = 'string',
 				schema = 'verifiable_credential',
-                zentype = 'dictionary'
+                zentype = 'd'
             })
             return (deepmap(OCTET.from_string, obj))
         end
@@ -177,7 +177,7 @@ When(
         local sk = havekey'ecdh' -- assuming secp256k1
         ACK.jws = O.from_string(
             jws_signature_to_octet(ECDH.sign(sk, source_str)) )
-        new_codec('jws', { zentype = 'element',
+        new_codec('jws', { zentype = 'e',
                            encoding = 'string' })
     end
 )
@@ -187,7 +187,7 @@ When(
         local signature = have(sign)
         empty'jws'
         ACK.jws = O.from_string(jws_signature_to_octet(signature))
-        new_codec('jws', { zentype = 'element',
+        new_codec('jws', { zentype = 'e',
                            encoding = 'string' })
     end
 )
@@ -299,7 +299,7 @@ When(
             ACK.serviceEndpoint[name] = service.serviceEndpoint
         end
         new_codec('serviceEndpoint', { encoding = 'string',
-                                       zentype = 'dictionary' })
+                                       zentype = 'd' })
     end
 )
 

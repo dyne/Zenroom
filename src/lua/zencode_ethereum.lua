@@ -122,7 +122,7 @@ When('create the ethereum address', function()
 	   pk = ECDH.pubgen( havekey'ethereum' )
 	end
 	ACK.ethereum_address = ETH.address_from_public_key(pk)
-	new_codec('ethereum address', { zentype = 'element',
+	new_codec('ethereum address', { zentype = 'e',
 					encoding = 'hex' })
 end)
 

@@ -30,7 +30,7 @@ When(
             src = ZEN.serialize(src) -- serialize tables using zenroom's algo
         end
         ACK.hash = HASH.new(CONF.hash):process(src)
-	new_codec('hash', { zentype = 'element' })
+	new_codec('hash', { zentype = 'e' })
     end
 )
 
@@ -47,7 +47,7 @@ When(
             ACK.hash = sha512(src)
         end
         ZEN.assert(ACK.hash, 'Invalid hash: ' .. h)
-	new_codec('hash', { zentype = 'element' })
+	new_codec('hash', { zentype = 'e' })
     end
 )
 
@@ -60,7 +60,7 @@ When("create the hash to point '' of ''", function(curve, object)
     empty'hash_to_point'
     local obj = have(object)
     ACK.hash_to_point = F.hashtopoint(ZEN.serialize(obj))
-    new_codec('hash_to_point', { zentype='element' })
+    new_codec('hash_to_point', { zentype='e' })
 end)
 
 When(deprecated("create the hash to point '' of each object in ''",
@@ -79,7 +79,7 @@ EndForeach]],
         local count = isarray(obj)
         ZEN.assert(count > 0, 'Object is not an array: ' .. object)
         ACK.hash_to_point = deepmap(F.hashtopoint, obj)
-        new_codec('hash_to_point', {zentype='array'})
+        new_codec('hash_to_point', {zentype='a'})
     end)
 )
 
@@ -90,7 +90,7 @@ When(
         local count = isarray(A)
         ZEN.assert(count > 0, 'Object is not an array: ' .. arr)
         ACK.hashes = deepmap(sha256, A)
-	new_codec('hashes', {zentype='array' })
+	new_codec('hashes', {zentype='a' })
     end
 )
 
@@ -108,7 +108,7 @@ When(
         --     octet *k  = o_arg(L, 2);
         --     octet *in = o_arg(L, 3);
         ACK.HMAC = HASH.new(CONF.hash):hmac(hkey, src)
-	new_codec('HMAC', { zentype = 'element' })
+	new_codec('HMAC', { zentype = 'e' })
     end
 )
 
@@ -120,7 +120,7 @@ When(
             src = ZEN.serialize(src)
         end
         ACK.key_derivation = HASH.new(CONF.hash):kdf(src)
-	new_codec('key_derivation', { zentype = 'element' })
+	new_codec('key_derivation', { zentype = 'e' })
     end
 )
 
@@ -148,7 +148,7 @@ local function _pbkdf2_f(src, pass, n)
 				  {salt = pass,
 				   iterations = n,
 				   length = 32})
-    new_codec('key derivation', { zentype = 'element' })
+    new_codec('key derivation', { zentype = 'e' })
 end
 
 When(

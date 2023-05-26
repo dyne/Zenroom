@@ -25,7 +25,7 @@
 When("create the random ''", function(dest)
 		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		ACK[dest] = OCTET.random(32) -- TODO: right now hardcoded 256 bit random secrets
-                new_codec(dest, { zentype = 'element' })
+                new_codec(dest, { zentype = 'e' })
 end)
 
 function shuffle_array_f(tab)
@@ -48,7 +48,7 @@ When("create the random object of '' bits", function(n)
 	local bits = tonumber(n)
 	ZEN.assert(bits, 'Invalid number of bits: ' .. n)
 	ACK.random_object = OCTET.random(math.ceil(bits / 8))
-	new_codec('random_object', { zentype = 'element' })
+	new_codec('random_object', { zentype = 'e' })
 end
 )
 When("create the random object of '' bytes",function(n)
@@ -56,14 +56,14 @@ When("create the random object of '' bytes",function(n)
 	local bytes = math.ceil(tonumber(n))
 	ZEN.assert(bytes, 'Invalid number of bytes: ' .. n)
 	ACK.random_object = OCTET.random(bytes)
-	new_codec('random_object', { zentype = 'element' })
+	new_codec('random_object', { zentype = 'e' })
 end
 )
 
 When("randomize the '' array", function(arr)
 		local A = ACK[arr]
 		ZEN.assert(A, "Object not found: "..arr)
-		-- ZEN.assert(ZEN.CODEC[arr].zentype == 'array', "Object is not an array: "..arr)
+		-- ZEN.assert(ZEN.CODEC[arr].zentype == 'a', "Object is not an array: "..arr)
 		ACK[arr] = shuffle_array_f(A)
 end)
 
@@ -74,7 +74,7 @@ When("create the array of '' random objects", function(s)
 		for i = s,1,-1 do
 		   table.insert(ACK.array,OCTET.random(64))
 		end
-		new_codec('array', {zentype = 'array'})
+		new_codec('array', {zentype = 'a'})
 end)
 
 When("create the array of '' random objects of '' bits", function(s, b)
@@ -87,7 +87,7 @@ When("create the array of '' random objects of '' bits", function(s, b)
 	for i = q,1,-1 do
 	   table.insert(ACK.array,OCTET.random(bytes))
 	end
-	new_codec('array', {zentype = 'array'})
+	new_codec('array', {zentype = 'a'})
 end)
 
 When("create the array of '' random objects of '' bytes", function(s, b)
@@ -99,7 +99,7 @@ When("create the array of '' random objects of '' bytes", function(s, b)
 	for i = q,1,-1 do
 	   table.insert(ACK.array,OCTET.random(bytes))
 	end
-	new_codec('array', {zentype = 'array'})
+	new_codec('array', {zentype = 'a'})
 end)
 
 When("create the array of '' random numbers", function(s)
@@ -108,7 +108,7 @@ When("create the array of '' random numbers", function(s)
 	for i = s,1,-1 do
 		table.insert(ACK.array,F.new(random_int16()))
 	end
-	new_codec('array', {zentype = 'array', encoding = 'number' })
+	new_codec('array', {zentype = 'a', encoding = 'number' })
 end)
 
 When("create the array of '' random numbers modulo ''", function(s,m)
@@ -117,7 +117,7 @@ When("create the array of '' random numbers modulo ''", function(s,m)
 	for i = s,1,-1 do
 		table.insert(ACK.array,F.new(math.floor(random_int16() % m)))
 	end
-	new_codec('array', {zentype = 'array', encoding = 'number' })
+	new_codec('array', {zentype = 'a', encoding = 'number' })
 end)
 
 local function _extract_random_elements(num, from, random_fun)

@@ -129,7 +129,7 @@ When("create the url from ''", function(src)
 	local res = _is_valid_host(toks[2])
 	ZEN.assert(not res, res)
 	ACK.url = obj
-	new_codec('url',{zentype='element',content='url', encoding='string'})
+	new_codec('url',{zentype='e',content='url', encoding='string'})
 end)
 
 When("append '' as http request to ''", function(ele, dst)

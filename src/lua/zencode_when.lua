@@ -31,12 +31,12 @@ local function _is_found(el, t)
 		return ACK[el] and (luatype(ACK[el]) == 'table' or #ACK[el] ~= 0)
 	else
 		ZEN.assert(ACK[t], "Array or dictionary not found in: "..t)
-		if ZEN.CODEC[t].zentype == 'array' then
+		if ZEN.CODEC[t].zentype == 'a' then
 			local o_el = O.from_string(el)
 			for _,v in pairs(ACK[t]) do
 				if v == o_el then return true end
 			end
-		elseif ZEN.CODEC[t].zentype == 'dictionary' then
+		elseif ZEN.CODEC[t].zentype == 'd' then
 			return ACK[t][el] and (luatype(ACK[t][el]) == 'table' or #ACK[t][el] ~= 0)
 		else
 			ZEN.assert(false, "Invalid container type: "..t.." is "..ZEN.CODEC[t].zentype)
@@ -151,7 +151,7 @@ When("write string '' in ''", function(content, dest)
 	ZEN.CODEC[dest] = new_codec(dest,
 				    {encoding = 'string',
 				     luatype = 'string',
-				     zentype = 'element' })
+				     zentype = 'e' })
 end)
 
 -- ... and from a number
@@ -165,14 +165,14 @@ When("write number '' in ''", function(content, dest)
 		-- TODO: maybe support unsigned native here
 --	end
 	ACK[dest] = F.new(content)
-	ZEN.CODEC[dest] = new_codec(dest, {zentype = 'element' })
+	ZEN.CODEC[dest] = new_codec(dest, {zentype = 'e' })
 end)
 
 When("create the number from ''", function(from)
 	empty'number'
 	local get = have(from)
 	ACK.number = BIG.from_decimal(get:octet():string())
-	ZEN.CODEC.number = new_codec('number', {zentype = 'element' })
+	ZEN.CODEC.number = new_codec('number', {zentype = 'e' })
 end)
 
 When("set '' to '' as ''", function(dest, content, format)
@@ -181,7 +181,7 @@ When("set '' to '' as ''", function(dest, content, format)
 	guess.raw = content
 	guess.name = dest
 	ACK[dest] = operate_conversion(guess)
---	ZEN.CODEC[dest] = new_codec(dest, { luatype = luatype(ACK[dest]), zentype = 'element' })
+--	ZEN.CODEC[dest] = new_codec(dest, { luatype = luatype(ACK[dest]), zentype = 'e' })
 end)
 
 When("create the json of ''", function(src)
@@ -194,7 +194,7 @@ When("create the json of ''", function(src)
 	   JSON.encode(obj, encoding)
 	)
 	new_codec('json', {encoding = 'string',
-			   zentype = 'element'})
+			   zentype = 'e'})
 end)
 
 -- numericals
@@ -207,7 +207,7 @@ When("set '' to '' base ''", function(dest, content, base)
 	ACK[dest] = F.new(num)
 	ZEN.CODEC[dest] = new_codec(dest,
  				    {encoding = 'number',
- 				     zentype = 'element' })
+ 				     zentype = 'e' })
 end)
 
 local function _delete_f(name)
@@ -276,7 +276,7 @@ When("create the '' string of ''", function(encoding, src)
 		local f = guess_outcast(encoding)
 		ZEN.assert(f, "Encoding format not found: "..encoding)
 		ACK[encoding] = O.from_string( f( orig:octet() ) )
-		new_codec(encoding, { zentype = 'element',
+		new_codec(encoding, { zentype = 'e',
 							  luatype = 'string',
 							  encoding = 'string' })
 end)
@@ -412,13 +412,13 @@ local function _math_op(op, l, r, bigop)
 	if lz == "zenroom.big" then
 		codec = new_codec('result',
 						  {encoding = 'integer',
-						   zentype = 'element'}
+						   zentype = 'e'}
 		)
 
 	else
 		codec = new_codec('result',
 						  {encoding = 'float',
-						   zentype = 'element'}
+						   zentype = 'e'}
 		)
 	end
         if type(left) == 'zenroom.big'
@@ -591,7 +591,7 @@ When("create the count of char '' found in ''", function(needle, haystack)
 	ACK.count = F.new(h:octet():charcount(tostring(needle)))
 	new_codec('count',
 		  {encoding = 'number',
-		   zentype = 'element' })
+		   zentype = 'e' })
 end)
 
 -- TODO:
@@ -829,10 +829,10 @@ When("create the result of ''", function(expr)
   if type(values[1]) == 'zenroom.big' then
     ZEN.CODEC['result'] = new_codec('result',
    		                    {encoding = 'integer',
-							 zentype = 'element' })
+							 zentype = 'e' })
   elseif type(values[1]) == 'zenroom.float' then
     ZEN.CODEC['result'] = new_codec('result',
    		                    {encoding = 'number',
-							 zentype = 'element' })
+							 zentype = 'e' })
   end
 end)

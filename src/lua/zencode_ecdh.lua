@@ -73,7 +73,7 @@ When(
 		empty'ecdh public key'
 		local sk = havekey'ecdh'
 		ACK.ecdh_public_key = ECDH.pubgen(sk)
-		new_codec('ecdh public key') -- { zentype = 'element' }
+		new_codec('ecdh public key') -- { zentype = 'e' }
 	end
 )
 When("create the ecdh key with secret key ''",function(sec)
@@ -109,7 +109,7 @@ When(
 			ACK.secret_message.iv,
 			ACK.secret_message.header
 		)
-		new_codec('secret message', { zentype = 'dictionary' })
+		new_codec('secret message', { zentype = 'd' })
 	end
 )
 
@@ -174,7 +174,7 @@ When(
 			ACK.secret_message.iv,
 			ACK.secret_message.header
 		)
-		new_codec('secret message', { zentype = 'dictionary' })
+		new_codec('secret message', { zentype = 'd' })
 	end
 )
 
@@ -203,7 +203,7 @@ local function _signing(msg, var)
    empty(var)
    local obj = have(msg)
    ACK[var] = ECDH.sign(sk, ZEN.serialize(obj))
-   new_codec(var, { zentype = 'dictionary' })
+   new_codec(var, { zentype = 'd' })
 end
 
 local function _verifying(msg, sig, by)
