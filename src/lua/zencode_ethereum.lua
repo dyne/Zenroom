@@ -45,13 +45,22 @@ local function big_wei_to_str_eth(x)
    return ( ( x / weimult ):decimal() )
 end
 
+local function import_eth_address_f(str_add)
+    local oct_add = O.from_hex(str_add)
+    local check = ETH.checksum_encode(oct_add)
+    if check ~= str_add then
+        I.warn("Invalid encoding for ethereum address. Expected encoding: " .. check)
+    end
+    return oct_add
+end
+
 local function import_eth_tx(obj)
   local res = { }
   res.nonce = ZEN.get(obj, 'nonce', INT.from_decimal, tostring)
   res.gas_price = ZEN.get(obj, 'gas_price', INT.from_decimal, tostring)
   res.gas_limit = ZEN.get(obj, 'gas_limit', INT.from_decimal, tostring)
   res.value = ZEN.get(obj, 'value', INT.from_decimal, tostring)
-  res.to = ZEN.get(obj, 'to', O.from_hex, tostring)
+  res.to = ZEN.get(obj, 'to', import_eth_address_f, tostring)
   if obj.data then
     res.data = ZEN.get(obj, 'data', O.from_hex, tostring)
   else res.data = O.new() end
@@ -65,7 +74,7 @@ local function export_eth_tx(obj)
   if obj.nonce then res.nonce = obj.nonce:decimal() end
   res.gas_price = obj.gas_price:decimal()
   res.gas_limit = obj.gas_limit:decimal()
-  res.to = obj.to:hex()
+  res.to = ETH.checksum_encode(obj.to)
   if #obj.value == 0 then res.value = '0'
   elseif type(obj.value) == 'zenroom.big' then
     res.value = obj.value:decimal()
@@ -82,9 +91,11 @@ end
 ZEN.add_schema(
    {
       ethereum_public_key = { import = O.from_hex,
-							  export = O.to_hex },
-      ethereum_address = { import = O.from_hex,
-						   export = O.to_hex },
+			      export = O.to_hex },
+      ethereum_address = { import = function(obj)
+                return ZEN.get(obj, '.', import_eth_address_f, tostring)
+                end,
+			   export = ETH.checksum_encode },
       -- TODO generic import from string in zenroom.big,
       -- if a number begins with 0x import it as hex
       -- otherwise as decimal (here we have to use tonumber
@@ -122,8 +133,16 @@ When('create the ethereum address', function()
 	   pk = ECDH.pubgen( havekey'ethereum' )
 	end
 	ACK.ethereum_address = ETH.address_from_public_key(pk)
-	new_codec('ethereum address', { zentype = 'e',
-					encoding = 'hex' })
+	new_codec('ethereum address', { zentype = 'schema' , encoding = 'complex'})
+end)
+
+-- Note that the address must be given as a string
+-- Maybe change statement in "verify the string '' is a valid ethereum address"
+When("verify the ethereum address '' is valid", function(add)
+    local str_add = O.to_string(have(add))
+    local address = O.from_hex(str_add)
+    ZEN.assert(str_add == ETH.checksum_encode(address), "The address has a wrong encoding")
+
 end)
 
 When("create the ethereum transaction of '' to ''",
