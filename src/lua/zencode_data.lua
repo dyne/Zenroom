@@ -409,13 +409,7 @@
     else
        res = { name = name }
 	   -- check if name is a schema
-	   local sch = ZEN.schemas[name]
-	   if sch then
-		  res.schema = name
-		  if luatype(sch) == 'table' and sch.import and sch.export then
-			 res.encoding = 'complex'
-		  end
-	   end
+	   if ZEN.schemas[name] then res.schema = name end
     end
     -- always detect zentype (may be an element extracted from dict)
 	local lt = luatype(ackn)

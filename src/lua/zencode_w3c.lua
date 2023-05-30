@@ -57,11 +57,7 @@ end
 
 local function export_did_document(doc)
    local t = luatype(doc)
-   if t == 'table' then
-	  return deepmap(O.to_string, doc)
-   else
-	  return O.to_string(doc)
-   end
+   return deepmap(O.to_string, doc)
 end
 
 local function import_verification_method(doc)
@@ -163,8 +159,8 @@ local function _json_encoding(src)
     local source, codec = have(src)
     local source_str = source
     if luatype(source) == 'table' then
-        local encoding = fif( codec.encoding == 'complex',
-                              codec.schema or src, codec.encoding)
+        local encoding = codec.schema or codec.encoding
+		   or CODEC.output.encoding.name
         source_str = O.from_string( JSON.encode(source, encoding) )
     end
     return source_str
@@ -322,7 +318,7 @@ When(
                 ACK.verificationMethod[pub_key_name] = O.from_base58(pub_key)
             end
         end
-        new_codec('verificationMethod', { encoding = 'complex' })
+        new_codec('verificationMethod')
     end
 )
 

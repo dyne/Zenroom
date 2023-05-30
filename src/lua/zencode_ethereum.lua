@@ -62,7 +62,7 @@ local function import_eth_tx(obj)
 end
 local function export_eth_tx(obj)
   local res = { }
-  res.nonce = obj.nonce:decimal()
+  if obj.nonce then res.nonce = obj.nonce:decimal() end
   res.gas_price = obj.gas_price:decimal()
   res.gas_limit = obj.gas_limit:decimal()
   res.to = obj.to:hex()
@@ -82,32 +82,32 @@ end
 ZEN.add_schema(
    {
       ethereum_public_key = { import = O.from_hex,
-			      export = O.to_hex },
+							  export = O.to_hex },
       ethereum_address = { import = O.from_hex,
-			   export = O.to_hex },
+						   export = O.to_hex },
       -- TODO generic import from string in zenroom.big,
       -- if a number begins with 0x import it as hex
       -- otherwise as decimal (here we have to use tonumber
       -- in order to contemplate hex strings)
       ethereum_nonce = { import = function(o)
-			   local n = tonumber(o)
-			   ZEN.assert(n, "Ethereum nonce not valid")
-			   return INT.new(n) end,
+							local n = tonumber(o)
+							ZEN.assert(n, "Ethereum nonce not valid")
+							return INT.new(n) end,
                          export = function(o) return o:decimal() end },
       ethereum_transaction = { import = import_eth_tx,
-			       export = export_eth_tx },
+							   export = export_eth_tx },
       signed_ethereum_transaction = { import = O.from_hex,
-			              export = O.to_hex },
+									  export = O.to_hex },
       gas_price = { import = str_wei_to_big_wei,
-		    export = big_wei_to_str_wei },
+					export = big_wei_to_str_wei },
       gas_limit = { import = str_wei_to_big_wei,
-		    export = big_wei_to_str_wei },
+					export = big_wei_to_str_wei },
       ethereum_value = { import = str_eth_to_big_wei,
-			 export = big_wei_to_str_eth },
+						 export = big_wei_to_str_eth },
       gwei_value = { import = str_gwei_to_big_wei,
-		     export = big_wei_to_str_gwei },
+					 export = big_wei_to_str_gwei },
       wei_value = { import = str_wei_to_big_wei,
-		    export = big_wei_to_str_wei }
+					export = big_wei_to_str_wei }
 })
 
 When('create the ethereum key', function()
@@ -137,8 +137,7 @@ function(quantity, destaddr)
   tx.to = have(destaddr)
   tx.data = O.new()
   ACK.ethereum_transaction = tx
-  new_codec('ethereum transaction', { zentype = 'schema',
-  encoding = 'complex'})
+  new_codec('ethereum transaction')
 end)
 
 When("create the ethereum transaction to ''",
@@ -152,7 +151,7 @@ function(destaddr)
   tx.data = O.empty()
   tx.to = have(destaddr)
   ACK.ethereum_transaction = tx
-  new_codec('ethereum transaction', { zentype = 'schema', encoding = 'complex'})
+  new_codec('ethereum transaction')
 end)
 
 local function _use_eth_transaction(abi_fun, ...)
@@ -201,8 +200,7 @@ function()
   tx.v = INT.new(1337) -- default local testnet
   ACK.signed_ethereum_transaction =
   ETH.encodeSignedTransaction(sk, tx)
-  new_codec('signed ethereum transaction', { zentype = 'schema',
-  encoding = 'complex'})
+  new_codec('signed ethereum transaction')
 end)
 
 When("create the signed ethereum transaction for chain ''",
@@ -229,8 +227,7 @@ function(chainid)
   tx.s = O.new()
   ACK.signed_ethereum_transaction =
   ETH.encodeSignedTransaction(sk, tx)
-  new_codec('signed ethereum transaction', { zentype = 'schema',
-  encoding = 'complex'})
+  new_codec('signed ethereum transaction')
 end)
 
 When("verify the signed ethereum transaction from ''",

@@ -130,16 +130,16 @@ end
 
 ZEN.add_schema(
    {
-      dilithium_public_key = dilithium_public_key_f,
-      dilithium_signature = dilithium_signature_f,
-      kyber_public_key = kyber_public_key_f,
-      kyber_secret = kyber_secret_f,
-      kyber_ciphertext = kyber_ciphertext_f,
-      kyber_kem = kyber_import_kem,
-      ntrup_public_key = ntrup_public_key_f,
-      ntrup_secret = ntrup_secret_f,
-      ntrup_ciphertext = ntrup_ciphertext_f,
-      ntrup_kem = ntrup_import_kem
+      dilithium_public_key = {import=dilithium_public_key_f},
+      dilithium_signature = {import=dilithium_signature_f},
+      kyber_public_key = {import=kyber_public_key_f},
+      kyber_secret = {import=kyber_secret_f},
+      kyber_ciphertext = {import=kyber_ciphertext_f},
+      kyber_kem = {import=kyber_import_kem},
+      ntrup_public_key = {import=ntrup_public_key_f},
+      ntrup_secret = {import=ntrup_secret_f},
+      ntrup_ciphertext = {import=ntrup_ciphertext_f},
+      ntrup_kem = {import=ntrup_import_kem}
    }
 )
 

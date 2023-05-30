@@ -173,7 +173,7 @@ function operate_conversion(guessed)
 			   res[k] = guessed.fun(v)
 			end
 			return (res)
-		 elseif guessed.encoding == 'complex' then
+		 elseif luatype(guessed.fun) == 'table' then
 			return guessed.fun.import(guessed.raw)
 		 else
 			return guessed.fun(guessed.raw)
