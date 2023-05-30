@@ -124,17 +124,20 @@ function credential.blind_sign(sk, Lambda)
 end
 
 function credential.aggregate_creds(sk, sigma_tilde)
-   local agg_s = sigma_tilde[1].b_tilde - sigma_tilde[1].a_tilde * sk -- ElGamal verify commitment
-
-   if #sigma_tilde > 1 then
-      for i = 2, #sigma_tilde do
+   local agg_s = nil
+   local first_h = nil
+   for k,v in pairs(sigma_tilde) do
+	  if not agg_s then
+		 agg_s = v.b_tilde - v.a_tilde * sk
+		 first_h = v.h
+	  else
          agg_s =
-            agg_s + sigma_tilde[i].b_tilde - sigma_tilde[i].a_tilde * sk
+            agg_s + v.b_tilde - v.a_tilde * sk
       end
    end
    -- aggregated sigma
    return {
-      h = sigma_tilde[1].h,
+      h = first_h,
       s = agg_s
    }
 end

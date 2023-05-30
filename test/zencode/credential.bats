@@ -125,3 +125,118 @@ and print the 'keyring'
 EOF
     save_output 'centralizedCredentialIssuance.json'
 }
+
+@test "Setup of credentials for selective proof" {
+
+    cat << EOF | zexe IssuerKeygen.zen credentialParticipantSignatureRequest.json
+Scenario credential: issuer keygen
+Given that I am known as 'issuer_A'
+and I have a 'credential request' inside 'Alice'
+When I create the issuer key
+When I create the issuer public key
+When I create the credential signature
+Then print my 'issuer public key'
+and print my 'credential signature'
+EOF
+    save_output 'PKcredIssuerA.json'
+
+    cat << EOF | zexe IssuerKeygen.zen credentialParticipantSignatureRequest.json
+Scenario credential: issuer keygen
+Given that I am known as 'issuer_B'
+and I have a 'credential request' inside 'Alice'
+When I create the issuer key
+When I create the issuer public key
+When I create the credential signature
+Then print my 'issuer public key'
+and print my 'credential signature'
+EOF
+    save_output 'PKcredIssuerB.json'
+
+    cat << EOF | zexe IssuerKeygen.zen credentialParticipantSignatureRequest.json
+Scenario credential: issuer keygen
+Given that I am known as 'issuer_C'
+and I have a 'credential request' inside 'Alice'
+When I create the issuer key
+When I create the issuer public key
+When I create the credential signature
+Then print my 'issuer public key'
+and print my 'credential signature'
+EOF
+    save_output 'PKcredIssuerC.json'
+	cat PKcredIssuerA.json  PKcredIssuerB.json  PKcredIssuerC.json \
+		| json_join | save PKcredentials.json
+	# >&3 cat PKcredentials.json | jq .
+}
+
+@test "Selective proof of 3 credentials" {
+
+    cat << EOF | debug SelectiveAggregateCredential.zen credentialParticipantKeyring.json PKcredentials.json
+Scenario credential: selective aggregation of credentials
+
+Given that I am known as 'Alice'
+and I have my 'keyring'
+
+Given I have a 'credential signature' in 'issuer_A'
+  and I rename 'credential signature' to 'credA'
+  and I have a 'credential signature' in 'issuer_B'
+  and I rename 'credential signature' to 'credB'
+  and I have a 'credential signature' in 'issuer_C'
+  and I rename 'credential signature' to 'credC'
+
+Given I have a 'issuer public key' in 'issuer_A'
+  and I rename 'issuer public key' to 'pkA'
+  and I have a 'issuer public key' in 'issuer_B'
+  and I rename 'issuer public key' to 'pkB'
+  and I have a 'issuer public key' in 'issuer_C'
+  and I rename 'issuer public key' to 'pkC'
+
+When I create the new array
+and I rename 'new array' to 'pks'
+and I move 'pkA' in 'pks'
+and I move 'pkB' in 'pks'
+and I move 'pkC' in 'pks'
+
+When I create the new array
+and I rename 'new array' to 'creds'
+and I move 'credA' in 'creds'
+and I move 'credB' in 'creds'
+and I move 'credC' in 'creds'
+
+When I aggregate the credentials in 'creds'
+and I aggregate the verifiers in 'pks'
+and I create the credential proof
+
+Then print the 'credential proof'
+EOF
+
+save_output selective-proof.json
+>&3 cat selective-proof.json | jq .
+}
+
+@test "Verify proof of 3 credentials" {
+	  cat << EOF | zexe verify-selective-proof.zen selective-proof.json PKcredentials.json
+Scenario credential
+
+Given I have a 'credential proof'
+
+
+Given I have a 'issuer public key' in 'issuer_A'
+  and I rename 'issuer public key' to 'pkA'
+  and I have a 'issuer public key' in 'issuer_B'
+  and I rename 'issuer public key' to 'pkB'
+  and I have a 'issuer public key' in 'issuer_C'
+  and I rename 'issuer public key' to 'pkC'
+
+
+When I create the new array
+ and I rename 'new array' to 'pks'
+ and I move 'pkA' in 'pks'
+ and I move 'pkB' in 'pks'
+ and I move 'pkC' in 'pks'
+ and I aggregate the verifiers in 'pks'
+
+When I verify the credential proof
+Then print the string 'the selective credential proof matches!'
+EOF
+}
+
