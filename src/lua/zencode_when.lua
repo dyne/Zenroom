@@ -125,7 +125,7 @@ When("append the '' of '' to ''", function(enc, src, dest)
 	local to = have(dest)
 	ZEN.assert(type(to) == 'zenroom.octet', "Destination type is not octet: "..dest.." ("..type(to)..")")
 	ZEN.assert(ZEN.CODEC[dest].encoding == 'string', "Destination encoding is not string: "..dest)
-	local f = guess_outcast(enc)
+	local f = get_encoding_function(enc)
 	ZEN.assert(f, "Encoding format not found: "..enc)
 	to = to .. O.from_string( f( from:octet() ) )
 	ACK[dest] = to
@@ -273,7 +273,7 @@ When("create the '' string of ''", function(encoding, src)
 		local orig = have(src)
 		ZEN.assert(luatype(orig) ~= 'table', "Source element is not a table: "..src)
 		empty(encoding) -- destination name is encoding name
-		local f = guess_outcast(encoding)
+		local f = get_encoding_function(encoding)
 		ZEN.assert(f, "Encoding format not found: "..encoding)
 		ACK[encoding] = O.from_string( f( orig:octet() ) )
 		new_codec(encoding, { zentype = 'e',

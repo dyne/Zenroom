@@ -96,7 +96,7 @@ CONF.output = { }
 print '== JSON import/export'
 function jsontest(reason)
    CONF.input.encoding = input_encoding(reason)
-   CONF.output.encoding = { fun = guess_outcast(reason),
+   CONF.output.encoding = { fun = get_encoding_function(reason),
 			    name = reason }
    local str = JSON.encode({public = left})
    right = JSON.decode(str)

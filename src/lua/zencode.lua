@@ -203,7 +203,7 @@ local function set_rule(text)
 		end,
 		['output encoding'] = function (encoding)
 			if not encoding then return false end
-			CONF.output.encoding = { fun = guess_outcast(encoding),
+			CONF.output.encoding = { fun = get_encoding_function(encoding),
 							name = encoding }
 			return true and CONF.output.encoding
 		end,
