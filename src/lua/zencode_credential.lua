@@ -160,6 +160,19 @@ When(
    end
 )
 
+When(
+   "aggregate the credentials in ''",
+   function(creds)
+      local cred_t = have(creds)
+      havekey'credential'
+      -- prepare output with an aggregated sigma credential
+      -- requester signs the sigma with private key
+      ACK.credentials =
+		 CRED.aggregate_creds(ACK.keyring.credential, cred_t)
+      new_codec'credentials'
+   end
+)
+
 
 -- exported function (non local) for use in zencode_petition
 function import_credential_proof_f(obj)
@@ -210,6 +223,24 @@ When(
 	end
 )
 
+
+When(
+	"aggregate the verifiers in ''",
+	function(issuers)
+		local issuers_t = have(issuers)
+		empty''
+		local res = { alpha = nil, beta = nil}
+		for k, v in pairs(issuers_t) do
+		   if not res.alpha then res.alpha = v.alpha
+			  else res.alpha = res.alpha + v.alpha end
+		   if not res.beta then res.beta = v.beta
+			  else res.beta = res.beta + v.beta end
+		end
+		ACK.verifiers = res
+		new_codec'verifiers'
+	end
+)
+
 When(
 	'create the credential proof',
 	function()
@@ -219,10 +250,7 @@ When(
 		havekey'credential'
 		ACK.credential_proof =
 			CRED.prove_cred(ACK.verifiers, ACK.credentials, ACK.keyring.credential)
-		new_codec('credential proof', {
-            encoding="complex",
-            schema="credential_proof",
-        })
+		new_codec('credential proof')
 	end
 )
 IfWhen(
