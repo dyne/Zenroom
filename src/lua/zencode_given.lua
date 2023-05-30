@@ -158,6 +158,8 @@ function operate_conversion(guessed)
    --	     guessed = guessed })
    -- TODO: make xxx print to stderr!
    -- xxx('Operating conversion on: '..guessed.name)
+   local fun = guessed.fun
+   if luatype(fun) == 'table' then fun = fun.import end
    local lt = luatype(guessed.raw)
    if lt == 'table' then
 	  if guessed.schema then
@@ -165,25 +167,23 @@ function operate_conversion(guessed)
 		 local res = {}
 		 if guessed.zentype == 'a' then
 			for _,v in pairs(guessed.raw) do
-			   table.insert(res, guessed.fun(v))
+			   table.insert(res, fun(v))
 			end
 			return(res)
 		 elseif guessed.zentype == 'd' then
 			for k, v in pairs(guessed.raw) do
-			   res[k] = guessed.fun(v)
+			   res[k] = fun(v)
 			end
 			return (res)
-		 elseif luatype(guessed.fun) == 'table' then
-			return guessed.fun.import(guessed.raw)
 		 else
-			return guessed.fun(guessed.raw)
+			return fun(guessed.raw)
 		 end
 	  else
 		 -- TODO: better error checking on deepmap?
 		 if luatype(guessed.check) == 'function' then
 			deepmap(guessed.check, guessed.raw)
 		 end
-		 return deepmap(guessed.fun, guessed.raw)
+		 return deepmap(fun, guessed.raw)
 	  end
    else -- element
 
@@ -202,11 +202,7 @@ function operate_conversion(guessed)
 			error("Could not read " .. guessed.name)
 		 end
 	  end
-	  if guessed.encoding == 'complex' then
-		 return guessed.fun.import(guessed.raw)
-	  else
-		 return guessed.fun(guessed.raw)
-	  end
+	  return fun(guessed.raw)
    end
 end
 
