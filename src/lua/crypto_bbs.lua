@@ -18,6 +18,35 @@
 --
 --]]
 
+--[[
+
+# Optimization notes
+
+The create_generators function (see Section 4.2 of this draft
+https://identity.foundation/bbs-signature/draft-irtf-cfrg-bbs-signatures.html)
+is rather slow.  The function takes an integer count and returns count
+points on the curve G1 .  It is fully deterministic, and after the
+first call it caches its output, so that in successive calls we
+generate none or less points.  The sequence of points produced by the
+function is always the same for a fixed hash function.
+
+Hence, one could simply cache the first n points for SHA and the first
+n points for SHAKE.  In this scenario, these 2n points should be
+loaded as ciphersuite parameters.
+
+One could also make the function itself faster by implementing some of
+its operations in C.  In particular, one such operation could be
+hash_to_curve and its subfunctions.  hash_to_curve is called by
+create_generators. It is a uniform encoding from byte strings to
+points in G1. That is, the distribution of its output is statistically
+close to uniform in G1 (see Section 3 of this draft
+https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-hash-to-curve-16).
+hash_to_curve should become faster when implented in C since
+hashtopoint (which behaves somewhat similarly to hash_to_curve) is
+implemented in C and it is rather fast.
+
+--]]
+
 local bbs = {}
 
 local OCTET_SCALAR_LENGTH = 32 -- ceil(log2(PRIME_R)/8)

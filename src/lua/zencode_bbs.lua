@@ -20,6 +20,48 @@
 --on Thursday, 11th May 2023
 --]]
 
+--[[
+
+Right now the Zencode statements set the header parameter (used in the
+signature, the verification, the creation of the proof and the
+verification of the proof) as the default value, an empty octet.
+
+In the zero knowledge proof context as we implemented it following
+this draft, the header is created by the ISSUER and it is designed to
+possibly contain pieces of information meant to be PUBLIC. For
+example, an header MAY contain a set of messages meant to be ALWAYS
+DISCLOSED in the proof creation.
+
+To enable the use of the header inside Zencode, one should create at
+least three new statements, considering the header parameter inside
+the issuer credential signature, inside the proof creation and inside
+the proof verification.
+
+Right now, the presentation header (used in the creation of the proof
+and the verification of the proof) is set as a random octet of fixed
+length inside the Zencode examples. It is meant to mitigate the replay
+attacks. It is created by the PARTICIPANT and it can be a nonce and/or
+contain additional information, like an expiration date of the proof
+(this is used to guarantee the freshness of the generated proof).
+
+One can find a nice presentation regarding the BBS zero-knowledge
+proof scheme here
+https://grotto-networking.com/Presentations/BBSforVCs/BBSforVCsBasics.html#/title-slide
+
+One may interactively test the functionality of the
+BBS ZKP scheme directly on a browser here
+https://www.grotto-networking.com/BBSDemo/
+
+Our actual implementation of the BBS ZKP does not require the use of
+participant's SECRET key to generate the proof. In certain use case
+scenario, this allows the issuer to impersonate a given
+participant. There are many possible solutions for such an issue
+depending on the application. A possible variant of the BBS ZKP
+assessing the lack of the participant's private key can be found here
+https://basileioskal.github.io/bbs-bound-signatures/draft-bound-bbs-signatures.html
+
+--]]
+
 local BBS = require'crypto_bbs'
 
 local function bbs_public_key_f(obj)
