@@ -63,8 +63,6 @@ When("create the eddsa key with secret ''",
 
 When("create the eddsa public key with secret key ''",function(sec)
 	local sk = have(sec)
-	initkeyring'eddsa'
-	ACK.keyring.eddsa = sk
 	empty'eddsa public key'
 	ACK.eddsa_public_key = ED.pubgen(sk)
 	new_codec('eddsa public key', { zentype = 'element',
