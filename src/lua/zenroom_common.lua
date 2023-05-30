@@ -164,8 +164,9 @@ function deepmap(fun,t,...)
    -- if luatype(t) == 'number' then
    -- 	  return t end
    if luatype(t) ~= 'table' then
-	  error("Internal error: deepmap 2nd argument is not a table", 3)
-	  return nil end
+	  return fun(t) end
+	  -- error("Internal error: deepmap 2nd argument is not a table", 3)
+      -- return nil end
    local res = {}
    for k,v in pairs(t) do
 	  if luatype(v) == 'table' then
