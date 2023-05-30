@@ -187,14 +187,10 @@ end)
 When("create the json of ''", function(src)
 	local obj, codec = have(src)
 	empty'json'
-	local encoding = fif( codec.encoding == 'complex',
-						  codec.schema or src, codec.encoding)
-	ACK.json = OCTET.from_string(
-
-	   JSON.encode(obj, encoding)
-	)
-	new_codec('json', {encoding = 'string',
-			   zentype = 'e'})
+	local encoding = codec.schema or codec.encoding
+	   or CODEC.output.encoding.name
+	ACK.json = OCTET.from_string( JSON.encode(obj, encoding) )
+	new_codec('json', {encoding = 'string', zentype = 'e'})
 end)
 
 -- numericals
@@ -205,9 +201,7 @@ When("set '' to '' base ''", function(dest, content, base)
 	local num = tonumber(content,bas)
 	ZEN.assert(num, "Invalid numerical conversion for value: "..content)
 	ACK[dest] = F.new(num)
-	ZEN.CODEC[dest] = new_codec(dest,
- 				    {encoding = 'number',
- 				     zentype = 'e' })
+	ZEN.CODEC[dest] = new_codec(dest, {encoding = 'number', zentype = 'e' })
 end)
 
 local function _delete_f(name)

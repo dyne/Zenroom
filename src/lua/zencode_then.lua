@@ -37,68 +37,40 @@
 
  -- CODEC format:
  -- { name: string,
- --   encoding: encoder name string or 'complex' handled by schema
- --   zentype:  zencode type: element, array or dictionary
- --   schema: schema name used to import (may differ from name)
+ --   encoding: encoding of object data, both basic and schema
+ --   zentype:  zencode type: 'e'lement, 'a'rray or 'd'ictionary
+ --   schema: schema name used to import or nil when basic object
  -- }
- -- return: name of codec encoding
-local function check_codec(in_name)
-    local name = uscore(in_name)
-    local codec = ZEN.CODEC[name]
-	if not codec then error("CODEC not found for object: "..name, 2) end
-	local schema = ZEN.schemas[codec.schema]
-	if schema then return codec.schema end
-	if codec.encoding == 'def' then return CONF.output.encoding.name end
-	return codec.encoding
- end
 
--- executes a guess_outcast and then operates it
--- sch may be fed with check_codec() result (name of encoding)
-local function then_outcast(val, sch, key)
+local function then_outcast(val, key, enc)
    if not val then
       error("Then outcast called on empty variable", 2)
    end
-   -- if sch has a codec then we extract its export function from its
-   -- schema name if it exist, otherwise from its name
-   -- if no codec is found then we simply extract the export function
-   -- from the name sch
    local fun
-   local codec = ZEN.CODEC[sch]
-
-   if key and sch == 'complex' then
-	  fun = guess_outcast(key)
-   else
-	  if codec then
-		 fun = guess_outcast(codec.schema or codec.name)
+   local codec
+   if enc then
+	  fun = get_encoding_function(enc)
+	  if fun then return deepmap(fun, val) end
+	  error("Output encoding not found: "..enc)
+   end
+   local codec = ZEN.CODEC[uscore(key)]
+   if not codec then error("CODEC not found for object: "..key, 2) end
+   if codec.schema then
+	  local schema = ZEN.schemas[codec.schema]
+	  if not schema then error("Schema not found: "..key,2) end
+	  if luatype(schema) == 'function' then fun = default_export_f
 	  else
-		 fun = guess_outcast(sch)
+		 fun = schema.export or default_export_f
 	  end
+	  return fun(val)
    end
-
-   local lt = luatype(val)
-   -- handle simple conversions
-   if lt ~= 'table' then return fun(val) end
-   if not codec or ( codec and not codec.schema ) then
-      return deepmap(fun, val)
+   if codec.encoding then
+	  fun = get_encoding_function(codec.encoding)
+	  if not fun then error("CODEC encoding not found: "..codec.encoding) end
+   else
+	  fun = default_export_f
    end
-   -- handle schema conversions
-   if codec.encoding and codec.encoding == 'complex' then
-      -- complex
-      if not isdictionary(val) and not isarray(val) then
-	 error('Complex schema value is not a dictionary: '..sch..' '..key, 2)
-      end
-	  -- fun is already set to schema.export by guess_outcast
-      return fun(val)
-   else -- schema not complex
-      local res = fun(val)
-      local enc = guess_outcast( codec.encoding )
-      if luatype(res) == 'table' then
-	 return deepmap(enc, res)
-      else
-	 return enc(res)
-      end
-   end
-   error("Then outcast cannot handle data: "..sch..' '..key,2)
+   return deepmap(fun,val)
 end
 
 local function then_insert(dest, val, key)
@@ -165,17 +137,12 @@ end)
 
 Then("print ''", function(name)
 	local val = have(name)
-    local codec = check_codec(name)
-	if name == 'keyring' or codec == 'keyring' then
-	   OUT[name] = export_keyring(val)
-	else
-	   OUT[name] = then_outcast( val, codec, name )
-	end
+	OUT[name] = then_outcast( val, name )
 end)
 
 Then("print '' as ''",function(k, s)
 	local val = have(k)
-	OUT[k] = then_outcast( val, s )
+	OUT[k] = then_outcast( val, k, s )
 end)
 
 Then("print my name in ''",function(dst)
@@ -187,14 +154,9 @@ end)
 Then("print my ''",function(k)
 	Iam()
 	local val = have(k)
-    local codec = check_codec(k)
 	-- my statements always print to a dictionary named after WHO
 	if not OUT[WHO] then OUT[WHO] = { } end
-	if k == 'keyring' or codec == 'keyring' then
-	   OUT[WHO][k] = export_keyring(val)
-	else
-	   OUT[WHO][k] = then_outcast( val, codec, k )
-	end
+	OUT[WHO][k] = then_outcast( val, k )
 end)
 
 Then("print my '' as ''",function(k, s)
@@ -205,46 +167,48 @@ Then("print my '' as ''",function(k, s)
 	   warn("DEPRECATED: Then print 'keyring' as '...'")
 	   warn("Please use: Then print keyring")
 	else
-	   then_insert( WHO, then_outcast( val, s, k), k)
+	   then_insert( WHO, then_outcast( val, k, s), k)
 	end
 end)
 
 Then("print '' from ''",function(k, f)
 	local val = have(f)
-    local codec = check_codec(f)
+	local codec = ZEN.CODEC[f]
 	ZEN.assert(val[k], "Object: "..k..", not found in "..f)
 	-- f is used in the then_outcast to support schemas
-	OUT[k] = then_outcast( val, codec, k )[k]
+	local tmp = then_outcast( val, f, codec.encoding )
+	OUT[k] = tmp[k]
 end)
 
 Then("print '' from '' as ''",function(k, f, s)
 	local val = have({f,k}) -- use array to check in depth
-	OUT[k] = then_outcast( val, s, k )
+	OUT[k] = then_outcast( val, k, s )
 end)
 
 Then("print '' from '' as '' in ''",function(k, f, s, d)
 	local val = have({f,k}) -- use array to check in depth
-	then_insert( d, then_outcast( val, s, k ), k)
+	then_insert( d, then_outcast( val, k, s ), k)
 end)
 
 Then("print '' as '' in ''",function(k, s, d)
 	local val = have(k) -- use array to check in depth
-	then_insert( d, then_outcast( val, s, k ), k)
+	then_insert( d, then_outcast( val, k, s ), k)
 end)
 
 Then("print my '' from '' as ''",function(k, f, s)
 	Iam()
 	local val = have({f,k}) -- use array to check in depth
-	then_insert( WHO, then_outcast( val, s, k ), k)
+	then_insert( WHO, then_outcast( val, k, s ), k)
 end)
 
 Then("print my '' from ''",function(k, f)
 	Iam()
 	local val = have(f)
+	local codec = ZEN.CODEC[f]
 	ZEN.assert(val[k], "Object: "..k..", not foun in "..f)
 	-- my statements always print to a dictionary named after WHO
 	if not OUT[WHO] then OUT[WHO] = { } end
-	OUT[WHO][k] = then_outcast( val, check_codec(f), k )[k]
+	OUT[WHO][k] = then_outcast( val, k, codec.encoding )[k]
 end)
 
 Then('print keyring',function()
@@ -268,9 +232,8 @@ end)
 
 Then('print data',function()
 	for k, v in pairs(ACK) do
-       local codec = check_codec(k)
-	   if k ~= 'keyring' and codec ~= 'keyring' then
-	      OUT[k] = then_outcast(v, codec, k)
+	   if k ~= 'keyring' then
+	      OUT[k] = then_outcast(v, k)
 	   end
 	end
 end
@@ -280,16 +243,18 @@ Then("print data as ''",function(e)
 	local fun
 	for k, v in pairs(ACK) do
 	   if k ~= 'keyring' then
-	      OUT[k] = then_outcast(v, e)
+	      OUT[k] = then_outcast(v, k, e)
 	   end
 	end
 end
 )
+
 Then("print data from ''", function(src)
 	local obj = have(src)
+	local codec = ZEN.CODEC[src]
 	for k,v in pairs(obj) do
 	   if k ~= 'keyring' then
-	      OUT[k] = then_outcast( v, check_codec(src), src )
+	      OUT[k] = then_outcast( v, k, codec.encoding)
 	   end
 	end
 end)
@@ -298,7 +263,7 @@ Then("print data from '' as ''", function(src, e)
 	local obj = have(src)
 	for k,v in pairs(obj) do
 	   if k ~= 'keyring' then
-	      OUT[k] = then_outcast( v, e, src )
+	      OUT[k] = then_outcast( v, k, e )
 	   end
 	end
 end)
@@ -308,7 +273,7 @@ Then('print my data',function()
 	OUT[WHO] = { }
 	for k, v in pairs(ACK) do
 	   if k ~= 'keyring' then
-	      OUT[WHO][k] = then_outcast( v, check_codec(k) )
+	      OUT[WHO][k] = then_outcast( v, k )
 	   end
 	end
 end)
@@ -317,18 +282,20 @@ Then("print my data as ''",function(e)
 	OUT[WHO] = { }
 	for k, v in pairs(ACK) do
 	   if k ~= 'keyring' then
-	      OUT[WHO][k] = then_outcast( v, e )
+	      OUT[WHO][k] = then_outcast( v, k, e )
 	   end
 	end
 end
 )
+
 Then("print my data from ''",function(src)
 	Iam() -- sanity checks
 	OUT[WHO] = { }
 	local obj = have(src)
+	local codec = ZEN.CODEC[src]
 	for k, v in pairs(obj) do
 	   if k ~= 'keyring' then
-	      OUT[WHO][k] = then_outcast( v, check_codec(k), src )
+	      OUT[WHO][k] = then_outcast( v, k, codec.encoding )
 	   end
 	end
 end
@@ -337,19 +304,20 @@ Then("print my data from '' as ''",function(src, e)
 	Iam() -- sanity checks
 	OUT[WHO] = { }
 	local obj = have(src)
+	local codec = ZEN.CODEC[src]
 	for k, v in pairs(obj) do
 	   if k ~= 'keyring' then
-	      OUT[WHO][k] = then_outcast( v, e, src )
+	      OUT[WHO][k] = then_outcast( v, k, codec.encoding )
 	   end
 	end
 end
 )
 
 Then("print object named by ''", function(name)
-	local val = have(name):string()
-	local real_name = have(val)
+	local real_name = have(name):string()
+	local val = have(real_name)
 	if real_name ~= 'keyring' then
-	   OUT[val] = then_outcast( real_name, check_codec(val), real_name )
+	   OUT[real_name] = then_outcast( val, real_name )
 	end
 end)
 

@@ -133,11 +133,7 @@ When(
 				}
 			}
 		}
-		ZEN.CODEC.petition = {
-			name = 'petition',
-			encoding = 'complex',
-			zentype = 'schema'
-		}
+		new_codec('petition')
 		-- generate an ECDH signature of the (encoded) petition using the
 		-- credential keys
 		-- ecdh = ECDH.new()
@@ -190,11 +186,7 @@ When(
 			uid_signature = zeta, -- ECP
 			uid_petition = ack_uid
 		}
-        new_codec('petition_signature', {
-            schema = 'petition_signature',
-            encoding = 'complex',
-            zentype = 'schema',
-        })
+        new_codec('petition_signature')
 	end
 )
 

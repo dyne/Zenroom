@@ -86,7 +86,8 @@ end
 local function export_obj(object, format)
   -- CONF { encoding = <function 1>,
   --        encoding_prefix = "u64"  }
-  assert(object, 'export_obj object not found')
+  if not object then
+	 error('Inspect.export_obj() object not found: ', format,3) end
   if luatype(object) == 'table' then
      local tres = {}
      for k, v in pairs(object) do -- only flat tables support recursion
