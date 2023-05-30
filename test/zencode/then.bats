@@ -99,7 +99,7 @@ EOF
     cat <<EOF | zexe read_and_print_tx.zen read_and_print_tx.json
 Scenario ethereum
 Given I have a 'ethereum transaction' named 'tx'
-Then print 'to' from 'tx'
+Then print 'to' from 'tx' as 'hex'
 Then print data
 EOF
     save_output 'read_and_print_tx.out'
