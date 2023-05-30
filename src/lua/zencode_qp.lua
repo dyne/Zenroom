@@ -161,8 +161,6 @@ end)
 
 When("create the dilithium public key with secret key ''",function(sec)
 	local sk = have(sec)
-	initkeyring'dilithium'
-	ACK.keyring.dilithium = sk
 	empty'dilithium public key'
 	ACK.dilithium_public_key = QP.sigpubgen(sk)
 	new_codec('dilithium public key', { zentype = 'element'})
@@ -205,8 +203,6 @@ end)
 
 When("create the kyber public key with secret key ''",function(sec)
 	local sk = have(sec)
-	initkeyring'kyber'
-	ACK.keyring.kyber = sk
 	empty'kyber public key'
 	ACK.kyber_public_key = QP.kempubgen(sk)
 	new_codec('kyber public key', { zentype = 'element'})
@@ -249,8 +245,6 @@ end)
 
 When("create the ntrup public key with secret key ''",function(sec)
 	local sk = have(sec)
-	initkeyring'ntrup'
-	ACK.keyring.ntrup = sk
 	empty'ntrup public key'
 	ACK.ntrup_public_key = QP.ntrup_pubgen(sk)
 	new_codec('ntrup public key', { zentype = 'element'})
