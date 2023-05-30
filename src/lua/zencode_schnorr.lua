@@ -82,8 +82,6 @@ end)
 
 When("create the schnorr public key with secret key ''",function(sec)
 	local sk = have(sec)
-	initkeyring'schnorr'
-	ACK.keyring.schnorr = sk
 	empty'schnorr public key'
 	ACK.schnorr_public_key = SCH.pubgen(sk)
 	new_codec('schnorr public key', { zentype = 'element'})
