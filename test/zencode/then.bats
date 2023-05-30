@@ -79,7 +79,7 @@ Given I have a 'ethereum address' named 'storage contract'
 Then print 'storage contract'
 EOF
     save_output 'coding_export.out'
-    assert_output '{"storage_contract":"1b620ca5172a8d6a64798fca2ee690066f7a7816"}'
+    assert_output '{"storage_contract":"0x1b620cA5172A8D6A64798FcA2ee690066F7A7816"}'
 
 }
 
@@ -89,7 +89,7 @@ EOF
 {
 	"tx": {
 		"nonce": "0",
-		"to": "1b620cA5172A8D6A64798FcA2ee690066F7A7816",
+		"to": "0x1b620cA5172A8D6A64798FcA2ee690066F7A7816",
 		"gas price": "100000000000",
 		"gas limit": "300000",
 		"value": "0"
@@ -103,7 +103,7 @@ Then print 'to' from 'tx' as 'hex'
 Then print data
 EOF
     save_output 'read_and_print_tx.out'
-    assert_output '{"to":"1b620ca5172a8d6a64798fca2ee690066f7a7816","tx":{"gas_limit":"300000","gas_price":"100000000000","nonce":"0","to":"1b620ca5172a8d6a64798fca2ee690066f7a7816","value":"0"}}'
+    assert_output '{"to":"0x1b620cA5172A8D6A64798FcA2ee690066F7A7816","tx":{"gas_limit":"300000","gas_price":"100000000000","nonce":"0","to":"0x1b620cA5172A8D6A64798FcA2ee690066F7A7816","value":"0"}}'
 
 }
 
