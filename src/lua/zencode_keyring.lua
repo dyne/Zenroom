@@ -154,7 +154,7 @@ function export_keyring(obj)
    if obj.ecdh then res.ecdh = CONF.output.encoding.fun(obj.ecdh) end
    if obj.credential then res.credential = obj.credential:octet():base64() end
    if obj.issuer then
-      local fun = guess_outcast("base64")
+      local fun = get_encoding_function("base64")
       res.issuer = {x = obj.issuer.x:octet(), y = obj.issuer.y:octet()}
       res.issuer = deepmap(fun, res.issuer)
    end

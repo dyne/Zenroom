@@ -123,12 +123,12 @@ _G['CONF'] = {
 		tagged = false
 	},
 	output = {
-		encoding = { fun = guess_outcast('base64'),
+		encoding = { fun = get_encoding_function('base64'),
 			     name = 'base64' },
 		format = { fun = JSON.auto, name = 'json' },
 		versioning = false
 	},
-	debug = { encoding = { fun = guess_outcast('hex'),
+	debug = { encoding = { fun = get_encoding_function('hex'),
 			       name = 'hex' } },
 	parser = {strict_match = true},
 	heap = { check_collision = true },

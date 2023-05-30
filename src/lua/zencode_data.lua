@@ -309,35 +309,36 @@
        if dt == 'table' then error("invalid table conversion",2) end
        -- passthrough native number data
        if dt == 'number' or dt == 'boolean' then
-	  return data
+		  return data
        elseif dt == 'zenroom.big' then
-	  -- always export BIG INT as decimal
-	  return BIG.to_decimal(data)
+		  -- always export BIG INT as decimal
+		  return BIG.to_decimal(data)
        elseif dt == 'zenroom.float' then
-	  return tonumber(tostring(data))
+		  return tonumber(tostring(data))
        elseif iszen(dt) then
-	  -- leverage first class citizen method on zenroom data
-	  return fun(data:octet())
+		  -- leverage first class citizen method on zenroom data
+		  return fun(data:octet())
        end
        return fun(data)
     end
  end
 
  function default_export_f(obj)
+	local f = O.to_octet
 	if luatype(obj) == 'table' then
-	   return deepmap(O.to_octet,obj)
+	   return deepmap(f,obj)
 	else
-	   return O.to_octet(obj)
+	   return f(obj)
 	end
  end
 
  -- takes a string returns the function, good for use in deepmap(fun,table)
- function guess_outcast(cast)
+ function get_encoding_function(cast)
     if not cast then
-       error('guess_outcast called with nil argument', 2)
+       error('get_encoding_function called with nil argument', 2)
     end
     if luatype(cast) ~= 'string' then
-       error('guess_outcast called with wrong argument: '..type(cast), 3) end
+       error('get_encoding_function called with wrong argument: '..type(cast), 3) end
     if cast == 'def' then
 	   return CONF.output.encoding.fun
 	elseif cast == 'string' then
