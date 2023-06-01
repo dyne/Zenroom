@@ -381,7 +381,7 @@ EOF
     Given I have a 'did document'
     and I have a 'ecdh signature'
     Given I have a 'string dictionary' named 'proof'
-    and I have a 'integer' named 'timestamp'
+    and I have a 'string' named 'timestamp'
 
     When I create the jws signature using the ecdh signature in 'ecdh signature'
     and I move 'jws' in 'proof'
@@ -394,7 +394,6 @@ EOF
     and I move 'proof' in 'did document'
 
     Then print the 'did document'
-    Then print the 'eddsa signature'
 EOF
     save_output "did_document_with_proof.json"
 }
