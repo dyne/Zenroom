@@ -387,6 +387,14 @@
     return nil
  end
 
+
+ -- CODEC format:
+ -- { name: string,
+ --   encoding: encoding of object data, both basic and schema
+ --   zentype:  zencode type: 'e'lement, 'a'rray or 'd'ictionary
+ --   schema: schema name used to import or nil when basic object
+ --   st: schema type properties, so far just 'o'pen or none
+ -- }
  function new_codec(cname, parameters, clone)
     if not cname then error("Missing name in new codec", 2) end
     local name
