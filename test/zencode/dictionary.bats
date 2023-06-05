@@ -728,3 +728,28 @@ EOF
     save_output 'copy.json'
     assert_output '{"myArray":["John","Doe","42",{"age":"44","myArray":["John","Doe","42"],"name":"Bruce","surname":"Wayne"},"where?"],"myDict":{"age":"44","myArray":["John","Doe","42"],"name":"Bruce","surname":"Wayne"}}'
 }
+
+@test "fail to insert element in a close schema" {
+    cat << EOF | save_asset fail_move.data
+{
+   "myMessage": "Dear Bob, your name is too short, goodbye - Alice.",
+   "ecdh signature": {
+      "r": "/cCmwHoaHGc7lbh60OMjG9ylUmAm20pbrnCN9w7NWJM=",
+      "s": "KXS+Ci0joCuZgUPYjrf7Qc+7d9lIqlHnCSooSwUk1CU="
+    }
+}
+EOF
+
+    cat << EOF | save_asset fail_move.zen
+Scenario 'ecdh': insert something in a signature
+
+Given I have a 'ecdh signature'
+Given I have a 'string' named 'myMessage'
+
+When I move 'myMessage' in 'ecdh signature'
+
+Then print the 'ecdh signature'
+EOF
+    run $ZENROOM_EXECUTABLE -z -a fail_move.data fail_move.zen
+    assert_line --partial 'Schema is not open to accept extra objects: ecdh_signature'
+}
