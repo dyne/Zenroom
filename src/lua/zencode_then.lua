@@ -173,10 +173,9 @@ end)
 
 Then("print '' from ''",function(k, f)
 	local val = have(f)
-	local codec = ZEN.CODEC[f]
 	ZEN.assert(val[k], "Object: "..k..", not found in "..f)
 	-- f is used in the then_outcast to support schemas
-	local tmp = then_outcast( val, f, codec.encoding )
+	local tmp = then_outcast( val, f )
 	OUT[k] = tmp[k]
 end)
 
