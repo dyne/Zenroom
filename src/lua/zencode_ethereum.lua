@@ -137,12 +137,10 @@ When('create the ethereum address', function()
 end)
 
 -- Note that the address must be given as a string
--- Maybe change statement in "verify the string '' is a valid ethereum address"
-When("verify the ethereum address '' is valid", function(add)
+When("verify the ethereum address string '' is valid", function(add)
     local str_add = O.to_string(have(add))
     local address = O.from_hex(str_add)
     ZEN.assert(str_add == ETH.checksum_encode(address), "The address has a wrong encoding")
-
 end)
 
 When("create the ethereum transaction of '' to ''",

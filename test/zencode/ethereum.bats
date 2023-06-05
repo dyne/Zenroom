@@ -544,13 +544,32 @@ EOF
 
     cat <<EOF | zexe checksum_enc.zen checksum_enc.json
 Scenario ethereum
-
 Given I have a 'string' named 'ethereum address' 
-
-When I verify the ethereum address 'ethereum address' is valid
-
+When I verify the ethereum address string 'ethereum address' is valid
 Then print the string 'The address has a valid encoding'
 EOF
     save_output 'checksum_enc_output.json'
     assert_output '{"output":["The_address_has_a_valid_encoding"]}'
+}
+
+@test "Wrong encoding raises warning or error" {
+    cat <<EOF | save_asset checksum_fail.json
+{
+    "ethereum_address" : "0x1E30e53E87869aaD8dC5A1A9dAc31a8dD3559460"
+}
+EOF
+
+    cat <<EOF | save_asset checksum_fail.zen 
+Scenario ethereum
+Given I have a 'string' named 'ethereum address'
+Given I rename 'ethereum address' to 'string address'
+
+Given I have a 'ethereum address'
+When I verify the ethereum address string 'string address' is valid
+
+Then print the string 'This fails'
+EOF
+    run $ZENROOM_EXECUTABLE -z -a checksum_fail.json checksum_fail.zen
+    assert_line '[W]  "Invalid encoding for ethereum address. Expected encoding: 0x1e30e53E87869aaD8dC5A1A9dAc31a8dD3559460"'
+    assert_line '[W]  [!] The address has a wrong encoding'
 }
