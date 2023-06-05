@@ -279,29 +279,32 @@ When("for each dictionary in '' append '' to ''", function(arr, right, left)
 end)
 
 local function move_or_copy_in(src_value, src_name, dest)
-   local d = have(dest)
-   if luatype(d) ~= 'table' then error("Object is not a table: "..dest, 2) end
-   local cdest = (ZEN.CODEC[dest]
-   if cdest.schema then
-	  local sdest = ZEN.schemas[cdest.schema]
-	  if luatype(sdest) ~= 'table' then -- old schema types are not open
-		 error("Schema is not open to accept extra objects: "..dest)
-	  elseif not sdest.schematype or sdest.schematype ~= 'open' then
-		 error("Schema is not open to accept extra objects: "..dest)
-	  end
-	  d[src_name] = src_value
-	  ACK[dest] = d
-   elseif cdest.zentype == 'd' then
-      if d[src_name] then
-		 error("Cannot overwrite: "..src_name.." in "..dest,2)
-	  end
-      d[src_name] = src_value
-      ACK[dest] = d
-   elseif cdest.zentype == 'a' then
-      table.insert(ACK[dest], src_value)
-   else
-      error("Invalid destination type: "..cdest.zentype,2)
-   end
+    local d = have(dest)
+    if luatype(d) ~= 'table' then error("Object is not a table: "..dest, 2) end
+    local cdest = ZEN.CODEC[dest]
+    if cdest.schema then
+        local sdest = ZEN.schemas[cdest.schema]
+        if luatype(sdest) ~= 'table' then -- old schema types are not open
+            error("Schema is not open to accept extra objects: "..dest)
+        elseif not sdest.schematype or sdest.schematype ~= 'open' then
+            error("Schema is not open to accept extra objects: "..dest)
+        end
+        if d[src_name] then
+            error("Cannot overwrite: "..src_name.." in "..dest,2)
+        end
+        d[src_name] = src_value
+        ACK[dest] = d
+    elseif cdest.zentype == 'd' then
+        if d[src_name] then
+            error("Cannot overwrite: "..src_name.." in "..dest,2)
+        end
+        d[src_name] = src_value
+        ACK[dest] = d
+    elseif cdest.zentype == 'a' then
+        table.insert(ACK[dest], src_value)
+    else
+        error("Invalid destination type: "..cdest.zentype,2)
+    end
 end
 
 When("move named by '' in ''", function(src_name, dest)
