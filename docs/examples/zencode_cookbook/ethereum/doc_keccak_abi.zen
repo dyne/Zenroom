@@ -1,0 +1,14 @@
+Scenario ethereum
+
+Given I have a 'hex' named 'address'
+Given I have a 'string' named 'vote'
+Given I have a 'string array' named 'typeSpec'
+
+When I create the new array
+When I move 'address' in 'new array'
+When I move 'vote' in 'new array'
+When I create the ethereum abi encoding of 'new array' using 'typeSpec'
+When I create the hash of 'ethereum abi encoding' using 'keccak256'
+
+Then print the 'ethereum abi encoding'
+Then print the 'hash'

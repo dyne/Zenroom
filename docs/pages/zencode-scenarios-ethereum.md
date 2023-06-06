@@ -73,9 +73,9 @@ The statements used to manage a transaction, follow closely the logic of the Eth
 * Then we use the file above, to create a **ethereum transaction**.
 * Finally we'll **sign** it using the key we generated above.
 
-## Fist step: JSON file
+## First step: JSON file
 
-Now Prepare a JSON file containing the noce, the gas price and the gas limit. The file should look like this:
+Now prepare a JSON file containing the nonce, the gas price and the gas limit. The file should look like this:
 
 [](../_media/examples/zencode_cookbook/ethereum/doc_tx_information.json ':include :type=code json')
 
@@ -115,7 +115,7 @@ The data stored in this case was a **string** because ethereum allows only array
 
 ## Sign the transaction
 
-You can now pass the **transaction** produced from the above script (here we are using the transaction created to sotre the data), along with <a href="../_media/examples/zencode_cookbook/ethereum/alice_keys.json" download>keys.json</a> to the following script that will sign the transaction for a specific chain with **chain id** specified in the statement and produce the raw transaction. Here, for example, we are using fabt as **chain id** (https://github.com/dyne/fabchain).
+You can now pass the **transaction** produced from the above script (here we are using the transaction created to store the data), along with <a href="../_media/examples/zencode_cookbook/ethereum/alice_keys.json" download>keys.json</a> to the following script that will sign the transaction for a specific chain with **chain id** specified in the statement and produce the raw transaction. Here, for example, we are using fabt as **chain id** (https://github.com/dyne/fabchain).
 
 [](../_media/examples/zencode_cookbook/ethereum/doc_sign_transaction.zen ':include :type=code gherkin')
 
@@ -146,6 +146,47 @@ and we can read the original data with the following script:
 The output will be:
 
 [](../_media/examples/zencode_cookbook/ethereum/doc_retrieved_data.json ':include :type=code json')
+
+# The ethereum signature
+
+A user may want to sign an object different from a transaction, and may want others to be able to verify such signature using only the ethereum address.  
+This is an example of the data which a user could sign:
+
+[](../_media/examples/zencode_cookbook/ethereum/doc_keccak_abi.data ':include :type=code json')
+
+## Creation of the hash
+
+Given the above data, a user shall first compute the hash of the ABI encoding of the data.  
+The user can achieve this using the following script:
+
+[](../_media/examples/zencode_cookbook/ethereum/doc_keccak_abi.zen ':include :type=code gherkin')
+
+The output should look like:
+
+[](../_media/examples/zencode_cookbook/ethereum/doc_keccak_abi_out.json ':include :type=code json')
+
+## Creation of the signature
+
+Once the hash has been computed, assuming that the user already has a ethereum private key in the keyring, the signature can be created using the following script:
+
+[](../_media/examples/zencode_cookbook/ethereum/doc_signtest.zen ':include :type=code gherkin')
+
+The output should look like:
+
+[](../_media/examples/zencode_cookbook/ethereum/doc_signtest_out.json ':include :type=code json')
+
+**Note: this script and the previous one can be merged** into one script that creates the hash, signs it and prints it out.
+
+## Verification
+
+Given the previous output, anyone may verify the signature using the following script:
+
+[](../_media/examples/zencode_cookbook/ethereum/doc_verifytesteth.zen ':include :type=code gherkin')
+
+When the signature is correct, the output will be:
+
+[](../_media/examples/zencode_cookbook/ethereum/doc_verifytesteth_out.json ':include :type=code json')
+
 
 # The script used to create the material in this page
 

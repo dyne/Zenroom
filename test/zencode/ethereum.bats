@@ -447,7 +447,7 @@ EOF
     cat <<EOF | zexe doc_sign_transaction_local.zen doc_alice_storage_tx.json alice_keys.json
 scenario ethereum
 
-# Load the private key and the transacrtion
+# Load the private key and the transaction
 given I have the 'keyring'
 and I have a 'ethereum transaction'
 
@@ -536,14 +536,14 @@ EOF
 }
 
 @test "KECCAK256 on the abi encoding" {
-    cat <<EOF | save_asset 'keccak_abi.data'
+    cat <<EOF | save_asset 'doc_keccak_abi.data'
 {
     "address": "77c2f9730B6C3341e1B71F76ECF19ba39E88f247",
     "vote": "234",
     "typeSpec": ["address", "string"]
 }
 EOF
-    cat <<EOF | zexe keccak_abi.zen keccak_abi.data
+    cat <<EOF | zexe doc_keccak_abi.zen doc_keccak_abi.data
 Scenario ethereum
 
 Given I have a 'hex' named 'address'
@@ -559,20 +559,20 @@ When I create the hash of 'ethereum abi encoding' using 'keccak256'
 Then print the 'ethereum abi encoding'
 Then print the 'hash'
 EOF
-    save_output 'keccak_abi_out.json'
+    save_output 'doc_keccak_abi_out.json'
     assert_output '{"ethereum_abi_encoding":"00000000000000000000000077c2f9730b6c3341e1b71f76ecf19ba39e88f247000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033233340000000000000000000000000000000000000000000000000000000000","hash":"pTFYbyovWkOT6CaHSRNCN7ySQ/AGbphs9WQnZ2JwPWQ="}'
 }
 
 @test "Create ethereum signature" {
     cat <<EOF | save_asset 'sk_sign.data'
 {
-    "ethereum_address": "380FfB13F42AfFBE88949643B27FA74Ba85B3977",
+    "ethereum_address": "0x380FfB13F42AfFBE88949643B27FA74Ba85B3977",
     "keyring": {
         "ethereum": "876f6d4554e91f6f4bdaf8c741eef18b28f580f01d9d1af43c5238b8fe6bac6b"
     }
 }
 EOF
-    cat <<EOF | zexe signtest.zen sk_sign.data keccak_abi_out.json
+    cat <<EOF | zexe doc_signtest.zen sk_sign.data doc_keccak_abi_out.json
 Scenario ethereum
 
 Given I have a 'ethereum address'
@@ -585,11 +585,11 @@ Then print the 'ethereum signature'
 Then print the 'ethereum address'
 Then print the 'hash'
 EOF
-    save_output 'signtest_out.json'
+    save_output 'doc_signtest_out.json'
 }
 
 @test "Verify a ethereum signature from an address" {
-    cat <<EOF | zexe verifytesteth.zen signtest_out.json
+    cat <<EOF | zexe doc_verifytesteth.zen doc_signtest_out.json
 Scenario ethereum
 
 Given I have a 'ethereum signature'
@@ -600,7 +600,7 @@ When I verify the 'hash' has a ethereum signature in 'ethereum signature' by 'et
 
 Then print the string 'The signature is valid'
 EOF
-    save_output verifytesteth_out.json
+    save_output doc_verifytesteth_out.json
     assert_output '{"output":["The_signature_is_valid"]}'
 }
 
