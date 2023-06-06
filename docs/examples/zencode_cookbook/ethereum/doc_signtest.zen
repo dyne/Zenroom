@@ -1,0 +1,11 @@
+Scenario ethereum
+
+Given I have a 'ethereum address'
+Given I have a 'keyring'
+Given I have a 'base64' named 'hash'
+
+When I create the ethereum signature of 'hash'
+
+Then print the 'ethereum signature'
+Then print the 'ethereum address'
+Then print the 'hash'
