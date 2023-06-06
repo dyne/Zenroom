@@ -218,7 +218,7 @@ cat <<EOF | save_asset alice_nonce_data.json
 { "ethereum nonce": "`printf "%d" ${NONCE}`",
 "gas price": "100000000000",
 "gas limit": "300000",
-"storage_contract": "E54c7b475644fBd918cfeDC57b1C9179939921E6"
+"storage_contract": "0xE54c7b475644fBd918cfeDC57b1C9179939921E6"
 }
 EOF
 }
@@ -275,8 +275,8 @@ EOF
 	"gas price": "100000000000",
 	"gas limit": "100000",
 	"token value": "1",
-	"erc20": "1e30e53E87869aaD8dC5A1A9dAc31a8dD3559460",
-	"receiver": "828bddf0231656fb736574dfd02b7862753de64b",
+	"erc20": "0x1e30e53E87869aaD8dC5A1A9dAc31a8dD3559460",
+	"receiver": "0x828bddf0231656fb736574dfd02b7862753de64b",
 	"ethereum nonce": "`echo $(($NONCE))`"
 }
 EOF
@@ -533,4 +533,43 @@ then print the 'v4' as 'hex'
 EOF
     save_output 'import_tx.json'
     assert_output '{"v0":"3435316491","v1":"3435316492","v2":"195","v3":"196","v4":"196"}'
+}
+
+@test "Verify etherum address encoding" {
+    cat <<EOF | save_asset checksum_enc.json
+{
+    "ethereum_address" : "0x1e30e53E87869aaD8dC5A1A9dAc31a8dD3559460"
+}
+EOF
+
+    cat <<EOF | zexe doc_checksum_enc.zen checksum_enc.json
+Scenario ethereum
+Given I have a 'string' named 'ethereum address' 
+When I verify the ethereum address string 'ethereum address' is valid
+Then print the string 'The address has a valid encoding'
+EOF
+    save_output 'doc_checksum_enc_output.json'
+    assert_output '{"output":["The_address_has_a_valid_encoding"]}'
+}
+
+@test "Wrong encoding raises warning or error" {
+    cat <<EOF | save_asset checksum_fail.json
+{
+    "ethereum_address" : "0x1E30e53E87869aaD8dC5A1A9dAc31a8dD3559460"
+}
+EOF
+
+    cat <<EOF | save_asset checksum_fail.zen 
+Scenario ethereum
+Given I have a 'string' named 'ethereum address'
+Given I rename 'ethereum address' to 'string address'
+
+Given I have a 'ethereum address'
+When I verify the ethereum address string 'string address' is valid
+
+Then print the string 'This fails'
+EOF
+    run $ZENROOM_EXECUTABLE -z -a checksum_fail.json checksum_fail.zen
+    assert_line '[W]  "Invalid encoding for ethereum address. Expected encoding: 0x1e30e53E87869aaD8dC5A1A9dAc31a8dD3559460"'
+    assert_line '[W]  [!] The address has a wrong encoding'
 }

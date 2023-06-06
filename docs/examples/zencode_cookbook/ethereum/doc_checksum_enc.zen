@@ -1,0 +1,4 @@
+Scenario ethereum
+Given I have a 'string' named 'ethereum address' 
+When I verify the ethereum address string 'ethereum address' is valid
+Then print the string 'The address has a valid encoding'

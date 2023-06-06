@@ -42,7 +42,8 @@ If, for any reason, you need the ethereum public key, then you can simply comput
 # Create Ethereum address
 
 
-The **Ethereum address** is derived as the last 20 bytes of the public key controlling the account. The public key is produced starting from the private key so you'll need the <a href="../_media/examples/zencode_cookbook/ethereum/alice_keys.json" download>keys.json</a> you've just generated as input to the following script: 
+The **Ethereum address** is derived as the last 20 bytes of the public key controlling the account.
+The **Ethereum address** is represented as an hexadecimal string with encoding given by [ERC-55](https://eips.ethereum.org/EIPS/eip-55). The public key is produced starting from the private key so you'll need the <a href="../_media/examples/zencode_cookbook/ethereum/alice_keys.json" download>keys.json</a> you've just generated as input to the following script: 
 
 [](../_media/examples/zencode_cookbook/ethereum/alice_addrgen.zen ':include :type=code gherkin')
 
@@ -50,13 +51,20 @@ The output should look like:
 
 [](../_media/examples/zencode_cookbook/ethereum/alice_address.json ':include :type=code json')
 
+It is also possible to verify that a given string is a valid **Ethereum address** by running the following script:
+
+[](../_media/examples/zencode_cookbook/ethereum/doc_checksum_enc.zen ':include :type=code gherkin')
+
+The output should look like:
+
+[](../_media/examples/zencode_cookbook/ethereum/doc_checksum_enc_output.json ':include :type=code json')
 
 # The transaction: setup and execution
 
 The statements used to manage a transaction, follow closely the logic of the Ethereum protocol. With Ethereum we can store data on the chain or transafer eth from an address to another. What we'll do here is:
 
 * Prepare a JSON file containing:
-  * the **ethereum noce**, it is the number of transactions sent from the sender address
+  * the **ethereum nonce**, it is the number of transactions sent from the sender address
   * the **gas price**
   * the **gas limit**
   * the **recipient address**

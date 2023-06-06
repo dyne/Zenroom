@@ -174,6 +174,31 @@ function ETH.decodeTransaction(rlp)
    }
 end
 
+-- Solving Issue #391: checksum for ethereum addresses
+-- https://eips.ethereum.org/EIPS/eip-55
+function ETH.checksum_encode(address)
+   local hex_addr = address:hex()
+   local checksummed_buffer = ""
+   local H = HASH.new('keccak256')
+   local hashed_address = H:process(hex_addr):bin()
+   for i = 1, #hex_addr do
+      local character = string.sub(hex_addr, i, i)
+      if string.find("0123456789", character) then
+         checksummed_buffer = checksummed_buffer..character
+      elseif string.find("abcdef", character) then
+         local hashed_address_nibble = string.sub(hashed_address, 4*i -3, 4*i -3)
+         if hashed_address_nibble == '1' then
+            checksummed_buffer = checksummed_buffer..string.upper(character)
+         else
+            checksummed_buffer = checksummed_buffer..character
+         end
+      else
+         error("Unrecognized hex character at position "..i, 2)
+      end
+   end
+   return "0x"..checksummed_buffer
+end
+
 -- modify the input transaction
 function ETH.encodeSignedTransaction(sk, tx)
    local H, txHash, sig, y_parity, two, res
