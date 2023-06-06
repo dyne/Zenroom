@@ -1,5 +1,4 @@
 Scenario ethereum
-
 Given I have a 'hex' named 'ethereum private key'
 
 # here we upload the key

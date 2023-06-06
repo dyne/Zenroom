@@ -218,7 +218,7 @@ cat <<EOF | save_asset alice_nonce_data.json
 { "ethereum nonce": "`printf "%d" ${NONCE}`",
 "gas price": "100000000000",
 "gas limit": "300000",
-"storage_contract": "E54c7b475644fBd918cfeDC57b1C9179939921E6"
+"storage_contract": "0xE54c7b475644fBd918cfeDC57b1C9179939921E6"
 }
 EOF
 }
@@ -542,13 +542,13 @@ EOF
 }
 EOF
 
-    cat <<EOF | zexe checksum_enc.zen checksum_enc.json
+    cat <<EOF | zexe doc_checksum_enc.zen checksum_enc.json
 Scenario ethereum
 Given I have a 'string' named 'ethereum address' 
 When I verify the ethereum address string 'ethereum address' is valid
 Then print the string 'The address has a valid encoding'
 EOF
-    save_output 'checksum_enc_output.json'
+    save_output 'doc_checksum_enc_output.json'
     assert_output '{"output":["The_address_has_a_valid_encoding"]}'
 }
 

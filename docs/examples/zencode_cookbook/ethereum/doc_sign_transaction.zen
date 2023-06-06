@@ -1,5 +1,10 @@
 scenario ethereum
+
+# Load the private key and the transacrtion
 given I have the 'keyring'
 and I have a 'ethereum transaction'
+
+# sign the transaction for the chain with chain id 'fabt'
 when I create the signed ethereum transaction for chain 'fabt'
+
 then print the 'signed ethereum transaction'
