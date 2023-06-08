@@ -206,6 +206,25 @@ The result should look like this:
 
 [](../_media/examples/zencode_cookbook/cookbook_ecdh/scenarioECDHPart4.json ':include :type=code json')
 
+# Create an ECDSA deterministic signature
+
+Provided that you have a keyring with an ECDH key, you can also sign an object in a determinisitic manner as specified in [RFC-6979](https://www.rfc-editor.org/rfc/rfc6979) using the following script:
+
+[](../_media/examples/zencode_cookbook/ecdh/sign_deterministic_from_alice.zen ':include :type=code gherkin')
+
+The output will be:
+
+[](../_media/examples/zencode_cookbook/ecdh/sign_deterministic_alice_keyring.json ':include :type=code json')
+
+## Verify an ECDSA deterministic signature
+
+If you want to verify a deterministic signature as the one printed in the previous output, provided that you have the ECDH public key of the signer, you can use the following script:
+
+[](../_media/examples/zencode_cookbook/ecdh/alice_verify_deterministic_signed.zen ':include :type=code gherkin')
+
+The output will be:
+
+[](../_media/examples/zencode_cookbook/ecdh/verify_deterministic_alice_signature.json ':include :type=code json')
 
 
 
