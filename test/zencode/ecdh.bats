@@ -163,7 +163,7 @@ EOF
 }
 
 @test "Verify a message signed by Alice (deterministic)" {
-    cat <<EOF > alice_verify_deterministic_signed.zen
+    cat <<EOF | zexe alice_verify_deterministic_signed.zen alice_pubkey.json sign_deterministic_alice_keyring.json
 Scenario 'ecdh'
 Given I have a 'ecdh' public key from 'Alice'
 and I have a 'string' named 'message'
@@ -172,7 +172,6 @@ When I verify the 'message' has a ecdh signature in 'ecdsa deterministic signatu
 Then print the string 'Signature is valid'
 and print the 'message'
 EOF
-    cat alice_verify_deterministic_signed.zen | zexe verify_deterministic_from_alice.zen alice_pubkey.json sign_deterministic_alice_keyring.json
     save_output verify_deterministic_alice_signature.json
     assert_output '{"message":"This_is_my_authenticated_message.","output":["Signature_is_valid"]}'
 }

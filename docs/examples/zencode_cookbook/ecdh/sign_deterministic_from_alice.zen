@@ -1,0 +1,7 @@
+Scenario 'ecdh'
+Given that I am known as 'Alice'
+and I have my 'keyring'
+When I write string 'This is my authenticated message.' in 'message'
+and I create the ecdsa deterministic signature of 'message'
+Then print the 'message'
+and print the 'ecdsa deterministic signature'
