@@ -363,7 +363,7 @@ When("create the ethereum abi encoding of '' using ''", function(t, args)
     end
     empty'ethereum abi encoding'
     ACK.ethereum_abi_encoding = ETH.abi_encode(type_spec, data)
-    new_codec('ethereum abi encoding', { zentype = 'element', encoding = 'hex'})
+    new_codec('ethereum abi encoding', {encoding = 'hex'})
 end)
 
 When("create the ethereum signature of ''", function(object)
@@ -372,7 +372,7 @@ When("create the ethereum signature of ''", function(object)
 
     empty'ethereum signature'
     ACK.ethereum_signature = ETH.encodeSignedData(sk, data)
-    new_codec('ethereum signature', { zentype = 'schema', encoding = 'complex'})
+    new_codec('ethereum signature')
 end)
 
 IfWhen("verify the '' has a ethereum signature in '' by ''", function(doc, sig, by)
