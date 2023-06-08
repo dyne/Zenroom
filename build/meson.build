@@ -162,7 +162,8 @@ tests = [ 'determinism' ]
 foreach test_suite : tests
     test('random_'+test_suite.underscorify(),
 	 bats_bin,
-	 args: [test_dir+test_suite])
+	 args: [test_dir+test_suite],
+         timeout: 60)
 endforeach
 
 ## BATS tests in vectors
@@ -172,7 +173,8 @@ tests = [ 'sha', 'aes', 'hmac', 'blake2' ]
 foreach test_suite : tests
     test('vectors_'+test_suite.underscorify(),
 	 bats_bin,
-	 args: [test_dir+'vectors/'+test_suite+'.bats'])
+	 args: [test_dir+'vectors/'+test_suite+'.bats'],
+         timeout: 60)
 endforeach
 
 ## BATS tests in test/lua
@@ -200,7 +202,8 @@ tests = [
 foreach test_suite : tests
     test('zencode_'+test_suite.underscorify(),
 	 bats_bin,
-	 args: [test_dir+'zencode/'+test_suite+'.bats'])
+	 args: [test_dir+'zencode/'+test_suite+'.bats'],
+         timeout: 60)
 endforeach
 
 ## BATS tests in test/api
@@ -210,5 +213,6 @@ tests = [ 'hash' ]
 foreach test_suite : tests
     test('api_'+test_suite.underscorify(),
 	 bats_bin,
-	 args: [test_dir+'api/'+test_suite+'.bats'])
+	 args: [test_dir+'api/'+test_suite+'.bats'],
+         timeout: 60)
 endforeach

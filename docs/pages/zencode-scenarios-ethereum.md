@@ -51,7 +51,7 @@ The output should look like:
 
 [](../_media/examples/zencode_cookbook/ethereum/alice_address.json ':include :type=code json')
 
-It is also possible to verify that a given string is a valid **Ethereum address** by running the following script:
+It is also possible to verify that a given string is a valid **Ethereum address** and also load it by running the following script:
 
 [](../_media/examples/zencode_cookbook/ethereum/doc_checksum_enc.zen ':include :type=code gherkin')
 
@@ -153,6 +153,8 @@ A user may want to sign an object different from a transaction, and may want oth
 This is an example of the data which a user could sign:
 
 [](../_media/examples/zencode_cookbook/ethereum/doc_keccak_abi.data ':include :type=code json')
+
+**Note:** the resulting ethereum signature uses the ECDSA determinitsic algorithm as specified in [RFC-6979](https://www.rfc-editor.org/rfc/rfc6979).
 
 ## Creation of the hash
 

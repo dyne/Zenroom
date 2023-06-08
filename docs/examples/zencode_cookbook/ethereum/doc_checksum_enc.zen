@@ -1,4 +1,14 @@
 Scenario ethereum
-Given I have a 'string' named 'ethereum address' 
-When I verify the ethereum address string 'ethereum address' is valid
+
+# To verify the address you have to upload it as a string
+Given I have a 'string' named 'ethereum address'
+Given I rename 'ethereum address' to 'address string'
+
+# To use it you simply write the following statement.
+Given I have a 'ethereum address'
+
+When I verify the ethereum address string 'address string' is valid
+# Insert here other "When" statements which use 'ethereum address'
+
+Then print the 'ethereum address'
 Then print the string 'The address has a valid encoding'

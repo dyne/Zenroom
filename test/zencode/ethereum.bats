@@ -431,7 +431,7 @@ EOF
     cat <<EOF | zexe doc_sign_transaction.zen doc_alice_storage_tx.json alice_keys.json
 scenario ethereum
 
-# Load the private key and the transacrtion
+# Load the private key and the transaction
 given I have the 'keyring'
 and I have a 'ethereum transaction'
 
@@ -614,12 +614,22 @@ EOF
 
     cat <<EOF | zexe doc_checksum_enc.zen checksum_enc.json
 Scenario ethereum
+
+# To verify the address you have to upload it as a string
 Given I have a 'string' named 'ethereum address'
-When I verify the ethereum address string 'ethereum address' is valid
+Given I rename 'ethereum address' to 'address string'
+
+# To use it you simply write the following statement.
+Given I have a 'ethereum address'
+
+When I verify the ethereum address string 'address string' is valid
+# Insert here other "When" statements which use 'ethereum address'
+
+Then print the 'ethereum address'
 Then print the string 'The address has a valid encoding'
 EOF
     save_output 'doc_checksum_enc_output.json'
-    assert_output '{"output":["The_address_has_a_valid_encoding"]}'
+    assert_output '{"ethereum_address":"0x1e30e53E87869aaD8dC5A1A9dAc31a8dD3559460","output":["The_address_has_a_valid_encoding"]}'
 }
 
 @test "Wrong encoding raises warning or error" {
