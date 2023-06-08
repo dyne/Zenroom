@@ -1,6 +1,6 @@
 scenario ethereum
 
-# Load the private key and the transacrtion
+# Load the private key and the transaction
 given I have the 'keyring'
 and I have a 'ethereum transaction'
 

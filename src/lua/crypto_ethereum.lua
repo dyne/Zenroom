@@ -254,11 +254,13 @@ end
 
 local encode
 
+-- This function defaults to sign_ecdh_deterministic if no sign_function is passed.
+-- One may use the random ECDSA by specifying the "sign_function" parameter as "sign_ecdh".
 function ETH.encodeSignedData(sk, message, sign_function)
    local ethersMessage = O.from_string("\x19Ethereum Signed Message:\n") .. O.new(#message) .. message
    local hmsg = keccak256(ethersMessage)
-   sign_function = sign_function or function(sk, msg) 
-         return ECDH.sign_ecdh_deterministic(sk, msg, 32) end
+   sign_function = sign_function or function(seck, msg)
+         return ECDH.sign_ecdh_deterministic(seck, msg, 32) end
    local sig, y_par = sign_function(sk, hmsg)
 
    -- If y_par = 0 = false then you write 27. Otherwise 28.
