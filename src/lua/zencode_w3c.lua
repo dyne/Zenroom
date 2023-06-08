@@ -89,7 +89,8 @@ end
 ZEN.add_schema(
     {
         did_document = { import = import_did_document,
-                         export = export_did_document },
+                         export = export_did_document,
+ 						 schematype = 'open' },
         verificationMethod = { import = import_verification_method,
                                export = export_verification_method },
         verification_method = { import = import_verification_method,

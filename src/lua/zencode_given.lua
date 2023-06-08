@@ -152,7 +152,7 @@ function operate_conversion(guessed)
 	  encoding = guessed.encoding,
 	  zentype = guessed.zentype,
 	  root = guessed.root,
-	  schema = guessed.schema,
+	  schema = guessed.schema
    }
    -- I.warn({ codec = ZEN.CODEC[guessed.name],
    --	     guessed = guessed })

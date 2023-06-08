@@ -272,15 +272,18 @@ EOF
 @test "the Oracle sign the did document" {
     cat <<EOF | zexe did_doc_sign.zen privatekey_gen.json did_document.json
     Scenario 'eddsa': sign the did doc
+    Scenario 'ecdh': sign the did doc
 
     Given I have a 'string dictionary' named 'did document'
     Given I have a 'keyring'
 
     When I create the json of 'did document'
+    When I create the ecdh signature of 'json'
     When I create the eddsa signature of 'json'
 
     Then print the 'did document'
     Then print the 'eddsa signature'
+    Then print the 'ecdh signature'
 EOF
     save_output "did_document_signed.json"
 }
@@ -301,7 +304,7 @@ EOF
 
     Then print the string 'did document signature verified'
 EOF
-    save_output "did_document_signed.json"
+    save_output "did_document_verified.json"
 }
 
 @test "now the Oracle sign different documents with its keys" {
@@ -358,4 +361,39 @@ When I verify the 'json' has a eddsa signature in 'eddsa signature' by 'eddsa pu
 # verification is succesfull
 Then print the string 'signature verified!!!'
 EOF
+}
+
+@test "the controller insert the proof in the did document" {
+    cat <<EOF | save_asset proof.json
+    {
+        "proof":{
+            "type":"EcdsaSecp256k1Signature2019",
+            "proofPurpose":"assertionMethod"
+        },
+        "timestamp": "1685610487148"
+    }
+EOF
+
+    cat <<EOF | zexe did_doc_proof.zen proof.json did_document_signed.json
+    Scenario 'ecdh': insert proof in the did doc
+    Scenario 'w3c': did doc
+
+    Given I have a 'did document'
+    and I have a 'ecdh signature'
+    Given I have a 'string dictionary' named 'proof'
+    and I have a 'string' named 'timestamp'
+
+    When I create the jws signature using the ecdh signature in 'ecdh signature'
+    and I move 'jws' in 'proof'
+    and I copy the 'timestamp' to 'created' in 'proof'
+
+    When I pickup from path 'did_document.id'
+    and I rename 'id' to 'verificationMethod'
+    and I append the string '#ecdh_public_key' to 'verificationMethod'
+    and I move 'verificationMethod' in 'proof'
+    and I move 'proof' in 'did document'
+
+    Then print the 'did document'
+EOF
+    save_output "did_document_with_proof.json"
 }
