@@ -254,10 +254,13 @@ end
 
 local encode
 
-function ETH.encodeSignedData(sk, message)
+function ETH.encodeSignedData(sk, message, sign_function)
    local ethersMessage = O.from_string("\x19Ethereum Signed Message:\n") .. O.new(#message) .. message
    local hmsg = keccak256(ethersMessage)
-   local sig, y_par = ECDH.sign_ecdh(sk, hmsg)
+   sign_function = sign_function or function(sk, msg) 
+         return ECDH.sign_ecdh_deterministic(sk, msg, 32) end
+   local sig, y_par = sign_function(sk, hmsg)
+
    -- If y_par = 0 = false then you write 27. Otherwise 28.
    -- See https://bitcoin.stackexchange.com/a/112489
    if y_par then
