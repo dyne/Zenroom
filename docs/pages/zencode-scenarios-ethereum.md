@@ -149,17 +149,48 @@ The output will be:
 
 # The ethereum signature
 
-A user may want to sign an object different from a transaction, and may want others to be able to verify such signature using only the ethereum address.  
+A user may want to sign an object different from a transaction, and may want others to be able to verify such signature using only the ethereum address. 
+**Note:** the resulting ethereum signature uses the ECDSA determinitsic algorithm as specified in [RFC-6979](https://www.rfc-editor.org/rfc/rfc6979).
+
+## Creation of the signature
+
+Given a string of which we want to compute the signature, assuming that the user already has a ethereum private key in the keyring, the signature can be created using the following script:
+
+[](../_media/examples/zencode_cookbook/ethereum/doc_signtest_str.zen ':include :type=code gherkin')
+
+The output should look like:
+
+[](../_media/examples/zencode_cookbook/ethereum/doc_signtest_str_out.json ':include :type=code json')
+
+The user may want to have the signature as a unique string instead of the table above.
+In order to do that one can use the following script:
+
+[](../_media/examples/zencode_cookbook/ethereum/eth_sig_hash.zen  ':include :type=code gherkin')
+
+The output should look like:
+
+[](../_media/examples/zencode_cookbook/ethereum/eth_sig_hash_out.json ':include :type=code json')
+
+
+## Verification
+
+Given the ethereum signature of the string and the ethereum address, anyone may verify the signature using the following script:
+
+[](../_media/examples/zencode_cookbook/ethereum/doc_verifytesteth_str.zen ':include :type=code gherkin')
+
+When the signature is correct, the output will be:
+
+[](../_media/examples/zencode_cookbook/ethereum/doc_verifytesteth_str_out.json ':include :type=code json')
+
+## Sign complex object
+
+It could be the case that one wants to sign an object different from a string or a transaction.
 This is an example of the data which a user could sign:
 
 [](../_media/examples/zencode_cookbook/ethereum/doc_keccak_abi.data ':include :type=code json')
 
-**Note:** the resulting ethereum signature uses the ECDSA determinitsic algorithm as specified in [RFC-6979](https://www.rfc-editor.org/rfc/rfc6979).
-
-## Creation of the hash
-
-Given the above data, a user shall first compute the hash of the ABI encoding of the data.  
-The user can achieve this using the following script:
+Given the above data, a user can first compute the hash of the ABI encoding of the data.  
+This can be achieved using the following script:
 
 [](../_media/examples/zencode_cookbook/ethereum/doc_keccak_abi.zen ':include :type=code gherkin')
 
@@ -167,28 +198,7 @@ The output should look like:
 
 [](../_media/examples/zencode_cookbook/ethereum/doc_keccak_abi_out.json ':include :type=code json')
 
-## Creation of the signature
-
-Once the hash has been computed, assuming that the user already has a ethereum private key in the keyring, the signature can be created using the following script:
-
-[](../_media/examples/zencode_cookbook/ethereum/doc_signtest.zen ':include :type=code gherkin')
-
-The output should look like:
-
-[](../_media/examples/zencode_cookbook/ethereum/doc_signtest_out.json ':include :type=code json')
-
-**Note: this script and the previous one can be merged** into one script that creates the hash, signs it and prints it out.
-
-## Verification
-
-Given the previous output, anyone may verify the signature using the following script:
-
-[](../_media/examples/zencode_cookbook/ethereum/doc_verifytesteth.zen ':include :type=code gherkin')
-
-When the signature is correct, the output will be:
-
-[](../_media/examples/zencode_cookbook/ethereum/doc_verifytesteth_out.json ':include :type=code json')
-
+**NOTE**: in the end one can use the same scripts as above to create and verify the signature of the obtained *hash*.
 
 # The script used to create the material in this page
 
