@@ -1,0 +1,9 @@
+Scenario ethereum
+
+Given I have a 'ethereum signature'
+Given I have a 'ethereum address'
+Given I have a 'string' named 'myString'
+
+When I verify the 'myString' has a ethereum signature in 'ethereum signature' by 'ethereum address'
+
+Then print the string 'The signature is valid'
