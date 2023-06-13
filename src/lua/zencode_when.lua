@@ -184,13 +184,32 @@ When("set '' to '' as ''", function(dest, content, format)
 --	ZEN.CODEC[dest] = new_codec(dest, { luatype = luatype(ACK[dest]), zentype = 'e' })
 end)
 
-When("create the json of ''", function(src)
-	local obj, codec = have(src)
-	empty'json'
-	local encoding = codec.schema or codec.encoding
-	   or CODEC.output.encoding.name
-	ACK.json = OCTET.from_string( JSON.encode(obj, encoding) )
-	new_codec('json', {encoding = 'string', zentype = 'e'})
+local function _json_encoede_f(src, dest)
+    local obj, codec = have(src)
+    empty(dest)
+    local encoding = codec.schema or codec.encoding
+        or CODEC.output.encoding.name
+    ACK[dest] = OCTET.from_string( JSON.encode(obj, encoding) )
+    new_codec(dest, {encoding = 'string', zentype = 'e'})
+end
+
+When(deprecated("create the json of ''",
+    "create the escaped string of ''",
+    function(src) _json_encoede_f(src, 'json') end)
+)
+
+When("create the escaped string of ''", function(src)
+    _json_encoede_f(src, 'escaped_string') 
+end)
+
+When("create the unescaped object of ''", function(src)
+    local obj = have(src)
+    empty'unescaped_object'
+    ACK.unescaped_object = deepmap(
+        OCTET.from_string,
+        JSON.decode(O.to_string(obj))
+    )
+    new_codec('unescaped_object', {encoding = 'string'})
 end)
 
 -- numericals
