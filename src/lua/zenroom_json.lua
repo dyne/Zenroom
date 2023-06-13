@@ -34,8 +34,8 @@ J.decode = function(data)
    while right do
       left, right = jsontok(right) -- function in zen_parser.c
       if not left then
-         -- data is not a table
-         if next(res) == nil then
+         -- data is not a table nor a empty table
+         if next(res) == nil and (data ~= '[]' and data ~= '{}') then
             res = data
          end
          break
