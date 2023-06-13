@@ -2,7 +2,7 @@
 vectors = JSON.decode(DATA)
 blake = HASH.new('blake2')
 c=0
-for _,i in ipairs(vectors.array) do
+for _,i in ipairs(vectors) do
    if i.input ~= "" and i.key == "" and i.salt == "" then
 	  write('.')
 	  assert( blake:process(O.from_hex(i.input)) == O.from_hex(i.out))
