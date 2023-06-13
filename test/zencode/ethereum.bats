@@ -630,6 +630,33 @@ EOF
     save_output 'doc_signtest_str_out.json'
 }
 
+@test "Print ethereum signature as table" {
+        cat <<EOF | zexe doc_print_ethsig.zen doc_signtest_str_out.json
+Scenario ethereum
+
+Given I have a 'ethereum signature'
+
+Then print the 'ethereum signature' as 'hex'
+
+EOF
+    save_output doc_print_ethsig_out.json
+    assert_output '{"ethereum_signature":{"r":"19373b64e400e237dd7fb23e76621675f8691c0eb14aa171a82f69593b1a2a05","s":"36203582c38585754a785ca504f51e4178bab5cc3f566e985358eaf7cb5d7876","v":"27"}}'
+}
+
+@test "Import ethereum signature as table" {
+        cat <<EOF | zexe import_ethsig.zen doc_print_ethsig_out.json
+Scenario ethereum
+
+Given I have a 'ethereum signature'
+
+Then print the 'ethereum signature'
+
+EOF
+    save_output import_ethsig_out.json
+    assert_output '{"ethereum_signature":"0x19373b64e400e237dd7fb23e76621675f8691c0eb14aa171a82f69593b1a2a0536203582c38585754a785ca504f51e4178bab5cc3f566e985358eaf7cb5d78761b"}'
+}
+
+
 @test "Verify a ethereum signature of string from an address" {
     cat <<EOF | zexe doc_verifytesteth_str.zen doc_signtest_str_out.json
 Scenario ethereum
@@ -644,52 +671,6 @@ Then print the string 'The signature is valid'
 EOF
     save_output doc_verifytesteth_str_out.json
     assert_output '{"output":["The_signature_is_valid"]}'
-}
-
-@test "Create ethereum signature hash" {
-    cat <<EOF | save_asset 'eth_sig_hash.json'
-{
-    "myString": "I love the Beatles, all but 3",
-    "keyring": {
-        "ethereum": "6b4f32fc48ff19f0c184f1b7c593fbe26633421798191931c210a3a9bb46ae22"
-    }
-}
-EOF
-    cat <<EOF | zexe eth_sig_hash.zen eth_sig_hash.json
-Scenario ethereum
-
-Given I have my 'keyring'
-Given I have a 'string' named 'myString'
-
-When I create the ethereum signature hash of 'myString'
-
-Then print the 'ethereum signature hash'
-EOF
-    save_output eth_sig_hash_out.json
-    assert_output '{"ethereum_signature_hash":"0xed8f36c71989f8660e8f5d4adbfd8f1c0288cca90d3a5330b7bf735d71ab52fe7ba0a7827dc4ba707431f1c10babd389f658f8e208b89390a9be3c097579a2ff1b"}'
-}
-
-@test "Verify ethereum signature hash" {
-    cat <<EOF | save_asset 'eth_sig_hash_ver.json'
-{
-    "ethereum_signature_hash":"0xed8f36c71989f8660e8f5d4adbfd8f1c0288cca90d3a5330b7bf735d71ab52fe7ba0a7827dc4ba707431f1c10babd389f658f8e208b89390a9be3c097579a2ff1b",
-    "ethereum_address":"0x2B8070975AF995Ef7eb949AE28ee7706B9039504",
-    "myString": "I love the Beatles, all but 3"
-}
-EOF
-    cat <<EOF | zexe eth_sig_hash_ver.zen eth_sig_hash_ver.json
-Scenario ethereum
-
-Given I have a 'string' named 'myString'
-Given I have a 'ethereum address'
-Given I have a 'ethereum signature hash'
-
-When I verify the 'myString' has a ethereum signature in 'ethereum signature hash' by 'ethereum address'
-
-Then print the string 'The ethereum signature is valid'
-EOF
-    save_output eth_sig_hash_ver_out.json
-    assert_output '{"output":["The_ethereum_signature_is_valid"]}'
 }
 
 @test "Verify etherum address encoding" {
