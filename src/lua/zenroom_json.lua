@@ -33,7 +33,13 @@ J.decode = function(data)
    local tmp
    while right do
       left, right = jsontok(right) -- function in zen_parser.c
-      if not left then break end
+      if not left then
+         -- data is not a table
+         if next(res) == nil then
+            res = data
+         end
+         break
+      end
       tmp = JSON.raw_decode(left)
       if luatype(tmp) == 'table' then
             for k,v in pairs(tmp) do
@@ -53,6 +59,10 @@ J.decode = function(data)
 end
 
 J.encode = function(tab,enc)
+   -- tab not a table
+   if type(tab) == 'zenroom.octet' then
+      return INSPECT.process(tab, enc or CONF.output.encoding.name)
+   end
    return
       JSON.raw_encode(
 	 -- process encodes zencode types
