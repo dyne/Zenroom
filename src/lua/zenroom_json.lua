@@ -43,13 +43,7 @@ J.decode = function(data)
       tmp = JSON.raw_decode(left)
       if luatype(tmp) == 'table' then
             for k,v in pairs(tmp) do
-               -- adds all unnamed array elements into 'array'
-               if luatype(k)=='number' then
-                  res.array = fif(res.array, res.array, {})
-                  table.insert(res.array, v)
-               else
-                  res[k] = v
-               end
+               res[k] = v
             end
       else
          error("JSON decode has not returned a table", 2)
