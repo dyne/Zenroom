@@ -1,1 +1,1 @@
-{"ethereum_address":"0x380FfB13F42AfFBE88949643B27FA74Ba85B3977","ethereum_signature":{"r":"19373b64e400e237dd7fb23e76621675f8691c0eb14aa171a82f69593b1a2a05","s":"36203582c38585754a785ca504f51e4178bab5cc3f566e985358eaf7cb5d7876","v":"27"},"myString":"I love the Beatles, all but 3"}
+{"ethereum_address":"0x380FfB13F42AfFBE88949643B27FA74Ba85B3977","ethereum_signature":"0x19373b64e400e237dd7fb23e76621675f8691c0eb14aa171a82f69593b1a2a0536203582c38585754a785ca504f51e4178bab5cc3f566e985358eaf7cb5d78761b","myString":"I love the Beatles, all but 3"}

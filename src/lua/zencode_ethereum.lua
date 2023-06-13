@@ -106,15 +106,6 @@ local function import_signature_f(obj)
 end
 
 local function export_signature_f(obj)
-  local res = { }
-  if obj.v then res.v = obj.v:decimal() end
-  if obj.r then res.r = obj.r:octet():hex() end
-  if obj.s then res.s = obj.s:octet():hex() end
-  return res
-end
-
-local function export_signature_hash_f(obj)
-    I.spy(obj)
     if (type(obj) == 'table') then
         obj = obj.r..obj.s..O.new(obj.v)
     end
@@ -153,9 +144,7 @@ ZEN.add_schema(
       wei_value = { import = str_wei_to_big_wei,
 		    export = big_wei_to_str_wei },
       ethereum_signature = { import = import_signature_f,
-            export = export_signature_f},
-      ethereum_signature_hash = {import = import_signature_f,
-            export = export_signature_hash_f}
+            export = export_signature_f}
 })
 
 When('create the ethereum key', function()
@@ -385,15 +374,6 @@ When("create the ethereum signature of ''", function(object)
     new_codec('ethereum signature')
 end)
 
-When("create the ethereum signature hash of ''", function(object)
-    local sk = havekey'ethereum'
-    local data = have(object)
-    local sig = ETH.encodeSignedData(sk, data)
-    empty'ethereum signature hash'
-    ACK.ethereum_signature_hash = sig.r..sig.s..O.new(sig.v)
-    new_codec('ethereum signature hash')
-end)
-
 IfWhen("verify the '' has a ethereum signature in '' by ''", function(doc, sig, by)
 
     local msg = have(doc)
@@ -401,20 +381,10 @@ IfWhen("verify the '' has a ethereum signature in '' by ''", function(doc, sig, 
     local hmsg = keccak256(ethersMessage)
 
     local signature = have(sig)
-    local res = {}
-    if (type(signature) == 'zenroom.octet') then
-        res = {
-            r = signature:sub(1,32),
-            s = signature:sub(33, 64),
-            v = BIG.new(signature:sub(65, 65))
-        }
-    else
-        res = signature
-    end
     local address = have(by)
 
     ZEN.assert(
-        ETH.verify_signature_from_address(res, address, fif(res.v:parity(), 0, 1), hmsg),
+        ETH.verify_signature_from_address(signature, address, fif(signature.v:parity(), 0, 1), hmsg),
        'The ethereum signature by '..by..' is not authentic'
     )
 end)

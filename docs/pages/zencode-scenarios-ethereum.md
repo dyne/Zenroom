@@ -150,6 +150,7 @@ The output will be:
 # The ethereum signature
 
 A user may want to sign an object different from a transaction, and may want others to be able to verify such signature using only the ethereum address. 
+
 **Note:** the resulting ethereum signature uses the ECDSA determinitsic algorithm as specified in [RFC-6979](https://www.rfc-editor.org/rfc/rfc6979).
 
 ## Creation of the signature
@@ -162,15 +163,15 @@ The output should look like:
 
 [](../_media/examples/zencode_cookbook/ethereum/doc_signtest_str_out.json ':include :type=code json')
 
-The user may want to have the signature as a unique string instead of the table above.
-In order to do that one can use the following script:
+**Note**: the *ethereum signature* can be encoded both as a single hexadecimal string or as a table containing three values *r*, *s*, and *v*. Zenroom can load and print ethereum signatures in both the encodings.
 
-[](../_media/examples/zencode_cookbook/ethereum/eth_sig_hash.zen  ':include :type=code gherkin')
+The following script shows how to print the tabular encoding:
+
+[](../_media/examples/zencode_cookbook/ethereum/doc_print_ethsig.zen ':include :type=code gherkin')
 
 The output should look like:
 
-[](../_media/examples/zencode_cookbook/ethereum/eth_sig_hash_out.json ':include :type=code json')
-
+[](../_media/examples/zencode_cookbook/ethereum/doc_print_ethsig_out.json ':include :type=code json')
 
 ## Verification
 

@@ -1,8 +1,0 @@
-Scenario ethereum
-Given I am 'participant'
-Given I have my 'keyring'
-Given I have a 'string' named 'myString'
-
-When I create the ethereum signature hash of 'myString'
-
-Then print the 'ethereum signature hash'
