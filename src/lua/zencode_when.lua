@@ -198,18 +198,18 @@ When(deprecated("create the json of ''",
     function(src) _json_encoede_f(src, 'json') end)
 )
 
-When("create the escaped string of ''", function(src)
-    _json_encoede_f(src, 'escaped_string') 
+When("create the json escaped string of ''", function(src)
+    _json_encoede_f(src, 'json_escaped_string')
 end)
 
-When("create the unescaped object of ''", function(src)
+When("create the json unescaped object of ''", function(src)
     local obj = have(src)
-    empty'unescaped_object'
-    ACK.unescaped_object = deepmap(
+    empty'json_unescaped_object'
+    ACK.json_unescaped_object = deepmap(
         OCTET.from_string,
         JSON.decode(O.to_string(obj))
     )
-    new_codec('unescaped_object', {encoding = 'string'})
+    new_codec('json_unescaped_object', {encoding = 'string'})
 end)
 
 -- numericals
