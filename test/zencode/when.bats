@@ -189,8 +189,7 @@ EOF
     "myBase64Dictionary" : {
       "first": "aGVsbG8=",
       "second": "d29ybGQh"
-    },
-    "myString": "hello World!"
+    }
 }
 EOF
 
@@ -199,7 +198,6 @@ Given I have a 'string array' named 'myStringArray'
 Given I have a 'base64 array' named 'myBase64Array'
 Given I have a 'string dictionary' named 'myStringDictionary'
 Given I have a 'base64 dictionary' named 'myBase64Dictionary'
-Given I have a 'string' named 'myString'
 
 When I create the json escaped string of 'myStringArray'
 and I rename the 'json escaped string' to 'json.myStringArray'
@@ -213,17 +211,13 @@ and I rename the 'json escaped string' to 'json.myStringDictionary'
 When I create the json escaped string of 'myBase64Dictionary'
 and I rename the 'json escaped string' to 'json.myBase64Dictionary'
 
-When I create the json escaped string of 'myString'
-and I rename the 'json escaped string' to 'json.myString'
-
 Then print the 'json.myStringArray'
 Then print the 'json.myBase64Array'
 Then print the 'json.myStringDictionary'
 Then print the 'json.myBase64Dictionary'
-Then print the 'json.myString'
 EOF
     save_output 'json_encode.out'
-    assert_output '{"json.myBase64Array":"[\"BPEg2X6/Y+68oolE6ocCPDlLWQZLqdaBV00d/jJ5f0dRNQNBUcIh/JHGgfDotpM4p682MPZ5PKoC3vsjhI88OeE=\"]","json.myBase64Dictionary":"{\"first\":\"aGVsbG8=\",\"second\":\"d29ybGQh\"}","json.myString":"hello World!","json.myStringArray":"[\"Hello World! myFirstObject, myFirstArray[0]\",\"Hello World! myFirstObject, myFirstArray[1]\",\"Hello World! myFirstObject, myFirstArray[2]\"]","json.myStringDictionary":"{\"first\":\"hello\",\"second\":\"world!\"}"}'
+    assert_output '{"json.myBase64Array":"[\"BPEg2X6/Y+68oolE6ocCPDlLWQZLqdaBV00d/jJ5f0dRNQNBUcIh/JHGgfDotpM4p682MPZ5PKoC3vsjhI88OeE=\"]","json.myBase64Dictionary":"{\"first\":\"aGVsbG8=\",\"second\":\"d29ybGQh\"}","json.myStringArray":"[\"Hello World! myFirstObject, myFirstArray[0]\",\"Hello World! myFirstObject, myFirstArray[1]\",\"Hello World! myFirstObject, myFirstArray[2]\"]","json.myStringDictionary":"{\"first\":\"hello\",\"second\":\"world!\"}"}'
 }
 
 @test "When I create the json unescaped object of ''" {
@@ -232,7 +226,6 @@ Given I have a 'string' named 'json.myStringArray'
 Given I have a 'string' named 'json.myBase64Array'
 Given I have a 'string' named 'json.myStringDictionary'
 Given I have a 'string' named 'json.myBase64Dictionary'
-Given I have a 'string' named 'json.myString'
 
 When I create the json unescaped object of 'json.myStringArray'
 and I rename the 'json unescaped object' to 'myStringArray'
@@ -246,34 +239,59 @@ and I rename the 'json unescaped object' to 'myStringDictionary'
 When I create the json unescaped object of 'json.myBase64Dictionary'
 and I rename the 'json unescaped object' to 'myBase64Dictionary'
 
-When I create the json unescaped object of 'json.myString'
-and I rename the 'json unescaped object' to 'myString'
-
 Then print the 'myStringArray'
 Then print the 'myBase64Array'
 Then print the 'myStringDictionary'
 Then print the 'myBase64Dictionary'
-Then print the 'myString'
 EOF
     save_output 'json_decode.out'
-    assert_output '{"myBase64Array":["BPEg2X6/Y+68oolE6ocCPDlLWQZLqdaBV00d/jJ5f0dRNQNBUcIh/JHGgfDotpM4p682MPZ5PKoC3vsjhI88OeE="],"myBase64Dictionary":{"first":"aGVsbG8=","second":"d29ybGQh"},"myString":"hello World!","myStringArray":["Hello World! myFirstObject, myFirstArray[0]","Hello World! myFirstObject, myFirstArray[1]","Hello World! myFirstObject, myFirstArray[2]"],"myStringDictionary":{"first":"hello","second":"world!"}}'
+    assert_output '{"myBase64Array":["BPEg2X6/Y+68oolE6ocCPDlLWQZLqdaBV00d/jJ5f0dRNQNBUcIh/JHGgfDotpM4p682MPZ5PKoC3vsjhI88OeE="],"myBase64Dictionary":{"first":"aGVsbG8=","second":"d29ybGQh"},"myStringArray":["Hello World! myFirstObject, myFirstArray[0]","Hello World! myFirstObject, myFirstArray[1]","Hello World! myFirstObject, myFirstArray[2]"],"myStringDictionary":{"first":"hello","second":"world!"}}'
 }
 
 @test "When create the json unescaped object of '' nested arrays" {
-    cat <<EOF | save_asset result4.json
+    cat <<EOF | save_asset json_unescaped_nested_arrays.json
 {
-    "result_4": "[[\"data_1\",\"data_2\",[\"data_4\"]],[\"data_3\"]]"
+    "nested_array": "[[\"data_1\",\"data_2\",[\"data_4\"]],[\"data_3\"]]"
 }
 EOF
-    cat <<EOF | zexe result4.zen result4.json
-Given I have a 'string' named 'result_4'
+    cat <<EOF | zexe json_unescaped_nested_arrays.zen json_unescaped_nested_arrays.json
+Given I have a 'string' named 'nested_array'
 
-When I create the json unescaped object of 'result_4'
+When I create the json unescaped object of 'nested_array'
 
 Then print the 'json unescaped object'
 EOF
-    save_output 'result4.out'
+    save_output 'json_unescaped_nested_arrays.out'
     assert_output '{"json_unescaped_object":[["data_1","data_2",["data_4"]],["data_3"]]}'
+}
+
+@test "When create the json escaped object of '' string fail" {
+    cat <<EOF | save_asset json_escaped_of_string.json
+{
+    "myString": "Hello world!"
+}
+EOF
+    cat <<EOF | save_asset json_escaped_of_string.zen
+Given I have a 'string' named 'myString'
+
+When I create the json escaped string of 'myString'
+
+Then print the 'json escaped string'
+EOF
+    run $ZENROOM_EXECUTABLE -z -a json_escaped_of_string.json json_escaped_of_string.zen
+    assert_line --partial 'JSON encode input is not a table'
+}
+
+@test "When create the json unescaped object of '' string fail" {
+    cat <<EOF | save_asset json_unescaped_of_string.zen
+Given I have a 'string' named 'myString'
+
+When I create the json unescaped object of 'myString'
+
+Then print the 'json unescaped object'
+EOF
+    run $ZENROOM_EXECUTABLE -z -a json_escaped_of_string.json json_unescaped_of_string.zen
+    assert_line --partial 'JSON decode input is not a encoded table'
 }
 
 @test "cast float into integer" {

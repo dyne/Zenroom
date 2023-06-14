@@ -46,7 +46,6 @@ local cred_signed = JSON.encode( cred_table )
 I.print(cred_table)
 ---------------------------------------
 -- VERIFY
-
 local v_cred_table = JSON.decode( cred_signed )
 local v_proof = cred_table.proof
 v_cred_table.proof = nil
@@ -54,8 +53,8 @@ v_cred_oct = ZEN.serialize(v_cred_table)
 assert(v_cred_oct == cred_oct) -- check serialization is deterministic
 local v_jws = strtok(v_proof.jws,'.')
 -- parse header
-local v_header = JSON.decode( v_jws[1] )
-I.print(v_header)
+--local v_header = JSON.decode( v_jws[1] )
+--I.print(v_header)
 -- parse signature
 local v_sigoct = OCTET.from_url64(v_jws[3])
 local v_signature = { }
