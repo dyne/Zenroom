@@ -31,13 +31,10 @@ J.decode = function(data)
    local right = tostring(data)
    local left
    local tmp
-   while right do
+   while right and right ~= "" do
       left, right = jsontok(right) -- function in zen_parser.c
       if not left then
-         -- data is not a table nor a empty table
-         if next(res) == nil and (data ~= '[]' and data ~= '{}') then
-            res = data
-         end
+         error("JSON decode input is not a encoded table", 2)
          break
       end
       tmp = JSON.raw_decode(left)
@@ -54,8 +51,8 @@ end
 
 J.encode = function(tab,enc)
    -- tab not a table
-   if type(tab) == 'zenroom.octet' then
-      return INSPECT.process(tab, enc or CONF.output.encoding.name)
+   if luatype(tab) ~= 'table' then
+    error("JSON encode input is not a table", 2)
    end
    return
       JSON.raw_encode(
