@@ -21,3 +21,37 @@ assert(four:int() == 4, "Error four conversion to int")
 
 assert(BIG.new(O.from_hex('0a')):int() == 10, "Octet -> BIG -> integer conversion failed")
 assert(BIG.new(O.from_hex('14')):int() == 20, "Octet -> BIG -> integer conversion failed")
+
+print('----------------------------------------------')
+
+-- MODULAR ARITHMETICS TESTS
+
+print("TEST: Tonelli-Shanks")
+
+-- case p = 3 mod 4 
+local p = ECP.prime()
+for i = 1, 10 do
+    print("Test case ".. i)
+    local res = BIG.modrand(p)
+    local n = BIG.modsqr(res, p)
+    local r = BIG.modsqrt(n, p)
+    assert((r == res) or (r == BIG.modneg(res, p)))
+end
+--case p = 1 mod 4
+p = BIG.new(O.from_hex('1000000000000021'))
+for i = 11, 20 do
+    print("Test case ".. i)
+    local res = BIG.modrand(p)
+    local n = BIG.modsqr(res, p)
+    local r = BIG.modsqrt(n, p)
+    assert((r == res) or (r == BIG.modneg(res, p)))
+end
+
+--[[
+print("Test failure")
+local n = BIG.modrand(p)
+while BIG.jacobi(n,p) == 1 do
+    n = BIG.modrand(p)
+end
+local r = BIG.modsqrt(n,p)
+--]]

@@ -133,6 +133,7 @@ extern void PAIR_${CN}_GTpow(FP12_${CN} *x,BIG_${BS} b);
 #define BIGLEN NLEN_${BS}
 #define DBIGLEN DNLEN_${BS}
 #define BIG_zero(b) BIG_${BS}_zero(b)
+#define BIG_one(b) BIG_${BS}_one(b)
 #define BIG_fromBytesLen(b,v,l) BIG_${BS}_fromBytesLen(b,v,l)
 #define BIG_iszilch(b) BIG_${BS}_iszilch(b)
 #define BIG_diszilch(b) BIG_${BS}_diszilch(b)
@@ -168,6 +169,7 @@ extern void PAIR_${CN}_GTpow(FP12_${CN} *x,BIG_${BS} b);
 #define BIG_modsqr(x,y,n) BIG_${BS}_modsqr(x,y,n)
 #define BIG_modneg(x,y,n) BIG_${BS}_modneg(x,y,n)
 #define BIG_jacobi(x,y) BIG_${BS}_jacobi(x,y)
+#define BIG_modpow(z,x,n,m) BIG_${BS}_modpow(z,x,n,m)
 #define BIG_random(m,r) BIG_${BS}_random(m,r)
 #define BIG_randomnum(m,q,r) BIG_${BS}_randomnum(m,q,r)
 

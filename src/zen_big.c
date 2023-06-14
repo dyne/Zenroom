@@ -1391,6 +1391,112 @@ end:
 	END(1);
 }
 
+/* Tonelli-Shanks algorithm: compute r square root of n mod p where p is an odd prime.
+    We assume that n is a square modulo p, so that a solution exist. */
+void modsqrt(BIG r, BIG n, BIG p)
+{   
+    BIG modp, four;
+    BIG_zero(four);
+    BIG_inc(four, 4);
+    BIG_copy(modp, p);
+    BIG_mod(modp, four);
+    if (!BIG_isunity(modp)) { //if p = 3 mod 4
+        BIG exponent;
+        BIG_copy(exponent, p);
+        BIG_inc(exponent, 1);
+        BIG_shr(exponent, 2);
+        BIG_modpow(r, n, exponent, p);
+        return;
+    }
+    else { // if p = 1 mod 4
+        int S = 0;
+        BIG Q;
+        BIG_copy(Q, p);
+        BIG_dec(Q, 1);
+        while (!BIG_parity(Q)) {
+            BIG_shr(Q, 1);
+            S++;
+        }
+        BIG z;
+        BIG_one(z);
+        BIG_inc(z,1);
+        while(BIG_jacobi(z,p) == 1){
+            BIG_inc(z,1);
+        }
+        BIG c, t, R, exp, T, b;
+        int M = S;
+        BIG_modpow(c, z, Q, p);
+        BIG_modpow(t, n, Q, p);
+        BIG_copy(exp, Q);
+        BIG_inc(exp, 1);
+        BIG_shr(exp, 1); //exp = (Q+1)/2
+        BIG_modpow(R, n, exp, p);
+
+        if(BIG_iszilch(t)) {
+            BIG_zero(r);
+            return;
+        }
+        int i;
+        while (!BIG_isunity(t)) {
+            i = 0;
+            BIG_copy(T, t);
+            do {
+                BIG_modsqr(T,T,p);
+                i++;
+            } while(!BIG_isunity(T));
+            BIG_copy(b, c);
+            for(int j = 0; j< M-i-1; j++){
+                BIG_modsqr(b, b, p);
+            }
+            M = i;
+            BIG_modsqr(c, b, p);
+            BIG_modmul(t, t, c, p);
+            BIG_modmul(R, R, b, p);
+        }
+        BIG_copy(r, R);
+        return;
+    }
+}
+
+/* Tonelli-Shanks algorithm. Given as input two bigs n and p compute the square root of n modulo p 
+	where p is an odd prime and n is a square modulo p */
+static int big_modsqrt(lua_State *L){
+	BEGIN();
+	char *failed_msg = NULL;
+	big *n = big_arg(L, 1);
+	big *p = big_arg(L, 2);
+	if(!n || !p) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
+	if(n->doublesize || p->doublesize) {
+		failed_msg = "modsqrt not supported on double big numbers";
+		goto end;
+	}
+
+	//check if the input n is a quadratic residue modulo p
+	if (BIG_jacobi(n->val, p->val) != 1) {
+		failed_msg = "n is not a square modulo p";
+		goto end;
+	}
+	
+	big *r = big_new(L);
+	if(!r) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
+	big_init(L,r);
+	modsqrt(r->val, n->val, p->val);
+	BIG_norm(r->val);
+end:
+	big_free(L, n);
+	big_free(L, p);
+	if(failed_msg){
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
 static int big_modinv(lua_State *L) {
 	BEGIN();
 	big *y = big_arg(L, 1);
@@ -1714,6 +1820,7 @@ int luaopen_big(lua_State *L) {
 		{"random", big_random},
 		{"modinv", big_modinv},
 		{"jacobi", big_jacobi},
+		{"modsqrt", big_modsqrt},
 		{"monty", big_monty},
 		{"parity", big_parity},
 		{"info", lua_biginfo},
