@@ -763,6 +763,33 @@ end:
 	END(1);
 }
 
+static int ecp_rhs(lua_State *L){
+	BEGIN();
+	char *failed_msg = NULL;
+	big *rhs = NULL;
+	big *x = big_arg(L, 1);
+	if(!x) {
+		failed_msg = "Could not read BIG";
+		goto end;
+	}
+	FP X, Y;
+	FP_nres(&X , x->val);
+	ECP_rhs(&Y, &X);
+	rhs = big_new(L);
+	if(!rhs) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
+	big_init(L,rhs);
+	_fp_to_big(rhs, &Y);
+end:
+	big_free(L,x);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
 int luaopen_ecp(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg ecp_class[] = {
@@ -779,6 +806,7 @@ int luaopen_ecp(lua_State *L) {
 		{"mul", ecp_mul},
 		{"validate", ecp_validate},
 		{"prime", ecp_prime},
+		{"rhs", ecp_rhs},
 		{NULL, NULL}};
 	const struct luaL_Reg ecp_methods[] = {
 		{"affine", ecp_affine},

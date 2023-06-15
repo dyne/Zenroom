@@ -68,6 +68,7 @@ cat <<EOF > "${DIR}"/zen_ecp_factory.h
 #define ECP_mapit(q,w) ECP_${CN}_mapit(q,w)
 #define ECP_validate(o) ECP_${CN}_PUBLIC_KEY_VALIDATE(o)
 #define ECP_get(x,y,q) ECP_${CN}_get(x,y,q)
+#define ECP_rhs(v,x) ECP_${CN}_rhs(v,x)
 
 #define FP2 FP2_${CN}
 #define FP2_from_BIGs(x,a,b) FP2_${CN}_from_BIGs(x,a,b)

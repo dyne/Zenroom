@@ -26,26 +26,8 @@ for i=1,10 do
 end
 
 print('----------------------------------------------')
-
-print("TEST: Tonelli-Shanks")
-
--- case p = 3 mod 4 
-local p = ECP.prime()
-for i = 1, 10 do
-    print("Test case ".. i)
-    local res = BIG.modrand(p)
-    local n = BIG.modsqr(res, p)
-    local r = BIG.modsqrt(n, p)
-    assert((r == res) or (r == BIG.modneg(res, p)))
-end
---case p = 1 mod 4
-p = BIG.new(O.from_hex('1000000000000021'))
-for i = 11, 20 do
-    print("Test case ".. i)
-    local res = BIG.modrand(p)
-    local n = BIG.modsqr(res, p)
-    local r = BIG.modsqrt(n, p)
-    assert((r == res) or (r == BIG.modneg(res, p)))
-end
+print("TEST generators")
+I.spy(type(ECP.order()))
+I.spy(PVSS.create_generators(10, ECP.prime(), ECP.order()))
 
 print('----------------------------------------------')
