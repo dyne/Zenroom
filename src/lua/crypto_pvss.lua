@@ -18,8 +18,6 @@
 --
 --]]
 
--- TODO: Tonelli-Shanks (in zen_ecdh.c maybe)
-
 local PVSS = {}
 
 -- TODO: use secp256k1 (apparently ECDH, but ECDH.generator() does NOT exists,
@@ -80,7 +78,49 @@ function PVSS.verify_proof_DLEQ(points_tables, c, r_array, options)
         return true
     end
     return false
+end
 
+--[[
+    Given a number n and a prime p return a table containing n different generators of the curve.
+    NOTE that for us p is ECP.prime() and r is ECP.order() 
+--]] 
+function PVSS.create_generators(n, p, r)
+    local generators = {}
+    while #generators < n do
+        local x = BIG.modrand(p)
+        local rhs = ECP.rhs(x)
+        while BIG.jacobi(rhs, p) ~= 1 do
+            x = BIG.modrand(p)
+            rhs = ECP.rhs(x)
+        end
+        local y = BIG.modsqrt(rhs, p)
+        local point = ECP.new(x,y)
+        -- see function clear cofactor in src/lua/crypto_bbs.lua
+        -- NOTE that this works only on BLS12-381 curve
+        local h_eff = BIG.new(O.from_hex('d201000000010001'))
+        point = point * h_eff
+        if (point*r == ECP.infinity()) then
+            local flag = true
+            for _,k in pairs(generators) do
+                if point == k then
+                    flag = false
+                end
+            end
+            if flag then 
+                table.insert(generators, point)
+            end
+        end
+    end
+    return generators
+end
+
+--Create the secret and public keys of a partecipant using the generator G
+function PVSS.keygen()
+    return  BIG.modrand(CURVE_ORDER)
+end
+
+function PVSS.sk2pk(G, sk)
+    return G*sk
 end
 
 return PVSS
