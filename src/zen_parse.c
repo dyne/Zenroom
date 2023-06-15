@@ -32,6 +32,8 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
+#define MAX_DEPTH 4096
+
 static char low[MAX_LINE]; // 1KB max for a single zencode line
 // parse the first word until the first space, returns a new string
 static int lua_parse_prefix(lua_State* L) { 
@@ -133,15 +135,17 @@ static int lua_unserialize_json(lua_State* L) {
 	register char *p;
 	register char in_literal_str = 0;
 	in = luaL_checklstring(L, 1, &size);
+	char brakets[MAX_DEPTH];
 	p = (char*)in;
 	while (size && isspace(*p) ) { size--; p++; } // first char
 	while (size && (*p == 0x0) ) { size--; p++; } // first char
 	if(!size) {	lua_pushnil(L);	return 1; }
 	if (*p == '{' || *p == '[') {
+		brakets[level] = *p == '{' ? '}' : ']';
 		size--;
 		level++;
 	} else {
-		func(L, "JSON doesn't starts with '{', char found: %c (%02x)", *p, *p);
+		func(L, "JSON doesn't starts with '{' nor '[', char found: %c (%02x)", *p, *p);
 		lua_pushnil(L);
 		return 1;
 	} // ok, level is 1
@@ -157,11 +161,26 @@ static int lua_unserialize_json(lua_State* L) {
 		} else {
 			if(*p=='"') in_literal_str = 1;
 			else {
-				if(*p=='{' || *p=='[') level++;
-				if(*p=='}' || *p==']') level--;
+				if(*p=='{' || *p=='[') {
+					if(level < MAX_DEPTH){
+						brakets[level] = *p == '{' ? '}' : ']';
+					}
+					level++;
+				}
+				if(*p=='}' || *p==']') {
+					level--;
+					if(level < MAX_DEPTH && brakets[level] != *p){
+						lerror(L, "JSON format error, expected: %c, found %c at position %d", brakets[level], *p, (size_t)(p - in)+1);
+						lua_pushnil(L);
+						return 1;
+					}
+				}
 				if(level==0) { // end of first block
 					lua_pushlstring(L, in, (size_t)(p - in)+1);
-					lua_pushlstring(L, ++p, size);
+					p++;
+					while (size && isspace(*p) ) { size--; p++; } // remove final spaces
+					while (size && (*p == 0x0) ) { size--; p++; } // remove final char
+					lua_pushlstring(L, p, size);
 					return 2;
 				}
 			}
