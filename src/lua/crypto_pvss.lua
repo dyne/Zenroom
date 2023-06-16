@@ -28,11 +28,11 @@ local CURVE_ORDER = ECP.order()
 -- of the discrete logarithm equality.
 -- Section 3 of https://link.springer.com/chapter/10.1007/3-540-48071-4_7
 -- Section 3 of https://www.win.tue.nl/~berry/papers/crypto99.pdf
-function PVSS.create_proof_DLEQ(points_tables, alpha_array, options)
-    -- points_tables is an array where each component is {g1, h1, g2, h2, alpha}.
+function PVSS.create_proof_DLEQ(points_tables, alpha_array, hash)
+    -- points_tables is an array where each component is {g1, h1, g2, h2}.
     -- alpha is such that g1^alpha = h1 and g2^alpha = h2
 
-    local hash_function = options.hash or sha256
+    local hash_function = hash or sha256
     local w_array = {}
     local r_array = {}
     local concat = O.empty()
@@ -60,9 +60,9 @@ end
 -- of the discrete logarithm equality.
 -- Section 3 of https://link.springer.com/chapter/10.1007/3-540-48071-4_7
 -- Section 3 of https://www.win.tue.nl/~berry/papers/crypto99.pdf
-function PVSS.verify_proof_DLEQ(points_tables, c, r_array, options)
+function PVSS.verify_proof_DLEQ(points_tables, c, r_array, hash)
 
-    local hash_function = options.hash or sha256
+    local hash_function = hash or sha256
     local concat = O.empty()
     for k,v in pairs(points_tables) do
         local g1, h1, g2, h2 = table.unpack(v)
@@ -121,6 +121,56 @@ end
 
 function PVSS.sk2pk(G, sk)
     return G*sk
+end
+
+-- polynomial evaluation using Horner's rule.
+local function pol_evaluation(x, K_array)
+    local len = #K_array
+    local y = K_array[len]
+    for i = len-1, 1, -1 do
+        y = (K_array[i] + y:modmul(x, CURVE_ORDER)) % CURVE_ORDER
+    end
+    return y
+end
+
+function PVSS.create_shares(s, g, pks, t, n)
+    -- We assume that s is a BIG modulo CURVE_ORDER.
+    local coefficients = {s}
+    local commitments = {g * s}
+    for i = 2,t do
+        coefficients[i] = BIG.modrand(CURVE_ORDER)
+        commitments[i] = g * coefficients[i]
+    end
+
+    local encrypted_shares = {}
+    -- local xs = {}
+    local evals = {}
+    local proof_points = {}
+    for i = 1,n do
+        evals[i] = pol_evaluation(BIG.new(i), coefficients)
+        encrypted_shares[i] = pks[i] * evals[i]
+        proof_points[i] = {g, g * evals[i], pks[i], encrypted_shares[i]}
+    end
+
+    local challenge, responses = PVSS.create_proof_DLEQ(proof_points, evals)
+
+    return commitments, encrypted_shares, challenge, responses
+end
+
+function PVSS.verify_shares(g, pks, t, n, commitments, encrypted_shares, challenge, responses)
+    local Xs = {}
+    local proof_points = {}
+    for i=1,n do
+        local value = ECP.infinity()
+        for j = 0, (t-1) do
+            local pow = BIG.new(i):modpower(BIG.new(j), CURVE_ORDER)
+            value = value + (commitments[j+1] * pow)
+        end
+        Xs[i] = value
+        proof_points[i] = {g, Xs[i], pks[i], encrypted_shares[i]}
+    end
+
+    return PVSS.verify_proof_DLEQ(proof_points, challenge, responses)
 end
 
 return PVSS
