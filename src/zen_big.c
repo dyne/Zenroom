@@ -1041,22 +1041,21 @@ end:
 */
 static void _square_and_multiply(BIG z, BIG x, BIG n, BIG m)
 {
-	BIG safen;
-	BIG_copy(safen, n);
 	BIG_one(z);
-
-	BIG powerx;
-	BIG_copy(powerx, x);
-	BIG one;
-	BIG_one(one);
-	while(BIG_comp(safen, one) > 0) {
-		if(safen[0] & 1) {
-			BIG_modmul(z, z, powerx, m);
+	if( ! BIG_iszilch(n)){
+		BIG safen, powerx, one;
+		BIG_copy(safen, n);
+		BIG_copy(powerx, x);
+		BIG_one(one);
+		while(BIG_comp(safen, one) > 0) {
+			if(safen[0] & 1) {
+				BIG_modmul(z, z, powerx, m);
+			}
+			BIG_modmul(powerx, powerx, powerx, m);
+			BIG_shr(safen, 1);
 		}
-		BIG_modmul(powerx, powerx, powerx, m);
-		BIG_shr(safen, 1);
+		BIG_modmul(z, z, powerx, m);
 	}
-	BIG_modmul(z, z, powerx, m);
 }
 
 static int big_modpower(lua_State *L) {
