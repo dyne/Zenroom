@@ -28,7 +28,7 @@ local CURVE_ORDER = ECP.order()
 -- of the discrete logarithm equality.
 -- Section 3 of https://link.springer.com/chapter/10.1007/3-540-48071-4_7
 -- Section 3 of https://www.win.tue.nl/~berry/papers/crypto99.pdf
-function PVSS.create_proof_DLEQ(points_tables, alpha_array, hash)
+function PVSS.create_proof_DLEQ(points_tables, alpha_array, hash, is_det)
     -- points_tables is an array where each component is {g1, h1, g2, h2}.
     -- alpha is such that g1^alpha = h1 and g2^alpha = h2
 
@@ -38,13 +38,30 @@ function PVSS.create_proof_DLEQ(points_tables, alpha_array, hash)
     local concat = O.empty()
     for k,v in pairs(points_tables) do
         local g1, h1, g2, h2 = table.unpack(v)
-        local w = BIG.modrand(CURVE_ORDER)
+        local w
+        if(is_det) then
+            w = BIG.new(k+3)
+        else
+            w = BIG.modrand(CURVE_ORDER)
+        end
         w_array[k] = w
         local a1 = g1 * w
         local a2 = g2 * w
-        concat = concat .. h1:zcash_export() .. h2:zcash_export() .. a1:zcash_export() .. a2:zcash_export()
+        if(is_det) then
+            -- TODO: decide if it is best to use our element order in the concatenation
+            -- or the one seen in the Sage implementation.
+            concat = concat .. O.from_string(h1:x():decimal())
+            concat = concat .. O.from_string(h1:y():decimal())
+            concat = concat .. O.from_string(h2:x():decimal())
+            concat = concat .. O.from_string(h2:y():decimal())
+            concat = concat .. O.from_string(a1:x():decimal())
+            concat = concat .. O.from_string(a1:y():decimal())
+            concat = concat .. O.from_string(a2:x():decimal())
+            concat = concat .. O.from_string(a2:y():decimal())
+        else
+            concat = concat .. h1:zcash_export() .. h2:zcash_export() .. a1:zcash_export() .. a2:zcash_export()
+        end
     end
-
     local c = hash_function(concat)
     c = BIG.mod( BIG.new(c) , CURVE_ORDER)
 
@@ -133,28 +150,38 @@ local function pol_evaluation(x, K_array)
     return y
 end
 
-function PVSS.create_shares(s, g, pks, t, n)
+function PVSS.create_shares(s, g, pks, t, n, det_pol_coefs)
     -- We assume that s is a BIG modulo CURVE_ORDER.
+    local is_det = nil
     local coefficients = {s}
     local commitments = {g * s}
-    for i = 2,t do
-        coefficients[i] = BIG.modrand(CURVE_ORDER)
-        commitments[i] = g * coefficients[i]
+    if(not det_pol_coefs) then
+        for i = 2,t do
+            coefficients[i] = BIG.modrand(CURVE_ORDER)
+            commitments[i] = g * coefficients[i]
+        end
+    else
+        is_det = true
+        for i = 2,t do
+            coefficients[i] = det_pol_coefs[i]
+            commitments[i] = g * coefficients[i]
+        end
     end
 
     local encrypted_shares = {}
-    -- local xs = {}
+    local Xs = {}
     local evals = {}
     local proof_points = {}
     for i = 1,n do
         evals[i] = pol_evaluation(BIG.new(i), coefficients)
         encrypted_shares[i] = pks[i] * evals[i]
-        proof_points[i] = {g, g * evals[i], pks[i], encrypted_shares[i]}
+        Xs[i] = g * evals[i]
+        proof_points[i] = {g, Xs[i], pks[i], encrypted_shares[i]}
     end
 
-    local challenge, responses = PVSS.create_proof_DLEQ(proof_points, evals)
+    local challenge, responses = PVSS.create_proof_DLEQ(proof_points, evals, nil, is_det)
 
-    return commitments, encrypted_shares, challenge, responses
+    return commitments, encrypted_shares, challenge, responses, Xs
 end
 
 function PVSS.verify_shares(g, pks, t, n, commitments, encrypted_shares, challenge, responses)
