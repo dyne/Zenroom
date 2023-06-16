@@ -539,15 +539,6 @@ extern void BIG_XXX_modneg(BIG_XXX x,BIG_XXX y,BIG_XXX n);
 extern int BIG_XXX_jacobi(BIG_XXX x,BIG_XXX y);
 
 
-/**	@brief  Calculate z = x^n mod m using square and multiply
- *
-	@param z BIG number, on exit = x^n mod m
-	@param x BIG number
-	@param n The BIG exponent
-	@param m The BIG modulus
- */
-extern void BIG_XXX_modpow( BIG_XXX z, BIG_XXX x, BIG_XXX n, BIG_XXX m);
-
 /**	@brief  Calculate x=1/y mod n
  *
 	Modular Inversion - This is slow. Uses binary method.

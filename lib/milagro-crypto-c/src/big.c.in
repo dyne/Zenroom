@@ -1387,27 +1387,6 @@ int BIG_XXX_jacobi(BIG_XXX a,BIG_XXX p)
     else return -1;
 }
 
-/* Compute z = x^n mod m using square and multiply */
-void BIG_XXX_modpow( BIG_XXX z, BIG_XXX x, BIG_XXX n, BIG_XXX m)
-{
-    BIG_XXX safen;
-    BIG_XXX_copy(safen, n);
-    BIG_XXX_one(z);
-
-    BIG_XXX powerx;
-    BIG_XXX_copy(powerx, x);
-    BIG_XXX one;
-    BIG_XXX_one(one);
-    while(BIG_XXX_comp(safen, one) > 0) {
-		if(safen[0] & 1) {
-			BIG_XXX_modmul(z, z, powerx, m);
-		}
-		BIG_XXX_modmul(powerx, powerx, powerx, m);
-		BIG_XXX_shr(safen, 1);
-	}
-	BIG_XXX_modmul(z, z, powerx, m);
-}
-
 /* Arazi and Qi inversion mod 256 */
 static int invmod256(int a)
 {
