@@ -1030,41 +1030,44 @@ end:
 	END(1);
 }
 
-// Square and multiply, not secure against side channel attacks
+/* Compute z = x^n mod m using square and multiply */
+// NOT secure against side channel attacks
+/**	@brief  Calculate z = x^n mod m using square and multiply
+ *
+	@param z BIG number, on exit = x^n mod m
+	@param x BIG number
+	@param n The BIG exponent
+	@param m The BIG modulus
+*/
+static void _square_and_multiply(BIG z, BIG x, BIG n, BIG m)
+{
+	BIG safen;
+	BIG_copy(safen, n);
+	BIG_one(z);
+
+	BIG powerx;
+	BIG_copy(powerx, x);
+	BIG one;
+	BIG_one(one);
+	while(BIG_comp(safen, one) > 0) {
+		if(safen[0] & 1) {
+			BIG_modmul(z, z, powerx, m);
+		}
+		BIG_modmul(powerx, powerx, powerx, m);
+		BIG_shr(safen, 1);
+	}
+	BIG_modmul(z, z, powerx, m);
+}
+
 static int big_modpower(lua_State *L) {
 	BEGIN();
 	big *x = big_arg(L,1);
 	big *n = big_arg(L,2);
 	big *m = big_arg(L,3);
 	big *res = big_new(L);
+	big_init(L, res);
 	if(x && n && m && res) {
-		BIG safen;
-		BIG_copy(safen, n->val);
-
-		big_init(L,res);
-		BIG_zero(res->val);
-		BIG_inc(res->val, 1);
-
-		BIG powerx;
-		BIG_copy(powerx, x->val);
-
-		BIG zero;
-		BIG_zero(zero);
-
-		while(BIG_comp(safen, zero) > 0) {
-			if((safen[0] & 1) == 1) {
-				// n odd
-				BIG_modmul(res->val, res->val, powerx, m->val);
-				BIG_dec(safen, 1);
-			} else {
-				// n even
-				BIG tmp;
-				BIG_modmul(tmp, powerx, powerx, m->val);
-				BIG_copy(powerx, tmp);
-				BIG_norm(safen);
-				BIG_shr(safen, 1);
-			}
-		}
+		_square_and_multiply(res->val, x->val, n->val, m->val);
 	}
 	big_free(L,m);
 	big_free(L,n);
@@ -1393,7 +1396,7 @@ end:
 
 /* Tonelli-Shanks algorithm: compute r square root of n mod p where p is an odd prime.
     We assume that n is a square modulo p, so that a solution exist. */
-void modsqrt(BIG r, BIG n, BIG p)
+static void _modsqrt(BIG r, BIG n, BIG p)
 {   
     BIG modp, four;
     BIG_zero(four);
@@ -1405,7 +1408,7 @@ void modsqrt(BIG r, BIG n, BIG p)
         BIG_copy(exponent, p);
         BIG_inc(exponent, 1);
         BIG_shr(exponent, 2);
-        BIG_modpow(r, n, exponent, p);
+        _square_and_multiply(r, n, exponent, p);
         return;
     }
     else { // if p = 1 mod 4
@@ -1425,12 +1428,12 @@ void modsqrt(BIG r, BIG n, BIG p)
         }
         BIG c, t, R, exp, T, b;
         int M = S;
-        BIG_modpow(c, z, Q, p);
-        BIG_modpow(t, n, Q, p);
+        _square_and_multiply(c, z, Q, p);
+        _square_and_multiply(t, n, Q, p);
         BIG_copy(exp, Q);
         BIG_inc(exp, 1);
         BIG_shr(exp, 1); //exp = (Q+1)/2
-        BIG_modpow(R, n, exp, p);
+        _square_and_multiply(R, n, exp, p);
 
         if(BIG_iszilch(t)) {
             BIG_zero(r);
@@ -1486,7 +1489,7 @@ static int big_modsqrt(lua_State *L){
 		goto end;
 	}
 	big_init(L,r);
-	modsqrt(r->val, n->val, p->val);
+	_modsqrt(r->val, n->val, p->val);
 	BIG_norm(r->val);
 end:
 	big_free(L, n);
