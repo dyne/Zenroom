@@ -5,6 +5,24 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
 # Zenroom ChangeLog
+## major release version 3.0.0 (2023)
+
+Adopted semantic versioning: major releases signal breaking changes,
+each one opens a development series following with features and fixes.
+
+Established grammar for the Zencode language, with the addition of
+branching and for-each cycling.
+
+This new major development series adds stable support for
+Quantum-proof cryptography (both signatures and shared keys:
+dilithium, kyber and NTRU). Also new signatures available: EDDSA,
+deterministic ECDSA signatures, BBS+ zero-knowledge proof and more
+schemes being worked on as we face use-cases.
+
+Work in progress on improved debugging, JSON logging and soon
+step-execution as well import/export of a running HEAP across
+different running VMs.
+
 
 ## 2.0.0 (March 2022)
 
