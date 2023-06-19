@@ -73,15 +73,13 @@ local function _satoshi_unspent_import(obj)
       -- compatibility with electrum and bitcoin core
       table.insert(res, { amount = ZEN.get(v,'value', BIG.from_decimal, tostring),
 			  txid    = ZEN.get(v,'txid', OCTET.from_hex, tostring),
-			  vout    = v.vout }) 
+			  vout    = F.new(v.vout) })
    end
    return(res)
 end
 local function _satoshi_unspent_export(obj)
    local res = { }
    for _,v in pairs(obj) do
-      -- to_segwit: octet, version number(0), 'bc' or 'tc'
-      local address = v.address:segwit(0, 'tb')
       local amount = BIG.to_decimal(v.amount)
       local txid = v.txid:hex()
       local vout = v.vout
