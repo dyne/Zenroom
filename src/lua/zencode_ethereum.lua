@@ -395,7 +395,7 @@ When("use the ethereum transaction to run '' using ''", function(m, p)
     local params = have(p)
     ZEN.assert(
         method.name and method.input and type(method.input) == "table",
-       'method must contain the keys method and input'
+       'method must contain the keys name (string) and input (string array)'
     )
     local input = deepmap(function(o)
         return o:octet():string() end, method.input)
