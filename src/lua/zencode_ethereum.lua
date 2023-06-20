@@ -112,6 +112,30 @@ local function export_signature_f(obj)
     return "0x"..O.to_hex(obj)
 end
 
+local function import_method_f(obj)
+    local res = {}
+    res.name = ZEN.get(obj, 'name', nil, O.from_string)
+    local input = ZEN.get(obj, 'input', nil, O.from_string)
+    if type(input) ~= "table" then
+        error("invalid input type: "..type(obj.output).."should be a string array")
+    end
+    res.input = input
+    local output = ZEN.get(obj, 'output', nil, O.from_string)
+    if type(input) ~= "table" then
+        error("invalid output type: "..type(obj.output).."should be a string array")
+    end
+    res.output = output
+    return res
+end
+
+local function export_method_f(obj)
+    res = {}
+    res.name = obj.name:octet():string()
+    res.input = deepmap(function(o) return o:octet():string() end, obj.input)
+    res.output = deepmap(function(o) return o:octet():string() end, obj.output)
+    return res
+end
+
 ZEN.add_schema(
    {
       ethereum_public_key = { import = O.from_hex,
@@ -144,7 +168,9 @@ ZEN.add_schema(
       wei_value = { import = str_wei_to_big_wei,
 		    export = big_wei_to_str_wei },
       ethereum_signature = { import = import_signature_f,
-            export = export_signature_f}
+            export = export_signature_f},
+      ethereum_method = { import = import_method_f,
+            export = export_method_f},
 })
 
 When('create the ethereum key', function()
@@ -391,11 +417,11 @@ end)
 
 When("use the ethereum transaction to run '' using ''", function(m, p)
 
-    local method = have(m)
+    local method, codec = have(m)
     local params = have(p)
     ZEN.assert(
-        method.name and method.input and type(method.input) == "table",
-       'method must contain the keys name (string) and input (string array)'
+       codec.schema == 'ethereum_method',
+       'method must be a `ethereum method`'
     )
     local input = deepmap(function(o)
         return o:octet():string() end, method.input)
