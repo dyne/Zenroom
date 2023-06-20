@@ -69,6 +69,7 @@ end
 
 local function _satoshi_unspent_import(obj)
    local res = {}
+   -- TODO: quick fix on import from number format, to improve later
    for _,v in pairs(obj) do
       amount = ZEN.get(v,'value', BIG.from_decimal, tostring)
       if type(amount) == 'number' then
