@@ -721,3 +721,56 @@ EOF
     assert_line '[W]  "Invalid encoding for ethereum address. Expected encoding: 0x1e30e53E87869aaD8dC5A1A9dAc31a8dD3559460"'
     assert_line '[W]  [!] The address has a wrong encoding'
 }
+
+@test "Call generic smart contract" {
+    cat <<EOF | save_asset call_sc.data
+{
+	"myMethod": {
+		"name": "myFantasticMethod",
+		"input": [
+			"address",
+			"uint256",
+                        "string"
+		],
+		"output": "bool"
+	},
+	"solidity address": "0xE54c7b475644fBd918cfeDC57b1C9179939921E6",
+	"ethereum nonce": "0",
+	"gas price": "100000000000",
+	"gas limit": "300000",
+	"parameter1": "E54c7b475644fBd918cfeDC57b1C9179939921E6",
+	"parameter2": "1234567891234",
+	"parameter3": "hello world, this is a string passed as parameter to a smart contract"
+}
+EOF
+    cat <<EOF | zexe call_sc.zen call_sc.data
+Scenario 'ethereum': call solidity
+
+Given I have a 'string dictionary' named 'myMethod'
+Given I have a 'ethereum address' named 'solidity address'
+
+Given I have a  'gas price'
+Given I have a 'gas limit'
+Given I have an 'ethereum nonce'
+
+Given I have an 'hex' named 'parameter1'
+Given I have an 'integer' named 'parameter2'
+Given I have an 'string' named 'parameter3'
+
+When I create the ethereum transaction to 'solidity address'
+
+When I create the new array
+When I rename the 'new array' to 'myParams'
+
+When I move 'parameter1' in 'myParams'
+When I move 'parameter2' in 'myParams'
+When I move 'parameter3' in 'myParams'
+
+When I use the ethereum transaction to run 'myMethod' using 'myParams'
+
+Then print the 'ethereum transaction'
+EOF
+    save_output import_ethsig_out.json
+    assert_output '{"ethereum_transaction":{"data":"483041db000000000000000000000000e54c7b475644fbd918cfedc57b1c9179939921e60000000000000000000000000000000000000000000000000000011f71fb09220000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000004568656c6c6f20776f726c642c2074686973206973206120737472696e672070617373656420617320706172616d6574657220746f206120736d61727420636f6e7472616374000000000000000000000000000000000000000000000000000000","gas_limit":"300000","gas_price":"100000000000","nonce":"0","to":"0xE54c7b475644fBd918cfeDC57b1C9179939921E6","value":"0"}}'
+}
+

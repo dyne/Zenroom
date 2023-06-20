@@ -388,3 +388,21 @@ IfWhen("verify the '' has a ethereum signature in '' by ''", function(doc, sig, 
        'The ethereum signature by '..by..' is not authentic'
     )
 end)
+
+When("use the ethereum transaction to run '' using ''", function(m, p)
+
+    local method = have(m)
+    local params = have(p)
+    ZEN.assert(
+        method.name and method.input and type(method.input) == "table",
+       'method must contain the keys method and input'
+    )
+    local input = deepmap(function(o)
+        return o:octet():string() end, method.input)
+    local encoder = ETH.data_contract_factory(
+        method.name:octet():string(), input)
+    local transaction_data = encoder(table.unpack(params))
+    local tx = have'ethereum transaction'
+    ZEN.assert(not tx.data or #tx.data == 0, "Cannot overwrite transaction data")
+    tx.data = transaction_data
+end)
