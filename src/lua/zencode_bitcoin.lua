@@ -70,8 +70,12 @@ end
 local function _satoshi_unspent_import(obj)
    local res = {}
    for _,v in pairs(obj) do
+      amount = ZEN.get(v,'value', BIG.from_decimal, tostring)
+      if type(amount) == 'number' then
+         amount = BIG.from_decimal(tostring(amount))
+      end
       -- compatibility with electrum and bitcoin core
-      table.insert(res, { amount = ZEN.get(v,'value', BIG.from_decimal, tostring),
+      table.insert(res, { amount = amount,
 			  txid    = ZEN.get(v,'txid', OCTET.from_hex, tostring),
 			  vout    = F.new(v.vout) })
    end
