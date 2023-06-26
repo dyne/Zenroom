@@ -471,3 +471,22 @@ Given("a '' part of '' before string suffix ''", function(enc, src, sfx)
 		 ack(src)
 		 gc()
 end)
+
+Given("a '' in path ''", function(enc, path)
+    local path_array = strtok(uscore(path), '([^.]+)')
+    local root = path_array[1]
+    table.remove(path_array, 1)
+    local dest = path_array[#path_array]
+    local res = KIN[root] or IN[root]
+    for k,v in pairs(path_array) do
+        ZEN.assert(luatype(res) == 'table', "Object is not a table: "..root)
+        ZEN.assert(res[v] ~= nil, "Key "..v.." not found in "..root)
+        res = res[v]
+        root = v
+    end
+    TMP = guess_conversion(res, enc)
+    TMP.name = dest
+    ack(dest)
+    gc()
+end)
+

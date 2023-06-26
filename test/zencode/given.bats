@@ -404,3 +404,39 @@ EOF
 	  assert_output '{"sfx_onebyte":"1bb0515e4fe007600355be41f4d7d93508b3b11b6741b9af51ec295a1b544c40"}'
 
 }
+
+@test "Given I have a '' in path ''" {
+    cat << EOF | save_asset given_in_path.data
+{
+  "my_dict": {
+    "result": {
+      "my_string_array": [
+        "hello",
+	"world"
+      ],
+      "my_number_array": [
+        1,
+	2,
+	3
+      ],
+      "my_hex": "0123",
+      "my_base64": "W8ZFMccV+jErS2wLP3nn6jH46WgNp8vzzfzuFMxmWtA=",
+      "my_base58": "6nLf3J6QhF94jE6A6BNVcHEyjBXdS1H1YqGBfaWgTULv"
+    }
+  }
+ }
+EOF
+
+    cat << EOF | zexe given_in_path.zen given_in_path.data
+Given I have a 'string array' in path 'my_dict.result.my_string_array'
+and I have a 'number array' in path 'my_dict.result.my_number_array'
+and I have a 'hex' in path 'my_dict.result.my_hex'
+and I have a 'base64' in path 'my_dict.result.my_base64'
+and I have a 'base58' in path 'my_dict.result.my_base58'
+
+Then print the data
+EOF
+    save_output 'given_in_path.json'
+    assert_output '{"my_base58":"6nLf3J6QhF94jE6A6BNVcHEyjBXdS1H1YqGBfaWgTULv","my_base64":"W8ZFMccV+jErS2wLP3nn6jH46WgNp8vzzfzuFMxmWtA=","my_hex":"0123","my_number_array":[1,2,3],"my_string_array":["hello","world"]}'
+
+}
