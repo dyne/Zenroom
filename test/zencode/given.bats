@@ -408,23 +408,23 @@ EOF
 @test "Given I have a '' in path ''" {
     cat << EOF | save_asset given_in_path.data
 {
-  "my_dict": {
-    "result": {
-      "my_string_array": [
-        "hello",
-	"world"
-      ],
-      "my_number_array": [
-        1,
-	2,
-	3
-      ],
-      "my_hex": "0123",
-      "my_base64": "W8ZFMccV+jErS2wLP3nn6jH46WgNp8vzzfzuFMxmWtA=",
-      "my_base58": "6nLf3J6QhF94jE6A6BNVcHEyjBXdS1H1YqGBfaWgTULv"
+    "my_dict": {
+        "result": {
+            "my_string_array": [
+                "hello",
+                "world"
+            ],
+            "my_number_array": [
+                1,
+                2,
+                3
+            ],
+            "my_hex": "0123",
+            "my_base64": "W8ZFMccV+jErS2wLP3nn6jH46WgNp8vzzfzuFMxmWtA=",
+            "my_base58": "6nLf3J6QhF94jE6A6BNVcHEyjBXdS1H1YqGBfaWgTULv"
+        }
     }
-  }
- }
+}
 EOF
 
     cat << EOF | zexe given_in_path.zen given_in_path.data
@@ -438,5 +438,22 @@ Then print the data
 EOF
     save_output 'given_in_path.json'
     assert_output '{"my_base58":"6nLf3J6QhF94jE6A6BNVcHEyjBXdS1H1YqGBfaWgTULv","my_base64":"W8ZFMccV+jErS2wLP3nn6jH46WgNp8vzzfzuFMxmWtA=","my_hex":"0123","my_number_array":[1,2,3],"my_string_array":["hello","world"]}'
+}
 
+@test "Given I have a '' in path '' (fail)" {
+    cat << EOF | save_asset given_in_path_fail_not_found.zen
+Given I have a 'string array' in path 'my_dict.result.not_my_string_array'
+
+Then print the data
+EOF
+    run $ZENROOM_EXECUTABLE -z -a given_in_path.data given_in_path_fail_not_found.zen
+    assert_line '[W]  [!] Key not_my_string_array not found in result'
+
+    cat << EOF | save_asset given_in_path_fail_not_a_table.zen
+Given I have a 'string array' in path 'my_dict.result.my_hex.not_existing_element'
+
+Then print the data
+EOF
+    run $ZENROOM_EXECUTABLE -z -a given_in_path.data given_in_path_fail_not_a_table.zen
+    assert_line '[W]  [!] Object is not a table: my_hex'
 }
