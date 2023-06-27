@@ -422,7 +422,9 @@
     -- always detect zentype (may be an element extracted from dict)
 	local lt = luatype(ackn)
 	if lt == 'table' then
-	   if isdictionary(ackn) then
+     if ZEN.schemas[name] then
+      res.zentype = 'e'
+	   elseif isdictionary(ackn) then
 		  res.zentype = 'd'
 	   elseif isarray(ackn) then
 		  res.zentype = 'a'
