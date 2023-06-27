@@ -216,7 +216,7 @@ When("create the kyber kem for ''",function(pub)
 	local enc = QP.enc(pk)
 	ACK.kyber_kem.kyber_ciphertext = enc.cipher
 	ACK.kyber_kem.kyber_secret = enc.secret
-	new_codec('kyber kem', { zentype = 'schema'})
+	new_codec('kyber kem')
 end)
 -- create the secret starting from a ciphertext
 When("create the kyber secret from ''",function(secret)
@@ -258,7 +258,7 @@ When("create the ntrup kem for ''",function(pub)
 	local enc = QP.ntrup_enc(pk)
 	ACK.ntrup_kem.ntrup_ciphertext = enc.cipher
 	ACK.ntrup_kem.ntrup_secret = enc.secret
-	new_codec('ntrup kem', { zentype = 'schema'})
+	new_codec('ntrup kem')
 end)
 -- create the secret starting from a ciphertext
 When("create the ntrup secret from ''",function(ciphertext)
