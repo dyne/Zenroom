@@ -140,7 +140,14 @@ install_headers('../src/zenroom.h', subdir: 'zenroom')
 
 zenroom_exe = executable(
     'zenroom',
-    '../src/cli.c',
+    '../src/cli-zenroom.c',
+    dependencies: zenroom_dep,
+    install: true,
+)
+
+zencode_exe = executable(
+    'zencode-exec',
+    '../src/zencode-exec.c',
     dependencies: zenroom_dep,
     install: true,
 )

@@ -42,7 +42,7 @@ CORTEX_M_CFLAGS = \
 	       -nostartfiles
 
 SOURCES := \
-	cli.o zenroom.o zen_error.o \
+	zenroom.o zen_error.o \
 	lua_functions.o lua_modules.o lualibs_detected.o lua_shims.o \
 	encoding.o base58.o rmd160.o segwit_addr.o \
 	zen_memory.o mutt_sprintf.o \
@@ -64,14 +64,17 @@ js: ${SOURCES}
 
 # static: LDADD  += /usr/lib/${ARCH}-linux-musl/libc.a
 # using default path for non-native installs of musl
-musl: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o zenroom ${LDFLAGS} ${LDADD}
+musl: ${SOURCES} cli-zenroom.o zencode-exec.o
+	${CC} ${CFLAGS} ${SOURCES} cli-zenroom.o -o zenroom ${LDFLAGS} ${LDADD}
+	${CC} ${CFLAGS} ${SOURCES} zencode-exec.o -o zencode-exec ${LDFLAGS} ${LDADD}
 
-linux: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o zenroom ${LDFLAGS} ${LDADD}
+linux: ${SOURCES} cli-zenroom.o zencode-exec.o
+	${CC} ${CFLAGS} ${SOURCES} cli-zenroom.o -o zenroom ${LDFLAGS} ${LDADD}
+	${CC} ${CFLAGS} ${SOURCES} zencode-exec.o -o zencode-exec ${LDFLAGS} ${LDADD}
 
-linux-debug: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o zenroom ${LDFLAGS} ${LDADD}
+linux-debug: ${SOURCES} cli-zenroom.o zencode-exec.o
+	${CC} ${CFLAGS} ${SOURCES} cli-zenroom.o -o zenroom ${LDFLAGS} ${LDADD}
+	${CC} ${CFLAGS} ${SOURCES} zencode-exec.o -o zencode-exec ${LDFLAGS} ${LDADD}
 
 
 # available vars to identify the build:
@@ -99,17 +102,20 @@ go: ${SOURCES}
 erlang: ${SOURCES} erlang.o
 	${CC} -shared ${CFLAGS} ${SOURCES} erlang.o -o zenroom.so ${LDFLAGS} ${LDADD}
 
-osx: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o zenroom.command ${LDFLAGS} ${LDADD}
+osx: ${SOURCES} cli-zenroom.o zencode-exec.o
+	${CC} ${CFLAGS} ${SOURCES} cli-zenroom.o -o zenroom.command ${LDFLAGS} ${LDADD}
+	${CC} ${CFLAGS} ${SOURCES} zencode-exec.o -o zencode-exec.command ${LDFLAGS} ${LDADD}
 
 # Call libzenroom.so to simplify python bindings
 osx-shared: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o libzenroom-${ARCH}.so ${LDFLAGS} ${LDADD}
 
 win-exe: LDFLAGS += -static
-win-exe: ${SOURCES}
+win-exe: ${SOURCES} cli-zenroom.o zencode-exec.o
 	./stamp-exe.sh
-	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.exe zenroom.res ${SOURCES} ${LDADD}
+	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.exe zenroom.res ${SOURCES} cli-zenroom.o ${LDADD}
+	${CC} ${CFLAGS} ${LDFLAGS} -o zencode-exec.exe zenroom.res ${SOURCES} zencode-exec.o ${LDADD}
+
 #x86_64-w64-mingw32-strip zenroom.exe
 
 win-dll: CFLAGS += -DLIBRARY
@@ -119,9 +125,10 @@ win-dll: ${SOURCES}
 	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.dll zenroom.res ${SOURCES} ${LDADD} -Wl,--out-implib,libzenroom_dll.lib
 
 cyg-exe: LDFLAGS += -static
-cyg-exe: ${SOURCES}
+cyg-exe: ${SOURCES} cli-zenroom.o zencode-exec.o
 	./stamp-exe.sh
-	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.exe zenroom.res ${SOURCES} ${LDADD}
+	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.exe zenroom.res ${SOURCES} cli-zenroom.o ${LDADD}
+	${CC} ${CFLAGS} ${LDFLAGS} -o zencode-exec.exe zenroom.res ${SOURCES} zencode-exec.o ${LDADD}
 
 cyg-dll: CFLAGS += -DLIBRARY
 cyg-dll: LDFLAGS += -shared
@@ -142,8 +149,9 @@ arm: ${SOURCES} cortex_m_boot.o
 	${CC} ${CFLAGS} ${CORTEX_M_CFLAGS} ${CORTEX_M_SRC_C} ${SOURCES} cortex_m_boot.o -o zenroom.elf ${LDFLAGS} ${LDADD}
 	${OBJCOPY} -O binary zenroom.elf zenroom.bin
 
-aarch64: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o zenroom ${LDFLAGS} ${LDADD}
+aarch64: ${SOURCES} cli-zenroom.o zencode-exec.o
+	${CC} ${CFLAGS} ${SOURCES} cli-zenroom.o -o zenroom ${LDFLAGS} ${LDADD}
+	${CC} ${CFLAGS} ${SOURCES} zencode-exec.o -o zencode-exec ${LDFLAGS} ${LDADD}
 
 debug: CFLAGS+= -ggdb -DDEBUG=1 -Wall
 debug: LDADD+= -lm
