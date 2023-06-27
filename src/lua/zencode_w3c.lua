@@ -102,7 +102,7 @@ ZEN.add_schema(
             new_codec('verifiable_credential', {
                 encoding = 'string',
 				schema = 'verifiable_credential',
-                zentype = 'd'
+                zentype = 'e'
             })
             return (deepmap(OCTET.from_string, obj))
         end

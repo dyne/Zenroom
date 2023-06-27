@@ -156,14 +156,14 @@ When('create the dilithium public key',function()
 	empty'dilithium public key'
 	local sk = havekey'dilithium'
 	ACK.dilithium_public_key = QP.sigpubgen(sk)
-	new_codec('dilithium public key', { zentype = 'e'})
+	new_codec('dilithium public key')
 end)
 
 When("create the dilithium public key with secret key ''",function(sec)
 	local sk = have(sec)
 	empty'dilithium public key'
 	ACK.dilithium_public_key = QP.sigpubgen(sk)
-	new_codec('dilithium public key', { zentype = 'e'})
+	new_codec('dilithium public key')
 end)
 
 -- generate the sign for a msg and verify
@@ -172,7 +172,7 @@ When("create the dilithium signature of ''",function(doc)
 	local obj = have(doc)
 	empty'dilithium signature'
 	ACK.dilithium_signature = QP.sign(sk, ZEN.serialize(obj))
-	new_codec('dilithium signature', { zentype = 'e'})
+	new_codec('dilithium signature')
 end)
 
 IfWhen("verify the '' has a dilithium signature in '' by ''",function(msg, sig, by)
@@ -198,14 +198,14 @@ When('create the kyber public key',function()
 	empty'kyber public key'
 	local sk = havekey'kyber'
 	ACK.kyber_public_key = QP.kempubgen(sk)
-	new_codec('kyber public key', { zentype = 'e'})
+	new_codec('kyber public key')
 end)
 
 When("create the kyber public key with secret key ''",function(sec)
 	local sk = have(sec)
 	empty'kyber public key'
 	ACK.kyber_public_key = QP.kempubgen(sk)
-	new_codec('kyber public key', { zentype = 'e'})
+	new_codec('kyber public key')
 end)
 
 -- create a secret message and its ciphertext
@@ -224,7 +224,7 @@ When("create the kyber secret from ''",function(secret)
 	local sec = have(secret)
 	empty 'kyber secret'
 	ACK.kyber_secret = QP.dec(sk, sec)
-	new_codec('kyber secret', { zentype = 'e'})
+	new_codec('kyber secret')
 end)
 
 --# NTRUP #--
@@ -240,14 +240,14 @@ When('create the ntrup public key',function()
 	empty'ntrup public key'
 	local sk = havekey'ntrup'
 	ACK.ntrup_public_key = QP.ntrup_pubgen(sk)
-	new_codec('ntrup public key', { zentype = 'e'})
+	new_codec('ntrup public key')
 end)
 
 When("create the ntrup public key with secret key ''",function(sec)
 	local sk = have(sec)
 	empty'ntrup public key'
 	ACK.ntrup_public_key = QP.ntrup_pubgen(sk)
-	new_codec('ntrup public key', { zentype = 'e'})
+	new_codec('ntrup public key')
 end)
 
 -- create a secret message and its ciphertext
@@ -266,5 +266,5 @@ When("create the ntrup secret from ''",function(ciphertext)
 	local ct = have(ciphertext)
 	empty'ntrup secret'
 	ACK.ntrup_secret = QP.ntrup_dec(sk, ct)
-	new_codec('ntrup secret', { zentype = 'e'})
+	new_codec('ntrup secret')
 end)
