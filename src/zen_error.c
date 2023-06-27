@@ -142,7 +142,7 @@ int FAIL() { return 1; }
 #endif
 
 void json_start(void *L) {
-  const char *logstart = "{ [ \"ZENROOM JSON LOG START\",";
+  const char *logstart = "[ \"ZENROOM JSON LOG START\",";
   octet o;
   o.len = o.max = strlen(logstart);
   o.val = malloc(o.len+0x0f);
@@ -152,7 +152,7 @@ void json_start(void *L) {
 }
 
 void json_end(void *L) {
-  const char *logend = "\"ZENROOM JSON LOG END\" ] }";
+  const char *logend = "\"ZENROOM JSON LOG END\" ]";
   octet o;
   o.len = o.max = strlen(logend);
   o.val = malloc(o.len+0x0f);

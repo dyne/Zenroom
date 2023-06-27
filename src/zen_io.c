@@ -204,7 +204,7 @@ int zen_log(lua_State *L, log_priority prio, octet *o) {
 // print to stderr without prefix with newline
 ZEN_PRINT(zen_printerr, printerr(L, o))
 ZEN_PRINT(zen_warn, zen_log(L, LOG_WARN, o))
-ZEN_PRINT(zen_act, zen_log(L, LOG_INFO, o))
+ZEN_PRINT(zen_act, zen_log(L, LOG_DEBUG, o))
 ZEN_PRINT(zen_notice, zen_log(L, LOG_INFO, o))
 ZEN_PRINT(zen_debug, zen_log(L, LOG_VERBOSE, o))
 
