@@ -771,7 +771,45 @@ When I use the ethereum transaction to run 'myMethod' using 'myParams'
 Then print the 'ethereum transaction'
 Then print 'myMethod'
 EOF
-    save_output import_ethsig_out.json
+    save_output call_sc_out.json
     assert_output '{"ethereum_transaction":{"data":"483041db000000000000000000000000e54c7b475644fbd918cfedc57b1c9179939921e60000000000000000000000000000000000000000000000000000011f71fb09220000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000004568656c6c6f20776f726c642c2074686973206973206120737472696e672070617373656420617320706172616d6574657220746f206120736d61727420636f6e7472616374000000000000000000000000000000000000000000000000000000","gas_limit":"300000","gas_price":"100000000000","nonce":"0","to":"0xE54c7b475644fBd918cfeDC57b1C9179939921E6","value":"0"},"myMethod":{"input":["address","uint256","string"],"name":"myFantasticMethod","output":"bool"}}'
 }
 
+@test "print a ethereum signature array and ethereum address dictionary" {
+    cat <<EOF | save_asset eth_sign_arr_eth_add_dict.data
+{
+	"addresses": {
+		"first": "0x2B8070975AF995Ef7eb949AE28ee7706B9039504",
+		"second": "0x3028806AC293B5aC9b863B685c73813626311DaD",
+		"third": "0xe1C2F1ACb2758c4D88EDb84e0306A0a96682E62a"
+	},
+    "signatures": [
+		{
+			"r": "ed8f36c71989f8660e8f5d4adbfd8f1c0288cca90d3a5330b7bf735d71ab52fe",
+			"s": "7ba0a7827dc4ba707431f1c10babd389f658f8e208b89390a9be3c097579a2ff",
+			"v": "27"
+		},
+		{
+			"r": "40d305373c648bb6b2bbadebe02ada256a9d0b3d3c37367c0a2795e367b22f73",
+			"s": "72e40dfc3497927764d1585783d058e4367bb4d24d2107777d7aa4ddcb6593c7",
+			"v": "27"
+		},
+		{
+			"r": "9e07477c31db612e8c99a950385162373ff41a5b8941470b1aeba43b76c53570",
+			"s": "05fce6615567dc1944cc02fbed86202b09d92d79fbade425af0d74c328d8f6ae",
+			"v": "28"
+		}
+	]
+}
+EOF
+    cat <<EOF | zexe eth_sign_arr_eth_add_dict.zen eth_sign_arr_eth_add_dict.data
+Scenario ethereum: array of signature and dictionary of address
+
+Given I have a 'ethereum signature array' named 'signatures'
+Given I have a 'ethereum address dictionary' named 'addresses'
+
+Then print the data
+EOF
+    save_output eth_sign_arr_eth_add_dict_out.json
+    assert_output '{"addresses":{"first":"0x2B8070975AF995Ef7eb949AE28ee7706B9039504","second":"0x3028806AC293B5aC9b863B685c73813626311DaD","third":"0xe1C2F1ACb2758c4D88EDb84e0306A0a96682E62a"},"signatures":["0xed8f36c71989f8660e8f5d4adbfd8f1c0288cca90d3a5330b7bf735d71ab52fe7ba0a7827dc4ba707431f1c10babd389f658f8e208b89390a9be3c097579a2ff1b","0x40d305373c648bb6b2bbadebe02ada256a9d0b3d3c37367c0a2795e367b22f7372e40dfc3497927764d1585783d058e4367bb4d24d2107777d7aa4ddcb6593c71b","0x9e07477c31db612e8c99a950385162373ff41a5b8941470b1aeba43b76c5357005fce6615567dc1944cc02fbed86202b09d92d79fbade425af0d74c328d8f6ae1c"]}'
+}
