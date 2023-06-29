@@ -563,6 +563,46 @@ EOF
     assert_output '{"ethereum_abi_encoding":"00000000000000000000000077c2f9730b6c3341e1b71f76ecf19ba39e88f247000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033233340000000000000000000000000000000000000000000000000000000000","hash":"pTFYbyovWkOT6CaHSRNCN7ySQ/AGbphs9WQnZ2JwPWQ="}'
 }
 
+@test "Complex encoding" {
+    cat <<EOF | save_asset 'encoding_with_bool.data'
+{
+    "typeSpec": [
+        "address",
+        "uint256",
+        "string",
+        "string",
+        "bool"
+    ],
+	"parameter1": "E54c7b475644fBd918cfeDC57b1C9179939921E6",
+	"parameter2": "1234567891234",
+	"parameter3": "hello world, this is a string passed as parameter to a smart contract",
+	"parameter3b": "false string doesn't work on remix",
+	"parameter4": "false"
+}
+EOF
+    cat <<EOF | zexe encoding_with_bool.zen encoding_with_bool.data
+Scenario ethereum
+
+Given I have a 'ethereum address' named 'parameter1'
+Given I have a 'integer' named 'parameter2'
+Given I have a 'string' named 'parameter3'
+Given I have a 'string' named 'parameter3b'
+Given I have a 'string' named 'parameter4'
+Given I have a 'string array' named 'typeSpec'
+
+When I create the new array
+When I move 'parameter1' in 'new array'
+When I move 'parameter2' in 'new array'
+When I move 'parameter3' in 'new array'
+When I move 'parameter3b' in 'new array'
+When I move 'parameter4' in 'new array'
+When I create the ethereum abi encoding of 'new array' using 'typeSpec'
+
+Then print the 'ethereum abi encoding'
+EOF
+    save_output 'encoding_with_bool.json'
+    assert_output '{"ethereum_abi_encoding":"000000000000000000000000e54c7b475644fbd918cfedc57b1c9179939921e60000000000000000000000000000000000000000000000000000011f71fb092200000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004568656c6c6f20776f726c642c2074686973206973206120737472696e672070617373656420617320706172616d6574657220746f206120736d61727420636f6e7472616374000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002266616c736520737472696e6720646f65736e277420776f726b206f6e2072656d6978000000000000000000000000000000000000000000000000000000000000"}'
+}
 @test "Create ethereum signature" {
     cat <<EOF | save_asset 'sk_sign.data'
 {

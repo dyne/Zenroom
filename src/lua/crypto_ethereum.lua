@@ -424,6 +424,15 @@ function encode(t, arg)
          end
          res = arg .. padding
       elseif t == 'bool' then
+         if iszen(type(arg)) then
+            arg = arg:octet():string()
+         end
+         if type(arg) == 'string' then
+            if arg ~= "true" and arg ~= "false" then
+               error(arg .. " is not a boolean value")
+            end
+            arg = arg ~= 'false'
+         end
          res = BIG.new(fif(arg, 1, 0)):fixed(32)
       elseif t == 'string' or t == 'bytes' then
          if iszen(type(arg)) then
