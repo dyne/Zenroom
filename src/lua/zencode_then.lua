@@ -62,7 +62,16 @@ local function then_outcast(val, key, enc)
 	  else
 		 fun = schema.export or default_export_f
 	  end
-	  return fun(val)
+      -- table
+      if codec.zentype ~= 'e' then
+        local res = {}
+        for k,v in pairs(val) do
+            res[k] = fun(v)
+        end
+        return res
+      end
+      -- element
+      return fun(val)
    end
    if codec.encoding then
 	  fun = get_encoding_function(codec.encoding)

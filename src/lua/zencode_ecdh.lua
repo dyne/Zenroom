@@ -83,7 +83,7 @@ When(
 		empty'ecdh public key'
 		local sk = havekey'ecdh'
 		ACK.ecdh_public_key = ECDH.pubgen(sk)
-		new_codec('ecdh public key') -- { zentype = 'e' }
+		new_codec('ecdh public key')
 	end
 )
 When("create the ecdh key with secret key ''",function(sec)
@@ -119,7 +119,7 @@ When(
 			ACK.secret_message.iv,
 			ACK.secret_message.header
 		)
-		new_codec('secret message', { zentype = 'd' })
+		new_codec('secret message')
 	end
 )
 
@@ -184,7 +184,7 @@ When(
 			ACK.secret_message.iv,
 			ACK.secret_message.header
 		)
-		new_codec('secret message', { zentype = 'd' })
+		new_codec('secret message')
 	end
 )
 
@@ -213,7 +213,7 @@ local function _signing(msg, var)
    empty(var)
    local obj = have(msg)
    ACK[var] = ECDH.sign(sk, ZEN.serialize(obj))
-   new_codec(var, { zentype = 'd' })
+   new_codec(var)
 end
 
 local function _verifying(msg, sig, by)
@@ -243,7 +243,7 @@ local function _signing_det(msg, var)
     local obj = have(msg)
     -- 64 here means to use SHA512.
     ACK[var] = ECDH.sign_deterministic(sk, ZEN.serialize(obj), 64)
-    new_codec(var, { zentype = 'dictionary' })
+    new_codec(var)
 end
 
 When("create the ecdh deterministic signature of ''",function(msg)
