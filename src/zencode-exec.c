@@ -70,6 +70,8 @@ int main(int argc, char **argv) {
 	exit(1);
   }
 
+  // TODO: check for spaces and newlines and invalid base64 chars
+
   if( ! fgets(script_b64, MAX_ZENCODE, stdin) ) {
 	fprintf(stderr, "fgets #1 (script): %s\n",strerror(errno));
 	return EXIT_FAILURE;
@@ -102,7 +104,7 @@ int main(int argc, char **argv) {
 	fprintf(stderr,"\"ZENROOM JSON LOG END\" ]\n");
 	return EXIT_FAILURE;
   }
-
+  zen_exec_script(Z, "CONF.debug.format='compact'");
   zen_exec_zencode(Z, script);
 
   register int exitcode = Z->exitcode;

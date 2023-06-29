@@ -32,8 +32,14 @@ end
 
 -- debug functions
 local function debug_traceback()
-   for k,v in pairs(ZEN.traceback) do
-	  warn(v)
+   if CONF.debug.format == 'compact' then
+	  act("TRACE: "..OCTET.to_base64(
+			  OCTET.from_string(
+				 JSON.encode(ZEN.traceback))))
+   else
+	  for k,v in pairs(ZEN.traceback) do
+		 warn(v)
+	  end
    end
 end
 Given("backtrace", function() debug_traceback() end)
@@ -47,17 +53,31 @@ local function debug_heap_dump()
    local HEAP = ZEN.heap()
    local ack = HEAP.ACK
    local keyring = ack.keyring
-   -- ack.keyring = '(hidden)'
-   if keyring then
-      I.schema({KEYRING = keyring})
-      ack.keyring = '(hidden)'
+   if CONF.debug.format == 'compact' then
+	  if keyring then
+		 ack.keyring = '(hidden)'
+	  end
+	  act("HEAP: "..OCTET.to_base64(
+			  OCTET.from_string(
+				 JSON.encode(
+					{GIVEN_data = HEAP.IN,
+					 GIVEN_keys = HEAP.KIN,
+					 CODEC = ZEN.CODEC,
+					 WHEN = ack,
+					 THEN = HEAP.OUT}))))
+   else -- CONF.debug.format == 'log'
+	  -- ack.keyring = '(hidden)'
+	  if keyring then
+		 I.schema({KEYRING = keyring})
+		 ack.keyring = '(hidden)'
+	  end
+	  I.warn({a_GIVEN_in = HEAP.IN,
+			  b_GIVEN_in = HEAP.KIN,
+			  c_WHEN_ack = ack,
+			  c_CODEC_ack = ZEN.CODEC,
+			  d_THEN_out = HEAP.OUT})
+	  ack.keyring = keyring
    end
-   I.warn({a_GIVEN_in = HEAP.IN,
-	   b_GIVEN_in = HEAP.KIN,
-	   c_WHEN_ack = ack,
-	   c_CODEC_ack = ZEN.CODEC,
-	   d_THEN_out = HEAP.OUT})
-   ack.keyring = keyring
 end
 
 local function debug_heap_schema()

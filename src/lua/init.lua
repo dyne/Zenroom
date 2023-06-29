@@ -117,28 +117,30 @@ _G['Then'] = nil
 -----------
 -- defaults
 _G['CONF'] = {
-	input = {
-		encoding = input_encoding('base64'),
-		format = { fun = JSON.auto, name = 'json' },
-		tagged = false
-	},
-	output = {
-		encoding = { fun = get_encoding_function('base64'),
-			     name = 'base64' },
-		format = { fun = JSON.auto, name = 'json' },
-		versioning = false
-	},
-	debug = { encoding = { fun = get_encoding_function('hex'),
-			       name = 'hex' } },
-	parser = {strict_match = true},
-	heap = { check_collision = true },
-	hash = 'sha256',
+   input = {
+	  encoding = input_encoding('base64'),
+	  format = { fun = JSON.auto, name = 'json' },
+	  tagged = false
+   },
+   output = {
+	  encoding = { fun = get_encoding_function('base64'),
+				   name = 'base64' },
+	  format = { fun = JSON.auto, name = 'json' },
+	  versioning = false
+   },
+   debug = { encoding = { fun = get_encoding_function('hex'),
+						  name = 'hex' },
+			 format = 'log' -- or 'compact' for base64 encoded json
+		   },
+   parser = {strict_match = true},
+   heap = { check_collision = true },
+   hash = 'sha256',
 }
 -- turn on heapguard when DEBUG or linux-debug build
 if DEBUG > 1 or MAKETARGET == "linux-debug" then
-	_G['CONF'].heapguard = true
+   _G['CONF'].heapguard = true
 else
-	_G['CONF'].heapguard = false
+   _G['CONF'].heapguard = false
 end
 
 -- do not modify
