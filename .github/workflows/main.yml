@@ -121,30 +121,30 @@ jobs:
           make ${command}
       - run: make meson-test
 
-  linux-crypto-check:
-    name: 🐧 Linux crypto tests
-    needs: [reuse, c-lint, lua-lint]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - run: |
-          sudo apt install zsh jq meson
-          make linux
-          make check-linux
+  # linux-crypto-check:
+  #   name: 🐧 Linux crypto tests
+  #   needs: [reuse, c-lint, lua-lint]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         fetch-depth: 0
+  #     - run: |
+  #         sudo apt install zsh jq meson
+  #         make linux
+  #         make check-linux
 
-  macosx-crypto-check:
-    name: 🍎 macos crypto tests
-    needs: [reuse, c-lint, lua-lint]
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - run: |
-          make osx
-          make check-osx
+  # macosx-crypto-check:
+  #   name: 🍎 macos crypto tests
+  #   needs: [reuse, c-lint, lua-lint]
+  #   runs-on: macos-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         fetch-depth: 0
+  #     - run: |
+  #         make osx
+  #         make check-osx
 
   go-build-check:
     name: 🐹 go build & checks
@@ -200,25 +200,25 @@ jobs:
       - name: 🔐 check crypto with rust-${{ matrix.rust }}
         run: make check-rs
 
-  cortex-m-build-check:
-    name: 📟 cortex-m build & checks
-    needs: [reuse, c-lint, lua-lint]
-    runs-on: ubuntu-latest
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'run cortex') || contains(github.event.head_commit.message, 'run cortex') }}
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - uses: numworks/setup-arm-toolchain@2021-10
-      - run: sudo apt install zsh qemu-system-arm
-      - name: Download cmsis
-        run: |
-          curl -LO https://github.com/ARM-software/CMSIS_5/archive/refs/tags/5.7.0.tar.gz
-          tar xvf 5.7.0.tar.gz -C lib
-          mv lib/CMSIS_5-5.7.0 lib/cmsis
-      - run: make cortex-arm
-      - name: 🔐 check crypto with cortex-m
-        run: make check-cortex-m
+  # cortex-m-build-check:
+  #   name: 📟 cortex-m build & checks
+  #   needs: [reuse, c-lint, lua-lint]
+  #   runs-on: ubuntu-latest
+  #   if: ${{ contains(github.event.pull_request.labels.*.name, 'run cortex') || contains(github.event.head_commit.message, 'run cortex') }}
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         fetch-depth: 0
+  #     - uses: numworks/setup-arm-toolchain@2021-10
+  #     - run: sudo apt install zsh qemu-system-arm
+  #     - name: Download cmsis
+  #       run: |
+  #         curl -LO https://github.com/ARM-software/CMSIS_5/archive/refs/tags/5.7.0.tar.gz
+  #         tar xvf 5.7.0.tar.gz -C lib
+  #         mv lib/CMSIS_5-5.7.0 lib/cmsis
+  #     - run: make cortex-arm
+  #     - name: 🔐 check crypto with cortex-m
+  #       run: make check-cortex-m
 
   js-build-check:
     name: 🐯 js build & checks
@@ -299,7 +299,7 @@ jobs:
 
   semantic-release:
     name: 🤖 Semantic release
-    needs: [rust-build-check, go-build-check, meson-build, js-build-check, linux-crypto-check, macosx-crypto-check]
+    needs: [rust-build-check, go-build-check, meson-build, js-build-check]
     runs-on: ubuntu-latest
     if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
     outputs:

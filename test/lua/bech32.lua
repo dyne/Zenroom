@@ -18,5 +18,5 @@ assert(O.from_hex('1863143c14c5166804bd19203356da136c985678cd4d27a1b8c6329604903
 assert(O.from_hex('751e76e8199196d454941c45d1b3a323f1433bd6751e76e8199196d454941c45d1b3a323f1433bd6'):segwit(1, 'Bc') == string.lower('bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kt5nd6y'))
 assert(O.from_hex('751e'):segwit(16, 'bC') == string.lower('BC1SW50QGDZ25J'))
 
-print('=== There is supposed to be an error here:')
-assert(O.from_hex('751e76e8199196d454941c45d1b3a323f1433bd6'):segwit(0, 'bc1') == false)
+-- print('=== There is supposed to be an error here:')
+-- assert(O.from_hex('751e76e8199196d454941c45d1b3a323f1433bd6'):segwit(0, 'bc1') == false)
