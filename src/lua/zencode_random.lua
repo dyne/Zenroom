@@ -136,7 +136,7 @@ local function _extract_random_elements(num, from, random_fun)
    local len = #tmp
    local max_len = 65536
    ZEN.assert(len < max_len, "The number of elements of "..from.." exceed the maximum length: "..max_len)
-   ZEN.assert(n < len, num.." is grater than the number of elements in "..from)
+   ZEN.assert(n <= len, num.." is grater than the number of elements in "..from)
    local max_random = math.floor(max_len/len)*len
 
    local dst = { }
