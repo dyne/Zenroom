@@ -333,21 +333,21 @@ void zen_teardown(zenroom_t *ZZ) {
 int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
   SAFE_EXEC;
 	int ret;
-	char *zscript = malloc(MAX_ZENCODE);
 	lua_State* L = (lua_State*)ZZ->lua;
 	// introspection on code being executed
-	mutt_snprintf(zscript,MAX_ZENCODE-1,
-	        "local _res, _err\n"
-		"_res, _err = pcall( function() ZEN:begin() end)\n"
-		"if not _res then exitcode(4) ZEN.OK = false error('INIT: '.._err,2) end\n"
-		"_res, _err = pcall( function() ZEN:parse([[\n%s\n]]) end)\n"
-		"if not _res then exitcode(3) ZEN.OK = false error('PARSE: '.._err,2) end\n"
-		"_res, _err = pcall( function() ZEN:run() end)\n"
-		"if not _res then exitcode(2) ZEN.OK = false error('EXEC: '.._err,2) end\n"
-		, script);
-	zen_setenv(L,"CODE",(char*)zscript);
-	ret = luaL_dostring(L, zscript);
-	free(zscript);
+	zen_setenv(L,"CODE",(char*)script);
+	ret = luaL_dostring
+	  (L,
+	   "local _res, _err\n"
+	   "_res, _err = pcall( function() ZEN:begin() end)\n"
+	   "if not _res then exitcode(4) ZEN.OK = false error('INIT: '.._err,2) end\n"
+	   "if OCTET.is_base64(CODE) then\n"
+	   "  _res, _err = pcall( function() ZEN:parse(OCTET.from_base64(CODE):str()) end)\n"
+	   "else _res, _err = pcall( function() ZEN:parse(CODE) end) end\n"
+	   "if not _res then exitcode(3) ZEN.OK = false error('PARSE: '.._err,2) end\n"
+	   "_res, _err = pcall( function() ZEN:run() end)\n"
+	   "if not _res then exitcode(2) ZEN.OK = false error('EXEC: '.._err,2) end\n"
+	   );
 	if(ret == SUCCESS) {
 	  notice(L, "Script successfully executed");
 	} else {
