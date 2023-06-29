@@ -1,122 +1,79 @@
-// Package zenroom is a CGO wrapper for the Zenroom virtual machine, which aims
-// to make Zenroom easily usable from Go programs. Currently the C binary we
-// wrap is only available for Linux.
 package zenroom
 
-// #cgo CFLAGS: -I${SRCDIR}/src
-// #cgo LDFLAGS: -L${SRCDIR}/lib -Wl,-rpath=${SRCDIR}/lib -lzenroom
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include <string.h>
-// #include "zenroom.h"
-// typedef int(*fun)(char*, char*, char*, char*, char*, size_t, char*, size_t);
-//
-// int wrapper(fun exec, char* script, char* conf, char* data, char* keys, char* stdout, size_t stdout_size, char* stderr, size_t stderr_size) {
-//     return exec(script, conf, data, keys, stdout, stdout_size, stderr, stderr_size);
-// }
-import "C"
-
 import (
-	"unsafe"
+	"io"
+	"log"
+	"os/exec"
+	"strings"
+	b64 "encoding/base64"
 )
 
-// maxString is zenroom defined buffer MAX_STRING size
-const BUFSIZE = 2 * 1024 * 1024
-
 type ZenResult struct {
-    Output string;
-    Logs string;
-}
-
-// ZenroomExec is our primary public API method, and it is here that we call Zenroom's
-// zenroom_exec_tobuf function. This method attempts to pass a required script,
-// and some optional extra parameters to the Zenroom virtual machine, where
-// cryptographic operations are performed with the result being returned to the
-// caller. The method signature has been tweaked slightly from the original
-// function defined by Zenroom; rather than making all parameters required,
-// instead we have just included as a required parameter the input SCRIPT, while
-// all other properties must be supplied via one of the previously defined
-// Option helpers.
-//
-// Returns the output of the execution of the Zenroom virtual machine, or an
-// error.
-func ZenroomExec(script string, conf string, keys string, data string) (ZenResult, bool) {
-	exec := C.fun(C.zenroom_exec_tobuf)
-	return wrapper(exec, script, conf, keys, data)
+	Output string;
+	Logs string;
 }
 
 func ZencodeExec(script string, conf string, keys string, data string) (ZenResult, bool) {
-	exec := C.fun(C.zencode_exec_tobuf)
-	return wrapper(exec, script, conf, keys, data)
+	execCmd := exec.Command("zencode-exec")
+
+	stdout, err := execCmd.StdoutPipe()
+	if err != nil {
+		log.Fatalf("Failed to create stdout pipe: %v", err)
+	}
+
+	stderr, err := execCmd.StderrPipe()
+	if err != nil {
+		log.Fatalf("Failed to create stderr pipe: %v", err)
+	}
+
+	stdin, err := execCmd.StdinPipe()
+    if err != nil {
+		log.Fatalf("Failed to create stdin pipe: %v", err)
+    }
+    defer stdin.Close()
+
+
+
+	io.WriteString(stdin, conf)
+	io.WriteString(stdin, "\n")
+
+	b64script := b64.StdEncoding.EncodeToString([]byte(script))
+	io.WriteString(stdin, b64script)
+	io.WriteString(stdin, "\n")
+
+	b64keys := b64.StdEncoding.EncodeToString([]byte(keys))
+	io.WriteString(stdin, b64keys)
+	io.WriteString(stdin, "\n")
+
+	b64data := b64.StdEncoding.EncodeToString([]byte(data))
+	io.WriteString(stdin, b64data)
+	io.WriteString(stdin, "\n")
+
+	err = execCmd.Start()
+	if err != nil {
+		log.Fatalf("Failed to start command: %v", err)
+	}
+	stdoutOutput := make(chan string)
+	stderrOutput := make(chan string)
+	go captureOutput(stdout, stdoutOutput)
+	go captureOutput(stderr, stderrOutput)
+
+	stdoutStr := <-stdoutOutput
+	stderrStr := <-stderrOutput
+
+	err = execCmd.Wait()
+
+	return ZenResult{Output: stdoutStr, Logs: stderrStr}, err == nil
 }
 
-func wrapper(fun C.fun, script string, conf string, keys string, data string) (ZenResult, bool) {
-	var (
-		cScript, cConf, cKeys, cData *C.char
-	)
+func captureOutput(pipe io.ReadCloser, output chan<- string) {
+	defer close(output)
 
-	cScript = C.CString(script)
-	defer C.free(unsafe.Pointer(cScript))
-
-	if conf != "" {
-		cConf = C.CString(conf)
-		defer C.free(unsafe.Pointer(cConf))
-	} else {
-		cConf = nil
+	buf := new(strings.Builder)
+	_, err := io.Copy(buf, pipe)
+	if err != nil {
+		log.Printf("Failed to capture output: %v", err)
+		return
 	}
-
-
-	if data != "" {
-		cData = C.CString(data)
-		defer C.free(unsafe.Pointer(cData))
-	} else {
-		cData = nil
-	}
-
-	if keys != "" {
-		cKeys = C.CString(keys)
-		defer C.free(unsafe.Pointer(cKeys))
-	} else {
-		cKeys = nil
-	}
-
-	// create empty strings to capture zenroom's output
-	stdout := emptyString(BUFSIZE)
-	stderr := emptyString(BUFSIZE)
-	defer C.free(unsafe.Pointer(stdout))
-	defer C.free(unsafe.Pointer(stderr))
-
-	res := C.wrapper(
-		fun,
-		cScript,
-		cConf, cKeys, cData,
-		stdout, BUFSIZE,
-		stderr, BUFSIZE,
-	)
-
-	zen_res := ZenResult{
-		Output: C.GoString(stdout),
-		Logs: C.GoString(stderr),
-	}
-
-	return zen_res, res == 0
-}
-
-// ZencodeExec is our primary public API method, and it is here that we call Zenroom's
-// zencode_exec_tobuf function. This method attempts to pass a required script,
-// and some optional extra parameters to the Zenroom virtual machine, where
-// cryptographic operations are performed with the result being returned to the
-// caller. The method signature has been tweaked slightly from the original
-// function defined by Zenroom; rather than making all parameters required,
-// instead we have just included as a required parameter the input SCRIPT, while
-// all other properties must be supplied via one of the previously defined
-// Option helpers.
-//
-// Returns the output of the execution of the Zenroom virtual machine, or an
-// error.
-
-// reimplementation of https://golang.org/src/strings/strings.go?s=13172:13211#L522
-func emptyString(size int) *C.char {
-	p := C.malloc(C.size_t(size))
-	return (*C.char)(p)
+	output <- buf.String()
 }
