@@ -76,21 +76,21 @@ int main(int argc, char **argv) {
 	fprintf(stderr, "fgets #1 (script): %s\n",strerror(errno));
 	return EXIT_FAILURE;
   }
-  script = alloc_from_b64(script_b64);
+  if(script_b64[0] != '\n') script = alloc_from_b64(script_b64);
 //  fprintf(stderr,"script in: %s\n",script);
 
   if( fgets(keys_b64, MAX_FILE, stdin) ) {
-	keys = alloc_from_b64(keys_b64);
+	if(keys_b64[0] != '\n') keys = alloc_from_b64(keys_b64);
 //	fprintf(stderr,"keys in: %s\n",keys);
   }
 
   if( fgets(data_b64, MAX_FILE, stdin) ) {
-	data = alloc_from_b64(data_b64);
+	if(data_b64[0] != '\n')	data = alloc_from_b64(data_b64);
 //	fprintf(stderr,"data in: %s\n",keys);
   }
 
   if( fgets(conf, MAX_CONFIG, stdin) ) {
-	strcat(conf,",logfmt=json");
+	if(conf[0] != '\n') strcat(conf,",logfmt=json");
   } else {
 	sprintf(conf,"logfmt=json");
   }

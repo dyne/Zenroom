@@ -53,6 +53,9 @@ meson-test:
 	echo '#!/bin/sh' > ${pwd}/test/zenroom
 	echo "${pwd}/meson/zenroom "'$$*' >> ${pwd}/test/zenroom
 	chmod +x ${pwd}/test/zenroom
+	echo '#!/bin/sh' > ${pwd}/test/zencode-exec
+	echo "${pwd}/meson/zencode-exec "'$$*' >> ${pwd}/test/zencode-exec
+	chmod +x ${pwd}/test/zencode-exec
 	ninja -C meson test
 
 meson-analyze:
