@@ -21,6 +21,7 @@ load ../bats_setup
     Z pbkdf2.lua
     Z rlp_encoding.lua
     Z satoshibtc.lua
+    Z bech32.lua
     Z schnorr.lua
     Z w3c-vc.lua
     Z coconut_preference.lua
