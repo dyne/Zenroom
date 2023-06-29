@@ -204,7 +204,7 @@ tests = [
 'generic_dilithium', 'generic_ecdh', 'generic_eddsa', 'generic_schnorr', 'given', 'hash',
 'http', 'keys', 'kyber', 'ntrup', 'numbers', 'output', 'pack', 'parser', 'planetmint',
 'random', 'reflow', 'rules', 'secshare', 'then', 'w3c', 'w3c_did', 'when', 'zenswarm',
-'zkp', 'zkp_multi_petitions'
+'zkp', 'zkp_multi_petitions', 'zencode_exec'
 ]
 foreach test_suite : tests
     test('zencode_'+test_suite.underscorify(),
