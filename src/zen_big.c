@@ -116,6 +116,8 @@ int _octet_to_big(lua_State *L, big *dst, const octet *src) {
 void big_free(lua_State *L, big *b) {
 	Z(L);
 	if(b) {
+		if(b->dval) free(b->dval);
+		if(b->val) free(b->val);
 		free(b);
 		Z->memcount_bigs--;
 	}
@@ -149,7 +151,17 @@ big* big_arg(lua_State *L,int n) {
 	result->zencode_positive = BIG_POSITIVE;
 	void *ud = luaL_testudata(L, n, "zenroom.big");
 	if(ud) {
-		*result = *(big*)ud;
+		big *big_ud = (big*)ud;
+		result->chunksize = big_ud->chunksize;
+		result->doublesize = big_ud->doublesize;
+		if(big_ud->val) {
+			big_init(L, result);
+			BIG_copy(result->val, big_ud->val);
+		} else if(big_ud->dval) {
+			dbig_init(L, result);
+			BIG_dcopy(result->dval, big_ud->dval);
+			BIG_sducopy(result->dval, big_ud->dval);
+		}
 		if(!result->val && !result->dval) {
 			zerror(L, "invalid big number in argument: not initalized");
 			big_free(L,result);
@@ -192,10 +204,16 @@ int big_destroy(lua_State *L) {
 	big *c = (big*)luaL_testudata(L, 1, "zenroom.big");
 	if(c) {
 		if(c->doublesize) {
-			if(c->dval) free(c->dval);
+			if(c->dval) {
+				free(c->dval);
+				c->dval = NULL;
+			}
 			if(c->val) warning(L,"found leftover buffer while freeing double big");
 		} else {
-			if(c->val) free(c->val);
+			if(c->val) {
+				free(c->val);
+				c->val = NULL;
+			}
 			if(c->dval) warning(L,"found leftover buffer while freeing big");
 		}
 	}
@@ -264,6 +282,7 @@ int dbig_init(lua_State *L,big *n) {
 		// extend from big to double big
 		BIG_dscopy(n->dval,n->val);
 		free(n->val);
+		n->val = NULL;
 		n->len = MODBYTES<<1;
 	}
 	if(!n->val || !n->dval) {
