@@ -261,7 +261,7 @@ int main(int argc, char **argv) {
 	}
 
 	if(verbosity) {
-		fprintf(stderr, "Zenroom v%s - secure crypto language VM\n",VERSION);
+		fprintf(stderr, "Zenroom %s - secure crypto language VM\n",VERSION);
 		fprintf(stderr, "Zenroom is Copyright (C) 2017-%s by the Dyne.org foundation\n", CURRENT_YEAR);
 		fprintf(stderr, "For the original source code and documentation go to https://zenroom.org\n");
 		fprintf(stderr, "Zenroom is free software: you can redistribute it and/or modify\n");
