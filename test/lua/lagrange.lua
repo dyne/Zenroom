@@ -81,7 +81,4 @@ for i = 1,Q,1 do
     sec = BIG.add(sec, (shares[i].y):modmul(num:moddiv(den, ECP.order())))   
     sec = BIG.mod(sec, ECP.order()) 
 end
-
-print(coeff[1])
-print(sec)
 assert(coeff[1] == sec)
