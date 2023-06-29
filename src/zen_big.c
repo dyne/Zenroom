@@ -162,6 +162,7 @@ big* big_arg(lua_State *L,int n) {
 			BIG_dcopy(result->dval, big_ud->dval);
 			BIG_sducopy(result->dval, big_ud->dval);
 		}
+		result->zencode_positive = big_ud->zencode_positive;
 		if(!result->val && !result->dval) {
 			zerror(L, "invalid big number in argument: not initalized");
 			big_free(L,result);
