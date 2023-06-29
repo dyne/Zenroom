@@ -162,7 +162,7 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 					return 0;
 				}
 				if(strncasecmp(lex.string, "dec:", 4) != 0) { // dec: prefix needed
-					_err( "Invalid rngseed data prefix (must be dec:)\n");
+					_err( "Invalid maxiter data prefix (must be dec:)\n");
 					// free(lexbuf);
 					return 0;
 				}

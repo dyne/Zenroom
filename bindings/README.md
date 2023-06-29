@@ -35,11 +35,11 @@ In brief such a shell command:
 cat zencode-data-keys-conf | zencode-exec
 ```
 
-The `zencode-data-keys-conf` is a file or stream with a newline separated list of base64 encoded inputs (except the final `conf` line) which has to be in this order:
-1. zencode script (string -> base64) *newline*
-2. keys (json -> base64) *newline*
-3. data (json -> base64) *newline*
-4. conf (string) *newline*
+The `zencode-data-keys-conf` is a file or stream with a newline separated list of base64 encoded inputs (except the initial `conf` line) which has to be in this order:
+1. conf (string) *newline*
+2. zencode script (string -> base64) *newline*
+3. keys (json -> base64) *newline*
+4. data (json -> base64) *newline*
 
 Each line should start directly with the base64 string without any prefix and should end with a newline. Anything else will likely be rejected.
 

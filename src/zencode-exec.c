@@ -53,8 +53,22 @@ int main(int argc, char **argv) {
 	exit(1);
   }
 
+  if( fgets(conf, MAX_CONFIG, stdin) ) {
+	if(strlen(conf)>=MAX_CONFIG) {
+	  fprintf(stderr,"zencode-exec error: conf string out of bounds.\n");
+	  return EXIT_FAILURE;
+	}
+	if(conf[0] != '\n')	{
+	  strcat(conf,",logfmt=json");
+	} else {
+	  snprintf(conf,MAX_CONFIG,"logfmt=json");
+	}
+  } else {
+	  snprintf(conf,MAX_CONFIG,"logfmt=json");
+  }
+
   if( ! fgets(script_b64, MAX_ZENCODE, stdin) ) {
-	fprintf(stderr, "zencode-exec missing script on first line: %s\n",strerror(errno));
+	fprintf(stderr, "zencode-exec missing script at line 2: %s\n",strerror(errno));
 	return EXIT_FAILURE;
   }
 
@@ -63,15 +77,6 @@ int main(int argc, char **argv) {
   }
   if( fgets(data_b64, MAX_FILE, stdin) ) {
 	ret = strlen(data_b64); data_b64[ret-1] = 0x0; // remove newline
-  }
-  if( fgets(conf, MAX_CONFIG, stdin) ) {
-	if(strlen(conf)>=MAX_CONFIG) {
-	  fprintf(stderr,"zencode-exec error: conf string out of bounds.\n");
-	  return EXIT_FAILURE;
-	}
-	if(conf[0] != '\n') strcat(conf,",logfmt=json");
-  } else {
-	snprintf(conf,MAX_CONFIG,"logfmt=json");
   }
 
   Z = zen_init(conf,
@@ -82,6 +87,8 @@ int main(int argc, char **argv) {
 	fprintf(stderr,"\"ZENROOM JSON LOG END\" ]\n");
 	return EXIT_FAILURE;
   }
+
+  // TODO(jaromil): if used elsewhere promote to conf directives
   // heap and trace dumps in base64 encoded json
   zen_exec_script(Z, "CONF.debug.format='compact'");
   // import DATA and KEYS from base64

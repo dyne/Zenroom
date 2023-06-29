@@ -3,7 +3,10 @@ load ../bats_zencode
 
 @test "Execute zencode-exec with all stdin inputs" {
 
-	cat <<EOF | base64 -w0 > zencode_exec_stdin
+	# empty conf
+	echo > zencode_exec_stdin
+
+	cat <<EOF | base64 -w0 >> zencode_exec_stdin
 rule check version 3.0.0
 Scenario 'ecdh': Bob verifies the signature from Alice
 # Here we load the pubkey we'll verify the signature against
@@ -63,7 +66,9 @@ EOF
 
 @test "Check heap dump in zencode-exec is compact (base64)" {
 
-	cat <<EOF | base64 -w0 > zencode_exec_stdin
+	echo "rngseed=hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" > zencode_exec_stdin
+
+	cat <<EOF | base64 -w0 >> zencode_exec_stdin
 Given nothing
 When I create the random object of '256' bits
 and debug
@@ -71,9 +76,9 @@ Then print the 'random object'
 
 EOF
 	echo >> zencode_exec_stdin
+
 	echo >> zencode_exec_stdin # keys
 	echo >> zencode_exec_stdin # data
-	echo "rngseed=hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" >> zencode_exec_stdin
 
 	echo > $TMP/out
 	cat zencode_exec_stdin | ${TR}/zencode-exec 2>>full.json 1>>full.json
