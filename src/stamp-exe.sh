@@ -19,7 +19,7 @@ BEGIN
       VALUE "LegalCopyright", "Written and designed by Denis Roio <jaromil@dyne.org>"
       VALUE "OriginalFilename", "zenroom.exe"
       VALUE "ProductName", "Zenroom"
-      VALUE "ProductVersion", "`cat ../VERSION`"
+      VALUE "ProductVersion", "3"
     END
   END
   BLOCK "VarFileInfo"
