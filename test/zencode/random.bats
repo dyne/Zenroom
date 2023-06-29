@@ -103,3 +103,16 @@ EOF
     save_output "array_random_nums_modulo.json"
     assert_output '{"aggregation":3271,"array":[89,80,83,31,98,10,79,97,11,39,82,39,38,59,94,95,91,92,61,18,4,67,77,67,36,10,0,22,42,3,49,12,17,66,45,49,77,60,21,66,50,20,67,37,4,95,86,51,53,12,96,22,20,17,82,98,54,39,24,91,81,19,20,57]}'
 }
+
+@test "Pick random in array with one element" {
+    cat <<EOF | save_asset single_element_array.json
+{"array": [42]}
+EOF
+    cat <<EOF | zexe single_element_array_random.zen single_element_array.json
+Given I have a 'float array' named 'array'
+When I pick the random object in 'array'
+Then print the 'random object'
+EOF
+    save_output "single_element_array_random.out"
+    assert_output '{"random_object":42}'
+}
