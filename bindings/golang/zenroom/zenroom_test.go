@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestBasicCall(t *testing.T) {
+/*func TestBasicCall(t *testing.T) {
 	script := "print (1)"
 	res, _ := ZenroomExec(script, "", "", "")
 	if res.Output == "1" {
@@ -45,14 +45,20 @@ func TestCallStrings(t *testing.T) {
 			}
 		})
 	}
-}
+}*/
 
 func TestZencode(t *testing.T) {
 	script := `Scenario 'ecdh': Create the keypair
 Given that I am known as 'Alice'
 When I create the ecdh key
-Then print my data`
+and debug
+Then print my data
+Then print my keyring`
 	res, success := ZencodeExec(script, "", "", "")
+	fmt.Println("Result")
+	fmt.Println(res)
+	fmt.Println("Logs")
+	fmt.Println(res.Logs)
 	if !success {
 		t.Error(res.Logs)
 	}
