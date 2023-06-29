@@ -529,6 +529,7 @@ jobs:
           name: release-bin-linux-amd64
           path: |
             src/zenroom
+            src/zencode-exec
       - name: Clean for next build
         run: make clean
       - name: Build x86_64 shlib
@@ -552,8 +553,28 @@ jobs:
           name: release-exe-win-w64
           path: |
             src/zenroom.exe
+            src/zencode-exec.exe
             src/libzenroom_dll.lib
             src/zenroom.dll
+
+  build-release-on-osx:
+    name: 🍎 mac osx release build
+    needs: [semantic-release]
+    runs-on: macos-latest
+    if: ${{ needs.semantic-release.outputs.release == 'True' }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - run: |
+          make osx
+      - name: Upload artifact win x86_64
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-bin-osx
+          path: |
+            src/zenroom.command
+            src/zencode-exec.command
 
   draft-binary-release:
     name: 📦 Pack release

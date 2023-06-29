@@ -24,14 +24,19 @@
 
 #include <zenroom.h>
 
+#if !defined(ARCH_WIN)
 #include <sys/poll.h>
+#endif
 
 int main(int argc, char **argv) {
   (void)argc;
   (void)argv;
   register int ret;
   zenroom_t *Z;
+
+#if !defined(ARCH_WIN)
   struct pollfd fds;
+#endif
 
   char script_b64[MAX_ZENCODE];
   char keys_b64[MAX_FILE];
@@ -42,6 +47,8 @@ int main(int argc, char **argv) {
   data_b64[0] = 0x0;
   conf[0] = 0x0;
 
+// TODO(jaromil): find a way to check stdin on windows
+#if !defined(ARCH_WIN)
   fds.fd = 0; // stdin
   fds.events = POLLIN;
   ret = poll(&fds, 1, 0);
@@ -52,6 +59,7 @@ int main(int argc, char **argv) {
 	fprintf(stderr,"stdin error: %s\n",strerror(errno));
 	exit(1);
   }
+#endif
 
   if( fgets(conf, MAX_CONFIG, stdin) ) {
 	if(strlen(conf)>=MAX_CONFIG) {
