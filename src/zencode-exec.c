@@ -93,6 +93,8 @@ int main(int argc, char **argv) {
   zen_exec_script(Z, "CONF.debug.format='compact'");
   // import DATA and KEYS from base64
   zen_exec_script(Z, "CONF.input.format.fun = function(obj) return JSON.decode(OCTET.from_base64(obj):str()) end");
+  zen_exec_script(Z, "CONF.code.encoding.fun = function(obj) return OCTET.from_base64(obj):str() end");
+
 
   ret = strlen(script_b64); script_b64[ret-1] = 0x0; // remove newline
   zen_exec_zencode(Z, script_b64);

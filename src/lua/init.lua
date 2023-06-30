@@ -117,6 +117,9 @@ _G['Then'] = nil
 -----------
 -- defaults
 _G['CONF'] = {
+   code = {
+	  encoding = { fun = function(code) return code end }
+   },
    input = {
 	  encoding = input_encoding('base64'),
 	  format = { fun = JSON.auto, name = 'json' },
