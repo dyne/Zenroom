@@ -347,7 +347,7 @@ int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
 	   "if not _res then exitcode(2) ZEN.OK = false error('EXEC: '.._err,2) end\n"
 	   );
 	if(ret == SUCCESS) {
-	  notice(L, "Script successfully executed");
+	  func(L, "Script successfully executed");
 	} else {
 	  zerror(L, "ERROR:");
 	  zerror(L, "%s", lua_tostring(L, -1));
