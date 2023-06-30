@@ -29,6 +29,7 @@ test/**/*.zen
 *.[oa]
 *.so
 src/zenroom
+src/zencode-exec
 build/zenroom
 src/zenroom.js
 src/zenroom.js.mem
