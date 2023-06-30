@@ -338,25 +338,28 @@ int main(int argc, char **argv) {
 		static char zscript[MAX_ZENCODE];
 		fprintf(stderr, "Documentation for scenario: %s\n",introspect);
 		snprintf(zscript,MAX_ZENCODE-1,
-		               "function Given(text, fn) ZEN.given_steps[text] = true end\n"
-		               "function When(text, fn) ZEN.when_steps[text] = true end\n"
-		               "function Then(text, fn) ZEN.then_steps[text] = true end\n"
-					   "function IfWhen(text, fn) ZEN.if_steps[text] = true end\n"
-		               "function ZEN.add_schema(arr)\n"
-		               "  for k,v in pairs(arr) do ZEN.schemas[k] = true end end\n"
-		               "ZEN.given_steps = {}\n"
-		               "ZEN.when_steps = {}\n"
-		               "ZEN.then_steps = {}\n"
-   		               "ZEN.if_steps = {}\n"
-		               "ZEN.schemas = {}\n"
-		               "require_once('zencode_%s')\n"
-		               "print(JSON.encode(\n"
-		               "{ Scenario = \"%s\",\n"
-		               "  Given = ZEN.given_steps,\n"
-		               "  When = ZEN.when_steps,\n"
-		               "  Then = ZEN.then_steps,\n"
-					   "  If = ZEN.if_steps,\n"
-		               "  Schemas = ZEN.schemas }))", introspect, introspect);
+				"function Given(text, fn) ZEN.given_steps[text] = true end\n"
+				"function When(text, fn) ZEN.when_steps[text] = true end\n"
+				"function Then(text, fn) ZEN.then_steps[text] = true end\n"
+				"function IfWhen(text, fn) ZEN.if_steps[text] = true end\n"
+				"function Foreach(text, fn) ZEN.foreach_steps[text] = true end\n"
+				"function ZEN.add_schema(arr)\n"
+				"  for k,v in pairs(arr) do ZEN.schemas[k] = true end end\n"
+				"ZEN.given_steps = {}\n"
+				"ZEN.when_steps = {}\n"
+				"ZEN.then_steps = {}\n"
+				"ZEN.if_steps = {}\n"
+				"ZEN.foreach_steps = {}\n"
+				"ZEN.schemas = {}\n"
+				"require_once('zencode_%s')\n"
+				"print(JSON.encode(\n"
+				"{ Scenario = \"%s\",\n"
+				"  Given = ZEN.given_steps,\n"
+				"  When = ZEN.when_steps,\n"
+				"  Then = ZEN.then_steps,\n"
+				"  If = ZEN.if_steps,\n"
+				"  Foreach = ZEN.foreach_steps,\n"
+				"  Schemas = ZEN.schemas }))", introspect, introspect);
 		int ret = luaL_dostring(Z->lua, zscript);
 		if(ret) {
 			fprintf(stderr, "Zencode execution error\n");
