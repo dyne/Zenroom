@@ -391,6 +391,25 @@ When("create the ethereum abi encoding of '' using ''", function(t, args)
     new_codec('ethereum abi encoding', {encoding = 'hex'})
 end)
 
+When("create the ethereum abi decoding of '' using ''", function(t, args)
+    -- We imply that t is an octet/octet array and args is a single string/a string array
+    local data = have(t)
+    local o_type_spec = have(args)
+    local type_spec
+    -- TODO: support for nested array using deepmap.
+    if(type(o_type_spec) == "table") then
+        type_spec = {}
+        for i,v in pairs(o_type_spec) do
+            type_spec[i] = O.to_string(v)
+        end
+    else
+        type_spec = O.to_string(o_type_spec)
+    end
+    empty'ethereum abi decoding'
+    ACK.ethereum_abi_decoding = ETH.abi_decode(type_spec)(data)
+    new_codec('ethereum abi decoding', {zentype="a"})
+end)
+
 When("create the ethereum signature of ''", function(object)
     local sk = havekey'ethereum'
     local data = have(object)

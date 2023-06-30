@@ -559,31 +559,39 @@ function ETH.contract_return_factory(params)
 
       local res = {}
       for i, v in ipairs(params) do
-	 -- I don't check the range of values (for bool the input should be 0 or 1),
-	 -- while for int<M> should be 0 ... 2^(<M>)-1
-	 if v == 'address' or string.match(v, '^uint%d+$') then
-	    table.insert(res, BIG.new(val:sub(32 * (i-1)+1, 32 * i)))
-	 elseif v == 'bool' then
-	    table.insert(res, BIG.new(val:sub(32 * (i-1)+1, 32 * i)) ~= BIG.new(0))
-	 elseif v == 'string' or v == 'bytes' then
-	    -- TODO: don't know the maximum size of argument
-	    -- there could be an overflow
-	    local offset = tonumber(val:sub(32 * (i-1)+1, 32 * i):hex(), 16)
-	    local slen = tonumber(val:sub(1+offset, 32+offset):hex(), 16)
-	    local s = val:sub(1+offset+32, offset+32+slen):string()
-            if v == 'string' then
-              s = s:string()
+         -- I don't check the range of values (for bool the input should be 0 or 1),
+         -- while for int<M> should be 0 ... 2^(<M>)-1
+         if v == 'address' or string.match(v, '^uint%d+$') then
+            local val = BIG.new(val:sub(32 * (i-1)+1, 32 * i))
+            if v == 'address' then
+               val = val:fixed(32)
             end
-	    table.insert(res, s)
-	 else
-	    assert(false, "Unknown data type")
-	 end
+            table.insert(res, val)
+         elseif v == 'bool' then
+            table.insert(res, BIG.new(val:sub(32 * (i-1)+1, 32 * i)) ~= BIG.new(0))
+         elseif v == 'string' or v == 'bytes' then
+            -- TODO: don't know the maximum size of argument
+            -- there could be an overflow
+            local offset = tonumber(val:sub(32 * (i-1)+1, 32 * i):hex(), 16)
+            local slen = tonumber(val:sub(1+offset, 32+offset):hex(), 16)
+            local s = val:sub(1+offset+32, offset+32+slen):string()
+            if v == 'string' then
+               s = s:string()
+            end
+            table.insert(res, s)
+         elseif v == "bytes32" then -- TODO: for any bytesXX
+            local val = val:sub(32 * (i-1)+1, 32 * i)
+            table.insert(res, val)
+         else
+            assert(false, "Unknown data type")
+         end
       end
 
       return res
    end
 end
 
+ETH.abi_decode = ETH.contract_return_factory
 
 -- methods with the modifier "view" have to be executed (locally) with
 -- eth_call, they don't change the blockchain
