@@ -30,19 +30,22 @@ end
 -- I.spy(PVSS.create_generators(10, ECP.prime(), ECP.order()))
 
 print('----------------------------------------------')
-print("Create and verify shares")
+print("Create and verify encrypted shares")
 print("Test case 1")
 local participants = 10
+local indeces = {}
 local thr = 6
 local secret = BIG.modrand(ECP.order())
 local g, G = table.unpack(PVSS.create_generators(2, ECP.prime(), ECP.order()))
 local public_keys = {}
-
+local secret_keys = {}
 for i=1,participants do
-    public_keys[i] = PVSS.sk2pk(G, PVSS.keygen())
+    secret_keys[i] = PVSS.keygen()
+    public_keys[i] = PVSS.sk2pk(G, secret_keys[i])
+    indeces[i] = i
 end
 
-local commitments, encrypted_shares, challenge, responses = PVSS.create_shares(secret, g, public_keys, thr, participants)
+local commitments, encrypted_shares, challenge, responses, XXss, evals = PVSS.create_shares(secret, g, public_keys, thr, participants)
 assert(PVSS.verify_shares(g, public_keys, thr, participants, commitments, encrypted_shares, challenge, responses))
 
 print("Test failure 1")
@@ -71,6 +74,27 @@ assert( not PVSS.verify_shares(g, public_keys, thr, participants, commitments, e
 commitments[1] = temp
 
 print('----------------------------------------------')
+print("Test: decrypt shares")
+local shares_proof = {}
+for i = 1, participants do
+    print("Test case ".. i)
+    local table_dec = PVSS.decrypt_share(secret_keys[i], encrypted_shares[i], public_keys[i], G)
+    table.insert(shares_proof, table_dec)
+    local S = table.unpack(table_dec,1,1)
+    assert(S == G*evals[i])
+end
+
+print('----------------------------------------------')
+print("Test: verify decrypted shares")
+local shares = PVSS.verify_decrypted_shares(shares_proof)
+assert(#shares == participants)
+
+print('----------------------------------------------')
+print("Test: pooling the shares")
+local sec = PVSS.pooling_shares(shares, indeces, thr)
+assert(sec == G*secret)
+
+print('----------------------------------------------')
 print("Create deterministic shares")
 
 -- We test our implementation with a deterministic variant of
@@ -83,10 +107,12 @@ G = ECP.new(BIG.new(O.from_hex("0a17f5c7ea3abe3654c4b56d709efd293e17e79327e15b2a
 local t = 3
 local n = 5
 local s = BIG.new(123)
+local sec_keys = {}
 local pks = {}
 local det_coefs = {s, BIG.new(5), BIG.new(6)}
 for i=3,n+2 do
-    table.insert(pks, PVSS.sk2pk(G, BIG.new(i)))
+    table.insert(sec_keys, BIG.new(i))
+    table.insert(pks, PVSS.sk2pk(G, sec_keys[i-2]))
 end
 
 local C = {
@@ -167,6 +193,72 @@ for k,v in pairs(resp) do
 end
 
 assert(chall == c)
+
+print('----------------------------------------------')
+
+print("Reconstruction proofs")
+
+local S_array = {
+    { BIG.new(O.from_hex("0x591ce63050db62dd89f3e8189ca7ed8c5c6d73d302f4ea580bdc207ffdb3308885f2fdea679e581ca56cacbe83c7431")), BIG.new(O.from_hex("0xa16b47ced104df569a97e542c5c7ca814a2dd47446890fa4650360aac784392eca88ed6b389ee5f15493c4d03f93b79")) }
+    ,
+    { BIG.new(O.from_hex("0x1504c48c316a134a03d540e38ca7dcb8ff51c8240d632bdb7ceb989b9d74b692930bb4688c505bc7756af7b714a0f037")), BIG.new(O.from_hex("0x400c9dfd599cd2da728cbe3346a5c3f0714ca545ab88878e7cd53caef9a8fd46f174280c288d3f8123b6008e1cb0a9d")) }
+    ,
+    { BIG.new(O.from_hex("0x9778d7ec1f84e0750bae6ea0affb9bbd14dece9bac704f0de3e38394a84d14847af65af4f07a9fa6c2a8942f79fdeda")), BIG.new(O.from_hex("0x55ecdabfe9b2900ae19ccf45356684b4721fb51db85bf641d68cc518d531b337aa518144b7c03e30b5f5f11617c4d05")) }
+    ,
+    { BIG.new(O.from_hex("0x7acb009c4c6146748e1b2392506f455b678079b74e6f2f61e71fda7265d54c08fdfa9bb28213419b1e7b476cae78b8f")), BIG.new(O.from_hex("0x454a77ea751fa7e3db30c9d20f1c1282f23b83fdbcb79cad78176953da63f72631c8edfa2470b185d35fbea6f07df33")) }
+    ,
+    { BIG.new(O.from_hex("0x126106cce5d249f23905be9ae0b3882132a1f481fd7f4db9296ddf88c0a1ee5d3421a168e7499bc2655e620627ed05d")), BIG.new(O.from_hex("0x513974b628a21781212b953bc0b2fd518bb40e136087220a6801da88c48174001ec68a2d7481017bc957c652e5ffc4a")) }
+}
+
+local CURVE_ORDER = ECP.order()
+
+local sage_reconstruction_C_R = {
+    { BIG.mod(BIG.new(O.from_hex("766ec76de80675d660173a251a7ae42db56f03bed4e745576cdaed6cef7eb702")), CURVE_ORDER),
+    BIG.new(O.from_hex("0x6c6a4702ee62939daca1b1b0d716b38c2ea984cf81439ff5b96f37b53183db02")) },
+    -----------------------------
+    { BIG.mod(BIG.new(O.from_hex("464bacedd523dd6091e30dace094685d163e42a6184ef022d46a609e3a95e9a5")), CURVE_ORDER),
+    BIG.new(O.from_hex("0x429a424228490256522151649a93e69ba23fe1709ebf5371ae567d8415a85973")) },
+    -----------------------------
+    { BIG.mod(BIG.new(O.from_hex("064063ad7674764eb880ace296b1211e7b0361fb6a7d466c5b37f750cd04f608")), CURVE_ORDER),
+    BIG.new(O.from_hex("0x54abb4efd9572dbe98b6779b182c326cecacba19eb8bfbe137e82b6afee731dd")) },
+    -----------------------------
+    { BIG.mod(BIG.new(O.from_hex("548d4a42202eef7b4290344f9eec1a91ebf96c1de33830e18b7fe37ba7ef5d7a")), CURVE_ORDER),
+    BIG.new(O.from_hex("0x485487130ef9d58570bffe4a76a098af1adbab5baca6a6b1bb00ab151063cf2d")) },
+    -----------------------------
+    { BIG.mod(BIG.new(O.from_hex("c2106724026534096b1c2dbf275ccc27642524c0667b65d38d4eee0fdd7b265b")), CURVE_ORDER),
+    BIG.new(O.from_hex("0x20b105e9e29d732078f0e026600c8b2c2fdfaee1328c872b22d77d84f1a1f393")) },
+    -----------------------------
+}
+
+local valid_shares = {}
+
+for i = 1, 5 do
+    print("Test case ".. i)
+    local reconstruction_table = PVSS.decrypt_share(sec_keys[i], enc_shares[i], pks[i], G, true)
+    local S_decrypted, ch, response = table.unpack(reconstruction_table, 1, 3)
+    table.insert(valid_shares, S_decrypted)
+    assert(S_decrypted:x() == S_array[i][1])
+    assert(S_decrypted:y() == S_array[i][2])
+    assert(ch == sage_reconstruction_C_R[i][1])
+    assert(response == sage_reconstruction_C_R[i][2])
+end
+
+print('----------------------------------------------')
+print("Test pooling shares")
+
+local sage_secret = {
+    BIG.new(O.from_hex("0x1589ff4a362290d5a3784d3b0f60e92818e12d32348bec3477fc975d03c608a7b626c840ecf2cf596b4547b7e47f86ff")),
+    BIG.new(O.from_hex("0x3c7a0388a44653a4f64e2feacf25f92dbd02600db7ca95669ed03a08a1ae78793bb8cb9ed16400adbd388ba0202efc2"))
+}
+
+print("Test case 1")
+local shared_secret = PVSS.pooling_shares(valid_shares, {1,2,3,4,5}, t)
+assert(shared_secret:x() == sage_secret[1])
+assert(shared_secret:y() == sage_secret[2])
+assert(shared_secret == (G*s))
+
+print("Test case 2")
+assert(shared_secret == PVSS.pooling_shares({valid_shares[2], valid_shares[3], valid_shares[5]}, {2,3, 5}, t))
 
 print('----------------------------------------------')
 print('----------------------------------------------')
