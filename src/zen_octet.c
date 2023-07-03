@@ -144,6 +144,9 @@ int is_base58(lua_State *L, const char *in) {
 int is_hex(lua_State *L, const char *in) {
 	(void)L;
 	if(!in) { ERROR(); return 0; }
+	if ( (in[0] == '0') && (in[1] == 'x') ) {
+		in+=2;
+	}
 	int c;
 	for(c=0; in[c]!=0; c++) {
 		if (!isxdigit(in[c])) {
