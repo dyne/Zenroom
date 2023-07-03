@@ -150,6 +150,7 @@ local function pol_evaluation(x, K_array)
     return y
 end
 
+-- Given the secret, the public keys, the values t and n compute the shares 
 function PVSS.create_shares(s, g, pks, t, n, det_pol_coefs)
     -- We assume that s is a BIG modulo CURVE_ORDER.
     local is_det = nil
@@ -181,9 +182,10 @@ function PVSS.create_shares(s, g, pks, t, n, det_pol_coefs)
 
     local challenge, responses = PVSS.create_proof_DLEQ(proof_points, evals, nil, is_det)
 
-    return commitments, encrypted_shares, challenge, responses, Xs
+    return commitments, encrypted_shares, challenge, responses, Xs, evals
 end
 
+-- Given the proofs of the encrypted shares, verify their validity
 function PVSS.verify_shares(g, pks, t, n, commitments, encrypted_shares, challenge, responses)
     local Xs = {}
     local proof_points = {}
@@ -198,6 +200,49 @@ function PVSS.verify_shares(g, pks, t, n, commitments, encrypted_shares, challen
     end
 
     return PVSS.verify_proof_DLEQ(proof_points, challenge, responses)
+end
+
+-- Given the share and the public key the participant decrypt the share and compute a ZKP of the correctness of the operation
+function PVSS.decrypt_share(x, Y, y, G)
+    local S = Y * BIG.modinv(x, CURVE_ORDER)
+    local point_array = {G, y, S, Y}
+    local challenge, responses = PVSS.create_proof_DLEQ({point_array}, {x}) --, nil, nil)
+    return {S, challenge, responses, point_array}
+end
+
+--Given as input a table containing the output tables of PVSS.decrypt_shares, verify the validity of the shares
+-- return the list of valid decrypted shares
+function PVSS.verify_decrypted_shares(shares_proof)
+    local valid_shares = {}
+    for i = 1, #shares_proof do
+        if PVSS.verify_proof_DLEQ({shares_proof[i][4]}, shares_proof[i][2], shares_proof[i][3]) then
+            table.insert(valid_shares, shares_proof[i][1])
+        end
+    end
+    return valid_shares
+end
+
+-- Given as input a table containing the decrypted shares and the threshold retrive the secret.
+-- Here we are assuming that the shares have been already verified.
+function PVSS.pooling_shares(shares, threshold)
+    if #shares >= threshold then
+        local secret = ECP.infinity()
+        for i = 1, threshold do
+            local lagrange_coeff = BIG.new(1)
+            for j = 1, threshold do
+                local factor = BIG.new(1)
+                if j ~= i then
+                    local big_j = BIG.new(j)
+                    factor = BIG.moddiv(big_j, BIG.modsub(big_j, BIG.new(i), CURVE_ORDER), CURVE_ORDER)
+                    lagrange_coeff = BIG.modmul(lagrange_coeff,factor, CURVE_ORDER)
+                end
+            end
+            secret = secret + (shares[i]*lagrange_coeff)
+        end
+        return secret
+    else
+        error("The number of shares is less then the threshold", 2)
+    end
 end
 
 return PVSS
