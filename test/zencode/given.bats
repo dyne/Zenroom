@@ -457,3 +457,22 @@ EOF
     run $ZENROOM_EXECUTABLE -z -a given_in_path.data given_in_path_fail_not_a_table.zen
     assert_line '[W]  [!] Object is not a table: my_hex'
 }
+
+@test "Read hex with 0x prefix" {
+    cat << eof | save_asset hex_0x_prefix.data
+{
+  "0xprefix": "0x7d6df85bDBCe99151c813fd1DDE6BC007c523C27"
+}
+eof
+    cat <<EOF | zexe hex_0x_prefix.zen hex_0x_prefix.data
+Scenario ethereum
+
+Given I have a 'hex' named '0xprefix'
+Given I rename '0xprefix' to 'myhex'
+Given I have a 'ethereum address' named '0xprefix'
+
+Then print data
+EOF
+    save_output "hex_0x_prefix.out"
+    assert_output '{"0xprefix":"0x7d6df85bDBCe99151c813fd1DDE6BC007c523C27","myhex":"7d6df85bdbce99151c813fd1dde6bc007c523c27"}'
+}
