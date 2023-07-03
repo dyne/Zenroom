@@ -203,11 +203,11 @@ function PVSS.verify_shares(g, pks, t, n, commitments, encrypted_shares, challen
 end
 
 -- Given the share and the public key the participant decrypt the share and compute a ZKP of the correctness of the operation
-function PVSS.decrypt_share(x, Y, y, G)
+function PVSS.decrypt_share(x, Y, y, G, is_det)
     local S = Y * BIG.modinv(x, CURVE_ORDER)
     local point_array = {G, y, S, Y}
-    local challenge, responses = PVSS.create_proof_DLEQ({point_array}, {x}) --, nil, nil)
-    return {S, challenge, responses, point_array}
+    local challenge, responses = PVSS.create_proof_DLEQ({point_array}, {x}, nil, is_det)
+    return {S, challenge, responses[1], point_array}
 end
 
 --Given as input a table containing the output tables of PVSS.decrypt_shares, verify the validity of the shares
@@ -215,7 +215,7 @@ end
 function PVSS.verify_decrypted_shares(shares_proof)
     local valid_shares = {}
     for i = 1, #shares_proof do
-        if PVSS.verify_proof_DLEQ({shares_proof[i][4]}, shares_proof[i][2], shares_proof[i][3]) then
+        if PVSS.verify_proof_DLEQ({shares_proof[i][4]}, shares_proof[i][2], { shares_proof[i][3] }) then
             table.insert(valid_shares, shares_proof[i][1])
         end
     end
@@ -224,12 +224,14 @@ end
 
 -- Given as input a table containing the decrypted shares and the threshold retrive the secret.
 -- Here we are assuming that the shares have been already verified.
-function PVSS.pooling_shares(shares, threshold)
+function PVSS.pooling_shares(shares, indeces, threshold)
     if #shares >= threshold then
         local secret = ECP.infinity()
-        for i = 1, threshold do
+        for k = 1, threshold do
+            local i = indeces[k]
             local lagrange_coeff = BIG.new(1)
-            for j = 1, threshold do
+            for m = 1, threshold do
+                local j = indeces[m]
                 local factor = BIG.new(1)
                 if j ~= i then
                     local big_j = BIG.new(j)
@@ -237,7 +239,7 @@ function PVSS.pooling_shares(shares, threshold)
                     lagrange_coeff = BIG.modmul(lagrange_coeff,factor, CURVE_ORDER)
                 end
             end
-            secret = secret + (shares[i]*lagrange_coeff)
+            secret = secret + (shares[k]*lagrange_coeff)
         end
         return secret
     else
