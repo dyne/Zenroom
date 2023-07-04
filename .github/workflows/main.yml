@@ -622,3 +622,21 @@ jobs:
           prerelease: false
           fail_on_unmatched_files: true
           generate_release_notes: true
+
+  remove-tag-on-fail:
+    name: 🧻 Remove tag on fail
+    needs: [semantic-release, js-build-release, python-build-check, python-build-check-armv7, python-sdist, build-release-on-osx, build-release-on-ubuntu]
+    runs-on: ubuntu-latest
+    if: ${{ failure() }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Remove tag
+        uses: dev-drprasad/delete-tag-and-release@v1.0
+        with:
+          tag_name: ${{ needs.semantic-release.outputs.version }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          delete_release: false
+          repo: dyne/zenroom
