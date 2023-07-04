@@ -629,7 +629,7 @@ jobs:
     name: 🧻 Remove tag on fail
     needs: [semantic-release, js-build-release, python-build-check, python-build-check-armv7, python-sdist, build-release-on-osx, build-release-on-ubuntu]
     runs-on: ubuntu-latest
-    if: ${{ failure() && needs.semantic-release.outputs.release == 'True' }}
+    if: ${{ (failure() || cancelled()) && needs.semantic-release.outputs.release == 'True' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
