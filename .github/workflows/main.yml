@@ -464,8 +464,7 @@ jobs:
   npm-release:
     name: 📦 npm release
     runs-on: ubuntu-latest
-    needs: [semantic-release]
-    if: ${{ needs.semantic-release.outputs.release == 'True' }}
+    needs: [python-build-check, python-build-check-armv7, python-sdist]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -503,8 +502,7 @@ jobs:
   build-release-on-ubuntu:
     name: 🐧 Binary builds on Ubuntu
     runs-on: ubuntu-latest
-    needs: [semantic-release]
-    if: ${{ needs.semantic-release.outputs.release == 'True' }}
+    needs: [python-build-check, python-build-check-armv7, python-sdist]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -559,7 +557,7 @@ jobs:
 
   build-release-on-osx:
     name: 🍎 mac osx release build
-    needs: [semantic-release]
+    needs: [python-build-check, python-build-check-armv7, python-sdist]
     runs-on: macos-latest
     if: ${{ needs.semantic-release.outputs.release == 'True' }}
     steps:
@@ -578,7 +576,7 @@ jobs:
 
   draft-binary-release:
     name: 📦 Pack release
-    needs: [semantic-release, build-release-on-ubuntu]
+    needs: [semantic-release, build-release-on-ubuntu, build-release-on-osx]
     runs-on: ubuntu-latest
     steps:
       - name: download binary artifacts
