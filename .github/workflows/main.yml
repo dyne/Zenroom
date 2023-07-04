@@ -318,6 +318,7 @@ jobs:
   js-build-release:
     name: 🐯 js build release
     needs: [semantic-release]
+    if: ${{ needs.semantic-release.outputs.release == 'True' }}
     runs-on: ubuntu-latest
     env:
       EM_VERSION: 3.1.26
@@ -489,6 +490,7 @@ jobs:
     name: 🐧 Binary builds on Ubuntu
     runs-on: ubuntu-latest
     needs: [semantic-release]
+    if: ${{ needs.semantic-release.outputs.release == 'True' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -627,7 +629,7 @@ jobs:
     name: 🧻 Remove tag on fail
     needs: [semantic-release, js-build-release, python-build-check, python-build-check-armv7, python-sdist, build-release-on-osx, build-release-on-ubuntu]
     runs-on: ubuntu-latest
-    if: ${{ failure() }}
+    if: ${{ failure() && needs.semantic-release.outputs.release == 'True' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
