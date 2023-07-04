@@ -485,44 +485,6 @@ jobs:
       with:
         path: ./bindings/python3/dist/*.tar.gz
 
-  npm-release:
-    name: 📦 npm release
-    runs-on: ubuntu-latest
-    needs: [js-build-release, python-build-check, python-build-check-armv7, python-sdist]
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: master
-          fetch-depth: 0
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16.x
-          registry-url: 'https://registry.npmjs.org'
-      - uses: actions/download-artifact@v3
-        with:
-          name: javascript-artifact
-          path: .
-      - run: |
-          version=$(git describe --tags --abbrev=0)
-          yarn version --new-version ${version:1} --no-git-tag-version
-      - run: npm publish . --tag latest
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-  pypi-release:
-    name: 📦 PyPI release
-    needs: [js-build-release, python-build-check, python-build-check-armv7, python-sdist]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v3
-        with:
-          name: artifact
-          path: dist
-      - uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
-
   build-release-on-ubuntu:
     name: 🐧 Binary builds on Ubuntu
     runs-on: ubuntu-latest
@@ -597,6 +559,44 @@ jobs:
           path: |
             src/zenroom.command
             src/zencode-exec.command
+
+  npm-release:
+    name: 📦 npm release
+    runs-on: ubuntu-latest
+    needs: [js-build-release, python-build-check, python-build-check-armv7, python-sdist, build-release-on-osx, build-release-on-ubuntu]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: master
+          fetch-depth: 0
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          registry-url: 'https://registry.npmjs.org'
+      - uses: actions/download-artifact@v3
+        with:
+          name: javascript-artifact
+          path: .
+      - run: |
+          version=$(git describe --tags --abbrev=0)
+          yarn version --new-version ${version:1} --no-git-tag-version
+      - run: npm publish . --tag latest
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  pypi-release:
+    name: 📦 PyPI release
+    needs: [js-build-release, python-build-check, python-build-check-armv7, python-sdist, build-release-on-osx, build-release-on-ubuntu]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
 
   draft-binary-release:
     name: 📦 Pack release
