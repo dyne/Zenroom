@@ -89,9 +89,27 @@ end
 local function import_jwt(obj)
     local res = {}
     local toks = strtok(obj, '.')
-    res.header = JSON.parse(ZEN.get(toks[1], '.', O.from_url64, tostring))
-    res.payload = JSON.parse(ZEN.get(toks[1], '.', O.from_url64, tostring))
-    res.signature = ZEN.get(toks[1], '.', O.from_url64, tostring)
+    res.header = JSON.decode(ZEN.get(toks[1], '.', O.from_url64, tostring):string())
+    res.header = deepmap(function(s)
+        if type(s) == 'string' then
+            return O.from_string(s)
+        elseif type(s) == 'number' then
+            return F.new(s)
+        else
+            return s
+        end
+    end, res.header)
+    res.payload = JSON.decode(ZEN.get(toks[2], '.', O.from_url64, tostring):string())
+    res.payload = deepmap(function(s)
+        if type(s) == 'string' then
+            return O.from_string(s)
+        elseif type(s) == 'number' then
+            return F.new(s)
+        else
+            return s
+        end
+    end, res.payload)
+    res.signature = ZEN.get(toks[3], '.', O.from_url64, tostring)
     return res
 end
 
@@ -374,7 +392,7 @@ function create_jwt_hs256(payload, password)
 
     local signature = hash:hmac(
         password,
-        I.spy(b64header .. '.' .. b64payload))
+        b64header .. '.' .. b64payload)
     return {
         header=header,
         payload=payload,
@@ -389,5 +407,15 @@ When(
         local password = mayhave(password_name) or password_name
         ACK.jwt_hs256 = create_jwt_hs256(payload, password)
         new_codec("jwt_hs256", {encoding="complex", schema='jwt', zentype="e"})
+    end
+)
+
+IfWhen(
+    "verify the jwt hs256 in '' using ''",
+    function(hmac_name, password_name)
+        local hmac = have(hmac_name)
+        local password = mayhave(password_name) or password_name
+        local jwt_hs256 = create_jwt_hs256(hmac.payload, password)
+        ZEN.assert(jwt_hs256.signature == hmac.signature, "Could not re-create HMAC")
     end
 )

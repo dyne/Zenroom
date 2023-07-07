@@ -724,3 +724,16 @@ EOF
     save_output jwt_hs256.json
     assert_output '{"jwt_hs256":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1MTYyLCJuYW1lIjoiSm9obiBEb2UiLCJzdWIiOiIxMjM0NTY3ODkwIn0.t_oDRdxZOP3rL53qUL5cS74WsqrZWWsXaIZT-AQL4WU"}'
 }
+
+@test "JWT HS256 verify" {
+    cat <<EOF | zexe jwt_hs256_verify.zen jwt_hs256.json
+Scenario 'w3c': did document manipulation
+Given I have a 'jwt' named 'jwt hs256'
+
+When I verify the jwt hs256 in 'jwt_hs256' using 'password'
+
+Then print the string 'ok'
+EOF
+    save_output jwt_hs256_verify.json
+    assert_output '{"output":["ok"]}'
+}
