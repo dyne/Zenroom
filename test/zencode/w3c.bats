@@ -701,3 +701,26 @@ EOF
     run $ZENROOM_EXECUTABLE -z -a did_documents.json verify_wrong_did_doc.zen
     assert_line '[W]  The signer id in proof is different from the one in not_signer_did_document'
 }
+@test "JWT HS256 creation" {
+    cat <<EOF > jwt_hs256.data
+{
+	"payload": {
+        "iat": 15162,
+        "name": "John Doe",
+        "sub": "1234567890"
+    },
+	"password": "password"
+}
+EOF
+    cat <<EOF | zexe jwt_hs256.zen jwt_hs256.data
+Scenario 'w3c': did document manipulation
+Given I have a 'string dictionary' named 'payload'
+Given I have a 'string' named 'password'
+
+When I create the jwt hs256 of 'payload' using 'password'
+
+Then print the 'jwt hs256'
+EOF
+    save_output jwt_hs256.json
+    assert_output '{"jwt_hs256":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1MTYyLCJuYW1lIjoiSm9obiBEb2UiLCJzdWIiOiIxMjM0NTY3ODkwIn0.t_oDRdxZOP3rL53qUL5cS74WsqrZWWsXaIZT-AQL4WU"}'
+}

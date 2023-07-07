@@ -86,6 +86,22 @@ local function export_verification_method(doc)
     return res
 end
 
+local function import_jwt(obj)
+    local res = {}
+    local toks = strtok(obj, '.')
+    res.header = JSON.parse(ZEN.get(toks[1], '.', O.from_url64, tostring))
+    res.payload = JSON.parse(ZEN.get(toks[1], '.', O.from_url64, tostring))
+    res.signature = ZEN.get(toks[1], '.', O.from_url64, tostring)
+    return res
+end
+
+
+local function export_jwt(obj)
+    local header = O.to_url64(O.from_string(JSON.encode(obj.header, 'string')))
+    local payload = O.to_url64(O.from_string(JSON.encode(obj.payload, 'string')))
+    return header .. '.' .. payload .. '.' .. obj.signature:url64()
+end
+
 ZEN.add_schema(
     {
         did_document = { import = import_did_document,
@@ -105,7 +121,9 @@ ZEN.add_schema(
                 zentype = 'e'
             })
             return (deepmap(OCTET.from_string, obj))
-        end
+        end,
+        jwt = { import = import_jwt,
+                export = export_jwt }
     }
 )
 
@@ -341,5 +359,35 @@ When(
         ZEN.assert(ACK[pk_name], pk_name..' not found in the did document '..did_doc)
         ZEN.CODEC[pk_name] = guess_conversion(ACK[pk_name], pk_name)
         ZEN.CODEC[pk_name].name = pk_name
+    end
+)
+
+function create_jwt_hs256(payload, password)
+    local header, b64header, b64payload, hmac
+    header = {
+        alg=O.from_string("HS256"),
+        typ=O.from_string("JWT")
+    }
+    b64header = O.from_string(JSON.encode(header, 'string')):url64()
+    b64payload = O.from_string(JSON.encode(payload, 'string')):url64()
+    hash = HASH.new("sha256")
+
+    local signature = hash:hmac(
+        password,
+        I.spy(b64header .. '.' .. b64payload))
+    return {
+        header=header,
+        payload=payload,
+        signature=signature,
+    }
+end
+
+When(
+    "create the jwt hs256 of '' using ''",
+    function(payload_name, password_name)
+        local payload = have(payload_name)
+        local password = mayhave(password_name) or password_name
+        ACK.jwt_hs256 = create_jwt_hs256(payload, password)
+        new_codec("jwt_hs256", {encoding="complex", schema='jwt', zentype="e"})
     end
 )
