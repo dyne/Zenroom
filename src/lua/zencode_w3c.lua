@@ -140,8 +140,8 @@ ZEN.add_schema(
             })
             return (deepmap(OCTET.from_string, obj))
         end,
-        jwt = { import = import_jwt,
-                export = export_jwt }
+        json_web_token = { import = import_jwt,
+                           export = export_jwt }
     }
 )
 
@@ -401,17 +401,18 @@ function create_jwt_hs256(payload, password)
 end
 
 When(
-    "create the jwt hs256 of '' using ''",
+    "create the json web token of '' using ''",
     function(payload_name, password_name)
         local payload = have(payload_name)
         local password = mayhave(password_name) or password_name
-        ACK.jwt_hs256 = create_jwt_hs256(payload, password)
-        new_codec("jwt_hs256", {encoding="complex", schema='jwt', zentype="e"})
+        empty'json_web_token'
+        ACK.json_web_token = create_jwt_hs256(payload, password)
+        new_codec("json_web_token")
     end
 )
 
 IfWhen(
-    "verify the jwt hs256 in '' using ''",
+    "verify the json web token in '' using ''",
     function(hmac_name, password_name)
         local hmac = have(hmac_name)
         local password = mayhave(password_name) or password_name
