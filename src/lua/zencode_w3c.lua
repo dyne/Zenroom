@@ -86,6 +86,40 @@ local function export_verification_method(doc)
     return res
 end
 
+local function import_jwt(obj)
+    local res = {}
+    local toks = strtok(obj, '.')
+    res.header = JSON.decode(ZEN.get(toks[1], '.', O.from_url64, tostring):string())
+    res.header = deepmap(function(s)
+        if type(s) == 'string' then
+            return O.from_string(s)
+        elseif type(s) == 'number' then
+            return F.new(s)
+        else
+            return s
+        end
+    end, res.header)
+    res.payload = JSON.decode(ZEN.get(toks[2], '.', O.from_url64, tostring):string())
+    res.payload = deepmap(function(s)
+        if type(s) == 'string' then
+            return O.from_string(s)
+        elseif type(s) == 'number' then
+            return F.new(s)
+        else
+            return s
+        end
+    end, res.payload)
+    res.signature = ZEN.get(toks[3], '.', O.from_url64, tostring)
+    return res
+end
+
+
+local function export_jwt(obj)
+    local header = O.to_url64(O.from_string(JSON.encode(obj.header, 'string')))
+    local payload = O.to_url64(O.from_string(JSON.encode(obj.payload, 'string')))
+    return header .. '.' .. payload .. '.' .. obj.signature:url64()
+end
+
 ZEN.add_schema(
     {
         did_document = { import = import_did_document,
@@ -105,7 +139,9 @@ ZEN.add_schema(
                 zentype = 'e'
             })
             return (deepmap(OCTET.from_string, obj))
-        end
+        end,
+        json_web_token = { import = import_jwt,
+                           export = export_jwt }
     }
 )
 
@@ -341,5 +377,46 @@ When(
         ZEN.assert(ACK[pk_name], pk_name..' not found in the did document '..did_doc)
         ZEN.CODEC[pk_name] = guess_conversion(ACK[pk_name], pk_name)
         ZEN.CODEC[pk_name].name = pk_name
+    end
+)
+
+function create_jwt_hs256(payload, password)
+    local header, b64header, b64payload, hmac
+    header = {
+        alg=O.from_string("HS256"),
+        typ=O.from_string("JWT")
+    }
+    b64header = O.from_string(JSON.encode(header, 'string')):url64()
+    b64payload = O.from_string(JSON.encode(payload, 'string')):url64()
+    hash = HASH.new("sha256")
+
+    local signature = hash:hmac(
+        password,
+        b64header .. '.' .. b64payload)
+    return {
+        header=header,
+        payload=payload,
+        signature=signature,
+    }
+end
+
+When(
+    "create the json web token of '' using ''",
+    function(payload_name, password_name)
+        local payload = have(payload_name)
+        local password = mayhave(password_name) or password_name
+        empty'json_web_token'
+        ACK.json_web_token = create_jwt_hs256(payload, password)
+        new_codec("json_web_token")
+    end
+)
+
+IfWhen(
+    "verify the json web token in '' using ''",
+    function(hmac_name, password_name)
+        local hmac = have(hmac_name)
+        local password = mayhave(password_name) or password_name
+        local jwt_hs256 = create_jwt_hs256(hmac.payload, password)
+        ZEN.assert(jwt_hs256.signature == hmac.signature, "Could not re-create HMAC")
     end
 )
