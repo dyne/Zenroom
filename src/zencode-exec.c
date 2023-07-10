@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
 #if !defined(ARCH_WIN)
   fds.fd = 0; // stdin
   fds.events = POLLIN;
-  ret = poll(&fds, 1, 0);
+  ret = poll(&fds, 1, -1); // by default wait until input
   if(ret == 0) {
 	fprintf(stderr,"usage: stream | zencode-exec\n");
 	exit(1);
