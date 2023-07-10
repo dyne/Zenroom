@@ -107,6 +107,43 @@ print("Create deterministic shares")
 g = ECP.new(BIG.new(O.from_hex("07ef3f7f6123b2f5e1ce7c249e0a44c8b18b3671e11d5e233d15742cf538d068f94dfae3ac9966e626a3d6670d78b6ee")), BIG.new(O.from_hex("12d5c20e3ce7143c03491820a7b08c067f25bd9b724985cd95ec862f8cbb31c944f420e59f8f820bccf6e94b72236ca7")))
 G = ECP.new(BIG.new(O.from_hex("0a17f5c7ea3abe3654c4b56d709efd293e17e79327e15b2a7eababd02b20edf33bba0a6ff2c801923399c3c9fd6a1718")), BIG.new(O.from_hex("12f6579b77dbc6485107e68fe181e0aeb680f665880c7ded1db5f84c0a3fdc152f299511e4e5f64f1422d21c276f848a")))
 
+-- local test_arr_sk = {}
+-- local test_arr_pk = {}
+-- for i=1,10 do
+--     local seccc_key = PVSS.keygen()
+--     local pubbb_key = PVSS.sk2pk(G, seccc_key)
+--     table.insert(test_arr_sk, seccc_key)
+--     table.insert(test_arr_pk, pubbb_key)
+-- end
+
+-- for i = 1,10 do
+--     I.spy(test_arr_sk[i]:octet():base64())
+-- end
+-- for i = 1,10 do
+--     I.spy(test_arr_pk[i]:zcash_export():base64())
+-- end
+
+-- [W]  "K+QxIAYwFcdLNq8E3JoQ6f9QpQS2FX7Z6uiuuEaTzBg="
+-- [W]  "WNdQ4yPZ79M7OhV7OMo/VodGVe3xNtsFzeKhzG5bOPM="
+-- [W]  "Sn2qMumbuqkFciFkD03EJcuDiY+NWE+e+O22DAtbeN0="
+-- [W]  "WQbxm1IKPtC9ad6U8ERl1G8x9G6WarFM+T9iw/iL3JU="
+-- [W]  "LecFI3kqbWjW8JYv3et3nc0p5RVatlCRCfsnjJG2yjk="
+-- [W]  "LLBUDLssBVy2AQdZY6lyNcHUBJMXB0jJ1gAd6TR6C90="
+-- [W]  "JRBs6YqWwhKFb9CR1DD186+0s5MRifgfKEgsyXrYwEk="
+-- [W]  "E0EZb3m1z66W+Hq0/vUq2D1aYTwAr+xszxIofR9LrvU="
+-- [W]  "C1iwgxzPqP5FrKzapmgKnvzZU+njsaCWFg4EsvQPuXQ="
+-- [W]  "O0sYS8Fva+Zb3XS/fqmX1lu3bokTGCoN24FBcfl/eKE="
+-- [W]  "iNt3+0VE0QWWahdEIQ14t4dpO4/Pw3J6g0LfSUQAbG14kDQN/Pe1dyc6/+0ja94H"
+-- [W]  "tXZ7QIy8dZKRzNNzx1msrj4BMS1H5DXKPNQWdxHLWCUKdYbhEuEg26auYQ7LpDnh"
+-- [W]  "h+HF0NNhVEbW6tcFi7+O6h/gAjehwQol0U+g+IF+Zc3kcuU5EAKkI9GHQc75oTvG"
+-- [W]  "lQkUlMc6lDVWrNy0zihv2QlOgnJjYs+9htrNaPJjyw/MBeIunlSFx4i3rCmzNPFU"
+-- [W]  "luZHQDAd3MQitDIBqu/rrC27mP3sFwGrmuD1sIqs7mr40Z57wRwe5Q4/CCkhRgrT"
+-- [W]  "jUc/GHUYbEaY6L8mCFnJYtUP8s2sqRwxph4d3q7Yj8auSY8G3dTFYSnTLZZdKhHy"
+-- [W]  "mFAEK9EIvzKsMw3/HwF34aNpRtm3nzOxaS9+9qzGXUQT7WnwQnGhhfR0EMDCfU07"
+-- [W]  "hivaOVnaIRBhBgvE95RFA2UIMOlxpjDNuOpbnD4pZuxZgRrYsd1LrDigN6qxa437"
+-- [W]  "uYOkK6sAwyupym4FTG26Ddw/Rv8Yw0TJKdpu56va//9biltYaSUxmBlcgvsWLah/"
+-- [W]  "tIdHaimPwaX/YTx+w71MVSSOpze1ytmNodG/7duQCvSV/kuc/rm2gpJlUuBvazRa"
+
 local t = 3
 local n = 5
 local s = BIG.new(123)
