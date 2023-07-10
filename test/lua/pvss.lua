@@ -199,8 +199,8 @@ r = {
         BIG.new(O.from_hex("0x42a970f59b7ef38da0c52f0a971bf142328a6ccfd6bde402721ce0cbfdbcbc3c")),
         BIG.new(O.from_hex("0x29e36f53dbc8d2eb882e6900b4b3b96d90a1ebdebb6bbe86153ec9074603f67b")),
 }
-
-local commits, enc_shares, chall, resp, Xs = PVSS.create_shares(s, g, pks, t, n, det_coefs)
+local w_arr = {BIG.new(4),  BIG.new(5), BIG.new(6), BIG.new(7), BIG.new(8)} 
+local commits, enc_shares, chall, resp, Xs = PVSS.create_shares(s, g, pks, t, n, {det_coefs,w_arr})
 
 
 for k,v in pairs(commits) do
@@ -260,7 +260,7 @@ local valid_shares = {}
 
 for i = 1, 5 do
     print("Test case ".. i)
-    local reconstruction_table = PVSS.decrypt_share(sec_keys[i], enc_shares[i][2], pks[i], G, i,true)
+    local reconstruction_table = PVSS.decrypt_share(sec_keys[i], enc_shares[i][2], pks[i], G, i, {BIG.new(4)})
     local S_decrypted, ch, response = table.unpack(reconstruction_table, 1, 3)
     table.insert(valid_shares, S_decrypted)
     assert(S_decrypted:x() == S_array[i][1])
@@ -282,6 +282,168 @@ local shared_secret = PVSS.pooling_shares(valid_shares, {1,2,3,4,5}, t)
 assert(shared_secret:x() == sage_secret[1])
 assert(shared_secret:y() == sage_secret[2])
 assert(shared_secret == (G*s))
+
+print("Test case 2")
+assert(shared_secret == PVSS.pooling_shares({valid_shares[2], valid_shares[3], valid_shares[5]}, {2,3, 5}, t))
+
+print('----------------------------------------------')
+
+
+print("TEST sage 2")
+
+-- SECRET KEYS
+local sage_secret_keys = {
+BIG.new(O.from_hex("0x541945c9a80aff78ad101d29370f56661035f108a53292f92e826cb5afe0f7bb")),
+BIG.new(O.from_hex("0x58761bb3a41593ad3c9161656f89143b3ea1df79b59db86901b552024a6d320a")),
+BIG.new(O.from_hex("0x0c38e44f57de7cc0d3b103201cd8b294c5b80fea88591c32c26fcbdda254c5dc")),
+BIG.new(O.from_hex("0x23d24a231ae14e142a3652e64889af518760c7008b838415294ad135f1d3d777")),
+BIG.new(O.from_hex("0x5ddcb66bd07d1c1c4f68cd67153eda92f0f30b030188818e3f496a0e5fe512a9")),
+}
+-- PUBLIC KEYS
+local sage_public_keys = {
+{ BIG.new(O.from_hex("0x0e9bc85e97f9bb2d32a2fe6caecd345e5d30da85c1512e5f4d166fe15552e789dc118fcdb280510413a5293bfcb9a649")), BIG.new(O.from_hex("0x097761dc398787de573d9284b49bde4be3f1dbf647df41d8bd69549463937f89b908223b77d1d8ed04188f46000e1c6e")) } ,
+{ BIG.new(O.from_hex("0x0658f6d7a7c70e16c6bff84ba8d6c6c51fcab34ac83c21641f8e9bc1e148d75d10841a9c96110dd17ea4ddb01426a558")), BIG.new(O.from_hex("0x183c760f84e8f772a5e0df7a5cd3e562612697716b4e5ae7188cc923c4a54a54e8e9b40364c0abd128fd954d499c9ada")) } ,
+{ BIG.new(O.from_hex("0x0d85965bf7ab23dc29961715bbd43e53873698e61ca80bd952633bfb74d97471fb6470113054a9590301495a64e37def")), BIG.new(O.from_hex("0x17d8507c3efb791206ce9b908b828694204346661ab6a6d590790944eeaf8f856c3fb8bc29d13fc0da7896273bad636a")) } ,
+{ BIG.new(O.from_hex("0x192b1099ec575e9a081446155cb4969c57a0a168eba6092303770286d3a2948b72aefd1ca8a774a74f74c6f95233b8af")), BIG.new(O.from_hex("0x83ccea405b2d3f62ecc0d8dc52812ec8f41711519e82c6dbf40983a5b0bafd01421b9dcfece46c1ce855558a258474")) } ,
+{ BIG.new(O.from_hex("0x099719eb6a28782717e921ec80e1818f7e62137b73be84921fb00cd38cc19a1eb70f3b377ee19b5206e1d7ba8d2dc094")), BIG.new(O.from_hex("0x014bfba1e27e84d6425130cb99578116f7dd9e0e5c11edee005ce7429fb43b909b15d57ea3687252a2b6b9c59462431f")) } ,
+}
+
+-- Secret exponent
+local sage_secret_exp = BIG.new(O.from_hex("0x06c055adb278b84dd2bba597f7c5829c8e7fb0cf0e32f704c3c3cdd87344b95b"))
+-- POLYNOMIAL COEFFICIENTS
+local sage_poly_coeff = {
+BIG.new(O.from_hex("0x06c055adb278b84dd2bba597f7c5829c8e7fb0cf0e32f704c3c3cdd87344b95b")),
+BIG.new(O.from_hex("0x12d130bc1bdc9bfd19cbbe3444f3eeedc9b5fb93fbcbe52b7dcc1e4af7abaf17")),
+BIG.new(O.from_hex("0x279aa4e866f49c8bbfa3fcd57673e2409db09ce6d7c92980b4251e82e1ccd70b")),
+}
+
+-- COMMITMENTS
+local sage_commitments = {
+{ BIG.new(O.from_hex("0x01e9f57a36b8f02f720a4f4374d4812d7275819667643abcf511808d2409d7788bbb66767591924ab0b82ab19614f0ec")), BIG.new(O.from_hex("0x714be238da4ced495c8308c01428d3792c8770128c5a9c9a533576c54fc502235c33cb07ce6dd03911f35c2a7977bd")) } ,
+{ BIG.new(O.from_hex("0x0f5de8b28302e38262c7468272dd037bf0adbd4ffdd1bd916e5aa77f4064c3a790a60e493792082b0447e51d93f0d575")), BIG.new(O.from_hex("0x0932e35b664f51e0c8d999a9e598af66d76a2df07eea670a34f55a026b9c10a79f88e12c8814360059cd60a1742ffe53")) } ,
+{ BIG.new(O.from_hex("0x0b4029b6ca3f6bf49d3639d029fe802ed56a540ecabc89425c8589681b030de56d45cc85f11b0016b3c4d9281780991e")), BIG.new(O.from_hex("0x144a64e2c8608230f1c3b429ce659a678e6fdbda193fc72d1b950a9d8e60ba152fac54e9374b222b4f3811df31eee041")) } ,
+}
+-- ENCRYPTED SHARES
+local sage_enc_shares = {
+{ BIG.new(O.from_hex("0x1273e1ba81c17f5dfc9e3bb8384122f81544cbc411ac48105f9e08b00cdc14681225e1f283ba2f77adf6fb52e63f3b89")), BIG.new(O.from_hex("0x0f31a64179fbfa78f52a81cd4561c8284361a8defeeb2c5851ec783ec206092492534a34be9dd5f736c7aa77dc060433")) } ,
+{ BIG.new(O.from_hex("0x130ada028ceffe4aabf7e4d30046b319020c3db31faad5dcb7625b87f075f8624a9a2eee01e0151e7b500d6eba8e1b34")), BIG.new(O.from_hex("0x1056fe3645036df1604da4fdd32417282bcca153531f7386d994fe0c4bac12c693566bd56f9ba492647991107b7a528a")) } ,
+{ BIG.new(O.from_hex("0x1805207555ea10fff2be3767f0bf5c79520dbff6140158e955d4024774ae0a57e4247ca702d0698d94acc16c95265c6c")), BIG.new(O.from_hex("0x03b16ed1f629d1e07a30e56a63547d655eda80dd2dc960dded1ce63bb7c4192e1d3e305936a6845eee334602c91ca270")) } ,
+{ BIG.new(O.from_hex("0x19df91ca7361fa487b336387f67d60b6b1d23cbcde12462e9c0cb646f776e1315d5e462d06cb47f3a4d16be355801082")), BIG.new(O.from_hex("0x0fc6b2bfe36725f54437bddb26acb49fc1760d01513ad8d39c4632f52b542bd2a80f71305ea6b512794eaa566ae17be1")) } ,
+{ BIG.new(O.from_hex("0x17ee39cde13d2e969956c69ec2d20d8a1eb87e9d802864a8ba63d1b631dec2924698de1b11418258dbe6953c04e1abac")), BIG.new(O.from_hex("0x10f0050c97defb2acd4ebff5899978282f6035f431ed259886237288e383ba591f057f3ee275bd02acfeaa9dbd753ec3")) } ,
+}
+-- Xs
+local sage_Xs = {
+{ BIG.new(O.from_hex("0x135d3e3db0d6d4fd30afc632e5eaa5361a73db20e55e947a6462018e4007b3a6e3a8c25d378fe6c80f2e408dd118ddba")), BIG.new(O.from_hex("0x0deab429a4d121d0c324ce521c81301e1f578eb6465f9c31f946ec19cbd28cba90084214cec9fb86d7cc43a931087952")) } ,
+{ BIG.new(O.from_hex("0x100fbd868e7611ea475a916ba175d645ee770e4f011ea2dd9ccfa8edcd94eba4593a96d0b713f4ddba75796b64dff525")), BIG.new(O.from_hex("0x05f1f984bd09eb452586fe31f724f32d39377b98cba3ced922d5657199cb0b4925120f21d28d71866b47deb0e409b2b9")) } ,
+{ BIG.new(O.from_hex("0x18a9e6367b4a2af252f8e8430386a1bf3afb638a97ed70f7b52cb2067cb2207fd47f9529c4ca66bf3551a6bd2a1f8b92")), BIG.new(O.from_hex("0x164c89b45b00a6ecb4275739ec1fbcd24c6b23f0b070a47531bc1c96d1f58a887f6fc8390345e0efb0ec865faaf3c8f5")) } ,
+{ BIG.new(O.from_hex("0x098857270cf706637bdce0a09fa7842b3915c61c2236963e9d08e19979ca4b7ff6af0d305c3468846c7209a06d92f625")), BIG.new(O.from_hex("0x06fa690a0f3e1879e8606e8f765d7af87f392009b48c5593fa7e597ec8839a6fea731975032b61c536754fed3926b9cc")) } ,
+{ BIG.new(O.from_hex("0x024f88ee97af82930bd9ed2b1749d64c4a01bae8a25134fe862e43147dc94923a956b65ebd87a03e04ae2741a84315c5")), BIG.new(O.from_hex("0x1ecbcf4f9f5d235fbb802c51c724674a44b7e9409fce1613caa77c94108dfc86c7e656e98ff0c03ff57560db84551a")) } ,
+}
+-----------------------------
+-- RANDOM CHALLENGES
+local sage_rand_chall = {
+BIG.new(O.from_hex("0x6471fbdba941e5cb33cc3121ce7b21cc494b52a6276fa27550af317a782b1c10")),
+BIG.new(O.from_hex("0x358752c0c07c76777e159fef06a9820de3fddfc41fd9278f04fd3d43a1979856")),
+BIG.new(O.from_hex("0x3bc31da805d56fa0fd47a62e6a9cc9ef74e78fa5cc04f5aea108a6b21f82bdac")),
+BIG.new(O.from_hex("0x09da01bee9df26ef224630d3d466974493d160fdf76cb5ddbbc1a1762792e1ed")),
+BIG.new(O.from_hex("0x17eaba7ad13772a1264adea81736b216e6bdde99802704b62da894151f878aad")),
+}
+-- challenge
+local sage_challenge = BIG.new(O.from_hex("4f89feed9cf31fcfa666e0bc2c9b06e79c9a155d69e9810a0555bfee728d0b04"))
+-- RESPONSES
+local sage_responses = {
+BIG.new(O.from_hex("0x2ef44d23fc3abe2b520c5fc8152724f3ea90fdb4e018cdb64dafcfaea32ecea9")),
+BIG.new(O.from_hex("0x2e823b9a2161b2f3e6fa2583d3cd6b67bc4293343e9c2284e238c2e79f482a2d")),
+BIG.new(O.from_hex("0x6cac9289b37ab713cbbd378a209b2abc327e7cf58b72581ef2f2763c48b12960")),
+BIG.new(O.from_hex("0x083a4fccf97aa2ea3dffaac6cc0028bf915015a89216bb8f16cd1d5dd510221c")),
+BIG.new(O.from_hex("0x61257d7fab3a4746dd6ece12bc6fdd8626353020309ca16d26491ecfaa2499f7")),
+}
+-----------------------------
+-- RECONTRUCTION PHASE
+-- decrypted shares
+local sage_dec_shares = {
+{ BIG.new(O.from_hex("0x108f9975e7b0e97c6b770ccadb5932958ead267cbbce7479ebd44618f029ae3965291d0a7875afdd7a8e7294c44ede")), BIG.new(O.from_hex("0x02c90d876ca9cb224a29fe772815fe7adc026ee92c89e5f671382fcbfa7901e107780b1e2bcad742a1c6d2dafda29fbb")) } ,
+{ BIG.new(O.from_hex("0x09fcba5844824ced49adec6e561ac95d066bcee5d2b8e23215bfb4b49f12dcd4502ee662ff503400114b1e031736a47d")), BIG.new(O.from_hex("0x142d52923e07a5aeb8c629c6509a3c836ca91b63bb11afc2b62c9c3d8be9a512aada1dd5d9d27ea1e50f6d25664d6494")) } ,
+{ BIG.new(O.from_hex("0x0fb3750fdd97285df4abc46bcde350bb29d7ddd5e77223729c3ce6bd4f9eecec3dad2ee96b0aa52d88f7dad579491a52")), BIG.new(O.from_hex("0x19e04e2f0286027c8d5926a309a333a9624d57c6fa831c739c6e1509db6c4d17e870b03d16d2ca6f8a9c63a06c1eb7ce")) } ,
+{ BIG.new(O.from_hex("0x9b3ad7acd575ecf5c6d1f48aa21e24456f065d5050dfe9b51edd85275f412cb9c5e36e23c16ce82444daef2b8270c9")), BIG.new(O.from_hex("0x05bb4b5f4f527d0256713ff120935938a9767c14ab3195d72dd38e1b2c27a961ec3f23341c7e941014ec7276a693fc7e")) } ,
+{ BIG.new(O.from_hex("0x1678d4b2188195733e946cd18aa61ab5633f0bc1155925685e1c757fc8d83345cdade89956effcbdc2ab502b4f0c75e5")), BIG.new(O.from_hex("0x128c7f6b07109c454361f0ddc521ee7aea52d6ad58c7cfa0d55600188d76e10225c20d023cdff5162ca272fac6b97c75")) } ,
+}
+-- Reconstruction proofs
+local sage_reconstruction_proof = {
+{ BIG.mod(BIG.new(O.from_hex("1d96adcd84c94457c232a22c03f3fbf8e620eae8ec00000abe9874e70df74e6f")), CURVE_ORDER),
+BIG.new(O.from_hex("0x6f1fa77a374a11f7e12aabeb2c2d5565166a449154e457880ed8e1b1f1f28380")) },
+{ BIG.mod(BIG.new(O.from_hex("5039889fc2b46fb532c298ac2af7f1f84d02f4510021f221b6ef2792e987def2")), CURVE_ORDER),
+BIG.new(O.from_hex("0x3cb9ec142140c8442fcbdf359bd7cd8ad1ffd0531c559d296af8d2d5d24068a2")) },
+{ BIG.mod(BIG.new(O.from_hex("a4d393d247872d4da07b4affa3e1174796335e792b8b6bf59fc5e70b7665b36c")), CURVE_ORDER),
+BIG.new(O.from_hex("0x3734f2f7077c84a54cb6279c762e0639651fb4bce9115f7ce4c740adaf7cf11e")) },
+{ BIG.mod(BIG.new(O.from_hex("4abc71c3991fc2b3d687b95bcf8e9a48b4a3cf1262a5ade87e02661024a6e370")), CURVE_ORDER),
+BIG.new(O.from_hex("0x6c106cba0b99029f3ed517c683ac3ce9d67db6a00e7f59096f615fdf172b6fb1")) },
+{ BIG.mod(BIG.new(O.from_hex("770b1e856e57c050048da68aa5a987689e2d75f5adb87ac4127d2aa0a62f80a7")), CURVE_ORDER),
+BIG.new(O.from_hex("0x554131fb7a820aa60e960f4e4e2b2b208c52164fa62d80fffca1cd5890476a62")) },
+}
+-- w_array
+local sage_w_array = {
+BIG.new(O.from_hex("0x371361caaeb63473dcf08b670ab95bc77f61070bc8ed4b6856906fc66de7dcf7")),
+BIG.new(O.from_hex("0x28d6513b2d7f609244d91362d338ede7495e363d77b93d6207751e701e3b07a4")),
+BIG.new(O.from_hex("0x01104fbc4621177d960f9faa4ac31389eb39b6626885bf8d701013e15f70b042")),
+BIG.new(O.from_hex("0x19f3b1e3d747595f9e70a9a88b16824a63314a419a383f97386eba72369d1392")),
+BIG.new(O.from_hex("0x19d16fd9de3fbf88f6b34a405d7bd714127a003626f72881fd41fca138727065")),
+}
+
+-- recontructed secret
+local sage_rec_sec = { BIG.new(O.from_hex("0x180118272372899e521eece0bb7dd43bb9ef58127b89b6e2a8721ddfea5b35808d60cff4ab6d85e30ea007149d8ceea6")), BIG.new(O.from_hex("0x54a343fe9928bf61a510a74c243d63a9d3b5e4dad0d6823666ea3b19f7fec504fb1b2b89a9055847fdcef122c7995b")) }
+
+local points_pub_keys = {}
+for i = 1,n do
+    points_pub_keys[i] = ECP.new(sage_public_keys[i][1], sage_public_keys[i][2])
+end
+
+print("Test: create shares")
+commits, enc_shares, chall, resp, Xs = PVSS.create_shares(sage_secret_exp, g, points_pub_keys, t, n, {sage_poly_coeff, sage_rand_chall})
+
+for k,v in pairs(commits) do
+    assert(v:x() == sage_commitments[k][1])
+    assert(v:y() == sage_commitments[k][2])
+end
+
+for k,v in pairs(enc_shares) do
+    assert(v[2]:x() == sage_enc_shares[k][1])
+    assert(v[2]:y() == sage_enc_shares[k][2])
+end
+
+for k,v in pairs(Xs) do
+    assert(v:x() == sage_Xs[k][1])
+    assert(v:y() == sage_Xs[k][2])
+end
+
+for k,v in pairs(resp) do
+    assert(v == sage_responses[k])
+end
+
+assert(chall == sage_challenge)
+print('----------------------------------------------')
+print("Test: verify shares")
+valid_shares = {}
+
+for i = 1, 5 do
+    print("Test case ".. i)
+    local reconstruction_table = PVSS.decrypt_share(sage_secret_keys[i], enc_shares[i][2], points_pub_keys[i], G, i, {sage_w_array[i]})
+    local S_decrypted, ch, response = table.unpack(reconstruction_table, 1, 3)
+    table.insert(valid_shares, S_decrypted)
+    assert(S_decrypted:x() == sage_dec_shares[i][1])
+    assert(S_decrypted:y() == sage_dec_shares[i][2])
+    assert(ch == sage_reconstruction_proof[i][1])
+    assert(response == sage_reconstruction_proof[i][2])
+end
+
+print('----------------------------------------------')
+print("Test pooling shares")
+
+print("Test case 1")
+shared_secret = PVSS.pooling_shares(valid_shares, {1,2,3,4,5}, t)
+assert(shared_secret:x() == sage_rec_sec[1])
+assert(shared_secret:y() == sage_rec_sec[2])
+assert(shared_secret == (G*sage_secret_exp))
 
 print("Test case 2")
 assert(shared_secret == PVSS.pooling_shares({valid_shares[2], valid_shares[3], valid_shares[5]}, {2,3, 5}, t))

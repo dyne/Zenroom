@@ -40,7 +40,7 @@ function PVSS.create_proof_DLEQ(points_tables, alpha_array, hash, is_det)
         local g1, h1, g2, h2 = table.unpack(v)
         local w
         if(is_det) then
-            w = BIG.new(k+3)
+            w = is_det[k]
         else
             w = BIG.modrand(CURVE_ORDER)
         end
@@ -167,9 +167,9 @@ function PVSS.create_shares(s, g, pks, t, n, det_pol_coefs)
             commitments[i] = g * coefficients[i]
         end
     else
-        is_det = true
+        is_det = det_pol_coefs[2]
         for i = 2,t do
-            coefficients[i] = det_pol_coefs[i]
+            coefficients[i] = det_pol_coefs[1][i]
             commitments[i] = g * coefficients[i]
         end
     end
