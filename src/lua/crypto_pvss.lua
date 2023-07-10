@@ -218,18 +218,18 @@ function PVSS.decrypt_share(x, Y, y, G, index, is_det)
     local S = Y * BIG.modinv(x, CURVE_ORDER)
     local point_array = {G, y, S, Y}
     local challenge, responses = PVSS.create_proof_DLEQ({point_array}, {x}, nil, is_det)
-    return {S, challenge, responses[1], point_array, index}
+    return {S, {challenge, responses}, {index, Y}, y}
 end
 
 --Given as input a table containing the output tables of PVSS.decrypt_shares, verify the validity of the shares
 -- return the list of valid decrypted shares
-function PVSS.verify_decrypted_shares(shares_proof)
+function PVSS.verify_decrypted_shares(G, dec_shares, proof_array, enc_shares, pub_keys)
     local valid_shares = {}
     local valid_indexes = {}
-    for i = 1, #shares_proof do
-        if PVSS.verify_proof_DLEQ({shares_proof[i][4]}, shares_proof[i][2], {shares_proof[i][3]}) then
-            table.insert(valid_shares, shares_proof[i][1])
-            table.insert(valid_indexes, shares_proof[i][5])
+    for i = 1, #dec_shares do
+        if PVSS.verify_proof_DLEQ({{G, pub_keys[i], dec_shares[i], enc_shares[i][2]}}, proof_array[i][1], proof_array[i][2]) then
+            table.insert(valid_shares, dec_shares[i])
+            table.insert(valid_indexes, enc_shares[i][1])
         end
     end
     return valid_shares, valid_indexes

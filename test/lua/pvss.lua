@@ -73,18 +73,23 @@ commitments[1] = temp
 
 print('----------------------------------------------')
 print("Test: decrypt shares")
-local shares_proof = {}
+local dec_shares = {}
+local proof_array = {}
+local enc_shares = {}
 for i = 1, participants do
     print("Test case ".. i)
     local table_dec = PVSS.decrypt_share(secret_keys[i], encrypted_shares[i][2], public_keys[i], G, i)
-    table.insert(shares_proof, table_dec)
-    local S = table.unpack(table_dec,1,1)
+    table.insert(dec_shares, table_dec[1])
+    table.insert(proof_array, table_dec[2])
+    table.insert(enc_shares, table_dec[3]) 
+    
+    local S = dec_shares[i]
     assert(S == G*evals[i])
 end
 
 print('----------------------------------------------')
 print("Test: verify decrypted shares")
-local shares, indexes = PVSS.verify_decrypted_shares(shares_proof)
+local shares, indexes = PVSS.verify_decrypted_shares(G, dec_shares, proof_array, enc_shares, public_keys)
 assert(#shares == participants)
 
 print('----------------------------------------------')
@@ -123,26 +128,64 @@ G = ECP.new(BIG.new(O.from_hex("0a17f5c7ea3abe3654c4b56d709efd293e17e79327e15b2a
 --     I.spy(test_arr_pk[i]:zcash_export():base64())
 -- end
 
--- [W]  "K+QxIAYwFcdLNq8E3JoQ6f9QpQS2FX7Z6uiuuEaTzBg="
--- [W]  "WNdQ4yPZ79M7OhV7OMo/VodGVe3xNtsFzeKhzG5bOPM="
--- [W]  "Sn2qMumbuqkFciFkD03EJcuDiY+NWE+e+O22DAtbeN0="
--- [W]  "WQbxm1IKPtC9ad6U8ERl1G8x9G6WarFM+T9iw/iL3JU="
--- [W]  "LecFI3kqbWjW8JYv3et3nc0p5RVatlCRCfsnjJG2yjk="
--- [W]  "LLBUDLssBVy2AQdZY6lyNcHUBJMXB0jJ1gAd6TR6C90="
--- [W]  "JRBs6YqWwhKFb9CR1DD186+0s5MRifgfKEgsyXrYwEk="
--- [W]  "E0EZb3m1z66W+Hq0/vUq2D1aYTwAr+xszxIofR9LrvU="
--- [W]  "C1iwgxzPqP5FrKzapmgKnvzZU+njsaCWFg4EsvQPuXQ="
--- [W]  "O0sYS8Fva+Zb3XS/fqmX1lu3bokTGCoN24FBcfl/eKE="
--- [W]  "iNt3+0VE0QWWahdEIQ14t4dpO4/Pw3J6g0LfSUQAbG14kDQN/Pe1dyc6/+0ja94H"
--- [W]  "tXZ7QIy8dZKRzNNzx1msrj4BMS1H5DXKPNQWdxHLWCUKdYbhEuEg26auYQ7LpDnh"
--- [W]  "h+HF0NNhVEbW6tcFi7+O6h/gAjehwQol0U+g+IF+Zc3kcuU5EAKkI9GHQc75oTvG"
--- [W]  "lQkUlMc6lDVWrNy0zihv2QlOgnJjYs+9htrNaPJjyw/MBeIunlSFx4i3rCmzNPFU"
--- [W]  "luZHQDAd3MQitDIBqu/rrC27mP3sFwGrmuD1sIqs7mr40Z57wRwe5Q4/CCkhRgrT"
--- [W]  "jUc/GHUYbEaY6L8mCFnJYtUP8s2sqRwxph4d3q7Yj8auSY8G3dTFYSnTLZZdKhHy"
--- [W]  "mFAEK9EIvzKsMw3/HwF34aNpRtm3nzOxaS9+9qzGXUQT7WnwQnGhhfR0EMDCfU07"
--- [W]  "hivaOVnaIRBhBgvE95RFA2UIMOlxpjDNuOpbnD4pZuxZgRrYsd1LrDigN6qxa437"
--- [W]  "uYOkK6sAwyupym4FTG26Ddw/Rv8Yw0TJKdpu56va//9biltYaSUxmBlcgvsWLah/"
--- [W]  "tIdHaimPwaX/YTx+w71MVSSOpze1ytmNodG/7duQCvSV/kuc/rm2gpJlUuBvazRa"
+-- local s_keys ={  "K+QxIAYwFcdLNq8E3JoQ6f9QpQS2FX7Z6uiuuEaTzBg=",
+--   "WNdQ4yPZ79M7OhV7OMo/VodGVe3xNtsFzeKhzG5bOPM=",
+--   "Sn2qMumbuqkFciFkD03EJcuDiY+NWE+e+O22DAtbeN0=",
+--   "WQbxm1IKPtC9ad6U8ERl1G8x9G6WarFM+T9iw/iL3JU=",
+--   "LecFI3kqbWjW8JYv3et3nc0p5RVatlCRCfsnjJG2yjk=",
+--   "LLBUDLssBVy2AQdZY6lyNcHUBJMXB0jJ1gAd6TR6C90=",
+--   "JRBs6YqWwhKFb9CR1DD186+0s5MRifgfKEgsyXrYwEk=",
+--   "E0EZb3m1z66W+Hq0/vUq2D1aYTwAr+xszxIofR9LrvU=",
+--   "C1iwgxzPqP5FrKzapmgKnvzZU+njsaCWFg4EsvQPuXQ=",
+--   "O0sYS8Fva+Zb3XS/fqmX1lu3bokTGCoN24FBcfl/eKE="
+-- }
+
+-- local p_keys = {  "iNt3+0VE0QWWahdEIQ14t4dpO4/Pw3J6g0LfSUQAbG14kDQN/Pe1dyc6/+0ja94H",
+--   "tXZ7QIy8dZKRzNNzx1msrj4BMS1H5DXKPNQWdxHLWCUKdYbhEuEg26auYQ7LpDnh",
+--   "h+HF0NNhVEbW6tcFi7+O6h/gAjehwQol0U+g+IF+Zc3kcuU5EAKkI9GHQc75oTvG",
+--   "lQkUlMc6lDVWrNy0zihv2QlOgnJjYs+9htrNaPJjyw/MBeIunlSFx4i3rCmzNPFU",
+--   "luZHQDAd3MQitDIBqu/rrC27mP3sFwGrmuD1sIqs7mr40Z57wRwe5Q4/CCkhRgrT",
+--   "jUc/GHUYbEaY6L8mCFnJYtUP8s2sqRwxph4d3q7Yj8auSY8G3dTFYSnTLZZdKhHy",
+--   "mFAEK9EIvzKsMw3/HwF34aNpRtm3nzOxaS9+9qzGXUQT7WnwQnGhhfR0EMDCfU07",
+--   "hivaOVnaIRBhBgvE95RFA2UIMOlxpjDNuOpbnD4pZuxZgRrYsd1LrDigN6qxa437",
+--   "uYOkK6sAwyupym4FTG26Ddw/Rv8Yw0TJKdpu56va//9biltYaSUxmBlcgvsWLah/",
+--   "tIdHaimPwaX/YTx+w71MVSSOpze1ytmNodG/7duQCvSV/kuc/rm2gpJlUuBvazRa"}
+
+--   local pvss_encrypted_shares = {{"1","iRvERL/sxxi4xtKgw2nShMNJ47Q/gspR326ZdC3/xuHjx1meLng8XrLrA7eGrbWQ"},
+--   {"2","tL57o4ouad+3S1ArBP1KbIWXxLNJ9nay0AhpRYywl7VrfrADeftBN/syMpZYG1AZ"},
+--   {"3","pGgI0dLU1ZwFJ0FUiqrebuX12FnVzPbgTd2XHB606mINxq0F0AM8vFkNmwb+QHMo"},
+--   {"4","uLq/otZep2uqB8uP1sczcQmfg2J9alVZQZrIBkKeYxKkGpaPLmF2tbxCrGNW40H7"},
+--   {"5","ol26jmN/BAx2Fl3xt7mCbr2tKRocWn1Z2qEcDA0iZGj46OUf2WNXiwiH/lAB0djX"},
+--   {"6","gA2Sjhtnh0X63nCfxr09TpgnZMXAZu1yZvnFn3Yje6K5wop25gAreHSwUarSPOtX"},
+--   {"7","rnjuuo84qG0UUYacpMJ6oMoAukdWoCWu+0umRLFj//ko6OBVEGxnwPuZpByqBD0S"},
+--   {"8","hizreRLh6cdLGZF+3n3iy2zzrgeamPBBagcHiTSRGvN8SzMQ9FWA1B9WEwSSlqR+"},
+--   {"9","gXO4sk+M8/FttVbV3oxad0lKynMat9v93izZkjr/I9DrbS8S2WSxhz0eLs1qJpMd"},
+--   {"10","tzqHq/qxs52DejnZhlgM9IIxTghbYsVdMDt/bNNbRB7tdcFHyfy6EKQFrBPQjtoD"}}
+
+--   local SSS = {}
+--   local PROOFS = {}
+--   for i = 1, 10 do
+--     local table = PVSS.decrypt_share(BIG.new(O.from_base64(s_keys[i])), O.from_base64(pvss_encrypted_shares[i][2]):zcash_topoint(), O.from_base64(p_keys[i]):zcash_topoint(), G, i)
+--     SSS[i] = table[1]
+--     PROOFS[i] = table[2]
+-- end
+-- print("SSSSSSS")
+-- print("[")
+-- for i = 1, 10 do
+--     I.spy(SSS[i]:zcash_export():base64())
+--     print(",")
+-- end
+-- print("]")
+-- print("PROOOOF")
+-- print("[")
+-- for i = 1, 10 do
+--     print("[")
+--     I.spy(PROOFS[i][1])
+--     print(",[")
+--     I.spy(PROOFS[i][2][1])
+--     print("]],")
+-- end
+-- print("]")
 
 local t = 3
 local n = 5
@@ -261,12 +304,13 @@ local valid_shares = {}
 for i = 1, 5 do
     print("Test case ".. i)
     local reconstruction_table = PVSS.decrypt_share(sec_keys[i], enc_shares[i][2], pks[i], G, i, {BIG.new(4)})
-    local S_decrypted, ch, response = table.unpack(reconstruction_table, 1, 3)
+    local S_decrypted = reconstruction_table[1]
+    local ch, response = table.unpack(reconstruction_table[2])
     table.insert(valid_shares, S_decrypted)
     assert(S_decrypted:x() == S_array[i][1])
     assert(S_decrypted:y() == S_array[i][2])
     assert(ch == sage_reconstruction_C_R[i][1])
-    assert(response == sage_reconstruction_C_R[i][2])
+    assert(response[1] == sage_reconstruction_C_R[i][2])
 end
 
 print('----------------------------------------------')
@@ -428,12 +472,13 @@ valid_shares = {}
 for i = 1, 5 do
     print("Test case ".. i)
     local reconstruction_table = PVSS.decrypt_share(sage_secret_keys[i], enc_shares[i][2], points_pub_keys[i], G, i, {sage_w_array[i]})
-    local S_decrypted, ch, response = table.unpack(reconstruction_table, 1, 3)
+    local S_decrypted = reconstruction_table[1]
+    local ch, response = table.unpack(reconstruction_table[2])
     table.insert(valid_shares, S_decrypted)
     assert(S_decrypted:x() == sage_dec_shares[i][1])
     assert(S_decrypted:y() == sage_dec_shares[i][2])
     assert(ch == sage_reconstruction_proof[i][1])
-    assert(response == sage_reconstruction_proof[i][2])
+    assert(response[1] == sage_reconstruction_proof[i][2])
 end
 
 print('----------------------------------------------')

@@ -57,9 +57,14 @@ end
 local function pvss_enc_shares_exp_f(obj)
     -- obj is of the form {{i_1, Y_i_1}, ..., {i_v, Y_i_v}}
     local output = {}
-    for _,v in pairs(obj) do
-        table.insert( output, { BIG.to_decimal( v[1] ) , v[2]:zcash_export() })
+    if type(obj[1]) == 'table' then
+        for _,v in pairs(obj) do
+            table.insert( output, { BIG.to_decimal( v[1] ) , v[2]:zcash_export() })
+        end
+    else
+        output = {BIG.to_decimal(obj[1]), obj[2]:zcash_export()}
     end
+
     return output
 end
 
@@ -192,5 +197,42 @@ end)
 ----------------------------------- RECONSTRUCTION -------------------------------------------
 
 -- - [1] Participant decrypts its own share AND generate a proof
+When("decrypt the share ''", function(obj)
+    local arr = have(obj)
+    local ind = arr[1]
+    local Y = arr[2]
+    local x = havekey'pvss'
+    local y = have'pvss public key'
+    local output = PVSS.decrypt_share(x, Y, y, G, ind)
+    local S, proof = table.unpack(output,1,2)
+    empty'pvss proof'
+    ACK.pvss_proof = proof
+    new_codec('pvss proof', {zentype='a'}) -- array of BIGs.
+
+    empty'pvss decrypted share'
+    ACK.pvss_decrypted_share = S:zcash_export()
+    new_codec('pvss decrypted share', {zentype = 'e'})
+end)
+
 -- - [2] Each participant verifies the shares of the others
+When("verify the pvss decrypted shares", function()
+    local dec_shares = have'pvss decrypted shares'
+    local proof_array = have'pvss proofs'
+    local enc_shares = have'pvss encrypted shares'
+    local pub_keys = have'pvss participant pks'
+    local valid_shares, valid_indexes = PVSS.verify_decrypted_shares(G, dec_shares, proof_array, enc_shares, pub_keys)
+    empty'pvss valid shares'
+    for i = 1, #valid_shares do
+        valid_shares[i] = valid_shares[i]:zcash_export()
+    end
+    ACK.pvss_valid_shares = valid_shares
+    new_codec('pvss valid shares', {zentype = 'a'})
+    empty'pvss valid indexes'
+    for i = 1, #valid_indexes do
+        valid_indexes[i] = BIG.new(valid_indexes[i])
+    end
+    ACK.pvss_valid_indexes = valid_indexes
+    new_codec('pvss valid indexes', {zentype = 'a'})
+end)
+
 -- - [3] Secret reconstruction / pooling the share
