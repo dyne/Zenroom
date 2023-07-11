@@ -236,3 +236,14 @@ When("verify the pvss decrypted shares", function()
 end)
 
 -- - [3] Secret reconstruction / pooling the share
+When("compose the pvss secret using '' indexed with ''", function(shrs, inds)
+    local threshold = have'pvss quorum'
+    threshold = tonumber(BIG.to_decimal(threshold))
+    local shares = have(shrs)
+    local indexes = have(inds)
+    local secret_point = PVSS.pooling_shares(shares, indexes, threshold)
+
+    empty'pvss secret'
+    ACK.pvss_secret = secret_point:zcash_export()
+    new_codec('pvss secret', {zentype = 'e'})
+end)

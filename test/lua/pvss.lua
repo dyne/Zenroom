@@ -112,6 +112,10 @@ print("Create deterministic shares")
 g = ECP.new(BIG.new(O.from_hex("07ef3f7f6123b2f5e1ce7c249e0a44c8b18b3671e11d5e233d15742cf538d068f94dfae3ac9966e626a3d6670d78b6ee")), BIG.new(O.from_hex("12d5c20e3ce7143c03491820a7b08c067f25bd9b724985cd95ec862f8cbb31c944f420e59f8f820bccf6e94b72236ca7")))
 G = ECP.new(BIG.new(O.from_hex("0a17f5c7ea3abe3654c4b56d709efd293e17e79327e15b2a7eababd02b20edf33bba0a6ff2c801923399c3c9fd6a1718")), BIG.new(O.from_hex("12f6579b77dbc6485107e68fe181e0aeb680f665880c7ded1db5f84c0a3fdc152f299511e4e5f64f1422d21c276f848a")))
 
+-- local ssssssssss = BIG.from_decimal("35688237357964554424910256379692958620043154328334738115441976865761925826586")
+-- I.spy(ssssssssss)
+-- I.spy((G*ssssssssss):zcash_export():base64())
+
 -- local test_arr_sk = {}
 -- local test_arr_pk = {}
 -- for i=1,10 do
