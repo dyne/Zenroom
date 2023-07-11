@@ -807,6 +807,7 @@ int luaopen_ecp(lua_State *L) {
 		{"validate", ecp_validate},
 		{"prime", ecp_prime},
 		{"rhs", ecp_rhs},
+		{"zcash_export", ecp_zcash_export},
 		{NULL, NULL}};
 	const struct luaL_Reg ecp_methods[] = {
 		{"affine", ecp_affine},

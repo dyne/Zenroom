@@ -202,7 +202,7 @@ tests = [
 'and', 'array', 'bbs_sha', 'bbs_shake', 'bbs_zkp', 'bbs_zkp_shake', 'bitcoin', 'branching',
 'credential', 'dictionary', 'dp3t', 'ecdh', 'ethereum', 'float', 'foreach', 'generic_bbs',
 'generic_dilithium', 'generic_ecdh', 'generic_eddsa', 'generic_schnorr', 'given', 'hash',
-'http', 'keys', 'kyber', 'ntrup', 'numbers', 'output', 'pack', 'parser', 'planetmint',
+'http', 'keys', 'kyber', 'ntrup', 'numbers', 'output', 'pack', 'parser', 'planetmint', 'pvss',
 'random', 'reflow', 'rules', 'secshare', 'then', 'w3c', 'w3c_did', 'when', 'zenswarm',
 'zkp', 'zkp_multi_petitions', 'zencode_exec'
 ]

@@ -1976,6 +1976,7 @@ int luaopen_octet(lua_State *L) {
 		{"to_array",  to_array},
 		{"to_octet",  to_octet},
 		{"to_bin",    to_bin},
+		{"zcash_topoint", zcash_topoint},
 		{"to_mnemonic", to_mnemonic},
 		{"random",  new_random},
 		{"entropy", entropy},
