@@ -16,16 +16,11 @@
 --GNU Affero General Public License v3.0
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
---Last modified by ...
---on ...
 --]]
 
 local PVSS = require'crypto_pvss'
 
--- TODO: decide if g, G should be fixed or they should be randomly generated using Tonelli-Shanks.
-
-g = ECP.new(BIG.new(O.from_hex("07ef3f7f6123b2f5e1ce7c249e0a44c8b18b3671e11d5e233d15742cf538d068f94dfae3ac9966e626a3d6670d78b6ee")), BIG.new(O.from_hex("12d5c20e3ce7143c03491820a7b08c067f25bd9b724985cd95ec862f8cbb31c944f420e59f8f820bccf6e94b72236ca7")))
-G = ECP.new(BIG.new(O.from_hex("0a17f5c7ea3abe3654c4b56d709efd293e17e79327e15b2a7eababd02b20edf33bba0a6ff2c801923399c3c9fd6a1718")), BIG.new(O.from_hex("12f6579b77dbc6485107e68fe181e0aeb680f665880c7ded1db5f84c0a3fdc152f299511e4e5f64f1422d21c276f848a")))
+local GENERATORS = PVSS.set_generators()
 
 local function pvss_public_key_f(obj)
     local point = obj:zcash_topoint()
@@ -40,123 +35,69 @@ local function pvss_public_key_f(obj)
     return point
 end
 
-local function pvss_enc_shares_imp_f(obj)
-    -- obj is of the form {i, Y_i} where i is integer, Y_i is ECP point
-    if type(obj) == "string" then
-        local tonumb = tonumber(obj)
-        if tonumb then
-            return BIG.new(tonumb)
-        else
-            return O.from_base64(obj):zcash_topoint()
-        end
-    else
-        error("Invalid type of object in encrypted share", 2)
-    end
+local function import_public_shares_f(obj)
+    local res = {}
+    res.public_keys = ZEN.get(obj, 'public_keys', pvss_public_key_f)
+    res.proof = ZEN.get(obj, 'proof', BIG.new, O.from_base64)
+    res.commitments = ZEN.get(obj, 'commitments', O.zcash_topoint, O.from_base64)
+    res.encrypted_shares = ZEN.get(obj, 'encrypted_shares', O.zcash_topoint, O.from_base64)
+    return res
 end
 
-local function pvss_enc_shares_exp_f(obj)
-    -- obj is of the form {{i_1, Y_i_1}, ..., {i_v, Y_i_v}}
-    local output = {}
-    if type(obj[1]) == 'table' then
-        for _,v in pairs(obj) do
-            table.insert( output, { BIG.to_decimal( v[1] ) , v[2]:zcash_export() })
-        end
-    else
-        output = {BIG.to_decimal(obj[1]), obj[2]:zcash_export()}
+local function export_public_shares_f(obj)
+    local res = {["public_keys"] = {}, ["proof"] = {}, ["encrypted_shares"] = {}, ["commitments"] = {}}
+    for i = 1, #obj.commitments do
+        res.commitments[i] = obj.commitments[i]:zcash_export()
     end
-
-    return output
+    local n = #obj.public_keys
+    for i=1,n do
+        res.public_keys[i] = obj.public_keys[i]:zcash_export()
+        res.proof[i] = obj.proof[i]:octet():base64()
+        res.encrypted_shares[i] = obj.encrypted_shares[i]:zcash_export()
+    end
+    res.proof[n+1] = obj.proof[n+1]:octet():base64()
+    return res
 end
 
-ZEN.add_schema(
-    {
-        pvss_public_key = {
-            import = function(obj)
-                return ZEN.get(obj, '.', pvss_public_key_f)
-            end,
-            export = function(o) return o:zcash_export() end
-        },
-        pvss_encrypted_shares = {
-            import = function(obj)
-                return ZEN.get(obj, '.', nil, pvss_enc_shares_imp_f)
-            end,
-            export = pvss_enc_shares_exp_f
-        }
-    }
-)
+local function import_secret_share_f(obj)
+    local res = {}
+    res.index = ZEN.get(obj, 'index', INT.from_decimal, tostring)
+    res.proof = ZEN.get(obj, 'proof', BIG.new, O.from_base64)
+    res.dec_share = ZEN.get(obj, 'dec_share', O.zcash_topoint, O.from_base64)
+    res.enc_share = ZEN.get(obj, 'enc_share', O.zcash_topoint, O.from_base64)
+    res.pub_key = ZEN.get(obj, 'pub_key', pvss_public_key_f)
+    return res
+end
 
----------------------------------------- PVSS initialization -------------------------------------
-
--- generate the private key
-When('create the pvss key',function()
-    initkeyring'pvss'
-    ACK.keyring.pvss = PVSS.keygen()
-end)
-
--- generate the public key
-When('create the pvss public key',function()
-    empty'pvss public key'
-    local sk = havekey'pvss'
-    ACK.pvss_public_key = PVSS.sk2pk(G, sk)
-    new_codec('pvss public key', { zentype = 'e'})
-end)
-
------------------------------------------ DISTRIBUTION --------------------------------------------
-
--- TODO: array of public keys in schema to execute "have'pks'" ?
-When("create the pvss secret shares of '' with '' quorum '' using the public keys ''", function(sec, num, thr, pubks)
-    local s = have(sec)
-	local n = tonumber(num)
-	ZEN.assert(n, "Total shares is not a number: "..num)
-	local t = tonumber(thr)
-	ZEN.assert(t, "Quorum shares is not a number: "..thr)
-    ZEN.assert(t <= n, "Quorum is bigger than total")
-    local pks = have(pubks)
-    local Cs, Yarray, challenge, responses = PVSS.create_shares(s, g, pks, t, n)
-
-    empty'pvss cs'
-    for i = 1,t do
-        Cs[i] = Cs[i]:zcash_export()
+local function export_secret_share_f(obj)
+    local res = {["proof"]={}}
+    res.index = obj.index:decimal()
+    res.enc_share = obj.enc_share:zcash_export()
+    res.dec_share = obj.dec_share:zcash_export()
+    res.pub_key = obj.pub_key:zcash_export()
+    for i=1,#obj.proof do
+        res.proof[i] = obj.proof[i]:octet():base64()
     end
-    ACK.pvss_cs = Cs
-    new_codec('pvss cs', {zentype='a'}) -- array of points.
+    return res
+end
 
-    empty'pvss encrypted shares'
-    for i = 1, n do
-        Yarray[i][1] = BIG.new(Yarray[i][1])
+local function import_verified_shares_f(obj)
+    local res = {}
+    res.valid_indexes = ZEN.get(obj, 'valid_indexes', INT.from_decimal, tostring)
+    res.valid_shares = ZEN.get(obj, 'valid_shares', O.zcash_topoint, O.from_base64)
+    return res
+end
+
+local function export_verified_shares_f(obj)
+    local res = {["valid_indexes"] = {}, ["valid_shares"] = {}}
+    for i = 1, #obj.valid_indexes do
+        res.valid_shares[i] = obj.valid_shares[i]:zcash_export()
+        res.valid_indexes[i] = obj.valid_indexes[i]:decimal()
     end
-    ACK.pvss_encrypted_shares = Yarray
-    new_codec('pvss encrypted shares')
+    return res
+end
 
-    -- pvss_proof is an array of BIGs: {challenge, r} or {challenge, r_1,..,r_n}
-    empty'pvss proof'
-    table.insert(responses, 1, challenge)
-    ACK.pvss_proof = responses
-    new_codec('pvss proof', {zentype='a'}) -- array of BIGs.
-
-    empty'pvss quorum'
-    ACK.pvss_quorum = BIG.new(t)
-    new_codec('pvss quorum', {zentype = 'e'})
-
-    empty'pvss total'
-    ACK.pvss_total = BIG.new(n)
-    new_codec('pvss total', {zentype = 'e'})
-
-    -- empty'pvss participant pks'
-    -- ACK.pvss_participant_pks = pks
-    -- new_codec('pvss participant pks', {zentype = 'a'})
-end)
-
-When("verify the pvss encrypted shares", function()
-    local commitments = have'pvss cs'
-    local encrypted_shares = have'pvss encrypted shares'
-    local proof = have'pvss proof'
-    local t = have'pvss quorum'
-    local n = have'pvss total'
-    local pks = have'pvss participant pks'
-
-    n = tonumber(BIG.to_decimal(n))
-    t = tonumber(BIG.to_decimal(t))
+local function check_inputs(pks, commitments, encrypted_shares, proof, t, n)
     ZEN.assert(t <= n, "Quorum is bigger than total")
 
     ZEN.assert(type(pks) == 'table', "'pvss participant pks' is not a table")
@@ -169,79 +110,116 @@ When("verify the pvss encrypted shares", function()
     ZEN.assert(#encrypted_shares == n, "'pvss encrypted shares' is of wrong length")
     ZEN.assert(#proof == n + 1, "'pvss proof' is of wrong length")
 
-    for i = 1,t do
-        commitments[i] = pvss_public_key_f(commitments[i])
-    end
-
-    local enc_shares = {}
-
-    for i = 1,n do
-        pks[i] = pvss_public_key_f(pks[i])
-        enc_shares[i] = { tonumber(BIG.to_decimal(encrypted_shares[i][1])), encrypted_shares[i][2] }
+    for i = 1,n+1 do
         ZEN.assert(type(proof[i]) == 'zenroom.big', 'Proof element is not big')
         ZEN.assert(proof[i] < ECP.order(), 'Proof element is not modulo CURVE_ORDER')
     end
-    ZEN.assert(type(proof[n + 1]) == 'zenroom.big', 'Proof element is not big')
-    ZEN.assert(proof[n + 1] < ECP.order(), 'Proof element is not modulo CURVE_ORDER')
+end
 
-    -- TODO: use "table.remove" ?
-    local challenge = proof[1]
-    local responses = { table.unpack(proof, 2, n+1) }
+ZEN.add_schema(
+    {
+        pvss_public_key = {
+            import = function(obj)
+                return ZEN.get(obj, '.', pvss_public_key_f)
+            end,
+            export = ECP.zcash_export
+        },
+        pvss_public_shares = { import = import_public_shares_f,
+            export = export_public_shares_f},
+        pvss_secret_share = { import = import_secret_share_f,
+            export = export_secret_share_f
+        },
+        pvss_verified_shares = { import = import_verified_shares_f,
+            export = export_verified_shares_f
+        }
+    }
+)
+
+---------------------------------------- PVSS initialization -------------------------------------
+
+-- Participant generates the private key
+When('create the pvss key',function()
+    initkeyring'pvss'
+    ACK.keyring.pvss = PVSS.keygen()
+end)
+
+-- Participant generates the public key
+When('create the pvss public key',function()
+    empty'pvss public key'
+    local sk = havekey'pvss'
+    ACK.pvss_public_key = PVSS.sk2pk(GENERATORS, sk)
+    new_codec('pvss public key', { zentype = 'e'})
+end)
+
+----------------------------------------- DISTRIBUTION --------------------------------------------
+
+-- The issuer generates the encrypted shares for n participants with quorum t
+When("create the pvss public shares of '' with '' quorum '' using the public keys ''", function(sec, num, thr, pubks)
+    local s = have(sec)
+	local n = tonumber(have(num):decimal())
+	ZEN.assert(n, "Total shares is not a number: "..num)
+	local t = tonumber(have(thr):decimal())
+	ZEN.assert(t, "Quorum shares is not a number: "..thr)
+    ZEN.assert(t <= n, "Quorum is bigger than total")
+    local pks = have(pubks)
+    local pvss_public_shares = PVSS.create_shares(GENERATORS, s, pks, t, n)
+
+    empty'pvss public shares'
+    ACK.pvss_public_shares = pvss_public_shares
+    new_codec('pvss public shares')
+
+end)
+
+-- Anyone verifies the encrypted shares created by the issuer
+When("verify the pvss public shares with '' quorum ''", function(num,thr)
+    local pvss_public_shares = have'pvss public shares'
+    local t = tonumber(have(thr):decimal())
+    local n = tonumber(have(num):decimal())
+
+    check_inputs(pvss_public_shares.public_keys, pvss_public_shares.commitments, pvss_public_shares.encrypted_shares, pvss_public_shares.proof, t, n)
 
     ZEN.assert(
-        PVSS.verify_shares(g, pks, t, n, commitments, enc_shares, challenge, responses),
-        'The pvss encrypted shares are not authentic'
+        PVSS.verify_shares(GENERATORS, t, n, pvss_public_shares),
+        'The pvss public shares are not authentic'
     )
 end)
 
 ----------------------------------- RECONSTRUCTION -------------------------------------------
 
--- - [1] Participant decrypts its own share AND generate a proof
-When("decrypt the share ''", function(obj)
-    local arr = have(obj)
-    local ind = arr[1]
-    local Y = arr[2]
+-- Participant decrypts its own share AND generate a proof
+When("create the secret share with public key ''", function(pk)
     local x = havekey'pvss'
-    local y = have'pvss public key'
-    local output = PVSS.decrypt_share(x, Y, y, G, ind)
-    local S, proof = table.unpack(output,1,2)
-    empty'pvss proof'
-    ACK.pvss_proof = proof
-    new_codec('pvss proof', {zentype='a'}) -- array of BIGs.
+    local y = have(pk)
+    ZEN.assert(y == PVSS.sk2pk(GENERATORS, x))
+    local issuer_shares = have'pvss public shares'
+    local output = PVSS.decrypt_share(GENERATORS, x, y, issuer_shares)
+    output["index"] = BIG.new(output["index"])
 
-    empty'pvss decrypted share'
-    ACK.pvss_decrypted_share = S:zcash_export()
-    new_codec('pvss decrypted share', {zentype = 'e'})
+    empty'pvss secret share'
+    ACK.pvss_secret_share = output
+    new_codec('pvss secret share')
 end)
 
--- - [2] Each participant verifies the shares of the others
-When("verify the pvss decrypted shares", function()
-    local dec_shares = have'pvss decrypted shares'
-    local proof_array = have'pvss proofs'
-    local enc_shares = have'pvss encrypted shares'
-    local pub_keys = have'pvss participant pks'
-    local valid_shares, valid_indexes = PVSS.verify_decrypted_shares(G, dec_shares, proof_array, enc_shares, pub_keys)
-    empty'pvss valid shares'
-    for i = 1, #valid_shares do
-        valid_shares[i] = valid_shares[i]:zcash_export()
-    end
-    ACK.pvss_valid_shares = valid_shares
-    new_codec('pvss valid shares', {zentype = 'a'})
-    empty'pvss valid indexes'
+-- Each participant verifies the shares of the others
+When("create the pvss verified shares from ''", function(list)
+    local dec_shares = have(list)
+    local valid_shares, valid_indexes = PVSS.verify_decrypted_shares(GENERATORS, dec_shares)
     for i = 1, #valid_indexes do
         valid_indexes[i] = BIG.new(valid_indexes[i])
     end
-    ACK.pvss_valid_indexes = valid_indexes
-    new_codec('pvss valid indexes', {zentype = 'a'})
+
+    empty'pvss verified shares'
+    ACK.pvss_verified_shares = {["valid_shares"] = valid_shares, ["valid_indexes"] = valid_indexes}
+    new_codec('pvss verified shares')
+
 end)
 
--- - [3] Secret reconstruction / pooling the share
-When("compose the pvss secret using '' indexed with ''", function(shrs, inds)
-    local threshold = have'pvss quorum'
-    threshold = tonumber(BIG.to_decimal(threshold))
-    local shares = have(shrs)
-    local indexes = have(inds)
-    local secret_point = PVSS.pooling_shares(shares, indexes, threshold)
+-- Secret reconstruction / pooling the share
+When("compose the pvss secret using '' with quorum ''", function(shrs, thr)
+    local threshold = tonumber(BIG.to_decimal(have(thr)))
+    local verified_shares = have(shrs)
+
+    local secret_point = PVSS.pooling_shares(verified_shares.valid_shares, verified_shares.valid_indexes, threshold)
 
     empty'pvss secret'
     ACK.pvss_secret = secret_point:zcash_export()
