@@ -114,7 +114,7 @@ When("write number '' in ''", function(content, dest)
 		-- TODO: maybe support unsigned native here
 --	end
 	ACK[dest] = F.new(content)
-	new_codec(dest, {zentype = 'e' })
+    new_codec(dest, {zentype = 'e', encoding = 'number'})
 end)
 
 When("create number from ''", function(from)
