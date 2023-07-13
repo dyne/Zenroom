@@ -169,10 +169,10 @@ end
 
 When("pick random object in ''", function(from)
         key, ACK.random_object = next(_extract_random_elements(1, from, random_int16))
-        new_codec('random_object', {name=key})
+        new_codec('random_object', {name=key, encoding = ZEN.CODEC[from].encoding})
 end)
 
 When("create random dictionary with '' random objects from ''", function(num, from)
         ACK.random_dictionary = _extract_random_elements(num, from, random_int16)
-        new_codec('random_dictionary')
+        new_codec('random_dictionary', {encoding = ZEN.CODEC[from].encoding})
 end)
