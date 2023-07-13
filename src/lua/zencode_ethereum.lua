@@ -112,6 +112,14 @@ local function export_signature_f(obj)
     return "0x"..O.to_hex(obj)
 end
 
+local function export_signature_table_f(obj)
+    local res = {}
+    res.r = obj.r:octet():hex()
+    res.s = obj.s:octet():hex()
+    res.v = obj.v:decimal()
+    return res
+end
+
 local function import_method_f(obj)
     local res = {}
     res.name = schema_get(obj, 'name', nil, O.from_string)
@@ -183,6 +191,8 @@ ZEN:add_schema(
 		    export = big_wei_to_str_wei },
       ethereum_signature = { import = import_signature_f,
             export = export_signature_f},
+      ethereum_signature_table = { import = import_signature_f,
+            export = export_signature_table_f},
       ethereum_method = { import = import_method_f,
             export = export_method_f},
         ethereum_address_signature_pair = {

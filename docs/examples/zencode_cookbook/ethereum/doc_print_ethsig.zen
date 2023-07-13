@@ -2,5 +2,5 @@ Scenario ethereum
 
 Given I have a 'ethereum signature'
 
-Then print the 'ethereum signature' as 'hex'
+Then print the 'ethereum signature' as 'ethereum signature table'
 

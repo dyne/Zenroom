@@ -676,11 +676,11 @@ Scenario ethereum
 
 Given I have a 'ethereum signature'
 
-Then print the 'ethereum signature' as 'hex'
+Then print the 'ethereum signature' as 'ethereum signature table'
 
 EOF
     save_output doc_print_ethsig_out.json
-    assert_output '{"ethereum_signature":{"r":"19373b64e400e237dd7fb23e76621675f8691c0eb14aa171a82f69593b1a2a05","s":"36203582c38585754a785ca504f51e4178bab5cc3f566e985358eaf7cb5d7876","v":"1b"}}'
+    assert_output '{"ethereum_signature":{"r":"19373b64e400e237dd7fb23e76621675f8691c0eb14aa171a82f69593b1a2a05","s":"36203582c38585754a785ca504f51e4178bab5cc3f566e985358eaf7cb5d7876","v":"27"}}'
 }
 
 @test "Import ethereum signature as table" {
