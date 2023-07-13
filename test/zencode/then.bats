@@ -6,13 +6,13 @@ SUBDOC=then
     cat <<EOF | save_asset dictionary.json
 { "dictionary": {
    "first": {
-    "v1": 1,
-    "v2": 2,
+    "v1": 123,
+    "v2": 234,
     "vs": "hello"
     },
    "second": {
-    "v3": 3,
-    "v4": 4,
+    "v3": 345,
+    "v4": 456,
     "vs": "world"
     }
   }
@@ -23,7 +23,7 @@ Given I have the 'string dictionary' named 'dictionary'
 Then print all data
 EOF
     save_output 'print_data.out'
-    assert_output '{"dictionary":{"first":{"v1":1,"v2":2,"vs":"hello"},"second":{"v3":3,"v4":4,"vs":"world"}}}'
+    assert_output '{"dictionary":{"first":{"v1":"123","v2":"234","vs":"hello"},"second":{"v3":"345","v4":"456","vs":"world"}}}'
 }
 
 @test "Print my data" {
@@ -33,8 +33,7 @@ Given I have the 'string dictionary' named 'dictionary'
 Then print my data
 EOF
     save_output 'print_my_data.out'
-    assert_output '{"Alice":{"dictionary":{"first":{"v1":1,"v2":2,"vs":"hello"},"second":{"v3":3,"v4":4,"vs":"world"}}}}'
-
+    assert_output '{"Alice":{"dictionary":{"first":{"v1":"123","v2":"234","vs":"hello"},"second":{"v3":"345","v4":"456","vs":"world"}}}}'
 }
 
 @test "Print data from" {
@@ -44,7 +43,7 @@ Then print data from 'dictionary'
 Then print the 'dictionary'
 EOF
     save_output 'print_data_from.out'
-    assert_output '{"dictionary":{"first":{"v1":1,"v2":2,"vs":"hello"},"second":{"v3":3,"v4":4,"vs":"world"}},"first":{"v1":1,"v2":2,"vs":"hello"},"second":{"v3":3,"v4":4,"vs":"world"}}'
+    assert_output '{"dictionary":{"first":{"v1":"123","v2":"234","vs":"hello"},"second":{"v3":"345","v4":"456","vs":"world"}},"first":{"v1":"123","v2":"234","vs":"hello"},"second":{"v3":"345","v4":"456","vs":"world"}}'
 }
 
 @test "Print data from as" {
@@ -54,7 +53,7 @@ Then print data from 'dictionary' as 'base58'
 Then print the 'dictionary'
 EOF
     save_output 'print_data_from_as.out'
-    assert_output '{"dictionary":{"first":{"v1":1,"v2":2,"vs":"hello"},"second":{"v3":3,"v4":4,"vs":"world"}},"first":{"v1":1,"v2":2,"vs":"Cn8eVZg"},"second":{"v3":3,"v4":4,"vs":"EUYUqQf"}}'
+    assert_output '{"dictionary":{"first":{"v1":"123","v2":"234","vs":"hello"},"second":{"v3":"345","v4":"456","vs":"world"}},"first":{"v1":"HXRC","v2":"HryZ","vs":"Cn8eVZg"},"second":{"v3":"JCXv","v4":"JY6H","vs":"EUYUqQf"}}'
 }
 
 @test "Then print '' from ''" {
@@ -63,7 +62,7 @@ Given I have the 'string dictionary' named 'dictionary'
 Then print 'second' from 'dictionary'
 EOF
     save_output 'print_data2.out'
-    assert_output '{"second":{"v3":3,"v4":4,"vs":"world"}}'
+    assert_output '{"second":{"v3":"345","v4":"456","vs":"world"}}'
 }
 
 @test "tests for encoding on print" {
@@ -116,6 +115,7 @@ EOF
     assert_output '{"identity":"Alice"}'
 }
 
+
 @test "Print '' as '' in ''" {
     cat <<EOF | save_asset print_as_in.data
 {
@@ -133,4 +133,105 @@ and print the 'string'
 EOF
     save_output 'print_as_in.out'
     assert_output '{"hex_data":["68656c6c6f"],"string":"hello"}'
+}
+
+@test "Print positive big in different encodings" {
+    cat <<EOF | save_asset print_big_encoded.data
+    {
+        "big": "197846894637981748973289437329874387498372948739827"
+    }
+EOF
+    cat <<EOF | zexe print_big_encoded.zen print_big_encoded.data
+Given I have a 'integer' named 'big'
+
+When I copy 'big' to 'big_to_hex'
+When I copy 'big' to 'big_to_base58'
+When I copy 'big' to 'big_to_base64'
+When I copy 'big' to 'big_to_binary'
+When I copy 'big' to 'big_to_url64'
+When I copy 'big' to 'big_to_integer'
+
+Then print the 'big'
+Then print the 'big_to_hex' as 'hex'
+Then print the 'big_to_base64' as 'base64'
+Then print the 'big_to_base58' as 'base58'
+Then print the 'big_to_binary' as 'binary'
+Then print the 'big_to_url64' as 'url64'
+Then print the 'big_to_integer' as 'integer'
+EOF
+    save_output 'print_big_encoded.out'
+    assert_output '{"big":"197846894637981748973289437329874387498372948739827","big_to_base58":"9KooCfQvDTBguALVSgdqpefnm5AF4","big_to_base64":"h19RloyzHhv5in7MpWTUWB8qrsbz","big_to_binary":"100001110101111101010001100101101000110010110011000111100001101111111001100010100111111011001100101001010110010011010100010110000001111100101010101011101100011011110011","big_to_hex":"875f51968cb31e1bf98a7ecca564d4581f2aaec6f3","big_to_integer":"197846894637981748973289437329874387498372948739827","big_to_url64":"h19RloyzHhv5in7MpWTUWB8qrsbz"}'
+}
+
+@test "Print negative big in different encodings fails" {
+    cat <<EOF | save_asset print_big_encoded_fail.data
+    {
+        "negative_big": "-197846894637981748973289437329874387498372948739827"
+    }
+EOF
+    cat <<EOF | save_asset print_big_encoded_fail.zen
+    Given I have a 'integer' named 'negative big'
+    Then print the 'negative big' as 'hex'
+EOF
+    run $ZENROOM_EXECUTABLE -z -a print_big_encoded_fail.data print_big_encoded_fail.zen
+    assert_line --partial 'Negative integers can not be encoded'
+}
+
+@test "Print big as float fails" {
+    cat <<EOF | save_asset print_big_as_float_fail.data
+    {
+        "negative_big": "197846894637981748973289437329874387498372948739827"
+    }
+EOF
+    cat <<EOF | save_asset print_big_as_float_fail.zen
+    Given I have a 'integer' named 'negative big'
+    Then print the 'negative big' as 'float'
+EOF
+    run $ZENROOM_EXECUTABLE -z -a print_big_as_float_fail.data print_big_as_float_fail.zen
+    assert_line --partial 'Encoding not valid for integers'
+}
+
+@test "Print float in different encodings" {
+    cat <<EOF | save_asset print_float_encoded.data
+    {
+        "small_float": 155.6234,
+        "big_float": 1978468946
+    }
+EOF
+    cat <<EOF | zexe print_float_encoded.zen print_float_encoded.data
+Given I have a 'float' named 'small_float'
+Given I have a 'float' named 'big_float'
+
+When I copy 'small_float' to 'sf_to_hex'
+When I copy 'small_float' to 'sf_to_base58'
+When I copy 'small_float' to 'sf_to_base64'
+When I copy 'small_float' to 'sf_to_binary'
+When I copy 'small_float' to 'sf_to_url64'
+When I copy 'small_float' to 'sf_to_string'
+
+When I copy 'big_float' to 'bf_to_hex'
+When I copy 'big_float' to 'bf_to_base58'
+When I copy 'big_float' to 'bf_to_base64'
+When I copy 'big_float' to 'bf_to_binary'
+When I copy 'big_float' to 'bf_to_url64'
+When I copy 'big_float' to 'bf_to_string'
+
+Then print the 'small_float'
+Then print the 'sf_to_hex' as 'hex'
+Then print the 'sf_to_base64' as 'base64'
+Then print the 'sf_to_base58' as 'base58'
+Then print the 'sf_to_binary' as 'binary'
+Then print the 'sf_to_url64' as 'url64'
+Then print the 'sf_to_string' as 'string'
+
+Then print the 'big_float'
+Then print the 'bf_to_hex' as 'hex'
+Then print the 'bf_to_base64' as 'base64'
+Then print the 'bf_to_base58' as 'base58'
+Then print the 'bf_to_binary' as 'binary'
+Then print the 'bf_to_url64' as 'url64'
+Then print the 'bf_to_string' as 'string'
+EOF
+    save_output 'print_float_encoded.out'
+    assert_output '{"bf_to_base58":"vq4TLUcEtrfSXYEk","bf_to_base64":"MS45Nzg0NjllKzA5","bf_to_binary":"001100010010111000111001001101110011100000110100001101100011100101100101001010110011000000111001","bf_to_hex":"312e393738343639652b3039","bf_to_string":"1.978469e+09","bf_to_url64":"MS45Nzg0NjllKzA5","big_float":1.978469e+09,"sf_to_base58":"3mM4tuZnxpndM9","sf_to_base64":"MTU1LjYyMzM5OA==","sf_to_binary":"00110001001101010011010100101110001101100011001000110011001100110011100100111000","sf_to_hex":"3135352e363233333938","sf_to_string":"155.623398","sf_to_url64":"MTU1LjYyMzM5OA","small_float":155.6234}'
 }
