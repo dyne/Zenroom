@@ -323,6 +323,12 @@
     return nil
  end
 
+local function to_float_f(data)
+  local res = tonumber(tostring(data))
+  ZEN.assert(res, "Could not read the float number")
+  return res
+end
+
  -- factory function returns a small outcast function that applies
  -- return guessed.fun(guessed.raw)safety checks on values like
  -- exceptions for numbers and booleans
@@ -335,10 +341,18 @@
        if dt == 'number' or dt == 'boolean' then
 		  return data
        elseif dt == 'zenroom.big' then
-		  -- always export BIG INT as decimal
-		  return BIG.to_decimal(data)
+        ZEN.assert(fun ~= to_float_f and fun ~= O.to_mnemonic and fun ~= O.to_string, "Encoding not valid for integers")
+        if fun ~= BIG.to_decimal then
+          ZEN.assert(BIG.zenpositive(data), "Negative integers can not be encoded")
+          data = data:octet()
+        end
+        return fun(data)
        elseif dt == 'zenroom.float' then
-		  return tonumber(tostring(data))
+        ZEN.assert(fun ~= BIG.to_decimal and fun ~= O.to_mnemonic, "Encoding not valid for floats")
+        if fun ~= to_float_f then
+          data = data:octet()
+        end
+		    return fun(data)
        elseif iszen(dt) then
 		  -- leverage first class citizen method on zenroom data
 		  return fun(data:octet())
@@ -356,48 +370,47 @@
 	end
  end
 
- -- takes a string returns the function, good for use in deepmap(fun,table)
- function get_encoding_function(cast)
-    if not cast then
-       error('get_encoding_function called with nil argument', 2)
+-- takes a string returns the function, good for use in deepmap(fun,table)
+function get_encoding_function(cast)
+  if not cast then
+    error('get_encoding_function called with nil argument', 2)
+  end
+  if luatype(cast) ~= 'string' then
+    error('get_encoding_function called with wrong argument: '..type(cast), 3)
+  end
+  if cast == 'def' then
+    return CONF.output.encoding.fun
+  elseif cast == 'boolean' then
+    return function(data) return data end
+  end
+  local encoding_table = {
+    string = O.to_string,
+    hex = O.to_hex,
+    base64 = O.to_base64,
+    url64 = O.to_url64,
+    base58 = O.to_base58,
+    binary = O.to_bin,
+    bin = O.to_bin,
+    mnemonic = O.to_mnemonic,
+    float = to_float_f,
+    number = to_float_f,
+    integer = BIG.to_decimal
+  }
+  if encoding_table[cast] then
+    return f_factory_outcast(encoding_table[cast])
+  end
+  -- try schemas
+  local fun = ZEN.schemas[uscore(cast)]
+  if luatype(fun) == 'table' then
+    if fun.export then
+      return fun.export
+    else
+      return default_export_f
     end
-    if luatype(cast) ~= 'string' then
-       error('get_encoding_function called with wrong argument: '..type(cast), 3) end
-    if cast == 'def' then
-	   return CONF.output.encoding.fun
-	elseif cast == 'string' then
-       return f_factory_outcast(O.to_string)
-    elseif cast == 'hex' then
-       return f_factory_outcast(O.to_hex)
-    elseif cast == 'base64' then
-       return f_factory_outcast(O.to_base64)
-    elseif cast == 'url64' then
-       return f_factory_outcast(O.to_url64)
-    elseif cast == 'base58' then
-       return f_factory_outcast(O.to_base58)
-    elseif cast == 'binary' or cast == 'bin' then
-       return f_factory_outcast(O.to_bin)
-    elseif cast == 'mnemonic' then
-       return f_factory_outcast(O.to_mnemonic)
-    elseif cast == 'float' or cast == 'number' then
-       return f_factory_outcast(function(data) tonumber(tostring(data)) end)
-    elseif cast == 'integer' then
-       return f_factory_outcast(BIG.to_decimal)
-    elseif cast == 'boolean' then
-       return function(data) return data end
-    end
-    -- try schemas
-    local fun = ZEN.schemas[uscore(cast)]
-    if luatype(fun) == 'table' then
-	   if fun.export then
-		  return fun.export
-	   else
-		  return default_export_f
-	   end
-    end
-	-- last default
-	return CONF.output.encoding.fun
- end
+  end
+  -- last default
+  return CONF.output.encoding.fun
+end
 
  function get_format(what)
     if what == 'json' or what == 'JSON' then
