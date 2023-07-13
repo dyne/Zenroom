@@ -35,6 +35,28 @@
 -- my from as
 ----------------------
 
+local function apply_schema(variable_value, variable_name, schema_name)
+    local fun
+    local codec = ZEN.CODEC[uscore(variable_name)]
+    if not codec then error("CODEC not found for object: "..key, 2) end
+    local schema = ZEN.schemas[schema_name]
+    if not schema then error("Schema not found: "..variable_name,2) end
+    if luatype(schema) == 'function' then fun = default_export_f
+    else
+        fun = schema.export or default_export_f
+    end
+    -- table
+    if codec.zentype ~= 'e' then
+        local res = {}
+        for k,v in pairs(variable_value) do
+            res[k] = fun(v)
+        end
+        return res
+    end
+    -- element
+    return fun(variable_value)
+end
+
  -- CODEC format:
  -- { name: string,
  --   encoding: encoding of object data, both basic and schema
@@ -50,29 +72,16 @@ local function then_outcast(val, key, enc)
    local codec
    if enc then
 	  fun = get_encoding_function(enc)
-	  if fun then return deepmap(fun, val) end
+      if ZEN.schemas[enc] then
+        return apply_schema(val, key, enc)
+      elseif fun then
+        return deepmap(fun, val)
+      end
 	  error("Output encoding not found: "..enc)
    end
    local codec = CODEC[uscore(key)]
    if not codec then error("CODEC not found for object: "..key, 2) end
-   if codec.schema then
-	  local schema = ZEN.schemas[codec.schema]
-	  if not schema then error("Schema not found: "..key,2) end
-	  if luatype(schema) == 'function' then fun = default_export_f
-	  else
-		 fun = schema.export or default_export_f
-	  end
-      -- table
-      if codec.zentype ~= 'e' then
-        local res = {}
-        for k,v in pairs(val) do
-            res[k] = fun(v)
-        end
-        return res
-      end
-      -- element
-      return fun(val)
-   end
+   if codec.schema then return apply_schema(val, key, codec.schema) end
    if codec.encoding then
 	  fun = get_encoding_function(codec.encoding)
 	  if not fun then error("CODEC encoding not found: "..codec.encoding) end
