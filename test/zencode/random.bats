@@ -68,14 +68,14 @@ EOF
 @test "Array rename remove" {
     cat <<EOF | zexe array_rename_remove.zen arr.json
 rule input encoding url64
-rule output encoding hex
+# rule output encoding hex
 Given I have a 'url64 array' named 'bonnetjes'
 When I pick the random object in 'bonnetjes'
 and I rename the 'random object' to 'lucky one'
 and I remove the 'lucky one' from 'bonnetjes'
 # redundant check
 and I verify the 'lucky one' is not found in 'bonnetjes'
-Then print the 'lucky one'
+Then print the 'lucky one' as 'hex'
 EOF
     save_output 'array_rename_remove.out'
     assert_output '{"lucky_one":"91316b1214ba84cf23ec26f6b7981bc84cf79e3d1c7355ef419a1232d28e2882"}'
@@ -131,7 +131,7 @@ EOF
     cat <<EOF | zexe single_element_array_random.zen single_element_array.json
 Given I have a 'float array' named 'array'
 When I pick the random object in 'array'
-Then print the 'random object'
+Then print the 'random object' as 'float'
 EOF
     save_output "single_element_array_random.out"
     assert_output '{"random_object":42}'

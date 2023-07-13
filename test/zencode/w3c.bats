@@ -705,7 +705,7 @@ EOF
     cat <<EOF > jwt_hs256.data
 {
 	"payload": {
-        "iat": 15162,
+        "iat": "15162",
         "name": "John Doe",
         "sub": "1234567890"
     },
@@ -718,11 +718,11 @@ Given I have a 'string dictionary' named 'payload'
 Given I have a 'string' named 'password'
 
 When I create the json web token of 'payload' using 'password'
-
+and debug
 Then print the 'json web token'
 EOF
     save_output jwt_hs256.json
-    assert_output '{"json_web_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1MTYyLCJuYW1lIjoiSm9obiBEb2UiLCJzdWIiOiIxMjM0NTY3ODkwIn0.t_oDRdxZOP3rL53qUL5cS74WsqrZWWsXaIZT-AQL4WU"}'
+    assert_output '{"json_web_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOiIxNTE2MiIsIm5hbWUiOiJKb2huIERvZSIsInN1YiI6IjEyMzQ1Njc4OTAifQ.FyHC5dRXzneZ2gs4yU6jTuj0jDue3IlL25m8OgJ8IDA"}'
 }
 
 @test "JWT HS256 verify" {

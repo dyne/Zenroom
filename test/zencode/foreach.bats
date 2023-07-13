@@ -50,7 +50,7 @@ Endif
 Then print 'new array' as 'string'
 EOF
     save_output "foreach_in_if.out"
-    assert_output '{"new_array":[1,2,3,4,5,6,7,8,9,1,2,3,4,5,6,7,8,9,1,2,3,4,5,6,7,8,9]}'
+    assert_output '{"new_array":["1","2","3","4","5","6","7","8","9","1","2","3","4","5","6","7","8","9","1","2","3","4","5","6","7","8","9"]}'
 }
 
 
@@ -65,14 +65,14 @@ EOF
     cat << EOF | zexe if_in_foreach.zen if_in_foreach.data
 Given I have a 'float array' named 'xs'
 Given I have a 'float' named 'limit'
-When I create the new array
+When I create the 'float array' named 'new array'
 Foreach 'x' in 'xs'
 If I verify number 'x' is less than 'limit'
 When I move 'x' in 'new array'
 Endif
 EndForeach
 When I rename 'new array' to 'new nums'
-Then print 'new nums' as 'string'
+Then print 'new nums'
 EOF
     save_output "if_in_foreach.out"
     assert_output '{"new_nums":[1,2,3,4,5]}'
@@ -91,12 +91,12 @@ EOF
 Given I have a 'float' named 'zero'
 Given I have a 'float' named 'one'
 Given I have a 'float' named 'limit'
-When I create the new array
+When I create the 'float array' named 'new array'
 Foreach 'x' in sequence from 'zero' to 'limit' with step 'one'
 When I move 'x' in 'new array'
 EndForeach
 When I rename 'new array' to 'new strings'
-Then print 'new strings' as 'string'
+Then print 'new strings'
 EOF
     save_output "foreach_float.out"
     assert_output '{"new_strings":[0,2,4,6,8,10]}'
@@ -115,11 +115,11 @@ EOF
 Given I have a 'integer' named 'zero'
 Given I have a 'integer' named 'one'
 Given I have a 'integer' named 'limit'
-When I create the new array
+When I create the 'integer array' named 'new array'
 Foreach 'x' in sequence from 'zero' to 'limit' with step 'one'
 When I move 'x' in 'new array'
 EndForeach
-Then print 'new array' as 'string'
+Then print 'new array'
 EOF
     save_output "foreach_big.out"
     assert_output '{"new_array":["-5","-3","-1","1","3","5","7","9","11"]}'
@@ -163,12 +163,10 @@ Given I have a 'integer array' named 'numbers'
 Given I have a 'integer' named 'const'
 Given I have a 'float' named 'counter'
 Given I have a 'integer' named 'limit'
-When I create the new array
-When I rename 'new array' to 'new nums'
+When I create the 'integer array' named 'new nums'
 When I create the new array
 When I rename 'new array' to 'old keys'
-When I create the 'string dictionary'
-When I rename 'string dictionary' to 'ifdict'
+When I create the 'integer dictionary' named 'ifdict'
 When I set 'resultname' to 'result' as 'string'
 Foreach 'x' in 'numbers'
 When I create the result of '(x + 12) / const'
@@ -193,8 +191,8 @@ When I remove 'keyname'
 # some comments
 # some comments
 EndForeach
-Then print 'new nums' as 'string'
-Then print 'ifdict' as 'string'
+Then print 'new nums'
+Then print 'ifdict'
 EOF
     save_output "foreach_append.out"
     assert_output '{"ifdict":{"key37":"2","key42":"2","key55":"3","key78":"4"},"new_nums":["2","2","3","4"]}'
