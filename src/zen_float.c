@@ -55,30 +55,28 @@ int _string_from_float(char dest[1024], float src) {
 
 	// Remove tailing zeros (after .)
 	int last_zero = -1;
-	bool dot = false;
 	if(bufsz > 0 && format[1] == 'f') {
 		bufsz--;
-		while(bufsz >= 0 && !dot) {
-			if(last_zero < 0 && dest[bufsz] != '0') {
-				last_zero = bufsz + 1;;
+		while(last_zero < 0 && bufsz >= 0) {
+			if(dest[bufsz] != '0') {
+				last_zero = bufsz + 1;
 			}
 			if(dest[bufsz] == '.') {
-				dot = true;
 				// if last zero is immediately after the
 				// dot, remove also the dot
 				if(last_zero == bufsz+1) {
 					last_zero--;
 				}
+				bufsz--;
 			}
 			bufsz--;
 		}
-		bufsz++;
-		if(dot) {
+		bufsz += 2;
+		if(last_zero > 0) {
 			dest[last_zero] = '\0';
 		}
 	}
 	return bufsz;
-
 }
 
 octet *new_octet_from_float(lua_State *L, float *f) {
