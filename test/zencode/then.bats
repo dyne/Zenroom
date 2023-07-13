@@ -235,3 +235,17 @@ EOF
     save_output 'print_float_encoded.out'
     assert_output '{"bf_to_base58":"vq4TLUcEtrfSXYEk","bf_to_base64":"MS45Nzg0NjllKzA5","bf_to_binary":"001100010010111000111001001101110011100000110100001101100011100101100101001010110011000000111001","bf_to_hex":"312e393738343639652b3039","bf_to_string":"1.978469e+09","bf_to_url64":"MS45Nzg0NjllKzA5","big_float":1.978469e+09,"sf_to_base58":"3mM4tuZnxpndM9","sf_to_base64":"MTU1LjYyMzM5OA==","sf_to_binary":"00110001001101010011010100101110001101100011001000110011001100110011100100111000","sf_to_hex":"3135352e363233333938","sf_to_string":"155.623398","sf_to_url64":"MTU1LjYyMzM5OA","small_float":155.6234}'
 }
+
+@test "print float from base64 fail" {
+    cat <<EOF | save_asset float_from_base64_fail.data
+    {
+        "b64": "CTlQid3NvdizBrYjqIwNLIrHGeFccqHzlQ/jsYovLJA="
+    }
+EOF
+    cat <<EOF | save_asset float_from_base64_fail.zen
+    Given I have a 'base64' named 'b64'
+    Then print the 'b64' as 'number'
+EOF
+    run $ZENROOM_EXECUTABLE -z -a float_from_base64_fail.data float_from_base64_fail.zen
+    assert_line '[W]  Could not read the float number'
+}
