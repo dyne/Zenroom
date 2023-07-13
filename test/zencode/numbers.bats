@@ -148,7 +148,7 @@ Given I have a 'string dictionary' named 'mycat'
 Then print all data
 EOF
     save_output 'booleans.out'
-    assert_output '{"mycat":{"age":6,"black":true,"name":"cat","white":false}}'
+    assert_output '{"mycat":{"age":"6","black":true,"name":"cat","white":false}}'
 }
 
 @test "Numbers remove zero values" {
@@ -299,7 +299,7 @@ Then print the 'salesReport'
 Then print the 'salesReport.hash'
 EOF
     save_output 'divisions.out'
-    assert_output '{"salesReport":{"percentOfSalesinTransaction2":0.9375,"priceRampinTransaction1":3.333333,"salesDifference":-5},"salesReport.hash":"gb3MzzbvQyWfTudZnEmzljx77tDTJrEGBlgSWL3BVOc="}'
+    assert_output '{"salesReport":{"percentOfSalesinTransaction2":0.9375,"priceRampinTransaction1":3.333333,"salesDifference":-5},"salesReport.hash":"diCLkxU/zRRT1bCM4a8EIPe2Z5lqzX45o6qHubp4fWg="}'
 }
 
 @test "When I create the result of '' _ ''" {
@@ -341,7 +341,7 @@ Then print all data
 EOF
 
     save_output 'big_pos_and_neg.out'
-    assert_output '{"a":"100000000000000","a+b":"-19900000000000000","a-b":"20100000000000000","array":[5000,5.6,"1.0","1000000","-300","stringa"],"b":"-20000000000000000","b*a":"-2000000000000000000000000000000","b+a":"-19900000000000000","b-a":"-20100000000000000","b/a":"-200","c":50000,"d":5.6,"fp1":1,"fp2":2}'
+    assert_output '{"a":"100000000000000","a+b":"-19900000000000000","a-b":"20100000000000000","array":["5000","5.6","1.0","1000000","-300","stringa"],"b":"-20000000000000000","b*a":"-2000000000000000000000000000000","b+a":"-19900000000000000","b-a":"-20100000000000000","b/a":"-200","c":50000,"d":5.6,"fp1":1,"fp2":2}'
 }
 
 

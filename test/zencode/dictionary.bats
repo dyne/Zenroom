@@ -71,7 +71,7 @@ and print the 'HistoryOfTransactions'
 and print the 'HistoryOfTransactions.signature'
 EOF
     save_output 'dictionaries_Identity_signed.json'
-    assert_output '{"HistoryOfTransactions":{"CanceledTransactions":6,"DateOfFirstTransaction":"2019-01-01","NumberOfCurrentPeriodTransactions":57,"NumberOfPreviouslyExecutedTransactions":1020,"Remarks":"none","TotalPurchasedWithTransactions":1005,"TotalSoldWithTransactions":2160},"HistoryOfTransactions.signature":{"r":"hLj1fqGCCrGQ4BccC7lbmcCEgo2H+YqMcdZToKeq8t0=","s":"1ZGjmzK4KqBW2EcyiHTT5TgLFX33txPktvntqJqSZdI="},"Identity":{"Address":"Piazza Venezia","DateOfBirth":"1977-01-01","DateOfIssue":"2020-01-01","FirstNames":"Rossi","Name":"Giacomo","PlaceOfBirth":"Milano","RecordNo":22,"TelephoneNo":"327 1234567","UserNo":1021},"Identity.signature":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"cuFsBvc4QLGWJaB3uyWXQf50SgiwNJ3dqESrCiIBymg="}}'
+    assert_output '{"HistoryOfTransactions":{"CanceledTransactions":"6","DateOfFirstTransaction":"2019-01-01","NumberOfCurrentPeriodTransactions":"57","NumberOfPreviouslyExecutedTransactions":"1020","Remarks":"none","TotalPurchasedWithTransactions":"1005","TotalSoldWithTransactions":"2160"},"HistoryOfTransactions.signature":{"r":"hLj1fqGCCrGQ4BccC7lbmcCEgo2H+YqMcdZToKeq8t0=","s":"1ZGjmzK4KqBW2EcyiHTT5TgLFX33txPktvntqJqSZdI="},"Identity":{"Address":"Piazza Venezia","DateOfBirth":"1977-01-01","DateOfIssue":"2020-01-01","FirstNames":"Rossi","Name":"Giacomo","PlaceOfBirth":"Milano","RecordNo":"22","TelephoneNo":"327 1234567","UserNo":"1021"},"Identity.signature":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"cuFsBvc4QLGWJaB3uyWXQf50SgiwNJ3dqESrCiIBymg="}}'
 }
 
 @test "Anyone can verify the Authority's signature of the Identity" {
@@ -108,7 +108,7 @@ and I move 'AverageAmountPerTransaction' in 'ABC-TransactionsStatement'
 Then print the 'ABC-TransactionsStatement'
 EOF
     save_output 'dictionariesCreate_transaction_entry.json'
-    assert_output '{"ABC-TransactionsStatement":{"AverageAmountPerTransaction":21,"TransactionsConcluded":108,"nameOfDictionary":"Transaction_Control_Dictionary"}}'
+    assert_output '{"ABC-TransactionsStatement":{"AverageAmountPerTransaction":"21","TransactionsConcluded":"108","nameOfDictionary":"Transaction_Control_Dictionary"}}'
 
 }
 
@@ -248,11 +248,34 @@ and print the 'New-ABC-TransactionsSum.signature'
 EOF
     save_output 'dictionariesFind_max_transactions.json'
     assert_output '{"New-ABC-TransactionsSum":{"TransactionProductAmountSums":1500,"TransactionValueSums":6000,"timestamp":1.597573e+09},"New-ABC-TransactionsSum.signature":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"NeeOCvb7hhawMPsGwfyUWLZesndeLxAYRnA69iM+xp4="}}'
-
-
 }
 
 @test "Random dictionary" {
+    cat <<EOF | zexe random_dictionary.zen dictionariesBlockchain.json
+Given I have a 'float dictionary' named 'ABC-TransactionListFirstBatch'
+When I create the random dictionary with '3' random objects from 'ABC-TransactionListFirstBatch'
+Then print the 'random dictionary'
+EOF
+    save_output 'random_dictionary.json'
+    assert_output '{"random_dictionary":{"ABC-Transactions2Data":{"PricePerKG":2,"TransactionValue":1000,"TransferredProductAmount":500,"timestamp":1.597573e+09},"ABC-Transactions3Data":{"PricePerKG":2,"TransactionValue":1000,"TransferredProductAmount":500,"timestamp":1.597573e+09},"ABC-Transactions5Data":{"PricePerKG":4,"TransactionValue":2000,"TransferredProductAmount":500,"timestamp":1.597574e+09}}}'
+}
+
+@test "Another random dictionary" {
+    cat <<EOF | save_asset num.json
+{ "few": 2 }
+EOF
+
+    cat <<EOF | zexe another_random_dictionary.zen num.json dictionariesBlockchain.json
+Given I have a 'number dictionary' named 'ABC-TransactionListFirstBatch'
+and I have a 'number' named 'few'
+When I create the random dictionary with 'few' random objects from 'ABC-TransactionListFirstBatch'
+Then print the 'random dictionary'
+EOF
+    save_output 'another_random_dictionary.json'
+    assert_output '{"random_dictionary":{"ABC-Transactions2Data":{"PricePerKG":2,"TransactionValue":1000,"TransferredProductAmount":500,"timestamp":1.597573e+09},"ABC-Transactions5Data":{"PricePerKG":4,"TransactionValue":2000,"TransferredProductAmount":500,"timestamp":1.597574e+09}}}'
+}
+
+@test "Nested dictionaries" {
     cat << EOF | save_asset nested_dictionaries.json
 {
    "dataTime0":{
@@ -283,33 +306,6 @@ EOF
    }
 }
 EOF
-
-    cat <<EOF | zexe random_dictionary.zen dictionariesBlockchain.json
-Given I have a 'string dictionary' named 'ABC-TransactionListFirstBatch'
-When I create the random dictionary with '3' random objects from 'ABC-TransactionListFirstBatch'
-Then print the 'random dictionary'
-EOF
-    save_output 'random_dictionary.json'
-    assert_output '{"random_dictionary":{"ABC-Transactions2Data":{"PricePerKG":2,"TransactionValue":1000,"TransferredProductAmount":500,"timestamp":1.597573e+09},"ABC-Transactions3Data":{"PricePerKG":2,"TransactionValue":1000,"TransferredProductAmount":500,"timestamp":1.597573e+09},"ABC-Transactions5Data":{"PricePerKG":4,"TransactionValue":2000,"TransferredProductAmount":500,"timestamp":1.597574e+09}}}'
-
-}
-
-@test "Another random dictionary" {
-    cat <<EOF | save_asset num.json
-{ "few": 2 }
-EOF
-
-    cat <<EOF | zexe another_random_dictionary.zen num.json dictionariesBlockchain.json
-Given I have a 'string dictionary' named 'ABC-TransactionListFirstBatch'
-and I have a 'number' named 'few'
-When I create the random dictionary with 'few' random objects from 'ABC-TransactionListFirstBatch'
-Then print the 'random dictionary'
-EOF
-    save_output 'another_random_dictionary.json'
-    assert_output '{"random_dictionary":{"ABC-Transactions2Data":{"PricePerKG":2,"TransactionValue":1000,"TransferredProductAmount":500,"timestamp":1.597573e+09},"ABC-Transactions5Data":{"PricePerKG":4,"TransactionValue":2000,"TransferredProductAmount":500,"timestamp":1.597574e+09}}}'
-}
-
-@test "Nested dictionaries" {
     cat << EOF | zexe nested_dictionaries.zen nested_dictionaries.json
 Given I have a 'string dictionary' named 'nested'
 When I create the copy of 'dataTime1' from dictionary 'nested'
@@ -446,8 +442,7 @@ When I copy contents of 'blockchains' in 'TransactionsBatchA'
 Then print 'TransactionsBatchA'
 EOF
     save_output 'copy_contents_in.json'
-    assert_output '{"TransactionsBatchA":{"ABC-Transactions1Data":{"PricePerKG":100,"ProductPurchasePrice":50,"TransactionValue":1500,"TransferredProductAmount":15,"UndeliveredProductAmount":7,"timestamp":1.597573e+09},"ABC-Transactions2Data":{"PricePerKG":80,"TransactionValue":1600,"TransferredProductAmount":20,"timestamp":1.597573e+09},"ABC-Transactions3Data":{"PricePerKG":70,"TransactionValue":700,"TransferredProductAmount":10,"timestamp":1.597573e+09},"Information":{"Buyer":"John Doe","Metadata":"TransactionsBatchB6789"},"MetaData":"This var is Not a Table","b1":{"endpoint":"http://pesce.com/","last-transaction":"123"},"b2":{"endpoint":"http://fresco.com/","last-transaction":"234"},"number":1234}}'
-
+    assert_output '{"TransactionsBatchA":{"ABC-Transactions1Data":{"PricePerKG":"100","ProductPurchasePrice":"50","TransactionValue":"1500","TransferredProductAmount":"15","UndeliveredProductAmount":"7","timestamp":"1.597573e+09"},"ABC-Transactions2Data":{"PricePerKG":"80","TransactionValue":"1600","TransferredProductAmount":"20","timestamp":"1.597573e+09"},"ABC-Transactions3Data":{"PricePerKG":"70","TransactionValue":"700","TransferredProductAmount":"10","timestamp":"1.597573e+09"},"Information":{"Buyer":"John Doe","Metadata":"TransactionsBatchB6789"},"MetaData":"This var is Not a Table","b1":{"endpoint":"http://pesce.com/","last-transaction":"123"},"b2":{"endpoint":"http://fresco.com/","last-transaction":"234"},"number":1234}}'
 }
 
 @test "Dictionary named by" {

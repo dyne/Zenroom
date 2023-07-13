@@ -19,7 +19,7 @@ Given I have a 'float' named 'fp_str'
 Given I have a 'float' named 'fp_int'
 Given I have a 'string' named 'stringa'
 Given I have a 'integer' named 'int_str'
-Given I have a 'integer' named 'int_number'
+Given I have a 'float' named 'int_number'
 and debug
 
 Then print all data

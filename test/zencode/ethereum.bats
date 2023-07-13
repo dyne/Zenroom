@@ -532,7 +532,7 @@ then print the 'v3' as 'hex'
 then print the 'v4' as 'hex'
 EOF
     save_output 'import_tx.json'
-    assert_output '{"v0":"3435316491","v1":"3435316492","v2":"195","v3":"196","v4":"196"}'
+    assert_output '{"v0":"ccc2c50b","v1":"ccc2c50c","v2":"c3","v3":"c4","v4":"c4"}'
 }
 
 @test "KECCAK256 on the abi encoding" {
@@ -680,7 +680,7 @@ Then print the 'ethereum signature' as 'hex'
 
 EOF
     save_output doc_print_ethsig_out.json
-    assert_output '{"ethereum_signature":{"r":"19373b64e400e237dd7fb23e76621675f8691c0eb14aa171a82f69593b1a2a05","s":"36203582c38585754a785ca504f51e4178bab5cc3f566e985358eaf7cb5d7876","v":"27"}}'
+    assert_output '{"ethereum_signature":{"r":"19373b64e400e237dd7fb23e76621675f8691c0eb14aa171a82f69593b1a2a05","s":"36203582c38585754a785ca504f51e4178bab5cc3f566e985358eaf7cb5d7876","v":"1b"}}'
 }
 
 @test "Import ethereum signature as table" {

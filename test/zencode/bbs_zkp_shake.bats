@@ -25,7 +25,7 @@ Scenario bbs
 Given I have a 'bbs public key' inside 'The Authority'
 Given I have a 'bbs credential'
 Given I have a 'string array' named 'bbs messages'
-Given I have a 'integer array' named 'bbs disclosed indexes'
+Given I have a 'number array' named 'bbs disclosed indexes'
 When I create the random object of '256' bits 
 When I rename the 'random_object' to 'bbs presentation header'
 When I create the bbs disclosed messages
