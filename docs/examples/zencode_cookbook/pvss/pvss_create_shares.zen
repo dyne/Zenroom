@@ -1,0 +1,9 @@
+Scenario pvss
+Given I have a 'base64' named 'pvss s'
+Given I have a 'integer' named 'pvss total'
+Given I have a 'integer' named 'pvss quorum'
+Given I have a 'pvss public key array' named 'pvss participant pks'
+When I create the pvss public shares of 'pvss s' with 'pvss total' quorum 'pvss quorum' using the public keys 'pvss participant pks'
+Then print the 'pvss public shares'
+and print the 'pvss quorum'
+and print the 'pvss total'

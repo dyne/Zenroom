@@ -1,0 +1,5 @@
+Scenario pvss
+Given I have a 'pvss secret share array' named 'pvss secret shares'
+When I create the pvss verified shares from 'pvss secret shares'
+Then print the 'pvss verified shares'
+

@@ -1,0 +1,5 @@
+Scenario pvss
+Given I am known as 'Alice'
+Given I have my 'keyring'
+When I create the pvss public key
+Then print my 'pvss public key'

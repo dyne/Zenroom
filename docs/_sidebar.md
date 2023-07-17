@@ -22,6 +22,7 @@
   - [Scenario 'petition': cryptographic petition](/pages/zencode-scenarios-petition "Zencode petition")
   - [Scenario 'dp3t': proximity tracing](/pages/zencode-scenario-dp3t "Zencode dp3t")
   - [Scenario 'secshare': secret sharing](/pages/zencode-scenario-secShare "Zencode secret share")
+  - [Scenario 'pvss': publicly verifiable secret sharing](/pages/zencode-scenario-pvss.md "Zencode pvss")
   - [Scenario 'w3c': Verifiable Credentials](/pages/zencode-cookbook-w3c-vc "W3C Verifiable Credentials")
   - [Scenario 'Reflow': Multisignature](/pages/zencode-scenario-reflow "Reflow Multisignature")
   - [Scenario 'http': Create GET requests](/pages/zencode-scenarios-http.md "create GET requests")

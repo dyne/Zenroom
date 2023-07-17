@@ -74,7 +74,7 @@ EOF
     "keyring" : {
         "pvss" : "K+QxIAYwFcdLNq8E3JoQ6f9QpQS2FX7Z6uiuuEaTzBg="
     },
-    "pvss_public_key": "iNt3+0VE0QWWahdEIQ14t4dpO4/Pw3J6g0LfSUQAbG14kDQN/Pe1dyc6/+0ja94H",
+    "pvss_public_key": "iNt3+0VE0QWWahdEIQ14t4dpO4/Pw3J6g0LfSUQAbG14kDQN/Pe1dyc6/+0ja94H"
 }
 EOF
     cat <<EOF | zexe pvss_decrypt_shares.zen pvss_decrypt_data.json pvss_issuer_proof.json

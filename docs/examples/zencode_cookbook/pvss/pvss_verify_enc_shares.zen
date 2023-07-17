@@ -1,0 +1,6 @@
+Scenario pvss
+Given I have a 'integer' named 'pvss quorum'
+Given I have a 'integer' named 'pvss total'
+Given I have a 'pvss public shares'
+When I verify the pvss public shares with 'pvss total' quorum 'pvss quorum'
+Then print the string 'pvss public shares verification successful'
