@@ -1,0 +1,6 @@
+Scenario pvss
+Given I have a 'keyring'
+Given I have a 'pvss public key'
+Given I have a 'pvss public shares'
+When I create the secret share with public key 'pvss public key'
+Then print the 'pvss secret share'

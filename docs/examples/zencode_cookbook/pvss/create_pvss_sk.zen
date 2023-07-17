@@ -1,0 +1,5 @@
+Scenario pvss
+Given I am known as 'Alice'
+When I create the keyring
+and I create the pvss key
+Then print my 'keyring'
