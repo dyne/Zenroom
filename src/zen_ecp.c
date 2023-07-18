@@ -57,6 +57,7 @@
 #include <zen_memory.h>
 #include <lua_functions.h>
 
+extern int _octet_to_big(lua_State *L, big *dst, octet *src);
 
 ecp* ecp_new(lua_State *L) {
 	ecp *e = (ecp *)lua_newuserdata(L, sizeof(ecp));
