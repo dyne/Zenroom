@@ -97,23 +97,10 @@ local function export_verified_shares_f(obj)
     return res
 end
 
-local function check_inputs(pks, commitments, encrypted_shares, proof, t, n)
-    ZEN.assert(t <= n, "Quorum is bigger than total")
-
-    ZEN.assert(type(pks) == 'table', "'pvss participant pks' is not a table")
-    ZEN.assert(type(commitments) == 'table', "'pvss commitments' is not a table")
-    ZEN.assert(type(encrypted_shares) == 'table', "'pvss encrypted shares' is not a table")
-    ZEN.assert(type(proof) == 'table', "'pvss proof' is not a table")
-
-    ZEN.assert(#pks == n, "'pvss participant pks' is of wrong length")
-    ZEN.assert(#commitments == t, "'pvss commitments' is of wrong length")
-    ZEN.assert(#encrypted_shares == n, "'pvss encrypted shares' is of wrong length")
-    ZEN.assert(#proof == n + 1, "'pvss proof' is of wrong length")
-
-    for i = 1,n+1 do
-        ZEN.assert(type(proof[i]) == 'zenroom.big', 'Proof element is not big')
-        ZEN.assert(proof[i] < ECP.order(), 'Proof element is not modulo CURVE_ORDER')
-    end
+local function tablelength(T)
+    local count = 0
+    for _ in pairs(T) do count = count + 1 end
+    return count
 end
 
 ZEN.add_schema(
@@ -176,7 +163,22 @@ When("verify the pvss public shares with '' quorum ''", function(num,thr)
     local t = tonumber(have(thr):decimal())
     local n = tonumber(have(num):decimal())
 
-    check_inputs(pvss_public_shares.public_keys, pvss_public_shares.commitments, pvss_public_shares.encrypted_shares, pvss_public_shares.proof, t, n)
+    ZEN.assert(t <= n, "Quorum is bigger than total")
+
+    ZEN.assert(type(pvss_public_shares.public_keys) == 'table', "'pvss participant pks' is not a table")
+    ZEN.assert(type(pvss_public_shares.commitments) == 'table', "'pvss commitments' is not a table")
+    ZEN.assert(type(pvss_public_shares.encrypted_shares) == 'table', "'pvss encrypted shares' is not a table")
+    ZEN.assert(type(pvss_public_shares.proof) == 'table', "'pvss proof' is not a table")
+
+    ZEN.assert(tablelength(pvss_public_shares.public_keys) == n, "'pvss participant pks' is of wrong length")
+    ZEN.assert(tablelength(pvss_public_shares.commitments) == t, "'pvss commitments' is of wrong length")
+    ZEN.assert(tablelength(pvss_public_shares.encrypted_shares) == n, "'pvss encrypted shares' is of wrong length")
+    ZEN.assert(tablelength(pvss_public_shares.proof) == n + 1, "'pvss proof' is of wrong length")
+
+    for i = 1,n+1 do
+        ZEN.assert(type(pvss_public_shares.proof[i]) == 'zenroom.big', 'Proof element is not big')
+        ZEN.assert(pvss_public_shares.proof[i] < ECP.order(), 'Proof element is not modulo CURVE_ORDER')
+    end
 
     ZEN.assert(
         PVSS.verify_shares(GENERATORS, t, n, pvss_public_shares),
@@ -204,8 +206,8 @@ end)
 When("create the pvss verified shares from ''", function(list)
     local dec_shares = have(list)
     local valid_shares, valid_indexes = PVSS.verify_decrypted_shares(GENERATORS, dec_shares)
-    for i = 1, #valid_indexes do
-        valid_indexes[i] = BIG.new(valid_indexes[i])
+    for k,v in pairs(valid_indexes) do
+        valid_indexes[k] = BIG.new(v)
     end
 
     empty'pvss verified shares'
