@@ -46,8 +46,8 @@ end
 
 local function export_public_shares_f(obj)
     local res = {["public_keys"] = {}, ["proof"] = {}, ["encrypted_shares"] = {}, ["commitments"] = {}}
-    for i = 1, #obj.commitments do
-        res.commitments[i] = obj.commitments[i]:to_zcash()
+    for k,v in pairs(obj.commitments) do
+        res.commitments[k] = v:to_zcash()
     end
     local n = #obj.public_keys
     for i=1,n do
@@ -75,8 +75,8 @@ local function export_secret_share_f(obj)
     res.enc_share = obj.enc_share:to_zcash()
     res.dec_share = obj.dec_share:to_zcash()
     res.pub_key = obj.pub_key:to_zcash()
-    for i=1,#obj.proof do
-        res.proof[i] = obj.proof[i]:octet():base64()
+    for k,v in pairs(obj.proof) do
+        res.proof[k] = v:octet():base64()
     end
     return res
 end
@@ -175,9 +175,9 @@ When("verify the pvss public shares with '' quorum ''", function(num,thr)
     ZEN.assert(tablelength(pvss_public_shares.encrypted_shares) == n, "'pvss encrypted shares' is of wrong length")
     ZEN.assert(tablelength(pvss_public_shares.proof) == n + 1, "'pvss proof' is of wrong length")
 
-    for i = 1,n+1 do
-        ZEN.assert(type(pvss_public_shares.proof[i]) == 'zenroom.big', 'Proof element is not big')
-        ZEN.assert(pvss_public_shares.proof[i] < ECP.order(), 'Proof element is not modulo CURVE_ORDER')
+    for _,v in pairs(pvss_public_shares.proof) do
+        ZEN.assert(type(v) == 'zenroom.big', 'Proof element is not big')
+        ZEN.assert(v < ECP.order(), 'Proof element is not modulo CURVE_ORDER')
     end
 
     ZEN.assert(
