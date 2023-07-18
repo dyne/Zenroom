@@ -65,7 +65,7 @@ https://basileioskal.github.io/bbs-bound-signatures/draft-bound-bbs-signatures.h
 local BBS = require'crypto_bbs'
 
 local function bbs_public_key_f(obj)
-    local point = obj:zcash_topoint()
+    local point = ECP2.from_zcash(obj)
     ZEN.assert(
        point ~=  ECP2.infinity(),
        'bbs public key is not valid'
@@ -86,7 +86,7 @@ local function bbs_signature_f(obj)
     )
 
     local A_octets = signature_octets:sub(1, 48)
-    local AA = A_octets:zcash_topoint()
+    local AA = ECP.from_zcash(A_octets)
     ZEN.assert(AA ~= ECP.generator(),
         "Point is identity"
     )
@@ -236,7 +236,7 @@ local function bbs_proof_f(obj)
     local index = 1
     for i = 1, 3 do
         local end_index = index + 47
-        local point = (proof_octets:sub(index, end_index)):zcash_topoint()
+        local point = ECP.from_zcash(proof_octets:sub(index, end_index))
         ZEN.assert(point ~= ECP.generator(),
             "Invalid point"
         )

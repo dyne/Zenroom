@@ -868,7 +868,7 @@ static int ecp2_zcash_import(lua_State *L) {
 	}
 
 	if(c_bit) {
-		FP2 fx;
+		FP2 fx, fy;
 		octet x0 = {
 			.max = 48,
 			.len = 48,
@@ -889,6 +889,17 @@ static int ecp2_zcash_import(lua_State *L) {
 			failed_msg = "Invalid input octet: not a point on the curve";
 			goto end;
 		}
+		ECP2_get(&fx, &fy, &e->val);
+
+		BIG by0,by1;
+		FP2_reduce(&fy);
+		FP_redc(by0,&(fy.a));
+		FP_redc(by1,&(fy.b));
+
+		if(gf2_sign(by0, by1) != s_bit) {
+			ECP2_neg(&e->val);
+		}
+
 		lua_pop(L,1);
 		lua_pop(L,1);
 
@@ -913,7 +924,7 @@ int luaopen_ecp2(lua_State *L) {
 		{"mapit", ecp2_mapit},
 		{"inf", ecp2_get_infinity},
 		{"infinity", ecp2_get_infinity},
-		{"zcash_import", ecp2_zcash_import},
+		{"from_zcash", ecp2_zcash_import},
 		// basic pairing function & aliases
 		{"pair", ecp2_millerloop},
 		{"loop", ecp2_millerloop},
@@ -942,7 +953,7 @@ int luaopen_ecp2(lua_State *L) {
 		{"__mul", ecp2_mul},
 		{"__gc", ecp2_destroy},
 		{"__tostring", ecp2_output},
-		{"zcash_export", ecp2_zcash_export},
+		{"to_zcash", ecp2_zcash_export},
 		{NULL, NULL}
 	};
 	zen_add_class(L, "ecp2", ecp2_class, ecp2_methods);

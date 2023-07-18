@@ -228,18 +228,18 @@ print("TEST: create_generators")
 
 -- Section 7.5.2
 local create_generators_test = {
-    (O.from_hex('b57ec5e001c28d4063e0b6f5f0a6eee357b51b64d789a21cf18fd11e73e73577910182d421b5a61812f5d1ca751fa3f0')):zcash_topoint(),
-    (O.from_hex('909573cbb9da401b89d2778e8a405fdc7d504b03f0158c31ba64cdb9b648cc35492b18e56088b44c8b4dc6310afb5e49')):zcash_topoint(),
-    (O.from_hex('90248350d94fd550b472a54269e28b680757d8cbbe6bb2cb000742c07573138276884c2872a8285f4ecf10df6029be15')):zcash_topoint(),
-    (O.from_hex('8fb7d5c43273a142b6fc445b76a8cdfc0f96c5fdac7cdd73314ac4f7ec4990a0a6f28e4ad97fb0a3a22efb07b386e3ff')):zcash_topoint(),
-    (O.from_hex('8241e3e861aaac2a54a8d7093301143d7d3e9911c384a2331fcc232a3e64b4882498ce4d9da8904ffcbe5d6eadafc82b')):zcash_topoint(),
-    (O.from_hex('99bb19d202a4019c14a36933264ae634659994076bf02a94135e1026ea309c7d3fd6da60c7929d30b656aeaba7c0dcec')):zcash_topoint(),
-    (O.from_hex('81779fa5268e75a980799c0a01677a763e14ba82cbf0a66c653edc174057698636507ac58e73522a59585558dca80b42')):zcash_topoint(),
-    (O.from_hex('98a3f9af71d391337bc6ae5d26980241b6317d5d71570829ce03d63c17e0d2164e1ad793645e1762bfcc049a17f5994b')):zcash_topoint(),
-    (O.from_hex('aca6a84770bb1f515591b4b95d69777856ddc52d5439325839e31ce5b6237618a9bc01a04b0057d33eab14341504c7e9')):zcash_topoint(),
-    (O.from_hex('b96e206d6cf32b51d2f4d543972d488a4c4cbc5d994f6ebb0bdffbc5459dcb9a8e5ab045c5949dc7eb33b0545b62aae3')):zcash_topoint(),
-    (O.from_hex('8edf840b56ecf8d7c5a9c4a0aaf8a5525f3480df735743298dd2f4ae1cbb56f56ed6a04ef6fa7c92cd68d9101c7b8c8f')):zcash_topoint(),
-    (O.from_hex('86d4ae04738dc082eb37e753bc8ec35a8d982e463559214d0f777599f71aa1f95780b3dccbdcae45e146e5c7623dfe7d')):zcash_topoint()
+    ECP.from_zcash(O.from_hex('b57ec5e001c28d4063e0b6f5f0a6eee357b51b64d789a21cf18fd11e73e73577910182d421b5a61812f5d1ca751fa3f0')),
+    ECP.from_zcash(O.from_hex('909573cbb9da401b89d2778e8a405fdc7d504b03f0158c31ba64cdb9b648cc35492b18e56088b44c8b4dc6310afb5e49')),
+    ECP.from_zcash(O.from_hex('90248350d94fd550b472a54269e28b680757d8cbbe6bb2cb000742c07573138276884c2872a8285f4ecf10df6029be15')),
+    ECP.from_zcash(O.from_hex('8fb7d5c43273a142b6fc445b76a8cdfc0f96c5fdac7cdd73314ac4f7ec4990a0a6f28e4ad97fb0a3a22efb07b386e3ff')),
+    ECP.from_zcash(O.from_hex('8241e3e861aaac2a54a8d7093301143d7d3e9911c384a2331fcc232a3e64b4882498ce4d9da8904ffcbe5d6eadafc82b')),
+    ECP.from_zcash(O.from_hex('99bb19d202a4019c14a36933264ae634659994076bf02a94135e1026ea309c7d3fd6da60c7929d30b656aeaba7c0dcec')),
+    ECP.from_zcash(O.from_hex('81779fa5268e75a980799c0a01677a763e14ba82cbf0a66c653edc174057698636507ac58e73522a59585558dca80b42')),
+    ECP.from_zcash(O.from_hex('98a3f9af71d391337bc6ae5d26980241b6317d5d71570829ce03d63c17e0d2164e1ad793645e1762bfcc049a17f5994b')),
+    ECP.from_zcash(O.from_hex('aca6a84770bb1f515591b4b95d69777856ddc52d5439325839e31ce5b6237618a9bc01a04b0057d33eab14341504c7e9')),
+    ECP.from_zcash(O.from_hex('b96e206d6cf32b51d2f4d543972d488a4c4cbc5d994f6ebb0bdffbc5459dcb9a8e5ab045c5949dc7eb33b0545b62aae3')),
+    ECP.from_zcash(O.from_hex('8edf840b56ecf8d7c5a9c4a0aaf8a5525f3480df735743298dd2f4ae1cbb56f56ed6a04ef6fa7c92cd68d9101c7b8c8f')),
+    ECP.from_zcash(O.from_hex('86d4ae04738dc082eb37e753bc8ec35a8d982e463559214d0f777599f71aa1f95780b3dccbdcae45e146e5c7623dfe7d'))
 }
 local count_test = 12
 
@@ -551,7 +551,7 @@ local function run_test_create_generators2 (test)
     local output_generators = bbs.create_generators(ciphersuite, count_test)
     for i = 1, count_test do
         print("Test case ".. i)
-        assert(output_generators[i] == (O.from_hex(test[i])):zcash_topoint())
+        assert(output_generators[i] == ECP.from_zcash(O.from_hex(test[i])))
     end
 end
 
