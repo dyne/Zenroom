@@ -37,7 +37,7 @@ function PVSS.det_concatenation(h1, h2, a1, a2)
 end
 
 function PVSS.concatenation(h1, h2, a1, a2)
-    return h1:zcash_export() .. h2:zcash_export() .. a1:zcash_export() .. a2:zcash_export()
+    return h1:to_zcash() .. h2:to_zcash() .. a1:to_zcash() .. a2:to_zcash()
 end
 
 -- This function implements the creation of a non-interactive zero knwoledge proof

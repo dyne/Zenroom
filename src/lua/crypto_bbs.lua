@@ -69,7 +69,7 @@ local CIPHERSUITE_SHAKE = {
     hash_to_scalar_dst = O.from_string('BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_H2S_'),
     map_msg_to_scalar_as_hash_dst = O.from_string('BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MAP_MSG_TO_SCALAR_AS_HASH_'),
     expand_dst = O.from_string('BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_SIG_DET_DST_'),
-    P1 = (O.from_hex('91b784eaac4b2b2c6f9bfb2c9eae97e817dd12bba49a0821d175a50f1632465b319ca9fb81dda3fb0434412185e2cca5')):zcash_topoint(),
+    P1 = ECP.from_zcash(O.from_hex('91b784eaac4b2b2c6f9bfb2c9eae97e817dd12bba49a0821d175a50f1632465b319ca9fb81dda3fb0434412185e2cca5')),
     GENERATORS = {},
     GENERATOR_N = 1,
     GENERATOR_V = expand_message_xof(O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MESSAGE_GENERATOR_SEED"),
@@ -85,7 +85,7 @@ local CIPHERSUITE_SHA = {
     hash_to_scalar_dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_H2S_'),
     map_msg_to_scalar_as_hash_dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MAP_MSG_TO_SCALAR_AS_HASH_'),
     expand_dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_DET_DST_'),
-    P1 = (O.from_hex('8533b3fbea84e8bd9ccee177e3c56fbe1d2e33b798e491228f6ed65bb4d1e0ada07bcc4489d8751f8ba7a1b69b6eecd7')):zcash_topoint(),
+    P1 = ECP.from_zcash(O.from_hex('8533b3fbea84e8bd9ccee177e3c56fbe1d2e33b798e491228f6ed65bb4d1e0ada07bcc4489d8751f8ba7a1b69b6eecd7')),
     GENERATORS = {},
     GENERATOR_N = 1,
     GENERATOR_V = expand_message_xmd(O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MESSAGE_GENERATOR_SEED"),
@@ -218,7 +218,7 @@ end
 
 --draft-irtf-cfrg-bbs-signatures Section 3.3.2
 function bbs.sk2pk(sk)
-    return (ECP2.generator() * sk):zcash_export()
+    return (ECP2.generator() * sk):to_zcash()
 end
 
 -----------------------------------------------
@@ -496,7 +496,7 @@ local function serialization(input_array)
         local elt = input_array[i]
         local elt_type = type(elt)
         if (elt_type == "zenroom.ecp") or (elt_type == "zenroom.epc2") then
-            el_octs = elt:zcash_export()
+            el_octs = elt:to_zcash()
         elseif (elt_type == "zenroom.big") then
             el_octs = i2osp(elt, OCTET_SCALAR_LENGTH)
         elseif (elt_type == "number") then
@@ -582,7 +582,7 @@ local function octets_to_signature(signature_octets)
     end
 
     local A_octets = signature_octets:sub(1, OCTET_POINT_LENGTH)
-    local AA = A_octets:zcash_topoint()
+    local AA = ECP.from_zcash(A_octets)
     if (AA == IDENTITY_G1) then
         error("Point is identity", 2)
     end
@@ -607,7 +607,7 @@ end
 
 --draft-irtf-cfrg-bbs-signatures Section 4.7.6
 function bbs.octets_to_pub_key(pk)
-    local W = pk:zcash_topoint()
+    local W = ECP2.from_zcash(pk)
 
     -- ECP2.infinity == Identity_G2
     if (W == ECP2.infinity()) then
@@ -819,7 +819,7 @@ local function octets_to_proof(proof_octets)
     local return_array = {}
     for i = 1, 3 do
         local end_index = index + OCTET_POINT_LENGTH - 1
-        return_array[i] = (proof_octets:sub(index, end_index)):zcash_topoint()
+        return_array[i] = ECP.from_zcash(proof_octets:sub(index, end_index))
         if return_array[i] == IDENTITY_G1 then
             error("Invalid point", 2)
         end

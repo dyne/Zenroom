@@ -763,6 +763,79 @@ end:
 	END(1);
 }
 
+static int ecp_zcash_import(lua_State *L){
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *o = o_arg(L, 1);
+	if(o == NULL) {
+		failed_msg = "Could not allocate octet";
+		goto end;
+	}
+
+	ecp  *e = NULL;
+
+	unsigned char m_byte = o->val[0] & 0xE0;
+	char c_bit;
+	char i_bit;
+	char s_bit;
+	if(m_byte == 0x20 || m_byte == 0x60 || m_byte == 0xE0) {
+		failed_msg = "Invalid octet header";
+		goto end;
+	}
+	c_bit = ((m_byte & 0x80) == 0x80);
+	i_bit = ((m_byte & 0x40) == 0x40);
+	s_bit = ((m_byte & 0x20) == 0x20);
+
+	if(c_bit) {
+		if(o->len != 48) {
+			failed_msg = "Invalid octet header";
+			goto end;
+		}
+	} else {
+		if(o->len != 96) {
+			failed_msg = "Invalid octet header";
+			goto end;
+		}
+	}
+
+	e = ecp_new(L);
+
+	o->val[0] = o->val[0] & 0x1F;
+
+	if(i_bit) {
+		// TODO: check o->val is all 0
+		ECP_inf(&e->val);
+		goto end;
+	}
+	if(c_bit) {	
+		BIG xpoint, ypoint;
+		big* bigx = big_new(L);
+		_octet_to_big(L, bigx, o);
+
+		if(!ECP_setx(&e->val, bigx->val, 0)) {
+			failed_msg = "Invalid input octet: not a point on the curve";
+			goto end;
+		}
+
+		ECP_get(xpoint, ypoint, &e->val);
+		if(gf_sign(ypoint) != s_bit) {
+			ECP_neg(&e->val);
+		}
+
+		lua_pop(L,1);
+
+	} else {
+		failed_msg = "Not yet implemented";
+		goto end;
+	}
+end:
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
 static int ecp_rhs(lua_State *L){
 	BEGIN();
 	char *failed_msg = NULL;
@@ -807,7 +880,8 @@ int luaopen_ecp(lua_State *L) {
 		{"validate", ecp_validate},
 		{"prime", ecp_prime},
 		{"rhs", ecp_rhs},
-		{"zcash_export", ecp_zcash_export},
+		{"to_zcash", ecp_zcash_export},
+		{"from_zcash", ecp_zcash_import},
 		{NULL, NULL}};
 	const struct luaL_Reg ecp_methods[] = {
 		{"affine", ecp_affine},
@@ -828,7 +902,7 @@ int luaopen_ecp(lua_State *L) {
 		{"__eq", ecp_eq},
 		{"__gc", ecp_destroy},
 		{"__tostring", ecp_output},
-		{"zcash_export", ecp_zcash_export},
+		{"to_zcash", ecp_zcash_export},
 		{NULL, NULL}
 	};
 	zen_add_class(L, "ecp", ecp_class, ecp_methods);

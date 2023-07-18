@@ -23,7 +23,7 @@ local PVSS = require'crypto_pvss'
 local GENERATORS = PVSS.set_generators()
 
 local function pvss_public_key_f(obj)
-    local point = obj:zcash_topoint()
+    local point = ECP.from_zcash(obj)
     ZEN.assert(
        point ~=  ECP.infinity(),
        'pvss public key is not valid (is infinity)'
@@ -39,21 +39,21 @@ local function import_public_shares_f(obj)
     local res = {}
     res.public_keys = ZEN.get(obj, 'public_keys', pvss_public_key_f)
     res.proof = ZEN.get(obj, 'proof', BIG.new, O.from_base64)
-    res.commitments = ZEN.get(obj, 'commitments', O.zcash_topoint, O.from_base64)
-    res.encrypted_shares = ZEN.get(obj, 'encrypted_shares', O.zcash_topoint, O.from_base64)
+    res.commitments = ZEN.get(obj, 'commitments', ECP.from_zcash, O.from_base64)
+    res.encrypted_shares = ZEN.get(obj, 'encrypted_shares', ECP.from_zcash, O.from_base64)
     return res
 end
 
 local function export_public_shares_f(obj)
     local res = {["public_keys"] = {}, ["proof"] = {}, ["encrypted_shares"] = {}, ["commitments"] = {}}
     for i = 1, #obj.commitments do
-        res.commitments[i] = obj.commitments[i]:zcash_export()
+        res.commitments[i] = obj.commitments[i]:to_zcash()
     end
     local n = #obj.public_keys
     for i=1,n do
-        res.public_keys[i] = obj.public_keys[i]:zcash_export()
+        res.public_keys[i] = obj.public_keys[i]:to_zcash()
         res.proof[i] = obj.proof[i]:octet():base64()
-        res.encrypted_shares[i] = obj.encrypted_shares[i]:zcash_export()
+        res.encrypted_shares[i] = obj.encrypted_shares[i]:to_zcash()
     end
     res.proof[n+1] = obj.proof[n+1]:octet():base64()
     return res
@@ -63,8 +63,8 @@ local function import_secret_share_f(obj)
     local res = {}
     res.index = ZEN.get(obj, 'index', INT.from_decimal, tostring)
     res.proof = ZEN.get(obj, 'proof', BIG.new, O.from_base64)
-    res.dec_share = ZEN.get(obj, 'dec_share', O.zcash_topoint, O.from_base64)
-    res.enc_share = ZEN.get(obj, 'enc_share', O.zcash_topoint, O.from_base64)
+    res.dec_share = ZEN.get(obj, 'dec_share', ECP.from_zcash, O.from_base64)
+    res.enc_share = ZEN.get(obj, 'enc_share', ECP.from_zcash, O.from_base64)
     res.pub_key = ZEN.get(obj, 'pub_key', pvss_public_key_f)
     return res
 end
@@ -72,9 +72,9 @@ end
 local function export_secret_share_f(obj)
     local res = {["proof"]={}}
     res.index = obj.index:decimal()
-    res.enc_share = obj.enc_share:zcash_export()
-    res.dec_share = obj.dec_share:zcash_export()
-    res.pub_key = obj.pub_key:zcash_export()
+    res.enc_share = obj.enc_share:to_zcash()
+    res.dec_share = obj.dec_share:to_zcash()
+    res.pub_key = obj.pub_key:to_zcash()
     for i=1,#obj.proof do
         res.proof[i] = obj.proof[i]:octet():base64()
     end
@@ -84,14 +84,14 @@ end
 local function import_verified_shares_f(obj)
     local res = {}
     res.valid_indexes = ZEN.get(obj, 'valid_indexes', INT.from_decimal, tostring)
-    res.valid_shares = ZEN.get(obj, 'valid_shares', O.zcash_topoint, O.from_base64)
+    res.valid_shares = ZEN.get(obj, 'valid_shares', ECP.from_zcash, O.from_base64)
     return res
 end
 
 local function export_verified_shares_f(obj)
     local res = {["valid_indexes"] = {}, ["valid_shares"] = {}}
     for i = 1, #obj.valid_indexes do
-        res.valid_shares[i] = obj.valid_shares[i]:zcash_export()
+        res.valid_shares[i] = obj.valid_shares[i]:to_zcash()
         res.valid_indexes[i] = obj.valid_indexes[i]:decimal()
     end
     return res
@@ -109,7 +109,7 @@ ZEN.add_schema(
             import = function(obj)
                 return ZEN.get(obj, '.', pvss_public_key_f)
             end,
-            export = ECP.zcash_export
+            export = ECP.to_zcash
         },
         pvss_public_shares = { import = import_public_shares_f,
             export = export_public_shares_f},
@@ -224,6 +224,6 @@ When("compose the pvss secret using '' with quorum ''", function(shrs, thr)
     local secret_point = PVSS.pooling_shares(verified_shares.valid_shares, verified_shares.valid_indexes, threshold)
 
     empty'pvss secret'
-    ACK.pvss_secret = secret_point:zcash_export()
+    ACK.pvss_secret = secret_point:to_zcash()
     new_codec('pvss secret', {zentype = 'e'})
 end)
