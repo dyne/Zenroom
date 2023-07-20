@@ -282,7 +282,7 @@ local function move_or_copy_in(src_value, src_name, dest)
     local d = have(dest)
     if luatype(d) ~= 'table' then error("Object is not a table: "..dest, 2) end
     local cdest = ZEN.CODEC[dest]
-    if cdest.schema then
+    if cdest.zentype == 'e' and cdest.schema then
         local sdest = ZEN.schemas[cdest.schema]
         if luatype(sdest) ~= 'table' then -- old schema types are not open
             error("Schema is not open to accept extra objects: "..dest)
