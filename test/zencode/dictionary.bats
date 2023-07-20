@@ -753,3 +753,25 @@ EOF
     run $ZENROOM_EXECUTABLE -z -a fail_move.data fail_move.zen
     assert_line --partial 'Schema is not open to accept extra objects: ecdh_signature'
 }
+
+@test "move element in an array of schemas" {
+    cat << EOF | save_asset move_in_array_of_schemas.data
+{
+   "ethereum signature": "0xed8f36c71989f8660e8f5d4adbfd8f1c0288cca90d3a5330b7bf735d71ab52fe7ba0a7827dc4ba707431f1c10babd389f658f8e208b89390a9be3c097579a2ff1b"
+}
+EOF
+
+    cat << EOF | zexe move_in_array_of_schemas.zen move_in_array_of_schemas.data
+Scenario 'ethereum': insert signature in an array
+
+Given I have a 'ethereum signature'
+
+When I create the 'ethereum signature array' named 'signatures'
+
+When I move 'ethereum signature' in 'signatures'
+
+Then print the 'signatures'
+EOF
+    save_output 'move_in_array_of_schemas.json'
+    assert_output '{"signatures":["0xed8f36c71989f8660e8f5d4adbfd8f1c0288cca90d3a5330b7bf735d71ab52fe7ba0a7827dc4ba707431f1c10babd389f658f8e208b89390a9be3c097579a2ff1b"]}'
+}
