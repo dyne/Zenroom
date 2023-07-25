@@ -1,0 +1,12 @@
+Scenario 'ethereum': batch verification
+
+Given I have a 'ethereum address array' named 'ethereum addresses'
+and I have a 'ethereum signature array' named 'ethereum signatures'
+and I have a 'string' named 'message'
+
+Foreach 'address' in 'ethereum addresses'
+and 'signature' in 'ethereum signatures'
+When I verify the 'message' has a ethereum signature in 'signature' by 'address'
+EndForeach
+
+Then print the string 'OK'
