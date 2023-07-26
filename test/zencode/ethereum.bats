@@ -886,3 +886,45 @@ EOF
     save_output 'eth_abi_decoding.json'
     assert_output '{"dao_vote_id":"211","data":"48656c6c6f20576f726c64000000000000000000000000000000000000000000","request_id":"200"}'
 }
+
+@test "verify array of signature in one statement" {
+    cat <<EOF | save_asset signature_array.data
+{
+	"addresses": [
+		"0x2B8070975AF995Ef7eb949AE28ee7706B9039504",
+		"0x3028806AC293B5aC9b863B685c73813626311DaD",
+		"0xe1C2F1ACb2758c4D88EDb84e0306A0a96682E62a"
+	],
+	"signatures": [
+		{
+			"r": "ed8f36c71989f8660e8f5d4adbfd8f1c0288cca90d3a5330b7bf735d71ab52fe",
+			"s": "7ba0a7827dc4ba707431f1c10babd389f658f8e208b89390a9be3c097579a2ff",
+			"v": "27"
+		},
+		{
+			"r": "40d305373c648bb6b2bbadebe02ada256a9d0b3d3c37367c0a2795e367b22f73",
+			"s": "72e40dfc3497927764d1585783d058e4367bb4d24d2107777d7aa4ddcb6593c7",
+			"v": "27"
+		},
+		{
+			"r": "9e07477c31db612e8c99a950385162373ff41a5b8941470b1aeba43b76c53570",
+			"s": "05fce6615567dc1944cc02fbed86202b09d92d79fbade425af0d74c328d8f6ae",
+			"v": "28"
+		}
+	],
+	"signed-string": "I love the Beatles, all but 3"
+}
+EOF
+    cat <<EOF | zexe signature_array.zen signature_array.data
+    Scenario ethereum: verify sig
+    Given I have a 'ethereum address array' named 'addresses' 
+    Given I have a 'ethereum signature array' named 'signatures'
+    Given I have a 'string' named 'signed-string'
+
+    When I verify the 'signed-string' has an array of ethereum signatures in 'signatures' by 'addresses'
+
+    Then print the string 'ok'
+EOF
+    save_output signature_array.out
+    assert_output '{"output":["ok"]}'
+}
