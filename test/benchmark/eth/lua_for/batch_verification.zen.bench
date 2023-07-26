@@ -1,0 +1,9 @@
+Scenario 'ethereum': batch verification
+
+Given I have a 'ethereum address array' named 'ethereum addresses'
+and I have a 'ethereum signature array' named 'ethereum signatures'
+and I have a 'string' named 'message'
+
+When I verify the 'message' has an array of ethereum signatures in 'ethereum signatures' by 'ethereum addresses'
+
+Then print the string 'OK'
