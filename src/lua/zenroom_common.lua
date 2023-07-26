@@ -316,3 +316,18 @@ function deprecated(old, new, func)
     end
     return old, warn_func
 end
+
+-- TODO: add checks that input are only arrays
+function zip(...)
+    local arrays, ans = {...}, {}
+    local index = 0
+    return function()
+        index = index + 1
+        for k, v in pairs(arrays) do
+            ans[k] = v[index]
+            -- stop iteration at the first nil value in one of the array
+            if ans[k] == nil then return end
+        end
+        return table.unpack(ans)
+    end
+end
