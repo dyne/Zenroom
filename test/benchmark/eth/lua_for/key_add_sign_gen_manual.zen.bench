@@ -1,0 +1,10 @@
+Scenario 'ethereum': keys and sign
+
+Given I have a 'string' named 'message'
+
+When I create the ethereum key
+and I create the ethereum address
+and I create the ethereum signature of 'message'
+
+Then print the 'ethereum address'
+and print the 'ethereum signature'

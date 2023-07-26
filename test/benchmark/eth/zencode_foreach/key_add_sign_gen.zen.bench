@@ -1,0 +1,24 @@
+Scenario 'ethereum': keys and sign
+
+Given I have a 'number' named 'n_signatures'
+and I have a 'number' named 'start'
+and I have a 'number' named 'step'
+and I have a 'string' named 'message'
+
+When I create the 'ethereum address array' named 'ethereum addresses'
+and I create the 'ethereum signature array' named 'ethereum signatures'
+
+Foreach 'n' in sequence from 'start' to 'n_signatures' with step 'step'
+# generate
+When I create the ethereum key
+and I create the ethereum address
+and I create the ethereum signature of 'message'
+# store
+When I move 'ethereum address' in 'ethereum addresses'
+and I move 'ethereum signature' in 'ethereum signatures'
+and I remove the 'keyring'
+EndForeach
+
+Then print the 'ethereum addresses'
+and print the 'ethereum signatures'
+and print the 'message'
