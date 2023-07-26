@@ -419,19 +419,33 @@ When("create the ethereum signature of ''", function(object)
     new_codec('ethereum signature')
 end)
 
-IfWhen("verify the '' has a ethereum signature in '' by ''", function(doc, sig, by)
-
+local function _verify_signature(doc, sig, by)
     local msg = have(doc)
     local ethersMessage = O.from_string("\x19Ethereum Signed Message:\n") .. O.new(#msg) .. msg
     local hmsg = keccak256(ethersMessage)
 
-    local signature = have(sig)
-    local address = have(by)
+    local signature, signature_codec = have(sig)
+    local address, address_codec = have(by)
 
-    ZEN.assert(
-        ETH.verify_signature_from_address(signature, address, fif(signature.v:parity(), 0, 1), hmsg),
-       'The ethereum signature by '..by..' is not authentic'
-    )
+    if signature_codec.zentype == 'e' and address_codec.zentype == 'e' then
+        ZEN.assert(ETH.verify_signature_from_address(signature, address, fif(signature.v:parity(), 0, 1), hmsg),
+            'The ethereum signature by '..by..' is not authentic')
+    elseif signature_codec.zentype == 'a' and address_codec.zentype == 'a' then
+        for s, a in zip(signature, address) do
+            ZEN.assert(ETH.verify_signature_from_address(s, a, fif(s.v:parity(), 0, 1), hmsg),
+                'The ethereum signature by '..by..' is not authentic')
+        end
+    else
+        error("Signautre and address are incompatible: "..signature_codec.zentype.." and "..address_codec.zentype)
+    end
+end
+
+IfWhen("verify the '' has a ethereum signature in '' by ''", function(doc, sig, by)
+    _verify_signature(doc, sig, by)
+end)
+
+IfWhen("verify the '' has an array of ethereum signatures in '' by ''", function(doc, sig, by)
+    _verify_signature(doc, sig, by)
 end)
 
 When("use the ethereum transaction to run '' using ''", function(m, p)
