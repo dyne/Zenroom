@@ -764,6 +764,7 @@ end:
 	END(1);
 }
 
+// See the generalised version commented inside zen_octet.c
 static int ecp_zcash_import(lua_State *L){
 	BEGIN();
 	char *failed_msg = NULL;
