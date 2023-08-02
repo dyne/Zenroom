@@ -817,6 +817,8 @@ end:
 //
 //}
 
+
+// See the generalised version commented inside zen_octec.c
 // TODO: remove magic numbers
 // TODO: implement import for non compressed octets
 static int ecp2_zcash_import(lua_State *L) {
