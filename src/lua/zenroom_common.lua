@@ -317,10 +317,13 @@ function deprecated(old, new, func)
     return old, warn_func
 end
 
--- TODO: add checks that input are only arrays
 function zip(...)
-    local arrays, ans = {...}, {}
+    local arrays = {...}
+    local ans = {}
     local index = 0
+    for k, v in pairs(arrays) do
+        ZEN.assert(isarray(v), "zip input are not arrays")
+    end
     return function()
         index = index + 1
         for k, v in pairs(arrays) do
