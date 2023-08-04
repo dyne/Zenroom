@@ -3,14 +3,15 @@
 n_signatures=1000
 
 if [ $# != 1 ]; then
-    echo "Generating $n_signatures signatures and verify them.\nIf you want to use a different number use: $0 <number_of_signatures>"
+    printf "Generating $n_signatures signatures and verify them.\nIf you want to use a different number use: $0 <number_of_signatures>\n"
 else
     n_signatures=$1
     echo "Generating $n_signatures signatures and verify them."
 fi
 msg='"message": "I love the Beatles, all but 3",'
 
-echo signing $n_signatures times...
+echo
+echo Signing $n_signatures times...
 echo '"ethereum_addresses": [' >addresses.txt
 echo '"ethereum_signatures": [' >signatures.txt
 time for ((i=1; i<=$n_signatures; i++)); do
@@ -37,11 +38,22 @@ echo "}" >> add_and_sign.json
 rm res_1.json execution_data_1.txt addresses.txt signatures.txt
 
 echo
-echo verifying $n_signatures signatures...
+echo Verifying $n_signatures signatures...
 time zenroom -a add_and_sign.json -z batch_verification.zen.bench >res_2.json 2>execution_data_2.txt
 if [ "`cat res_2.json`" != "{\"output\":[\"OK\"]}" ]; then
     echo "Error during verification"
     cat execution_data_2.txt
     exit 0
 fi
-rm -f res_2.json execution_data_2.txt add_and_sign.json
+rm -f res_2.json execution_data_2.txt
+
+echo
+echo Create the verification result of $n_signatures signatures...
+time zenroom -a add_and_sign.json -z batch_verification_result.zen.bench >res_3.json 2>execution_data_3.txt
+if [ "$?" != "0" ]; then
+    echo "Error during verification result creation"
+    cat execution_data_3.txt
+    exit 0
+fi
+cat res_3.json | grep "not verified"
+rm -f res_3.json execution_data_3.txt add_and_sign.json
