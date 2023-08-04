@@ -183,6 +183,28 @@ When the signature is correct, the output will be:
 
 [](../_media/examples/zencode_cookbook/ethereum/doc_verifytesteth_str_out.json ':include :type=code json')
 
+## Multiple signatures verification
+
+Given an array of ethereum signatures, an array of ethereum addresses and the signed message
+
+[](../_media/examples/zencode_cookbook/ethereum/signature_array.data ':include :type=code json')
+
+anyone may verify all the signatures usign the following script:
+
+[](../_media/examples/zencode_cookbook/ethereum/signature_array.zen ':include :type=code gherkin')
+
+This code will fail if at least one signature is not verified, to obtain a list that associate each address to the result of the verification the folowing script can be used:
+
+[](../_media/examples/zencode_cookbook/ethereum/verification_result.zen ':include :type=code gherkin')
+
+For example with the following data, where the last signature is the copy of the third one in which the *v* parameter is set to 27 instead of 28, *i.e.* is not a valid signature:
+
+[](../_media/examples/zencode_cookbook/ethereum/verification_result.data ':include :type=code json')
+
+the result is
+
+[](../_media/examples/zencode_cookbook/ethereum/verification_result.out ':include :type=code json')
+
 ## Sign complex object
 
 It could be the case that one wants to sign an object different from a string or a transaction.
