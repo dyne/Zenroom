@@ -1,0 +1,8 @@
+    Scenario ethereum: verify sig
+    Given I have a 'ethereum address array' named 'addresses' 
+    Given I have a 'ethereum signature array' named 'signatures'
+    Given I have a 'string' named 'signed-string'
+
+    When I verify the 'signed-string' has an array of ethereum signatures in 'signatures' by 'addresses'
+
+    Then print the string 'ok'
