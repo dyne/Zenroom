@@ -1,0 +1,8 @@
+Scenario ethereum: verify sig
+Given I have a 'ethereum address array' named 'ethereum addresses'
+and I have a 'ethereum signature array' named 'ethereum signatures'
+and I have a 'string' named 'message'
+
+When I create the verification result verifying the 'message' has an array of ethereum signatures in 'ethereum signatures' by 'ethereum addresses'
+
+Then print the 'verification result'
