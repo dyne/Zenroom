@@ -1,8 +1,7 @@
     Scenario ethereum: verify sig
-    Given I have a 'ethereum address array' named 'addresses' 
-    Given I have a 'ethereum signature array' named 'signatures'
-    Given I have a 'string' named 'signed-string'
+    Given I have a 'ethereum address signature pair array' named 'addresses_signatures'
+    Given I have a 'string' named 'signed_string'
 
-    When I verify the 'signed-string' has an array of ethereum signatures in 'signatures' by 'addresses'
+    When I verify the ethereum address signature pair array 'addresses_signatures' of 'signed_string'
 
     Then print the string 'ok'

@@ -185,7 +185,7 @@ When the signature is correct, the output will be:
 
 ## Multiple signatures verification
 
-Given an array of ethereum signatures, an array of ethereum addresses and the signed message
+Given an array that contains pairs of ethereum address and signature and a signed message
 
 [](../_media/examples/zencode_cookbook/ethereum/signature_array.data ':include :type=code json')
 
