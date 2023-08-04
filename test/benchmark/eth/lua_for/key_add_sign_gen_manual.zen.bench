@@ -6,5 +6,8 @@ When I create the ethereum key
 and I create the ethereum address
 and I create the ethereum signature of 'message'
 
-Then print the 'ethereum address'
-and print the 'ethereum signature'
+When I create the 'ethereum_address_signature_pair' named 'signature'
+and I move the 'ethereum_address' to 'address' in 'signature'
+and I move the 'ethereum_signature' to 'signature' in 'signature'
+
+Then print the 'signature'

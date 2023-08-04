@@ -12,8 +12,7 @@ msg='"message": "I love the Beatles, all but 3",'
 
 echo
 echo Signing $n_signatures times...
-echo '"ethereum_addresses": [' >addresses.txt
-echo '"ethereum_signatures": [' >signatures.txt
+echo '"address_signature_pair": [' >addresses_signatures.txt
 time for ((i=1; i<=$n_signatures; i++)); do
     zenroom -a key_add_sign_gen.keys.bench -z key_add_sign_gen_manual.zen.bench >res_1.json 2>execution_data_1.txt
     if [ "$?" != "0" ]; then
@@ -22,20 +21,16 @@ time for ((i=1; i<=$n_signatures; i++)); do
         exit 1
     fi
     if [ "$i" != "$n_signatures" ]; then
-        cat res_1.json | cut -d, -f1 | cut -d: -f2 | sed 's/$/,/' >> addresses.txt
-        cat res_1.json | cut -d, -f2 | cut -d: -f2 | cut -d\} -f1 | sed 's/$/,/' >> signatures.txt
+        cat res_1.json | cut -d: -f2- | cut -d\} -f1-2 | sed 's/$/,/' >> addresses_signatures.txt
     else
-        cat res_1.json | cut -d, -f1 | cut -d: -f2 >> addresses.txt
-        cat res_1.json | cut -d, -f2 | cut -d: -f2 | cut -d\} -f1 >> signatures.txt
+        cat res_1.json | cut -d: -f2- | cut -d\} -f1-2 >> addresses_signatures.txt
     fi
 done
-echo '],' >>addresses.txt
-echo ']' >>signatures.txt
+echo ']' >>addresses_signatures.txt
 echo "{$msg" > add_and_sign.json
-cat addresses.txt >> add_and_sign.json
-cat signatures.txt >> add_and_sign.json
+cat addresses_signatures.txt >> add_and_sign.json
 echo "}" >> add_and_sign.json
-rm res_1.json execution_data_1.txt addresses.txt signatures.txt
+rm res_1.json execution_data_1.txt addresses_signatures.txt
 
 echo
 echo Verifying $n_signatures signatures...
