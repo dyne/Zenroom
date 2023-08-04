@@ -136,6 +136,20 @@ local function export_method_f(obj)
     return res
 end
 
+local function import_eth_address_signature_pair_f(obj)
+    local res = {}
+    res.address = ZEN.get(obj, 'address', import_eth_address_f, tostring)
+    res.signature = import_signature_f(obj.signature)
+    return res
+end
+
+local function export_eth_address_signature_pair_f(obj)
+    local res = {}
+    res.address = ETH.checksum_encode(obj.address)
+    res.signature = export_signature_f(obj.signature)
+    return res
+end
+
 ZEN.add_schema(
    {
       ethereum_public_key = { import = O.from_hex,
@@ -171,6 +185,10 @@ ZEN.add_schema(
             export = export_signature_f},
       ethereum_method = { import = import_method_f,
             export = export_method_f},
+        ethereum_address_signature_pair = {
+            import = import_eth_address_signature_pair_f,
+            export = export_eth_address_signature_pair_f
+        },
 })
 
 When('create the ethereum key', function()
@@ -419,55 +437,54 @@ When("create the ethereum signature of ''", function(object)
     new_codec('ethereum signature')
 end)
 
-local function _verify_signature(doc, sig, by, fun)
+IfWhen("verify the '' has a ethereum signature in '' by ''", function(doc, sig, by)
     local msg = have(doc)
     local ethersMessage = O.from_string("\x19Ethereum Signed Message:\n") .. O.new(#msg) .. msg
     local hmsg = keccak256(ethersMessage)
 
-    local signature, signature_codec = have(sig)
-    local address, address_codec = have(by)
-
-    if signature_codec.zentype == 'e' and address_codec.zentype == 'e' then
-        ZEN.assert(ETH.verify_signature_from_address(signature, address, fif(signature.v:parity(), 0, 1), hmsg),
+    local signature = have(sig)
+    local address = have(by)
+    ZEN.assert(ETH.verify_signature_from_address(signature, address, fif(signature.v:parity(), 0, 1), hmsg),
             'The ethereum signature by '..by..' is not authentic')
-    elseif signature_codec.zentype == 'a' and address_codec.zentype == 'a' then
-        ZEN.assert(#address == #signature, "The addresses array and the signatures array have different length")
-        return fun(signature, address, hmsg, by)
-    else
-        error("Signautre and address are incompatible: "..signature_codec.zentype.." and "..address_codec.zentype)
-    end
-end
-
-IfWhen("verify the '' has a ethereum signature in '' by ''", function(doc, sig, by)
-    _verify_signature(doc, sig, by)
 end)
 
-IfWhen("verify the '' has an array of ethereum signatures in '' by ''", function(doc, sig, by)
-    _verify_signature(doc, sig, by,
-        function(signature, address, hmsg, by)
-            for s, a in zip(signature, address) do
-                ZEN.assert(ETH.verify_signature_from_address(s, a, fif(s.v:parity(), 0, 1), hmsg),
-                    'The ethereum signature by '..by..' is not authentic')
+local function _verify_address_signature_array(add_sig, doc, fun)
+    local msg = have(doc)
+    local ethersMessage = O.from_string("\x19Ethereum Signed Message:\n") .. O.new(#msg) .. msg
+    local hmsg = keccak256(ethersMessage)
+
+    local address_signature, address_signature_codec = have(add_sig)
+    ZEN.assert(address_signature_codec.schema, "The ethereum address signature pair array is not a schema")
+    ZEN.assert(address_signature_codec.zentype == "a", "The ethereum address signature pair array is not an array")
+    return fun(address_signature, hmsg)
+end
+
+IfWhen("verify the ethereum address signature pair array '' of ''", function(add_sig, doc)
+    _verify_address_signature_array(add_sig, doc,
+        function(address_signature_pair, hmsg)
+            for _, v in pairs(address_signature_pair) do
+                ZEN.assert(ETH.verify_signature_from_address(v.signature, v.address, fif(v.signature.v:parity(), 0, 1), hmsg),
+                    'The ethereum signature by '..ETH.checksum_encode(v.address)..' is not authentic')
             end
         end
     )
 end)
 
-IfWhen("create the verification result verifying the '' has an array of ethereum signatures in '' by ''", function(doc, sig, by)
-    empty 'verification result'
-    ACK.verification_result = _verify_signature(doc, sig, by,
-        function(signature, address, hmsg, by)
+IfWhen("use the ethereum address signature pair array '' to create the result array of ''", function(add_sig, doc)
+    empty 'result array'
+    ACK.result_array = _verify_address_signature_array(add_sig, doc,
+        function(address_signature_pair, hmsg)
             local res = {}
-            for s, a in zip(signature, address) do
+            for _, v in pairs(address_signature_pair) do
                 local tmp = {}
-                tmp.address = O.from_string(ETH.checksum_encode(a))
-                tmp.status = ETH.verify_signature_from_address(s, a, fif(s.v:parity(), 0, 1), hmsg) and O.from_string("verified") or O.from_string("not verified")
+                tmp.address = O.from_string(ETH.checksum_encode(v.address))
+                tmp.status = ETH.verify_signature_from_address(v.signature, v.address, fif(v.signature.v:parity(), 0, 1), hmsg) and O.from_string("verified") or O.from_string("not verified")
                 table.insert(res, tmp)
             end
             return res
         end
     )
-    new_codec("verification_result", {encoding="string"})
+    new_codec("result array", {encoding="string"})
 end)
 
 When("use the ethereum transaction to run '' using ''", function(m, p)
