@@ -1,11 +1,32 @@
 load ../bats_setup
 load ../bats_zencode
 
+@test "Execute zencode-exec empty script without inputs" {
+	# empty conf
+	echo > zencode_exec_stdin
+    # zencode
+	cat <<EOF | base64 -w0 >> zencode_exec_stdin
+Given I have nothing
+Then print all data
+
+EOF
+    echo >> zencode_exec_stdin # keys
+    echo >> zencode_exec_stdin # data
+    echo >> zencode_exec_stdin # extra
+    echo >> zencode_exec_stdin # context
+    echo >> zencode_exec_stdin
+
+    >&3 cat zencode_exec_stdin
+	cat zencode_exec_stdin | ${TR}/zencode-exec > $TMP/out
+    save_output empty.json
+    >&3 cat empty.json
+}
 @test "Execute zencode-exec with all stdin inputs" {
 
 	# empty conf
 	echo > zencode_exec_stdin
 
+    # zencode
 	cat <<EOF | base64 -w0 >> zencode_exec_stdin
 rule check version 3.0.0
 Scenario 'ecdh': Bob verifies the signature from Alice
@@ -30,6 +51,8 @@ Then print the 'myMessage'
 
 EOF
 	echo >> zencode_exec_stdin
+
+    # keys
 	cat <<EOF | base64 -w0 >> zencode_exec_stdin
 {
 	"Alice": {
@@ -39,6 +62,7 @@ EOF
 EOF
 	echo >> zencode_exec_stdin
 
+    # data
 	cat <<EOF | base64 -w0 >> zencode_exec_stdin
 {
 	"myMessage": "Dear Bob, your name is too short, goodbye - Alice.",
@@ -58,6 +82,13 @@ EOF
 }
 EOF
 	echo >> zencode_exec_stdin
+
+    # empty extra
+    echo >> zencode_exec_stdin
+
+    # empty context
+    echo >> zencode_exec_stdin
+    >&3 cat zencode_exec_stdin
 
 	cat zencode_exec_stdin | ${TR}/zencode-exec > $TMP/out
 	save_output verified.json
@@ -79,13 +110,15 @@ EOF
 
 	echo >> zencode_exec_stdin # keys
 	echo >> zencode_exec_stdin # data
+    echo >> zencode_exec_stdin # extra
+    echo >> zencode_exec_stdin # context
 
 	echo > $TMP/out
 	cat zencode_exec_stdin | ${TR}/zencode-exec 2>>full.json 1>>full.json
 
 	awk '/HEAP:/ {print $4}' full.json | sed 's/",//' | base64 -d > $TMP/out
     save_output heap.json
-	assert_output '{"CODEC":{"random_object":{"encoding":"def","name":"random_object","zentype":"e"}},"GIVEN_data":[],"GIVEN_keys":[],"THEN":[],"WHEN":{"random_object":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="}}'
+	assert_output '{"CODEC":{"random_object":{"encoding":"def","name":"random_object","zentype":"e"}},"GIVEN_data":[],"THEN":[],"WHEN":{"random_object":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="}}'
 	>&3 echo
 	awk '/TRACE:/ {print $4}' full.json | sed 's/",//' | base64 -d > $TMP/out
 	save_output trace.json

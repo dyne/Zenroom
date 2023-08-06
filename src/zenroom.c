@@ -273,6 +273,21 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	return(ZZ);
 }
 
+zenroom_t *zen_init_extra(const char *conf, const char *keys, const char *data,
+			const char *extra, const char *context) {
+	zenroom_t *ZZ = zen_init(conf, keys, data);
+	if(!ZZ) return NULL;
+	if(extra) {
+		func(ZZ->lua, "declaring global: EXTRA");
+		zen_setenv(ZZ->lua,"EXTRA",extra);
+	}
+	if(context) {
+		func(ZZ->lua, "declaring global: CONTEXT");
+		zen_setenv(ZZ->lua,"CONTEXT",context);
+	}
+	return(ZZ);
+}
+
 void zen_teardown(zenroom_t *ZZ) {
 	notice(ZZ->lua,"Zenroom teardown.");
 	act(ZZ->lua,"Memory used: %u KB",
@@ -347,7 +362,7 @@ int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
 	   "if not _res then exitcode(2) ZEN.OK = false error('EXEC: '.._err,2) end\n"
 	   );
 	if(ret == SUCCESS) {
-	  func(L, "Script successfully executed");
+	  func(L, "Zencode script successfully executed");
 	} else {
 	  zerror(L, "ERROR:");
 	  zerror(L, "%s", lua_tostring(L, -1));
@@ -365,7 +380,7 @@ int zen_exec_script(zenroom_t *ZZ, const char *script) {
 	zen_setenv(L,"CODE",(char*)script);
 	ret = luaL_dostring(L, script);
 	if(ret == SUCCESS) {
-	  notice(L, "Script successfully executed");
+	  func(L, "Lua script successfully executed");
 	  ZZ->exitcode = SUCCESS;
 	} else {
 	  zerror(L, "ERROR:");

@@ -60,7 +60,7 @@ local function pick(what, conv)
    local data
    local raw
    local name = _index_to_string(what)
-   raw = KIN[name] or IN[name]
+   raw = IN[name]
    if not raw then error("Cannot find '" .. name .. "' anywhere (null value?)", 2) end
    if raw == '' then error("Found empty string in '" .. name) end
    -- if not conv and ZEN.schemas[what] then conv = what end
@@ -94,13 +94,7 @@ local function pickin(section, what, conv, fail)
    local bail  -- fail
    local name = _index_to_string(what)
 
-   if KIN[section] then
-      root = KIN[section]
-   elseif IN[section] then
-      root = IN[section]
-   else
-      root = nil
-   end
+   root = IN[section]
    if not root then
       error("Cannot find '"..section.."'", 2)
    end
@@ -253,7 +247,7 @@ Given(
    'nothing',
    function()
       ZEN.assert(
-         (next(IN) == nil) and (next(KIN) == nil),
+         (next(IN) == nil),
          'Undesired data passed as input'
       )
    end
@@ -354,7 +348,7 @@ Given(
    "a '' named by ''",
    function(s, n)
       -- local name = have(n)
-      local name = _index_to_string(KIN[n] or IN[n])
+      local name = _index_to_string(IN[n])
       -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
       pick(name, s)
       ack(name)
@@ -374,7 +368,7 @@ Given(
 Given(
    "a '' named by '' in ''",
    function(s, n, t)
-      local name = _index_to_string(KIN[n] or IN[n])
+      local name = _index_to_string(IN[n])
       pickin(t, name, s)
       ack(name) -- save it in ACK.name
       gc()
@@ -404,7 +398,7 @@ Given(
    "my '' named by ''",
    function(s, n)
       -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
-      local name = _index_to_string(KIN[n] or IN[n])
+      local name = _index_to_string(IN[n])
       pickin(WHO, name, s)
       ack(name)
       gc()
@@ -441,7 +435,7 @@ Given(
 )
 
 Given("a '' part of '' after string prefix ''", function(enc, src, pfx)
-		 local whole = KIN[src] or IN[src]
+		 local whole = IN[src]
 		 ZEN.assert(whole, "Cannot find '" .. src .. "' anywhere (null value?)")
 		 local plen = #pfx
 		 local wlen = #whole
@@ -457,7 +451,7 @@ Given("a '' part of '' after string prefix ''", function(enc, src, pfx)
 end)
 
 Given("a '' part of '' before string suffix ''", function(enc, src, sfx)
-		 local whole = KIN[src] or IN[src]
+		 local whole = IN[src]
 		 ZEN.assert(whole, "Cannot find '" .. src .. "' anywhere (null value?)")
 		 local slen = #sfx
 		 local wlen = #whole
@@ -477,7 +471,7 @@ Given("a '' in path ''", function(enc, path)
     local root = path_array[1]
     table.remove(path_array, 1)
     local dest = path_array[#path_array]
-    local res = KIN[root] or IN[root]
+    local res = IN[root]
     for k,v in pairs(path_array) do
         ZEN.assert(luatype(res) == 'table', "Object is not a table: "..root)
         ZEN.assert(res[v] ~= nil, "Key "..v.." not found in "..root)
