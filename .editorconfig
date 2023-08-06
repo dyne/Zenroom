@@ -1,7 +1,10 @@
-# Copyright 2017-2023 Dyne.org foundation
-# SPDX-FileCopyrightText: 2017-2021 Dyne.org foundation
+# Copyright 2023 Dyne.org foundation
+# SPDX-FileCopyrightText: 2023 Dyne.org foundation
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
+
+# stop search for .editorconfig in parent directories
+root = true
 
 [*]
 end_of_line = lf
