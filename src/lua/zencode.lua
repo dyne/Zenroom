@@ -364,7 +364,6 @@ end
 
 -- Zencode HEAP globals
 IN = {} -- Given processing, import global DATA from json
-KIN = {} -- Given processing, import global KEYS from json
 TMP = TMP or {} -- Given processing, temp buffer for ack*->validate->push*
 ACK = ACK or {} -- When processing,  destination for push*
 OUT = OUT or {} -- print out
@@ -538,7 +537,6 @@ function zencode:begin()
 	-- Reset HEAP
 	self.machine = {}
 	IN = {} -- Given processing, import global DATA from json
-	KIN = {} -- Given processing, import global KEYS from json
 	TMP = {} -- Given processing, temp buffer for ack*->validate->push*
 	ACK = {} -- When processing,  destination for push*
 	OUT = {} -- print out
@@ -736,35 +734,45 @@ function zencode:run()
 	end
 	-- HEAP setup
 	IN = {} -- import global DATA from json
+	local tmp
+	if EXTRA then
+		tmp  = CONF.input.format.fun(EXTRA) or {}
+		for k, v in pairs(tmp) do
+			IN[k] = v
+		end
+		EXTRA = nil
+	end
 	if DATA then
-		-- if plain array conjoin into associative
-		IN = CONF.input.format.fun(DATA) or {}
+		tmp  = CONF.input.format.fun(DATA) or {}
+		for k, v in pairs(tmp) do
+			if IN[k] then
+				error("Object name collision in input: "..k)
+			end
+			IN[k] = v
+		end
 		DATA = nil
 	end
-	KIN = {} -- import global KEYS from json
 	if KEYS then
-		KIN = CONF.input.format.fun(KEYS) or {}
+		tmp  = CONF.input.format.fun(KEYS) or {}
+		for k, v in pairs(tmp) do
+			if IN[k] then
+				error("Object name collision in input: "..k)
+			end
+			IN[k] = v
+		end
 		KEYS = nil
 	end
+	tmp = nil
 	collectgarbage 'collect'
 
 	-- convert all spaces in keys to underscore
 	IN = IN_uscore(IN)
-	KIN = IN_uscore(KIN)
-
-	-- check name collisions between DATA and KEYS
-	if CONF.heap.check_collision then
-	   for k in pairs(IN) do
-	      if KIN[k] then
-		 error("Object name collision in input: "..k)
-	      end
-	   end
-	end
 
 	-- EXEC zencode
 	-- TODO: for optimization, to develop a lua iterator, which would save lookup time
 	-- https://www.lua.org/pil/7.1.html
-	while ZEN.next_instruction <= #self.AST do
+	local AST_size = #self.AST
+	while ZEN.next_instruction <= AST_size do
 		ZEN.current_instruction = ZEN.next_instruction
 		local x = self.AST[ZEN.current_instruction]
 		ZEN.next_instruction = ZEN.next_instruction + 1
@@ -778,7 +786,6 @@ function zencode:run()
 		-- trigger upon switch to when or then section
 		if x.from == 'given' and x.to ~= 'given' then
 			-- delete IN memory
-			KIN = {}
 			IN = {}
 			collectgarbage 'collect'
 		end
@@ -843,7 +850,6 @@ end
 function zencode.heap()
 	return ({
 		IN = IN,
-		KIN = KIN,
 		TMP = TMP,
 		ACK = ACK,
 		OUT = OUT

@@ -218,7 +218,7 @@ static int lua_strtok(lua_State* L) {
 	const char DEFAULT_SEP[] = " ";
 
 	char copy[MAX_FILE];
-	char *sep = DEFAULT_SEP;
+	const char *sep = DEFAULT_SEP;
 
 	const char *in;
 	size_t size;
@@ -226,7 +226,10 @@ static int lua_strtok(lua_State* L) {
 	register char *token;
 
 	in = luaL_checklstring(L, 1, &size);
-
+	if(!in) {
+		lua_pushnil(L);
+		return 1;
+	}
 	if (lua_gettop(L) > 1) {
 		sep = luaL_checklstring(L, 2, NULL);
 	}

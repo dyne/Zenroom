@@ -61,7 +61,6 @@ local function debug_heap_dump()
 			  OCTET.from_string(
 				 JSON.encode(
 					{GIVEN_data = HEAP.IN,
-					 GIVEN_keys = HEAP.KIN,
 					 CODEC = ZEN.CODEC,
 					 WHEN = ack,
 					 THEN = HEAP.OUT}))))
@@ -72,7 +71,6 @@ local function debug_heap_dump()
 		 ack.keyring = '(hidden)'
 	  end
 	  I.warn({a_GIVEN_in = HEAP.IN,
-			  b_GIVEN_in = HEAP.KIN,
 			  c_WHEN_ack = ack,
 			  c_CODEC_ack = ZEN.CODEC,
 			  d_THEN_out = HEAP.OUT})

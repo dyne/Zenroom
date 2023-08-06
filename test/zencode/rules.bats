@@ -170,31 +170,12 @@ EOF
     assert_output '{"result":"test_passed"}'
 }
 
-# --- collision ignore --- #
-@test "collision ignore" {
-    cat <<EOF | save_asset collision.keys 
-{"test": "collision_keys"}
-EOF
-    cat <<EOF | save_asset collision.json
-{"test": "collision_data"}
-EOF
-    cat <<EOF | zexe collision_ignore.zen collision.keys collision.json
-Rule collision ignore
-
-Given I have a 'string' named 'test'
-When I write string 'test passed' in 'result'
-Then print the 'result'
-EOF
-    save_output collision_ignore_output.json
-    assert_output '{"result":"test_passed"}'
-}
-
 # --- caller restroom-mw --- #
 @test "caller restroom-mw" {
-    cat <<EOF | zexe caller_restroom-mw.zen collision.keys  collision.json
+    cat <<EOF | zexe caller_restroom-mw.zen
 Rule caller restroom-mw
 
-Given I have a 'string' named 'test'
+Given nothing
 When I test the rule with a statement that does not exist
 and I also have a collision in data and keys
 When I write string 'test passed' in 'result'

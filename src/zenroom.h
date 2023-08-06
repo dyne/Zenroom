@@ -113,6 +113,8 @@ typedef struct {
 #define SUCCESS 0 // EXIT_SUCCESS
 
 zenroom_t *zen_init(const char *conf, const char *keys, const char *data);
+zenroom_t *zen_init_extra(const char *conf, const char *keys, const char *data,
+			const char *extra, const char *context);
 int  zen_exec_script(zenroom_t *Z, const char *script);
 int  zen_exec_zencode(zenroom_t *Z, const char *script);
 void zen_teardown(zenroom_t *zenroom);

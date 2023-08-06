@@ -17,6 +17,8 @@
  * If not, see http://www.gnu.org/licenses/agpl.txt
  */
 
+// for usage information see: bindings/README.md
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,6 +29,26 @@
 #if !defined(ARCH_WIN)
 #include <sys/poll.h>
 #endif
+
+static void _getline(char *in) {
+	register int ret;
+	if( ! fgets(in, MAX_FILE, stdin) ) {
+		fprintf(stderr, "zencode-exec missing input: %s\n",strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+	ret = strlen(in);
+	if(in[0]=='\n') { in[0]=0x0; return; } // remove newline on empty line
+	if(in[0]=='\r') { in[0]=0x0; return; } // remove carriage return on empty line
+	ret = strlen(in);
+	if(ret<4) {// min base64 is 4 chars
+		fprintf(stderr,"zencode-exec error: input line too short.\n");
+		exit(EXIT_FAILURE);
+	}
+	if(in[ret-2]=='\r') { in[ret-2]=0x0; return; } // remove ending CRLF
+	if(in[ret-1]=='\n') { in[ret-1]=0x0; return; } // remove ending LF
+	fprintf(stderr, "zencode-exec invalid input\n");
+	exit(EXIT_FAILURE);
+}
 
 int main(int argc, char **argv) {
   (void)argc;
@@ -42,9 +64,13 @@ int main(int argc, char **argv) {
   char keys_b64[MAX_FILE];
   char data_b64[MAX_FILE];
   char conf[MAX_CONFIG];
+  char extra_b64[MAX_FILE];
+  char context_b64[MAX_FILE];
   script_b64[0] = 0x0;
   keys_b64[0] = 0x0;
   data_b64[0] = 0x0;
+  extra_b64[0] = 0x0;
+  context_b64[0] = 0x0;
   conf[0] = 0x0;
 
 // TODO(jaromil): find a way to check stdin on windows
@@ -72,24 +98,32 @@ int main(int argc, char **argv) {
 	  snprintf(conf,MAX_CONFIG,"logfmt=json");
 	}
   } else {
-	  snprintf(conf,MAX_CONFIG,"logfmt=json");
+	fprintf(stderr, "zencode-exec missing conf at line 1: %s\n",strerror(errno));
+	return EXIT_FAILURE;
   }
 
   if( ! fgets(script_b64, MAX_ZENCODE, stdin) ) {
 	fprintf(stderr, "zencode-exec missing script at line 2: %s\n",strerror(errno));
 	return EXIT_FAILURE;
   }
-
-  if( fgets(keys_b64, MAX_FILE, stdin) ) {
-	ret = strlen(keys_b64); keys_b64[ret-1] = 0x0; // remove newline
+  ret = strlen(script_b64);
+  if( ret < 16) {
+	fprintf(stderr, "zencode-exec error: script too short.\n");
+	return EXIT_FAILURE;
   }
-  if( fgets(data_b64, MAX_FILE, stdin) ) {
-	ret = strlen(data_b64); data_b64[ret-1] = 0x0; // remove newline
-  }
+  if( script_b64[ret-2]=='\r' ) script_b64[ret-2] = 0x0; // remove ending CRLF
+  if( script_b64[ret-1]=='\n' ) script_b64[ret-1] = 0x0; // remove ending LF
 
-  Z = zen_init(conf,
-			   keys_b64[0]?keys_b64:NULL,
-			   data_b64[0]?data_b64:NULL);
+  _getline(keys_b64);
+  _getline(data_b64);
+  _getline(extra_b64);
+  _getline(context_b64);
+
+  Z = zen_init_extra(conf,
+					 keys_b64[0]?keys_b64:NULL,
+					 data_b64[0]?data_b64:NULL,
+					 extra_b64[0]?extra_b64:NULL,
+					 context_b64[0]?context_b64:NULL);
   if(!Z) {
 	fprintf(stderr, "\"[!] Initialisation failed\",\n");
 	fprintf(stderr,"\"ZENROOM JSON LOG END\" ]\n");
@@ -103,8 +137,6 @@ int main(int argc, char **argv) {
   zen_exec_script(Z, "CONF.input.format.fun = function(obj) return JSON.decode(OCTET.from_base64(obj):str()) end");
   zen_exec_script(Z, "CONF.code.encoding.fun = function(obj) return OCTET.from_base64(obj):str() end");
 
-
-  ret = strlen(script_b64); script_b64[ret-1] = 0x0; // remove newline
   zen_exec_zencode(Z, script_b64);
 
   register int exitcode = Z->exitcode;
