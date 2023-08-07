@@ -16,10 +16,8 @@ EOF
     echo >> zencode_exec_stdin # context
     echo >> zencode_exec_stdin
 
-    >&3 cat zencode_exec_stdin
 	cat zencode_exec_stdin | ${TR}/zencode-exec > $TMP/out
     save_output empty.json
-    >&3 cat empty.json
 }
 @test "Execute zencode-exec with all stdin inputs" {
 
@@ -81,14 +79,12 @@ EOF
 	}
 }
 EOF
-	echo >> zencode_exec_stdin
 
     # empty extra
     echo >> zencode_exec_stdin
 
     # empty context
     echo >> zencode_exec_stdin
-    >&3 cat zencode_exec_stdin
 
 	cat zencode_exec_stdin | ${TR}/zencode-exec > $TMP/out
 	save_output verified.json

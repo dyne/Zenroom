@@ -231,7 +231,7 @@ When("create the copy of object named by '' from dictionary ''", function(name, 
 end)
 
 local function take_out_f(path, dest, format)
-	local parr = strtok(uscore(path), '([^.]+)')
+	local parr = strtok(uscore(path), '.')
 	local root = parr[1] -- first
 	table.remove(parr, 1)
 	if not dest then

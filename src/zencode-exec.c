@@ -32,10 +32,7 @@
 
 static void _getline(char *in) {
 	register int ret;
-	if( ! fgets(in, MAX_FILE, stdin) ) {
-		fprintf(stderr, "zencode-exec missing input: %s\n",strerror(errno));
-		exit(EXIT_FAILURE);
-	}
+	if( ! fgets(in, MAX_FILE, stdin) ) { in[0]=0x0; return; }
 	ret = strlen(in);
 	if(in[0]=='\n') { in[0]=0x0; return; } // remove newline on empty line
 	if(in[0]=='\r') { in[0]=0x0; return; } // remove carriage return on empty line
@@ -93,6 +90,7 @@ int main(int argc, char **argv) {
 	  return EXIT_FAILURE;
 	}
 	if(conf[0] != '\n')	{
+	  conf[strlen(conf)-1] = 0x0; // remove ending LF
 	  strcat(conf,",logfmt=json");
 	} else {
 	  snprintf(conf,MAX_CONFIG,"logfmt=json");
@@ -119,6 +117,14 @@ int main(int argc, char **argv) {
   _getline(extra_b64);
   _getline(context_b64);
 
+	{
+		fprintf(stderr,"%s\n",conf);
+		fprintf(stderr,"%s\n",script_b64);
+		fprintf(stderr,"%s\n",keys_b64);
+		fprintf(stderr,"%s\n",data_b64);
+		fprintf(stderr,"%s\n",extra_b64);
+		fprintf(stderr,"%s\n",context_b64);
+	}
   Z = zen_init_extra(conf,
 					 keys_b64[0]?keys_b64:NULL,
 					 data_b64[0]?data_b64:NULL,

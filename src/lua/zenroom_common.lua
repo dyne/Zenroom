@@ -72,6 +72,27 @@ function xxx(s, n)
    end
 end
 
+function strtok(str, delimiter)
+    delimiter = delimiter or ' '
+    local result = {}
+    local start = 1
+    local delimiterPos = string.find(str, delimiter, start, true)
+
+    while delimiterPos do
+        local token = string.sub(str, start, delimiterPos - 1)
+        table.insert(result, token)
+        start = delimiterPos + 1
+        delimiterPos = string.find(str, delimiter, start, true)
+    end
+
+    local lastToken = string.sub(str, start)
+    if lastToken ~= "" then
+        table.insert(result, lastToken)
+    end
+
+    return result
+end
+
 -- sorted iterator for deterministic ordering of tables
 -- from: https://www.lua.org/pil/19.3.html
 _G["lua_pairs"]  = _G["pairs"]

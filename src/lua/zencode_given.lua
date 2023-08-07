@@ -467,7 +467,7 @@ Given("a '' part of '' before string suffix ''", function(enc, src, sfx)
 end)
 
 Given("a '' in path ''", function(enc, path)
-    local path_array = strtok(uscore(path), '([^.]+)')
+    local path_array = strtok(uscore(path), '.')
     local root = path_array[1]
     table.remove(path_array, 1)
     local dest = path_array[#path_array]
