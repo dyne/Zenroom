@@ -258,7 +258,7 @@ void zen_add_parse(lua_State *L) {
 		  {"trim", lua_trim_spaces},
 		  {"trimq", lua_trim_quotes},
 		  {"jsontok", lua_unserialize_json},
-		  {"strtok", lua_strtok},
+//		  {"strtok", lua_strtok},
 		  {NULL, NULL} };
 	lua_getglobal(L, "_G");
 	luaL_setfuncs(L, custom_parser, 0);  // for Lua versions 5.2 or greater
