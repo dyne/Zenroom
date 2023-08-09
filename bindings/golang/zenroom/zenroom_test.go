@@ -1,10 +1,10 @@
 package zenroom
 
 import (
-	"fmt"
 	"testing"
 )
 
+// ZENROOM is not available in new bindings
 /*func TestBasicCall(t *testing.T) {
 	script := "print (1)"
 	res, _ := ZenroomExec(script, "", "", "")
@@ -51,14 +51,22 @@ func TestZencode(t *testing.T) {
 	script := `Scenario 'ecdh': Create the keypair
 Given that I am known as 'Alice'
 When I create the ecdh key
-and debug
-Then print my data
-Then print my keyring`
+Then print the keyring`
 	res, success := ZencodeExec(script, "", "", "")
-	fmt.Println("Result")
-	fmt.Println(res)
-	fmt.Println("Logs")
-	fmt.Println(res.Logs)
+	if !success {
+		t.Error(res.Logs)
+	}
+}
+
+
+func TestZencodeExtra(t *testing.T) {
+	script := `Scenario 'ecdh': Create the keypair
+Given I have a 'string' named 'keys'
+Given I have a 'string' named 'data'
+Given I have a 'string' named 'extra'
+Then print data
+`
+res, success := ZencodeExecExtra(script, "", `{"keys": "keys"}`, `{"data": "data"}`, `{"extra": "extra"}`)
 	if !success {
 		t.Error(res.Logs)
 	}

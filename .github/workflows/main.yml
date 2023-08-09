@@ -167,8 +167,8 @@ jobs:
       - run: |
           pip3 install meson ninja
           sudo apt-get install --force-yes zsh
-      - run: make linux-go
-      - run: cp meson/libzenroom.so bindings/golang/zenroom/lib
+      - run: make linux
+      - run: cp src/zencode-exec /usr/local/bin/
       - name: 🧪 test bindings go-${{ matrix.go }}
         working-directory: bindings/golang/zenroom
         run: make test
