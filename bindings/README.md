@@ -40,8 +40,12 @@ The `zencode-data-keys-conf` is a file or stream with a newline separated list o
 2. zencode script (string -> base64) *newline*
 3. keys (json -> base64) *newline*
 4. data (json -> base64) *newline*
+5. extra (json -> base64) *newline*
+6. context (json -> base64) *newline*
 
-Each line should start directly with the base64 string without any prefix and should end with a newline. Anything else will likely be rejected.
+Each line should start directly with the base64 string without any prefix and should end with a newline.
+
+Empty lines can be a newline (or CRLF) and will be skipped, but should never be omitted: the zencode-exec expects 6 input lines in total, not less, including empty ones, all newline terminated. 
 
 This executes and returns two streams:
 1. `stdout` with the `json` formatted results of the execution

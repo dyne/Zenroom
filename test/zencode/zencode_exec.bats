@@ -14,12 +14,11 @@ EOF
     echo >> zencode_exec_stdin # data
     echo >> zencode_exec_stdin # extra
     echo >> zencode_exec_stdin # context
-    echo >> zencode_exec_stdin
 
 	cat zencode_exec_stdin | ${TR}/zencode-exec > $TMP/out
     save_output empty.json
 }
-@test "Execute zencode-exec with all stdin inputs" {
+@test "Execute zencode-exec with keys and data stdin inputs" {
 
 	# empty conf
 	echo > zencode_exec_stdin
@@ -119,4 +118,80 @@ EOF
 	awk '/TRACE:/ {print $4}' full.json | sed 's/",//' | base64 -d > $TMP/out
 	save_output trace.json
 	assert_output '["Given nothing","When I create the random object of '"'"'256'"'"' bits","and debug"]'
+}
+
+@test "Execute zencode-exec with all stdin inputs including extra" {
+
+	# empty conf
+	echo > zencode_exec_stdin
+
+    # zencode
+	cat <<EOF | base64 -w0 >> zencode_exec_stdin
+rule check version 3.0.0
+Scenario 'ecdh': Bob verifies the signature from Alice
+# Here we load the pubkey we'll verify the signature against
+Given I have a 'public key' from 'Alice'
+# Here we load the objects to be verified
+Given I have a 'string' named 'myMessage'
+Given I have a 'string array' named 'myStringArray'
+
+# Here we load the objects's signatures
+Given I have a 'signature' named 'myStringArray.signature'
+Given I have a 'signature' named 'myMessage.signature'
+
+# Here we perform the verifications
+When I verify the 'myMessage' has a ecdh signature in 'myMessage.signature' by 'Alice'
+When I verify the 'myStringArray' has a ecdh signature in 'myStringArray.signature' by 'Alice'
+
+# Here we print out the result: if the verifications succeeded, a string will be printed out
+# if the verifications failed, Zenroom will throw an error
+Then print the string 'Zenroom certifies that signatures are all correct!'
+Then print the 'myMessage'
+
+EOF
+	echo >> zencode_exec_stdin
+
+    # keys
+	cat <<EOF | base64 -w0 >> zencode_exec_stdin
+{
+	"Alice": {
+		"public_key": "BBCQg21VcjsmfTmNsg+I+8m1Cm0neaYONTqRnXUjsJLPa8075IYH+a9w2wRO7rFM1cKmv19Igd7ntDZcUvLq3xI="
+	}
+}
+EOF
+	echo >> zencode_exec_stdin
+
+    # data
+	cat <<EOF | base64 -w0 >> zencode_exec_stdin
+{
+	"myMessage": "Dear Bob, your name is too short, goodbye - Alice.",
+	"myMessage.signature": {
+		"r": "vWerszPubruWexUib69c7IU8Dxy1iisUmMGC7h7arDw=",
+		"s": "nSjxT+JAP56HMRJjrLwwB6kP+mluYySeZcG8JPBGcpY="
+	}
+}
+EOF
+
+    # extra
+cat <<EOF | base64 -w0 >> zencode_exec_stdin
+{
+	"myStringArray": [
+		"Hello World! This is my string array, element [0]",
+		"Hello World! This is my string array, element [1]",
+		"Hello World! This is my string array, element [2]"
+	],
+	"myStringArray.signature": {
+		"r": "B8qrQqYSWaTf5Q16mBCjY1tfsD4Cf6ZSMJTHCCV8Chg=",
+		"s": "S1/Syca6+XozVr5P9fQ6/AkQ+fJTMfwc063sbKmZ5B4="
+	}
+}
+EOF
+    echo >> zencode_exec_stdin
+
+    # empty context
+    echo >> zencode_exec_stdin
+
+	cat zencode_exec_stdin | ${TR}/zencode-exec > $TMP/out
+	save_output verified.json
+	assert_output '{"myMessage":"Dear Bob, your name is too short, goodbye - Alice.","output":["Zenroom_certifies_that_signatures_are_all_correct!"]}'
 }
