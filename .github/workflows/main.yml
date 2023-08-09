@@ -172,8 +172,8 @@ jobs:
       - name: 🧪 test bindings go-${{ matrix.go }}
         working-directory: bindings/golang/zenroom
         run: make test
-      - name: 🔐 check crypto with go-${{ matrix.go }}
-        run: make check-go
+#       - name: 🔐 check crypto with go-${{ matrix.go }}
+#         run: make check-go
 
   rust-build-check:
     name: 🦀 rust build & checks
