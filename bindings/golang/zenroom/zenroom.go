@@ -13,10 +13,10 @@ type ZenResult struct {
 	Logs string;
 }
 func ZencodeExec(script string, conf string, keys string, data string) (ZenResult, bool) {
-	return ZencodeExecExtra(script, conf, keys, data, "")
+	return ZencodeExecExtra(script, conf, keys, data, "", "")
 }
 
-func ZencodeExecExtra(script string, conf string, keys string, data string, extra string) (ZenResult, bool) {
+func ZencodeExecExtra(script string, conf string, keys string, data string, extra string, context string) (ZenResult, bool) {
 	execCmd := exec.Command("zencode-exec")
 
 	stdout, err := execCmd.StdoutPipe()
@@ -56,7 +56,8 @@ func ZencodeExecExtra(script string, conf string, keys string, data string, extr
 	io.WriteString(stdin, b64extra)
 	io.WriteString(stdin, "\n")
 
-	// context
+	b64context := b64.StdEncoding.EncodeToString([]byte(context))
+	io.WriteString(stdin, b64context)
 	io.WriteString(stdin, "\n")
 
 	err = execCmd.Start()
