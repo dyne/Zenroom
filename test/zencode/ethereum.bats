@@ -1031,3 +1031,21 @@ EOF
     save_output verification_result.out
     assert_output '{"result_array":[{"address":"0x2B8070975AF995Ef7eb949AE28ee7706B9039504","status":"verified"},{"address":"0x3028806AC293B5aC9b863B685c73813626311DaD","status":"verified"},{"address":"0xe1C2F1ACb2758c4D88EDb84e0306A0a96682E62a","status":"verified"},{"address":"0xe1C2F1ACb2758c4D88EDb84e0306A0a96682E62a","status":"not verified"}]}'
 }
+
+@test "create the ethereum address from the ethereum signature '' of ''" {
+    cat <<EOF | save_asset add_from_sig.data
+{
+    "ethereum_signature": "0xed8f36c71989f8660e8f5d4adbfd8f1c0288cca90d3a5330b7bf735d71ab52fe7ba0a7827dc4ba707431f1c10babd389f658f8e208b89390a9be3c097579a2ff1b",
+    "message": "I love the Beatles, all but 3"
+}
+EOF
+    cat <<EOF | zexe add_from_sig.zen add_from_sig.data
+Scenario ethereum
+Given I have a 'ethereum_signature'
+Given I have a 'string' named 'message'
+When I create the ethereum address from the ethereum signature 'ethereum_signature' of 'message'
+Then print the 'ethereum address'
+EOF
+    save_output 'add_from_sig.json'
+    assert_output '{"ethereum_address":"0x2B8070975AF995Ef7eb949AE28ee7706B9039504"}'
+}

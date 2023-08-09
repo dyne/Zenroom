@@ -437,11 +437,15 @@ When("create the ethereum signature of ''", function(object)
     new_codec('ethereum signature')
 end)
 
-IfWhen("verify the '' has a ethereum signature in '' by ''", function(doc, sig, by)
-    local msg = have(doc)
-    local ethersMessage = O.from_string("\x19Ethereum Signed Message:\n") .. O.new(#msg) .. msg
-    local hmsg = keccak256(ethersMessage)
+local function _prepare_msg_f(src)
+    local msg = have(src)
+    local ethers_message = O.from_string("\x19Ethereum Signed Message:\n") .. O.new(#msg) .. msg
+    local hashed_msg = keccak256(ethers_message)
+    return hashed_msg
+end
 
+IfWhen("verify the '' has a ethereum signature in '' by ''", function(doc, sig, by)
+    local hmsg = _prepare_msg_f(doc)
     local signature = have(sig)
     local address = have(by)
     zencode_assert(ETH.verify_signature_from_address(signature, address, fif(signature.v:parity(), 0, 1), hmsg),
@@ -449,10 +453,7 @@ IfWhen("verify the '' has a ethereum signature in '' by ''", function(doc, sig, 
 end)
 
 local function _verify_address_signature_array(add_sig, doc, fun)
-    local msg = have(doc)
-    local ethersMessage = O.from_string("\x19Ethereum Signed Message:\n") .. O.new(#msg) .. msg
-    local hmsg = keccak256(ethersMessage)
-
+    local hmsg = _prepare_msg_f(doc)
     local address_signature, address_signature_codec = have(add_sig)
     zencode_assert(address_signature_codec.schema, "The ethereum address signature pair array is not a schema")
     zencode_assert(address_signature_codec.zentype == "a", "The ethereum address signature pair array is not an array")
@@ -503,4 +504,16 @@ When("use the ethereum transaction to run '' using ''", function(m, p)
     local tx = have'ethereum transaction'
     zencode_assert(not tx.data or #tx.data == 0, "Cannot overwrite transaction data")
     tx.data = transaction_data
+end)
+
+When("create the ethereum address from the ethereum signature '' of ''", function(sign, doc)
+    empty'ethereum address'
+    local hashed_msg = _prepare_msg_f(doc)
+    local signature = have(sign)
+    local res = ETH.address_from_signature(signature, fif(signature.v:parity(), 0, 1), hashed_msg)
+    if not res then
+        error("No valid address found related to signature :"..sign)
+    end
+    ACK.ethereum_address = res
+    new_codec('ethereum address', { zentype = 'e' , encoding = 'complex'})
 end)
