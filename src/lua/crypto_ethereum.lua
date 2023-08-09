@@ -252,8 +252,6 @@ function ETH.verifySignatureTransaction(pk, txSigned)
    return ECDH.verify_hashed(pk, txHash, sig, #txHash)
 end
 
-local encode
-
 -- This function defaults to sign_ecdh_deterministic if no sign_function is passed.
 -- One may use the random ECDSA by specifying the "sign_function" parameter as "sign_ecdh".
 function ETH.encodeSignedData(sk, message, sign_function)
@@ -380,6 +378,24 @@ function ETH.address_from_public_key(pk)
    return H:process(pk:sub(2, #pk)):sub(13, 32)
 end
 
+function ETH.address_from_signature(signature, y_parity, hash)
+   local pk, valid
+
+   local x = INT.new(signature.r)
+   local p = ECDH.prime()
+   local n = ECDH.order()
+   local h = ECDH.cofactor() --h=1
+   repeat
+	   pk, valid = ECDH.recovery(x:octet(), y_parity, hash, signature)
+	   if h > 0 then   -- do not add n last iteration
+		   x = (x + n) % p
+	   end
+	   h = h-1
+   until (valid) or (h < 0)
+
+   return valid and ETH.address_from_public_key(pk)
+end
+
 local function encode_uint(val)
    return BIG.new(val):fixed(32)
 end
@@ -403,7 +419,7 @@ end
 
 local encode_tuple
 
-function encode(t, arg)
+local function encode(t, arg)
    local res
    if type(t) == "string" then
       if string.match(t, 'uint%d+$') or t == 'address' then
