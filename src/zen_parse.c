@@ -191,6 +191,11 @@ static int lua_unserialize_json(lua_State* L) {
 	return 0;
 }
 
+// removed because of unexplained segfault when used inside pcall to
+// parse zencode: set_rule and set_scenario will explode, also seems
+// to perform worse than pure Lua (see PR #709)
+
+#if 0
 char* strtok_single(char* str, char const* delims)
 {
     static char* src = NULL;
@@ -249,6 +254,7 @@ static int lua_strtok(lua_State* L) {
 	}
 	return 1;
 }
+#endif
 
 void zen_add_parse(lua_State *L) {
 	// override print() and io.write()
@@ -258,7 +264,6 @@ void zen_add_parse(lua_State *L) {
 		  {"trim", lua_trim_spaces},
 		  {"trimq", lua_trim_quotes},
 		  {"jsontok", lua_unserialize_json},
-//		  {"strtok", lua_strtok},
 		  {NULL, NULL} };
 	lua_getglobal(L, "_G");
 	luaL_setfuncs(L, custom_parser, 0);  // for Lua versions 5.2 or greater
