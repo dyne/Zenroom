@@ -66,7 +66,7 @@ Given I have a 'string' named 'data'
 Given I have a 'string' named 'extra'
 Then print data
 `
-res, success := ZencodeExecExtra(script, "", `{"keys": "keys"}`, `{"data": "data"}`, `{"extra": "extra"}`)
+res, success := ZencodeExecExtra(script, "", `{"keys": "keys"}`, `{"data": "data"}`, `{"extra": "extra"}`, "")
 	if !success {
 		t.Error(res.Logs)
 	}
