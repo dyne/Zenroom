@@ -34,67 +34,64 @@
 
  -- Used in scenario's schema declarations to cast to zenroom. type
  ZEN.get = function(obj, key, conversion, encoding)
-    if type(key) ~= 'string' then
-       error('ZEN.get key is not a string', 2) end
-    if conversion and type(conversion) ~= 'function' then
-       error('ZEN.get invalid conversion function', 2) end
-    if encoding and type(encoding) ~= 'function' then
-       error('ZEN.get invalid encoding function', 2) end
-    local k
-    if not obj then -- take from IN root
-       -- does not support to pick in WHO (use of 'my')
-       k = KIN[key] or IN[key]
-    else
-       if key == '.' then
-	  k = obj
-       else
-	  k = obj[key]
-       end
-    end
-    if not k then
-       error('Key not found in object conversion: ' .. key, 2)
-    end
-    local res = nil
-    local t = type(k)
-    -- BIG/INT default export is decimal
-    if conversion == INT.new and not encoding then
-       -- compare function address and use default
-       res = INT.from_decimal(k)
-       goto ok
-    end
-    if iszen(t) and conversion then
-       res = conversion(k)
-       goto ok
-    end
-    if iszen(t) and not conversion then
-       res = k
-       goto ok
-    end
-    if t == 'string' then
-       if encoding then
-	  res = encoding(k)
-       else
-	  res = CONF.input.encoding.fun(k)
-       end
-       if conversion then
-	  res = conversion(res)
-       end
-       goto ok
-    end
-    if t == 'number' then
-       res = k
-    end
-    if t == 'table' then
-       res = deepmap(encoding or CONF.input.encoding.fun, k)
-       if conversion then
-	  res = deepmap(conversion, res)
-       end
-    end
-    ::ok::
-    assert(
-       ZEN.OK and res,
-       'ZEN.get on invalid key: ' .. key .. ' (' .. t .. ')', 2)
-    return res
+	if type(key) ~= 'string' then
+	   error('ZEN.get key is not a string', 2)
+	end
+	if conversion and type(conversion) ~= 'function' then
+	   error('ZEN.get invalid conversion function', 2)
+	end
+	if encoding and type(encoding) ~= 'function' then
+	   error('ZEN.get invalid encoding function', 2)
+	end
+	local k
+	if not obj then -- take from IN root
+	   -- does not support to pick in WHO (use of 'my')
+	   k = KIN[key] or IN[key]
+	else
+	   if key == '.' then
+          k = obj
+	   else
+          k = obj[key]
+	   end
+	end
+	if not k then
+	   error('Key not found in object conversion: ' .. key, 2)
+	end
+	local res = nil
+	local t = type(k)
+	-- BIG/INT default export is decimal
+	if conversion == INT.new and not encoding then
+	   -- compare function address and use default
+	   res = INT.from_decimal(k)
+	elseif iszen(t) and conversion then
+	   res = conversion(k)
+	elseif iszen(t) and not conversion then
+	   res = k
+	elseif t == 'string' then
+	   if encoding then
+          res = encoding(k)
+	   else
+          res = CONF.input.encoding.fun(k)
+	   end
+	   if conversion then
+          res = conversion(res)
+	   end
+	else
+	   if t == 'number' then
+          res = k
+	   end
+	   if t == 'table' then
+          res = deepmap(encoding or CONF.input.encoding.fun, k)
+          if conversion then
+			 res = deepmap(conversion, res)
+          end
+	   end
+	end
+
+	assert(
+	   ZEN.OK and res,
+	   'ZEN.get on invalid key: ' .. key .. ' (' .. t .. ')', 2)
+	return res
  end
 
  -- return leftmost and rightmost if definition string indicates

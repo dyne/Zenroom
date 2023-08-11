@@ -65,17 +65,13 @@ local function export_arr(object, format)
   local ft = type(format)
   if format and ft == 'function' then
      conv_f = format
-     goto ok
-  end
-  if format and ft == 'string' then
+  elseif format and ft == 'string' then
      conv_f = get_encoding_function(format)
-     goto ok
-  end
-  if not CONF.output.encoding then
+  elseif not CONF.output.encoding then
      error('CONF.output.encoding is not configured', 2)
+  else
+    conv_f = CONF.debug.encoding.fun -- fallback to configured conversion function
   end
-  conv_f = CONF.debug.encoding.fun -- fallback to configured conversion function
-  ::ok::
   ZEN.assert(
      type(conv_f) == 'function',
      'export_arr conversion function not configured'

@@ -563,8 +563,7 @@ function zencode:parse(text)
    for line in zencode_newline_iter(text) do
 	linenum = linenum + 1
 	local tline = trim(line) -- saves trims in isempty / iscomment
-	  if zencode_isempty(tline) then goto continue end
-	  if zencode_iscomment(tline) then goto continue end
+	if not zencode_isempty(tline) and not zencode_iscomment(tline) then
 	--   xxx('Line: '.. text, 3)
 	  -- max length for single zencode line is #define MAX_LINE
 	  -- hard-coded inside zenroom.h
@@ -599,7 +598,8 @@ function zencode:parse(text)
 	  assert(fm(self.machine, { msg = tline, Z = self }),
 				line.."\n    "..
 				"Invalid transition from: "..self.machine.current)
-	  ::continue::
+	end
+	-- continue
    end
    collectgarbage'collect'
    return true
@@ -777,12 +777,7 @@ function zencode:run()
 		local x = self.AST[ZEN.current_instruction]
 		ZEN.next_instruction = ZEN.next_instruction + 1
 		-- ZEN:trace(x.source)
-		if manage_branching(x) then
-			goto continue
-		end
-		if manage_foreach(x) then
-			goto continue
-		end
+	if not manage_branching(x) and not manage_foreach(x) then
 		-- trigger upon switch to when or then section
 		if x.from == 'given' and x.to ~= 'given' then
 			-- delete IN memory
@@ -808,7 +803,8 @@ function zencode:run()
 			fatal(x.source) -- traceback print inside
 		end
 		collectgarbage 'collect'
-		::continue::
+	end
+	--	::continue::
 	end
 	-- PRINT output
 	ZEN:trace('--- Zencode execution completed')

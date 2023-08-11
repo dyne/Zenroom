@@ -6,7 +6,7 @@ globals = {
     'require', 'require_once','fif', 'deepmap', 'luatype', 'sort_pairs',
     'empty', 'have', 'initkeyring', 'havekey', 'zenguard', 'exitcode',
     'deprecated', 'mayhave', 'parse_prefix', 'strtok', 'strcasecmp',
-    'uscore', 'debug_traceback',
+    'uscore', 'debug_traceback', 'isnumber'
     'G2','ABC','ECDH',
     'check_codec', 'ZKP_challenge', 'SHA256', 'SHA512', 'sha256', 'sha512',
     'printerr', 'act', 'notice', 'warn', 'error', 'xxx', 'fatal', 'trim', 'serialize', 'iszen',
