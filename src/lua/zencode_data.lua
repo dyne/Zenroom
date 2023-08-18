@@ -415,22 +415,22 @@
        res = { name = name }
 	   -- check if name is a schema
 	   if ZEN.schemas[name] then res.schema = name end
-    end
     -- always detect zentype (may be an element extracted from dict)
-	local lt = luatype(ackn)
-	if lt == 'table' then
-     if ZEN.schemas[name] then
-      res.zentype = 'e'
-	   elseif isdictionary(ackn) then
-		  res.zentype = 'd'
-	   elseif isarray(ackn) then
-		  res.zentype = 'a'
-	   else
-		  error("Unknown zentype for lua table: "..name, 2)
-	   end
-	else
-	   res.zentype = 'e'
-	end
+      local lt = luatype(ackn)
+      if lt == 'table' then
+         if ZEN.schemas[name] then
+          res.zentype = 'e'
+         elseif isdictionary(ackn) then
+          res.zentype = 'd'
+         elseif isarray(ackn) then
+          res.zentype = 'a'
+         else
+          error("Unknown zentype for lua table: "..name, 2)
+         end
+      else
+         res.zentype = 'e'
+      end
+    end
     -- overwrite with paramenters in argument
     if parameters then
        for k,v in pairs(parameters) do
