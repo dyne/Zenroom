@@ -7,8 +7,8 @@ Files: src/* bindings/* test/* docs/* examples/* .github/* build/* VERSION pet/p
 Copyright: 2017-2023 Dyne.org foundation
 License: AGPL-3.0-or-later
 
-Files: lib/lua53/*
-Copyright: 1994-2017 Lua.org, PUC-Rio
+Files: lib/lua54/*
+Copyright: 1994-2023 Lua.org, PUC-Rio
 License: MIT
 
 Files: lib/milagro-crypto-c/*
