@@ -10,7 +10,7 @@ PYTHON_ROOT = os.getcwd()
 ZENROOM_ROOT = os.path.join( os.getcwd(), 'src')
 
 ZENROOM_LIB_ROOT_REL= 'src/src'
-LUA_ROOT = os.path.join(ZENROOM_ROOT, 'lib/lua53/src')
+LUA_ROOT = os.path.join(ZENROOM_ROOT, 'lib/lua54/src')
 MILAGRO_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/milagro-crypto-c/include')
 QP_ROOT = os.path.join(ZENROOM_ROOT, 'lib/pqclean')
 ED25519_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/ed25519-donna')

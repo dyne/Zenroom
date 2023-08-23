@@ -57,7 +57,7 @@ extern int luaopen_float(lua_State *L);
 extern int luaopen_qp(lua_State *L);
 extern int luaopen_ed(lua_State *L);
 
-// really loaded in lib/lua53/linit.c
+// really loaded in lib/lua54/linit.c
 // align here for reference
 luaL_Reg lualibs[] = {
 //	{LUA_LOADLIBNAME, luaopen_package},

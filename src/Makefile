@@ -23,7 +23,7 @@ COMMIT := $(shell git rev-parse --short HEAD)
 VERSION := $(shell git describe --tags | cut -d- -f1)
 CURRENT_YEAR := $(shell date +%Y)
 
-CFLAGS  += -I. -I../lib/lua53/src \
+CFLAGS  += -I. -I../lib/lua54/src \
 	-I../lib/milagro-crypto-c/build/include \
 	-I../lib/milagro-crypto-c/include \
 	-I../lib/ed25519-donna \
@@ -83,7 +83,7 @@ linux-lib: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o libzenroom-${ARCH}.so ${LDFLAGS} ${LDADD}
 
 lib-static: ${SOURCES}
-	ar x ../lib/lua53/src/liblua.a
+	ar x ../lib/lua54/src/liblua.a
 	ar x ${MILIB}/libamcl_curve_${ECP}.a
 	ar x ${MILIB}/libamcl_pairing_${ECP}.a
 	ar x ${MILIB}/libamcl_curve_${ECDH}.a
