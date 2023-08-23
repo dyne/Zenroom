@@ -67,6 +67,7 @@ luaL_Reg lualibs[] = {
 	{LUA_MATHLIBNAME, luaopen_math},
 	{LUA_UTF8LIBNAME, luaopen_utf8},
 	{LUA_DBLIBNAME,   luaopen_debug},
+
 // #if defined(LUA_COMPAT_BITLIB)
 // 	{LUA_BITLIBNAME,  luaopen_bit32},
 // #endif
@@ -88,12 +89,14 @@ int zen_load_string(lua_State *L, const char *code,
 			break; }
 	case LUA_ERRSYNTAX: { zerror(L, "%s syntax error: %s", __func__, name); break; }
 	case LUA_ERRMEM: { zerror(L, "%s out of memory: %s", __func__, name); break;  }
+// removed in lua 5.4
+#if 0
 	case LUA_ERRGCMM: {
 		zerror(L, "%s garbage collection error: %s", __func__, name);
-		break; }
+		break;
 	}
-	// HEREn(size);
-	// HEREp(code);
+#endif
+	}
 	return(res);
 }
 

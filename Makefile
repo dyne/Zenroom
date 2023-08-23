@@ -8,7 +8,7 @@ pwd := $(shell pwd)
 PREFIX ?= /usr/local
 # VERSION is set in src/Makefile
 # Targets to be build in this order
-BUILDS := apply-patches milagro lua53 embed-lua quantum-proof ed25519-donna mimalloc blake2
+BUILDS := apply-patches milagro lua54 embed-lua quantum-proof ed25519-donna mimalloc blake2
 
 # DESTDIR is supported by install target
 
@@ -73,7 +73,7 @@ include ${pwd}/build/docker.mk
 include ${pwd}/build/luarock.mk
 
 # experimental target for xtensa embedded boards
-esp32: apply-patches milagro lua53
+esp32: apply-patches milagro lua54
 	CC=${pwd}/build/xtensa-esp32-elf/bin/xtensa-esp32-elf-${gcc} \
 	LD=${pwd}/build/xtensa-esp32-elf/bin/xtensa-esp32-elf-ld \
 	CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
@@ -81,27 +81,27 @@ esp32: apply-patches milagro lua53
 
 # static dependencies in lib
 # lpeglabel:
-# 	CC=${gcc} CFLAGS="${cflags} -I${pwd}/lib/lua53/src" AR="${ar}" $(MAKE) -C lib/lpeglabel
+# 	CC=${gcc} CFLAGS="${cflags} -I${pwd}/lib/lua54/src" AR="${ar}" $(MAKE) -C lib/lpeglabel
 
-android-lua53:
+lua54:
 	CC="${lua_cc}" CFLAGS="${cflags} ${lua_cflags}" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
-	$(MAKE) -C ${pwd}/lib/lua53/src ${platform}
+	$(MAKE) -C ${pwd}/lib/lua54/src liblua.a
 
-musl-lua53:
+android-lua54:
 	CC="${lua_cc}" CFLAGS="${cflags} ${lua_cflags}" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
-	$(MAKE) -C ${pwd}/lib/lua53/src ${platform}
+	$(MAKE) -C ${pwd}/lib/lua54/src ${platform}
 
-lua53:
+musl-lua54:
 	CC="${lua_cc}" CFLAGS="${cflags} ${lua_cflags}" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
-	$(MAKE) -C ${pwd}/lib/lua53/src ${platform}
+	$(MAKE) -C ${pwd}/lib/lua54/src ${platform}
 
-cortex-lua53:
+cortex-lua54:
 	CC="${lua_cc}" CFLAGS="${cflags} ${lua_cflags} -DLUA_BAREBONE" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
-	$(MAKE) -C ${pwd}/lib/lua53/src ${platform}
+	$(MAKE) -C ${pwd}/lib/lua54/src ${platform}
 
 milagro-debug: milagro
 milagro:
@@ -194,7 +194,7 @@ install-lua:
 
 clean:
 	rm -rf ${pwd}/meson
-	$(MAKE) clean -C ${pwd}/lib/lua53/src
+	$(MAKE) clean -C ${pwd}/lib/lua54/src
 	$(MAKE) clean -C ${pwd}/lib/pqclean
 	rm -rf ${pwd}/lib/milagro-crypto-c/build
 	rm -rf ${pwd}/lib/mimalloc/build

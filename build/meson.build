@@ -64,7 +64,7 @@ milagro_generated_include_dirs = include_directories('milagro-crypto-c/include')
 
 mimalloc_include_dirs = include_directories('../lib/mimalloc/include')
 
-lua_include_dirs = include_directories('../lib/lua53/src')
+lua_include_dirs = include_directories('../lib/lua54/src')
 
 ed25519_include_dirs = include_directories('../lib/ed25519-donna')
 
