@@ -8,8 +8,8 @@ mil := ${pwd}/build/milagro
 website := ${pwd}/docs
 
 # libs defaults
-luasrc := ${pwd}/lib/lua53/src
-ldadd := ${pwd}/lib/lua53/src/liblua.a
+luasrc := ${pwd}/lib/lua54/src
+ldadd := ${pwd}/lib/lua54/src/liblua.a
 lua_embed_opts := ""
 ecdh_curve ?= SECP256K1
 ecp_curve  ?= BLS381

@@ -44,7 +44,7 @@ index c06ab86..6e6ab51 100644
 -
 -CFLAGS = $(CWARNS) $(COPT) -std=c99 -I$(LUADIR) -fPIC
 -CC = gcc
-+LUADIR = ../lua53/src/
++LUADIR = ../lua54/src/
  
  FILES = lpvm.o lpcap.o lptree.o lpcode.o lpprint.o
 -# For Linux
@@ -63,7 +63,7 @@ index c06ab86..6e6ab51 100644
 -lpeglabel.so: $(FILES)
 -	env $(CC) $(DLLFLAGS) $(FILES) -o lpeglabel.so
 -lpeglabel.dll: $(FILES)
--	$(CC) $(DLLFLAGS) $(FILES) -o lpeglabel.dll $(LUADIR)/bin/lua53.dll
+-	$(CC) $(DLLFLAGS) $(FILES) -o lpeglabel.dll $(LUADIR)/bin/lua54.dll
 -
 -$(FILES): makefile
 -
