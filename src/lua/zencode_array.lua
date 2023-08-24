@@ -325,12 +325,12 @@ When("create the flat array of contents in ''", function(dic)
 	ZEN.assert(luatype(data) == 'table', "Invalid array: "..dic)
 	empty'flat array'
 	ACK.flat_array = {}
-	deepmap(function(v, k, res) table.insert(res, v) end, data, ACK.flat_array)
+	deepsortmap(function(v, k, res) table.insert(res, v) end, data, ACK.flat_array)
 	new_codec('flat array', { encoding="string" })
 end)
 
 local function _keys_flat_array(data, res)
-	for k, item in pairs(data) do
+	for k, item in sort_pairs(data) do
 		if type(k) == 'string' then
 			k = O.from_string(k)
 		elseif type(k) == 'number' then

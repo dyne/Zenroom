@@ -199,6 +199,27 @@ function deepmap(fun,t,...)
    return setmetatable(res, getmetatable(t))
 end
 
+function deepsortmap(fun,t,...)
+   local luatype = luatype
+   if luatype(fun) ~= 'function' then
+	  error("Internal error: deepmap 1st argument is not a function", 3)
+	  return nil end
+   -- if luatype(t) == 'number' then
+   -- 	  return t end
+   if luatype(t) ~= 'table' then
+	  return fun(t) end
+	  -- error("Internal error: deepmap 2nd argument is not a table", 3)
+      -- return nil end
+   local res = {}
+   for k,v in sort_pairs(t) do
+	  if luatype(v) == 'table' then
+		 res[k] = deepsortmap(fun,v,...) -- recursion
+	  else
+		 res[k] = fun(v,k,...)
+	  end
+   end
+   return setmetatable(res, getmetatable(t))
+end
 
 -- function to be used when converting codecs with complex trees
 -- mask is a dictionary of functions to be applied in place

@@ -508,7 +508,7 @@ and print the 'contents flat array'
 EOF
 
     output=`cat $TMP/out`
-    assert_output '{"contents_flat_array":["1644878787666","1644878787611","1644878787367","1644878787754","1644878787679","1644878787692","1644878787628","18485","135"],"keys_flat_array":["allTimestamps",1,2,3,4,5,6,"average","variance","standard_deviation"]}'
+    assert_output '{"contents_flat_array":["1644878787666","1644878787611","1644878787367","1644878787754","1644878787679","1644878787692","1644878787628","135","18485"],"keys_flat_array":["allTimestamps",1,2,3,4,5,6,"average","standard_deviation","variance"]}'
 }
 
 @test "Consensusroom flatten" {
@@ -559,7 +559,7 @@ Then print the 'flattened array 2'
 Then print the string 'succes'
 EOF
     save_output "consensusroom-flatten.json"
-    assert_output '{"flattened_array_1":["https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp","https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp","https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp","https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp"],"flattened_array_2":["ip","port_https","get-6-timestampsAPI","uid","timestampAPI","announceAPI","baseUrl","port_http","public_key","version","tracker"],"output":["succes"]}'
+    assert_output '{"flattened_array_1":["https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp","https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp","https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp","https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp"],"flattened_array_2":["announceAPI","baseUrl","get-6-timestampsAPI","ip","port_http","port_https","public_key","timestampAPI","tracker","uid","version"],"output":["succes"]}'
 }
 
 @test "dict2array" {
