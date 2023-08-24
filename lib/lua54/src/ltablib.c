@@ -224,6 +224,9 @@ static int tunpack (lua_State *L) {
 typedef unsigned int IdxT;
 
 
+// switch to deterministic behavior -jrml
+#define l_randomizePivot() 0xFFFFFFFF
+
 /*
 ** Produce a "random" 'unsigned int' to randomize pivot choice. This
 ** macro is used only when 'sort' detects a big imbalance in the result

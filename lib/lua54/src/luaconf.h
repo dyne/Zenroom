@@ -44,6 +44,10 @@
 /* #define LUA_USE_C89 */
 
 
+// switch to deterministic behavior -jrml
+#define l_randomizePivot() 0xFFFFFFFF
+
+
 /*
 ** By default, Lua on Windows use (some) specific Windows features
 */
@@ -737,7 +741,7 @@
 ** (It must fit into max(size_t)/32 and max(int)/2.)
 */
 #if LUAI_IS32INT
-#define LUAI_MAXSTACK		1000000
+#define LUAI_MAXSTACK		5000000
 #else
 #define LUAI_MAXSTACK		15000
 #endif
