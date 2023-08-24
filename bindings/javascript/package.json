@@ -81,7 +81,9 @@
     "ts-node": "^10.7.0",
     "typescript": "^4.6.3"
   },
-  "dependencies": {},
+  "dependencies": {
+    "yarn": "^1.22.19"
+  },
   "standard": {
     "ignore": [
       "dist",
