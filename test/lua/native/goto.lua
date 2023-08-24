@@ -1,4 +1,4 @@
--- $Id: goto.lua,v 1.13 2016/11/07 13:11:28 roberto Exp $
+-- $Id: testes/goto.lua $
 -- See Copyright Notice in file all.lua
 
 collectgarbage()
@@ -14,6 +14,7 @@ errmsg([[ do ::l1:: end goto l1; ]], "label 'l1'")
 
 -- repeated label
 errmsg([[ ::l1:: ::l1:: ]], "label 'l1'")
+errmsg([[ ::l1:: do ::l1:: end]], "label 'l1'")
 
 
 -- undefined label
@@ -67,8 +68,6 @@ do
   assert(assert(load(prog))() == 31)
 end
 
--- goto to correct label when nested
-do goto l3; ::l3:: end   -- does not loop jumping to previous label 'l3'
 
 -- ok to jump over local dec. to end of block
 do
@@ -128,10 +127,34 @@ do   -- bug in 5.2 -> 5.3.2
   assert(x == 2 and y == true)
 end
 
+-- bug in 5.3
+do
+  local first = true
+  local a = false
+  if true then
+    goto LBL
+    ::loop::
+    a = true
+    ::LBL::
+    if first then
+      first = false
+      goto loop
+    end
+  end
+  assert(a)
+end
+
+do   -- compiling infinite loops
+  goto escape   -- do not run the infinite loops
+  ::a:: goto a
+  ::b:: goto c
+  ::c:: goto b
+end
+::escape::
 --------------------------------------------------------------------------------
 -- testing closing of upvalues
 
--- local debug = require 'debug'
+local debug = require 'debug'
 
 local function foo ()
   local t = {}
@@ -226,6 +249,22 @@ assert(testG(2) == "2")
 assert(testG(3) == "3")
 assert(testG(4) == 5)
 assert(testG(5) == 10)
+
+do
+  -- if x back goto out of scope of upvalue
+  local X
+  goto L1
+
+  ::L2:: goto L3
+
+  ::L1:: do
+    local a <close> = setmetatable({}, {__close = function () X = true end})
+    assert(X == nil)
+    if a then goto L2 end   -- jumping back out of scope of 'a'
+  end
+
+  ::L3:: assert(X == true)   -- checks that 'a' was correctly closed
+end
 --------------------------------------------------------------------------------
 
 

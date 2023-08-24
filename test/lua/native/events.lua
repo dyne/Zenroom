@@ -1,9 +1,9 @@
--- $Id: events.lua,v 1.45 2016/12/21 19:23:02 roberto Exp $
+-- $Id: testes/events.lua $
 -- See Copyright Notice in file all.lua
 
 print('testing metatables')
 
--- local debug = require'debug'
+local debug = require'debug'
 
 X = 20; B = 30
 
@@ -15,7 +15,7 @@ X = X+10
 assert(X == 30 and _G.X == 20)
 B = false
 assert(B == false)
-B = nil
+_ENV["B"] = undef
 assert(B == 30)
 
 assert(getmetatable{} == nil)
@@ -70,8 +70,12 @@ end
 local c = {}
 a = setmetatable({}, t)
 t.__newindex = c
-a[1] = 10; a[2] = 20; a[3] = 90
-assert(c[1] == 10 and c[2] == 20 and c[3] == 90)
+t.__index = c
+a[1] = 10; a[2] = 20; a[3] = 90;
+for i = 4, 20 do a[i] = i * 10 end
+assert(a[1] == 10 and a[2] == 20 and a[3] == 90)
+for i = 4, 20 do assert(a[i] == i * 10) end
+assert(next(a) == nil)
 
 
 do
@@ -95,7 +99,8 @@ do  -- newindex
   foi = false; a['a1']=0; assert(not foi)
   foi = false; a['a11']=0; assert(foi)
   foi = false; a[11]=0; assert(foi)
-  foi = false; a[1]=nil; assert(not foi)
+  foi = false; a[1]=undef; assert(not foi)
+  a[1] = undef
   foi = false; a[1]=nil; assert(foi)
 end
 
@@ -106,9 +111,9 @@ t.__call = f
 
 do
   local x,y = a(table.unpack{'a', 1})
-  assert(x==a and y[1]=='a' and y[2]==1 and y[3]==nil)
+  assert(x==a and y[1]=='a' and y[2]==1 and y[3]==undef)
   x,y = a()
-  assert(x==a and y[1]==nil)
+  assert(x==a and y[1]==undef)
 end
 
 
@@ -133,52 +138,55 @@ t.__bxor = f("bxor")
 t.__shl = f("shl")
 t.__shr = f("shr")
 t.__bnot = f("bnot")
+t.__lt = f("lt")
+t.__le = f("le")
 
-assert(b+5 == b)
-assert(cap[0] == "add" and cap[1] == b and cap[2] == 5 and cap[3]==nil)
-assert(b+'5' == b)
-assert(cap[0] == "add" and cap[1] == b and cap[2] == '5' and cap[3]==nil)
-assert(5+b == 5)
-assert(cap[0] == "add" and cap[1] == 5 and cap[2] == b and cap[3]==nil)
-assert('5'+b == '5')
-assert(cap[0] == "add" and cap[1] == '5' and cap[2] == b and cap[3]==nil)
-b=b-3; assert(getmetatable(b) == t)
-assert(5-a == 5)
-assert(cap[0] == "sub" and cap[1] == 5 and cap[2] == a and cap[3]==nil)
-assert('5'-a == '5')
-assert(cap[0] == "sub" and cap[1] == '5' and cap[2] == a and cap[3]==nil)
-assert(a*a == a)
-assert(cap[0] == "mul" and cap[1] == a and cap[2] == a and cap[3]==nil)
-assert(a/0 == a)
-assert(cap[0] == "div" and cap[1] == a and cap[2] == 0 and cap[3]==nil)
-assert(a%2 == a)
-assert(cap[0] == "mod" and cap[1] == a and cap[2] == 2 and cap[3]==nil)
-assert(a // (1/0) == a)
-assert(cap[0] == "idiv" and cap[1] == a and cap[2] == 1/0 and cap[3]==nil)
-assert(a & "hi" == a)
-assert(cap[0] == "band" and cap[1] == a and cap[2] == "hi" and cap[3]==nil)
-assert(a | "hi" == a)
-assert(cap[0] == "bor" and cap[1] == a and cap[2] == "hi" and cap[3]==nil)
-assert("hi" ~ a == "hi")
-assert(cap[0] == "bxor" and cap[1] == "hi" and cap[2] == a and cap[3]==nil)
-assert(-a == a)
-assert(cap[0] == "unm" and cap[1] == a)
-assert(a^4 == a)
-assert(cap[0] == "pow" and cap[1] == a and cap[2] == 4 and cap[3]==nil)
-assert(a^'4' == a)
-assert(cap[0] == "pow" and cap[1] == a and cap[2] == '4' and cap[3]==nil)
-assert(4^a == 4)
-assert(cap[0] == "pow" and cap[1] == 4 and cap[2] == a and cap[3]==nil)
-assert('4'^a == '4')
-assert(cap[0] == "pow" and cap[1] == '4' and cap[2] == a and cap[3]==nil)
-assert(#a == a)
-assert(cap[0] == "len" and cap[1] == a)
-assert(~a == a)
-assert(cap[0] == "bnot" and cap[1] == a)
-assert(a << 3 == a)
-assert(cap[0] == "shl" and cap[1] == a and cap[2] == 3)
-assert(1.5 >> a == 1.5)
-assert(cap[0] == "shr" and cap[1] == 1.5 and cap[2] == a)
+
+local function checkcap (t)
+  assert(#cap + 1 == #t)
+  for i = 1, #t do
+    assert(cap[i - 1] == t[i])
+    assert(math.type(cap[i - 1]) == math.type(t[i]))
+  end
+end
+
+-- Some tests are done inside small anonymous functions to ensure
+-- that constants go to constant table even in debug compilation,
+-- when the constant table is very small.
+assert(b+5 == b); checkcap{"add", b, 5}
+assert(5.2 + b == 5.2); checkcap{"add", 5.2, b}
+assert(b+'5' == b); checkcap{"add", b, '5'}
+assert(5+b == 5); checkcap{"add", 5, b}
+assert('5'+b == '5'); checkcap{"add", '5', b}
+b=b-3; assert(getmetatable(b) == t); checkcap{"sub", b, 3}
+assert(5-a == 5); checkcap{"sub", 5, a}
+assert('5'-a == '5'); checkcap{"sub", '5', a}
+assert(a*a == a); checkcap{"mul", a, a}
+assert(a/0 == a); checkcap{"div", a, 0}
+assert(a/0.0 == a); checkcap{"div", a, 0.0}
+assert(a%2 == a); checkcap{"mod", a, 2}
+assert(a // (1/0) == a); checkcap{"idiv", a, 1/0}
+;(function () assert(a & "hi" == a) end)(); checkcap{"band", a, "hi"}
+;(function () assert(10 & a  == 10) end)(); checkcap{"band", 10, a}
+;(function () assert(a | 10  == a) end)(); checkcap{"bor", a, 10}
+assert(a | "hi" == a); checkcap{"bor", a, "hi"}
+assert("hi" ~ a == "hi"); checkcap{"bxor", "hi", a}
+;(function () assert(10 ~ a == 10) end)(); checkcap{"bxor", 10, a}
+assert(-a == a); checkcap{"unm", a, a}
+assert(a^4.0 == a); checkcap{"pow", a, 4.0}
+assert(a^'4' == a); checkcap{"pow", a, '4'}
+assert(4^a == 4); checkcap{"pow", 4, a}
+assert('4'^a == '4'); checkcap{"pow", '4', a}
+assert(#a == a); checkcap{"len", a, a}
+assert(~a == a); checkcap{"bnot", a, a}
+assert(a << 3 == a); checkcap{"shl", a, 3}
+assert(1.5 >> a == 1.5); checkcap{"shr", 1.5, a}
+
+-- for comparison operators, all results are true
+assert(5.0 > a); checkcap{"lt", a, 5.0}
+assert(a >= 10); checkcap{"le", 10, a}
+assert(a <= -10.0); checkcap{"le", a, -10.0}
+assert(a < -10); checkcap{"lt", a, -10}
 
 
 -- test for rawlen
@@ -202,9 +210,23 @@ t.__lt = function (a,b,c)
  return a<b, "dummy"
 end
 
+t.__le = function (a,b,c)
+  assert(c == nil)
+  if type(a) == 'table' then a = a.x end
+  if type(b) == 'table' then b = b.x end
+ return a<=b, "dummy"
+end
+
+t.__eq = function (a,b,c)
+  assert(c == nil)
+  if type(a) == 'table' then a = a.x end
+  if type(b) == 'table' then b = b.x end
+ return a == b, "dummy"
+end
+
 function Op(x) return setmetatable({x=x}, t) end
 
-local function test ()
+local function test (a, b, c)
   assert(not(Op(1)<Op(1)) and (Op(1)<Op(2)) and not(Op(2)<Op(1)))
   assert(not(1 < Op(1)) and (Op(1) < 2) and not(2 < Op(1)))
   assert(not(Op('a')<Op('a')) and (Op('a')<Op('b')) and not(Op('b')<Op('a')))
@@ -217,18 +239,13 @@ local function test ()
   assert((1 >= Op(1)) and not(1 >= Op(2)) and (Op(2) >= 1))
   assert((Op('a')>=Op('a')) and not(Op('a')>=Op('b')) and (Op('b')>=Op('a')))
   assert(('a' >= Op('a')) and not(Op('a') >= 'b') and (Op('b') >= Op('a')))
+  assert(Op(1) == Op(1) and Op(1) ~= Op(2))
+  assert(Op('a') == Op('a') and Op('a') ~= Op('b'))
+  assert(a == a and a ~= b)
+  assert(Op(3) == c)
 end
 
-test()
-
-t.__le = function (a,b,c)
-  assert(c == nil)
-  if type(a) == 'table' then a = a.x end
-  if type(b) == 'table' then b = b.x end
- return a<=b, "dummy"
-end
-
-test()  -- retest comparisons, now using both `lt' and `le'
+test(Op(1), Op(2), Op(3))
 
 
 -- test `partial order'
@@ -246,18 +263,10 @@ end
 t.__lt = function (a,b)
   for k in pairs(a) do
     if not b[k] then return false end
-    b[k] = nil
+    b[k] = undef
   end
   return next(b) ~= nil
 end
-
-t.__le = nil
-
-assert(Set{1,2,3} < Set{1,2,3,4})
-assert(not(Set{1,2,3,4} < Set{1,2,3,4}))
-assert((Set{1,2,3,4} <= Set{1,2,3,4}))
-assert((Set{1,2,3,4} >= Set{1,2,3,4}))
-assert((Set{1,3} <= Set{3,5}))   -- wrong!! model needs a `le' method ;-)
 
 t.__le = function (a,b)
   for k in pairs(a) do
@@ -266,14 +275,19 @@ t.__le = function (a,b)
   return true
 end
 
-assert(not (Set{1,3} <= Set{3,5}))   -- now its OK!
+assert(Set{1,2,3} < Set{1,2,3,4})
+assert(not(Set{1,2,3,4} < Set{1,2,3,4}))
+assert((Set{1,2,3,4} <= Set{1,2,3,4}))
+assert((Set{1,2,3,4} >= Set{1,2,3,4}))
+assert(not (Set{1,3} <= Set{3,5}))
 assert(not(Set{1,3} <= Set{3,5}))
 assert(not(Set{1,3} >= Set{3,5}))
+
 
 t.__eq = function (a,b)
   for k in pairs(a) do
     if not b[k] then return false end
-    b[k] = nil
+    b[k] = undef
   end
   return next(b) == nil
 end
@@ -288,16 +302,27 @@ assert(Set{1,3,5} ~= Set{3,5,1,6})
 
 -- '__eq' is not used for table accesses
 t[Set{1,3,5}] = 1
-assert(t[Set{1,3,5}] == nil)
+assert(t[Set{1,3,5}] == undef)
+
+
+do   -- test invalidating flags
+  local mt = {__eq = true}
+  local a = setmetatable({10}, mt)
+  local b = setmetatable({10}, mt)
+  mt.__eq = nil
+  assert(a ~= b)   -- no metamethod
+  mt.__eq = function (x,y) return x[1] == y[1] end
+  assert(a == b)   -- must use metamethod now
+end
 
 
 if not T then
   (Message or print)('\n >>> testC not active: skipping tests for \z
-userdata equality <<<\n')
+userdata <<<\n')
 else
-  local u1 = T.newuserdata(0)
-  local u2 = T.newuserdata(0)
-  local u3 = T.newuserdata(0)
+  local u1 = T.newuserdata(0, 1)
+  local u2 = T.newuserdata(0, 1)
+  local u3 = T.newuserdata(0, 1)
   assert(u1 ~= u2 and u1 ~= u3)
   debug.setuservalue(u1, 1);
   debug.setuservalue(u2, 2);
@@ -311,6 +336,12 @@ else
   assert(u1 == u3 and u3 == u1 and u1 ~= u2)
   assert(u2 == u1 and u2 == u3 and u3 == u2)
   assert(u2 ~= {})   -- different types cannot be equal
+  assert(rawequal(u1, u1) and not rawequal(u1, u3))
+
+  local mirror = {}
+  debug.setmetatable(u3, {__index = mirror, __newindex = mirror})
+  for i = 1, 10 do u3[i] = i end
+  for i = 1, 10 do assert(u3[i] == i) end
 end
 
 
@@ -356,6 +387,7 @@ t1 = {};  c = {}; setmetatable(c, t1)
 d = {}
 t1.__eq = function () return true end
 t1.__lt = function () return true end
+t1.__le = function () return false end
 setmetatable(d, t1)
 assert(c == d and c < d and not(d <= c))
 t2 = {}
@@ -387,6 +419,9 @@ assert(i == 3 and x[1] == 3 and x[3] == 5)
 
 
 assert(_G.X == 20)
+
+_G.X, _G.B = nil
+
 
 print'+'
 
@@ -421,10 +456,10 @@ assert(getmetatable(true) == nil)
 
 debug.setmetatable(nil, mt)
 assert(getmetatable(nil) == mt)
-mt.__add = function (a,b) return (a or 0) + (b or 0) end
-assert(10 + nil == 10)
-assert(nil + 23 == 23)
-assert(nil + nil == 0)
+mt.__add = function (a,b) return (a or 1) + (b or 2) end
+assert(10 + nil == 12)
+assert(nil + 23 == 24)
+assert(nil + nil == 3)
 debug.setmetatable(nil, nil)
 assert(getmetatable(nil) == nil)
 

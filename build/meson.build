@@ -187,7 +187,7 @@ endforeach
 ## BATS tests in test/lua
 test_dir = meson.source_root() + '/../test/'
 bats_bin = find_program(test_dir+'bats/bin/bats')
-tests = [ 'lowmem', 'himem', 'primitives', 'crypto' ]
+tests = [ 'native', 'primitives', 'crypto' ]
 foreach test_suite : tests
     test('lua_'+test_suite.underscorify(),
 	 bats_bin,

@@ -1,4 +1,4 @@
--- $Id: tpack.lua,v 1.13 2016/11/07 13:11:28 roberto Exp $
+-- $Id: testes/tpack.lua $
 -- See Copyright Notice in file all.lua
 
 local pack = string.pack
@@ -35,7 +35,7 @@ print("\talignment: " .. align)
 
 
 -- check errors in arguments
-function checkerror (msg, f, ...)
+local function checkerror (msg, f, ...)
   local status, err = pcall(f, ...)
   -- print(status, err, msg)
   assert(not status and string.find(err, msg))
@@ -183,7 +183,7 @@ for _, n in ipairs{0, -1.1, 1.9, 1/0, -1/0, 1e20, -1e20, 0.1, 2000.7} do
     assert(pack(">d", n) == pack("<d", n):reverse())
 end
 
-print "for non-native precisions, test only with 'round' numbers"
+-- for non-native precisions, test only with "round" numbers
 for _, n in ipairs{0, -1.5, 1/0, -1/0, 1e10, -1e9, 0.5, 2000.25} do
   assert(unpack("<f", pack("<f", n)) == n)
   assert(unpack(">f", pack(">f", n)) == n)
@@ -203,6 +203,8 @@ do
   checkerror("does not fit", pack, "s1", s)
 
   checkerror("contains zeros", pack, "z", "alo\0");
+
+  checkerror("unfinished string", unpack, "zc10000000", "alo")
 
   for i = 2, NB do
     local s1 = pack("s" .. i, s)
@@ -235,7 +237,7 @@ do
 end
 
 
-print "testing multiple types and sequence"
+-- testing multiple types and sequence
 do
   local x = pack("<b h b f d f n i", 1, 2, 3, 4, 5, 6, 7, 8)
   assert(#x == packsize("<b h b f d f n i"))
@@ -312,9 +314,7 @@ do    -- testing initial position
   for i = 1, #x + 1 do
     assert(unpack("c0", x, i) == "")
   end
-  checkerror("out of string", unpack, "c0", x, 0)
   checkerror("out of string", unpack, "c0", x, #x + 2)
-  checkerror("out of string", unpack, "c0", x, -(#x + 1))
  
 end
 

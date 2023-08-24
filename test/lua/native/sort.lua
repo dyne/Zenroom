@@ -1,4 +1,4 @@
--- $Id: sort.lua,v 1.38 2016/11/07 13:11:28 roberto Exp $
+-- $Id: testes/sort.lua $
 -- See Copyright Notice in file all.lua
 
 print "testing (parts of) table library"
@@ -20,7 +20,7 @@ end
 checkerror("wrong number of arguments", table.insert, {}, 2, 3, 4)
 
 local x,y,z,a,n
-a = {}; lim = _soft and 200 or 2000
+a = {}; local lim = _soft and 200 or 2000
 for i=1, lim do a[i]=i end
 assert(select(lim, unpack(a)) == lim and select('#', unpack(a)) == lim)
 x = unpack(a)
@@ -79,7 +79,7 @@ end
 print "testing pack"
 
 a = table.pack()
-assert(a[1] == nil and a.n == 0) 
+assert(a[1] == undef and a.n == 0) 
 
 a = table.pack(table)
 assert(a[1] == table and a.n == 1)
@@ -88,7 +88,7 @@ a = table.pack(nil, nil, nil, nil)
 assert(a[1] == nil and a.n == 4)
 
 
-print "testing move"
+-- testing move
 do
 
   checkerror("table expected", table.move, 1, 2, 3, 4)
@@ -156,28 +156,28 @@ do
       end})
   table.move(a, 10, 13, 3, b)
   assert(b[1] == "(3,100)(4,110)(5,120)(6,130)")
-  -- local stat, msg = pcall(table.move, b, 10, 13, 3, b)
-  -- assert(not stat and msg == b)
+  local stat, msg = pcall(table.move, b, 10, 13, 3, b)
+  assert(not stat and msg == b)
 end
 
--- do
---   -- for very long moves, just check initial accesses and interrupt
---   -- move with an error
---   local function checkmove (f, e, t, x, y)
---     local pos1, pos2
---     local a = setmetatable({}, {
---                 __index = function (_,k) pos1 = k end,
---                 __newindex = function (_,k) pos2 = k; error() end, })
---     local st, msg = pcall(table.move, a, f, e, t)
---     assert(not st and not msg and pos1 == x and pos2 == y)
---   end
---   checkmove(1, maxI, 0, 1, 0)
---   checkmove(0, maxI - 1, 1, maxI - 1, maxI)
---   checkmove(minI, -2, -5, -2, maxI - 6)
---   checkmove(minI + 1, -1, -2, -1, maxI - 3)
---   checkmove(minI, -2, 0, minI, 0)  -- non overlapping
---   checkmove(minI + 1, -1, 1, minI + 1, 1)  -- non overlapping
--- end
+do
+  -- for very long moves, just check initial accesses and interrupt
+  -- move with an error
+  local function checkmove (f, e, t, x, y)
+    local pos1, pos2
+    local a = setmetatable({}, {
+                __index = function (_,k) pos1 = k end,
+                __newindex = function (_,k) pos2 = k; error() end, })
+    local st, msg = pcall(table.move, a, f, e, t)
+    assert(not st and not msg and pos1 == x and pos2 == y)
+  end
+  checkmove(1, maxI, 0, 1, 0)
+  checkmove(0, maxI - 1, 1, maxI - 1, maxI)
+  checkmove(minI, -2, -5, -2, maxI - 6)
+  checkmove(minI + 1, -1, -2, -1, maxI - 3)
+  checkmove(minI, -2, 0, minI, 0)  -- non overlapping
+  checkmove(minI + 1, -1, 1, minI + 1, 1)  -- non overlapping
+end
 
 checkerror("too many", table.move, {}, 0, maxI, 1)
 checkerror("too many", table.move, {}, -1, maxI - 1, 1)
@@ -188,7 +188,7 @@ checkerror("wrap around", table.move, {}, 1, 2, maxI)
 checkerror("wrap around", table.move, {}, minI, -2, 2)
 
 
-print "testing sort"
+print"testing sort"
 
 
 -- strange lengths
@@ -222,7 +222,7 @@ a = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
 table.sort(a)
 check(a)
 
-function perm (s, n)
+local function perm (s, n)
   n = n or #s
   if n == 1 then
     local t = {unpack(s)}
@@ -248,16 +248,16 @@ perm{1,2,3,3,5}
 perm{1,2,3,4,5,6}
 perm{2,2,3,3,5,6}
 
--- function timesort (a, n, func, msg, pre)
---   local x = os.clock()
---   table.sort(a, func)
---   x = (os.clock() - x) * 1000
---   pre = pre or ""
---   print(string.format("%ssorting %d %s elements in %.2f msec.", pre, n, msg, x))
---   check(a, func)
--- end
+local function timesort (a, n, func, msg, pre)
+  local x = os.clock()
+  table.sort(a, func)
+  x = (os.clock() - x) * 1000
+  pre = pre or ""
+  print(string.format("%ssorting %d %s elements in %.2f msec.", pre, n, msg, x))
+  check(a, func)
+end
 
-limit = 50000
+local limit = 50000
 if _soft then limit = 5000 end
 
 a = {}
@@ -265,42 +265,43 @@ for i=1,limit do
   a[i] = math.random()
 end
 
--- timesort(a, limit, nil, "random")
+timesort(a, limit, nil, "random")
 
--- timesort(a, limit, nil, "sorted", "re-")
+timesort(a, limit, nil, "sorted", "re-")
 
 a = {}
 for i=1,limit do
   a[i] = math.random()
 end
 
--- x = os.clock(); i=0
--- table.sort(a, function(x,y) i=i+1; return y<x end)
--- x = (os.clock() - x) * 1000
--- print(string.format("Invert-sorting other %d elements in %.2f msec., with %i comparisons",
---       limit, x, i))
--- check(a, function(x,y) return y<x end)
+local x = os.clock(); local i = 0
+table.sort(a, function(x,y) i=i+1; return y<x end)
+x = (os.clock() - x) * 1000
+print(string.format("Invert-sorting other %d elements in %.2f msec., with %i comparisons",
+      limit, x, i))
+check(a, function(x,y) return y<x end)
 
 
 table.sort{}  -- empty array
 
 for i=1,limit do a[i] = false end
--- timesort(a, limit,  function(x,y) return nil end, "equal")
+timesort(a, limit,  function(x,y) return nil end, "equal")
 
 for i,v in pairs(a) do assert(v == false) end
 
-A = {"Ã¡lo", "\0first :-)", "alo", "then this one", "45", "and a new"}
-table.sort(A)
-check(A)
+AA = {"álo", "\0first :-)", "alo", "then this one", "45", "and a new"}
+table.sort(AA)
+check(AA)
 
-table.sort(A, function (x, y)
-          load(string.format("A[%q] = ''", x), "")()
+table.sort(AA, function (x, y)
+          load(string.format("AA[%q] = ''", x), "")()
           collectgarbage()
           return x<y
         end)
 
+_G.AA = nil
 
-tt = {__lt = function (a,b) return a.val < b.val end}
+local tt = {__lt = function (a,b) return a.val < b.val end}
 a = {}
 for i=1,10 do  a[i] = {val=math.random(100)}; setmetatable(a[i], tt); end
 table.sort(a)

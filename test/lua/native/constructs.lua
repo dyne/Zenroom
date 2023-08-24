@@ -1,9 +1,9 @@
--- $Id: constructs.lua,v 1.41 2016/11/07 13:11:28 roberto Exp $
+-- $Id: testes/constructs.lua $
 -- See Copyright Notice in file all.lua
 
 ;;print "testing syntax";;
 
--- local debug = require "debug"
+local debug = require "debug"
 
 
 local function checkload (s, msg)
@@ -11,6 +11,7 @@ local function checkload (s, msg)
 end
 
 -- testing semicollons
+local a
 do ;;; end
 ; do ; a = 3; assert(a == 3) end;
 ;
@@ -32,10 +33,6 @@ assert(-3%5 == 2 and -3+5 == 2)
 assert(2*1+3/3 == 3 and 1+2 .. 3*1 == "33");
 assert(not(2+1 > 3*1) and "a".."b" > "a");
 
-assert("7" .. 3 << 1 == 146)
-assert(10 >> 1 .. "9" == 0)
-assert(10 | 1 .. "9" == 27)
-
 assert(0xF0 | 0xCC ~ 0xAA & 0xFD == 0xF4)
 assert(0xFD & 0xAA ~ 0xCC | 0xF0 == 0xF4)
 assert(0xF0 & 0x0F + 1 == 0x10)
@@ -53,15 +50,51 @@ assert((((nil and true) or false) and true) == false)
 
 local a,b = 1,nil;
 assert(-(1 or 2) == -1 and (1 and 2)+(-1.25 or -4) == 0.75);
-x = ((b or a)+1 == 2 and (10 or a)+1 == 11); assert(x);
+local x = ((b or a)+1 == 2 and (10 or a)+1 == 11); assert(x);
 x = (((2<3) or 1) == true and (2<3 and 4) == 4); assert(x);
 
-x,y=1,2;
+local x, y = 1, 2;
 assert((x>y) and x or y == 2);
 x,y=2,1;
 assert((x>y) and x or y == 2);
 
 assert(1234567890 == tonumber('1234567890') and 1234567890+1 == 1234567891)
+
+do   -- testing operators with diffent kinds of constants
+  -- operands to consider:
+  --  * fit in register
+  --  * constant doesn't fit in register
+  --  * floats with integral values
+  local operand = {3, 100, 5.0, -10, -5.0, 10000, -10000}
+  local operator = {"+", "-", "*", "/", "//", "%", "^",
+                    "&", "|", "^", "<<", ">>",
+                    "==", "~=", "<", ">", "<=", ">=",}
+  for _, op in ipairs(operator) do
+    local f = assert(load(string.format([[return function (x,y)
+                return x %s y
+              end]], op)))();
+    for _, o1 in ipairs(operand) do
+      for _, o2 in ipairs(operand) do
+        local gab = f(o1, o2)
+
+        _ENV.XX = o1
+        local code = string.format("return XX %s %s", op, o2)
+        local res = assert(load(code))()
+        assert(res == gab)
+
+        _ENV.XX = o2
+        code = string.format("return (%s) %s XX", o1, op)
+        res = assert(load(code))()
+        assert(res == gab)
+
+        code = string.format("return (%s) %s %s", o1, op, o2)
+        res = assert(load(code))()
+        assert(res == gab)
+      end
+    end
+  end
+  _ENV.XX = nil
+end
 
 
 -- silly loops
@@ -69,10 +102,35 @@ repeat until 1; repeat until true;
 while false do end; while nil do end;
 
 do  -- test old bug (first name could not be an `upvalue')
- local a; function f(x) x={a=1}; x={x=1}; x={G=1} end
+ local a; local function f(x) x={a=1}; x={x=1}; x={G=1} end
 end
 
-function f (i)
+
+do   -- bug since 5.4.0
+  -- create code with a table using more than 256 constants
+  local code = {"local x = {"}
+  for i = 1, 257 do
+    code[#code + 1] = i .. ".1,"
+  end
+  code[#code + 1] = "};"
+  code = table.concat(code)
+
+  -- add "ret" to the end of that code and checks that
+  -- it produces the expected value "val"
+  local function check (ret, val)
+    local code = code .. ret
+    code = load(code)
+    assert(code() == val)
+  end
+
+  check("return (1 ~ (2 or 3))", 1 ~ 2)
+  check("return (1 | (2 or 3))", 1 | 2)
+  check("return (1 + (2 or 3))", 1 + 2)
+  check("return (1 << (2 or 3))", 1 << 2)
+end
+
+
+local function f (i)
   if type(i) ~= 'number' then return i,'jojo'; end;
   if i > 0 then return i, f(i-1); end;
 end
@@ -98,10 +156,10 @@ end
 assert(f(3) == 'a' and f(12) == 'b' and f(26) == 'c' and f(100) == nil)
 
 for i=1,1000 do break; end;
-n=100;
-i=3;
-t = {};
-a=nil
+local n=100;
+local i=3;
+local t = {};
+local a=nil
 while not a do
   a=0; for i=1,n do for i=i,1,-1 do a=a+1; t[i]=1; end; end;
 end
@@ -144,14 +202,14 @@ a={y=1}
 x = {a.y}
 assert(x[1] == 1)
 
-function f(i)
+local function f (i)
   while 1 do
     if i>0 then i=i-1;
     else return; end;
   end;
 end;
 
-function g(i)
+local function g(i)
   while 1 do
     if i>0 then i=i-1
     else return end
@@ -179,6 +237,28 @@ assert(a==1 and b==nil)
 
 print'+';
 
+do   -- testing constants
+  local prog <const> = [[local x <XXX> = 10]]
+  checkload(prog, "unknown attribute 'XXX'")
+
+  checkload([[local xxx <const> = 20; xxx = 10]],
+             ":1: attempt to assign to const variable 'xxx'")
+
+  checkload([[
+    local xx;
+    local xxx <const> = 20;
+    local yyy;
+    local function foo ()
+      local abc = xx + yyy + xxx;
+      return function () return function () xxx = yyy end end
+    end
+  ]], ":6: attempt to assign to const variable 'xxx'")
+
+  checkload([[
+    local x <close> = nil
+    x = io.open()
+  ]], ":2: attempt to assign to const variable 'x'")
+end
 
 f = [[
 return function ( a , b , c , d , e )
@@ -194,7 +274,7 @@ function g (a,b,c,d,e)
   if not (a>=b or c or d and e or nil) then return 0; else return 1; end;
 end
 
-function h (a,b,c,d,e)
+local function h (a,b,c,d,e)
   while (a>=b or c or (d and e) or nil) do return 1; end;
   return 0;
 end;
@@ -222,8 +302,8 @@ do
   assert(a==2)
 end
 
-function F(a)
-  -- assert(debug.getinfo(1, "n").name == 'F')
+local function F (a)
+  assert(debug.getinfo(1, "n").name == 'F')
   return a,2,3
 end
 
@@ -234,7 +314,7 @@ a,b = F(nil)==nil; assert(a == true and b == nil)
 ------------------------------------------------------------------
 
 -- sometimes will be 0, sometimes will not...
--- _ENV.GLOB1 = math.floor(os.time()) % 2
+_ENV.GLOB1 = math.random(0, 1)
 
 -- basic expressions with their respective values
 local basiccases = {
@@ -242,19 +322,39 @@ local basiccases = {
   {"false", false},
   {"true", true},
   {"10", 10},
---  {"(0==_ENV.GLOB1)", 0 == _ENV.GLOB1},
+  {"(0==_ENV.GLOB1)", 0 == _ENV.GLOB1},
 }
 
--- print('testing short-circuit optimizations (' .. _ENV.GLOB1 .. ')')
+local prog
+
+if _ENV.GLOB1 == 0 then
+  basiccases[2][1] = "F"   -- constant false
+
+  prog = [[
+    local F <const> = false
+    if %s then IX = true end
+    return %s
+]]
+else
+  basiccases[4][1] = "k10"   -- constant 10
+
+  prog = [[
+    local k10 <const> = 10
+    if %s then IX = true end
+    return %s
+  ]]
+end
+
+print('testing short-circuit optimizations (' .. _ENV.GLOB1 .. ')')
 
 
 -- operators with their respective values
-local binops = {
+local binops <const> = {
   {" and ", function (a,b) if not a then return a else return b end end},
   {" or ", function (a,b) if a then return a else return b end end},
 }
 
-local cases = {}
+local cases <const> = {}
 
 -- creates all combinations of '(cases[i] op cases[n-i])' plus
 -- 'not(cases[i] op cases[n-i])' (syntax + value)
@@ -280,34 +380,27 @@ end
 -- do not do too many combinations for soft tests
 local level = _soft and 3 or 4
 
---------------------------------------------------
--- breaks with own ipairs (see zenroom_common.lua)
--- cases[1] = basiccases
--- for i = 2, level do cases[i] = createcases(i) end
--- print("+")
--- local prog = [[if %s then IX = true end; return %s]]
--- local i = 0
--- for n = 1, level do
---   for _, v in pairs(cases[n]) do
---     local s = v[1]
---     local p = load(string.format(prog, s, s), "")
---     IX = false
---     assert(p() == v[2] and IX == not not v[2])
---     i = i + 1
---     if i % 60000 == 0 then print('+') end
---   end
--- end
+cases[1] = basiccases
+for i = 2, level do cases[i] = createcases(i) end
+print("+")
+
+local i = 0
+for n = 1, level do
+  for _, v in pairs(cases[n]) do
+    local s = v[1]
+    local p = load(string.format(prog, s, s), "")
+    IX = false
+    assert(p() == v[2] and IX == not not v[2])
+    i = i + 1
+    if i % 60000 == 0 then print('+') end
+  end
+end
+IX = nil
+_G.GLOB1 = nil
 ------------------------------------------------------------------
 
 -- testing some syntax errors (chosen through 'gcov')
 checkload("for x do", "expected")
 checkload("x:call", "expected")
-
-if not _soft then
-  -- control structure too long
-  local s = string.rep("a = a + 1\n", 2^18)
-  s = "while true do " .. s .. "end"
-  checkload(s, "too long")
-end
 
 print'OK'

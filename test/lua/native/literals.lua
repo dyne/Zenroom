@@ -1,15 +1,16 @@
--- $Id: literals.lua,v 1.36 2016/11/07 13:11:28 roberto Exp $
+-- $Id: testes/literals.lua $
 -- See Copyright Notice in file all.lua
 
 print('testing scanner')
 
--- local debug = require "debug"
+local debug = require "debug"
 
 
 local function dostring (x) return assert(load(x), "")() end
 
 dostring("x \v\f = \t\r 'a\0a' \v\f\f")
 assert(x == 'a\0a' and string.len(x) == 3)
+_G.x = nil
 
 -- escape sequences
 assert('\n\"\'\\' == [[
@@ -37,14 +38,14 @@ local function lexstring (x, y, n)
   assert(s == y and l == n)
 end
 
--- lexstring("'abc\\z  \n   efg'", "abcefg", 2)
--- lexstring("'abc\\z  \n\n\n'", "abc", 4)
--- lexstring("'\\z  \n\t\f\v\n'",  "", 3)
--- lexstring("[[\nalo\nalo\n\n]]", "alo\nalo\n\n", 5)
--- lexstring("[[\nalo\ralo\n\n]]", "alo\nalo\n\n", 5)
--- lexstring("[[\nalo\ralo\r\n]]", "alo\nalo\n", 4)
--- lexstring("[[\ralo\n\ralo\r\n]]", "alo\nalo\n", 4)
--- lexstring("[[alo]\n]alo]]", "alo]\n]alo", 2)
+lexstring("'abc\\z  \n   efg'", "abcefg", 2)
+lexstring("'abc\\z  \n\n\n'", "abc", 4)
+lexstring("'\\z  \n\t\f\v\n'",  "", 3)
+lexstring("[[\nalo\nalo\n\n]]", "alo\nalo\n\n", 5)
+lexstring("[[\nalo\ralo\n\n]]", "alo\nalo\n\n", 5)
+lexstring("[[\nalo\ralo\r\n]]", "alo\nalo\n", 4)
+lexstring("[[\ralo\n\ralo\r\n]]", "alo\nalo\n", 4)
+lexstring("[[alo]\n]alo]]", "alo]\n]alo", 2)
 
 assert("abc\z
         def\z
@@ -56,23 +57,30 @@ assert("abc\z
 assert("\u{0}\u{00000000}\x00\0" == string.char(0, 0, 0, 0))
 
 -- limits for 1-byte sequences
-assert("\u{0}\u{7F}" == "\x00\z\x7F")
+assert("\u{0}\u{7F}" == "\x00\x7F")
 
 -- limits for 2-byte sequences
-assert("\u{80}\u{7FF}" == "\xC2\x80\z\xDF\xBF")
+assert("\u{80}\u{7FF}" == "\xC2\x80\xDF\xBF")
 
 -- limits for 3-byte sequences
-assert("\u{800}\u{FFFF}" ==   "\xE0\xA0\x80\z\xEF\xBF\xBF")
+assert("\u{800}\u{FFFF}" ==   "\xE0\xA0\x80\xEF\xBF\xBF")
 
 -- limits for 4-byte sequences
-assert("\u{10000}\u{10FFFF}" == "\xF0\x90\x80\x80\z\xF4\x8F\xBF\xBF")
+assert("\u{10000}\u{1FFFFF}" == "\xF0\x90\x80\x80\xF7\xBF\xBF\xBF")
+
+-- limits for 5-byte sequences
+assert("\u{200000}\u{3FFFFFF}" == "\xF8\x88\x80\x80\x80\xFB\xBF\xBF\xBF\xBF")
+
+-- limits for 6-byte sequences
+assert("\u{4000000}\u{7FFFFFFF}" ==
+       "\xFC\x84\x80\x80\x80\x80\xFD\xBF\xBF\xBF\xBF\xBF")
 
 
 -- Error in escape sequences
 local function lexerror (s, err)
   local st, msg = load('return ' .. s, '')
   if err ~= '<eof>' then err = err .. "'" end
-  -- assert(not st and string.find(msg, "near .-" .. err))
+  assert(not st and string.find(msg, "near .-" .. err))
 end
 
 lexerror([["abc\x"]], [[\x"]])
@@ -94,7 +102,7 @@ lexerror([["xyz\300"]], [[\300"]])
 lexerror([["   \256"]], [[\256"]])
 
 -- errors in UTF-8 sequences
-lexerror([["abc\u{110000}"]], [[abc\u{110000]])   -- too large
+lexerror([["abc\u{100000000}"]], [[abc\u{100000000]])   -- too large
 lexerror([["abc\u11r"]], [[abc\u1]])    -- missing '{'
 lexerror([["abc\u"]], [[abc\u"]])    -- missing '{'
 lexerror([["abc\u{11r"]], [[abc\u{11r]])    -- missing '}'
@@ -122,16 +130,16 @@ end
 
 -- long variable names
 
-var1 = string.rep('a', 15000) .. '1'
-var2 = string.rep('a', 15000) .. '2'
-prog = string.format([[
+local var1 = string.rep('a', 15000) .. '1'
+local var2 = string.rep('a', 15000) .. '2'
+local prog = string.format([[
   %s = 5
   %s = %s + 1
   return function () return %s - %s end
 ]], var1, var2, var1, var1, var2)
 local f = dostring(prog)
 assert(_G[var1] == 5 and _G[var2] == 6 and f() == -1)
-var1, var2, f = nil
+_G[var1], _G[var2] = nil
 print('+')
 
 -- escapes --
@@ -143,13 +151,13 @@ assert([[
  $debug]] == "\n $debug")
 assert([[ [ ]] ~= [[ ] ]])
 -- long strings --
-b = "001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789"
+local b = "001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789"
 assert(string.len(b) == 960)
 prog = [=[
 print('+')
 
-a1 = [["this is a 'string' with several 'quotes'"]]
-a2 = "'quotes'"
+local a1 = [["this is a 'string' with several 'quotes'"]]
+local a2 = "'quotes'"
 
 assert(string.find(a1, a2) == 34)
 print('+')
@@ -157,12 +165,13 @@ print('+')
 a1 = [==[temp = [[an arbitrary value]]; ]==]
 assert(load(a1))()
 assert(temp == 'an arbitrary value')
+_G.temp = nil
 -- long strings --
-b = "001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789"
+local b = "001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789"
 assert(string.len(b) == 960)
 print('+')
 
-a = [[00123456789012345678901234567890123456789123456789012345678901234567890123456789
+local a = [[00123456789012345678901234567890123456789123456789012345678901234567890123456789
 00123456789012345678901234567890123456789123456789012345678901234567890123456789
 00123456789012345678901234567890123456789123456789012345678901234567890123456789
 00123456789012345678901234567890123456789123456789012345678901234567890123456789
@@ -192,19 +201,41 @@ x = 1
 ]=]
 
 print('+')
-x = nil
+_G.x = nil
 dostring(prog)
 assert(x)
+_G.x = nil
 
-prog = nil
-a = nil
-b = nil
+
+
+do  -- reuse of long strings
+
+  -- get the address of a string
+  local function getadd (s) return string.format("%p", s) end
+
+  local s1 <const> = "01234567890123456789012345678901234567890123456789"
+  local s2 <const> = "01234567890123456789012345678901234567890123456789"
+  local s3 = "01234567890123456789012345678901234567890123456789"
+  local function foo() return s1 end
+  local function foo1() return s3 end
+  local function foo2()
+    return "01234567890123456789012345678901234567890123456789"
+  end
+  local a1 = getadd(s1)
+  assert(a1 == getadd(s2))
+  assert(a1 == getadd(foo()))
+  assert(a1 == getadd(foo1()))
+  assert(a1 == getadd(foo2()))
+
+  local sd = "0123456789" .. "0123456789012345678901234567890123456789"
+  assert(sd == s1 and getadd(sd) ~= a1)
+end
 
 
 -- testing line ends
 prog = [[
-a = 1        -- a comment
-b = 2
+local a = 1        -- a comment
+local b = 2
 
 
 x = [=[
@@ -213,18 +244,19 @@ hi
 y = "\
 hello\r\n\
 "
--- return require"debug".getinfo(1).currentline
+return require"debug".getinfo(1).currentline
 ]]
 
--- for _, n in pairs{"\n", "\r", "\n\r", "\r\n"} do
---   local prog, nn = string.gsub(prog, "\n", n)
---   assert(dostring(prog) == nn)
---   assert(_G.x == "hi\n" and _G.y == "\nhello\r\n\n")
--- end
+for _, n in pairs{"\n", "\r", "\n\r", "\r\n"} do
+  local prog, nn = string.gsub(prog, "\n", n)
+  assert(dostring(prog) == nn)
+  assert(_G.x == "hi\n" and _G.y == "\nhello\r\n\n")
+end
+_G.x, _G.y = nil
 
 
 -- testing comments and strings with long brackets
-a = [==[]=]==]
+local a = [==[]=]==]
 assert(a == "]=")
 
 a = [==[[===[[=[]]=][====[]]===]===]==]
@@ -262,34 +294,30 @@ end
 
 
 -- testing decimal point locale
--- if not ((ARCH == "UNIX") or (ARCH == "MUSL")) then
+if os.setlocale("pt_BR") or os.setlocale("ptb") then
+  assert(tonumber("3,4") == 3.4 and tonumber"3.4" == 3.4)
+  assert(tonumber("  -.4  ") == -0.4)
+  assert(tonumber("  +0x.41  ") == 0X0.41)
+  assert(not load("a = (3,4)"))
+  assert(assert(load("return 3.4"))() == 3.4)
+  assert(assert(load("return .4,3"))() == .4)
+  assert(assert(load("return 4."))() == 4.)
+  assert(assert(load("return 4.+.5"))() == 4.5)
 
---    if os.setlocale("pt_BR") or os.setlocale("ptb") then
--- 	  assert(tonumber("3,4") == 3.4 and tonumber"3.4" == 3.4)
--- 	  assert(tonumber("  -.4  ") == -0.4)
--- 	  assert(tonumber("  +0x.41  ") == 0X0.41)
--- 	  assert(not load("a = (3,4)"))
--- 	  assert(assert(load("return 3.4"))() == 3.4)
--- 	  assert(assert(load("return .4,3"))() == .4)
--- 	  assert(assert(load("return 4."))() == 4.)
--- 	  assert(assert(load("return 4.+.5"))() == 4.5)
+  assert(" 0x.1 " + " 0x,1" + "-0X.1\t" == 0x0.1)
 
--- 	  assert(" 0x.1 " + " 0x,1" + "-0X.1\t" == 0x0.1)
+  assert(not tonumber"inf" and not tonumber"NAN")
 
--- 	  assert(tonumber"inf" == nil and tonumber"NAN" == nil)
+  assert(assert(load(string.format("return %q", 4.51)))() == 4.51)
 
--- 	  assert(assert(load(string.format("return %q", 4.51)))() == 4.51)
+  local a,b = load("return 4.5.")
+  assert(string.find(b, "'4%.5%.'"))
 
--- 	  local a,b = load("return 4.5.")
--- 	  assert(string.find(b, "'4%.5%.'"))
-
--- 	  assert(os.setlocale("C"))
---    else
--- 	  (Message or print)(
--- 		 '\n >>> pt_BR locale not available: skipping decimal point tests <<<\n')
---    end
-
--- end
+  assert(os.setlocale("C"))
+else
+  (Message or print)(
+   '\n >>> pt_BR locale not available: skipping decimal point tests <<<\n')
+end
 
 
 -- testing %q x line ends
@@ -302,5 +330,14 @@ assert(not load"a = 'non-ending string")
 assert(not load"a = 'non-ending string\n'")
 assert(not load"a = '\\345'")
 assert(not load"a = [=x]")
+
+local function malformednum (n, exp)
+  local s, msg = load("return " .. n)
+  assert(not s and string.find(msg, exp))
+end
+
+malformednum("0xe-", "near <eof>")
+malformednum("0xep-p", "malformed number")
+malformednum("1print()", "malformed number")
 
 print('OK')
