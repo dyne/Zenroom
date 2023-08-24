@@ -58,20 +58,18 @@ extern int luaopen_qp(lua_State *L);
 extern int luaopen_ed(lua_State *L);
 
 // really loaded in lib/lua54/linit.c
-// align here for reference
-luaL_Reg lualibs[] = {
-//	{LUA_LOADLIBNAME, luaopen_package},
-	{LUA_COLIBNAME,   luaopen_coroutine},
-	{LUA_TABLIBNAME,  luaopen_table},
-	{LUA_STRLIBNAME,  luaopen_string},
-	{LUA_MATHLIBNAME, luaopen_math},
-	{LUA_UTF8LIBNAME, luaopen_utf8},
-	{LUA_DBLIBNAME,   luaopen_debug},
-
-// #if defined(LUA_COMPAT_BITLIB)
-// 	{LUA_BITLIBNAME,  luaopen_bit32},
-// #endif
-	{NULL, NULL}
+// always align here for correct reference
+static const luaL_Reg loadedlibs[] = {
+  {LUA_GNAME, luaopen_base},
+  {LUA_COLIBNAME, luaopen_coroutine},
+  {LUA_TABLIBNAME, luaopen_table},
+  {LUA_IOLIBNAME, luaopen_io},
+  {LUA_OSLIBNAME, luaopen_os},
+  {LUA_STRLIBNAME, luaopen_string},
+  {LUA_MATHLIBNAME, luaopen_math},
+  {LUA_UTF8LIBNAME, luaopen_utf8},
+  {LUA_DBLIBNAME, luaopen_debug},
+  {NULL, NULL}
 };
 
 
@@ -143,11 +141,10 @@ int zen_require(lua_State *L) {
 	// HEREs(s);
 	if(!s) return 0;
 	// require classic lua libs
-	for (luaL_Reg *p = lualibs; p->name != NULL; ++p) {
-		if (strcmp(p->name, s) == 0) {
-			// HEREp(p->func);
-			luaL_requiref(L, p->name, p->func, 1);
-			// func(L,"%s %s",__func__, p->name);
+	const luaL_Reg *ll;
+	for (ll = loadedlibs; ll->name != NULL; ++ll) {
+		if (strcmp(ll->name, s) == 0) {
+			luaL_requiref(L, ll->name, ll->func, 1);
 			return 1;
 		}
 	}
