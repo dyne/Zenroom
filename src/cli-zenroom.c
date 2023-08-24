@@ -297,6 +297,11 @@ int main(int argc, char **argv) {
 			conffile[0]?conffile:NULL,
 			keys[0]?keys:NULL,
 			data[0]?data:NULL);
+		if(!Z) {
+		  fprintf(stderr, "Internal error in Zenroom initialization\n");
+		  return(EXIT_FAILURE);
+		}
+
 		lua_State *L = (lua_State*)Z->lua;
 
 		// print function
