@@ -45,7 +45,9 @@ for i in ${(f)libs}; do
     print "+ $i $opts"
 	tmp=`mktemp -d`
 	if [[ "$opts" = "compile" ]]; then
-		luac5.3 -o ${tmp}/${n} $i
+		curl -Ls -o luac54 https://github.com/dyne/luabinaries/releases/latest/download/luac54
+		chmod +x luac54
+		./luac54 -o ${tmp}/${n} $i
 	else
 		cp $i ${tmp}/${n}
 	fi
