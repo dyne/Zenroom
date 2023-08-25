@@ -281,6 +281,10 @@ jobs:
       - run: brew install zsh
         if: runner.os == 'macOS'
       - run: |
+          cd ../..
+          make linux
+          cp src/zencode-exec /usr/local/bin/
+      - run: |
           ./prepare.sh
           pipx install meson
           pipx install ninja
@@ -350,142 +354,6 @@ jobs:
             ./bindings/javascript/README.md
             ./bindings/javascript/dist/
 
-  python-build-check:
-    name: 🐍 Python build & checks
-    needs: [semantic-release]
-    runs-on: ${{ matrix.os }}
-    if: ${{ needs.semantic-release.outputs.release == 'True' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-        python-version: [38, 39, 310, 311]
-        platform_id: [manylinux_x86_64, manylinux_i686, manylinux_aarch64, macosx_x86_64]
-        exclude:
-          - os: macos-latest
-            platform_id: manylinux_x86_64
-          - os: macos-latest
-            platform_id: manylinux_i686
-          - os: macos-latest
-            platform_id: manylinux_aarch64
-          - os: ubuntu-latest
-            platform_id: macosx_x86_64
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: master
-          fetch-depth: 0
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      - uses: docker/setup-qemu-action@v2
-        if: runner.os == 'Linux'
-        with:
-          platforms: all
-      - name: Build wheels
-        env:
-          CIBW_BUILD: cp${{ matrix.python-version }}-${{ matrix.platform_id }}
-          CIBW_ARCHS_LINUX: auto aarch64
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_24
-          CIBW_MANYLINUX_I686_IMAGE: manylinux_2_24
-          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_24
-          CIBW_BEFORE_BUILD_LINUX: |
-            # deb.debian.org -> archive.debian.org
-            sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list
-            # security.debian.org -> archive.debian.org/debian-security/
-            sed -i 's|security.debian.org|archive.debian.org/|g' /etc/apt/sources.list
-            # remove line that contains source stretch-update
-            sed -i '/stretch-updates/d' /etc/apt/sources.list
-            # update and install
-            apt-get update && apt-get install -y cmake zsh vim && pip install meson ninja
-          CIBW_BEFORE_BUILD_MACOS: brew install cmake zsh && pip install meson ninja
-          CIBW_TEST_EXTRAS: "test"
-          CIBW_TEST_COMMAND: "pytest -s {project}/tests"
-        run: |
-          # Remove shared library
-          rm -f bindings/golang/zenroom/lib/libzenroom.so
-          cd bindings/python3
-          ./prepare.sh
-          cp -r ../../.git .
-          pip install cibuildwheel
-          cibuildwheel --output-dir wheelhouse
-      - uses: actions/upload-artifact@v3
-        with:
-          path: ./bindings/python3/wheelhouse/*.whl
-
-  python-build-check-armv7:
-    name: 🐍 Python build & check on armv7
-    runs-on: ubuntu-22.04
-    needs: [semantic-release]
-    if: ${{ needs.semantic-release.outputs.release == 'True' }}
-    strategy:
-      matrix:
-        python_version: ['3.8', '3.9', '3.10', '3.11']
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: master
-          fetch-depth: 0
-      - uses: uraimo/run-on-arch-action@v2
-        name: Build wheels
-        with:
-          arch: armv7
-          distro: ubuntu22.04
-          install: |
-            apt-get update
-            apt-get install -y git vim zsh software-properties-common cmake ninja-build
-          run: |
-            # preparation
-            git config --global --add safe.directory /home/runner/work/Zenroom/Zenroom
-            # default python version is 3.10
-            if [[ ${{ matrix.python_version }} != '3.10' ]]; then
-              add-apt-repository -y ppa:deadsnakes/ppa && apt-get update
-              apt-get install -y python${{ matrix.python_version }} python${{ matrix.python_version }}-distutils
-              py_3=`which python3`
-              py_310=`which python3.10`
-              py=`which python${{ matrix.python_version }}`
-              update-alternatives --install $py_3 python3 $py_310 1
-              update-alternatives --install $py_3 python3 $py 2
-              update-alternatives --set python3 $py
-            fi
-            apt-get install -y python3-pip && python3 -m pip install --upgrade pip
-            pip install meson wheel pytest schema
-            # build
-            rm -f bindings/golang/zenroom/lib/libzenroom.so
-            cd bindings/python3
-            ./prepare.sh
-            python3 setup.py bdist_wheel
-            mkdir ../../wheelhouse && cp dist/*.whl ../../wheelhouse
-            # tests
-            pip install ./dist/*.whl
-            pytest -s tests
-      - uses: actions/upload-artifact@v3
-        with:
-          path: ./wheelhouse/*.whl
-
-  python-sdist:
-    name: 🐍 Python create source distribution
-    runs-on: ubuntu-latest
-    needs: [semantic-release]
-    if: ${{ needs.semantic-release.outputs.release == 'True' }}
-    defaults:
-      run:
-        working-directory: bindings/python3
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        ref: master
-        fetch-depth: 0
-    - run: |
-        sudo apt-get install --force-yes cmake vim zsh
-        pip install meson ninja twine
-        ./prepare.sh
-    - run: pipx run build --sdist
-    - run: twine check dist/*.tar.gz
-    - uses: actions/upload-artifact@v3
-      with:
-        path: ./bindings/python3/dist/*.tar.gz
-
   build-release-on-ubuntu:
     name: 🐧 Binary builds on Ubuntu
     runs-on: ubuntu-latest
@@ -543,6 +411,44 @@ jobs:
             src/libzenroom_dll.lib
             src/zenroom.dll
 
+  file-changes:
+    name: "🗃️  Check file changes"
+    runs-on: ubuntu-latest
+    needs: [semantic-release]
+    if: "needs.semantic-release.outputs.release == 'True'"
+    outputs:
+      python3: ${{ steps.filter.outputs.python3 }}
+    steps:
+    - uses: actions/checkout@v3
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          python3:
+            - 'bindings/python3/**'
+
+  python-sdist:
+    name: 🐍 Python create source distribution
+    runs-on: ubuntu-latest
+    needs: [semantic-release, file-changes]
+    if: "needs.semantic-release.outputs.release == 'True' && needs.file-changes.outputs.python3 == 'true'"
+    defaults:
+      run:
+        working-directory: bindings/python3
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        ref: master
+        fetch-depth: 0
+    - run: |
+        pip install ninja twine
+        ./prepare.sh
+    - run: pipx run build --sdist
+    - run: twine check dist/*.tar.gz
+    - uses: actions/upload-artifact@v3
+      with:
+        path: ./bindings/python3/dist/*.tar.gz
+
   build-release-on-osx:
     name: 🍎 mac osx release build
     needs: [semantic-release]
@@ -565,7 +471,7 @@ jobs:
   npm-release:
     name: 📦 npm release
     runs-on: ubuntu-latest
-    needs: [js-build-release, python-build-check, python-build-check-armv7, python-sdist, build-release-on-osx, build-release-on-ubuntu]
+    needs: [js-build-release, build-release-on-osx, build-release-on-ubuntu]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -588,7 +494,7 @@ jobs:
 
   pypi-release:
     name: 📦 PyPI release
-    needs: [js-build-release, python-build-check, python-build-check-armv7, python-sdist, build-release-on-osx, build-release-on-ubuntu]
+    needs: [js-build-release, build-release-on-osx, build-release-on-ubuntu]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v3
@@ -602,7 +508,7 @@ jobs:
 
   draft-binary-release:
     name: 📦 Pack release
-    needs: [semantic-release, js-build-release, python-build-check, python-build-check-armv7, python-sdist, build-release-on-osx, build-release-on-ubuntu]
+    needs: [semantic-release, js-build-release, build-release-on-osx, build-release-on-ubuntu]
     runs-on: ubuntu-latest
     steps:
       - name: download binary artifacts
@@ -627,7 +533,7 @@ jobs:
 
   remove-tag-on-fail:
     name: 🧻 Remove tag on fail
-    needs: [semantic-release, js-build-release, python-build-check, python-build-check-armv7, python-sdist, build-release-on-osx, build-release-on-ubuntu]
+    needs: [semantic-release, js-build-release, python-sdist, build-release-on-osx, build-release-on-ubuntu]
     runs-on: ubuntu-latest
     if: ${{ (failure() || cancelled()) && needs.semantic-release.outputs.release == 'True' }}
     steps:

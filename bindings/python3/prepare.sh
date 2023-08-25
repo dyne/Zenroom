@@ -1,11 +1,6 @@
 #!/bin/bash
 mkdir -p src/docs/pages
 cp ../../docs/pages/python.md src/docs/pages/python.md
-cp ../../Makefile src/Makefile
-cp -r ../../build src/build
-cp -r ../../lib src/lib
-cp -r ../../src src/src
-cp -r ../../test src/test
 
 py_version=`git describe --tags --abbrev=0 | sed 's/^v//'`
 py_version_hash=${py_version}

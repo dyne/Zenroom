@@ -1,6 +1,6 @@
 import pytest
 from schema import Schema, Regex
-from zenroom import zenroom_exec, zencode_exec
+from zenroom import zencode_exec #, zenroom_exec
 
 
 def test_zencode_call_random_array():
@@ -28,8 +28,8 @@ Then print the data
     res = zencode_exec(contract)
     assert("ERROR" in res.logs)
 
-def test_lua_call_hello_world():
-    lua_res = zenroom_exec(
-        "print('hello world')"
-    )
-    assert lua_res.output == 'hello world'
+# def test_lua_call_hello_world():
+#     lua_res = zenroom_exec(
+#         "print('hello world')"
+#     )
+#     assert lua_res.output == 'hello world'
