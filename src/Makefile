@@ -27,7 +27,6 @@ CFLAGS  += -I. -I../lib/lua54/src \
 	-I../lib/milagro-crypto-c/build/include \
 	-I../lib/milagro-crypto-c/include \
 	-I../lib/ed25519-donna \
-	-I../lib/blake2 \
 	-I../lib/mimalloc/include \
 	-Wall -Wextra
 

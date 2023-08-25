@@ -14,7 +14,6 @@ LUA_ROOT = os.path.join(ZENROOM_ROOT, 'lib/lua54/src')
 MILAGRO_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/milagro-crypto-c/include')
 QP_ROOT = os.path.join(ZENROOM_ROOT, 'lib/pqclean')
 ED25519_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/ed25519-donna')
-BLAKE2_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/blake2')
 MIMALLOC_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/mimalloc/include')
 
 def get_versions():
@@ -86,7 +85,6 @@ zenroom_lib = Extension('zenroom',
                             LUA_ROOT,
                             MILAGRO_INCLUDE_DIR,
                             ED25519_INCLUDE_DIR,
-                            BLAKE2_INCLUDE_DIR,
                             MIMALLOC_INCLUDE_DIR,
                             os.path.join(meson_root, 'milagro-crypto-c/include'),
                             os.path.join(meson_root, 'milagro-crypto-c/include'),
@@ -110,7 +108,6 @@ zenroom_lib = Extension('zenroom',
                             os.path.join(meson_root, 'libqpz.a'),
                             os.path.join(meson_root, 'liblua.a'),
                             os.path.join(meson_root, 'libed25519.a'),
-                            os.path.join(meson_root, 'libblake2.a'),
                             os.path.join(meson_root, 'libmimalloc-static.a'),
                         ],
                         extra_link_args=['-lm']

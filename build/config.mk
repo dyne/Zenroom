@@ -20,7 +20,6 @@ ldadd += ${milib}/libamcl_curve_${ecdh_curve}.a
 ldadd += ${milib}/libamcl_core.a
 ldadd += ${pwd}/lib/pqclean/libqpz.a
 ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
-ldadd += ${pwd}/lib/blake2/libblake2.a
 ldadd += ${pwd}/lib/mimalloc/build/libmimalloc-static.a
 
 # ----------------
@@ -313,10 +312,6 @@ quantum_proof_cflags ?= -I ${pwd}/src -I ${pwd}/lib/mimalloc/include -I.
 #-----------------
 # ed25519 settings
 ed25519_cc ?= ${gcc}
-
-#-----------------
-# blake2 settings
-blake2_cc ?= ${gcc}
 
 #-----------------
 # mimalloc settings

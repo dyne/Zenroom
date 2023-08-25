@@ -51,7 +51,6 @@ add_project_link_arguments(
     'liblua.a',
     'libqpz.a',
     'libed25519.a',
-	'libblake2.a',
     'libmimalloc-static.a',
     language: 'c'
 )
@@ -67,8 +66,6 @@ mimalloc_include_dirs = include_directories('../lib/mimalloc/include')
 lua_include_dirs = include_directories('../lib/lua54/src')
 
 ed25519_include_dirs = include_directories('../lib/ed25519-donna')
-
-blake2_include_dirs = include_directories('../lib/blake2')
 
 zenroom_src = [
     '../src/base58.c',
@@ -113,7 +110,6 @@ zenroom_lib = library(
         milagro_include_dirs,
         milagro_generated_include_dirs,
 	ed25519_include_dirs,
-	blake2_include_dirs,
         lua_include_dirs,
 	mimalloc_include_dirs,
     ],
@@ -130,7 +126,6 @@ zenroom_dep = declare_dependency(
         milagro_include_dirs,
         milagro_generated_include_dirs,
 	ed25519_include_dirs,
-	blake2_include_dirs,
         lua_include_dirs,
 	mimalloc_include_dirs,
     ],
@@ -176,7 +171,7 @@ endforeach
 ## BATS tests in vectors
 test_dir = meson.source_root() + '/../test/'
 bats_bin = find_program(test_dir+'bats/bin/bats')
-tests = [ 'sha', 'aes', 'hmac', 'blake2' ]
+tests = [ 'sha', 'aes', 'hmac' ]
 foreach test_suite : tests
     test('vectors_'+test_suite.underscorify(),
 	 bats_bin,

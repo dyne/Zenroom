@@ -24,7 +24,6 @@
 #include <lua.h>
 #include <amcl.h>
 #include <rmd160.h>
-#include <blake2.h>
 
 #define SHA256 32
 #define SHA512 64
@@ -40,26 +39,21 @@
 #define _SHAKE256 8
 #define _KECCAK256 7
 #define _RMD160 160
-#define _BLAKE2B 464
-#define _BLAKE2S 465
 
 typedef struct {
-	char name[16];
-	int algo;
-	int len;
-	hash256 *sha256;
-	hash384 *sha384;
-	hash512 *sha512;
-	sha3 *sha3_256; // SHA3 aka keccak with 32 bytes
-	sha3 *sha3_512; // SHA3 aka keccak with 64 bytes
-        sha3 *keccak256;
-	sha3 *shake256;
-        dword *rmd160;
-  blake2b_state *blake2b;
-  blake2s_state *blake2s;
-
-        csprng *rng; // zencode runtime random
-        // ...
+  char name[16];
+  int algo;
+  int len;
+  hash256 *sha256;
+  hash384 *sha384;
+  hash512 *sha512;
+  sha3 *sha3_256; // SHA3 aka keccak with 32 bytes
+  sha3 *sha3_512; // SHA3 aka keccak with 64 bytes
+  sha3 *keccak256;
+  sha3 *shake256;
+  dword *rmd160;
+  csprng *rng; // zencode runtime random
+  // ...
 } hash;
 
 

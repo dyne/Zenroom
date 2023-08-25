@@ -13,7 +13,6 @@ fn main() {
     println!("cargo:rustc-link-lib=static=amcl_curve_SECP256K1");
     println!("cargo:rustc-link-lib=static=amcl_pairing_BLS381");
     println!("cargo:rustc-link-lib=static=ed25519");
-    println!("cargo:rustc-link-lib=static=blake2");
     println!("cargo:rustc-link-lib=static=mimalloc-static");
     println!("cargo:rustc-link-search=native=clib");
 
