@@ -41,7 +41,7 @@ platform := posix
 # {{{ TARGET SPECIFIC
 
 ifneq (,$(findstring win,$(MAKECMDGOALS)))
-defines += -D'ARCH=\"WIN\"' -DARCH_WIN
+defines += -D'ARCH=\"WIN\"' -DARCH_WIN -DLUA_USE_WINDOWS
 gcc := $(shell which x86_64-w64-mingw32-gcc)
 ar  := $(shell which x86_64-w64-mingw32-ar)
 ranlib := $(shell which x86_64-w64-mingw32-ranlib)
@@ -293,7 +293,7 @@ endif
 # ------------
 # lua settings
 lua_cc ?= ${gcc}
-lua_cflags = -DLUA_USE_POSIX -DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE -DLUA_COMPAT_BITLIB -I${pwd}/lib/milagro-crypto-c/build/include -I${pwd}/src -I${pwd}/lib/milagro-crypto-c/build/include -I ${pwd}/lib/mimalloc/include
+lua_cflags = -DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE -DLUA_COMPAT_BITLIB -I${pwd}/lib/milagro-crypto-c/build/include -I${pwd}/src -I${pwd}/lib/milagro-crypto-c/build/include -I ${pwd}/lib/mimalloc/include
 
 # ----------------
 # milagro settings

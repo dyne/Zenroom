@@ -61,6 +61,14 @@ test("does handle empty lua", async (t) => {
   }
 });
 
+
+// cannot reproduce since timezone changes from CI to local
+// github reports 3600 and local GMT+2 reports 0
+// test("does access os.time()", async (t) => {
+//   const {result} = await zenroom_exec(`print(os.time({year=1970, month=1, day=1, hour=1}))`);
+//   t.is(result, "0\n");
+// });
+
 test("does run zencode", async (t) => {
   const {result} = await zencode_exec(`scenario simple:
   given nothing

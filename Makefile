@@ -110,7 +110,7 @@ milagro:
 		cd ${pwd}/lib/milagro-crypto-c && \
 		mkdir -p build && \
 		cd build && \
-		CC=${gcc} LD=${ld} \
+		CC=${gcc} LD=${ld} AR=${ar} \
 		cmake ../ -DCMAKE_C_FLAGS="${cflags}" -DCMAKE_SYSTEM_NAME="${system}" \
 		-DCMAKE_AR=${ar} -DCMAKE_C_COMPILER=${gcc} ${milagro_cmake_flags}; \
 	fi
@@ -126,7 +126,7 @@ mimalloc:
 		cd ${pwd}/lib/mimalloc && \
                 mkdir -p build && \
                 cd build && \
-                CC=${gcc} LD=${ld} \
+                CC=${gcc} LD=${ld} AR=${AR} \
                 cmake ../ ${mimalloc_cmake_flags} \
                 -DCMAKE_C_FLAGS="${cflags} ${mimalloc_cflags}" \
                 -DCMAKE_SYSTEM_NAME="${system}" \

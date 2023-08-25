@@ -61,7 +61,7 @@ javascript-npm: ldflags += -s \
 	-s ALLOW_MEMORY_GROWTH=1 \
 	--no-heap-copy
 javascript-npm: ${BUILDS}
-	CC="${gcc}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	CC="${gcc}" AR="${ar}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	JSEXT="--embed-file lua@/" \
 	make -C src js
 	@mkdir -p build/npm
