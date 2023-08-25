@@ -202,9 +202,9 @@ static int dochunk (lua_State *L, int status) {
 }
 
 
-static int dofile (lua_State *L, const char *name) {
-  return dochunk(L, luaL_loadfile(L, name));
-}
+// static int dofile (lua_State *L, const char *name) {
+//   return dochunk(L, luaL_loadfile(L, name));
+// }
 
 
 static int dostring (lua_State *L, const char *s, const char *name) {
@@ -249,18 +249,18 @@ static int pushargs (lua_State *L) {
 }
 
 
-static int handle_script (lua_State *L, char **argv) {
-  int status;
-  const char *fname = argv[0];
-  if (strcmp(fname, "-") == 0 && strcmp(argv[-1], "--") != 0)
-    fname = NULL;  /* stdin */
-  status = luaL_loadfile(L, fname);
-  if (status == LUA_OK) {
-    int n = pushargs(L);  /* push arguments to script */
-    status = docall(L, n, LUA_MULTRET);
-  }
-  return report(L, status);
-}
+// static int handle_script (lua_State *L, char **argv) {
+//   int status;
+//   const char *fname = argv[0];
+//   if (strcmp(fname, "-") == 0 && strcmp(argv[-1], "--") != 0)
+//     fname = NULL;  /* stdin */
+//   status = luaL_loadfile(L, fname);
+//   if (status == LUA_OK) {
+//     int n = pushargs(L);  /* push arguments to script */
+//     status = docall(L, n, LUA_MULTRET);
+//   }
+//   return report(L, status);
+// }
 
 
 /* bits of various argument indicators in 'args' */
@@ -374,8 +374,8 @@ static int handle_luainit (lua_State *L) {
     init = getenv(name + 1);  /* try alternative name */
   }
   if (init == NULL) return LUA_OK;
-  else if (init[0] == '@')
-    return dofile(L, init+1);
+  // else if (init[0] == '@')
+  //   return dofile(L, init+1);
   else
     return dostring(L, init, name);
 }
@@ -656,7 +656,7 @@ static int pmain (lua_State *L) {
       print_version();
       doREPL(L);  /* do read-eval-print loop */
     }
-    else dofile(L, NULL);  /* executes stdin as a file */
+    // else dofile(L, NULL);  /* executes stdin as a file */
   }
   lua_pushboolean(L, 1);  /* signal no errors */
   return 1;
