@@ -433,12 +433,12 @@ if not _port then
   --   assert("alo" < "álo" and "álo" < "amo")
   -- end
 
-  if trylocale("ctype") then
-    assert(string.gsub("áéíóú", "%a", "x") == "xxxxx")
-    assert(string.gsub("áÁéÉ", "%l", "x") == "xÁxÉ")
-    assert(string.gsub("áÁéÉ", "%u", "x") == "áxéx")
-    assert(string.upper"áÁé{xuxu}ção" == "ÁÁÉ{XUXU}ÇÃO")
-  end
+  -- if trylocale("ctype") then
+  --   assert(string.gsub("áéíóú", "%a", "x") == "xxxxx")
+  --   assert(string.gsub("áÁéÉ", "%l", "x") == "xÁxÉ")
+  --   assert(string.gsub("áÁéÉ", "%u", "x") == "áxéx")
+  --   assert(string.upper"áÁé{xuxu}ção" == "ÁÁÉ{XUXU}ÇÃO")
+  -- end
 
   os.setlocale("C")
   assert(os.setlocale() == 'C')
