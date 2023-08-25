@@ -816,13 +816,12 @@ static void createstdfile (lua_State *L, FILE *f, const char *k,
 }
 
 
-LUAMOD_API int luaopen_io (lua_State *L) {
-  luaL_newlib(L, iolib);  /* new module */
-  createmeta(L);
-  /* create (and set) default files */
-  createstdfile(L, stdin, IO_INPUT, "stdin");
-  createstdfile(L, stdout, IO_OUTPUT, "stdout");
-  createstdfile(L, stderr, NULL, "stderr");
-  return 1;
-}
-
+// LUAMOD_API int luaopen_io (lua_State *L) {
+//   luaL_newlib(L, iolib);  /* new module */
+//   createmeta(L);
+//   /* create (and set) default files */
+//   createstdfile(L, stdin, IO_INPUT, "stdin");
+//   createstdfile(L, stdout, IO_OUTPUT, "stdout");
+//   createstdfile(L, stderr, NULL, "stderr");
+//   return 1;
+// }
