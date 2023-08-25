@@ -8,7 +8,7 @@ pwd := $(shell pwd)
 PREFIX ?= /usr/local
 # VERSION is set in src/Makefile
 # Targets to be build in this order
-BUILDS := apply-patches milagro lua54 embed-lua quantum-proof ed25519-donna mimalloc blake2
+BUILDS := apply-patches milagro lua54 embed-lua quantum-proof ed25519-donna mimalloc
 
 # DESTDIR is supported by install target
 
@@ -163,14 +163,6 @@ ed25519-donna:
 	LDFLAGS="${ldflags}" \
 	$(MAKE) -C ${pwd}/lib/ed25519-donna
 
-blake2:
-	$(info -- Building Blake2 hash)
-	CC="${blake2_cc}" \
-	AR=${ar} \
-	CFLAGS="${cflags}" \
-	LDFLAGS="${ldflags}" \
-	$(MAKE) -C ${pwd}/lib/blake2
-
 # -------------------
 # Test suites for all platforms
 include ${pwd}/build/tests.mk
@@ -198,7 +190,6 @@ clean:
 	$(MAKE) clean -C ${pwd}/lib/pqclean
 	rm -rf ${pwd}/lib/milagro-crypto-c/build
 	rm -rf ${pwd}/lib/mimalloc/build
-	$(MAKE) clean -C ${pwd}/lib/blake2
 	$(MAKE) clean -C ${pwd}/src
 	if [ -d "bindings" ]; then $(MAKE) clean -C ${pwd}/bindings; fi
 	rm -f ${extras}/index.*

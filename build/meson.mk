@@ -9,7 +9,6 @@ prepare-meson:
 	ln -sf ${pwd}/lib/pqclean/libqpz.a ${pwd}/meson/libqpz.a
 	ln -sf ${pwd}/lib/lua54/src/liblua.a ${pwd}/meson/liblua.a
 	ln -sf ${pwd}/lib/ed25519-donna/libed25519.a ${pwd}/meson/libed25519.a
-	ln -sf ${pwd}/lib/blake2/libblake2.a ${pwd}/meson/libblake2.a
 	ln -sf ${pwd}/lib/mimalloc/build/libmimalloc-static.a ${pwd}/meson/libmimalloc-static.a
 
 run-meson:

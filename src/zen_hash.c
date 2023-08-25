@@ -1,6 +1,6 @@
 /* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Copyright (C) 2017-2019 Dyne.org foundation
+ * Copyright (C) 2017-2023 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -133,19 +133,6 @@ hash* hash_new(lua_State *L, const char *hashtype) {
 		h->algo = _RMD160;
 		h->rmd160 = (dword*)malloc((160/32)+0x0f);
 		RMD160_init(h->rmd160);
-	} else if(strncasecmp(hashtype,"blake2",6) == 0
-			  || strncasecmp(hashtype,"blake2b",7) == 0 ) {
-		strncpy(h->name,hashtype,15);
-		h->len = 64;
-		h->algo = _BLAKE2B;
-		h->blake2b = (blake2b_state*)malloc(sizeof(blake2b_state));
-		blake2b_init(h->blake2b, 64);
-	} else if(strncasecmp(hashtype,"blake2s",7) == 0 ) {
-		strncpy(h->name,hashtype,15);
-		h->len = 32;
-		h->algo = _BLAKE2S;
-		h->blake2s = (blake2s_state*)malloc(sizeof(blake2s_state));
-		blake2s_init(h->blake2s, 64);
 	} // ... TODO: other hashes
 	else {
 		zerror(L, "Hash algorithm not known: %s", hashtype);
@@ -190,8 +177,6 @@ int hash_destroy(lua_State *L) {
 		case _SHAKE256: free(h->shake256); break;
 		case _KECCAK256: free(h->keccak256); break;
 		case _RMD160: free(h->rmd160); break;
-		case _BLAKE2B: free(h->blake2b); break;
-		case _BLAKE2S: free(h->blake2s); break;
 		}
 	}
 	END(0);
@@ -220,8 +205,6 @@ static void _feed(hash *h, octet *o) {
 	case _SHAKE256: for(i=0;i<o->len;i++) SHA3_process(h->shake256,o->val[i]); break;
 	case _KECCAK256: for(i=0;i<o->len;i++) SHA3_process(h->keccak256,o->val[i]); break;
 	case _RMD160: RMD160_process(h->rmd160, (unsigned char*)o->val, o->len); break;
-	case _BLAKE2B: blake2b_update(h->blake2b, o->val, o->max); break;
-	case _BLAKE2S: blake2s_update(h->blake2s, o->val, o->max); break;
 	}
 }
 
@@ -235,14 +218,6 @@ static void _yeld(hash *h, octet *o) {
 	case _SHA3_512: SHA3_hash(h->sha3_512,o->val); break;
 	case _KECCAK256: KECCAK_hash(h->keccak256,o->val); break;
 	case _RMD160: RMD160_hash(h->rmd160, (unsigned char*)o->val); break;
-	case _BLAKE2B:
-	  blake2b_final(h->blake2b, o->val, o->max);
-	  blake2b_init(h->blake2b, 64); // prepare for the next
-	  break;
-	case _BLAKE2S:
-	  blake2s_final(h->blake2s, o->val, o->max);
-	  blake2s_init(h->blake2s, 64); // prepare for the next
-	  break;
 	}
 }
 
