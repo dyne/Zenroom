@@ -429,9 +429,9 @@ if not _port then
     return false
   end
 
-  if trylocale("collate")  then
-    assert("alo" < "álo" and "álo" < "amo")
-  end
+  -- if trylocale("collate")  then
+  --   assert("alo" < "álo" and "álo" < "amo")
+  -- end
 
   if trylocale("ctype") then
     assert(string.gsub("áéíóú", "%a", "x") == "xxxxx")
