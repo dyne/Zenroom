@@ -90,9 +90,9 @@ jobs:
     if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_MESON')"
     strategy:
       matrix:
-        compiler: [clang-9, clang-10, clang-11, gcc-7, gcc-8, gcc-9, gcc-10]
+        command: [meson-ccache, meson-clang-ccache]
       fail-fast: false
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
@@ -101,50 +101,59 @@ jobs:
         with:
           python-version: '3.10'
       - uses: hendrikmuhs/ccache-action@v1.2
-      - name: install compiler and dependencies
+      - name: install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ${{ matrix.compiler }}
           sudo apt-get install -y vim zsh luajit lua-cjson
           pip3 install meson ninja
-      - name: Compile with ${{ matrix.compiler }}
+      - name: Compile with command ${{ matrix.command }}
         run: |
-          compiler=`echo ${{ matrix.compiler }} | cut -d "-" -f 1`
-          if [[ ${compiler} == 'gcc' ]]; then
-            default='gcc-9'; command='meson-ccache'
-          else
-            default='clang-11'; command='meson-clang-ccache'
-          fi
-          sudo update-alternatives --install $(which ${compiler}) ${compiler} $(which ${default}) 1
-          sudo update-alternatives --install $(which ${compiler}) ${compiler} $(which ${{ matrix.compiler }}) 2
-          sudo update-alternatives --set ${compiler} $(which ${{ matrix.compiler }})
-          make ${command}
+          make  ${{ matrix.command }}
       - run: make meson-test
 
-  # linux-crypto-check:
-  #   name: 🐧 Linux crypto tests
-  #   needs: [reuse, c-lint, lua-lint]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         fetch-depth: 0
-  #     - run: |
-  #         sudo apt install zsh jq meson
-  #         make linux
-  #         make check-linux
+  linux-build:
+    name: 🐧 Linux build
+    needs: [reuse, c-lint, lua-lint]
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: install dependencies
+        run: sudo apt install -y zsh jq musl-dev meson
+      - name: Build mimalloc
+        run: make mimalloc
+      - name: Build x86_64 with musl-system
+        run: |
+          make musl-system
+          make clean
+      - name: Build x86_64 shlib
+        run: make linux-meson-clang-release
 
-  # macosx-crypto-check:
-  #   name: 🍎 macos crypto tests
-  #   needs: [reuse, c-lint, lua-lint]
-  #   runs-on: macos-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         fetch-depth: 0
-  #     - run: |
-  #         make osx
-  #         make check-osx
+  windows-build:
+    name: 🪟 Windows build
+    needs: [reuse, c-lint, lua-lint]
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: install dependencies
+        run : sudo apt install -y zsh jq gcc-mingw-w64 g++-mingw-w64
+      - name: Build x86_64 windows .exe
+        run: |
+          make win
+          make win-dll
+
+  macosx-build:
+    name: 🍎 Macosx build
+    needs: [reuse, c-lint, lua-lint]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - run: make osx
 
   go-build-check:
     name: 🐹 go build & checks
