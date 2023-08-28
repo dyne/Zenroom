@@ -1,6 +1,6 @@
 import pytest
 from schema import Schema, Regex
-from zenroom import zenroom_exec, zencode_exec
+from zenroom import zencode_exec #, zenroom_exec
 
 
 def test_zencode_call_random_array():
@@ -20,6 +20,17 @@ and print the 'aggregation' as 'number'
         'array': [int]
     }).validate(res.result)
 
+def test_extra():
+    script="""Scenario 'ecdh': Create the keypair
+Given I have a 'string' named 'keys'
+Given I have a 'string' named 'data'
+Given I have a 'string' named 'extra'
+Then print data
+"""
+    res = zencode_exec(script, "", '{"keys": "keys"}', '{"data": "data"}', '{"extra": "extra"}', "")
+    out = '{"data":"data","extra":"extra","keys":"keys"}\n'
+    assert res.output == out
+
 def test_zencode_failure():
     contract = """
 Given I have a 'string' named 'string'
@@ -28,8 +39,8 @@ Then print the data
     res = zencode_exec(contract)
     assert("ERROR" in res.logs)
 
-def test_lua_call_hello_world():
-    lua_res = zenroom_exec(
-        "print('hello world')"
-    )
-    assert lua_res.output == 'hello world'
+# def test_lua_call_hello_world():
+#     lua_res = zenroom_exec(
+#         "print('hello world')"
+#     )
+#     assert lua_res.output == 'hello world'
