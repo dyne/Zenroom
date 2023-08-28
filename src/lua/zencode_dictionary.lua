@@ -213,12 +213,18 @@ local function _extract(tab, ele, root)
 end
 local function create_copy_f(root, in1, in2)
 	empty'copy'
-	local r = have(root)
+	local r, r_codec = have(root)
 	ACK.copy = _extract(r, in1, root)
 	if in2 then
 	   ACK.copy = _extract(ACK.copy, in2, in1)
 	end
-	new_codec('copy', nil, root)
+    local n_codec = { encoding = r_codec.encoding }
+    -- table of schemas can only contain elements
+    if r_codec.schema then
+        n_codec.schema = r_codec.schema
+        n_codec.zentype = "e"
+    end
+	new_codec('copy', n_codec)
 	ZEN.CODEC['copy'].name = in2 or in1
 end
 When("create the copy of '' from dictionary ''", function(name, dict) create_copy_f(dict, name) end)
