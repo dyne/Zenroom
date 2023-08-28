@@ -119,6 +119,7 @@ When("find the min value '' for dictionaries in ''", function(name, arr)
 	empty'min value'
 	local min
 	-- init min with any value
+    -- TODO: use next, add checks for existance
 	for k,v in pairs(ACK[arr]) do
 	   min = v[name] -- suppose existance of key
 	   break
@@ -282,62 +283,6 @@ When("for each dictionary in '' append '' to ''", function(arr, right, left)
 		zencode_assert(r, "Object not found: "..kk.."."..right)
 		vv[left] = l..r
 	end
-end)
-
-local function move_or_copy_in(src_value, src_name, dest)
-    local d = have(dest)
-    if luatype(d) ~= 'table' then error("Object is not a table: "..dest, 2) end
-    local cdest = CODEC[dest]
-    if cdest.zentype == 'e' and cdest.schema then
-        local sdest = ZEN.schemas[cdest.schema]
-        if luatype(sdest) ~= 'table' then -- old schema types are not open
-            error("Schema is not open to accept extra objects: "..dest)
-        elseif not sdest.schematype or sdest.schematype ~= 'open' then
-            error("Schema is not open to accept extra objects: "..dest)
-        end
-        if d[src_name] then
-            error("Cannot overwrite: "..src_name.." in "..dest,2)
-        end
-        d[src_name] = src_value
-        ACK[dest] = d
-    elseif cdest.zentype == 'd' then
-        if d[src_name] then
-            error("Cannot overwrite: "..src_name.." in "..dest,2)
-        end
-        d[src_name] = src_value
-        ACK[dest] = d
-    elseif cdest.zentype == 'a' then
-        table.insert(ACK[dest], src_value)
-    else
-        error("Invalid destination type: "..cdest.zentype,2)
-    end
-end
-
-When("move named by '' in ''", function(src_name, dest)
-	local src = have(src_name):string()
-	move_or_copy_in(have(src), src, dest)
-	ACK[src] = nil
-	CODEC[src] = nil
-end)
-
-When("move '' in ''", function(src, dest)
-	move_or_copy_in(have(src), src, dest)
-	ACK[src] = nil
-	CODEC[src] = nil
-end)
-
-When("move '' from '' to ''", function(name, src, dest)
-	move_or_copy_in(have({src, name}), name, dest)
-	ACK[src][name] = nil
-end)
-
-When("copy named by '' in ''", function(src_name, dest)
-	local src = have(src_name):string()
-	move_or_copy_in(deepcopy(have(src)), src, dest)
-end)
-
-When("copy '' in ''", function(src, dest)
-	move_or_copy_in(deepcopy(have(src)), src, dest)
 end)
 
 local function _filter_from(v, k, f)
