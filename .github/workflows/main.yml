@@ -533,7 +533,7 @@ jobs:
 
   remove-tag-on-fail:
     name: 🧻 Remove tag on fail
-    needs: [semantic-release, js-build-release, python-sdist, build-release-on-osx, build-release-on-ubuntu]
+    needs: [semantic-release, js-build-release, build-release-on-osx, build-release-on-ubuntu]
     runs-on: ubuntu-latest
     if: ${{ (failure() || cancelled()) && needs.semantic-release.outputs.release == 'True' }}
     steps:
