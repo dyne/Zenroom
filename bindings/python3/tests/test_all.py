@@ -20,6 +20,17 @@ and print the 'aggregation' as 'number'
         'array': [int]
     }).validate(res.result)
 
+def test_extra():
+    script="""Scenario 'ecdh': Create the keypair
+Given I have a 'string' named 'keys'
+Given I have a 'string' named 'data'
+Given I have a 'string' named 'extra'
+Then print data
+"""
+    res = zencode_exec(script, "", '{"keys": "keys"}', '{"data": "data"}', '{"extra": "extra"}', "")
+    out = '{"data":"data","extra":"extra","keys":"keys"}\n'
+    assert res.output == out
+
 def test_zencode_failure():
     contract = """
 Given I have a 'string' named 'string'

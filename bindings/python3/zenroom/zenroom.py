@@ -18,7 +18,7 @@ class ZenResult():
             self.result = None
 
 
-def zencode_exec(script, conf=None, keys=None, data=None, context=None):
+def zencode_exec(script, conf=None, keys=None, data=None, extra=None, context=None):
     zen_input = []
     if conf:
         zen_input.append(conf)
@@ -30,6 +30,9 @@ def zencode_exec(script, conf=None, keys=None, data=None, context=None):
     zen_input.append(b'\n')
     if data:
         zen_input.append(base64.b64encode(data.encode()))
+    zen_input.append(b'\n')
+    if extra:
+        zen_input.append(base64.b64encode(extra.encode()))
     zen_input.append(b'\n')
     if context:
         zen_input.append(base64.b64encode(context.encode()))
