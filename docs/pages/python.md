@@ -51,6 +51,20 @@ for the edge (syn to the latest commit on master) version please run:
 pip install zenroom --pre
 ```
 
+The `zenroom` package is just a wrapper around the `zencode-exec` utility.
+You also need to install `zencode-exec`, you can download if from the official [releases on github](https://github.com/dyne/Zenroom/releases/)
+
+When after downloading you have to move it somewhere in your path:
+```
+sudo cp zencode-exec /usr/local/bin/
+```
+
+Warning: on Mac OS, the executable is `zencode-exec.command` and you have to symlink it to `zencode-exec`
+```
+sudo cp zencode-exec.command /usr/local/bin/
+cd /usr/local/bin
+sudo ln -s zencode-exec.command zencode-exec
+```
 
 ***
 ## 🎮 Usage
