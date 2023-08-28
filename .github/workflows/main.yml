@@ -114,6 +114,7 @@ jobs:
   linux-build:
     name: 🐧 Linux build
     needs: [reuse, c-lint, lua-lint]
+    if: "github.event_name == 'pull_request'"
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v3
@@ -133,6 +134,7 @@ jobs:
   windows-build:
     name: 🪟 Windows build
     needs: [reuse, c-lint, lua-lint]
+    if: "github.event_name == 'pull_request'"
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v3
@@ -148,6 +150,7 @@ jobs:
   macosx-build:
     name: 🍎 Macosx build
     needs: [reuse, c-lint, lua-lint]
+    if: "github.event_name == 'pull_request'"
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
