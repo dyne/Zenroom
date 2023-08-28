@@ -112,7 +112,13 @@ When("create the copy of element '' in array ''", function(pos, arr)
 	ZEN.assert(num, "Argument is not a position number: "..pos)
 	ZEN.assert(src[num], "No element found in: "..arr.."["..pos.."]")
 	ACK.copy = src[num]
-	new_codec('copy', {encoding = src_codec.encoding})
+	local n_codec = { encoding = src_codec.encoding }
+	-- table of schemas can only contain elements
+	if src_codec.schema then
+		n_codec.schema = src_codec.schema
+		n_codec.zentype = "e"
+	end
+	new_codec('copy', n_codec)
 end)
 
 local function _insert_in(what, dest)
