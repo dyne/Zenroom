@@ -494,7 +494,7 @@ jobs:
 
   pypi-release:
     name: 📦 PyPI release
-    needs: [js-build-release, build-release-on-osx, build-release-on-ubuntu]
+    needs: [js-build-release, python-sdist, build-release-on-osx, build-release-on-ubuntu]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v3
