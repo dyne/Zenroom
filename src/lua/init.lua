@@ -1,6 +1,6 @@
 -- This file is part of Zenroom (https://zenroom.dyne.org)
 --
--- Copyright (C) 2018-2022 Dyne.org foundation designed, written and
+-- Copyright (C) 2018-2023 Dyne.org foundation designed, written and
 -- maintained by Denis Roio <jaromil@dyne.org>
 --
 -- This program is free software: you can redistribute it and/or modify
@@ -63,13 +63,13 @@ FLOAT = require'float'
 JSON = require('zenroom_json')
 ECDH = require('zenroom_ecdh')
 -- ECDH public keys cannot function as ECP because of IANA 7303
-AES = require'aes'
+AES = require('aes')
 ECP = require('zenroom_ecp')
 ECP2 = require('zenroom_ecp2')
 HASH = require('zenroom_hash')
 O = OCTET -- alias
 INT = BIG -- alias
-F=FLOAT
+F = FLOAT
 I = INSPECT -- alias
 H = HASH -- alias
 PAIR = ECP2 -- alias
@@ -84,8 +84,10 @@ V = require('semver')
 ZENROOM_VERSION = V(VERSION)
 MAXITER = tonumber(STR_MAXITER)
 
-ZEN = require('zencode')
--- the global ZEN context
+------------------------------
+-- ZENCODE starts here
+
+_G['ZEN'] = require('zencode')
 
 -- base zencode functions and schemas
 load_scenario('zencode_data') -- pick/in, conversions etc.

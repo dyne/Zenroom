@@ -22,7 +22,8 @@
 -- https://stevedonovan.github.io/Penlight/api/libraries/pl.strict.html
 
 -- the main security concern in this Zencode module is that no data
--- passes without validation from IN to ACK or from inline input.
+-- passes without validation from ZEN.HEAP.IN to ZEN.HEAP.ACK or from
+-- inline input.
 
 -- data coming in is analyzed through a series of functions:
 -- guess_conversion(raw, conv or name) -> zenode_data.lua L:100 approx 
@@ -30,7 +31,7 @@
 
 -- GIVEN
 local function gc()
-   TMP = {}
+   ZEN.TMP = {}
    collectgarbage 'collect'
 end
 
@@ -47,9 +48,9 @@ local function _index_to_string(what)
 end
 
 ---
--- Pick a generic data structure from the <b>IN</b> memory
+-- Pick a generic data structure from the <b>ZEN.HEAP.IN</b> memory
 -- space. Looks for named data on the first and second level and makes
--- it ready in TMP for @{validate} or @{ack}.
+-- it ready in ZEN.TMP for @{validate} or @{ack}.
 --
 -- @function pick(name, data, encoding)
 -- @param what string descriptor of the data object
@@ -60,26 +61,26 @@ local function pick(what, conv)
    local data
    local raw
    local name = _index_to_string(what)
-   raw = IN[name]
+   raw = ZEN.HEAP.IN[name]
    if not raw then error("Cannot find '" .. name .. "' anywhere (null value?)", 2) end
    if raw == '' then error("Found empty string in '" .. name) end
    -- if not conv and ZEN.schemas[what] then conv = what end
-   TMP = guess_conversion(raw, conv or name)
-   if not TMP then error('Cannot guess any conversion for: ' ..
+   ZEN.TMP = guess_conversion(raw, conv or name)
+   if not ZEN.TMP then error('Cannot guess any conversion for: ' ..
          luatype(raw) .. ' ' .. (conv or name or '(nil)')) end
-   TMP.name = name
+   ZEN.TMP.name = name
    assert(ZEN.OK)
    if DEBUG > 1 then
-      ZEN:ftrace('pick found ' .. name .. '('..TMP.zentype..')')
+      ZEN.ftrace('pick found ' .. name .. '('..ZEN.TMP.zentype..')')
    end
 end
 
 ---
 -- Pick a data structure named 'what' contained under a 'section' key
--- of the at the root of the <b>IN</b> memory space. Looks for named
--- data at the first and second level underneath IN[section] and moves
--- it to TMP[what][section], ready for @{validate} or @{ack}. If
--- TMP[what] exists already, every new entry is added as a key/value
+-- of the at the root of the <b>ZEN.HEAP.IN</b> memory space. Looks for named
+-- data at the first and second level underneath ZEN.HEAP.IN[section] and moves
+-- it to ZEN.TMP[what][section], ready for @{validate} or @{ack}. If
+-- ZEN.TMP[what] exists already, every new entry is added as a key/value
 --
 -- @function pickin(section, name)
 -- @param section string descriptor of the section containing the data
@@ -94,7 +95,7 @@ local function pickin(section, what, conv, fail)
    local bail  -- fail
    local name = _index_to_string(what)
 
-   root = IN[section]
+   root = ZEN.HEAP.IN[section]
    if not root then
       error("Cannot find '"..section.."'", 2)
    end
@@ -119,12 +120,12 @@ local function pickin(section, what, conv, fail)
    -- conv = conv or name
    -- if not conv and ZEN.schemas[name] then conv = name end
    -- if no encoding provided then conversion is same as name (schemas etc.)
-   TMP = guess_conversion(raw, conv or name)
-   TMP.name = name
-   TMP.root = section
+   ZEN.TMP = guess_conversion(raw, conv or name)
+   ZEN.TMP.name = name
+   ZEN.TMP.root = section
    assert(ZEN.OK)
    if DEBUG > 1 then
-      ZEN:ftrace('pickin found ' .. name .. ' in ' .. section)
+      ZEN.ftrace('pickin found ' .. name .. ' in ' .. section)
    end
 end
 
@@ -141,14 +142,14 @@ function operate_conversion(guessed)
 	  return nil
    end
    -- carry guessed detection in CODEC
-   ZEN.CODEC[guessed.name] = {
+   ZEN.HEAP.CODEC[guessed.name] = {
 	  name = guessed.name,
 	  encoding = guessed.encoding,
 	  zentype = guessed.zentype,
 	  root = guessed.root,
 	  schema = guessed.schema
    }
-   -- I.warn({ codec = ZEN.CODEC[guessed.name],
+   -- I.warn({ codec = ZEN.HEAP.CODEC[guessed.name],
    --	     guessed = guessed })
    -- TODO: make xxx print to stderr!
    -- xxx('Operating conversion on: '..guessed.name)
@@ -203,42 +204,42 @@ end
 local function ack_table(key, val)
    ZEN.assert(
       luatype(key) == 'string',
-      'ZEN:table_add arg #1 is not a string'
+      'ZEN.table_add arg #1 is not a string'
    )
    ZEN.assert(
       luatype(val) == 'string',
-      'ZEN:table_add arg #2 is not a string'
+      'ZEN.table_add arg #2 is not a string'
    )
-   if not ACK[key] then
-      ACK[key] = {}
+   if not ZEN.HEAP.ACK[key] then
+      ZEN.HEAP.ACK[key] = {}
    end
-   ACK[key][val] = operate_conversion(TMP)
-   if key ~= TMP.name then
-      ZEN.CODEC[key] = ZEN.CODEC[TMP.name]
-      ZEN.CODEC[TMP.name] = nil
+   ZEN.HEAP.ACK[key][val] = operate_conversion(ZEN.TMP)
+   if key ~= ZEN.TMP.name then
+      ZEN.HEAP.CODEC[key] = ZEN.HEAP.CODEC[ZEN.TMP.name]
+      ZEN.HEAP.CODEC[ZEN.TMP.name] = nil
    end
 end
 
 ---
 -- Final step inside the <b>Given</b> block towards the <b>When</b>:
--- pass on a data structure into the ACK memory space, ready for
--- processing.  It requires the data to be present in TMP[name] and
+-- pass on a data structure into the ZEN.HEAP.ACK memory space, ready for
+-- processing.  It requires the data to be present in ZEN.TMP[name] and
 -- typically follows a @{pick}. In some restricted cases it is used
 -- inside a <b>When</b> block following the inline insertion of data
 -- from zencode.
 --
 -- @function ack(name)
--- @param name string key of the data object in TMP[name]
+-- @param name string key of the data object in ZEN.TMP[name]
 local function ack(what)
    local name = _index_to_string(what)
-   ZEN.assert(TMP, 'No valid object found: ' .. name)
+   ZEN.assert(ZEN.TMP, 'No valid object found: ' .. name)
    empty(name)
-   ACK[name] = operate_conversion(TMP)
+   ZEN.HEAP.ACK[name] = operate_conversion(ZEN.TMP)
    -- name of schema may differ from name of object
-   -- new_codec(name, { schema = TMP.schema })
+   -- new_codec(name, { schema = ZEN.TMP.schema })
 
-   -- if TMP.schema and (TMP.schema ~= 'number') and ( TMP.schema ~= TMP.encoding ) then
-   --    ZEN.CODEC[name].schema = TMP.schema
+   -- if ZEN.TMP.schema and (ZEN.TMP.schema ~= 'number') and ( ZEN.TMP.schema ~= ZEN.TMP.encoding ) then
+   --    ZEN.HEAP.CODEC[name].schema = ZEN.TMP.schema
    -- end
 
 end
@@ -247,7 +248,7 @@ Given(
    'nothing',
    function()
       ZEN.assert(
-         (next(IN) == nil),
+         (next(ZEN.HEAP.IN) == nil),
          'Undesired data passed as input'
       )
    end
@@ -268,9 +269,9 @@ Given(
    "my name is in a '' named ''",
    function(sc, name)
       pick(name, sc)
-      assert(TMP.name, 'No name found in: ' .. name)
-      Iam(O.to_string(operate_conversion(TMP)))
-      ZEN.CODEC[name] = nil -- just used to get name
+      assert(ZEN.TMP.name, 'No name found in: ' .. name)
+      Iam(O.to_string(operate_conversion(ZEN.TMP)))
+      ZEN.HEAP.CODEC[name] = nil -- just used to get name
    end
 )
 
@@ -278,9 +279,9 @@ Given(
    "my name is in a '' named '' in ''",
    function(sc, name, struct)
       pickin(struct, name, sc)
-      assert(TMP.name,  'No name found in: '..name)
-      Iam(O.to_string(operate_conversion(TMP)))
-      ZEN.CODEC[name] = nil -- just name string
+      assert(ZEN.TMP.name,  'No name found in: '..name)
+      Iam(O.to_string(operate_conversion(ZEN.TMP)))
+      ZEN.HEAP.CODEC[name] = nil -- just name string
    end
 )
 
@@ -303,7 +304,7 @@ Given(
    "a '' in ''",
    function(s, t)
       pickin(t, s)
-      ack(s) -- save it in ACK.obj
+      ack(s) -- save it in ZEN.HEAP.ACK.obj
       gc()
    end
 )
@@ -348,7 +349,7 @@ Given(
    "a '' named by ''",
    function(s, n)
       -- local name = have(n)
-      local name = _index_to_string(IN[n])
+      local name = _index_to_string(ZEN.HEAP.IN[n])
       -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
       pick(name, s)
       ack(name)
@@ -360,7 +361,7 @@ Given(
    "a '' named '' in ''",
    function(s, n, t)
       pickin(t, n, s)
-      ack(n) -- save it in ACK.name
+      ack(n) -- save it in ZEN.HEAP.ACK.name
       gc()
    end
 )
@@ -368,9 +369,9 @@ Given(
 Given(
    "a '' named by '' in ''",
    function(s, n, t)
-      local name = _index_to_string(IN[n])
+      local name = _index_to_string(ZEN.HEAP.IN[n])
       pickin(t, name, s)
-      ack(name) -- save it in ACK.name
+      ack(name) -- save it in ZEN.HEAP.ACK.name
       gc()
    end
 )
@@ -398,7 +399,7 @@ Given(
    "my '' named by ''",
    function(s, n)
       -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
-      local name = _index_to_string(IN[n])
+      local name = _index_to_string(ZEN.HEAP.IN[n])
       pickin(WHO, name, s)
       ack(name)
       gc()
@@ -425,17 +426,17 @@ Given(
    function(old, new)
        empty(new)
        have(old)
-       ACK[new] = ACK[old]
-       new_codec(new, ZEN.CODEC[old])
-       ZEN.CODEC[new].name = new
+       ZEN.HEAP.ACK[new] = ZEN.HEAP.ACK[old]
+       new_codec(new, ZEN.HEAP.CODEC[old])
+       ZEN.HEAP.CODEC[new].name = new
 
-       ACK[old] = nil
-       ZEN.CODEC[old] = nil
+       ZEN.HEAP.ACK[old] = nil
+       ZEN.HEAP.CODEC[old] = nil
    end
 )
 
 Given("a '' part of '' after string prefix ''", function(enc, src, pfx)
-		 local whole = IN[src]
+		 local whole = ZEN.HEAP.IN[src]
 		 ZEN.assert(whole, "Cannot find '" .. src .. "' anywhere (null value?)")
 		 local plen = #pfx
 		 local wlen = #whole
@@ -444,14 +445,14 @@ Given("a '' part of '' after string prefix ''", function(enc, src, pfx)
 		 ZEN.assert(string.sub(whole, 1, plen) == pfx,
 					"Prefix not found in "..src..": "..pfx)
 		 -- if not conv and ZEN.schemas[what] then conv = what end
-		 TMP = guess_conversion(string.sub(whole,plen+1,wlen), enc)
-		 TMP.name = src
+		 ZEN.TMP = guess_conversion(string.sub(whole,plen+1,wlen), enc)
+		 ZEN.TMP.name = src
 		 ack(src)
 		 gc()
 end)
 
 Given("a '' part of '' before string suffix ''", function(enc, src, sfx)
-		 local whole = IN[src]
+		 local whole = ZEN.HEAP.IN[src]
 		 ZEN.assert(whole, "Cannot find '" .. src .. "' anywhere (null value?)")
 		 local slen = #sfx
 		 local wlen = #whole
@@ -460,8 +461,8 @@ Given("a '' part of '' before string suffix ''", function(enc, src, sfx)
 		 ZEN.assert(string.sub(whole, wlen-slen+1, wlen) == sfx,
 					"Suffix not found in "..src..": "..sfx)
 		 -- if not conv and ZEN.schemas[what] then conv = what end
-		 TMP = guess_conversion(string.sub(whole,1,wlen-slen), enc)
-		 TMP.name = src
+		 ZEN.TMP = guess_conversion(string.sub(whole,1,wlen-slen), enc)
+		 ZEN.TMP.name = src
 		 ack(src)
 		 gc()
 end)
@@ -471,15 +472,15 @@ Given("a '' in path ''", function(enc, path)
     local root = path_array[1]
     table.remove(path_array, 1)
     local dest = path_array[#path_array]
-    local res = IN[root]
+    local res = ZEN.HEAP.IN[root]
     for k,v in pairs(path_array) do
         ZEN.assert(luatype(res) == 'table', "Object is not a table: "..root)
         ZEN.assert(res[v] ~= nil, "Key "..v.." not found in "..root)
         res = res[v]
         root = v
     end
-    TMP = guess_conversion(res, enc)
-    TMP.name = dest
+    ZEN.TMP = guess_conversion(res, enc)
+    ZEN.TMP.name = dest
     ack(dest)
     gc()
 end)

@@ -143,7 +143,8 @@ function schnorr.sign(sk, m)
 end
 
 local function _schnorr_assert(condition, message)
-    return (condition) or (table.insert(ZEN.traceback, message) and false)
+   local traceback = ZEN.HEAP.traceback
+    return (condition) or (table.insert(traceback, message) and false)
 end
 
 -- verification algortihm

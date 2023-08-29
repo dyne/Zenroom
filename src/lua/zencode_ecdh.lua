@@ -32,8 +32,8 @@ end
 
 local function signature_f(o)
    return {
-      r = ZEN.get(o, 'r'),
-      s = ZEN.get(o, 's')
+      r = schema_get(o, 'r'),
+      s = schema_get(o, 's')
    }
 end
 
@@ -42,7 +42,7 @@ local function warn_keypair()
    warn("Examples: I have my 'keyring' or I create the keyring")
 end
 
-ZEN.add_schema(
+ZEN:add_schema(
 	{
 		-- keypair (ECDH)
 		public_key = {
@@ -54,10 +54,10 @@ ZEN.add_schema(
 		secret_message = {
 		   import = function(obj)
 			  return {
-				 checksum = ZEN.get(obj, 'checksum'),
-				 header = ZEN.get(obj, 'header'),
-				 iv = ZEN.get(obj, 'iv'),
-				 text = ZEN.get(obj, 'text')
+				 checksum = schema_get(obj, 'checksum'),
+				 header = schema_get(obj, 'header'),
+				 iv = schema_get(obj, 'iv'),
+				 text = schema_get(obj, 'text')
 			  }
 		   end
 		},

@@ -25,7 +25,7 @@ if not BTC then btc = require_once('crypto_bitcoin') else btc = BTC end
 
 -- TODO: any mean to verify that the content of address and txid is valid
 local function _get_addr(obj)
-   local res = ZEN.get(obj, '.', O.from_base58, tostring)
+   local res = schema_get(obj, '.', O.from_base58, tostring)
    if not res then error("invalid segwit address",2) end
    return res
 end
@@ -39,10 +39,10 @@ local function _bitcoin_unspent_import(obj)
       local n_vout = fif( v.vout, 'vout', 'prevout_n')
       local address
       if v.address then
-	 address = ZEN.get(v,'address', O.from_segwit, tostring)
+	 address = schema_get(v,'address', O.from_segwit, tostring)
       end
-      local amount  = ZEN.get(v,n_amount, btc.value_btc_to_satoshi, tostring)
-      local txid    = ZEN.get(v,n_txid, OCTET.from_hex, tostring)
+      local amount  = schema_get(v,n_amount, btc.value_btc_to_satoshi, tostring)
+      local txid    = schema_get(v,n_txid, OCTET.from_hex, tostring)
       local vout    = INT.new(v[n_vout])
       table.insert(res, { address = address,
 			  amount  = amount,
@@ -71,13 +71,13 @@ local function _satoshi_unspent_import(obj)
    local res = {}
    -- TODO: quick fix on import from number format, to improve later
    for _,v in pairs(obj) do
-      amount = ZEN.get(v,'value', BIG.from_decimal, tostring)
+      amount = schema_get(v,'value', BIG.from_decimal, tostring)
       if type(amount) == 'number' then
          amount = BIG.from_decimal(tostring(amount))
       end
       -- compatibility with electrum and bitcoin core
       table.insert(res, { amount = amount,
-			  txid    = ZEN.get(v,'txid', OCTET.from_hex, tostring),
+			  txid    = schema_get(v,'txid', OCTET.from_hex, tostring),
 			  vout    = F.new(v.vout) })
    end
    return(res)
@@ -107,11 +107,11 @@ local function _address_export(obj)
    return O.to_segwit(obj.raw, tonumber(obj.version), O.to_string(obj.network))
 end
 
-local function _wif_import(obj)	return ZEN.get(obj, '.', BTC.wif_to_sk, O.from_base58) end
+local function _wif_import(obj)	return schema_get(obj, '.', BTC.wif_to_sk, O.from_base58) end
 local function _wif_bitcoin_export(obj)	return O.to_base58( BTC.sk_to_wif( obj, 'bitcoin') ) end
 local function _wif_testnet_export(obj)	return O.to_base58( BTC.sk_to_wif( obj, 'testnet') ) end
 
-ZEN.add_schema(
+ZEN:add_schema(
    {
       bitcoin_key = { import = _wif_import,
 					  export = _wif_bitcoin_export },
@@ -120,12 +120,12 @@ ZEN.add_schema(
 
       satoshi_amount            = {
 		 import = function(obj)
-			return ZEN.get(obj, '.', BIG.from_decimal, tostring) end,
+			return schema_get(obj, '.', BIG.from_decimal, tostring) end,
 		 export = BIG.to_decimal
 	  },
       satoshi_fee               = {
 		 import = function(obj)
-			return ZEN.get(obj, '.', BIG.from_decimal, tostring) end,
+			return schema_get(obj, '.', BIG.from_decimal, tostring) end,
 		 export = BIG.to_decimal
 	  },
       satoshi_unspent = { import = _satoshi_unspent_import,

@@ -109,13 +109,13 @@ local function bbs_signature_f(obj)
     return obj
 end
 
-ZEN.add_schema(
+ZEN:add_schema(
    {
       bbs_public_key = function(obj)
-        return ZEN.get(obj, '.', bbs_public_key_f)
+        return schema_get(obj, '.', bbs_public_key_f)
       end,
       bbs_signature = function(obj)
-        return ZEN.get(obj, '.', bbs_signature_f)
+        return schema_get(obj, '.', bbs_signature_f)
       end
    }
 )
@@ -255,13 +255,13 @@ local function bbs_proof_f(obj)
     return obj
 end
 
-ZEN.add_schema(
+ZEN:add_schema(
     {
         bbs_proof = function(obj)
-            return ZEN.get(obj, '.', bbs_proof_f)
+            return schema_get(obj, '.', bbs_proof_f)
         end,
         bbs_credential = function(obj)
-            return ZEN.get(obj, '.', bbs_signature_f)
+            return schema_get(obj, '.', bbs_signature_f)
           end
     }
 )

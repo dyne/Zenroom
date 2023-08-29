@@ -51,17 +51,17 @@ local function import_reflow_seal_f(obj)
 	  f = import_reflow_seal_fingerprints_f(obj.fingerprints)
    else f = nil end
    return {
-	  identity = ZEN.get(obj, 'identity', ECP.new),
-	  SM = ZEN.get(obj, 'SM', ECP.new),
-	  verifier = ZEN.get(obj, 'verifier', ECP2.new),
+	  identity = schema_get(obj, 'identity', ECP.new),
+	  SM = schema_get(obj, 'SM', ECP.new),
+	  verifier = schema_get(obj, 'verifier', ECP2.new),
 	  fingerprints = f
    }
 end
 
-ZEN.add_schema(
+ZEN:add_schema(
    {
       reflow_public_key = function(obj)
-	 return ZEN.get(obj, '.', ECP2.new)
+	 return schema_get(obj, '.', ECP2.new)
       end,
 
       reflow_seal = import_reflow_seal_f,
@@ -69,10 +69,10 @@ ZEN.add_schema(
       reflow_signature = {
 	 import = function(obj)
 	    return {
-	       identity = ZEN.get(obj, 'identity', ECP.new),
-	       signature = ZEN.get(obj, 'signature', ECP.new),
+	       identity = schema_get(obj, 'identity', ECP.new),
+	       signature = schema_get(obj, 'signature', ECP.new),
 	       proof = import_credential_proof_f(obj.proof),
-	       zeta = ZEN.get(obj, 'zeta', ECP.new)
+	       zeta = schema_get(obj, 'zeta', ECP.new)
 	    }
 	 end,
 	 export = function(obj)
@@ -81,13 +81,13 @@ ZEN.add_schema(
      end,
       },
       reflow_identity = function(obj)
-	 return ZEN.get(obj, '.', ECP.new)
+	 return schema_get(obj, '.', ECP.new)
       end,
       material_passport = function(obj)
 	 return {
 	    seal = import_reflow_seal_f(obj.seal),
 	    proof = import_credential_proof_f(obj.proof),
-	    zeta = ZEN.get(obj, 'zeta', ECP.new)
+	    zeta = schema_get(obj, 'zeta', ECP.new)
 	 }
       end
    }

@@ -20,37 +20,86 @@
 --on Saturday, 13th November 2021
 --]]
 
--- limit output of string if too long
-function limit(anystr)
-   local t = luatype(anystr)
-   ZEN.assert(t=='string',"Argument to limit on-screen not a string")
-   if #anystr > 32 then
-	  return(string.sub(anystr,1,32).."..")
+
+-- quick internal debugging facility
+function xxx(s, n)
+   n = n or 3
+   if DEBUG >= n then
+	  printerr("LUA "..s)
    end
-   return(anystr)
+end
+
+-- set and get to keep track of traceback before HEAP creation
+-- ZEN.traceback is moved to HEAP by zencode_begin()
+local function get_tb(Z)
+	if Z.HEAP then
+	   return Z.HEAP.traceback
+	else
+	   return {}
+	end
+end
+local function set_tb(Z, tb)
+	if Z.HEAP then
+	   Z.HEAP.traceback = tb
+	else
+	   Z.traceback = tb
+	end
+end
+
+function ZEN:trace(src)
+	-- take current line of zencode
+	if not src then return end
+	local tr = trim(src)
+	local traceback = get_tb(self)
+
+	-- TODO: tabbing, ugly but ok for now
+	if string.sub(tr, 1, 1) == '[' then
+		table.insert(traceback, tr)
+	else
+		table.insert(traceback, ' .  ' .. tr)
+	end
+	set_tb(self,traceback)
+end
+-- trace function execution also on success
+function ZEN:ftrace(src)
+   if not src then return end
+	local traceback = get_tb(self)
+
+	table.insert(traceback, ' D  ZEN:' .. trim(src))
+	set_tb(self,traceback)
+end
+-- log zencode warning in traceback
+function ZEN:wtrace(src)
+	local traceback = get_tb(self)
+	table.insert(traceback, ' W  +' .. trim(src))
+	set_tb(self,traceback)
+end
+function ZEN:crumb()
+   self:ftrace(debug.getinfo(2, 'n').name)
 end
 
 -- debug functions
-local function debug_traceback()
+function ZEN:debug_traceback()
+   local traceback = self.HEAP.traceback
    if CONF.debug.format == 'compact' then
 	  act("TRACE: "..OCTET.to_base64(
 			  OCTET.from_string(
-				 JSON.encode(ZEN.traceback))))
+				 JSON.encode(traceback))))
    else
-	  for k,v in pairs(ZEN.traceback) do
+	  for k,v in pairs(traceback) do
 		 warn(v)
 	  end
    end
 end
-Given("backtrace", function() debug_traceback() end)
-When("backtrace", function() debug_traceback() end)
-Then("backtrace", function() debug_traceback() end)
-Given("trace", function() debug_traceback() end)
-When("trace", function() debug_traceback() end)
-Then("trace", function() debug_traceback() end)
+Given("backtrace", function() ZEN:debug_traceback() end)
+When("backtrace", function() ZEN:debug_traceback() end)
+Then("backtrace", function() ZEN:debug_traceback() end)
+Given("trace", function() ZEN:debug_traceback() end)
+When("trace", function() ZEN:debug_traceback() end)
+Then("trace", function() ZEN:debug_traceback() end)
 
 local function debug_heap_dump()
-   local HEAP = ZEN.heap()
+   local HEAP = ZEN.HEAP
    local ack = HEAP.ACK
    local keyring = ack.keyring
    if CONF.debug.format == 'compact' then
@@ -61,7 +110,7 @@ local function debug_heap_dump()
 			  OCTET.from_string(
 				 JSON.encode(
 					{GIVEN_data = HEAP.IN,
-					 CODEC = ZEN.CODEC,
+					 CODEC = HEAP.CODEC,
 					 WHEN = ack,
 					 THEN = HEAP.OUT}))))
    else -- CONF.debug.format == 'log'
@@ -72,19 +121,20 @@ local function debug_heap_dump()
 	  end
 	  I.warn({a_GIVEN_in = HEAP.IN,
 			  c_WHEN_ack = ack,
-			  c_CODEC_ack = ZEN.CODEC,
+			  c_CODEC_ack = HEAP.CODEC,
 			  d_THEN_out = HEAP.OUT})
 	  ack.keyring = keyring
    end
 end
 
 local function debug_heap_schema()
-   I.schema({SCHEMA = ZEN.heap()})
+   I.schema({SCHEMA = ZEN.HEAP})
    -- print only keys without values
 end
 
 
 ZEN.assert = function(condition, errmsg)
+   local traceback = ZEN.HEAP.traceback
    if condition then
       return true
    else
@@ -92,10 +142,10 @@ ZEN.assert = function(condition, errmsg)
    end
    -- in conditional branching ZEN.assert doesn't quit
    if ZEN.branch then
-      table.insert(ZEN.traceback, errmsg)
+      table.insert(traceback, errmsg)
    else
       -- ZEN.debug() -- prints all data in memory
-      table.insert(ZEN.traceback, errmsg)
+      table.insert(traceback, errmsg)
       ZEN.OK = false
       exitcode(1)
       error(errmsg, 3)
@@ -104,7 +154,7 @@ end
 
 ZEN.debug = function()
 	debug_heap_dump()
-	debug_traceback()
+	ZEN:debug_traceback()
 end
 
 -- local function debug_obj_dump()
@@ -119,7 +169,7 @@ When("schema",  function() debug_heap_schema() end)
 Then("schema",  function() debug_heap_schema() end)
 
 function debug_codec()
-   I.warn({CODEC = ZEN.CODEC})
+   I.warn({CODEC = ZEN.HEAP.CODEC})
 end
 
 Given("codec", function() debug_codec() end)

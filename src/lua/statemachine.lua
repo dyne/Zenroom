@@ -1,8 +1,26 @@
+--[[
+--This file is part of zenroom
+--
+--Copyright (C) 2018-2023 Dyne.org foundation
+--designed, written and maintained by Denis Roio <jaromil@dyne.org>
+--
+--Forked from statemachine by Kyle Conroy (2012)
+--
+--This program is free software: you can redistribute it and/or modify
+--it under the terms of the GNU Affero General Public License v3.0
+--
+--This program is distributed in the hope that it will be useful,
+--but WITHOUT ANY WARRANTY; without even the implied warranty of
+--MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--GNU Affero General Public License for more details.
+--
+--Along with this program you should have received a copy of the
+--GNU Affero General Public License v3.0
+--If not, see http://www.gnu.org/licenses/agpl.txt
+--]]
+
 local machine = {}
 machine.__index = machine
-
-local NONE = "none"
-local ASYNC = "async"
 
 local function call_handler(handler, params)
   if handler then
@@ -14,59 +32,22 @@ local function create_transition(name)
   local can, to, from, params
 
   local function transition(self, ...)
-    if self.asyncState == NONE then
-      can, to = self:can(name)
-      from = self.current
-      params = { self, name, from, to, ...}
+	 can, to = self:can(name)
+	 from = self.current
+	 params = { self, name, from, to, ...}
 
-      if not can then return false end
-      self.currentTransitioningEvent = name
+	 if not can then return false end
+	 self.currentTransitioningEvent = name
+	 self.current = to
 
-      local beforeReturn = call_handler(self["onbefore" .. name], params)
-      local leaveReturn = call_handler(self["onleave" .. from], params)
+	 call_handler(self["on" .. to], params)
+	 call_handler(self["on" .. name], params)
 
-      if beforeReturn == false or leaveReturn == false then
-        return false
-      end
+	 self.currentTransitioningEvent = nil
+	 return true
+end
 
-      self.asyncState = name .. "WaitingOnLeave"
-
-      if leaveReturn ~= ASYNC then
-        transition(self, ...)
-      end
-      
-      return true
-    elseif self.asyncState == name .. "WaitingOnLeave" then
-      self.current = to
-
-      local enterReturn = call_handler(self["onenter" .. to] or self["on" .. to], params)
-
-      self.asyncState = name .. "WaitingOnEnter"
-
-      if enterReturn ~= ASYNC then
-        transition(self, ...)
-      end
-      
-      return true
-    elseif self.asyncState == name .. "WaitingOnEnter" then
-      call_handler(self["onafter" .. name] or self["on" .. name], params)
-      call_handler(self["onstatechange"], params)
-      self.asyncState = NONE
-      self.currentTransitioningEvent = nil
-      return true
-    else
-    	if string.find(self.asyncState, "WaitingOnLeave") or string.find(self.asyncState, "WaitingOnEnter") then
-    		self.asyncState = NONE
-    		transition(self, ...)
-    		return true
-    	end
-    end
-
-    self.currentTransitioningEvent = nil
-    return false
-  end
-
-  return transition
+return transition
 end
 
 local function add_to_map(map, event)
@@ -87,7 +68,6 @@ function machine.create(options)
 
   fsm.options = options
   fsm.current = options.initial or 'none'
-  fsm.asyncState = NONE
   fsm.events = {}
 
   for _, event in ipairs(options.events or {}) do
@@ -110,12 +90,8 @@ end
 
 function machine:can(e)
   local event = self.events[e]
-  local to = event and event.map[self.current] or event.map['*']
+  local to = event and event.map[self.current]
   return to ~= nil, to
-end
-
-function machine:cannot(e)
-  return not self:can(e)
 end
 
 function machine:transition(event)
@@ -123,15 +99,5 @@ function machine:transition(event)
     return self[self.currentTransitioningEvent](self)
   end
 end
-
-function machine:cancelTransition(event)
-  if self.currentTransitioningEvent == event then
-    self.asyncState = NONE
-    self.currentTransitioningEvent = nil
-  end
-end
-
-machine.NONE = NONE
-machine.ASYNC = ASYNC
 
 return machine

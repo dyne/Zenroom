@@ -22,7 +22,7 @@
 
 local ED = require'ed'
 
-ZEN.add_schema(
+ZEN:add_schema(
    {
       eddsa_public_key = { import = O.from_base58,
 			   export = O.to_base58 },

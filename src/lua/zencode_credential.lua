@@ -28,8 +28,8 @@ local G2 = ECP2.generator()
 
 local function import_issuer_pk_f(obj)
 	return {
-		alpha = ZEN.get(obj, 'alpha', ECP2.new),
-		beta = ZEN.get(obj, 'beta', ECP2.new)
+		alpha = schema_get(obj, 'alpha', ECP2.new),
+		beta = schema_get(obj, 'beta', ECP2.new)
 	}
 end
 
@@ -70,17 +70,17 @@ end)
 local function import_credential_request_f(obj)
    local req = {
       sign = {
-	 a = ZEN.get(obj.sign, 'a', ECP.new),
-	 b = ZEN.get(obj.sign, 'b', ECP.new)
+	 a = schema_get(obj.sign, 'a', ECP.new),
+	 b = schema_get(obj.sign, 'b', ECP.new)
       },
       pi_s = {
-          rr = ZEN.get(obj.pi_s, 'rr', INT.new, O.from_base64),
-          rm = ZEN.get(obj.pi_s, 'rm', INT.new, O.from_base64),
-          rk = ZEN.get(obj.pi_s, 'rk', INT.new, O.from_base64),
-          commit = ZEN.get(obj.pi_s, 'commit', INT.new, O.from_base64),
+          rr = schema_get(obj.pi_s, 'rr', INT.new, O.from_base64),
+          rm = schema_get(obj.pi_s, 'rm', INT.new, O.from_base64),
+          rk = schema_get(obj.pi_s, 'rk', INT.new, O.from_base64),
+          commit = schema_get(obj.pi_s, 'commit', INT.new, O.from_base64),
       },
-      commit = ZEN.get(obj, 'commit', ECP.new),
-      public = ZEN.get(obj, 'public', ECP.new)
+      commit = schema_get(obj, 'commit', ECP.new),
+      public = schema_get(obj, 'public', ECP.new)
    }
    ZEN.assert(
       CRED.verify_pi_s(req),
@@ -90,7 +90,7 @@ local function import_credential_request_f(obj)
 end
 
 -- request credential signatures
-ZEN.add_schema(
+ZEN:add_schema(
    {
       issuer_public_key = {
 		 import = import_issuer_pk_f,
@@ -109,15 +109,15 @@ When('create the credential request', function()
 end)
 
 -- issuer's signature of credentials
-ZEN.add_schema(
+ZEN:add_schema(
    {
       -- sigmatilde
       credential_signature = {
 		 import = function(obj)
 			return {
-			   h = ZEN.get(obj, 'h', ECP.new),
-			   b_tilde = ZEN.get(obj, 'b_tilde', ECP.new),
-			   a_tilde = ZEN.get(obj, 'a_tilde', ECP.new)
+			   h = schema_get(obj, 'h', ECP.new),
+			   b_tilde = schema_get(obj, 'b_tilde', ECP.new),
+			   a_tilde = schema_get(obj, 'a_tilde', ECP.new)
 			}
 		 end
 	  },
@@ -125,8 +125,8 @@ ZEN.add_schema(
 	  credentials = {
 		 import = function(obj)
 			return {
-			   h = ZEN.get(obj, 'h', ECP.new),
-			   s = ZEN.get(obj, 's', ECP.new)
+			   h = schema_get(obj, 'h', ECP.new),
+			   s = schema_get(obj, 's', ECP.new)
 			}
 		 end
 	  }
@@ -177,16 +177,16 @@ When(
 -- exported function (non local) for use in zencode_petition
 function import_credential_proof_f(obj)
    return {
-      nu = ZEN.get(obj, 'nu', ECP.new),
-      kappa = ZEN.get(obj, 'kappa', ECP2.new),
+      nu = schema_get(obj, 'nu', ECP.new),
+      kappa = schema_get(obj, 'kappa', ECP2.new),
       pi_v = {
-	 c = ZEN.get(obj.pi_v, 'c', INT.new, O.from_base64),
-	 rm = ZEN.get(obj.pi_v, 'rm', INT.new, O.from_base64),
-	 rr = ZEN.get(obj.pi_v, 'rr', INT.new, O.from_base64)
+	 c = schema_get(obj.pi_v, 'c', INT.new, O.from_base64),
+	 rm = schema_get(obj.pi_v, 'rm', INT.new, O.from_base64),
+	 rr = schema_get(obj.pi_v, 'rr', INT.new, O.from_base64)
       },
       sigma_prime = {
-	 h_prime = ZEN.get(obj.sigma_prime, 'h_prime', ECP.new),
-	 s_prime = ZEN.get(obj.sigma_prime, 's_prime', ECP.new)
+	 h_prime = schema_get(obj.sigma_prime, 'h_prime', ECP.new),
+	 s_prime = schema_get(obj.sigma_prime, 's_prime', ECP.new)
       }
    }
 end
@@ -198,7 +198,7 @@ function export_credential_proof_f(obj)
     return obj
 end
 
-ZEN.add_schema(
+ZEN:add_schema(
    {
       -- theta: blind proof of certification
       credential_proof = {

@@ -52,7 +52,7 @@ local function import_did_document(doc)
 	    end
 	end
     end
-    return ZEN.get(doc, '.', O.from_string, tostring)
+    return schema_get(doc, '.', O.from_string, tostring)
 end
 
 local function export_did_document(doc)
@@ -67,7 +67,7 @@ local function import_verification_method(doc)
         [EDDSA_PUBLIC_KEY] = O.from_base58
     }
     for key, _ in pairs(doc) do
-        res[key] = ZEN.get(doc[key], '.',
+        res[key] = schema_get(doc[key], '.',
                            import_functions[key] or O.from_base64,
                            tostring)
     end
@@ -89,7 +89,7 @@ end
 local function import_jwt(obj)
     local res = {}
     local toks = strtok(obj, '.')
-    res.header = JSON.decode(ZEN.get(toks[1], '.', O.from_url64, tostring):string())
+    res.header = JSON.decode(get(toks[1], '.', O.from_url64, tostring):string())
     res.header = deepmap(function(s)
         if type(s) == 'string' then
             return O.from_string(s)
@@ -99,7 +99,7 @@ local function import_jwt(obj)
             return s
         end
     end, res.header)
-    res.payload = JSON.decode(ZEN.get(toks[2], '.', O.from_url64, tostring):string())
+    res.payload = JSON.decode(get(toks[2], '.', O.from_url64, tostring):string())
     res.payload = deepmap(function(s)
         if type(s) == 'string' then
             return O.from_string(s)
@@ -109,7 +109,7 @@ local function import_jwt(obj)
             return s
         end
     end, res.payload)
-    res.signature = ZEN.get(toks[3], '.', O.from_url64, tostring)
+    res.signature = schema_get(toks[3], '.', O.from_url64, tostring)
     return res
 end
 
@@ -120,7 +120,7 @@ local function export_jwt(obj)
     return header .. '.' .. payload .. '.' .. obj.signature:url64()
 end
 
-ZEN.add_schema(
+ZEN:add_schema(
     {
         did_document = { import = import_did_document,
                          export = export_did_document,
@@ -375,8 +375,8 @@ When(
             i = i+1
         until( ( not doc.verificationMethod[i] ) or ACK[pk_name] )
         ZEN.assert(ACK[pk_name], pk_name..' not found in the did document '..did_doc)
-        ZEN.CODEC[pk_name] = guess_conversion(ACK[pk_name], pk_name)
-        ZEN.CODEC[pk_name].name = pk_name
+        ZEN.HEAP.CODEC[pk_name] = guess_conversion(ACK[pk_name], pk_name)
+        ZEN.HEAP.CODEC[pk_name].name = pk_name
     end
 )
 

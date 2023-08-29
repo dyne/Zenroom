@@ -31,15 +31,15 @@ local function _is_found(el, t)
 		return ACK[el] and (luatype(ACK[el]) == 'table' or #ACK[el] ~= 0)
 	else
 		ZEN.assert(ACK[t], "Array or dictionary not found in: "..t)
-		if ZEN.CODEC[t].zentype == 'a' then
+		if ZEN.HEAP.CODEC[t].zentype == 'a' then
 			local o_el = O.from_string(el)
 			for _,v in pairs(ACK[t]) do
 				if v == o_el then return true end
 			end
-		elseif ZEN.CODEC[t].zentype == 'd' then
+		elseif ZEN.HEAP.CODEC[t].zentype == 'd' then
 			return ACK[t][el] and (luatype(ACK[t][el]) == 'table' or #ACK[t][el] ~= 0)
 		else
-			ZEN.assert(false, "Invalid container type: "..t.." is "..ZEN.CODEC[t].zentype)
+			ZEN.assert(false, "Invalid container type: "..t.." is "..ZEN.HEAP.CODEC[t].zentype)
 		end
 	end
 	return false
@@ -97,8 +97,8 @@ When("append '' to ''", function(src, dest)
 		-- if the destination is a number, fix the encoding to string
 		if isnumber(dst) then
 		   dst = O.from_string( tostring(dst) )
-		   ZEN.CODEC[dest].encoding = "string"
-		   ZEN.CODEC[dest].zentype = 'e'
+		   ZEN.HEAP.CODEC[dest].encoding = "string"
+		   ZEN.HEAP.CODEC[dest].zentype = 'e'
         end
         if isnumber(val) then
 		   val = O.from_string( tostring(val) )
@@ -113,8 +113,8 @@ When("append the string '' to ''", function(hstr, dest)
 	-- if the destination is a number, fix the encoding to string
 	if isnumber(dst) then
 	   dst = O.from_string( tostring(dst) )
-	   ZEN.CODEC[dest].encoding = "string"
-	   ZEN.CODEC[dest].zentype = 'e'
+	   ZEN.HEAP.CODEC[dest].encoding = "string"
+	   ZEN.HEAP.CODEC[dest].zentype = 'e'
 	end
 	dst = dst:octet() .. O.from_string(hstr)
 	ACK[dest] = dst
@@ -124,7 +124,7 @@ When("append the '' of '' to ''", function(enc, src, dest)
 	local from = have(src)
 	local to = have(dest)
 	ZEN.assert(type(to) == 'zenroom.octet', "Destination type is not octet: "..dest.." ("..type(to)..")")
-	ZEN.assert(ZEN.CODEC[dest].encoding == 'string', "Destination encoding is not string: "..dest)
+	ZEN.assert(ZEN.HEAP.CODEC[dest].encoding == 'string', "Destination encoding is not string: "..dest)
 	local f = get_encoding_function(enc)
 	ZEN.assert(f, "Encoding format not found: "..enc)
 	to = to .. O.from_string( f( from:octet() ) )
@@ -134,21 +134,21 @@ end)
 When("create the ''", function(dest)
 	empty (dest)
 	ACK[dest] = { }
-	ZEN.CODEC[dest] = guess_conversion(ACK[dest], dest)
-	ZEN.CODEC[dest].name = dest
+	ZEN.HEAP.CODEC[dest] = guess_conversion(ACK[dest], dest)
+	ZEN.HEAP.CODEC[dest].name = dest
 end)
 When("create the '' named ''", function(sch, name)
 	empty(name)
 	ACK[name] = { }
-	ZEN.CODEC[name] = guess_conversion(ACK[name], sch)
-	ZEN.CODEC[name].name = name
+	ZEN.HEAP.CODEC[name] = guess_conversion(ACK[name], sch)
+	ZEN.HEAP.CODEC[name].name = name
 end)
 
 -- simplified exception for I write: import encoding from_string ...
 When("write string '' in ''", function(content, dest)
 	empty(dest)
 	ACK[dest] = O.from_string(content)
-	ZEN.CODEC[dest] = new_codec(dest,
+	ZEN.HEAP.CODEC[dest] = new_codec(dest,
 				    {encoding = 'string',
 				     luatype = 'string',
 				     zentype = 'e' })
@@ -165,14 +165,14 @@ When("write number '' in ''", function(content, dest)
 		-- TODO: maybe support unsigned native here
 --	end
 	ACK[dest] = F.new(content)
-	ZEN.CODEC[dest] = new_codec(dest, {zentype = 'e' })
+	ZEN.HEAP.CODEC[dest] = new_codec(dest, {zentype = 'e' })
 end)
 
 When("create the number from ''", function(from)
 	empty'number'
 	local get = have(from)
 	ACK.number = BIG.from_decimal(get:octet():string())
-	ZEN.CODEC.number = new_codec('number', {zentype = 'e' })
+	ZEN.HEAP.CODEC.number = new_codec('number', {zentype = 'e' })
 end)
 
 When("set '' to '' as ''", function(dest, content, format)
@@ -181,7 +181,7 @@ When("set '' to '' as ''", function(dest, content, format)
 	guess.raw = content
 	guess.name = dest
 	ACK[dest] = operate_conversion(guess)
---	ZEN.CODEC[dest] = new_codec(dest, { luatype = luatype(ACK[dest]), zentype = 'e' })
+--	ZEN.HEAP.CODEC[dest] = new_codec(dest, { luatype = luatype(ACK[dest]), zentype = 'e' })
 end)
 
 local function _json_encoede_f(src, dest)
@@ -220,13 +220,13 @@ When("set '' to '' base ''", function(dest, content, base)
 	local num = tonumber(content,bas)
 	ZEN.assert(num, "Invalid numerical conversion for value: "..content)
 	ACK[dest] = F.new(num)
-	ZEN.CODEC[dest] = new_codec(dest, {encoding = 'number', zentype = 'e' })
+	ZEN.HEAP.CODEC[dest] = new_codec(dest, {encoding = 'number', zentype = 'e' })
 end)
 
 local function _delete_f(name)
    have(name)
    ACK[name] = nil
-   ZEN.CODEC[name] = nil
+   ZEN.HEAP.CODEC[name] = nil
 end
 When("delete ''", _delete_f)
 When("remove ''", _delete_f)
@@ -238,16 +238,16 @@ When("rename the '' to ''", function(old,new)
 	empty(new)
 	ACK[new] = ACK[old]
 	ACK[old] = nil
-	ZEN.CODEC[new] = ZEN.CODEC[old]
-	ZEN.CODEC[old] = nil
+	ZEN.HEAP.CODEC[new] = ZEN.HEAP.CODEC[old]
+	ZEN.HEAP.CODEC[old] = nil
 end)
 When("rename '' to ''", function(old,new)
 	have(old)
 	empty(new)
 	ACK[new] = ACK[old]
 	ACK[old] = nil
-	ZEN.CODEC[new] = ZEN.CODEC[old]
-	ZEN.CODEC[old] = nil
+	ZEN.HEAP.CODEC[new] = ZEN.HEAP.CODEC[old]
+	ZEN.HEAP.CODEC[old] = nil
 end)
 When("rename the object named by '' to ''", function(old,new)
 	local oldo = have(old)
@@ -256,8 +256,8 @@ When("rename the object named by '' to ''", function(old,new)
 	empty(new)
 	ACK[new] = ACK[olds]
 	ACK[olds] = nil
-	ZEN.CODEC[new] = ZEN.CODEC[olds]
-	ZEN.CODEC[olds] = nil
+	ZEN.HEAP.CODEC[new] = ZEN.HEAP.CODEC[olds]
+	ZEN.HEAP.CODEC[olds] = nil
 end)
 When("rename '' to named by ''", function(old,new)
 	have(old)
@@ -266,8 +266,8 @@ When("rename '' to named by ''", function(old,new)
 	empty(news)
 	ACK[news] = ACK[old]
 	ACK[old] = nil
-	ZEN.CODEC[news] = ZEN.CODEC[old]
-	ZEN.CODEC[old] = nil
+	ZEN.HEAP.CODEC[news] = ZEN.HEAP.CODEC[old]
+	ZEN.HEAP.CODEC[old] = nil
 end)
 When("rename the object named by '' to named by ''", function(old,new)
 	local oldo = have(old)
@@ -278,8 +278,8 @@ When("rename the object named by '' to named by ''", function(old,new)
 	empty(news)
 	ACK[news] = ACK[olds]
 	ACK[olds] = nil
-	ZEN.CODEC[news] = ZEN.CODEC[olds]
-	ZEN.CODEC[olds] = nil
+	ZEN.HEAP.CODEC[news] = ZEN.HEAP.CODEC[olds]
+	ZEN.HEAP.CODEC[olds] = nil
 end)
 
 When("create the '' string of ''", function(encoding, src)
@@ -311,7 +311,7 @@ local function _copy_move_in(old, new, inside, delete)
 	ACK[inside] = dst
 	if delete then
 	   ACK[old] = nil
-	   ZEN.CODEC[old] = nil
+	   ZEN.HEAP.CODEC[old] = nil
 	end
 end
 When("copy the '' to '' in ''", function(old,new,inside)
@@ -455,14 +455,14 @@ When("create the result of '' inverted sign", function(left)
         elseif type(l) == "zenroom.float" then
             zero = F.new(0)
         end
-	ACK.result, ZEN.CODEC.result = _math_op(_sub, zero, l, BIG.zensub)
+	ACK.result, ZEN.HEAP.CODEC.result = _math_op(_sub, zero, l, BIG.zensub)
 end)
 
 When("create the result of '' + ''", function(left,right)
 	local l = have(left)
 	local r = have(right)
 	empty 'result'
-	ACK.result, ZEN.CODEC.result = _math_op(_add, l, r, BIG.zenadd)
+	ACK.result, ZEN.HEAP.CODEC.result = _math_op(_add, l, r, BIG.zenadd)
 end)
 
 When("create the result of '' in '' + ''", function(left, dict, right)
@@ -470,7 +470,7 @@ When("create the result of '' in '' + ''", function(left, dict, right)
 	local l = d[left]
 	local r = have(right)
 	empty 'result'
-	ACK.result, ZEN.CODEC.result = _math_op(_add, l, r, BIG.zenadd)
+	ACK.result, ZEN.HEAP.CODEC.result = _math_op(_add, l, r, BIG.zenadd)
 end)
 
 When("create the result of '' in '' + '' in ''", function(left, ldict, right, rdict)
@@ -479,14 +479,14 @@ When("create the result of '' in '' + '' in ''", function(left, ldict, right, rd
 	local rd = have(rdict)
 	local r = rd[right]
 	empty 'result'
-	ACK.result, ZEN.CODEC.result = _math_op(_add, l, r, BIG.zenadd)
+	ACK.result, ZEN.HEAP.CODEC.result = _math_op(_add, l, r, BIG.zenadd)
 end)
 
 When("create the result of '' - ''", function(left,right)
 	local l = have(left)
 	local r = have(right)
 	empty 'result'
-	ACK.result, ZEN.CODEC.result = _math_op(_sub, l, r, BIG.zensub)
+	ACK.result, ZEN.HEAP.CODEC.result = _math_op(_sub, l, r, BIG.zensub)
 end)
 
 When("create the result of '' in '' - ''", function(left, dict, right)
@@ -494,7 +494,7 @@ When("create the result of '' in '' - ''", function(left, dict, right)
 	local l = d[left]
 	local r = have(right)
 	empty 'result'
-	ACK.result, ZEN.CODEC.result = _math_op(_sub, l, r, BIG.zensub)
+	ACK.result, ZEN.HEAP.CODEC.result = _math_op(_sub, l, r, BIG.zensub)
 end)
 
 When("create the result of '' in '' - '' in ''", function(left, ldict, right, rdict)
@@ -503,14 +503,14 @@ When("create the result of '' in '' - '' in ''", function(left, ldict, right, rd
 	local rd = have(rdict)
 	local r = rd[right]
 	empty 'result'
-	ACK.result, ZEN.CODEC.result = _math_op(_sub, l, r, BIG.zensub)
+	ACK.result, ZEN.HEAP.CODEC.result = _math_op(_sub, l, r, BIG.zensub)
 end)
 
 When("create the result of '' * ''", function(left,right)
 	local l = have(left)
 	local r = have(right)
 	empty 'result'
-	ACK.result, ZEN.CODEC.result = _math_op(_mul, l, r, BIG.zenmul)
+	ACK.result, ZEN.HEAP.CODEC.result = _math_op(_mul, l, r, BIG.zenmul)
 end)
 
 When("create the result of '' in '' * ''", function(left, dict, right)
@@ -518,7 +518,7 @@ When("create the result of '' in '' * ''", function(left, dict, right)
 	local l = d[left]
 	local r = have(right)
 	empty 'result'
-	ACK.result, ZEN.CODEC.result = _math_op(_mul, l, r, BIG.zenmul)
+	ACK.result, ZEN.HEAP.CODEC.result = _math_op(_mul, l, r, BIG.zenmul)
 end)
 
 When("create the result of '' * '' in ''", function(left, right, dict)
@@ -526,7 +526,7 @@ When("create the result of '' * '' in ''", function(left, right, dict)
 	local d = have(dict)
 	local r = d[right]
 	empty 'result'
-	ACK.result, ZEN.CODEC.result = _math_op(_mul, l, r, BIG.zenmul)
+	ACK.result, ZEN.HEAP.CODEC.result = _math_op(_mul, l, r, BIG.zenmul)
 end)
 
 When("create the result of '' in '' * '' in ''", function(left, ldict, right, rdict)
@@ -535,14 +535,14 @@ When("create the result of '' in '' * '' in ''", function(left, ldict, right, rd
 	local rd = have(rdict)
 	local r = rd[right]
 	empty 'result'
-	ACK.result, ZEN.CODEC.result = _math_op(_mul, l, r, BIG.zenmul)
+	ACK.result, ZEN.HEAP.CODEC.result = _math_op(_mul, l, r, BIG.zenmul)
 end)
 
 When("create the result of '' / ''", function(left,right)
 	local l = have(left)
 	local r = have(right)
 	empty 'result'
-	ACK.result, ZEN.CODEC.result = _math_op(_div, l, r, BIG.zendiv)
+	ACK.result, ZEN.HEAP.CODEC.result = _math_op(_div, l, r, BIG.zendiv)
 end)
 
 When("create the result of '' in '' / ''", function(left, dict, right)
@@ -550,7 +550,7 @@ When("create the result of '' in '' / ''", function(left, dict, right)
 	local l = d[left]
 	local r = have(right)
 	empty 'result'
-	ACK.result, ZEN.CODEC.result = _math_op(_div, l, r, BIG.zendiv)
+	ACK.result, ZEN.HEAP.CODEC.result = _math_op(_div, l, r, BIG.zendiv)
 end)
 
 When("create the result of '' / '' in ''", function(left, right, dict)
@@ -558,7 +558,7 @@ When("create the result of '' / '' in ''", function(left, right, dict)
 	local d = have(dict)
 	local r = d[right]
 	empty 'result'
-	ACK.result, ZEN.CODEC.result = _math_op(_div, l, r, BIG.zendiv)
+	ACK.result, ZEN.HEAP.CODEC.result = _math_op(_div, l, r, BIG.zendiv)
 end)
 
 When("create the result of '' in '' / '' in ''", function(left, ldict, right, rdict)
@@ -567,14 +567,14 @@ When("create the result of '' in '' / '' in ''", function(left, ldict, right, rd
 	local rd = have(rdict)
 	local r = rd[right]
 	empty 'result'
-	ACK.result, ZEN.CODEC.result = _math_op(_div, l, r, BIG.zendiv)
+	ACK.result, ZEN.HEAP.CODEC.result = _math_op(_div, l, r, BIG.zendiv)
 end)
 
 When("create the result of '' % ''", function(left,right)
 	local l = have(left)
 	local r = have(right)
 	empty 'result'
-	ACK.result, ZEN.CODEC.result = _math_op(_mod, l, r, BIG.zenmod)
+	ACK.result, ZEN.HEAP.CODEC.result = _math_op(_mod, l, r, BIG.zenmod)
 end)
 
 When("create the result of '' in '' % ''", function(left, dict, right)
@@ -582,7 +582,7 @@ When("create the result of '' in '' % ''", function(left, dict, right)
 	local l = d[left]
 	local r = have(right)
 	empty 'result'
-	ACK.result, ZEN.CODEC.result = _math_op(_mod, l, r, BIG.zendiv)
+	ACK.result, ZEN.HEAP.CODEC.result = _math_op(_mod, l, r, BIG.zendiv)
 end)
 
 When("create the result of '' in '' % '' in ''", function(left, ldict, right, rdict)
@@ -591,7 +591,7 @@ When("create the result of '' in '' % '' in ''", function(left, ldict, right, rd
 	local rd = have(rdict)
 	local r = rd[right]
 	empty 'result'
-	ACK.result, ZEN.CODEC.result = _math_op(_mod, l, r, BIG.zendiv)
+	ACK.result, ZEN.HEAP.CODEC.result = _math_op(_mod, l, r, BIG.zendiv)
 end)
 
 local function _countchar(haystack, needle)
@@ -678,8 +678,8 @@ end
 -- end)
 
 When("create the '' cast of strings in ''", function(conv, source)
-	ZEN.assert(ZEN.CODEC[source], "Object has no codec: "..source)
-	ZEN.assert(ZEN.CODEC[source].encoding == 'string', "Object has no string encoding: "..source)
+	ZEN.assert(ZEN.HEAP.CODEC[source], "Object has no codec: "..source)
+	ZEN.assert(ZEN.HEAP.CODEC[source].encoding == 'string', "Object has no string encoding: "..source)
 	empty(conv)
 	local src = have(source)
 	local enc = input_encoding(conv)
@@ -840,11 +840,11 @@ When("create the result of ''", function(expr)
   ZEN.assert(#values == 1, "Invalid arithmetical expression", 2)
   ACK.result = values[1]
   if type(values[1]) == 'zenroom.big' then
-    ZEN.CODEC['result'] = new_codec('result',
+    ZEN.HEAP.CODEC['result'] = new_codec('result',
    		                    {encoding = 'integer',
 							 zentype = 'e' })
   elseif type(values[1]) == 'zenroom.float' then
-    ZEN.CODEC['result'] = new_codec('result',
+    ZEN.HEAP.CODEC['result'] = new_codec('result',
    		                    {encoding = 'number',
 							 zentype = 'e' })
   end

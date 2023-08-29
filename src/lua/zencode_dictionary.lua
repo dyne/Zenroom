@@ -225,13 +225,13 @@ local function create_copy_f(root, in1, in2)
         n_codec.zentype = "e"
     end
 	new_codec('copy', n_codec)
-	ZEN.CODEC['copy'].name = in2 or in1
+	ZEN.HEAP.CODEC['copy'].name = in2 or in1
 end
 When("create the copy of '' from dictionary ''", function(name, dict) create_copy_f(dict, name) end)
 When("create the copy of '' from ''", function(name, dict) create_copy_f(dict, name) end)
 When("create the copy of '' in ''", function(name, dict) create_copy_f(dict, name) end)
 When("create the copy of '' in '' in ''", function(obj, branch, root) create_copy_f(root, branch, obj) end)
-When("create the copy of object named by '' from dictionary ''", function(name, dict) 
+When("create the copy of object named by '' from dictionary ''", function(name, dict)
   local label = have(name)
   create_copy_f(dict, label:string())
 end)
@@ -253,7 +253,7 @@ local function take_out_f(path, dest, format)
 	if format then
 	   new_codec(dest, guess_conversion(ACK[dest], format))
 	else
-	   new_codec(dest, { encoding = ZEN.CODEC[root].encoding })
+	   new_codec(dest, { encoding = ZEN.HEAP.CODEC[root].encoding })
 	end
 end
 
@@ -287,7 +287,7 @@ end)
 local function move_or_copy_in(src_value, src_name, dest)
     local d = have(dest)
     if luatype(d) ~= 'table' then error("Object is not a table: "..dest, 2) end
-    local cdest = ZEN.CODEC[dest]
+    local cdest = ZEN.HEAP.CODEC[dest]
     if cdest.zentype == 'e' and cdest.schema then
         local sdest = ZEN.schemas[cdest.schema]
         if luatype(sdest) ~= 'table' then -- old schema types are not open
@@ -317,13 +317,13 @@ When("move named by '' in ''", function(src_name, dest)
 	local src = have(src_name):string()
 	move_or_copy_in(have(src), src, dest)
 	ACK[src] = nil
-	ZEN.CODEC[src] = nil
+	ZEN.HEAP.CODEC[src] = nil
 end)
 
 When("move '' in ''", function(src, dest)
 	move_or_copy_in(have(src), src, dest)
 	ACK[src] = nil
-	ZEN.CODEC[src] = nil
+	ZEN.HEAP.CODEC[src] = nil
 end)
 
 When("move '' from '' to ''", function(name, src, dest)
@@ -368,4 +368,3 @@ When("filter '' fields from ''", function(filters, target)
 	ZEN.assert(isarray(filters), "Object is not an array: "..filters)
 	ACK[target] = deepmap(_filter_from, t, f)
 end)
-

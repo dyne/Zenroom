@@ -53,7 +53,7 @@ local function then_outcast(val, key, enc)
 	  if fun then return deepmap(fun, val) end
 	  error("Output encoding not found: "..enc)
    end
-   local codec = ZEN.CODEC[uscore(key)]
+   local codec = ZEN.HEAP.CODEC[uscore(key)]
    if not codec then error("CODEC not found for object: "..key, 2) end
    if codec.schema then
 	  local schema = ZEN.schemas[codec.schema]
@@ -83,40 +83,40 @@ local function then_outcast(val, key, enc)
 end
 
 local function then_insert(dest, val, key)
-   -- initialize OUT
-   if not OUT[dest] then
+   -- initialize ZEN.HEAP.OUT
+   if not ZEN.HEAP.OUT[dest] then
       if ACK[dest] then
 	 if luatype(ACK[dest]) ~= 'table' then
-	    OUT[dest] = { ACK[dest] }
-	    table.insert(OUT[dest], val)
+	    ZEN.HEAP.OUT[dest] = { ACK[dest] }
+	    table.insert(ZEN.HEAP.OUT[dest], val)
 	 elseif isarray(ACK[dest]) then
-	    OUT[dest] = ACK[dest]
-	    table.insert(OUT[dest], val)
+	    ZEN.HEAP.OUT[dest] = ACK[dest]
+	    table.insert(ZEN.HEAP.OUT[dest], val)
 	 else -- isdictionary
-	    OUT[dest] = ACK[dest]
-	    OUT[dest][key] = val
+	    ZEN.HEAP.OUT[dest] = ACK[dest]
+	    ZEN.HEAP.OUT[dest][key] = val
 	 end
       else -- use only val and key
-	 OUT[dest] = {}
+	 ZEN.HEAP.OUT[dest] = {}
 	 if key then
-	    OUT[dest][key] = val
+	    ZEN.HEAP.OUT[dest][key] = val
 	 else
-	    table.insert(OUT[dest], val)
+	    table.insert(ZEN.HEAP.OUT[dest], val)
 	 end
       end
-   else -- load OUT
-      if luatype(OUT[dest]) ~= 'table' then
+   else -- load ZEN.HEAP.OUT
+      if luatype(ZEN.HEAP.OUT[dest]) ~= 'table' then
 	 -- extend string to array
-	 local tmp = OUT[dest]
-	 OUT[dest] = { tmp }
-	 table.insert(OUT[dest], val)
-      elseif isarray(OUT[dest]) then
-	 table.insert(OUT[dest], val)
+	 local tmp = ZEN.HEAP.OUT[dest]
+	 ZEN.HEAP.OUT[dest] = { tmp }
+	 table.insert(ZEN.HEAP.OUT[dest], val)
+      elseif isarray(ZEN.HEAP.OUT[dest]) then
+	 table.insert(ZEN.HEAP.OUT[dest], val)
       else -- isdictionary
 	 if not key then
 	    error(key, 'Then statement targets dictionary with empty key: '..dest, 2)
 	 end
-	 OUT[dest][key] = val
+	 ZEN.HEAP.OUT[dest][key] = val
       end
    end
 end
@@ -138,41 +138,42 @@ end
 Then("nothing", function() return end) -- nop to terminate if
 
 Then("print string ''", function(k)
-	if not OUT.output then
-		OUT.output = {}
+	ZEN:crumb()
+	if not ZEN.HEAP.OUT.output then
+		ZEN.HEAP.OUT.output = {}
 	end
-	table.insert(OUT.output, k) -- raw string value
+	table.insert(ZEN.HEAP.OUT.output, k) -- raw string value
 end)
 
 Then("print ''", function(name)
 	local val = have(name)
-	OUT[name] = then_outcast( val, name )
+	ZEN.HEAP.OUT[name] = then_outcast( val, name )
 end)
 
 Then("print '' as ''",function(k, s)
 	local val = have(k)
-	OUT[k] = then_outcast( val, k, s )
+	ZEN.HEAP.OUT[k] = then_outcast( val, k, s )
 end)
 
 Then("print my name in ''",function(dst)
 		ZEN.assert(WHO, 'No identity specified: please use Given I am')
-		ZEN.assert(not OUT[dst], 'Cannot overwrite OUT.'..dst)
-		OUT[dst] = WHO
+		ZEN.assert(not ZEN.HEAP.OUT[dst], 'Cannot overwrite ZEN.HEAP.OUT.'..dst)
+		ZEN.HEAP.OUT[dst] = WHO
 end)
 
 Then("print my ''",function(k)
 	Iam()
 	local val = have(k)
 	-- my statements always print to a dictionary named after WHO
-	if not OUT[WHO] then OUT[WHO] = { } end
-	OUT[WHO][k] = then_outcast( val, k )
+	if not ZEN.HEAP.OUT[WHO] then ZEN.HEAP.OUT[WHO] = { } end
+	ZEN.HEAP.OUT[WHO][k] = then_outcast( val, k )
 end)
 
 Then("print my '' as ''",function(k, s)
 	Iam()
 	local val = have(k) -- use array to check in depth
 	if k == 'keyring' or s == 'keyring' then
-	   OUT[k] = export_keyring(val)
+	   ZEN.HEAP.OUT[k] = export_keyring(val)
 	   warn("DEPRECATED: Then print 'keyring' as '...'")
 	   warn("Please use: Then print keyring")
 	else
@@ -185,12 +186,12 @@ Then("print '' from ''",function(k, f)
 	ZEN.assert(val[k], "Object: "..k..", not found in "..f)
 	-- f is used in the then_outcast to support schemas
 	local tmp = then_outcast( val, f )
-	OUT[k] = tmp[k]
+	ZEN.HEAP.OUT[k] = tmp[k]
 end)
 
 Then("print '' from '' as ''",function(k, f, s)
 	local val = have({f,k}) -- use array to check in depth
-	OUT[k] = then_outcast( val, k, s )
+	ZEN.HEAP.OUT[k] = then_outcast( val, k, s )
 end)
 
 Then("print '' from '' as '' in ''",function(k, f, s, d)
@@ -212,21 +213,21 @@ end)
 Then("print my '' from ''",function(k, f)
 	Iam()
 	local val = have(f)
-	local codec = ZEN.CODEC[f]
+	local codec = ZEN.HEAP.CODEC[f]
 	ZEN.assert(val[k], "Object: "..k..", not foun in "..f)
 	-- my statements always print to a dictionary named after WHO
-	if not OUT[WHO] then OUT[WHO] = { } end
-	OUT[WHO][k] = then_outcast( val, k, codec.encoding )[k]
+	if not ZEN.HEAP.OUT[WHO] then ZEN.HEAP.OUT[WHO] = { } end
+	ZEN.HEAP.OUT[WHO][k] = then_outcast( val, k, codec.encoding )[k]
 end)
 
 Then('print keyring',function()
 	local val = have'keyring'
-	OUT.keyring = ZEN.schemas['keyring'].export(val)
+	ZEN.HEAP.OUT.keyring = ZEN.schemas['keyring'].export(val)
 end)
 Then('print my keyring',function()
 	Iam()
 	local val = have'keyring'
-	OUT[WHO] = { keyring = ZEN.schemas['keyring'].export(val) }
+	ZEN.HEAP.OUT[WHO] = { keyring = ZEN.schemas['keyring'].export(val) }
 end)
 
 -- data
@@ -241,7 +242,7 @@ end)
 Then('print data',function()
 	for k, v in pairs(ACK) do
 	   if k ~= 'keyring' then
-	      OUT[k] = then_outcast(v, k)
+	      ZEN.HEAP.OUT[k] = then_outcast(v, k)
 	   end
 	end
 end
@@ -251,7 +252,7 @@ Then("print data as ''",function(e)
 	local fun
 	for k, v in pairs(ACK) do
 	   if k ~= 'keyring' then
-	      OUT[k] = then_outcast(v, k, e)
+	      ZEN.HEAP.OUT[k] = then_outcast(v, k, e)
 	   end
 	end
 end
@@ -259,10 +260,10 @@ end
 
 Then("print data from ''", function(src)
 	local obj = have(src)
-	local codec = ZEN.CODEC[src]
+	local codec = ZEN.HEAP.CODEC[src]
 	for k,v in pairs(obj) do
 	   if k ~= 'keyring' then
-	      OUT[k] = then_outcast( v, k, codec.encoding)
+	      ZEN.HEAP.OUT[k] = then_outcast( v, k, codec.encoding)
 	   end
 	end
 end)
@@ -271,26 +272,26 @@ Then("print data from '' as ''", function(src, e)
 	local obj = have(src)
 	for k,v in pairs(obj) do
 	   if k ~= 'keyring' then
-	      OUT[k] = then_outcast( v, k, e )
+	      ZEN.HEAP.OUT[k] = then_outcast( v, k, e )
 	   end
 	end
 end)
 
 Then('print my data',function()
 	Iam() -- sanity checks
-	OUT[WHO] = { }
+	ZEN.HEAP.OUT[WHO] = { }
 	for k, v in pairs(ACK) do
 	   if k ~= 'keyring' then
-	      OUT[WHO][k] = then_outcast( v, k )
+	      ZEN.HEAP.OUT[WHO][k] = then_outcast( v, k )
 	   end
 	end
 end)
 Then("print my data as ''",function(e)
 	Iam() -- sanity checks
-	OUT[WHO] = { }
+	ZEN.HEAP.OUT[WHO] = { }
 	for k, v in pairs(ACK) do
 	   if k ~= 'keyring' then
-	      OUT[WHO][k] = then_outcast( v, k, e )
+	      ZEN.HEAP.OUT[WHO][k] = then_outcast( v, k, e )
 	   end
 	end
 end
@@ -298,24 +299,24 @@ end
 
 Then("print my data from ''",function(src)
 	Iam() -- sanity checks
-	OUT[WHO] = { }
+	ZEN.HEAP.OUT[WHO] = { }
 	local obj = have(src)
-	local codec = ZEN.CODEC[src]
+	local codec = ZEN.HEAP.CODEC[src]
 	for k, v in pairs(obj) do
 	   if k ~= 'keyring' then
-	      OUT[WHO][k] = then_outcast( v, k, codec.encoding )
+	      ZEN.HEAP.OUT[WHO][k] = then_outcast( v, k, codec.encoding )
 	   end
 	end
 end
 )
 Then("print my data from '' as ''",function(src, e)
 	Iam() -- sanity checks
-	OUT[WHO] = { }
+	ZEN.HEAP.OUT[WHO] = { }
 	local obj = have(src)
-	local codec = ZEN.CODEC[src]
+	local codec = ZEN.HEAP.CODEC[src]
 	for k, v in pairs(obj) do
 	   if k ~= 'keyring' then
-	      OUT[WHO][k] = then_outcast( v, k, codec.encoding )
+	      ZEN.HEAP.OUT[WHO][k] = then_outcast( v, k, codec.encoding )
 	   end
 	end
 end
@@ -325,7 +326,7 @@ Then("print object named by ''", function(name)
 	local real_name = have(name):string()
 	local val = have(real_name)
 	if real_name ~= 'keyring' then
-	   OUT[real_name] = then_outcast( val, real_name )
+	   ZEN.HEAP.OUT[real_name] = then_outcast( val, real_name )
 	end
 end)
 

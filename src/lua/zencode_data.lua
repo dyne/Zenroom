@@ -33,15 +33,15 @@
 
 
  -- Used in scenario's schema declarations to cast to zenroom. type
- ZEN.get = function(obj, key, conversion, encoding)
+ get = function(obj, key, conversion, encoding)
 	if type(key) ~= 'string' then
-	   error('ZEN.get key is not a string', 2)
+	   error('get key is not a string', 2)
 	end
 	if conversion and type(conversion) ~= 'function' then
-	   error('ZEN.get invalid conversion function', 2)
+	   error('get invalid conversion function', 2)
 	end
 	if encoding and type(encoding) ~= 'function' then
-	   error('ZEN.get invalid encoding function', 2)
+	   error('get invalid encoding function', 2)
 	end
 	local k
 	if not obj then -- take from IN root
@@ -87,10 +87,9 @@
           end
 	   end
 	end
-
-	assert(
-	   ZEN.OK and res,
-	   'ZEN.get on invalid key: ' .. key .. ' (' .. t .. ')', 2)
+   if ZEN then
+   	assert(ZEN.OK and res,'get on invalid key: ' .. key .. ' (' .. t .. ')', 2)
+   end
 	return res
  end
 
@@ -402,12 +401,12 @@
 	end
 	local ackn = ACK[name]
     if not ackn then error("Cannot create codec, object not found: "..name, 2) end
-    if ZEN.CODEC[name] then error("Cannot overwrite ZEN.CODEC."..name, 2) end
+    if ZEN.HEAP.CODEC[name] then error("Cannot overwrite ZEN.HEAP.CODEC."..name, 2) end
     local res
     if clone then
-	   local cclone = ZEN.CODEC[clone]
+	   local cclone = ZEN.HEAP.CODEC[clone]
 	   if not cclone then
-		  error("Clone not found in ZEN.CODEC."..clone, 2)
+		  error("Clone not found in ZEN.HEAP.CODEC."..clone, 2)
 	   end
        res = deepcopy(cclone)
        res.name = name
@@ -439,7 +438,7 @@
     end
 	-- default encoding if not specified
 	if not res.encoding then res.encoding = 'def' end
-    ZEN.CODEC[name] = res
+    ZEN.HEAP.CODEC[name] = res
     return(res) -- redundant, should not use return value for efficiency
  end
 

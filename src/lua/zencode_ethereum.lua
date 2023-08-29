@@ -56,17 +56,17 @@ end
 
 local function import_eth_tx(obj)
   local res = { }
-  res.nonce = ZEN.get(obj, 'nonce', INT.from_decimal, tostring)
-  res.gas_price = ZEN.get(obj, 'gas_price', INT.from_decimal, tostring)
-  res.gas_limit = ZEN.get(obj, 'gas_limit', INT.from_decimal, tostring)
-  res.value = ZEN.get(obj, 'value', INT.from_decimal, tostring)
-  res.to = ZEN.get(obj, 'to', import_eth_address_f, tostring)
+  res.nonce = schema_get(obj, 'nonce', INT.from_decimal, tostring)
+  res.gas_price = schema_get(obj, 'gas_price', INT.from_decimal, tostring)
+  res.gas_limit = schema_get(obj, 'gas_limit', INT.from_decimal, tostring)
+  res.value = schema_get(obj, 'value', INT.from_decimal, tostring)
+  res.to = schema_get(obj, 'to', import_eth_address_f, tostring)
   if obj.data then
-    res.data = ZEN.get(obj, 'data', O.from_hex, tostring)
+    res.data = schema_get(obj, 'data', O.from_hex, tostring)
   else res.data = O.new() end
-  if obj.v then res.v = ZEN.get(obj, 'v', O.from_hex) end
-  if obj.r then res.r = ZEN.get(obj, 'r', O.from_hex) end
-  if obj.s then res.s = ZEN.get(obj, 's', O.from_hex) end
+  if obj.v then res.v = schema_get(obj, 'v', O.from_hex) end
+  if obj.r then res.r = schema_get(obj, 'r', O.from_hex) end
+  if obj.s then res.s = schema_get(obj, 's', O.from_hex) end
   return res
 end
 local function export_eth_tx(obj)
@@ -90,7 +90,7 @@ end
 
 local function import_signature_f(obj)
     local res = {}
-    local supp = ZEN.get(obj, '.', nil, O.from_hex)
+    local supp = schema_get(obj, '.', nil, O.from_hex)
     if (type(supp) == 'zenroom.octet') then
         res = {
             r = supp:sub(1,32),
@@ -98,9 +98,9 @@ local function import_signature_f(obj)
             v = BIG.new(supp:sub(65, 65))
         }
     else
-        res.r = ZEN.get(obj, 'r', nil, O.from_hex)
-        res.v = ZEN.get(obj, 'v', nil, BIG.from_decimal)
-        res.s = ZEN.get(obj, 's', nil, O.from_hex)
+        res.r = schema_get(obj, 'r', nil, O.from_hex)
+        res.v = schema_get(obj, 'v', nil, BIG.from_decimal)
+        res.s = schema_get(obj, 's', nil, O.from_hex)
     end
     return res
 end
@@ -114,13 +114,13 @@ end
 
 local function import_method_f(obj)
     local res = {}
-    res.name = ZEN.get(obj, 'name', nil, O.from_string)
-    local input = ZEN.get(obj, 'input', nil, O.from_string)
+    res.name = schema_get(obj, 'name', nil, O.from_string)
+    local input = schema_get(obj, 'input', nil, O.from_string)
     if type(input) ~= "table" then
         error("invalid input type: "..type(obj.output).."should be a string array")
     end
     res.input = input
-    local output = ZEN.get(obj, 'output', nil, O.from_string)
+    local output = schema_get(obj, 'output', nil, O.from_string)
     if type(input) ~= "table" then
         error("invalid output type: "..type(obj.output).."should be a string array")
     end
@@ -138,7 +138,7 @@ end
 
 local function import_eth_address_signature_pair_f(obj)
     local res = {}
-    res.address = ZEN.get(obj, 'address', import_eth_address_f, tostring)
+    res.address = schema_get(obj, 'address', import_eth_address_f, tostring)
     res.signature = import_signature_f(obj.signature)
     return res
 end
@@ -150,12 +150,12 @@ local function export_eth_address_signature_pair_f(obj)
     return res
 end
 
-ZEN.add_schema(
+ZEN:add_schema(
    {
       ethereum_public_key = { import = O.from_hex,
 			      export = O.to_hex },
       ethereum_address = { import = function(obj)
-                return ZEN.get(obj, '.', import_eth_address_f, tostring)
+                return schema_get(obj, '.', import_eth_address_f, tostring)
                 end,
 			   export = ETH.checksum_encode },
       -- TODO generic import from string in zenroom.big,
