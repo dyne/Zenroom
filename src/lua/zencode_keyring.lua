@@ -103,49 +103,49 @@ local function import_keyring(obj)
    -- bls_curve
    local res = {}
    if obj.ecdh then
-      res.ecdh = ZEN.get(obj, 'ecdh', nop, O.from_base64)
+      res.ecdh = schema_get(obj, 'ecdh', nop, O.from_base64)
    end
    if obj.credential then
-      res.credential = ZEN.get(obj, 'credential', INT.new, O.from_base64)
+      res.credential = schema_get(obj, 'credential', INT.new, O.from_base64)
    end
    if obj.issuer then
       res.issuer = {
-	 x = ZEN.get(obj.issuer, 'x', INT.new, O.from_base64),
-	 y = ZEN.get(obj.issuer, 'y', INT.new, O.from_base64)
+	 x = schema_get(obj.issuer, 'x', INT.new, O.from_base64),
+	 y = schema_get(obj.issuer, 'y', INT.new, O.from_base64)
       }
    end
    if obj.bbs then
-      res.bbs = ZEN.get(obj, 'bbs', INT.new, O.from_base64)
+      res.bbs = schema_get(obj, 'bbs', INT.new, O.from_base64)
    end
    if obj.pvss then
-      res.pvss = ZEN.get(obj, 'pvss', INT.new, O.from_base64)
+      res.pvss = schema_get(obj, 'pvss', INT.new, O.from_base64)
    end
    if obj.reflow then
-      res.reflow = ZEN.get(obj, 'reflow', INT.new, O.from_base64)
+      res.reflow = schema_get(obj, 'reflow', INT.new, O.from_base64)
    end
    if obj.bitcoin then
-      res.bitcoin = ZEN.get(obj, 'bitcoin', BTC.wif_to_sk, O.from_base58)
+      res.bitcoin = schema_get(obj, 'bitcoin', BTC.wif_to_sk, O.from_base58)
    end
    if obj.testnet then
-      res.testnet = ZEN.get(obj, 'testnet', BTC.wif_to_sk, O.from_base58)
+      res.testnet = schema_get(obj, 'testnet', BTC.wif_to_sk, O.from_base58)
    end
    if obj.ethereum then
-      res.ethereum = ZEN.get(obj, 'ethereum', nop, O.from_hex)
+      res.ethereum = schema_get(obj, 'ethereum', nop, O.from_hex)
    end
    if obj.dilithium then
-      res.dilithium = ZEN.get(obj, 'dilithium', dilithium_f, O.from_base64)
+      res.dilithium = schema_get(obj, 'dilithium', dilithium_f, O.from_base64)
    end
    if obj.kyber then
-      res.kyber = ZEN.get(obj, 'kyber', kyber_f, O.from_base64)
+      res.kyber = schema_get(obj, 'kyber', kyber_f, O.from_base64)
    end
    if obj.schnorr then
-      res.schnorr = ZEN.get(obj, 'schnorr', nop, O.from_base64)
+      res.schnorr = schema_get(obj, 'schnorr', nop, O.from_base64)
    end
    if obj.ntrup then
-      res.ntrup = ZEN.get(obj, 'ntrup', ntrup_f, O.from_base64)
+      res.ntrup = schema_get(obj, 'ntrup', ntrup_f, O.from_base64)
    end
    if obj.eddsa then
-      res.eddsa = ZEN.get(obj, 'eddsa', nop, O.from_base58)
+      res.eddsa = schema_get(obj, 'eddsa', nop, O.from_base58)
    end
    return (res)
 end
@@ -182,7 +182,7 @@ function export_keyring(obj)
    return (res)
 end
 
-ZEN.add_schema(
+ZEN:add_schema(
    { keyring = { import = import_keyring,
 				 export = export_keyring }
    }

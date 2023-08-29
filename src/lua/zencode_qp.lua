@@ -23,7 +23,7 @@
 local QP = require'qp'
 
 local function dilithium_public_key_f(obj)
-   local res = ZEN.get(obj, '.')
+   local res = schema_get(obj, '.')
    ZEN.assert(
       QP.sigpubcheck(res),
       'Dilithium public key length is not correct'
@@ -32,7 +32,7 @@ local function dilithium_public_key_f(obj)
 end
 
 local function dilithium_signature_f(obj)
-   local res = ZEN.get(obj, '.')
+   local res = schema_get(obj, '.')
    ZEN.assert(
       QP.signature_check(res),
       'Dilithium signature length is not correcr'
@@ -41,7 +41,7 @@ local function dilithium_signature_f(obj)
 end
 
 local function kyber_public_key_f(obj)
-   local res = ZEN.get(obj, '.')
+   local res = schema_get(obj, '.')
    ZEN.assert(
       QP.kempubcheck(res),
       'Kyber public key length is not correct'
@@ -50,7 +50,7 @@ local function kyber_public_key_f(obj)
 end
 
 local function kyber_secret_f(obj)
-   local res = ZEN.get(obj, '.')
+   local res = schema_get(obj, '.')
    ZEN.assert(
       QP.kemsscheck(res),
       'Kyber secret lentgth is not correct'
@@ -59,7 +59,7 @@ local function kyber_secret_f(obj)
 end
 
 local function kyber_ciphertext_f(obj)
-   local res = ZEN.get(obj, '.')
+   local res = schema_get(obj, '.')
    ZEN.assert(
       QP.kemctcheck(res),
       'Kyber ciphertext length is not correct'
@@ -75,7 +75,7 @@ local function kyber_import_kem(obj)
 end
 
 local function ntrup_public_key_f(obj)
-   local res = ZEN.get(obj, '.')
+   local res = schema_get(obj, '.')
    ZEN.assert(
       QP.ntrup_pubcheck(res),
       'NTRUP public key length is not correct'
@@ -84,7 +84,7 @@ local function ntrup_public_key_f(obj)
 end
 
 local function ntrup_secret_f(obj)
-   local res = ZEN.get(obj, '.')
+   local res = schema_get(obj, '.')
    ZEN.assert(
       QP.ntrup_sscheck(res),
       'NTRUP secret lentgth is not correct'
@@ -93,7 +93,7 @@ local function ntrup_secret_f(obj)
 end
 
 local function ntrup_ciphertext_f(obj)
-   local res = ZEN.get(obj, '.')
+   local res = schema_get(obj, '.')
    ZEN.assert(
       QP.ntrup_ctcheck(res),
       'NTRUP ciphertext length is not correct'
@@ -128,7 +128,7 @@ local function _pubkey_compat(_key, algo)
    return pubkey
 end
 
-ZEN.add_schema(
+ZEN:add_schema(
    {
       dilithium_public_key = {import=dilithium_public_key_f},
       dilithium_signature = {import=dilithium_signature_f},

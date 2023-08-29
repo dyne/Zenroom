@@ -387,10 +387,10 @@ IfWhen("verify the elements in '' are not equal", _check_elements_not_equals)
 local function start_with_from(str, sub, start)
    local str_oct = have(str)
    local sub_oct = ACK[sub]
-   local str_codec = ZEN.CODEC[str]
+   local str_codec = ZEN.HEAP.CODEC[str]
    local sub_codec = {}
    if sub_oct then
-      sub_codec = ZEN.CODEC[sub]
+      sub_codec = ZEN.HEAP.CODEC[sub]
    else
       sub_oct = O.from_string(sub)
       sub_codec.encoding = 'string'

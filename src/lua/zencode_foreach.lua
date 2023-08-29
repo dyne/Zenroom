@@ -1,7 +1,7 @@
 Foreach("'' in ''", function(name, collection)
     local info = ZEN.ITER
     local col = have(collection)
-    ZEN.assert(ZEN.CODEC[collection].zentype == "a", "Can only iterate over arrays")
+    ZEN.assert(ZEN.HEAP.CODEC[collection].zentype == "a", "Can only iterate over arrays")
     -- in the first itaration decale the index variable
     if info.pos == 1 or not ACK[name] then
         empty(name)
@@ -13,8 +13,8 @@ Foreach("'' in ''", function(name, collection)
     else
         -- for each iteration read the value in the collection
         ACK[name] = col[info.pos]
-        if not ZEN.CODEC[name] then
-            new_codec(name, {encoding = ZEN.CODEC[collection].encoding})
+        if not ZEN.HEAP.CODEC[name] then
+            new_codec(name, {encoding = ZEN.HEAP.CODEC[collection].encoding})
         end
     end
 end)
@@ -58,9 +58,9 @@ Foreach("'' in sequence from '' to '' with step ''", function(name, from_name, t
         info.pos = 0
     else
         ACK[name] = current_value
-        if not ZEN.CODEC[name] then
-            new_codec(name, ZEN.CODEC[from])
-            ZEN.CODEC[name].name = name
+        if not ZEN.HEAP.CODEC[name] then
+            new_codec(name, ZEN.HEAP.CODEC[from])
+            ZEN.HEAP.CODEC[name].name = name
         end
     end
 end)

@@ -137,7 +137,7 @@ When(
 		    return HASH.new(CONF.hash):kdf(v)
 		end,
 		t)
-	 new_codec('key derivations', {zentype = ZEN.CODEC[tab].zentype})
+	 new_codec('key derivations', {zentype = ZEN.HEAP.CODEC[tab].zentype})
     end
 )
 

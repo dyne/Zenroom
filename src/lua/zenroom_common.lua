@@ -43,6 +43,16 @@ function fif(condition, if_true, if_false)
   if condition then return if_true else return if_false end
 end
 
+-- reliable table size measurement
+table.size = function(t)
+   if not t then return 0 end
+   local c = 0
+   for _ in pairs(t) do
+	  c = c + 1
+   end
+   return c
+end
+
 function uscore(input)
    local it = luatype(input)
    if it == 'string' then
@@ -61,14 +71,6 @@ function space(input)
       return input
    else
       error("Whitespace transform not a string or number: "..it, 3)
-   end
-end
-
--- debugging facility
-function xxx(s, n)
-   n = n or 3
-   if DEBUG >= n then
-	  printerr("LUA "..s)
    end
 end
 
@@ -263,7 +265,7 @@ function isarray(obj)
       local o = ACK[obj]
       if not o then return false end
       if luatype(o) ~= 'table' then return false end
-      if ZEN.CODEC[obj].zentype == 'a' then return true end
+      if ZEN.HEAP.CODEC[obj].zentype == 'a' then return true end
       return false
    end
    if luatype(obj) ~= 'table' then
@@ -290,8 +292,8 @@ function isdictionary(obj)
       local o = ACK[obj]
       if not o then return false end
       if luatype(o) ~= 'table' then return false end
-      if ZEN.CODEC[obj].zentype == 'd'
-	 or ZEN.CODEC[obj].zentype == 'schema' then
+      if ZEN.HEAP.CODEC[obj].zentype == 'd'
+	 or ZEN.HEAP.CODEC[obj].zentype == 'schema' then
 	 return true end -- TRUE
       return false
    end

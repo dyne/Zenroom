@@ -27,29 +27,29 @@ local function petition_scores_f(o)
 	local obj = deepmap(CONF.input.encoding.fun, o)
 	return ({
 		pos = {
-			left = ZEN.get(obj.pos, 'left', ECP.new),
-			right = ZEN.get(obj.pos, 'right', ECP.new)
+			left = schema_get(obj.pos, 'left', ECP.new),
+			right = schema_get(obj.pos, 'right', ECP.new)
 		},
 		neg = {
-			left = ZEN.get(obj.neg, 'left', ECP.new),
-			right = ZEN.get(obj.neg, 'right', ECP.new)
+			left = schema_get(obj.neg, 'left', ECP.new),
+			right = schema_get(obj.neg, 'right', ECP.new)
 		}
 	})
 end
 
 
 -- petition
-ZEN.add_schema(
+ZEN:add_schema(
 	{
 		petition_scores = petition_scores_f,
 		petition = {
             import = function(obj)
                 local res = {
-                    uid = ZEN.get(obj, 'uid'),
+                    uid = schema_get(obj, 'uid'),
                     scores = petition_scores_f(obj.scores)
                 }
                 if obj.owner then
-                    res.owner = ZEN.get(obj, 'owner', ECP.new)
+                    res.owner = schema_get(obj, 'owner', ECP.new)
                 end
                 if obj.issuer_public_key then
 				   local f = ZEN.schemas['issuer_public_key'].import
@@ -59,15 +59,15 @@ ZEN.add_schema(
                     res.list =
                     deepmap(
                     function(o)
-                        return ZEN.get(o, '.', ECP.new)
+                        return schema_get(o, '.', ECP.new)
                     end,
                     obj.list
                     )
                 end
                 if obj.signature then
                     res.signature = {
-                        r = ZEN.get(obj.signature, 'r'),
-                        s = ZEN.get(obj.signature, 's')
+                        r = schema_get(obj.signature, 'r'),
+                        s = schema_get(obj.signature, 's')
                     }
                 end
                 return res
@@ -81,8 +81,8 @@ ZEN.add_schema(
                 return {
                     -- from zencode_credential
                     proof = import_credential_proof_f(obj.proof),
-                    uid_signature = ZEN.get(obj, 'uid_signature', ECP.new),
-                    uid_petition = ZEN.get(obj, 'uid_petition')
+                    uid_signature = schema_get(obj, 'uid_signature', ECP.new),
+                    uid_petition = schema_get(obj, 'uid_petition')
                 }
             end,
             export = function (obj)
@@ -93,13 +93,13 @@ ZEN.add_schema(
 		petition_tally = {
             import = function(obj)
                 local dec = {}
-                dec.neg = ZEN.get(obj.dec, 'neg', ECP.new)
-                dec.pos = ZEN.get(obj.dec, 'pos', ECP.new)
+                dec.neg = schema_get(obj.dec, 'neg', ECP.new)
+                dec.pos = schema_get(obj.dec, 'pos', ECP.new)
                 return {
-                    uid = ZEN.get(obj, 'uid'),
-                    c = ZEN.get(obj, 'c', INT.new, O.from_base64),
+                    uid = schema_get(obj, 'uid'),
+                    c = schema_get(obj, 'c', INT.new, O.from_base64),
                     dec = dec,
-                    rx = ZEN.get(obj, 'rx', INT.new, O.from_base64),
+                    rx = schema_get(obj, 'rx', INT.new, O.from_base64),
                 }
             end,
             export = function(obj)

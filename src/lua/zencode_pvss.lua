@@ -37,10 +37,10 @@ end
 
 local function import_public_shares_f(obj)
     local res = {}
-    res.public_keys = ZEN.get(obj, 'public_keys', pvss_public_key_f)
-    res.proof = ZEN.get(obj, 'proof', BIG.new, O.from_base64)
-    res.commitments = ZEN.get(obj, 'commitments', ECP.from_zcash, O.from_base64)
-    res.encrypted_shares = ZEN.get(obj, 'encrypted_shares', ECP.from_zcash, O.from_base64)
+    res.public_keys = schema_get(obj, 'public_keys', pvss_public_key_f)
+    res.proof = schema_get(obj, 'proof', BIG.new, O.from_base64)
+    res.commitments = schema_get(obj, 'commitments', ECP.from_zcash, O.from_base64)
+    res.encrypted_shares = schema_get(obj, 'encrypted_shares', ECP.from_zcash, O.from_base64)
     return res
 end
 
@@ -61,11 +61,11 @@ end
 
 local function import_secret_share_f(obj)
     local res = {}
-    res.index = ZEN.get(obj, 'index', INT.from_decimal, tostring)
-    res.proof = ZEN.get(obj, 'proof', BIG.new, O.from_base64)
-    res.dec_share = ZEN.get(obj, 'dec_share', ECP.from_zcash, O.from_base64)
-    res.enc_share = ZEN.get(obj, 'enc_share', ECP.from_zcash, O.from_base64)
-    res.pub_key = ZEN.get(obj, 'pub_key', pvss_public_key_f)
+    res.index = schema_get(obj, 'index', INT.from_decimal, tostring)
+    res.proof = schema_get(obj, 'proof', BIG.new, O.from_base64)
+    res.dec_share = schema_get(obj, 'dec_share', ECP.from_zcash, O.from_base64)
+    res.enc_share = schema_get(obj, 'enc_share', ECP.from_zcash, O.from_base64)
+    res.pub_key = schema_get(obj, 'pub_key', pvss_public_key_f)
     return res
 end
 
@@ -83,8 +83,8 @@ end
 
 local function import_verified_shares_f(obj)
     local res = {}
-    res.valid_indexes = ZEN.get(obj, 'valid_indexes', INT.from_decimal, tostring)
-    res.valid_shares = ZEN.get(obj, 'valid_shares', ECP.from_zcash, O.from_base64)
+    res.valid_indexes = schema_get(obj, 'valid_indexes', INT.from_decimal, tostring)
+    res.valid_shares = schema_get(obj, 'valid_shares', ECP.from_zcash, O.from_base64)
     return res
 end
 
@@ -103,11 +103,11 @@ local function tablelength(T)
     return count
 end
 
-ZEN.add_schema(
+ZEN:add_schema(
     {
         pvss_public_key = {
             import = function(obj)
-                return ZEN.get(obj, '.', pvss_public_key_f)
+                return schema_get(obj, '.', pvss_public_key_f)
             end,
             export = ECP.to_zcash
         },

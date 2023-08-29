@@ -32,10 +32,10 @@ local function _export_big_as_octet_f(obj)
 end
 function single_share_f(o)
    local obj = deepmap(CONF.input.encoding.fun, o)
-   return { x = ZEN.get(obj, 'x', BIG.new, O.from_base64),
-            y = ZEN.get(obj, 'y', BIG.new, O.from_base64) }
+   return { x = schema_get(obj, 'x', BIG.new, O.from_base64),
+            y = schema_get(obj, 'y', BIG.new, O.from_base64) }
 end
-ZEN.add_schema({
+ZEN:add_schema({
       -- single share
       single_share = {
         import = single_share_f,

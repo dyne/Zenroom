@@ -24,7 +24,7 @@
 
 SHA256 = HASH.new('sha256')
 
--- ZEN.add_schema({
+-- ZEN:add_schema({
 -- 	  -- secret_day_key = function(obj)
 -- 	  -- 	 ZEN.assert(#obj == 32, "Secret day key has wrong size (not 32 bytes / 256 bits)")
 -- 	  -- 	 return obj

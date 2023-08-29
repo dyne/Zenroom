@@ -21,7 +21,7 @@
 local SCH = require'crypto_schnorr_signature'
 
 local function schnorr_public_key_f(obj)
-   local res = ZEN.get(obj, '.')
+   local res = schema_get(obj, '.')
    ZEN.assert(
       SCH.pubcheck(res),
       'Schnorr public key is not valid'
@@ -30,7 +30,7 @@ local function schnorr_public_key_f(obj)
 end
 
 local function schnorr_signature_f(obj)
-   local res = ZEN.get(obj, '.')
+   local res = schema_get(obj, '.')
    ZEN.assert(
       SCH.sigcheck(res),
       'Schnorr signature is not valid'
@@ -58,7 +58,7 @@ local function _pubkey_compat(_key)
 end
 
 
-ZEN.add_schema(
+ZEN:add_schema(
    {
       schnorr_public_key = schnorr_public_key_f,
       schnorr_signature = schnorr_signature_f
