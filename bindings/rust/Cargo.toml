@@ -6,16 +6,15 @@ edition = "2018"
 documentation = "https://dev.zenroom.org/#/pages/zencode-cookbook-intro"
 license = "AGPL-3.0-only"
 description = "zenroom is a small, portable and secure language interpreter of a domain specific language called zencode, able to execute cryptographic operations and smart contracts in a multiplatform environment."
-include = ["src/", "zenroom.h", "clib/*.a", "build.rs", "zenroom.h", "wrapper.h"]
-build = "build.rs"
+include = ["src/"]
 
 [lib]
 name = "zenroom"
 path = "src/lib.rs"
 crate-type = ["lib"]
 
-[build-dependencies]
-bindgen = "0.59.2"
-
 [dev-dependencies]
 serde_json = "1.0.74"
+
+[dependencies]
+base64 = "0.21.3"
