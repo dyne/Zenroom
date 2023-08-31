@@ -205,7 +205,8 @@ jobs:
       - run: |
           pip3 install meson ninja
           sudo apt-get install --force-yes zsh
-      - run: make linux-rust
+      - run: make linux
+      - run: cp src/zencode-exec /usr/local/bin/
       - name: 🧪 test bindings rust-${{ matrix.rust }}
         working-directory: bindings/rust
         run: cargo test
