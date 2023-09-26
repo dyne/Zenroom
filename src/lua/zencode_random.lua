@@ -28,7 +28,7 @@ When("create the random ''", function(dest)
                 new_codec(dest, { zentype = 'e' })
 end)
 
-function shuffle_array_f(tab)
+local function shuffle_array_f(tab)
    -- do not enforce CODEC detection since some schemas are also 1st level arrays
    local count = isarray(tab)
    ZEN.assert( count > 0, "Randomized object is not an array")
@@ -45,7 +45,7 @@ end
 -- random and hashing operations
 When("create the random object of '' bits", function(n)
 	empty'random object'
-	local bits = tonumber(n)
+	local bits = tonumber(mayhave(n) or n)
 	ZEN.assert(bits, 'Invalid number of bits: ' .. n)
 	ACK.random_object = OCTET.random(math.ceil(bits / 8))
 	new_codec('random_object', { zentype = 'e' })
@@ -53,7 +53,7 @@ end
 )
 When("create the random object of '' bytes",function(n)
 	empty'random object'
-	local bytes = math.ceil(tonumber(n))
+	local bytes = math.ceil(tonumber(mayhave(n) or n))
 	ZEN.assert(bytes, 'Invalid number of bytes: ' .. n)
 	ACK.random_object = OCTET.random(bytes)
 	new_codec('random_object', { zentype = 'e' })
@@ -61,63 +61,68 @@ end
 )
 
 When("randomize the '' array", function(arr)
-		local A = ACK[arr]
-		ZEN.assert(A, "Object not found: "..arr)
+		local A = have(arr)
 		-- ZEN.assert(ZEN.CODEC[arr].zentype == 'a', "Object is not an array: "..arr)
 		ACK[arr] = shuffle_array_f(A)
 end)
 
+local function _create_random_array(array_length, fun_input, fun)
+    empty 'array'
+    ACK.array = { }
+    local length = tonumber(mayhave(array_length) or array_length)
+    ZEN.assert(length, "Argument is not a number: "..array_length)
+    for i = length,1,-1 do
+        table.insert(ACK.array, fun(fun_input))
+    end
+end
 
 When("create the array of '' random objects", function(s)
-		ZEN.assert(not ACK.array, "Cannot overwrite existing object: ".."array")
-		ACK.array = { }
-		for i = s,1,-1 do
-		   table.insert(ACK.array,OCTET.random(64))
-		end
-		new_codec('array', {zentype = 'a'})
+    _create_random_array(s, 64, OCTET.random)
+    new_codec('array', {zentype = 'a'})
 end)
 
 When("create the array of '' random objects of '' bits", function(s, b)
-	empty'array'
-	ACK.array = { }
-	local q = tonumber(s)
-	ZEN.assert(q, "Argument is not a number: "..s)
-	local bits = tonumber(b)
-	local bytes = math.ceil(bits/8)
-	for i = q,1,-1 do
-	   table.insert(ACK.array,OCTET.random(bytes))
-	end
-	new_codec('array', {zentype = 'a'})
+    local bits = tonumber(mayhave(b) or b)
+    ZEN.assert(bits, "Argument is not a number: "..b)
+    local bytes = math.ceil(bits/8)
+    _create_random_array(s, bytes, OCTET.random)
+    new_codec('array', {zentype = 'a'})
 end)
 
 When("create the array of '' random objects of '' bytes", function(s, b)
-	empty'array'
-	ACK.array = { }
-	local q = tonumber(s)
-	ZEN.assert(q, "Argument is not a number: "..s)
-	local bytes = math.ceil(tonumber(b))
-	for i = q,1,-1 do
-	   table.insert(ACK.array,OCTET.random(bytes))
-	end
-	new_codec('array', {zentype = 'a'})
+    local n_bytes = tonumber(mayhave(b) or b)
+    ZEN.assert(n_bytes, "Argument is not a number: "..b)
+    local bytes = math.ceil(n_bytes)
+    _create_random_array(s, bytes, OCTET.random)
+    new_codec('array', {zentype = 'a'})
 end)
 
 When("create the array of '' random numbers", function(s)
-	ZEN.assert(not ACK.array, "Cannot overwrite existing object: ".."array")
-	ACK.array = { }
-	for i = s,1,-1 do
-		table.insert(ACK.array,F.new(random_int16()))
-	end
-	new_codec('array', {zentype = 'a', encoding = 'number' })
+    _create_random_array(s, null, BIG.random)
+    new_codec('array', {zentype = 'a', encoding = 'integer' })
 end)
 
 When("create the array of '' random numbers modulo ''", function(s,m)
-	ZEN.assert(not ACK.array, "Cannot overwrite existing object: ".."array")
-	ACK.array = { }
-	for i = s,1,-1 do
-		table.insert(ACK.array,F.new(math.floor(random_int16() % m)))
-	end
-	new_codec('array', {zentype = 'a', encoding = 'number' })
+    local modulo = mayhave(m)
+    if not modulo then
+        local mod = tonumber(m)
+        ZEN.assert(mod, "Argument is not a number: "..m)
+        modulo = BIG.new(mod)
+    end
+    local fun
+    local enc
+    local modulo_type = type(modulo)
+    if modulo_type == "zenroom.big" then
+        fun = function(input) return BIG.random() % input end
+        enc = 'integer'
+    elseif modulo_type == "zenroom.float" then
+        fun = function(input) return random_int16() % input end
+        enc = 'float'
+    else
+        error("Modulo is not a number nor an integer: "..modulo_type)
+    end
+    _create_random_array(s, modulo, fun)
+    new_codec('array', {zentype = 'a', encoding = enc })
 end)
 
 local function _extract_random_elements(num, from, random_fun)
