@@ -185,7 +185,7 @@ Then print 'key derivation'
 Then print 'HMAC'
 EOF
     save_output 'array_random_nums.json'
-    assert_output '{"HMAC":"JxoWzE+K1YvSOtxkRBkZ53v2ufOAdIAuFNpKcQSpvI8=","key_derivation":"o5vX+ydRxacRDaSZZhyVOecaAdCpssoiUPPL6t0KS68=","sha256":"R0O4u7f3wsTAVUDf4/vVWvTY7AqfFDqxmwo4U+I5wtU=","sha512":"YP2kyOt75BuI/6sCUwBsN0/od81QwWzmg2Pwxh1pXneW3VIygTRO2mU17dO/CZ2XOy3euWb0hbyHlc1Jyn+VQQ=="}'
+    assert_output '{"HMAC":"dFGFO3vRONcS9DPewsSHoWdsx99vBatnzUVMVJ2W0sg=","key_derivation":"9geWtsqQwnvm/ukbHwMQ6rlKttjWvjAJJUNKdyihe5Y=","sha256":"c75TjcFMRKsBC8ZQHpQ5+Hp0PhZv2cl8LCGf6jEen2Q=","sha512":"0KKLgW/ZJDN4T7QZRfuFCKQMcWRoLUmkKkBIArvri27MXvVfWMb/oWuGyFYeqAAsvgy8y4eR1JKvoRsHhpq60g=="}'
 
 
 }
