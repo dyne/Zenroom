@@ -19,6 +19,7 @@
  */
 
 #include <unistd.h>
+#include <errno.h>
 
 #ifdef __ANDROID__
 #include <android/log.h>
@@ -44,11 +45,22 @@
 #include <zen_memory.h>
 #include <mutt_sprintf.h>
 
+// simple inline duplicate function wrapper also in zen_io.c
+inline void _write(int fd, const void *buf, size_t count) {
+  register ssize_t res;
+  res = write(fd, buf, count);
+  if(res<0) {
+	// spit errors hoping there is a stderr
+	fprintf(stderr,"[!] Error on write() %lu bytes\n",count);
+	fprintf(stderr,"[!] %s\n",strerror(errno));
+  }
+}
+
 // from zen_io.c
 extern int zen_log(lua_State *L, log_priority prio, octet *oct);
 extern int printerr(lua_State *L, octet *in);
 
-#define Z_FORMAT_ARG(l) zenroom_t *Z = NULL; if (l) { void *_zv; lua_getallocf(l, &_zv); Z = _zv; } else { _err(format, arg); return(0); }
+#define Z_FORMAT_ARG(l) zenroom_t *Z=NULL; (void)Z; if (l) { void *_zv; lua_getallocf(l, &_zv); Z = _zv; } else { _err(format, arg); return(0); }
 
 #define MAX_ERRMSG 256 // maximum length of an error message line
 
@@ -97,10 +109,10 @@ void _out(const char *fmt, ...) {
   EM_ASM_({Module.print(UTF8ToString($0))}, msg);
 #elif defined(ARCH_CORTEX)
   msg[len] = '\n'; msg[len+1] = 0x0;
-  write(SEMIHOSTING_STDOUT_FILENO, msg, len+1);
+  _write(SEMIHOSTING_STDOUT_FILENO, msg, len+1);
 #else
   msg[len] = '\n'; msg[len+1] = 0x0;
-  write(STDOUT_FILENO, msg, len+1);
+  _write(STDOUT_FILENO, msg, len+1);
 #endif
 }
 
@@ -121,7 +133,7 @@ void _err(const char *fmt, ...) {
 #elif defined(ARCH_CORTEX)
   write_to_console(msg);
 #else
-  write(STDERR_FILENO, msg, len+1);
+  _write(STDERR_FILENO, msg, len+1);
 #endif
 }
 
@@ -239,16 +251,6 @@ int warning(void *L, const char *format, ...) {
   return 0;
 }
 
-// WIP
-// common function called both by C and Lua
-int _fatal(void *LL, int lvl, const char *fmt, ...) {
-  return 0;
-}
-
 int lua_fatal(lua_State *L) {
   return lua_error(L);
-}
-
-int fatal(void *LL, const char *fmt, ...) {
-  return 0;
 }

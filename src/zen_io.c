@@ -44,6 +44,17 @@ extern int SEMIHOSTING_STDOUT_FILENO;
 extern int write_to_console(const char* str);
 #endif
 
+// simple inline duplicate function wrapper also in zen_error.c
+inline void _write(int fd, const void *buf, size_t count) {
+  register ssize_t res;
+  res = write(fd, buf, count);
+  if(res<0) {
+	// spit errors hoping there is a stderr
+	fprintf(stderr,"[!] Error on write() %lu bytes\n",count);
+	fprintf(stderr,"[!] %s\n",strerror(errno));
+  }
+}
+
 static int zen_print (lua_State *L) {
   BEGIN();
   Z(L);
@@ -69,9 +80,9 @@ static int zen_print (lua_State *L) {
 #if defined(__EMSCRIPTEN__)
 	EM_ASM_({Module.print(UTF8ToString($0))}, o->val);
 #elif defined(ARCH_CORTEX)
-	write(SEMIHOSTING_STDOUT_FILENO, o->val, o->len+1);
+	_write(SEMIHOSTING_STDOUT_FILENO, o->val, o->len+1);
 #else
-	write(STDOUT_FILENO, o->val, o->len+1);
+	_write(STDOUT_FILENO, o->val, o->len+1);
 #endif
   } else
 	func(L, "print of an empty string");
@@ -105,7 +116,7 @@ int printerr(lua_State *L, octet *o) {
 #elif defined(ARCH_CORTEX)
 	write_to_console(o->val);
 #else
-	write(STDERR_FILENO, o->val, o->len+1);
+	_write(STDERR_FILENO, o->val, o->len+1);
 #endif
   } else
 	func(L, "printerr of an empty string");	
@@ -134,7 +145,7 @@ static int zen_write (lua_State *L) {
 	// octet safety buffer allows this: o->val = malloc(size +0x0f);
 	EM_ASM_({Module.print(UTF8ToString($0))}, o->val);
 #else
-	write(STDOUT_FILENO, o->val, o->len);
+	_write(STDOUT_FILENO, o->val, o->len);
 #endif
   } else
 	func(L, "write of an empty string");
@@ -179,11 +190,11 @@ int zen_log(lua_State *L, log_priority prio, octet *o) {
 	EM_ASM_({Module.printErr(UTF8ToString($0))}, prefix);
 	EM_ASM_({Module.printErr(UTF8ToString($0))}, o->val);
 #elif defined(ARCH_CORTEX)
-	write(SEMIHOSTING_STDOUT_FILENO, prefix, 5);
-	write(SEMIHOSTING_STDOUT_FILENO, o->val, tlen);
+	_write(SEMIHOSTING_STDOUT_FILENO, prefix, 5);
+	_write(SEMIHOSTING_STDOUT_FILENO, o->val, tlen);
 #else
-	write(STDERR_FILENO, prefix, 5);
-	write(STDERR_FILENO, o->val, tlen);
+	_write(STDERR_FILENO, prefix, 5);
+	_write(STDERR_FILENO, o->val, tlen);
 #endif
   }
   return 0;
