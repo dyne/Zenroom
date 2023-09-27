@@ -56,6 +56,9 @@
 #include <zen_big.h>
 #include <zen_hash.h>
 
+// somehow not found in headers
+extern size_t strnlen(const char *s, size_t maxlen);
+
 // From rmd160.c
 extern void RMD160_init(dword *MDbuf);
 extern void RMD160_process(dword *MDbuf, byte *message, dword length);

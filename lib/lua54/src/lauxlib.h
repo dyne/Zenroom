@@ -141,8 +141,7 @@ LUALIB_API void (luaL_requiref) (lua_State *L, const char *modname,
 
 #define luaL_typename(L,i)	lua_typename(L, lua_type(L,(i)))
 
-// #define luaL_dofile(L, fn) \
-// 	(luaL_loadfile(L, fn) || lua_pcall(L, 0, LUA_MULTRET, 0))
+// #define luaL_dofile(L, fn) (luaL_loadfile(L, fn) || lua_pcall(L, 0, LUA_MULTRET, 0))
 
 #define luaL_dofile(L, fn) \
 	lua_pcall(L, 0, LUA_MULTRET, 0)
