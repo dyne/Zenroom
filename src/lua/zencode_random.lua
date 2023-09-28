@@ -116,7 +116,7 @@ When("create the array of '' random numbers modulo ''", function(s,m)
         fun = function(input) return BIG.random() % input end
         enc = 'integer'
     elseif modulo_type == "zenroom.float" then
-        fun = function(input) return random_int16() % input end
+        fun = function(input) return F.new(math.floor(random_int16() % tonumber(input))) end
         enc = 'float'
     else
         error("Modulo is not a number nor an integer: "..modulo_type)
