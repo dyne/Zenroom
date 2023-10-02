@@ -279,11 +279,11 @@ and I rename the 'result' to 'priceRampinTransaction1'
 When I create the 'number dictionary'
 and I rename the 'number dictionary' to 'salesReport'
 
-# Here we insert elements into the newly created dictionary
+# Here we move elements into the newly created dictionary
 
-When I insert 'salesDifference' in 'salesReport'
-When I insert 'priceRampinTransaction1' in 'salesReport'
-When I insert 'percentOfSalesinTransaction2' in 'salesReport'
+When I move 'salesDifference' in 'salesReport'
+When I move 'priceRampinTransaction1' in 'salesReport'
+When I move 'percentOfSalesinTransaction2' in 'salesReport'
 
 
 When I create the hash of 'salesReport' using 'sha256'

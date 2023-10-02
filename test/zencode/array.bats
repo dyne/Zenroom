@@ -14,14 +14,14 @@ EOF
   
 }
 
-@test "When I create the length of" {
+@test "When I create the size of" {
     cat << EOF | zexe array_length.zen arr.json
 Given I have a 'url64 array' named 'bonnetjes'
-When I create the length of 'bonnetjes'
-Then print the 'length'
+When I create the size of 'bonnetjes'
+Then print the 'size'
 EOF
     save_output "array_length.json"
-    assert_output '{"length":32}'
+    assert_output '{"size":32}'
 }
 
 @test "When I pick the random object in, rename, remove" {
@@ -433,18 +433,18 @@ When I rename the 'copy' to 'time5'
 When I create the copy of 'myTimestamp' from dictionary '6'
 When I rename the 'copy' to 'time6'
 
-# Insert timestamps in array to create average and variance
+# move timestamps in array to create average and variance
 
 When I create the 'string array'
 When I rename the 'string array' to 'allTimestamps'
 
-When I insert 'time1' in 'allTimestamps'
-When I insert 'time2' in 'allTimestamps'
-When I insert 'time3' in 'allTimestamps'
-When I insert 'time4' in 'allTimestamps'
-When I insert 'time5' in 'allTimestamps'
-When I insert 'time6' in 'allTimestamps'
-# When I insert 'non numero' in 'allTimestamps'
+When I move 'time1' in 'allTimestamps'
+When I move 'time2' in 'allTimestamps'
+When I move 'time3' in 'allTimestamps'
+When I move 'time4' in 'allTimestamps'
+When I move 'time5' in 'allTimestamps'
+When I move 'time6' in 'allTimestamps'
+# When I move 'non numero' in 'allTimestamps'
 
 When I create the average of elements in array 'allTimestamps'
 When I create the variance of elements in array 'allTimestamps'
@@ -680,10 +680,10 @@ Given I have a 'string dictionary' named 'dict'
 Given I have a 'string array' named 'nested_arr'
 Given I have a 'string dictionary' named 'empty_dict'
 
-If the elements in 'arr' are all equal
-If the elements in 'dict' are all equal
-If the elements in 'nested arr' are all equal
-If the elements in 'empty dict' are all equal
+If I verify the elements in 'arr' are all equal
+If I verify the elements in 'dict' are all equal
+If I verify the elements in 'nested arr' are all equal
+If I verify the elements in 'empty dict' are all equal
 Then print string 'OK'
 EOF
     save_output "compare-equal.json"
@@ -712,9 +712,9 @@ Given I have a 'string array' named 'arr'
 Given I have a 'string dictionary' named 'dict'
 Given I have a 'string array' named 'nested_arr'
 
-If the elements in 'arr' are not all equal
-If the elements in 'dict' are not all equal
-If the elements in 'nested arr' are not all equal
+If I verify the elements in 'arr' are not all equal
+If I verify the elements in 'dict' are not all equal
+If I verify the elements in 'nested arr' are not all equal
 Then print string 'OK'
 EOF
     save_output "compare-not-equal.json"
@@ -891,8 +891,8 @@ EOF
     cat <<EOF | zexe length_param.zen length_param.data
 Given I have a 'string array' named 'array'
 
-When I create the length of 'array'
-and I create the copy of element 'length' in array 'array'
+When I create the size of 'array'
+and I create the copy of element 'size' in array 'array'
 
 Then print the 'copy'
 EOF

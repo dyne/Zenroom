@@ -99,13 +99,13 @@ Endif
 
 # Here we check if all the elements in the dictionary are equal
 # (it works also with arrays)
-If the elements in 'dictionary_equal' are equal
+If I verify the elements in 'dictionary_equal' are equal
 Then print string 'all elements inside dictionary_equal are equal'
 Endif
 
 # Here we check if at least two elements in the dictionary are different
 # (it works also with arrays)
-If the elements in 'dictionary_not_equal' are not equal
+If I verify the elements in 'dictionary_not_equal' are not equal
 Then print string 'all elements inside dictionary_not_equal are different'
 Endif
 

@@ -102,9 +102,9 @@ and I rename the 'string dictionary' to 'ABC-TransactionsStatement'
 and I write number '108' in 'TransactionsConcluded'
 and I write string 'Transaction Control Dictionary' in 'nameOfDictionary'
 and I write number '21' in 'AverageAmountPerTransaction'
-and I insert 'nameOfDictionary' in 'ABC-TransactionsStatement'
-and I insert 'TransactionsConcluded' in 'ABC-TransactionsStatement'
-and I insert 'AverageAmountPerTransaction' in 'ABC-TransactionsStatement'
+and I move 'nameOfDictionary' in 'ABC-TransactionsStatement'
+and I move 'TransactionsConcluded' in 'ABC-TransactionsStatement'
+and I move 'AverageAmountPerTransaction' in 'ABC-TransactionsStatement'
 Then print the 'ABC-TransactionsStatement'
 EOF
     save_output 'dictionariesCreate_transaction_entry.json'
@@ -233,9 +233,9 @@ and I rename the 'result' to 'TransactionProductAmountSums'
 
 # create the entry for the new sum
 and I create the 'number dictionary'
-and I insert 'TransactionValueSums' in 'number dictionary'
-and I insert 'TransactionProductAmountSums' in 'number dictionary'
-and I insert 'timestamp' in 'number dictionary'
+and I move 'TransactionValueSums' in 'number dictionary'
+and I move 'TransactionProductAmountSums' in 'number dictionary'
+and I move 'timestamp' in 'number dictionary'
 and I rename the 'number dictionary' to 'New-ABC-TransactionsSum'
 
 # sign the new entry
@@ -389,10 +389,10 @@ When I create the 'number dictionary'
 and I rename the 'number dictionary' to 'salesReport'
 
 
-# Here we insert elements into the newly created dictionary
-When I insert 'maxPricePerKG' in 'salesReport'
-When I insert 'sumValueAllTransactions' in 'salesReport'
-When I insert 'transferredProductAmountafterSalesStart' in 'salesReport'
+# Here we move elements into the newly created dictionary
+When I move 'maxPricePerKG' in 'salesReport'
+When I move 'sumValueAllTransactions' in 'salesReport'
+When I move 'transferredProductAmountafterSalesStart' in 'salesReport'
 
 
 When I create the hash of 'salesReport' using 'sha512'
@@ -555,7 +555,7 @@ Given I have a 'string dictionary' named 'data' inside 'dataFromEndpoint'
 When I pickup from path 'data.batches.header_signature'
 When I pickup a 'string' from path 'data.header.previous_block_id'
 When I pickup a 'string array' from path 'data.batches'
-When I insert 'previous block id' in 'batches'
+When I move 'previous block id' in 'batches'
 When I take 'state root hash' from path 'data.header'
 Then print the 'header signature'
 Then print the 'batches'
@@ -729,7 +729,7 @@ EOF
     assert_output '{"myArray":["John","Doe","42",{"age":"44","myArray":["John","Doe","42"],"name":"Bruce","surname":"Wayne"},"where?"],"myDict":{"age":"44","myArray":["John","Doe","42"],"name":"Bruce","surname":"Wayne"}}'
 }
 
-@test "fail to insert element in a close schema" {
+@test "fail to move element in a close schema" {
     cat << EOF | save_asset fail_move.data
 {
    "myMessage": "Dear Bob, your name is too short, goodbye - Alice.",
@@ -741,7 +741,7 @@ EOF
 EOF
 
     cat << EOF | save_asset fail_move.zen
-Scenario 'ecdh': insert something in a signature
+Scenario 'ecdh': move something in a signature
 
 Given I have a 'ecdh signature'
 Given I have a 'string' named 'myMessage'
@@ -762,7 +762,7 @@ EOF
 EOF
 
     cat << EOF | zexe move_in_array_of_schemas.zen move_in_array_of_schemas.data
-Scenario 'ethereum': insert signature in an array
+Scenario 'ethereum': move signature in an array
 
 Given I have a 'ethereum signature'
 
