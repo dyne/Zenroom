@@ -1,15 +1,7 @@
-use std::ffi::{CStr, CString};
+use base64::{engine::general_purpose, Engine as _};
 use std::fmt;
-use std::sync::{Mutex, MutexGuard, Once};
-
-mod c {
-    #![allow(non_upper_case_globals)]
-    #![allow(non_camel_case_types)]
-    #![allow(non_snake_case)]
-    #![allow(dead_code)]
-    #![allow(deref_nullptr)]
-    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-}
+use std::io::prelude::*;
+use std::process::{Command, Stdio};
 
 #[derive(Clone, Debug)]
 pub struct ZenResult {
@@ -38,95 +30,72 @@ impl fmt::Display for ZenError {
     }
 }
 
-impl std::error::Error for ZenError {}
+pub fn zencode_exec_extra(
+    script: &str,
+    conf: &str,
+    keys: &str,
+    data: &str,
+    extra: &str,
+    context: &str,
+) -> Result<ZenResult, ZenError> {
+    let mut zen_input: String = "".to_owned();
 
-type ZenGIL = MutexGuard<'static, ()>;
+    zen_input.push_str(conf);
+    zen_input.push_str("\n");
 
-fn aquire_zen_gil() -> ZenGIL {
-    static mut MUTEX: *const Mutex<()> = std::ptr::null();
-    static ONCE: Once = Once::new();
-    let mutex: &Mutex<()> = unsafe {
-        ONCE.call_once(|| {
-            MUTEX = std::mem::transmute(Box::new(Mutex::new(())));
-        });
-        MUTEX.as_ref().unwrap()
-    };
-    mutex.lock().unwrap()
+    zen_input.push_str(&general_purpose::STANDARD.encode(script));
+    zen_input.push_str("\n");
+
+    zen_input.push_str(&general_purpose::STANDARD.encode(&keys));
+    zen_input.push_str("\n");
+
+    zen_input.push_str(&general_purpose::STANDARD.encode(&data));
+    zen_input.push_str("\n");
+
+    zen_input.push_str(&general_purpose::STANDARD.encode(&extra));
+    zen_input.push_str("\n");
+
+    zen_input.push_str(&general_purpose::STANDARD.encode(&context));
+    zen_input.push_str("\n");
+
+    let mut child = Command::new("zencode-exec")
+        .stdin(Stdio::piped())
+        .stderr(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap();
+    let mut stdin = child.stdin.take().unwrap();
+
+    std::thread::spawn(move || {
+        stdin
+            .write_all(zen_input.as_bytes())
+            .expect("Failed to write to stdin");
+    });
+
+    let output = child.wait_with_output().expect("Failed to read stdout");
+    Ok(ZenResult {
+        output: String::from_utf8_lossy(&output.stdout).to_string(),
+        logs: String::from_utf8_lossy(&output.stderr).to_string(),
+    })
 }
-
-const BUF_SIZE: usize = 2 * 1024 * 1024;
-
-type Fun = unsafe extern "C" fn(
-    *const ::std::os::raw::c_char,
-    *const ::std::os::raw::c_char,
-    *const ::std::os::raw::c_char,
-    *const ::std::os::raw::c_char,
-    *mut ::std::os::raw::c_char,
-    ::std::os::raw::c_ulong,
-    *mut ::std::os::raw::c_char,
-    ::std::os::raw::c_ulong,
-) -> ::std::os::raw::c_int;
 
 pub fn zencode_exec(
-    script: impl AsRef<str>,
-    conf: impl AsRef<str>,
-    keys: impl AsRef<str>,
-    data: impl AsRef<str>,
+    script: &str,
+    conf: &str,
+    keys: &str,
+    data: &str,
 ) -> Result<ZenResult, ZenError> {
-    exec_f(c::zencode_exec_tobuf, script, conf, keys, data)
+    zencode_exec_extra(script, conf, keys, data, "", "")
 }
 
-pub fn zenroom_exec(
+/*pub fn zenroom_exec(
     script: impl AsRef<str>,
     conf: impl AsRef<str>,
     keys: impl AsRef<str>,
     data: impl AsRef<str>,
 ) -> Result<ZenResult, ZenError> {
     exec_f(c::zenroom_exec_tobuf, script, conf, keys, data)
-}
-
-fn exec_f(
-    fun: Fun,
-    script: impl AsRef<str>,
-    conf: impl AsRef<str>,
-    keys: impl AsRef<str>,
-    data: impl AsRef<str>,
-) -> Result<ZenResult, ZenError> {
-    let mut stdout = Vec::<i8>::with_capacity(BUF_SIZE);
-    let stdout_ptr = stdout.as_mut_ptr();
-    let mut stderr = Vec::<i8>::with_capacity(BUF_SIZE);
-    let stderr_ptr = stderr.as_mut_ptr();
-
-    let lock = aquire_zen_gil();
-    let exit_code = unsafe {
-        fun(
-            CString::new(script.as_ref())?.into_raw(),
-            CString::new(conf.as_ref())?.into_raw(),
-            CString::new(keys.as_ref())?.into_raw(),
-            CString::new(data.as_ref())?.into_raw(),
-            stdout_ptr,
-            BUF_SIZE as u64,
-            stderr_ptr,
-            BUF_SIZE as u64,
-        )
-    };
-    drop(lock);
-
-    let res = ZenResult {
-        output: unsafe { CStr::from_ptr(stdout_ptr) }
-            .to_string_lossy()
-            .into_owned(),
-        logs: unsafe { CStr::from_ptr(stderr_ptr) }
-            .to_string_lossy()
-            .into_owned(),
-    };
-
-    if exit_code == 0 {
-        Ok(res)
-    } else {
-        Err(ZenError::Execution(res))
-    }
-}
+}*/
 
 #[cfg(test)]
 mod tests {
@@ -142,11 +111,18 @@ mod tests {
     Then print my 'keyring'
     "#;
 
+    const EXTRA_USAGE: &str = r#"Scenario 'ecdh': Create the keypair
+Given I have a 'string' named 'keys'
+Given I have a 'string' named 'data'
+Given I have a 'string' named 'extra'
+Then print data
+"#;
     #[test]
     fn simple_script() -> Result<(), ZenError> {
         let result = zencode_exec(SAMPLE_SCRIPT, "", "", "")?;
 
         let json: Value = serde_json::from_str(&result.output).unwrap();
+        println!("{}", result.output);
         let keypair = json
             .as_object()
             .unwrap()
@@ -156,6 +132,25 @@ mod tests {
             .unwrap();
         assert!(keypair.get("ecdh").is_some());
         assert!(keypair.get("schnorr").is_some());
+
+        Ok(())
+    }
+
+    #[test]
+    fn extra_usage() -> Result<(), ZenError> {
+        let result = zencode_exec_extra(
+            EXTRA_USAGE,
+            "",
+            "{\"keys\": \"keys\"}",
+            "{\"data\": \"data\"}",
+            "{\"extra\": \"extra\"}",
+            "",
+        )?;
+
+        let json: Value = serde_json::from_str(&result.output).unwrap();
+        assert!(json.get("data").unwrap() == "data");
+        assert!(json.get("extra").unwrap() == "extra");
+        assert!(json.get("keys").unwrap() == "keys");
 
         Ok(())
     }
