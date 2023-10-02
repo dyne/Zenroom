@@ -194,7 +194,7 @@ local function _json_encoede_f(src, dest)
 end
 
 When(deprecated("create the json of ''",
-    "create the escaped string of ''",
+    "create the json escaped string of ''",
     function(src) _json_encoede_f(src, 'json') end)
 )
 
