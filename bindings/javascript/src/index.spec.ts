@@ -94,9 +94,10 @@ test("handle broken zencode", async (t) => {
   try {
     await zencode_exec(`sapodksapodk`);
   } catch (e) {
+    console.log(e)
     t.true(
       e.logs.includes(
-        `Invalid Zencode line 1: 'sapodksapodk'`
+        `Invalid Zencode prefix 1: 'sapodksapodk'`
       )
     );
   }
