@@ -46,7 +46,7 @@ When(
         elseif strcasecmp(h, 'sha512') then
             ACK.hash = sha512(src)
         elseif strcasecmp(h, 'keccak256') then
-            ACK.hash = keccak256(src)
+            ACK.hash = HASH.keccak256(src)
         end
         zencode_assert(ACK.hash, 'Invalid hash: ' .. h)
 	new_codec('hash', { zentype = 'e' })

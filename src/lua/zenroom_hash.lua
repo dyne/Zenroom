@@ -23,10 +23,10 @@
 local hash = require'hash'
 
 -- when using facility functions, global hashers are created only once
-SHA256 = nil
-SHA512 = nil
-SHAKE256 = nil
-KECCAK256 = nil
+local SHA256 = nil
+local SHA512 = nil
+local SHAKE256 = nil
+local KECCAK256 = nil
 local function init(bits)
    local h
    if bits == 256 or bits == 32 then
@@ -43,13 +43,13 @@ end
 
 function sha256(data) return init(256):process(data) end
 function sha512(data) return init(512):process(data) end
-function shake256(data, len)
+hash.shake256 = function(data, len)
 	if SHAKE256==nil then SHAKE256 = hash.new('shake256') end
 	if not len then len = 32 end
 	return SHAKE256:process(data, len)
 end
 
-function keccak256(data)
+hash.keccak256 = function(data)
     if KECCAK256==nil then KECCAK256 = hash.new('keccak256') end
     return KECCAK256:process(data)
 end
@@ -60,24 +60,24 @@ function KDF(data, bits)
 end
 
 function hash.dsha256(msg)
-   local SHA256 = HASH.new('sha256')
-   return SHA256:process(SHA256:process(msg))
+   local _SHA256 = HASH.new('sha256')
+   return _SHA256:process(_SHA256:process(msg))
 end
 
 function hash.hash160(msg)
-   local SHA256 = HASH.new('sha256')
-   local RMD160 = HASH.new('ripemd160')
-   return RMD160:process(SHA256:process(msg))
+   local _SHA256 = HASH.new('sha256')
+   local _RMD160 = HASH.new('ripemd160')
+   return _RMD160:process(_SHA256:process(msg))
 
 end
 
 --used in BBS+ signature
-function hkdf_extract(salt, ikm)
+hash.hkdf_extract = function(salt, ikm)
 	return HASH.hmac(hash.new('sha256'), salt, ikm)
 end
 
 --used in BBS+ signature
-function hkdf_expand(prk, info, l)
+hash.hkdf_expand = function(prk, info, l)
 	local h = hash.new('sha256')
 	local hash_len = 32
 	assert(#prk >= hash_len)
@@ -113,7 +113,7 @@ end
 --used in BBS+ signature
 -- draft-irtf-cfrg-hash-to-curve-16 section 5.3.2
 -- It outputs a uniformly random byte string. (uses SHAKE256)
-function expand_message_xof(msg, DST, len_in_bytes)
+hash.expand_message_xof = function (msg, DST, len_in_bytes)
 --msg and DST must be octets
 	if len_in_bytes > 65536 then
 		error("len_in_bytes is too big", 2)
@@ -124,7 +124,7 @@ function expand_message_xof(msg, DST, len_in_bytes)
 
 	local DST_prime = DST .. i2osp(#DST, 1)
 	local msg_prime = msg .. i2osp(len_in_bytes, 2) .. DST_prime
-	local uniform_bytes = shake256(msg_prime, len_in_bytes)
+	local uniform_bytes = hash.shake256(msg_prime, len_in_bytes)
 
 	return uniform_bytes, DST_prime, msg_prime
 
@@ -133,7 +133,7 @@ end
 --used in BBS+ signature
 -- draft-irtf-cfrg-hash-to-curve-16 section 5.3.1
 -- It outputs a uniformly random byte string.
-function expand_message_xmd(msg, DST, len_in_bytes)
+hash.expand_message_xmd = function(msg, DST, len_in_bytes)
 	-- msg, DST are OCTETS; len_in_bytes is an integer.
 
 	-- Parameters:
