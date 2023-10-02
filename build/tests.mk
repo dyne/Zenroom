@@ -21,6 +21,10 @@ check:
 	@echo "\t check-linux, check-osx, check-js, check-py, check-rs, check-go"
 	@echo "For an efficient test suite, use target: meson-test"
 
+luacheck:
+	@echo "Running Luacheck analysis (requires lua-check installed)"
+	luacheck --config src/lua/.luacheckrc --codes src/lua/**.lua
+
 check-osx: test-exec := ./src/zenroom.command
 check-osx:
 	@cp -v ${test-exec} test/zenroom
