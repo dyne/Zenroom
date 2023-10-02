@@ -1,4 +1,5 @@
 local bbs = require'crypto_bbs'
+local HASH = require'hash'
 
 print('----------------- TEST SHA256 ------------------')
 
@@ -265,7 +266,7 @@ local function seeded_random_scalars_xmd(count)
     local r = ECP.order()
     local out_len = EXPAND_LEN * count
     assert(out_len <= 65535)
-    local v = expand_message_xmd(SEED, O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MOCK_RANDOM_SCALARS_DST_"), out_len)
+    local v = HASH.expand_message_xmd(SEED, O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MOCK_RANDOM_SCALARS_DST_"), out_len)
     -- if v is INVALID return INVALID
 
     local arr = {}
@@ -283,7 +284,7 @@ local function seeded_random_scalars_xof(count)
     local r = ECP.order()
     local out_len = EXPAND_LEN * count
     assert(out_len <= 65535)
-    local v = expand_message_xof(SEED, O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MOCK_RANDOM_SCALARS_DST_"), out_len)
+    local v = HASH.expand_message_xof(SEED, O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MOCK_RANDOM_SCALARS_DST_"), out_len)
     -- if v is INVALID return INVALID
 
     local arr = {}

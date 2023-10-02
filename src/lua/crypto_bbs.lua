@@ -61,7 +61,7 @@ local IDENTITY_G1 = ECP.generator()
 local K = nil -- see function K_INIT() below
 
 local CIPHERSUITE_SHAKE = {
-    expand = expand_message_xof,
+    expand = HASH.expand_message_xof,
     ciphersuite_ID = O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_"),
     generator_seed = O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MESSAGE_GENERATOR_SEED"),
     seed_dst = O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_SIG_GENERATOR_SEED_"),
@@ -72,12 +72,12 @@ local CIPHERSUITE_SHAKE = {
     P1 = ECP.from_zcash(O.from_hex('91b784eaac4b2b2c6f9bfb2c9eae97e817dd12bba49a0821d175a50f1632465b319ca9fb81dda3fb0434412185e2cca5')),
     GENERATORS = {},
     GENERATOR_N = 1,
-    GENERATOR_V = expand_message_xof(O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MESSAGE_GENERATOR_SEED"),
+    GENERATOR_V = HASH.expand_message_xof(O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MESSAGE_GENERATOR_SEED"),
     O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_SIG_GENERATOR_SEED_"), 48)
 }
 
 local CIPHERSUITE_SHA = {
-    expand = expand_message_xmd,
+    expand = HASH.expand_message_xmd,
     ciphersuite_ID = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_"),
     generator_seed = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MESSAGE_GENERATOR_SEED"),
     seed_dst = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_GENERATOR_SEED_"),
@@ -88,7 +88,7 @@ local CIPHERSUITE_SHA = {
     P1 = ECP.from_zcash(O.from_hex('8533b3fbea84e8bd9ccee177e3c56fbe1d2e33b798e491228f6ed65bb4d1e0ada07bcc4489d8751f8ba7a1b69b6eecd7')),
     GENERATORS = {},
     GENERATOR_N = 1,
-    GENERATOR_V = expand_message_xmd(O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MESSAGE_GENERATOR_SEED"),
+    GENERATOR_V = HASH.expand_message_xmd(O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MESSAGE_GENERATOR_SEED"),
     O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_GENERATOR_SEED_"), 48)
 }
 
@@ -208,8 +208,8 @@ function bbs.keygen(ikm, key_info)
     local sk = INT.new(0)
     while sk == INT.new(0) do
         salt = sha256(salt)
-        local prk = hkdf_extract(salt, ikm .. i2osp(0, 1))
-        local okm = hkdf_expand(prk, key_info .. i2osp(l, 2), l)
+        local prk = HASH.hkdf_extract(salt, ikm .. i2osp(0, 1))
+        local okm = HASH.hkdf_expand(prk, key_info .. i2osp(l, 2), l)
         sk = os2ip(okm) % ECP.order()
     end
 
@@ -237,7 +237,7 @@ function bbs.hash_to_field(msg, count, DST)
     local L = 64
 
     local len_in_bytes = count*m*L
-    local uniform_bytes = bbs.expand_message_xmd(msg, DST, len_in_bytes)
+    local uniform_bytes = HASH.expand_message_xmd(msg, DST, len_in_bytes)
     local u = {}
     for i = 0, (count-1) do
         local u_i = {}
@@ -260,7 +260,7 @@ function bbs.hash_to_field_m1(msg, count, DST)
     local L = 64
 
     local len_in_bytes = count*L
-    local uniform_bytes = bbs.expand_message_xmd(msg, DST, len_in_bytes)
+    local uniform_bytes = HASH.expand_message_xmd(msg, DST, len_in_bytes)
     local u = {}
     for i = 0, (count-1) do
         local elm_offset = L*i

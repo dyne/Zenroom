@@ -440,7 +440,7 @@ end)
 local function _prepare_msg_f(src)
     local msg = have(src)
     local ethers_message = O.from_string("\x19Ethereum Signed Message:\n") .. O.new(#msg) .. msg
-    local hashed_msg = keccak256(ethers_message)
+    local hashed_msg = HASH.keccak256(ethers_message)
     return hashed_msg
 end
 

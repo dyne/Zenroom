@@ -35,9 +35,9 @@ local function run_test_hkdf(test)
     if type(test.info) == 'string' then
         test.info = O.from_hex(test.info)
     end
-    local prk = hkdf_extract(test.salt, O.from_hex(test.ikm))
+    local prk = HASH.hkdf_extract(test.salt, O.from_hex(test.ikm))
     assert(O.from_hex(test.prk) == prk)
-    local okm = hkdf_expand(prk, test.info, test.l)
+    local okm = HASH.hkdf_expand(prk, test.info, test.l)
     assert(O.from_hex(test.okm) == okm)
 end
 
@@ -134,7 +134,7 @@ local expand_message_xmd_SHA_256_test = {
 }
 
 local function run_test_expand_message_xmd_SHA_256 (test)
-    local output_bytes, output_DST, output_msg = expand_message_xmd(O.from_string(test.msg), O.from_string(DST_test), tonumber(test.len_in_bytes))
+    local output_bytes, output_DST, output_msg = HASH.expand_message_xmd(O.from_string(test.msg), O.from_string(DST_test), tonumber(test.len_in_bytes))
     assert(output_bytes:hex() == test.uniform_bytes, "Wrong output bytes")
     assert(output_DST:hex() == test.DST_prime, "Wrong dst prime")
     assert(output_msg:hex() == test.msg_prime, "Wrong msg_prime")
@@ -229,7 +229,7 @@ local expand_message_xof_test = {
 
 
 local function run_test_expand_message_xof_SHAKE_128 (test)
-    local output_bytes_xof, output_DST_xof, output_msg_xof = expand_message_xof(O.from_string(test.msg), O.from_string(DST_EXPAND_MSG_XOF), tonumber(test.len_in_bytes))
+    local output_bytes_xof, output_DST_xof, output_msg_xof = HASH.expand_message_xof(O.from_string(test.msg), O.from_string(DST_EXPAND_MSG_XOF), tonumber(test.len_in_bytes))
     assert(output_DST_xof:hex() == test.DST_prime, "Wrong dst prime")
     assert(output_msg_xof:hex() == test.msg_prime, "Wrong msg_prime")
     assert(output_bytes_xof:hex() == test.uniform_bytes, "Wrong output bytes")

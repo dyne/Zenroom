@@ -18,7 +18,8 @@
 --]]
 
 local mpack = require_once'msgpack'
-local pack, unpack = string.pack, string.unpack
+local pack = string.pack
+local unpack = string.unpack
 
 local to_octenv = OCTET.to_url64
 local from_octenv = OCTET.from_url64
@@ -41,19 +42,19 @@ mpack.encoder_functions['zenroom.ecp2']   = function(v)
    return pack('>Bs4', 0xd5, to_octenv(v:octet())) end
 
 local function decode_octet(data, offset)
-   local value, pos = string.unpack('>s4', data, offset)
+   local value, pos = unpack('>s4', data, offset)
    return from_octenv(value), pos
 end
 local function decode_big(data, offset)
-   local value, pos = string.unpack('>s4', data, offset)
+   local value, pos = unpack('>s4', data, offset)
    return BIG.new(from_octenv(value)), pos
 end
 local function decode_ecp(data, offset)
-   local value, pos = string.unpack('>s4', data, offset)
+   local value, pos = unpack('>s4', data, offset)
    return ECP.new(from_octenv(value)), pos   
 end
 local function decode_ecp2(data, offset)
-   local value, pos = string.unpack('>s4', data, offset)
+   local value, pos = unpack('>s4', data, offset)
    return ECP2.new(from_octenv(value)), pos   
 end
 mpack.decoder_functions[0xc7] = decode_octet

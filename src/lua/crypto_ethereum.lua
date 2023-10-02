@@ -179,8 +179,7 @@ end
 function ETH.checksum_encode(address)
    local hex_addr = address:hex()
    local checksummed_buffer = ""
-   local H = HASH.new('keccak256')
-   local hashed_address = H:process(hex_addr):bin()
+   local hashed_address = HASH.keccak256(hex_addr):bin()
    for i = 1, #hex_addr do
       local character = string.sub(hex_addr, i, i)
       if string.find("0123456789", character) then
@@ -202,8 +201,7 @@ end
 -- modify the input transaction
 function ETH.encodeSignedTransaction(sk, tx)
    local H, txHash, sig, y_parity, two, res
-   H = HASH.new('keccak256')
-   txHash = H:process(ETH.encodeTransaction(tx))
+   txHash = HASH.keccak256(ETH.encodeTransaction(tx))
 
    sig, y_parity = ECDH.sign_ecdh(sk, txHash)
 
@@ -235,7 +233,7 @@ local function hashFromSignedTransaction(txSigned)
    tx["s"] = O.empty()
 
    H = HASH.new('keccak256')
-   return H:process(ETH.encodeTransaction(tx))
+   return HASH.keccak256(ETH.encodeTransaction(tx))
 end
 
 -- Verify the signature of a transaction which implements EIP-155
@@ -256,7 +254,7 @@ end
 -- One may use the random ECDSA by specifying the "sign_function" parameter as "sign_ecdh".
 function ETH.encodeSignedData(sk, message, sign_function)
    local ethersMessage = O.from_string("\x19Ethereum Signed Message:\n") .. O.new(#message) .. message
-   local hmsg = keccak256(ethersMessage)
+   local hmsg = HASH.keccak256(ethersMessage)
    sign_function = sign_function or function(seck, msg)
          return ECDH.sign_ecdh_deterministic(seck, msg, 32) end
    local sig, y_par = sign_function(sk, hmsg)
@@ -374,8 +372,7 @@ function ETH.keygen()
 end
 
 function ETH.address_from_public_key(pk)
-   local H = HASH.new('keccak256')
-   return H:process(pk:sub(2, #pk)):sub(13, 32)
+   return HASH.keccak256(pk:sub(2, #pk)):sub(13, 32)
 end
 
 function ETH.address_from_signature(signature, y_parity, hash)
@@ -551,12 +548,11 @@ ETH.abi_encode = encode
 -- Really simple data encoder, it only works with elementary types (for
 -- example ERC-20 only uses this kind of data types)
 function ETH.data_contract_factory(fz_name, params)
-   local H = HASH.new('keccak256')
    if type(params) ~= 'table' then
       params = {}
    end
    local signature = fz_name .. '(' .. table.concat(params, ",") .. ')'
-   local f_id = O.from_hex(string.sub(hex(H:process(signature)), 1, 8))
+   local f_id = O.from_hex(string.sub(hex(HASH.keccak256(signature)), 1, 8))
    return function(...)
       return f_id .. encode_tuple(params, table.pack(...))
    end
