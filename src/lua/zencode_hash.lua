@@ -48,14 +48,14 @@ When(
         elseif strcasecmp(h, 'keccak256') then
             ACK.hash = keccak256(src)
         end
-        ZEN.assert(ACK.hash, 'Invalid hash: ' .. h)
+        zencode_assert(ACK.hash, 'Invalid hash: ' .. h)
 	new_codec('hash', { zentype = 'e' })
     end
 )
 
 When("create the hash to point '' of ''", function(curve, object)
     local F = _G[curve]
-    ZEN.assert(
+    zencode_assert(
             luatype(F.hashtopoint) == 'function',
             'Hash type ' .. curve .. ' is invalid (no hashtopoint)'
     )
@@ -72,14 +72,14 @@ and I move 'hash to point' in 'array of hashes'
 EndForeach]],
     function(curve, object)
         local F = _G[curve]
-        ZEN.assert(
+        zencode_assert(
                 luatype(F.hashtopoint) == 'function',
                 'Hash type ' .. curve .. ' is invalid (no hashtopoint)'
         )
         empty'hash_to_point'
         local obj = have(object)
         local count = isarray(obj)
-        ZEN.assert(count > 0, 'Object is not an array: ' .. object)
+        zencode_assert(count > 0, 'Object is not an array: ' .. object)
         ACK.hash_to_point = deepmap(F.hashtopoint, obj)
         new_codec('hash_to_point', {zentype='a'})
     end)
@@ -90,7 +90,7 @@ When(
     function(arr)
         local A = have(arr)
         local count = isarray(A)
-        ZEN.assert(count > 0, 'Object is not an array: ' .. arr)
+        zencode_assert(count > 0, 'Object is not an array: ' .. arr)
         ACK.hashes = deepmap(sha256, A)
 	new_codec('hashes', {zentype='a' })
     end
@@ -130,7 +130,7 @@ When(
     "create the key derivations of each object in ''",
     function(tab)
         local t = have(tab)
-        ZEN.assert(luatype(t) == 'table', 'Object is not a table: ' .. tab)
+        zencode_assert(luatype(t) == 'table', 'Object is not a table: ' .. tab)
         ACK.key_derivations =
 	    deepmap(
 		function(v)

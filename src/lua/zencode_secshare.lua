@@ -68,11 +68,11 @@ When("create the secret shares of '' with '' quorum ''", function(sec, tot, q)
 	-- this check is relative to the BIG size, established by curve's size
 	-- it is made inside the crypto function, but could also be made here
 	-- local sbig = BIG.new(soct) % ECP.order()
-	-- ZEN.assert(sbig:octet() == soct, "Secret too big to share: "..#soct.." bytes")
+	-- zencode_assert(sbig:octet() == soct, "Secret too big to share: "..#soct.." bytes")
 	local total = tonumber(tot)
-	ZEN.assert(total, "Total shares is not a number: "..tot)
+	zencode_assert(total, "Total shares is not a number: "..tot)
 	local quorum = tonumber(q)
-	ZEN.assert(quorum, "Quorum shares is not a number: "..q)
+	zencode_assert(quorum, "Quorum shares is not a number: "..q)
         ACK.secret_shares = LAG.create_shared_secret(total,quorum,soct)
         new_codec('secret_shares', {
             encoding="complex",

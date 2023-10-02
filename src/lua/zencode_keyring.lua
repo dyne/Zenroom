@@ -39,7 +39,7 @@ function initkeyring(ktype)
    end
    -- if ktype is specified then check overwriting
    if ktype then
-      ZEN.assert(
+      zencode_assert(
 	 not ACK.keyring[uscore(ktype)],
 	 'Cannot overwrite existing key: ' .. ktype
       )
@@ -70,26 +70,26 @@ local keytypes = {
 
 function havekey(ktype)
    local kname = uscore(ktype)
-   ZEN.assert(keytypes[kname], 'Unknown key type: ' .. ktype)
+   zencode_assert(keytypes[kname], 'Unknown key type: ' .. ktype)
    -- check that keys exist and are a table
    initkeyring()
    local res = ACK.keyring[kname]
-   ZEN.assert(res, 'Key not found: ' .. ktype)
+   zencode_assert(res, 'Key not found: ' .. ktype)
    return res
 end
 
 local function nop(x) return(x) end
 -- the length of the kyber, dilithium and ntrup keys can be found in Zenroom/src/zen_qp.c
 local function dilithium_f(o)
-   ZEN.assert(#o == 2528, 'Dilithium key length` is not correct')
+   zencode_assert(#o == 2528, 'Dilithium key length` is not correct')
    return o
 end
 local function kyber_f(o)
-   ZEN.assert(#o == 1632, 'Kyber key length is not correct')
+   zencode_assert(#o == 1632, 'Kyber key length is not correct')
    return o
 end
 local function ntrup_f(o)
-   ZEN.assert(#o == 1763, 'Ntrup key length is not correct')
+   zencode_assert(#o == 1763, 'Ntrup key length is not correct')
    return o
 end  
 
@@ -201,7 +201,7 @@ function load_pubkey_compat(_key, algo)
         else
             pubkey = pubkey_arr
         end
-        ZEN.assert(
+        zencode_assert(
         pubkey,
         'Public key not found for: ' .. _key
         )

@@ -24,7 +24,7 @@ local QP = require'qp'
 
 local function dilithium_public_key_f(obj)
    local res = schema_get(obj, '.')
-   ZEN.assert(
+   zencode_assert(
       QP.sigpubcheck(res),
       'Dilithium public key length is not correct'
    )
@@ -33,7 +33,7 @@ end
 
 local function dilithium_signature_f(obj)
    local res = schema_get(obj, '.')
-   ZEN.assert(
+   zencode_assert(
       QP.signature_check(res),
       'Dilithium signature length is not correcr'
    )
@@ -42,7 +42,7 @@ end
 
 local function kyber_public_key_f(obj)
    local res = schema_get(obj, '.')
-   ZEN.assert(
+   zencode_assert(
       QP.kempubcheck(res),
       'Kyber public key length is not correct'
    )
@@ -51,7 +51,7 @@ end
 
 local function kyber_secret_f(obj)
    local res = schema_get(obj, '.')
-   ZEN.assert(
+   zencode_assert(
       QP.kemsscheck(res),
       'Kyber secret lentgth is not correct'
    )
@@ -60,7 +60,7 @@ end
 
 local function kyber_ciphertext_f(obj)
    local res = schema_get(obj, '.')
-   ZEN.assert(
+   zencode_assert(
       QP.kemctcheck(res),
       'Kyber ciphertext length is not correct'
    )
@@ -76,7 +76,7 @@ end
 
 local function ntrup_public_key_f(obj)
    local res = schema_get(obj, '.')
-   ZEN.assert(
+   zencode_assert(
       QP.ntrup_pubcheck(res),
       'NTRUP public key length is not correct'
    )
@@ -85,7 +85,7 @@ end
 
 local function ntrup_secret_f(obj)
    local res = schema_get(obj, '.')
-   ZEN.assert(
+   zencode_assert(
       QP.ntrup_sscheck(res),
       'NTRUP secret lentgth is not correct'
    )
@@ -94,7 +94,7 @@ end
 
 local function ntrup_ciphertext_f(obj)
    local res = schema_get(obj, '.')
-   ZEN.assert(
+   zencode_assert(
       QP.ntrup_ctcheck(res),
       'NTRUP ciphertext length is not correct'
    )
@@ -120,7 +120,7 @@ local function _pubkey_compat(_key, algo)
       else
 	 pubkey = pubkey_arr
       end
-      ZEN.assert(
+      zencode_assert(
 	 pubkey,
 	 'Public key not found for: ' .. _key
       )
@@ -179,7 +179,7 @@ IfWhen("verify the '' has a dilithium signature in '' by ''",function(msg, sig, 
 	  local pk = _pubkey_compat(by, 'dilithium')
 	  local m = have(msg)
 	  local s = have(sig)
-	  ZEN.assert(
+	  zencode_assert(
 	     QP.verify(pk, s, zencode_serialize(m)),
 	     'The dilithium signature by '..by..' is not authentic'
 	  )

@@ -24,11 +24,11 @@ local GENERATORS = PVSS.set_generators()
 
 local function pvss_public_key_f(obj)
     local point = ECP.from_zcash(obj)
-    ZEN.assert(
+    zencode_assert(
        point ~=  ECP.infinity(),
        'pvss public key is not valid (is infinity)'
     )
-    ZEN.assert(
+    zencode_assert(
         point*ECP.order() == ECP.infinity(),
         'pvss public key is not valid (not in the subgroup)'
     )
@@ -144,10 +144,10 @@ end)
 When("create the pvss public shares of '' with '' quorum '' using the public keys ''", function(sec, num, thr, pubks)
     local s = have(sec)
 	local n = tonumber(have(num):decimal())
-	ZEN.assert(n, "Total shares is not a number: "..num)
+	zencode_assert(n, "Total shares is not a number: "..num)
 	local t = tonumber(have(thr):decimal())
-	ZEN.assert(t, "Quorum shares is not a number: "..thr)
-    ZEN.assert(t <= n, "Quorum is bigger than total")
+	zencode_assert(t, "Quorum shares is not a number: "..thr)
+    zencode_assert(t <= n, "Quorum is bigger than total")
     local pks = have(pubks)
     local pvss_public_shares = PVSS.create_shares(GENERATORS, s, pks, t, n)
 
@@ -163,24 +163,24 @@ When("verify the pvss public shares with '' quorum ''", function(num,thr)
     local t = tonumber(have(thr):decimal())
     local n = tonumber(have(num):decimal())
 
-    ZEN.assert(t <= n, "Quorum is bigger than total")
+    zencode_assert(t <= n, "Quorum is bigger than total")
 
-    ZEN.assert(type(pvss_public_shares.public_keys) == 'table', "'pvss participant pks' is not a table")
-    ZEN.assert(type(pvss_public_shares.commitments) == 'table', "'pvss commitments' is not a table")
-    ZEN.assert(type(pvss_public_shares.encrypted_shares) == 'table', "'pvss encrypted shares' is not a table")
-    ZEN.assert(type(pvss_public_shares.proof) == 'table', "'pvss proof' is not a table")
+    zencode_assert(type(pvss_public_shares.public_keys) == 'table', "'pvss participant pks' is not a table")
+    zencode_assert(type(pvss_public_shares.commitments) == 'table', "'pvss commitments' is not a table")
+    zencode_assert(type(pvss_public_shares.encrypted_shares) == 'table', "'pvss encrypted shares' is not a table")
+    zencode_assert(type(pvss_public_shares.proof) == 'table', "'pvss proof' is not a table")
 
-    ZEN.assert(tablelength(pvss_public_shares.public_keys) == n, "'pvss participant pks' is of wrong length")
-    ZEN.assert(tablelength(pvss_public_shares.commitments) == t, "'pvss commitments' is of wrong length")
-    ZEN.assert(tablelength(pvss_public_shares.encrypted_shares) == n, "'pvss encrypted shares' is of wrong length")
-    ZEN.assert(tablelength(pvss_public_shares.proof) == n + 1, "'pvss proof' is of wrong length")
+    zencode_assert(tablelength(pvss_public_shares.public_keys) == n, "'pvss participant pks' is of wrong length")
+    zencode_assert(tablelength(pvss_public_shares.commitments) == t, "'pvss commitments' is of wrong length")
+    zencode_assert(tablelength(pvss_public_shares.encrypted_shares) == n, "'pvss encrypted shares' is of wrong length")
+    zencode_assert(tablelength(pvss_public_shares.proof) == n + 1, "'pvss proof' is of wrong length")
 
     for _,v in pairs(pvss_public_shares.proof) do
-        ZEN.assert(type(v) == 'zenroom.big', 'Proof element is not big')
-        ZEN.assert(v < ECP.order(), 'Proof element is not modulo CURVE_ORDER')
+        zencode_assert(type(v) == 'zenroom.big', 'Proof element is not big')
+        zencode_assert(v < ECP.order(), 'Proof element is not modulo CURVE_ORDER')
     end
 
-    ZEN.assert(
+    zencode_assert(
         PVSS.verify_shares(GENERATORS, t, n, pvss_public_shares),
         'The pvss public shares are not authentic'
     )
@@ -192,7 +192,7 @@ end)
 When("create the secret share with public key ''", function(pk)
     local x = havekey'pvss'
     local y = have(pk)
-    ZEN.assert(y == PVSS.sk2pk(GENERATORS, x))
+    zencode_assert(y == PVSS.sk2pk(GENERATORS, x))
     local issuer_shares = have'pvss public shares'
     local output = PVSS.decrypt_share(GENERATORS, x, y, issuer_shares)
     output["index"] = BIG.new(output["index"])

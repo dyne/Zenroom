@@ -704,11 +704,11 @@ function Then(text, fn)
 end
 function Iam(name)
 	if name then
-		ZEN.assert(not WHO, 'Identity already defined in WHO')
-		ZEN.assert(type(name) == 'string', 'Own name not a string')
+		zencode_assert(not WHO, 'Identity already defined in WHO')
+		zencode_assert(type(name) == 'string', 'Own name not a string')
 		WHO = uscore(name)
 	else
-		ZEN.assert(WHO, 'No identity specified in WHO')
+		zencode_assert(WHO, 'No identity specified in WHO')
 	end
 	assert(ZEN.OK)
 end

@@ -23,7 +23,7 @@
 -- random operations, mostly on arrays and schemas supported
 
 When("create the random ''", function(dest)
-		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
+		zencode_assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		ACK[dest] = OCTET.random(32) -- TODO: right now hardcoded 256 bit random secrets
                 new_codec(dest, { zentype = 'e' })
 end)
@@ -31,7 +31,7 @@ end)
 local function shuffle_array_f(tab)
    -- do not enforce CODEC detection since some schemas are also 1st level arrays
    local count = isarray(tab)
-   ZEN.assert( count > 0, "Randomized object is not an array")
+   zencode_assert( count > 0, "Randomized object is not an array")
    local res = { }
    for i = count,2,-1 do
 	  local r = (random_int16() % i)+1
@@ -46,7 +46,7 @@ end
 When("create the random object of '' bits", function(n)
 	empty'random object'
 	local bits = tonumber(mayhave(n) or n)
-	ZEN.assert(bits, 'Invalid number of bits: ' .. n)
+	zencode_assert(bits, 'Invalid number of bits: ' .. n)
 	ACK.random_object = OCTET.random(math.ceil(bits / 8))
 	new_codec('random_object', { zentype = 'e' })
 end
@@ -54,7 +54,7 @@ end
 When("create the random object of '' bytes",function(n)
 	empty'random object'
 	local bytes = math.ceil(tonumber(mayhave(n) or n))
-	ZEN.assert(bytes, 'Invalid number of bytes: ' .. n)
+	zencode_assert(bytes, 'Invalid number of bytes: ' .. n)
 	ACK.random_object = OCTET.random(bytes)
 	new_codec('random_object', { zentype = 'e' })
 end
@@ -113,9 +113,9 @@ end)
 
 local function _extract_random_elements(num, from, random_fun)
    local n = tonumber(num) or tonumber(tostring(have(num)))
-   ZEN.assert(n and n>=0, "Not a number or not a positive number: "..num)
+   zencode_assert(n and n>=0, "Not a number or not a positive number: "..num)
    local src = have(from)
-   ZEN.assert(luatype(src) == 'table', "Object is not a table: "..from)
+   zencode_assert(luatype(src) == 'table', "Object is not a table: "..from)
 
    local tmp = { }
    local keys = { }
@@ -126,8 +126,8 @@ local function _extract_random_elements(num, from, random_fun)
 
    local len = #tmp
    local max_len = 65536
-   ZEN.assert(len < max_len, "The number of elements of "..from.." exceed the maximum length: "..max_len)
-   ZEN.assert(n <= len, num.." is grater than the number of elements in "..from)
+   zencode_assert(len < max_len, "The number of elements of "..from.." exceed the maximum length: "..max_len)
+   zencode_assert(n <= len, num.." is grater than the number of elements in "..from)
    local max_random = math.floor(max_len/len)*len
 
    local dst = { }

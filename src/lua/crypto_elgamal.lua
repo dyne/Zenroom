@@ -104,8 +104,8 @@ end
 
 function elgah.verify(pub, theta)
    -- recompute witnessess commitment
-   ZEN.assert(theta.pi,   "ELGAH.verify 1st argument has no proof")
-   ZEN.assert(theta.value,"ELGAH.verify 2nd argument has no value")
+   zencode_assert(theta.pi,   "ELGAH.verify 1st argument has no proof")
+   zencode_assert(theta.value,"ELGAH.verify 2nd argument has no value")
 
    local value = theta.value.pos
    local Aw = G * theta.pi.rk
@@ -117,7 +117,7 @@ function elgah.verify(pub, theta)
 	  + hs * theta.pi.rm
 	  + theta.cv * theta.pi.c
    -- verify challenge
-   ZEN.assert(theta.pi.c == to_challenge(
+   zencode_assert(theta.pi.c == to_challenge(
 				 {value.left, value.right,
 				  theta.cv, Aw, Bw, Cw }),
 			  "ELGAH.verify: challenge fails")
@@ -169,7 +169,7 @@ function elgah.verify_tally(tally, value)
    local rxneg = tally.rx:modneg(O)
    local Aw = { rxneg * value.pos.left + tally.c * tally.dec.pos,
 				rxneg * value.neg.left + tally.c * tally.dec.neg  }
-   ZEN.assert(tally.c == to_challenge(Aw),
+   zencode_assert(tally.c == to_challenge(Aw),
 		  "ELGAH.verify_tally: challenge fails")
    return true
 end

@@ -22,7 +22,7 @@ local SCH = require'crypto_schnorr_signature'
 
 local function schnorr_public_key_f(obj)
    local res = schema_get(obj, '.')
-   ZEN.assert(
+   zencode_assert(
       SCH.pubcheck(res),
       'Schnorr public key is not valid'
    )
@@ -31,7 +31,7 @@ end
 
 local function schnorr_signature_f(obj)
    local res = schema_get(obj, '.')
-   ZEN.assert(
+   zencode_assert(
       SCH.sigcheck(res),
       'Schnorr signature is not valid'
    )
@@ -49,7 +49,7 @@ local function _pubkey_compat(_key)
       else
 	 pubkey = pubkey_arr
       end
-      ZEN.assert(
+      zencode_assert(
 	 pubkey,
 	 'Public key not found for: ' .. _key
       )
@@ -91,7 +91,7 @@ local function _schnorr_key_from_secret(sec)
    local sk = have(sec)
    local o = ECP.order()
    local d = BIG.new(sk) % o
-   ZEN.assert(d ~= BIG.new(0), 'invalid secret key, is zero')
+   zencode_assert(d ~= BIG.new(0), 'invalid secret key, is zero')
    initkeyring'schnorr'
    ACK.keyring.schnorr = d:octet():pad(32)
 end
@@ -116,7 +116,7 @@ IfWhen("verify the '' has a schnorr signature in '' by ''",function(doc, sig, by
 	  local pk = _pubkey_compat(by)
 	  local obj = have(doc)
 	  local s = have(sig)
-	  ZEN.assert(
+	  zencode_assert(
 	     SCH.verify(pk, zencode_serialize(obj), s),
 	     'The schnorr signature by '..by..' is not authentic'
 	  )

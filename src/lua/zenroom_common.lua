@@ -366,7 +366,7 @@ function zip(...)
     local ans = {}
     local index = 0
     for k, v in pairs(arrays) do
-        ZEN.assert(isarray(v), "zip input are not arrays")
+        zencode_assert(isarray(v), "zip input are not arrays")
     end
     return function()
         index = index + 1

@@ -57,7 +57,7 @@ IfWhen(
   function(l, r)
     local left = have(l)
     local right = have(r)
-    ZEN.assert(
+    zencode_assert(
       _eq(left, right),
       'Verification fail: elements are not equal: ' .. l .. ' == ' .. r
     )
@@ -69,7 +69,7 @@ IfWhen(
   function(l, r)
     local left = have(l)
     local right = have(r)
-    ZEN.assert(
+    zencode_assert(
       _neq(left, right),
       'Verification fail: elements are equal: ' .. l .. ' == ' .. r
     )
@@ -83,7 +83,7 @@ IfWhen(
     local left = have(l)
     local tab = have(tt)
     local right = tab[tr]
-    ZEN.assert(
+    zencode_assert(
       _eq(left, right),
       'Verification fail: elements are not equal: ' ..
         l .. ' == ' .. tt .. '.' .. tr
@@ -97,7 +97,7 @@ IfWhen(
     local left = have(l)
     local tab = have(tt)
     local right = tab[tr]
-    ZEN.assert(
+    zencode_assert(
       _neq(left, right),
       'Verification fail: elements are equal: ' ..
         l .. ' == ' .. tt .. '.' .. tr
@@ -150,7 +150,7 @@ local function numcheck(l, r, op)
     else
         ar = right:octet()
     end
-    ZEN.assert(operators[op](al, ar), 'Comparison fail: ' .. l .. op .. r)
+    zencode_assert(operators[op](al, ar), 'Comparison fail: ' .. l .. op .. r)
 end
 
 IfWhen(deprecated("number '' is less than ''",
@@ -198,10 +198,10 @@ local function _check_compare_length(obj_name, num_name)
     local obj_ztype = obj_codec.zentype
     local num, num_codec = have(num_name)
     local num_enc = num_codec.encoding
-    ZEN.assert(obj_ztype == "a" or obj_ztype == "d" or
+    zencode_assert(obj_ztype == "a" or obj_ztype == "d" or
         (obj_ztype == "e" and obj_codec.encoding == "string"),
         "Can not compute the length for type "..obj_ztype)
-    ZEN.assert(num_enc == "integer" or num_enc == "float",
+    zencode_assert(num_enc == "integer" or num_enc == "float",
         "Can not compare the length of "..obj_name.." with number of type "..num_enc)
     local obj_len_enc = { ["integer"] = BIG.new, ["float"] = F.new }
     local obj_len
@@ -219,25 +219,25 @@ end
 
 IfWhen("verify the length of '' is less than ''", function(obj_name, num_name)
     local l, r = _check_compare_length(obj_name, num_name)
-    ZEN.assert(l < r,
+    zencode_assert(l < r,
         "Comparison fail: length of "..obj_name.." is not less than "..num_name)
 end)
 
 IfWhen("verify the length of '' is less or equal than ''", function(obj_name, num_name)
     local l, r = _check_compare_length(obj_name, num_name)
-    ZEN.assert(l <= r,
+    zencode_assert(l <= r,
         "Comparison fail: length of "..obj_name.." is not less or equal than "..num_name)
 end)
 
 IfWhen("verify the length of '' is more than ''", function(obj_name, num_name)
     local l, r = _check_compare_length(obj_name, num_name)
-    ZEN.assert(r < l,
+    zencode_assert(r < l,
         "Comparison fail: length of "..obj_name.." is not more than "..num_name)
 end)
 
 IfWhen("verify the length of '' is more or equal than ''", function(obj_name, num_name)
     local l, r = _check_compare_length(obj_name, num_name)
-    ZEN.assert(r <= l,
+    zencode_assert(r <= l,
         "Comparison fail: length of "..obj_name.." is not more or equal than "..num_name)
 end)
 
@@ -312,9 +312,9 @@ IfWhen(
   "verify '' is a email",
   function(name)
     local A = ACK[name]
-    ZEN.assert(A, 'Object not found: ' .. name)
+    zencode_assert(A, 'Object not found: ' .. name)
     local res, err = validemail(O.to_string(A))
-    ZEN.assert(res, err)
+    zencode_assert(res, err)
   end
 )
 
@@ -322,15 +322,15 @@ IfWhen(
   "verify '' contains a list of emails",
   function(name)
     local A = ACK[name]
-    ZEN.assert(A, 'Object not found: ' .. name)
-    ZEN.assert(
+    zencode_assert(A, 'Object not found: ' .. name)
+    zencode_assert(
       luatype(A) == 'table',
       'Object is not a container: ' .. name
     )
     local res, err
     for k, v in pairs(A) do
       res, err = validemail(O.to_string(v))
-      ZEN.assert(res, (err or 'OK') .. ' on email: ' .. O.to_string(v))
+      zencode_assert(res, (err or 'OK') .. ' on email: ' .. O.to_string(v))
     end
   end
 )
@@ -344,7 +344,7 @@ local function _check_elements_equals(obj_name)
             first = v
             first_idx = k
         else
-            ZEN.assert(_eq(first, v),
+            zencode_assert(_eq(first, v),
                 "Verification failed: the elements in position "
                 .. k .. " and " .. first_idx
                 .. "are not equal")
@@ -373,7 +373,7 @@ local function _check_elements_not_equals(obj_name)
             end
         end
     end
-    ZEN.assert(false, "Verification failed: all elements are equal")
+    zencode_assert(false, "Verification failed: all elements are equal")
 end
 
 IfWhen(deprecated("the elements in '' are not equal",
@@ -396,18 +396,18 @@ local function start_with_from(str, sub, start)
       sub_codec.encoding = 'string'
       sub_codec.zentype = 'e'
    end
-   ZEN.assert(str_codec.zentype == 'e' and
+   zencode_assert(str_codec.zentype == 'e' and
 	      sub_codec.zentype == 'e',
 	      "Verification failed: one or both inputs are not elements")
-   ZEN.assert(str_codec.encoding == 'string' and
+   zencode_assert(str_codec.encoding == 'string' and
 	      sub_codec.encoding == 'string',
 	      "Verification failed: one or both inputs are not strings")
-   ZEN.assert(#sub_oct <= #str_oct,
+   zencode_assert(#sub_oct <= #str_oct,
 	      "Verification failed: substring is longer than the string")
    local s = str_oct:string()
    local b = sub_oct:string()
    start = start or (#s-#b+1)
-   ZEN.assert(s:find(b, start, true) == start,
+   zencode_assert(s:find(b, start, true) == start,
 	      "Verification failed: substring not found at position "..start)
 end
 

@@ -23,7 +23,7 @@
 -- defined outside because reused across different schemas
 local function public_key_f(o)
 	local res = CONF.input.encoding.fun(o)
-	ZEN.assert(
+	zencode_assert(
 		ECDH.pubcheck(res),
 		'Public key is not a valid point on curve'
 	)
@@ -141,7 +141,7 @@ When(
 			text.iv,
 			text.header
 		)
-		ZEN.assert(ACK.checksum == text.checksum,
+		zencode_assert(ACK.checksum == text.checksum,
 			   'Decryption error: authentication failure, checksum mismatch')
 		new_codec'text'
 		new_codec'checksum'
@@ -159,7 +159,7 @@ local function _pubkey_compat(_key)
 		else
 		   pubkey = pubkey_arr
 		end
-		ZEN.assert(pubkey, 'Public key not found for: ' .. _key)
+		zencode_assert(pubkey, 'Public key not found for: ' .. _key)
 	end
 	return pubkey
 end
@@ -198,7 +198,7 @@ When(
 		local session = ECDH.session(sk, pk)
 		ACK.text, ACK.checksum =
 			ECDH.aead_decrypt(session, message.text, message.iv, message.header)
-		ZEN.assert(
+		zencode_assert(
 			ACK.checksum == message.checksum,
 			'Failed verification of integrity for secret message'
 		)
@@ -220,7 +220,7 @@ local function _verifying(msg, sig, by)
    local pk = _pubkey_compat(by)
    local obj = have(msg)
    local s = have(sig)
-   ZEN.assert(
+   zencode_assert(
       ECDH.verify(pk, zencode_serialize(obj), s),
       'The ecdh signature by ' .. by .. ' is not authentic'
    )

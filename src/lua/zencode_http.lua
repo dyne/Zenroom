@@ -124,10 +124,10 @@ When("create the url from ''", function(src)
 	local proto
 	if url:sub(1,7)=='http://' then proto = 'http://' end
 	if url:sub(1,8)=='https://' then proto = 'https://' end
-	ZEN.assert(proto, "Invalid http prefix in url: "..obj:str())
+	zencode_assert(proto, "Invalid http prefix in url: "..obj:str())
 	local toks = strtok(url, '/') -- second is the host
 	local res = _is_valid_host(toks[2])
-	ZEN.assert(not res, res)
+	zencode_assert(not res, res)
 	ACK.url = obj
 	new_codec('url',{zentype='e',content='url', encoding='string'})
 end)
@@ -136,7 +136,7 @@ When("append '' as http request to ''", function(ele, dst)
 	local arg = have(ele):str():lower()
 	local url = have(dst):str():lower()
 	local codec = CODEC[dst]
-	ZEN.assert(codec.content=='url',
+	zencode_assert(codec.content=='url',
 		   "Cannot append http request to invalid url: "..dst)
 	local separator = fif( url:find('?'), '&', '?' )
 	ACK[dst] = O.from_string( url .. separator ..

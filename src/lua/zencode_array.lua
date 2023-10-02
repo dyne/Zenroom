@@ -25,7 +25,7 @@ local stats = require('stats')
 local function _when_remove_dictionary(ele, from)
 	-- ele is just the name (key) of object to remove
 	local dict = have(from)
-	ZEN.assert(dict, "Dictionary not found: "..from)
+	zencode_assert(dict, "Dictionary not found: "..from)
 	if dict[ele] then
 		ACK[from][ele] = nil -- remove from dictionary
 	elseif CODEC[ele].name ~= ele and dict[CODEC[ele].name] then
@@ -57,13 +57,13 @@ local function _when_remove_array(ele, from)
 			found = true
 		end
 	end
-	ZEN.assert(found, "Element to be removed not found in array")
+	zencode_assert(found, "Element to be removed not found in array")
 	ACK[from] = newdest
 end
 
 When("remove the '' from ''", function(ele,from)
 	local codec = CODEC[from]
-	ZEN.assert(codec, "No codec registration for target: "..from)
+	zencode_assert(codec, "No codec registration for target: "..from)
 	if codec.zentype == 'd'
 	   or codec.schema then
 	   _when_remove_dictionary(ele, from)
@@ -107,10 +107,10 @@ end)
 When("create the copy of element '' in array ''", function(pos, arr)
 	empty 'copy'
 	local src, src_codec = have(arr)
-	ZEN.assert(src_codec.zentype == "a", "Not an array: "..arr)
+	zencode_assert(src_codec.zentype == "a", "Not an array: "..arr)
 	local num = tonumber(mayhave(pos) or pos)
-	ZEN.assert(num, "Argument is not a position number: "..pos)
-	ZEN.assert(src[num], "No element found in: "..arr.."["..pos.."]")
+	zencode_assert(num, "Argument is not a position number: "..pos)
+	zencode_assert(src[num], "No element found in: "..arr.."["..pos.."]")
 	ACK.copy = src[num]
 	local n_codec = { encoding = src_codec.encoding }
 	-- table of schemas can only contain elements
@@ -123,9 +123,9 @@ end)
 
 local function _insert_in(what, dest)
 	local d, d_codec = have(dest)
-	ZEN.assert(luatype(d) == 'table',
+	zencode_assert(luatype(d) == 'table',
 	"Invalid destination, not a table: "..dest)
-	ZEN.assert(d_codec.zentype == 'a',
+	zencode_assert(d_codec.zentype == 'a',
 	"Invalid destination, not an array: "..dest)
 	table.insert(ACK[dest], what)
 end
@@ -145,9 +145,9 @@ When(deprecated("insert '' in ''",
 function(ele, dest)
 	local d = have(dest)
 	local e = have(ele)
-	ZEN.assert(luatype(d) == 'table',
+	zencode_assert(luatype(d) == 'table',
 	"Invalid destination, not a table: "..dest)
-	ZEN.assert(CODEC[dest].zentype ~= 'e',
+	zencode_assert(CODEC[dest].zentype ~= 'e',
 	"Invalid destination, not a container: "..dest)
 	if CODEC[dest].zentype == 'a' then
 		table.insert(ACK[dest], e)
@@ -156,7 +156,7 @@ function(ele, dest)
 	elseif CODEC[dest].zentype == 'schema' then
 		ACK[dest][ele] = e
 	else
-		ZEN.assert(false, "Invalid destination type: "
+		zencode_assert(false, "Invalid destination type: "
 		..CODEC[dest].zentype)
 	end
 	CODEC[dest][ele] = CODEC[ele]
@@ -166,9 +166,9 @@ end)
 )
 
 -- When("insert the '' in ''", function(ele,arr)
---     ZEN.assert(ACK[ele], "Element not found: "..ele)
---     ZEN.assert(ACK[arr], "Array not found: "..arr)
--- 	ZEN.assert(CODEC[arr].zentype == 'a',
+--     zencode_assert(ACK[ele], "Element not found: "..ele)
+--     zencode_assert(ACK[arr], "Array not found: "..arr)
+-- 	zencode_assert(CODEC[arr].zentype == 'a',
 -- 			   "Object is not an array: "..arr)
 --     table.insert(ACK[arr], ACK[ele])
 -- end)
@@ -178,13 +178,13 @@ local function _not_found_in(ele_name, obj_name)
 	local obj, obj_codec = have(obj_name)
 	if obj_codec.zentype == 'a' then
 		for _,v in pairs(obj) do
-			ZEN.assert(v ~= ele, "Element '"..ele_name.."' is contained inside: "..obj_name)
+			zencode_assert(v ~= ele, "Element '"..ele_name.."' is contained inside: "..obj_name)
 		end
 	elseif obj_codec.zentype == 'd' then
 		local val = O.to_string(ele)
-		ZEN.assert(obj[val] == nil, "Element '"..ele_name.."' is contained inside: "..obj_name)
+		zencode_assert(obj[val] == nil, "Element '"..ele_name.."' is contained inside: "..obj_name)
 	else
-		ZEN.assert(false, "Invalid container type: "..obj_name.." is "..obj_codec.zentype)
+		zencode_assert(false, "Invalid container type: "..obj_name.." is "..obj_codec.zentype)
 	end
 end
 
@@ -205,12 +205,12 @@ local function _found_in(ele_name, obj_name)
 				break
 			end
 		end
-		ZEN.assert(found, "The content of element '"..ele_name.."' is not found inside: "..obj_name)
+		zencode_assert(found, "The content of element '"..ele_name.."' is not found inside: "..obj_name)
 	elseif obj_codec.zentype == 'd' then
 		local val = O.to_string(ele)
-		ZEN.assert(obj[val] ~= nil, "Element '"..ele_name.."' is not found inside: "..obj_name)
+		zencode_assert(obj[val] ~= nil, "Element '"..ele_name.."' is not found inside: "..obj_name)
 	else
-		ZEN.assert(false, "Invalid container type: "..obj_name.." is "..obj_codec.zentype)
+		zencode_assert(false, "Invalid container type: "..obj_name.." is "..obj_codec.zentype)
 	end
 end
 
@@ -222,13 +222,13 @@ IfWhen("verify the '' is found in ''", _found_in)
 
 local function _found_in_atleast(ele_name, obj_name, times)
 	local ele, ele_codec = have(ele_name)
-	ZEN.assert( luatype(ele) ~= 'table',
+	zencode_assert( luatype(ele) ~= 'table',
 				"Invalid use of table in object comparison: "..ele_name)
 	local num = have(times)
 	local obj, obj_codec = have(obj_name)
-	ZEN.assert( luatype(obj) == 'table',
+	zencode_assert( luatype(obj) == 'table',
 				"Not a table: "..obj_name)
-	ZEN.assert( obj_codec.zentype == 'a', "Not an array: "..obj_name)
+	zencode_assert( obj_codec.zentype == 'a', "Not an array: "..obj_name)
 	local constructor = fif(type(num) == "zenroom.big", BIG.new, F.new)
 	local found = constructor(0)
 	local one = constructor(1)
@@ -236,9 +236,9 @@ local function _found_in_atleast(ele_name, obj_name, times)
 		if type(v) == type(ele) and v == ele then found = found + one end
 	end
 	if type(num) == "zenroom.big" then
-		ZEN.assert(found >= num, "Object "..ele_name.." found only "..found:decimal().." times instead of "..num:decimal().." in array "..obj_name)
+		zencode_assert(found >= num, "Object "..ele_name.." found only "..found:decimal().." times instead of "..num:decimal().." in array "..obj_name)
 	else
-		ZEN.assert(found >= num, "Object "..ele_name.." found only "..tostring(found).." times instead of "..tostring(num).." in array "..obj_name)
+		zencode_assert(found >= num, "Object "..ele_name.." found only "..tostring(found).." times instead of "..tostring(num).." in array "..obj_name)
 	end
 end
 
@@ -251,9 +251,9 @@ IfWhen("verify the '' is found in '' at least '' times", _found_in_atleast)
 local function _aggr_array(arr)
 	local A = have(arr)
 	local codec = CODEC[arr]
-	ZEN.assert(codec.zentype == 'a', "Object is not a valid array: "..arr)
+	zencode_assert(codec.zentype == 'a', "Object is not a valid array: "..arr)
 	local count = isarray(A)
-	ZEN.assert( count > 0, "Array is empty or invalid: "..arr)
+	zencode_assert( count > 0, "Array is empty or invalid: "..arr)
 	local res, par
 	if luatype(A[1]) == 'number' then
 		res = 0
@@ -324,11 +324,11 @@ end)
 
 When("create the flat array of contents in ''", function(dic)
 	local codec = CODEC[dic]
-	ZEN.assert(codec.zentype == 'a' or
+	zencode_assert(codec.zentype == 'a' or
 	codec.zentype == 'd',
 	"Target is not a valid: "..dic)
 	local data = have(dic)
-	ZEN.assert(luatype(data) == 'table', "Invalid array: "..dic)
+	zencode_assert(luatype(data) == 'table', "Invalid array: "..dic)
 	empty'flat array'
 	ACK.flat_array = {}
 	deepsortmap(function(v, k, res) table.insert(res, v) end, data, ACK.flat_array)
@@ -351,11 +351,11 @@ end
 
 When("create the flat array of keys in ''", function(dic)
 	local codec = CODEC[dic]
-	ZEN.assert(codec.zentype == 'a' or
+	zencode_assert(codec.zentype == 'a' or
 	codec.zentype == 'd',
 	"Target is not a valid: "..dic)
 	local data = have(dic)
-	ZEN.assert(luatype(data) == 'table', "Invalid target: "..dic)
+	zencode_assert(luatype(data) == 'table', "Invalid target: "..dic)
 	empty'flat array'
 	ACK.flat_array = {}
 	_keys_flat_array(data, ACK.flat_array)
@@ -363,7 +363,7 @@ When("create the flat array of keys in ''", function(dic)
 end)
 
 When("create the array of objects named by '' found in ''", function(name, dict)
-	ZEN.assert(isdictionary(dict), "Second argument is not a dictionary")
+	zencode_assert(isdictionary(dict), "Second argument is not a dictionary")
 	local n = have(name):octet():string()
 	local src = have(dict)
 	empty'array'
@@ -377,7 +377,7 @@ end)
 When("create the array by splitting '' at ''", function(data_name, sep_name)
 	local data = uscore(have(data_name):octet():string())
 	local sep = uscore(have(sep_name):octet():string())
-	ZEN.assert(#sep == 1, "You can only split with respect to one character")
+	zencode_assert(#sep == 1, "You can only split with respect to one character")
 	empty'array'
 	local strings = strtok(data, sep)
 	local octets = {}
@@ -431,10 +431,10 @@ When("create the '' from '' in ''", function(dest, key_name, obj_name)
 	end
 	if obj_codec.zentype == 'a' then
 		local key_num = tonumber(key)
-		ZEN.assert(#obj >= key_num, "Element "..key_num.." does not exists in array "..obj_name)
+		zencode_assert(#obj >= key_num, "Element "..key_num.." does not exists in array "..obj_name)
 		ACK[dest] = obj[key_num]
 	elseif obj_codec.zentype == 'd' then
-		ZEN.assert(obj[key], "Element "..key.." does not exists in dictionary "..obj_name)
+		zencode_assert(obj[key], "Element "..key.." does not exists in dictionary "..obj_name)
 		ACK[dest] = obj[key]
 	else
 		error("Last object must be an array or dictionary, found instead: "..obj_codec.zentype)

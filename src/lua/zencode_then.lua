@@ -156,8 +156,8 @@ Then("print '' as ''",function(k, s)
 end)
 
 Then("print my name in ''",function(dst)
-		ZEN.assert(WHO, 'No identity specified: please use Given I am')
-		ZEN.assert(not OUT[dst], 'Cannot overwrite OUT.'..dst)
+		zencode_assert(WHO, 'No identity specified: please use Given I am')
+		zencode_assert(not OUT[dst], 'Cannot overwrite OUT.'..dst)
 		OUT[dst] = WHO
 end)
 
@@ -183,7 +183,7 @@ end)
 
 Then("print '' from ''",function(k, f)
 	local val = have(f)
-	ZEN.assert(val[k], "Object: "..k..", not found in "..f)
+	zencode_assert(val[k], "Object: "..k..", not found in "..f)
 	-- f is used in the then_outcast to support schemas
 	local tmp = then_outcast( val, f )
 	OUT[k] = tmp[k]
@@ -214,7 +214,7 @@ Then("print my '' from ''",function(k, f)
 	Iam()
 	local val = have(f)
 	local codec = CODEC[f]
-	ZEN.assert(val[k], "Object: "..k..", not foun in "..f)
+	zencode_assert(val[k], "Object: "..k..", not foun in "..f)
 	-- my statements always print to a dictionary named after WHO
 	if not OUT[WHO] then OUT[WHO] = { } end
 	OUT[WHO][k] = then_outcast( val, k, codec.encoding )[k]

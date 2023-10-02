@@ -164,7 +164,7 @@ ZEN:add_schema(
       -- in order to contemplate hex strings)
       ethereum_nonce = { import = function(o)
 							local n = tonumber(o)
-							ZEN.assert(n, "Ethereum nonce not valid")
+							zencode_assert(n, "Ethereum nonce not valid")
 							return INT.new(n) end,
                          export = function(o) return o:decimal() end },
       ethereum_transaction = { import = import_eth_tx,
@@ -210,7 +210,7 @@ end)
 When("verify the ethereum address string '' is valid", function(add)
     local str_add = O.to_string(have(add))
     local address = O.from_hex(str_add)
-    ZEN.assert(str_add == ETH.checksum_encode(address), "The address has a wrong encoding")
+    zencode_assert(str_add == ETH.checksum_encode(address), "The address has a wrong encoding")
 end)
 
 When("create the ethereum transaction of '' to ''",
@@ -243,7 +243,7 @@ end)
 
 local function _use_eth_transaction(abi_fun, ...)
   local tx = have'ethereum transaction'
-  ZEN.assert(not tx.data or #tx.data == 0, "Cannot overwrite transaction data")
+  zencode_assert(not tx.data or #tx.data == 0, "Cannot overwrite transaction data")
   tx.data = abi_fun(...)
 end
 
@@ -259,7 +259,7 @@ When("create the string from the ethereum bytes named ''", function(obj)
   local data = have(obj):octet()
   local eth_decoder = ETH.contract_return_factory({ 'bytes' })
   local result = eth_decoder(data)
-  ZEN.assert(#result == 1, "Wrong data format")
+  zencode_assert(#result == 1, "Wrong data format")
   ACK.string = O.from_str(result[1])
   new_codec('string', { encoding = 'string'})
 end)
@@ -269,7 +269,7 @@ When("create the '' decoded from ethereum bytes ''", function(dst, obj)
   local data = have(obj):octet()
   local eth_decoder = ETH.contract_return_factory({ 'bytes' })
   local result = eth_decoder(data)
-  ZEN.assert(#result == 1, "Wrong data format")
+  zencode_assert(#result == 1, "Wrong data format")
   ACK[dst] = O.from_rawlen(result[1], #result[1])
   new_codec(dst)
 end)
@@ -306,7 +306,7 @@ function(chainid)
       cid = tonumber(chainid) or O.from_string(chainid)
   end
   cid = INT.new(cid)
-  ZEN.assert(cid, "Invalid chain id")
+  zencode_assert(cid, "Invalid chain id")
   if not tx.data  then tx.data = O.new() end
   if not tx.value then tx.value = O.new() end
   tx.v = cid
@@ -323,7 +323,7 @@ function(pubkey)
   local rawtx = have'signed ethereum transaction'
   local tx = ETH.decodeTransaction(rawtx)
   -- TODO: check decode errors
-  ZEN.assert( ETH.verifySignatureTransaction(pk, tx) )
+  zencode_assert( ETH.verifySignatureTransaction(pk, tx) )
 end)
 
 When("create the ethereum key with secret key ''",function(sec)
@@ -444,7 +444,7 @@ IfWhen("verify the '' has a ethereum signature in '' by ''", function(doc, sig, 
 
     local signature = have(sig)
     local address = have(by)
-    ZEN.assert(ETH.verify_signature_from_address(signature, address, fif(signature.v:parity(), 0, 1), hmsg),
+    zencode_assert(ETH.verify_signature_from_address(signature, address, fif(signature.v:parity(), 0, 1), hmsg),
             'The ethereum signature by '..by..' is not authentic')
 end)
 
@@ -454,8 +454,8 @@ local function _verify_address_signature_array(add_sig, doc, fun)
     local hmsg = keccak256(ethersMessage)
 
     local address_signature, address_signature_codec = have(add_sig)
-    ZEN.assert(address_signature_codec.schema, "The ethereum address signature pair array is not a schema")
-    ZEN.assert(address_signature_codec.zentype == "a", "The ethereum address signature pair array is not an array")
+    zencode_assert(address_signature_codec.schema, "The ethereum address signature pair array is not a schema")
+    zencode_assert(address_signature_codec.zentype == "a", "The ethereum address signature pair array is not an array")
     return fun(address_signature, hmsg)
 end
 
@@ -463,7 +463,7 @@ IfWhen("verify the ethereum address signature pair array '' of ''", function(add
     _verify_address_signature_array(add_sig, doc,
         function(address_signature_pair, hmsg)
             for _, v in pairs(address_signature_pair) do
-                ZEN.assert(ETH.verify_signature_from_address(v.signature, v.address, fif(v.signature.v:parity(), 0, 1), hmsg),
+                zencode_assert(ETH.verify_signature_from_address(v.signature, v.address, fif(v.signature.v:parity(), 0, 1), hmsg),
                     'The ethereum signature by '..ETH.checksum_encode(v.address)..' is not authentic')
             end
         end
@@ -491,7 +491,7 @@ When("use the ethereum transaction to run '' using ''", function(m, p)
 
     local method, codec = have(m)
     local params = have(p)
-    ZEN.assert(
+    zencode_assert(
        codec.schema == 'ethereum_method',
        'method must be a `ethereum method`'
     )
@@ -501,6 +501,6 @@ When("use the ethereum transaction to run '' using ''", function(m, p)
         method.name:octet():string(), input)
     local transaction_data = encoder(table.unpack(params))
     local tx = have'ethereum transaction'
-    ZEN.assert(not tx.data or #tx.data == 0, "Cannot overwrite transaction data")
+    zencode_assert(not tx.data or #tx.data == 0, "Cannot overwrite transaction data")
     tx.data = transaction_data
 end)

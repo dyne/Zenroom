@@ -82,7 +82,7 @@ local function import_credential_request_f(obj)
       commit = schema_get(obj, 'commit', ECP.new),
       public = schema_get(obj, 'public', ECP.new)
    }
-   ZEN.assert(
+   zencode_assert(
       CRED.verify_pi_s(req),
       'Error in credential request: proof is invalid (verify_pi_s)'
    )
@@ -258,7 +258,7 @@ IfWhen(
 	function()
 		have 'credential proof'
 		have 'verifiers'
-		ZEN.assert(
+		zencode_assert(
 			CRED.verify_cred(ACK.verifiers, ACK.credential_proof),
 			'Credential proof does not validate'
 		)

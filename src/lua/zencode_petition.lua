@@ -118,7 +118,7 @@ When(
 	"create the petition ''",
 	function(uid)
 		havekey'credential'
-		-- ZEN.assert(ACK.keyring.credential,"Credential key not found")
+		-- zencode_assert(ACK.keyring.credential,"Credential key not found")
 		ACK.petition = {
 			uid = OCTET.from_string(uid), -- TODO: take UID from HEAP not STACK
 			owner = ECP.generator() * ACK.keyring.credential,
@@ -146,19 +146,19 @@ When(
 When(
 	'verify the new petition to be empty',
 	function()
-		ZEN.assert(
+		zencode_assert(
 			ECP.isinf(ACK.petition.scores.pos.left),
 			'Invalid new petition: positive left score is not zero'
 		)
-		ZEN.assert(
+		zencode_assert(
 			ECP.isinf(ACK.petition.scores.pos.right),
 			'Invalid new petition: positive right score is not zero'
 		)
-		ZEN.assert(
+		zencode_assert(
 			ECP.isinf(ACK.petition.scores.neg.left),
 			'Invalid new petition: negative left score is not zero'
 		)
-		ZEN.assert(
+		zencode_assert(
 			ECP.isinf(ACK.petition.scores.neg.right),
 			'Invalid new petition: negative right score is not zero'
 		)
@@ -193,7 +193,7 @@ When(
 IfWhen(
 	'verify the signature proof is correct',
 	function()
-		ZEN.assert(
+		zencode_assert(
 			CRED.verify_cred_uid(
 				ACK.issuer_public_key,
 				ACK.petition_signature.proof,
@@ -207,7 +207,7 @@ IfWhen(
 
 local function _check_duplicate()
     if luatype(ACK.petition.list) == 'table' then
-        ZEN.assert(
+        zencode_assert(
             (not array_contains(
                 ACK.petition.list,
                 ACK.petition_signature.uid_signature
@@ -230,7 +230,7 @@ local function _check_one_more()
     -- verify that the signature is +1 (no other value supported)
     ACK.petition_signature.one =
         PET.prove_sign_petition(ACK.petition.owner, BIG.new(1))
-    ZEN.assert(
+    zencode_assert(
         PET.verify_sign_petition(
             ACK.petition.owner,
             ACK.petition_signature.one
@@ -265,7 +265,7 @@ When(
 	'create a petition tally',
 	function()
 		havekey'credential'
-		ZEN.assert(ACK.petition, 'Petition not found')
+		zencode_assert(ACK.petition, 'Petition not found')
 		ACK.petition_tally =
 			PET.prove_tally_petition(
 			ACK.keyring.credential,
@@ -279,9 +279,9 @@ When(
 When(
 	'count the petition results',
 	function()
-		ZEN.assert(ACK.petition, 'Petition not found')
-		ZEN.assert(ACK.petition_tally, 'Tally not found')
-		ZEN.assert(
+		zencode_assert(ACK.petition, 'Petition not found')
+		zencode_assert(ACK.petition_tally, 'Tally not found')
+		zencode_assert(
 			ACK.petition_tally.uid == ACK.petition.uid,
 			'Tally does not correspond to petition'
 		)

@@ -66,11 +66,11 @@ local BBS = require'crypto_bbs'
 
 local function bbs_public_key_f(obj)
     local point = ECP2.from_zcash(obj)
-    ZEN.assert(
+    zencode_assert(
        point ~=  ECP2.infinity(),
        'bbs public key is not valid'
     )
-    ZEN.assert(
+    zencode_assert(
        point*ECP.order() ==  ECP2.infinity(),
        'bbs public key is not valid'
     )
@@ -81,13 +81,13 @@ end
 local function bbs_signature_f(obj)
     local expected_len = 112
     local signature_octets = obj:octet()
-    ZEN.assert(#signature_octets == expected_len,
+    zencode_assert(#signature_octets == expected_len,
         "Wrong length of signature_octets"
     )
 
     local A_octets = signature_octets:sub(1, 48)
     local AA = ECP.from_zcash(A_octets)
-    ZEN.assert(AA ~= ECP.generator(),
+    zencode_assert(AA ~= ECP.generator(),
         "Point is identity"
     )
 
@@ -96,14 +96,14 @@ local function bbs_signature_f(obj)
     local end_index = index + 31
     local e = BIG.new(signature_octets:sub(index, end_index))
     local PRIME_R = ECP.order()
-    ZEN.assert( e ~= BIG_0 and e < PRIME_R,
+    zencode_assert( e ~= BIG_0 and e < PRIME_R,
         "Wrong e in deserialization"
     )
 
     index = index + 32
     end_index = index + 31
     local s = BIG.new(signature_octets:sub(index, end_index))
-    ZEN.assert( s ~= BIG_0 and s < PRIME_R,
+    zencode_assert( s ~= BIG_0 and s < PRIME_R,
         "Wrong s in deserialization"
     )
     return obj
@@ -207,7 +207,7 @@ local function generic_verify(doc, sig, by, h)
         obj = {obj}
     end
     local s = have(sig)
-    ZEN.assert(
+    zencode_assert(
         BBS.verify(ciphersuite, pk, s, obj),
        'The bbs signature by '..by..' is not authentic'
     )
@@ -230,14 +230,14 @@ IfWhen("verify the '' has a bbs signature in '' by '' using ''", generic_verify)
 local function bbs_proof_f(obj)
     local proof_octets = obj:octet()
     local proof_len_floor = 304
-    ZEN.assert(#proof_octets >= proof_len_floor,
+    zencode_assert(#proof_octets >= proof_len_floor,
         "proof_octets is too short"
     )
     local index = 1
     for i = 1, 3 do
         local end_index = index + 47
         local point = ECP.from_zcash(proof_octets:sub(index, end_index))
-        ZEN.assert(point ~= ECP.generator(),
+        zencode_assert(point ~= ECP.generator(),
             "Invalid point"
         )
         index = index + 48
@@ -246,7 +246,7 @@ local function bbs_proof_f(obj)
     while index < #proof_octets do
         local end_index = index + 31
         local sc = BIG.new(proof_octets:sub(index, end_index))
-        ZEN.assert( sc ~= BIG.new(0) and sc < PRIME_R,
+        zencode_assert( sc ~= BIG.new(0) and sc < PRIME_R,
             "Not a scalar in octets_proof"
         )
         index = index + 32
@@ -313,7 +313,7 @@ IfWhen("verify the bbs proof using ''", function(h)
     for k,v in pairs(float_indexes) do
         disclosed_indexes[k] = tonumber(v)
     end
-    ZEN.assert(
+    zencode_assert(
         BBS.proof_verify(ciphersuite, pubk, proof, nil, ph, disclosed_messages_octets, disclosed_indexes),
        'The bbs proof is not valid')
 end)
@@ -354,7 +354,7 @@ IfWhen("verify the bbs proof using '' with public key '' presentation header '' 
     for k,v in pairs(float_indexes) do
         disclosed_indexes[k] = tonumber(v)
     end
-    ZEN.assert(
+    zencode_assert(
         BBS.proof_verify(ciphersuite, pubk, proof, nil, ph, disclosed_messages_octets, disclosed_indexes),
        'The bbs proof is not valid')
 end)

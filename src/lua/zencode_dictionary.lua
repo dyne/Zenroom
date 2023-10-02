@@ -74,7 +74,7 @@ When("create the array of elements named '' for dictionaries in ''",
      function(name, dict)
 	empty'array'
 	local src = have(dict)
-	ZEN.assert(luatype(src)=='table', "Object is not a table: "..dict)
+	zencode_assert(luatype(src)=='table', "Object is not a table: "..dict)
 	local res = { }
 	for k, v in pairs(src) do
 	   if k == name then table.insert(res, v) end
@@ -90,13 +90,13 @@ end)
 When("create the pruned dictionary of ''", function(dict)
 	empty'pruned dictionary'
 	local d = have(dict)
-	ZEN.assert(luatype(d) == 'table', 'Object is not a table: '..dict)
+	zencode_assert(luatype(d) == 'table', 'Object is not a table: '..dict)
 	ACK.pruned_dictionary = prune(d)
 	new_codec('pruned dictionary', nil, dict)
 end)
 
 When("find the max value '' for dictionaries in ''", function(name, arr)
-	ZEN.assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
+	zencode_assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
 	empty'max value'
 	local max = nil
 	local params = {
@@ -107,7 +107,7 @@ When("find the max value '' for dictionaries in ''", function(name, arr)
 				end
 			}
 	dicts_reduce(ACK[arr],params) -- optimization? operate directly on ACK
-    ZEN.assert(max, "No max value "..name.." found across dictionaries in"..arr)
+    zencode_assert(max, "No max value "..name.." found across dictionaries in"..arr)
     ACK.max_value = max
 	new_codec('max value', {
 		zentype = 'e', -- introduce scalar?
@@ -115,7 +115,7 @@ When("find the max value '' for dictionaries in ''", function(name, arr)
 end)
 
 When("find the min value '' for dictionaries in ''", function(name, arr)
-	ZEN.assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
+	zencode_assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
 	empty'min value'
 	local min
 	-- init min with any value
@@ -137,7 +137,7 @@ When("find the min value '' for dictionaries in ''", function(name, arr)
 end)
 
 When("create the sum value '' for dictionaries in ''", function(name,arr)
-	ZEN.assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
+	zencode_assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
 	empty'sum value'
 	local sum -- result of reduction
 	local params = {
@@ -147,7 +147,7 @@ When("create the sum value '' for dictionaries in ''", function(name,arr)
 		end
 	}
     dicts_reduce(ACK[arr], params)
-    ZEN.assert(sum, "No sum of value "..name
+    zencode_assert(sum, "No sum of value "..name
 				  .." found across dictionaries in "..arr)
     ACK.sum_value = sum
 	new_codec('sum value', {
@@ -156,7 +156,7 @@ When("create the sum value '' for dictionaries in ''", function(name,arr)
 end)
 
 When("create the sum value '' for dictionaries in '' where '' > ''", function(name,arr, left, right)
-	ZEN.assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
+	zencode_assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
 	have(right)
 	empty'sum value'
 
@@ -169,7 +169,7 @@ When("create the sum value '' for dictionaries in '' where '' > ''", function(na
 	}
 	params.conditions[left] = ACK[right] -- used in cmp
     dicts_reduce(ACK[arr], params)
-    ZEN.assert(sum, "No sum of value "..name
+    zencode_assert(sum, "No sum of value "..name
 				  .." found across dictionaries in"..arr)
     ACK.sum_value = sum
 	new_codec('sum value', {
@@ -178,7 +178,7 @@ When("create the sum value '' for dictionaries in '' where '' > ''", function(na
 end)
 
 When("find the '' for dictionaries in '' where '' = ''",function(name, arr, left, right)
-	ZEN.assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
+	zencode_assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
 	have(right)
 	empty(name)
 
@@ -191,7 +191,7 @@ When("find the '' for dictionaries in '' where '' = ''",function(name, arr, left
 	}
 	params.conditions[left] = ACK[right]
 	dicts_reduce(ACK[arr], params)
-	ZEN.assert(val, "No value found "..name.." across dictionaries in "..arr)
+	zencode_assert(val, "No value found "..name.." across dictionaries in "..arr)
 	ACK[name] = val
 	new_codec(name, {zentype = 'a'}, arr)
 end)
@@ -199,8 +199,8 @@ end)
 
 local function _extract(tab, ele, root)
    local nr = root or 'nil'
-   ZEN.assert(luatype(tab) == 'table', "Object is not a table: "..nr)
-   ZEN.assert(ele, "Undefined key or index: "..ele.." in "..nr)
+   zencode_assert(luatype(tab) == 'table', "Object is not a table: "..nr)
+   zencode_assert(ele, "Undefined key or index: "..ele.." in "..nr)
    if #tab == 1 then
       if tab[ele] then return tab[ele] end
       if luatype(tab[1]) == 'table' and tab[1][ele] then
@@ -271,15 +271,15 @@ end)
 
 When("for each dictionary in '' append '' to ''", function(arr, right, left)
 	local dicts = have(arr)
-	ZEN.assert(luatype(dicts) == 'table', 'Object is not a table: '..arr)
+	zencode_assert(luatype(dicts) == 'table', 'Object is not a table: '..arr)
 	for kk,vv in pairs(dicts) do
 		local l, r
 		for k,v in pairs(vv) do
 			if k == right then r = v end
 			if k == left then l = v end
 		end
-		ZEN.assert(l, "Object not found: "..kk.."."..left)
-		ZEN.assert(r, "Object not found: "..kk.."."..right)
+		zencode_assert(l, "Object not found: "..kk.."."..left)
+		zencode_assert(r, "Object not found: "..kk.."."..right)
 		vv[left] = l..r
 	end
 end)
@@ -361,10 +361,10 @@ end
 
 When("filter '' fields from ''", function(filters, target)
 	local t = have(target)
-	ZEN.assert(isdictionary(target) or
+	zencode_assert(isdictionary(target) or
 		   _is_array_of_dictionaries(t),
 		   "Object is nor a dictionary neither an array of dictionaries: "..target)
 	local f = have(filters)
-	ZEN.assert(isarray(filters), "Object is not an array: "..filters)
+	zencode_assert(isarray(filters), "Object is not an array: "..filters)
 	ACK[target] = deepmap(_filter_from, t, f)
 end)
