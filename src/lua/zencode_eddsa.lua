@@ -74,7 +74,7 @@ When("create the eddsa signature of ''",function(doc)
 	local sk = havekey'eddsa'
 	local obj = have(doc)
 	empty'eddsa signature'
-	ACK.eddsa_signature = ED.sign(sk, ZEN.serialize(obj))
+	ACK.eddsa_signature = ED.sign(sk, zencode_serialize(obj))
 	new_codec('eddsa signature', { zentype = 'e',
 				       encoding = 'base58'})
 end)
@@ -84,7 +84,7 @@ IfWhen("verify the '' has a eddsa signature in '' by ''",function(msg, sig, by)
 	  local m = have(msg)
 	  local s = have(sig)
 	  ZEN.assert(
-	     ED.verify(pk, s, ZEN.serialize(m)),
+	     ED.verify(pk, s, zencode_serialize(m)),
 	     'The eddsa signature by '..by..' is not authentic'
 	  )
 end)

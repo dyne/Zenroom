@@ -135,7 +135,7 @@ end)
 When("append '' as http request to ''", function(ele, dst)
 	local arg = have(ele):str():lower()
 	local url = have(dst):str():lower()
-	local codec = ZEN.HEAP.CODEC[dst]
+	local codec = CODEC[dst]
 	ZEN.assert(codec.content=='url',
 		   "Cannot append http request to invalid url: "..dst)
 	local separator = fif( url:find('?'), '&', '?' )

@@ -19,7 +19,7 @@ credential = [[
 ]]
 
 local cred_table = JSON.decode(credential)
-local cred_oct = ZEN.serialize(cred_table)
+local cred_oct = zencode_serialize(cred_table)
 
 -- generate test keypair
 -- TODO: JWK read write from RFC7517
@@ -49,7 +49,7 @@ I.print(cred_table)
 local v_cred_table = JSON.decode( cred_signed )
 local v_proof = cred_table.proof
 v_cred_table.proof = nil
-v_cred_oct = ZEN.serialize(v_cred_table)
+v_cred_oct = zencode_serialize(v_cred_table)
 assert(v_cred_oct == cred_oct) -- check serialization is deterministic
 local v_jws = strtok(v_proof.jws,'.')
 -- parse header

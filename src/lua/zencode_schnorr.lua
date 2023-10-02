@@ -108,7 +108,7 @@ When("create the schnorr signature of ''",function(doc)
 	local sk = havekey'schnorr'
 	local obj = have(doc)
 	empty'schnorr signature'
-	ACK.schnorr_signature = SCH.sign(sk, ZEN.serialize(obj))
+	ACK.schnorr_signature = SCH.sign(sk, zencode_serialize(obj))
 	new_codec('schnorr signature')
 end)
 
@@ -117,7 +117,7 @@ IfWhen("verify the '' has a schnorr signature in '' by ''",function(doc, sig, by
 	  local obj = have(doc)
 	  local s = have(sig)
 	  ZEN.assert(
-	     SCH.verify(pk, ZEN.serialize(obj), s),
+	     SCH.verify(pk, zencode_serialize(obj), s),
 	     'The schnorr signature by '..by..' is not authentic'
 	  )
 end)

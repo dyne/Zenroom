@@ -117,7 +117,7 @@ EOF
 	>&3 echo
 	awk '/TRACE:/ {print $4}' full.json | sed 's/",//' | base64 -d > $TMP/out
 	save_output trace.json
-	assert_output '["Given nothing","When I create the random object of '"'"'256'"'"' bits","and debug"]'
+	assert_output '[" Z  Given nothing"," Z  When I create the random object of '"'"'256'"'"' bits"," Z  and debug"]'
 }
 
 @test "Execute zencode-exec with all stdin inputs including extra" {

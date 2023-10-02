@@ -265,7 +265,7 @@ function isarray(obj)
       local o = ACK[obj]
       if not o then return false end
       if luatype(o) ~= 'table' then return false end
-      if ZEN.HEAP.CODEC[obj].zentype == 'a' then return true end
+      if CODEC[obj].zentype == 'a' then return true end
       return false
    end
    if luatype(obj) ~= 'table' then
@@ -292,8 +292,8 @@ function isdictionary(obj)
       local o = ACK[obj]
       if not o then return false end
       if luatype(o) ~= 'table' then return false end
-      if ZEN.HEAP.CODEC[obj].zentype == 'd'
-	 or ZEN.HEAP.CODEC[obj].zentype == 'schema' then
+      if CODEC[obj].zentype == 'd'
+	 or CODEC[obj].zentype == 'schema' then
 	 return true end -- TRUE
       return false
    end

@@ -395,5 +395,5 @@ for k, v in pairs(tests) do
    assert(ETH.encodeRLP(v[1]) == v[2])
 
    assert(ETH.encodeRLP(ETH.decodeRLP(v[2])) == v[2])
-   assert(ZEN.serialize(ETH.decodeRLP(v[2])) == ZEN.serialize(v[1]))
+   assert(zencode_serialize(ETH.decodeRLP(v[2])) == zencode_serialize(v[1]))
 end

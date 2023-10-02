@@ -27,7 +27,7 @@ local function _eq(left, right)
     return (left == right)
   elseif luatype(left) == 'table' and luatype(right) == 'table' then
      if(#left ~= #right) then return false end -- optimization
-     return (ZEN.serialize(left) == ZEN.serialize(right))
+     return (zencode_serialize(left) == zencode_serialize(right))
   elseif iszen(type(left)) and iszen(type(right)) then
      return (left:octet() == right:octet())
   else
@@ -43,7 +43,7 @@ local function _neq(left, right)
     return not (left == right)
   elseif luatype(left) == 'table' and luatype(right) == 'table' then
      if(#left ~= #right) then return true end -- optimization
-     return (ZEN.serialize(left) ~= ZEN.serialize(right))
+     return (zencode_serialize(left) ~= zencode_serialize(right))
   elseif iszen(type(left)) and iszen(type(right)) then
      return (left:octet() ~= right:octet())
   else
@@ -387,10 +387,10 @@ IfWhen("verify the elements in '' are not equal", _check_elements_not_equals)
 local function start_with_from(str, sub, start)
    local str_oct = have(str)
    local sub_oct = ACK[sub]
-   local str_codec = ZEN.HEAP.CODEC[str]
+   local str_codec = CODEC[str]
    local sub_codec = {}
    if sub_oct then
-      sub_codec = ZEN.HEAP.CODEC[sub]
+      sub_codec = CODEC[sub]
    else
       sub_oct = O.from_string(sub)
       sub_codec.encoding = 'string'
