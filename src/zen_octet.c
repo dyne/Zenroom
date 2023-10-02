@@ -143,7 +143,7 @@ int is_base58(lua_State *L, const char *in) {
 
 int is_hex(lua_State *L, const char *in) {
 	(void)L;
-	if(!in) { ERROR(); return 0; }
+	if(!in) { zerror(L, "Error in %s",__func__); return 0; }
 	if ( (in[0] == '0') && (in[1] == 'x') ) {
 		in+=2;
 	}
@@ -158,7 +158,7 @@ int is_hex(lua_State *L, const char *in) {
 // return total string length including spaces
 int is_bin(lua_State *L, const char *in) {
 	(void)L;
-	if(!in) { ERROR(); return 0; }
+	if(!in) { zerror(L, "Error in %s",__func__); return 0; }
 	register int c;
 	register int len = 0;
 	for(c=0; in[c]!='\0'; c++) {

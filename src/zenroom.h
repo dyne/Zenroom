@@ -102,8 +102,8 @@ typedef struct {
 } zenroom_t;
 
 // LOG FORMATS
-#define TEXT 0
-#define JSON  1
+#define LOG_TEXT 0
+#define LOG_JSON  1
 
 // EXIT CODES
 #define ERR_INIT 4
