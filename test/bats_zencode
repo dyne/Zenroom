@@ -45,13 +45,13 @@ zexe() {
     tmperr=$TMP/err
 
     if [ "$keys" != "" ]; then
-	$ZENROOM_EXECUTABLE -z -c $conf -k $keys -a $input $script  1>$tmpout
+	$ZENROOM_EXECUTABLE -z -c $conf -k $keys -a $input $script  1>$tmpout 2> >(tee $tmperr >&2)
 	status=$?
     elif [ "$input" != "" ]; then
-	$ZENROOM_EXECUTABLE -z -c $conf -a $input $script           1>$tmpout
+	$ZENROOM_EXECUTABLE -z -c $conf -a $input $script           1>$tmpout 2> >(tee $tmperr >&2)
 	status=$?
     else
-	$ZENROOM_EXECUTABLE -z -c $conf $script                     1>$tmpout
+	$ZENROOM_EXECUTABLE -z -c $conf $script                     1>$tmpout 2> >(tee $tmperr >&2)
 	status=$?
     fi
     if [ $status == 0 ]; then
@@ -60,6 +60,8 @@ zexe() {
     fi
     # if [ $status != 0 ]; then >&3 cat $tmperr; fi
     # export output=`cat $TMP/out`
+    dep=`cat $tmperr | grep 'DEPRECATED:' -A 3 || true`
+    if [ "$dep" != "" ] && [ $status == 0 ]; then status=255; fi
     return $status
 }
 
