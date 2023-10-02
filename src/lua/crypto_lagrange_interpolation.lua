@@ -51,13 +51,16 @@ CONDITIONS OF ANY KIND, either express or implied.
 -- 115792089237316195423570985008687907853269984665640564039457584007913129639747
 
 
-octP = O.from_hex('ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff43')
-P = BIG.new(octP)
-assert(P:octet() == octP)
+local octP = O.from_hex('ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff43')
+local P = BIG.new(octP)
+-- assert(P:octet() == octP)
 
 function li.create_shared_secret(total, quorum, secret)
    if quorum >= total then
       error('Error calling create_shared_secret: quorum ('..quorum..') must be smaller than total ('..total..')', 2)
+   end
+   if not secret then
+	  error('Secret not provided to shared secret creation', 2)
    end
    -- check that BIG can contain the whole secret, depends from curve's size and the choosen prime P
    local secbig = BIG.new(secret)
@@ -66,10 +69,8 @@ function li.create_shared_secret(total, quorum, secret)
    end
    secbig = secbig % P
    -- generation of the coefficients of the secret polynomial
-   local coeff = { }
+   local coeff = { secbig }
    -- take last argument or create random
-   if secret then coeff[1] = BIG.new(secret)
-   else coeff[1] = BIG.modrand(P) end
    for i=2,quorum,1 do
       coeff[i] = BIG.modrand(P)
    end
