@@ -102,14 +102,30 @@ When("create the array of '' random numbers", function(s)
     new_codec('array', {zentype = 'a', encoding = 'integer' })
 end)
 
+
 When("create the array of '' random numbers modulo ''", function(s,m)
-	zencode_assert(not ACK.array, "Cannot overwrite existing object: ".."array")
-	ACK.array = { }
-	for i = s,1,-1 do
-		table.insert(ACK.array,F.new(math.floor(random_int16() % m)))
-	end
-	new_codec('array', {zentype = 'a', encoding = 'number' })
+    local modulo = mayhave(m)
+    if not modulo then
+        local mod = tonumber(m)
+        zencode_assert(mod, "Argument is not a number: "..m)
+        modulo = BIG.new(mod)
+    end
+    local fun
+    local enc
+    local modulo_type = type(modulo)
+    if modulo_type == "zenroom.big" then
+        fun = function(input) return BIG.random() % input end
+        enc = 'integer'
+    elseif modulo_type == "zenroom.float" then
+        fun = function(input) return F.new(math.floor(random_int16() % tonumber(input))) end
+        enc = 'float'
+    else
+        error("Modulo is not a number nor an integer: "..modulo_type)
+    end
+    _create_random_array(s, modulo, fun)
+    new_codec('array', {zentype = 'a', encoding = enc })
 end)
+
 
 local function _extract_random_elements(num, from, random_fun)
    local n = tonumber(num) or tonumber(tostring(have(num)))
