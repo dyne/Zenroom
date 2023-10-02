@@ -21,8 +21,10 @@
 --]]
 
 -- override type to recognize zenroom's types
-luatype = type
-_G['type'] = function(var)
+local _luatype <const> = _G['type']
+_G['luatype'] = _luatype
+
+local _type <const> = function(var)
    local simple = luatype(var)
    if simple == "userdata" then
 	  local meta = getmetatable(var)
@@ -30,13 +32,16 @@ _G['type'] = function(var)
 	  else return("unknown") end
    else return(simple) end
 end
+_G['type'] = _type
+
 -- TODO: optimise in C
-function iszen(n)
+local _iszen <const> = function(n)
    for _ in n:gmatch("zenroom") do
 	  return true
    end
    return false
 end
+_G['iszen'] = _iszen
 
 -- workaround for a ternary conditional operator
 function fif(condition, if_true, if_false)
