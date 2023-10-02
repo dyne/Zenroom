@@ -36,7 +36,7 @@ function HDW.parse_extkey(data)
    local extkey = {}
    local i = 1
 
-   version = data:sub(i,i+3)
+   local version = data:sub(i,i+3)
    i = i + 4
 
    assert(version == HDW.MAINPK or version == HDW.MAINSK or
@@ -143,8 +143,8 @@ function HDW.ckd_priv(parent_key, i)
    
    l = HASH.hmac(s512, parent_key.chain_code, l)
 
-   lL = BIG.new(l:sub( 1,32))
-   lR = l:sub(33,64)
+   local lL = BIG.new(l:sub( 1,32))
+   local lR = l:sub(33,64)
   
    -- On BIP32 there is a mod, if I add it, it doesn't work
    -- TODO improve arithmetics modulo order of curve secp256k1
@@ -152,7 +152,7 @@ function HDW.ckd_priv(parent_key, i)
 
    -- check if lR >= order curve, in that case return ckd_priv(parent_key, i+1)
    if newkey.secret == INT.new(0) then
-      return ckd_priv(parent_key, i+1)
+      return HDW.ckd_priv(parent_key, i+1)
    end
 
    -- compute fingerprint
@@ -194,7 +194,7 @@ function HDW.ckd_pub(parent_key, i)
    if parent_key.secret then
       newkey = HDW.neutered(HDW.ckd_priv(parent_key, i))
    else
-      pk = HDW.getPublic(parent_key)
+      local pk = HDW.getPublic(parent_key)
       newkey.child_number = i
       
       l = parent_key.public .. i:fixed(4)
@@ -208,7 +208,7 @@ function HDW.ckd_pub(parent_key, i)
       newkey.public = ECDH.compress_public_key(ECDH.add(nG, parent_key.public))
       -- check if lR >= order curve, in that case return ckd_priv(parent_key, i+1)
       if newkey.secret == INT.new(0) then
-	 return ckd_priv(parent_key, i+1)
+	 return HDW.ckd_priv(parent_key, i+1)
       end
 
       newkey.fingerprint_parent = HASH.hash160(pk):sub(1,4)
@@ -261,9 +261,9 @@ function HDW.standard_child(parent_key, i, wallet, nohardened)
 
    assert(wallet < HARDNED)
 
-   wallet_key = HDW.ckd_priv(parent_key, wallet+HARDNED)
-   external_key = HDW.ckd_priv(wallet_key, INT.new(0))
-   address_key = HDW.ckd_priv(external_key, i)
+   local wallet_key = HDW.ckd_priv(parent_key, wallet+HARDNED)
+   local external_key = HDW.ckd_priv(wallet_key, INT.new(0))
+   local address_key = HDW.ckd_priv(external_key, i)
 
    return address_key
 end

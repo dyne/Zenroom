@@ -20,7 +20,7 @@
 --on Sunday, 10th April 2022
 --]]
 
-ETH = require_once'crypto_ethereum'
+local ETH = require_once'crypto_ethereum'
 
 
 local function big_wei_to_str_wei(x)
