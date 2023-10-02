@@ -89,7 +89,7 @@ end
 local function import_jwt(obj)
     local res = {}
     local toks = strtok(obj, '.')
-    res.header = JSON.decode(get(toks[1], '.', O.from_url64, tostring):string())
+    res.header = JSON.decode(schema_get(toks[1], '.', O.from_url64, tostring):string())
     res.header = deepmap(function(s)
         if type(s) == 'string' then
             return O.from_string(s)
@@ -99,7 +99,7 @@ local function import_jwt(obj)
             return s
         end
     end, res.header)
-    res.payload = JSON.decode(get(toks[2], '.', O.from_url64, tostring):string())
+    res.payload = JSON.decode(schema_get(toks[2], '.', O.from_url64, tostring):string())
     res.payload = deepmap(function(s)
         if type(s) == 'string' then
             return O.from_string(s)
@@ -375,8 +375,8 @@ When(
             i = i+1
         until( ( not doc.verificationMethod[i] ) or ACK[pk_name] )
         ZEN.assert(ACK[pk_name], pk_name..' not found in the did document '..did_doc)
-        ZEN.HEAP.CODEC[pk_name] = guess_conversion(ACK[pk_name], pk_name)
-        ZEN.HEAP.CODEC[pk_name].name = pk_name
+        CODEC[pk_name] = guess_conversion(ACK[pk_name], pk_name)
+        CODEC[pk_name].name = pk_name
     end
 )
 

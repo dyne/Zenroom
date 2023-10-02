@@ -53,10 +53,10 @@ function pubkey(sk)
 end
 
 function hash_tag(tag, data)
-    -- TODO: can this be changed, used ZEN.serialize?
+    -- TODO: can this be changed, used zencode_serialize?
     -- original implementation follows BIP0340
 --    return sha256(sha256(OCTET.str(tag))..sha256(OCTET.str(tag))..data)
---    return(sha256( ZEN.serialize( {tag, data})))
+--    return(sha256( zencode_serialize( {tag, data})))
     return(sha256(OCTET.from_str(tag)..data))
 end
 

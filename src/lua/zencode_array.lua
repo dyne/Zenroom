@@ -28,9 +28,9 @@ local function _when_remove_dictionary(ele, from)
 	ZEN.assert(dict, "Dictionary not found: "..from)
 	if dict[ele] then
 		ACK[from][ele] = nil -- remove from dictionary
-	elseif ZEN.HEAP.CODEC[ele].name ~= ele and dict[ZEN.HEAP.CODEC[ele].name] then
+	elseif CODEC[ele].name ~= ele and dict[CODEC[ele].name] then
 		-- it may be a copy or random object with different name
-		ACK[from][ZEN.HEAP.CODEC[ele].name] = nil
+		ACK[from][CODEC[ele].name] = nil
 	else
 		error("Object not found in dictionary: "..ele.." in "..from)
 	end
@@ -46,7 +46,7 @@ local function _when_remove_array(ele, from)
 		local m_arr = {}
 		setmetatable(arr, m_arr)
 		setmetatable(obj, m_obj)
-		local fun = function(l, r) return ZEN.serialize(l) == ZEN.serialize(r) end
+		local fun = function(l, r) return zencode_serialize(l) == zencode_serialize(r) end
 		m_arr.__eq = fun
 		m_obj.__eq = fun
 	end
@@ -62,7 +62,7 @@ local function _when_remove_array(ele, from)
 end
 
 When("remove the '' from ''", function(ele,from)
-	local codec = ZEN.HEAP.CODEC[from]
+	local codec = CODEC[from]
 	ZEN.assert(codec, "No codec registration for target: "..from)
 	if codec.zentype == 'd'
 	   or codec.schema then
@@ -147,28 +147,28 @@ function(ele, dest)
 	local e = have(ele)
 	ZEN.assert(luatype(d) == 'table',
 	"Invalid destination, not a table: "..dest)
-	ZEN.assert(ZEN.HEAP.CODEC[dest].zentype ~= 'e',
+	ZEN.assert(CODEC[dest].zentype ~= 'e',
 	"Invalid destination, not a container: "..dest)
-	if ZEN.HEAP.CODEC[dest].zentype == 'a' then
+	if CODEC[dest].zentype == 'a' then
 		table.insert(ACK[dest], e)
-	elseif ZEN.HEAP.CODEC[dest].zentype == 'd' then
+	elseif CODEC[dest].zentype == 'd' then
 		ACK[dest][ele] = e
-	elseif ZEN.HEAP.CODEC[dest].zentype == 'schema' then
+	elseif CODEC[dest].zentype == 'schema' then
 		ACK[dest][ele] = e
 	else
 		ZEN.assert(false, "Invalid destination type: "
-		..ZEN.HEAP.CODEC[dest].zentype)
+		..CODEC[dest].zentype)
 	end
-	ZEN.HEAP.CODEC[dest][ele] = ZEN.HEAP.CODEC[ele]
+	CODEC[dest][ele] = CODEC[ele]
 	ACK[ele] = nil
-	ZEN.HEAP.CODEC[ele] = nil
+	CODEC[ele] = nil
 end)
 )
 
 -- When("insert the '' in ''", function(ele,arr)
 --     ZEN.assert(ACK[ele], "Element not found: "..ele)
 --     ZEN.assert(ACK[arr], "Array not found: "..arr)
--- 	ZEN.assert(ZEN.HEAP.CODEC[arr].zentype == 'a',
+-- 	ZEN.assert(CODEC[arr].zentype == 'a',
 -- 			   "Object is not an array: "..arr)
 --     table.insert(ACK[arr], ACK[ele])
 -- end)
@@ -250,7 +250,7 @@ IfWhen("verify the '' is found in '' at least '' times", _found_in_atleast)
 
 local function _aggr_array(arr)
 	local A = have(arr)
-	local codec = ZEN.HEAP.CODEC[arr]
+	local codec = CODEC[arr]
 	ZEN.assert(codec.zentype == 'a', "Object is not a valid array: "..arr)
 	local count = isarray(A)
 	ZEN.assert( count > 0, "Array is empty or invalid: "..arr)
@@ -323,7 +323,7 @@ When("create the standard deviation of elements in array ''", function(arr)
 end)
 
 When("create the flat array of contents in ''", function(dic)
-	local codec = ZEN.HEAP.CODEC[dic]
+	local codec = CODEC[dic]
 	ZEN.assert(codec.zentype == 'a' or
 	codec.zentype == 'd',
 	"Target is not a valid: "..dic)
@@ -350,7 +350,7 @@ local function _keys_flat_array(data, res)
 end
 
 When("create the flat array of keys in ''", function(dic)
-	local codec = ZEN.HEAP.CODEC[dic]
+	local codec = CODEC[dic]
 	ZEN.assert(codec.zentype == 'a' or
 	codec.zentype == 'd',
 	"Target is not a valid: "..dic)

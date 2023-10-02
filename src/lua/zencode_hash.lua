@@ -27,7 +27,7 @@ When(
     function(s)
         local src = have(s)
         if luatype(src) == 'table' then
-            src = ZEN.serialize(src) -- serialize tables using zenroom's algo
+            src = zencode_serialize(src) -- serialize tables using zenroom's algo
         end
         ACK.hash = HASH.new(CONF.hash):process(src)
 	new_codec('hash', { zentype = 'e' })
@@ -39,7 +39,7 @@ When(
     function(s, h)
         local src = have(s)
         if luatype(src) == 'table' then
-            src = ZEN.serialize(src)
+            src = zencode_serialize(src)
         end
         if strcasecmp(h, 'sha256') then
             ACK.hash = sha256(src)
@@ -61,7 +61,7 @@ When("create the hash to point '' of ''", function(curve, object)
     )
     empty'hash_to_point'
     local obj = have(object)
-    ACK.hash_to_point = F.hashtopoint(ZEN.serialize(obj))
+    ACK.hash_to_point = F.hashtopoint(zencode_serialize(obj))
     new_codec('hash_to_point', { zentype='e' })
 end)
 
@@ -102,7 +102,7 @@ When(
     function(obj, key)
         local src = have(obj)
         if luatype(src) == 'table' then
-            src = ZEN.serialize(src)
+            src = zencode_serialize(src)
         end
         local hkey = have(key)
         -- static int hash_hmac(lua_State *L) {
@@ -119,7 +119,7 @@ When(
     function(obj)
         local src = have(obj)
         if luatype(src) == 'table' then
-            src = ZEN.serialize(src)
+            src = zencode_serialize(src)
         end
         ACK.key_derivation = HASH.new(CONF.hash):kdf(src)
 	new_codec('key_derivation', { zentype = 'e' })
@@ -137,13 +137,13 @@ When(
 		    return HASH.new(CONF.hash):kdf(v)
 		end,
 		t)
-	 new_codec('key derivations', {zentype = ZEN.HEAP.CODEC[tab].zentype})
+	 new_codec('key derivations', {zentype = CODEC[tab].zentype})
     end
 )
 
 local function _pbkdf2_f(src, pass, n)
     if luatype(src) == 'table' then
-	    src = ZEN.serialize(src)
+	    src = zencode_serialize(src)
     end
     ACK.key_derivation =
 	HASH.new('sha512'):pbkdf2(src,

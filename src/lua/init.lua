@@ -27,8 +27,7 @@ function fatal(msg)
 	error(msg, 2)
 end
 
--- global
-REQUIRED = {}
+_G['REQUIRED'] = {}
 -- avoid duplicating requires (internal includes)
 function require_once(ninc)
 	local class = REQUIRED[ninc]
@@ -41,7 +40,7 @@ function require_once(ninc)
 	return class
 end
 
-SCENARIOS = {}
+_G['SCENARIOS'] = {}
 function load_scenario(scen)
    local s = SCENARIOS[scen]
    if not s then
@@ -87,6 +86,14 @@ MAXITER = tonumber(STR_MAXITER)
 ------------------------------
 -- ZENCODE starts here
 
+-- declare HEAP globals in the main co-routine
+IN  = {} -- Given processing, import global DATA from json
+TMP = {} -- temporary buffer used by Given
+ACK = {} -- When processing,  destination for push*
+OUT = {} -- print out
+CODEC = {} -- metadata
+WHO = nil -- whoami
+-- globals will be filled by zencode
 _G['ZEN'] = require('zencode')
 
 -- base zencode functions and schemas

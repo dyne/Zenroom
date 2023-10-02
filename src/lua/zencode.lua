@@ -91,15 +91,17 @@ end
 
 function ZEN:begin(new_heap)
    self:crumb()
-	self.HEAP = new_heap or {
-		IN  = {}, -- Given processing, import global DATA from json
-		ACK = {}, -- When processing,  destination for push*
-		OUT = {}, -- print out
-		CODEC = {}, -- metadata
-		WHO = nil,
-		traceback = ZEN.traceback
-	}
-	ZEN.traceback = nil
+   if new_heap then
+	  -- TODO: setup with an existing HEAP
+   else
+	  IN  = {} -- Given processing, import global DATA from json
+	  ACK = {} -- When processing,  destination for push*
+	  OUT = {} -- print out
+	  CODEC = {} -- metadata
+	  WHO = nil
+	  traceback = {}
+   end
+
 	-- stateDiagram
     -- [*] --> Given
     -- Given --> When
@@ -113,7 +115,6 @@ function ZEN:begin(new_heap)
     -- When --> branch
     -- branch --> When
     -- Then --> [*]
-
 
 	local function set_sentence(self, event, from, to, ctx)
 	   local translate = {
@@ -203,6 +204,96 @@ function ZEN:begin(new_heap)
 	   end
 	   return true
 	end
+	-- END local function set_sentence
+
+	local function set_rule(text)
+	   local tr = text.msg:gsub(' +', ' ') -- eliminate multiple internal spaces
+	   local rule = strtok(trim(tr):lower())
+	   local rules = {
+		  -- TODO: rule debug [ format | encoding ]
+		  -- ['load'] = function(extension)
+		  --	if not extension then return false end
+		  --  act("zencode extension: "..extension)
+		  --  require("zencode_"..extension)
+		  -- 	return true
+		  -- end,
+		  ['check version'] = function (version)
+			 -- TODO: check version of running VM
+			 if not version then return false end
+			 local ver = V(version)
+			 if ver == ZENROOM_VERSION then
+				act('Zencode version match: ' .. ZENROOM_VERSION.original)
+			 elseif ver < ZENROOM_VERSION then
+				warn('Zencode written for an older version: ' .. ver.original)
+			 elseif ver > ZENROOM_VERSION then
+				warn('Zencode written for a newer version: ' .. ver.original)
+			 else
+				error('Version check error: ' .. version)
+			 end
+			 text.Z.checks.version = true
+			 return true
+		  end,
+		  ['input encoding'] = function (encoding)
+			 if not encoding then return false end
+			 CONF.input.encoding = input_encoding(encoding)
+			 return true and CONF.input.encoding
+		  end,
+		  ['input format'] = function (format)
+			 if not format then return false end
+			 CONF.input.format = get_format(format)
+			 return true and CONF.input.format
+		  end,
+		  ['input untagged'] = function ()
+			 CONF.input.tagged = false
+			 return true
+		  end,
+		  ['output encoding'] = function (encoding)
+			 if not encoding then return false end
+			 CONF.output.encoding = { fun = get_encoding_function(encoding),
+									  name = encoding }
+			 return true and CONF.output.encoding
+		  end,
+		  ['output format'] = function (format)
+			 if not format then return false end
+			 CONF.output.format = get_format(format)
+			 return true and CONF.output.format
+		  end,
+		  ['output versioning'] = function ()
+			 CONF.output.versioning = true
+			 return true
+		  end,
+		  ['unknown ignore'] = function ()
+			 CONF.parser.strict_match = false
+			 return true
+		  end,
+		  ['collision ignore'] = function ()
+			 CONF.heap.check_collision = false
+			 return true
+		  end,
+		  ['caller restroom-mw'] = function()
+			 CONF.parser.strict_match = false
+			 CONF.heap.check_collision = false
+			 return true
+		  end,
+		  ['set'] = function (conf, value)
+			 if not conf or not value then return false end
+			 CONF[conf] = fif( tonumber(value), tonumber(value),
+							   fif( value=='true', true,
+									fif( value=='false', false,
+										 value)))
+			 return true
+		  end,
+	   }
+	   local res
+	   if rule[2] == 'set' then
+		  res = rules[rule[2]](rule[3], rule[4])
+	   else
+		  res = rules[rule[2]..' '..rule[3]] and rules[rule[2]..' '..rule[3]](rule[4])
+	   end
+	   if res then act(text.msg) else error('Rule invalid: ' .. text.msg, 3) end
+	   return res
+	end
+	-- END local function set_rule
 
 	self.machine =	MACHINE.create({
 		initial = 'init',
@@ -264,7 +355,7 @@ function ZEN:begin(new_heap)
 				for k, scen in ipairs(scenarios) do
 					if k ~= 1 then -- skip first (prefix)
 						load_scenario('zencode_' .. trimq(scen))
-						trace('Scenario ' .. scen)
+						-- self:trace('Scenario ' .. scen)
 						return
 					end
 				end
@@ -454,32 +545,31 @@ function ZEN:run()
 		)
 	end
 	-- HEAP setup
-	self.HEAP.IN = {} -- import global DATA from json
 	local tmp
 	if EXTRA then
 		tmp  = CONF.input.format.fun(EXTRA) or {}
 		for k, v in pairs(tmp) do
-			self.HEAP.IN[k] = v
+			IN[k] = v
 		end
 		EXTRA = nil
 	end
 	if DATA then
 		tmp  = CONF.input.format.fun(DATA) or {}
 		for k, v in pairs(tmp) do
-			if self.HEAP.IN[k] then
+			if IN[k] then
 				error("Object name collision in input: "..k)
 			end
-			self.HEAP.IN[k] = v
+			IN[k] = v
 		end
 		DATA = nil
 	end
 	if KEYS then
 		tmp  = CONF.input.format.fun(KEYS) or {}
 		for k, v in pairs(tmp) do
-			if self.HEAP.IN[k] then
+			if IN[k] then
 				error("Object name collision in input: "..k)
 			end
-			self.HEAP.IN[k] = v
+			IN[k] = v
 		end
 		KEYS = nil
 	end
@@ -487,7 +577,7 @@ function ZEN:run()
 	collectgarbage 'collect'
 
 	-- convert all spaces in keys to underscore
-	self.HEAP.IN = IN_uscore(self.HEAP.IN)
+	IN = IN_uscore(IN)
 
 	-- EXEC zencode
 	-- TODO: for optimization, to develop a lua iterator, which would save lookup time
@@ -498,19 +588,19 @@ function ZEN:run()
 		self.current_instruction = self.next_instruction
 		x = self.AST[self.current_instruction]
 		self.next_instruction = self.next_instruction + 1
-	--trace(x.source)
+	--self:trace(x.source)
 	if not manage_branching(self, x) and not manage_foreach(self, x) then
 		-- trigger upon switch to when or then section
 		if x.from == 'given' and x.to ~= 'given' then
 			-- delete IN memory
-			self.HEAP.IN = {}
+			IN = {}
 			collectgarbage 'collect'
 		end
 		self:trace(x.source)
 		-- HEAP integrity guard
 		if CONF.heapguard then -- watchdog
 			-- guard ACK's contents on section switch
-			deepmap(zenguard, self.HEAP.ACK)
+			deepmap(zenguard, ACK)
 			-- check that everythink in HEAP.ACK has a CODEC
 			self:codecguard()
 		end
@@ -520,7 +610,7 @@ function ZEN:run()
 		local ok, err = pcall(x.hook, table.unpack(x.args))
 		if not ok or not self.OK then
 		   self:debug_traceback() -- ?
-		   if err then trace('[!] ' .. err) end
+		   if err then self:trace('[!] ' .. err) end
 		   fatal(x.source) -- traceback print inside
 		end
 		collectgarbage 'collect'
@@ -528,111 +618,23 @@ function ZEN:run()
 	--	::continue::
 	end
 	-- PRINT output
-	trace('--- Zencode execution completed')
-	if type(self.HEAP.OUT) == 'table' then
-		trace('<<< Encoding { OUT } to JSON ')
+	self:trace('--- Zencode execution completed')
+	if type(OUT) == 'table' then
+		self:trace('<<< Encoding { OUT } to JSON ')
 		-- this is all already encoded
 		-- needs to be formatted
 		-- was used CONF.output.format.fun
 		-- suspended until more formats are implemented
-		print( JSON.encode(self.HEAP.OUT) )
-		trace('>>> Encoding successful')
+		print( JSON.encode(OUT) )
+		self:trace('>>> Encoding successful')
 	else -- this should never occur in zencode, OUT is always a table
-		trace('<<< Printing OUT (plain format, not a table)')
-		print(self.HEAP.OUT)
+		self:trace('<<< Printing OUT (plain format, not a table)')
+		print(OUT)
 	end
 end
 
  
 
-
-local function set_rule(text)
-	local tr = text.msg:gsub(' +', ' ') -- eliminate multiple internal spaces
-	local rule = strtok(trim(tr):lower())
-	local rules = {
-		-- TODO: rule debug [ format | encoding ]
-		-- ['load'] = function(extension)
-		--	if not extension then return false end
-		--  act("zencode extension: "..extension)
-		--  require("zencode_"..extension)
-		-- 	return true
-		-- end,
-		['check version'] = function (version)
-			-- TODO: check version of running VM
-			if not version then return false end
-			local ver = V(version)
-			if ver == ZENROOM_VERSION then
-				act('Zencode version match: ' .. ZENROOM_VERSION.original)
-			elseif ver < ZENROOM_VERSION then
-				warn('Zencode written for an older version: ' .. ver.original)
-			elseif ver > ZENROOM_VERSION then
-				warn('Zencode written for a newer version: ' .. ver.original)
-			else
-				error('Version check error: ' .. version)
-			end
-			text.Z.checks.version = true
-			return true
-		end,
-		['input encoding'] = function (encoding)
-			if not encoding then return false end
-			CONF.input.encoding = input_encoding(encoding)
-			return true and CONF.input.encoding
-		end,
-		['input format'] = function (format)
-			if not format then return false end
-			CONF.input.format = get_format(format)
-			return true and CONF.input.format
-		end,
-		['input untagged'] = function ()
-			CONF.input.tagged = false
-			return true
-		end,
-		['output encoding'] = function (encoding)
-			if not encoding then return false end
-			CONF.output.encoding = { fun = get_encoding_function(encoding),
-							name = encoding }
-			return true and CONF.output.encoding
-		end,
-		['output format'] = function (format)
-			if not format then return false end
-			CONF.output.format = get_format(format)
-			return true and CONF.output.format
-		end,
-		['output versioning'] = function ()
-			CONF.output.versioning = true
-			return true
-		end,
-		['unknown ignore'] = function ()
-			CONF.parser.strict_match = false
-			return true
-		end,
-		['collision ignore'] = function ()
-			CONF.heap.check_collision = false
-			return true
-		end,
-		['caller restroom-mw'] = function()
-			CONF.parser.strict_match = false
-			CONF.heap.check_collision = false
-			return true
-		end,
-		['set'] = function (conf, value)
-			if not conf or not value then return false end
-			CONF[conf] = fif( tonumber(value), tonumber(value),
-							fif( value=='true', true,
-							fif( value=='false', false,
-							value)))
-			return true
-		end,
-	}
-	local res
-	if rule[2] == 'set' then
-		res = rules[rule[2]](rule[3], rule[4])
-	else
-		res = rules[rule[2]..' '..rule[3]] and rules[rule[2]..' '..rule[3]](rule[4])
-	end
-	if res then act(text.msg) else error('Rule invalid: ' .. text.msg, 3) end
-	return res
-end
 
 
 ---------------------------------------------------------------
@@ -651,12 +653,11 @@ end
 
 -- compare heap.ACK and heap.CODEC
 function ZEN:codecguard()
-   local heap = self.HEAP
-   local left = heap.ACK
-   local right = heap.CODEC
+   local left = ACK
+   local right = CODEC
    for key1, value1 in pairs(left) do
       if not right[key1] then
-	 self.debug()
+	 self:debug()
 	 error("Internal memory error: missing CODEC for "..key1)
 	 return false, key1
       end
@@ -665,7 +666,7 @@ function ZEN:codecguard()
    -- check for missing keys in tbl1
    for key2, _ in pairs(right) do
       if not left[key2] then
-	 self.debug()
+	 self:debug()
 	 error("Internal memory error: unbound CODEC for "..key2)
 	 return false, key2
       end
@@ -703,11 +704,11 @@ function Then(text, fn)
 end
 function Iam(name)
 	if name then
-		ZEN.assert(not ZEN.HEAP.WHO, 'Identity already defined in WHO')
+		ZEN.assert(not WHO, 'Identity already defined in WHO')
 		ZEN.assert(type(name) == 'string', 'Own name not a string')
-		ZEN.HEAP.WHO = uscore(name)
+		WHO = uscore(name)
 	else
-		ZEN.assert(ZEN.HEAP.WHO, 'No identity specified in WHO')
+		ZEN.assert(WHO, 'No identity specified in WHO')
 	end
 	assert(ZEN.OK)
 end
@@ -715,7 +716,7 @@ function have(obj) -- accepts arrays for depth checks
 	local res
 	-- depth check used in pick
 	if luatype(obj) == 'table' then
-		local prev = ZEN.HEAP.ACK
+		local prev = ACK
 		for k, v in ipairs(obj) do
 			res = prev[uscore(v)]
 			if not res then
@@ -727,34 +728,34 @@ function have(obj) -- accepts arrays for depth checks
 	end
 
 	local name = uscore(trim(obj))
-	res = ZEN.HEAP.ACK[name]
+	res = ACK[name]
 	if not res then
 	   error('Cannot find object: ' .. name, 2)
 	end
-	local codec = ZEN.HEAP.CODEC[name]
+	local codec = CODEC[name]
 	if not codec then error("CODEC not found: "..name, 2) end
 	return res, codec
 end
 function empty(obj)
 	-- convert all spaces to underscore in argument
-	if ZEN.HEAP.ACK[uscore(obj)] then
+	if ACK[uscore(obj)] then
 		error('Cannot overwrite existing object: ' .. obj, 2)
 	end
 end
 function mayhave(obj)
 	-- TODO: accept arrays for depth checks as the `have` function
 	local name = uscore(trim(obj))
-	res = ZEN.HEAP.ACK[name]
+	res = ACK[name]
 	if not res then
 		I.warn(name .. " not found in DATA or KEYS")
 		return nil
 	end
-	local codec = ZEN.HEAP.CODEC[name]
+	local codec = CODEC[name]
 	if not codec then error("CODEC not found: "..name, 2) end
 	return res, codec
 end
 
-zencode_serialize = function(A)
+function zencode_serialize(A)
    local t = luatype(A)
    if t == 'table' then
       local res

@@ -43,7 +43,7 @@ Given that I am known as 'MadHatter'
 Then print 'Success' 'OK'
 EOF
     run $ZENROOM_EXECUTABLE -z $TMP/error1.zen
-    assert_line --partial "Invalid Zencode line 4: '0YOUI4qhIeXmIpyK'"
+    assert_line --partial "Invalid Zencode prefix 4: '0YOUI4qhIeXmIpyK'"
 }
 
 

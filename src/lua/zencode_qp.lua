@@ -171,7 +171,7 @@ When("create the dilithium signature of ''",function(doc)
 	local sk = havekey'dilithium'
 	local obj = have(doc)
 	empty'dilithium signature'
-	ACK.dilithium_signature = QP.sign(sk, ZEN.serialize(obj))
+	ACK.dilithium_signature = QP.sign(sk, zencode_serialize(obj))
 	new_codec('dilithium signature')
 end)
 
@@ -180,7 +180,7 @@ IfWhen("verify the '' has a dilithium signature in '' by ''",function(msg, sig, 
 	  local m = have(msg)
 	  local s = have(sig)
 	  ZEN.assert(
-	     QP.verify(pk, s, ZEN.serialize(m)),
+	     QP.verify(pk, s, zencode_serialize(m)),
 	     'The dilithium signature by '..by..' is not authentic'
 	  )
 end)

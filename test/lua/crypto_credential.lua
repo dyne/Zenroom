@@ -57,7 +57,7 @@ Theta2 =CRED.prove_cred(issuer_aggkeys, client.aggsigma, client.private)
 assert(CRED.verify_cred(issuer_aggkeys, Theta))
 assert(CRED.verify_cred(issuer_aggkeys, Theta2))
 assert(
-	not (ZEN.serialize(Theta) == ZEN.serialize(Theta2)),
+	not (zencode_serialize(Theta) == zencode_serialize(Theta2)),
 	'different zk proofs do not differ'
 )
 
@@ -86,7 +86,7 @@ assert(
 	'second UID-proof verification fails'
 )
 assert(
-	not (ZEN.serialize(Theta) == ZEN.serialize(Theta2)),
+	not (zencode_serialize(Theta) == zencode_serialize(Theta2)),
 	'different zk UID-proofs do not differ'
 )
 assert(zeta == zeta2, 'zeta differs with same UID')

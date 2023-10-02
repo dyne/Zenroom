@@ -212,7 +212,7 @@ local function _signing(msg, var)
    local sk = havekey'ecdh'
    empty(var)
    local obj = have(msg)
-   ACK[var] = ECDH.sign(sk, ZEN.serialize(obj))
+   ACK[var] = ECDH.sign(sk, zencode_serialize(obj))
    new_codec(var)
 end
 
@@ -221,7 +221,7 @@ local function _verifying(msg, sig, by)
    local obj = have(msg)
    local s = have(sig)
    ZEN.assert(
-      ECDH.verify(pk, ZEN.serialize(obj), s),
+      ECDH.verify(pk, zencode_serialize(obj), s),
       'The ecdh signature by ' .. by .. ' is not authentic'
    )
 end
@@ -242,7 +242,7 @@ local function _signing_det(msg, var)
     empty(var)
     local obj = have(msg)
     -- 64 here means to use SHA512.
-    ACK[var] = ECDH.sign_deterministic(sk, ZEN.serialize(obj), 64)
+    ACK[var] = ECDH.sign_deterministic(sk, zencode_serialize(obj), 64)
     new_codec(var)
 end
 

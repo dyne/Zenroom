@@ -96,7 +96,7 @@ ZEN:add_schema(
 local function _makeuid(src)
    local uid
    if luatype(src) == 'table' then
-	  uid = ECP.hashtopoint(ZEN.serialize(src))
+	  uid = ECP.hashtopoint(zencode_serialize(src))
    else
 	  uid = ECP.hashtopoint(src)
    end
