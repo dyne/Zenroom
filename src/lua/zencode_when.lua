@@ -148,10 +148,10 @@ end)
 When("write string '' in ''", function(content, dest)
 	empty(dest)
 	ACK[dest] = O.from_string(content)
-	CODEC[dest] = new_codec(dest,
-				    {encoding = 'string',
-				     luatype = 'string',
-				     zentype = 'e' })
+	new_codec(dest,
+			  {encoding = 'string',
+			   luatype = 'string',
+			   zentype = 'e' })
 end)
 
 -- ... and from a number
@@ -165,14 +165,14 @@ When("write number '' in ''", function(content, dest)
 		-- TODO: maybe support unsigned native here
 --	end
 	ACK[dest] = F.new(content)
-	CODEC[dest] = new_codec(dest, {zentype = 'e' })
+	new_codec(dest, {zentype = 'e' })
 end)
 
 When("create the number from ''", function(from)
 	empty'number'
 	local get = have(from)
 	ACK.number = BIG.from_decimal(get:octet():string())
-	CODEC.number = new_codec('number', {zentype = 'e' })
+	new_codec('number', {zentype = 'e' })
 end)
 
 When("set '' to '' as ''", function(dest, content, format)
@@ -181,7 +181,7 @@ When("set '' to '' as ''", function(dest, content, format)
 	guess.raw = content
 	guess.name = dest
 	ACK[dest] = operate_conversion(guess)
---	CODEC[dest] = new_codec(dest, { luatype = luatype(ACK[dest]), zentype = 'e' })
+--	new_codec(dest, { luatype = luatype(ACK[dest]), zentype = 'e' })
 end)
 
 local function _json_encoede_f(src, dest)
@@ -220,7 +220,7 @@ When("set '' to '' base ''", function(dest, content, base)
 	local num = tonumber(content,bas)
 	zencode_assert(num, "Invalid numerical conversion for value: "..content)
 	ACK[dest] = F.new(num)
-	CODEC[dest] = new_codec(dest, {encoding = 'number', zentype = 'e' })
+	new_codec(dest, {encoding = 'number', zentype = 'e' })
 end)
 
 local function _delete_f(name)
@@ -420,18 +420,17 @@ local function _math_op(op, l, r, bigop)
 	local lz = type(left)
 	local rz = type(right)
 	if lz ~= rz then error("Incompatible numeric arguments", 2) end
-	local codec
 	ACK.result = true -- new_codec checks existance
 	if lz == "zenroom.big" then
-		codec = new_codec('result',
-						  {encoding = 'integer',
-						   zentype = 'e'}
+		new_codec('result',
+				  {encoding = 'integer',
+				   zentype = 'e'}
 		)
 
 	else
-		codec = new_codec('result',
-						  {encoding = 'float',
-						   zentype = 'e'}
+		new_codec('result',
+				  {encoding = 'float',
+				   zentype = 'e'}
 		)
 	end
         if type(left) == 'zenroom.big'
@@ -443,7 +442,7 @@ local function _math_op(op, l, r, bigop)
           --  error("Operation not supported on big integers")
           end
         end
-	return op(left, right), codec
+	return op(left, right)
 end
 
 When("create the result of '' inverted sign", function(left)
@@ -455,14 +454,14 @@ When("create the result of '' inverted sign", function(left)
         elseif type(l) == "zenroom.float" then
             zero = F.new(0)
         end
-	ACK.result, CODEC.result = _math_op(_sub, zero, l, BIG.zensub)
+	ACK.result = _math_op(_sub, zero, l, BIG.zensub)
 end)
 
 When("create the result of '' + ''", function(left,right)
 	local l = have(left)
 	local r = have(right)
 	empty 'result'
-	ACK.result, CODEC.result = _math_op(_add, l, r, BIG.zenadd)
+	ACK.result = _math_op(_add, l, r, BIG.zenadd)
 end)
 
 When("create the result of '' in '' + ''", function(left, dict, right)
@@ -470,7 +469,7 @@ When("create the result of '' in '' + ''", function(left, dict, right)
 	local l = d[left]
 	local r = have(right)
 	empty 'result'
-	ACK.result, CODEC.result = _math_op(_add, l, r, BIG.zenadd)
+	ACK.result = _math_op(_add, l, r, BIG.zenadd)
 end)
 
 When("create the result of '' in '' + '' in ''", function(left, ldict, right, rdict)
@@ -479,14 +478,14 @@ When("create the result of '' in '' + '' in ''", function(left, ldict, right, rd
 	local rd = have(rdict)
 	local r = rd[right]
 	empty 'result'
-	ACK.result, CODEC.result = _math_op(_add, l, r, BIG.zenadd)
+	ACK.result = _math_op(_add, l, r, BIG.zenadd)
 end)
 
 When("create the result of '' - ''", function(left,right)
 	local l = have(left)
 	local r = have(right)
 	empty 'result'
-	ACK.result, CODEC.result = _math_op(_sub, l, r, BIG.zensub)
+	ACK.result = _math_op(_sub, l, r, BIG.zensub)
 end)
 
 When("create the result of '' in '' - ''", function(left, dict, right)
@@ -494,7 +493,7 @@ When("create the result of '' in '' - ''", function(left, dict, right)
 	local l = d[left]
 	local r = have(right)
 	empty 'result'
-	ACK.result, CODEC.result = _math_op(_sub, l, r, BIG.zensub)
+	ACK.result = _math_op(_sub, l, r, BIG.zensub)
 end)
 
 When("create the result of '' in '' - '' in ''", function(left, ldict, right, rdict)
@@ -503,14 +502,14 @@ When("create the result of '' in '' - '' in ''", function(left, ldict, right, rd
 	local rd = have(rdict)
 	local r = rd[right]
 	empty 'result'
-	ACK.result, CODEC.result = _math_op(_sub, l, r, BIG.zensub)
+	ACK.result = _math_op(_sub, l, r, BIG.zensub)
 end)
 
 When("create the result of '' * ''", function(left,right)
 	local l = have(left)
 	local r = have(right)
 	empty 'result'
-	ACK.result, CODEC.result = _math_op(_mul, l, r, BIG.zenmul)
+	ACK.result = _math_op(_mul, l, r, BIG.zenmul)
 end)
 
 When("create the result of '' in '' * ''", function(left, dict, right)
@@ -518,7 +517,7 @@ When("create the result of '' in '' * ''", function(left, dict, right)
 	local l = d[left]
 	local r = have(right)
 	empty 'result'
-	ACK.result, CODEC.result = _math_op(_mul, l, r, BIG.zenmul)
+	ACK.result = _math_op(_mul, l, r, BIG.zenmul)
 end)
 
 When("create the result of '' * '' in ''", function(left, right, dict)
@@ -526,7 +525,7 @@ When("create the result of '' * '' in ''", function(left, right, dict)
 	local d = have(dict)
 	local r = d[right]
 	empty 'result'
-	ACK.result, CODEC.result = _math_op(_mul, l, r, BIG.zenmul)
+	ACK.result = _math_op(_mul, l, r, BIG.zenmul)
 end)
 
 When("create the result of '' in '' * '' in ''", function(left, ldict, right, rdict)
@@ -535,14 +534,14 @@ When("create the result of '' in '' * '' in ''", function(left, ldict, right, rd
 	local rd = have(rdict)
 	local r = rd[right]
 	empty 'result'
-	ACK.result, CODEC.result = _math_op(_mul, l, r, BIG.zenmul)
+	ACK.result = _math_op(_mul, l, r, BIG.zenmul)
 end)
 
 When("create the result of '' / ''", function(left,right)
 	local l = have(left)
 	local r = have(right)
 	empty 'result'
-	ACK.result, CODEC.result = _math_op(_div, l, r, BIG.zendiv)
+	ACK.result = _math_op(_div, l, r, BIG.zendiv)
 end)
 
 When("create the result of '' in '' / ''", function(left, dict, right)
@@ -550,7 +549,7 @@ When("create the result of '' in '' / ''", function(left, dict, right)
 	local l = d[left]
 	local r = have(right)
 	empty 'result'
-	ACK.result, CODEC.result = _math_op(_div, l, r, BIG.zendiv)
+	ACK.result = _math_op(_div, l, r, BIG.zendiv)
 end)
 
 When("create the result of '' / '' in ''", function(left, right, dict)
@@ -558,7 +557,7 @@ When("create the result of '' / '' in ''", function(left, right, dict)
 	local d = have(dict)
 	local r = d[right]
 	empty 'result'
-	ACK.result, CODEC.result = _math_op(_div, l, r, BIG.zendiv)
+	ACK.result = _math_op(_div, l, r, BIG.zendiv)
 end)
 
 When("create the result of '' in '' / '' in ''", function(left, ldict, right, rdict)
@@ -567,14 +566,14 @@ When("create the result of '' in '' / '' in ''", function(left, ldict, right, rd
 	local rd = have(rdict)
 	local r = rd[right]
 	empty 'result'
-	ACK.result, CODEC.result = _math_op(_div, l, r, BIG.zendiv)
+	ACK.result = _math_op(_div, l, r, BIG.zendiv)
 end)
 
 When("create the result of '' % ''", function(left,right)
 	local l = have(left)
 	local r = have(right)
 	empty 'result'
-	ACK.result, CODEC.result = _math_op(_mod, l, r, BIG.zenmod)
+	ACK.result = _math_op(_mod, l, r, BIG.zenmod)
 end)
 
 When("create the result of '' in '' % ''", function(left, dict, right)
@@ -582,7 +581,7 @@ When("create the result of '' in '' % ''", function(left, dict, right)
 	local l = d[left]
 	local r = have(right)
 	empty 'result'
-	ACK.result, CODEC.result = _math_op(_mod, l, r, BIG.zendiv)
+	ACK.result = _math_op(_mod, l, r, BIG.zendiv)
 end)
 
 When("create the result of '' in '' % '' in ''", function(left, ldict, right, rdict)
@@ -591,7 +590,7 @@ When("create the result of '' in '' % '' in ''", function(left, ldict, right, rd
 	local rd = have(rdict)
 	local r = rd[right]
 	empty 'result'
-	ACK.result, CODEC.result = _math_op(_mod, l, r, BIG.zendiv)
+	ACK.result = _math_op(_mod, l, r, BIG.zendiv)
 end)
 
 local function _countchar(haystack, needle)
@@ -840,12 +839,12 @@ When("create the result of ''", function(expr)
   zencode_assert(#values == 1, "Invalid arithmetical expression", 2)
   ACK.result = values[1]
   if type(values[1]) == 'zenroom.big' then
-    CODEC['result'] = new_codec('result',
-   		                    {encoding = 'integer',
-							 zentype = 'e' })
+    new_codec('result',
+			  {encoding = 'integer',
+			   zentype = 'e' })
   elseif type(values[1]) == 'zenroom.float' then
-    CODEC['result'] = new_codec('result',
-   		                    {encoding = 'number',
-							 zentype = 'e' })
+    new_codec('result',
+			  {encoding = 'number',
+			   zentype = 'e' })
   end
 end)

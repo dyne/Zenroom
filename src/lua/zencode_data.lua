@@ -439,7 +439,6 @@
 	-- default encoding if not specified
 	if not res.encoding then res.encoding = 'def' end
     CODEC[name] = res
-    return(res) -- redundant, should not use return value for efficiency
  end
 
  -- Crawls a whole table structure and collects all strings and octets
@@ -518,6 +517,6 @@
        end
        return setmetatable(res, getmetatable(ttab))
     end
-    pruned_tables = prune_in(pruned_values)
+    local pruned_tables = prune_in(pruned_values)
     return pruned_tables
  end
