@@ -143,26 +143,26 @@ Given I have a 'string array' named 'service'
 When I create the 'string dictionary' named 'did document'
 
 ## @context
-When I insert '@context' in 'did document'
+When I move '@context' in 'did document'
 ## service
-When I insert 'service' in 'did document'
+When I move 'service' in 'did document'
 ## State
-When I insert 'State' in 'did document'
+When I move 'State' in 'did document'
 ## Country
-When I insert 'Country' in 'did document'
+When I move 'Country' in 'did document'
 ## description
-When I insert 'description' in 'did document'
+When I move 'description' in 'did document'
 
 ## id
 When I set 'did:dyne:' to 'did:dyne:oracle:' as 'string'
 When I append 'eddsa public key' to 'did:dyne:'
 When I copy the 'did:dyne:' to 'id'
-When I insert 'id' in 'did document'
+When I move 'id' in 'did document'
 
 ## alsoKnownAs
 When I set 'alsoKnownAs' to 'did:dyne:ganache:' as 'string'
 When I append 'eddsa public key' to 'alsoKnownAs'
-When I insert 'alsoKnownAs' in 'did document'
+When I move 'alsoKnownAs' in 'did document'
 
 ## veririfcationMethod
 When I create the 'string array' named 'verificationMethod'
@@ -171,73 +171,73 @@ When I create the 'string array' named 'verificationMethod'
 When I create the 'string dictionary' named 'verification-key'
 # pk
 When I copy 'ecdh public key' to 'publicKeyBase58' 
-When I insert 'publicKeyBase58' in 'verification-key'
+When I move 'publicKeyBase58' in 'verification-key'
 # type
 When I set 'type' to 'EcdsaSecp256k1VerificationKey2019' as 'string'
-When I insert 'type' in 'verification-key'
+When I move 'type' in 'verification-key'
 # id
 When I copy 'did:dyne:' to 'id'
 When I set '#ecdh_public_key' to '#ecdh_public_key' as 'string'
 When I append '#ecdh_public_key' to 'id'
-When I insert 'id' in 'verification-key'
+When I move 'id' in 'verification-key'
 # controller
 When I copy 'did:dyne:' to 'controller'
-When I insert 'controller' in 'verification-key'
-When I insert 'verification-key' in 'verificationMethod'
+When I move 'controller' in 'verification-key'
+When I move 'verification-key' in 'verificationMethod'
 
 # 2-reflow public key
 When I create the 'string dictionary' named 'verification-key'
 # pk
 When I copy 'reflow public key' to 'publicKeyBase58' 
-When I insert 'publicKeyBase58' in 'verification-key'
+When I move 'publicKeyBase58' in 'verification-key'
 # type
 When I set 'type' to 'ReflowBLS12381VerificationKey' as 'string'
-When I insert 'type' in 'verification-key'
+When I move 'type' in 'verification-key'
 # id
 When I copy 'did:dyne:' to 'id'
 When I set '#reflow_public_key' to '#reflow_public_key' as 'string'
 When I append '#reflow_public_key' to 'id'
-When I insert 'id' in 'verification-key'
+When I move 'id' in 'verification-key'
 # controller
 When I copy 'did:dyne:' to 'controller'
-When I insert 'controller' in 'verification-key'
-When I insert 'verification-key' in 'verificationMethod'
+When I move 'controller' in 'verification-key'
+When I move 'verification-key' in 'verificationMethod'
 
 # 3-bitcoin public key
 When I create the 'string dictionary' named 'verification-key'
 # pk
 When I copy 'bitcoin public key' to 'publicKeyBase58' 
-When I insert 'publicKeyBase58' in 'verification-key'
+When I move 'publicKeyBase58' in 'verification-key'
 # type
 When I set 'type' to 'EcdsaSecp256k1VerificationKey2019' as 'string'
-When I insert 'type' in 'verification-key'
+When I move 'type' in 'verification-key'
 # id
 When I copy 'did:dyne:' to 'id'
 When I set '#bitcoin_public_key' to '#bitcoin_public_key' as 'string'
 When I append '#bitcoin_public_key' to 'id'
-When I insert 'id' in 'verification-key'
+When I move 'id' in 'verification-key'
 # controller
 When I copy 'did:dyne:' to 'controller'
-When I insert 'controller' in 'verification-key'
-When I insert 'verification-key' in 'verificationMethod'
+When I move 'controller' in 'verification-key'
+When I move 'verification-key' in 'verificationMethod'
 
 # 4-eddsa public key
 When I create the 'string dictionary' named 'verification-key'
 # pk
 When I copy 'eddsa_public_key' to 'publicKeyBase58'
-When I insert 'publicKeyBase58' in 'verification-key'
+When I move 'publicKeyBase58' in 'verification-key'
 # type
 When I set 'type' to 'Ed25519VerificationKey2018' as 'string'
-When I insert 'type' in 'verification-key'
+When I move 'type' in 'verification-key'
 # id
 When I copy 'did:dyne:' to 'id'
 When I set '#eddsa_public_key' to '#eddsa_public_key' as 'string'
 When I append '#eddsa_public_key' to 'id'
-When I insert 'id' in 'verification-key'
+When I move 'id' in 'verification-key'
 # controller
 When I copy 'did:dyne:' to 'controller'
-When I insert 'controller' in 'verification-key'
-When I insert 'verification-key' in 'verificationMethod'
+When I move 'controller' in 'verification-key'
+When I move 'verification-key' in 'verificationMethod'
 
 # 5-ethereum address
 When I create the 'string dictionary' named 'verification-key'
@@ -246,21 +246,21 @@ When I create the 'string dictionary' named 'verification-key'
 # thus it is: namespace + ":" + chain_id + ":" + address
 When I set 'blockchainAccountId' to 'eip155:1717658228:0x' as 'string'
 When I append 'ethereum address' to 'blockchainAccountId'
-When I insert 'blockchainAccountId' in 'verification-key'
+When I move 'blockchainAccountId' in 'verification-key'
 # type
 When I set 'type' to 'EcdsaSecp256k1RecoveryMethod2020' as 'string'
-When I insert 'type' in 'verification-key'
+When I move 'type' in 'verification-key'
 # id
 When I copy 'did:dyne:' to 'id'
 When I set '#ethereum_address' to '#ethereum_address' as 'string'
 When I append '#ethereum_address' to 'id'
-When I insert 'id' in 'verification-key'
+When I move 'id' in 'verification-key'
 # controller
 When I copy 'did:dyne:' to 'controller'
-When I insert 'controller' in 'verification-key'
-When I insert 'verification-key' in 'verificationMethod'
+When I move 'controller' in 'verification-key'
+When I move 'verification-key' in 'verificationMethod'
 
-When I insert 'verificationMethod' in 'did document'
+When I move 'verificationMethod' in 'did document'
 ### DID-Document ended
 
 ### save DID document
@@ -277,9 +277,9 @@ EOF
     Given I have a 'string dictionary' named 'did document'
     Given I have a 'keyring'
 
-    When I create the json of 'did document'
-    When I create the ecdh signature of 'json'
-    When I create the eddsa signature of 'json'
+    When I create the json escaped string of 'did document'
+    When I create the ecdh signature of 'json escaped string'
+    When I create the eddsa signature of 'json escaped string'
 
     Then print the 'did document'
     Then print the 'eddsa signature'
@@ -299,8 +299,8 @@ EOF
     When I create the verificationMethod of 'did document'
     When I pickup a 'eddsa_public_key' from path 'verificationMethod.eddsa_public_key'
 
-    When I create the json of 'did document'
-    When I verify the 'json' has a eddsa signature in 'eddsa signature' by 'eddsa public key'
+    When I create the json escaped string of 'did document'
+    When I verify the 'json escaped string' has a eddsa signature in 'eddsa signature' by 'eddsa public key'
 
     Then print the string 'did document signature verified'
 EOF
