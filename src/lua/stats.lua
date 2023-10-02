@@ -21,17 +21,18 @@
 
 
 -- Table to hold statistical functions
-stats={}
+local stats={}
 
 -- Get the mean value of a table
-function stats.average( t )
+function stats.average( tab_in )
   local zero = BIG.new(0)
   local one = BIG.new(1)
   local sum = zero
   local count = zero 
-
-  for k,v in pairs(t) do
-    local t = type(v)
+  local newsum
+  local t
+  for _,v in pairs(tab_in) do
+    t = type(v)
     if t == 'number' then
       v = BIG.from_decimal(tostring(v))
     elseif iszen(t) then
@@ -40,7 +41,7 @@ function stats.average( t )
       error("Unknown type for number", 2)
     end
     if type(v) == 'zenroom.big' then
-      local newsum = sum + v
+      newsum = sum + v
       count = count + one
       zencode_assert(newsum > sum, "Overflow in sum")
       sum = newsum
@@ -51,7 +52,7 @@ function stats.average( t )
   return (sum / count)
 end
 -- Get the variance of a table
-function stats.variance( t )
+function stats.variance( tab_in )
   local zero = BIG.new(0)
   local one = BIG.new(1)
   local m
@@ -59,11 +60,12 @@ function stats.variance( t )
   local sum = zero 
   local count = zero
   local result
+  local t
+  local newsum
+  m = stats.average( tab_in )
 
-  m = stats.average( t )
-
-  for k,v in pairs(t) do
-    local t = type(v)
+  for _,v in pairs(tab_in) do
+    t = type(v)
 
     if t == 'number' then
       v = BIG.from_decimal(tostring(v))
@@ -73,7 +75,6 @@ function stats.variance( t )
       error("Unknown type for number", 2)
     end
     if type(v) == 'zenroom.big' then
-      local newsum
       vm = v - m
       newsum = sum + (vm * vm)
       zencode_assert(newsum > sum, "Overflow in sum")
