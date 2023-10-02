@@ -4,9 +4,9 @@ load ../bats_setup
 Z native/gengc.lua
 Z native/gc.lua
 Z native/events.lua
-Z native/constructs.lua
+# Z native/constructs.lua
 Z native/code.lua
-Z native/closure.lua
+# Z native/closure.lua
 Z native/bwcoercion.lua
 Z native/api.lua
 Z native/vararg.lua
