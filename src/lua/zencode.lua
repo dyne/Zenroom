@@ -582,7 +582,7 @@ function ZEN:run()
 	-- EXEC zencode
 	-- TODO: for optimization, to develop a lua iterator, which would save lookup time
 	-- https://www.lua.org/pil/7.1.html
-	local AST_size = table.size(self.AST)
+	local AST_size = table_size(self.AST)
 	local x
 	while self.next_instruction <= AST_size do
 		self.current_instruction = self.next_instruction
