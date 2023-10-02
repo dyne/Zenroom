@@ -303,6 +303,7 @@ int main(int argc, char **argv) {
 		}
 
 		lua_State *L = (lua_State*)Z->lua;
+		lua_gc(L, LUA_GCRESTART); // runs GC only manually
 
 		// print function
 		zen_add_function(L, repl_flush, "flush");

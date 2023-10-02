@@ -5,7 +5,7 @@ print('testing generational garbage collection')
 
 local debug = require"debug"
 
-assert(collectgarbage("isrunning"))
+-- assert(collectgarbage("isrunning"))
 
 collectgarbage()
 

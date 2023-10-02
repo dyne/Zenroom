@@ -221,6 +221,10 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	  return NULL;
 	}
 
+	// use the generative garbage collector
+	lua_gc(ZZ->lua, LUA_GCGEN);
+	lua_gc(ZZ->lua, LUA_GCSTOP); // runs GC only manually
+
 	// init log format if needed
 	if(ZZ->logformat == LOG_JSON) json_start(ZZ->lua);
 
@@ -246,7 +250,6 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 		return NULL;
 	}
 
-	lua_gc(ZZ->lua, LUA_GCCOLLECT, 0);
 	lua_gc(ZZ->lua, LUA_GCCOLLECT, 0);
 	func(ZZ->lua,"Initialized memory: %u KB",
 	    lua_gc(ZZ->lua,LUA_GCCOUNT,0));
@@ -320,7 +323,6 @@ void zen_teardown(zenroom_t *ZZ) {
 
 	if(ZZ->logformat == LOG_JSON) json_end(ZZ->lua);
 
-	lua_gc((lua_State*)ZZ->lua, LUA_GCCOLLECT, 0);
 	lua_gc((lua_State*)ZZ->lua, LUA_GCCOLLECT, 0);
 	// this call here frees also Z (lightuserdata)
 	lua_close((lua_State*)ZZ->lua);
