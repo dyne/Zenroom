@@ -46,7 +46,7 @@
 #include <mutt_sprintf.h>
 
 // simple inline duplicate function wrapper also in zen_io.c
-inline void _write(int fd, const void *buf, size_t count) {
+static inline void _zen_error_write(int fd, const void *buf, size_t count) {
   register ssize_t res;
   res = write(fd, buf, count);
   if(res<0) {
@@ -80,7 +80,7 @@ const char* log_prefix[] = {
 void get_log_prefix(void *Z, log_priority prio, char dest[5]) {
   zenroom_t *ZZ = (zenroom_t*)Z;
   char *p = dest;
-  if(ZZ->logformat == JSON) { *p = '"'; p++; }
+  if(ZZ->logformat == LOG_JSON) { *p = '"'; p++; }
   strncpy(p, log_prefix[prio], 4);
 }
 
@@ -109,10 +109,10 @@ void _out(const char *fmt, ...) {
   EM_ASM_({Module.print(UTF8ToString($0))}, msg);
 #elif defined(ARCH_CORTEX)
   msg[len] = '\n'; msg[len+1] = 0x0;
-  _write(SEMIHOSTING_STDOUT_FILENO, msg, len+1);
+  _zen_error_write(SEMIHOSTING_STDOUT_FILENO, msg, len+1);
 #else
   msg[len] = '\n'; msg[len+1] = 0x0;
-  _write(STDOUT_FILENO, msg, len+1);
+  _zen_error_write(STDOUT_FILENO, msg, len+1);
 #endif
 }
 
@@ -133,7 +133,7 @@ void _err(const char *fmt, ...) {
 #elif defined(ARCH_CORTEX)
   write_to_console(msg);
 #else
-  _write(STDERR_FILENO, msg, len+1);
+  _zen_error_write(STDERR_FILENO, msg, len+1);
 #endif
 }
 

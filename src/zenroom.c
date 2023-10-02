@@ -177,7 +177,7 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	// set zero rngseed as config flag
 	ZZ->zconf_rngseed[0] = '\0';
 	ZZ->exitcode = 1; // success
-	ZZ->logformat = TEXT;
+	ZZ->logformat = LOG_TEXT;
 	ZZ->str_maxiter[0] = '1';
 	ZZ->str_maxiter[1] = '0';
 	ZZ->str_maxiter[2] = '0';
@@ -222,7 +222,7 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	}
 
 	// init log format if needed
-	if(ZZ->logformat == JSON) json_start(ZZ->lua);
+	if(ZZ->logformat == LOG_JSON) json_start(ZZ->lua);
 
 	// expose the debug level
 	lua_pushinteger(ZZ->lua, ZZ->debuglevel);
@@ -267,9 +267,9 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 		zen_setenv(ZZ->lua,"KEYS",keys);
 	}
 	func(ZZ->lua, "declaring log format: %s",
-		 ZZ->logformat == JSON ? "JSON" : "TEXT");
+		 ZZ->logformat == LOG_JSON ? "JSON" : "TEXT");
 	  zen_setenv(ZZ->lua, "LOGFMT",
-				 ZZ->logformat == JSON ? "JSON" : "TEXT");
+				 ZZ->logformat == LOG_JSON ? "JSON" : "TEXT");
 	return(ZZ);
 }
 
@@ -318,7 +318,7 @@ void zen_teardown(zenroom_t *ZZ) {
 		ZZ->random_generator = NULL;
 	}
 
-	if(ZZ->logformat == JSON) json_end(ZZ->lua);
+	if(ZZ->logformat == LOG_JSON) json_end(ZZ->lua);
 
 	lua_gc((lua_State*)ZZ->lua, LUA_GCCOLLECT, 0);
 	lua_gc((lua_State*)ZZ->lua, LUA_GCCOLLECT, 0);

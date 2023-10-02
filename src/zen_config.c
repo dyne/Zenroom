@@ -145,8 +145,8 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 				_err( "Invalid length of log format: %u (must be 4)\n",len);
 				return 0;
 			  }
-			  if(strncasecmp(lex.string, "json", 4) == 0) ZZ->logformat = JSON;
-			  else if(strncasecmp(lex.string, "text", 4) == 0) ZZ->logformat = TEXT;
+			  if(strncasecmp(lex.string, "json", 4) == 0) ZZ->logformat = LOG_JSON;
+			  else if(strncasecmp(lex.string, "text", 4) == 0) ZZ->logformat = LOG_TEXT;
 			  else {
 				_err( "Invalid log format string: %s\n",lex.string);
 				return 0;

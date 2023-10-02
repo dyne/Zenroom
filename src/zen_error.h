@@ -66,7 +66,6 @@ int warning(void *L, const char *format, ...); // WARN
 void json_start(void *L);
 void json_end(void *L);
 
-#define ERROR() zerror(L, "Error in %s",__func__)
 #define SAFE(x) if(!x) lerror(L, "NULL variable in %s",__func__)
 
 void set_debug(int lev);
