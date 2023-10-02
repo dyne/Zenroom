@@ -44,7 +44,7 @@ function fif(condition, if_true, if_false)
 end
 
 -- reliable table size measurement
-table.size = function(t)
+_G['table_size'] = function(t)
    if not t then return 0 end
    local c = 0
    for _ in pairs(t) do
@@ -53,7 +53,7 @@ table.size = function(t)
    return c
 end
 
-function uscore(input)
+_G['uscore'] = function(input)
    local it = luatype(input)
    if it == 'string' then
       return string.gsub(input, ' ', '_')
@@ -63,7 +63,7 @@ function uscore(input)
       error("Underscore transform not a string or number: "..it, 3)
    end
 end
-function space(input)
+_G['space'] = function(input)
    local it = luatype(input)
    if it == 'string' then
       return string.gsub(input, '_', ' ')
@@ -74,7 +74,7 @@ function space(input)
    end
 end
 
-function strtok(str, delimiter)
+_G['strtok'] = function(str, delimiter)
     delimiter = delimiter or ' '
     local result = {}
     local start = 1
@@ -129,24 +129,24 @@ end
 _G["sort_pairs"]  = _pairs
 _G["sort_ipairs"] = _pairs
 
-function deepcopy(orig)
+local function _deepcopy(orig)
    local orig_type = type(orig)
    local copy
    if orig_type == 'table' then
 	  copy = {}
 	  for orig_key, orig_value in next, orig, nil do
-		 copy[deepcopy(orig_key)] = deepcopy(orig_value)
+		 copy[_deepcopy(orig_key)] = _deepcopy(orig_value)
 	  end
-	  setmetatable(copy, deepcopy(getmetatable(orig)))
+	  setmetatable(copy, _deepcopy(getmetatable(orig)))
    else -- number, string, boolean, etc
 	  copy = orig
    end
    return copy
 end
-
+_G['deepcopy'] = _deepcopy
 
 -- compare two tables
-function deepcmp(left, right)
+local function _deepcmp(left, right)
    if not ( luatype(left) == "table" ) then
       error("Internal error: deepcmp 1st argument is not a table")
    end
@@ -159,7 +159,7 @@ function deepcmp(left, right)
       if value2 == nil then return false
       elseif value1 ~= value2 then
 	 if type(value1) == "table" and type(value2) == "table" then
-	    if not deepcmp(value1, value2) then
+	    if not _deepcmp(value1, value2) then
 	       return false
 	    end
 	 else
@@ -175,11 +175,12 @@ function deepcmp(left, right)
    end
    return true
 end
+_G['deepcmp'] = _deepcmp
 
 -- deep recursive map on a tree structure
 -- for usage see test/deepmap.lua
 -- operates only on strings, passes numbers through
-function deepmap(fun,t,...)
+local function _deepmap(fun,t,...)
    local luatype = luatype
    if luatype(fun) ~= 'function' then
 	  error("Internal error: deepmap 1st argument is not a function", 3)
@@ -193,15 +194,16 @@ function deepmap(fun,t,...)
    local res = {}
    for k,v in pairs(t) do
 	  if luatype(v) == 'table' then
-		 res[k] = deepmap(fun,v,...) -- recursion
+		 res[k] = _deepmap(fun,v,...) -- recursion
 	  else
 		 res[k] = fun(v,k,...)
 	  end
    end
    return setmetatable(res, getmetatable(t))
 end
+_G['deepmap'] = _deepmap
 
-function deepsortmap(fun,t,...)
+local function _deepsortmap(fun,t,...)
    local luatype = luatype
    if luatype(fun) ~= 'function' then
 	  error("Internal error: deepmap 1st argument is not a function", 3)
@@ -215,17 +217,18 @@ function deepsortmap(fun,t,...)
    local res = {}
    for k,v in sort_pairs(t) do
 	  if luatype(v) == 'table' then
-		 res[k] = deepsortmap(fun,v,...) -- recursion
+		 res[k] = _deepsortmap(fun,v,...) -- recursion
 	  else
 		 res[k] = fun(v,k,...)
 	  end
    end
    return setmetatable(res, getmetatable(t))
 end
+_G['deepsortmap'] = _deepsortmap
 
 -- function to be used when converting codecs with complex trees
 -- mask is a dictionary of functions to be applied in place
-function deepmask(fun,t,mask)
+local function _deepmask(fun,t,mask)
    local luatype = luatype
    if luatype(fun) ~= 'function' then
       error("Internal error: deepmask 1st argument is not a function", 3)
@@ -240,9 +243,9 @@ function deepmask(fun,t,mask)
    for k,v in pairs(t) do
       if luatype(v) == 'table' then
 	 if not mask or not mask[k] then
-	    res[k] = deepmask(fun,v) -- switch to deepmap?
+	    res[k] = _deepmask(fun,v) -- switch to deepmap?
 	 else
-	    res[k] = deepmask(fun,v,mask[k]) -- recursion
+	    res[k] = _deepmask(fun,v,mask[k]) -- recursion
 	 end
       else
 	 if not mask or not mask[k] then -- check tree of funcs
@@ -254,6 +257,7 @@ function deepmask(fun,t,mask)
    end
    return setmetatable(res, getmetatable(t))
 end
+_G['deepmask'] = _deepmask
 
 function isarray(obj)
    if not obj then
