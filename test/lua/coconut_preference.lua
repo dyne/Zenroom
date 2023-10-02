@@ -85,7 +85,7 @@ end
        + hs * theta.pi_vote.rr2
        + theta.cv * theta.pi_vote.c
     -- verify challenge
-    ZEN.assert(theta.pi_vote.c == ZKP_challenge(
+    zencode_assert(theta.pi_vote.c == ZKP_challenge(
                   {scores.pos.left, scores.pos.right,
                    theta.cv, Aw, Bw, Cw, Dw }),
                "verify_sign_petition: challenge fails")

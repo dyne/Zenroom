@@ -208,7 +208,7 @@ local function _create_tx(name, recipient)
 	local fee     = have'satoshi fee'
 	local unspent = have(name..' unspent')
 	local tx = btc.build_tx_from_unspent(unspent, to, q, fee, ACK.sender)
-	ZEN.assert(tx, "Not enough "..name.." in the unspent list")
+	zencode_assert(tx, "Not enough "..name.." in the unspent list")
 	ACK[name..'_transaction'] = tx
 	new_codec(name..'_transaction') -- TODO: { schema = 'transaction' })
 end
@@ -220,7 +220,7 @@ When("create the testnet transaction to ''", function(recipient) _create_tx('tes
 local function _sign_tx(name)
    local sk = havekey(name)
    local tx = have(name..'_transaction')
-   ZEN.assert(not tx.witness, "The "..name.." transaction is already signed")
+   zencode_assert(not tx.witness, "The "..name.." transaction is already signed")
    tx.witness = btc.build_witness(tx, sk)
 end
 When("sign the bitcoin transaction", function() _sign_tx('bitcoin') end)

@@ -30,7 +30,7 @@ local function _is_found(el, t)
 	if not t then
 		return ACK[el] and (luatype(ACK[el]) == 'table' or #ACK[el] ~= 0)
 	else
-		ZEN.assert(ACK[t], "Array or dictionary not found in: "..t)
+		zencode_assert(ACK[t], "Array or dictionary not found in: "..t)
 		if CODEC[t].zentype == 'a' then
 			local o_el = O.from_string(el)
 			for _,v in pairs(ACK[t]) do
@@ -39,7 +39,7 @@ local function _is_found(el, t)
 		elseif CODEC[t].zentype == 'd' then
 			return ACK[t][el] and (luatype(ACK[t][el]) == 'table' or #ACK[t][el] ~= 0)
 		else
-			ZEN.assert(false, "Invalid container type: "..t.." is "..CODEC[t].zentype)
+			zencode_assert(false, "Invalid container type: "..t.." is "..CODEC[t].zentype)
 		end
 	end
 	return false
@@ -48,51 +48,51 @@ end
 IfWhen(deprecated("'' is found",
     "verify '' is found",
     function(el)
-        ZEN.assert(_is_found(el), "Cannot find object: "..el)
+        zencode_assert(_is_found(el), "Cannot find object: "..el)
     end)
 )
 
 IfWhen(deprecated("'' is not found",
     "verify '' is not found",
     function(el)
-        ZEN.assert(not _is_found(el), "Object should not be found: "..el)
+        zencode_assert(not _is_found(el), "Object should not be found: "..el)
     end)
 )
 
 IfWhen(deprecated("'' is found in ''",
     "verify '' is found in ''",
     function(el, t)
-        ZEN.assert(_is_found(el, t), "Cannot find object: "..el.." in "..t)
+        zencode_assert(_is_found(el, t), "Cannot find object: "..el.." in "..t)
     end)
 )
 
 IfWhen(deprecated("'' is not found in ''",
     "verify '' is not found in ''",
     function(el, t)
-        ZEN.assert(not _is_found(el,t), "Object: "..el.." should not be found in "..t)
+        zencode_assert(not _is_found(el,t), "Object: "..el.." should not be found in "..t)
     end)
 )
 
 IfWhen("verify '' is found", function(el)
-    ZEN.assert(_is_found(el), "Cannot find object: "..el)
+    zencode_assert(_is_found(el), "Cannot find object: "..el)
 end)
 
 IfWhen("verify '' is not found", function(el)
-    ZEN.assert(not _is_found(el), "Object should not be found: "..el)
+    zencode_assert(not _is_found(el), "Object should not be found: "..el)
 end)
 
 IfWhen("verify '' is found in ''", function(el, t)
-    ZEN.assert(_is_found(el, t), "Cannot find object: "..el.." in "..t)
+    zencode_assert(_is_found(el, t), "Cannot find object: "..el.." in "..t)
 end)
 
 IfWhen("verify '' is not found in ''", function(el, t)
-    ZEN.assert(not _is_found(el,t), "Object: "..el.." should not be found in "..t)
+    zencode_assert(not _is_found(el,t), "Object: "..el.." should not be found in "..t)
 end)
 
 When("append '' to ''", function(src, dest)
 		local val = have(src)
 		local dst = have(dest)
-		ZEN.assert(luatype(dst) ~= 'table',
+		zencode_assert(luatype(dst) ~= 'table',
 				   "Cannot append to table: "..dest)
 		-- if the destination is a number, fix the encoding to string
 		if isnumber(dst) then
@@ -109,7 +109,7 @@ end)
 
 When("append the string '' to ''", function(hstr, dest)
 	local dst = have(dest)
-	ZEN.assert(luatype(dst) ~= 'table', "Cannot append to table: "..dest)
+	zencode_assert(luatype(dst) ~= 'table', "Cannot append to table: "..dest)
 	-- if the destination is a number, fix the encoding to string
 	if isnumber(dst) then
 	   dst = O.from_string( tostring(dst) )
@@ -123,10 +123,10 @@ end)
 When("append the '' of '' to ''", function(enc, src, dest)
 	local from = have(src)
 	local to = have(dest)
-	ZEN.assert(type(to) == 'zenroom.octet', "Destination type is not octet: "..dest.." ("..type(to)..")")
-	ZEN.assert(CODEC[dest].encoding == 'string', "Destination encoding is not string: "..dest)
+	zencode_assert(type(to) == 'zenroom.octet', "Destination type is not octet: "..dest.." ("..type(to)..")")
+	zencode_assert(CODEC[dest].encoding == 'string', "Destination encoding is not string: "..dest)
 	local f = get_encoding_function(enc)
-	ZEN.assert(f, "Encoding format not found: "..enc)
+	zencode_assert(f, "Encoding format not found: "..enc)
 	to = to .. O.from_string( f( from:octet() ) )
 	ACK[dest] = to
 end)
@@ -159,7 +159,7 @@ When("write number '' in ''", function(content, dest)
 	empty(dest)
 	-- TODO: detect number base 10
 	local num = tonumber(content)
-	ZEN.assert(num, "Cannot convert value to number: "..content)
+	zencode_assert(num, "Cannot convert value to number: "..content)
 --	if num > 2147483647 then
 --		error('Overflow of number object over 32bit signed size')
 		-- TODO: maybe support unsigned native here
@@ -216,9 +216,9 @@ end)
 When("set '' to '' base ''", function(dest, content, base)
 	empty(dest)
 	local bas = tonumber(base)
-	ZEN.assert(bas, "Invalid numerical conversion for base: "..base)
+	zencode_assert(bas, "Invalid numerical conversion for base: "..base)
 	local num = tonumber(content,bas)
-	ZEN.assert(num, "Invalid numerical conversion for value: "..content)
+	zencode_assert(num, "Invalid numerical conversion for value: "..content)
 	ACK[dest] = F.new(num)
 	CODEC[dest] = new_codec(dest, {encoding = 'number', zentype = 'e' })
 end)
@@ -284,10 +284,10 @@ end)
 
 When("create the '' string of ''", function(encoding, src)
 		local orig = have(src)
-		ZEN.assert(luatype(orig) ~= 'table', "Source element is not a table: "..src)
+		zencode_assert(luatype(orig) ~= 'table', "Source element is not a table: "..src)
 		empty(encoding) -- destination name is encoding name
 		local f = get_encoding_function(encoding)
-		ZEN.assert(f, "Encoding format not found: "..encoding)
+		zencode_assert(f, "Encoding format not found: "..encoding)
 		ACK[encoding] = O.from_string( f( orig:octet() ) )
 		new_codec(encoding, { zentype = 'e',
 							  luatype = 'string',
@@ -304,8 +304,8 @@ end)
 local function _copy_move_in(old, new, inside, delete)
 	local src = have(old)
 	local dst = have(inside)
-	ZEN.assert(luatype(dst) == 'table', "Destination is not a table: "..inside)
-	ZEN.assert(not dst[new],
+	zencode_assert(luatype(dst) == 'table', "Destination is not a table: "..inside)
+	zencode_assert(not dst[new],
 			   "Cannot overwrite destination: "..new.." inside "..inside)
 	dst[new] = deepcopy(src)
 	ACK[inside] = dst
@@ -350,7 +350,7 @@ When("copy contents of '' named '' in ''", function(src,name,dst)
 end)
 
 When("copy the '' in '' to ''", function(old,inside,new)
-	ZEN.assert(ACK[inside][old], "Object not found: "..old.." inside "..inside)
+	zencode_assert(ACK[inside][old], "Object not found: "..old.." inside "..inside)
 	empty(new)
 	ACK[new] = deepcopy(ACK[inside][old])
 	new_codec(new, { }, inside)
@@ -360,7 +360,7 @@ When("split the rightmost '' bytes of ''", function(len, src)
 	local obj = have(src)
 	empty'rightmost'
 	local s = tonumber(len)
-	ZEN.assert(s, "Invalid number arg #1: "..type(len))
+	zencode_assert(s, "Invalid number arg #1: "..type(len))
 	local l,r = OCTET.chop(obj,#obj-s)
 	ACK.rightmost = r
 	ACK[src] = l
@@ -371,7 +371,7 @@ When("split the leftmost '' bytes of ''", function(len, src)
 	local obj = have(src)
 	empty'leftmost'
 	local s = tonumber(len)
-	ZEN.assert(s, "Invalid number arg #1: "..type(len))
+	zencode_assert(s, "Invalid number arg #1: "..type(len))
 	local l,r = OCTET.chop(obj,s)
 	ACK.leftmost = l
 	ACK[src] = r
@@ -635,15 +635,15 @@ end)
 
 When("remove spaces in ''", function(target)
     local src = have(target)
-    ZEN.assert(not isnumber(src), "Invalid number object: "..target)
-    ZEN.assert(luatype(src) ~= 'table', "Invalid table object: "..target)
+    zencode_assert(not isnumber(src), "Invalid number object: "..target)
+    zencode_assert(luatype(src) ~= 'table', "Invalid table object: "..target)
     ACK[target] = src:octet():rmchar( O.from_hex('20') )
 end)
 
 When("remove newlines in ''", function(target)
     local src = have(target)
-    ZEN.assert(not isnumber(src), "Invalid number object: "..target)
-    ZEN.assert(luatype(src) ~= 'table', "Invalid table object: "..target)
+    zencode_assert(not isnumber(src), "Invalid number object: "..target)
+    zencode_assert(luatype(src) ~= 'table', "Invalid table object: "..target)
     ACK[target] = src:octet():rmchar( O.from_hex('0A') )
 end)
 
@@ -651,18 +651,18 @@ When("remove all occurrences of character '' in ''",
      function(char, target)
     local src = have(target)
     local ch = have(char)
-    ZEN.assert(not isnumber(src), "Invalid number object: "..target)
-    ZEN.assert(luatype(src) ~= 'table', "Invalid table object: "..target)
-    ZEN.assert(not isnumber(ch), "Invalid number object: "..char)
-    ZEN.assert(luatype(ch) ~= 'table', "Invalid table object: "..char)
+    zencode_assert(not isnumber(src), "Invalid number object: "..target)
+    zencode_assert(luatype(src) ~= 'table', "Invalid table object: "..target)
+    zencode_assert(not isnumber(ch), "Invalid number object: "..char)
+    zencode_assert(luatype(ch) ~= 'table', "Invalid table object: "..char)
     ACK[target] = src:octet():rmchar( ch:octet() )
 end)
 
 When("compact ascii strings in ''",
      function(target)
 	local src = have(target)
-	ZEN.assert(not isnumber(src), "Invalid number object: "..target)
-	ZEN.assert(luatype(src) ~= 'table', "Invalid table object: "..target)
+	zencode_assert(not isnumber(src), "Invalid number object: "..target)
+	zencode_assert(luatype(src) ~= 'table', "Invalid table object: "..target)
     ACK[target] = src:octet():compact_ascii()
 end)
 
@@ -678,20 +678,20 @@ end
 -- end)
 
 When("create the '' cast of strings in ''", function(conv, source)
-	ZEN.assert(CODEC[source], "Object has no codec: "..source)
-	ZEN.assert(CODEC[source].encoding == 'string', "Object has no string encoding: "..source)
+	zencode_assert(CODEC[source], "Object has no codec: "..source)
+	zencode_assert(CODEC[source].encoding == 'string', "Object has no string encoding: "..source)
 	empty(conv)
 	local src = have(source)
 	local enc = input_encoding(conv)
 	if luatype(src) == 'table' then
 	   ACK[conv] = deepmap(function(v)
 		 local s = OCTET.to_string(v)
-		 ZEN.assert(enc.check(s), "Object value is not a "..conv..": "..source)
+		 zencode_assert(enc.check(s), "Object value is not a "..conv..": "..source)
 		 return enc.fun( s )
 	   end, src)
 	else
 	   local s = OCTET.to_string(src)
-	   ZEN.assert(enc.check(s), "Object value is not a "..conv..": "..source)
+	   zencode_assert(enc.check(s), "Object value is not a "..conv..": "..source)
 	   ACK[conv] = enc.fun(s)
 	end
 	new_codec(conv, {encoding = conv})
@@ -710,7 +710,7 @@ end)
 When("seed the random with ''",
      function(seed)
 	local s = have(seed)
-	ZEN.assert(iszen(type(s)), "New random seed is not a valid zenroom type: "..seed)
+	zencode_assert(iszen(type(s)), "New random seed is not a valid zenroom type: "..seed)
 	local fingerprint = random_seed(s) -- pass the seed for srand init
 	act("New random seed of "..#s.." bytes") 
 	xxx("New random fingerprint: "..fingerprint:hex())
@@ -727,7 +727,7 @@ local function apply_op2(op, a, b)
   elseif type(a) == 'zenroom.float' and type(b) == 'zenroom.float' then
     fop = float_ops2[op]
   end
-  ZEN.assert(fop, "Unknown types to do arithmetics on", 2)
+  zencode_assert(fop, "Unknown types to do arithmetics on", 2)
   return fop(a, b)
 end
 
@@ -741,7 +741,7 @@ local function apply_op1(op, a)
   elseif type(a) == 'zenroom.float' then
     fop = float_ops1[op]
   end
-  ZEN.assert(fop, "Unknown type to do arithmetics on", 2)
+  zencode_assert(fop, "Unknown type to do arithmetics on", 2)
   return fop(a)
 end
 
@@ -796,7 +796,7 @@ When("create the result of ''", function(expr)
         table.insert(rpn, operators[#operators])
         operators[#operators] = nil
       end
-      ZEN.assert(#operators > 0, "Paranthesis not balanced", 2)
+      zencode_assert(#operators > 0, "Paranthesis not balanced", 2)
       operators[#operators] = nil -- remove open parens
     else
       table.insert(rpn, v)
@@ -806,7 +806,7 @@ When("create the result of ''", function(expr)
   -- all remaining operators have to be applied
   for i = #operators, 1, -1 do
     if operators[i] == '(' then
-      ZEN.assert(false, "Paranthesis not balanced", 2)
+      zencode_assert(false, "Paranthesis not balanced", 2)
     end
     table.insert(rpn, operators[i])
   end
@@ -818,7 +818,7 @@ When("create the result of ''", function(expr)
       local op = values[#values]; values[#values] = nil
       table.insert(values, apply_op1(v, op))
     elseif priorities[v] then
-      ZEN.assert(#values >= 2)
+      zencode_assert(#values >= 2)
       local op1 = values[#values]; values[#values] = nil
       local op2 = values[#values]; values[#values] = nil
       local res = apply_op2(v, op2, op1)
@@ -837,7 +837,7 @@ When("create the result of ''", function(expr)
     end
   end
 
-  ZEN.assert(#values == 1, "Invalid arithmetical expression", 2)
+  zencode_assert(#values == 1, "Invalid arithmetical expression", 2)
   ACK.result = values[1]
   if type(values[1]) == 'zenroom.big' then
     CODEC['result'] = new_codec('result',

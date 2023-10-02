@@ -42,11 +42,11 @@ function stats.average( t )
     if type(v) == 'zenroom.big' then
       local newsum = sum + v
       count = count + one
-      ZEN.assert(newsum > sum, "Overflow in sum")
+      zencode_assert(newsum > sum, "Overflow in sum")
       sum = newsum
     end
   end
-  ZEN.assert(count > zero, "No numbers in array")
+  zencode_assert(count > zero, "No numbers in array")
 
   return (sum / count)
 end
@@ -76,13 +76,13 @@ function stats.variance( t )
       local newsum
       vm = v - m
       newsum = sum + (vm * vm)
-      ZEN.assert(newsum > sum, "Overflow in sum")
+      zencode_assert(newsum > sum, "Overflow in sum")
       count = count + one
       sum = newsum
     end
   end
 
-  ZEN.assert(count > one, "Not enough numbers (at least 2)")
+  zencode_assert(count > one, "Not enough numbers (at least 2)")
   result = sum / (count-one)
 
   return result

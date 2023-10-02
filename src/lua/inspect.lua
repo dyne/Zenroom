@@ -57,7 +57,7 @@ inspect.METATABLE = setmetatable({}, {__tostring = function() return 'inspect.ME
 -- @param format pointer to a converter function
 -- @return object converted to format
 local function export_arr(object, format)
-  ZEN.assert(
+  zencode_assert(
      iszen(type(object)),
      'export_arr called on a ' .. type(object)
   )
@@ -72,7 +72,7 @@ local function export_arr(object, format)
   else
     conv_f = CONF.debug.encoding.fun -- fallback to configured conversion function
   end
-  ZEN.assert(
+  zencode_assert(
      type(conv_f) == 'function',
      'export_arr conversion function not configured'
   )

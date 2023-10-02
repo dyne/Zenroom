@@ -24,15 +24,15 @@ local EDDSA_PUBLIC_KEY = "eddsa_public_key"
 
 local function import_did_document(doc)
     -- id and @context must be always present in DID-documents
-    ZEN.assert(doc.id and #doc.id < 256, 'Invalid DID document: id not found')
-    ZEN.assert(doc['@context'], 'Invalid DID document: @context not found')
-    ZEN.assert(#JSON.encode(doc, 'string') < 8192, 'DID document too large')
+    zencode_assert(doc.id and #doc.id < 256, 'Invalid DID document: id not found')
+    zencode_assert(doc['@context'], 'Invalid DID document: @context not found')
+    zencode_assert(#JSON.encode(doc, 'string') < 8192, 'DID document too large')
     local did_components = strtok(doc.id, ':')
     -- schme: did
-    ZEN.assert(did_components[1] == 'did',
+    zencode_assert(did_components[1] == 'did',
 	       'Invalid DID document: invalid scheme')
     -- method name: a-z/0-9
-    ZEN.assert(not did_components[2]:match('[^%l%d]'),
+    zencode_assert(not did_components[2]:match('[^%l%d]'),
 	       'Invalid DID document: invalid method-name')
     -- mathod specific identifier: a-z/A-Z/0-9/"."/"-"/"_"/"%" HEXDIG HEXDIG
     local error_msg = 'Invalid DID document: invalid method specific identifier'
@@ -40,14 +40,14 @@ local function import_did_document(doc)
 	first = true
 	for chars in did_components[i]:gmatch('[^%%]*') do
 	    if first then
-		ZEN.assert(not chars:match('[^%w%.%-%_]'),
+		zencode_assert(not chars:match('[^%w%.%-%_]'),
 			   error_msg)
 		first = nil
 	    else
 		-- checks %%
-		ZEN.assert(chars, error_msg)
+		zencode_assert(chars, error_msg)
 		-- checks %hexhex...
-		ZEN.assert(chars:match('%x%x[%w%.%-%_]*') == chars,
+		zencode_assert(chars:match('%x%x[%w%.%-%_]*') == chars,
 			   error_msg)
 	    end
 	end
@@ -175,7 +175,7 @@ When(
     "set the verification method in '' to ''",
     function(vc, meth)
         local cred = have(vc)
-        ZEN.assert(cred.proof, 'The object is not signed: ' .. vc)
+        zencode_assert(cred.proof, 'The object is not signed: ' .. vc)
         local m = have(meth)
         ACK[vc].proof.verificationMethod = m
     end
@@ -186,7 +186,7 @@ When(
    function(vc)
 	  empty 'verification_method'
 	  local cred = have(vc)
-	  ZEN.assert(cred.proof, 'The object is not signed: ' .. vc)
+	  zencode_assert(cred.proof, 'The object is not signed: ' .. vc)
 	  ACK.verification_method = cred.proof.verificationMethod
 	  new_codec('verification_method')
    end
@@ -232,7 +232,7 @@ IfWhen(
         local pub = have 'ecdh public key'
         local source_str = _json_encoding(src)
         local signature = jws_octet_to_signature(jws)
-        ZEN.assert(
+        zencode_assert(
             ECDH.verify(pub, source_str, signature),
             'The signature does not validate: ' .. src
         )
@@ -244,7 +244,7 @@ When(
     function(vc)
         local credential = have(vc)
         local sk = havekey'ecdh' -- assuming secp256k1
-        ZEN.assert(not credential.proof,'The object is already signed: ' .. vc)
+        zencode_assert(not credential.proof,'The object is already signed: ' .. vc)
         local proof = {
             type = 'Zenroom v'.._G.ZENROOM_VERSION.original,
             -- "Signature", -- TODO: check what to write here for secp256k1
@@ -268,7 +268,7 @@ local function _verification_f(src, document, public_key)
     document.proof = nil
     local document_str = _json_encoding(src)
     document.proof = proof
-    ZEN.assert(
+    zencode_assert(
         ECDH.verify(public_key, document_str, signature),
         'The signature does not validate: ' .. src
     )
@@ -278,7 +278,7 @@ IfWhen(
     "verify the verifiable credential named ''",
     function(src)
         local document = have(src)
-        ZEN.assert(document.proof and document.proof.jws,
+        zencode_assert(document.proof and document.proof.jws,
                     'The object has no signature: ' .. src)
         _verification_f(src, document, have('ecdh public key'))
     end
@@ -288,7 +288,7 @@ IfWhen(
     "verify the did document named ''",
     function(src)
         local document = have(src)
-        ZEN.assert(document.proof and document.proof.jws,
+        zencode_assert(document.proof and document.proof.jws,
                     'The object has no signature: ' .. src)
         _verification_f(src, document, have('ecdh public key'))
     end
@@ -299,13 +299,13 @@ IfWhen(
     function(src, signer_did_doc)
         local document = have(src)
         local signer_document = have(signer_did_doc)
-        ZEN.assert(document.proof and document.proof.jws,
+        zencode_assert(document.proof and document.proof.jws,
                     'The object has no signature: ' .. src)
-        ZEN.assert(document.proof.verificationMethod,
+        zencode_assert(document.proof.verificationMethod,
                     'The proof inside '..src..' has no verificationMethod')
         local data = strtok(O.to_string(document.proof.verificationMethod), '#' )
         local signer_id = O.from_string(data[1])
-        ZEN.assert(signer_id == signer_document.id,
+        zencode_assert(signer_id == signer_document.id,
                     'The signer id in proof is different from the one in '..signer_did_doc)
         local i = 1
         local pk = nil
@@ -316,7 +316,7 @@ IfWhen(
             end
             i = i+1
         until( ( not signer_document.verificationMethod[i] ) or pk )
-        ZEN.assert(pk , data[2]..' used to sign '..src..' not found in the did document '..signer_did_doc)
+        zencode_assert(pk , data[2]..' used to sign '..src..' not found in the did document '..signer_did_doc)
         _verification_f(src, document, pk)
     end
 )
@@ -325,7 +325,7 @@ When(
     "create the serviceEndpoint of ''",
     function(did_doc)
         local doc = have(did_doc)
-        ZEN.assert(doc.service, 'service not found')
+        zencode_assert(doc.service, 'service not found')
         ACK.serviceEndpoint = {}
         for _, service in pairs(doc.service) do
             local name = strtok(O.to_string(service.id), '#')[2]
@@ -340,7 +340,7 @@ When(
     "create the verificationMethod of ''",
     function(did_doc)
         local doc = have(did_doc)
-        ZEN.assert(doc.verificationMethod, 'verificationMethod not found')
+        zencode_assert(doc.verificationMethod, 'verificationMethod not found')
         empty 'verificationMethod'
         ACK.verificationMethod = {}
 
@@ -365,7 +365,7 @@ When(
         local doc = have (did_doc)
         local pk_name = algo..'_public_key'
         empty (pk_name)
-        ZEN.assert(doc.verificationMethod, 'verificationMethod not found in '..did_doc)
+        zencode_assert(doc.verificationMethod, 'verificationMethod not found in '..did_doc)
         local id = doc.id..O.from_string('#'..pk_name)
         local i = 1
         repeat
@@ -374,7 +374,7 @@ When(
             end
             i = i+1
         until( ( not doc.verificationMethod[i] ) or ACK[pk_name] )
-        ZEN.assert(ACK[pk_name], pk_name..' not found in the did document '..did_doc)
+        zencode_assert(ACK[pk_name], pk_name..' not found in the did document '..did_doc)
         CODEC[pk_name] = guess_conversion(ACK[pk_name], pk_name)
         CODEC[pk_name].name = pk_name
     end
@@ -417,6 +417,6 @@ IfWhen(
         local hmac = have(hmac_name)
         local password = mayhave(password_name) or password_name
         local jwt_hs256 = create_jwt_hs256(hmac.payload, password)
-        ZEN.assert(jwt_hs256.signature == hmac.signature, "Could not re-create HMAC")
+        zencode_assert(jwt_hs256.signature == hmac.signature, "Could not re-create HMAC")
     end
 )

@@ -1,7 +1,7 @@
 Foreach("'' in ''", function(name, collection)
     local info = ZEN.ITER
     local col = have(collection)
-    ZEN.assert(CODEC[collection].zentype == "a", "Can only iterate over arrays")
+    zencode_assert(CODEC[collection].zentype == "a", "Can only iterate over arrays")
     -- in the first itaration decale the index variable
     if info.pos == 1 or not ACK[name] then
         empty(name)
@@ -29,16 +29,16 @@ Foreach("'' in sequence from '' to '' with step ''", function(name, from_name, t
         empty(name)
     end
 
-    ZEN.assert(type(from) == type(to) and type(to) == type(step), "Types must be equal in foreach declaration")
-    ZEN.assert(type(from) == 'zenroom.big' or type(from) == 'zenroom.float', "Unknown number type")
+    zencode_assert(type(from) == type(to) and type(to) == type(step), "Types must be equal in foreach declaration")
+    zencode_assert(type(from) == 'zenroom.big' or type(from) == 'zenroom.float', "Unknown number type")
     local current_value
     local finished
     -- TODO(optimization): we are currently doing multiplication at each iteration
     if type(from) == 'zenroom.big' then
-        ZEN.assert(BIG.zenpositive(step)
+        zencode_assert(BIG.zenpositive(step)
             and BIG.zenpositive(BIG.zensub(to, from)),
             "only positive step is supported")
-        ZEN.assert(step ~= BIG.new(0), "step cannot be zero")
+        zencode_assert(step ~= BIG.new(0), "step cannot be zero")
         local bigpos = BIG.new(info.pos-1)
         current_value = BIG.zenadd(from, BIG.zenmul(bigpos, step))
         -- current_value >  to
@@ -47,7 +47,7 @@ Foreach("'' in sequence from '' to '' with step ''", function(name, from_name, t
         finished = BIG.zenpositive(
             BIG.zensub(current_value, BIG.zenadd(to,BIG.new(1))))
     else
-        ZEN.assert(step > F.new(0) and from < to,
+        zencode_assert(step > F.new(0) and from < to,
             "only positive step is supported")
         local floatpos = F.new(info.pos-1)
         current_value = from + floatpos * step

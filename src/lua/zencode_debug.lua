@@ -112,13 +112,13 @@ local function debug_heap_schema()
 end
 
 
-ZEN.assert = function(condition, errmsg)
+zencode_assert = function(condition, errmsg)
    if condition then
       return true
    else
       ZEN.branch_valid = false
    end
-   -- in conditional branching ZEN.assert doesn't quit
+   -- in conditional branching zencode_assert doesn't quit
    if ZEN.branch then
       table.insert(traceback, errmsg)
    else

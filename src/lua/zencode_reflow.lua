@@ -141,13 +141,13 @@ When(
    function(arr)
       empty 'reflow public key'
       local s = have(arr)
-      ZEN.assert(#s ~= 0, "Empty array: "..arr)
+      zencode_assert(#s ~= 0, "Empty array: "..arr)
       local val
       for k, v in pairs(s) do
 	 if k == 'reflow_public_key' then val = v
 	    -- tolerate about named arrays
 	 elseif v.reflow_public_key then val = v.reflow_public_key
-	 else ZEN.assert(false, "Reflow public key not found in array: "
+	 else zencode_assert(false, "Reflow public key not found in array: "
 			 ..arr.."["..#s.."] at key "..k)
 	 end
 	 if not ACK.reflow_public_key then
@@ -169,13 +169,13 @@ end)
 When("create the reflow identity of objects in ''", function(doc)
 	empty 'reflow identity'
 	local arr = have(doc)
-	ZEN.assert(luatype(arr)=='table', "Object is not an array or dictionary: "..doc)
+	zencode_assert(luatype(arr)=='table', "Object is not an array or dictionary: "..doc)
 	local first = { }
 	for k,v in pairs(arr) do
 	   -- if reflow_id already present then check if ECP and use that
 	   if v.reflow_identity then
 	      local rid = ECP.new(v.reflow_identity)
-	      ZEN.assert(not rid:isinfinity(),
+	      zencode_assert(not rid:isinfinity(),
 			 "Object "..doc.."["..k.."] has an invalid reflow identity")
 	      table.insert(first, rid)
 	   else
@@ -200,7 +200,7 @@ local function _create_reflow_seal_f(uid)
     have(uid)
     have 'reflow public key'
     local UID = ACK[uid]
-    ZEN.assert(type(UID) == 'zenroom.ecp',
+    zencode_assert(type(UID) == 'zenroom.ecp',
                             "Invalid reflow identity: "
                             ..uid.." ("..type(UID)..")")
     local r = INT.random()
@@ -275,7 +275,7 @@ IfWhen(
         have 'reflow_signature'
         have 'verifiers'
         have 'reflow_seal'
-        ZEN.assert(
+        zencode_assert(
             ABC.verify_cred_uid(
                 ACK.verifiers,
                 ACK.reflow_signature.proof,
@@ -295,7 +295,7 @@ IfWhen(
         if not ACK.reflow_seal.fingerprints then
             return
         end
-        ZEN.assert(
+        zencode_assert(
             not ACK.reflow_seal.fingerprints[ACK.reflow_signature.zeta],
             'Signature fingerprint is not new'
         )
@@ -334,7 +334,7 @@ IfWhen(
     'verify the reflow seal is valid',
     function()
         have 'reflow_seal'
-        ZEN.assert(
+        zencode_assert(
             ECP2.miller(ACK.reflow_seal.verifier, ACK.reflow_seal.identity)
             ==
             ECP2.miller(G2, ACK.reflow_seal.SM),
@@ -432,18 +432,18 @@ IfWhen(
 	  local src = have(obj)
 	  local mp = have'material passport'
 	  local pub = have'issuer public key'
-	  ZEN.assert(mp.seal.fingerprints,
+	  zencode_assert(mp.seal.fingerprints,
 				 "No fingerprints found in material passport seal: "..obj)
 	  local UID = _makeuid(src)
-	  ZEN.assert(UID == mp.seal.identity,
+	  zencode_assert(UID == mp.seal.identity,
 				 "Object does not match material passport identity (needs track and trace?): "..obj)
 	  local SID = UID + _aggregate_array(mp.seal.fingerprints)
-	  ZEN.assert(
+	  zencode_assert(
 		 ECP2.miller(mp.seal.verifier, SID)
 		 ==
 		 ECP2.miller(G2, mp.seal.SM),
 		 "Object matches, but seal is invalid: "..obj)
-	  ZEN.assert(
+	  zencode_assert(
 		 ABC.verify_cred_uid(pub, mp.proof, mp.zeta, SID),
 		 "Object and seal are valid, but proof of issuance fails: "..obj)
 end)

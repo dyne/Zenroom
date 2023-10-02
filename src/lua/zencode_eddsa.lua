@@ -83,7 +83,7 @@ IfWhen("verify the '' has a eddsa signature in '' by ''",function(msg, sig, by)
 	  local pk = load_pubkey_compat(by, 'eddsa')
 	  local m = have(msg)
 	  local s = have(sig)
-	  ZEN.assert(
+	  zencode_assert(
 	     ED.verify(pk, s, zencode_serialize(m)),
 	     'The eddsa signature by '..by..' is not authentic'
 	  )

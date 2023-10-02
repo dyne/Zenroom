@@ -26,7 +26,7 @@ SHA256 = HASH.new('sha256')
 
 -- ZEN:add_schema({
 -- 	  -- secret_day_key = function(obj)
--- 	  -- 	 ZEN.assert(#obj == 32, "Secret day key has wrong size (not 32 bytes / 256 bits)")
+-- 	  -- 	 zencode_assert(#obj == 32, "Secret day key has wrong size (not 32 bytes / 256 bits)")
 -- 	  -- 	 return obj
 -- 	  -- end
 -- 	  -- TODO:
@@ -35,16 +35,16 @@ SHA256 = HASH.new('sha256')
 -- })
 
 When("renew the secret day key to a new day", function()
-		ZEN.assert(ACK.secret_day_key, "Secret day key not found")
+		zencode_assert(ACK.secret_day_key, "Secret day key not found")
 		local sk = SHA256:process(ACK.secret_day_key)
-		ZEN.assert(sk, "Error renewing secret day key (SHA256)")
+		zencode_assert(sk, "Error renewing secret day key (SHA256)")
 		ACK.secret_day_key = sk
 end)
 
 When("create the ephemeral ids for today", function()
-		ZEN.assert(ACK.secret_day_key, "Secret day key not found")
-		ZEN.assert(ACK.broadcast_key, "Broadcast key not found")
-		ZEN.assert(isnumber(ACK.epoch), "Epoch length (minutes) not found")
+		zencode_assert(ACK.secret_day_key, "Secret day key not found")
+		zencode_assert(ACK.broadcast_key, "Broadcast key not found")
+		zencode_assert(isnumber(ACK.epoch), "Epoch length (minutes) not found")
         local epoch = tonumber(ACK.epoch)
 		local PRF = SHA256:hmac(ACK.secret_day_key, ACK.broadcast_key)
 		local epd = (24*60)/epoch -- num epochs per day
@@ -59,11 +59,11 @@ When("create the ephemeral ids for today", function()
 end)
 
 When("create the proximity tracing of infected ids", function()
-		ZEN.assert(isnumber(ACK.epoch), "Number of moments not found")
+		zencode_assert(isnumber(ACK.epoch), "Number of moments not found")
         local epoch = tonumber(ACK.epoch)
-		ZEN.assert(type(ACK.list_of_infected) == 'table', "List of infected not found")
-		ZEN.assert(type(ACK.ephemeral_ids) == 'table', "List of ephemeral ids not found")
-		ZEN.assert(ACK.broadcast_key, "Broadcast key not found")
+		zencode_assert(type(ACK.list_of_infected) == 'table', "List of infected not found")
+		zencode_assert(type(ACK.ephemeral_ids) == 'table', "List of ephemeral ids not found")
+		zencode_assert(ACK.broadcast_key, "Broadcast key not found")
 		ACK.proximity_tracing = { }
 		local epd = (24*60)/epoch -- num epochs per day
 		local zero = OCTET.zero(epd*16) -- 0 byte buffer

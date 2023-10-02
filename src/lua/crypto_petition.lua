@@ -86,7 +86,7 @@ function petition.prove_sign_petition(pub, m)
        + SALT * theta.pi_vote.rr2
        + theta.cv * theta.pi_vote.c
     -- verify challenge
-    ZEN.assert(theta.pi_vote.c == ZKP_challenge(
+    zencode_assert(theta.pi_vote.c == ZKP_challenge(
                   {scores.left, scores.right,
                    theta.cv, Aw, Bw, Cw, Dw }),
                "verify_sign_petition: challenge fails")
@@ -111,7 +111,7 @@ function petition.prove_sign_petition(pub, m)
     local rxneg = pi_tally.rx:modneg(O)
     local Aw = { rxneg*scores.pos.left + pi_tally.c * pi_tally.dec.pos,
                  rxneg*scores.neg.left + pi_tally.c * pi_tally.dec.neg  }
-    ZEN.assert(pi_tally.c == ZKP_challenge(Aw),
+    zencode_assert(pi_tally.c == ZKP_challenge(Aw),
                "verify_tally_petition: challenge fails")
     return true
  end

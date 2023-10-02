@@ -89,7 +89,7 @@ end
 -- @param fail bool bail out or continue on error
 -- @return true or false
 local function pickin(section, what, conv, fail)
-   ZEN.assert(section, 'No section specified')
+   zencode_assert(section, 'No section specified')
    local root  -- section
    local raw  -- data pointer
    local bail  -- fail
@@ -202,11 +202,11 @@ function operate_conversion(guessed)
 end
 
 local function ack_table(key, val)
-   ZEN.assert(
+   zencode_assert(
       luatype(key) == 'string',
       'ZEN.table_add arg #1 is not a string'
    )
-   ZEN.assert(
+   zencode_assert(
       luatype(val) == 'string',
       'ZEN.table_add arg #2 is not a string'
    )
@@ -232,7 +232,7 @@ end
 -- @param name string key of the data object in ZEN.TMP[name]
 local function ack(what)
    local name = _index_to_string(what)
-   ZEN.assert(ZEN.TMP, 'No valid object found: ' .. name)
+   zencode_assert(ZEN.TMP, 'No valid object found: ' .. name)
    empty(name)
    ACK[name] = operate_conversion(ZEN.TMP)
    -- name of schema may differ from name of object
@@ -247,7 +247,7 @@ end
 Given(
    'nothing',
    function()
-      ZEN.assert(
+      zencode_assert(
          (next(IN) == nil),
          'Undesired data passed as input'
       )
@@ -338,7 +338,7 @@ Given(
 Given(
    "a '' named ''",
    function(s, n)
-      -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
+      -- zencode_assert(encoder, "Invalid input encoding for '"..n.."': "..s)
       pick(n, s)
       ack(n)
       gc()
@@ -350,7 +350,7 @@ Given(
    function(s, n)
       -- local name = have(n)
       local name = _index_to_string(IN[n])
-      -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
+      -- zencode_assert(encoder, "Invalid input encoding for '"..n.."': "..s)
       pick(name, s)
       ack(name)
       gc()
@@ -379,7 +379,7 @@ Given(
 Given(
    "my ''",
    function(n)
-      ZEN.assert(WHO, 'No identity specified, use: Given I am ...')
+      zencode_assert(WHO, 'No identity specified, use: Given I am ...')
       pickin(WHO, n)
       ack(n)
       gc()
@@ -389,7 +389,7 @@ Given(
 Given(
    "my '' named ''",
    function(s, n)
-      -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
+      -- zencode_assert(encoder, "Invalid input encoding for '"..n.."': "..s)
       pickin(WHO, n, s)
       ack(n)
       gc()
@@ -398,7 +398,7 @@ Given(
 Given(
    "my '' named by ''",
    function(s, n)
-      -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
+      -- zencode_assert(encoder, "Invalid input encoding for '"..n.."': "..s)
       local name = _index_to_string(IN[n])
       pickin(WHO, name, s)
       ack(name)
@@ -437,12 +437,12 @@ Given(
 
 Given("a '' part of '' after string prefix ''", function(enc, src, pfx)
 		 local whole = IN[src]
-		 ZEN.assert(whole, "Cannot find '" .. src .. "' anywhere (null value?)")
+		 zencode_assert(whole, "Cannot find '" .. src .. "' anywhere (null value?)")
 		 local plen = #pfx
 		 local wlen = #whole
-		 ZEN.assert(wlen > plen, "String too short: "
+		 zencode_assert(wlen > plen, "String too short: "
 					.. src.. "("..wlen..") prefix("..plen..")")
-		 ZEN.assert(string.sub(whole, 1, plen) == pfx,
+		 zencode_assert(string.sub(whole, 1, plen) == pfx,
 					"Prefix not found in "..src..": "..pfx)
 		 -- if not conv and ZEN.schemas[what] then conv = what end
 		 ZEN.TMP = guess_conversion(string.sub(whole,plen+1,wlen), enc)
@@ -453,12 +453,12 @@ end)
 
 Given("a '' part of '' before string suffix ''", function(enc, src, sfx)
 		 local whole = IN[src]
-		 ZEN.assert(whole, "Cannot find '" .. src .. "' anywhere (null value?)")
+		 zencode_assert(whole, "Cannot find '" .. src .. "' anywhere (null value?)")
 		 local slen = #sfx
 		 local wlen = #whole
-		 ZEN.assert(wlen > slen, "String too short: "
+		 zencode_assert(wlen > slen, "String too short: "
 					.. src.. "("..wlen..") suffix("..slen..")")
-		 ZEN.assert(string.sub(whole, wlen-slen+1, wlen) == sfx,
+		 zencode_assert(string.sub(whole, wlen-slen+1, wlen) == sfx,
 					"Suffix not found in "..src..": "..sfx)
 		 -- if not conv and ZEN.schemas[what] then conv = what end
 		 ZEN.TMP = guess_conversion(string.sub(whole,1,wlen-slen), enc)
@@ -474,8 +474,8 @@ Given("a '' in path ''", function(enc, path)
     local dest = path_array[#path_array]
     local res = IN[root]
     for k,v in pairs(path_array) do
-        ZEN.assert(luatype(res) == 'table', "Object is not a table: "..root)
-        ZEN.assert(res[v] ~= nil, "Key "..v.." not found in "..root)
+        zencode_assert(luatype(res) == 'table', "Object is not a table: "..root)
+        zencode_assert(res[v] ~= nil, "Key "..v.." not found in "..root)
         res = res[v]
         root = v
     end
