@@ -68,7 +68,8 @@ ZEN = {
 	current_instruction = 0, -- first instruction
 	next_instruction = 1, -- first instruction
 	ITER = nil, -- foreach infos
-	traceback = {} -- transferred into HEAP by zencode_begin
+	traceback = {}, -- transferred into HEAP by zencode_begin
+	linenum = 0,
 }
 
 
@@ -197,10 +198,10 @@ function ZEN:begin(new_heap)
 	   if not ctx.Z.OK and CONF.parser.strict_match then
 		  ctx.Z.debug()
 		  exitcode(1)
-		  error('Zencode pattern not found ('..index..'): ' .. trim(ctx.msg), 1)
+		  error('Zencode line '..ctx.Z.linenum..' pattern not found ('..index..'): ' .. trim(ctx.msg), 1)
 		  return false
 	   elseif not ctx.Z.OK and not CONF.parser.strict_match then
-		  warn('Zencode pattern ignored: ' .. trim(ctx.msg), 1)
+		  warn('Zencode line '..ctx.Z.linenum..' pattern ignored: ' .. trim(ctx.msg), 1)
 	   end
 	   return true
 	end
@@ -390,11 +391,7 @@ end
 
 -- returns an iterator for newline termination
 local function zencode_newline_iter(text)
-	s = trim(text) -- implemented in zen_io.c
-	if s:sub(-1) ~= '\n' then
-		s = s .. '\n'
-	end
-	return s:gmatch('(.-)\n') -- iterators return functions
+	return text:gmatch("[^\r\n]*")
 end
 local function zencode_isempty(b)
 	if b == nil or b == '' then
@@ -419,14 +416,14 @@ function ZEN:parse(text)
    	  warn("Zencode text too short to parse")
 		 return false
 	end
-	local linenum=0
 	local prefix
 	local branching = false
 	local looping = false
 	local prefixes = {}
 	local parse_prefix = parse_prefix -- optimization
+	self.linenum = 0
    for line in zencode_newline_iter(text) do
-	linenum = linenum + 1
+	self.linenum = self.linenum + 1
 	local tline = trim(line) -- saves trims in isempty / iscomment
     xxx(tline,3)
 
@@ -435,7 +432,7 @@ function ZEN:parse(text)
 	  -- max length for single zencode line is #define MAX_LINE
 	  -- hard-coded inside zenroom.h
 	  prefix = parse_prefix(line) -- trim is included
-	  assert(prefix, "Invalid Zencode line "..linenum..": "..line)
+	  assert(prefix, "Invalid Zencode line "..self.linenum..": "..line)
 	  self.OK = true
 	  exitcode(0)
 	  if not branching and prefix == 'if' then
@@ -461,7 +458,7 @@ function ZEN:parse(text)
 	  -- try to enter the machine state named in prefix
 	  -- xxx("Zencode machine enter_"..prefix..": "..text, 3)
 	  local fm = self.machine["enter_"..prefix]
-	  assert(fm, "Invalid Zencode prefix "..linenum..": '"..line.."'")
+	  assert(fm, "Invalid Zencode prefix "..self.linenum..": '"..line.."'")
 	  assert(fm(self.machine, { msg = tline, Z = self }),
 				line.."\n    "..
 				"Invalid transition from: "..self.machine.current)

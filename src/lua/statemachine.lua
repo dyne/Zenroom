@@ -69,6 +69,7 @@ function machine.create(options)
   fsm.options = options
   fsm.current = options.initial or 'none'
   fsm.events = {}
+  fsm.line = 0
 
   for _, event in ipairs(options.events or {}) do
     local name = event.name
