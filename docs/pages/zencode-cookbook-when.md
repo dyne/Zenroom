@@ -128,7 +128,7 @@ When I create the petition signature 'nameOfThePetitionIWantToSign'
 A statement is available also to transform a binary object to a JSON string: 
 
 ```gherkin
-When I create the json of 'myObject'
+When I create the escaped string of 'myObject'
 ``` 
 
 We're sparing you the full list of **schemas** that you can create, but the best place to see a full and updated list is <a href="https://apiroom.net">https://apiroom.net</a>. 
@@ -142,7 +142,7 @@ In the second group we gathered the *When* statements that can create new object
 
  The "set" statements allow you to ***create an object and assign a value to it***. 
  
- The "create the json of" statement allows you ***render an object to a JSON string***, which at the end can be printed as a string and is internal to the main JSON output returned by Zencode: it is a JSON string inside a JSON dictionary value.
+ The "create the create the escaped string of" statement allows you ***render an object to a JSON string***, which at the end can be printed as a string and is internal to the main JSON output returned by Zencode: it is a JSON string inside a JSON dictionary value.
  
  A special case is the stament "create key", which we see in two flavours, one ***creates a key from a random seed***, one ***from a known seed***.
  
@@ -164,8 +164,6 @@ Here we have grouped together the statements that perform:
 
 
  ***Basic hashing***
- 
- ***Hashing a number to a point on a curve***
  
  ***Key derivation function (KDF)***
  

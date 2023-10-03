@@ -2,15 +2,14 @@
 # These creates a new empty array named 'array'
 When I create the new array
 
-# INSERT
-# The "insert" statement is used to append a simple object to an array.
+# MOVE
+# The "move" statement is used to append a simple object to an array.
 # It's pretty self-explaining. 
-When I insert 'myFirstString' in 'myFirstArray'
+When I move 'myFirstString' in 'myFirstArray'
 
-# LENTGH
-# These two statements create objects, named "size" and "length" 
-# containing the length of the array
-When I create the length of 'mySecondNumberArray'
+# SIZE
+# These two statements create objects, named "size"
+# containing the size of the array
 When I create the size of 'mySecondNumberArray'
 
 # SUM 
@@ -45,7 +44,6 @@ Then print the 'mySecondNumberArray'
 Then print the 'myFirstArray'
 Then print the 'myJustRenamedArray'
 
-Then print the 'length'
 Then print the 'size'
 
 Then print the 'aggregation'
