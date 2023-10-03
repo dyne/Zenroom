@@ -426,18 +426,6 @@ And I rename the 'hash' to 'sha512HashOf:MyFirstArray'
 When I create the hash of 'ABC-Transactions1Data' using 'sha512'
 And I rename the 'hash' to 'sha512HashOfDictionary:ABC-Transactions1Data'
 
-
-
-# The "create hash to point" statement can do some serious cryptography: 
-# use it generating public keys from a secret key, where the secret key can be any random number.
-# The statement accepts curves "ecp" or "ecp2" to produce the hash.
-# This statement takes an array as input, and produces an array as output named "hash_to_point", which
-# we immediately rename.
-When I create the hash to point 'ecp' of each object in 'myFourthArray'
-And I rename the 'hash_to_point' to 'ecpHashesOfMyFourthArray'
-When I create the hash to point 'ecp2' of each object in 'myFirstArray'        
-And I rename the 'hash_to_point' to 'ecp2HashesOfMyFirstArray'
-
 # Key derivation function (KDF)
 # The output object is named "key_derivation":
 When I create the key derivation of 'myEleventhStringToBeHashed'
@@ -461,7 +449,7 @@ When I create the aggregation of array 'myFirstNumberArray'
 And I rename the 'aggregation' to 'aggregationOfMyFirstNumberArray'
 
 # Now let's print out everything
-Then print all data  
+Then print all data
 EOF
     cat $R/docs/examples/zencode_cookbook/$SUBDOC/whenCompleteScriptGiven.zen \
 	$R/docs/examples/zencode_cookbook/$SUBDOC/whenCompleteScriptPart3.zen \
@@ -508,15 +496,14 @@ EOF
 # These creates a new empty array named 'array'
 When I create the new array
 
-# INSERT
-# The "insert" statement is used to append a simple object to an array.
+# MOVE
+# The "move" statement is used to append a simple object to an array.
 # It's pretty self-explaining. 
-When I insert 'myFirstString' in 'myFirstArray'
+When I move 'myFirstString' in 'myFirstArray'
 
-# LENTGH
-# These two statements create objects, named "size" and "length" 
-# containing the length of the array
-When I create the length of 'mySecondNumberArray'
+# SIZE
+# These two statements create objects, named "size"
+# containing the size of the array
 When I create the size of 'mySecondNumberArray'
 
 # SUM 
@@ -551,7 +538,6 @@ Then print the 'mySecondNumberArray'
 Then print the 'myFirstArray'
 Then print the 'myJustRenamedArray'
 
-Then print the 'length'
 Then print the 'size'
 
 Then print the 'aggregation'
