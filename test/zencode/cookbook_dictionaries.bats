@@ -64,9 +64,9 @@ and I rename the 'string dictionary' to 'ABC-TransactionsStatement'
 and I write number '108' in 'TransactionsConcluded'
 and I write string 'Transaction Control Dictionary' in 'nameOfDictionary'
 and I write number '21' in 'AverageAmountPerTransaction'
-and I insert 'nameOfDictionary' in 'ABC-TransactionsStatement'
-and I insert 'TransactionsConcluded' in 'ABC-TransactionsStatement'
-and I insert 'AverageAmountPerTransaction' in 'ABC-TransactionsStatement'
+and I move 'nameOfDictionary' in 'ABC-TransactionsStatement'
+and I move 'TransactionsConcluded' in 'ABC-TransactionsStatement'
+and I move 'AverageAmountPerTransaction' in 'ABC-TransactionsStatement'
 Then print the 'ABC-TransactionsStatement' 
 EOF
 
@@ -326,7 +326,7 @@ and I verify the 'not.there' is not found in 'TransactionsBatchA'
 # CREATE Dictionary
 # You can create a new dictionary using a similar syntax to the one to create an array 
 # in the case below we're create a "number dictionary", which is key value storage where 
-# the values we want to insert are all numbers
+# the values we want to move are all numbers
 When I create the 'number dictionary'
 and I rename the 'number dictionary' to 'ABC-TransactionsAfterTheta'
 
@@ -351,13 +351,13 @@ And I rename the 'copy' to 'LaterAmount<<TransactionAmountsA'
 When I create the copy of 'Buyer' in 'Information' in 'TransactionsBatchA'
 and I rename the 'copy' to 'Buyer<<Information<<TransactionsBatchA'
 
-# INSERT in Dictionary
-# We can use the "insert" statement to add an element to a dictionary, as we would do with an array
-When I insert 'SumTransactionValueAfterTheta' in 'ABC-TransactionsAfterTheta' 
-When I insert 'SumTransactionProductAmountAfterTheta' in 'ABC-TransactionsAfterTheta'
-When I insert 'TransactionValueSecondBatchAtTheta' in 'ABC-TransactionsAfterTheta'
-When I insert 'TransferredProductAmountSecondBatchAtTheta' in 'ABC-TransactionsAfterTheta'
-When I insert 'referenceTimestamp' in 'ABC-TransactionsAfterTheta'
+# MOVE in Dictionary
+# We can use the "move" statement to add an element to a dictionary, as we would do with an array
+When I move 'SumTransactionValueAfterTheta' in 'ABC-TransactionsAfterTheta'
+When I move 'SumTransactionProductAmountAfterTheta' in 'ABC-TransactionsAfterTheta'
+When I move 'TransactionValueSecondBatchAtTheta' in 'ABC-TransactionsAfterTheta'
+When I move 'TransferredProductAmountSecondBatchAtTheta' in 'ABC-TransactionsAfterTheta'
+When I move 'referenceTimestamp' in 'ABC-TransactionsAfterTheta'
 
 # ECDSA SIGNATURE of Dictionaries
 # sign the newly created dictionary using ECDSA cryptography

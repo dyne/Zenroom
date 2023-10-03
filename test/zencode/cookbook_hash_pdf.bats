@@ -77,8 +77,8 @@ And I rename the 'HMAC' to 'HMACHashOffile'
 When I create the 'base64 dictionary'
 and I rename the 'base64 dictionary' to 'fileToBeHashed.Hashes'
 
-When I insert 'sha256HashOffile' in 'fileToBeHashed.Hashes'
-When I insert 'sha512HashOffile' in 'fileToBeHashed.Hashes'
+When I move 'sha256HashOffile' in 'fileToBeHashed.Hashes'
+When I move 'sha512HashOffile' in 'fileToBeHashed.Hashes'
 
 
 
@@ -92,8 +92,8 @@ and I rename the 'signature' to 'fileToBeHashed.Metadata.signature'
 
 When I create the 'base64 dictionary'
 and I rename the 'base64 dictionary' to 'fileToBeHashed.signatures'
-When I insert 'fileToBeHashed.Hashes.signature' in 'fileToBeHashed.signatures'
-When I insert 'fileToBeHashed.Metadata.signature' in 'fileToBeHashed.signatures'
+When I move 'fileToBeHashed.Hashes.signature' in 'fileToBeHashed.signatures'
+When I move 'fileToBeHashed.Metadata.signature' in 'fileToBeHashed.signatures'
 
 # and to finish, here we print out the encrypted payloads, for both the recipients
 # Then print the 'sha256HashOffile'
