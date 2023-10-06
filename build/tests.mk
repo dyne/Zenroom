@@ -1,9 +1,19 @@
 
+prepare-executables:
+	echo '#!/bin/sh' > ${pwd}/test/zenroom
+	echo "${pwd}/src/zenroom "'$$*' >> ${pwd}/test/zenroom
+	chmod +x ${pwd}/test/zenroom
+	echo '#!/bin/sh' > ${pwd}/test/zencode-exec
+	echo "${pwd}/src/zencode-exec "'$$*' >> ${pwd}/test/zencode-exec
+	chmod +x ${pwd}/test/zencode-exec
+
+.PHONY: prepare-executables
+
 # bats function
 bats = @test/bats/bin/bats $(1)
 bats_file = @test/bats/bin/bats $(1).bats
 # temporary target for testing the tests
-check-bats:
+check-bats: prepare-executables
 	@cp -v src/zenroom test/zenroom
 	$(call bats, test/lua)
 	$(call bats, test/determinism)
@@ -26,7 +36,7 @@ luacheck:
 	luacheck --config src/lua/.luacheckrc --codes src/lua/**.lua
 
 check-osx: test-exec := ./src/zenroom.command
-check-osx:
+check-osx: prepare-executables
 	@cp -v ${test-exec} test/zenroom
 	$(call bats, test/lua)
 	$(call bats, test/determinism)
@@ -38,7 +48,7 @@ check-osx:
 	@echo "----------------"
 
 check-linux: test-exec := ./src/zenroom
-check-linux:
+check-linux: prepare-executables
 	@cp -v ${test-exec} test/zenroom
 	rm -f /tmp/zenroom-test-summary.txt
 	$(call bats, test/lua)
