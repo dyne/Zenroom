@@ -47,7 +47,7 @@ EOF
 }
 
 
-@test "Zencode pattern not found: and 0YOUI4qhIeXmIpyK" {
+@test "Zencode line 4 pattern not found: should fail" {
     cat <<EOF > $TMP/error2.zen
 rule check version 1.0.0
 Scenario credential: issuer keygen
@@ -56,11 +56,11 @@ and 0YOUI4qhIeXmIpyK
 Then print 'Success' 'OK'
 EOF
     run $ZENROOM_EXECUTABLE -z $TMP/error2.zen
-    assert_line --partial 'Zencode pattern not found (given): and 0YOUI4qhIeXmIpyK'
+    assert_line --partial 'Zencode line 4 pattern not found (given): and 0YOUI4qhIeXmIpyK'
 }
 
 
-@test "Zencode pattern not found: this should fail or 'rule unknown ignore'" {
+@test "Zencode line 5 pattern not found: should fail" {
     cat <<EOF > $TMP/error3.zen
 rule check version 1.0.0
 Scenario credential: issuer keygen
@@ -70,5 +70,23 @@ and this should fail or 'rule unknown ignore'
 Then print my 'issuer keypair'
 EOF
     run $ZENROOM_EXECUTABLE -z $TMP/error3.zen
-    assert_line --partial "Zencode pattern not found (when): and this should fail or 'rule unknown ignore'"
+    assert_line --partial "Zencode line 5 pattern not found (when): and this should fail or 'rule unknown ignore'"
+}
+
+@test "Zencode line 10 pattern not found: should fail" {
+    cat <<EOF > $TMP/error3.zen
+
+# comment line
+rule check version 1.0.0
+
+# empty line above
+Scenario credential: issuer keygen
+Given that I am known as 'MadHatter'
+When I create the issuer key
+
+and this should fail or 'rule unknown ignore'
+Then print my 'issuer keypair'
+EOF
+    run $ZENROOM_EXECUTABLE -z $TMP/error3.zen
+    assert_line --partial "Zencode line 10 pattern not found (when): and this should fail or 'rule unknown ignore'"
 }
