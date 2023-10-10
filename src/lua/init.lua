@@ -87,6 +87,7 @@ MAXITER = tonumber(STR_MAXITER)
 -- ZENCODE starts here
 
 -- declare HEAP globals in the main co-routine
+AST = {} -- Abstract Syntax Tree filled by ZEN:parser
 IN  = {} -- Given processing, import global DATA from json
 TMP = {} -- temporary buffer used by Given
 ACK = {} -- When processing,  destination for push*
