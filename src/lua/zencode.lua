@@ -1,7 +1,7 @@
 --[[
 --This file is part of zenroom
 --
---Copyright (C) 2018-2021 Dyne.org foundation
+--Copyright (C) 2018-2023 Dyne.org foundation
 --designed, written and maintained by Denis Roio <jaromil@dyne.org>
 --
 --This program is free software: you can redistribute it and/or modify
@@ -51,8 +51,6 @@
 
 ZEN = {
 	given_steps = {},
-	TMP = {}, -- Given processing, temp buffer for ack*->validate->push*
-	AST = {}, -- AST of parsed Zencode
 	when_steps = {},
 	if_steps = {},
 	endif_steps = { endif = function() return end }, --nop
@@ -182,7 +180,7 @@ function ZEN:begin(new_heap)
 		  ctx.Z.id = ctx.Z.id + 1
 		  -- AST data prototype
 		  table.insert(
-			 ctx.Z.AST,
+			 AST,
 			 {
 				id = ctx.Z.id, -- ordered number
 				args = args, -- array of vars
@@ -579,11 +577,11 @@ function ZEN:run()
 	-- EXEC zencode
 	-- TODO: for optimization, to develop a lua iterator, which would save lookup time
 	-- https://www.lua.org/pil/7.1.html
-	local AST_size = table_size(self.AST)
+	local AST_size = table_size(AST)
 	local x
 	while self.next_instruction <= AST_size do
 		self.current_instruction = self.next_instruction
-		x = self.AST[self.current_instruction]
+		x = AST[self.current_instruction]
 		self.next_instruction = self.next_instruction + 1
 	--self:trace(x.source)
 	if not manage_branching(self, x) and not manage_foreach(self, x) then
@@ -630,7 +628,7 @@ function ZEN:run()
 	end
 end
 
- 
+
 
 
 
