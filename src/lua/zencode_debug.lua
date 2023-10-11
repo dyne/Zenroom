@@ -23,24 +23,12 @@
 
 -- quick internal debugging facility
 function xxx(s, n)
-   n = n or 3
+   local n <const> = n or 3
    if DEBUG >= n then
 	  printerr("LUA "..s)
    end
 end
 
-function ZEN:trace(src)
-	-- take current line of zencode
-	if not src then return end
-	local tr = trim(src)
-
-	-- TODO: tabbing, ugly but ok for now
-	if string.sub(tr, 1, 1) == '[' then
-		table.insert(traceback, tr)
-	else
-		table.insert(traceback, ' Z  '..tr)
-	end
-end
 -- trace function execution also on success
 function ZEN:ftrace(src)
    if DEBUG < 3 then return end
@@ -52,8 +40,9 @@ end
 function ZEN:wtrace(src)
 	table.insert(traceback, ' W  +' .. trim(src))
 end
-function ZEN:crumb()
+function ZEN:crumb(msg)
    self:ftrace(debug.getinfo(2, 'n').name)
+   if msg then self:ftrace(msg) end
 end
 
 -- debug functions
@@ -64,7 +53,11 @@ function ZEN:debug_traceback()
 				 JSON.encode(traceback))))
    else
 	  for k,v in pairs(traceback) do
-		 warn(v)
+		 if LOGFMT == 'JSON' then
+			printerr('"'..v..'",')
+		 else
+			printerr(v)
+		 end
 	  end
    end
 end
@@ -123,7 +116,7 @@ zencode_assert = function(condition, errmsg)
       table.insert(traceback, errmsg)
    else
       -- ZEN.debug() -- prints all data in memory
-      table.insert(traceback, errmsg)
+      -- table.insert(traceback, '[!] '..errmsg)
       ZEN.OK = false
       exitcode(1)
       error(errmsg, 3)

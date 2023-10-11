@@ -21,10 +21,10 @@
 -- zen_load_extensions(L) usually after zen_init()
 
 -- -- remap fatal and error
-function fatal(msg)
+function fatal(x)
 	ZEN.debug()
-	msg = msg or 'fatal error'
-	error(msg, 2)
+	local msg <const> = x.msg or 'fatal error'
+	error('Zencode line '..x.linenum..': '..msg, 2)
 end
 
 _G['REQUIRED'] = {}

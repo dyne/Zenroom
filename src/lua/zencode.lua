@@ -67,7 +67,7 @@ ZEN = {
 	next_instruction = 1, -- first instruction
 	ITER = nil, -- foreach infos
 	traceback = {}, -- transferred into HEAP by zencode_begin
-	linenum = 0,
+	linenum = 0
 }
 
 
@@ -116,7 +116,7 @@ function ZEN:begin(new_heap)
     -- Then --> [*]
 
 	local function set_sentence(self, event, from, to, ctx)
-	   local translate = {
+	   local translate <const> = {
 		  whenif = 'when',
 		  thenif = 'then',
 		  whenforeach = 'when',
@@ -127,18 +127,21 @@ function ZEN:begin(new_heap)
 		  ifforeach = 'if',
 		  endifforeach = 'endif',
 	   }
-	   local current = self.current
-	   local index = translate[current] or current
-	   local reg = ctx.Z[index .. '_steps']
+	   local current <const> = self.current
+	   local index <const> = translate[current] or current
+	   -- save in reg a pointer to array of statements
+	   local reg <const> = ctx.Z[index .. '_steps']
+	   local sentence <const> = ctx.msg
+	   local linenum <const> = ctx.Z.linenum
 	   ctx.Z.OK = false
 	   xxx('Zencode parser from: ' .. from .. " to: "..to, 3)
 	   assert(reg,'Callback register not found: ' .. current)
-	   assert(#reg,'Callback register empty: '..current)
-	   local gsub = string.gsub -- optimization
+	   -- assert(#reg,'Callback register empty: '..current)
+	   local gsub <const> = string.gsub -- optimization
 	   -- TODO: optimize in C
 	   -- remove '' contents, lower everything, expunge prefixes
 	   -- ignore 'the' only in Then statements
-	   local tt = gsub(ctx.msg, "'(.-)'", "''") -- msg trimmed on parse
+	   local tt = gsub(sentence, "'(.-)'", "''") -- msg trimmed on parse
 	   tt = gsub(tt, ' I ', ' ', 1) -- eliminate first person pronoun
 	   tt = tt:lower() -- lowercase all statement
 	   if to == 'then' or to == 'thenif' then
@@ -168,11 +171,11 @@ function ZEN:begin(new_heap)
 	   tt = gsub(tt, ' +', ' ') -- eliminate multiple internal spaces
 	   tt = gsub(tt, '^ +', '') -- remove initial spaces
 	   tt = gsub(tt, ' +$', '') -- remove final spaces
-	   tt = tt:lower()
-	   local func = reg[tt]
+	   --
+	   local func <const> = reg[tt] -- lookup the statement
 	   if func and luatype(func) == 'function' then
 		  local args = {} -- handle multiple arguments in same string
-		  for arg in string.gmatch(ctx.msg, "'(.-)'") do
+		  for arg in string.gmatch(sentence, "'(.-)'") do
 			 -- convert all spaces to underscore in argument strings
 			 arg = uscore(arg, ' ', '_')
 			 table.insert(args, arg)
@@ -184,11 +187,12 @@ function ZEN:begin(new_heap)
 			 {
 				id = ctx.Z.id, -- ordered number
 				args = args, -- array of vars
-				source = ctx.msg, -- source text
+				source = sentence, -- source text
 				section = current,
 				from = from,
 				to = to,
-				hook = func
+				hook = func,
+				linenum = linenum
 			 }
 		  ) -- function
 		  ctx.Z.OK = true
@@ -196,10 +200,10 @@ function ZEN:begin(new_heap)
 	   if not ctx.Z.OK and CONF.parser.strict_match then
 		  ctx.Z.debug()
 		  exitcode(1)
-		  error('Zencode line '..ctx.Z.linenum..' pattern not found ('..index..'): ' .. trim(ctx.msg), 1)
+		  error('Zencode line '..linenum..' pattern not found ('..index..'): ' .. trim(sentence), 1)
 		  return false
 	   elseif not ctx.Z.OK and not CONF.parser.strict_match then
-		  warn('Zencode line '..ctx.Z.linenum..' pattern ignored: ' .. trim(ctx.msg), 1)
+		  warn('Zencode line '..linenum..' pattern ignored: ' .. trim(sentence), 1)
 	   end
 	   return true
 	end
@@ -399,7 +403,7 @@ local function zencode_isempty(b)
 	end
 end
 local function zencode_iscomment(b)
-	local x = string.char(b:byte(1))
+	local x <const> = string.char(b:byte(1))
 	if x == '#' then
 		return true
 	else
@@ -414,11 +418,10 @@ function ZEN:parse(text)
    	  warn("Zencode text too short to parse")
 		 return false
 	end
-	local prefix
 	local branching = false
 	local looping = false
 	local prefixes = {}
-	local parse_prefix = parse_prefix -- optimization
+	local parse_prefix <const> = parse_prefix -- optimization
 	self.linenum = 0
    for line in zencode_newline_iter(text) do
 	self.linenum = self.linenum + 1
@@ -429,7 +432,7 @@ function ZEN:parse(text)
 	--   xxx('Line: '.. text, 3)
 	  -- max length for single zencode line is #define MAX_LINE
 	  -- hard-coded inside zenroom.h
-	  prefix = parse_prefix(line) -- trim is included
+	   local prefix = parse_prefix(line) -- trim is included
 	  assert(prefix, "Invalid Zencode line "..self.linenum..": "..line)
 	  self.OK = true
 	  exitcode(0)
@@ -455,7 +458,7 @@ function ZEN:parse(text)
 
 	  -- try to enter the machine state named in prefix
 	  -- xxx("Zencode machine enter_"..prefix..": "..text, 3)
-	  local fm = self.machine["enter_"..prefix]
+	  local fm <const> = self.machine["enter_"..prefix]
 	  assert(fm, "Invalid Zencode prefix "..self.linenum..": '"..line.."'")
 	  assert(fm(self.machine, { msg = tline, Z = self }),
 				line.."\n    "..
@@ -532,100 +535,104 @@ end
 
 function ZEN:run()
    self:crumb()
-	local trace = self.trace
-	-- runtime checks
-	if not self.checks.version then
-		warn(
-			'Zencode is missing version check, please add: rule check version N.N.N'
-		)
-	end
-	-- HEAP setup
-	local tmp
-	if EXTRA then
-		tmp  = CONF.input.format.fun(EXTRA) or {}
-		for k, v in pairs(tmp) do
-			IN[k] = v
-		end
-		EXTRA = nil
-	end
-	if DATA then
-		tmp  = CONF.input.format.fun(DATA) or {}
-		for k, v in pairs(tmp) do
-			if IN[k] then
-				error("Object name collision in input: "..k)
-			end
-			IN[k] = v
-		end
-		DATA = nil
-	end
-	if KEYS then
-		tmp  = CONF.input.format.fun(KEYS) or {}
-		for k, v in pairs(tmp) do
-			if IN[k] then
-				error("Object name collision in input: "..k)
-			end
-			IN[k] = v
-		end
-		KEYS = nil
-	end
-	tmp = nil
-	collectgarbage 'collect'
 
-	-- convert all spaces in keys to underscore
-	IN = IN_uscore(IN)
+   local runtime_trace = function(x)
+	  table.insert(traceback, '+'..x.linenum..'  '..x.source)
+   end
+   local runtime_error = function(x, err)
+	  table.insert(traceback, '[!] Error at Zencode line '..x.linenum)
+	  if err then table.insert(traceback, '[!] '..err) end
+   end
+   -- runtime checks
+   if not self.checks.version then
+	  warn(
+		 'Zencode is missing version check, please add: rule check version N.N.N'
+	  )
+   end
+   -- HEAP setup
+   local tmp
+   if EXTRA then
+	  tmp  = CONF.input.format.fun(EXTRA) or {}
+	  for k, v in pairs(tmp) do
+		 IN[k] = v
+	  end
+	  EXTRA = nil
+   end
+   if DATA then
+	  tmp  = CONF.input.format.fun(DATA) or {}
+	  for k, v in pairs(tmp) do
+		 if IN[k] then
+			error("Object name collision in input: "..k)
+		 end
+		 IN[k] = v
+	  end
+	  DATA = nil
+   end
+   if KEYS then
+	  tmp  = CONF.input.format.fun(KEYS) or {}
+	  for k, v in pairs(tmp) do
+		 if IN[k] then
+			error("Object name collision in input: "..k)
+		 end
+		 IN[k] = v
+	  end
+	  KEYS = nil
+   end
+   tmp = nil
+   collectgarbage 'collect'
 
-	-- EXEC zencode
-	-- TODO: for optimization, to develop a lua iterator, which would save lookup time
-	-- https://www.lua.org/pil/7.1.html
-	local AST_size = table_size(AST)
-	local x
-	while self.next_instruction <= AST_size do
-		self.current_instruction = self.next_instruction
-		x = AST[self.current_instruction]
-		self.next_instruction = self.next_instruction + 1
-	--self:trace(x.source)
-	if not manage_branching(self, x) and not manage_foreach(self, x) then
-		-- trigger upon switch to when or then section
-		if x.from == 'given' and x.to ~= 'given' then
+   -- convert all spaces in keys to underscore
+   IN = IN_uscore(IN)
+
+   -- EXEC zencode
+   -- TODO: for optimization, to develop a lua iterator, which would save lookup time
+   -- https://www.lua.org/pil/7.1.html
+   local AST_size <const> = table_size(AST)
+   while self.next_instruction <= AST_size do
+	  self.current_instruction = self.next_instruction
+	  local x <const> = AST[self.current_instruction]
+	  self.next_instruction = self.next_instruction + 1
+	  if not manage_branching(self, x) and not manage_foreach(self, x) then
+		 -- trigger upon switch to when or then section
+		 if x.from == 'given' and x.to ~= 'given' then
 			-- delete IN memory
 			IN = {}
 			collectgarbage 'collect'
-		end
-		self:trace(x.source)
-		-- HEAP integrity guard
-		if CONF.heapguard then -- watchdog
+		 end
+		 -- HEAP integrity guard
+		 if CONF.heapguard then -- watchdog
 			-- guard ACK's contents on section switch
 			deepmap(zenguard, ACK)
 			-- check that everythink in HEAP.ACK has a CODEC
 			self:codecguard()
-		end
+		 end
 
-		self.OK = true
-		exitcode(0)
-		local ok, err = pcall(x.hook, table.unpack(x.args))
-		if not ok or not self.OK then
-		   self:debug_traceback() -- ?
-		   if err then self:trace('[!] ' .. err) end
-		   fatal(x.source) -- traceback print inside
-		end
-		collectgarbage 'collect'
-	end
-	--	::continue::
-	end
-	-- PRINT output
-	self:trace('--- Zencode execution completed')
-	if type(OUT) == 'table' then
-		self:trace('<<< Encoding { OUT } to JSON ')
-		-- this is all already encoded
-		-- needs to be formatted
-		-- was used CONF.output.format.fun
-		-- suspended until more formats are implemented
-		print( JSON.encode(OUT) )
-		self:trace('>>> Encoding successful')
-	else -- this should never occur in zencode, OUT is always a table
-		self:trace('<<< Printing OUT (plain format, not a table)')
-		print(OUT)
-	end
+		 self.OK = true
+		 exitcode(0)
+		 runtime_trace(x)
+		 local ok, err <const> = pcall(x.hook, table.unpack(x.args))
+		 if not ok or not self.OK then
+			runtime_error(x, err)
+			fatal(x) -- traceback print inside
+		 end
+		 collectgarbage 'collect'
+	  end
+	  --	::continue::
+   end
+   -- PRINT output
+   self:ftrace('--- Zencode execution completed')
+   if type(OUT) == 'table' then
+	  self:ftrace('<<< Encoding { OUT } to JSON ')
+	  -- this is all already encoded
+	  -- needs to be formatted
+	  -- was used CONF.output.format.fun
+	  -- suspended until more formats are implemented
+	  print( JSON.encode(OUT) )
+	  self:ftrace('>>> Encoding successful')
+   else -- this should never occur in zencode, OUT is always a table
+	  self:ftrace('<<< Printing OUT (plain format, not a table)')
+	  print(OUT)
+   end
 end
 
 
