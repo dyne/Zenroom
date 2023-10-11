@@ -198,7 +198,7 @@ EOF
 {"message":"This_is_not_the_real_message.","ecdh signature":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"DwtadYikqZIduxNEB5+u1cgkUpN/+rH/aR5f7Je06F4="}}
 EOF
     run $ZENROOM_EXECUTABLE -z -a alice_pubkey.json -k wrong_message.json alice_verify_signed.zen
-    assert_line '[W]  The ecdh signature by Alice is not authentic'
+    assert_line --partial 'The ecdh signature by Alice is not authentic'
 }
 
 @test "Fail verification on a wrong signature" {
@@ -207,5 +207,5 @@ EOF
 {"message":"This_is_my_authenticated_message.","ecdh signature":{"r":"d3tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"DwtadYikqZIduxNEB5+u1cgkUpN/+rH/aR5f7Je06F4="}}
 EOF
     run $ZENROOM_EXECUTABLE -z -a alice_pubkey.json -k wrong_signature.json alice_verify_signed.zen
-    assert_line '[W]  The ecdh signature by Alice is not authentic'
+    assert_line --partial 'The ecdh signature by Alice is not authentic'
 }

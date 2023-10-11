@@ -349,29 +349,40 @@ void zen_teardown(zenroom_t *ZZ) {
 
 int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
   SAFE_EXEC;
-	int ret;
+  int ret;
 	lua_State* L = (lua_State*)ZZ->lua;
 	// introspection on code being executed
 	zen_setenv(L,"CODE",(char*)script);
-	ret = luaL_dostring
-	  (L,
-	   "local _res, _err\n"
-	   "_res, _err = pcall( function() ZEN:begin() end)\n"
-	   "if not _res then exitcode(4) ZEN.OK = false error('INIT: '.._err,2) end\n"
-	   "_res, _err = pcall( function() ZEN:parse(CONF.code.encoding.fun(CODE)) end)\n"
-	   "if not _res then exitcode(3) ZEN.OK = false error('PARSE: '.._err,2) end\n"
-	   "_res, _err = pcall( function() ZEN:run() end)\n"
-	   "if not _res then exitcode(2) ZEN.OK = false error('EXEC: '.._err,2) end\n"
-	   );
-	if(ret == SUCCESS) {
-	  func(L, "Zencode script successfully executed");
-	} else {
-	  zerror(L, "ERROR:");
+	ret = luaL_dostring(L,
+	   "local _res, _err <const> = pcall( function() ZEN:begin() end)\n"
+	   "if not _res then exitcode(4) ZEN.OK = false error(_err,2) end\n");
+	if(ret != SUCCESS) {
+	  zerror(L, "Zencode init error");
 	  zerror(L, "%s", lua_tostring(L, -1));
-	  zerror(L, "Execution aborted");
   	  ZZ->exitcode = ZZ->exitcode==SUCCESS ? ERR_GENERIC : ZZ->exitcode;
+	  return ZZ->exitcode;
 	}
-	return ZZ->exitcode;
+	ret = luaL_dostring(L,
+	   "local _res, _err <const> = pcall( function() ZEN:parse(CONF.code.encoding.fun(CODE)) end)\n"
+	   "if not _res then exitcode(3) ZEN.OK = false error(_err,2) end\n");
+	if(ret != SUCCESS) {
+	  zerror(L, "Zencode parser error");
+	  zerror(L, "%s", lua_tostring(L, -1));
+  	  ZZ->exitcode = ZZ->exitcode==SUCCESS ? ERR_GENERIC : ZZ->exitcode;
+	  return ZZ->exitcode;
+	}
+	ret = luaL_dostring(L,
+	   "local _res, _err <const> = pcall( function() ZEN:run() end)\n"
+	   "if not _res then exitcode(2) ZEN.OK = false error(_err,2) end\n");
+	if(ret != SUCCESS) {
+	  zerror(L, "Zencode runtime error");
+	  zerror(L, "%s", lua_tostring(L, -1));
+  	  ZZ->exitcode = ZZ->exitcode==SUCCESS ? ERR_GENERIC : ZZ->exitcode;
+	  return ZZ->exitcode;
+	}
+	func(L, "Zencode successfully executed");
+	ZZ->exitcode = SUCCESS;
+	return SUCCESS;
 }
 
 int zen_exec_script(zenroom_t *ZZ, const char *script) {
@@ -385,7 +396,7 @@ int zen_exec_script(zenroom_t *ZZ, const char *script) {
 	  func(L, "Lua script successfully executed");
 	  ZZ->exitcode = SUCCESS;
 	} else {
-	  zerror(L, "ERROR:");
+	  zerror(L, "Lua script error:");
 	  zerror(L, "%s", lua_tostring(L, -1));
 	  zerror(L, "Execution aborted");
 	  ZZ->exitcode = ZZ->exitcode==SUCCESS ? ERR_GENERIC : ZZ->exitcode;
