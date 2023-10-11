@@ -758,8 +758,8 @@ When I verify the ethereum address string 'string address' is valid
 Then print the string 'This fails'
 EOF
     run $ZENROOM_EXECUTABLE -z -a checksum_fail.json checksum_fail.zen
-    assert_line '[W]  "Invalid encoding for ethereum address. Expected encoding: 0x1e30e53E87869aaD8dC5A1A9dAc31a8dD3559460"'
-    assert_line '[W]  [!] The address has a wrong encoding'
+    assert_line --partial 'Invalid encoding for ethereum address. Expected encoding: 0x1e30e53E87869aaD8dC5A1A9dAc31a8dD3559460'
+    assert_line --partial 'The address has a wrong encoding'
 }
 
 @test "Call generic smart contract" {
@@ -976,7 +976,7 @@ EOF
     Then print the 'result_array'
 EOF
     run $ZENROOM_EXECUTABLE -z -a fail_array_verification.data fail_array_verification.zen
-    assert_line '[W]  The ethereum signature by 0xe1C2F1ACb2758c4D88EDb84e0306A0a96682E62a is not authentic'
+    assert_line --partial 'The ethereum signature by 0xe1C2F1ACb2758c4D88EDb84e0306A0a96682E62a is not authentic'
 }
 
 @test "create the verification result of array of signature" {

@@ -24,7 +24,7 @@ rule check version 1.0.0
 	 Then print the 'random object'
 EOF
     run $ZENROOM_EXECUTABLE -z -a fail_nothing.data fail_nothing.zen
-    assert_line '[W]  Undesired data passed as input'
+    assert_line --partial 'Undesired data passed as input'
 }
 @test "Given I have a '' named ''" {
     echo '{ "anykey": "anyvalue" }' | save_asset 'have_anyvalue.data'
@@ -447,7 +447,7 @@ Given I have a 'string array' in path 'my_dict.result.not_my_string_array'
 Then print the data
 EOF
     run $ZENROOM_EXECUTABLE -z -a given_in_path.data given_in_path_fail_not_found.zen
-    assert_line '[W]  [!] Key not_my_string_array not found in result'
+    assert_line --partial 'Key not_my_string_array not found in result'
 
     cat << EOF | save_asset given_in_path_fail_not_a_table.zen
 Given I have a 'string array' in path 'my_dict.result.my_hex.not_existing_element'
@@ -455,7 +455,7 @@ Given I have a 'string array' in path 'my_dict.result.my_hex.not_existing_elemen
 Then print the data
 EOF
     run $ZENROOM_EXECUTABLE -z -a given_in_path.data given_in_path_fail_not_a_table.zen
-    assert_line '[W]  [!] Object is not a table: my_hex'
+    assert_line --partial 'Object is not a table: my_hex'
 }
 
 @test "Read hex with 0x prefix" {

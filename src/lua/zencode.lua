@@ -414,57 +414,57 @@ end
 
 function ZEN:parse(text)
    self:crumb()
-	if #text < 9 then -- strlen("and debug") == 9
-   	  warn("Zencode text too short to parse")
-		 return false
-	end
-	local branching = false
-	local looping = false
-	local prefixes = {}
-	local parse_prefix <const> = parse_prefix -- optimization
-	self.linenum = 0
+   if #text < 9 then -- strlen("and debug") == 9
+	  error("Zencode text too short to parse")
+	  return false
+   end
+   local branching = false
+   local looping = false
+   local prefixes = {}
+   local parse_prefix <const> = parse_prefix -- optimization
+   self.linenum = 0
    for line in zencode_newline_iter(text) do
-	self.linenum = self.linenum + 1
-	local tline = trim(line) -- saves trims in isempty / iscomment
-    xxx(tline,3)
+	  self.linenum = self.linenum + 1
+	  local tline = trim(line) -- saves trims in isempty / iscomment
+	  xxx(tline,3)
 
-	if not zencode_isempty(tline) and not zencode_iscomment(tline) then
-	--   xxx('Line: '.. text, 3)
-	  -- max length for single zencode line is #define MAX_LINE
-	  -- hard-coded inside zenroom.h
-	   local prefix = parse_prefix(line) -- trim is included
-	  assert(prefix, "Invalid Zencode line "..self.linenum..": "..line)
-	  self.OK = true
-	  exitcode(0)
-	  if not branching and prefix == 'if' then
-		  branching = true
-		  table.insert(prefixes, 1, 'if')
-	  elseif not looping and prefix == 'foreach' then
-		  looping = true
-		  table.insert(prefixes, 1, 'foreach')
-	  elseif prefix == 'endif' then
-		  branching = false
-		  table.remove(prefixes, 1)
-	  elseif prefix == 'endforeach' then
-		  looping = false
-		  table.remove(prefixes, 1)
-	  end
-	  if prefix == 'if' or prefix == 'foreach' then
-		  prefix =  table.concat(prefixes,'')
-	  elseif prefix == 'when' or prefix == 'then'
-		  or prefix == 'endif' or prefix == 'endforeach' then
-		  prefix =  prefix .. table.concat(prefixes,'')
-	  end
+	  if not zencode_isempty(tline) and not zencode_iscomment(tline) then
+		 --   xxx('Line: '.. text, 3)
+		 -- max length for single zencode line is #define MAX_LINE
+		 -- hard-coded inside zenroom.h
+		 local prefix = parse_prefix(line) -- trim is included
+		 assert(prefix, "Invalid Zencode line "..self.linenum..": "..line)
+		 self.OK = true
+		 exitcode(0)
+		 if not branching and prefix == 'if' then
+			branching = true
+			table.insert(prefixes, 1, 'if')
+		 elseif not looping and prefix == 'foreach' then
+			looping = true
+			table.insert(prefixes, 1, 'foreach')
+		 elseif prefix == 'endif' then
+			branching = false
+			table.remove(prefixes, 1)
+		 elseif prefix == 'endforeach' then
+			looping = false
+			table.remove(prefixes, 1)
+		 end
+		 if prefix == 'if' or prefix == 'foreach' then
+			prefix =  table.concat(prefixes,'')
+		 elseif prefix == 'when' or prefix == 'then'
+			or prefix == 'endif' or prefix == 'endforeach' then
+			prefix =  prefix .. table.concat(prefixes,'')
+		 end
 
-	  -- try to enter the machine state named in prefix
-	  -- xxx("Zencode machine enter_"..prefix..": "..text, 3)
-	  local fm <const> = self.machine["enter_"..prefix]
-	  assert(fm, "Invalid Zencode prefix "..self.linenum..": '"..line.."'")
-	  assert(fm(self.machine, { msg = tline, Z = self }),
+		 -- try to enter the machine state named in prefix
+		 -- xxx("Zencode machine enter_"..prefix..": "..text, 3)
+		 local fm <const> = self.machine["enter_"..prefix]
+		 assert(fm, "Invalid Zencode prefix "..self.linenum..": '"..line.."'")
+		 assert(fm(self.machine, { msg = tline, Z = self }),
 				line.."\n    "..
 				"Invalid transition from: "..self.machine.current)
-	end
-	-- continue
+	  end
+	  -- continue
    end
    collectgarbage'collect'
    return true

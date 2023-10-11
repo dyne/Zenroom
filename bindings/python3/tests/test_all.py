@@ -37,7 +37,7 @@ Given I have a 'string' named 'string'
 Then print the data
 """
     res = zencode_exec(contract)
-    assert("ERROR" in res.logs)
+    assert("fatal error" in res.logs)
 
 # def test_lua_call_hello_world():
 #     lua_res = zenroom_exec(

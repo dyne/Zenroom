@@ -102,7 +102,7 @@ Then print the string 'Signature is valid'
 and print the 'message'
 EOF
     run $ZENROOM_EXECUTABLE -z -a sign_pubkey.json wrong_message.zen
-    assert_line '[W]  The eddsa signature by Alice is not authentic'
+    assert_line --partial 'The eddsa signature by Alice is not authentic'
 }
 
 @test "Fail verification on a different public key" {
@@ -126,7 +126,7 @@ Then print the string 'Signature is valid'
 and print the 'message'
 EOF
     run $ZENROOM_EXECUTABLE -z -a wrong_pubkey.json wrong_pubkey.zen
-    assert_line '[W]  The eddsa signature by Alice is not authentic'
+    assert_line --partial 'The eddsa signature by Alice is not authentic'
 }
 
 @test "Alice signs a big file" {

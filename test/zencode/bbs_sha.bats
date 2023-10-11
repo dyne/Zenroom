@@ -188,7 +188,7 @@ When I verify the 'myStringArray' has a bbs signature in 'bbs signature' by 'Ali
 Then print the string 'Signature is valid'
 EOF
     run $ZENROOM_EXECUTABLE -z -a '3messages_sha.json' -k sign_pubkey_sha.json wrong_message_sha.zen 
-    assert_line '[W]  The bbs signature by Alice is not authentic'
+    assert_line --partial 'The bbs signature by Alice is not authentic'
 }
 
 @test "Fail verification on a different public key" {
@@ -210,7 +210,7 @@ When I verify the 'myStringArray' has a bbs signature in 'bbs signature' by 'Ali
 Then print the string 'Signature is valid'
 EOF
     run $ZENROOM_EXECUTABLE -z -a multi_msg_data_sha.json -k sign_pubkey_sha.json verify_from_wrong_pk_sha.zen
-    assert_line '[W]  The bbs signature by Alice is not authentic'
+    assert_line --partial 'The bbs signature by Alice is not authentic'
 }
 
 @test "DOCS: Generate keys for Alice" {
