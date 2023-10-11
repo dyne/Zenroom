@@ -350,39 +350,35 @@ void zen_teardown(zenroom_t *ZZ) {
 int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
   SAFE_EXEC;
   int ret;
-	lua_State* L = (lua_State*)ZZ->lua;
-	// introspection on code being executed
-	zen_setenv(L,"CODE",(char*)script);
-	ret = luaL_dostring(L,
-	   "local _res, _err <const> = pcall( function() ZEN:begin() end)\n"
-	   "if not _res then exitcode(4) ZEN.OK = false error(_err,2) end\n");
-	if(ret != SUCCESS) {
-	  zerror(L, "Zencode init error");
-	  zerror(L, "%s", lua_tostring(L, -1));
-  	  ZZ->exitcode = ZZ->exitcode==SUCCESS ? ERR_GENERIC : ZZ->exitcode;
-	  return ZZ->exitcode;
-	}
-	ret = luaL_dostring(L,
-	   "local _res, _err <const> = pcall( function() ZEN:parse(CONF.code.encoding.fun(CODE)) end)\n"
-	   "if not _res then exitcode(3) ZEN.OK = false error(_err,2) end\n");
-	if(ret != SUCCESS) {
-	  zerror(L, "Zencode parser error");
-	  zerror(L, "%s", lua_tostring(L, -1));
-  	  ZZ->exitcode = ZZ->exitcode==SUCCESS ? ERR_GENERIC : ZZ->exitcode;
-	  return ZZ->exitcode;
-	}
-	ret = luaL_dostring(L,
-	   "local _res, _err <const> = pcall( function() ZEN:run() end)\n"
-	   "if not _res then exitcode(2) ZEN.OK = false error(_err,2) end\n");
-	if(ret != SUCCESS) {
-	  zerror(L, "Zencode runtime error");
-	  zerror(L, "%s", lua_tostring(L, -1));
-  	  ZZ->exitcode = ZZ->exitcode==SUCCESS ? ERR_GENERIC : ZZ->exitcode;
-	  return ZZ->exitcode;
-	}
-	func(L, "Zencode successfully executed");
-	ZZ->exitcode = SUCCESS;
-	return SUCCESS;
+  lua_State* L = (lua_State*)ZZ->lua;
+  // introspection on code being executed
+  zen_setenv(L,"CODE",(char*)script);
+  ZZ->exitcode = luaL_dostring
+	(L,"local _res, _err <const> = pcall( function() ZEN:begin() end)\n"
+	 "if not _res then exitcode(4) ZEN.OK = false error(_err,2) end\n");
+  if(ZZ->exitcode != SUCCESS) {
+	zerror(L, "Zencode init error");
+	zerror(L, "%s", lua_tostring(L, -1));
+	return ZZ->exitcode;
+  }
+  ZZ->exitcode = luaL_dostring
+	(L,"local _res, _err <const> = pcall( function() ZEN:parse(CONF.code.encoding.fun(CODE)) end)\n"
+	 "if not _res then exitcode(3) ZEN.OK = false error(_err,2) end\n");
+  if(ZZ->exitcode != SUCCESS) {
+	zerror(L, "Zencode parser error");
+	zerror(L, "%s", lua_tostring(L, -1));
+	return ZZ->exitcode;
+  }
+  ZZ->exitcode = luaL_dostring
+	(L,"local _res, _err <const> = pcall( function() ZEN:run() end)\n"
+	 "if not _res then exitcode(2) ZEN.OK = false error(_err,2) end\n");
+  if(ZZ->exitcode != SUCCESS) {
+	zerror(L, "Zencode runtime error");
+	zerror(L, "%s", lua_tostring(L, -1));
+	return ZZ->exitcode;
+  }
+  if(ZZ->exitcode == SUCCESS) func(L, "Zencode successfully executed");
+  return ZZ->exitcode;
 }
 
 int zen_exec_script(zenroom_t *ZZ, const char *script) {
@@ -449,10 +445,9 @@ int _check_zenroom_init(zenroom_t *zz) {
   return SUCCESS;
 }
 
-int _check_zenroom_result(zenroom_t *zz, int res) {
-  int exitcode = res;
-  zz->exitcode = res;
-  if(res != SUCCESS) {
+int _check_zenroom_result(zenroom_t *zz) {
+  int exitcode = zz->exitcode;
+  if(exitcode != SUCCESS) {
     zerror(zz->lua, "Execution aborted with errors.");
   } else {
     act(zz->lua, "Zenroom execution completed.");
@@ -480,8 +475,8 @@ int zencode_exec(const char *script, const char *conf, const char *keys, const c
 	zenroom_t *Z = zen_init(c, k, d);
 
 	if (_check_zenroom_init(Z) != SUCCESS) return ERR_INIT;
-
-	return( _check_zenroom_result(Z, zen_exec_zencode(Z, script) ));
+	zen_exec_zencode(Z, script);
+	return( _check_zenroom_result(Z) );
 }
 
 int zenroom_exec(const char *script, const char *conf, const char *keys, const char *data) {
@@ -495,8 +490,8 @@ int zenroom_exec(const char *script, const char *conf, const char *keys, const c
 
 	zenroom_t *Z = zen_init(c, k, d);
 	if (_check_zenroom_init(Z) != SUCCESS) return ERR_INIT;
-
-	return( _check_zenroom_result(Z, zen_exec_script(Z, script) ));
+	zen_exec_script(Z, script);
+	return( _check_zenroom_result(Z));
 }
 
 int zencode_exec_tobuf(const char *script, const char *conf, const char *keys, const char *data,
@@ -518,8 +513,8 @@ int zencode_exec_tobuf(const char *script, const char *conf, const char *keys, c
 	Z->stdout_len = stdout_len;
 	Z->stderr_buf = stderr_buf;
 	Z->stderr_len = stderr_len;
-
-	return( _check_zenroom_result(Z, zen_exec_zencode(Z, script) ));
+	zen_exec_zencode(Z, script);
+	return( _check_zenroom_result(Z));
 }
 
 
@@ -542,7 +537,7 @@ int zenroom_exec_tobuf(const char *script, const char *conf, const char *keys, c
 	Z->stdout_len = stdout_len;
 	Z->stderr_buf = stderr_buf;
 	Z->stderr_len = stderr_len;
-
-	return( _check_zenroom_result(Z, zen_exec_script(Z, script) ));
+	zen_exec_script(Z, script);
+	return( _check_zenroom_result(Z));
 }
 
