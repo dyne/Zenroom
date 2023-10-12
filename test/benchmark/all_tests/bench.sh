@@ -7,13 +7,21 @@ command -v bc > /dev/null || {
 	echo "bc not found"; exit 1
 }
 
-meson_test() {
+
+local_test() {
+	tmp=$(mktemp)
+    echo "testing local build"
+    make meson-benchmark | tee $tmp
+    cat $tmp | grep -o 'zencode_.*' | tr -d 'OK'> $1
+    rm $tmp
+}
+
+remote_test() {
     tmp=$(mktemp)
-    make -s clean
     echo "compiling"
-    make -s meson 1>/dev/null 2>/dev/null
+    make -s meson-ccache
     echo "testing"
-    make meson-benchmark > $tmp
+    make meson-benchmark | tee $tmp
     cat $tmp | grep -o 'zencode_.*' | tr -d 'OK'> $1
     rm $tmp
 }
@@ -21,7 +29,7 @@ meson_test() {
 # local folder
 echo "testing local $(git rev-parse --abbrev-ref HEAD) branch..."
 local_out=$(mktemp)
-meson_test $local_out
+local_test $local_out
 
 # remote main
 echo ""
@@ -31,7 +39,7 @@ echo "cloning remote main"
 git clone -q "https://github.com/dyne/Zenroom.git" $remote_dir
 remote_out=$(mktemp)
 cd $remote_dir
-meson_test $remote_out
+remote_test $remote_out
 cd -
 rm -rf $remote_dir
 
