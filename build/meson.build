@@ -210,11 +210,21 @@ foreach test_suite : tests
          timeout: 60)
 endforeach
 
-foreach test_suite: tests
+benches = [ 'and', 'array', 'bbs_sha', 'bbs_shake', 'bbs_zkp',
+'bbs_zkp_shake', 'bitcoin', 'branching', 'cookbook_dictionaries',
+'cookbook_ecdh', 'cookbook_given', 'cookbook_intro', 'cookbook_then',
+'cookbook_when', 'credential', 'dictionary', 'ecdh', 'float',
+'foreach', 'generic_bbs', 'generic_dilithium', 'generic_ecdh',
+'generic_eddsa', 'generic_schnorr', 'given', 'hash', 'kyber', 'ntrup',
+'numbers', 'output', 'pack', 'parser', 'planetmint', 'pvss', 'random',
+'reflow', 'secshare', 'then', 'w3c', 'w3c_did', 'when',
+'zencode_exec', 'zenswarm', 'zkp', 'zkp_multi_petitions' ]
+
+foreach test_suite: benches
     benchmark('zencode_'+test_suite.underscorify(),
         bats_bin,
         args: [test_dir+'zencode/'+test_suite+'.bats'],
-        timeout: 60)
+        timeout: 120)
 endforeach
 
 ## BATS tests in test/api
