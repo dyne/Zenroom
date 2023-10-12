@@ -210,6 +210,13 @@ foreach test_suite : tests
          timeout: 60)
 endforeach
 
+foreach test_suite: tests
+    benchmark('zencode_'+test_suite.underscorify(),
+        bats_bin,
+        args: [test_dir+'zencode/'+test_suite+'.bats'],
+        timeout: 60)
+endforeach
+
 ## BATS tests in test/api
 test_dir = meson.source_root() + '/../test/'
 bats_bin = find_program(test_dir+'bats/bin/bats')

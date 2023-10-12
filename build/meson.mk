@@ -48,14 +48,19 @@ linux-meson-clang-debug: ${TARGETS} prepare-meson run-meson
 linux-meson-asan: ${TARGETS} prepare-meson asan-meson
 	ninja -C meson
 
-meson-test:
+prepare-meson-test:
 	echo '#!/bin/sh' > ${pwd}/test/zenroom
 	echo "${pwd}/meson/zenroom "'$$*' >> ${pwd}/test/zenroom
 	chmod +x ${pwd}/test/zenroom
 	echo '#!/bin/sh' > ${pwd}/test/zencode-exec
 	echo "${pwd}/meson/zencode-exec "'$$*' >> ${pwd}/test/zencode-exec
 	chmod +x ${pwd}/test/zencode-exec
+
+meson-test: prepare-meson-test
 	ninja -C meson test
+
+meson-benchmark: prepare-meson-test
+	ninja -C meson benchmark
 
 meson-analyze:
 	SCANBUILD=$(pwd)/build/scanbuild.sh ninja -C meson scan-build
