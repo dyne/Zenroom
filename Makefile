@@ -215,3 +215,8 @@ distclean:
 # Parsing the documentation
 needed-docs:
 	cd ${pwd}/docs/doc_needed; ./run.sh
+
+# -------------------
+# Linux benchamrk
+linux-benchmark:
+	./test/benchmark/all_tests/bench.sh
