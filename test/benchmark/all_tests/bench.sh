@@ -1,4 +1,8 @@
 #!/bin/env bash
+
+# add any new test to bucket by simpling add |test_identifier"
+bucket="foreach|cookbook"
+
 RESET="\033[0m"
 RED="\033[31m"
 GREEN="\033[32m"
@@ -34,6 +38,15 @@ remote_test() {
     rm $tmp
 }
 
+print_result() {
+    printf "%-35s" "$1"
+    if (( $(echo "$2 > $3" | bc -l) )); then
+        printf "%b  %6ss %b %6ss %b\n" "$RED" "$2" "$GREEN" "$3" "$RESET"
+    else
+        printf "%b  %6ss %b %6ss %b\n" "$GREEN" "$2" "$RED" "$3" "$RESET"
+    fi
+}
+
 # local folder
 echo "testing local $(git rev-parse --abbrev-ref HEAD) branch..."
 local_out=$(mktemp)
@@ -52,17 +65,23 @@ cd -
 rm -rf $remote_dir
 
 # bench output
-printf "%43s %8s\n" "local" "remote"
+bucket_size=0
+local_sum=0
+remote_sum=0
+printf "%43s %9s\n" "local" "remote"
 while read local <&3; do
     test=$(echo $local | tr -s ' ' | cut -d ' ' -f 1)
     local_time=$(echo $local | tr -s ' ' | cut -d ' ' -f 2 | tr -d 's ')
     # to be sure tests are taken in the right order
     remote_time=$(cat $remote_out | grep -w "$test " | tr -s ' ' | cut -d ' ' -f 2 | tr -d 's ')
-    printf "%-35s" "$test"
-    if (( $(echo "$local_time > $remote_time" |bc -l) )); then
-        printf "%b  %5.2fs %b %5.2fs %b\n" "$RED" "$local_time" "$GREEN" "$remote_time" "$RESET"
-    else
-        printf "%b  %5.2fs %b %5.2fs %b\n" "$GREEN" "$local_time" "$RED" "$remote_time" "$RESET"
+    if [[ $(echo "$test" | grep -E "$bucket") != "" ]]; then
+	bucket_size=$((bucket_size+1))
+        local_sum=$(echo "$local_sum + $local_time" | bc -l)
+        remote_sum=$(echo "$remote_sum + $remote_time" | bc -l)
     fi
+    print_result $test $local_time $remote_time
 done 3<$local_out
+local_sum=$(echo "scale=2; $local_sum / $bucket_size" | bc -l)
+remote_sum=$(echo "scale=2; $remote_sum / $bucket_size" | bc -l)
+print_result $bucket $local_sum $remote_sum
 rm $local_out $remote_out
