@@ -3,13 +3,21 @@ RESET="\033[0m"
 RED="\033[31m"
 GREEN="\033[32m"
 
-command -v bc > /dev/null || {
-	echo "bc not found"; exit 1
+command -v bc >/dev/null || {
+    echo "bc not found"; exit 1
 }
 
+command -v ccache >/dev/null || {
+    echo "ccache not found"; exit 1
+}
 
 local_test() {
-	tmp=$(mktemp)
+    tmp=$(mktemp)
+    if [ ! -d meson ]; then
+        echo "compiling"
+        make clean
+        make -s meson-ccache
+    fi
     echo "testing local build"
     make meson-benchmark | tee $tmp
     cat $tmp | grep -o 'zencode_.*' | tr -d 'OK'> $1
