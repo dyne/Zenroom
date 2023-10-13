@@ -217,29 +217,65 @@ local function _check_compare_length(obj_name, num_name)
     return obj_len, num
 end
 
-IfWhen("verify the length of '' is less than ''", function(obj_name, num_name)
+IfWhen("verify the size of '' is less than ''", function(obj_name, num_name)
     local l, r = _check_compare_length(obj_name, num_name)
     zencode_assert(l < r,
-        "Comparison fail: length of "..obj_name.." is not less than "..num_name)
+        "Comparison fail: size of "..obj_name.." is not less than "..num_name)
 end)
 
-IfWhen("verify the length of '' is less or equal than ''", function(obj_name, num_name)
+IfWhen(deprecated("verify the length of '' is less than ''",
+    "verify the size of '' is less than ''",
+    function(obj_name, num_name)
+        local l, r = _check_compare_length(obj_name, num_name)
+        zencode_assert(l < r,
+            "Comparison fail: length of "..obj_name.." is not less than "..num_name)
+    end)
+)
+
+IfWhen("verify the size of '' is less or equal than ''", function(obj_name, num_name)
     local l, r = _check_compare_length(obj_name, num_name)
     zencode_assert(l <= r,
-        "Comparison fail: length of "..obj_name.." is not less or equal than "..num_name)
+        "Comparison fail: size of "..obj_name.." is not less or equal than "..num_name)
 end)
 
-IfWhen("verify the length of '' is more than ''", function(obj_name, num_name)
+IfWhen(deprecated("verify the length of '' is less or equal than ''",
+    "verify the size of '' is less or equal than ''",
+    function(obj_name, num_name)
+        local l, r = _check_compare_length(obj_name, num_name)
+        zencode_assert(l <= r,
+            "Comparison fail: length of "..obj_name.." is not less or equal than "..num_name)
+    end)
+)
+
+IfWhen("verify the size of '' is more than ''", function(obj_name, num_name)
     local l, r = _check_compare_length(obj_name, num_name)
     zencode_assert(r < l,
-        "Comparison fail: length of "..obj_name.." is not more than "..num_name)
+        "Comparison fail: size of "..obj_name.." is not more than "..num_name)
 end)
 
-IfWhen("verify the length of '' is more or equal than ''", function(obj_name, num_name)
+IfWhen(deprecated("verify the length of '' is more than ''",
+    "verify the size of '' is more than ''",
+    function(obj_name, num_name)
+        local l, r = _check_compare_length(obj_name, num_name)
+        zencode_assert(r < l,
+            "Comparison fail: length of "..obj_name.." is not more than "..num_name)
+    end)
+)
+
+IfWhen("verify the size of '' is more or equal than ''", function(obj_name, num_name)
     local l, r = _check_compare_length(obj_name, num_name)
     zencode_assert(r <= l,
-        "Comparison fail: length of "..obj_name.." is not more or equal than "..num_name)
+        "Comparison fail: size of "..obj_name.." is not more or equal than "..num_name)
 end)
+
+IfWhen(deprecated("verify the length of '' is more or equal than ''",
+    "verify the size of '' is more or equal than ''",
+    function(obj_name, num_name)
+        local l, r = _check_compare_length(obj_name, num_name)
+        zencode_assert(r <= l,
+            "Comparison fail: length of "..obj_name.." is not more or equal than "..num_name)
+    end)
+)
 
 -- TODO: substitute with RFC2047 compliant code (take from jaromail)
 local function validemail(str)
