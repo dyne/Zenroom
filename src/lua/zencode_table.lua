@@ -23,7 +23,7 @@
 local function move_or_copy_in(src_value, src_name, dest)
     local d = have(dest)
     if luatype(d) ~= 'table' then error("Object is not a table: "..dest, 2) end
-    local cdest = ZEN.CODEC[dest]
+    local cdest = CODEC[dest]
     if cdest.zentype == 'e' and cdest.schema then
         local sdest = ZEN.schemas[cdest.schema]
         if luatype(sdest) ~= 'table' then -- old schema types are not open
@@ -53,7 +53,7 @@ When("move named by '' in ''", function(src_name, dest)
     local src = have(src_name):string()
     move_or_copy_in(have(src), src, dest)
     ACK[src] = nil
-    ZEN.CODEC[src] = nil
+    CODEC[src] = nil
 end)
 
 When(deprecated("insert '' in ''",
@@ -61,14 +61,14 @@ When(deprecated("insert '' in ''",
     function(src, dest)
         move_or_copy_in(have(src), src, dest)
         ACK[src] = nil
-        ZEN.CODEC[src] = nil
+        CODEC[src] = nil
     end)
 )
 
 When("move '' in ''", function(src, dest)
     move_or_copy_in(have(src), src, dest)
     ACK[src] = nil
-    ZEN.CODEC[src] = nil
+    CODEC[src] = nil
 end)
 
 When("move '' from '' to ''", function(name, src, dest)
@@ -88,12 +88,12 @@ end)
 local function _when_remove_dictionary(ele, from)
     -- ele is just the name (key) of object to remove
     local dict = have(from)
-    ZEN.assert(dict, "Dictionary not found: "..from)
+    zencode_assert(dict, "Dictionary not found: "..from)
     if dict[ele] then
         ACK[from][ele] = nil -- remove from dictionary
-    elseif ZEN.CODEC[ele].name ~= ele and dict[ZEN.CODEC[ele].name] then
+    elseif CODEC[ele].name ~= ele and dict[CODEC[ele].name] then
         -- it may be a copy or random object with different name
-        ACK[from][ZEN.CODEC[ele].name] = nil
+        ACK[from][CODEC[ele].name] = nil
     else
         error("Object not found in dictionary: "..ele.." in "..from)
     end
@@ -110,7 +110,7 @@ local function _when_remove_array(ele, from)
         local m_arr = {}
         setmetatable(arr, m_arr)
         setmetatable(obj, m_obj)
-        local fun = function(l, r) return ZEN.serialize(l) == ZEN.serialize(r) end
+        local fun = function(l, r) return zencode_serialize(l) == zencode_serialize(r) end
         m_arr.__eq = fun
         m_obj.__eq = fun
     end
@@ -121,13 +121,13 @@ local function _when_remove_array(ele, from)
             found = true
         end
     end
-    ZEN.assert(found, "Element to be removed not found in array")
+    zencode_assert(found, "Element to be removed not found in array")
     ACK[from] = newdest
 end
 
 When("remove the '' from ''", function(ele,from)
-    local codec = ZEN.CODEC[from]
-    ZEN.assert(codec, "No codec registration for target: "..from)
+    local codec = CODEC[from]
+    zencode_assert(codec, "No codec registration for target: "..from)
     if codec.zentype == 'd'
         or codec.schema then
         _when_remove_dictionary(ele, from)
@@ -169,13 +169,13 @@ local function _not_found_in(ele_name, obj_name)
     local obj, obj_codec = have(obj_name)
     if obj_codec.zentype == 'a' then
         for _,v in pairs(obj) do
-            ZEN.assert(v ~= ele, "Element '"..ele_name.."' is contained inside: "..obj_name)
+            zencode_assert(v ~= ele, "Element '"..ele_name.."' is contained inside: "..obj_name)
         end
     elseif obj_codec.zentype == 'd' then
         local val = O.to_string(ele)
-        ZEN.assert(obj[val] == nil, "Element '"..ele_name.."' is contained inside: "..obj_name)
+        zencode_assert(obj[val] == nil, "Element '"..ele_name.."' is contained inside: "..obj_name)
     else
-        ZEN.assert(false, "Invalid container type: "..obj_name.." is "..obj_codec.zentype)
+        zencode_assert(false, "Invalid container type: "..obj_name.." is "..obj_codec.zentype)
     end
 end
 
@@ -196,12 +196,12 @@ local function _found_in(ele_name, obj_name)
                 break
             end
         end
-        ZEN.assert(found, "The content of element '"..ele_name.."' is not found inside: "..obj_name)
+        zencode_assert(found, "The content of element '"..ele_name.."' is not found inside: "..obj_name)
     elseif obj_codec.zentype == 'd' then
         local val = O.to_string(ele)
-        ZEN.assert(obj[val] ~= nil, "Element '"..ele_name.."' is not found inside: "..obj_name)
+        zencode_assert(obj[val] ~= nil, "Element '"..ele_name.."' is not found inside: "..obj_name)
     else
-        ZEN.assert(false, "Invalid container type: "..obj_name.." is "..obj_codec.zentype)
+        zencode_assert(false, "Invalid container type: "..obj_name.." is "..obj_codec.zentype)
     end
 end
 
@@ -213,13 +213,13 @@ IfWhen("verify the '' is found in ''", _found_in)
 
 local function _found_in_atleast(ele_name, obj_name, times)
     local ele, ele_codec = have(ele_name)
-    ZEN.assert( luatype(ele) ~= 'table',
+    zencode_assert( luatype(ele) ~= 'table',
                 "Invalid use of table in object comparison: "..ele_name)
     local num = have(times)
     local obj, obj_codec = have(obj_name)
-    ZEN.assert( luatype(obj) == 'table',
+    zencode_assert( luatype(obj) == 'table',
                 "Not a table: "..obj_name)
-    ZEN.assert( obj_codec.zentype == 'a', "Not an array: "..obj_name)
+    zencode_assert( obj_codec.zentype == 'a', "Not an array: "..obj_name)
     local constructor = fif(type(num) == "zenroom.big", BIG.new, F.new)
     local found = constructor(0)
     local one = constructor(1)
@@ -227,9 +227,9 @@ local function _found_in_atleast(ele_name, obj_name, times)
         if type(v) == type(ele) and v == ele then found = found + one end
     end
     if type(num) == "zenroom.big" then
-        ZEN.assert(found >= num, "Object "..ele_name.." found only "..found:decimal().." times instead of "..num:decimal().." in array "..obj_name)
+        zencode_assert(found >= num, "Object "..ele_name.." found only "..found:decimal().." times instead of "..num:decimal().." in array "..obj_name)
     else
-        ZEN.assert(found >= num, "Object "..ele_name.." found only "..tostring(found).." times instead of "..tostring(num).." in array "..obj_name)
+        zencode_assert(found >= num, "Object "..ele_name.." found only "..tostring(found).." times instead of "..tostring(num).." in array "..obj_name)
     end
 end
 
