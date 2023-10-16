@@ -907,23 +907,47 @@ EOF
   "smalldict": {
     "key": "val",
     "foo": "bar"
-  }
+  },
+  "smallSignatures": [
+		{
+			"r": "ed8f36c71989f8660e8f5d4adbfd8f1c0288cca90d3a5330b7bf735d71ab52fe",
+			"s": "7ba0a7827dc4ba707431f1c10babd389f658f8e208b89390a9be3c097579a2ff",
+			"v": "27"
+		},
+		{
+			"r": "40d305373c648bb6b2bbadebe02ada256a9d0b3d3c37367c0a2795e367b22f73",
+			"s": "72e40dfc3497927764d1585783d058e4367bb4d24d2107777d7aa4ddcb6593c7",
+			"v": "27"
+		},
+		{
+			"r": "9e07477c31db612e8c99a950385162373ff41a5b8941470b1aeba43b76c53570",
+			"s": "05fce6615567dc1944cc02fbed86202b09d92d79fbade425af0d74c328d8f6ae",
+			"v": "28"
+		}
+	]
 }
 EOF
 
     cat <<EOF | zexe last_element.zen last_element.data
+Scenario 'ethereum': array of signatures
+
 Given I have a 'string array' named 'smallarray'
 Given I have a 'string dictionary' named 'smalldict'
+Given I have a 'ethereum signature array' named 'smallSignatures'
 
 When I create the copy of last element in 'smallarray'
-When I rename 'copy_of_last_element' to 'last array'
+and I rename 'copy_of_last_element' to 'last array'
 When I create the copy of last element in 'smalldict'
+and I rename 'copy_of_last_element' to 'last dict'
+When I create the copy of last element in 'smallSignatures'
+and I rename 'copy_of_last_element' to 'last signature'
 
 Then print the 'last array'
-Then print the 'copy of last element'
+Then print the 'last dict'
+Then print the 'last signature'
 EOF
     save_output "last_element.json"
-    assert_output '{"copy_of_last_element":"val","last_array":"foo"}'
+    assert_output '{"last_array":"foo","last_dict":"val","last_signature":"0x9e07477c31db612e8c99a950385162373ff41a5b8941470b1aeba43b76c5357005fce6615567dc1944cc02fbed86202b09d92d79fbade425af0d74c328d8f6ae1c"}'
 }
 
 @test "Create the '' from '' in ''" {

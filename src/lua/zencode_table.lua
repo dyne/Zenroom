@@ -259,6 +259,11 @@ When("create the copy of last element in ''", function(obj_name)
     else
         error("Cannot find last element in " .. obj_codec.zentype)
     end
-    -- TODO: fix codec when copying from table of schemas
-    new_codec('copy_of_last_element', {encoding = obj_codec.encoding})
+    local n_codec = {encoding = obj_codec.encoding}
+    -- if copying from table of schema
+    if obj_codec.schema then
+        n_codec.schema = obj_codec.schema
+        n_codec.zentype = "e"
+    end
+    new_codec('copy_of_last_element', n_codec)
 end)
