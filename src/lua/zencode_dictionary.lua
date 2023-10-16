@@ -46,12 +46,8 @@ local function dicts_reduce(dicts, params)
 	    end
 	 else found = true end -- no filters, apply everywhere
 	 -- apply sum of selected key/value
-	 if found then
-	    for k,v in pairs(av) do
-	       if k == params.target then
-		  params.op(v)
-	       end
-	    end
+	 if found and av[params.target] ~= nil then
+         params.op(av[params.target])
 	 end
       end -- av is a table
    end
@@ -95,56 +91,74 @@ When("create the pruned dictionary of ''", function(dict)
 	new_codec('pruned dictionary', nil, dict)
 end)
 
+local function _initial_set(number, name, arr)
+    local t = type(number)
+    local enc
+    if t == "zenroom.float" then
+        enc = "float"
+    elseif t == "zenroom.big" then
+        enc = "integer"
+    else
+        error(name.." inside dictionaires in "..arr.." is neither a integer nor a float")
+    end
+    return number, enc
+end
+
 When("find the max value '' for dictionaries in ''", function(name, arr)
 	zencode_assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
 	empty'max value'
 	local max = nil
+    local max_enc = nil
 	local params = {
 				target = name,
 				op = function(v)
-					if not max then max = v
+					if not max then
+                        max, max_enc = _initial_set(v, name, arr)
 					elseif max < v then max = v end
 				end
 			}
 	dicts_reduce(ACK[arr],params) -- optimization? operate directly on ACK
-    zencode_assert(max, "No max value "..name.." found across dictionaries in"..arr)
+    zencode_assert(max, "No max value "..name.." found across dictionaries in "..arr)
     ACK.max_value = max
 	new_codec('max value', {
-		zentype = 'e', -- introduce scalar?
-	}, arr) -- clone array's encoding
+        zentype = 'e',
+        encoding = max_enc
+	})
 end)
 
 When("find the min value '' for dictionaries in ''", function(name, arr)
 	zencode_assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
 	empty'min value'
-	local min
-	-- init min with any value
-    -- TODO: use next, add checks for existance
-	for k,v in pairs(ACK[arr]) do
-	   min = v[name] -- suppose existance of key
-	   break
-	end
+	local min = nil
+    local min_enc = nil
 	local params = {
 		target = name,
 		op = function(v)
-			if v < min then min = v end
+            if not min then
+                min, min_enc = _initial_set(v, name, arr)
+			elseif v < min then min = v end
 		 end
 	}
 	dicts_reduce(ACK[arr],params)
+    zencode_assert(min, "No min value "..name.." found across dictionaries in "..arr)
 	ACK.min_value = min
 	new_codec('min value', {
-		zentype = 'e', -- introduce scalar?
-	}, arr) -- clone array's encoding
+        zentype = 'e',
+        encoding = min_enc
+    })
 end)
 
 When("create the sum value '' for dictionaries in ''", function(name,arr)
 	zencode_assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
 	empty'sum value'
 	local sum -- result of reduction
+    local sum_enc
 	local params = {
 		target = name,
 		op = function(v)
-		   if not sum then sum = v else sum = sum + v end
+            if not sum then
+                sum, sum_enc = _initial_set(v, name, arr)
+            else sum = sum + v end
 		end
 	}
     dicts_reduce(ACK[arr], params)
@@ -152,8 +166,9 @@ When("create the sum value '' for dictionaries in ''", function(name,arr)
 				  .." found across dictionaries in "..arr)
     ACK.sum_value = sum
 	new_codec('sum value', {
-		zentype = type(sum), -- introduce scalar?
-	}) -- clone array's encoding
+        zentype = 'e',
+        encoding = sum_enc
+	})
 end)
 
 When("create the sum value '' for dictionaries in '' where '' > ''", function(name,arr, left, right)
@@ -162,11 +177,16 @@ When("create the sum value '' for dictionaries in '' where '' > ''", function(na
 	empty'sum value'
 
 	local sum = nil -- result of reduction
+    local sum_enc
 	local params = {
 		target = name,
 		conditions = { },
 		cmp = function(l,r) return l > r end,
-		op = function(v) if sum then sum = sum + v else sum = v end end
+		op = function(v)
+            if not sum then
+                sum, sum_enc = _initial_set(v, name, arr)
+            else sum = sum + v end
+        end
 	}
 	params.conditions[left] = ACK[right] -- used in cmp
     dicts_reduce(ACK[arr], params)
@@ -174,8 +194,9 @@ When("create the sum value '' for dictionaries in '' where '' > ''", function(na
 				  .." found across dictionaries in"..arr)
     ACK.sum_value = sum
 	new_codec('sum value', {
-		zentype = 'e', -- introduce scalar?
-	}, arr) -- clone array's encoding
+        zentype = 'e',
+        encoding = sum_enc
+	})
 end)
 
 When("find the '' for dictionaries in '' where '' = ''",function(name, arr, left, right)
