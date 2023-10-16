@@ -139,28 +139,26 @@ When("remove the '' from ''", function(ele,from)
     end
 end)
 
-local function count_f(t)
+local function count_f(obj_name)
+    local obj, obj_codec = have(obj_name)
     local count = 0
-    -- TODO: iterate only for dictionry, for array use #
-    if luatype(t) == 'table' then
+    if obj_codec.zentype == 'd' then
         for _, _ in pairs(t) do
             count = count + 1
         end
     else
-        count = #t
+        count = #obj
     end
     return count
 end
 When(deprecated("create the length of ''",
 "create the size of ''",
 function(arr)
-    local obj = have(arr)
-    ACK.length = F.new(count_f(obj))
+    ACK.length = F.new(count_f(arr))
     new_codec('length', {zentype='e', encoding='float'})
 end))
 When("create the size of ''", function(arr)
-    local obj = have(arr)
-    ACK.size = F.new(count_f(obj))
+    ACK.size = F.new(count_f(arr))
     new_codec('size', {zentype='e', encoding='float'})
 end)
 
