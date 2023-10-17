@@ -227,3 +227,43 @@ EOF
     run $ZENROOM_EXECUTABLE -z rule_invalid.zen
     assert_line --partial 'Rule invalid: Rule that does not exists'
 }
+
+@test "Rule caller slangroom" {
+    cat <<EOF | zexe caller_slangroom.zen
+Rule caller slangroom
+
+Given an invalid statement
+and another one
+Given nothing
+When I create the random 'random'
+Then print the data
+Then another invalid statement
+EOF
+}
+
+@test "Rule caller slangroom fails" {
+    cat <<EOF | save_asset rule_caller_slangroom_fails_given.zen
+Rule caller slangroom
+
+Given an invalid statement
+Given nothing
+and another invalid staement
+When I create the random 'random'
+Then print the data
+EOF
+    run $ZENROOM_EXECUTABLE -z rule_caller_slangroom_fails_given.zen
+    assert_line --partial 'Zencode line 5 found invalid staement after a valid one in the given phase: and another invalid staement'
+
+    cat <<EOF | save_asset rule_caller_slangroom_fails_then.zen
+Rule caller slangroom
+
+Given an invalid statement
+Given nothing
+When I create the random 'random'
+Then print an invalid statement
+Then print the data
+Then print another one
+EOF
+    run $ZENROOM_EXECUTABLE -z rule_caller_slangroom_fails_then.zen
+    assert_line --partial 'Zencode line 7 found valid staement after an invalid one in the then phase: Then print the data'
+}
