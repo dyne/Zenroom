@@ -57,6 +57,8 @@ The log of events is a simple array sorted in chronological order, the nature of
 - `[W]` is a warning
 - `[!]` is a fatal error
 - `[D]` is a verbose debug information when switched on with conf `debug=3`
+- `+1 ` and other decimal numbers indicate the Zencode line being executed
+- `-1 ` and other decimal numbers indicate the Zencode line being ignored
 
 It is also worth noting that `zencode-exec` utility will dump the HEAP and TRACE on errors and on debug requests on one single line using JSON format encoded as base64, i.e:
 ```
