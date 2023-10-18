@@ -67,8 +67,12 @@ int _ecp2_to_octet(octet *o, ecp2 *e) {
 	return(1);
 }
 
-void ecp2_free(ecp2 *e) {
-	if(e) free(e);
+void ecp2_free(lua_State *L, ecp2 *e) {
+	Z(L);
+	if(e) {
+		free(e);
+		Z->memcount_ecp2--;
+	}
 }
 
 ecp2* ecp2_new(lua_State *L) {
@@ -84,10 +88,12 @@ ecp2* ecp2_new(lua_State *L) {
 }
 
 ecp2* ecp2_arg(lua_State *L, int n) {
+	Z(L);
 	void *ud = luaL_testudata(L, n, "zenroom.ecp2");
 	if(ud) {
 		ecp2 *result = (ecp2*)malloc(sizeof(ecp2));
 		*result = *(ecp2*)ud;
+		Z->memcount_ecp2++;
 		return result;
 	}
 	zerror(L, "invalid ecp2 point in argument");
@@ -259,7 +265,7 @@ static int ecp2_millerloop(lua_State *L) {
 	PAIR_fexp(&f->val);
 end:
 	ecp_free(L, y);
-	ecp2_free(x);
+	ecp2_free(L, x);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -289,7 +295,7 @@ static int ecp2_affine(lua_State *L) {
 	}
 	ECP2_affine(&out->val);
 end:
-	ecp2_free(in);
+	ecp2_free(L, in);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -327,7 +333,7 @@ static int ecp2_isinf(lua_State *L) {
 		return 0;
 	}
 	lua_pushboolean(L, ECP2_isinf(&e->val));
-	ecp2_free(e);
+	ecp2_free(L, e);
 	END(1);
 }
 
@@ -357,8 +363,8 @@ static int ecp2_add(lua_State *L) {
 	}
 	ECP2_add(&p->val, &q->val);
 end:
-	ecp2_free(e);
-	ecp2_free(q);
+	ecp2_free(L, e);
+	ecp2_free(L, q);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -392,8 +398,8 @@ static int ecp2_sub(lua_State *L) {
 	}
 	ECP2_sub(&p->val, &q->val);
 end:
-	ecp2_free(e);
-	ecp2_free(q);
+	ecp2_free(L, e);
+	ecp2_free(L, q);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -420,7 +426,7 @@ static int ecp2_negative(lua_State *L) {
 	}
 	ECP2_neg(&out->val);
 end:
-	ecp2_free(in);
+	ecp2_free(L, in);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -452,8 +458,8 @@ static int ecp2_eq(lua_State *L) {
 	ECP2_affine(&q->val);
 	lua_pushboolean(L, ECP2_equals(&p->val, &q->val));
 end:
-	ecp2_free(p);
-	ecp2_free(q);
+	ecp2_free(L, p);
+	ecp2_free(L, q);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -485,7 +491,7 @@ static int ecp2_octet(lua_State *L) {
 	}
 	ECP2_toOctet(o, &e->val);
 end:
-	ecp2_free(e);
+	ecp2_free(L, e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -513,8 +519,8 @@ static int ecp2_mul(lua_State *L) {
 	}
 	PAIR_G2mul(&r->val, b->val);
 end:
-	big_free(L,b);
-	ecp2_free(p);
+	big_free(L, b);
+	ecp2_free(L, p);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -576,7 +582,7 @@ static int ecp2_get_xr(lua_State *L) {
 	FP_copy(&fx, &e->val.x.a);
 	FP_reduce(&fx); FP_redc(xa->val, &fx);
 end:
-	ecp2_free(e);
+	ecp2_free(L, e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -601,7 +607,7 @@ static int ecp2_get_xi(lua_State *L) {
 	FP_copy(&fx, &e->val.x.b);
 	FP_reduce(&fx); FP_redc(xb->val, &fx);
 end:
-	ecp2_free(e);
+	ecp2_free(L, e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -627,7 +633,7 @@ static int ecp2_get_yr(lua_State *L) {
 	FP_copy(&fy, &e->val.y.a);
 	FP_reduce(&fy); FP_redc(ya->val, &fy);
 end:
-	ecp2_free(e);
+	ecp2_free(L, e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -651,7 +657,7 @@ static int ecp2_get_yi(lua_State *L) {
 	FP_copy(&fy, &e->val.y.b);
 	FP_reduce(&fy); FP_redc(yb->val, &fy);
 end:
-	ecp2_free(e);
+	ecp2_free(L, e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -675,7 +681,7 @@ static int ecp2_get_zr(lua_State *L) {
 	FP_copy(&fz, &e->val.z.a);
 	FP_reduce(&fz); FP_redc(za->val, &fz);
 end:
-	ecp2_free(e);
+	ecp2_free(L, e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -699,7 +705,7 @@ static int ecp2_get_zi(lua_State *L) {
 	FP_copy(&fz, &e->val.z.b);
 	FP_reduce(&fz); FP_redc(zb->val, &fz);
 end:
-	ecp2_free(e);
+	ecp2_free(L, e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -732,7 +738,7 @@ static int ecp2_output(lua_State *L) {
 	_ecp2_to_octet(o, e);
 	push_octet_to_hex_string(L, o);
 end:
-	ecp2_free(e);
+	ecp2_free(L, e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -804,7 +810,7 @@ static int ecp2_zcash_export(lua_State *L) {
 	}
 
 end:
-	ecp2_free(e);
+	ecp2_free(L, e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
