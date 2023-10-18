@@ -110,7 +110,7 @@ int printerr(lua_State *L, octet *o) {
 	o->val[o->len+1] = 0x0; // add string termination
 #if defined(__EMSCRIPTEN__)
 	// octet safety buffer allows this: o->val = malloc(size +0x0f);
-	EM_ASM_({Module.print(UTF8ToString($0))}, o->val);
+	EM_ASM_({Module.printErr(UTF8ToString($0))}, o->val);
 #elif defined(__ANDROID__)
 	__android_log_print(ANDROID_LOG_DEFAULT, "ZEN", "%s", o->val);
 #elif defined(ARCH_CORTEX)
