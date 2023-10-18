@@ -610,7 +610,7 @@ function ZEN:run()
 		 local ok, err <const> = pcall(x.hook, table.unpack(x.args))
 		 if not ok or not self.OK then
 			runtime_error(x, err)
-			fatal(x) -- traceback print inside
+			fatal({msg=x.source, linenum=x.linenum}) -- traceback print inside
 		 end
 		 collectgarbage 'collect'
 	  end

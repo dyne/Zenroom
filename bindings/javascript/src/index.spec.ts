@@ -27,9 +27,12 @@ test("does broke gracefully", async (t) => {
   try {
     await zenroom_exec(`broken sapokdao`);
   } catch (e) {
+    console.log(e.logs);
+    console.log("ORA PARSA");
+    const lines = JSON.parse(e.logs);
     t.true(
-      e.logs.includes(
-        `[!]  [string "broken sapokdao"]:1: syntax error near 'sapokdao'`
+      lines.includes(
+        `[!] /zencode.lua:463: Invalid Zencode prefix 1: 'sapodksapodk'",\n`
       )
     );
   }
@@ -76,14 +79,12 @@ test("does run zencode", async (t) => {
   t.is(result, "[]\n");
 });
 
-// this breaks with json log format
-// TODO: test both text and json logs
 test("error format contains newlines", async t => {
   try {
     await zencode_exec(`a`);
   } catch (e) {
-    const lines = e.logs.split('\n');
-    t.true(lines.includes('[!]  Zencode parser error'));
+    const lines = JSON.parse(e.logs);
+    t.true(lines.includes('[!] Zencode parser error'));
   }
 })
 
@@ -115,6 +116,22 @@ test("Executes a zencode correctly", async (t) => {
   t.is(typeof r[random_name]["keyring"]["credential"], "string");
   t.is(typeof r[random_name]["keyring"]["issuer"]["x"], "string");
   t.is(typeof r[random_name]["keyring"]["issuer"]["y"], "string");
+});
+
+test("Unknown variable error shown in logs", async (t) => {
+  const random_name = Math.random().toString(36).substring(7);
+  try {
+    await zencode_exec(`Rule unknown ignore
+      Given nothing
+      Then print my '${random_name}'`);
+    t.truthy(false);
+  } catch(e) {
+    console.log(e.logs);
+    console.log("ORA PARSA");
+    const lines = JSON.parse(e.logs);
+    t.truthy(lines.contains("[!] /zencode_then.lua:165: No identity specified in WHO"))
+    t.truthy(lines.contains(`[!] /zencode.lua:617: Zencode line 3: Then print my '${random_name}'`))
+  }
 });
 
 test("Run hash api", async (t) => {
