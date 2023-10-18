@@ -201,7 +201,8 @@ end_big:
 	}
 	ecp *e = ecp_new(L); SAFE(e);
 	if(o->len == 2 && o->val[0] == SCHAR_MAX && o->val[1] == SCHAR_MAX) {
-		ECP_inf(&e->val); return 1; } // ECP Infinity
+		ECP_inf(&e->val);
+		goto end; } // ECP Infinity
 	if(o->len > e->totlen) { // quick and dirty safety
 		lua_pop(L, 1);
 		zerror(L, "Octet length %u instead of %u bytes", o->len, e->totlen);
