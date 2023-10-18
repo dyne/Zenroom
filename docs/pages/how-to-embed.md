@@ -24,7 +24,18 @@ The list of accepted configurations in `conf` argument are:
 
 - `debug` is the level of log verbosity, default is `debug=1`
 - `rngseed` is used to provide an external random seed for fully deterministic behaviour, it accepts an hexadecimal string representing a series of 64 bytes (128 chars in total) prefixed by `hex:`. For example: `rngseed=hex:000000...` up to 128 zeroes
-- `logfmt` is the format of the error logs, it can be `text` or `json`, the default is `logfmt=text`
+- `logfmt` is the format of the error logs, it can be `text` or `json`, the default is `logfmt=text` of `logfmt=json` when using Zenroom from bindings.
+
+## Parsing the stderr output
+
+The control log (stderr output channel) is a simple array (json or newline terminated according to `logfmt`) sorted in chronological order. The nature of the logged events can be detected by parsing the first 3 chars of each entry:
+- `[*]` is a notification of success
+- ` . ` is execution information
+- `[W]` is a warning
+- `[!]` is a fatal error
+- `[D]` is a verbose debug information when switched on with conf `debug=3`
+- `+1 ` and other decimal numbers indicate the Zencode line being executed
+- `-1 ` and other decimal numbers indicate the Zencode line being ignored
 
 ## Extended API
 
