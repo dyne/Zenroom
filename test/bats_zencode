@@ -62,6 +62,8 @@ zexe() {
     # export output=`cat $TMP/out`
     dep=`cat $tmperr | grep 'DEPRECATED:' -A 3 || true`
     if [ "$dep" != "" ] && [ $status == 0 ]; then status=255; fi
+    mem=`cat $tmperr | grep 'Zenroom memory left allocated' || true`
+    if [ "$mem" != "" ] && [ $status == 0 ]; then status=255; fi
     return $status
 }
 
