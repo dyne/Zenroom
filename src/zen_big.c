@@ -333,6 +333,7 @@ static int lua_bigmax(lua_State *L) {
 */
 static int newbig(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	void *ud;
 	// kept for backward compat with zenroom 0.9
 	ud = luaL_testudata(L, 2, "zenroom.big");
@@ -362,19 +363,23 @@ static int newbig(lua_State *L) {
 	// octet argument, import
 	octet *o = o_arg(L, 1);
 	if(!o) {
-		zerror(L, "Could not allocate octet");
-		return 0;
+		failed_msg = "Could not allocate octet";
+		goto end;
 	}
 	if(o->len > MODBYTES) {
-		zerror(L, "Import of octet to BIG limit exceeded (%u > %u bytes)", o->len, MODBYTES);
-		return 0; }
+		failed_msg = "Import of octet to BIG limit exceeded";
+		goto end; }
 	big *c = big_new(L);
 	if(!c) {
-		zerror(L, "Could not allocate big");
-		return 0;
+		failed_msg = "Could not allocate big";
+		goto end;
 	}
 	_octet_to_big(L, c,o);
+end:
 	o_free(L,o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
