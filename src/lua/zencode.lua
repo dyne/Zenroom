@@ -269,13 +269,9 @@ function ZEN:begin(new_heap)
 			 CONF.parser.strict_match = false
 			 return true
 		  end,
-		  ['collision ignore'] = function ()
-			 CONF.heap.check_collision = false
-			 return true
-		  end,
 		  ['caller restroom-mw'] = function()
+			 warn("DEPRECATED:\nRule caller restroom-mw\nuse instead\nRule unknown ignore")
 			 CONF.parser.strict_match = false
-			 CONF.heap.check_collision = false
 			 return true
 		  end,
 		  ['set'] = function (conf, value)
