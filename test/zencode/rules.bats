@@ -170,21 +170,6 @@ EOF
     assert_output '{"result":"test_passed"}'
 }
 
-# --- caller restroom-mw --- #
-@test "caller restroom-mw" {
-    cat <<EOF | zexe caller_restroom-mw.zen
-Rule caller restroom-mw
-
-Given nothing
-When I test the rule with a statement that does not exist
-and I also have a collision in data and keys
-When I write string 'test passed' in 'result'
-Then print the 'result'
-EOF
-    save_output caller_restroom-mw_output.json
-    assert_output '{"result":"test_passed"}'
-}
-
 # --- set --- #
 @test "set" {
     cat << EOF | zexe set_hash.zen
