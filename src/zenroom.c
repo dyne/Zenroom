@@ -177,7 +177,11 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	// set zero rngseed as config flag
 	ZZ->zconf_rngseed[0] = '\0';
 	ZZ->exitcode = 1; // success
+#if defined(__EMSCRIPTEN__)
+	ZZ->logformat = LOG_JSON;
+#else
 	ZZ->logformat = LOG_TEXT;
+#endif
 	ZZ->str_maxiter[0] = '1';
 	ZZ->str_maxiter[1] = '0';
 	ZZ->str_maxiter[2] = '0';
