@@ -203,7 +203,8 @@ function ZEN:begin(new_heap)
 		  error('Zencode line '..linenum..' pattern not found ('..index..'): ' .. trim(sentence), 1)
 		  return false
 	   elseif not ctx.Z.OK and not CONF.parser.strict_match then
-		  warn('Zencode line '..linenum..' pattern ignored: ' .. trim(sentence), 1)
+		  table.insert(traceback, '-'..linenum..'  '..sentence)
+		  warn('Zencode line '..linenum..' pattern ignored: ' .. sentence, 1)
 	   end
 	   return true
 	end
