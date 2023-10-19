@@ -36,6 +36,7 @@ The control log (stderr output channel) is a simple array (json or newline termi
 - `[D]` is a verbose debug information when switched on with conf `debug=3`
 - `+1 ` and other decimal numbers indicate the Zencode line being executed
 - `-1 ` and other decimal numbers indicate the Zencode line being ignored
+- `J64` followed by HEAP or TRACE indicate a base64 encoded JSON dump
 
 ## Extended API
 
