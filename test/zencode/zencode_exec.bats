@@ -111,11 +111,11 @@ EOF
 	echo > $TMP/out
 	cat zencode_exec_stdin | ${TR}/zencode-exec 2>>full.json 1>>full.json
 
-	awk '/HEAP:/ {print $4}' full.json | sed 's/",//' | base64 -d > $TMP/out
+	awk '/J64 HEAP:/ {print(substr($3,1,length($3)-2))}' full.json | sed 's/",//' | base64 -d > $TMP/out
     save_output heap.json
 	assert_output '{"CODEC":{"random_object":{"encoding":"def","name":"random_object","zentype":"e"}},"GIVEN_data":[],"THEN":[],"WHEN":{"random_object":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="}}'
 	>&3 echo
-	awk '/TRACE:/ {print $4}' full.json | sed 's/",//' | base64 -d > $TMP/out
+	awk '/J64 TRACE:/ {print(substr($3,1,length($3)-2))}' full.json | sed 's/",//' | base64 -d > $TMP/out
 	save_output trace.json
 	assert_output '["+1  Given nothing","+2  When I create the random object of '"'"'256'"'"' bits","+3  and debug"]'
 }
