@@ -212,11 +212,6 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 		ZZ->random_external = 1;
 		memset(ZZ->random_seed, 0x0, RANDOM_SEED_LEN);
 		int len = hex2buf(ZZ->random_seed, ZZ->zconf_rngseed);
-		if(ZZ->debuglevel > 2)
-		  _err("RNG seed converted from hex to %u bytes\n", len);
-	} else {
-	  if(ZZ->debuglevel > 2)
-		_err("RNG seed not found in configuration\n");
 	}
 
 	// initialize the random generator
@@ -268,6 +263,9 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	// expose the random seed for optional determinism
 	push_buffer_to_octet(ZZ->lua, ZZ->random_seed, RANDOM_SEED_LEN);
 	lua_setglobal(ZZ->lua, "RNGSEED");
+	if(ZZ->zconf_rngseed[0] != 0x0)
+	  act(ZZ->lua, "RNG seed fed by external configuration");
+
 
 	// load arguments if present
 	if(data) {
