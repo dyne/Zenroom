@@ -117,14 +117,15 @@ int main(int argc, char **argv) {
   _getline(extra_b64);
   _getline(context_b64);
 
-	{
-		fprintf(stderr,"%s\n",conf);
-		fprintf(stderr,"%s\n",script_b64);
-		fprintf(stderr,"%s\n",keys_b64);
-		fprintf(stderr,"%s\n",data_b64);
-		fprintf(stderr,"%s\n",extra_b64);
-		fprintf(stderr,"%s\n",context_b64);
-	}
+	// {
+	// 	fprintf(stderr,"%s\n",conf);
+	// 	fprintf(stderr,"%s\n",script_b64);
+	// 	fprintf(stderr,"%s\n",keys_b64);
+	// 	fprintf(stderr,"%s\n",data_b64);
+	// 	fprintf(stderr,"%s\n",extra_b64);
+	// 	fprintf(stderr,"%s\n",context_b64);
+	// }
+
   Z = zen_init_extra(conf,
 					 keys_b64[0]?keys_b64:NULL,
 					 data_b64[0]?data_b64:NULL,
