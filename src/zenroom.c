@@ -146,6 +146,11 @@ int zen_init_pmain(lua_State *L) { // protected mode init
 		zerror(L, "Initialisation of lua scripts failed");
 		return(LUA_ERRRUN);
 	}
+
+	Z(L);
+	if(Z->logformat == LOG_JSON)
+	  luaL_dostring(L, "CONF.debug.format='compact'");
+
 	return(LUA_OK);
 }
 
