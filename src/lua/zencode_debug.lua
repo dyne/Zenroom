@@ -52,9 +52,11 @@ end
 -- debug functions
 function ZEN:debug_traceback()
    if CONF.debug.format == 'compact' then
-	  printerr("J64 TRACE: "..OCTET.to_base64(
-			  OCTET.from_string(
-				 JSON.encode(traceback))))
+	  local tmp = "J64 TRACE: "..OCTET.to_base64(
+		 OCTET.from_string(
+			JSON.encode(traceback)))
+	  if LOGFMT == 'JSON' then tmp = '"'..tmp..'",' end
+	  printerr(tmp)
    else
 	  for k,v in pairs(traceback) do
 		 if LOGFMT == 'JSON' then
@@ -79,13 +81,15 @@ local function debug_heap_dump()
 	  if keyring then
 		 ack.keyring = '(hidden)'
 	  end
-	  printerr("J64 HEAP: "..OCTET.to_base64(
-			  OCTET.from_string(
-				 JSON.encode(
-					{GIVEN_data = IN,
-					 CODEC = CODEC,
-					 WHEN = ack,
-					 THEN = OUT}))))
+	  local tmp = "J64 HEAP: "..OCTET.to_base64(
+		 OCTET.from_string(
+			JSON.encode(
+			   {GIVEN_data = IN,
+				CODEC = CODEC,
+				WHEN = ack,
+				THEN = OUT})))
+	  if LOGFMT == 'JSON' then tmp = '"'..tmp..'",' end
+	  printerr(tmp)
    else -- CONF.debug.format == 'log'
 	  -- ack.keyring = '(hidden)'
 	  if keyring then
