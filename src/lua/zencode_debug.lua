@@ -25,7 +25,11 @@
 function xxx(s, n)
    local n <const> = n or 3
    if DEBUG >= n then
-	  printerr("LUA "..s)
+	  if LOGFMT == 'JSON' then
+		 printerr("\"LUA "..s.."\",")
+	  else
+		 printerr("LUA "..s)
+	  end
    end
 end
 
@@ -48,7 +52,7 @@ end
 -- debug functions
 function ZEN:debug_traceback()
    if CONF.debug.format == 'compact' then
-	  act("TRACE: "..OCTET.to_base64(
+	  printerr("J64 TRACE: "..OCTET.to_base64(
 			  OCTET.from_string(
 				 JSON.encode(traceback))))
    else
@@ -75,7 +79,7 @@ local function debug_heap_dump()
 	  if keyring then
 		 ack.keyring = '(hidden)'
 	  end
-	  act("HEAP: "..OCTET.to_base64(
+	  printerr("J64 HEAP: "..OCTET.to_base64(
 			  OCTET.from_string(
 				 JSON.encode(
 					{GIVEN_data = IN,
