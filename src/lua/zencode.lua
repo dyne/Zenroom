@@ -423,8 +423,6 @@ function ZEN:parse(text)
    for line in zencode_newline_iter(text) do
 	  self.linenum = self.linenum + 1
 	  local tline = trim(line) -- saves trims in isempty / iscomment
-	  xxx(tline,3)
-
 	  if not zencode_isempty(tline) and not zencode_iscomment(tline) then
 		 --   xxx('Line: '.. text, 3)
 		 -- max length for single zencode line is #define MAX_LINE
