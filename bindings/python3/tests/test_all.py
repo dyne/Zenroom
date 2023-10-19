@@ -1,4 +1,6 @@
 import pytest
+import base64
+import json
 from schema import Schema, Regex
 from zenroom import zencode_exec #, zenroom_exec
 
@@ -37,7 +39,12 @@ Given I have a 'string' named 'string'
 Then print the data
 """
     res = zencode_exec(contract)
-    assert("fatal error" in res.logs)
+    logs = json.loads(res.logs)
+    found = None
+    for s in logs:
+        if s.startswith("J64 TRACE"):
+            found = base64.b64decode(s.split(": ")[1]).decode()
+    assert("Cannot find 'string' anywhere " in found)
 
 # def test_lua_call_hello_world():
 #     lua_res = zenroom_exec(
