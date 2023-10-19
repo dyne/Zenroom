@@ -559,8 +559,8 @@ const char *luaO_pushfstring (lua_State *L, const char *fmt, ...) {
 
 
 #define RETS	"..."
-#define PRE	"[string \""
-#define POS	"\"]"
+#define PRE	"[source '"
+#define POS	"']"
 
 #define addstr(a,b,l)	( memcpy(a,b,(l) * sizeof(char)), a += (l) )
 
