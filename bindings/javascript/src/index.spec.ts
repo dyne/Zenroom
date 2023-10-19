@@ -27,12 +27,10 @@ test("does broke gracefully", async (t) => {
   try {
     await zenroom_exec(`broken sapokdao`);
   } catch (e) {
-    console.log(e.logs);
-    console.log("ORA PARSA");
     const lines = JSON.parse(e.logs);
     t.true(
       lines.includes(
-        `[!] /zencode.lua:463: Invalid Zencode prefix 1: 'sapodksapodk'",\n`
+        `[!] [source 'broken sapokdao']:1: syntax error near 'sapokdao'`
       )
     );
   }
@@ -92,7 +90,6 @@ test("handle broken zencode", async (t) => {
   try {
     await zencode_exec(`sapodksapodk`);
   } catch (e) {
-    console.log(e)
     t.true(
       e.logs.includes(
         `Invalid Zencode prefix 1: 'sapodksapodk'`
@@ -126,11 +123,16 @@ test("Unknown variable error shown in logs", async (t) => {
       Then print my '${random_name}'`);
     t.truthy(false);
   } catch(e) {
-    console.log(e.logs);
-    console.log("ORA PARSA");
     const lines = JSON.parse(e.logs);
-    t.truthy(lines.contains("[!] /zencode_then.lua:165: No identity specified in WHO"))
-    t.truthy(lines.contains(`[!] /zencode.lua:617: Zencode line 3: Then print my '${random_name}'`))
+    let found = null;
+    for(let log of lines) {
+      if(log.startsWith("J64 TRACE")) {
+        const encoded = log.substring("J64 TRACE: ".length);
+        found =  Buffer.from(encoded, 'base64').toString('utf-8');
+      }
+    }
+    t.truthy(found && JSON.parse(found).some((s: string) => (s.startsWith("[!]") && s.includes("No identity specified in WHO"))))
+    t.truthy(lines.some((s: string) => (s.startsWith("[!]") && s.includes(`Zencode line 3: Then print my '${random_name}'`))))
   }
 });
 
