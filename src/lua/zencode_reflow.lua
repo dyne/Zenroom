@@ -287,19 +287,26 @@ IfWhen(
     end
 )
 
+local function _fingerprint_is_new()
+    have 'reflow_signature'
+    have 'reflow_seal'
+    if not ACK.reflow_seal.fingerprints then
+        return
+    end
+    zencode_assert(
+        not ACK.reflow_seal.fingerprints[ACK.reflow_signature.zeta],
+        'Signature fingerprint is not new'
+    )
+end
+
 IfWhen(deprecated("check the reflow signature fingerprint is new",
-				  "verify the reflow signature fingerprint is new",
-    function()
-        have 'reflow_signature'
-        have 'reflow_seal'
-        if not ACK.reflow_seal.fingerprints then
-            return
-        end
-        zencode_assert(
-            not ACK.reflow_seal.fingerprints[ACK.reflow_signature.zeta],
-            'Signature fingerprint is not new'
-        )
-    end)
+                  "verify the reflow signature fingerprint is new",
+                  _fingerprint_is_new
+                 )
+)
+
+IfWhen("verify the reflow signature fingerprint is new",
+       _fingerprint_is_new
 )
 
 When(
