@@ -287,8 +287,8 @@ IfWhen(
     end
 )
 
-IfWhen(
-    'check the reflow signature fingerprint is new',
+IfWhen(deprecated("check the reflow signature fingerprint is new",
+				  "verify the reflow signature fingerprint is new",
     function()
         have 'reflow_signature'
         have 'reflow_seal'
@@ -299,7 +299,7 @@ IfWhen(
             not ACK.reflow_seal.fingerprints[ACK.reflow_signature.zeta],
             'Signature fingerprint is not new'
         )
-    end
+    end)
 )
 
 When(
