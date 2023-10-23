@@ -125,7 +125,7 @@ local function _when_remove_array(ele, from)
     ACK[from] = newdest
 end
 
-When("remove the '' from ''", function(ele,from)
+When("remove '' from ''", function(ele,from)
     local codec = CODEC[from]
     zencode_assert(codec, "No codec registration for target: "..from)
     if codec.zentype == 'd'
@@ -152,12 +152,12 @@ local function count_f(obj_name)
     return count
 end
 When(deprecated("create the length of ''",
-"create the size of ''",
+"create size of ''",
 function(arr)
     ACK.length = F.new(count_f(arr))
     new_codec('length', {zentype='e', encoding='float'})
 end))
-When("create the size of ''", function(arr)
+When("create size of ''", function(arr)
     ACK.size = F.new(count_f(arr))
     new_codec('size', {zentype='e', encoding='float'})
 end)
@@ -178,10 +178,9 @@ local function _not_found_in(ele_name, obj_name)
 end
 
 IfWhen(deprecated("the '' is not found in ''",
-    "verify the '' is not found in ''",
+    "verify '' is not found in ''",
     _not_found_in)
 )
-IfWhen("verify the '' is not found in ''", _not_found_in)
 
 local function _found_in(ele_name, obj_name)
     local ele, ele_codec = have(ele_name)
@@ -204,10 +203,9 @@ local function _found_in(ele_name, obj_name)
 end
 
 IfWhen(deprecated("the '' is found in ''",
-    "verify the '' is found in ''",
+    "verify '' is found in ''",
     _found_in)
 )
-IfWhen("verify the '' is found in ''", _found_in)
 
 local function _found_in_atleast(ele_name, obj_name, times)
     local ele, ele_codec = have(ele_name)
@@ -232,10 +230,10 @@ local function _found_in_atleast(ele_name, obj_name, times)
 end
 
 IfWhen(deprecated("the '' is found in '' at least '' times",
-    "verify the '' is found in '' at least '' times",
+    "verify '' is found in '' at least '' times",
     _found_in_atleast)
 )
-IfWhen("verify the '' is found in '' at least '' times", _found_in_atleast)
+IfWhen("verify '' is found in '' at least '' times", _found_in_atleast)
 
 When(deprecated("create the copy of last element in ''",
     "create the copy of last element from ''",

@@ -148,9 +148,12 @@ function ZEN:begin(new_heap)
 		  tt = gsub(tt, ' the ', ' ', 1)
 	   end
 	   if to == 'given' then
-		  tt = gsub(tt, ' the ', ' a ', 1)
+		  tt = gsub(tt, ' the ', ' ', 1)
+		  tt = gsub(tt, ' a ', ' ', 1)
+		  tt = gsub(tt, ' an ', ' ', 1)
 		  tt = gsub(tt, ' have ', ' ', 1)
 		  tt = gsub(tt, ' known as ', ' ', 1)
+		  tt = gsub(tt, ' valid ', ' ', 1)
 	   end
 	   -- prefixes found at beginning of statement
 	   tt = gsub(tt, '^when ', '', 1)
@@ -161,6 +164,7 @@ function ZEN:begin(new_heap)
 	   tt = gsub(tt, '^and ', '', 1) -- TODO: expunge only first 'and'
 	   -- generic particles
 	   tt = gsub(tt, '^that ', ' ', 1)
+	   tt = gsub(tt, ' the ', ' ')
 	   tt = gsub(tt, '^an ', 'a ', 1) -- equivalence
 	   tt = gsub(tt, ' valid ', ' ', 1) -- backward compat (v1)
 	   tt = gsub(tt, ' all ', ' ', 1)
@@ -679,13 +683,19 @@ function Given(text, fn)
 end
 function When(text, fn)
     text = text:lower()
-	assert(not ZEN.when_steps[text],'Conflicting WHEN statement loaded by scenario: ' .. text, 2)
+	if ZEN.when_steps[text] then
+		  error('Conflicting WHEN statement loaded by scenario: ' .. text, 2)
+	end
 	ZEN.when_steps[text] = fn
 end
 function IfWhen(text, fn)
     text = text:lower()
-    assert(not ZEN.if_steps[text],'Conflicting IF-WHEN statement loaded by scenario: ' .. text, 2)
-	assert(not ZEN.when_steps[text],'Conflicting IF-WHEN statement loaded by scenario: ' .. text, 2)
+    if ZEN.if_steps[text] then
+	   error('Conflicting IF-WHEN statement loaded by scenario: ' .. text, 2)
+	end
+	if ZEN.when_steps[text] then
+		  error('Conflicting IF-WHEN statement loaded by scenario: ' .. text, 2)
+	end
 	ZEN.if_steps[text]   = fn
 	ZEN.when_steps[text] = fn
 end

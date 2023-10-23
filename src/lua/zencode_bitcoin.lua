@@ -147,8 +147,8 @@ local function _keygen(name)
 	local kp = ECDH.keygen()
 	ACK.keyring[name] = kp.private
 end
-When('create the bitcoin key', function() _keygen('bitcoin') end)
-When('create the testnet key', function() _keygen('testnet') end)
+When('create bitcoin key', function() _keygen('bitcoin') end)
+When('create testnet key', function() _keygen('testnet') end)
 
 local function _import_wif(sec, name)
 		local sk = have(sec)
@@ -165,13 +165,13 @@ local function _import_wif(sec, name)
 		initkeyring(name)
 		ACK.keyring[name] = res
 end
-When("create the bitcoin key with secret key ''", function(sec)
+When("create bitcoin key with secret key ''", function(sec)
 	_import_wif(sec, 'bitcoin') end)
-When("create the testnet key with secret key ''", function(sec)
+When("create testnet key with secret key ''", function(sec)
 	_import_wif(sec, 'testnet') end)
-When("create the bitcoin key with secret ''", function(sec)
+When("create bitcoin key with secret ''", function(sec)
 	_import_wif(sec, 'bitcoin') end)
-When("create the testnet key with secret ''", function(sec)
+When("create testnet key with secret ''", function(sec)
 	_import_wif(sec, 'testnet') end)
 
 local function _get_pub(name)
@@ -180,8 +180,8 @@ local function _get_pub(name)
 	ACK[name..'_public_key'] = ECDH.sk_to_pubc(sk)
 	new_codec(name..' public key')
 end
-When("create the bitcoin public key", function() _get_pub('bitcoin') end)
-When("create the testnet public key", function() _get_pub('testnet') end)
+When("create bitcoin public key", function() _get_pub('bitcoin') end)
+When("create testnet public key", function() _get_pub('testnet') end)
 
 local function _create_addr(name,pfx)
 	empty(name..' address')
@@ -196,8 +196,8 @@ local function _create_addr(name,pfx)
 				  network = O.from_string(pfx) }
 	new_codec(name..' address')
 end
-When("create the bitcoin address", function() _create_addr('bitcoin','bc') end)
-When("create the testnet address", function() _create_addr('testnet','tb') end)
+When("create bitcoin address", function() _create_addr('bitcoin','bc') end)
+When("create testnet address", function() _create_addr('testnet','tb') end)
 
 local function _create_tx(name, recipient)
 	local to      = have(recipient or 'recipient')
@@ -212,10 +212,10 @@ local function _create_tx(name, recipient)
 	ACK[name..'_transaction'] = tx
 	new_codec(name..'_transaction') -- TODO: { schema = 'transaction' })
 end
-When('create the bitcoin transaction', function() _create_tx('bitcoin') end)
-When('create the testnet transaction', function() _create_tx('testnet') end)
-When("create the bitcoin transaction to ''", function(recipient) _create_tx('bitcoin', recipient) end)
-When("create the testnet transaction to ''", function(recipient) _create_tx('testnet', recipient) end)
+When('create bitcoin transaction', function() _create_tx('bitcoin') end)
+When('create testnet transaction', function() _create_tx('testnet') end)
+When("create bitcoin transaction to ''", function(recipient) _create_tx('bitcoin', recipient) end)
+When("create testnet transaction to ''", function(recipient) _create_tx('testnet', recipient) end)
 
 local function _sign_tx(name)
    local sk = havekey(name)
@@ -223,8 +223,8 @@ local function _sign_tx(name)
    zencode_assert(not tx.witness, "The "..name.." transaction is already signed")
    tx.witness = btc.build_witness(tx, sk)
 end
-When("sign the bitcoin transaction", function() _sign_tx('bitcoin') end)
-When("sign the testnet transaction", function() _sign_tx('testnet') end)
+When("sign bitcoin transaction", function() _sign_tx('bitcoin') end)
+When("sign testnet transaction", function() _sign_tx('testnet') end)
 
 local function _toraw_tx(name)
 	local tx = have(name..' transaction')
@@ -234,5 +234,5 @@ local function _toraw_tx(name)
 	new_codec(dst, { encoding = 'hex' })
 end
 
-When("create the bitcoin raw transaction", function() _toraw_tx('bitcoin') end)
-When("create the testnet raw transaction", function() _toraw_tx('testnet') end)
+When("create bitcoin raw transaction", function() _toraw_tx('bitcoin') end)
+When("create testnet raw transaction", function() _toraw_tx('testnet') end)

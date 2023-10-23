@@ -132,13 +132,13 @@ ZEN:add_schema(
 --]]
 
 -- generate the private key
-When('create the bbs key',function()
+When('create bbs key',function()
     initkeyring'bbs'
     ACK.keyring.bbs = BBS.keygen()
 end)
 
 -- generate the public key
-When('create the bbs public key',function()
+When('create bbs public key',function()
     empty'bbs public key'
     local sk = havekey'bbs'
     ACK.bbs_public_key = BBS.sk2pk(sk)
@@ -154,15 +154,15 @@ local function _key_from_secret(sec)
    ACK.keyring.bbs = sk
 end
 
-When("create the bbs key with secret key ''",
+When("create bbs key with secret key ''",
      _key_from_secret
 )
 
-When("create the bbs key with secret ''",
+When("create bbs key with secret ''",
      _key_from_secret
 )
 
-When("create the bbs public key with secret key ''",function(sec)
+When("create bbs public key with secret key ''",function(sec)
     local sk = have(sec)
     -- Check if the user-provided sk is reasonable
     assert(type(sk) == "zenroom.big", "sk must have type integer")
@@ -192,11 +192,11 @@ local function generic_bbs_signature(doc, h)
     new_codec('bbs signature', { zentype = 'e'})
 end
 
-When("create the bbs signature of ''", function(doc)
+When("create bbs signature of ''", function(doc)
     return generic_bbs_signature(doc, 'shake256')
 end)
 
-When("create the bbs signature of '' using ''", generic_bbs_signature)
+When("create bbs signature of '' using ''", generic_bbs_signature)
 
 local function generic_verify(doc, sig, by, h)
     local pk = load_pubkey_compat(by, 'bbs')
@@ -213,11 +213,11 @@ local function generic_verify(doc, sig, by, h)
     )
 end
 
-IfWhen("verify the '' has a bbs signature in '' by ''", function(doc, sig, by)
+IfWhen("verify '' has a bbs signature in '' by ''", function(doc, sig, by)
     return generic_verify(doc, sig, by, 'shake256')
 end)
 
-IfWhen("verify the '' has a bbs signature in '' by '' using ''", generic_verify)
+IfWhen("verify '' has a bbs signature in '' by '' using ''", generic_verify)
 
 --[[
     Participant generates proof with the function bbs.proof_gen(ciphersuite, pk, signature, 
@@ -266,7 +266,7 @@ ZEN:add_schema(
     }
 )
 
-When("create the bbs disclosed messages", function()
+When("create bbs disclosed messages", function()
     local dis_ind = have'bbs disclosed indexes'
     local all_msgs = have'bbs messages'
 
@@ -279,7 +279,7 @@ When("create the bbs disclosed messages", function()
     new_codec('bbs disclosed messages', { zentype = 'a', encoding = 'string'})
 end)
 
-When("create the bbs proof using ''", function(h)
+When("create bbs proof using ''", function(h)
     local hash =  O.to_string(mayhave(h)) or h
     local ciphersuite = BBS.ciphersuite(hash)
     local ph = have'bbs presentation header':octet()
@@ -301,7 +301,7 @@ When("create the bbs proof using ''", function(h)
     new_codec('bbs proof', { zentype = 'e'})
 end)
 
-IfWhen("verify the bbs proof using ''", function(h)
+IfWhen("verify bbs proof using ''", function(h)
     local hash =  O.to_string(mayhave(h)) or h
     local ciphersuite = BBS.ciphersuite(hash)
     local pubk = have'bbs public key'
@@ -319,7 +319,7 @@ IfWhen("verify the bbs proof using ''", function(h)
 end)
 
 --bbs.proof_gen(ciphersuite, pk, signature, header, ph, messages_octets, disclosed_indexes)
-When("create the bbs proof of the signature '' of the messages '' using '' with public key '' presentation header '' and disclosed indexes ''", function(sig, msg, h, pk, prh, dis_ind)
+When("create bbs proof of signature '' of messages '' using '' with public key '' presentation header '' and disclosed indexes ''", function(sig, msg, h, pk, prh, dis_ind)
     local hash =  O.to_string(mayhave(h)) or h
     local ciphersuite = BBS.ciphersuite(hash)
     local ph = have(prh):octet()
@@ -342,7 +342,7 @@ When("create the bbs proof of the signature '' of the messages '' using '' with 
 end)
 
 --bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages_octets, disclosed_indexes)
-IfWhen("verify the bbs proof using '' with public key '' presentation header '' disclosed messages '' and disclosed indexes ''", function(h, pk, prh, dis_msg, dis_ind)
+IfWhen("verify bbs proof using '' with public key '' presentation header '' disclosed messages '' and disclosed indexes ''", function(h, pk, prh, dis_msg, dis_ind)
     local hash =  O.to_string(mayhave(h)) or h
     local ciphersuite = BBS.ciphersuite(hash)
     local pubk = have(pk)

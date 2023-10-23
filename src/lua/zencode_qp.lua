@@ -146,20 +146,20 @@ ZEN:add_schema(
 --# DILITHIUM #--
 
 -- generate the private key
-When('create the dilithium key',function()
+When('create dilithium key',function()
 	initkeyring'dilithium'
 	ACK.keyring.dilithium = QP.sigkeygen().private
 end)
 
 -- generate the public key
-When('create the dilithium public key',function()
+When('create dilithium public key',function()
 	empty'dilithium public key'
 	local sk = havekey'dilithium'
 	ACK.dilithium_public_key = QP.sigpubgen(sk)
 	new_codec('dilithium public key')
 end)
 
-When("create the dilithium public key with secret key ''",function(sec)
+When("create dilithium public key with secret key ''",function(sec)
 	local sk = have(sec)
 	empty'dilithium public key'
 	ACK.dilithium_public_key = QP.sigpubgen(sk)
@@ -167,7 +167,7 @@ When("create the dilithium public key with secret key ''",function(sec)
 end)
 
 -- generate the sign for a msg and verify
-When("create the dilithium signature of ''",function(doc)
+When("create dilithium signature of ''",function(doc)
 	local sk = havekey'dilithium'
 	local obj = have(doc)
 	empty'dilithium signature'
@@ -175,7 +175,7 @@ When("create the dilithium signature of ''",function(doc)
 	new_codec('dilithium signature')
 end)
 
-IfWhen("verify the '' has a dilithium signature in '' by ''",function(msg, sig, by)
+IfWhen("verify '' has a dilithium signature in '' by ''",function(msg, sig, by)
 	  local pk = _pubkey_compat(by, 'dilithium')
 	  local m = have(msg)
 	  local s = have(sig)
@@ -188,20 +188,20 @@ end)
 --# KYBER #--
 
 -- generate the private key
-When('create the kyber key',function()
+When('create kyber key',function()
 	initkeyring'kyber'
 	ACK.keyring.kyber = QP.kemkeygen().private
 end)
 
--- generate the public key
-When('create the kyber public key',function()
+-- generate public key
+When('create kyber public key',function()
 	empty'kyber public key'
 	local sk = havekey'kyber'
 	ACK.kyber_public_key = QP.kempubgen(sk)
 	new_codec('kyber public key')
 end)
 
-When("create the kyber public key with secret key ''",function(sec)
+When("create kyber public key with secret key ''",function(sec)
 	local sk = have(sec)
 	empty'kyber public key'
 	ACK.kyber_public_key = QP.kempubgen(sk)
@@ -209,7 +209,7 @@ When("create the kyber public key with secret key ''",function(sec)
 end)
 
 -- create a secret message and its ciphertext
-When("create the kyber kem for ''",function(pub)
+When("create kyber kem for ''",function(pub)
 	local pk = _pubkey_compat(pub, 'kyber')
 	empty'kyber kem'
 	ACK.kyber_kem = {}
@@ -219,7 +219,7 @@ When("create the kyber kem for ''",function(pub)
 	new_codec('kyber kem')
 end)
 -- create the secret starting from a ciphertext
-When("create the kyber secret from ''",function(secret)
+When("create kyber secret from ''",function(secret)
 	local sk = havekey'kyber'
 	local sec = have(secret)
 	empty 'kyber secret'
@@ -230,20 +230,20 @@ end)
 --# NTRUP #--
 
 -- generate the private key
-When('create the ntrup key',function()
+When('create ntrup key',function()
 	initkeyring'ntrup'
 	ACK.keyring.ntrup = QP.ntrup_keygen().private
 end)
 
 -- generate the public key
-When('create the ntrup public key',function()
+When('create ntrup public key',function()
 	empty'ntrup public key'
 	local sk = havekey'ntrup'
 	ACK.ntrup_public_key = QP.ntrup_pubgen(sk)
 	new_codec('ntrup public key')
 end)
 
-When("create the ntrup public key with secret key ''",function(sec)
+When("create ntrup public key with secret key ''",function(sec)
 	local sk = have(sec)
 	empty'ntrup public key'
 	ACK.ntrup_public_key = QP.ntrup_pubgen(sk)
@@ -251,7 +251,7 @@ When("create the ntrup public key with secret key ''",function(sec)
 end)
 
 -- create a secret message and its ciphertext
-When("create the ntrup kem for ''",function(pub)
+When("create ntrup kem for ''",function(pub)
 	local pk = _pubkey_compat(pub, 'ntrup')
 	empty'ntrup kem'
 	ACK.ntrup_kem = {}
@@ -261,7 +261,7 @@ When("create the ntrup kem for ''",function(pub)
 	new_codec('ntrup kem')
 end)
 -- create the secret starting from a ciphertext
-When("create the ntrup secret from ''",function(ciphertext)
+When("create ntrup secret from ''",function(ciphertext)
 	local sk = havekey'ntrup'
 	local ct = have(ciphertext)
 	empty'ntrup secret'

@@ -53,20 +53,20 @@ local function dicts_reduce(dicts, params)
    end
 end
 
-When("create the new dictionary", function()
+When("create new dictionary", function()
 		empty'new dictionary'
 		ACK.new_dictionary = { }
 		new_codec('new dictionary', { zentype = 'd' })
 end)
 
 
-When("create the new dictionary named ''", function(name)
+When("create new dictionary named ''", function(name)
 		empty(name)
 		ACK[name] = { }
 		new_codec(name, { zentype = 'd' })
 end)
 
-When("create the array of elements named '' for dictionaries in ''",
+When("create array of elements named '' for dictionaries in ''",
      function(name, dict)
 	empty'array'
 	local src = have(dict)
@@ -83,7 +83,7 @@ When("create the array of elements named '' for dictionaries in ''",
 	new_codec('array', {zentype='a'}, dict)
 end)
 
-When("create the pruned dictionary of ''", function(dict)
+When("create pruned dictionary of ''", function(dict)
 	empty'pruned dictionary'
 	local d = have(dict)
 	zencode_assert(luatype(d) == 'table', 'Object is not a table: '..dict)
@@ -104,7 +104,7 @@ local function _initial_set(number, name, arr)
     return number, enc
 end
 
-When("find the max value '' for dictionaries in ''", function(name, arr)
+When("find max value '' for dictionaries in ''", function(name, arr)
 	zencode_assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
 	empty'max value'
 	local max = nil
@@ -126,7 +126,7 @@ When("find the max value '' for dictionaries in ''", function(name, arr)
 	})
 end)
 
-When("find the min value '' for dictionaries in ''", function(name, arr)
+When("find min value '' for dictionaries in ''", function(name, arr)
 	zencode_assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
 	empty'min value'
 	local min = nil
@@ -148,7 +148,7 @@ When("find the min value '' for dictionaries in ''", function(name, arr)
     })
 end)
 
-When("create the sum value '' for dictionaries in ''", function(name,arr)
+When("create sum value '' for dictionaries in ''", function(name,arr)
 	zencode_assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
 	empty'sum value'
 	local sum -- result of reduction
@@ -171,7 +171,7 @@ When("create the sum value '' for dictionaries in ''", function(name,arr)
 	})
 end)
 
-When("create the sum value '' for dictionaries in '' where '' > ''", function(name,arr, left, right)
+When("create sum value '' for dictionaries in '' where '' > ''", function(name,arr, left, right)
 	zencode_assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
 	have(right)
 	empty'sum value'
@@ -199,7 +199,7 @@ When("create the sum value '' for dictionaries in '' where '' > ''", function(na
 	})
 end)
 
-When("find the '' for dictionaries in '' where '' = ''",function(name, arr, left, right)
+When("find '' for dictionaries in '' where '' = ''",function(name, arr, left, right)
 	zencode_assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
 	have(right)
 	empty(name)

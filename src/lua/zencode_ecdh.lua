@@ -71,14 +71,14 @@ ZEN:add_schema(
 )
 
 When(
-	"create the ecdh key",
+	"create ecdh key",
 	function()
 		initkeyring'ecdh'
 		ACK.keyring.ecdh = ECDH.keygen().private
 	end
 )
 When(
-	"create the ecdh public key",
+	"create ecdh public key",
 	function()
 		empty'ecdh public key'
 		local sk = havekey'ecdh'
@@ -86,13 +86,13 @@ When(
 		new_codec('ecdh public key')
 	end
 )
-When("create the ecdh key with secret key ''",function(sec)
+When("create ecdh key with secret key ''",function(sec)
 	local sk = have(sec)
 	initkeyring'ecdh'
 	ECDH.pubgen(sk)
 	ACK.keyring.ecdh = sk
 end)
-When("create the ecdh key with secret ''",function(sec)
+When("create ecdh key with secret ''",function(sec)
 	local sk = have(sec)
 	initkeyring'ecdh'
 	ECDH.pubgen(sk)
@@ -101,7 +101,7 @@ end)
 
 -- encrypt with a header and secret
 When(
-	"encrypt the secret message '' with ''",
+	"encrypt secret message '' with ''",
 	function(msg, sec)
 		local text = have(msg)
 		local sk = have(sec)
@@ -125,7 +125,7 @@ When(
 
 -- decrypt with a secret
 When(
-	"decrypt the text of '' with ''",
+	"decrypt text of '' with ''",
 	function(msg, sec)
 		local sk = have(sec)
 		local text = have(msg)
@@ -166,7 +166,7 @@ end
 
 -- encrypt to a single public key
 When(
-	"encrypt the secret message of '' for ''",
+	"encrypt secret message of '' for ''",
 	function(msg, _key)
 		local sk = havekey'ecdh'
 		have(msg)
@@ -189,7 +189,7 @@ When(
 )
 
 When(
-	"decrypt the text of '' from ''",
+	"decrypt text of '' from ''",
 	function(secret, _key)
 		local sk = havekey'ecdh'
 		have(secret)
@@ -227,12 +227,12 @@ local function _verifying(msg, sig, by)
 end
 
 When(
-   "create the signature of ''", function(msg)
+   "create signature of ''", function(msg)
    _signing(msg, 'signature')
 end)
 
 When(
-   "create the ecdh signature of ''", function(msg)
+   "create ecdh signature of ''", function(msg)
    _signing(msg, 'ecdh_signature')
 end)
 
@@ -246,7 +246,7 @@ local function _signing_det(msg, var)
     new_codec(var)
 end
 
-When("create the ecdh deterministic signature of ''",function(msg)
+When("create ecdh deterministic signature of ''",function(msg)
     _signing_det(msg, "ecdh_deterministic_signature")
 end)
 
@@ -254,25 +254,25 @@ end)
 -- If one wnats to use another hash, the ECDH.verify_deterministic should be
 -- called with the correct integer input.
 IfWhen(
-    "verify the '' has a ecdh deterministic signature in '' by ''",
+    "verify '' has a ecdh deterministic signature in '' by ''",
     _verifying
 )
 
-When("create the ecdsa deterministic signature of ''",function(msg)
+When("create ecdsa deterministic signature of ''",function(msg)
     _signing_det(msg, "ecdsa_deterministic_signature")
 end)
 
 IfWhen(
-    "verify the '' has a ecdsa deterministic signature in '' by ''",
+    "verify '' has a ecdsa deterministic signature in '' by ''",
     _verifying
 )
 
 IfWhen(
-   "verify the '' has a signature in '' by ''",
+   "verify '' has a signature in '' by ''",
    _verifying
 )
 
 IfWhen(
-   "verify the '' has a ecdh signature in '' by ''",
+   "verify '' has a ecdh signature in '' by ''",
    _verifying
 )

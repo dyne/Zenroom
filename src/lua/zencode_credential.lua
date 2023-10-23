@@ -34,31 +34,31 @@ local function import_issuer_pk_f(obj)
 end
 
 -- credential keypair operations
-When('create the credential key',function()
+When('create credential key',function()
 	initkeyring'credential'
 	ACK.keyring.credential = INT.random()
 end)
 
-When("create the credential key with secret key ''",function(sec)
+When("create credential key with secret key ''",function(sec)
 	initkeyring'credential'
 	local secret = have(sec)
 	ACK.keyring.credential = INT.new(secret)
 end)
-When("create the credential key with secret ''",function(sec)
+When("create credential key with secret ''",function(sec)
 	initkeyring'credential'
 	local secret = have(sec)
 	ACK.keyring.credential = INT.new(secret)
 end)
 
 When(
-	'create the issuer key',
+	'create issuer key',
 	function()
 		initkeyring'issuer'
 		ACK.keyring.issuer = CRED.issuer_keygen()
 	end
 )
 
-When('create the issuer public key',function()
+When('create issuer public key',function()
 	havekey'issuer'
 	ACK.issuer_public_key = {
 	   alpha = G2 * ACK.keyring.issuer.x,
@@ -102,7 +102,7 @@ ZEN:add_schema(
    }
 )
 
-When('create the credential request', function()
+When('create credential request', function()
 	havekey'credential'
 	ACK.credential_request = CRED.prepare_blind_sign(ACK.keyring.credential)
 	new_codec('credential request')
@@ -133,7 +133,7 @@ ZEN:add_schema(
    }
 )
 When(
-   'create the credential signature',
+   'create credential signature',
    function()
       have 'credential request'
       havekey'issuer'
@@ -148,7 +148,7 @@ When(
    end
 )
 When(
-   'create the credentials',
+   'create credentials',
    function()
       have 'credential signature'
       havekey'credential'
@@ -161,7 +161,7 @@ When(
 )
 
 When(
-   "aggregate the credentials in ''",
+   "aggregate credentials in ''",
    function(creds)
       local cred_t = have(creds)
       havekey'credential'
@@ -209,7 +209,7 @@ ZEN:add_schema(
 )
 
 When(
-	'aggregate the issuer public keys',
+	'aggregate issuer public keys',
 	function()
 		have 'issuer public key'
 		if not ACK.verifiers then
@@ -225,7 +225,7 @@ When(
 
 
 When(
-	"aggregate the verifiers in ''",
+	"aggregate verifiers in ''",
 	function(issuers)
 		local issuers_t = have(issuers)
 		empty''
@@ -242,7 +242,7 @@ When(
 )
 
 When(
-	'create the credential proof',
+	'create credential proof',
 	function()
 		have 'verifiers'
 		have 'credentials'
@@ -254,7 +254,7 @@ When(
 	end
 )
 IfWhen(
-	'verify the credential proof',
+	'verify credential proof',
 	function()
 		have 'credential proof'
 		have 'verifiers'

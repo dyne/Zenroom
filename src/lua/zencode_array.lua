@@ -22,7 +22,7 @@
 local stats = require('stats')
 -- array operations
 
-When("create the new array", function()
+When("create new array", function()
 	ACK.new_array = { }
 	new_codec('new array', {zentype='a'})
 end)
@@ -63,7 +63,6 @@ When("create the copy of element '' from array ''", function(pos, arr)
 	end
 	new_codec('copy', n_codec)
 end)
-
 
 local function _insert_in(what, dest)
 	local d, d_codec = have(dest)
@@ -127,38 +126,38 @@ local function _aggr_array(arr)
 	return res, par
 end
 
-When("create the aggregation of array ''", function(arr)
+When("create aggregation of array ''", function(arr)
 	empty'aggregation'
 	local params
 	ACK.aggregation, params = _aggr_array(arr)
 	new_codec('aggregation', params)
 end)
-When("create the sum value of elements in array ''", function(arr)
+When("create sum value of elements in array ''", function(arr)
 	empty'sum value'
 	local params
 	ACK.sum_value, params = _aggr_array(arr)
 	new_codec('sum value', params)
 end)
-When("create the average of elements in array ''", function(arr)
+When("create average of elements in array ''", function(arr)
 	empty'average'
 	local data = have(arr)
 	ACK.average = O.from_string(stats.average(data):decimal())
 	new_codec('average', { encoding="string" })
 end)
-When("create the variance of elements in array ''", function(arr)
+When("create variance of elements in array ''", function(arr)
 	empty'variance'
 	local data = have(arr)
 	ACK.variance = O.from_string(stats.variance(data):decimal())
 	new_codec('variance', { encoding="string" })
 end)
-When("create the standard deviation of elements in array ''", function(arr)
+When("create standard deviation of elements in array ''", function(arr)
 	empty'standard_deviation'
 	local data = have(arr)
 	ACK.standard_deviation = O.from_string(stats.standardDeviation(data):decimal())
 	new_codec('standard_deviation', { encoding="string" })
 end)
 
-When("create the flat array of contents in ''", function(dic)
+When("create flat array of contents in ''", function(dic)
 	local codec = CODEC[dic]
 	zencode_assert(codec.zentype == 'a' or
 	codec.zentype == 'd',
@@ -185,7 +184,7 @@ local function _keys_flat_array(data, res)
 	end
 end
 
-When("create the flat array of keys in ''", function(dic)
+When("create flat array of keys in ''", function(dic)
 	local codec = CODEC[dic]
 	zencode_assert(codec.zentype == 'a' or
 	codec.zentype == 'd',
@@ -198,7 +197,7 @@ When("create the flat array of keys in ''", function(dic)
 	new_codec('flat array', { encoding="string" })
 end)
 
-When("create the array of objects named by '' found in ''", function(name, dict)
+When("create array of objects named by '' found in ''", function(name, dict)
 	zencode_assert(isdictionary(dict), "Second argument is not a dictionary")
 	local n = have(name):octet():string()
 	local src = have(dict)
@@ -210,7 +209,7 @@ When("create the array of objects named by '' found in ''", function(name, dict)
 	new_codec('array', { encoding='string', zentype='a' })
 end)
 
-When("create the array by splitting '' at ''", function(data_name, sep_name)
+When("create array by splitting '' at ''", function(data_name, sep_name)
 	local data = uscore(have(data_name):octet():string())
 	local sep = uscore(have(sep_name):octet():string())
 	zencode_assert(#sep == 1, "You can only split with respect to one character")
@@ -227,7 +226,7 @@ When("create the array by splitting '' at ''", function(data_name, sep_name)
 	new_codec('array', { encoding='string', zentype='a' })
 end)
 
-When("create the '' from '' in ''", function(dest, key_name, obj_name)
+When("create '' from '' in ''", function(dest, key_name, obj_name)
 	empty(dest)
 	local obj, obj_codec = have(obj_name)
 	local key, key_enc = mayhave(key_name)

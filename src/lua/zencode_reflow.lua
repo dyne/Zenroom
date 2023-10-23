@@ -104,7 +104,7 @@ local function _makeuid(src)
 end
 
 When(
-    'create the reflow key',
+    'create reflow key',
     function()
         -- keygen: δ = r.O ; γ = δ.G2
         initkeyring 'reflow'
@@ -113,13 +113,13 @@ When(
     end
 )
 
-When("create the reflow key with secret key ''",
+When("create reflow key with secret key ''",
 function(sec)
     local sk = have(sec)
     initkeyring'reflow'
     ACK.keyring.reflow = INT.new(sk)
 end)
-When("create the reflow key with secret ''",
+When("create reflow key with secret ''",
 function(sec)
     local sk = have(sec)
     initkeyring'reflow'
@@ -127,7 +127,7 @@ function(sec)
 end)
 
 When(
-    'create the reflow public key',
+    'create reflow public key',
     function()
         empty 'reflow public key'
         havekey 'reflow'
@@ -137,7 +137,7 @@ When(
 )
 
 When(
-   "aggregate the reflow public key from array ''",
+   "aggregate reflow public key from array ''",
    function(arr)
       empty 'reflow public key'
       local s = have(arr)
@@ -160,13 +160,13 @@ When(
    end
 )
 
-When("create the reflow identity of ''", function(doc)
+When("create reflow identity of ''", function(doc)
 	empty 'reflow identity'
 	ACK.reflow_identity = _makeuid(have(doc))
 	new_codec'reflow identity'
 end)
 
-When("create the reflow identity of objects in ''", function(doc)
+When("create reflow identity of objects in ''", function(doc)
 	empty 'reflow identity'
 	local arr = have(doc)
 	zencode_assert(luatype(arr)=='table', "Object is not an array or dictionary: "..doc)
@@ -213,12 +213,12 @@ local function _create_reflow_seal_f(uid)
 end
 
 When(
-    "create the reflow seal with identity ''",
+    "create reflow seal with identity ''",
     _create_reflow_seal_f)
-When("create the reflow seal",
+When("create reflow seal",
     function() _create_reflow_seal_f('reflow identity') end)
 
-When('create the reflow signature', function()
+When('create reflow signature', function()
 	empty 'reflow signature'
 	have 'reflow seal'
 	have 'issuer public key'
@@ -270,7 +270,7 @@ When(
 )
 
 IfWhen(
-    'verify the reflow signature credential',
+    'verify reflow signature credential',
     function()
         have 'reflow_signature'
         have 'verifiers'
@@ -310,7 +310,7 @@ IfWhen("verify the reflow signature fingerprint is new",
 )
 
 When(
-    'add the reflow fingerprint to the reflow seal',
+    'add reflow fingerprint to reflow seal',
     function()
         have 'reflow_signature'
         have 'reflow_seal'
@@ -328,7 +328,7 @@ When(
 )
 
 When(
-    'add the reflow signature to the reflow seal',
+    'add reflow signature to reflow seal',
     function()
         have 'reflow_seal'
         have 'reflow_signature'
@@ -338,7 +338,7 @@ When(
 )
 
 IfWhen(
-    'verify the reflow seal is valid',
+    'verify reflow seal is valid',
     function()
         have 'reflow_seal'
         zencode_assert(
@@ -351,7 +351,7 @@ IfWhen(
 )
 
 When(
-    "aggregate the reflow seal array in ''",
+    "aggregate reflow seal array in ''",
     function(arr)
         have(arr)
         empty 'reflow seal'
@@ -401,7 +401,7 @@ local function _aggregate_array(arr)
 end
 
 When(
-   "create the material passport of ''",
+   "create material passport of ''",
    function(obj)
 	  local key = havekey'reflow'
 	  local cred = have'credentials'
@@ -434,7 +434,7 @@ When(
 end)
 
 IfWhen(
-   "verify the material passport of ''",
+   "verify material passport of ''",
    function(obj)
 	  local src = have(obj)
 	  local mp = have'material passport'
@@ -459,7 +459,7 @@ end)
 -- correct then validates, else searches for .track array of seals and
 -- calculates aggregated UID, if correct then validates
 IfWhen(
-   "verify the material passport of '' is valid",
+   "verify material passport of '' is valid",
    function(obj)
 	  have(obj)
 	  have(obj..'.seal')

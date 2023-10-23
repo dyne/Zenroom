@@ -117,7 +117,7 @@ local function _is_valid_host (host)
    return nil
 end
 
-When("create the url from ''", function(src)
+When("create url from ''", function(src)
 	local obj = have(src)
 	local url = obj:str():lower()
 	empty'url'

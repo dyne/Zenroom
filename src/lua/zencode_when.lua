@@ -107,10 +107,10 @@ When("append '' to ''", function(src, dest)
 		ACK[dest] = dst
 end)
 
-When("append the string '' to ''", function(hstr, dest)
+When("append string '' to ''", function(hstr, dest)
 	local dst = have(dest)
 	zencode_assert(luatype(dst) ~= 'table', "Cannot append to table: "..dest)
-	-- if the destination is a number, fix the encoding to string
+	-- if the destination is a number, fix encoding to string
 	if isnumber(dst) then
 	   dst = O.from_string( tostring(dst) )
 	   CODEC[dest].encoding = "string"
@@ -120,7 +120,7 @@ When("append the string '' to ''", function(hstr, dest)
 	ACK[dest] = dst
 end)
 
-When("append the '' of '' to ''", function(enc, src, dest)
+When("append '' of '' to ''", function(enc, src, dest)
 	local from = have(src)
 	local to = have(dest)
 	zencode_assert(type(to) == 'zenroom.octet', "Destination type is not octet: "..dest.." ("..type(to)..")")
@@ -131,13 +131,13 @@ When("append the '' of '' to ''", function(enc, src, dest)
 	ACK[dest] = to
 end)
 
-When("create the ''", function(dest)
+When("create ''", function(dest)
 	empty (dest)
 	ACK[dest] = { }
 	CODEC[dest] = guess_conversion(ACK[dest], dest)
 	CODEC[dest].name = dest
 end)
-When("create the '' named ''", function(sch, name)
+When("create '' named ''", function(sch, name)
 	empty(name)
 	ACK[name] = { }
 	CODEC[name] = guess_conversion(ACK[name], sch)
@@ -168,7 +168,7 @@ When("write number '' in ''", function(content, dest)
 	new_codec(dest, {zentype = 'e' })
 end)
 
-When("create the number from ''", function(from)
+When("create number from ''", function(from)
 	empty'number'
 	local get = have(from)
 	ACK.number = BIG.from_decimal(get:octet():string())
@@ -194,15 +194,15 @@ local function _json_encoede_f(src, dest)
 end
 
 When(deprecated("create the json of ''",
-    "create the json escaped string of ''",
+    "create json escaped string of ''",
     function(src) _json_encoede_f(src, 'json') end)
 )
 
-When("create the json escaped string of ''", function(src)
+When("create json escaped string of ''", function(src)
     _json_encoede_f(src, 'json_escaped_string')
 end)
 
-When("create the json unescaped object of ''", function(src)
+When("create json unescaped object of ''", function(src)
     local obj = have(src)
     empty'json_unescaped_object'
     ACK.json_unescaped_object = deepmap(
@@ -230,17 +230,7 @@ local function _delete_f(name)
 end
 When("delete ''", _delete_f)
 When("remove ''", _delete_f)
-When("delete the ''", _delete_f)
-When("remove the ''", _delete_f)
 
-When("rename the '' to ''", function(old,new)
-	have(old)
-	empty(new)
-	ACK[new] = ACK[old]
-	ACK[old] = nil
-	CODEC[new] = CODEC[old]
-	CODEC[old] = nil
-end)
 When("rename '' to ''", function(old,new)
 	have(old)
 	empty(new)
@@ -249,7 +239,7 @@ When("rename '' to ''", function(old,new)
 	CODEC[new] = CODEC[old]
 	CODEC[old] = nil
 end)
-When("rename the object named by '' to ''", function(old,new)
+When("rename object named by '' to ''", function(old,new)
 	local oldo = have(old)
 	local olds = oldo:octet():string()
 	have(olds)
@@ -269,7 +259,7 @@ When("rename '' to named by ''", function(old,new)
 	CODEC[news] = CODEC[old]
 	CODEC[old] = nil
 end)
-When("rename the object named by '' to named by ''", function(old,new)
+When("rename object named by '' to named by ''", function(old,new)
 	local oldo = have(old)
 	local olds = oldo:octet():string()
 	have(olds)
@@ -282,7 +272,7 @@ When("rename the object named by '' to named by ''", function(old,new)
 	CODEC[olds] = nil
 end)
 
-When("create the '' string of ''", function(encoding, src)
+When("create '' string of ''", function(encoding, src)
 		local orig = have(src)
 		zencode_assert(luatype(orig) ~= 'table', "Source element is not a table: "..src)
 		empty(encoding) -- destination name is encoding name
@@ -294,7 +284,7 @@ When("create the '' string of ''", function(encoding, src)
 							  encoding = 'string' })
 end)
 
-When("copy the '' to ''", function(old,new)
+When("copy '' to ''", function(old,new)
 	have(old)
 	empty(new)
 	ACK[new] = deepcopy(ACK[old])
@@ -314,10 +304,10 @@ local function _copy_move_in(old, new, inside, delete)
 	   CODEC[old] = nil
 	end
 end
-When("copy the '' to '' in ''", function(old,new,inside)
+When("copy '' to '' in ''", function(old,new,inside)
 		_copy_move_in(old, new, inside, false)
 end)
-When("move the '' to '' in ''", function(old,new,inside)
+When("move '' to '' in ''", function(old,new,inside)
 		_copy_move_in(old, new, inside, true)
 end)
 
@@ -380,7 +370,7 @@ When("copy the '' from '' to ''", function(old,inside,new)
     new_codec(new, n_codec)
 end)
 
-When("split the rightmost '' bytes of ''", function(len, src)
+When("split rightmost '' bytes of ''", function(len, src)
 	local obj = have(src)
 	empty'rightmost'
 	local s = tonumber(len)
@@ -391,7 +381,7 @@ When("split the rightmost '' bytes of ''", function(len, src)
 	new_codec('rightmost', { }, src)
 end)
 
-When("split the leftmost '' bytes of ''", function(len, src)
+When("split leftmost '' bytes of ''", function(len, src)
 	local obj = have(src)
 	empty'leftmost'
 	local s = tonumber(len)
@@ -469,7 +459,7 @@ local function _math_op(op, l, r, bigop)
 	return op(left, right)
 end
 
-When("create the result of '' inverted sign", function(left)
+When("create result of '' inverted sign", function(left)
 	local l = have(left)
 	empty 'result'
         local zero = 0;
@@ -481,14 +471,14 @@ When("create the result of '' inverted sign", function(left)
 	ACK.result = _math_op(_sub, zero, l, BIG.zensub)
 end)
 
-When("create the result of '' + ''", function(left,right)
+When("create result of '' + ''", function(left,right)
 	local l = have(left)
 	local r = have(right)
 	empty 'result'
 	ACK.result = _math_op(_add, l, r, BIG.zenadd)
 end)
 
-When("create the result of '' in '' + ''", function(left, dict, right)
+When("create result of '' in '' + ''", function(left, dict, right)
 	local d = have(dict)
 	local l = d[left]
 	local r = have(right)
@@ -496,7 +486,7 @@ When("create the result of '' in '' + ''", function(left, dict, right)
 	ACK.result = _math_op(_add, l, r, BIG.zenadd)
 end)
 
-When("create the result of '' in '' + '' in ''", function(left, ldict, right, rdict)
+When("create result of '' in '' + '' in ''", function(left, ldict, right, rdict)
 	local ld = have(ldict)
 	local l = ld[left]
 	local rd = have(rdict)
@@ -505,14 +495,14 @@ When("create the result of '' in '' + '' in ''", function(left, ldict, right, rd
 	ACK.result = _math_op(_add, l, r, BIG.zenadd)
 end)
 
-When("create the result of '' - ''", function(left,right)
+When("create result of '' - ''", function(left,right)
 	local l = have(left)
 	local r = have(right)
 	empty 'result'
 	ACK.result = _math_op(_sub, l, r, BIG.zensub)
 end)
 
-When("create the result of '' in '' - ''", function(left, dict, right)
+When("create result of '' in '' - ''", function(left, dict, right)
 	local d = have(dict)
 	local l = d[left]
 	local r = have(right)
@@ -520,7 +510,7 @@ When("create the result of '' in '' - ''", function(left, dict, right)
 	ACK.result = _math_op(_sub, l, r, BIG.zensub)
 end)
 
-When("create the result of '' in '' - '' in ''", function(left, ldict, right, rdict)
+When("create result of '' in '' - '' in ''", function(left, ldict, right, rdict)
 	local ld = have(ldict)
 	local l = ld[left]
 	local rd = have(rdict)
@@ -529,14 +519,14 @@ When("create the result of '' in '' - '' in ''", function(left, ldict, right, rd
 	ACK.result = _math_op(_sub, l, r, BIG.zensub)
 end)
 
-When("create the result of '' * ''", function(left,right)
+When("create result of '' * ''", function(left,right)
 	local l = have(left)
 	local r = have(right)
 	empty 'result'
 	ACK.result = _math_op(_mul, l, r, BIG.zenmul)
 end)
 
-When("create the result of '' in '' * ''", function(left, dict, right)
+When("create result of '' in '' * ''", function(left, dict, right)
 	local d = have(dict)
 	local l = d[left]
 	local r = have(right)
@@ -544,7 +534,7 @@ When("create the result of '' in '' * ''", function(left, dict, right)
 	ACK.result = _math_op(_mul, l, r, BIG.zenmul)
 end)
 
-When("create the result of '' * '' in ''", function(left, right, dict)
+When("create result of '' * '' in ''", function(left, right, dict)
 	local l = have(left)
 	local d = have(dict)
 	local r = d[right]
@@ -552,7 +542,7 @@ When("create the result of '' * '' in ''", function(left, right, dict)
 	ACK.result = _math_op(_mul, l, r, BIG.zenmul)
 end)
 
-When("create the result of '' in '' * '' in ''", function(left, ldict, right, rdict)
+When("create result of '' in '' * '' in ''", function(left, ldict, right, rdict)
 	local ld = have(ldict)
 	local l = ld[left]
 	local rd = have(rdict)
@@ -561,14 +551,14 @@ When("create the result of '' in '' * '' in ''", function(left, ldict, right, rd
 	ACK.result = _math_op(_mul, l, r, BIG.zenmul)
 end)
 
-When("create the result of '' / ''", function(left,right)
+When("create result of '' / ''", function(left,right)
 	local l = have(left)
 	local r = have(right)
 	empty 'result'
 	ACK.result = _math_op(_div, l, r, BIG.zendiv)
 end)
 
-When("create the result of '' in '' / ''", function(left, dict, right)
+When("create result of '' in '' / ''", function(left, dict, right)
 	local d = have(dict)
 	local l = d[left]
 	local r = have(right)
@@ -576,7 +566,7 @@ When("create the result of '' in '' / ''", function(left, dict, right)
 	ACK.result = _math_op(_div, l, r, BIG.zendiv)
 end)
 
-When("create the result of '' / '' in ''", function(left, right, dict)
+When("create result of '' / '' in ''", function(left, right, dict)
 	local l = have(left)
 	local d = have(dict)
 	local r = d[right]
@@ -584,7 +574,7 @@ When("create the result of '' / '' in ''", function(left, right, dict)
 	ACK.result = _math_op(_div, l, r, BIG.zendiv)
 end)
 
-When("create the result of '' in '' / '' in ''", function(left, ldict, right, rdict)
+When("create result of '' in '' / '' in ''", function(left, ldict, right, rdict)
 	local ld = have(ldict)
 	local l = ld[left]
 	local rd = have(rdict)
@@ -593,14 +583,14 @@ When("create the result of '' in '' / '' in ''", function(left, ldict, right, rd
 	ACK.result = _math_op(_div, l, r, BIG.zendiv)
 end)
 
-When("create the result of '' % ''", function(left,right)
+When("create result of '' % ''", function(left,right)
 	local l = have(left)
 	local r = have(right)
 	empty 'result'
 	ACK.result = _math_op(_mod, l, r, BIG.zenmod)
 end)
 
-When("create the result of '' in '' % ''", function(left, dict, right)
+When("create result of '' in '' % ''", function(left, dict, right)
 	local d = have(dict)
 	local l = d[left]
 	local r = have(right)
@@ -608,7 +598,7 @@ When("create the result of '' in '' % ''", function(left, dict, right)
 	ACK.result = _math_op(_mod, l, r, BIG.zendiv)
 end)
 
-When("create the result of '' in '' % '' in ''", function(left, ldict, right, rdict)
+When("create result of '' in '' % '' in ''", function(left, ldict, right, rdict)
 	local ld = have(ldict)
 	local l = ld[left]
 	local rd = have(rdict)
@@ -620,7 +610,7 @@ end)
 local function _countchar(haystack, needle)
     return select(2, string.gsub(haystack, needle, ""))
 end
-When("create the count of char '' found in ''", function(needle, haystack)
+When("create count of char '' found in ''", function(needle, haystack)
 	local h = have(haystack)
 	empty'count'
 --	ACK.count = _countchar(O.to_string(h), needle)
@@ -700,7 +690,7 @@ end
 -- 	ACK[target] = deepmap(function(v) if trim(v) == '' then return nil end, ACK[target])
 -- end)
 
-When("create the '' cast of strings in ''", function(conv, source)
+When("create '' cast of strings in ''", function(conv, source)
 	zencode_assert(CODEC[source], "Object has no codec: "..source)
 	zencode_assert(CODEC[source].encoding == 'string', "Object has no string encoding: "..source)
 	empty(conv)
@@ -720,7 +710,7 @@ When("create the '' cast of strings in ''", function(conv, source)
 	new_codec(conv, {encoding = conv})
 end)
 
-When("create the float '' cast of integer in ''", function(dest, source)
+When("create float '' cast of integer in ''", function(dest, source)
 	empty(dest)
 	local src = have(source)
     if type(src) ~= 'zenroom.big' then
@@ -730,12 +720,12 @@ When("create the float '' cast of integer in ''", function(dest, source)
 	new_codec(dest, {encoding = 'float'})
 end)
 
-When("seed the random with ''",
+When("seed random with ''",
      function(seed)
 	local s = have(seed)
 	zencode_assert(iszen(type(s)), "New random seed is not a valid zenroom type: "..seed)
 	local fingerprint = random_seed(s) -- pass the seed for srand init
-	act("New random seed of "..#s.." bytes") 
+	act("New random seed of "..#s.." bytes")
 	xxx("New random fingerprint: "..fingerprint:hex())
      end
 )
@@ -771,7 +761,7 @@ end
 
 -- ~ is unary minus
 local priorities = {['+'] = 0, ['-'] = 0, ['*'] = 1, ['/'] = 1, ['~'] = 2}
-When("create the result of ''", function(expr)
+When("create result of ''", function(expr)
   local specials = {'(', ')'}
   local i, j
   empty 'result'

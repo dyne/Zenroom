@@ -1,7 +1,7 @@
 
 local ED = require'ed'
 
-When("create the planetmint signatures of ''", function(tx)
+When("create planetmint signatures of ''", function(tx)
     empty'planetmint_signatures'
     local serialized_tx = have(tx):string()
     local tx = JSON.decode(serialized_tx)

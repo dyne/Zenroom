@@ -191,12 +191,12 @@ ZEN:add_schema(
         },
 })
 
-When('create the ethereum key', function()
+When('create ethereum key', function()
 	initkeyring'ethereum'
 	ACK.keyring.ethereum = ECDH.keygen().private
 end)
 
-When('create the ethereum address', function()
+When('create ethereum address', function()
 	empty'ethereum address'
 	local pk = ACK.ethereum_public_key
 	if not pk then
@@ -207,13 +207,13 @@ When('create the ethereum address', function()
 end)
 
 -- Note that the address must be given as a string
-When("verify the ethereum address string '' is valid", function(add)
+When("verify ethereum address string '' is valid", function(add)
     local str_add = O.to_string(have(add))
     local address = O.from_hex(str_add)
     zencode_assert(str_add == ETH.checksum_encode(address), "The address has a wrong encoding")
 end)
 
-When("create the ethereum transaction of '' to ''",
+When("create ethereum transaction of '' to ''",
 function(quantity, destaddr)
   empty'ethereum transaction'
   local tx = { }
@@ -227,7 +227,7 @@ function(quantity, destaddr)
   new_codec('ethereum transaction')
 end)
 
-When("create the ethereum transaction to ''",
+When("create ethereum transaction to ''",
 function(destaddr)
   empty'ethereum transaction'
   local tx = { }
@@ -248,13 +248,13 @@ local function _use_eth_transaction(abi_fun, ...)
 end
 
 -- we can store only strings (for the moment)
-When("use the ethereum transaction to store ''",
+When("use ethereum transaction to store ''",
 function(content)
   _use_eth_transaction(ETH.make_storage_data, have(content))
 end)
 
 -- TODO: DEPRECATE
-When("create the string from the ethereum bytes named ''", function(obj)
+When("create string from ethereum bytes named ''", function(obj)
   empty'string'
   local data = have(obj):octet()
   local eth_decoder = ETH.contract_return_factory({ 'bytes' })
@@ -264,7 +264,7 @@ When("create the string from the ethereum bytes named ''", function(obj)
   new_codec('string', { encoding = 'string'})
 end)
 
-When("create the '' decoded from ethereum bytes ''", function(dst, obj)
+When("create '' decoded from ethereum bytes ''", function(dst, obj)
   empty(dst)
   local data = have(obj):octet()
   local eth_decoder = ETH.contract_return_factory({ 'bytes' })
@@ -280,7 +280,7 @@ end)
 -- use the ethereum transaction to elect ''
 -- use the ethereum transaction to vote ''
 
-When("create the signed ethereum transaction",
+When("create signed ethereum transaction",
 function()
   local sk = havekey'ethereum'
   local tx = have'ethereum transaction'
@@ -290,7 +290,7 @@ function()
   new_codec('signed ethereum transaction')
 end)
 
-When("create the signed ethereum transaction for chain ''",
+When("create signed ethereum transaction for chain ''",
 function(chainid)
   local sk = havekey'ethereum'
   local tx = have'ethereum transaction'
@@ -317,7 +317,7 @@ function(chainid)
   new_codec('signed ethereum transaction')
 end)
 
-When("verify the signed ethereum transaction from ''",
+When("verify signed ethereum transaction from ''",
 function(pubkey)
   local pk = have(pubkey)
   local rawtx = have'signed ethereum transaction'
@@ -326,20 +326,20 @@ function(pubkey)
   zencode_assert( ETH.verifySignatureTransaction(pk, tx) )
 end)
 
-When("create the ethereum key with secret key ''",function(sec)
+When("create ethereum key with secret key ''",function(sec)
 	local sk = have(sec)
 	initkeyring'ethereum'
 	ECDH.pubgen(sk)
 	ACK.keyring.ethereum = sk
 end)
-When("create the ethereum key with secret ''",function(sec)
+When("create ethereum key with secret ''",function(sec)
 	local sk = have(sec)
 	initkeyring'ethereum'
 	ECDH.pubgen(sk)
 	ACK.keyring.ethereum = sk
 end)
 
-When("use the ethereum transaction to transfer '' erc20 tokens to ''",
+When("use ethereum transaction to transfer '' erc20 tokens to ''",
 function(quantity, destaddr)
     _use_eth_transaction(ETH.erc20.transfer,
                          have(destaddr),
@@ -347,7 +347,7 @@ function(quantity, destaddr)
 end)
 
 
-When("use the ethereum transaction to transfer '' erc20 tokens to '' with details ''",
+When("use ethereum transaction to transfer '' erc20 tokens to '' with details ''",
 function(quantity, destaddr, details)
     _use_eth_transaction(ETH.transfer_erc20_details,
                          have(destaddr),
@@ -355,19 +355,19 @@ function(quantity, destaddr, details)
                          have(details))
 end)
 
-When("use the ethereum transaction to create the erc721 of uri ''",
+When("use ethereum transaction to create erc721 of uri ''",
 function(uri)
     _use_eth_transaction(ETH.create_erc721,
                          have(uri):string())
 end)
 
-When("use the ethereum transaction to create the erc721 of object ''",
+When("use ethereum transaction to create erc721 of object ''",
 function(uri)
     _use_eth_transaction(ETH.create_erc721,
                          have(uri):base64())
 end)
 
-When("use the ethereum transaction to transfer the erc721 '' from '' to ''",
+When("use ethereum transaction to transfer erc721 '' from '' to ''",
 function(token_id, from, dest)
     _use_eth_transaction(ETH.erc721.safeTransferFrom,
                          have(from),
@@ -375,14 +375,14 @@ function(token_id, from, dest)
                          BIG.new(have(token_id)))
 end)
 
-When("use the ethereum transaction to approve the erc721 '' transfer from ''",
+When("use ethereum transaction to approve erc721 '' transfer from ''",
 function(token_id, from)
     _use_eth_transaction(ETH.erc721.approve,
                          have(from),
                          BIG.new(have(token_id)))
 end)
 
-When("use the ethereum transaction to transfer the erc721 '' in the contract '' to '' in planetmint",
+When("use ethereum transaction to transfer erc721 '' in contract '' to '' in planetmint",
 function(token_id, nft, to)
     _use_eth_transaction(ETH.eth_to_planetmint,
                          have(nft),
@@ -390,7 +390,7 @@ function(token_id, nft, to)
                          have(to))
 end)
 
-When("create the ethereum abi encoding of '' using ''", function(t, args)
+When("create ethereum abi encoding of '' using ''", function(t, args)
     -- We imply that t is an octet/octet array and args is a single string/a string array
     local data = have(t)
     local o_type_spec = have(args)
@@ -409,7 +409,7 @@ When("create the ethereum abi encoding of '' using ''", function(t, args)
     new_codec('ethereum abi encoding', {encoding = 'hex'})
 end)
 
-When("create the ethereum abi decoding of '' using ''", function(t, args)
+When("create ethereum abi decoding of '' using ''", function(t, args)
     -- We imply that t is an octet/octet array and args is a single string/a string array
     local data = have(t)
     local o_type_spec = have(args)
@@ -428,7 +428,7 @@ When("create the ethereum abi decoding of '' using ''", function(t, args)
     new_codec('ethereum abi decoding', {zentype="a"})
 end)
 
-When("create the ethereum signature of ''", function(object)
+When("create ethereum signature of ''", function(object)
     local sk = havekey'ethereum'
     local data = have(object)
 
@@ -444,7 +444,7 @@ local function _prepare_msg_f(src)
     return hashed_msg
 end
 
-IfWhen("verify the '' has a ethereum signature in '' by ''", function(doc, sig, by)
+IfWhen("verify '' has a ethereum signature in '' by ''", function(doc, sig, by)
     local hmsg = _prepare_msg_f(doc)
     local signature = have(sig)
     local address = have(by)
@@ -460,7 +460,7 @@ local function _verify_address_signature_array(add_sig, doc, fun)
     return fun(address_signature, hmsg)
 end
 
-IfWhen("verify the ethereum address signature pair array '' of ''", function(add_sig, doc)
+IfWhen("verify ethereum address signature pair array '' of ''", function(add_sig, doc)
     _verify_address_signature_array(add_sig, doc,
         function(address_signature_pair, hmsg)
             for _, v in pairs(address_signature_pair) do
@@ -471,7 +471,7 @@ IfWhen("verify the ethereum address signature pair array '' of ''", function(add
     )
 end)
 
-IfWhen("use the ethereum address signature pair array '' to create the result array of ''", function(add_sig, doc)
+IfWhen("use ethereum address signature pair array '' to create result array of ''", function(add_sig, doc)
     empty 'result array'
     ACK.result_array = _verify_address_signature_array(add_sig, doc,
         function(address_signature_pair, hmsg)
@@ -488,7 +488,7 @@ IfWhen("use the ethereum address signature pair array '' to create the result ar
     new_codec("result array", {encoding="string"})
 end)
 
-When("use the ethereum transaction to run '' using ''", function(m, p)
+When("use ethereum transaction to run '' using ''", function(m, p)
 
     local method, codec = have(m)
     local params = have(p)
@@ -506,7 +506,7 @@ When("use the ethereum transaction to run '' using ''", function(m, p)
     tx.data = transaction_data
 end)
 
-When("create the ethereum address from the ethereum signature '' of ''", function(sign, doc)
+When("create ethereum address from ethereum signature '' of ''", function(sign, doc)
     empty'ethereum address'
     local hashed_msg = _prepare_msg_f(doc)
     local signature = have(sign)

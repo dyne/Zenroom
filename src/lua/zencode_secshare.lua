@@ -63,7 +63,7 @@ ZEN:add_schema({
       }
 })
 
-When("create the secret shares of '' with '' quorum ''", function(sec, tot, q)
+When("create secret shares of '' with '' quorum ''", function(sec, tot, q)
 	local soct = have(sec)
 	-- this check is relative to the BIG size, established by curve's size
 	-- it is made inside the crypto function, but could also be made here
@@ -80,7 +80,7 @@ When("create the secret shares of '' with '' quorum ''", function(sec, tot, q)
         })
 end)
 
-When("compose the secret using ''", function(shares)
+When("compose secret using ''", function(shares)
 	local sh = have(shares)
         ACK.secret = LAG.compose_shared_secret(sh):octet()
         new_codec('secret', {

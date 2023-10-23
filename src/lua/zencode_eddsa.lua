@@ -32,13 +32,13 @@ ZEN:add_schema(
 )
 
 -- generate the private key
-When('create the eddsa key',function()
+When('create eddsa key',function()
 	initkeyring'eddsa'
 	ACK.keyring.eddsa = ED.secgen()
 end)
 
 -- generate the public key
-When('create the eddsa public key',function()
+When('create eddsa public key',function()
 	empty'eddsa public key'
 	local sk = havekey'eddsa'
 	ACK.eddsa_public_key = ED.pubgen(sk)
@@ -53,15 +53,15 @@ local function _pubkey_from_secret(sec)
    ACK.keyring.eddsa = sk
 end
 
-When("create the eddsa key with secret key ''",
+When("create eddsa key with secret key ''",
      _pubkey_from_secret
 )
 
-When("create the eddsa key with secret ''",
+When("create eddsa key with secret ''",
      _pubkey_from_secret
 )
 
-When("create the eddsa public key with secret key ''",function(sec)
+When("create eddsa public key with secret key ''",function(sec)
 	local sk = have(sec)
 	empty'eddsa public key'
 	ACK.eddsa_public_key = ED.pubgen(sk)
@@ -70,7 +70,7 @@ When("create the eddsa public key with secret key ''",function(sec)
 end)
 
 -- generate the sign for a msg and verify
-When("create the eddsa signature of ''",function(doc)
+When("create eddsa signature of ''",function(doc)
 	local sk = havekey'eddsa'
 	local obj = have(doc)
 	empty'eddsa signature'
@@ -79,7 +79,7 @@ When("create the eddsa signature of ''",function(doc)
 				       encoding = 'base58'})
 end)
 
-IfWhen("verify the '' has a eddsa signature in '' by ''",function(msg, sig, by)
+IfWhen("verify '' has a eddsa signature in '' by ''",function(msg, sig, by)
 	  local pk = load_pubkey_compat(by, 'eddsa')
 	  local m = have(msg)
 	  local s = have(sig)

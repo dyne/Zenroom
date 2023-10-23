@@ -115,7 +115,7 @@ ZEN:add_schema(
 )
 
 When(
-	"create the petition ''",
+	"create petition ''",
 	function(uid)
 		havekey'credential'
 		-- zencode_assert(ACK.keyring.credential,"Credential key not found")
@@ -144,7 +144,7 @@ When(
 )
 
 When(
-	'verify the new petition to be empty',
+	'verify new petition to be empty',
 	function()
 		zencode_assert(
 			ECP.isinf(ACK.petition.scores.pos.left),
@@ -166,7 +166,7 @@ When(
 )
 
 When(
-	"create the petition signature ''",
+	"create petition signature ''",
 	function(uid)
 		have'credentials'
 		have'issuer public key'
@@ -191,7 +191,7 @@ When(
 )
 
 IfWhen(
-	'verify the signature proof is correct',
+	'verify signature proof is correct',
 	function()
 		zencode_assert(
 			CRED.verify_cred_uid(
@@ -221,10 +221,10 @@ local function _check_duplicate()
 end
 
 IfWhen(deprecated('the petition signature is not a duplicate',
-    'verify the petition signature is not a duplicate',
+    'verify petition signature is not a duplicate',
     _check_duplicate)
 )
-IfWhen('verify the petition signature is not a duplicate', _check_duplicate)
+IfWhen('verify petition signature is not a duplicate', _check_duplicate)
 
 local function _check_one_more()
     -- verify that the signature is +1 (no other value supported)
@@ -240,14 +240,14 @@ local function _check_one_more()
 end
 
 IfWhen(deprecated('the petition signature is just one more',
-    'verify the petition signature is just one more',
+    'verify petition signature is just one more',
     _check_one_more)
 )
 
-IfWhen('verify the petition signature is just one more', _check_one_more)
+IfWhen('verify petition signature is just one more', _check_one_more)
 
 When(
-	'add the signature to the petition',
+	'add signature to petition',
 	function()
 		-- add the signature to the petition count
 		local scores = ACK.petition.scores
@@ -277,7 +277,7 @@ When(
 )
 
 When(
-	'count the petition results',
+	'count petition results',
 	function()
 		zencode_assert(ACK.petition, 'Petition not found')
 		zencode_assert(ACK.petition_tally, 'Tally not found')

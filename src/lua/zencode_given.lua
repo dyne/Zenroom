@@ -266,7 +266,7 @@ Given(
 )
 
 Given(
-   "my name is in a '' named ''",
+   "my name is in '' named ''",
    function(sc, name)
       pick(name, sc)
       assert(ZEN.TMP.name, 'No name found in: ' .. name)
@@ -276,7 +276,7 @@ Given(
 )
 
 Given(
-   "my name is in a '' named '' in ''",
+   "my name is in '' named '' in ''",
    function(sc, name, struct)
       pickin(struct, name, sc)
       assert(ZEN.TMP.name,  'No name found in: '..name)
@@ -292,7 +292,7 @@ Given(
 
 -- TODO: I have a '' as ''
 Given(
-   "a ''",
+   "''",
    function(n)
       pick(n)
       ack(n)
@@ -301,7 +301,7 @@ Given(
 )
 
 Given(
-   "a '' in ''",
+   "'' in ''",
    function(s, t)
       pickin(t, s)
       ack(s) -- save it in ACK.obj
@@ -313,7 +313,7 @@ Given(
 -- returns a special array for upcoming session:
 -- public_key_session : { name : value }
 Given(
-   "a '' public key from ''",
+   "'' public key from ''",
    function(s, t)
       -- if not pickin(t, s, nil, false) then
       -- 	pickin(s, t)
@@ -324,7 +324,7 @@ Given(
 )
 
 Given(
-   "a '' from ''",
+   "'' from ''",
    function(s, t)
       -- if not pickin(t, s, nil, false) then
       -- 	pickin(s, t)
@@ -336,7 +336,7 @@ Given(
 )
 
 Given(
-   "a '' named ''",
+   "'' named ''",
    function(s, n)
       -- zencode_assert(encoder, "Invalid input encoding for '"..n.."': "..s)
       pick(n, s)
@@ -346,7 +346,7 @@ Given(
 )
 
 Given(
-   "a '' named by ''",
+   "'' named by ''",
    function(s, n)
       -- local name = have(n)
       local name = _index_to_string(IN[n])
@@ -358,7 +358,7 @@ Given(
 )
 
 Given(
-   "a '' named '' in ''",
+   "'' named '' in ''",
    function(s, n, t)
       pickin(t, n, s)
       ack(n) -- save it in ACK.name
@@ -367,7 +367,7 @@ Given(
 )
 
 Given(
-   "a '' named by '' in ''",
+   "'' named by '' in ''",
    function(s, n, t)
       local name = _index_to_string(IN[n])
       pickin(t, name, s)
@@ -407,7 +407,7 @@ Given(
 )
 
 Given(
-   "a '' is valid",
+   "'' is valid",
    function(n)
       pick(n)
       gc()
@@ -435,7 +435,7 @@ Given(
    end
 )
 
-Given("a '' part of '' after string prefix ''", function(enc, src, pfx)
+Given("'' part of '' after string prefix ''", function(enc, src, pfx)
 		 local whole = IN[src]
 		 zencode_assert(whole, "Cannot find '" .. src .. "' anywhere (null value?)")
 		 local plen = #pfx
@@ -451,7 +451,7 @@ Given("a '' part of '' after string prefix ''", function(enc, src, pfx)
 		 gc()
 end)
 
-Given("a '' part of '' before string suffix ''", function(enc, src, sfx)
+Given("'' part of '' before string suffix ''", function(enc, src, sfx)
 		 local whole = IN[src]
 		 zencode_assert(whole, "Cannot find '" .. src .. "' anywhere (null value?)")
 		 local slen = #sfx
@@ -467,7 +467,7 @@ Given("a '' part of '' before string suffix ''", function(enc, src, sfx)
 		 gc()
 end)
 
-Given("a '' in path ''", function(enc, path)
+Given("'' in path ''", function(enc, path)
     local path_array = strtok(uscore(path), '.')
     local root = path_array[1]
     table.remove(path_array, 1)
