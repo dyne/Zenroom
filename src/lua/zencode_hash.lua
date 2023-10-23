@@ -65,7 +65,7 @@ When("create hash to point '' of ''", function(curve, object)
     new_codec('hash_to_point', { zentype='e' })
 end)
 
-When(deprecated("create the hash to point '' of each object in ''",
+When(deprecated("create hash to point '' of each object in ''",
     [[Foreach 'element' in 'array'
 When I create hash to point of 'array'
 and I move 'hash to point' in 'array of hashes'

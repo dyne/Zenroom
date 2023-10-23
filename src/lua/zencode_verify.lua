@@ -223,7 +223,7 @@ IfWhen("verify size of '' is less than ''", function(obj_name, num_name)
         "Comparison fail: size of "..obj_name.." is not less than "..num_name)
 end)
 
-IfWhen(deprecated("verify the length of '' is less than ''",
+IfWhen(deprecated("verify length of '' is less than ''",
     "verify size of '' is less than ''",
     function(obj_name, num_name)
         local l, r = _check_compare_length(obj_name, num_name)
@@ -238,7 +238,7 @@ IfWhen("verify size of '' is less or equal than ''", function(obj_name, num_name
         "Comparison fail: size of "..obj_name.." is not less or equal than "..num_name)
 end)
 
-IfWhen(deprecated("verify the length of '' is less or equal than ''",
+IfWhen(deprecated("verify length of '' is less or equal than ''",
     "verify size of '' is less or equal than ''",
     function(obj_name, num_name)
         local l, r = _check_compare_length(obj_name, num_name)
@@ -253,7 +253,7 @@ IfWhen("verify size of '' is more than ''", function(obj_name, num_name)
         "Comparison fail: size of "..obj_name.." is not more than "..num_name)
 end)
 
-IfWhen(deprecated("verify the length of '' is more than ''",
+IfWhen(deprecated("verify length of '' is more than ''",
     "verify size of '' is more than ''",
     function(obj_name, num_name)
         local l, r = _check_compare_length(obj_name, num_name)
@@ -268,7 +268,7 @@ IfWhen("verify size of '' is more or equal than ''", function(obj_name, num_name
         "Comparison fail: size of "..obj_name.." is not more or equal than "..num_name)
 end)
 
-IfWhen(deprecated("verify the length of '' is more or equal than ''",
+IfWhen(deprecated("verify length of '' is more or equal than ''",
     "verify size of '' is more or equal than ''",
     function(obj_name, num_name)
         local l, r = _check_compare_length(obj_name, num_name)
@@ -388,7 +388,7 @@ local function _check_elements_equals(obj_name)
     end
 end
 
-IfWhen(deprecated("the elements in '' are equal",
+IfWhen(deprecated("elements in '' are equal",
     "verify elements in '' are equal",
     _check_elements_equals)
 )
@@ -412,7 +412,7 @@ local function _check_elements_not_equals(obj_name)
     zencode_assert(false, "Verification failed: all elements are equal")
 end
 
-IfWhen(deprecated("the elements in '' are not equal",
+IfWhen(deprecated("elements in '' are not equal",
     "verify elements in '' are not equal",
     _check_elements_not_equals)
 )

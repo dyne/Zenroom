@@ -26,23 +26,8 @@
 When("done", function() end)
 
 
-local function _is_found(el, t)
-	if not t then
-		return ACK[el] and (luatype(ACK[el]) == 'table' or #ACK[el] ~= 0)
-	else
-		zencode_assert(ACK[t], "Array or dictionary not found in: "..t)
-		if CODEC[t].zentype == 'a' then
-			local o_el = O.from_string(el)
-			for _,v in pairs(ACK[t]) do
-				if v == o_el then return true end
-			end
-		elseif CODEC[t].zentype == 'd' then
-			return ACK[t][el] and (luatype(ACK[t][el]) == 'table' or #ACK[t][el] ~= 0)
-		else
-			zencode_assert(false, "Invalid container type: "..t.." is "..CODEC[t].zentype)
-		end
-	end
-	return false
+local function _is_found(el)
+    return ACK[el] and (luatype(ACK[el]) == 'table' or #ACK[el] ~= 0)
 end
 
 IfWhen(deprecated("'' is found",
@@ -59,34 +44,12 @@ IfWhen(deprecated("'' is not found",
     end)
 )
 
-IfWhen(deprecated("'' is found in ''",
-    "verify '' is found in ''",
-    function(el, t)
-        zencode_assert(_is_found(el, t), "Cannot find object: "..el.." in "..t)
-    end)
-)
-
-IfWhen(deprecated("'' is not found in ''",
-    "verify '' is not found in ''",
-    function(el, t)
-        zencode_assert(not _is_found(el,t), "Object: "..el.." should not be found in "..t)
-    end)
-)
-
 IfWhen("verify '' is found", function(el)
     zencode_assert(_is_found(el), "Cannot find object: "..el)
 end)
 
 IfWhen("verify '' is not found", function(el)
     zencode_assert(not _is_found(el), "Object should not be found: "..el)
-end)
-
-IfWhen("verify '' is found in ''", function(el, t)
-    zencode_assert(_is_found(el, t), "Cannot find object: "..el.." in "..t)
-end)
-
-IfWhen("verify '' is not found in ''", function(el, t)
-    zencode_assert(not _is_found(el,t), "Object: "..el.." should not be found in "..t)
 end)
 
 When("append '' to ''", function(src, dest)
@@ -193,7 +156,7 @@ local function _json_encoede_f(src, dest)
     new_codec(dest, {encoding = 'string', zentype = 'e'})
 end
 
-When(deprecated("create the json of ''",
+When(deprecated("create json of ''",
     "create json escaped string of ''",
     function(src) _json_encoede_f(src, 'json') end)
 )
