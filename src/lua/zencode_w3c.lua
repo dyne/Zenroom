@@ -306,7 +306,7 @@ IfWhen(
         local data = strtok(O.to_string(document.proof.verificationMethod), '#' )
         local signer_id = O.from_string(data[1])
         zencode_assert(signer_id == signer_document.id,
-                    'signer id in proof is different from one in '..signer_did_doc)
+                    'The signer id in proof is different from the one in '..signer_did_doc)
         local i = 1
         local pk = nil
         repeat
