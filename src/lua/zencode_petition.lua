@@ -220,7 +220,7 @@ local function _check_duplicate()
     table.insert(ACK.petition.list, ACK.petition_signature.uid_signature)
 end
 
-IfWhen(deprecated('the petition signature is not a duplicate',
+IfWhen(deprecated('petition signature is not a duplicate',
     'verify petition signature is not a duplicate',
     _check_duplicate)
 )
@@ -239,7 +239,7 @@ local function _check_one_more()
     )
 end
 
-IfWhen(deprecated('the petition signature is just one more',
+IfWhen(deprecated('petition signature is just one more',
     'verify petition signature is just one more',
     _check_one_more)
 )

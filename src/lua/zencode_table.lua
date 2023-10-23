@@ -151,7 +151,7 @@ local function count_f(obj_name)
     end
     return count
 end
-When(deprecated("create the length of ''",
+When(deprecated("create length of ''",
 "create size of ''",
 function(arr)
     ACK.length = F.new(count_f(arr))
@@ -162,50 +162,44 @@ When("create size of ''", function(arr)
     new_codec('size', {zentype='e', encoding='float'})
 end)
 
-local function _not_found_in(ele_name, obj_name)
-    local ele, ele_codec = have(ele_name)
+local function _is_found_in(ele_name, obj_name)
+    local ele = mayhave(ele_name) or O.from_string(ele_name)
     local obj, obj_codec = have(obj_name)
     if obj_codec.zentype == 'a' then
         for _,v in pairs(obj) do
-            zencode_assert(v ~= ele, "Element '"..ele_name.."' is contained inside: "..obj_name)
+            if v == ele then return true end
         end
     elseif obj_codec.zentype == 'd' then
-        local val = O.to_string(ele)
-        zencode_assert(obj[val] == nil, "Element '"..ele_name.."' is contained inside: "..obj_name)
+        local el = O.to_string(ele)
+        return obj[el] and (luatype(obj[el]) == 'table' or #obj[el] ~= 0)
     else
-        zencode_assert(false, "Invalid container type: "..obj_name.." is "..obj_codec.zentype)
+        zencode_assert(false, "Invalid container type: "..obj.." is "..obj_codec)
     end
 end
 
-IfWhen(deprecated("the '' is not found in ''",
-    "verify '' is not found in ''",
-    _not_found_in)
+IfWhen(deprecated("'' is not found in ''",
+                  "verify '' is not found in ''",
+                  function(ele_name, obj_name)
+                      zencode_assert(not _is_found_in(ele_name, obj_name),
+                                     "Object should not be found: "..ele_name.." in "..obj_name)
+                 end)
 )
+IfWhen("verify '' is not found in ''", function(ele_name, obj_name)
+           zencode_assert(not _is_found_in(ele_name, obj_name),
+                          "Object should not be found: "..ele_name.." in "..obj_name)
+end)
 
-local function _found_in(ele_name, obj_name)
-    local ele, ele_codec = have(ele_name)
-    local obj, obj_codec = have(obj_name)
-    if obj_codec.zentype == 'a' then
-        local found = false
-        for _,v in pairs(obj) do
-            if v == ele then
-                found = true
-                break
-            end
-        end
-        zencode_assert(found, "The content of element '"..ele_name.."' is not found inside: "..obj_name)
-    elseif obj_codec.zentype == 'd' then
-        local val = O.to_string(ele)
-        zencode_assert(obj[val] ~= nil, "Element '"..ele_name.."' is not found inside: "..obj_name)
-    else
-        zencode_assert(false, "Invalid container type: "..obj_name.." is "..obj_codec.zentype)
-    end
-end
-
-IfWhen(deprecated("the '' is found in ''",
-    "verify '' is found in ''",
-    _found_in)
+IfWhen(deprecated("'' is found in ''",
+                  "verify '' is found in ''",
+                  function(ele_name, obj_name)
+                      zencode_assert(_is_found_in(ele_name, obj_name),
+                                     "Cannot find object: "..ele_name.." in "..obj_name)
+                 end)
 )
+IfWhen("verify '' is found in ''", function(ele_name, obj_name)
+           zencode_assert(_is_found_in(ele_name, obj_name),
+                          "Cannot find object: "..ele_name.." in "..obj_name)
+end)
 
 local function _found_in_atleast(ele_name, obj_name, times)
     local ele, ele_codec = have(ele_name)
@@ -229,7 +223,7 @@ local function _found_in_atleast(ele_name, obj_name, times)
     end
 end
 
-IfWhen(deprecated("the '' is found in '' at least '' times",
+IfWhen(deprecated("'' is found in '' at least '' times",
     "verify '' is found in '' at least '' times",
     _found_in_atleast)
 )
