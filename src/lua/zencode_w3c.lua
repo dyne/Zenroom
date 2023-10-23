@@ -172,7 +172,7 @@ local function jws_signature_to_octet(obj, algo)
 end
 
 When(
-    "set the verification method in '' to ''",
+    "set verification method in '' to ''",
     function(vc, meth)
         local cred = have(vc)
         zencode_assert(cred.proof, 'The object is not signed: ' .. vc)
@@ -182,7 +182,7 @@ When(
 )
 
 When(
-   "get the verification method in ''",
+   "get verification method in ''",
    function(vc)
 	  empty 'verification_method'
 	  local cred = have(vc)
@@ -204,7 +204,7 @@ local function _json_encoding(src)
 end
 
 When(
-    "create the jws signature of ''", function(src)
+    "create jws signature of ''", function(src)
         local source_str = _json_encoding(src)
         empty'jws'
         local sk = havekey'ecdh' -- assuming secp256k1
@@ -216,7 +216,7 @@ When(
 )
 
 When(
-    "create the jws signature using the ecdh signature in ''", function(sign)
+    "create jws signature using ecdh signature in ''", function(sign)
         local signature = have(sign)
         empty'jws'
         ACK.jws = O.from_string(jws_signature_to_octet(signature))
@@ -226,7 +226,7 @@ When(
 )
 
 IfWhen(
-    "verify the jws signature of ''",
+    "verify jws signature of ''",
     function(src)
         local jws = have'jws'
         local pub = have 'ecdh public key'
@@ -240,7 +240,7 @@ IfWhen(
 )
 
 When(
-    "sign the verifiable credential named ''",
+    "sign verifiable credential named ''",
     function(vc)
         local credential = have(vc)
         local sk = havekey'ecdh' -- assuming secp256k1
@@ -263,7 +263,7 @@ When(
 local function _verification_f(src, document, public_key)
     local signature = jws_octet_to_signature(document.proof.jws)
 
-    -- omit the proof subtable from verification
+    -- omit proof subtable from verification
     local proof = document.proof
     document.proof = nil
     local document_str = _json_encoding(src)
@@ -275,7 +275,7 @@ local function _verification_f(src, document, public_key)
 end
 
 IfWhen(
-    "verify the verifiable credential named ''",
+    "verify verifiable credential named ''",
     function(src)
         local document = have(src)
         zencode_assert(document.proof and document.proof.jws,
@@ -285,7 +285,7 @@ IfWhen(
 )
 
 IfWhen(
-    "verify the did document named ''",
+    "verify did document named ''",
     function(src)
         local document = have(src)
         zencode_assert(document.proof and document.proof.jws,
@@ -295,7 +295,7 @@ IfWhen(
 )
 
 IfWhen(
-    "verify the did document named '' is signed by ''",
+    "verify did document named '' is signed by ''",
     function(src, signer_did_doc)
         local document = have(src)
         local signer_document = have(signer_did_doc)
@@ -306,7 +306,7 @@ IfWhen(
         local data = strtok(O.to_string(document.proof.verificationMethod), '#' )
         local signer_id = O.from_string(data[1])
         zencode_assert(signer_id == signer_document.id,
-                    'The signer id in proof is different from the one in '..signer_did_doc)
+                    'signer id in proof is different from one in '..signer_did_doc)
         local i = 1
         local pk = nil
         repeat
@@ -322,7 +322,7 @@ IfWhen(
 )
 -- operations on the did-document
 When(
-    "create the serviceEndpoint of ''",
+    "create serviceEndpoint of ''",
     function(did_doc)
         local doc = have(did_doc)
         zencode_assert(doc.service, 'service not found')
@@ -337,7 +337,7 @@ When(
 )
 
 When(
-    "create the verificationMethod of ''",
+    "create verificationMethod of ''",
     function(did_doc)
         local doc = have(did_doc)
         zencode_assert(doc.verificationMethod, 'verificationMethod not found')
@@ -360,7 +360,7 @@ When(
 )
 
 When(
-    "create the '' public key from did document ''",
+    "create '' public key from did document ''",
     function(algo, did_doc)
         local doc = have (did_doc)
         local pk_name = algo..'_public_key'
@@ -401,7 +401,7 @@ function create_jwt_hs256(payload, password)
 end
 
 When(
-    "create the json web token of '' using ''",
+    "create json web token of '' using ''",
     function(payload_name, password_name)
         local payload = have(payload_name)
         local password = mayhave(password_name) or password_name
@@ -412,7 +412,7 @@ When(
 )
 
 IfWhen(
-    "verify the json web token in '' using ''",
+    "verify json web token in '' using ''",
     function(hmac_name, password_name)
         local hmac = have(hmac_name)
         local password = mayhave(password_name) or password_name

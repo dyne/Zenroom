@@ -22,7 +22,7 @@
 
 -- random operations, mostly on arrays and schemas supported
 
-When("create the random ''", function(dest)
+When("create random ''", function(dest)
 		zencode_assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		ACK[dest] = OCTET.random(32) -- TODO: right now hardcoded 256 bit random secrets
                 new_codec(dest, { zentype = 'e' })
@@ -43,7 +43,7 @@ local function shuffle_array_f(tab)
 end
 
 -- random and hashing operations
-When("create the random object of '' bits", function(n)
+When("create random object of '' bits", function(n)
 	empty'random object'
 	local bits = tonumber(mayhave(n) or n)
 	zencode_assert(bits, 'Invalid number of bits: ' .. n)
@@ -51,7 +51,7 @@ When("create the random object of '' bits", function(n)
 	new_codec('random_object', { zentype = 'e' })
 end
 )
-When("create the random object of '' bytes",function(n)
+When("create random object of '' bytes",function(n)
 	empty'random object'
 	local bytes = math.ceil(tonumber(mayhave(n) or n))
 	zencode_assert(bytes, 'Invalid number of bytes: ' .. n)
@@ -60,7 +60,7 @@ When("create the random object of '' bytes",function(n)
 end
 )
 
-When("randomize the '' array", function(arr)
+When("randomize '' array", function(arr)
 		local A = have(arr)
 		-- ZEN.assert(ZEN.CODEC[arr].zentype == 'a', "Object is not an array: "..arr)
 		ACK[arr] = shuffle_array_f(A)
@@ -76,12 +76,12 @@ local function _create_random_array(array_length, fun_input, fun)
     end
 end
 
-When("create the array of '' random objects", function(s)
+When("create array of '' random objects", function(s)
     _create_random_array(s, 64, OCTET.random)
     new_codec('array', {zentype = 'a'})
 end)
 
-When("create the array of '' random objects of '' bits", function(s, b)
+When("create array of '' random objects of '' bits", function(s, b)
     local bits = tonumber(mayhave(b) or b)
     zencode_assert(bits, "Argument is not a number: "..b)
     local bytes = math.ceil(bits/8)
@@ -89,7 +89,7 @@ When("create the array of '' random objects of '' bits", function(s, b)
     new_codec('array', {zentype = 'a'})
 end)
 
-When("create the array of '' random objects of '' bytes", function(s, b)
+When("create array of '' random objects of '' bytes", function(s, b)
     local n_bytes = tonumber(mayhave(b) or b)
     zencode_assert(n_bytes, "Argument is not a number: "..b)
     local bytes = math.ceil(n_bytes)
@@ -97,13 +97,13 @@ When("create the array of '' random objects of '' bytes", function(s, b)
     new_codec('array', {zentype = 'a'})
 end)
 
-When("create the array of '' random numbers", function(s)
+When("create array of '' random numbers", function(s)
     _create_random_array(s, null, BIG.random)
     new_codec('array', {zentype = 'a', encoding = 'integer' })
 end)
 
 
-When("create the array of '' random numbers modulo ''", function(s,m)
+When("create array of '' random numbers modulo ''", function(s,m)
     local modulo = mayhave(m)
     if not modulo then
         local mod = tonumber(m)
@@ -167,12 +167,12 @@ local function _extract_random_elements(num, from, random_fun)
    return dst
 end
 
-When("pick the random object in ''", function(from)
+When("pick random object in ''", function(from)
         key, ACK.random_object = next(_extract_random_elements(1, from, random_int16))
         new_codec('random_object', {name=key})
 end)
 
-When("create the random dictionary with '' random objects from ''", function(num, from)
+When("create random dictionary with '' random objects from ''", function(num, from)
         ACK.random_dictionary = _extract_random_elements(num, from, random_int16)
         new_codec('random_dictionary')
 end)

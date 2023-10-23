@@ -18,7 +18,7 @@
 --]]
 
 -- TODO: distinguish zpack and mpack
-When("create the mpack of ''", function(src)
+When("create mpack of ''", function(src)
     empty'mpack'
     local source = have(src)
     local tmp = MPACK.encode(source)
@@ -26,7 +26,7 @@ When("create the mpack of ''", function(src)
     new_codec('mpack', { zentype = 'e'})
 end)
 
-When("create the '' decoded from mpack ''", function(dst, src)
+When("create '' decoded from mpack ''", function(dst, src)
     empty(dst)
     local pack = have(src)
     zencode_assert(CODEC[src].zentype == 'e', "Invalid mpack, not an element: "..src)

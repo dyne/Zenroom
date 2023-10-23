@@ -125,13 +125,13 @@ ZEN:add_schema(
 ---------------------------------------- PVSS initialization -------------------------------------
 
 -- Participant generates the private key
-When('create the pvss key',function()
+When('create pvss key',function()
     initkeyring'pvss'
     ACK.keyring.pvss = PVSS.keygen()
 end)
 
 -- Participant generates the public key
-When('create the pvss public key',function()
+When('create pvss public key',function()
     empty'pvss public key'
     local sk = havekey'pvss'
     ACK.pvss_public_key = PVSS.sk2pk(GENERATORS, sk)
@@ -141,7 +141,7 @@ end)
 ----------------------------------------- DISTRIBUTION --------------------------------------------
 
 -- The issuer generates the encrypted shares for n participants with quorum t
-When("create the pvss public shares of '' with '' quorum '' using the public keys ''", function(sec, num, thr, pubks)
+When("create pvss public shares of '' with '' quorum '' using public keys ''", function(sec, num, thr, pubks)
     local s = have(sec)
 	local n = tonumber(have(num):decimal())
 	zencode_assert(n, "Total shares is not a number: "..num)
@@ -158,7 +158,7 @@ When("create the pvss public shares of '' with '' quorum '' using the public key
 end)
 
 -- Anyone verifies the encrypted shares created by the issuer
-When("verify the pvss public shares with '' quorum ''", function(num,thr)
+When("verify pvss public shares with '' quorum ''", function(num,thr)
     local pvss_public_shares = have'pvss public shares'
     local t = tonumber(have(thr):decimal())
     local n = tonumber(have(num):decimal())
@@ -189,7 +189,7 @@ end)
 ----------------------------------- RECONSTRUCTION -------------------------------------------
 
 -- Participant decrypts its own share AND generate a proof
-When("create the secret share with public key ''", function(pk)
+When("create secret share with public key ''", function(pk)
     local x = havekey'pvss'
     local y = have(pk)
     zencode_assert(y == PVSS.sk2pk(GENERATORS, x))
@@ -203,7 +203,7 @@ When("create the secret share with public key ''", function(pk)
 end)
 
 -- Each participant verifies the shares of the others
-When("create the pvss verified shares from ''", function(list)
+When("create pvss verified shares from ''", function(list)
     local dec_shares = have(list)
     local valid_shares, valid_indexes = PVSS.verify_decrypted_shares(GENERATORS, dec_shares)
     for k,v in pairs(valid_indexes) do
@@ -217,7 +217,7 @@ When("create the pvss verified shares from ''", function(list)
 end)
 
 -- Secret reconstruction / pooling the share
-When("compose the pvss secret using '' with quorum ''", function(shrs, thr)
+When("compose pvss secret using '' with quorum ''", function(shrs, thr)
     local threshold = tonumber(BIG.to_decimal(have(thr)))
     local verified_shares = have(shrs)
 

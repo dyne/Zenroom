@@ -67,20 +67,20 @@ ZEN:add_schema(
 
 
 -- generate the private key
-When('create the schnorr key',function()
+When('create schnorr key',function()
 	initkeyring'schnorr'
 	ACK.keyring.schnorr = SCH.keygen()
 end)
 
 -- generate the public key
-When('create the schnorr public key',function()
+When('create schnorr public key',function()
 	empty'schnorr public key'
 	local sk = havekey'schnorr'
 	ACK.schnorr_public_key = SCH.pubgen(sk)
 	new_codec('schnorr public key')
 end)
 
-When("create the schnorr public key with secret key ''",function(sec)
+When("create schnorr public key with secret key ''",function(sec)
 	local sk = have(sec)
 	empty'schnorr public key'
 	ACK.schnorr_public_key = SCH.pubgen(sk)
@@ -96,15 +96,15 @@ local function _schnorr_key_from_secret(sec)
    ACK.keyring.schnorr = d:octet():pad(32)
 end
 
-When("create the schnorr key with secret key ''",
+When("create schnorr key with secret key ''",
      _schnorr_key_from_secret
 )
-When("create the schnorr key with secret ''",
+When("create schnorr key with secret ''",
      _schnorr_key_from_secret
 )
 
 -- generate the sign for a msg and verify
-When("create the schnorr signature of ''",function(doc)
+When("create schnorr signature of ''",function(doc)
 	local sk = havekey'schnorr'
 	local obj = have(doc)
 	empty'schnorr signature'
@@ -112,7 +112,7 @@ When("create the schnorr signature of ''",function(doc)
 	new_codec('schnorr signature')
 end)
 
-IfWhen("verify the '' has a schnorr signature in '' by ''",function(doc, sig, by)
+IfWhen("verify '' has a schnorr signature in '' by ''",function(doc, sig, by)
 	  local pk = _pubkey_compat(by)
 	  local obj = have(doc)
 	  local s = have(sig)

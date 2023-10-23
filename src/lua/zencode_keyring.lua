@@ -45,7 +45,7 @@ function initkeyring(ktype)
       )
    end
 end
-When("create the keyring", function()
+When("create keyring", function()
     empty'keyring'
     initkeyring()
 end)

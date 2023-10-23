@@ -23,7 +23,7 @@
 
 -- hashing single strings
 When(
-    "create the hash of ''",
+    "create hash of ''",
     function(s)
         local src = have(s)
         if luatype(src) == 'table' then
@@ -35,7 +35,7 @@ When(
 )
 
 When(
-    "create the hash of '' using ''",
+    "create hash of '' using ''",
     function(s, h)
         local src = have(s)
         if luatype(src) == 'table' then
@@ -53,7 +53,7 @@ When(
     end
 )
 
-When("create the hash to point '' of ''", function(curve, object)
+When("create hash to point '' of ''", function(curve, object)
     local F = _G[curve]
     zencode_assert(
             luatype(F.hashtopoint) == 'function',
@@ -67,7 +67,7 @@ end)
 
 When(deprecated("create the hash to point '' of each object in ''",
     [[Foreach 'element' in 'array'
-When I create the hash to point of 'array'
+When I create hash to point of 'array'
 and I move 'hash to point' in 'array of hashes'
 EndForeach]],
     function(curve, object)
@@ -86,7 +86,7 @@ EndForeach]],
 )
 
 When(
-    "create the hashes of each object in ''",
+    "create hashes of each object in ''",
     function(arr)
         local A = have(arr)
         local count = isarray(A)
@@ -98,7 +98,7 @@ When(
 
 -- HMAC from RFC2104.
 When(
-    "create the HMAC of '' with key ''",
+    "create HMAC of '' with key ''",
     function(obj, key)
         local src = have(obj)
         if luatype(src) == 'table' then
@@ -115,7 +115,7 @@ When(
 )
 
 When(
-    "create the key derivation of ''",
+    "create key derivation of ''",
     function(obj)
         local src = have(obj)
         if luatype(src) == 'table' then
@@ -127,7 +127,7 @@ When(
 )
 
 When(
-    "create the key derivations of each object in ''",
+    "create key derivations of each object in ''",
     function(tab)
         local t = have(tab)
         zencode_assert(luatype(t) == 'table', 'Object is not a table: ' .. tab)
@@ -154,14 +154,14 @@ local function _pbkdf2_f(src, pass, n)
 end
 
 When(
-    "create the key derivation of '' with password ''",
+    "create key derivation of '' with password ''",
     function(obj, salt)
 	_pbkdf2_f(have(obj), have(salt), 5000)
     end
 )
 
 When(
-    "create the key derivation of '' with '' rounds",
+    "create key derivation of '' with '' rounds",
     function(obj, iter)
 	local n = tonumber(iter) or tonumber(tostring(have(iter)))
 	_pbkdf2_f(have(obj), nil, n)
@@ -169,7 +169,7 @@ When(
 )
 
 When(
-    "create the key derivation of '' with '' rounds with password ''",
+    "create key derivation of '' with '' rounds with password ''",
     function(obj, iter, salt)
 	local n = tonumber(iter) or tonumber(tostring(have(iter)))
 	_pbkdf2_f(have(obj), have(salt), n)
