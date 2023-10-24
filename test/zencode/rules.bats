@@ -158,7 +158,28 @@ EOF
 
 # --- unknown ignore --- #
 @test "Rule unknown ignore" {
-    cat <<EOF | zexe  unknown_ignore.zen
+    cat <<EOF | zexe unknown_ignore.zen
+Rule unknown ignore
+
+Given a statement that does not exist
+and what about this one?
+Given nothing
+When I write string 'test passed' in 'result'
+Then print the data
+Then another statement that does not exist
+and maybe another one
+EOF
+    save_output unknown_ignore_output.json
+    assert_output '{"result":"test_passed"}'
+    run $ZENROOM_EXECUTABLE -z $TMP/unknown_ignore.zen
+    assert_line --partial 'Zencode line 3 pattern ignored: Given a statement that does not exist'
+    assert_line --partial 'Zencode line 4 pattern ignored: and what about this one?'
+    assert_line --partial 'Zencode line 8 pattern ignored: Then another statement that does not exist'
+    assert_line --partial 'Zencode line 9 pattern ignored: and maybe another one'
+}
+
+@test "Rule unknown ignore fails" {
+    cat <<EOF | save_asset unknown_ignore_fails.zen
 Rule unknown ignore
 
 Given nothing
@@ -166,8 +187,34 @@ When I test the rule with a statement that does not exist
 When I write string 'test passed' in 'result'
 Then print the data
 EOF
-    save_output unknown_ignore_output.json
-    assert_output '{"result":"test_passed"}'
+    run $ZENROOM_EXECUTABLE -z unknown_ignore_fails.zen
+    assert_line --partial 'Zencode line 4 found invalid statement out of given or then phase: When I test the rule with a statement that does not exist'
+}
+
+@test "Rule unknown ignore fails in given" {
+    cat <<EOF | save_asset unknown_ignore_fails_given.zen
+Rule unknown ignore
+
+Given nothing
+Given I test the rule with a statement that does not exist
+When I write string 'test passed' in 'result'
+Then print the data
+EOF
+    run $ZENROOM_EXECUTABLE -z unknown_ignore_fails_given.zen
+    assert_line --partial 'Zencode line 4 found invalid statement after a valid one in the given phase: Given I test the rule with a statement that does not exist'
+}
+
+@test "Rule unknown ignore fails in then" {
+    cat <<EOF | save_asset unknown_ignore_fails_then.zen
+Rule unknown ignore
+
+Given nothing
+When I write string 'test passed' in 'result'
+Then I use a statement that does not exists
+Then print the data
+EOF
+    run $ZENROOM_EXECUTABLE -z unknown_ignore_fails_then.zen
+    assert_line --partial 'Zencode line 6 found valid statement after an invalid one in the then phase: Then print the data'
 }
 
 # --- set --- #

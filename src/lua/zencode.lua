@@ -67,7 +67,8 @@ ZEN = {
 	next_instruction = 1, -- first instruction
 	ITER = nil, -- foreach infos
 	traceback = {}, -- transferred into HEAP by zencode_begin
-	linenum = 0
+	linenum = 0,
+	last_valid_statement = false
 }
 
 
@@ -206,10 +207,23 @@ function ZEN:begin(new_heap)
 		  exitcode(1)
 		  error('Zencode line '..linenum..' pattern not found ('..index..'): ' .. trim(sentence), 1)
 		  return false
-	   elseif not ctx.Z.OK and not CONF.parser.strict_match then
-		  table.insert(traceback, '-'..linenum..'  '..sentence)
-		  warn('Zencode line '..linenum..' pattern ignored: ' .. sentence, 1)
 	   end
+	   if not CONF.parser.strict_match then
+		   if index == 'given' then
+			   assert(not ctx.Z.last_valid_statement or ctx.Z.OK,
+					  'Zencode line '..linenum..' found invalid statement after a valid one in the given phase: '..trim(sentence))
+		   elseif index == 'then' then
+			   assert(ctx.Z.last_valid_statement or not ctx.Z.OK,
+					  'Zencode line '..linenum..' found valid statement after an invalid one in the then phase: '..trim(sentence))
+		   else
+			   assert(ctx.Z.OK, 'Zencode line '..linenum..' found invalid statement out of given or then phase: '..trim(sentence))
+		   end
+		   if not ctx.Z.OK then
+			   table.insert(traceback, '-'..linenum..'	'..sentence)
+			   warn('Zencode line '..linenum..' pattern ignored: ' .. sentence, 1)
+		   end
+	   end
+	   ctx.Z.last_valid_statement = ctx.Z.OK
 	   return true
 	end
 	-- END local function set_sentence

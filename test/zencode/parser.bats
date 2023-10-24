@@ -29,8 +29,8 @@ rule unknown ignore
 Scenario credential: issuer keygen
 Given that I am known as 'MadHatter'
 When I create the issuer key
-and I don't know what I am doing
 Then print my 'keyring'
+and I don't know what I am doing
 EOF
 }
 
