@@ -276,3 +276,39 @@ end)
 When("take '' from path ''", function(target, path)
     take_out_f(path, uscore(target), nil)
 end)
+
+When("set pointer to ''", function(obj_name)
+    local obj, obj_codec = have(obj_name)
+    empty "pointer"
+    zencode_assert(obj_codec.zentype ~= "e", "Cannot set pointer to an element")
+    ACK.pointer = obj
+    new_codec("pointer", nil, obj_name)
+end)
+
+When("enter '' with pointer", function(key_name)
+    local key_o, key_codec = mayhave(key_name)
+    local p, p_codec = have("pointer")
+    local key_s
+    if key_o then
+        key_s = get_encoding_function(key_codec.encoding)(key_o)
+    else
+        key_s = key_name
+    end
+    if p_codec.zentype == "a" then
+        key_s = tonumber(key_s)
+        zencode_assert(key_s, "Pointer is an array but key is not a position number: "..key_name)
+    end
+    zencode_assert(p[key_s], "Cannot find "..key_s.." in pointer")
+    zencode_assert(luatype(p[key_s]) == "table",
+        "Cannot enter a "..luatype(p[key_s])..", is not a table")
+    -- do not point to elements
+    zencode_assert(not p_codec.schema, "Cannot set pointer to an element")
+    ACK.pointer = p[key_s]
+    local n_codec = {encoding = p_codec.encoding}
+    if p_codec.schema then
+        n_codec.schema = p_codec.schema
+        n_codec.zentype = "e"
+    end
+    CODEC.pointer = nil
+    new_codec("pointer", n_codec)
+end)
