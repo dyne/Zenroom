@@ -27,7 +27,27 @@ When("create the new array", function()
 	new_codec('new array', {zentype='a'})
 end)
 
-When("create the copy of element '' in array ''", function(pos, arr)
+When(deprecated("create the copy of element '' in array ''",
+	"create the copy of element '' from array ''",
+	function(pos, arr)
+		empty 'copy'
+		local src, src_codec = have(arr)
+		zencode_assert(src_codec.zentype == "a", "Not an array: "..arr)
+		local num = tonumber(mayhave(pos) or pos)
+		zencode_assert(num, "Argument is not a position number: "..pos)
+		zencode_assert(src[num], "No element found in: "..arr.."["..pos.."]")
+		ACK.copy = src[num]
+		local n_codec = { encoding = src_codec.encoding }
+		-- table of schemas can only contain elements
+		if src_codec.schema then
+			n_codec.schema = src_codec.schema
+			n_codec.zentype = "e"
+		end
+		new_codec('copy', n_codec)
+	end)
+)
+
+When("create the copy of element '' from array ''", function(pos, arr)
 	empty 'copy'
 	local src, src_codec = have(arr)
 	zencode_assert(src_codec.zentype == "a", "Not an array: "..arr)
@@ -43,6 +63,7 @@ When("create the copy of element '' in array ''", function(pos, arr)
 	end
 	new_codec('copy', n_codec)
 end)
+
 
 local function _insert_in(what, dest)
 	local d, d_codec = have(dest)
