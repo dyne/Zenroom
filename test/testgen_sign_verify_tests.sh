@@ -48,9 +48,9 @@ EOF
 Scenario %%ALGOSIGN%%
 Given I am known as 'Carl'
 When I create the %%ALGOSIGN%% key
-and I copy the '%%ALGOSIGN%%' in 'keyring' to '%%ALGOSIGN%% before'
+and I copy the '%%ALGOSIGN%%' from 'keyring' to '%%ALGOSIGN%% before'
 and I create the %%ALGOSIGN%% public key
-and I copy the '%%ALGOSIGN%%' in 'keyring' to '%%ALGOSIGN%% after'
+and I copy the '%%ALGOSIGN%%' from 'keyring' to '%%ALGOSIGN%% after'
 and I verify '%%ALGOSIGN%% before' is equal to '%%ALGOSIGN%% after'
 Then print '%%ALGOSIGN%% before' as 'hex'
 and print '%%ALGOSIGN%% after' as 'hex'

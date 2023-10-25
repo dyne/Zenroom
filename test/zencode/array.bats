@@ -892,7 +892,7 @@ EOF
 Given I have a 'string array' named 'array'
 
 When I create the size of 'array'
-and I create the copy of element 'size' in array 'array'
+and I create the copy of element 'size' from array 'array'
 
 Then print the 'copy'
 EOF
@@ -935,11 +935,11 @@ Given I have a 'string array' named 'smallarray'
 Given I have a 'string dictionary' named 'smalldict'
 Given I have a 'ethereum signature array' named 'smallSignatures'
 
-When I create the copy of last element in 'smallarray'
+When I create the copy of last element from 'smallarray'
 and I rename 'copy_of_last_element' to 'last array'
-When I create the copy of last element in 'smalldict'
+When I create the copy of last element from 'smalldict'
 and I rename 'copy_of_last_element' to 'last dict'
-When I create the copy of last element in 'smallSignatures'
+When I create the copy of last element from 'smallSignatures'
 and I rename 'copy_of_last_element' to 'last signature'
 
 Then print the 'last array'
@@ -1014,7 +1014,7 @@ EOF
     cat << EOF | zexe copy_from_schema_array.zen copy_from_schema_array.data
 Scenario 'ethereum': copy element
 Given I have a 'ethereum address signature pair array' named 'addresses_signatures'
-When I create the copy of element '1' in array 'addresses_signatures'
+When I create the copy of element '1' from array 'addresses_signatures'
 Then print the 'copy'
 EOF
     save_output 'copy_from_schema_array.json'

@@ -42,9 +42,9 @@ EOF
 Scenario schnorr
 Given I am known as 'Carl'
 When I create the schnorr key
-and I copy the 'schnorr' in 'keyring' to 'schnorr before'
+and I copy the 'schnorr' from 'keyring' to 'schnorr before'
 and I create the schnorr public key
-and I copy the 'schnorr' in 'keyring' to 'schnorr after'
+and I copy the 'schnorr' from 'keyring' to 'schnorr after'
 and I verify 'schnorr before' is equal to 'schnorr after'
 Then print 'schnorr before' as 'hex'
 and print 'schnorr after' as 'hex'

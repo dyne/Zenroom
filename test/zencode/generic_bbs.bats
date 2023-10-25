@@ -42,9 +42,9 @@ EOF
 Scenario bbs
 Given I am known as 'Carl'
 When I create the bbs key
-and I copy the 'bbs' in 'keyring' to 'bbs before'
+and I copy the 'bbs' from 'keyring' to 'bbs before'
 and I create the bbs public key
-and I copy the 'bbs' in 'keyring' to 'bbs after'
+and I copy the 'bbs' from 'keyring' to 'bbs after'
 and I verify 'bbs before' is equal to 'bbs after'
 Then print 'bbs before' as 'hex'
 and print 'bbs after' as 'hex'
