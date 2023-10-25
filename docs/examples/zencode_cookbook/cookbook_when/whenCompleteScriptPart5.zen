@@ -31,7 +31,7 @@ When I create the variance of elements in array 'mySecondNumberArray'
 # COPY ELEMENT
 # This statement creates a an object named "copy" containing
 # the given element of the array
-When I create the copy of element '2' in array 'mySecondNumberArray'
+When I create the copy of element '2' from array 'mySecondNumberArray'
 
 # REMOVE
 # The "remove" statement does the opposite of the one above:
