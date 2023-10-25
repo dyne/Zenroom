@@ -42,9 +42,9 @@ EOF
 Scenario qp
 Given I am known as 'Carl'
 When I create the dilithium key
-and I copy the 'dilithium' in 'keyring' to 'dilithium before'
+and I copy the 'dilithium' from 'keyring' to 'dilithium before'
 and I create the dilithium public key
-and I copy the 'dilithium' in 'keyring' to 'dilithium after'
+and I copy the 'dilithium' from 'keyring' to 'dilithium after'
 and I verify 'dilithium before' is equal to 'dilithium after'
 Then print 'dilithium before' as 'hex'
 and print 'dilithium after' as 'hex'

@@ -42,9 +42,9 @@ EOF
 Scenario ecdh
 Given I am known as 'Carl'
 When I create the ecdh key
-and I copy the 'ecdh' in 'keyring' to 'ecdh before'
+and I copy the 'ecdh' from 'keyring' to 'ecdh before'
 and I create the ecdh public key
-and I copy the 'ecdh' in 'keyring' to 'ecdh after'
+and I copy the 'ecdh' from 'keyring' to 'ecdh after'
 and I verify 'ecdh before' is equal to 'ecdh after'
 Then print 'ecdh before' as 'hex'
 and print 'ecdh after' as 'hex'

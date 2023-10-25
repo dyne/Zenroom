@@ -42,9 +42,9 @@ EOF
 Scenario eddsa
 Given I am known as 'Carl'
 When I create the eddsa key
-and I copy the 'eddsa' in 'keyring' to 'eddsa before'
+and I copy the 'eddsa' from 'keyring' to 'eddsa before'
 and I create the eddsa public key
-and I copy the 'eddsa' in 'keyring' to 'eddsa after'
+and I copy the 'eddsa' from 'keyring' to 'eddsa after'
 and I verify 'eddsa before' is equal to 'eddsa after'
 Then print 'eddsa before' as 'hex'
 and print 'eddsa after' as 'hex'
