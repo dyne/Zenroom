@@ -349,11 +349,35 @@ When("copy contents of '' named '' in ''", function(src,name,dst)
 	end
 end)
 
-When("copy the '' in '' to ''", function(old,inside,new)
-	zencode_assert(ACK[inside][old], "Object not found: "..old.." inside "..inside)
-	empty(new)
-	ACK[new] = deepcopy(ACK[inside][old])
-	new_codec(new, { }, inside)
+When(deprecated("copy the '' in '' to ''",
+    "copy the '' from '' to ''",
+    function(old,inside,new)
+        zencode_assert(ACK[inside][old], "Object not found: "..old.." inside "..inside)
+        empty(new)
+        ACK[new] = deepcopy(ACK[inside][old])
+        local o_codec = CODEC[inside]
+        local n_codec = { encoding = o_codec.encoding }
+        -- table of schemas can only contain elements
+        if o_codec.schema then
+            n_codec.schema = o_codec.schema
+            n_codec.zentype = "e"
+        end
+        new_codec(new, n_codec)
+    end)
+)
+
+When("copy the '' from '' to ''", function(old,inside,new)
+    zencode_assert(ACK[inside][old], "Object not found: "..old.." inside "..inside)
+    empty(new)
+    ACK[new] = deepcopy(ACK[inside][old])
+    local o_codec = CODEC[inside]
+    local n_codec = { encoding = o_codec.encoding }
+	-- table of schemas can only contain elements
+	if o_codec.schema then
+		n_codec.schema = o_codec.schema
+		n_codec.zentype = "e"
+	end
+    new_codec(new, n_codec)
 end)
 
 When("split the rightmost '' bytes of ''", function(len, src)

@@ -237,7 +237,41 @@ IfWhen(deprecated("the '' is found in '' at least '' times",
 )
 IfWhen("verify the '' is found in '' at least '' times", _found_in_atleast)
 
-When("create the copy of last element in ''", function(obj_name)
+When(deprecated("create the copy of last element in ''",
+    "create the copy of last element in ''",
+    function(obj_name)
+        local obj, obj_codec = have(obj_name)
+        if type(obj) ~= 'table' then
+            error("Can only index tables")
+        end
+        if obj_codec.zentype == 'a' then
+            if #obj == 0 then
+                error("Last element doesn't exist for empty array")
+            end
+            ACK.copy_of_last_element = obj[#obj]
+        elseif obj_codec.zentype == 'd' then
+            local elem = nil
+            for _, v in sort_pairs(obj) do
+                elem = v
+            end
+            if not elem then
+                error("Last element doesn't exist for empty dictionary")
+            end
+            ACK.copy_of_last_element = elem
+        else
+            error("Cannot find last element in " .. obj_codec.zentype)
+        end
+        local n_codec = {encoding = obj_codec.encoding}
+        -- if copying from table of schema
+        if obj_codec.schema then
+            n_codec.schema = obj_codec.schema
+            n_codec.zentype = "e"
+        end
+        new_codec('copy_of_last_element', n_codec)
+    end)
+)
+
+When("create the copy of last element from ''", function(obj_name)
     local obj, obj_codec = have(obj_name)
     if type(obj) ~= 'table' then
         error("Can only index tables")
