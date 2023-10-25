@@ -108,10 +108,11 @@ And I rename the 'copy' to 'InitialAmount<<TransactionAmountsA'
 When I create the copy of object named by 'objectToBeCopied' from dictionary 'TransactionAmountsA'
 And I rename the 'copy' to 'LaterAmount<<TransactionAmountsA'
 
-# And you can also copy an element of a dictionary, that is nested 
-# into another dictionary, to the root level:
-When I create the copy of 'Buyer' in 'Information' in 'TransactionsBatchA'
-and I rename the 'copy' to 'Buyer<<Information<<TransactionsBatchA'
+# PICKUP
+# And you can also pickup an element of a dictionary, that is nested 
+# into another dictionaries, to the root level:
+When I pickup from path 'TransactionsBatchA.Information.Buyer'
+and I rename the 'Buyer' to 'Buyer<<Information<<TransactionsBatchA'
 
 # MOVE in Dictionary
 # We can use the "move" statement to add an element to a dictionary, as we would do with an array
