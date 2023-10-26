@@ -238,7 +238,7 @@ IfWhen(deprecated("the '' is found in '' at least '' times",
 IfWhen("verify the '' is found in '' at least '' times", _found_in_atleast)
 
 When(deprecated("create the copy of last element in ''",
-    "create the copy of last element in ''",
+    "create the copy of last element from ''",
     function(obj_name)
         local obj, obj_codec = have(obj_name)
         if type(obj) ~= 'table' then
