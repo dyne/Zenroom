@@ -27,8 +27,8 @@ When("create new array", function()
 	new_codec('new array', {zentype='a'})
 end)
 
-When(deprecated("create the copy of element '' in array ''",
-	"create the copy of element '' from array ''",
+When(deprecated("create copy of element '' in array ''",
+	"create copy of element '' from array ''",
 	function(pos, arr)
 		empty 'copy'
 		local src, src_codec = have(arr)
@@ -47,7 +47,7 @@ When(deprecated("create the copy of element '' in array ''",
 	end)
 )
 
-When("create the copy of element '' from array ''", function(pos, arr)
+When("create copy of element '' from array ''", function(pos, arr)
 	empty 'copy'
 	local src, src_codec = have(arr)
 	zencode_assert(src_codec.zentype == "a", "Not an array: "..arr)

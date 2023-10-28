@@ -249,17 +249,17 @@ local function create_copy_f(root, in1, in2)
 	new_codec('copy', n_codec)
 	CODEC['copy'].name = in2 or in1
 end
-When("create the copy of '' from dictionary ''", function(name, dict) create_copy_f(dict, name) end)
-When("create the copy of '' from ''", function(name, dict) create_copy_f(dict, name) end)
-When(deprecated("create the copy of '' in ''",
-                "create the copy of '' from ''",
+When("create copy of '' from dictionary ''", function(name, dict) create_copy_f(dict, name) end)
+When("create copy of '' from ''", function(name, dict) create_copy_f(dict, name) end)
+When(deprecated("create copy of '' in ''",
+                "create copy of '' from ''",
                 function(name, dict) create_copy_f(dict, name) end)
 )
-When(deprecated("create the copy of '' in '' in ''",
+When(deprecated("create copy of '' in '' in ''",
                 "pickup from path ''",
                 function(obj, branch, root) create_copy_f(root, branch, obj) end)
 )
-When("create the copy of object named by '' from dictionary ''", function(name, dict)
+When("create copy of object named by '' from dictionary ''", function(name, dict)
   local label = have(name)
   create_copy_f(dict, label:string())
 end)
