@@ -274,14 +274,6 @@ When("move '' to '' in ''", function(old,new,inside)
 		_copy_move_in(old, new, inside, true)
 end)
 
-
-When("copy '' to ''", function(old,new)
-	have(old)
-	empty(new)
-	ACK[new] = deepcopy(ACK[old])
-	new_codec(new, { }, old)
-end)
-
 When("copy contents of '' in ''", function(src,dst)
 	local obj = have(src)
 	have(dst)
@@ -302,8 +294,8 @@ When("copy contents of '' named '' in ''", function(src,name,dst)
 	end
 end)
 
-When(deprecated("copy the '' in '' to ''",
-    "copy the '' from '' to ''",
+When(deprecated("copy '' in '' to ''",
+    "copy '' from '' to ''",
     function(old,inside,new)
         zencode_assert(ACK[inside][old], "Object not found: "..old.." inside "..inside)
         empty(new)
@@ -319,7 +311,7 @@ When(deprecated("copy the '' in '' to ''",
     end)
 )
 
-When("copy the '' from '' to ''", function(old,inside,new)
+When("copy '' from '' to ''", function(old,inside,new)
     zencode_assert(ACK[inside][old], "Object not found: "..old.." inside "..inside)
     empty(new)
     ACK[new] = deepcopy(ACK[inside][old])

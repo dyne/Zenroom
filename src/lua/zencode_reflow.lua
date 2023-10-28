@@ -299,13 +299,13 @@ local function _fingerprint_is_new()
     )
 end
 
-IfWhen(deprecated("check the reflow signature fingerprint is new",
-                  "verify the reflow signature fingerprint is new",
+IfWhen(deprecated("check reflow signature fingerprint is new",
+                  "verify reflow signature fingerprint is new",
                   _fingerprint_is_new
                  )
 )
 
-IfWhen("verify the reflow signature fingerprint is new",
+IfWhen("verify reflow signature fingerprint is new",
        _fingerprint_is_new
 )
 

@@ -229,8 +229,8 @@ IfWhen(deprecated("'' is found in '' at least '' times",
 )
 IfWhen("verify '' is found in '' at least '' times", _found_in_atleast)
 
-When(deprecated("create the copy of last element in ''",
-    "create the copy of last element from ''",
+When(deprecated("create copy of last element in ''",
+    "create copy of last element from ''",
     function(obj_name)
         local obj, obj_codec = have(obj_name)
         if type(obj) ~= 'table' then
@@ -263,7 +263,7 @@ When(deprecated("create the copy of last element in ''",
     end)
 )
 
-When("create the copy of last element from ''", function(obj_name)
+When("create copy of last element from ''", function(obj_name)
     local obj, obj_codec = have(obj_name)
     if type(obj) ~= 'table' then
         error("Can only index tables")
