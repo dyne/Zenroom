@@ -6,11 +6,11 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 # Zenroom crypto VM
 
-[![Zenroom logo](https://files.dyne.org/zenroom/logos/zenroom_logotype.png)](https://dev.zenroom.org)
+[![Zenroom logo](https://files.dyne.org/zenroom/logos/zenroom_logotype.png)](https://zenroom.org)
 
-Zenroom is a **secure language interpreter** of both Lua and its own
-secure domain specific language (DSL) to execute fast cryptographic
-operations using elliptic curve arithmetics.
+Zenroom is a **secure language interpreter** of the secure domain
+specific language **Zencode**, it makes it very easy to execute fast
+cryptographic operations on any data structure.
 
 The Zenroom VM is very small, has **no external dependency**, is fully
 deterministic and ready to run **end-to-end encryption** on any
@@ -18,25 +18,32 @@ platform: desktop, embedded, mobile, cloud micro-services, web
 browsers. It can be embedded inside applications written in
 Javascript, Python3, Rust or Golang.
 
-**Zencode** is the name of the DSL executed by Zenroom: it is similar
-to human language and can process large data structures while
-operating cryptographic transformations and basic logical operations
-on them.
+**Zencode** is a domain-specific language (DSL) similar to human
+language. With its **no-code** approach one can process large data
+structures through complex cryptographic and logical
+transformations.
+
+Zencode helps us to lower the liability of developers by leveraging
+the **agency of domain experts**: one can write and review business
+logics and data-sensitive operations **without having to learn to
+code**.
 
 [![software by Dyne.org](https://files.dyne.org/software_by_dyne.png)](http://www.dyne.org)
 
 ## Timeline
 
-- 2017 - Development started
-- 2019 - Released version 1.0.0
-- 2022 - Released version 2.0.0 (long term support)
-- 2022 - Started development of 3.0.0
+- 2017 - Proof of Concept
+- 2018 - Prototype and Alpha release series
+- 2019 - Stable release series `v1` (now EOL)
+- 2022 - Stable release series [v2](https://github.com/dyne/Zenroom/tree/v2) until LTS `v2.22.1`
+- 2023 - Stable release series [v3](https://github.com/dyne/Zenroom/tree/v3) until LTS `v3.23.4`
+- 2024 - Current stable `v4` (latest HEAD)
+
+### [Read the full Changelog for more infos](https://github.com/dyne/Zenroom/blob/master/ChangeLog.md)
 
 This software has zero dependencies. If you chose to use it in your
 project be assured that we intend to support the same code to still
-run in 20 years from now.
-
-Version 3 development started with the implementation of Quantum Resistant encryption and signatures.
+run in 20 years from now on any target platform.
 
 ## Links
 
@@ -55,7 +62,7 @@ For many quick running examples visit the
 [ApiRoom](https://apiroom.net) online IDE powered by Zenroom.
 
 
-**Zenroom is licensed as AGPLv3; we are [open to grant exceptions on a commercial basis](https://forkbomb.eu).**
+**Zenroom is licensed as AGPLv3; we are [open to grant exceptions on a commercial basis](https://forkbomb.solutions).**
 
 ## Applications
 
@@ -138,18 +145,21 @@ Will produce a `zenroom` executable and a `libzenroom` shared lib in `zenroom/bu
 
 Copyright (C) 2017-2023 Dyne.org foundation
 
-Designed and written by Denis "[Jaromil](https://jaromil.dyne.org)" Roio with the help of [Puria](https://github.com/puria) Nafisi Azizi and [Andrea](https://github.com/andrea-dintino) D'Intino.
+Designed and written by Denis "[Jaromil](https://jaromil.dyne.org)"
+Roio with the help of [Puria](https://github.com/puria) Nafisi Azizi
+and [Andrea](https://www.linkedin.com/in/andrea-d-intino/) D'Intino.
 
-Includes code contributions by Alberto Lerda, Matteo Cristino, Danilo Spinella, Luca Di Domenico and Rebecca Selvaggini.
+Includes code contributions by Alberto Lerda, Matteo Cristino, Danilo
+Spinella, Luca Di Domenico and Rebecca Selvaggini.
 
 Reviews and suggestions contributed by: Richard Stallman, Daniele
-Lacamera, Enrico Zimuel, Sofía Celi, Sebastian Blichfeld, Danilo
-Spinella, Adam Burns, Thomas Fuerstner and Jürgen Eckel.
+Lacamera, Enrico Zimuel, Sofía Celi, Sebastian Blichfeld, Adam Burns,
+Thomas Fuerstner and Jürgen Eckel.
 
 Zenroom [complies with the REUSE license specification](https://github.com/dyne/Zenroom/actions/workflows/reuse.yml) and redistributes:
-- Lua 5.3 - Copyright © 1994–2019 Lua.org, PUC-Rio.
+- Lua 5.4 - Copyright © 1994–2023 Lua.org, PUC-Rio.
 - Apache Milagro Crypto Library (AMCL)
-- Various Lua libraries released under MIT license
+- Various Lua libraries released under Apache/MIT license
 
 Special thanks to our colleagues in the [DECODE
 project](https://decodeproject.eu) whose research has inspired the

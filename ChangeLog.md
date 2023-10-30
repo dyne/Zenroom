@@ -1,30 +1,63 @@
 <!--
-SPDX-FileCopyrightText: 2017-2022 Dyne.org foundation
+SPDX-FileCopyrightText: 2017-2023 Dyne.org foundation
 
 SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
 # Zenroom ChangeLog
-## major release version 3.0.0 (2023)
 
-Adopted semantic versioning: major releases signal breaking changes,
-each one opens a development series following with features and fixes.
+In this journal are noted the most visible features implemented in
+each major version and the early history of Zenroom comprising two
+Proof of Concept releases, several Alpha and Beta releases leading up
+to the v.1 release series and subsequent.
 
-Established grammar for the Zencode language, with the addition of
+Starting with the first stable releases series we adopt semantic
+versioning tagged on the Git history, which accounts for a more
+complete list of changes operated in Zenroom.
+
+Each new stable release series breaks compatibility with the previous
+adopting breaking changes that allow us to implement new advanced
+features. The last development release of stable series receives Long
+Term Support (LTS): it is maintained in a branch named 'v2', 'v3'
+etc. and its most recent tagged version is listed here and found in
+Git logs.
+
+Binaries and source-code of recent stable release series are available
+on https://files.dyne.org/zenroom . 
+
+## Nov 2023: Stable release series `v4` is latest
+
+Development plans include the implementation of new schemes like
+SD-JWT and support for the EUDI ARF specifications. Also debugging
+facilities will be improved with step-execution and Session
+Portability allowing to export and re-import a Zencode HEAP and STACK
+at any time between different VMs of the same version. This will also
+lead to VM-secured multi-party computation features.
+
+We are open for more engaging use-cases, get in touch!
+
+## May 2023: Stable release series `v3` up to LTS 3.23.4 
+
+Consolidated grammar for the Zencode language, with the addition of
 branching and for-each cycling.
 
-This new major development series adds stable support for
-Quantum-proof cryptography (both signatures and shared keys:
-dilithium, kyber and NTRU). Also new signatures available: EDDSA,
-deterministic ECDSA signatures, BBS+ zero-knowledge proof and more
-schemes being worked on as we face use-cases.
+Stable support for Quantum-proof cryptography (both signatures and
+shared keys: dilithium, kyber and NTRU). Also new signatures
+available: EDDSA, deterministic ECDSA signatures and BBS+
+zero-knowledge proof. The W3C scenario now supports all operations
+needed by our Distributed Identity implementation at DID.dyne.org .
 
-Work in progress on improved debugging, JSON logging and soon
-step-execution as well import/export of a running HEAP across
-different running VMs.
+Improvements include a code refactoring to ease maintenance, more
+documentation, several bugfixes and a 25% performance improvement on
+most Zencode operations and smaller binary payloads. Lua is updated to
+v5.4.
 
+Language bindings are simplified using a syscall to execute a portable
+and secure zencode-exec binary provided for all platforms and error
+messaging has been greatly improved including also JSON formatting for
+logs.
 
-## 2.0.0 (March 2022)
+## Mar 2022: Stable release series `v2` up to LTS 2.22.1
 
 Full implementation and documentation of the Zencode language.
 
@@ -36,7 +69,7 @@ Zencode data manipulation, arithmetics and complex operations.
 REFLOW crypto scenario for ZKP and digital product passport.
 Several improvements to stability and portability.
 
-## 1.0.0 (September 2019)
+## Sep 2019 Stable release series `v1` (EOL)
 
 Final refactoring and code cleanup with many optimizations.
 
@@ -48,7 +81,7 @@ to the iOS native library. Bindings included in source, improved and
 released on pypi and npm. Documentation included and online at
 dev.zenroom.org
 
-## 0.9 (March 2019)
+## Beta release 0.9 (March 2019)
 
 Completed high-level language implementation of Zencode and underlying
 zero-knowledge proof credential system Coconut, Elgamal and homomorphic
@@ -59,7 +92,7 @@ and portability. Removed many unused libraries, Schema refactoring.
 Working builds for python2/3, nodejs/wasm, golang, Android and iOS.
 Native integration in the mobile react-native app for DDDC petitions. 
 
-## 0.8.1 (November 2018)
+## Alpha release 0.8.1 (November 2018)
 
 Several fixes and improvements to the arithmetics and language
 constructions for EC and PAIR operations, deeper testing with
@@ -70,7 +103,7 @@ improve the security when executing malicious code.  Working examples
 now include an implicit certificate scheme (ECQV) and a working
 ElGamal encryption scheme inside Coconut's implementation.
 
-## 0.8.0 (October 2018)
+## Alpha release 0.8.0 (October 2018)
 
 New Elliptic Curve Arithmetics (ECP2) with Twisted Curve Pairings
 (Miller-Loop). Hamming distance measurements on OCTET
@@ -82,11 +115,11 @@ React-Native. Language bindings for Go lang, Python version 2
 and 3. Zenroom virtual machine language design improvements to build
 and documentation, object introspection.
 
-## 0.7.1 (September 2018)
+## Alpha release 0.7.1 (September 2018)
 
 Fixes to all Javascript builds.
 
-## 0.7.0 (August 2018)
+## Alpha release 0.7.0 (August 2018)
 
 Adopted AES-GCM as default encryption method, downgraded CBC as weak.
 Fixes to the exposed API for complete usage in Zenroom-studio.  Added
@@ -106,7 +139,7 @@ ElGamal with ZKP using ECP primitives. Started ECP2 twisted curve
 implementation. Improved build system; added python, java and esp32
 targets. Updated API documentation.
 
-## 0.6.0 (June 2018)
+## Alpha release 0.6.0 (June 2018)
 
 Implemented arithmetic operations on elliptic curve points (ECP)
 as cryptographic primitives to implement new schemes.
@@ -129,7 +162,7 @@ Exposed more public calls on zenroom.h for usage as a library
 Added contributed scripts for iOS, Android and Go shared builds.
 
 
-## 0.5.0 (April 2018)
+## Alpha release 0.5.0 (April 2018)
 
 Fully adopted Milagro-crypto-C as underlying crypto library,
 abandoning luazen at least for now. Refactored the API and language
@@ -156,7 +189,7 @@ tests. Half-baked RSA implementation may be abandoned in the future
 unless use-cases arise.
 
 
-## 0.4 (ALPHA) (March 2018)
+## Alpha release 0.4 (March 2018)
 
 Major improvements to standard Lua direct-syntax compatibility, port
 to emscripten, osx and win targets. Documentation using LDoc and
@@ -164,16 +197,16 @@ website. Support for cjson and other embedded extensions. First
 binary release, enters ALPHA stage.
 
 
-## 0.3 (Prototype) (February 2018)
+## Prototype release 0.3 (February 2018)
 
 Build fixes for various architecture targets. Milagro integration,
 test suites, continuous integration setup.
 
-## 0.2 (December 2017)
+## Proof of Concept release 0.2 (December 2017)
 
 Whitepaper and improved Lua support.
 Adopted luazen in place of luanacha.
 
-## 0.1 (November 2017)
+## Proof of Concept release 0.1 (November 2017)
 
 Proof of concept based on lua_sandbox
