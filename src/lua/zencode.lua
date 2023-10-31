@@ -288,11 +288,6 @@ function ZEN:begin(new_heap)
 			 CONF.parser.strict_match = false
 			 return true
 		  end,
-		  ['caller restroom-mw'] = function()
-			 warn("DEPRECATED:\nRule caller restroom-mw\nuse instead\nRule unknown ignore")
-			 CONF.parser.strict_match = false
-			 return true
-		  end,
 		  ['set'] = function (conf, value)
 			 if not conf or not value then return false end
 			 CONF[conf] = fif( tonumber(value), tonumber(value),

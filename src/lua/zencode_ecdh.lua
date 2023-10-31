@@ -37,11 +37,6 @@ local function signature_f(o)
    }
 end
 
-local function warn_keypair()
-   warn("Use of 'keypair' is deprecated in favor of 'keyring'")
-   warn("Examples: I have my 'keyring' or I create the keyring")
-end
-
 ZEN:add_schema(
 	{
 		-- keypair (ECDH)

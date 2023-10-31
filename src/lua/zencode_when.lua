@@ -30,20 +30,6 @@ local function _is_found(el)
     return ACK[el] and (luatype(ACK[el]) == 'table' or #ACK[el] ~= 0)
 end
 
-IfWhen(deprecated("'' is found",
-    "verify '' is found",
-    function(el)
-        zencode_assert(_is_found(el), "Cannot find object: "..el)
-    end)
-)
-
-IfWhen(deprecated("'' is not found",
-    "verify '' is not found",
-    function(el)
-        zencode_assert(not _is_found(el), "Object should not be found: "..el)
-    end)
-)
-
 IfWhen("verify '' is found", function(el)
     zencode_assert(_is_found(el), "Cannot find object: "..el)
 end)
@@ -147,22 +133,13 @@ When("set '' to '' as ''", function(dest, content, format)
 --	new_codec(dest, { luatype = luatype(ACK[dest]), zentype = 'e' })
 end)
 
-local function _json_encoede_f(src, dest)
+When("create json escaped string of ''", function(src)
     local obj, codec = have(src)
-    empty(dest)
+    empty 'json_escaped_string'
     local encoding = codec.schema or codec.encoding
         or CODEC.output.encoding.name
-    ACK[dest] = OCTET.from_string( JSON.encode(obj, encoding) )
-    new_codec(dest, {encoding = 'string', zentype = 'e'})
-end
-
-When(deprecated("create json of ''",
-    "create json escaped string of ''",
-    function(src) _json_encoede_f(src, 'json') end)
-)
-
-When("create json escaped string of ''", function(src)
-    _json_encoede_f(src, 'json_escaped_string')
+    ACK.json_escaped_string = OCTET.from_string( JSON.encode(obj, encoding) )
+    new_codec('json_escaped_string', {encoding = 'string', zentype = 'e'})
 end)
 
 When("create json unescaped object of ''", function(src)
@@ -293,23 +270,6 @@ When("copy contents of '' named '' in ''", function(src,name,dst)
 	   -- no new codec (using dst)
 	end
 end)
-
-When(deprecated("copy '' in '' to ''",
-    "copy '' from '' to ''",
-    function(old,inside,new)
-        zencode_assert(ACK[inside][old], "Object not found: "..old.." inside "..inside)
-        empty(new)
-        ACK[new] = deepcopy(ACK[inside][old])
-        local o_codec = CODEC[inside]
-        local n_codec = { encoding = o_codec.encoding }
-        -- table of schemas can only contain elements
-        if o_codec.schema then
-            n_codec.schema = o_codec.schema
-            n_codec.zentype = "e"
-        end
-        new_codec(new, n_codec)
-    end)
-)
 
 When("copy '' from '' to ''", function(old,inside,new)
     zencode_assert(ACK[inside][old], "Object not found: "..old.." inside "..inside)
