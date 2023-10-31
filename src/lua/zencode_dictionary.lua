@@ -251,14 +251,6 @@ local function create_copy_f(root, in1, in2)
 end
 When("create copy of '' from dictionary ''", function(name, dict) create_copy_f(dict, name) end)
 When("create copy of '' from ''", function(name, dict) create_copy_f(dict, name) end)
-When(deprecated("create copy of '' in ''",
-                "create copy of '' from ''",
-                function(name, dict) create_copy_f(dict, name) end)
-)
-When(deprecated("create copy of '' in '' in ''",
-                "pickup from path ''",
-                function(obj, branch, root) create_copy_f(root, branch, obj) end)
-)
 When("create copy of object named by '' from dictionary ''", function(name, dict)
   local label = have(name)
   create_copy_f(dict, label:string())

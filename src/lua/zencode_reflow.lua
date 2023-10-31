@@ -287,7 +287,7 @@ IfWhen(
     end
 )
 
-local function _fingerprint_is_new()
+IfWhen("verify reflow signature fingerprint is new", function()
     have 'reflow_signature'
     have 'reflow_seal'
     if not ACK.reflow_seal.fingerprints then
@@ -298,15 +298,6 @@ local function _fingerprint_is_new()
         'Signature fingerprint is not new'
     )
 end
-
-IfWhen(deprecated("check reflow signature fingerprint is new",
-                  "verify reflow signature fingerprint is new",
-                  _fingerprint_is_new
-                 )
-)
-
-IfWhen("verify reflow signature fingerprint is new",
-       _fingerprint_is_new
 )
 
 When(

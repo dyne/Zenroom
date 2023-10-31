@@ -56,15 +56,6 @@ When("move named by '' in ''", function(src_name, dest)
     CODEC[src] = nil
 end)
 
-When(deprecated("insert '' in ''",
-    "move '' in ''",
-    function(src, dest)
-        move_or_copy_in(have(src), src, dest)
-        ACK[src] = nil
-        CODEC[src] = nil
-    end)
-)
-
 When("move '' in ''", function(src, dest)
     move_or_copy_in(have(src), src, dest)
     ACK[src] = nil
@@ -151,12 +142,7 @@ local function count_f(obj_name)
     end
     return count
 end
-When(deprecated("create length of ''",
-"create size of ''",
-function(arr)
-    ACK.length = F.new(count_f(arr))
-    new_codec('length', {zentype='e', encoding='float'})
-end))
+
 When("create size of ''", function(arr)
     ACK.size = F.new(count_f(arr))
     new_codec('size', {zentype='e', encoding='float'})
@@ -177,31 +163,17 @@ local function _is_found_in(ele_name, obj_name)
     end
 end
 
-IfWhen(deprecated("'' is not found in ''",
-                  "verify '' is not found in ''",
-                  function(ele_name, obj_name)
-                      zencode_assert(not _is_found_in(ele_name, obj_name),
-                                     "Object should not be found: "..ele_name.." in "..obj_name)
-                 end)
-)
 IfWhen("verify '' is not found in ''", function(ele_name, obj_name)
            zencode_assert(not _is_found_in(ele_name, obj_name),
                           "Object should not be found: "..ele_name.." in "..obj_name)
 end)
 
-IfWhen(deprecated("'' is found in ''",
-                  "verify '' is found in ''",
-                  function(ele_name, obj_name)
-                      zencode_assert(_is_found_in(ele_name, obj_name),
-                                     "Cannot find object: "..ele_name.." in "..obj_name)
-                 end)
-)
 IfWhen("verify '' is found in ''", function(ele_name, obj_name)
            zencode_assert(_is_found_in(ele_name, obj_name),
                           "Cannot find object: "..ele_name.." in "..obj_name)
 end)
 
-local function _found_in_atleast(ele_name, obj_name, times)
+IfWhen("verify '' is found in '' at least '' times", function(ele_name, obj_name, times)
     local ele, ele_codec = have(ele_name)
     zencode_assert( luatype(ele) ~= 'table',
                 "Invalid use of table in object comparison: "..ele_name)
@@ -221,47 +193,7 @@ local function _found_in_atleast(ele_name, obj_name, times)
     else
         zencode_assert(found >= num, "Object "..ele_name.." found only "..tostring(found).." times instead of "..tostring(num).." in array "..obj_name)
     end
-end
-
-IfWhen(deprecated("'' is found in '' at least '' times",
-    "verify '' is found in '' at least '' times",
-    _found_in_atleast)
-)
-IfWhen("verify '' is found in '' at least '' times", _found_in_atleast)
-
-When(deprecated("create copy of last element in ''",
-    "create copy of last element from ''",
-    function(obj_name)
-        local obj, obj_codec = have(obj_name)
-        if type(obj) ~= 'table' then
-            error("Can only index tables")
-        end
-        if obj_codec.zentype == 'a' then
-            if #obj == 0 then
-                error("Last element doesn't exist for empty array")
-            end
-            ACK.copy_of_last_element = obj[#obj]
-        elseif obj_codec.zentype == 'd' then
-            local elem = nil
-            for _, v in sort_pairs(obj) do
-                elem = v
-            end
-            if not elem then
-                error("Last element doesn't exist for empty dictionary")
-            end
-            ACK.copy_of_last_element = elem
-        else
-            error("Cannot find last element in " .. obj_codec.zentype)
-        end
-        local n_codec = {encoding = obj_codec.encoding}
-        -- if copying from table of schema
-        if obj_codec.schema then
-            n_codec.schema = obj_codec.schema
-            n_codec.zentype = "e"
-        end
-        new_codec('copy_of_last_element', n_codec)
-    end)
-)
+end)
 
 When("create copy of last element from ''", function(obj_name)
     local obj, obj_codec = have(obj_name)

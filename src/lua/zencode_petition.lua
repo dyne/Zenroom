@@ -205,7 +205,7 @@ IfWhen(
 	end
 )
 
-local function _check_duplicate()
+IfWhen('verify petition signature is not a duplicate', function()
     if luatype(ACK.petition.list) == 'table' then
         zencode_assert(
             (not array_contains(
@@ -218,15 +218,9 @@ local function _check_duplicate()
         ACK.petition.list = {}
     end
     table.insert(ACK.petition.list, ACK.petition_signature.uid_signature)
-end
+end)
 
-IfWhen(deprecated('petition signature is not a duplicate',
-    'verify petition signature is not a duplicate',
-    _check_duplicate)
-)
-IfWhen('verify petition signature is not a duplicate', _check_duplicate)
-
-local function _check_one_more()
+IfWhen('verify petition signature is just one more', function()
     -- verify that the signature is +1 (no other value supported)
     ACK.petition_signature.one =
         PET.prove_sign_petition(ACK.petition.owner, BIG.new(1))
@@ -237,14 +231,8 @@ local function _check_one_more()
         ),
         'ABC petition signature adds more than one signature'
     )
-end
 
-IfWhen(deprecated('petition signature is just one more',
-    'verify petition signature is just one more',
-    _check_one_more)
-)
-
-IfWhen('verify petition signature is just one more', _check_one_more)
+end)
 
 When(
 	'add signature to petition',

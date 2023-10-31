@@ -153,42 +153,18 @@ local function numcheck(l, r, op)
     zencode_assert(operators[op](al, ar), 'Comparison fail: ' .. l .. op .. r)
 end
 
-IfWhen(deprecated("number '' is less than ''",
-    "verify number '' is less than ''",
-    function(left, right)
-        numcheck(left, right, "<")
-    end)
-)
 IfWhen("verify number '' is less than ''", function(left, right)
     numcheck(left, right, "<")
 end)
 
-IfWhen(deprecated("number '' is less or equal than ''",
-    "verify number '' is less or equal than ''",
-    function(left, right)
-        numcheck(left, right, "<=")
-    end)
-)
 IfWhen("verify number '' is less or equal than ''", function(left, right)
     numcheck(left, right, "<=")
 end)
 
-IfWhen(deprecated("number '' is more than ''",
-    "verify number '' is more than ''",
-    function(left, right)
-        numcheck(left, right, ">")
-    end)
-)
 IfWhen("verify number '' is more than ''", function(left, right)
     numcheck(left, right, ">")
 end)
 
-IfWhen(deprecated("number '' is more or equal than ''",
-    "verify number '' is more or equal than ''",
-    function(left, right)
-        numcheck(left, right, ">=")
-    end)
-)
 IfWhen("verify number '' is more or equal than ''", function(left, right)
     numcheck(left, right, ">=")
 end)
@@ -223,29 +199,11 @@ IfWhen("verify size of '' is less than ''", function(obj_name, num_name)
         "Comparison fail: size of "..obj_name.." is not less than "..num_name)
 end)
 
-IfWhen(deprecated("verify length of '' is less than ''",
-    "verify size of '' is less than ''",
-    function(obj_name, num_name)
-        local l, r = _check_compare_length(obj_name, num_name)
-        zencode_assert(l < r,
-            "Comparison fail: length of "..obj_name.." is not less than "..num_name)
-    end)
-)
-
 IfWhen("verify size of '' is less or equal than ''", function(obj_name, num_name)
     local l, r = _check_compare_length(obj_name, num_name)
     zencode_assert(l <= r,
         "Comparison fail: size of "..obj_name.." is not less or equal than "..num_name)
 end)
-
-IfWhen(deprecated("verify length of '' is less or equal than ''",
-    "verify size of '' is less or equal than ''",
-    function(obj_name, num_name)
-        local l, r = _check_compare_length(obj_name, num_name)
-        zencode_assert(l <= r,
-            "Comparison fail: length of "..obj_name.." is not less or equal than "..num_name)
-    end)
-)
 
 IfWhen("verify size of '' is more than ''", function(obj_name, num_name)
     local l, r = _check_compare_length(obj_name, num_name)
@@ -253,29 +211,11 @@ IfWhen("verify size of '' is more than ''", function(obj_name, num_name)
         "Comparison fail: size of "..obj_name.." is not more than "..num_name)
 end)
 
-IfWhen(deprecated("verify length of '' is more than ''",
-    "verify size of '' is more than ''",
-    function(obj_name, num_name)
-        local l, r = _check_compare_length(obj_name, num_name)
-        zencode_assert(r < l,
-            "Comparison fail: length of "..obj_name.." is not more than "..num_name)
-    end)
-)
-
 IfWhen("verify size of '' is more or equal than ''", function(obj_name, num_name)
     local l, r = _check_compare_length(obj_name, num_name)
     zencode_assert(r <= l,
         "Comparison fail: size of "..obj_name.." is not more or equal than "..num_name)
 end)
-
-IfWhen(deprecated("verify length of '' is more or equal than ''",
-    "verify size of '' is more or equal than ''",
-    function(obj_name, num_name)
-        local l, r = _check_compare_length(obj_name, num_name)
-        zencode_assert(r <= l,
-            "Comparison fail: length of "..obj_name.." is not more or equal than "..num_name)
-    end)
-)
 
 -- TODO: substitute with RFC2047 compliant code (take from jaromail)
 local function validemail(str)
@@ -371,7 +311,7 @@ IfWhen(
   end
 )
 
-local function _check_elements_equals(obj_name)
+IfWhen("verify elements in '' are equal", function(obj_name)
     local obj = have(obj_name)
     local first = nil
     local first_idx = nil
@@ -386,15 +326,9 @@ local function _check_elements_equals(obj_name)
                 .. "are not equal")
         end
     end
-end
+end)
 
-IfWhen(deprecated("elements in '' are equal",
-    "verify elements in '' are equal",
-    _check_elements_equals)
-)
-IfWhen("verify elements in '' are equal", _check_elements_equals)
-
-local function _check_elements_not_equals(obj_name)
+IfWhen("verify elements in '' are not equal", function(obj_name)
     local obj = have(obj_name)
     local first = nil
     local first_idx = nil
@@ -410,13 +344,7 @@ local function _check_elements_not_equals(obj_name)
         end
     end
     zencode_assert(false, "Verification failed: all elements are equal")
-end
-
-IfWhen(deprecated("elements in '' are not equal",
-    "verify elements in '' are not equal",
-    _check_elements_not_equals)
-)
-IfWhen("verify elements in '' are not equal", _check_elements_not_equals)
+end)
 
 -- if start = nil then will check if
 -- the string ends with the substring

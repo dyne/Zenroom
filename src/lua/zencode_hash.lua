@@ -65,26 +65,6 @@ When("create hash to point '' of ''", function(curve, object)
     new_codec('hash_to_point', { zentype='e' })
 end)
 
-When(deprecated("create hash to point '' of each object in ''",
-    [[Foreach 'element' in 'array'
-When I create hash to point of 'array'
-and I move 'hash to point' in 'array of hashes'
-EndForeach]],
-    function(curve, object)
-        local F = _G[curve]
-        zencode_assert(
-                luatype(F.hashtopoint) == 'function',
-                'Hash type ' .. curve .. ' is invalid (no hashtopoint)'
-        )
-        empty'hash_to_point'
-        local obj = have(object)
-        local count = isarray(obj)
-        zencode_assert(count > 0, 'Object is not an array: ' .. object)
-        ACK.hash_to_point = deepmap(F.hashtopoint, obj)
-        new_codec('hash_to_point', {zentype='a'})
-    end)
-)
-
 When(
     "create hashes of each object in ''",
     function(arr)
