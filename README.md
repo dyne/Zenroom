@@ -8,25 +8,14 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 [![Zenroom logo](https://files.dyne.org/zenroom/logos/zenroom_logotype.png)](https://zenroom.org)
 
-Zenroom is a **secure language interpreter** of the secure domain
-specific language **Zencode**, it makes it very easy to execute fast
-cryptographic operations on any data structure.
+Zenroom is a **secure language interpreter** of the domain-specific Zencode, making it easy to execute fast cryptographic operations on any data structure.
 
-The Zenroom VM is very small, has **no external dependency**, is fully
-deterministic and ready to run **end-to-end encryption** on any
-platform: desktop, embedded, mobile, cloud micro-services, web
-browsers. It can be embedded inside applications written in
-Javascript, Python3, Rust or Golang.
+The Zenroom VM is very small, has **no external dependency**, is fully deterministic and is ready to run **end-to-end encryption** on any platform: desktop, embedded mobile, cloud micro-services, and web browsers. Zenroom works inside applications written in Javascript, Python3, Rust or Golang.
 
-**Zencode** is a domain-specific language (DSL) similar to human
-language. With its **no-code** approach one can process large data
-structures through complex cryptographic and logical
-transformations.
+Zencode has a **no-code** approach. It is a domain-specific language (DSL) **similar to human language**. One can process large data structures through complex cryptographic and logical transformations.
 
-Zencode helps us to lower the liability of developers by leveraging
-the **agency of domain experts**: one can write and review business
-logics and data-sensitive operations **without having to learn to
-code**.
+Zencode helps developers to **empower people** who know what to do with data: one can write and review business logic and data-sensitive operations **without learning to code**.
+
 
 [![software by Dyne.org](https://files.dyne.org/software_by_dyne.png)](http://www.dyne.org)
 
