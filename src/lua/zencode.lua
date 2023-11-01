@@ -548,17 +548,14 @@ local function manage_foreach(stack, x)
 			stack.ITER = nil
 		end
 	end
-
 	if stack.ITER and stack.ITER.pos >= MAXITER then
 		error("Limit of iterations reached: " .. MAXITER)
 	end
-
 	return stack.ITER and stack.ITER.pos == 0
 end
 
 function ZEN:run()
    self:crumb()
-
    local runtime_trace = function(x)
 	  table.insert(traceback, '+'..x.linenum..'  '..x.source)
    end

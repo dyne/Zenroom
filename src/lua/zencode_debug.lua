@@ -158,3 +158,10 @@ Then("codec", function() debug_codec() end)
 Given("config", function() I.warn(_G["CONF"]) end)
 When("config", function() I.warn(_G["CONF"]) end)
 Then("config", function() I.warn(_G["CONF"]) end)
+
+Then("print codec", function()
+		if OUT.codec then
+		   error("Cannot overwrite printed output codec")
+		end
+		OUT.codec = CODEC
+end)
