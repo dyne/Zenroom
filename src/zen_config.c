@@ -109,7 +109,8 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 			// first token parsed, set enum for value
 		case CLEX_id:
 			if(strcasecmp(lex.string,"debug")  ==0) { curconf = VERBOSE; break; } // bool
-			if(strcasecmp(lex.string,"verbose")==0) { curconf = VERBOSE; break; }
+			if(strcasecmp(lex.string,"verbose")==0) { curconf = VERBOSE; break; } // int
+			if(strcasecmp(lex.string,"scope")==0) { curconf = SCOPE; break; } // str
 			if(strcasecmp(lex.string,"rngseed")==0) { curconf = RNGSEED; break; } // str
 			if(strcasecmp(lex.string,"logfmt") ==0) { curconf = LOGFMT;  break; } // str
 			if(strcasecmp(lex.string,"maxiter")==0) { curconf = MAXITER; break; } // str
@@ -149,6 +150,21 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 			  else if(strncasecmp(lex.string, "text", 4) == 0) ZZ->logformat = LOG_TEXT;
 			  else {
 				_err( "Invalid log format string: %s\n",lex.string);
+				return 0;
+			  }
+			  break;
+			}
+			if(curconf==SCOPE) {
+			  int len = strlen(lex.string);
+			  if( len != 4 && len != 5) {
+				// must be 4 or 5 chars (full or given)
+				_err( "Invalid scope config string: %u bytes\n",len);
+				return 0;
+			  }
+			  if(strncasecmp(lex.string, "full", 4) == 0) ZZ->scope = SCOPE_FULL;
+			  else if(strncasecmp(lex.string, "given", 5) == 0) ZZ->scope = SCOPE_GIVEN;
+			  else {
+				_err( "Invalid scope config string: %s\n",lex.string);
 				return 0;
 			  }
 			  break;

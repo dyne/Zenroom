@@ -150,7 +150,12 @@ int zen_init_pmain(lua_State *L) { // protected mode init
 	Z(L);
 	if(Z->logformat == LOG_JSON)
 	  luaL_dostring(L, "CONF.debug.format='compact'");
-
+	if(Z->scope == SCOPE_GIVEN) {
+	  luaL_dostring(L, "CONF.exec.scope='given'");
+	  luaL_dostring(L, "CONF.parser.strict_match=false");
+	} else { // SCOPE_FULL is default
+	  luaL_dostring(L, "CONF.exec.scope='full'");
+	}
 	return(LUA_OK);
 }
 
@@ -176,6 +181,7 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	ZZ->stderr_full = 0;
 	ZZ->userdata = NULL;
 	ZZ->errorlevel = 0;
+	ZZ->scope = SCOPE_FULL;
 	ZZ->debuglevel = 2;
 	ZZ->random_generator = NULL;
 	ZZ->random_external = 0;

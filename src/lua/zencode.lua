@@ -231,7 +231,7 @@ function ZEN:begin(new_heap)
 	local function set_rule(text)
 	   local tr = text.msg:gsub(' +', ' ') -- eliminate multiple internal spaces
 	   local rule = strtok(trim(tr):lower())
-	   local rules = {
+	   local rules <const> = {
 		  -- TODO: rule debug [ format | encoding ]
 		  -- ['load'] = function(extension)
 		  --	if not extension then return false end
@@ -308,93 +308,102 @@ function ZEN:begin(new_heap)
 	end
 	-- END local function set_rule
 
-	self.machine =	MACHINE.create({
+	-- state machine callback events
+	-- graph TD
+	--     Given --> When
+	--     IF --> When
+	--     Then --> When
+	--     Given --> IF
+	--     When --> IF
+	--     Then --> IF
+	--     IF --> Then
+	--     IF -> FOR
+	--     When -> FOR
+	--     FOR -> When
+	--     FOR -> Then
+	--     FOR -> IF
+	--     FOR -> Then
+	--     When --> Then
+	--     Given --> Then
+	local callbacks = {
+	   -- msg is a table: { msg = "string", Z = stack (self) }
+	   onscenario = function(self, event, from, to, msg)
+		  -- first word until the colon
+		  local scenarios =
+			 strtok(string.match(trim(msg.msg):lower(), '[^:]+'))
+		  for k, scen in ipairs(scenarios) do
+			 if k ~= 1 then -- skip first (prefix)
+				load_scenario('zencode_' .. trimq(scen))
+				-- self:trace('Scenario ' .. scen)
+				return
+			 end
+		  end
+	   end,
+	   onrule = function(self, event, from, to, msg)
+		  -- process rules immediately
+		  if msg then	set_rule(msg) end
+	   end,
+	   ongiven = set_sentence,
+	   onthen = set_sentence,
+	   onand = set_sentence
+	}
+	local events = {
+	   {name = 'enter_rule', from = {'init', 'rule', 'scenario'}, to = 'rule'},
+	   {name = 'enter_scenario', from = {'init', 'rule', 'scenario'}, to = 'scenario'},
+	   {name = 'enter_given', from = {'init', 'rule', 'scenario'},	to = 'given'},
+	   {name = 'enter_given', from = {'given'}, to = 'given'},
+	   {name = 'enter_and', from = 'given', to = 'given'},
+	   {name = 'enter_then', from = {'given', 'when', 'then', 'endif', 'endforeach'}, to = 'then'},
+	   {name = 'enter_and', from = 'then', to = 'then'},
+	}
+	if CONF.exec.scope == 'full' then
+	   -- rule output given-only
+	   callbacks.onwhen = set_sentence
+	   callbacks.onif = set_sentence
+	   callbacks.onendif = set_sentence
+	   callbacks.onwhenif = set_sentence
+	   callbacks.onthenif = set_sentence
+	   callbacks.onforeach = set_sentence
+	   callbacks.onendforeach = set_sentence
+	   callbacks.onwhenforeach = set_sentence
+	   callbacks.onforeachif = set_sentence
+	   callbacks.onwhenforeachif = set_sentence
+	   callbacks.onendforeachif = set_sentence
+	   callbacks.onifforeach = set_sentence
+	   callbacks.onwhenifforeach = set_sentence
+	   callbacks.onendifforeach = set_sentence
+	   local extra_events <const> = {
+		  {name = 'enter_when', from = {'given', 'when', 'then', 'endif', 'endforeach'}, to = 'when'},
+		  {name = 'enter_if', from = {'if', 'given', 'when', 'then', 'endif', 'endforeach'}, to = 'if'},
+		  {name = 'enter_whenif', from = {'if', 'whenif', 'thenif', 'endforeachif'}, to = 'whenif'},
+		  {name = 'enter_thenif', from = {'if', 'whenif', 'thenif'}, to = 'thenif'},
+		  {name = 'enter_endif', from = {'whenif', 'thenif', 'endforeachif'}, to = 'endif'},
+		  {name = 'enter_foreachif', from = {'if', 'whenif', 'endforeachif', 'foreachif'}, to = 'foreachif'},
+		  {name = 'enter_whenforeachif', from = {'foreachif', 'whenforeachif'}, to = 'whenforeachif'},
+		  {name = 'enter_endforeachif', from = {'foreachif', 'whenforeachif'}, to = 'endforeachif'},
+		  {name = 'enter_ifforeach', from = {'foreach', 'whenforeach', 'ifforeach', 'endifforeach'}, to = 'ifforeach'},
+		  {name = 'enter_whenifforeach', from = {'ifforeach', 'whenifforeach'}, to = 'whenifforeach'},
+		  {name = 'enter_endifforeach', from = {'ifforeach', 'whenifforeach'}, to = 'endifforeach'},
+		  {name = 'enter_foreach', from = {'given', 'when', 'endif', 'foreach'}, to = 'foreach'},
+		  {name = 'enter_whenforeach', from = {'foreach', 'whenforeach', 'endifforeach'}, to = 'whenforeach'},
+		  {name = 'enter_endforeach', from = {'whenforeach', 'endifforeach'}, to = 'endforeach'},
+		  {name = 'enter_and', from = 'when', to = 'when'},
+		  {name = 'enter_and', from = 'whenif', to = 'whenif'},
+		  {name = 'enter_and', from = 'thenif', to = 'thenif'},
+		  {name = 'enter_and', from = 'if', to = 'if'},
+		  {name = 'enter_and', from = 'foreach', to = 'foreach'},
+		  {name = 'enter_and', from = 'ifforeach', to = 'ifforeach'},
+		  {name = 'enter_and', from = 'foreachif', to = 'foreachif'},
+		  {name = 'enter_and', from = 'whenforeach', to = 'whenforeach'},
+		  {name = 'enter_and', from = 'whenifforeach', to = 'whenifforeach'}
+	   }
+	   for _,v in pairs(extra_events) do table.insert(events, v) end
+	end
+
+	self.machine = MACHINE.create({
 		initial = 'init',
---		asyncState = NONE,
-		events = {
-			{name = 'enter_rule', from = {'init', 'rule', 'scenario'}, to = 'rule'},
-			{name = 'enter_scenario', from = {'init', 'rule', 'scenario'}, to = 'scenario'},
-			{name = 'enter_given', from = {'init', 'rule', 'scenario'},	to = 'given'},
-			{name = 'enter_given', from = {'given'}, to = 'given'},
-			{name = 'enter_when', from = {'given', 'when', 'then', 'endif', 'endforeach'}, to = 'when'},
-			{name = 'enter_then', from = {'given', 'when', 'then', 'endif', 'endforeach'}, to = 'then'},
-			{name = 'enter_if', from = {'if', 'given', 'when', 'then', 'endif', 'endforeach'}, to = 'if'},
-			{name = 'enter_whenif', from = {'if', 'whenif', 'thenif', 'endforeachif'}, to = 'whenif'},
-			{name = 'enter_thenif', from = {'if', 'whenif', 'thenif'}, to = 'thenif'},
-			{name = 'enter_endif', from = {'whenif', 'thenif', 'endforeachif'}, to = 'endif'},
-			{name = 'enter_foreachif', from = {'if', 'whenif', 'endforeachif', 'foreachif'}, to = 'foreachif'},
-			{name = 'enter_whenforeachif', from = {'foreachif', 'whenforeachif'}, to = 'whenforeachif'},
-			{name = 'enter_endforeachif', from = {'foreachif', 'whenforeachif'}, to = 'endforeachif'},
-			{name = 'enter_ifforeach', from = {'foreach', 'whenforeach', 'ifforeach', 'endifforeach'}, to = 'ifforeach'},
-			{name = 'enter_whenifforeach', from = {'ifforeach', 'whenifforeach'}, to = 'whenifforeach'},
-			{name = 'enter_endifforeach', from = {'ifforeach', 'whenifforeach'}, to = 'endifforeach'},
-			{name = 'enter_foreach', from = {'given', 'when', 'endif', 'foreach'}, to = 'foreach'},
-			{name = 'enter_whenforeach', from = {'foreach', 'whenforeach', 'endifforeach'}, to = 'whenforeach'},
-			{name = 'enter_endforeach', from = {'whenforeach', 'endifforeach'}, to = 'endforeach'},
-			{name = 'enter_and', from = 'given', to = 'given'},
-			{name = 'enter_and', from = 'when', to = 'when'},
-			{name = 'enter_and', from = 'then', to = 'then'},
-			{name = 'enter_and', from = 'whenif', to = 'whenif'},
-			{name = 'enter_and', from = 'thenif', to = 'thenif'},
-			{name = 'enter_and', from = 'if', to = 'if'},
-			{name = 'enter_and', from = 'foreach', to = 'foreach'},
-			{name = 'enter_and', from = 'ifforeach', to = 'ifforeach'},
-			{name = 'enter_and', from = 'foreachif', to = 'foreachif'},
-			{name = 'enter_and', from = 'whenforeach', to = 'whenforeach'},
-			{name = 'enter_and', from = 'whenifforeach', to = 'whenifforeach'},
-		},
-		-- graph TD
-		--     Given --> When
-		--     IF --> When
-		--     Then --> When
-		--     Given --> IF
-		--     When --> IF
-		--     Then --> IF
-		--     IF --> Then
-		--     IF -> FOR
-		--     When -> FOR
-		--     FOR -> When
-		--     FOR -> Then
-		--     FOR -> IF
-		--     FOR -> Then
-		--     When --> Then
-		--     Given --> Then
-		callbacks = {
-			-- msg is a table: { msg = "string", Z = stack (self) }
-			onscenario = function(self, event, from, to, msg)
-				-- first word until the colon
-				local scenarios =
-					strtok(string.match(trim(msg.msg):lower(), '[^:]+'))
-				for k, scen in ipairs(scenarios) do
-					if k ~= 1 then -- skip first (prefix)
-						load_scenario('zencode_' .. trimq(scen))
-						-- self:trace('Scenario ' .. scen)
-						return
-					end
-				end
-			end,
-			onrule = function(self, event, from, to, msg)
-				-- process rules immediately
-				if msg then	set_rule(msg) end
-			end,
-			ongiven = set_sentence,
-			onwhen = set_sentence,
-			onif = set_sentence,
-			onendif = set_sentence,
-			onthen = set_sentence,
-			onand = set_sentence,
-			onwhenif = set_sentence,
-			onthenif = set_sentence,
-			onforeach = set_sentence,
-			onendforeach = set_sentence,
-			onwhenforeach = set_sentence,
-			onforeachif = set_sentence,
-			onwhenforeachif = set_sentence,
-			onendforeachif = set_sentence,
-			onifforeach = set_sentence,
-			onwhenifforeach = set_sentence,
-			onendifforeach = set_sentence,
-		}
+		events = events,
+		callbacks = callbacks
 	})
 	collectgarbage 'collect'
 	-- Zencode init traceback
@@ -467,10 +476,16 @@ function ZEN:parse(text)
 		 -- try to enter the machine state named in prefix
 		 -- xxx("Zencode machine enter_"..prefix..": "..text, 3)
 		 local fm <const> = self.machine["enter_"..prefix]
-		 assert(fm, "Invalid Zencode prefix "..self.linenum..": '"..line.."'")
-		 assert(fm(self.machine, { msg = tline, Z = self }),
-				line.."\n    "..
-				"Invalid transition from: "..self.machine.current)
+		 if CONF.parser.strict_match == true and not fm then
+			assert(fm, "Invalid Zencode prefix "..self.linenum..": '"..line.."'")
+		 elseif not fm then
+			table.insert(traceback, '-'..self.linenum..'	'..line)
+			warn('Zencode line '..self.linenum..' pattern ignored: ' .. line, 1)
+		 else
+			assert(fm(self.machine, { msg = tline, Z = self }),
+				   line.."\n    "..
+				   "Invalid transition from: "..self.machine.current)
+		 end
 	  end
 	  -- continue
    end
@@ -652,7 +667,7 @@ end
 -- assert all values in table are converted to zenroom types
 -- used in zencode when transitioning out of given memory
 function zenguard(val, key) -- AKA watchdog
-   local tv = type(val)
+   local tv <const> = type(val)
    if not (tv == 'boolean' or iszen(tv)) then
       error("Zenguard detected an invalid value in HEAP: "
 	    ..key.." ("..type(val)..")", 2)
@@ -772,7 +787,7 @@ function mayhave(obj)
 end
 
 function zencode_serialize(A)
-   local t = luatype(A)
+   local t <const> = luatype(A)
    if t == 'table' then
       local res
       res = serialize(A)
@@ -782,7 +797,7 @@ function zencode_serialize(A)
    elseif t == 'string' then
       return O.from_string(A)
    else
-      local zt = type(A)
+      local zt <const> = type(A)
       if not iszen(zt) then
 	 error('Cannot convert value to octet: '..zt, 2)
       end

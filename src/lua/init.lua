@@ -147,6 +147,7 @@ _G['CONF'] = {
 			 format = 'log' -- or 'compact' for base64 encoded json
 		   },
    parser = {strict_match = true},
+   exec = { scope = 'full' },
    heap = { check_collision = true },
    hash = 'sha256',
 }
