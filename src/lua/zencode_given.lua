@@ -57,21 +57,23 @@ end
 -- @param conv[opt] optional encoding spec (default CONF.input.encoding)
 -- @return true or false
 local function pick(what, conv)
-   local guess
-   local data
-   local raw
-   local name = _index_to_string(what)
-   raw = IN[name]
-   if not raw then error("Cannot find '" .. name .. "' anywhere (null value?)", 2) end
-   if raw == '' then error("Found empty string in '" .. name) end
+   local name <const> = _index_to_string(what)
+   local raw <const> = IN[name]
+   local err
+   if CONF.missing.fatal then err = error else err = warn end
+   if not raw and CONF.missing.fatal then
+	  err("Cannot find '" .. name .. "' anywhere (null value?)", 2) end
+   if raw == '' and CONF.missing.fatal then
+	  err("Found empty string in '" .. name) end
    -- if not conv and ZEN.schemas[what] then conv = what end
    ZEN.TMP = guess_conversion(raw, conv or name)
-   if not ZEN.TMP then error('Cannot guess any conversion for: ' ..
-         luatype(raw) .. ' ' .. (conv or name or '(nil)')) end
+   if not ZEN.TMP then
+	  error('Cannot guess any conversion for: ' ..
+			luatype(raw) .. ' ' .. (conv or name or '(nil)')) end
    ZEN.TMP.name = name
    assert(ZEN.OK)
    if DEBUG > 1 then
-      ZEN.ftrace('pick found ' .. name .. '('..ZEN.TMP.zentype..')')
+	  ZEN.ftrace('pick found ' .. name .. '('..ZEN.TMP.zentype..')')
    end
 end
 
@@ -90,23 +92,17 @@ end
 -- @return true or false
 local function pickin(section, what, conv, fail)
    zencode_assert(section, 'No section specified')
-   local root  -- section
+   local root <const> = IN[section]
+   if not root then error("Cannot find '"..section.."'", 2) end
+   local name <const> = _index_to_string(what)
    local raw  -- data pointer
-   local bail  -- fail
-   local name = _index_to_string(what)
-
-   root = IN[section]
-   if not root then
-      error("Cannot find '"..section.."'", 2)
-   end
-
    if luatype(root) ~= 'table' then
       error("Object is not a table: "..section, 2)
    end
    if #root == 1 then
       raw = root[name]
       if not raw and luatype(root[1]) == 'table' then
-	 raw = root[1][name]
+		 raw = root[1][name]
       end
    else
       raw = root[name]
@@ -114,7 +110,6 @@ local function pickin(section, what, conv, fail)
    if not raw then
       error("Object not found: "..name.." in "..section, 2)
    end
-
    if raw == '' then
       error("Found empty string '" .. name .."' inside '"..section.."'", 2) end
    -- conv = conv or name
@@ -134,13 +129,6 @@ end
 -- conversion and returns the resulting raw data to be used inside the
 -- WHEN block in HEAP.
 function operate_conversion(guessed)
-   -- check if already a zenroom type
-   -- (i.e. zenroom.big from json decode)
-   if not guessed.fun then
-	  I.warn(guessed)
-	  error('No conversion operation guessed', 2)
-	  return nil
-   end
    -- carry guessed detection in CODEC
    CODEC[guessed.name] = {
 	  name = guessed.name,
@@ -149,9 +137,16 @@ function operate_conversion(guessed)
 	  root = guessed.root,
 	  schema = guessed.schema
    }
-   -- I.warn({ codec = CODEC[guessed.name],
-   --	     guessed = guessed })
-   -- TODO: make xxx print to stderr!
+   -- data not found (and CONF.missing.fatal == false)
+   if guessed.zentype == 'n' then return nil end
+   -- check if already a zenroom type
+   -- (i.e. zenroom.big from json decode)
+   if not guessed.fun then
+	  I.warn(guessed)
+	  error('No conversion operation guessed', 2)
+	  return nil
+   end
+
    -- xxx('Operating conversion on: '..guessed.name)
    local fun = guessed.fun
    if luatype(fun) == 'table' then fun = fun.import end

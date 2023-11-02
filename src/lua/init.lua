@@ -147,7 +147,10 @@ _G['CONF'] = {
 			 format = 'log' -- or 'compact' for base64 encoded json
 		   },
    parser = {strict_match = true},
-   exec = { scope = 'full' },
+   exec = { scope = 'full' }, -- from conf scope=given, triggers:
+                              -- parser.strict_match=false
+                              -- missing.fatal=false
+   missing = { fatal = true },
    heap = { check_collision = true },
    hash = 'sha256',
 }

@@ -153,6 +153,7 @@ int zen_init_pmain(lua_State *L) { // protected mode init
 	if(Z->scope == SCOPE_GIVEN) {
 	  luaL_dostring(L, "CONF.exec.scope='given'");
 	  luaL_dostring(L, "CONF.parser.strict_match=false");
+	  luaL_dostring(L, "CONF.missing.fatal=false");
 	} else { // SCOPE_FULL is default
 	  luaL_dostring(L, "CONF.exec.scope='full'");
 	}

@@ -667,7 +667,7 @@ function zenguard(val, key) -- AKA watchdog
    local tv <const> = type(val)
    if not (tv == 'boolean' or iszen(tv)) then
       error("Zenguard detected an invalid value in HEAP: "
-	    ..key.." ("..type(val)..")", 2)
+	    ..key.." ("..type(val)..")", 3)
       return nil
    end
 end
@@ -675,22 +675,23 @@ end
 
 -- compare heap.ACK and heap.CODEC
 function ZEN:codecguard()
-   local left = ACK
-   local right = CODEC
+   local left <const> = ACK
+   local right <const> = CODEC
+   local fatal <const> = CONF.missing.fatal
    for key1, value1 in pairs(left) do
       if not right[key1] then
-	 self:debug()
-	 error("Internal memory error: missing CODEC for "..key1)
-	 return false, key1
+		 self:debug()
+		 error("Internal memory error: missing CODEC for "..key1)
+		 return false, key1
       end
       -- TODO: base checks if CODEC matches
    end
    -- check for missing keys in tbl1
    for key2, _ in pairs(right) do
-      if not left[key2] then
-	 self:debug()
-	 error("Internal memory error: unbound CODEC for "..key2)
-	 return false, key2
+      if not left[key2] and fatal then
+		 self:debug()
+		 error("Internal memory error: unbound CODEC for "..key2)
+		 return false, key2
       end
    end
    return true

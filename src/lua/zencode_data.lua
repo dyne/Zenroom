@@ -142,7 +142,7 @@
  -- }
  function guess_conversion(obj, definition)
     local t
-    local objtype = luatype(obj)
+    local objtype <const> = luatype(obj)
     local res
     if not definition then
        error("Cannot take undefined object, found a "..type(obj), 3)
@@ -222,9 +222,14 @@
        return (res)
     end
 
+	if objtype == 'nil' then
+	   res = input_encoding(definition)
+       res.zentype = 'n'
+	   return(res)
+	end
+
     -- objtype is not a luatype
-    objtype = type(obj)
-    if iszen(objtype) then
+    if iszen(type(obj)) then
        res = CONF.input.encoding
        res.zentype = 'e'
        res.schema = nil
