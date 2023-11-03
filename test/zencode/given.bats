@@ -476,3 +476,81 @@ EOF
     save_output "hex_0x_prefix.out"
     assert_output '{"0xprefix":"0x7d6df85bDBCe99151c813fd1DDE6BC007c523C27","myhex":"7d6df85bdbce99151c813fd1dde6bc007c523c27"}'
 }
+
+@test "Execution limited to scope=given for schema introspection" {
+    cat <<EOF | save myNestedRepetitveObject.json
+{
+   "myFirstObject":{
+      "myNumber":11223344,
+      "myString":"Hello World!",
+      "myStringArray":[
+         "String1",
+         "String2",
+         "String3",
+         "String4"
+      ]
+   },
+   "mySecondObject":{
+      "mySecondNumber":1234567890,
+	  "mySecondString":"Oh, hello again!",
+      "myStringArray":[
+         "anotherString1",
+         "anotherString2",
+         "anotherString3",
+         "anotherString4"
+      ]
+   },
+	 "Alice":{
+		  "keyring":{
+			 "ecdh":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM="
+		  }
+	   }
+}
+EOF
+	conf="scope=given"
+	cat <<EOF | zexe given_only.zen myNestedRepetitveObject.json
+Given I am 'Alice'
+And I have my 'keyring'
+And I have a 'string dictionary' named 'myFirstObject'
+And I have a 'string dictionary' named 'mySecondObject'
+# The When section should be ignored
+When I create the random 'random'
+Then print codec
+EOF
+	save_output given_only_schema_output.json
+	assert_output '{"codec":{"keyring":{"encoding":"complex","name":"keyring","root":"Alice","schema":"keyring","zentype":"e"},"myFirstObject":{"encoding":"string","name":"myFirstObject","zentype":"d"},"mySecondObject":{"encoding":"string","name":"mySecondObject","zentype":"d"}}}'
+}
+
+@test "Execution limited to scope=given with missing data" {
+    cat <<EOF | save myNestedRepetitveObject.json
+{
+   "myFirstObject":{
+      "myNumber":11223344,
+      "myString":"Hello World!",
+      "myStringArray":[
+         "String1",
+         "String2",
+         "String3",
+         "String4"
+      ]
+   }
+}
+EOF
+	conf="scope=given"
+	cat <<EOF | zexe given_only.zen myNestedRepetitveObject.json
+#Given I am 'Alice'
+#And I have my 'keyring'
+Given I have a 'string dictionary' named 'myFirstObject'
+And I have a 'string' named 'does not exists'
+When I create the random 'random'
+Then print codec
+EOF
+	save_output given_schema_missing.json
+	>&3 cat given_schema_missing.json
+	assert_output '{"codec":{"does_not_exists":{"encoding":"string","name":"does_not_exists","zentype":"n"},"myFirstObject":{"encoding":"string","name":"myFirstObject","zentype":"d"}}}'
+
+# TODO: missing data with complex type 'string dictionary'
+#       missing data with schema type
+#       missing keyring
+#       missing own data with declared owner 'Alice'
+}
