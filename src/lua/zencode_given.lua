@@ -37,7 +37,7 @@ end
 
 -- safely take any zenroom object as index
 local function _index_to_string(what)
-   local t = type(what)
+   local t <const> = type(what)
    if t == 'string' then
       return what
    elseif iszen(t) then
@@ -107,10 +107,10 @@ local function pickin(section, what, conv, fail)
    else
       raw = root[name]
    end
-   if not raw then
+   if not raw and CONF.missing.fatal then
       error("Object not found: "..name.." in "..section, 2)
    end
-   if raw == '' then
+   if raw == '' and CONF.missing.fatal then
       error("Found empty string '" .. name .."' inside '"..section.."'", 2) end
    -- conv = conv or name
    -- if not conv and ZEN.schemas[name] then conv = name end
@@ -135,14 +135,14 @@ function operate_conversion(guessed)
 	  encoding = guessed.encoding,
 	  zentype = guessed.zentype,
 	  root = guessed.root,
-	  schema = guessed.schema
+	  schema = guessed.schema,
+	  missing = guessed.missing
    }
    -- data not found (and CONF.missing.fatal == false)
-   if guessed.zentype == 'n' then return nil end
+   if guessed.missing then return nil end
    -- check if already a zenroom type
    -- (i.e. zenroom.big from json decode)
    if not guessed.fun then
-	  I.warn(guessed)
 	  error('No conversion operation guessed', 2)
 	  return nil
    end
@@ -155,19 +155,23 @@ function operate_conversion(guessed)
 	  if guessed.schema then
 		 -- error('Invalid schema conversion for encoding: '..guessed.encoding, 2)
 		 local res = {}
-		 if guessed.zentype == 'a' then
+		 local zt <const> = guessed.zentype
+		 if zt == 'e' then -- single schema element
+			return fun(guessed.raw)
+			-- array of schemas
+		 elseif zt == 'a' then
 			for _,v in pairs(guessed.raw) do
 			   table.insert(res, fun(v))
 			end
-			return(res)
-		 elseif guessed.zentype == 'd' then
+			-- dictionary of schemas
+		 elseif zt == 'd' then
 			for k, v in pairs(guessed.raw) do
 			   res[k] = fun(v)
 			end
-			return (res)
 		 else
-			return fun(guessed.raw)
+			error('Unknown zentype to operate schema conversion: '..guessed.zentype, 2)
 		 end
+		 return(res) -- a, d
 	  else
 		 -- TODO: better error checking on deepmap?
 		 if luatype(guessed.check) == 'function' then
@@ -208,10 +212,12 @@ local function ack_table(key, val)
    if not ACK[key] then
       ACK[key] = {}
    end
-   ACK[key][val] = operate_conversion(ZEN.TMP)
-   if key ~= ZEN.TMP.name then
-      CODEC[key] = CODEC[ZEN.TMP.name]
-      CODEC[ZEN.TMP.name] = nil
+   local t <const> = ZEN.TMP
+   ACK[key][val] = operate_conversion(t)
+   local n <const> = t.name
+   if key ~= n then
+      CODEC[key] = CODEC[n]
+      CODEC[n] = nil
    end
 end
 
@@ -226,10 +232,11 @@ end
 -- @function ack(name)
 -- @param name string key of the data object in ZEN.TMP[name]
 local function ack(what)
-   local name = _index_to_string(what)
-   zencode_assert(ZEN.TMP, 'No valid object found: ' .. name)
+   local t <const> = ZEN.TMP
+   local name <const> = _index_to_string(what)
+   zencode_assert(t, 'No valid object found: ' .. name)
    empty(name)
-   ACK[name] = operate_conversion(ZEN.TMP)
+   ACK[name] = operate_conversion(t)
    -- name of schema may differ from name of object
    -- new_codec(name, { schema = ZEN.TMP.schema })
 

@@ -34,6 +34,7 @@
 
  -- Used in scenario's schema declarations to cast to zenroom. type
  function schema_get(obj, key, conversion, encoding)
+	-- I.warn({obj=obj,key=key,conversion=conversion,encoding=encoding})
 	if type(key) ~= 'string' then
 	   error('get key is not a string', 2)
 	end
@@ -45,8 +46,7 @@
 	end
 	local k
 	if not obj then -- take from IN root
-	   -- does not support to pick in WHO (use of 'my')
-	   k = KIN[key] or IN[key]
+	   k = IN[key]
 	else
 	   if key == '.' then
           k = obj
@@ -104,12 +104,13 @@
     then
        res.leftwords = '' -- concat all left words in toks minus the last
        for i = 1, #toks - 2 do
-	  res.leftwords = res.leftwords .. toks[i] .. '_'
+		  res.leftwords = res.leftwords .. toks[i] .. '_'
        end
        res.leftwords = uscore( res.leftwords .. toks[#toks - 1] )
        -- no trailing underscore
        return res
     end
+	return nil
     -- schemas may or may be not tables
  end
 
@@ -154,13 +155,14 @@
        -- {import=fun, export=fun}
        local c = fif(luatype(t)=='table', 'complex', 'def')
        -- default is always the configured output encoding
-       return ({
-	     fun = t,
-		 schema = definition,
-	     zentype = 'e',
-	     raw = obj,
-	     encoding = c
-       })
+	   res = {
+		  fun = t,
+		  schema = definition,
+		  zentype = 'e',
+		  raw = obj,
+		  encoding = c }
+	   if not obj then res.missing = true end
+	   return(res)
     end
 
     -- definition: value_encoding .. data_type
@@ -223,8 +225,28 @@
     end
 
 	if objtype == 'nil' then
+	   local tab <const> = expect_table(definition)
+	   if tab then -- double encoding_zentype definition
+		  if ZEN.schemas[tab.leftwords] then
+			 return({ zentype = string.sub(tab.rightmost,1,1),
+					  schema = tab.leftwords,
+					  luatype = objtype,
+					  missing = true
+					})
+		  else
+			 res = input_encoding(tab.leftwords)
+			 if res then
+				res.zentype = string.sub(tab.rightmost,1,1)
+				res.schema = nil
+				res.missing = true
+				return(res)
+			 end
+		  end
+	   end
+	   -- single encoding definition
 	   res = input_encoding(definition)
-       res.zentype = 'n'
+	   res.zentype = 'e'
+	   res.missing = true
 	   return(res)
 	end
 
