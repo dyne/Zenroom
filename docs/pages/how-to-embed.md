@@ -18,6 +18,8 @@ The input string buffers will not be modified by the call, they are:
 
 This is all you need to know to start using Zenroom in your software, to try it out you may want to jump directly to the [specific instructions for language bindings](https://dev.zenroom.org/#/pages/how-to-embed?id=language-bindings).
 
+Here can you find the latest [zenroom.h header file](https://github.com/dyne/Zenroom/blob/master/src/zenroom.h)
+
 ## Configuration directives
 
 The list of accepted configurations in `conf` argument are:
@@ -42,7 +44,7 @@ The control log (stderr output channel) is a simple array (json or newline termi
 
 In addition to the main `zencode_exec` function there is another one that copies results (error messages and printed output) inside memory buffers pre-allocated by the caller, instead of stdin and stdout file descriptors:
 ```c
-int zenroom_exec_tobuf(char *script, char *conf,
+int zencode_exec_tobuf(char *script, char *conf,
                        char *keys,   char *data,
                        char *stdout_buf, size_t stdout_len,
                        char *stderr_buf, size_t stderr_len);
@@ -68,81 +70,50 @@ int zen_exec_script(zenroom_t *Z, const char *script);
 
 For more information see the [Zenroom header file](https://github.com/dyne/Zenroom/blob/master/src/zenroom.h) which is the only header you'll need to include in an application linking to the Zenroom static or shared library.
 
-# Language bindings
+## Advanced API usage
 
-This API can be called in similar ways from a variety of languages and wrappers that already facilitate its usage.
+This section lists some of the advanced API calls available, they are
+implemented to facilitate some specific use-cases and advanced
+applications embedding Zenroom.
 
-# Zenroom header file
+### Input Validation
 
-Here can you find the latest [zenroom.h header file](https://github.com/dyne/Zenroom/blob/master/src/zenroom.h), remember to add *#include <stddef.h>*.
+A caller application using Zenroom may want to have more information about the input data accepted by a Zencode script before executing it. Input validation can be operated without executing the whole script by calling `zencode_exec` using a special configuration directive: `scope=given`.
 
-## Javascript
+The output of input validation consists of a "`CODEC`" dictionary documenting all expected input by the `Given` section of a script, including data missing from the current input. The `CODEC` is in JSON format and consists of:
 
+- `n`ame = key name of the data
+- `r`oot = name of the parent object if present
+- `s`chema = scenario specific schema for data import/export
+- `e`ncoding = can be `hex`, `base64`, `string`, `base58`, etc.
+- `l`uatype = type of value in Lua: `table`, `string`, `number`, etc.
+- `z`entype = kind of value: `a`rray, `d`ictionary, `e`lement or `s`chema
+- `b`intype = the zenroom binary value type: `octet`, `ecp`, `float`, etc.
+- `m`issing = true if the input value was not found and just expected
 
-💾 Installation
+Each data object will have a corresponding `CODEC` entry describing it
+when using input validation: the entry will be part of a dictionary
+and its name will be used as key.
+
+### Direct Hash calls
+
+Zenroom offers direct API calls to certain basic cryptographic functions, so that calling applications can run them without the need to initialize the whole VM. These calls are much faster than executing a Zencode script.
+
+All direct API calls return 0 on success, anything else is an error.
+
+All their input arguments are encoded string values.
+
+Their output result is always an encoded string value.
+
+```c
+// hash_type may be one of these two strings: 'sha256' or 'sha512'
+int zenroom_hash_init(const char *hash_type);
+
+// hash_ctx is the string returned by init
+// buffer is an hex encoded string of the value to be hashed
+// buffer_size is the size in bytes of the value to be hashed
+int zenroom_hash_update(const char *hash_ctx, const char *buffer, const int buffer_size);
+
+// the final call will print the base64 encoded hash of the input data
+int zenroom_hash_final(const char *hash_ctx);
 ```
-npm install zenroom
-```
-
-🎮 Quick Usage
-
-```javascript
-const {zenroom_exec} = require("zenroom");
-const script = `print("Hello World!")`
-zenroom_exec(script).then(({result}) => console.log(result)) //=> "Hello World!"
-```
-
-Detailed documentation of js is available [here](/pages/javascript)
-
-Tutorials on how to use the zenRoom in the js world
-  * [Node.js](/pages/zenroom-javascript1)
-  * [Browser](/pages/zenroom-javascript2)
-  * [React](/pages/zenroom-javascript3)
-
-🌐 [Javascript NPM package](https://www.npmjs.com/package/zenroom)
-
-
-<!-- Outdated
- 
-
-## Python
-
-
-💾 Installation
-```
-pip install zenroom
-```
-
-🎮 Quick Usage
-
-```python
-from zenroom import zenroom
-
-script = "print('Hello world!')"
-result = zenroom.zenroom_exec(script)
-print(result.stdout) # guess what
-```
-
-Detailed documentation of python bindings are available [here](/pages/javascript)
-
-🌐 [Python package on Pypi](https://pypi.org/project/zenroom/)
-
-## Golang
-
-
-💾 Installation
-```
-import "github.com/dyne/Zenroom/tree/master/bindings/golang/zenroom"
-```
-
-🎮 Quick Usage
-
-```go
-script := []byte(`print("Hello World!")`)
-res, _ := zenroom.Exec(script)
-fmt.Println(string(res))
-```
-
-[Go language bindings](https://godoc.org/github.com/dyne/Zenroom/bindings/golang/zenroom)
-
--->
