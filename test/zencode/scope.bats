@@ -125,7 +125,8 @@ and I have a 'keyring'
 Then print codec
 EOF
 	save_output given_schema_missing.json
-	assert_output '{"codec":{"ethereum_address":{"encoding":"complex","name":"ethereum_address","schema":"ethereum_address","zentype":"e"},"keyring":{"encoding":"complex","name":"keyring","schema":"keyring","zentype":"e"},"missing_address":{"encoding":"complex","missing":true,"name":"missing_address","schema":"ethereum_address","zentype":"e"}}}'
+	assert_output '{"codec":{"ethereum_address":{"bintype":"zenroom.octet","encoding":"complex","name":"ethereum_address","schema":"ethereum_address","zentype":"e"},"keyring":{"encoding":"complex","name":"keyring","schema":"keyring","zentype":"e"},"missing_address":{"encoding":"complex","missing":true,"name":"missing_address","schema":"ethereum_address","zentype":"e"}}}'
+
 
 # TODO: missing keyring
 #       missing own data with declared owner 'Alice'
@@ -143,16 +144,24 @@ EOF
          "String3",
          "String4"
       ]
-   }
+   },
+    "Alice":{
+		  "keyring":{
+			 "ecdh":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM="
+		  }
+	   }
 }
 EOF
 	conf="scope=given"
 	cat <<EOF | zexe given_only.zen myNestedRepetitveObject.json
+Given I am 'Alice'
+and I have my 'hex' named 'missing public key'
 Given I have a 'string array' named 'myStringArray' in 'myFirstObject'
 And I have a 'string dictionary' named 'does not exists' in 'myFirstObject'
 When I create the random 'random'
 Then print codec
 EOF
 	save_output given_schema_missing.json
-	assert_output '{"codec":{"does_not_exists":{"encoding":"string","missing":true,"name":"does_not_exists","root":"myFirstObject","zentype":"d"},"myStringArray":{"encoding":"string","name":"myStringArray","root":"myFirstObject","zentype":"a"}}}'
+	assert_output '{"codec":{"does_not_exists":{"encoding":"string","missing":true,"name":"does_not_exists","root":"myFirstObject","zentype":"d"},"missing_public_key":{"encoding":"hex","missing":true,"name":"missing_public_key","root":"Alice","zentype":"e"},"myStringArray":{"encoding":"string","name":"myStringArray","root":"myFirstObject","zentype":"a"}}}'
+
 }

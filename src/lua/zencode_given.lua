@@ -213,11 +213,18 @@ local function ack_table(key, val)
       ACK[key] = {}
    end
    local t <const> = ZEN.TMP
-   ACK[key][val] = operate_conversion(t)
+   local v <const> = operate_conversion(t)
+   ACK[key][val] = v
    local n <const> = t.name
    if key ~= n then
       CODEC[key] = CODEC[n]
       CODEC[n] = nil
+   end
+   if not CODEC[key].missing then
+	  local vt <const> = type(v)
+	  if iszen(vt) then
+		 CODEC[key].bintype = vt
+	  end
    end
 end
 
@@ -236,7 +243,14 @@ local function ack(what)
    local name <const> = _index_to_string(what)
    zencode_assert(t, 'No valid object found: ' .. name)
    empty(name)
-   ACK[name] = operate_conversion(t)
+   local v <const> = operate_conversion(t)
+   ACK[name] = v
+   if not CODEC[name].missing then
+	  local vt <const> = type(v)
+	  if iszen(vt) then
+		 CODEC[name].bintype = vt
+	  end
+   end
    -- name of schema may differ from name of object
    -- new_codec(name, { schema = ZEN.TMP.schema })
 

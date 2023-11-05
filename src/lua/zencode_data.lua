@@ -140,6 +140,7 @@
  --   (root)      = root section name (set externally)
  --   luatype     = type of raw data for lua
  --   zentype     = type of data for zenroom (array, dict, element, schema)
+ --   missing     = true if the raw data was not found just expected
  -- }
  function guess_conversion(obj, definition)
     local t
