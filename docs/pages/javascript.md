@@ -48,21 +48,19 @@ npm install zenroom@next
 
 ## 🎮 Usage
 
-The bindings are composed of two main functions:
+The binding consists of one main function::
 
- * **zencode_exec** to execute [Zencode](https://dev.zenroom.org/#/pages/zencode-intro?id=smart-contracts-in-human-language). To learn more about zencode syntax look [here](https://dev.zenroom.org/#/pages/zencode-cookbook-intro)
-  * **zenroom_exec** to execute our special flavor of Lua enhanced with Zenroom's [special effects](https://dev.zenroom.org/#/pages/lua) 
+**zencode_exec** to execute [Zencode](https://dev.zenroom.org/#/pages/zencode-intro?id=smart-contracts-in-human-language). To learn more about zencode syntax look [here](https://dev.zenroom.org/#/pages/zencode-cookbook-intro)
 
-
-Both of this functions accepts a mandatory **SCRIPT** to be executed and some optional parameters:
+This function accepts a mandatory **SCRIPT** to be executed and some optional parameters:
   * DATA
   * KEYS
   * [CONF](https://dev.zenroom.org/#/pages/zenroom-config)
 All in form of strings.
 
-Both functions return a [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise).
+This functions returns a [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise).
 
-To start using the zenroom vm just
+To start using the zenroom vm just do:
 
 ```js
 import { zenroom_exec, zencode_exec } from 'zenroom'
@@ -117,74 +115,21 @@ zencode_exec(zencode, {data: zenData, keys: zenKeys, conf:`color=0, debug=0`})
 		throw new Error(error);
 	});
 
-
-
-// Lua Hello World!
-
-const lua = `print("Hello World!")`
-zenroom_exec(lua)
-	.then((result) => {
-		console.log(result);
-	})
-	.catch((error) => {
-		throw new Error(error);
-	});	
-
-
-
 // to pass the optional parameters you pass an object literal eg.
-
-
 try {
-  const result = await zenroom_exec(`print(DATA)`, {data: "Some data", keys: "Some other data", conf:`color=0, debug=0`});
+  const result = await zencode_exec(zencodeRandom, {data: "Some data", keys: "Some other data", conf:`color=0, debug=0`});
   console.log(result); // => Some data
 } catch (e) {
   throw new Error(e)
 }
 
-
 ```
 
+## 📖 Tutorials
 
-## 😍 Acknowledgements
+Here we wrote some tutorials on how to use Zenroom in the JS world
+  * [Node.js](/pages/zenroom-javascript1)
+  * [Browser](/pages/zenroom-javascript2)
+  * [React](/pages/zenroom-javascript3)
 
-Copyright (C) 2018-2020 by [Dyne.org](https://www.dyne.org) foundation, Amsterdam
-
-Designed, written and maintained by Puria Nafisi Azizi.
-
-<img src="https://upload.wikimedia.org/wikipedia/commons/8/84/European_Commission.svg" class="pic" alt="Project funded by the European Commission">
-
-This project is receiving funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement nr. 732546 (DECODE).
-
-* * *
-
-## 👤 Contributing
-
-Please first take a look at the [Dyne.org - Contributor License Agreement](CONTRIBUTING.md) then
-
-1.  [FORK IT](https://github.com/puria/zenroomjs/fork)
-2.  Create your feature branch `git checkout -b feature/branch`
-3.  Commit your changes `git commit -am 'Add some fooBar'`
-4.  Push to the branch `git push origin feature/branch`
-5.  Create a new Pull Request
-6.  Thank you
-
-* * *
-
-## 💼 License
-
-      Zenroom js - a javascript wrapper of zenroom
-      Copyright (c) 2018-2020 Dyne.org foundation, Amsterdam
-
-      This program is free software: you can redistribute it and/or modify
-      it under the terms of the GNU Affero General Public License as
-      published by the Free Software Foundation, either version 3 of the
-      License, or (at your option) any later version.
-
-      This program is distributed in the hope that it will be useful,
-      but WITHOUT ANY WARRANTY; without even the implied warranty of
-      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-      GNU Affero General Public License for more details.
-
-      You should have received a copy of the GNU Affero General Public License
-      along with this program.  If not, see <http://www.gnu.org/licenses/>.
+For more information also see the [🌐Javascript NPM package](https://www.npmjs.com/package/zenroom).
