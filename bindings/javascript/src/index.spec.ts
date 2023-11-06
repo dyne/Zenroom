@@ -1,10 +1,14 @@
 import test from "ava";
 
-import {zencode_exec, zenroom_exec,
-  zenroom_hash_init, zenroom_hash_update, zenroom_hash_final,
-  zenroom_hash
+import {
+  zencode_exec,
+  zenroom_exec,
+  zenroom_hash_init,
+  zenroom_hash_update,
+  zenroom_hash_final,
+  zenroom_hash,
 } from "./index";
-import { TextEncoder } from 'util';
+import { TextEncoder } from "util";
 var enc = new TextEncoder();
 
 test("does exists", (t) => {
@@ -14,12 +18,12 @@ test("does exists", (t) => {
 });
 
 test("does run hello world", async (t) => {
-  const {result} = await zenroom_exec(`print('hello world!')`);
+  const { result } = await zenroom_exec(`print('hello world!')`);
   t.is(result, "hello world!\n");
 });
 
 test("does parse data", async (t) => {
-  const {result} = await zenroom_exec(`print(DATA)`, {data: "DATA INSIDE"});
+  const { result } = await zenroom_exec(`print(DATA)`, { data: "DATA INSIDE" });
   t.is(result, "DATA INSIDE\n");
 });
 
@@ -62,7 +66,6 @@ test("does handle empty lua", async (t) => {
   }
 });
 
-
 // cannot reproduce since timezone changes from CI to local
 // github reports 3600 and local GMT+2 reports 0
 // test("does access os.time()", async (t) => {
@@ -71,38 +74,33 @@ test("does handle empty lua", async (t) => {
 // });
 
 test("does run zencode", async (t) => {
-  const {result} = await zencode_exec(`scenario simple:
+  const { result } = await zencode_exec(`scenario simple:
   given nothing
   Then print all data`);
   t.is(result, "[]\n");
 });
 
-test("error format contains newlines", async t => {
+test("error format contains newlines", async (t) => {
   try {
     await zencode_exec(`a`);
   } catch (e) {
     const lines = JSON.parse(e.logs);
-    t.true(lines.includes('[!] Zencode parser error'));
+    t.true(lines.includes("[!] Zencode parser error"));
   }
-})
+});
 
 test("handle broken zencode", async (t) => {
   try {
     await zencode_exec(`sapodksapodk`);
   } catch (e) {
-    t.true(
-      e.logs.includes(
-        `Invalid Zencode prefix 1: 'sapodksapodk'`
-      )
-    );
+    t.true(e.logs.includes(`Invalid Zencode prefix 1: 'sapodksapodk'`));
   }
 });
 
 test("Executes a zencode correctly", async (t) => {
   const random_name = Math.random().toString(36).substring(7);
-  const {
-    result,
-  } = await zencode_exec(`Scenario 'credential': credential keygen 
+  const { result } =
+    await zencode_exec(`Scenario 'credential': credential keygen 
     Given that I am known as '${random_name}' 
     When I create the credential key
     and I create the issuer key
@@ -122,29 +120,52 @@ test("Unknown variable error shown in logs", async (t) => {
       Given nothing
       Then print my '${random_name}'`);
     t.truthy(false);
-  } catch(e) {
+  } catch (e) {
     const lines = JSON.parse(e.logs);
     let found = null;
-    for(let log of lines) {
-      if(log.startsWith("J64 TRACE")) {
+    for (let log of lines) {
+      if (log.startsWith("J64 TRACE")) {
         const encoded = log.substring("J64 TRACE: ".length);
-        found =  Buffer.from(encoded, 'base64').toString('utf-8');
+        found = Buffer.from(encoded, "base64").toString("utf-8");
       }
     }
-    t.truthy(found && JSON.parse(found).some((s: string) => (s.startsWith("[!]") && s.includes("No identity specified in WHO"))))
-    t.truthy(lines.some((s: string) => (s.startsWith("[!]") && s.includes(`Zencode line 3: Then print my '${random_name}'`))))
+    t.truthy(
+      found &&
+        JSON.parse(found).some(
+          (s: string) =>
+            s.startsWith("[!]") && s.includes("No identity specified in WHO")
+        )
+    );
+    t.truthy(
+      lines.some(
+        (s: string) =>
+          s.startsWith("[!]") &&
+          s.includes(`Zencode line 3: Then print my '${random_name}'`)
+      )
+    );
   }
 });
 
 test("Run hash api", async (t) => {
   let ctx = await zenroom_hash_init("sha512");
-  t.is(ctx.result, '40000000000000000000000000000000008c9bcf367e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000');
-  ctx = await zenroom_hash_update(ctx.result, enc.encode('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq'));
-  t.is(ctx.result, '4c001000000000000000000000000000008c9bcf367e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b6564636264636261676665646665646369686766686766656b6a69686a6968676d6c6b6a6c6b6a696f6e6d6c6e6d6c6b71706f6e706f6e6d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000');
+  t.is(
+    ctx.result,
+    "40000000000000000000000000000000008c9bcf367e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000"
+  );
+  ctx = await zenroom_hash_update(
+    ctx.result,
+    enc.encode("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq")
+  );
+  t.is(
+    ctx.result,
+    "4c001000000000000000000000000000008c9bcf367e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b6564636264636261676665646665646369686766686766656b6a69686a6968676d6c6b6a6c6b6a696f6e6d6c6e6d6c6b71706f6e706f6e6d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000"
+  );
   ctx = await zenroom_hash_final(ctx.result);
-  t.is(ctx.result, 'IEqPxt2oLwoM7XvrjgikFlfBbvRosiioJ5vjMacDwzWW/RXBOxsH+aodO+pXeJygMa2Fx6cd1wNU7GMSOMo0RQ==');
+  t.is(
+    ctx.result,
+    "IEqPxt2oLwoM7XvrjgikFlfBbvRosiioJ5vjMacDwzWW/RXBOxsH+aodO+pXeJygMa2Fx6cd1wNU7GMSOMo0RQ=="
+  );
 });
-
 
 test("Unknown hash type", async (t) => {
   try {
@@ -156,9 +177,12 @@ test("Unknown hash type", async (t) => {
 
 test("Wrong context prefix (update)", async (t) => {
   try {
-    await zenroom_hash_update("z", enc.encode('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq'));
+    await zenroom_hash_update(
+      "z",
+      enc.encode("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq")
+    );
   } catch (e) {
-    t.true(e.logs.endsWith('z\n'));
+    t.true(e.logs.endsWith("z\n"));
   }
 });
 
@@ -166,34 +190,76 @@ test("Wrong context prefix (final)", async (t) => {
   try {
     await zenroom_hash_final("z");
   } catch (e) {
-    t.true(e.logs.endsWith('z\n'));
+    t.true(e.logs.endsWith("z\n"));
   }
 });
-
 
 test("Use zenroom_hash with unknown hash function", async (t) => {
   try {
-    await zenroom_hash("z", enc.encode("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"));
+    await zenroom_hash(
+      "z",
+      enc.encode("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq")
+    );
   } catch (e) {
-    t.true(e.logs.endsWith('z\n'));
+    t.true(e.logs.endsWith("z\n"));
   }
 });
 
-
 test("Use zenroom_hash with small input", async (t) => {
-  const hash = await zenroom_hash("sha512", enc.encode("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"));
-  t.is(hash.result, 'IEqPxt2oLwoM7XvrjgikFlfBbvRosiioJ5vjMacDwzWW/RXBOxsH+aodO+pXeJygMa2Fx6cd1wNU7GMSOMo0RQ==');
+  const hash = await zenroom_hash(
+    "sha512",
+    enc.encode("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq")
+  );
+  t.is(
+    hash.result,
+    "IEqPxt2oLwoM7XvrjgikFlfBbvRosiioJ5vjMacDwzWW/RXBOxsH+aodO+pXeJygMa2Fx6cd1wNU7GMSOMo0RQ=="
+  );
 });
-
 
 test("Use zenroom_hash with big input", async (t) => {
   // multiple of chunk size
-  const hash0 = await zenroom_hash("sha512", enc.encode("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq".repeat(1024*64)));
-  t.is(hash0.result, 'tqyQvZM1JPW5sSokgVWXbLp3tA8NNkEWdBc8YUX+6aDhfFTNEmQmralYFnk4izrXppH7cK7fVi3cpIvJrV783g==');
+  const hash0 = await zenroom_hash(
+    "sha512",
+    enc.encode(
+      "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq".repeat(
+        1024 * 64
+      )
+    )
+  );
+  t.is(
+    hash0.result,
+    "tqyQvZM1JPW5sSokgVWXbLp3tA8NNkEWdBc8YUX+6aDhfFTNEmQmralYFnk4izrXppH7cK7fVi3cpIvJrV783g=="
+  );
 
   // not multiple of chunk size
-  const hash1 = await zenroom_hash("sha512", enc.encode("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq".repeat(1087 * 73)));
-  t.is(hash1.result, 'HM5Pm1A/V/FqShY8sm6x4AU5O5B44Gs9+uXjDn6PhjSg9cSzlPa2MHXriPSZS4wuRYn0UgN2g9L3A+P7rOJRdA==');
+  const hash1 = await zenroom_hash(
+    "sha512",
+    enc.encode(
+      "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq".repeat(
+        1087 * 73
+      )
+    )
+  );
+  t.is(
+    hash1.result,
+    "HM5Pm1A/V/FqShY8sm6x4AU5O5B44Gs9+uXjDn6PhjSg9cSzlPa2MHXriPSZS4wuRYn0UgN2g9L3A+P7rOJRdA=="
+  );
 });
 
+test("Check the conf scope given", async (t) => {
+  const { result: validation } = await zencode_exec(
+    `Given I am 'Alice'
+And I have my 'keyring'
+And I have a 'string dictionary' named 'myFirstObject'
+And I have a 'string dictionary' named 'mySecondObject'
+# The When section should be ignored
+When I create the random 'random'
+Then print codec`,
+    { conf: "scope=given" }
+  );
 
+  t.is(
+    validation,
+    '{"codec":{"keyring":{"encoding":"complex","name":"keyring","root":"Alice","schema":"keyring","zentype":"e"},"myFirstObject":{"encoding":"string","name":"myFirstObject","zentype":"d"},"mySecondObject":{"encoding":"string","name":"mySecondObject","zentype":"d"}}}'
+  );
+});
