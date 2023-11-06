@@ -52,6 +52,37 @@ export const zencode_exec = async (
   });
 };
 
+export const zencode_valid_input = async (
+  zencode: string,
+  props?: ZenroomProps
+): Promise<ZenroomResult> => {
+  const Module = await getModule();
+  return new Promise((resolve, reject) => {
+    let result = "";
+    let logs = "";
+    const _exec = Module.cwrap("zencode_valid_input", "number", [
+      "string",
+      "string",
+      "string",
+      "string",
+	  "string",
+    ]);
+    Module.print = (t: string) => (result += t);
+    Module.printErr = (t: string) => (logs += t);
+    Module.exec_ok = () => {
+      resolve({result, logs});
+    };
+    Module.exec_error = () => {
+      reject({result, logs});
+    };
+    Module.onAbort = () => {
+      reject({result, logs});
+    };
+    const {data = null, keys = null, conf = null, extra = null} = {...props};
+    _exec(zencode, conf, keys, data, extra);
+  });
+};
+
 export const zenroom_exec = async (
   lua: string,
   props?: ZenroomProps
