@@ -555,3 +555,16 @@ int zenroom_exec_tobuf(const char *script, const char *conf, const char *keys, c
 	return( _check_zenroom_result(Z));
 }
 
+int zencode_valid_input(const char *script, const char *conf, const char *keys, const char *data, const char *extra) {
+
+	if (_check_script_arg(script) != SUCCESS) return ERR_INIT;
+
+	const char *c = "scope=given";
+	const char *k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
+	const char *d = data ? (data[0] == '\0') ? NULL : data : NULL;
+
+	zenroom_t *Z = zen_init(c, k, d);
+	if (_check_zenroom_init(Z) != SUCCESS) return ERR_INIT;
+	zen_exec_zencode(Z, script);
+	return( _check_zenroom_result(Z));
+}

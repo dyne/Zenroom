@@ -155,7 +155,6 @@ static char *conffile = NULL;
 static char *keysfile = NULL;
 static char *scriptfile = NULL;
 static char *datafile = NULL;
-static char *rngseed = NULL;
 static char *sideload = NULL;
 static char *sidescript = NULL;
 static char *script = NULL;
@@ -172,7 +171,6 @@ int cli_alloc_buffers() {
 	sideload = malloc(MAX_STRING);
 	keysfile = malloc(MAX_STRING);
 	datafile = malloc(MAX_STRING);
-	rngseed = malloc(MAX_STRING);
 	script = malloc(MAX_FILE);
 	sidescript = malloc(MAX_FILE);
 	keys = malloc(MAX_FILE);
@@ -187,7 +185,6 @@ int cli_free_buffers() {
 	free(sidescript);
 	free(keysfile);
 	free(datafile);
-	free(rngseed);
 	free(script);
 	free(keys);
 	free(data);
@@ -199,21 +196,21 @@ int main(int argc, char **argv) {
 	int opt, index;
 	int   interactive         = 0;
 	int   zencode             = 0;
+	int valid_input = 0;
 	int use_seccomp = 0;
 	cli_alloc_buffers();
 
 	zenroom_t *Z;
 
-	const char *short_options = "hD:ic:k:a:l:S:pz";
+	const char *short_options = "hsD:ic:k:a:zvl:";
 	const char *help          =
-		"Usage: zenroom [-h] [-s] [ -D scenario ] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ -S seed ] [ -p ] [ -z ] [ -l lib ] [ script.lua ]\n";
+		"Usage: zenroom [-h] [-s] [ -D scenario ] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ -z | -v ] [ -l lib ] [ script.lua ]\n";
 	int pid, status, retval;
 	conffile   [0] = '\0';
 	scriptfile [0] = '\0';
 	sideload   [0] = '\0';
 	keysfile   [0] = '\0';
 	datafile   [0] = '\0';
-	rngseed    [0] = '\0';
 	data       [0] = '\0';
 	keys       [0] = '\0';
 	introspect [0] = '\0';
@@ -248,13 +245,14 @@ int main(int argc, char **argv) {
 		case 'c':
 			snprintf(conffile,MAX_STRING-1,"%s",optarg);
 			break;
-		case 'S':
-			snprintf(rngseed,MAX_STRING-1,"%s",optarg);
-			break;
 		case 'z':
 			zencode = 1;
 			interactive = 0;
 			break;
+		case 'v':
+		  valid_input = 1;
+		  interactive = 0;
+		  break;
 		case '?': fprintf(stderr, "%s", help); cli_free_buffers(); return EXIT_FAILURE;
 		default:  fprintf(stderr, "%s", help); cli_free_buffers(); return EXIT_FAILURE;
 		}
@@ -263,17 +261,6 @@ int main(int argc, char **argv) {
 	if(verbosity) {
 		fprintf(stderr, "Zenroom %s - secure crypto language VM\n",VERSION);
 		fprintf(stderr, "Zenroom is Copyright (C) 2017-%s by the Dyne.org foundation\n", CURRENT_YEAR);
-		fprintf(stderr, "For the original source code and documentation go to https://zenroom.org\n");
-		fprintf(stderr, "Zenroom is free software: you can redistribute it and/or modify\n");
-		fprintf(stderr, "it under the terms of the GNU Affero General Public License as\n");
-		fprintf(stderr, "published by the Free Software Foundation, either version 3 of the\n");
-		fprintf(stderr, "License, or (at your option) any later version.\n");
-		fprintf(stderr, "Zenroom is distributed in the hope that it will be useful,\n");
-		fprintf(stderr, "but WITHOUT ANY WARRANTY; without even the implied warranty of\n");
-		fprintf(stderr, "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n");
-		fprintf(stderr, "GNU Affero General Public License for more details.\n");
-		fprintf(stderr, "You should have received a copy of the GNU Affero General Public License\n");
-		fprintf(stderr, "along with this program.  If not, see http://www.gnu.org/licenses/\n");
 	}
 
 	for (index = optind; index < argc; index++) {
@@ -319,6 +306,22 @@ int main(int argc, char **argv) {
 		return(res);
 	}
 
+	///////////////////
+	// Input validation
+	if (valid_input) {
+	  int exitcode;
+	  if(scriptfile[0]!='\0') load_file(script, fopen(scriptfile, "rb"));
+	  else load_file(script, stdin);
+	  exitcode = zencode_valid_input(script, "scope=given",
+									 (keys[0])?keys:NULL,
+									 (data[0])?data:NULL, NULL);
+	  if(exitcode)
+		fprintf(stderr, "Execution failed.\n");
+	  cli_free_buffers();
+	  return(exitcode);
+	} /////////////////
+
+	///////
 	// configuration from -c or default
 	if(conffile[0]!='\0') {
 		if(verbosity) fprintf(stderr, "configuration: %s\n",conffile);
