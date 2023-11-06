@@ -7,6 +7,7 @@ import {
   zenroom_hash_update,
   zenroom_hash_final,
   zenroom_hash,
+  introspect,
 } from "./index";
 import { TextEncoder } from "util";
 var enc = new TextEncoder();
@@ -246,20 +247,87 @@ test("Use zenroom_hash with big input", async (t) => {
   );
 });
 
-test("Check the conf scope given", async (t) => {
-  const { result: validation } = await zencode_exec(
+test("Check the introspection", async (t) => {
+  const r = await introspect(
+    `Scenario ethereum
+Given I have a 'ethereum address'
+and I have an 'ethereum address' named 'missing address'
+and I have a 'keyring'
+Then print codec`
+  );
+  t.deepEqual(r, {
+    ethereum_address: {
+      encoding: "complex",
+      missing: true,
+      name: "ethereum_address",
+      schema: "ethereum_address",
+      zentype: "e",
+    },
+    keyring: {
+      encoding: "complex",
+      missing: true,
+      name: "keyring",
+      schema: "keyring",
+      zentype: "e",
+    },
+    missing_address: {
+      encoding: "complex",
+      missing: true,
+      name: "missing_address",
+      schema: "ethereum_address",
+      zentype: "e",
+    },
+  });
+});
+
+test("Check the introspection with data", async (t) => {
+  const data = `{
+  "myFirstObject":{
+     "myNumber":11223344,
+     "myString":"Hello World!",
+     "myStringArray":[
+        "String1",
+        "String2",
+        "String3",
+        "String4"
+     ]
+  },
+   "Alice":{
+     "keyring":{
+      "ecdh":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM="
+     }
+    }
+}`;
+  const r = await introspect(
     `Given I am 'Alice'
-And I have my 'keyring'
-And I have a 'string dictionary' named 'myFirstObject'
-And I have a 'string dictionary' named 'mySecondObject'
-# The When section should be ignored
-When I create the random 'random'
-Then print codec`,
-    { conf: "scope=given" }
+    and I have my 'hex' named 'missing public key'
+    Given I have a 'string array' named 'myStringArray' in 'myFirstObject'
+    And I have a 'string dictionary' named 'does not exists' in 'myFirstObject'
+    When I create the random 'random'
+    Then print codec`,
+    { keys: null, data: data }
   );
 
-  t.is(
-    validation,
-    '{"codec":{"keyring":{"encoding":"complex","name":"keyring","root":"Alice","schema":"keyring","zentype":"e"},"myFirstObject":{"encoding":"string","name":"myFirstObject","zentype":"d"},"mySecondObject":{"encoding":"string","name":"mySecondObject","zentype":"d"}}}'
-  );
+  t.deepEqual(r, {
+    does_not_exists: {
+      encoding: "string",
+      missing: true,
+      name: "does_not_exists",
+      root: "myFirstObject",
+      zentype: "d",
+    },
+    missing_public_key: {
+      encoding: "hex",
+      missing: true,
+      name: "missing_public_key",
+      root: "Alice",
+      zentype: "e",
+    },
+    myStringArray: {
+      encoding: "string",
+      name: "myStringArray",
+      root: "myFirstObject",
+      zentype: "a",
+    },
+  });
 });

@@ -22,7 +22,6 @@
 
 <br><br>
 
-
 ## 💾 Install
 
 Stable releases are published on https://www.npmjs.com/package/zenroom that
@@ -34,7 +33,6 @@ yarn add zenroom
 npm install zenroom
 ```
 
-
 For more cutting edge functionalities there is a pre-release aligned with
 the last zenroom commit, automatically published, that you can install with
 
@@ -44,31 +42,30 @@ yarn add zenroom@next
 npm install zenroom@next
 ```
 
-* * *
+---
 
 ## 🎮 Usage
 
 The bindings are composed of two main functions:
 
- - **zencode_exec** to execute [Zencode](https://dev.zenroom.org/#/pages/zencode-intro?id=smart-contracts-in-human-language). To learn more about zencode syntax look [here](https://dev.zenroom.org/#/pages/zencode-cookbook-intro)
- - **zenroom_exec** to execute our special flavor of Lua enhanced with Zenroom's [special effects](https://dev.zenroom.org/#/pages/lua)
-
+- **zencode_exec** to execute [Zencode](https://dev.zenroom.org/#/pages/zencode-intro?id=smart-contracts-in-human-language). To learn more about zencode syntax look [here](https://dev.zenroom.org/#/pages/zencode-cookbook-intro)
+- **zenroom_exec** to execute our special flavor of Lua enhanced with Zenroom's [special effects](https://dev.zenroom.org/#/pages/lua)
 
 Both of this functions accepts a mandatory **SCRIPT** to be executed and some optional parameters:
-  * DATA
-  * KEYS
-  * [CONF](https://dev.zenroom.org/#/pages/zenroom-config)
-**All in form of strings.** This means that if you want to pass a JSON you have to `JSON.stringify` it before.
+
+- DATA
+- KEYS
+- [CONF](https://dev.zenroom.org/#/pages/zenroom-config)
+  **All in form of strings.** This means that if you want to pass a JSON you have to `JSON.stringify` it before.
 
 Both functions return a [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise).
 
 To start using the zenroom vm just
 
 ```js
-import { zenroom_exec, zencode_exec } from 'zenroom'
+import { zenroom_exec, zencode_exec, introspection } from "zenroom";
 // or if you don't use >ES6
 // const { zenroom_exec, zencode_exec } = require('zenroom')
-
 
 // Zencode: generate a random array. This script takes no extra input
 
@@ -76,7 +73,7 @@ const zencodeRandom = `
   Given nothing
   When I create the array of '16' random objects of '32' bits
   Then print all data
-`
+`;
 
 zencode_exec(zencodeRandom)
   .then((result) => {
@@ -85,7 +82,6 @@ zencode_exec(zencodeRandom)
   .catch((error) => {
     console.error(error);
   });
-
 
 // Zencode: encrypt a message.
 // This script takes the options' object as the second parameter: you can include data and/or keys as input.
@@ -96,21 +92,25 @@ const zencodeEncrypt = `
   Given that I have a 'string' named 'password'
   Given that I have a 'string' named 'message'
   When I encrypt the secret message 'message' with 'password'
-  Then print the 'secret message'`
+  Then print the 'secret message'`;
 
 const zenKeys = `
   {
     "password": "myVerySecretPassword"
   }
-`
+`;
 
 const zenData = `
   {
       "message": "HELLO WORLD"
   }
-`
+`;
 
-zencode_exec(zencodeEncrypt, {data: zenData, keys: zenKeys, conf:`color=0, debug=0`})
+zencode_exec(zencodeEncrypt, {
+  data: zenData,
+  keys: zenKeys,
+  conf: `color=0, debug=0`,
+})
   .then((result) => {
     console.log(result);
   })
@@ -118,11 +118,9 @@ zencode_exec(zencodeEncrypt, {data: zenData, keys: zenKeys, conf:`color=0, debug
     console.error(error);
   });
 
-
-
 // Lua Hello World!
 
-const lua = `print("Hello World!")`
+const lua = `print("Hello World!")`;
 zenroom_exec(lua)
   .then((result) => {
     console.log(result);
@@ -131,21 +129,27 @@ zenroom_exec(lua)
     console.error(error);
   });
 
-
-
 // to pass the optional parameters you pass an object literal eg.
 
-
 try {
-  const result = await zenroom_exec(`print(DATA)`, {data: "Some data", keys: "Some other data", conf:`color=0, debug=0`});
+  const result = await zenroom_exec(`print(DATA)`, {
+    data: "Some data",
+    keys: "Some other data",
+    conf: `color=0, debug=0`,
+  });
   console.log(result); // => Some data
 } catch (e) {
-  console.error(e)
+  console.error(e);
 }
 
+// code inspection is done via the `zencode_valid_input` primitive function or by a utility `introspect`
 
+const introspection = await introspection(
+  `Given I have a 'string' named 'missing'
+  Then print the codec`
+);
+console.log(introspection); // => an object described as https://dev.zenroom.org/#/pages/how-to-embed?id=input-validation
 ```
-
 
 ## 😍 Acknowledgements
 
@@ -157,7 +161,7 @@ Designed, written and maintained by Puria Nafisi Azizi.
 
 This project is receiving funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement nr. 732546 (DECODE).
 
-* * *
+---
 
 ## 👤 Contributing
 
@@ -170,7 +174,7 @@ Please first take a look at the [Dyne.org - Contributor License Agreement](CONTR
 5.  Create a new Pull Request
 6.  Thank you
 
-* * *
+---
 
 ## 💼 License
 
