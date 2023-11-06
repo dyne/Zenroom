@@ -52,42 +52,6 @@ export const zencode_exec = async (
   });
 };
 
-export const zencode_valid_input = async (
-  zencode: string,
-  props?: ZenroomProps
-): Promise<ZenroomResult> => {
-  const Module = await getModule();
-  return new Promise((resolve, reject) => {
-    let result = "";
-    let logs = "";
-    const _exec = Module.cwrap("zencode_valid_input", "number", [
-      "string",
-      "string",
-      "string",
-      "string",
-      "string",
-    ]);
-    Module.print = (t: string) => (result += t);
-    Module.printErr = (t: string) => (logs += t);
-    Module.exec_ok = () => {
-      resolve({ result, logs });
-    };
-    Module.exec_error = () => {
-      reject({ result, logs });
-    };
-    Module.onAbort = () => {
-      reject({ result, logs });
-    };
-    const {
-      data = null,
-      keys = null,
-      conf = null,
-      extra = null,
-    } = { ...props };
-    _exec(zencode, conf, keys, data, extra);
-  });
-};
-
 export const zenroom_exec = async (
   lua: string,
   props?: ZenroomProps
@@ -206,4 +170,48 @@ export const zenroom_hash = async (
     ctx = await zenroom_hash_update(ctx.result, i8a);
   }
   return zenroom_hash_final(ctx.result);
+};
+
+export const zencode_valid_input = async (
+  zencode: string,
+  props?: ZenroomProps
+): Promise<ZenroomResult> => {
+  const Module = await getModule();
+  return new Promise((resolve, reject) => {
+    let result = "";
+    let logs = "";
+    const _exec = Module.cwrap("zencode_valid_input", "number", [
+      "string",
+      "string",
+      "string",
+      "string",
+      "string",
+    ]);
+    Module.print = (t: string) => (result += t);
+    Module.printErr = (t: string) => (logs += t);
+    Module.exec_ok = () => {
+      resolve({ result, logs });
+    };
+    Module.exec_error = () => {
+      reject({ result, logs });
+    };
+    Module.onAbort = () => {
+      reject({ result, logs });
+    };
+    _exec(zencode, null, props?.keys, props?.data, null);
+  });
+};
+
+export const introspect = async (zencode, props?: ZenroomProps) => {
+  try {
+    const { result } = await zencode_valid_input(zencode, props);
+    return JSON.parse(result).codec;
+  } catch ({ logs }) {
+    console.error(logs);
+    const heap = JSON.parse(logs)
+      .filter((l) => l.startsWith("J64 HEAP:"))
+      .map((l) => l.replace("J64 HEAP:", "").trim())[0];
+
+    return JSON.parse(Buffer.from(heap, "base64").toString("utf-8"));
+  }
 };
