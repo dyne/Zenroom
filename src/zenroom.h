@@ -40,6 +40,9 @@ int zencode_exec_tobuf(const char *script, const char *conf, const char *keys, c
                        char *stdout_buf, size_t stdout_len,
                        char *stderr_buf, size_t stderr_len);
 
+// validate the input data processing only Given scope and print the CODEC
+int zencode_valid_input(const char *script, const char *conf, const char *keys, const char *data, const char *extra);
+
 // direct access hash calls
 // hash_type may be a string of: 'sha256' or 'sha512'
 // all functions return 0 on success, anything else signals an error
@@ -118,8 +121,7 @@ typedef struct {
 #define SUCCESS 0 // EXIT_SUCCESS
 
 zenroom_t *zen_init(const char *conf, const char *keys, const char *data);
-zenroom_t *zen_init_extra(const char *conf, const char *keys, const char *data,
-			const char *extra, const char *context);
+zenroom_t *zen_init_extra(const char *conf, const char *keys, const char *data,	const char *extra, const char *context);
 int  zen_exec_script(zenroom_t *Z, const char *script);
 int  zen_exec_zencode(zenroom_t *Z, const char *script);
 void zen_teardown(zenroom_t *zenroom);
