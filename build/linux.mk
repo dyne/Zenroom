@@ -15,6 +15,10 @@ musl-system: ${BUILDS}
 	CC="${gcc}" AR="${ar}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		$(MAKE) -C src musl
 
+cosmo-tiny: ${BUILDS}
+	CC="${gcc}" AR="${ar}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+		$(MAKE) -C src linux
+
 bsd: gcc := clang
 bsd: cflags := -O3 ${cflags_protection} -fPIE -fPIC -DARCH_BSD
 bsd: ldadd += -lm

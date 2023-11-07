@@ -120,6 +120,17 @@ ldflags := -static
 system := Linux
 endif
 
+ifneq (,$(findstring cosmo,$(MAKECMDGOALS)))
+defines := -DLIBCMALLOC
+BUILDS := $(filter-out mimalloc,$(BUILDS))
+ldadd := $(filter-out ${pwd}/lib/mimalloc/build/libmimalloc-static.a,${ldadd})
+gcc := cosmocc
+defines := -DLIBCMALLOC
+cflags := -Os -static -std=gnu99 -fPIC ${cflags_protection} -D'ARCH=\"MUSL\"' -D__MUSL__ -DARCH_MUSL ${defines}
+ldflags := -static
+system := Linux
+endif
+
 ifneq (,$(findstring linux,$(MAKECMDGOALS)))
 defines += $(if ${COMPILE_LUA}, -DLUA_COMPILED)
 cflags := ${cflags} -fPIC ${cflags_protection} -D'ARCH=\"LINUX\"' -DARCH_LINUX ${defines}

@@ -1,3 +1,6 @@
+
+#ifndef __COSMOPOLITAN__
+
 #ifndef sss_RANDOMBYTES_H
 #define sss_RANDOMBYTES_H
 
@@ -19,3 +22,4 @@ int randombytes(void *buf, size_t n);
 
 
 #endif /* sss_RANDOMBYTES_H */
+#endif // __COSMOPOLITAN__

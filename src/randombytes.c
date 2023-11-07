@@ -23,6 +23,11 @@
 
 #include "randombytes.h"
 
+// TODO: https://github.com/jart/cosmopolitan/issues/937
+// use getrandom from cosmo
+// https://github.com/jart/cosmopolitan/blob/master/libc/calls/getrandom.c
+#ifndef __COSMOPOLITAN__
+
 #if defined(ARCH_WIN)
 /* Windows */
 # include <windows.h>
@@ -277,3 +282,5 @@ int randombytes(void *buf, size_t n)
 # error "randombytes(...) is not supported on this platform"
 #endif
 }
+
+#endif // __COSMOPOLITAN__

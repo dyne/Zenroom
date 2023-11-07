@@ -27,6 +27,7 @@
 #include <zenroom.h>
 
 #if !defined(ARCH_WIN)
+#include <poll.h>
 #include <sys/poll.h>
 #endif
 
