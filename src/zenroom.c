@@ -246,6 +246,11 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	lua_pushstring(ZZ->lua, ZZ->str_maxiter);
 	lua_setglobal (ZZ->lua, "STR_MAXITER");
 
+	if(ZZ->scope == SCOPE_GIVEN) {
+	  lua_pushstring(ZZ->lua, "GIVEN");
+	  lua_setglobal (ZZ->lua, "ZENCODE_SCOPE");
+	}
+
 	lua_atpanic(ZZ->lua, &zen_lua_panic); // as done in lauxlib luaL_newstate
 	lua_pushcfunction(ZZ->lua, &zen_init_pmain);  /* to call in protected mode */
 	int status = lua_pcall(ZZ->lua, 0,   1,  0);

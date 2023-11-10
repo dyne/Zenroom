@@ -242,7 +242,7 @@ function ZEN:begin(new_heap)
 		  ['check version'] = function (version)
 			 -- TODO: check version of running VM
 			 if not version then return false end
-			 local ver = V(version)
+			 local ver = SEMVER(version)
 			 if ver == ZENROOM_VERSION then
 				act('Zencode version match: ' .. ZENROOM_VERSION.original)
 			 elseif ver < ZENROOM_VERSION then
