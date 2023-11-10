@@ -55,10 +55,15 @@ end
 
 -- ZEN = { assert = assert } -- zencode shim when not loaded
 require('zenroom_common')
-INSPECT = require('inspect')
+MACHINE = require('statemachine')
+SEMVER = require('semver')
+_G['ZENROOM_VERSION'] = SEMVER(VERSION)
+_G['MAXITER'] = tonumber(STR_MAXITER)
+
 OCTET = require('zenroom_octet')
 BIG = require('zenroom_big')
 FLOAT = require'float'
+INSPECT = require('inspect')
 JSON = require('zenroom_json')
 ECDH = require('zenroom_ecdh')
 -- ECDH public keys cannot function as ECP because of IANA 7303
@@ -66,6 +71,7 @@ AES = require('aes')
 ECP = require('zenroom_ecp')
 ECP2 = require('zenroom_ecp2')
 HASH = require('zenroom_hash')
+BTC = require('crypto_bitcoin') -- Bitcoin primitives imported by default
 O = OCTET -- alias
 INT = BIG -- alias
 F = FLOAT
@@ -73,16 +79,11 @@ I = INSPECT -- alias
 H = HASH -- alias
 PAIR = ECP2 -- alias
 PAIR.ate = ECP2.miller --alias
-MPACK = require('zenroom_msgpack')
-BENCH = require('zenroom_bench')
-MACHINE = require('statemachine')
-TIME = require('timetable')
--- BITCOIN primitives are imported by default
-BTC = require('crypto_bitcoin')
-V = require('semver')
-ZENROOM_VERSION = V(VERSION)
-MAXITER = tonumber(STR_MAXITER)
-
+if _G['ZENCODE_SCOPE'] ~= 'GIVEN' then
+   MPACK = require('zenroom_msgpack')
+   BENCH = require('zenroom_bench')
+   TIME = require('timetable')
+end
 ------------------------------
 -- ZENCODE starts here
 
@@ -100,17 +101,21 @@ _G['ZEN'] = require('zencode')
 -- base zencode functions and schemas
 load_scenario('zencode_data') -- pick/in, conversions etc.
 load_scenario('zencode_given')
-load_scenario('zencode_when')
-load_scenario('zencode_hash') -- when extension
-load_scenario('zencode_array') -- when extension
-load_scenario('zencode_random') -- when extension
-load_scenario('zencode_dictionary') -- when extension
-load_scenario('zencode_verify') -- when extension
-load_scenario('zencode_then')
 load_scenario('zencode_keyring')
-load_scenario('zencode_pack') -- mpack and zpack 
-load_scenario('zencode_foreach')
-load_scenario('zencode_table')
+
+if _G['ZENCODE_SCOPE'] ~= 'GIVEN' then
+   load_scenario('zencode_when')
+   load_scenario('zencode_hash') -- when extension
+   load_scenario('zencode_array') -- when extension
+   load_scenario('zencode_random') -- when extension
+   load_scenario('zencode_dictionary') -- when extension
+   load_scenario('zencode_verify') -- when extension
+   load_scenario('zencode_then')
+   load_scenario('zencode_pack') -- mpack and zpack
+   load_scenario('zencode_foreach')
+   load_scenario('zencode_table')
+end
+
 -- this is to evaluate expressions or derivate a column
 -- it would execute lua code inside the zencode and is
 -- therefore dangerous, switched off by default
