@@ -44,6 +44,17 @@ extern int p256_generate_random(uint8_t * output, unsigned output_size);
 int p256_gen_keypair(uint8_t priv[32], uint8_t pub[64]);
 
 /*
+ * ECDH/ECDSA generate public key
+ *
+ * [in] priv -- private key
+ * [out] pub: on success, holds the public key, as two big-endian integers
+ *
+ * return:  P256_SUCCESS on success
+ *          P256_RANDOM_FAILED on failure
+ */
+int p256_publickey(uint8_t priv[32], uint8_t pub[64]);
+
+/*
  * ECDH compute shared secret
  *
  * [out] secret: on success, holds the shared secret, as a big-endian integer

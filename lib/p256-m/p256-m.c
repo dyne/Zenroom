@@ -1202,6 +1202,26 @@ int p256_gen_keypair(uint8_t priv[32], uint8_t pub[64])
     return 0;
 }
 
+int p256_publickey(uint8_t priv[32], uint8_t pub[64])
+{
+    uint32_t s[8], x[8], y[8];
+    /* generate a random valid scalar */
+    int ret;
+
+    ret = scalar_from_bytes(s, priv);
+    if(ret != 0) {
+        return -1;
+    }
+    /* compute and ouput the associated public key */
+    scalar_mult(x, y, p256_gx, p256_gy, s);
+
+    /* the associated public key is not a secret */
+    CT_UNPOISON(x, 32);
+    CT_UNPOISON(y, 32);
+
+    point_to_bytes(pub, x, y);
+    return 0;
+}
 /**********************************************************************
  *
  * ECDH
