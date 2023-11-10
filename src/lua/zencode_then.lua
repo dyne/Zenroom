@@ -90,10 +90,10 @@ local function then_insert(dest, val, key)
 	    OUT[dest] = { ACK[dest] }
 	    table.insert(OUT[dest], val)
 	 elseif isarray(ACK[dest]) then
-	    OUT[dest] = ACK[dest]
+        OUT[dest] = deepcopy(ACK[dest])
 	    table.insert(OUT[dest], val)
 	 else -- isdictionary
-	    OUT[dest] = ACK[dest]
+         OUT[dest] = deepcopy(ACK[dest])
 	    OUT[dest][key] = val
 	 end
       else -- use only val and key
