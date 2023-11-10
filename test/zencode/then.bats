@@ -115,3 +115,22 @@ EOF
     save_output 'print_my_name.out'
     assert_output '{"identity":"Alice"}'
 }
+
+@test "Print '' as '' in ''" {
+    cat <<EOF | save_asset print_as_in.data
+{
+    "string": "hello"
+}
+EOF
+    cat <<EOF | zexe print_as_in.zen print_as_in.data
+Given I have a 'string'
+
+When I create the 'hex dictionary' named 'hex_data'
+
+Then print the 'string' as 'hex' in 'hex_data'
+# one more statement for trigger heapguard check
+and print the 'string'
+EOF
+    save_output 'print_as_in.out'
+    assert_output '{"hex_data":["68656c6c6f"],"string":"hello"}'
+}
