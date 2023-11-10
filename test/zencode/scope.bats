@@ -43,7 +43,7 @@ When I create the random 'random'
 Then print codec
 EOF
 	save_output given_only_schema_output.json
-	assert_output '{"codec":{"keyring":{"encoding":"complex","name":"keyring","root":"Alice","schema":"keyring","zentype":"e"},"myFirstObject":{"encoding":"string","name":"myFirstObject","zentype":"d"},"mySecondObject":{"encoding":"string","name":"mySecondObject","zentype":"d"}}}'
+	assert_output '{"CODEC":{"keyring":{"encoding":"complex","name":"keyring","root":"Alice","schema":"keyring","zentype":"e"},"myFirstObject":{"encoding":"string","name":"myFirstObject","zentype":"d"},"mySecondObject":{"encoding":"string","name":"mySecondObject","zentype":"d"}}}'
 }
 
 @test "Zencode scope=given with missing element" {
@@ -71,7 +71,7 @@ When I create the random 'random'
 Then print codec
 EOF
 	save_output given_schema_missing.json
-	assert_output '{"codec":{"does_not_exists":{"encoding":"string","missing":true,"name":"does_not_exists","zentype":"e"},"myFirstObject":{"encoding":"string","name":"myFirstObject","zentype":"d"}}}'
+	assert_output '{"CODEC":{"does_not_exists":{"encoding":"string","missing":true,"name":"does_not_exists","zentype":"e"},"myFirstObject":{"encoding":"string","name":"myFirstObject","zentype":"d"}}}'
 }
 
 @test "Zencode scope=given with missing dictionary or array" {
@@ -100,7 +100,7 @@ and I have a 'base64 dictionary' named 'missingArray'
 Then print codec
 EOF
 	save_output given_schema_missing.json
-	assert_output '{"codec":{"missingArray":{"encoding":"base64","missing":true,"name":"missingArray","zentype":"d"},"missingDictionary":{"encoding":"string","missing":true,"name":"missingDictionary","zentype":"d"},"myArray":{"encoding":"string","name":"myArray","zentype":"a"},"myDictionary":{"encoding":"string","name":"myDictionary","zentype":"d"}}}'
+	assert_output '{"CODEC":{"missingArray":{"encoding":"base64","missing":true,"name":"missingArray","zentype":"d"},"missingDictionary":{"encoding":"string","missing":true,"name":"missingDictionary","zentype":"d"},"myArray":{"encoding":"string","name":"myArray","zentype":"a"},"myDictionary":{"encoding":"string","name":"myDictionary","zentype":"d"}}}'
 }
 
 @test "Zencode scope=given with missing schema type" {
@@ -125,7 +125,7 @@ and I have a 'keyring'
 Then print codec
 EOF
 	save_output given_schema_missing.json
-	assert_output '{"codec":{"ethereum_address":{"bintype":"zenroom.octet","encoding":"complex","name":"ethereum_address","schema":"ethereum_address","zentype":"e"},"keyring":{"encoding":"complex","name":"keyring","schema":"keyring","zentype":"e"},"missing_address":{"encoding":"complex","missing":true,"name":"missing_address","schema":"ethereum_address","zentype":"e"}}}'
+	assert_output '{"CODEC":{"ethereum_address":{"bintype":"zenroom.octet","encoding":"complex","name":"ethereum_address","schema":"ethereum_address","zentype":"e"},"keyring":{"encoding":"complex","name":"keyring","schema":"keyring","zentype":"e"},"missing_address":{"encoding":"complex","missing":true,"name":"missing_address","schema":"ethereum_address","zentype":"e"}}}'
 
 
 # TODO: missing keyring
@@ -162,6 +162,6 @@ When I create the random 'random'
 Then print codec
 EOF
 	save_output given_schema_missing.json
-	assert_output '{"codec":{"does_not_exists":{"encoding":"string","missing":true,"name":"does_not_exists","root":"myFirstObject","zentype":"d"},"missing_public_key":{"encoding":"hex","missing":true,"name":"missing_public_key","root":"Alice","zentype":"e"},"myStringArray":{"encoding":"string","name":"myStringArray","root":"myFirstObject","zentype":"a"}}}'
+	assert_output '{"CODEC":{"does_not_exists":{"encoding":"string","missing":true,"name":"does_not_exists","root":"myFirstObject","zentype":"d"},"missing_public_key":{"encoding":"hex","missing":true,"name":"missing_public_key","root":"Alice","zentype":"e"},"myStringArray":{"encoding":"string","name":"myStringArray","root":"myFirstObject","zentype":"a"}}}'
 
 }
