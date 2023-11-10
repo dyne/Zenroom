@@ -8,7 +8,7 @@ pwd := $(shell pwd)
 PREFIX ?= /usr/local
 # VERSION is set in src/Makefile
 # Targets to be build in this order
-BUILDS := apply-patches milagro lua54 embed-lua quantum-proof ed25519-donna mimalloc
+BUILDS := apply-patches milagro lua54 embed-lua quantum-proof ed25519-donna mimalloc p256-m
 
 # DESTDIR is supported by install target
 
@@ -103,6 +103,16 @@ cortex-lua54:
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
 	$(MAKE) -C ${pwd}/lib/lua54/src ${platform}
 
+p256-m-debug: p256-m
+p256-m:
+	@echo "-- Building p256-m (${system})"
+	CC="${gcc}" \
+	LD=${ld} \
+	AR=${ar} \
+	CFLAGS="${cflags}" \
+	LDFLAGS="${ldflags}" \
+	${MAKE} -C ${pwd}/lib/p256-m p256-native.o
+
 milagro-debug: milagro
 milagro:
 	@echo "-- Building milagro (${system})"
@@ -190,6 +200,7 @@ clean:
 	$(MAKE) clean -C ${pwd}/lib/pqclean
 	rm -rf ${pwd}/lib/milagro-crypto-c/build
 	rm -rf ${pwd}/lib/mimalloc/build
+	rm -f ${pwd}/lib/p256-m/p256-native.o
 	$(MAKE) clean -C ${pwd}/src
 	if [ -d "bindings" ]; then $(MAKE) clean -C ${pwd}/bindings; fi
 	rm -f ${extras}/index.*

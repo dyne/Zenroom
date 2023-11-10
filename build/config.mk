@@ -21,6 +21,7 @@ ldadd += ${milib}/libamcl_core.a
 ldadd += ${pwd}/lib/pqclean/libqpz.a
 ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
 ldadd += ${pwd}/lib/mimalloc/build/libmimalloc-static.a
+ldadd += ${pwd}/lib/p256-m/p256-native.o
 
 # ----------------
 # zenroom defaults

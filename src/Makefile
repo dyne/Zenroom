@@ -28,6 +28,7 @@ CFLAGS  += -I. -I../lib/lua54/src \
 	-I../lib/milagro-crypto-c/include \
 	-I../lib/ed25519-donna \
 	-I../lib/mimalloc/include \
+	-I../lib/p256-m \
 	-Wall -Wextra
 
 CMSIS := ../lib/cmsis
@@ -50,6 +51,7 @@ SOURCES := \
 	zen_fp12.o zen_random.o zen_hash.o \
 	zen_ecdh_factory.o zen_ecdh.o \
 	zen_aes.o zen_qp.o zen_ed.o zen_float.o \
+	zen_p256.o \
 	api_hash.o randombytes.o \
 	cortex_m.o
 
