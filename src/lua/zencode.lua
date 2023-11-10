@@ -353,8 +353,6 @@ function ZEN:begin(new_heap)
 	   {name = 'enter_given', from = {'init', 'rule', 'scenario'},	to = 'given'},
 	   {name = 'enter_given', from = {'given'}, to = 'given'},
 	   {name = 'enter_and', from = 'given', to = 'given'},
-	   {name = 'enter_then', from = {'given', 'when', 'then', 'endif', 'endforeach'}, to = 'then'},
-	   {name = 'enter_and', from = 'then', to = 'then'},
 	}
 	if CONF.exec.scope == 'full' then
 	   -- rule output given-only
@@ -395,7 +393,9 @@ function ZEN:begin(new_heap)
 		  {name = 'enter_and', from = 'ifforeach', to = 'ifforeach'},
 		  {name = 'enter_and', from = 'foreachif', to = 'foreachif'},
 		  {name = 'enter_and', from = 'whenforeach', to = 'whenforeach'},
-		  {name = 'enter_and', from = 'whenifforeach', to = 'whenifforeach'}
+		  {name = 'enter_and', from = 'whenifforeach', to = 'whenifforeach'},
+		  {name = 'enter_then', from = {'given', 'when', 'then', 'endif', 'endforeach'}, to = 'then'},
+		  {name = 'enter_and', from = 'then', to = 'then'},
 	   }
 	   for _,v in pairs(extra_events) do table.insert(events, v) end
 	end
@@ -422,7 +422,7 @@ local function zencode_isempty(b)
 	end
 end
 local function zencode_iscomment(b)
-	local x <const> = string.char(b:byte(1))
+	local x <const> = string.sub(b,1,1) -- string.char(b:byte(1))
 	if x == '#' then
 		return true
 	else
@@ -641,26 +641,27 @@ function ZEN:run()
    end
    -- PRINT output
    self:ftrace('--- Zencode execution completed')
-   if type(OUT) == 'table' then
-	  self:ftrace('<<< Encoding { OUT } to JSON ')
-	  -- this is all already encoded
-	  -- needs to be formatted
-	  -- was used CONF.output.format.fun
-	  -- suspended until more formats are implemented
-	  print( JSON.encode(OUT) )
-	  self:ftrace('>>> Encoding successful')
-   else -- this should never occur in zencode, OUT is always a table
-	  self:ftrace('<<< Printing OUT (plain format, not a table)')
-	  print(OUT)
+   if CONF.exec.scope == 'full' then
+	  if type(OUT) == 'table' then
+		 self:ftrace('<<< Encoding { OUT } to JSON ')
+		 -- this is all already encoded
+		 -- needs to be formatted
+		 -- was used CONF.output.format.fun
+		 -- suspended until more formats are implemented
+		 print( JSON.encode(OUT) )
+		 self:ftrace('>>> Encoding successful')
+	  else -- this should never occur in zencode, OUT is always a table
+		 self:ftrace('<<< Printing OUT (plain format, not a table)')
+		 print(OUT)
+	  end
+   elseif CONF.exec.scope == 'given' then
+	  print(JSON.encode({CODEC = CODEC}))
+	  ZEN:debug() -- J64 HEAP and TRACE
    end
 end
 
-
-
-
-
----------------------------------------------------------------
--- ZENCODE PARSER
+-------------------
+-- ZENCODE WATCHDOG
 -- assert all values in table are converted to zenroom types
 -- used in zencode when transitioning out of given memory
 function zenguard(val, key) -- AKA watchdog
@@ -671,8 +672,6 @@ function zenguard(val, key) -- AKA watchdog
       return nil
    end
 end
-
-
 -- compare heap.ACK and heap.CODEC
 function ZEN:codecguard()
    local left <const> = ACK
@@ -697,40 +696,70 @@ function ZEN:codecguard()
    return true
 end
 
--- the global ZEN context
+------------------------------------------
+-- ZENCODE STATEMENT DECLARATION FUNCTIONS
 function Given(text, fn)
-    text = text:lower()
-	assert(not ZEN.given_steps[text], 'Conflicting GIVEN statement loaded by scenario: ' .. text, 2)
-	ZEN.given_steps[text] = fn
+   text = text:lower()
+   if ZEN.given_steps[text] then
+	  error('Conflicting GIVEN statement loaded by scenario: ' .. text, 2)
+   end
+   ZEN.given_steps[text] = fn
 end
 function When(text, fn)
-    text = text:lower()
-	if ZEN.when_steps[text] then
-		  error('Conflicting WHEN statement loaded by scenario: ' .. text, 2)
-	end
-	ZEN.when_steps[text] = fn
+   if ZENCODE_SCOPE == 'GIVEN' then
+	  text = nil
+	  fn = nil
+   else
+	  text = text:lower()
+	  if ZEN.when_steps[text] then
+		 error('Conflicting WHEN statement loaded by scenario: ' .. text, 2)
+	  end
+	  ZEN.when_steps[text] = fn
+   end
 end
 function IfWhen(text, fn)
-    text = text:lower()
-    if ZEN.if_steps[text] then
-	   error('Conflicting IF-WHEN statement loaded by scenario: ' .. text, 2)
-	end
-	if ZEN.when_steps[text] then
-		  error('Conflicting IF-WHEN statement loaded by scenario: ' .. text, 2)
-	end
-	ZEN.if_steps[text]   = fn
-	ZEN.when_steps[text] = fn
+   if ZENCODE_SCOPE == 'GIVEN' then
+	  text = nil
+	  fn = nil
+   else
+	  text = text:lower()
+	  if ZEN.if_steps[text] then
+		 error('Conflicting IF-WHEN statement loaded by scenario: '..text, 2)
+	  end
+	  if ZEN.when_steps[text] then
+		 error('Conflicting IF-WHEN statement loaded by scenario: '..text, 2)
+	  end
+	  ZEN.if_steps[text]   = fn
+	  ZEN.when_steps[text] = fn
+   end
 end
 function Foreach(text, fn)
-    text = text:lower()
-    assert(not ZEN.foreach_steps[text],'Conflicting FOREACH statement loaded by scenario: ' .. text, 2)
-	ZEN.foreach_steps[text] = fn
+   if ZENCODE_SCOPE == 'GIVEN' then
+	  text = nil
+	  fn = nil
+   else
+	  text = text:lower()
+	  if ZEN.foreach_steps[text] then
+			error('Conflicting FOREACH statement loaded by scenario: ' .. text, 2)
+	  end
+	  ZEN.foreach_steps[text] = fn
+   end
 end
 function Then(text, fn)
-    text = text:lower()
-	assert(not ZEN.then_steps[text],'Conflicting THEN statement loaded by scenario : ' .. text, 2)
-	ZEN.then_steps[text] = fn
+   if ZENCODE_SCOPE == 'GIVEN' then
+	  text = nil
+	  fn = nil
+   else
+	  text = text:lower()
+	  if ZEN.then_steps[text] then
+			error('Conflicting THEN statement loaded by scenario : ' .. text, 2)
+	  end
+	  ZEN.then_steps[text] = fn
+   end
 end
+
+---------------------------
+-- ZENCODE GLOBAL UTILITIES
 function Iam(name)
 	if name then
 		zencode_assert(not WHO, 'Identity already defined in WHO')

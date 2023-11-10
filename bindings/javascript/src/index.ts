@@ -205,7 +205,7 @@ export const zencode_valid_input = async (
 export const introspect = async (zencode, props?: ZenroomProps) => {
   try {
     const { result } = await zencode_valid_input(zencode, props);
-    return JSON.parse(result).codec;
+    return JSON.parse(result).CODEC;
   } catch ({ logs }) {
     console.error(logs);
     const heap = JSON.parse(logs)
