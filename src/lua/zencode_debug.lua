@@ -151,6 +151,10 @@ function debug_codec()
    I.warn({CODEC = CODEC})
 end
 
+Given("break", function() ZEN.OK = false end)
+When("break",  function() ZEN.OK = false end)
+Then("break",  function() ZEN.OK = false end)
+
 Given("codec", function() debug_codec() end)
 When("codec", function() debug_codec() end)
 Then("codec", function() debug_codec() end)
