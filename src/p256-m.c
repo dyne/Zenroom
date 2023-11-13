@@ -5,7 +5,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "p256-m.h"
+
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+
+#include <zen_error.h>
+#include <zen_octet.h>
+
+#include <p256-m.h> // includes zenroom.h
 
 /*
  * Zeroize memory - this should not be optimized away
@@ -1126,7 +1134,7 @@ static int scalar_from_bytes(uint32_t s[8], const uint8_t p[32])
  *      return 0 if OK, -1 on failure
  *      sbytes, s, x, y must be discarded when returning non-zero.
  */
-static int scalar_gen_with_pub(uint8_t sbytes[32], uint32_t s[8],
+static int scalar_gen_with_pub(zenroom_t *Z, uint8_t sbytes[32], uint32_t s[8],
                                uint32_t x[8], uint32_t y[8])
 {
     /* generate a random valid scalar */
@@ -1135,10 +1143,10 @@ static int scalar_gen_with_pub(uint8_t sbytes[32], uint32_t s[8],
     do {
         if (nb_tried++ >= 4)
             return -1;
-
-        ret = p256_generate_random(sbytes, 32);
-        if (ret != 0)
-            return -1;
+		octet o;
+		o.val = sbytes;
+		o.len = o.max = 32;
+		OCT_rand(&o, Z->random_generator, 32);
 
         ret = scalar_from_bytes(s, sbytes);
     }
@@ -1153,10 +1161,10 @@ static int scalar_gen_with_pub(uint8_t sbytes[32], uint32_t s[8],
 /*
  * ECDH/ECDSA generate pair
  */
-int p256_gen_keypair(uint8_t priv[32], uint8_t pub[64])
+int p256_gen_keypair(zenroom_t *Z, uint8_t priv[32], uint8_t pub[64])
 {
     uint32_t s[8], x[8], y[8];
-    int ret = scalar_gen_with_pub(priv, s, x, y);
+    int ret = scalar_gen_with_pub(Z, priv, s, x, y);
     zeroize(s, sizeof s);
     if (ret != 0)
         return P256_RANDOM_FAILED;
@@ -1276,7 +1284,7 @@ static void ecdsa_m256_from_hash(uint32_t z[8],
 /*
  * ECDSA sign
  */
-int p256_ecdsa_sign(uint8_t sig[64], const uint8_t priv[32],
+int p256_ecdsa_sign(zenroom_t *Z, uint8_t sig[64], const uint8_t priv[32],
                     const uint8_t *hash, size_t hlen)
 {
     /*
@@ -1294,7 +1302,7 @@ int p256_ecdsa_sign(uint8_t sig[64], const uint8_t priv[32],
     uint8_t *kb = (uint8_t *) t4;
     /* kb will be erased by re-using t4 for dU - if we exit before that, we
      * haven't read the private key yet so we kb isn't sensitive yet */
-    ret = scalar_gen_with_pub(kb, k, xr, t3);   /* xr = x_coord(k * G) */
+    ret = scalar_gen_with_pub(Z, kb, k, xr, t3);   /* xr = x_coord(k * G) */
     if (ret != 0)
         return P256_RANDOM_FAILED;
     m256_prep(k, &p256_n);
