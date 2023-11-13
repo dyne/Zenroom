@@ -10,6 +10,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include <zenroom.h>
+
 /* Status codes */
 #define P256_SUCCESS            0
 #define P256_RANDOM_FAILED      -1
@@ -41,7 +43,7 @@ extern int p256_generate_random(uint8_t * output, unsigned output_size);
  * return:  P256_SUCCESS on success
  *          P256_RANDOM_FAILED on failure
  */
-int p256_gen_keypair(uint8_t priv[32], uint8_t pub[64]);
+int p256_gen_keypair(zenroom_t *Z, uint8_t priv[32], uint8_t pub[64]);
 
 /*
  * ECDH/ECDSA generate public key
@@ -81,7 +83,7 @@ int p256_ecdh_shared_secret(uint8_t secret[32],
  *          P256_RANDOM_FAILED on failure
  *          P256_INVALID_PRIVKEY if priv is invalid
  */
-int p256_ecdsa_sign(uint8_t sig[64], const uint8_t priv[32],
+int p256_ecdsa_sign(zenroom_t *Z, uint8_t sig[64], const uint8_t priv[32],
                     const uint8_t *hash, size_t hlen);
 
 /*
