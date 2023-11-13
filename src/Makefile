@@ -51,7 +51,7 @@ SOURCES := \
 	zen_ecdh_factory.o zen_ecdh.o \
 	zen_aes.o zen_qp.o zen_ed.o zen_float.o \
 	api_hash.o randombytes.o \
-	cortex_m.o
+	cortex_m.o p256-m.o
 
 cortex_m_boot.o: $(CORTEX_M_SRC_ASM)
 	${CC} ${CFLAGS} ${CORTEX_M_CFLAGS} -c $^ -o $@
