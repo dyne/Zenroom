@@ -17,37 +17,6 @@ static void zeroize(void *d, size_t n)
         *p++ = 0;
 }
 
-/*
- * Helpers to test constant-time behaviour with valgrind or MemSan.
- *
- * CT_POISON() is used for secret data. It marks the memory area as
- * uninitialised, so that any branch or pointer dereference that depends on it
- * (even indirectly) triggers a warning.
- * CT_UNPOISON() is used for public data; it marks the area as initialised.
- *
- * These are macros in order to avoid interfering with origin tracking.
- */
-#if defined(CT_MEMSAN)
-
-#include <sanitizer/msan_interface.h>
-#define CT_POISON   __msan_allocated_memory
-// void __msan_allocated_memory(const volatile void* data, size_t size);
-#define CT_UNPOISON __msan_unpoison
-// void __msan_unpoison(const volatile void *a, size_t size);
-
-#elif defined(CT_VALGRIND)
-
-#include <valgrind/memcheck.h>
-#define CT_POISON   VALGRIND_MAKE_MEM_UNDEFINED
-// VALGRIND_MAKE_MEM_UNDEFINED(_qzz_addr,_qzz_len)
-#define CT_UNPOISON VALGRIND_MAKE_MEM_DEFINED
-// VALGRIND_MAKE_MEM_DEFINED(_qzz_addr,_qzz_len)
-
-#else
-#define CT_POISON(p, sz)
-#define CT_UNPOISON(p, sz)
-#endif
-
 /**********************************************************************
  *
  * Operations on fixed-width unsigned integers
@@ -1168,21 +1137,15 @@ static int scalar_gen_with_pub(uint8_t sbytes[32], uint32_t s[8],
             return -1;
 
         ret = p256_generate_random(sbytes, 32);
-        CT_POISON(sbytes, 32);
         if (ret != 0)
             return -1;
 
         ret = scalar_from_bytes(s, sbytes);
-        CT_UNPOISON(&ret, sizeof ret);
     }
     while (ret != 0);
 
     /* compute and ouput the associated public key */
     scalar_mult(x, y, p256_gx, p256_gy, s);
-
-    /* the associated public key is not a secret */
-    CT_UNPOISON(x, 32);
-    CT_UNPOISON(y, 32);
 
     return 0;
 }
@@ -1215,10 +1178,6 @@ int p256_publickey(uint8_t priv[32], uint8_t pub[64])
     /* compute and ouput the associated public key */
     scalar_mult(x, y, p256_gx, p256_gy, s);
 
-    /* the associated public key is not a secret */
-    CT_UNPOISON(x, 32);
-    CT_UNPOISON(y, 32);
-
     point_to_bytes(pub, x, y);
     return 0;
 }
@@ -1234,13 +1193,10 @@ int p256_publickey(uint8_t priv[32], uint8_t pub[64])
 int p256_ecdh_shared_secret(uint8_t secret[32],
                             const uint8_t priv[32], const uint8_t peer[64])
 {
-    CT_POISON(priv, 32);
-
     uint32_t s[8], px[8], py[8], x[8], y[8];
     int ret;
 
     ret = scalar_from_bytes(s, priv);
-    CT_UNPOISON(&ret, sizeof ret);
     if (ret != 0) {
         ret = P256_INVALID_PRIVKEY;
         goto cleanup;
@@ -1255,7 +1211,6 @@ int p256_ecdh_shared_secret(uint8_t secret[32],
     scalar_mult(x, y, px, py, s);
 
     m256_to_bytes(secret, x, &p256_p);
-    CT_UNPOISON(secret, 32);
 
 cleanup:
     zeroize(s, sizeof s);
@@ -1324,8 +1279,6 @@ static void ecdsa_m256_from_hash(uint32_t z[8],
 int p256_ecdsa_sign(uint8_t sig[64], const uint8_t priv[32],
                     const uint8_t *hash, size_t hlen)
 {
-    CT_POISON(priv, 32);
-
     /*
      * Steps and notations from [SEC1] 4.1.3
      *
@@ -1369,7 +1322,6 @@ int p256_ecdsa_sign(uint8_t sig[64], const uint8_t priv[32],
 
     /* Note: dU will be erased by re-using t4 for the value of s (public) */
     ret = scalar_from_bytes(t4, priv);   /* t4 = dU (integer domain) */
-    CT_UNPOISON(&ret, sizeof ret); /* Result of input validation */
     if (ret != 0)
         return P256_INVALID_PRIVKEY;
     m256_prep(t4, &p256_n);         /* t4 = dU (Montgomery domain) */
@@ -1381,7 +1333,6 @@ int p256_ecdsa_sign(uint8_t sig[64], const uint8_t priv[32],
     zeroize(k, sizeof k);
 
     /* 7. Output s (r already outputed at step 3) */
-    CT_UNPOISON(t4, 32);
     if (u256_diff0(t4) == 0) {
         /* undo early output of r */
         u256_to_bytes(sig, t4);
