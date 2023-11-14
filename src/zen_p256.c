@@ -49,7 +49,7 @@ static int p256_keygen(lua_State *L)
 	uint8_t priv[32];
 	uint8_t pub[64];
 	Z(L);
-	p256_gen_keypair(Z, priv, pub);
+	p256_gen_keypair(Z, NULL, priv, pub);
 	// return a table
 	lua_createtable(L, 0, 2);
 	octet *pk = o_new(L, 64 + 4);
@@ -134,7 +134,7 @@ static int p256_sign(lua_State *L)
 	hash256 sha256;
 	char hash[HASH_SIZE];
 	char *failed_msg = NULL;
-	octet *sk = NULL, *m = NULL, *sig = NULL;
+	octet *sk = NULL, *m = NULL, *sig = NULL, *k = NULL;
 	sk = o_arg(L, 1);
 	if (!sk)
 	{
@@ -164,7 +164,15 @@ static int p256_sign(lua_State *L)
 	}
 	sig->len = SIG_SIZE;
 
-	int ret = p256_ecdsa_sign(Z, (uint8_t *)sig->val, (uint8_t *)sk->val,
+	if(lua_isnoneornil(L, 3)) {
+		k = o_arg(L, 3);
+		if(k == NULL) {
+			failed_msg = "Could not allocate ephemeral key";
+			goto end;
+		}
+	}
+
+	int ret = p256_ecdsa_sign(Z, k, (uint8_t *)sig->val, (uint8_t *)sk->val,
 				  (uint8_t *)hash, HASH_SIZE);
 	if (ret != 0)
 	{
@@ -175,6 +183,7 @@ static int p256_sign(lua_State *L)
 end:
 	o_free(L, m);
 	o_free(L, sk);
+	o_free(L, k);
 	if (failed_msg != NULL)
 	{
 		THROW(failed_msg);

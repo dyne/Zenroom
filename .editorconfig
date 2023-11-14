@@ -23,11 +23,11 @@ indent_style = tab
 indent_style = space
 indent_size = 4
 
-[test/**.lua]
+[test/**/*.lua]
 indent_style = space
 indent_size = 4
 
-[test/**.bats]
+[test/**/*.bats]
 indent_style = space
 indent_size = 4
 
