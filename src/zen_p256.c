@@ -108,6 +108,8 @@ static int p256_pubcheck(lua_State *L)
 
 static int p256_sign(lua_State *L)
 {
+	int n_args = lua_gettop(L);
+
 	BEGIN();
 	Z(L);
 	hash256 sha256;
@@ -143,7 +145,7 @@ static int p256_sign(lua_State *L)
 	}
 	sig->len = SIG_SIZE;
 
-	if(lua_isnoneornil(L, 3)) {
+	if(n_args > 2) {
 		k = o_arg(L, 3);
 		if(k == NULL) {
 			failed_msg = "Could not allocate ephemeral key";

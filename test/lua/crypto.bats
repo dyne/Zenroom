@@ -6,6 +6,7 @@ load ../bats_setup
     Z big_arithmetics.lua
     Z hash.lua
     Z ecdh.lua
+    Z ecdsa_p256.lua
     Z dh_session.lua
     Z ecp_generic.lua
     Z elgamal.lua
