@@ -53,6 +53,7 @@ end)
 -- KNOWN KEY TYPES FOUND IN ACK.keyring
 local keytypes = {
     ecdh = true,
+    p256 = true,
     credential = true,
     issuer = true,
     bbs = true,
@@ -104,6 +105,9 @@ local function import_keyring(obj)
    local res = {}
    if obj.ecdh then
       res.ecdh = schema_get(obj, 'ecdh', nop, O.from_base64)
+   end
+   if obj.p256 then
+    res.p256 = schema_get(obj, 'p256', nop, O.from_base64)
    end
    if obj.credential then
       res.credential = schema_get(obj, 'credential', INT.new, O.from_base64)
@@ -162,6 +166,7 @@ function export_keyring(obj)
       res.issuer = {x = obj.issuer.x:octet(), y = obj.issuer.y:octet()}
       res.issuer = deepmap(fun, res.issuer)
    end
+   if obj.p256 then res.p256 = O.to_base64(obj.p256) end
    if obj.bbs then res.bbs = obj.bbs:octet():base64() end
    if obj.pvss then res.pvss = obj.pvss:octet():base64() end
    if obj.reflow then res.reflow = obj.reflow:octet():base64() end
