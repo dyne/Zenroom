@@ -45,35 +45,14 @@
 static int p256_keygen(lua_State *L)
 {
 	BEGIN();
-	char *failed_msg = NULL;
-	uint8_t priv[32];
-	uint8_t pub[64];
 	Z(L);
-	p256_gen_keypair(Z, NULL, priv, pub);
-	// return a table
-	lua_createtable(L, 0, 2);
-	octet *pk = o_new(L, 64 + 4);
-	if (pk == NULL)
-	{
-		failed_msg = "Could not create public key";
-		goto end;
-	}
-	memcpy(pk->val, pub, 64);
-	pk->len = 64;
-	lua_setfield(L, -2, "public");
-	octet *sk = o_new(L, 32 + 4);
-	if (sk == NULL)
-	{
-		failed_msg = "Could not create secret key";
-		goto end;
-	}
-	memcpy(sk->val, priv, 32);
-	sk->len = 32;
-	lua_setfield(L, -2, "private");
-end:
-	if (failed_msg)
-	{
-		THROW(failed_msg);
+	uint8_t pub[PK_SIZE];
+	octet *sk = o_new(L, SK_SIZE);
+	sk->len = SK_SIZE;
+	if(!sk) {
+		THROW("Could not allocate secret key");
+	} else {
+		p256_gen_keypair(Z, NULL, (uint8_t*)sk->val, pub);
 	}
 	END(1);
 }
