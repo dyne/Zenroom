@@ -167,10 +167,11 @@ ed25519-donna:
 # Test suites for all platforms
 include ${pwd}/build/tests.mk
 
-install: destbin=${DESTDIR}${PREFIX}/bin/zenroom
+install: destbin=${DESTDIR}${PREFIX}/bin
 install: destdocs=${DESTDIR}${PREFIX}/share/zenroom
 install:
-	install -p -s src/zenroom ${destbin}
+	install -p -s src/zenroom ${destbin}/zenroom
+	install -p -s src/zencode-exec ${destbin}/zencode-exec
 	install -d ${destdocs}/docs
 	if [ -d docs/website/site ]; then cd docs/website/site && cp -ra * ${destdocs}/docs/; cd -; fi
 	if [ -d docs/Zencode_Whitepaper.pdf ]; then cp -ra docs/Zencode_Whitepaper.pdf ${destdocs}/; fi
