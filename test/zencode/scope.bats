@@ -165,3 +165,18 @@ EOF
 	assert_output '{"CODEC":{"does_not_exists":{"encoding":"string","missing":true,"name":"does_not_exists","root":"myFirstObject","zentype":"d"},"missing_public_key":{"encoding":"hex","missing":true,"name":"missing_public_key","root":"Alice","zentype":"e"},"myStringArray":{"encoding":"string","name":"myStringArray","root":"myFirstObject","zentype":"a"}}}'
 
 }
+
+@test "Zencode scope=given with statements that starts with and" {
+	conf="scope=given"
+	cat <<EOF | zexe given_with_and.zen
+Given I have a 'hex' named 'missing public key'
+and I have a 'string dictionary' named 'does not exists'
+When I create the random 'random'
+and I create the 'string dictioanry' named 'hello'
+
+Then print codec
+and print 'hello'
+EOF
+	save_output given_with_and.json
+	assert_output '{"CODEC":{"does_not_exists":{"encoding":"string","missing":true,"name":"does_not_exists","zentype":"d"},"missing_public_key":{"encoding":"hex","missing":true,"name":"missing_public_key","zentype":"e"}}}'
+}

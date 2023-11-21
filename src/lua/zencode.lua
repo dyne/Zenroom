@@ -473,6 +473,11 @@ function ZEN:parse(text)
 			prefix =  prefix .. table.concat(prefixes,'')
 		 end
 
+		 if CONF.exec.scope == 'given' and (prefix == 'when' or prefix == 'then'
+											or prefix == 'if' or prefix == 'foreach') then
+			 break
+		 end
+
 		 -- try to enter the machine state named in prefix
 		 -- xxx("Zencode machine enter_"..prefix..": "..text, 3)
 		 local fm <const> = self.machine["enter_"..prefix]
