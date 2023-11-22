@@ -27,7 +27,7 @@ When("done", function() end)
 
 
 local function _is_found(el)
-    return ACK[el] and (luatype(ACK[el]) == 'table' or #ACK[el] ~= 0)
+    return ACK[el] and (luatype(ACK[el]) == 'table' or tonumber(ACK[el]) or #ACK[el] ~= 0)
 end
 
 IfWhen("verify '' is found", function(el)
