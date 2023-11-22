@@ -157,7 +157,7 @@ local function _is_found_in(ele_name, obj_name)
         end
     elseif obj_codec.zentype == 'd' then
         local el = O.to_string(ele)
-        return obj[el] and (luatype(obj[el]) == 'table' or #obj[el] ~= 0)
+        return obj[el] and (luatype(obj[el]) == 'table' or tonumber(obj[el]) or #obj[el] ~= 0)
     else
         zencode_assert(false, "Invalid container type: "..obj.." is "..obj_codec)
     end
