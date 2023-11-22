@@ -331,6 +331,7 @@ EOF
 {
 	"TransactionsBatchA": {
 		"MetaData": "This var is Not a Table",
+		"number": 1234,
 		"Information": {
 			"Metadata": "TransactionsBatchB6789",
 			"Buyer": "John Doe"
@@ -357,6 +358,7 @@ EOF
 		}
 	},
 	"dictionaryToBeFound": "Information",
+	"numberToBeFound": "number",
 	"salesStartTimestamp": 1597573200,
 	"PricePerKG": 3
 }
@@ -366,11 +368,13 @@ EOF
 Rule check version 2.0.0
 
 Given that I have a 'string' named 'dictionaryToBeFound'
+Given that I have a 'string' named 'numberToBeFound'
 Given that I have a 'string dictionary' named 'TransactionsBatchA'
 Given that I have a 'number' named 'salesStartTimestamp'
 
-# Here we search if a certain dictionary exists in the list
+# Here we search if a certain dictionary and a number exists in the list
 When I verify the 'dictionaryToBeFound' is found in 'TransactionsBatchA'
+and I verify the 'numberToBeFound' is found in 'TransactionsBatchA'
 
 # Here we find the highest value of an element, in all dictionaries
 When I find the max value 'PricePerKG' for dictionaries in 'TransactionsBatchA'
@@ -442,7 +446,7 @@ When I copy contents of 'blockchains' in 'TransactionsBatchA'
 Then print 'TransactionsBatchA'
 EOF
     save_output 'copy_contents_in.json'
-    assert_output '{"TransactionsBatchA":{"ABC-Transactions1Data":{"PricePerKG":100,"ProductPurchasePrice":50,"TransactionValue":1500,"TransferredProductAmount":15,"UndeliveredProductAmount":7,"timestamp":1.597573e+09},"ABC-Transactions2Data":{"PricePerKG":80,"TransactionValue":1600,"TransferredProductAmount":20,"timestamp":1.597573e+09},"ABC-Transactions3Data":{"PricePerKG":70,"TransactionValue":700,"TransferredProductAmount":10,"timestamp":1.597573e+09},"Information":{"Buyer":"John Doe","Metadata":"TransactionsBatchB6789"},"MetaData":"This var is Not a Table","b1":{"endpoint":"http://pesce.com/","last-transaction":"123"},"b2":{"endpoint":"http://fresco.com/","last-transaction":"234"}}}'
+    assert_output '{"TransactionsBatchA":{"ABC-Transactions1Data":{"PricePerKG":100,"ProductPurchasePrice":50,"TransactionValue":1500,"TransferredProductAmount":15,"UndeliveredProductAmount":7,"timestamp":1.597573e+09},"ABC-Transactions2Data":{"PricePerKG":80,"TransactionValue":1600,"TransferredProductAmount":20,"timestamp":1.597573e+09},"ABC-Transactions3Data":{"PricePerKG":70,"TransactionValue":700,"TransferredProductAmount":10,"timestamp":1.597573e+09},"Information":{"Buyer":"John Doe","Metadata":"TransactionsBatchB6789"},"MetaData":"This var is Not a Table","b1":{"endpoint":"http://pesce.com/","last-transaction":"123"},"b2":{"endpoint":"http://fresco.com/","last-transaction":"234"},"number":1234}}'
 
 }
 

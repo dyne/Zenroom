@@ -311,3 +311,40 @@ EOF
     save_output 'cast_float.out'
     assert_output '{"b64":"ITQjFPGiNLU0LC0yQeI=","fb64":6.734502e+32,"finteger":1.234568e+26,"integer":"123456789123456789123456789"}'
 }
+
+
+@test "verify is found" {
+    cat <<EOF | save_asset found.json
+{
+    "str": "hello",
+    "integer": "123456789123456789123456789",
+    "float": 1234,
+    "dict": {
+            "str_1": "hello",
+            "str_2": "world"
+    },
+    "array": [
+             "hello",
+             "world"
+    ]
+}
+EOF
+
+    cat <<EOF | zexe found.zen found.json
+Given I  have a 'string' named 'str'
+and I have a 'integer'
+and I have a 'float'
+and I have a 'string dictionary' named 'dict'
+and I have a 'string array' named 'array'
+
+When I verify 'str' is found
+and I verify 'integer' is found
+and I verify 'float' is found
+and I verify 'dict' is found
+and I verify 'array' is found
+
+Then print the string 'found everything'
+EOF
+    save_output 'found.out'
+    assert_output '{"output":["found_everything"]}'
+}
