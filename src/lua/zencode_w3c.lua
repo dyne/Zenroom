@@ -145,6 +145,9 @@ local function import_jwk(obj)
         zencode_assert(obj.use == "sig", "use must be sig, given is "..obj.use)
         res.use = O.from_string(obj.use)
     end
+    if obj.kid then
+        res.kid = O.from_url64(obj.kid)
+    end
     return res
 end
 
@@ -160,6 +163,9 @@ local function export_jwk(obj)
     end
     if obj.alg then
         key.alg = O.to_string(obj.alg)
+    end
+    if obj.kid then
+        key.kid = O.to_url64(obj.kid)
     end
 
     return key
@@ -187,8 +193,8 @@ ZEN:add_schema(
         end,
         json_web_token = { import = import_jwt,
                            export = export_jwt },
-        jwk = {import = import_jwk,
-                        export = export_jwk}
+        jwk = { import = import_jwk,
+                export = export_jwk}
     }
 )
 
@@ -468,14 +474,6 @@ IfWhen(
     end
 )
 
---[[
-    "jwk": {
-        "kty": "EC",
-        "crv": "P-256",
-        "x": "TCAER19Zvu3OHF4j4W4vfSVoHIP1ILilDls7vCeGemc",
-        "y": "ZxjiWWbZMQGHVWKVQ4hbSIirsVfuecCE6t4jT9F2HZQ"
-    }
---]]
 ----for reference on JSON Web Key see RFC7517
 When("create jwk with p256 public key ''", function(pk)
     local pubk = load_pubkey_compat(pk, 'p256')
@@ -491,4 +489,11 @@ When("create jwk with p256 public key ''", function(pk)
     empty'jwk'
     ACK.jwk = jwk
     new_codec("jwk")
+end)
+
+When("set kid in jwk '' to ''", function(jw, kid)
+    local jwk = have(jw)
+    local k_id = O.to_url64(have(kid))
+    zencode_assert(not jwk.kid, "The given JWK already has a field 'kid'")
+    ACK[jw].kid = O.from_url64(k_id)
 end)

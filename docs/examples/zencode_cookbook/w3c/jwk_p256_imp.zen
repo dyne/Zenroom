@@ -1,4 +1,6 @@
 Scenario 'w3c'
 
 Given I have 'jwk'
+Given I have a 'url64' named 'kid'
+When I set kid in jwk 'jwk' to 'kid'
 Then print 'jwk'
