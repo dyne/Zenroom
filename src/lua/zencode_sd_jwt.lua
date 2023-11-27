@@ -136,14 +136,86 @@ local function export_supported_selective_disclosure(obj)
     return res
 end
 
+--for reference on JSON Web Key see RFC7517
+local function import_jwk(obj)
+    zencode_assert(obj.kty, "The input is not a valid JSON Web Key, missing kty")
+    zencode_assert(obj.kty == "EC", "kty must be EC, given is "..obj.kty)
+    zencode_assert(obj.crv, "The input is not a valid JSON Web Key, missing crv")
+    zencode_assert(obj.crv == "P-256", "crv must be P-256, given is "..obj.crv)
+    zencode_assert(obj.x, "The input is not a valid JSON Web Key, missing x")
+    zencode_assert(#O.from_url64(obj.x) == 32, "Wrong length in field 'x', expected 32 given is ".. #O.from_url64(obj.x))
+    zencode_assert(obj.y, "The input is not a valid JSON Web Key, missing y")
+    zencode_assert(#O.from_url64(obj.y) == 32, "Wrong length in field 'y', expected 32 given is ".. #O.from_url64(obj.y))
 
+    local res = {
+        kty = O.from_string(obj.kty),
+        crv = O.from_string(obj.crv),
+        x = O.from_url64(obj.x),
+        y = O.from_url64(obj.y)
+    }
+    if obj.alg then
+        zencode_assert(obj.alg == "ES256", "alg must be ES256, given is "..obj.alg)
+        res.alg = O.from_string(obj.alg)
+    end
+    if obj.use then
+        zencode_assert(obj.use == "sig", "use must be sig, given is "..obj.use)
+        res.use = O.from_string(obj.use)
+    end
+    if obj.kid then
+        res.kid = O.from_url64(obj.kid)
+    end
+    return res
+end
+
+local function export_jwk(obj)
+    local key = {
+        kty = O.to_string(obj.kty),
+        crv = O.to_string(obj.crv),
+        x = O.to_url64(obj.x),
+        y = O.to_url64(obj.y)
+    }
+    if obj.use then
+        key.use = O.to_string(obj.use)
+    end
+    if obj.alg then
+        key.alg = O.to_string(obj.alg)
+    end
+    if obj.kid then
+        key.kid = O.to_url64(obj.kid)
+    end
+
+    return key
+end
+local function export_jwk_key_binding(obj)
+    return {
+        cnf = {
+            jwk = export_jwk(obj.cnf.jwk)
+        }
+    }
+end
+
+local function import_jwk_key_binding(obj)
+    return {
+        cnf = {
+            jwk = import_jwk(obj.cnf.jwk)
+        }
+    }
+end
 
 ZEN:add_schema(
     {
         supported_selective_disclosure = {
             import = import_supported_selective_disclosure,
             export = export_supported_selective_disclosure
-        }
+        },
+        jwk = {
+            import = import_jwk,
+            export = export_jwk
+        },
+        jwk_key_binding = {
+            import = import_jwk_key_binding,
+            export = export_jwk_key_binding,
+        },
     }
 )
 
@@ -184,4 +256,39 @@ When("use supported selective disclosure to disclose '' named '' with id ''", fu
         curr = credential.credentialSubject[name].display
         curr[#curr+1] = disp
     end
+end)
+
+----for reference on JSON Web Key see RFC7517
+When("create jwk with p256 public key ''", function(pk)
+    local pubk = load_pubkey_compat(pk, 'p256')
+    zencode_assert(#pubk == 64, "Invalid p256 public key: expected length is 64, given is "..#pubk)
+    local jwk = {
+        kty = O.from_string("EC"),
+        crv = O.from_string("P-256"),
+        alg = O.from_string("ES256"),
+        use = O.from_string("sig"),
+        x = pubk:sub(1,32),
+        y = pubk:sub(33,64)
+    }
+    empty'jwk'
+    ACK.jwk = jwk
+    new_codec("jwk")
+end)
+
+When("set kid in jwk '' to ''", function(jw, kid)
+    local jwk = have(jw)
+    local k_id = O.to_url64(have(kid))
+    zencode_assert(not jwk.kid, "The given JWK already has a field 'kid'")
+    ACK[jw].kid = O.from_url64(k_id)
+end)
+
+When("create jwt key binding with jwk ''", function(jwk_name)
+    local jwk = have(jwk_name)
+    empty'jwk key binding'
+    ACK.jwk_key_binding = {
+        cnf = {
+            jwk = jwk
+        }
+    }
+    new_codec("jwk_key_binding")
 end)

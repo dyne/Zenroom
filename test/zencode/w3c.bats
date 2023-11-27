@@ -738,34 +738,3 @@ EOF
     assert_output '{"output":["ok"]}'
 }
 
-@test "Create JWK with p256 public key" {
-    cat <<EOF | zexe jwk_p256.zen jwk_p256.json
-Scenario 'w3c'
-Scenario 'p256'
-
-Given I am known as 'Alice'
-and I have my 'keyring'
-Given I have a 'url64' named 'kid'
-When I create the p256 public key
-
-When I create jwk with p256 public key 'p256 public key'
-
-Then print 'jwk'
-Then print 'kid'
-EOF
-    save_output jwk_p256_out.json
-    assert_output '{"jwk":{"alg":"ES256","crv":"P-256","kty":"EC","use":"sig","x":"Z_zRBEUbhtqDzme6kcGbtV3X4BxARVC8ySoC02IbQu8","y":"zXFljZyvxo9cgvCdcJfrmww9HeSiJUFbI98UUwMkPss"},"kid":"1Jdpq0-Eu0KnZ4R9mapqSiFQfTVvHFg_SrLYifwz8Fc"}'
-}
-
-@test "Set kid value in JWK with p256 public key" {
-    cat <<EOF | zexe jwk_p256_imp.zen jwk_p256_out.json
-Scenario 'w3c'
-
-Given I have 'jwk'
-Given I have a 'url64' named 'kid'
-When I set kid in jwk 'jwk' to 'kid'
-Then print 'jwk'
-EOF
-    save_output jwk_p256_imp_out.json
-    assert_output '{"jwk":{"alg":"ES256","crv":"P-256","kid":"1Jdpq0-Eu0KnZ4R9mapqSiFQfTVvHFg_SrLYifwz8Fc","kty":"EC","use":"sig","x":"Z_zRBEUbhtqDzme6kcGbtV3X4BxARVC8ySoC02IbQu8","y":"zXFljZyvxo9cgvCdcJfrmww9HeSiJUFbI98UUwMkPss"}}'
-}

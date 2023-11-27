@@ -38,5 +38,51 @@ When I use supported selective disclosure to disclose 'is_over_18' named 'order_
 Then print data
 EOF
     save_output 'metadata2.out.json'
-    assert_output '{"authorization_endpoint":"http://issuer.example.org/authorize","authorization_response_iss_parameter_supported":true,"claim_types_supported":["normal"],"claims_parameter_supported":false,"code_challenge_methods_supported":["S256"],"credential_endpoint":"http://issuer.example.org/credentials","credential_issuer":"http://issuer.example.org","credentials_supported":[{"credentialSubject":{"family_name":{"display":[{"locale":"en-US","name":"Family Name"}]},"given_name":{"display":[{"locale":"en-US","name":"Given Name"}]},"is_over_18":{"display":[{"locale":"en-US","name":"Over 18"}]}},"cryptographic_binding_methods_supported":["did:jwk"],"cryptographic_suites_supported":["ES256"],"display":[{"background_color":"#000000","locale":"en-US","name":"IdentityCredential","text_color":"#ffffff"}],"format":"vc+sd-jwt","id":"ab8c936e-b9ab-4cf5-9862-c3a25bb82996","order":["given_name","family_name","is_over_18"],"types":["VerifiableCredential","IdentityCredential"]}],"grant_types_supported":["authorization_code","urn:ietf:params:oauth:grant-type:pre-authorized_code"],"id_token_signing_alg_values_supported":["ES256"],"issuer":"http://issuer.example.org","jwks_uri":"http://issuer.example.org/jwks","pushed_authorization_request_endpoint":"http://issuer.example.org/par","request_object_signing_alg_values_supported":["ES256"],"request_parameter_supported":true,"request_uri_parameter_supported":true,"response_modes_supported":["query"],"response_types_supported":["code"],"scopes_supported":["openid","IdentityCredential"],"subject_types_supported":["public"],"token_endpoint":"http://issuer.example.org/token","token_endpoint_auth_methods_supported":["none"]}'
+    assert_output '{"id":"ab8c936e-b9ab-4cf5-9862-c3a25bb82996","is_over_18":{"locale":"en-US","name":"Over 18"},"order_name":"is_over_18","supported_selective_disclosure":{"authorization_endpoint":"http://issuer.example.org/authorize","authorization_response_iss_parameter_supported":true,"claim_types_supported":["normal"],"claims_parameter_supported":false,"code_challenge_methods_supported":["S256"],"credential_endpoint":"http://issuer.example.org/credentials","credential_issuer":"http://issuer.example.org","credentials_supported":[{"credentialSubject":{"family_name":{"display":[{"locale":"en-US","name":"Family Name"}]},"given_name":{"display":[{"locale":"en-US","name":"Given Name"}]},"is_over_18":{"display":[{"locale":"en-US","name":"Over 18"}]}},"cryptographic_binding_methods_supported":["did:jwk"],"cryptographic_suites_supported":["ES256"],"display":[{"background_color":"#000000","locale":"en-US","name":"IdentityCredential","text_color":"#ffffff"}],"format":"vc+sd-jwt","id":"ab8c936e-b9ab-4cf5-9862-c3a25bb82996","order":["given_name","family_name","is_over_18"],"types":["VerifiableCredential","IdentityCredential"]}],"grant_types_supported":["authorization_code","urn:ietf:params:oauth:grant-type:pre-authorized_code"],"id_token_signing_alg_values_supported":["ES256"],"issuer":"http://issuer.example.org","jwks_uri":"http://issuer.example.org/jwks","pushed_authorization_request_endpoint":"http://issuer.example.org/par","request_object_signing_alg_values_supported":["ES256"],"request_parameter_supported":true,"request_uri_parameter_supported":true,"response_modes_supported":["query"],"response_types_supported":["code"],"scopes_supported":["openid","IdentityCredential"],"subject_types_supported":["public"],"token_endpoint":"http://issuer.example.org/token","token_endpoint_auth_methods_supported":["none"]}}'
+}
+
+@test "Create JWK with p256 public key" {
+    cat <<EOF | save_asset jwk_p256.json
+{
+    "Alice": {
+        "keyring": {
+        "p256": "Y5xo2U3cACj8V+8/mQYLmWb/+A768/ui0tN8+vsu36g="
+        }
+  },
+  "kid": "1Jdpq0-Eu0KnZ4R9mapqSiFQfTVvHFg_SrLYifwz8Fc"
+}
+EOF
+    cat <<EOF | zexe jwk_p256.zen jwk_p256.json
+Scenario 'p256'
+Scenario 'sd_jwt'
+
+Given I am known as 'Alice'
+and I have my 'keyring'
+Given I have a 'url64' named 'kid'
+When I create the p256 public key
+
+When I create jwk with p256 public key 'p256 public key'
+When I create the jwt key binding with jwk 'jwk'
+
+Then print 'jwk'
+Then print 'kid'
+Then print 'jwk key binding'
+EOF
+    save_output jwk_p256_out.json
+    assert_output '{"jwk":{"alg":"ES256","crv":"P-256","kty":"EC","use":"sig","x":"Z_zRBEUbhtqDzme6kcGbtV3X4BxARVC8ySoC02IbQu8","y":"zXFljZyvxo9cgvCdcJfrmww9HeSiJUFbI98UUwMkPss"},"jwk_key_binding":{"cnf":{"jwk":{"alg":"ES256","crv":"P-256","kty":"EC","use":"sig","x":"Z_zRBEUbhtqDzme6kcGbtV3X4BxARVC8ySoC02IbQu8","y":"zXFljZyvxo9cgvCdcJfrmww9HeSiJUFbI98UUwMkPss"}}},"kid":"1Jdpq0-Eu0KnZ4R9mapqSiFQfTVvHFg_SrLYifwz8Fc"}'
+}
+
+@test "Set kid value in JWK with p256 public key" {
+    cat <<EOF | zexe jwk_p256_imp.zen jwk_p256_out.json
+Scenario 'sd_jwt'
+
+Given I have 'jwk'
+Given I have a 'url64' named 'kid'
+Given I have a 'jwk_key_binding'
+When I set kid in jwk 'jwk' to 'kid'
+Then print 'jwk'
+Then print 'jwk_key_binding'
+EOF
+    save_output jwk_p256_imp_out.json
+    assert_output '{"jwk":{"alg":"ES256","crv":"P-256","kid":"1Jdpq0-Eu0KnZ4R9mapqSiFQfTVvHFg_SrLYifwz8Fc","kty":"EC","use":"sig","x":"Z_zRBEUbhtqDzme6kcGbtV3X4BxARVC8ySoC02IbQu8","y":"zXFljZyvxo9cgvCdcJfrmww9HeSiJUFbI98UUwMkPss"},"jwk_key_binding":{"cnf":{"jwk":{"alg":"ES256","crv":"P-256","kty":"EC","use":"sig","x":"Z_zRBEUbhtqDzme6kcGbtV3X4BxARVC8ySoC02IbQu8","y":"zXFljZyvxo9cgvCdcJfrmww9HeSiJUFbI98UUwMkPss"}}}}'
 }
