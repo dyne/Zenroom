@@ -120,6 +120,51 @@ local function export_jwt(obj)
     return header .. '.' .. payload .. '.' .. obj.signature:url64()
 end
 
+--for reference on JSON Web Key see RFC7517
+local function import_jwk(obj)
+    zencode_assert(obj.kty, "The input is not a valid JSON Web Key, missing kty")
+    zencode_assert(obj.kty == "EC", "kty must be EC, given is "..obj.kty)
+    zencode_assert(obj.crv, "The input is not a valid JSON Web Key, missing crv")
+    zencode_assert(obj.crv == "P-256", "crv must be P-256, given is "..obj.crv)
+    zencode_assert(obj.x, "The input is not a valid JSON Web Key, missing x")
+    zencode_assert(#O.from_url64(obj.x) == 32, "Wrong length in field 'x', expected 32 given is ".. #O.from_url64(obj.x))
+    zencode_assert(obj.y, "The input is not a valid JSON Web Key, missing y")
+    zencode_assert(#O.from_url64(obj.y) == 32, "Wrong length in field 'y', expected 32 given is ".. #O.from_url64(obj.y))
+
+    local res = {
+        kty = O.from_string(obj.kty),
+        crv = O.from_string(obj.crv),
+        x = O.from_url64(obj.x),
+        y = O.from_url64(obj.y)
+    }
+    if obj.alg then
+        zencode_assert(obj.alg == "ES256", "alg must be ES256, given is "..obj.alg)
+        res.alg = O.from_string(obj.alg)
+    end
+    if obj.use then
+        zencode_assert(obj.use == "sig", "use must be sig, given is "..obj.use)
+        res.use = O.from_string(obj.use)
+    end
+    return res
+end
+
+local function export_jwk(obj)
+    local key = {
+        kty = O.to_string(obj.kty),
+        crv = O.to_string(obj.crv),
+        x = O.to_url64(obj.x),
+        y = O.to_url64(obj.y)
+    }
+    if obj.use then
+        key.use = O.to_string(obj.use)
+    end
+    if obj.alg then
+        key.alg = O.to_string(obj.alg)
+    end
+
+    return key
+end
+
 ZEN:add_schema(
     {
         did_document = { import = import_did_document,
@@ -141,7 +186,9 @@ ZEN:add_schema(
             return (deepmap(OCTET.from_string, obj))
         end,
         json_web_token = { import = import_jwt,
-                           export = export_jwt }
+                           export = export_jwt },
+        jwk = {import = import_jwk,
+                        export = export_jwk}
     }
 )
 
@@ -420,3 +467,28 @@ IfWhen(
         zencode_assert(jwt_hs256.signature == hmac.signature, "Could not re-create HMAC")
     end
 )
+
+--[[
+    "jwk": {
+        "kty": "EC",
+        "crv": "P-256",
+        "x": "TCAER19Zvu3OHF4j4W4vfSVoHIP1ILilDls7vCeGemc",
+        "y": "ZxjiWWbZMQGHVWKVQ4hbSIirsVfuecCE6t4jT9F2HZQ"
+    }
+--]]
+----for reference on JSON Web Key see RFC7517
+When("create jwk with p256 public key ''", function(pk)
+    local pubk = load_pubkey_compat(pk, 'p256')
+    zencode_assert(#pubk == 64, "Invalid p256 public key: expected length is 64, given is "..#pubk)
+    local jwk = {
+        kty = O.from_string("EC"),
+        crv = O.from_string("P-256"),
+        alg = O.from_string("ES256"),
+        use = O.from_string("sig"),
+        x = pubk:sub(1,32),
+        y = pubk:sub(33,64)
+    }
+    empty'jwk'
+    ACK.jwk = jwk
+    new_codec("jwk")
+end)

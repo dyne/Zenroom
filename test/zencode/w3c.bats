@@ -737,3 +737,31 @@ EOF
     save_output jwt_hs256_verify.json
     assert_output '{"output":["ok"]}'
 }
+
+@test "Create JWK with p256 public key" {
+    cat <<EOF | zexe jwk_p256.zen jwk_p256.json
+Scenario 'w3c'
+Scenario 'p256'
+
+Given I am known as 'Alice'
+and I have my 'keyring'
+When I create the p256 public key
+
+When I create jwk with p256 public key 'p256 public key'
+
+Then print 'jwk'
+EOF
+    save_output jwk_p256_out.json
+    assert_output '{"jwk":{"alg":"ES256","crv":"P-256","kty":"EC","use":"sig","x":"Z_zRBEUbhtqDzme6kcGbtV3X4BxARVC8ySoC02IbQu8","y":"zXFljZyvxo9cgvCdcJfrmww9HeSiJUFbI98UUwMkPss"}}'
+}
+
+@test "Import JWK with p256 public key" {
+    cat <<EOF | zexe jwk_p256_imp.zen jwk_p256_out.json
+Scenario 'w3c'
+
+Given I have 'jwk'
+Then print 'jwk'
+EOF
+    save_output jwk_p256_imp_out.json
+    assert_output '{"jwk":{"alg":"ES256","crv":"P-256","kty":"EC","use":"sig","x":"Z_zRBEUbhtqDzme6kcGbtV3X4BxARVC8ySoC02IbQu8","y":"zXFljZyvxo9cgvCdcJfrmww9HeSiJUFbI98UUwMkPss"}}'
+}

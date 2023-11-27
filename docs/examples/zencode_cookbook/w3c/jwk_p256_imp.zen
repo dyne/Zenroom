@@ -1,0 +1,4 @@
+Scenario 'w3c'
+
+Given I have 'jwk'
+Then print 'jwk'

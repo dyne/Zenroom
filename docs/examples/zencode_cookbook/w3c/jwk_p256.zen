@@ -1,0 +1,10 @@
+Scenario 'w3c'
+Scenario 'p256'
+
+Given I am known as 'Alice'
+and I have my 'keyring'
+When I create the p256 public key
+
+When I create jwk with p256 public key 'p256 public key'
+
+Then print 'jwk'
