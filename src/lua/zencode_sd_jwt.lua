@@ -208,7 +208,7 @@ ZEN:add_schema(
             import = import_supported_selective_disclosure,
             export = export_supported_selective_disclosure
         },
-        jwk = {
+        p256_public_jwk = {
             import = import_jwk,
             export = export_jwk
         },
@@ -259,7 +259,7 @@ When("use supported selective disclosure to disclose '' named '' with id ''", fu
 end)
 
 ----for reference on JSON Web Key see RFC7517
-When("create jwk with p256 public key ''", function(pk)
+When("create p256 public jwk with ''", function(pk)
     local pubk = load_pubkey_compat(pk, 'p256')
     zencode_assert(#pubk == 64, "Invalid p256 public key: expected length is 64, given is "..#pubk)
     local jwk = {
@@ -270,9 +270,9 @@ When("create jwk with p256 public key ''", function(pk)
         x = pubk:sub(1,32),
         y = pubk:sub(33,64)
     }
-    empty'jwk'
-    ACK.jwk = jwk
-    new_codec("jwk")
+    empty'p256_public_jwk'
+    ACK.p256_public_jwk = jwk
+    new_codec("p256_public_jwk")
 end)
 
 When("set kid in jwk '' to ''", function(jw, kid)
