@@ -147,3 +147,41 @@ ZEN:add_schema(
     }
 )
 
+When("use supported selective disclosure to disclose '' named '' with id ''", function(disp_name, named, id_name)
+    local ssd = have'supported selective disclosure'
+    local disp = have(disp_name)
+    local name = have(named)
+    local id = have(id_name)
+    check_display(disp)
+
+    local credential = nil
+
+    -- search for credentials supported id
+    for i=1,#ssd.credentials_supported do
+        if ssd.credentials_supported[i].id == id then
+            credential = ssd.credentials_supported[i]
+            break
+        end
+    end
+
+    zencode_assert(credential ~= nil, "Credential not supported (unknown id)")
+
+    found = false
+    for i =1,#credential.order do
+        if credential.order[i] == name then
+            found = true
+        end
+    end
+
+    if not found then
+        credential.order[#credential.order+1] = name
+        credential.credentialSubject[name:string()] = {
+            display = {
+                disp
+            }
+        }
+    else
+        curr = credential.credentialSubject[name].display
+        curr[#curr+1] = disp
+    end
+end)

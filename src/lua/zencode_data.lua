@@ -54,7 +54,7 @@
           k = obj[key]
 	   end
 	end
-	if not k then
+	if k == nil then
 	   error('Key not found in object conversion: ' .. key, 2)
 	end
 	local res = nil
@@ -76,6 +76,11 @@
 	   if conversion then
           res = conversion(res)
 	   end
+  elseif t == 'boolean' then
+     res = k
+	   if conversion then
+          res = conversion(res)
+	   end
 	else
 	   if t == 'number' then
           res = k
@@ -88,7 +93,7 @@
 	   end
 	end
    if ZEN then
-   	assert(ZEN.OK and res,'get on invalid key: ' .. key .. ' (' .. t .. ')', 2)
+       assert(ZEN.OK and res ~= nil,'get on invalid key: ' .. key .. ' (' .. t .. ')', 2)
    end
 	return res
  end
