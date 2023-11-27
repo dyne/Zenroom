@@ -113,7 +113,6 @@ local function import_jwt(obj)
     return res
 end
 
-
 local function export_jwt(obj)
     local header = O.to_url64(O.from_string(JSON.encode(obj.header, 'string')))
     local payload = O.to_url64(O.from_string(JSON.encode(obj.payload, 'string')))
@@ -224,26 +223,20 @@ local function jws_signature_to_octet(obj, algo)
         '..' .. OCTET.to_url64(obj.r .. obj.s))
 end
 
-When(
-    "set verification method in '' to ''",
-    function(vc, meth)
-        local cred = have(vc)
-        zencode_assert(cred.proof, 'The object is not signed: ' .. vc)
-        local m = have(meth)
-        ACK[vc].proof.verificationMethod = m
-    end
-)
+When("set verification method in '' to ''", function(vc, meth)
+    local cred = have(vc)
+    zencode_assert(cred.proof, 'The object is not signed: ' .. vc)
+    local m = have(meth)
+    ACK[vc].proof.verificationMethod = m
+end)
 
-When(
-   "get verification method in ''",
-   function(vc)
-	  empty 'verification_method'
-	  local cred = have(vc)
-	  zencode_assert(cred.proof, 'The object is not signed: ' .. vc)
-	  ACK.verification_method = cred.proof.verificationMethod
-	  new_codec('verification_method')
-   end
-)
+When("get verification method in ''", function(vc)
+    empty 'verification_method'
+    local cred = have(vc)
+    zencode_assert(cred.proof, 'The object is not signed: ' .. vc)
+    ACK.verification_method = cred.proof.verificationMethod
+    new_codec('verification_method')
+end)
 
 local function _json_encoding(src)
     local source, codec = have(src)
@@ -256,62 +249,52 @@ local function _json_encoding(src)
     return source_str
 end
 
-When(
-    "create jws signature of ''", function(src)
-        local source_str = _json_encoding(src)
-        empty'jws'
-        local sk = havekey'ecdh' -- assuming secp256k1
-        ACK.jws = O.from_string(
-            jws_signature_to_octet(ECDH.sign(sk, source_str)) )
-        new_codec('jws', { zentype = 'e',
-                           encoding = 'string' })
-    end
-)
+When("create jws signature of ''", function(src)
+    local source_str = _json_encoding(src)
+    empty'jws'
+    local sk = havekey'ecdh' -- assuming secp256k1
+    ACK.jws = O.from_string(
+        jws_signature_to_octet(ECDH.sign(sk, source_str)) )
+    new_codec('jws', { zentype = 'e',
+                        encoding = 'string' })
+end)
 
-When(
-    "create jws signature using ecdh signature in ''", function(sign)
-        local signature = have(sign)
-        empty'jws'
-        ACK.jws = O.from_string(jws_signature_to_octet(signature))
-        new_codec('jws', { zentype = 'e',
-                           encoding = 'string' })
-    end
-)
+When("create jws signature using ecdh signature in ''", function(sign)
+    local signature = have(sign)
+    empty'jws'
+    ACK.jws = O.from_string(jws_signature_to_octet(signature))
+    new_codec('jws', { zentype = 'e',
+                        encoding = 'string' })
+end)
 
-IfWhen(
-    "verify jws signature of ''",
-    function(src)
-        local jws = have'jws'
-        local pub = have 'ecdh public key'
-        local source_str = _json_encoding(src)
-        local signature = jws_octet_to_signature(jws)
-        zencode_assert(
-            ECDH.verify(pub, source_str, signature),
-            'The signature does not validate: ' .. src
-        )
-    end
-)
+IfWhen("verify jws signature of ''", function(src)
+    local jws = have'jws'
+    local pub = have 'ecdh public key'
+    local source_str = _json_encoding(src)
+    local signature = jws_octet_to_signature(jws)
+    zencode_assert(
+        ECDH.verify(pub, source_str, signature),
+        'The signature does not validate: ' .. src
+    )
+end)
 
-When(
-    "sign verifiable credential named ''",
-    function(vc)
-        local credential = have(vc)
-        local sk = havekey'ecdh' -- assuming secp256k1
-        zencode_assert(not credential.proof,'The object is already signed: ' .. vc)
-        local proof = {
-            type = 'Zenroom v'.._G.ZENROOM_VERSION.original,
-            -- "Signature", -- TODO: check what to write here for secp256k1
-            -- created = "2018-06-18T21:19:10Z",
-            proofPurpose = 'authenticate' -- assertionMethod", -- TODO: check
-        }
-        local cred_str = _json_encoding(vc)
-        proof.jws =
-            jws_signature_to_octet(
-              ECDH.sign(sk, cred_str)
-        )
-        ACK[vc].proof = deepmap(OCTET.from_string, proof)
-    end
-)
+When("sign verifiable credential named ''", function(vc)
+    local credential = have(vc)
+    local sk = havekey'ecdh' -- assuming secp256k1
+    zencode_assert(not credential.proof,'The object is already signed: ' .. vc)
+    local proof = {
+        type = 'Zenroom v'.._G.ZENROOM_VERSION.original,
+        -- "Signature", -- TODO: check what to write here for secp256k1
+        -- created = "2018-06-18T21:19:10Z",
+        proofPurpose = 'authenticate' -- assertionMethod", -- TODO: check
+    }
+    local cred_str = _json_encoding(vc)
+    proof.jws =
+        jws_signature_to_octet(
+            ECDH.sign(sk, cred_str)
+    )
+    ACK[vc].proof = deepmap(OCTET.from_string, proof)
+end)
 
 local function _verification_f(src, document, public_key)
     local signature = jws_octet_to_signature(document.proof.jws)
@@ -327,56 +310,46 @@ local function _verification_f(src, document, public_key)
     )
 end
 
-IfWhen(
-    "verify verifiable credential named ''",
-    function(src)
-        local document = have(src)
-        zencode_assert(document.proof and document.proof.jws,
-                    'The object has no signature: ' .. src)
-        _verification_f(src, document, have('ecdh public key'))
-    end
-)
+IfWhen("verify verifiable credential named ''", function(src)
+    local document = have(src)
+    zencode_assert(document.proof and document.proof.jws,
+                'The object has no signature: ' .. src)
+    _verification_f(src, document, have('ecdh public key'))
+end)
 
-IfWhen(
-    "verify did document named ''",
-    function(src)
-        local document = have(src)
-        zencode_assert(document.proof and document.proof.jws,
-                    'The object has no signature: ' .. src)
-        _verification_f(src, document, have('ecdh public key'))
-    end
-)
+IfWhen("verify did document named ''", function(src)
+    local document = have(src)
+    zencode_assert(document.proof and document.proof.jws,
+                'The object has no signature: ' .. src)
+    _verification_f(src, document, have('ecdh public key'))
+end)
 
-IfWhen(
-    "verify did document named '' is signed by ''",
-    function(src, signer_did_doc)
-        local document = have(src)
-        local signer_document = have(signer_did_doc)
-        zencode_assert(document.proof and document.proof.jws,
-                    'The object has no signature: ' .. src)
-        zencode_assert(document.proof.verificationMethod,
-                    'The proof inside '..src..' has no verificationMethod')
-        local data = strtok(O.to_string(document.proof.verificationMethod), '#' )
-        local signer_id = O.from_string(data[1])
-        zencode_assert(signer_id == signer_document.id,
-                    'The signer id in proof is different from the one in '..signer_did_doc)
-        local i = 1
-        local pk = nil
-        repeat
-            if signer_document.verificationMethod[i].id == document.proof.verificationMethod then
-                pk = O.from_base58(
-                    O.to_string( signer_document.verificationMethod[i].publicKeyBase58 ))
-            end
-            i = i+1
-        until( ( not signer_document.verificationMethod[i] ) or pk )
-        zencode_assert(pk , data[2]..' used to sign '..src..' not found in the did document '..signer_did_doc)
-        _verification_f(src, document, pk)
-    end
-)
+IfWhen("verify did document named '' is signed by ''", function(src, signer_did_doc)
+    local document = have(src)
+    local signer_document = have(signer_did_doc)
+    zencode_assert(document.proof and document.proof.jws,
+                'The object has no signature: ' .. src)
+    zencode_assert(document.proof.verificationMethod,
+                'The proof inside '..src..' has no verificationMethod')
+    local data = strtok(O.to_string(document.proof.verificationMethod), '#' )
+    local signer_id = O.from_string(data[1])
+    zencode_assert(signer_id == signer_document.id,
+                'The signer id in proof is different from the one in '..signer_did_doc)
+    local i = 1
+    local pk = nil
+    repeat
+        if signer_document.verificationMethod[i].id == document.proof.verificationMethod then
+            pk = O.from_base58(
+                O.to_string( signer_document.verificationMethod[i].publicKeyBase58 ))
+        end
+        i = i+1
+    until( ( not signer_document.verificationMethod[i] ) or pk )
+    zencode_assert(pk , data[2]..' used to sign '..src..' not found in the did document '..signer_did_doc)
+    _verification_f(src, document, pk)
+end)
+
 -- operations on the did-document
-When(
-    "create serviceEndpoint of ''",
-    function(did_doc)
+When("create serviceEndpoint of ''", function(did_doc)
         local doc = have(did_doc)
         zencode_assert(doc.service, 'service not found')
         ACK.serviceEndpoint = {}
@@ -386,52 +359,45 @@ When(
         end
         new_codec('serviceEndpoint', { encoding = 'string',
                                        zentype = 'd' })
-    end
-)
+end)
 
-When(
-    "create verificationMethod of ''",
-    function(did_doc)
-        local doc = have(did_doc)
-        zencode_assert(doc.verificationMethod, 'verificationMethod not found')
-        empty 'verificationMethod'
-        ACK.verificationMethod = {}
+When("create verificationMethod of ''", function(did_doc)
+    local doc = have(did_doc)
+    zencode_assert(doc.verificationMethod, 'verificationMethod not found')
+    empty 'verificationMethod'
+    ACK.verificationMethod = {}
 
-        for _, ver_method in pairs(doc.verificationMethod) do
-            local pub_key_name = strtok(O.to_string(ver_method.id), '#')[2]
-            if pub_key_name == ETHEREUM_ADDRESS then
-                local address = strtok(
-                    O.to_string(ver_method.blockchainAccountId), ':' )[3]
-                ACK.verificationMethod[pub_key_name] = O.from_hex(address)
-            else
-                local pub_key = O.to_string(ver_method.publicKeyBase58)
-                ACK.verificationMethod[pub_key_name] = O.from_base58(pub_key)
-            end
+    for _, ver_method in pairs(doc.verificationMethod) do
+        local pub_key_name = strtok(O.to_string(ver_method.id), '#')[2]
+        if pub_key_name == ETHEREUM_ADDRESS then
+            local address = strtok(
+                O.to_string(ver_method.blockchainAccountId), ':' )[3]
+            ACK.verificationMethod[pub_key_name] = O.from_hex(address)
+        else
+            local pub_key = O.to_string(ver_method.publicKeyBase58)
+            ACK.verificationMethod[pub_key_name] = O.from_base58(pub_key)
         end
-        new_codec('verificationMethod')
     end
-)
+    new_codec('verificationMethod')
+end)
 
-When(
-    "create '' public key from did document ''",
-    function(algo, did_doc)
-        local doc = have (did_doc)
-        local pk_name = algo..'_public_key'
-        empty (pk_name)
-        zencode_assert(doc.verificationMethod, 'verificationMethod not found in '..did_doc)
-        local id = doc.id..O.from_string('#'..pk_name)
-        local i = 1
-        repeat
-            if doc.verificationMethod[i].id == id then
-                ACK[pk_name] = O.from_base58(O.to_string((doc.verificationMethod[i].publicKeyBase58)))
-            end
-            i = i+1
-        until( ( not doc.verificationMethod[i] ) or ACK[pk_name] )
-        zencode_assert(ACK[pk_name], pk_name..' not found in the did document '..did_doc)
-        CODEC[pk_name] = guess_conversion(ACK[pk_name], pk_name)
-        CODEC[pk_name].name = pk_name
-    end
-)
+When("create '' public key from did document ''", function(algo, did_doc)
+    local doc = have (did_doc)
+    local pk_name = algo..'_public_key'
+    empty (pk_name)
+    zencode_assert(doc.verificationMethod, 'verificationMethod not found in '..did_doc)
+    local id = doc.id..O.from_string('#'..pk_name)
+    local i = 1
+    repeat
+        if doc.verificationMethod[i].id == id then
+            ACK[pk_name] = O.from_base58(O.to_string((doc.verificationMethod[i].publicKeyBase58)))
+        end
+        i = i+1
+    until( ( not doc.verificationMethod[i] ) or ACK[pk_name] )
+    zencode_assert(ACK[pk_name], pk_name..' not found in the did document '..did_doc)
+    CODEC[pk_name] = guess_conversion(ACK[pk_name], pk_name)
+    CODEC[pk_name].name = pk_name
+end)
 
 function create_jwt_hs256(payload, password)
     local header, b64header, b64payload, hmac
@@ -453,26 +419,20 @@ function create_jwt_hs256(payload, password)
     }
 end
 
-When(
-    "create json web token of '' using ''",
-    function(payload_name, password_name)
-        local payload = have(payload_name)
-        local password = mayhave(password_name) or password_name
-        empty'json_web_token'
-        ACK.json_web_token = create_jwt_hs256(payload, password)
-        new_codec("json_web_token")
-    end
-)
+When("create json web token of '' using ''", function(payload_name, password_name)
+    local payload = have(payload_name)
+    local password = mayhave(password_name) or password_name
+    empty'json_web_token'
+    ACK.json_web_token = create_jwt_hs256(payload, password)
+    new_codec("json_web_token")
+end)
 
-IfWhen(
-    "verify json web token in '' using ''",
-    function(hmac_name, password_name)
-        local hmac = have(hmac_name)
-        local password = mayhave(password_name) or password_name
-        local jwt_hs256 = create_jwt_hs256(hmac.payload, password)
-        zencode_assert(jwt_hs256.signature == hmac.signature, "Could not re-create HMAC")
-    end
-)
+IfWhen("verify json web token in '' using ''", function(hmac_name, password_name)
+    local hmac = have(hmac_name)
+    local password = mayhave(password_name) or password_name
+    local jwt_hs256 = create_jwt_hs256(hmac.payload, password)
+    zencode_assert(jwt_hs256.signature == hmac.signature, "Could not re-create HMAC")
+end)
 
 ----for reference on JSON Web Key see RFC7517
 When("create jwk with p256 public key ''", function(pk)
