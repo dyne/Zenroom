@@ -202,6 +202,39 @@ local function import_jwk_key_binding(obj)
     }
 end
 
+local function import_selective_disclosure_request(obj)
+    -- TODO: zencode_assert height(obj.fields) == 1
+    -- TODO: zencode_assert fields are keys of object
+    -- TODO: zencode_assert keys in object are valid JWT claims
+    return {
+        fields = deepmap(function(o) return O.from_str(o) end, obj.fields),
+        object = deepmap(function(o)
+            if type(o) == 'string' then
+                return O.from_str(o)
+            elseif type(o) == 'number' then
+                return F.new(o)
+            else
+                return o
+            end
+        end, obj.object),
+    }
+end
+
+local function export_selective_disclosure_request(obj)
+    return {
+        fields = deepmap(function(o) return o:str() end, obj.fields),
+        object = deepmap(function(o)
+            if type(o) == 'zenroom.octet' then
+                return o:string()
+            elseif type(o) == 'zenroom.float' then
+                return tonumber(o)
+            else
+                return o
+            end
+        end, obj.object),
+    }
+end
+
 ZEN:add_schema(
     {
         supported_selective_disclosure = {
@@ -215,6 +248,10 @@ ZEN:add_schema(
         jwk_key_binding = {
             import = import_jwk_key_binding,
             export = export_jwk_key_binding,
+        },
+        selective_disclosure_request = {
+            import = import_selective_disclosure_request,
+            export = export_selective_disclosure_request,
         },
     }
 )
