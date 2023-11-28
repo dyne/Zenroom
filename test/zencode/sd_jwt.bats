@@ -89,7 +89,7 @@ EOF
 
 @test "Import and export SDR" {
     cat <<EOF | save_asset valid_sdr.data.json
-{"selective_disclosure_request":{"fields":["given_name","age"],"object":{"age":42,"family_name":"Lippo","given_name":"Mimmo"}}}
+{"selective_disclosure_request":{"fields":["given_name","age","family_name"],"object":{"age":42,"degree":"math","family_name":"Lippo","given_name":"Mimmo"}}}
 EOF
     cat <<EOF | zexe valid_sdr.zen valid_sdr.data.json
 Scenario 'sd_jwt'
@@ -99,4 +99,31 @@ Then print data
 EOF
     save_output valid_sdr.out.json
     assert_output "$(cat valid_sdr.data.json)"
+}
+
+@test "SDR matches SSD" {
+    cat <<EOF | zexe sdr_matches_ssd.zen valid_sdr.data.json metadata.keys.json
+Scenario 'sd_jwt'
+
+Given I have 'selective_disclosure_request'
+Given I have 'supported_selective_disclosure'
+When I verify the 'selective_disclosure_request' matches 'supported selective disclosure'
+Then print the string 'ok'
+EOF
+    save_output sdr_matches_ssd.out.json
+    assert_output '{"output":["ok"]}'
+}
+
+@test "SDR doesn't match SSD" {
+    cat <<EOF | zexe sdr_does_not_match_ssd.zen valid_sdr.data.json metadata2.out.json
+Scenario 'sd_jwt'
+
+Given I have 'selective_disclosure_request'
+Given I have 'supported_selective_disclosure'
+If I verify the 'selective_disclosure_request' matches 'supported selective disclosure'
+Then print the string 'failed'
+endif
+EOF
+    save_output sdr_matches_ssd.out.json
+    assert_output '[]'
 }

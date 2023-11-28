@@ -84,7 +84,6 @@ local function import_supported_selective_disclosure(obj)
         check_display(creds[i].display)
         local count = 0
         for j=1,#creds[i].order do
-            I.spy(creds[i])
             local display = creds[i].credentialSubject[creds[i].order[j]]
             if display then
                 check_display(display)
@@ -328,4 +327,40 @@ When("create jwt key binding with jwk ''", function(jwk_name)
         }
     }
     new_codec("jwk_key_binding")
+end)
+
+local function verify_cred_match(cred, sdr)
+    local all = true
+    for i=1,#cred.order do
+        -- I have to verify that each item of order is inside sdr.fields
+        local found = false
+        for j=1,#sdr.fields do
+            if sdr.fields[j] == cred.order[i] then
+                found = true
+                break
+            end
+        end
+        if not found then
+            all = false
+            break
+        end
+    end
+
+    return all
+end
+
+local function verify_ssd_match(ssd, sdr)
+    for i=1,#ssd.credentials_supported do
+        if verify_cred_match(ssd.credentials_supported[i], sdr) then
+            return true
+        end
+    end
+    return false
+end
+
+IfWhen("verify '' matches ''", function(sdr_name, ssd_name)
+    local sdr = have(sdr_name)
+    local ssd = have(ssd_name)
+
+    zencode_assert(verify_ssd_match(ssd, sdr), "No credential supported matches")
 end)
