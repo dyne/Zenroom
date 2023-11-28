@@ -453,6 +453,12 @@ function ZEN:parse(text)
 		 assert(prefix, "Invalid Zencode line "..self.linenum..": "..line)
 		 self.OK = true
 		 exitcode(0)
+		 if CONF.exec.scope == 'given' and
+			(prefix == 'when' or prefix == 'then'
+			 or prefix == 'if' or prefix == 'foreach') then
+			break -- stop parsing after given block
+		 end
+
 		 if not branching and prefix == 'if' then
 			branching = true
 			table.insert(prefixes, 1, 'if')
@@ -471,11 +477,6 @@ function ZEN:parse(text)
 		 elseif prefix == 'when' or prefix == 'then'
 			or prefix == 'endif' or prefix == 'endforeach' then
 			prefix =  prefix .. table.concat(prefixes,'')
-		 end
-
-		 if CONF.exec.scope == 'given' and (prefix == 'when' or prefix == 'then'
-											or prefix == 'if' or prefix == 'foreach') then
-			 break
 		 end
 
 		 -- try to enter the machine state named in prefix
