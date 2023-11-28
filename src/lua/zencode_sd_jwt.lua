@@ -55,9 +55,24 @@ local BOOLS_METADATA = {
     "request_uri_parameter_supported",
 }
 
+--[[ JWT reserved claim names (see Section 4.1 and Section 5 of RFC7519)
+"iss" (Issuer) Claim
+"sub" (Subject) Claim
+"aud" (Audience) Claim
+"exp" (Expiration Time) Claim
+"nbf" (Not Before) Claim
+"iat" (Issued At) Claim
+"jti" (JWT ID) Claim
+
+"typ" (Type) Header Parameter
+"cty" (Content Type) Header Parameter
+]]
+local JWT_RESERVED_CLAIMS = {"iss", "sub", "aud", "exp", "nbf", "iat", "jti", "typ", "cty"}
+
 local function check_display(display)
     return display.name and display.locale
 end
+
 local function import_supported_selective_disclosure(obj)
     local check_support = function(what, needed)
         found = false
@@ -202,9 +217,27 @@ local function import_jwk_key_binding(obj)
 end
 
 local function import_selective_disclosure_request(obj)
-    -- TODO: zencode_assert height(obj.fields) == 1
-    -- TODO: zencode_assert fields are keys of object
-    -- TODO: zencode_assert keys in object are valid JWT claims
+    zencode_assert(obj.fields, "Input object should have a key 'fields'")
+    zencode_assert(obj.object, "Input object should have a key 'object'")
+
+    for k,v in pairs(obj.object) do
+        for _,key in  pairs(JWT_RESERVED_CLAIMS) do
+            zencode_assert(k ~= key, "SD request can not contain a claim with key "..k)
+        end
+    end
+
+    for i=1, #obj.fields do
+        zencode_assert(type(obj.fields[i]) == 'string', "The object with key fields must be a string array")
+        found = false
+        for k,v in pairs(obj.object) do
+            if k == obj.fields[i] then
+                found = true
+                break
+            end
+        end
+        zencode_assert(found, "The field "..obj.fields[i].." is not a key in the object")
+    end
+
     return {
         fields = deepmap(function(o) return O.from_str(o) end, obj.fields),
         object = deepmap(function(o)
