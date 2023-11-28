@@ -397,3 +397,39 @@ IfWhen("verify '' matches ''", function(sdr_name, ssd_name)
 
     zencode_assert(verify_ssd_match(ssd, sdr), "No credential supported matches")
 end)
+
+local function create_sd(sdr)
+    local disclosures = {}
+    local jwt_payload = deepcopy(sdr.object)
+    jwt_payload._sd = {}
+    for _, f in pairs(sdr.fields) do
+        local f = f:str()
+        local encode = nil
+        if type(sdr.object[f]) == 'table' then
+            encode = deepmap(function(o) return o:str() end, sdr.object[f])
+        elseif type(sdr.object[f]) == 'zenroom.octet' then
+            encode = sdr.object[f]:str()
+        else
+            encode = sdr.object[f]
+        end
+        local disclosure = {
+            O.random(16):url64(),
+            f,
+            encode
+        }
+        disclosures[#disclosures+1] = disclosure
+        jwt_payload[f] = nil
+        jwt_payload._sd[#jwt_payload._sd+1] = sha256(
+            O.from_string(JSON.raw_encode(disclosure)):url64())
+    end
+    return I.spy({
+        payload=jwt_payload,
+        disclosures=disclosures,
+    })
+end
+
+When("create selective disclosure payload of ''", function(sdr_name)
+    local sdr = have(sdr_name)
+    ACK.selective_disclosure_payload = create_sd(sdr)
+    new_codec('selective_disclosure_payload')
+end)

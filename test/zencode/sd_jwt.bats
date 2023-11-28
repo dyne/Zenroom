@@ -157,3 +157,46 @@ EOF
     save_output sdr_matches_ssd.out.json
     assert_output '[]'
 }
+
+# TODO: problems sub, updated_at
+
+@test "Create SD Payload" {
+    cat <<EOF | save_asset sd_payload.data.json
+{
+    "selective_disclosure_request": {
+        "fields":[
+            "given_name","family_name","email","phone_number",
+            "phone_number_verified","address","birthdate"
+        ],
+        "object": {
+            "given_name": "John",
+            "family_name": "Doe",
+            "email": "johndoe@example.com",
+            "phone_number": "+1-202-555-0101",
+            "phone_number_verified": true,
+            "address": {
+                "street_address": "123 Main St",
+                "locality": "Anytown",
+                "region": "Anystate",
+                "country": "US"
+            },
+            "birthdate": "1940-01-01",
+            "updated_at": 1570000000,
+            "nationalities": [
+                "US",
+                "DE"
+            ]
+        }
+    }
+}
+EOF
+    cat <<EOF | zexe sd_payload.zen sd_payload.data.json
+Scenario 'sd_jwt'
+
+Given I have 'selective_disclosure_request'
+When I create the selective disclosure payload of 'selective_disclosure_request'
+Then print data
+EOF
+    save_output sd_payload.out.json
+    assert_output '[]'
+}
