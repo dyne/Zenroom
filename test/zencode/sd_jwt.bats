@@ -101,6 +101,36 @@ EOF
     assert_output "$(cat valid_sdr.data.json)"
 }
 
+@test "Fail import SDR for using restricted claim" {
+    cat <<EOF | save_asset invalid_sdr.data.json
+{"selective_disclosure_request":{"fields":["given_name","age"],"object":{"iat":42,"family_name":"Lippo","given_name":"Mimmo"}}}
+EOF
+    cat <<EOF | save_asset invalid_sdr.zen
+Scenario 'sd_jwt'
+
+Given I have 'selective_disclosure_request'
+Then print data
+EOF
+    run $ZENROOM_EXECUTABLE -z -a invalid_sdr.data.json invalid_sdr.zen
+    assert_line --partial 'SD request can not contain a claim with key'
+}
+
+@test "Fail import SDR for disclosing claim not in object" {
+    cat <<EOF | save_asset invalid_sdr2.data.json
+{"selective_disclosure_request":{"fields":["given_name","age","address"],"object":{"age":42,"family_name":"Lippo","given_name":"Mimmo"}}}
+EOF
+    run $ZENROOM_EXECUTABLE -z -a invalid_sdr2.data.json invalid_sdr.zen
+    assert_line --partial 'is not a key in the object'
+}
+
+@test "Fail import SDR because 'fields' is not a string array" {
+    cat <<EOF | save_asset invalid_sdr3.data.json
+{"selective_disclosure_request":{"fields":["given_name","age",{"address": "street"}],"object":{"age":42,"family_name":"Lippo","given_name":"Mimmo"}}}
+EOF
+    run $ZENROOM_EXECUTABLE -z -a invalid_sdr3.data.json invalid_sdr.zen
+    assert_line --partial 'The object with key fields must be a string array'
+}
+
 @test "SDR matches SSD" {
     cat <<EOF | zexe sdr_matches_ssd.zen valid_sdr.data.json metadata.keys.json
 Scenario 'sd_jwt'
