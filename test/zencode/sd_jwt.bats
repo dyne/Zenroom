@@ -86,3 +86,17 @@ EOF
     save_output jwk_p256_imp_out.json
     assert_output '{"jwk_key_binding":{"cnf":{"jwk":{"alg":"ES256","crv":"P-256","kty":"EC","use":"sig","x":"Z_zRBEUbhtqDzme6kcGbtV3X4BxARVC8ySoC02IbQu8","y":"zXFljZyvxo9cgvCdcJfrmww9HeSiJUFbI98UUwMkPss"}}},"p256_public_jwk":{"alg":"ES256","crv":"P-256","kid":"1Jdpq0-Eu0KnZ4R9mapqSiFQfTVvHFg_SrLYifwz8Fc","kty":"EC","use":"sig","x":"Z_zRBEUbhtqDzme6kcGbtV3X4BxARVC8ySoC02IbQu8","y":"zXFljZyvxo9cgvCdcJfrmww9HeSiJUFbI98UUwMkPss"}}'
 }
+
+@test "Import and export SDR" {
+    cat <<EOF | save_asset valid_sdr.data.json
+{"selective_disclosure_request":{"fields":["given_name","age"],"object":{"age":42,"family_name":"Lippo","given_name":"Mimmo"}}}
+EOF
+    cat <<EOF | zexe valid_sdr.zen valid_sdr.data.json
+Scenario 'sd_jwt'
+
+Given I have 'selective_disclosure_request'
+Then print data
+EOF
+    save_output valid_sdr.out.json
+    assert_output "$(cat valid_sdr.data.json)"
+}
