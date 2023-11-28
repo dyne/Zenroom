@@ -50,9 +50,7 @@ When("create credential key with secret ''",function(sec)
 	ACK.keyring.credential = INT.new(secret)
 end)
 
-When(
-	'create issuer key',
-	function()
+When('create issuer key',function()
 		initkeyring'issuer'
 		ACK.keyring.issuer = CRED.issuer_keygen()
 	end
@@ -132,10 +130,8 @@ ZEN:add_schema(
 	  }
    }
 )
-When(
-   'create credential signature',
-   function()
-      have 'credential request'
+When('create credential signature',function()
+		have 'credential request'
       havekey'issuer'
       ACK.credential_signature =
 	 CRED.blind_sign(ACK.keyring.issuer, ACK.credential_request)
@@ -147,9 +143,7 @@ When(
       new_codec'verifier'
    end
 )
-When(
-   'create credentials',
-   function()
+When('create credentials',function()
       have 'credential signature'
       havekey'credential'
       -- prepare output with an aggregated sigma credential
@@ -160,9 +154,7 @@ When(
    end
 )
 
-When(
-   "aggregate credentials in ''",
-   function(creds)
+When("aggregate credentials in ''",function(creds)
       local cred_t = have(creds)
       havekey'credential'
       -- prepare output with an aggregated sigma credential
@@ -208,9 +200,7 @@ ZEN:add_schema(
    }
 )
 
-When(
-	'aggregate issuer public keys',
-	function()
+When('aggregate issuer public keys',function()
 		have 'issuer public key'
 		if not ACK.verifiers then
 			ACK.verifiers = {}
@@ -224,9 +214,7 @@ When(
 )
 
 
-When(
-	"aggregate verifiers in ''",
-	function(issuers)
+When("aggregate verifiers in ''",function(issuers)
 		local issuers_t = have(issuers)
 		empty''
 		local res = { alpha = nil, beta = nil}
@@ -241,9 +229,7 @@ When(
 	end
 )
 
-When(
-	'create credential proof',
-	function()
+When("create credential proof",function()
 		have 'verifiers'
 		have 'credentials'
 		empty 'credential proof'
@@ -253,9 +239,7 @@ When(
 		new_codec('credential proof')
 	end
 )
-IfWhen(
-	'verify credential proof',
-	function()
+IfWhen('verify credential proof',function()
 		have 'credential proof'
 		have 'verifiers'
 		zencode_assert(
