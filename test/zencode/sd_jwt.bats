@@ -200,3 +200,16 @@ EOF
     save_output sd_payload.out.json
     assert_output '[]'
 }
+
+@test "Import SD Payload" {
+
+    cat <<EOF | zexe sd_payload2.zen sd_payload.out.json
+Scenario 'sd_jwt'
+
+Given I have 'selective_disclosure_payload'
+
+Then print data
+EOF
+    save_output sd_payload2.out.json
+    assert_output '[]'
+}

@@ -57,7 +57,7 @@ local function encode_nil(val)
 end
 
 
-local function encode_table(val, stack)
+local function encode_table(val, stack, whitespaces)
   local res = {}
   stack = stack or {}
 
@@ -81,9 +81,12 @@ local function encode_table(val, stack)
     end
     -- Encode
     for i, v in sort_ipairs(val) do
-        res[#res+1] = encode(v, stack)
+        res[#res+1] = encode(v, stack, whitespaces)
     end
     stack[val] = nil
+    if whitespaces then
+        return "[" .. table.concat(res, ", ") .. "]"
+    end
     return "[" .. table.concat(res, ",") .. "]"
 
   else
@@ -92,11 +95,19 @@ local function encode_table(val, stack)
       if type(k) ~= "string" then
         error("invalid table: mixed or invalid key types")
       end
-      local val = encode(v, stack)
+      local val = encode(v, stack, whitespaces)
       if type(val) == 'zenroom.big' then val = val:decimal() end
-      table.insert(res, encode(k, stack) .. ":" .. val)
+      if whitespaces then
+        table.insert(res, encode(k, stack, whitespaces) .. ": " .. val)
+      else
+        table.insert(res, encode(k, stack) .. ":" .. val)
+      end
+      
     end
     stack[val] = nil
+    if whitespaces then
+        return "{" .. table.concat(res, ", ") .. "}"
+    end
     return "{" .. table.concat(res, ",") .. "}"
   end
 end
@@ -134,18 +145,21 @@ local type_func_map = {
 }
 
 
-encode = function(val, stack)
+encode = function(val, stack, whitespaces)
   local t = type(val)
   local f = type_func_map[t]
   if f then
-    return f(val, stack)
+    if whitespaces then
+        return f(val, stack, whitespaces)
+    end
+    return f(val, stack, whitespaces)
   end
   error("unexpected type '" .. t .. "'")
 end
 
 
-function json.raw_encode(val)
-   return(encode(val))
+function json.raw_encode(val, whitespaces)
+   return(encode(val, nil, whitespaces))
    -- sort
    -- local out = "{ "
    -- for k,v in sort_pairs(val) do
