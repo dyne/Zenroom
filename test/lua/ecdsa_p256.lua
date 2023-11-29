@@ -1,4 +1,4 @@
-P256 = require('p256')
+P256 = require('es256')
 
 alice_sk = P256.keygen()
 I.spy(alice_sk)
