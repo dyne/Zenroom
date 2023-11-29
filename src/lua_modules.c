@@ -188,7 +188,7 @@ int zen_require(lua_State *L) {
 		luaL_requiref(L, s, luaopen_qp, 1); }	
 	else if(strcasecmp(s, "ed")  ==0) {
 		luaL_requiref(L, s, luaopen_ed, 1); }
-	else if(strcasecmp(s, "p256")  ==0) {
+	else if(strcasecmp(s, "es256")  ==0) {
 		luaL_requiref(L, s, luaopen_p256, 1); }
 	else {
 		// shall we bail out and abort execution here?
