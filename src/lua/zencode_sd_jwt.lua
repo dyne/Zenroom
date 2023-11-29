@@ -19,6 +19,8 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --]]
 
+local SD_JWT = require'crypto_sd_jwt'
+
 local function import_url_f(obj)
     -- TODO: validation URL
     return O.from_str(obj)
@@ -66,7 +68,7 @@ local BOOLS_METADATA = {
 "typ" (Type) Header Parameter
 "cty" (Content Type) Header Parameter
 ]]
-local JWT_RESERVED_CLAIMS = {"iss", "sub", "aud", "exp", "nbf", "iat", "jti", "typ", "cty"}
+local JWT_RESERVED_CLAIMS = {"iss", "sub", "aud", "exp", "nbf", "iat", "jti", "typ", "cty", "_sd"}
 
 local function check_display(display)
     return display.name and display.locale
@@ -215,6 +217,30 @@ local function import_jwk_key_binding(obj)
     }
 end
 
+local function import_str_dict(obj)
+    return deepmap(function(o)
+        if type(o) == 'string' then
+            return O.from_str(o)
+        elseif type(o) == 'number' then
+            return F.new(o)
+        else
+            return o
+        end
+    end, obj)
+end
+
+local function export_str_dict(obj)
+    return deepmap(function(o)
+        if type(o) == 'zenroom.octet' then
+            return o:string()
+        elseif type(o) == 'zenroom.float' then
+            return tonumber(o)
+        else
+            return o
+        end
+    end, obj)
+end
+
 local function import_selective_disclosure_request(obj)
     zencode_assert(obj.fields, "Input object should have a key 'fields'")
     zencode_assert(obj.object, "Input object should have a key 'object'")
@@ -239,30 +265,28 @@ local function import_selective_disclosure_request(obj)
 
     return {
         fields = deepmap(function(o) return O.from_str(o) end, obj.fields),
-        object = deepmap(function(o)
-            if type(o) == 'string' then
-                return O.from_str(o)
-            elseif type(o) == 'number' then
-                return F.new(o)
-            else
-                return o
-            end
-        end, obj.object),
+        object = import_str_dict(obj.object),
     }
 end
 
 local function export_selective_disclosure_request(obj)
     return {
         fields = deepmap(function(o) return o:str() end, obj.fields),
-        object = deepmap(function(o)
-            if type(o) == 'zenroom.octet' then
-                return o:string()
-            elseif type(o) == 'zenroom.float' then
-                return tonumber(o)
-            else
-                return o
-            end
-        end, obj.object),
+        object = export_str_dict(obj.object),
+    }
+end
+
+local function import_selective_disclosure_payload(obj)
+    return {
+        payload = import_str_dict(obj.payload),
+        disclosures = import_str_dict(obj.disclosures),
+    }
+end
+
+local function export_selective_disclosure_payload(obj)
+    return {
+        disclosures = export_str_dict(obj.disclosures),
+        payload = export_str_dict(obj.payload),
     }
 end
 
@@ -284,6 +308,10 @@ ZEN:add_schema(
             import = import_selective_disclosure_request,
             export = export_selective_disclosure_request,
         },
+        selective_disclosure_payload = {
+            import = import_selective_disclosure_payload,
+            export = export_selective_disclosure_payload,
+        }
     }
 )
 
@@ -397,38 +425,27 @@ IfWhen("verify '' matches ''", function(sdr_name, ssd_name)
     zencode_assert(verify_ssd_match(ssd, sdr), "No credential supported matches")
 end)
 
-local function create_sd(sdr)
-    local disclosures = {}
-    local jwt_payload = deepcopy(sdr.object)
-    jwt_payload._sd = {}
-    for _, f in pairs(sdr.fields) do
-        local f = f:str()
-        local encode = nil
-        if type(sdr.object[f]) == 'table' then
-            encode = deepmap(function(o) return o:str() end, sdr.object[f])
-        elseif type(sdr.object[f]) == 'zenroom.octet' then
-            encode = sdr.object[f]:str()
-        else
-            encode = sdr.object[f]
-        end
-        local disclosure = {
-            O.random(16):url64(),
-            f,
-            encode
-        }
-        disclosures[#disclosures+1] = disclosure
-        jwt_payload[f] = nil
-        jwt_payload._sd[#jwt_payload._sd+1] = sha256(
-            O.from_string(JSON.raw_encode(disclosure)):url64())
-    end
-    return I.spy({
-        payload=jwt_payload,
-        disclosures=disclosures,
-    })
-end
-
 When("create selective disclosure payload of ''", function(sdr_name)
     local sdr = have(sdr_name)
-    ACK.selective_disclosure_payload = create_sd(sdr)
+    local sdp = SD_JWT.create_sd(sdr)
+    for i = 1, #sdp.disclosures do
+        local tmp = sdp.disclosures[i][3]
+        if type(tmp) == 'table' then
+            tmp = deepmap(function(o) return O.from_string(o) end, sdp.disclosures[i][3])
+        elseif type(tmp) == 'string' then
+            tmp = O.from_string(tmp)
+        end
+        sdp.disclosures[i] = {O.from_string(sdp.disclosures[i][1]), O.from_string(sdp.disclosures[i][2]), tmp}
+    end
+    for k,v in pairs(sdp.payload) do
+        if k ~= "_sd" then
+            v = import_str_dict(v)
+        else
+            for i = 1, #sdp.payload._sd do
+                v[i] = O.from_string(v[i]:url64())
+            end
+        end
+    end
+    ACK.selective_disclosure_payload = sdp
     new_codec('selective_disclosure_payload')
 end)
