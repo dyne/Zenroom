@@ -1,4 +1,4 @@
-local P256 = require('p256')
+local P256 = require('es256')
 
 -- this is a simple rsp parser by jaromil@dyne.org
 -- an rsp file must be loaded in DATA
