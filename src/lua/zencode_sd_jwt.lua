@@ -1,10 +1,10 @@
 --[[
---This file is part of zenroom
+--This file is part of Zenroom
 --
 --Copyright (C) 2023 Dyne.org foundation
 --
 --designed, written and maintained by:
---Rebecca Selvaggini, Alberto Lerda and Denis Roio
+--Rebecca Selvaggini, Alberto Lerda, Denis Roio and Andrea D'Intino
 --
 --This program is free software: you can redistribute it and/or modify
 --it under the terms of the GNU Affero General Public License v3.0
@@ -272,7 +272,7 @@ ZEN:add_schema(
             import = import_supported_selective_disclosure,
             export = export_supported_selective_disclosure
         },
-        p256_public_jwk = {
+        es256_public_jwk = {
             import = import_jwk,
             export = export_jwk
         },
@@ -327,9 +327,9 @@ When("use supported selective disclosure to disclose '' named '' with id ''", fu
 end)
 
 ----for reference on JSON Web Key see RFC7517
-When("create p256 public jwk with ''", function(pk)
-    local pubk = load_pubkey_compat(pk, 'p256')
-    zencode_assert(#pubk == 64, "Invalid p256 public key: expected length is 64, given is "..#pubk)
+When("create es256 public jwk with ''", function(pk)
+    local pubk = load_pubkey_compat(pk, 'es256')
+    zencode_assert(#pubk == 64, "Invalid es256 public key: expected length is 64, given is "..#pubk)
     local jwk = {
         kty = O.from_string("EC"),
         crv = O.from_string("P-256"),
@@ -338,9 +338,9 @@ When("create p256 public jwk with ''", function(pk)
         x = pubk:sub(1,32),
         y = pubk:sub(33,64)
     }
-    empty'p256_public_jwk'
-    ACK.p256_public_jwk = jwk
-    new_codec("p256_public_jwk")
+    empty'es256_public_jwk'
+    ACK.es256_public_jwk = jwk
+    new_codec("es256_public_jwk")
 end)
 
 When("set kid in jwk '' to ''", function(jw, kid)

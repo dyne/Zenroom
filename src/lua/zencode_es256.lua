@@ -20,71 +20,71 @@
 --
 --]]
 
-local P256 = require('p256')
+local ES256 = require('es256')
 
 ZEN:add_schema(
    {
-      p256_public_key = { import = O.from_base64,
+      es256_public_key = { import = O.from_base64,
 			   export = O.to_base64 },
-      p256_signature = { import = O.from_base64,
+      es256_signature = { import = O.from_base64,
 			  export = O.to_base64 }
    }
 )
 
 -- generate the private key
-When('create p256 key',function()
-	initkeyring'p256'
-	ACK.keyring.p256 = P256.keygen()
+When('create es256 key',function()
+	initkeyring'es256'
+	ACK.keyring.es256 = ES256.keygen()
 end)
 
 -- generate the public key
-When('create p256 public key',function()
-	empty'p256 public key'
-	local sk = havekey'p256'
-	ACK.p256_public_key = P256.pubgen(sk)
-	new_codec('p256 public key', { zentype = 'e',
+When('create es256 public key',function()
+	empty'es256 public key'
+	local sk = havekey'es256'
+	ACK.es256_public_key = ES256.pubgen(sk)
+	new_codec('es256 public key', { zentype = 'e',
 					encoding = 'base64'})
 end)
 
 local function _pubkey_from_secret(sec)
    local sk = have(sec)
-   initkeyring'p256'
-   P256.pubgen(sk)
-   ACK.keyring.p256 = sk
+   initkeyring'es256'
+   ES256.pubgen(sk)
+   ACK.keyring.es256 = sk
 end
 
-When("create p256 key with secret key ''",
+When("create es256 key with secret key ''",
      _pubkey_from_secret
 )
 
-When("create p256 key with secret ''",
+When("create es256 key with secret ''",
      _pubkey_from_secret
 )
 
-When("create p256 public key with secret key ''",function(sec)
+When("create es256 public key with secret key ''",function(sec)
 	local sk = have(sec)
-	empty'p256 public key'
-	ACK.p256_public_key = P256.pubgen(sk)
-	new_codec('p256 public key', { zentype = 'e',
+	empty'es256 public key'
+	ACK.es256_public_key = ES256.pubgen(sk)
+	new_codec('es256 public key', { zentype = 'e',
 					encoding = 'base64'})
 end)
 
 -- generate the sign for a msg and verify
-When("create p256 signature of ''",function(doc)
-	local sk = havekey'p256'
+When("create es256 signature of ''",function(doc)
+	local sk = havekey'es256'
 	local obj = have(doc)
-	empty'p256 signature'
-	ACK.p256_signature = P256.sign(sk, zencode_serialize(obj))
-	new_codec('p256 signature', { zentype = 'e',
+	empty'es256 signature'
+	ACK.es256_signature = ES256.sign(sk, zencode_serialize(obj))
+	new_codec('es256 signature', { zentype = 'e',
 				       encoding = 'base64'})
 end)
 
-IfWhen("verify '' has a p256 signature in '' by ''",function(msg, sig, by)
-	  local pk = load_pubkey_compat(by, 'p256')
+IfWhen("verify '' has a es256 signature in '' by ''",function(msg, sig, by)
+	  local pk = load_pubkey_compat(by, 'es256')
 	  local m = have(msg)
 	  local s = have(sig)
 	  zencode_assert(
-	     P256.verify(pk, s, zencode_serialize(m)),
-	     'The p256 signature by '..by..' is not authentic'
+	     ES256.verify(pk, s, zencode_serialize(m)),
+	     'The es256 signature by '..by..' is not authentic'
 	  )
 end)
