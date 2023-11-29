@@ -1,8 +1,10 @@
 --[[
 --This file is part of zenroom
 --
---Copyright (C) 2022 Dyne.org foundation
---designed, written and maintained by 
+--Copyright (C) 2023 Dyne.org foundation
+--
+--designed, written and maintained by:
+--Rebecca Selvaggini, Alberto Lerda and Denis Roio
 --
 --This program is free software: you can redistribute it and/or modify
 --it under the terms of the GNU Affero General Public License v3.0
