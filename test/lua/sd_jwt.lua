@@ -71,7 +71,7 @@ local disclosures = {
 
 for i = 1, #contents do
     print("Test case "..i)
-    local dis, hashd = SD_JWT.create_disclosure(contents[i])
+    local _, hashd, dis = SD_JWT.create_disclosure(contents[i])
 
     zencode_assert(dis == disclosures[i], "Wrong disclosure")
     zencode_assert(hashd == O.from_string(hashed[i]), "Wrong hash")

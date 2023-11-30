@@ -21,6 +21,30 @@
 
 local sd_jwt = {}
 
+-- Given as input a "disclosure array" of the form {salt, key, value}
+-- Return: disclosure = the array in octet form
+--         hashed = the sha256 digest of the encoded array (for _sd)
+--         encoded_dis = the url64+json encoding of the input array (used just for testing)
+function sd_jwt.create_disclosure(dis_arr)
+    -- TODO: disclosure of disctionary
+    -- TODO: problems sub, updated_at
+    local encoded_dis = O.from_string(JSON.raw_encode(dis_arr, true)):url64()
+    local disclosure = {}
+    for i = 1, #dis_arr do
+        if type(dis_arr[i]) == 'table' then
+            disclosure[i] = deepmap(function(o) return O.from_string(o) end, dis_arr[i])
+        elseif type(dis_arr[i]) == 'string' then
+            disclosure[i] = O.from_string(dis_arr[i])
+        end
+    end
+    local hashed = O.from_string(sha256(encoded_dis):url64())
+    return  disclosure, hashed, encoded_dis
+end
+
+-- Given as input a selective disclosure request
+-- Return a table containing two keys:
+--        payload = the jwt containing disclosable object (the credential to be signed by the issuer)
+--        disclosures = the list of disclosure arrays
 function sd_jwt.create_sd(sdr)
     local disclosures = {}
     local jwt_payload = deepcopy(sdr.object)
@@ -35,28 +59,22 @@ function sd_jwt.create_sd(sdr)
         else
             encode = sdr.object[f]
         end
-        local disclosure = {
+        local disclosure_arr = {
             O.random(16):url64(),
             f,
             encode
         }
-        disclosures[#disclosures+1] = disclosure
+        local disclosure, hashed = sd_jwt.create_disclosure(disclosure_arr)
 
+        disclosures[#disclosures+1] = disclosure
         jwt_payload[f] = nil
-        jwt_payload._sd[#jwt_payload._sd+1] = sha256(
-            O.from_string(JSON.raw_encode(disclosure, true)):url64())
+        jwt_payload._sd[#jwt_payload._sd+1] = hashed
     end
 
     return {
         payload=jwt_payload,
         disclosures=disclosures,
     }
-end
-
-function sd_jwt.create_disclosure(dis)
-    local disclosure = O.from_string(JSON.raw_encode(dis, true)):url64()
-    local hashed = O.from_string(sha256(disclosure):url64())
-    return disclosure, hashed
 end
 
 return sd_jwt
