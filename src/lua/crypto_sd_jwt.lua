@@ -19,6 +19,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --]]
 
+local ES256 = require'es256'
 local sd_jwt = {}
 
 -- Given as input a "disclosure array" of the form {salt, key, value}
@@ -74,6 +75,43 @@ function sd_jwt.create_sd(sdr)
     return {
         payload=jwt_payload,
         disclosures=disclosures,
+    }
+end
+
+function sd_jwt.export_str_dict(obj)
+    return deepmap(function(o)
+        if type(o) == 'zenroom.octet' then
+            return o:string()
+        elseif type(o) == 'zenroom.float' then
+            return tonumber(o)
+        else
+            return o
+        end
+    end, obj)
+end
+-- TODO: add test from section A.3 of
+-- https://www.rfc-editor.org/rfc/rfc7515.html
+-- WARNING: the JSON encode is not unique, so I should
+-- return the base64 encoding to be sure to be able to verify it,
+-- but we are in zenroom and if I print the same object I obtain the
+-- same representation, thus I can keep the object and print it only
+-- on export, yay!
+function sd_jwt.create_jwt_es256(payload, sk)
+    local header, b64header, b64payload, hmac
+    header = {
+        alg=O.from_string("ES256"),
+        typ=O.from_string("JWT")
+    }
+    payload_str = sd_jwt.export_str_dict(payload)
+    I.spy(payload_str)
+    b64payload = O.from_string(JSON.raw_encode(payload_str)):url64()
+    I.spy(b64payload)
+
+    local signature = ES256.sign(sk, b64payload)
+    return {
+        header=header,
+        payload=payload,
+        signature=signature,
     }
 end
 

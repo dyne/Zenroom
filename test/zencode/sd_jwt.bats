@@ -192,24 +192,36 @@ EOF
 EOF
     cat <<EOF | zexe sd_payload.zen sd_payload.data.json
 Scenario 'sd_jwt'
+Scenario 'es256'
 
 Given I have 'selective_disclosure_request'
+
+When I create the es256 key
+When I create the es256 public key
 When I create the selective disclosure payload of 'selective_disclosure_request'
+When I create the signed selective disclosure of 'selective disclosure payload' with key es256
 Then print data
+Then print the 'keyring'
 EOF
     save_output sd_payload.out.json
-    assert_output '{"selective_disclosure_payload":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["5-Y_kvJBo3ni_JNNUrFnIA","family_name","Doe"],["VyJ47aH6-hysFuthAZJP-A","email","johndoe@example.com"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"],["5XsSIXmaZbf5ikQgMSVGjQ","phone_number_verified"],["br5gmh-cSRNAvocKCmAD0A","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["6UasczRKmme8SOUwelXq2w","birthdate","1940-01-01"]],"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo"],"nationalities":["US","DE"],"updated_at":1.57e+09}},"selective_disclosure_request":{"fields":["given_name","family_name","email","phone_number","phone_number_verified","address","birthdate"],"object":{"address":{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"},"birthdate":"1940-01-01","email":"johndoe@example.com","family_name":"Doe","given_name":"John","nationalities":["US","DE"],"phone_number":"+1-202-555-0101","phone_number_verified":true,"updated_at":1.57e+09}}}'
+    assert_output '{"es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg==","keyring":{"es256":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="},"selective_disclosure_payload":{"disclosures":[["VyJ47aH6-hysFuthAZJP-A","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","family_name","Doe"],["5XsSIXmaZbf5ikQgMSVGjQ","email","johndoe@example.com"],["br5gmh-cSRNAvocKCmAD0A","phone_number","+1-202-555-0101"],["6UasczRKmme8SOUwelXq2w","phone_number_verified"],["Ll27jjwT4yzd0i-7NGdZAw","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["DR92VSF2l3Az1K1-LyWO1w","birthdate","1940-01-01"]],"payload":{"_sd":["cMZilhOF9uEyvW_vCKx8IkbqfmntjqkV8HCFQ_lgPq0","DjUC3iXDmUj0QQgbZM7PQhhOLI3EjqSNzz3IhCpqQhg","wyoSepSkpJXnOxKlsypeqjr9PMFXf024GlIBPgVKnrg","MW58zqUyooJw5zGmASCETNi4qORcewuTRWDhLMLavis","sftnu87bkbl62AB38gmuyQdX5yD95TxMuzhvyiD7Wb8","dydbjYL8bcTkcXtLZ2e8514B7n7QDnOgOWD5Fniwjdo","84Vp4ymg-8VScgYletGB4TfHboLPkIXLaP3djL2Km0U"],"nationalities":["US","DE"],"updated_at":1.57e+09}},"selective_disclosure_request":{"fields":["given_name","family_name","email","phone_number","phone_number_verified","address","birthdate"],"object":{"address":{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"},"birthdate":"1940-01-01","email":"johndoe@example.com","family_name":"Doe","given_name":"John","nationalities":["US","DE"],"phone_number":"+1-202-555-0101","phone_number_verified":true,"updated_at":1.57e+09}},"signed_selective_disclosure":{"disclosures":[["VyJ47aH6-hysFuthAZJP-A","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","family_name","Doe"],["5XsSIXmaZbf5ikQgMSVGjQ","email","johndoe@example.com"],["br5gmh-cSRNAvocKCmAD0A","phone_number","+1-202-555-0101"],["6UasczRKmme8SOUwelXq2w","phone_number_verified"],["Ll27jjwT4yzd0i-7NGdZAw","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["DR92VSF2l3Az1K1-LyWO1w","birthdate","1940-01-01"]],"jwt":{"header":{"alg":"ES256","typ":"JWT"},"payload":{"_sd":["cMZilhOF9uEyvW_vCKx8IkbqfmntjqkV8HCFQ_lgPq0","DjUC3iXDmUj0QQgbZM7PQhhOLI3EjqSNzz3IhCpqQhg","wyoSepSkpJXnOxKlsypeqjr9PMFXf024GlIBPgVKnrg","MW58zqUyooJw5zGmASCETNi4qORcewuTRWDhLMLavis","sftnu87bkbl62AB38gmuyQdX5yD95TxMuzhvyiD7Wb8","dydbjYL8bcTkcXtLZ2e8514B7n7QDnOgOWD5Fniwjdo","84Vp4ymg-8VScgYletGB4TfHboLPkIXLaP3djL2Km0U"],"nationalities":["US","DE"],"updated_at":1.57e+09},"signature":"zfJnEY9fHtkPtOL0b97DCa7zjV5h13Yazxolw9sfZrcBeKXtLfazItHqku496af55ifywhV2h0a8APHviayFQA=="}}}'
 }
 
-@test "Import SD Payload" {
+@test "Import and export SD Payload" {
 
     cat <<EOF | zexe sd_payload2.zen sd_payload.out.json
 Scenario 'sd_jwt'
+Scenario 'es256'
 
+Given I have 'keyring'
+Given I have the 'es256 public key'
+Given I have 'selective_disclosure_request'
 Given I have 'selective_disclosure_payload'
+Given I have 'signed selective disclosure'
 
 Then print data
+Then print the 'keyring'
 EOF
     save_output sd_payload2.out.json
-    assert_output '{"selective_disclosure_payload":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["5-Y_kvJBo3ni_JNNUrFnIA","family_name","Doe"],["VyJ47aH6-hysFuthAZJP-A","email","johndoe@example.com"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"],["5XsSIXmaZbf5ikQgMSVGjQ","phone_number_verified"],["br5gmh-cSRNAvocKCmAD0A","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["6UasczRKmme8SOUwelXq2w","birthdate","1940-01-01"]],"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo"],"nationalities":["US","DE"],"updated_at":1.57e+09}}}'
+    assert_output "$(cat sd_payload.out.json)"
 }
