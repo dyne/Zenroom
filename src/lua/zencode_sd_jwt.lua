@@ -428,24 +428,7 @@ end)
 When("create selective disclosure payload of ''", function(sdr_name)
     local sdr = have(sdr_name)
     local sdp = SD_JWT.create_sd(sdr)
-    for i = 1, #sdp.disclosures do
-        local tmp = sdp.disclosures[i][3]
-        if type(tmp) == 'table' then
-            tmp = deepmap(function(o) return O.from_string(o) end, sdp.disclosures[i][3])
-        elseif type(tmp) == 'string' then
-            tmp = O.from_string(tmp)
-        end
-        sdp.disclosures[i] = {O.from_string(sdp.disclosures[i][1]), O.from_string(sdp.disclosures[i][2]), tmp}
-    end
-    for k,v in pairs(sdp.payload) do
-        if k ~= "_sd" then
-            v = import_str_dict(v)
-        else
-            for i = 1, #sdp.payload._sd do
-                v[i] = O.from_string(v[i]:url64())
-            end
-        end
-    end
+    sdp.payload = import_str_dict(sdp.payload)
     ACK.selective_disclosure_payload = sdp
     new_codec('selective_disclosure_payload')
 end)

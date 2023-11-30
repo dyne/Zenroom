@@ -198,7 +198,7 @@ When I create the selective disclosure payload of 'selective_disclosure_request'
 Then print data
 EOF
     save_output sd_payload.out.json
-    assert_output '[]'
+    assert_output '{"selective_disclosure_payload":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["5-Y_kvJBo3ni_JNNUrFnIA","family_name","Doe"],["VyJ47aH6-hysFuthAZJP-A","email","johndoe@example.com"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"],["5XsSIXmaZbf5ikQgMSVGjQ","phone_number_verified"],["br5gmh-cSRNAvocKCmAD0A","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["6UasczRKmme8SOUwelXq2w","birthdate","1940-01-01"]],"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo"],"nationalities":["US","DE"],"updated_at":1.57e+09}},"selective_disclosure_request":{"fields":["given_name","family_name","email","phone_number","phone_number_verified","address","birthdate"],"object":{"address":{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"},"birthdate":"1940-01-01","email":"johndoe@example.com","family_name":"Doe","given_name":"John","nationalities":["US","DE"],"phone_number":"+1-202-555-0101","phone_number_verified":true,"updated_at":1.57e+09}}}'
 }
 
 @test "Import SD Payload" {
@@ -211,5 +211,5 @@ Given I have 'selective_disclosure_payload'
 Then print data
 EOF
     save_output sd_payload2.out.json
-    assert_output '[]'
+    assert_output '{"selective_disclosure_payload":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["5-Y_kvJBo3ni_JNNUrFnIA","family_name","Doe"],["VyJ47aH6-hysFuthAZJP-A","email","johndoe@example.com"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"],["5XsSIXmaZbf5ikQgMSVGjQ","phone_number_verified"],["br5gmh-cSRNAvocKCmAD0A","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["6UasczRKmme8SOUwelXq2w","birthdate","1940-01-01"]],"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo"],"nationalities":["US","DE"],"updated_at":1.57e+09}}}'
 }
