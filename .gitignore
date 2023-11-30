@@ -53,6 +53,7 @@ build/*x86
 build/*npm
 *__pycache__*
 *zenroom.egg-info*
+meson
 
 # generated files by milagro
 lib/milacro-crypto-c/build
@@ -72,3 +73,6 @@ lib/mimalloc/build/
 
 # generated files by zstd
 lib/zstd/obj/
+
+# used to build javascript
+emsdk
