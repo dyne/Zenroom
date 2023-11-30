@@ -223,3 +223,9 @@ needed-docs:
 # Linux benchamrk
 linux-benchmark:
 	./test/benchmark/all_tests/bench.sh
+
+clean-test:
+	git clean -f docs
+	git restore docs
+	rm -f test/zenroom
+	rm -f test/zencode-exec
