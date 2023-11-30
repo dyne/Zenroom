@@ -29,6 +29,8 @@ local json = { _version = "0.1.2" }
 -- Encode
 -------------------------------------------------------------------------------
 
+-- TODO(Alberto): check the weird error in test/lua/json.lua
+
 local encode
 
 local escape_char_map = {
@@ -60,7 +62,10 @@ end
 local function encode_table(val, stack, whitespaces)
   local res = {}
   stack = stack or {}
-
+  local separator = ","
+  if whitespaces then
+      separator = ", "
+  end
   -- Circular reference?
   if stack[val] then error("circular reference") end
 
@@ -84,10 +89,7 @@ local function encode_table(val, stack, whitespaces)
         res[#res+1] = encode(v, stack, whitespaces)
     end
     stack[val] = nil
-    if whitespaces then
-        return "[" .. table.concat(res, ", ") .. "]"
-    end
-    return "[" .. table.concat(res, ",") .. "]"
+    return "[" .. table.concat(res, separator) .. "]"
 
   else
     -- Treat as an object
@@ -97,18 +99,14 @@ local function encode_table(val, stack, whitespaces)
       end
       local val = encode(v, stack, whitespaces)
       if type(val) == 'zenroom.big' then val = val:decimal() end
+      local cln = ":"
       if whitespaces then
-        table.insert(res, encode(k, stack, whitespaces) .. ": " .. val)
-      else
-        table.insert(res, encode(k, stack) .. ":" .. val)
+        cln = ": "
       end
-      
+      table.insert(res, encode(k, stack, whitespaces) .. cln .. val)
     end
     stack[val] = nil
-    if whitespaces then
-        return "{" .. table.concat(res, ", ") .. "}"
-    end
-    return "{" .. table.concat(res, ",") .. "}"
+    return "{" .. table.concat(res, separator) .. "}"
   end
 end
 
@@ -149,9 +147,6 @@ encode = function(val, stack, whitespaces)
   local t = type(val)
   local f = type_func_map[t]
   if f then
-    if whitespaces then
-        return f(val, stack, whitespaces)
-    end
     return f(val, stack, whitespaces)
   end
   error("unexpected type '" .. t .. "'")
