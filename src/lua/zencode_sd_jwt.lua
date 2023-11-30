@@ -290,6 +290,34 @@ local function export_selective_disclosure_payload(obj)
     }
 end
 
+local function import_signed_selective_disclosure(obj)
+    -- export the whole obj as string dictionary but the signature
+    local signature = obj.jwt.signature
+    obj.jwt.signature = nil
+    local jwt = import_str_dict(obj.jwt)
+    obj.jwt.signature = signature
+
+    jwt.signature = O.from_base64(signature)
+    return {
+        jwt = jwt,
+        disclosures = import_str_dict(obj.disclosures),
+    }
+end
+
+local function export_signed_selective_disclosure(obj)
+    -- export the whole obj as string dictionary but the signature
+    local signature = obj.jwt.signature
+    obj.jwt.signature = nil
+    local jwt = export_str_dict(obj.jwt)
+    obj.jwt.signature = signature
+
+    jwt.signature = signature:base64()
+    return {
+        jwt = jwt,
+        disclosures = export_str_dict(obj.disclosures),
+    }
+end
+
 ZEN:add_schema(
     {
         supported_selective_disclosure = {
@@ -311,7 +339,11 @@ ZEN:add_schema(
         selective_disclosure_payload = {
             import = import_selective_disclosure_payload,
             export = export_selective_disclosure_payload,
-        }
+        },
+        signed_selective_disclosure = {
+            import = import_signed_selective_disclosure,
+            export = export_signed_selective_disclosure,
+        },
     }
 )
 
@@ -431,4 +463,15 @@ When("create selective disclosure payload of ''", function(sdr_name)
     sdp.payload = import_str_dict(sdp.payload)
     ACK.selective_disclosure_payload = sdp
     new_codec('selective_disclosure_payload')
+end)
+
+When("create signed selective disclosure of '' with key es256", function(sdp_name)
+    local p256 = havekey'es256'
+    local sdp = have(sdp_name)
+
+    ACK.signed_selective_disclosure = {
+        jwt=SD_JWT.create_jwt_es256(sdp.payload, p256),
+        disclosures=sdp.disclosures,
+    }
+    new_codec('signed_selective_disclosure')
 end)

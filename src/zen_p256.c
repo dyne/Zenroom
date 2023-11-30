@@ -108,10 +108,10 @@ static int p256_pubcheck(lua_State *L)
 
 static int p256_sign(lua_State *L)
 {
-	int n_args = lua_gettop(L);
-
 	BEGIN();
 	Z(L);
+
+	int n_args = lua_gettop(L);
 	hash256 sha256;
 	char hash[HASH_SIZE];
 	char *failed_msg = NULL;
