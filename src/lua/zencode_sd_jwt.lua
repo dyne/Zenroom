@@ -399,40 +399,26 @@ When("create jwt key binding with jwk ''", function(jwk_name)
     new_codec("jwk_key_binding")
 end)
 
-local function verify_cred_match(cred, sdr)
-    local all = true
-    for i=1,#cred.order do
-        -- I have to verify that each item of order is inside sdr.fields
-        local found = false
-        for j=1,#sdr.fields do
-            if sdr.fields[j] == cred.order[i] then
-                found = true
-                break
-            end
-        end
-        if not found then
-            all = false
-            break
-        end
-    end
-
-    return all
-end
-
-local function verify_ssd_match(ssd, sdr)
-    for i=1,#ssd.credentials_supported do
-        if verify_cred_match(ssd.credentials_supported[i], sdr) then
-            return true
-        end
-    end
-    return false
-end
-
-IfWhen("verify '' matches ''", function(sdr_name, ssd_name)
-    local sdr = have(sdr_name)
+When("create selective disclosure request from '' with id '' for ''", function(ssd_name, id_name, object_name)
     local ssd = have(ssd_name)
+    local id = have(id_name)
+    local object = have(object_name)
 
-    zencode_assert(verify_ssd_match(ssd, sdr), "No credential supported matches")
+    local creds = ssd.credentials_supported
+    local pos = 0
+    for i=1,#creds do
+        if creds[i].id == id then
+	    pos = i
+	    break
+	end
+    end
+    zencode_assert(pos > 0, "Unknown credential id")
+
+    ACK.selective_disclosure_request = {
+        fields = creds[pos].order,
+        object = object,
+    }
+    new_codec("selective_disclosure_request")
 end)
 
 When("create selective disclosure payload of ''", function(sdr_name)

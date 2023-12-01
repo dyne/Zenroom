@@ -101,9 +101,9 @@ EOF
     assert_output "$(cat valid_sdr.data.json)"
 }
 
-@test "Fail import SDR for using restricted claim" {
-    cat <<EOF | save_asset invalid_sdr.data.json
-{"selective_disclosure_request":{"fields":["given_name","age"],"object":{"iat":42,"family_name":"Lippo","given_name":"Mimmo"}}}
+@test "Fail import SDR for disclosing claim not in object" {
+    cat <<EOF | save_asset invalid_sdr2.data.json
+{"selective_disclosure_request":{"fields":["given_name","age","address"],"object":{"age":42,"family_name":"Lippo","given_name":"Mimmo"}}}
 EOF
     cat <<EOF | save_asset invalid_sdr.zen
 Scenario 'sd_jwt'
@@ -111,14 +111,7 @@ Scenario 'sd_jwt'
 Given I have 'selective_disclosure_request'
 Then print data
 EOF
-    run $ZENROOM_EXECUTABLE -z -a invalid_sdr.data.json invalid_sdr.zen
-    assert_line --partial 'SD request can not contain a claim with key'
-}
 
-@test "Fail import SDR for disclosing claim not in object" {
-    cat <<EOF | save_asset invalid_sdr2.data.json
-{"selective_disclosure_request":{"fields":["given_name","age","address"],"object":{"age":42,"family_name":"Lippo","given_name":"Mimmo"}}}
-EOF
     run $ZENROOM_EXECUTABLE -z -a invalid_sdr2.data.json invalid_sdr.zen
     assert_line --partial 'is not a key in the object'
 }
@@ -131,34 +124,24 @@ EOF
     assert_line --partial 'The object with key fields must be a string array'
 }
 
-@test "SDR matches SSD" {
-    cat <<EOF | zexe sdr_matches_ssd.zen valid_sdr.data.json metadata.keys.json
+@test "SSD to SDR" {
+    cat <<EOF | save_asset object.data.json
+{"object":{"age":42,"family_name":"Lippo","given_name":"Mimmo"}, "id": "ab8c936e-b9ab-4cf5-9862-c3a25bb82996"}
+EOF
+    cat <<EOF | zexe ssd_to_sdr.zen object.data.json metadata.keys.json
 Scenario 'sd_jwt'
 
-Given I have 'selective_disclosure_request'
 Given I have 'supported_selective_disclosure'
-When I verify the 'selective_disclosure_request' matches 'supported selective disclosure'
-Then print the string 'ok'
+Given I have a 'string' named 'id'
+Given I have a 'string dictionary' named 'object'
+When I create the selective disclosure request from 'supported_selective_disclosure' with id 'id' for 'object'
+Then print the 'selective_disclosure_request'
 EOF
-    save_output sdr_matches_ssd.out.json
-    assert_output '{"output":["ok"]}'
+    save_output ssd_to_sdr.out.json
+    assert_output '{"selective_disclosure_request":{"fields":["given_name","family_name"],"object":{"age":42,"family_name":"Lippo","given_name":"Mimmo"}}}'
 }
 
-@test "SDR doesn't match SSD" {
-    cat <<EOF | zexe sdr_does_not_match_ssd.zen valid_sdr.data.json metadata2.out.json
-Scenario 'sd_jwt'
-
-Given I have 'selective_disclosure_request'
-Given I have 'supported_selective_disclosure'
-If I verify the 'selective_disclosure_request' matches 'supported selective disclosure'
-Then print the string 'failed'
-endif
-EOF
-    save_output sdr_matches_ssd.out.json
-    assert_output '[]'
-}
-
-# TODO: problems sub, updated_at
+# TODO: problems updated_at
 
 @test "Create SD Payload" {
     cat <<EOF | save_asset sd_payload.data.json
