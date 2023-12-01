@@ -247,5 +247,5 @@ EOF
     Then print the 'b64' as 'number'
 EOF
     run $ZENROOM_EXECUTABLE -z -a float_from_base64_fail.data float_from_base64_fail.zen
-    assert_line '[W]  Could not read the float number'
+    assert_line --partial 'Could not read the float number'
 }
