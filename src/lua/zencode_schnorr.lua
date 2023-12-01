@@ -67,13 +67,13 @@ ZEN:add_schema(
 
 
 -- generate the private key
-When('create schnorr key',function()
+When("create schnorr key",function()
 	initkeyring'schnorr'
 	ACK.keyring.schnorr = SCH.keygen()
 end)
 
 -- generate the public key
-When('create schnorr public key',function()
+When("create schnorr public key",function()
 	empty'schnorr public key'
 	local sk = havekey'schnorr'
 	ACK.schnorr_public_key = SCH.pubgen(sk)

@@ -140,7 +140,7 @@ When("create petition ''",function(uid)
 		-- OUT.petition_ecdh_sign = map(ACK.petition_ecdh_sign, hex)
 end)
 
-When('verify new petition to be empty',function()
+When("verify new petition to be empty",function()
 		zencode_assert(
 			ECP.isinf(ACK.petition.scores.pos.left),
 			'Invalid new petition: positive left score is not zero'
@@ -181,7 +181,7 @@ When("create petition signature ''",function(uid)
         new_codec('petition_signature')
 end)
 
-IfWhen('verify signature proof is correct',function()
+IfWhen("verify signature proof is correct",function()
 		zencode_assert(
 			CRED.verify_cred_uid(
 				ACK.issuer_public_key,
@@ -193,7 +193,7 @@ IfWhen('verify signature proof is correct',function()
 		)
 end)
 
-IfWhen('verify petition signature is not a duplicate', function()
+IfWhen("verify petition signature is not a duplicate", function()
     if luatype(ACK.petition.list) == 'table' then
         zencode_assert(
             (not array_contains(
@@ -208,7 +208,7 @@ IfWhen('verify petition signature is not a duplicate', function()
     table.insert(ACK.petition.list, ACK.petition_signature.uid_signature)
 end)
 
-IfWhen('verify petition signature is just one more', function()
+IfWhen("verify petition signature is just one more", function()
     -- verify that the signature is +1 (no other value supported)
     ACK.petition_signature.one =
         PET.prove_sign_petition(ACK.petition.owner, BIG.new(1))
@@ -222,7 +222,7 @@ IfWhen('verify petition signature is just one more', function()
 
 end)
 
-When('add signature to petition',function()
+When("add signature to petition",function()
 		-- add the signature to the petition count
 		local scores = ACK.petition.scores
 		local psign = ACK.petition_signature.one
@@ -234,7 +234,7 @@ When('add signature to petition',function()
 		ACK.petition.scores = scores
 end)
 
-When('create a petition tally',function()
+When("create a petition tally",function()
 		havekey'credential'
 		zencode_assert(ACK.petition, 'Petition not found')
 		ACK.petition_tally =
@@ -246,7 +246,7 @@ When('create a petition tally',function()
         new_codec('petition_tally')
 end)
 
-When('count petition results',function()
+When("count petition results",function()
 		zencode_assert(ACK.petition, 'Petition not found')
 		zencode_assert(ACK.petition_tally, 'Tally not found')
 		zencode_assert(

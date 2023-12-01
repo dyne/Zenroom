@@ -125,13 +125,13 @@ ZEN:add_schema(
 ---------------------------------------- PVSS initialization -------------------------------------
 
 -- Participant generates the private key
-When('create pvss key',function()
+When("create pvss key",function()
     initkeyring'pvss'
     ACK.keyring.pvss = PVSS.keygen()
 end)
 
 -- Participant generates the public key
-When('create pvss public key',function()
+When("create pvss public key",function()
     empty'pvss public key'
     local sk = havekey'pvss'
     ACK.pvss_public_key = PVSS.sk2pk(GENERATORS, sk)

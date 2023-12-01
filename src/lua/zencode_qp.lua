@@ -146,13 +146,13 @@ ZEN:add_schema(
 --# DILITHIUM #--
 
 -- generate the private key
-When('create dilithium key',function()
+When("create dilithium key",function()
 	initkeyring'dilithium'
 	ACK.keyring.dilithium = QP.sigkeygen().private
 end)
 
 -- generate the public key
-When('create dilithium public key',function()
+When("create dilithium public key",function()
 	empty'dilithium public key'
 	local sk = havekey'dilithium'
 	ACK.dilithium_public_key = QP.sigpubgen(sk)
@@ -188,13 +188,13 @@ end)
 --# KYBER #--
 
 -- generate the private key
-When('create kyber key',function()
+When("create kyber key",function()
 	initkeyring'kyber'
 	ACK.keyring.kyber = QP.kemkeygen().private
 end)
 
 -- generate public key
-When('create kyber public key',function()
+When("create kyber public key",function()
 	empty'kyber public key'
 	local sk = havekey'kyber'
 	ACK.kyber_public_key = QP.kempubgen(sk)
@@ -230,13 +230,13 @@ end)
 --# NTRUP #--
 
 -- generate the private key
-When('create ntrup key',function()
+When("create ntrup key",function()
 	initkeyring'ntrup'
 	ACK.keyring.ntrup = QP.ntrup_keygen().private
 end)
 
 -- generate the public key
-When('create ntrup public key',function()
+When("create ntrup public key",function()
 	empty'ntrup public key'
 	local sk = havekey'ntrup'
 	ACK.ntrup_public_key = QP.ntrup_pubgen(sk)

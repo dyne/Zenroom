@@ -32,13 +32,13 @@ ZEN:add_schema(
 )
 
 -- generate the private key
-When('create eddsa key',function()
+When("create eddsa key",function()
 	initkeyring'eddsa'
 	ACK.keyring.eddsa = ED.secgen()
 end)
 
 -- generate the public key
-When('create eddsa public key',function()
+When("create eddsa public key",function()
 	empty'eddsa public key'
 	local sk = havekey'eddsa'
 	ACK.eddsa_public_key = ED.pubgen(sk)
