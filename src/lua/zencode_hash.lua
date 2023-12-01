@@ -22,9 +22,7 @@
 
 
 -- hashing single strings
-When(
-    "create hash of ''",
-    function(s)
+When("create hash of ''",function(s)
         local src = have(s)
         if luatype(src) == 'table' then
             src = zencode_serialize(src) -- serialize tables using zenroom's algo
@@ -34,9 +32,7 @@ When(
     end
 )
 
-When(
-    "create hash of '' using ''",
-    function(s, h)
+When("create hash of '' using ''",function(s, h)
         local src = have(s)
         if luatype(src) == 'table' then
             src = zencode_serialize(src)
@@ -53,7 +49,7 @@ When(
     end
 )
 
-When("create hash to point '' of ''", function(curve, object)
+When("create hash to point '' of ''",function(curve, object)
     local F = _G[curve]
     zencode_assert(
             luatype(F.hashtopoint) == 'function',
@@ -65,9 +61,7 @@ When("create hash to point '' of ''", function(curve, object)
     new_codec('hash_to_point', { zentype='e' })
 end)
 
-When(
-    "create hashes of each object in ''",
-    function(arr)
+When("create hashes of each object in ''",function(arr)
         local A = have(arr)
         local count = isarray(A)
         zencode_assert(count > 0, 'Object is not an array: ' .. arr)
@@ -77,9 +71,7 @@ When(
 )
 
 -- HMAC from RFC2104.
-When(
-    "create HMAC of '' with key ''",
-    function(obj, key)
+When("create HMAC of '' with key ''",function(obj, key)
         local src = have(obj)
         if luatype(src) == 'table' then
             src = zencode_serialize(src)
@@ -94,9 +86,7 @@ When(
     end
 )
 
-When(
-    "create key derivation of ''",
-    function(obj)
+When("create key derivation of ''",function(obj)
         local src = have(obj)
         if luatype(src) == 'table' then
             src = zencode_serialize(src)
@@ -106,9 +96,7 @@ When(
     end
 )
 
-When(
-    "create key derivations of each object in ''",
-    function(tab)
+When("create key derivations of each object in ''",function(tab)
         local t = have(tab)
         zencode_assert(luatype(t) == 'table', 'Object is not a table: ' .. tab)
         ACK.key_derivations =
@@ -133,24 +121,18 @@ local function _pbkdf2_f(src, pass, n)
     new_codec('key derivation', { zentype = 'e' })
 end
 
-When(
-    "create key derivation of '' with password ''",
-    function(obj, salt)
+When("create key derivation of '' with password ''",function(obj, salt)
 	_pbkdf2_f(have(obj), have(salt), 5000)
     end
 )
 
-When(
-    "create key derivation of '' with '' rounds",
-    function(obj, iter)
+When("create key derivation of '' with '' rounds",function(obj, iter)
 	local n = tonumber(iter) or tonumber(tostring(have(iter)))
 	_pbkdf2_f(have(obj), nil, n)
     end
 )
 
-When(
-    "create key derivation of '' with '' rounds with password ''",
-    function(obj, iter, salt)
+When("create key derivation of '' with '' rounds with password ''",function(obj, iter, salt)
 	local n = tonumber(iter) or tonumber(tostring(have(iter)))
 	_pbkdf2_f(have(obj), have(salt), n)
     end
