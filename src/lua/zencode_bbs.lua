@@ -132,13 +132,13 @@ ZEN:add_schema(
 --]]
 
 -- generate the private key
-When('create bbs key',function()
+When("create bbs key",function()
     initkeyring'bbs'
     ACK.keyring.bbs = BBS.keygen()
 end)
 
 -- generate the public key
-When('create bbs public key',function()
+When("create bbs public key",function()
     empty'bbs public key'
     local sk = havekey'bbs'
     ACK.bbs_public_key = BBS.sk2pk(sk)

@@ -34,7 +34,7 @@ local function import_issuer_pk_f(obj)
 end
 
 -- credential keypair operations
-When('create credential key',function()
+When("create credential key",function()
 	initkeyring'credential'
 	ACK.keyring.credential = INT.random()
 end)
@@ -50,13 +50,13 @@ When("create credential key with secret ''",function(sec)
 	ACK.keyring.credential = INT.new(secret)
 end)
 
-When('create issuer key',function()
+When("create issuer key",function()
 		initkeyring'issuer'
 		ACK.keyring.issuer = CRED.issuer_keygen()
 	end
 )
 
-When('create issuer public key',function()
+When("create issuer public key",function()
 	havekey'issuer'
 	ACK.issuer_public_key = {
 	   alpha = G2 * ACK.keyring.issuer.x,
@@ -100,7 +100,7 @@ ZEN:add_schema(
    }
 )
 
-When('create credential request', function()
+When("create credential request", function()
 	havekey'credential'
 	ACK.credential_request = CRED.prepare_blind_sign(ACK.keyring.credential)
 	new_codec('credential request')
@@ -130,7 +130,7 @@ ZEN:add_schema(
 	  }
    }
 )
-When('create credential signature',function()
+When("create credential signature",function()
 		have 'credential request'
       havekey'issuer'
       ACK.credential_signature =
@@ -143,7 +143,7 @@ When('create credential signature',function()
       new_codec'verifier'
    end
 )
-When('create credentials',function()
+When("create credentials",function()
       have 'credential signature'
       havekey'credential'
       -- prepare output with an aggregated sigma credential
@@ -200,7 +200,7 @@ ZEN:add_schema(
    }
 )
 
-When('aggregate issuer public keys',function()
+When("aggregate issuer public keys",function()
 		have 'issuer public key'
 		if not ACK.verifiers then
 			ACK.verifiers = {}
@@ -239,7 +239,7 @@ When("create credential proof",function()
 		new_codec('credential proof')
 	end
 )
-IfWhen('verify credential proof',function()
+IfWhen("verify credential proof",function()
 		have 'credential proof'
 		have 'verifiers'
 		zencode_assert(

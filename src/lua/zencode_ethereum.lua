@@ -201,12 +201,12 @@ ZEN:add_schema(
         },
 })
 
-When('create ethereum key', function()
+When("create ethereum key", function()
 	initkeyring'ethereum'
 	ACK.keyring.ethereum = ECDH.keygen().private
 end)
 
-When('create ethereum address', function()
+When("create ethereum address", function()
 	empty'ethereum address'
 	local pk = ACK.ethereum_public_key
 	if not pk then

@@ -147,8 +147,8 @@ local function _keygen(name)
 	local kp = ECDH.keygen()
 	ACK.keyring[name] = kp.private
 end
-When('create bitcoin key', function() _keygen('bitcoin') end)
-When('create testnet key', function() _keygen('testnet') end)
+When("create bitcoin key", function() _keygen('bitcoin') end)
+When("create testnet key", function() _keygen('testnet') end)
 
 local function _import_wif(sec, name)
 		local sk = have(sec)
@@ -212,8 +212,8 @@ local function _create_tx(name, recipient)
 	ACK[name..'_transaction'] = tx
 	new_codec(name..'_transaction') -- TODO: { schema = 'transaction' })
 end
-When('create bitcoin transaction', function() _create_tx('bitcoin') end)
-When('create testnet transaction', function() _create_tx('testnet') end)
+When("create bitcoin transaction", function() _create_tx('bitcoin') end)
+When("create testnet transaction", function() _create_tx('testnet') end)
 When("create bitcoin transaction to ''", function(recipient) _create_tx('bitcoin', recipient) end)
 When("create testnet transaction to ''", function(recipient) _create_tx('testnet', recipient) end)
 

@@ -103,7 +103,7 @@ local function _makeuid(src)
    return(uid)
 end
 
-When('create reflow key',function()
+When("create reflow key",function()
         -- keygen: δ = r.O ; γ = δ.G2
         initkeyring 'reflow'
         ACK.keyring.reflow = INT.random()
@@ -122,7 +122,7 @@ function(sec)
     ACK.keyring.reflow = INT.new(sk)
 end)
 
-When('create reflow public key',function()
+When("create reflow public key",function()
         empty 'reflow public key'
         havekey 'reflow'
         ACK.reflow_public_key = G2 * ACK.keyring.reflow
@@ -204,7 +204,7 @@ end
 When("create reflow seal with identity ''",_create_reflow_seal_f)
 When("create reflow seal",function() _create_reflow_seal_f('reflow identity') end)
 
-When('create reflow signature',function()
+When("create reflow signature",function()
 	empty 'reflow signature'
 	have 'reflow seal'
 	have 'issuer public key'
@@ -238,7 +238,7 @@ When('create reflow signature',function()
 	new_codec('reflow signature')
 end)
 
-When('prepare credentials for verification',function()
+When("prepare credentials for verification",function()
         have 'credential'
         local res = false
         for _, v in pairs(ACK.issuer_public_key) do
@@ -252,7 +252,7 @@ When('prepare credentials for verification',function()
         ACK.verifiers = res
 end)
 
-IfWhen('verify reflow signature credential',function()
+IfWhen("verify reflow signature credential",function()
         have 'reflow_signature'
         have 'verifiers'
         have 'reflow_seal'
@@ -279,7 +279,7 @@ IfWhen("verify reflow signature fingerprint is new", function()
     )
 end)
 
-When('add reflow fingerprint to reflow seal',function()
+When("add reflow fingerprint to reflow seal",function()
         have 'reflow_signature'
         have 'reflow_seal'
         if not ACK.reflow_seal.fingerprints then
@@ -294,14 +294,14 @@ When('add reflow fingerprint to reflow seal',function()
         end
 end)
 
-When('add reflow signature to reflow seal',function()
+When("add reflow signature to reflow seal",function()
         have 'reflow_seal'
         have 'reflow_signature'
         ACK.reflow_seal.SM =
             ACK.reflow_seal.SM + ACK.reflow_signature.signature
 end)
 
-IfWhen('verify reflow seal is valid',function()
+IfWhen("verify reflow seal is valid",function()
         have 'reflow_seal'
         zencode_assert(
             ECP2.miller(ACK.reflow_seal.verifier, ACK.reflow_seal.identity)
