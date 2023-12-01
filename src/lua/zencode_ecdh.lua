@@ -65,16 +65,11 @@ ZEN:add_schema(
 	}
 )
 
-When(
-	"create ecdh key",
-	function()
+When("create ecdh key",function()
 		initkeyring'ecdh'
 		ACK.keyring.ecdh = ECDH.keygen().private
-	end
-)
-When(
-	"create ecdh public key",
-	function()
+end)
+When("create ecdh public key",function()
 		empty'ecdh public key'
 		local sk = havekey'ecdh'
 		ACK.ecdh_public_key = ECDH.pubgen(sk)
@@ -95,9 +90,7 @@ When("create ecdh key with secret ''",function(sec)
 end)
 
 -- encrypt with a header and secret
-When(
-	"encrypt secret message '' with ''",
-	function(msg, sec)
+When("encrypt secret message '' with ''",function(msg, sec)
 		local text = have(msg)
 		local sk = have(sec)
 		empty'secret message'
@@ -115,13 +108,10 @@ When(
 			ACK.secret_message.header
 		)
 		new_codec('secret message')
-	end
-)
+end)
 
 -- decrypt with a secret
-When(
-	"decrypt text of '' with ''",
-	function(msg, sec)
+When("decrypt text of '' with ''",function(msg, sec)
 		local sk = have(sec)
 		local text = have(msg)
 		empty'text'
@@ -140,8 +130,7 @@ When(
 			   'Decryption error: authentication failure, checksum mismatch')
 		new_codec'text'
 		new_codec'checksum'
-	end
-)
+end)
 
 -- check various locations to find the public key
 local function _pubkey_compat(_key)
@@ -160,9 +149,7 @@ local function _pubkey_compat(_key)
 end
 
 -- encrypt to a single public key
-When(
-	"encrypt secret message of '' for ''",
-	function(msg, _key)
+When("encrypt secret message of '' for ''",function(msg, _key)
 		local sk = havekey'ecdh'
 		have(msg)
 		local pk = _pubkey_compat(_key)
@@ -180,12 +167,9 @@ When(
 			ACK.secret_message.header
 		)
 		new_codec('secret message')
-	end
-)
+end)
 
-When(
-	"decrypt text of '' from ''",
-	function(secret, _key)
+When("decrypt text of '' from ''",function(secret, _key)
 		local sk = havekey'ecdh'
 		have(secret)
 		local pk = _pubkey_compat(_key)
@@ -199,8 +183,7 @@ When(
 		)
 		new_codec'text'
 		new_codec'checksum'
-	end
-)
+end)
 
 -- sign a message and verify
 local function _signing(msg, var)
@@ -221,13 +204,11 @@ local function _verifying(msg, sig, by)
    )
 end
 
-When(
-   "create signature of ''", function(msg)
+When("create signature of ''",function(msg)
    _signing(msg, 'signature')
 end)
 
-When(
-   "create ecdh signature of ''", function(msg)
+When("create ecdh signature of ''",function(msg)
    _signing(msg, 'ecdh_signature')
 end)
 
@@ -248,26 +229,14 @@ end)
 -- The deterministic ecdsa/ecdh above uses the default SHA512 to sign and verify.
 -- If one wnats to use another hash, the ECDH.verify_deterministic should be
 -- called with the correct integer input.
-IfWhen(
-    "verify '' has a ecdh deterministic signature in '' by ''",
-    _verifying
-)
+IfWhen("verify '' has a ecdh deterministic signature in '' by ''",_verifying)
 
 When("create ecdsa deterministic signature of ''",function(msg)
     _signing_det(msg, "ecdsa_deterministic_signature")
 end)
 
-IfWhen(
-    "verify '' has a ecdsa deterministic signature in '' by ''",
-    _verifying
-)
+IfWhen("verify '' has a ecdsa deterministic signature in '' by ''",_verifying)
 
-IfWhen(
-   "verify '' has a signature in '' by ''",
-   _verifying
-)
+IfWhen("verify '' has a signature in '' by ''",_verifying)
 
-IfWhen(
-   "verify '' has a ecdh signature in '' by ''",
-   _verifying
-)
+IfWhen("verify '' has a ecdh signature in '' by ''",_verifying)
