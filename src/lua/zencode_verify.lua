@@ -52,34 +52,26 @@ local function _neq(left, right)
   end
 end
 
-IfWhen(
-  "verify '' is equal to ''",
-  function(l, r)
+IfWhen("verify '' is equal to ''",function(l, r)
     local left = have(l)
     local right = have(r)
     zencode_assert(
       _eq(left, right),
       'Verification fail: elements are not equal: ' .. l .. ' == ' .. r
     )
-  end
-)
+end)
 
-IfWhen(
-  "verify '' is not equal to ''",
-  function(l, r)
+IfWhen("verify '' is not equal to ''",function(l, r)
     local left = have(l)
     local right = have(r)
     zencode_assert(
       _neq(left, right),
       'Verification fail: elements are equal: ' .. l .. ' == ' .. r
     )
-  end
-)
+end)
 
 -- comparison inside dictionary
-IfWhen(
-  "verify '' is equal to '' in ''",
-  function(l, tr, tt)
+IfWhen("verify '' is equal to '' in ''",function(l, tr, tt)
     local left = have(l)
     local tab = have(tt)
     local right = tab[tr]
@@ -88,12 +80,9 @@ IfWhen(
       'Verification fail: elements are not equal: ' ..
         l .. ' == ' .. tt .. '.' .. tr
     )
-  end
-)
+end)
 
-IfWhen(
-  "verify '' is not equal to '' in ''",
-  function(l, tr, tt)
+IfWhen("verify '' is not equal to '' in ''",function(l, tr, tt)
     local left = have(l)
     local tab = have(tt)
     local right = tab[tr]
@@ -102,8 +91,7 @@ IfWhen(
       'Verification fail: elements are equal: ' ..
         l .. ' == ' .. tt .. '.' .. tr
     )
-  end
-)
+end)
 
 -- check a tuple of numbers before comparison, convert to BIG or number, and then compare
 local function numcheck(l, r, op)
@@ -284,19 +272,14 @@ local function validemail(str)
   return true
 end
 
-IfWhen(
-  "verify '' is a email",
-  function(name)
+IfWhen("verify '' is a email",function(name)
     local A = ACK[name]
     zencode_assert(A, 'Object not found: ' .. name)
     local res, err = validemail(O.to_string(A))
     zencode_assert(res, err)
-  end
-)
+end)
 
-IfWhen(
-  "verify '' contains a list of emails",
-  function(name)
+IfWhen("verify '' contains a list of emails",function(name)
     local A = ACK[name]
     zencode_assert(A, 'Object not found: ' .. name)
     zencode_assert(
@@ -308,8 +291,7 @@ IfWhen(
       res, err = validemail(O.to_string(v))
       zencode_assert(res, (err or 'OK') .. ' on email: ' .. O.to_string(v))
     end
-  end
-)
+end)
 
 IfWhen("verify elements in '' are equal", function(obj_name)
     local obj = have(obj_name)
