@@ -103,18 +103,14 @@ local function _makeuid(src)
    return(uid)
 end
 
-When(
-    'create reflow key',
-    function()
+When('create reflow key',function()
         -- keygen: δ = r.O ; γ = δ.G2
         initkeyring 'reflow'
         ACK.keyring.reflow = INT.random()
         -- BLS secret signing key
-    end
-)
+end)
 
-When("create reflow key with secret key ''",
-function(sec)
+When("create reflow key with secret key ''",function(sec)
     local sk = have(sec)
     initkeyring'reflow'
     ACK.keyring.reflow = INT.new(sk)
@@ -126,19 +122,14 @@ function(sec)
     ACK.keyring.reflow = INT.new(sk)
 end)
 
-When(
-    'create reflow public key',
-    function()
+When('create reflow public key',function()
         empty 'reflow public key'
         havekey 'reflow'
         ACK.reflow_public_key = G2 * ACK.keyring.reflow
 	new_codec'reflow public key'
-    end
-)
+end)
 
-When(
-   "aggregate reflow public key from array ''",
-   function(arr)
+When("aggregate reflow public key from array ''",function(arr)
       empty 'reflow public key'
       local s = have(arr)
       zencode_assert(#s ~= 0, "Empty array: "..arr)
@@ -157,16 +148,15 @@ When(
 	 end
       end
       new_codec'reflow public key'
-   end
-)
+end)
 
-When("create reflow identity of ''", function(doc)
+When("create reflow identity of ''",function(doc)
 	empty 'reflow identity'
 	ACK.reflow_identity = _makeuid(have(doc))
 	new_codec'reflow identity'
 end)
 
-When("create reflow identity of objects in ''", function(doc)
+When("create reflow identity of objects in ''",function(doc)
 	empty 'reflow identity'
 	local arr = have(doc)
 	zencode_assert(luatype(arr)=='table', "Object is not an array or dictionary: "..doc)
@@ -192,8 +182,7 @@ When("create reflow identity of objects in ''", function(doc)
 	end
 	ACK.reflow_identity = res
 	new_codec'reflow identity'
-end
-)
+end)
 
 local function _create_reflow_seal_f(uid)
     empty 'reflow seal'
@@ -212,13 +201,10 @@ local function _create_reflow_seal_f(uid)
     new_codec'reflow seal'
 end
 
-When(
-    "create reflow seal with identity ''",
-    _create_reflow_seal_f)
-When("create reflow seal",
-    function() _create_reflow_seal_f('reflow identity') end)
+When("create reflow seal with identity ''",_create_reflow_seal_f)
+When("create reflow seal",function() _create_reflow_seal_f('reflow identity') end)
 
-When('create reflow signature', function()
+When('create reflow signature',function()
 	empty 'reflow signature'
 	have 'reflow seal'
 	have 'issuer public key'
@@ -252,9 +238,7 @@ When('create reflow signature', function()
 	new_codec('reflow signature')
 end)
 
-When(
-    'prepare credentials for verification',
-    function()
+When('prepare credentials for verification',function()
         have 'credential'
         local res = false
         for _, v in pairs(ACK.issuer_public_key) do
@@ -266,12 +250,9 @@ When(
             end
         end
         ACK.verifiers = res
-    end
-)
+end)
 
-IfWhen(
-    'verify reflow signature credential',
-    function()
+IfWhen('verify reflow signature credential',function()
         have 'reflow_signature'
         have 'verifiers'
         have 'reflow_seal'
@@ -284,8 +265,7 @@ IfWhen(
             ),
             'Signature has an invalid credential to sign'
         )
-    end
-)
+end)
 
 IfWhen("verify reflow signature fingerprint is new", function()
     have 'reflow_signature'
@@ -297,12 +277,9 @@ IfWhen("verify reflow signature fingerprint is new", function()
         not ACK.reflow_seal.fingerprints[ACK.reflow_signature.zeta],
         'Signature fingerprint is not new'
     )
-end
-)
+end)
 
-When(
-    'add reflow fingerprint to reflow seal',
-    function()
+When('add reflow fingerprint to reflow seal',function()
         have 'reflow_signature'
         have 'reflow_seal'
         if not ACK.reflow_seal.fingerprints then
@@ -315,22 +292,16 @@ When(
                 ACK.reflow_signature.zeta
             )
         end
-    end
-)
+end)
 
-When(
-    'add reflow signature to reflow seal',
-    function()
+When('add reflow signature to reflow seal',function()
         have 'reflow_seal'
         have 'reflow_signature'
         ACK.reflow_seal.SM =
             ACK.reflow_seal.SM + ACK.reflow_signature.signature
-    end
-)
+end)
 
-IfWhen(
-    'verify reflow seal is valid',
-    function()
+IfWhen('verify reflow seal is valid',function()
         have 'reflow_seal'
         zencode_assert(
             ECP2.miller(ACK.reflow_seal.verifier, ACK.reflow_seal.identity)
@@ -338,12 +309,9 @@ IfWhen(
             ECP2.miller(G2, ACK.reflow_seal.SM),
             "reflow seal doesn't validates"
         )
-    end
-)
+end)
 
-When(
-    "aggregate reflow seal array in ''",
-    function(arr)
+When("aggregate reflow seal array in ''",function(arr)
         have(arr)
         empty 'reflow seal'
         local dst = {}
@@ -366,8 +334,7 @@ When(
         end
         ACK.reflow_seal = dst
 	new_codec'reflow seal'
-    end
-)
+end)
 
 --------------------
 -- MATERIAL PASSPORT
@@ -391,9 +358,7 @@ local function _aggregate_array(arr)
    return(res)
 end
 
-When(
-   "create material passport of ''",
-   function(obj)
+When("create material passport of ''",function(obj)
 	  local key = havekey'reflow'
 	  local cred = have'credentials'
 	  local id = have'reflow identity'
@@ -424,9 +389,7 @@ When(
 	  new_codec'material passport'
 end)
 
-IfWhen(
-   "verify material passport of ''",
-   function(obj)
+IfWhen("verify material passport of ''",function(obj)
 	  local src = have(obj)
 	  local mp = have'material passport'
 	  local pub = have'issuer public key'
@@ -449,9 +412,7 @@ end)
 -- Complex check calculates UID of object and compares to seal, if
 -- correct then validates, else searches for .track array of seals and
 -- calculates aggregated UID, if correct then validates
-IfWhen(
-   "verify material passport of '' is valid",
-   function(obj)
+IfWhen("verify material passport of '' is valid",function(obj)
 	  have(obj)
 	  have(obj..'.seal')
       -- TODO
