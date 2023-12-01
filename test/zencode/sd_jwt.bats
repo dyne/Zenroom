@@ -89,7 +89,7 @@ EOF
 
 @test "Import and export SDR" {
     cat <<EOF | save_asset valid_sdr.data.json
-{"selective_disclosure_request":{"fields":["given_name","age","family_name"],"object":{"age":42,"degree":"math","family_name":"Lippo","given_name":"Mimmo"}}}
+{"selective_disclosure_request":{"fields":["given_name","age","family_name"],"object":{"age":42,"degree":"math","family_name":"Lippo","given_name":"Mimmo","iss":"http://example.org","sub":"user 42"}}}
 EOF
     cat <<EOF | zexe valid_sdr.zen valid_sdr.data.json
 Scenario 'sd_jwt'
@@ -126,7 +126,7 @@ EOF
 
 @test "SSD to SDR" {
     cat <<EOF | save_asset object.data.json
-{"object":{"age":42,"family_name":"Lippo","given_name":"Mimmo"}, "id": "ab8c936e-b9ab-4cf5-9862-c3a25bb82996"}
+{"object":{"age":42,"degree":"math","family_name":"Lippo","given_name":"Mimmo","iss":"http://example.org","sub":"user 42"}, "id": "ab8c936e-b9ab-4cf5-9862-c3a25bb82996"}
 EOF
     cat <<EOF | zexe ssd_to_sdr.zen object.data.json metadata.keys.json
 Scenario 'sd_jwt'
@@ -138,7 +138,7 @@ When I create the selective disclosure request from 'supported_selective_disclos
 Then print the 'selective_disclosure_request'
 EOF
     save_output ssd_to_sdr.out.json
-    assert_output '{"selective_disclosure_request":{"fields":["given_name","family_name"],"object":{"age":42,"family_name":"Lippo","given_name":"Mimmo"}}}'
+    assert_output '{"selective_disclosure_request":{"fields":["given_name","family_name"],"object":{"age":42,"degree":"math","family_name":"Lippo","given_name":"Mimmo","iss":"http://example.org","sub":"user 42"}}}'
 }
 
 # TODO: problems updated_at
@@ -168,7 +168,9 @@ EOF
             "nationalities": [
                 "US",
                 "DE"
-            ]
+            ],
+            "iss":"http://example.org",
+            "sub":"user 42"
         }
     }
 }
@@ -187,7 +189,7 @@ Then print data
 Then print the 'keyring'
 EOF
     save_output sd_payload.out.json
-    assert_output '{"es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg==","keyring":{"es256":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="},"selective_disclosure_payload":{"disclosures":[["VyJ47aH6-hysFuthAZJP-A","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","family_name","Doe"],["5XsSIXmaZbf5ikQgMSVGjQ","email","johndoe@example.com"],["br5gmh-cSRNAvocKCmAD0A","phone_number","+1-202-555-0101"],["6UasczRKmme8SOUwelXq2w","phone_number_verified"],["Ll27jjwT4yzd0i-7NGdZAw","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["DR92VSF2l3Az1K1-LyWO1w","birthdate","1940-01-01"]],"payload":{"_sd":["cMZilhOF9uEyvW_vCKx8IkbqfmntjqkV8HCFQ_lgPq0","DjUC3iXDmUj0QQgbZM7PQhhOLI3EjqSNzz3IhCpqQhg","wyoSepSkpJXnOxKlsypeqjr9PMFXf024GlIBPgVKnrg","MW58zqUyooJw5zGmASCETNi4qORcewuTRWDhLMLavis","sftnu87bkbl62AB38gmuyQdX5yD95TxMuzhvyiD7Wb8","dydbjYL8bcTkcXtLZ2e8514B7n7QDnOgOWD5Fniwjdo","84Vp4ymg-8VScgYletGB4TfHboLPkIXLaP3djL2Km0U"],"nationalities":["US","DE"],"updated_at":1.57e+09}},"selective_disclosure_request":{"fields":["given_name","family_name","email","phone_number","phone_number_verified","address","birthdate"],"object":{"address":{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"},"birthdate":"1940-01-01","email":"johndoe@example.com","family_name":"Doe","given_name":"John","nationalities":["US","DE"],"phone_number":"+1-202-555-0101","phone_number_verified":true,"updated_at":1.57e+09}},"signed_selective_disclosure":{"disclosures":[["VyJ47aH6-hysFuthAZJP-A","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","family_name","Doe"],["5XsSIXmaZbf5ikQgMSVGjQ","email","johndoe@example.com"],["br5gmh-cSRNAvocKCmAD0A","phone_number","+1-202-555-0101"],["6UasczRKmme8SOUwelXq2w","phone_number_verified"],["Ll27jjwT4yzd0i-7NGdZAw","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["DR92VSF2l3Az1K1-LyWO1w","birthdate","1940-01-01"]],"jwt":{"header":{"alg":"ES256","typ":"JWT"},"payload":{"_sd":["cMZilhOF9uEyvW_vCKx8IkbqfmntjqkV8HCFQ_lgPq0","DjUC3iXDmUj0QQgbZM7PQhhOLI3EjqSNzz3IhCpqQhg","wyoSepSkpJXnOxKlsypeqjr9PMFXf024GlIBPgVKnrg","MW58zqUyooJw5zGmASCETNi4qORcewuTRWDhLMLavis","sftnu87bkbl62AB38gmuyQdX5yD95TxMuzhvyiD7Wb8","dydbjYL8bcTkcXtLZ2e8514B7n7QDnOgOWD5Fniwjdo","84Vp4ymg-8VScgYletGB4TfHboLPkIXLaP3djL2Km0U"],"nationalities":["US","DE"],"updated_at":1.57e+09},"signature":"zfJnEY9fHtkPtOL0b97DCa7zjV5h13Yazxolw9sfZrcBeKXtLfazItHqku496af55ifywhV2h0a8APHviayFQA=="}}}'
+    assert_output '{"es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg==","keyring":{"es256":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="},"selective_disclosure_payload":{"disclosures":[["VyJ47aH6-hysFuthAZJP-A","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","family_name","Doe"],["5XsSIXmaZbf5ikQgMSVGjQ","email","johndoe@example.com"],["br5gmh-cSRNAvocKCmAD0A","phone_number","+1-202-555-0101"],["6UasczRKmme8SOUwelXq2w","phone_number_verified"],["Ll27jjwT4yzd0i-7NGdZAw","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["DR92VSF2l3Az1K1-LyWO1w","birthdate","1940-01-01"]],"payload":{"_sd":["cMZilhOF9uEyvW_vCKx8IkbqfmntjqkV8HCFQ_lgPq0","DjUC3iXDmUj0QQgbZM7PQhhOLI3EjqSNzz3IhCpqQhg","wyoSepSkpJXnOxKlsypeqjr9PMFXf024GlIBPgVKnrg","MW58zqUyooJw5zGmASCETNi4qORcewuTRWDhLMLavis","sftnu87bkbl62AB38gmuyQdX5yD95TxMuzhvyiD7Wb8","dydbjYL8bcTkcXtLZ2e8514B7n7QDnOgOWD5Fniwjdo","84Vp4ymg-8VScgYletGB4TfHboLPkIXLaP3djL2Km0U"],"iss":"http://example.org","sub":"user 42"}},"selective_disclosure_request":{"fields":["given_name","family_name","email","phone_number","phone_number_verified","address","birthdate"],"object":{"address":{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"},"birthdate":"1940-01-01","email":"johndoe@example.com","family_name":"Doe","given_name":"John","iss":"http://example.org","nationalities":["US","DE"],"phone_number":"+1-202-555-0101","phone_number_verified":true,"sub":"user 42","updated_at":1.57e+09}},"signed_selective_disclosure":{"disclosures":[["VyJ47aH6-hysFuthAZJP-A","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","family_name","Doe"],["5XsSIXmaZbf5ikQgMSVGjQ","email","johndoe@example.com"],["br5gmh-cSRNAvocKCmAD0A","phone_number","+1-202-555-0101"],["6UasczRKmme8SOUwelXq2w","phone_number_verified"],["Ll27jjwT4yzd0i-7NGdZAw","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["DR92VSF2l3Az1K1-LyWO1w","birthdate","1940-01-01"]],"jwt":{"header":{"alg":"ES256","typ":"JWT"},"payload":{"_sd":["cMZilhOF9uEyvW_vCKx8IkbqfmntjqkV8HCFQ_lgPq0","DjUC3iXDmUj0QQgbZM7PQhhOLI3EjqSNzz3IhCpqQhg","wyoSepSkpJXnOxKlsypeqjr9PMFXf024GlIBPgVKnrg","MW58zqUyooJw5zGmASCETNi4qORcewuTRWDhLMLavis","sftnu87bkbl62AB38gmuyQdX5yD95TxMuzhvyiD7Wb8","dydbjYL8bcTkcXtLZ2e8514B7n7QDnOgOWD5Fniwjdo","84Vp4ymg-8VScgYletGB4TfHboLPkIXLaP3djL2Km0U"],"iss":"http://example.org","sub":"user 42"},"signature":"zfJnEY9fHtkPtOL0b97DCa7zjV5h13Yazxolw9sfZrfaTEURYPa4ocb/KtKLkMutp0Q/ggrZdRHH1FtMsIjjDw=="}}}'
 }
 
 @test "Import and export SD Payload" {
