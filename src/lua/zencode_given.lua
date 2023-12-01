@@ -260,46 +260,34 @@ local function ack(what)
 
 end
 
-Given(
-   'nothing',
-   function()
+Given('nothing',function()
       zencode_assert(
          (next(IN) == nil),
          'Undesired data passed as input'
       )
-   end
-)
+end)
 
 -- maybe TODO: Given all valid data
 -- convert and import data only when is known by schema and passes validation
 -- ignore all other data structures that are not known by schema or don't pass validation
 
-Given(
-   "am ''",
-   function(name)
+Given("am ''",function(name)
       Iam(name)
-   end
-)
+end)
 
-Given(
-   "my name is in '' named ''",
-   function(sc, name)
+Given("my name is in '' named ''",function(sc, name)
       pick(name, sc)
       assert(ZEN.TMP.name, 'No name found in: ' .. name)
       Iam(O.to_string(operate_conversion(ZEN.TMP)))
       CODEC[name] = nil -- just used to get name
-   end
-)
+end)
 
-Given(
-   "my name is in '' named '' in ''",
-   function(sc, name, struct)
+Given("my name is in '' named '' in ''",function(sc, name, struct)
       pickin(struct, name, sc)
       assert(ZEN.TMP.name,  'No name found in: '..name)
       Iam(O.to_string(operate_conversion(ZEN.TMP)))
       CODEC[name] = nil -- just name string
-   end
-)
+end)
 
 -- variable names:
 -- s = schema of variable (or encoding)
@@ -307,139 +295,98 @@ Given(
 -- t = table containing the variable
 
 -- TODO: I have a '' as ''
-Given(
-   "''",
-   function(n)
+Given("''",function(n)
       pick(n)
       ack(n)
       gc()
-   end
-)
+end)
 
-Given(
-   "'' in ''",
-   function(s, t)
+Given("'' in ''",function(s, t)
       pickin(t, s)
       ack(s) -- save it in ACK.obj
       gc()
-   end
-)
+end)
 
 -- public keys for keyring arrays
 -- returns a special array for upcoming session:
 -- public_key_session : { name : value }
-Given(
-   "'' public key from ''",
-   function(s, t)
+Given("'' public key from ''",function(s, t)
       -- if not pickin(t, s, nil, false) then
       -- 	pickin(s, t)
       -- end
       pickin(t, s..'_public_key', s..'_public_key', false)
       ack_table('public_key_session', t)
-   end
-)
+end)
 
-Given(
-   "'' from ''",
-   function(s, t)
+Given("'' from ''",function(s, t)
       -- if not pickin(t, s, nil, false) then
       -- 	pickin(s, t)
       -- end
       pickin(t, s, s, false)
       ack_table(s, t)
       gc()
-   end
-)
+end)
 
-Given(
-   "'' named ''",
-   function(s, n)
+Given("'' named ''",function(s, n)
       -- zencode_assert(encoder, "Invalid input encoding for '"..n.."': "..s)
       pick(n, s)
       ack(n)
       gc()
-   end
-)
+end)
 
-Given(
-   "'' named by ''",
-   function(s, n)
+Given("'' named by ''",function(s, n)
       -- local name = have(n)
       local name = _index_to_string(IN[n])
       -- zencode_assert(encoder, "Invalid input encoding for '"..n.."': "..s)
       pick(name, s)
       ack(name)
       gc()
-   end
-)
+end)
 
-Given(
-   "'' named '' in ''",
-   function(s, n, t)
+Given("'' named '' in ''",function(s, n, t)
       pickin(t, n, s)
       ack(n) -- save it in ACK.name
       gc()
-   end
-)
+end)
 
-Given(
-   "'' named by '' in ''",
-   function(s, n, t)
+Given("'' named by '' in ''",function(s, n, t)
       local name = _index_to_string(IN[n])
       pickin(t, name, s)
       ack(name) -- save it in ACK.name
       gc()
-   end
-)
+end)
 
-Given(
-   "my ''",
-   function(n)
+Given("my ''",function(n)
       zencode_assert(WHO, 'No identity specified, use: Given I am ...')
       pickin(WHO, n)
       ack(n)
       gc()
-   end
-)
+end)
 
-Given(
-   "my '' named ''",
-   function(s, n)
+Given("my '' named ''",function(s, n)
       -- zencode_assert(encoder, "Invalid input encoding for '"..n.."': "..s)
       pickin(WHO, n, s)
       ack(n)
       gc()
-   end
-)
-Given(
-   "my '' named by ''",
-   function(s, n)
+end)
+Given("my '' named by ''",function(s, n)
       -- zencode_assert(encoder, "Invalid input encoding for '"..n.."': "..s)
       local name = _index_to_string(IN[n])
       pickin(WHO, name, s)
       ack(name)
       gc()
-   end
-)
+end)
 
-Given(
-   "'' is valid",
-   function(n)
+Given("'' is valid",function(n)
       pick(n)
       gc()
-   end
-)
-Given(
-   "my '' is valid",
-   function(n)
+end)
+Given("my '' is valid",function(n)
       pickin(WHO, n)
       gc()
-   end
-)
+end)
 
-Given(
-   "rename '' to ''",
-   function(old, new)
+Given("rename '' to ''",function(old, new)
        empty(new)
        have(old)
        ACK[new] = ACK[old]
@@ -448,8 +395,7 @@ Given(
 
        ACK[old] = nil
        CODEC[old] = nil
-   end
-)
+end)
 
 Given("'' part of '' after string prefix ''", function(enc, src, pfx)
 		 local whole = IN[src]
