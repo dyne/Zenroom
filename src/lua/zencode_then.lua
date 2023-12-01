@@ -37,7 +37,7 @@
 
 local function apply_schema(variable_value, variable_name, schema_name)
     local fun
-    local codec = ZEN.CODEC[uscore(variable_name)]
+    local codec = CODEC[uscore(variable_name)]
     if not codec then error("CODEC not found for object: "..key, 2) end
     local schema = ZEN.schemas[schema_name]
     if not schema then error("Schema not found: "..variable_name,2) end
