@@ -325,7 +325,7 @@
 
 local function to_float_f(data)
   local res = tonumber(tostring(data))
-  ZEN.assert(res, "Could not read the float number")
+  zencode_assert(res, "Could not read the float number")
   return res
 end
 
@@ -341,14 +341,15 @@ end
        if dt == 'number' or dt == 'boolean' then
 		  return data
        elseif dt == 'zenroom.big' then
-        ZEN.assert(fun ~= to_float_f and fun ~= O.to_mnemonic and fun ~= O.to_string, "Encoding not valid for integers")
+        zencode_assert(fun ~= to_float_f and fun ~= O.to_mnemonic, "Encoding not valid for integers")
+        if fun == O.to_string then fun = BIG.to_decimal end
         if fun ~= BIG.to_decimal then
-          ZEN.assert(BIG.zenpositive(data), "Negative integers can not be encoded")
+          zencode_assert(BIG.zenpositive(data), "Negative integers can not be encoded")
           data = data:octet()
         end
         return fun(data)
        elseif dt == 'zenroom.float' then
-        ZEN.assert(fun ~= BIG.to_decimal and fun ~= O.to_mnemonic, "Encoding not valid for floats")
+        zencode_assert(fun ~= BIG.to_decimal and fun ~= O.to_mnemonic, "Encoding not valid for floats")
         if fun ~= to_float_f then
           data = data:octet()
         end
