@@ -189,7 +189,7 @@ Then print data
 Then print the 'keyring'
 EOF
     save_output sd_payload.out.json
-    assert_output '{"es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg==","keyring":{"es256":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="},"selective_disclosure_payload":{"disclosures":[["VyJ47aH6-hysFuthAZJP-A","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","family_name","Doe"],["5XsSIXmaZbf5ikQgMSVGjQ","email","johndoe@example.com"],["br5gmh-cSRNAvocKCmAD0A","phone_number","+1-202-555-0101"],["6UasczRKmme8SOUwelXq2w","phone_number_verified"],["Ll27jjwT4yzd0i-7NGdZAw","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["DR92VSF2l3Az1K1-LyWO1w","birthdate","1940-01-01"]],"payload":{"_sd":["cMZilhOF9uEyvW_vCKx8IkbqfmntjqkV8HCFQ_lgPq0","DjUC3iXDmUj0QQgbZM7PQhhOLI3EjqSNzz3IhCpqQhg","wyoSepSkpJXnOxKlsypeqjr9PMFXf024GlIBPgVKnrg","MW58zqUyooJw5zGmASCETNi4qORcewuTRWDhLMLavis","sftnu87bkbl62AB38gmuyQdX5yD95TxMuzhvyiD7Wb8","dydbjYL8bcTkcXtLZ2e8514B7n7QDnOgOWD5Fniwjdo","84Vp4ymg-8VScgYletGB4TfHboLPkIXLaP3djL2Km0U"],"iss":"http://example.org","sub":"user 42"}},"selective_disclosure_request":{"fields":["given_name","family_name","email","phone_number","phone_number_verified","address","birthdate"],"object":{"address":{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"},"birthdate":"1940-01-01","email":"johndoe@example.com","family_name":"Doe","given_name":"John","iss":"http://example.org","nationalities":["US","DE"],"phone_number":"+1-202-555-0101","phone_number_verified":true,"sub":"user 42","updated_at":1.57e+09}},"signed_selective_disclosure":{"disclosures":[["VyJ47aH6-hysFuthAZJP-A","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","family_name","Doe"],["5XsSIXmaZbf5ikQgMSVGjQ","email","johndoe@example.com"],["br5gmh-cSRNAvocKCmAD0A","phone_number","+1-202-555-0101"],["6UasczRKmme8SOUwelXq2w","phone_number_verified"],["Ll27jjwT4yzd0i-7NGdZAw","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["DR92VSF2l3Az1K1-LyWO1w","birthdate","1940-01-01"]],"jwt":{"header":{"alg":"ES256","typ":"JWT"},"payload":{"_sd":["cMZilhOF9uEyvW_vCKx8IkbqfmntjqkV8HCFQ_lgPq0","DjUC3iXDmUj0QQgbZM7PQhhOLI3EjqSNzz3IhCpqQhg","wyoSepSkpJXnOxKlsypeqjr9PMFXf024GlIBPgVKnrg","MW58zqUyooJw5zGmASCETNi4qORcewuTRWDhLMLavis","sftnu87bkbl62AB38gmuyQdX5yD95TxMuzhvyiD7Wb8","dydbjYL8bcTkcXtLZ2e8514B7n7QDnOgOWD5Fniwjdo","84Vp4ymg-8VScgYletGB4TfHboLPkIXLaP3djL2Km0U"],"iss":"http://example.org","sub":"user 42"},"signature":"zfJnEY9fHtkPtOL0b97DCa7zjV5h13Yazxolw9sfZrfaTEURYPa4ocb/KtKLkMutp0Q/ggrZdRHH1FtMsIjjDw=="}}}'
+    assert_output '{"es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg==","keyring":{"es256":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="},"selective_disclosure_payload":{"disclosures":[["VyJ47aH6-hysFuthAZJP-A","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","family_name","Doe"],["5XsSIXmaZbf5ikQgMSVGjQ","email","johndoe@example.com"],["br5gmh-cSRNAvocKCmAD0A","phone_number","+1-202-555-0101"],["6UasczRKmme8SOUwelXq2w","phone_number_verified",true],["Ll27jjwT4yzd0i-7NGdZAw","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["DR92VSF2l3Az1K1-LyWO1w","birthdate","1940-01-01"]],"payload":{"_sd":["cMZilhOF9uEyvW_vCKx8IkbqfmntjqkV8HCFQ_lgPq0","DjUC3iXDmUj0QQgbZM7PQhhOLI3EjqSNzz3IhCpqQhg","wyoSepSkpJXnOxKlsypeqjr9PMFXf024GlIBPgVKnrg","MW58zqUyooJw5zGmASCETNi4qORcewuTRWDhLMLavis","sftnu87bkbl62AB38gmuyQdX5yD95TxMuzhvyiD7Wb8","dydbjYL8bcTkcXtLZ2e8514B7n7QDnOgOWD5Fniwjdo","84Vp4ymg-8VScgYletGB4TfHboLPkIXLaP3djL2Km0U"],"_sd_alg":"sha-256","iss":"http://example.org","sub":"user 42"}},"selective_disclosure_request":{"fields":["given_name","family_name","email","phone_number","phone_number_verified","address","birthdate"],"object":{"address":{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"},"birthdate":"1940-01-01","email":"johndoe@example.com","family_name":"Doe","given_name":"John","iss":"http://example.org","nationalities":["US","DE"],"phone_number":"+1-202-555-0101","phone_number_verified":true,"sub":"user 42","updated_at":1.57e+09}},"signed_selective_disclosure":{"disclosures":[["VyJ47aH6-hysFuthAZJP-A","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","family_name","Doe"],["5XsSIXmaZbf5ikQgMSVGjQ","email","johndoe@example.com"],["br5gmh-cSRNAvocKCmAD0A","phone_number","+1-202-555-0101"],["6UasczRKmme8SOUwelXq2w","phone_number_verified",true],["Ll27jjwT4yzd0i-7NGdZAw","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["DR92VSF2l3Az1K1-LyWO1w","birthdate","1940-01-01"]],"jwt":{"header":{"alg":"ES256","typ":"JWT"},"payload":{"_sd":["cMZilhOF9uEyvW_vCKx8IkbqfmntjqkV8HCFQ_lgPq0","DjUC3iXDmUj0QQgbZM7PQhhOLI3EjqSNzz3IhCpqQhg","wyoSepSkpJXnOxKlsypeqjr9PMFXf024GlIBPgVKnrg","MW58zqUyooJw5zGmASCETNi4qORcewuTRWDhLMLavis","sftnu87bkbl62AB38gmuyQdX5yD95TxMuzhvyiD7Wb8","dydbjYL8bcTkcXtLZ2e8514B7n7QDnOgOWD5Fniwjdo","84Vp4ymg-8VScgYletGB4TfHboLPkIXLaP3djL2Km0U"],"_sd_alg":"sha-256","iss":"http://example.org","sub":"user 42"},"signature":"zfJnEY9fHtkPtOL0b97DCa7zjV5h13Yazxolw9sfZrcFax8G7xSG4+Ai8uCNZgm+KpfpBANXo5NB2x2oWjqiWA=="}}}'
 }
 
 @test "Import and export SD Payload" {
@@ -209,4 +209,137 @@ Then print the 'keyring'
 EOF
     save_output sd_payload2.out.json
     assert_output "$(cat sd_payload.out.json)"
+}
+
+@test "Verify the validity of signed sd-jwt" {
+    cat <<EOF | save_asset alice_es256_keys.json
+{
+    "Alice": {
+        "es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg=="
+    },
+}
+EOF
+    cat <<EOF | save_asset sd_verification.zen
+Scenario 'sd_jwt'
+Scenario 'es256'
+
+Given I am known as 'Alice'
+Given I have my 'es256 public key'
+Given I have 'signed selective disclosure'
+
+When I verify sd jwt 'signed_selective_disclosure' issued by 'Alice' is valid
+
+Then print data
+
+EOF
+    cat <<EOF | zexe sd_verification.zen alice_es256_keys.json sd_payload2.out.json
+Scenario 'sd_jwt'
+Scenario 'es256'
+
+Given I am known as 'Alice'
+Given I have my 'es256 public key'
+Given I have 'signed selective disclosure'
+
+When I verify sd jwt 'signed_selective_disclosure' issued by 'Alice' is valid
+
+Then print data
+
+EOF
+    save_output sd_verification.out.json
+    assert_output '{"es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg==","signed_selective_disclosure":{"disclosures":[["VyJ47aH6-hysFuthAZJP-A","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","family_name","Doe"],["5XsSIXmaZbf5ikQgMSVGjQ","email","johndoe@example.com"],["br5gmh-cSRNAvocKCmAD0A","phone_number","+1-202-555-0101"],["6UasczRKmme8SOUwelXq2w","phone_number_verified",true],["Ll27jjwT4yzd0i-7NGdZAw","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["DR92VSF2l3Az1K1-LyWO1w","birthdate","1940-01-01"]],"jwt":{"header":{"alg":"ES256","typ":"JWT"},"payload":{"_sd":["cMZilhOF9uEyvW_vCKx8IkbqfmntjqkV8HCFQ_lgPq0","DjUC3iXDmUj0QQgbZM7PQhhOLI3EjqSNzz3IhCpqQhg","wyoSepSkpJXnOxKlsypeqjr9PMFXf024GlIBPgVKnrg","MW58zqUyooJw5zGmASCETNi4qORcewuTRWDhLMLavis","sftnu87bkbl62AB38gmuyQdX5yD95TxMuzhvyiD7Wb8","dydbjYL8bcTkcXtLZ2e8514B7n7QDnOgOWD5Fniwjdo","84Vp4ymg-8VScgYletGB4TfHboLPkIXLaP3djL2Km0U"],"_sd_alg":"sha-256","iss":"http://example.org","sub":"user 42"},"signature":"zfJnEY9fHtkPtOL0b97DCa7zjV5h13Yazxolw9sfZrcFax8G7xSG4+Ai8uCNZgm+KpfpBANXo5NB2x2oWjqiWA=="}}}'
+}
+@test "Fail verify on invalid sd-jwt: wrong header" {
+    cat <<EOF | save_asset wrong_header.json
+{
+    "Alice": {
+        "es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg=="
+    },
+    "signed_selective_disclosure":{
+        "disclosures":[["VyJ47aH6-hysFuthAZJP-A","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","family_name","Doe"],["5XsSIXmaZbf5ikQgMSVGjQ","email","johndoe@example.com"],["br5gmh-cSRNAvocKCmAD0A","phone_number","+1-202-555-0101"],["6UasczRKmme8SOUwelXq2w","phone_number_verified",true],["Ll27jjwT4yzd0i-7NGdZAw","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["DR92VSF2l3Az1K1-LyWO1w","birthdate","1940-01-01"]],
+        "jwt":{
+            "header":{"alg":"ES356","typ":"JWT"},
+            "payload":{"_sd":["cMZilhOF9uEyvW_vCKx8IkbqfmntjqkV8HCFQ_lgPq0","DjUC3iXDmUj0QQgbZM7PQhhOLI3EjqSNzz3IhCpqQhg","wyoSepSkpJXnOxKlsypeqjr9PMFXf024GlIBPgVKnrg","MW58zqUyooJw5zGmASCETNi4qORcewuTRWDhLMLavis","sftnu87bkbl62AB38gmuyQdX5yD95TxMuzhvyiD7Wb8","dydbjYL8bcTkcXtLZ2e8514B7n7QDnOgOWD5Fniwjdo","84Vp4ymg-8VScgYletGB4TfHboLPkIXLaP3djL2Km0U"],
+                        "_sd_alg":"sha-256",
+                        "iss":"http://example.org",
+                        "sub":"user 42"
+                    },
+            "signature":"zfJnEY9fHtkPtOL0b97DCa7zjV5h13Yazxolw9sfZrcFax8G7xSG4+Ai8uCNZgm+KpfpBANXo5NB2x2oWjqiWA=="
+        }
+    }
+}
+EOF
+    run $ZENROOM_EXECUTABLE -z -a wrong_header.json sd_verification.zen
+    assert_line --partial 'The JWT header is not valid'
+}
+
+@test "Fail verify on invalid sd-jwt: wrong signature" {
+    cat <<EOF | save_asset wrong_sig.json
+{
+    "Alice": {
+        "es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg=="
+    },
+    "signed_selective_disclosure":{
+        "disclosures":[["VyJ47aH6-hysFuthAZJP-A","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","family_name","Doe"],["5XsSIXmaZbf5ikQgMSVGjQ","email","johndoe@example.com"],["br5gmh-cSRNAvocKCmAD0A","phone_number","+1-202-555-0101"],["6UasczRKmme8SOUwelXq2w","phone_number_verified"],["Ll27jjwT4yzd0i-7NGdZAw","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["DR92VSF2l3Az1K1-LyWO1w","birthdate","1940-01-01"]],
+        "jwt":{
+            "header":{"alg":"ES256","typ":"JWT"},
+            "payload":{"_sd":["cMZilhOF9uEyvW_vCKx8IkbqfmntjqkV8HCFQ_lgPq0","DjUC3iXDmUj0QQgbZM7PQhhOLI3EjqSNzz3IhCpqQhg","wyoSepSkpJXnOxKlsypeqjr9PMFXf024GlIBPgVKnrg","MW58zqUyooJw5zGmASCETNi4qORcewuTRWDhLMLavis","sftnu87bkbl62AB38gmuyQdX5yD95TxMuzhvyiD7Wb8","dydbjYL8bcTkcXtLZ2e8514B7n7QDnOgOWD5Fniwjdo","84Vp4ymg-8VScgYletGB4TfHboLPkIXLaP3djL2Km0U"],
+                        "_sd_alg":"sha-256",
+                        "iss":"http://example.org",
+                        "sub":"user 42"
+                    },
+            "signature":"zFjnEY9fHtkPtOL0b97DCa7zjV5h13Yazxolw9sfZrcFax8G7xSG4+Ai8uCNZgm+KpfpBANXo5NB2x2oWjqiWA=="
+        }
+    }
+}
+EOF
+    run $ZENROOM_EXECUTABLE -z -a wrong_sig.json sd_verification.zen
+    assert_line --partial 'The issuer signature is not valid'
+}
+
+@test "Fail verify on invalid sd-jwt: wrong issuer pk" {
+    cat <<EOF | save_asset wrong_pk.json
+{
+    "Alice": {
+        "es256_public_key":"gMKKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg=="
+    },
+    "signed_selective_disclosure":{
+        "disclosures":[["VyJ47aH6-hysFuthAZJP-A","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","family_name","Doe"],["5XsSIXmaZbf5ikQgMSVGjQ","email","johndoe@example.com"],["br5gmh-cSRNAvocKCmAD0A","phone_number","+1-202-555-0101"],["6UasczRKmme8SOUwelXq2w","phone_number_verified",true],["Ll27jjwT4yzd0i-7NGdZAw","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["DR92VSF2l3Az1K1-LyWO1w","birthdate","1940-01-01"]],
+        "jwt":{
+            "header":{"alg":"ES256","typ":"JWT"},
+            "payload":{"_sd":["cMZilhOF9uEyvW_vCKx8IkbqfmntjqkV8HCFQ_lgPq0","DjUC3iXDmUj0QQgbZM7PQhhOLI3EjqSNzz3IhCpqQhg","wyoSepSkpJXnOxKlsypeqjr9PMFXf024GlIBPgVKnrg","MW58zqUyooJw5zGmASCETNi4qORcewuTRWDhLMLavis","sftnu87bkbl62AB38gmuyQdX5yD95TxMuzhvyiD7Wb8","dydbjYL8bcTkcXtLZ2e8514B7n7QDnOgOWD5Fniwjdo","84Vp4ymg-8VScgYletGB4TfHboLPkIXLaP3djL2Km0U"],
+                        "_sd_alg":"sha-256",
+                        "iss":"http://example.org",
+                        "sub":"user 42"
+                    },
+            "signature":"zfJnEY9fHtkPtOL0b97DCa7zjV5h13Yazxolw9sfZrcFax8G7xSG4+Ai8uCNZgm+KpfpBANXo5NB2x2oWjqiWA=="
+        }
+    }
+}
+EOF
+    run $ZENROOM_EXECUTABLE -z -a wrong_pk.json sd_verification.zen
+    assert_line --partial 'The issuer signature is not valid'
+}
+
+@test "Fail verify on invalid sd-jwt: wrong disclosure" {
+    cat <<EOF | save_asset wrong_dis.json
+{
+    "Alice": {
+        "es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg=="
+    },
+    "signed_selective_disclosure":{
+        "disclosures":[["VyJ47aH6-hysFuthAZJP-A","given_name","Paolo"],["vIXGZmzovnpG7Q_4mUJsOw","family_name","Doe"],["5XsSIXmaZbf5ikQgMSVGjQ","email","johndoe@example.com"],["br5gmh-cSRNAvocKCmAD0A","phone_number","+1-202-555-0101"],["6UasczRKmme8SOUwelXq2w","phone_number_verified",true],["Ll27jjwT4yzd0i-7NGdZAw","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["DR92VSF2l3Az1K1-LyWO1w","birthdate","1940-01-01"]],
+        "jwt":{
+            "header":{"alg":"ES256","typ":"JWT"},
+            "payload":{"_sd":["cMZilhOF9uEyvW_vCKx8IkbqfmntjqkV8HCFQ_lgPq0","DjUC3iXDmUj0QQgbZM7PQhhOLI3EjqSNzz3IhCpqQhg","wyoSepSkpJXnOxKlsypeqjr9PMFXf024GlIBPgVKnrg","MW58zqUyooJw5zGmASCETNi4qORcewuTRWDhLMLavis","sftnu87bkbl62AB38gmuyQdX5yD95TxMuzhvyiD7Wb8","dydbjYL8bcTkcXtLZ2e8514B7n7QDnOgOWD5Fniwjdo","84Vp4ymg-8VScgYletGB4TfHboLPkIXLaP3djL2Km0U"],
+                        "_sd_alg":"sha-256",
+                        "iss":"http://example.org",
+                        "sub":"user 42"
+                    },
+            "signature":"zfJnEY9fHtkPtOL0b97DCa7zjV5h13Yazxolw9sfZrcFax8G7xSG4+Ai8uCNZgm+KpfpBANXo5NB2x2oWjqiWA=="
+        }
+    }
+}
+EOF
+    run $ZENROOM_EXECUTABLE -z -a wrong_dis.json sd_verification.zen
+    assert_line --partial 'The disclosure is not valid'
 }

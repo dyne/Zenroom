@@ -36,6 +36,8 @@ function sd_jwt.create_disclosure(dis_arr)
             disclosure[i] = deepmap(function(o) return O.from_string(o) end, dis_arr[i])
         elseif type(dis_arr[i]) == 'string' then
             disclosure[i] = O.from_string(dis_arr[i])
+        else
+            disclosure[i] = dis_arr[i]
         end
     end
     local hashed = O.from_string(sha256(encoded_dis):url64())
@@ -63,6 +65,7 @@ local JWT_RESERVED_CLAIMS = {"iss", "sub", "aud", "exp", "nbf", "iat", "jti", "t
 function sd_jwt.create_sd(sdr)
     local disclosures = {}
     local jwt_payload = {
+        _sd_alg = O.from_string("sha-256"),
         _sd = {}
     }
     for _, f in pairs(sdr.fields) do
@@ -119,7 +122,7 @@ function sd_jwt.create_jwt_es256(payload, sk)
         alg=O.from_string("ES256"),
         typ=O.from_string("JWT")
     }
-    payload_str = sd_jwt.export_str_dict(payload)
+    local payload_str = sd_jwt.export_str_dict(payload)
     I.spy(payload_str)
     b64payload = O.from_string(JSON.raw_encode(payload_str)):url64()
     I.spy(b64payload)
@@ -130,6 +133,55 @@ function sd_jwt.create_jwt_es256(payload, sk)
         payload=payload,
         signature=signature,
     }
+end
+
+--[[
+    jws = { header= {alg, typ},
+            payload=payload,
+            signature
+        }
+]]
+
+-- for reference see Section 8.1 of https://datatracker.ietf.org/doc/draft-ietf-oauth-selective-disclosure-jwt/
+
+function sd_jwt.verify_jws_signature(jws, pk)
+    local payload_str = sd_jwt.export_str_dict(jws.payload)
+    local b64payload = O.from_string(JSON.raw_encode(payload_str)):url64()
+    return ES256.verify(pk, jws.signature, b64payload)
+end
+
+function sd_jwt.verify_jws_header(jws)
+    return jws.header.alg == O.from_string("ES256") and jws.header.typ == O.from_string("JWT")
+end
+
+function sd_jwt.verify_sd_alg(jwt)
+    return jwt.payload._sd_alg == O.from_string("sha-256")
+end
+
+local function is_in(list, elem)
+    local found = false
+    for i = 1, #list do
+        if list[i] == elem then
+            found = true
+            break
+        end
+    end
+    return found
+end
+
+function sd_jwt.verify_sd_fields(jwt, disclosures)
+-- TODO: verify that there are no repeated claims, and that no claim key is equal to "_sd"
+    local match = true
+    local digest_arr = jwt._sd
+    local disclosures_str = sd_jwt.export_str_dict(disclosures)
+    for i = 1, #disclosures_str do
+        local _, hashed = sd_jwt.create_disclosure(disclosures_str[i])
+        if not is_in(digest_arr, hashed) then
+            match = false
+            break
+        end
+    end
+    return match
 end
 
 return sd_jwt
