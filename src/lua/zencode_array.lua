@@ -81,7 +81,7 @@ local function _aggr_array(arr)
 		for _,v in next,A,nil do
 			res = res + v
 		end
-		par = {zentype = 'e'}
+		par = {encoding='integer',zentype = 'e'}
 	elseif type(A[1]) == 'zenroom.ecp' then
 		res = ECP.generator()
 		for _,v in next,A,nil do
