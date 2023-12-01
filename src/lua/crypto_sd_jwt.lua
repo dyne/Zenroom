@@ -42,14 +42,29 @@ function sd_jwt.create_disclosure(dis_arr)
     return  disclosure, hashed, encoded_dis
 end
 
+
+--[[ JWT reserved claim names (see Section 4.1 and Section 5 of RFC7519)
+"iss" (Issuer) Claim
+"sub" (Subject) Claim
+"aud" (Audience) Claim
+"exp" (Expiration Time) Claim
+"nbf" (Not Before) Claim
+"iat" (Issued At) Claim
+"jti" (JWT ID) Claim
+"typ" (Type) Header Parameter
+"cty" (Content Type) Header Parameter
+]]
+local JWT_RESERVED_CLAIMS = {"iss", "sub", "aud", "exp", "nbf", "iat", "jti", "typ", "cty"}
+
 -- Given as input a selective disclosure request
 -- Return a table containing two keys:
 --        payload = the jwt containing disclosable object (the credential to be signed by the issuer)
 --        disclosures = the list of disclosure arrays
 function sd_jwt.create_sd(sdr)
     local disclosures = {}
-    local jwt_payload = deepcopy(sdr.object)
-    jwt_payload._sd = {}
+    local jwt_payload = {
+        _sd = {}
+    }
     for _, f in pairs(sdr.fields) do
         local f = f:str()
         local encode = nil
@@ -68,8 +83,10 @@ function sd_jwt.create_sd(sdr)
         local disclosure, hashed = sd_jwt.create_disclosure(disclosure_arr)
 
         disclosures[#disclosures+1] = disclosure
-        jwt_payload[f] = nil
         jwt_payload._sd[#jwt_payload._sd+1] = hashed
+    end
+    for _, rc in pairs(JWT_RESERVED_CLAIMS) do
+        jwt_payload[rc] = deepcopy(sdr.object[rc])
     end
 
     return {
