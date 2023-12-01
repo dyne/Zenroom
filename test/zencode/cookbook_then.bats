@@ -6,11 +6,11 @@ SUBDOC=cookbook_then
     cat <<EOF | save_asset myLargeNestedObjectThen.json
 {
    "myObject":{
-      "myNumber_1":1234567890,
-      "myNumber_2":1234567890,
-      "myNumber_3":1234567890,
-      "myNumber_4":1234567890, 
-   	  "myNumber_5":12345678,  
+      "myNumber_1":"1234567890",
+      "myNumber_2":"1234567890",
+      "myNumber_3":"1234567890",
+      "myNumber_4":"1234567890",
+      "myNumber_5":"12345678",
 	  "myString_1":"Hello World!",
 	  "myString_2":"Hello World!",
 	  "myString_3":"Hello World!",
@@ -67,27 +67,27 @@ SUBDOC=cookbook_then
 	  "myNumberArray_1":[
          "123",
 		 "456",
-		 "1234.5678"
+		 "1234"
       ],
 	  "myNumberArray_2":[
          "123",
 		 "456",
-		 "1234.5678"
+		 "1234"
       ],
 	  "myNumberArray_3":[
          "123",
 		 "456",
-		 "1234.5678"
+		 "1234"
       ],
 	  "myNumberArray_4":[
          "123",
 		 "456",
-		 "1234.5678"
+		 "1234"
       ],
 	  "myNumberArray_5":[
          "123",
 		 "456",
-		 "1234.5678"
+		 "1234"
       ]
    },
    "Alice":{
@@ -152,17 +152,17 @@ Given I have a 'string array' named 'myStringArray_2' inside 'myObject'
 Given I have a 'string array' named 'myStringArray_3' inside 'myObject'
 Given I have a 'string array' named 'myStringArray_4' inside 'myObject' 
 Given I have a 'string array' named 'myStringArray_5' inside 'myObject'
-Given I have a 'number array' named 'myNumberArray_1' inside 'myObject'
-Given I have a 'number array' named 'myNumberArray_2' inside 'myObject'
-Given I have a 'number array' named 'myNumberArray_3' inside 'myObject'
-Given I have a 'number array' named 'myNumberArray_4' inside 'myObject'
-Given I have a 'number array' named 'myNumberArray_5' inside 'myObject'
+Given I have a 'integer array' named 'myNumberArray_1' inside 'myObject'
+Given I have a 'integer array' named 'myNumberArray_2' inside 'myObject'
+Given I have a 'integer array' named 'myNumberArray_3' inside 'myObject'
+Given I have a 'integer array' named 'myNumberArray_4' inside 'myObject'
+Given I have a 'integer array' named 'myNumberArray_5' inside 'myObject'
 # Load Numbers
-Given I have a 'number' named 'myNumber_1' inside 'myObject'
-Given I have a 'number' named 'myNumber_2' inside 'myObject'
-Given I have a 'number' named 'myNumber_3' inside 'myObject' 
-Given I have a 'number' named 'myNumber_4' inside 'myObject'
-Given I have a 'number' named 'myNumber_5' inside 'myObject'
+Given I have a 'integer' named 'myNumber_1' inside 'myObject'
+Given I have a 'integer' named 'myNumber_2' inside 'myObject'
+Given I have a 'integer' named 'myNumber_3' inside 'myObject' 
+Given I have a 'integer' named 'myNumber_4' inside 'myObject'
+Given I have a 'integer' named 'myNumber_5' inside 'myObject'
 # Load Strings
 Given I have a 'string' named 'myString_1'  inside 'myObject'
 # Questo sotto non funziona proprio, quindi toglierei la parte in 'qualcosa'
@@ -204,12 +204,12 @@ Then print all data
 # 
 # (0): default
 # 1: string
-# 2: number
+# 2: integer
 # 3: base64
 # 4: bin
 # 5: hex
 
-Then print 'myString_2' as 'number' 
+Then print 'myString_2' as 'integer' 
 Then print 'myString_3' as 'base64' 
 Then print 'myString_4' as 'bin' 
 Then print 'myString_5' as 'hex' 
@@ -219,7 +219,7 @@ Then print 'myNumber_3' as 'base64'
 Then print 'myNumber_4' as 'bin' 
 Then print 'myNumber_5' as 'hex'
 
-Then print 'myStringArray_2' as 'number' 
+Then print 'myStringArray_2' as 'integer' 
 Then print 'myStringArray_3' as 'base64' 
 Then print 'myStringArray_4' as 'bin' 
 Then print 'myStringArray_5' as 'hex' 
@@ -230,22 +230,22 @@ Then print 'myNumberArray_4' as 'bin'
 Then print 'myNumberArray_5' as 'hex' 
 
 Then print 'myBinary_2' as 'string' 
-Then print 'myBinary_3' as 'number' 
+Then print 'myBinary_3' as 'integer' 
 Then print 'myBinary_4' as 'base64' 
 Then print 'myBinary_5' as 'hex' 
 
 Then print 'myBase64_2' as 'string'
-Then print 'myBase64_3' as 'number' 
+Then print 'myBase64_3' as 'integer' 
 Then print 'myBase64_4' as 'bin'
 Then print 'myBase64_5' as 'hex' 
 
 Then print 'myHex_2' as 'string'
-Then print 'myHex_3' as 'number' 
+Then print 'myHex_3' as 'integer' 
 Then print 'myHex_4' as 'base64'
 Then print 'myHex_5' as 'bin' 
 
 Then print 'myUrl64_2' as 'string'
-Then print 'myUrl64_3' as 'number'
+Then print 'myUrl64_3' as 'integer'
 Then print 'myUrl64_4' as 'base64'
 Then print 'myUrl64_5' as 'bin'
 Then print 'myUrl64_6' as 'hex'
@@ -265,13 +265,13 @@ EOF
 # 
 # (0): default
 # 1: string
-# 2: number
+# 2: integer
 # 3: base64
 # 4: bin
 # 5: hex
 
 Then print 'myString_1'
-Then print 'myString_2' as 'number' 
+Then print 'myString_2' as 'integer' 
 Then print 'myString_3' as 'base64' 
 Then print 'myString_4' as 'bin' 
 Then print 'myString_5' as 'hex' 
@@ -283,7 +283,7 @@ Then print 'myNumber_4' as 'bin'
 Then print 'myNumber_5' as 'hex'
 
 Then print 'myStringArray_1' 
-Then print 'myStringArray_2' as 'number' 
+Then print 'myStringArray_2' as 'integer' 
 Then print 'myStringArray_3' as 'base64' 
 Then print 'myStringArray_4' as 'bin' 
 Then print 'myStringArray_5' as 'hex' 
@@ -296,25 +296,25 @@ Then print 'myNumberArray_5' as 'hex'
 
 Then print 'myBinary_1' 
 Then print 'myBinary_2' as 'string' 
-Then print 'myBinary_3' as 'number' 
+Then print 'myBinary_3' as 'integer' 
 Then print 'myBinary_4' as 'base64' 
 Then print 'myBinary_5' as 'hex' 
 
 Then print 'myBase64_1' 
 Then print 'myBase64_2' as 'string'
-Then print 'myBase64_3' as 'number' 
+Then print 'myBase64_3' as 'integer' 
 Then print 'myBase64_4' as 'bin'
 Then print 'myBase64_5' as 'hex' 
 
 Then print 'myHex_1' 
 Then print 'myHex_2' as 'string'
-Then print 'myHex_3' as 'number' 
+Then print 'myHex_3' as 'integer' 
 Then print 'myHex_4' as 'base64'
 Then print 'myHex_5' as 'bin' 
 
 Then print 'myUrl64_1' 
 Then print 'myUrl64_2' as 'string'
-Then print 'myUrl64_3' as 'number'
+Then print 'myUrl64_3' as 'integer'
 Then print 'myUrl64_4' as 'base64'
 Then print 'myUrl64_5' as 'bin'
 Then print 'myUrl64_6' as 'hex'
