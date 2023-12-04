@@ -344,6 +344,30 @@ EOF
     assert_line --partial 'The disclosure is not valid'
 }
 
+@test "Fail verify on invalid sd-jwt: wrong disclosure array" {
+    cat <<EOF | save_asset wrong_dis_arr.json
+{
+    "Alice": {
+        "es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg=="
+    },
+    "signed_selective_disclosure":{
+        "disclosures":[["VyJ47aH6-hysFuthAZJP-A","iss","John"],["vIXGZmzovnpG7Q_4mUJsOw","family_name","Doe"],["5XsSIXmaZbf5ikQgMSVGjQ","email","johndoe@example.com"],["br5gmh-cSRNAvocKCmAD0A","phone_number","+1-202-555-0101"],["6UasczRKmme8SOUwelXq2w","phone_number_verified",true],["Ll27jjwT4yzd0i-7NGdZAw","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["DR92VSF2l3Az1K1-LyWO1w","birthdate","1940-01-01"]],
+        "jwt":{
+            "header":{"alg":"ES256","typ":"JWT"},
+            "payload":{"_sd":["cMZilhOF9uEyvW_vCKx8IkbqfmntjqkV8HCFQ_lgPq0","DjUC3iXDmUj0QQgbZM7PQhhOLI3EjqSNzz3IhCpqQhg","wyoSepSkpJXnOxKlsypeqjr9PMFXf024GlIBPgVKnrg","MW58zqUyooJw5zGmASCETNi4qORcewuTRWDhLMLavis","sftnu87bkbl62AB38gmuyQdX5yD95TxMuzhvyiD7Wb8","dydbjYL8bcTkcXtLZ2e8514B7n7QDnOgOWD5Fniwjdo","84Vp4ymg-8VScgYletGB4TfHboLPkIXLaP3djL2Km0U"],
+                        "_sd_alg":"sha-256",
+                        "iss":"http://example.org",
+                        "sub":"user 42"
+                    },
+            "signature":"zfJnEY9fHtkPtOL0b97DCa7zjV5h13Yazxolw9sfZrcFax8G7xSG4+Ai8uCNZgm+KpfpBANXo5NB2x2oWjqiWA=="
+        }
+    }
+}
+EOF
+    run $ZENROOM_EXECUTABLE -z -a wrong_dis_arr.json sd_verification.zen
+    assert_line --partial 'The disclosure is not valid'
+}
+
 @test "Import and export SD JWT encoded" {
     cat <<EOF | save_asset 'sd-jwt.data.json'
 {"signed_selective_disclosure":"eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJfc2QiOlsiY01aaWxoT0Y5dUV5dldfdkNLeDhJa2JxZm1udGpxa1Y4SENGUV9sZ1BxMCIsIkRqVUMzaVhEbVVqMFFRZ2JaTTdQUWhoT0xJM0VqcVNOenozSWhDcHFRaGciLCJ3eW9TZXBTa3BKWG5PeEtsc3lwZXFqcjlQTUZYZjAyNEdsSUJQZ1ZLbnJnIiwiTVc1OHpxVXlvb0p3NXpHbUFTQ0VUTmk0cU9SY2V3dVRSV0RoTE1MYXZpcyIsInNmdG51ODdia2JsNjJBQjM4Z211eVFkWDV5RDk1VHhNdXpodnlpRDdXYjgiLCJkeWRiallMOGJjVGtjWHRMWjJlODUxNEI3bjdRRG5PZ09XRDVGbml3amRvIiwiODRWcDR5bWctOFZTY2dZbGV0R0I0VGZIYm9MUGtJWExhUDNkakwyS20wVSJdLCJfc2RfYWxnIjoic2hhLTI1NiIsImlzcyI6Imh0dHA6Ly9leGFtcGxlLm9yZyIsInN1YiI6InVzZXIgNDIifQ.zfJnEY9fHtkPtOL0b97DCa7zjV5h13Yazxolw9sfZrcFax8G7xSG4-Ai8uCNZgm-KpfpBANXo5NB2x2oWjqiWA~WyJWeUo0N2FINi1oeXNGdXRoQVpKUC1BIiwgImdpdmVuX25hbWUiLCAiSm9obiJd~WyJ2SVhHWm16b3ZucEc3UV80bVVKc093IiwgImZhbWlseV9uYW1lIiwgIkRvZSJd~WyI1WHNTSVhtYVpiZjVpa1FnTVNWR2pRIiwgImVtYWlsIiwgImpvaG5kb2VAZXhhbXBsZS5jb20iXQ~WyJicjVnbWgtY1NSTkF2b2NLQ21BRDBBIiwgInBob25lX251bWJlciIsICIrMS0yMDItNTU1LTAxMDEiXQ~WyI2VWFzY3pSS21tZThTT1V3ZWxYcTJ3IiwgInBob25lX251bWJlcl92ZXJpZmllZCIsIHRydWVd~WyJMbDI3amp3VDR5emQwaS03TkdkWkF3IiwgImFkZHJlc3MiLCB7ImNvdW50cnkiOiAiVVMiLCAibG9jYWxpdHkiOiAiQW55dG93biIsICJyZWdpb24iOiAiQW55c3RhdGUiLCAic3RyZWV0X2FkZHJlc3MiOiAiMTIzIE1haW4gU3QifV0~WyJEUjkyVlNGMmwzQXoxSzEtTHlXTzF3IiwgImJpcnRoZGF0ZSIsICIxOTQwLTAxLTAxIl0~"}
@@ -355,5 +379,26 @@ Given I have a 'sd jwt' named 'signed selective disclosure'
 Then print the 'signed selective disclosure' as 'sd jwt'
 EOF
     save_output sd_jwt_encoded.out.json
+    assert_output "$(cat sd-jwt.data.json)"
+}
+
+@test "Verify SD JWT encoded" {
+        cat <<EOF | save_asset 'ver-sd-jwt.data.json'
+{   "Alice": {
+        "es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg=="
+    },
+    "signed_selective_disclosure":"eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJfc2QiOlsiY01aaWxoT0Y5dUV5dldfdkNLeDhJa2JxZm1udGpxa1Y4SENGUV9sZ1BxMCIsIkRqVUMzaVhEbVVqMFFRZ2JaTTdQUWhoT0xJM0VqcVNOenozSWhDcHFRaGciLCJ3eW9TZXBTa3BKWG5PeEtsc3lwZXFqcjlQTUZYZjAyNEdsSUJQZ1ZLbnJnIiwiTVc1OHpxVXlvb0p3NXpHbUFTQ0VUTmk0cU9SY2V3dVRSV0RoTE1MYXZpcyIsInNmdG51ODdia2JsNjJBQjM4Z211eVFkWDV5RDk1VHhNdXpodnlpRDdXYjgiLCJkeWRiallMOGJjVGtjWHRMWjJlODUxNEI3bjdRRG5PZ09XRDVGbml3amRvIiwiODRWcDR5bWctOFZTY2dZbGV0R0I0VGZIYm9MUGtJWExhUDNkakwyS20wVSJdLCJfc2RfYWxnIjoic2hhLTI1NiIsImlzcyI6Imh0dHA6Ly9leGFtcGxlLm9yZyIsInN1YiI6InVzZXIgNDIifQ.zfJnEY9fHtkPtOL0b97DCa7zjV5h13Yazxolw9sfZrcFax8G7xSG4-Ai8uCNZgm-KpfpBANXo5NB2x2oWjqiWA~WyJWeUo0N2FINi1oeXNGdXRoQVpKUC1BIiwgImdpdmVuX25hbWUiLCAiSm9obiJd~WyJ2SVhHWm16b3ZucEc3UV80bVVKc093IiwgImZhbWlseV9uYW1lIiwgIkRvZSJd~WyI1WHNTSVhtYVpiZjVpa1FnTVNWR2pRIiwgImVtYWlsIiwgImpvaG5kb2VAZXhhbXBsZS5jb20iXQ~WyJicjVnbWgtY1NSTkF2b2NLQ21BRDBBIiwgInBob25lX251bWJlciIsICIrMS0yMDItNTU1LTAxMDEiXQ~WyI2VWFzY3pSS21tZThTT1V3ZWxYcTJ3IiwgInBob25lX251bWJlcl92ZXJpZmllZCIsIHRydWVd~WyJMbDI3amp3VDR5emQwaS03TkdkWkF3IiwgImFkZHJlc3MiLCB7ImNvdW50cnkiOiAiVVMiLCAibG9jYWxpdHkiOiAiQW55dG93biIsICJyZWdpb24iOiAiQW55c3RhdGUiLCAic3RyZWV0X2FkZHJlc3MiOiAiMTIzIE1haW4gU3QifV0~WyJEUjkyVlNGMmwzQXoxSzEtTHlXTzF3IiwgImJpcnRoZGF0ZSIsICIxOTQwLTAxLTAxIl0~"}
+EOF
+    cat <<EOF | zexe verify_sd_jwt_encoded ver-sd-jwt.data.json
+Scenario 'sd_jwt'
+Scenario 'es256'
+
+Given I am known as 'Alice'
+Given I have my 'es256 public key'
+Given I have a 'sd jwt' named 'signed selective disclosure'
+When I verify sd jwt 'signed_selective_disclosure' issued by 'Alice' is valid
+Then print the 'signed selective disclosure' as 'sd jwt'
+EOF
+    save_output verify_sd_jwt_encoded.out.json
     assert_output "$(cat sd-jwt.data.json)"
 }

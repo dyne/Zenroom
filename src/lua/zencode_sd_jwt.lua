@@ -488,7 +488,6 @@ end)
 
 -- for reference see Section 8.1 of https://datatracker.ietf.org/doc/draft-ietf-oauth-selective-disclosure-jwt/
 When("verify sd jwt '' issued by '' is valid", function(obj, by)
--- TODO: case input in serialized format
     local signed_sd = have(obj)
     local iss_pk = load_pubkey_compat(by, 'es256')
     local jwt = signed_sd.jwt
@@ -497,6 +496,9 @@ When("verify sd jwt '' issued by '' is valid", function(obj, by)
     zencode_assert(SD_JWT.verify_jws_header(jwt), "The JWT header is not valid")
 -- Check that the _sd_alg claim value is understood and the hash algorithm is deemed secure.
     zencode_assert(SD_JWT.verify_sd_alg(jwt), "The hash algorithm is not supported")
+
+-- Check that the sd-jwt contains all the mandatory claims
+    zencode_assert(SD_JWT.check_mandatory_claim_names(jwt.payload), "The JWT payload does not contain the mandatory claims")
 
 -- Validate the signature over the Issuer-signed JWT.
     zencode_assert(SD_JWT.verify_jws_signature(jwt, iss_pk), "The issuer signature is not valid")
