@@ -368,6 +368,10 @@ ZEN:add_schema(
             import = import_sd_jwt,
             export = export_sd_jwt,
         },
+        selective_disclosure_presentation = {
+            import = import_signed_selective_disclosure,
+            export = export_signed_selective_disclosure,
+        }
     }
 )
 
@@ -475,7 +479,7 @@ When("create selective disclosure payload of ''", function(sdr_name)
     new_codec('selective_disclosure_payload')
 end)
 
-When("create my signed selective disclosure of ''", function(sdp_name)
+When("create signed selective disclosure of ''", function(sdp_name)
     local p256 = havekey'es256'
     local sdp = have(sdp_name)
 
@@ -484,6 +488,17 @@ When("create my signed selective disclosure of ''", function(sdp_name)
         disclosures=sdp.disclosures,
     }
     new_codec('signed_selective_disclosure')
+end)
+
+When("create selective disclosure presentation of '' with disclosures ''", function(ssd_name, lis)
+    local ssd = have(ssd_name)
+    local disclosed_keys = have(lis)
+    local disclosure = SD_JWT.retrive_disclosures(ssd, disclosed_keys)
+    ACK.selective_disclosure_presentation = {
+        jwt = ssd.jwt,
+        disclosures = disclosure,
+    }
+    new_codec('selective_disclosure_presentation')
 end)
 
 -- for reference see Section 8.1 of https://datatracker.ietf.org/doc/draft-ietf-oauth-selective-disclosure-jwt/
