@@ -125,9 +125,7 @@ function sd_jwt.create_jwt_es256(payload, sk)
         typ=O.from_string("JWT")
     }
     local payload_str = sd_jwt.export_str_dict(payload)
-    I.spy(payload_str)
     b64payload = O.from_string(JSON.raw_encode(payload_str)):url64()
-    I.spy(b64payload)
 
     local signature = ES256.sign(sk, b64payload)
     return {

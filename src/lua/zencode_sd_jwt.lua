@@ -475,7 +475,7 @@ When("create selective disclosure payload of ''", function(sdr_name)
     new_codec('selective_disclosure_payload')
 end)
 
-When("create signed selective disclosure of '' with key es256", function(sdp_name)
+When("create my signed selective disclosure of ''", function(sdp_name)
     local p256 = havekey'es256'
     local sdp = have(sdp_name)
 
