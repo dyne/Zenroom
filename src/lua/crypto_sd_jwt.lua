@@ -58,6 +58,8 @@ end
 ]]
 local JWT_RESERVED_CLAIMS = {"iss", "sub", "aud", "exp", "nbf", "iat", "jti", "typ", "cty"}
 
+local NON_SELECTIVELY_DISCLOSABLE_CLAIMS = {"iss", "iat", "exp", "cnf", "type", "_sd", "_sd_alg"}
+
 -- Given as input a selective disclosure request
 -- Return a table containing two keys:
 --        payload = the jwt containing disclosable object (the credential to be signed by the issuer)
@@ -169,13 +171,52 @@ local function is_in(list, elem)
     return found
 end
 
+-- TODO: In the final version we should check that the sd-jwt payload contains all the mandatory claims below
+-- "iss", "iat", "cnf", "type", if "_sd" => "_sd_alg"
+function sd_jwt.check_mandatory_claim_names(jwt)
+    local found = true
+    if jwt._sd then
+        if not jwt._sd_alg then
+            found = false
+        end
+    end
+    if not jwt.iss then
+        found = false
+    end
+    return found
+end
+
+-- Check that the input is a table of three elements, where the first two object are string
+-- the input should be of the form {salt, key, value}
+-- we also check that the key is not in NON_SELECTIVELY_DISCLOSABLE_CLAIMS
+local function disclosure_array_is_valid(arr)
+    if type(arr) ~= 'table' or #arr ~= 3 then
+        return false
+    end
+    if type(arr[1]) ~= 'string' or type(arr[2]) ~= 'string' then
+        return false
+    end
+    if is_in(NON_SELECTIVELY_DISCLOSABLE_CLAIMS, arr[2]) then
+        return false
+    end
+    return true
+end
+
 function sd_jwt.verify_sd_fields(jwt, disclosures)
--- TODO: verify that there are no repeated claims, and that no claim key is equal to "_sd"
     local match = true
     local digest_arr = jwt._sd
-    local disclosures_str = sd_jwt.export_str_dict(disclosures)
-    for i = 1, #disclosures_str do
-        local _, hashed = sd_jwt.create_disclosure(disclosures_str[i])
+    local disclosures_arr = sd_jwt.export_str_dict(disclosures)
+    local claim_names = {}
+    for i = 1, #disclosures_arr do
+        if not disclosure_array_is_valid(disclosures_arr[i]) then
+            return false
+        end
+        if is_in(claim_names, disclosures_arr[i][2]) then
+            return false
+        else
+            table.insert(claim_names, disclosures_arr[i][2])
+        end
+        local _, hashed = sd_jwt.create_disclosure(disclosures_arr[i])
         if not is_in(digest_arr, hashed) then
             match = false
             break
