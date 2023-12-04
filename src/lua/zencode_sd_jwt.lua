@@ -296,6 +296,48 @@ local function export_signed_selective_disclosure(obj)
     }
 end
 
+local function import_jwt(obj)
+    local toks = strtok(obj, ".")
+    -- TODO: verify this is a valid jwt
+    return import_str_dict{
+        header = JSON.raw_decode(O.from_url64(toks[1]):str()),
+        payload = JSON.raw_decode(O.from_url64(toks[2]):str()),
+        signature = O.from_url64(toks[3]),
+    }
+end
+
+local function import_sd_jwt(obj)
+    zencode_assert(obj:sub(#obj, #obj) == '~', "JWT binding not implemented")
+    local toks = strtok(obj, "~")
+    disclosures = {}
+    for i=2,#toks do
+        disclosures[#disclosures+1] = JSON.raw_decode(O.from_url64(toks[i]):str())
+    end
+    return import_str_dict{
+        jwt = import_jwt(toks[1]),
+        disclosures = disclosures,
+    }
+end
+
+local function export_jwt(obj)
+    return table.concat({
+        O.from_string(JSON.raw_encode(export_str_dict(obj.header))):url64(),
+        O.from_string(JSON.raw_encode(export_str_dict(obj.payload))):url64(),
+        obj.signature:url64(),
+    }, ".")
+end
+
+local function export_sd_jwt(obj)
+    local records = {
+        export_jwt(obj.jwt)
+    }
+    for _, d in pairs(export_str_dict(obj.disclosures)) do
+        records[#records+1] = O.from_string(JSON.raw_encode(d, true)):url64()
+    end
+    records[#records+1] = ""
+    return table.concat(records, "~")
+end
+
 ZEN:add_schema(
     {
         supported_selective_disclosure = {
@@ -321,6 +363,10 @@ ZEN:add_schema(
         signed_selective_disclosure = {
             import = import_signed_selective_disclosure,
             export = export_signed_selective_disclosure,
+        },
+        sd_jwt = {
+            import = import_sd_jwt,
+            export = export_sd_jwt,
         },
     }
 )
