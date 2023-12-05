@@ -88,9 +88,9 @@ The wrapper exposes one simple calls: `zencode_exec`
 - `script` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)**
  the zencode script to be executed
 - `keys` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** the optional keys
- string to pass in execution as documented in zenroom docs [here](https://dev.zenroom.org/wiki/how-to-exec/#keys-string)
+ string to pass in execution as documented in zenroom docs
 - `data` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** the optional data
- string to pass in execution as documented in zenroom docs [here](https://dev.zenroom.org/wiki/how-to-exec/#data-string)
+ string to pass in execution as documented in zenroom docs
 - `conf` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** the optional conf
  string to pass according to zen_config [here](https://github.com/dyne/Zenroom/blob/master/src/zen_config.c#L99-L104)
 
