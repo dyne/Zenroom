@@ -69,7 +69,7 @@ sudo ln -s zencode-exec.command zencode-exec
 ***
 ## 🎮 Usage
 
-Two main calls are exposed, one to run `zencode` and one for `zenroom scripts`.
+The main call is to run `zencode`: `zencode_exec`
 
 If you don't know what `zencode` is, you can start with this blogpost
 https://decodeproject.eu/blog/smart-contracts-english-speaker
@@ -82,17 +82,10 @@ A good set of examples of `zencode` contracts could be found on
 
 ### 🐍 Python wrapper
 
-the wrapper exposes two simple calls:
-
-* `zenroom_exec`
-* `zencode_exec`
-
-as the names suggest are the two methods to execute zenroom (lua scripts) and zencode.
+The wrapper exposes one simple calls: `zencode_exec`
 
 #### args
-Both functions accept the same arguments:
-
-- `script` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** the lua script or
+- `script` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)**
  the zencode script to be executed
 - `keys` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** the optional keys
  string to pass in execution as documented in zenroom docs [here](https://dev.zenroom.org/wiki/how-to-exec/#keys-string)
@@ -117,25 +110,14 @@ from zenroom import zenroom
 
 contract = """Scenario ecdh: Create a keypair"
 Given that I am known as 'identifier'
-When I create the keypair
-Then print my data
+When I create the ecdh key
+Then print the 'keyring'
 """
 
 result = zenroom.zencode_exec(contract)
 print(result.output)
 ```
 
-
-Example usage of `zenroom_exec(script, keys=None, data=None, conf=None)`
-
-```python
-from zenroom import zenroom
-
-script = "print('Hello world')"
-result = zenroom.zenroom_exec(script)
-
-print(result.output)
-```
 
 The same arguments and the same result are applied as the `zencode_exec` call.
 
