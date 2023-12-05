@@ -144,7 +144,6 @@ function sd_jwt.retrive_disclosures(ssd, disclosed_keys)
         for ind, arr in pairs(all_dis) do
             if arr[2] == k then
                 table.insert(disclosures, arr)
-                table.remove(all_dis, ind)
                 break
             end
         end

@@ -233,10 +233,11 @@ Given I have a 'string array' named 'some disclosure'
 When I create the selective disclosure presentation of 'signed selective disclosure' with disclosures 'some disclosure'
 
 Then print 'selective disclosure presentation'
+Then print 'signed selective disclosure'
 
 EOF
     save_output sd_presentation.out.json
-    assert_output '{"selective_disclosure_presentation":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"]],"jwt":{"header":{"alg":"ES256","typ":"JWT"},"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo"],"_sd_alg":"sha-256","iss":"http://example.org","sub":"user 42"},"signature":"i95SyUjPhs5/PQinx1cHsOHXwbDGlr11ONaXrk13vFLvSo8Dn3rtw7xvcmROsB6LX3q7wFaaFmE3m5t8xTPxOw=="}}}'
+    assert_output '{"selective_disclosure_presentation":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"]],"jwt":{"header":{"alg":"ES256","typ":"JWT"},"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo"],"_sd_alg":"sha-256","iss":"http://example.org","sub":"user 42"},"signature":"i95SyUjPhs5/PQinx1cHsOHXwbDGlr11ONaXrk13vFLvSo8Dn3rtw7xvcmROsB6LX3q7wFaaFmE3m5t8xTPxOw=="}},"signed_selective_disclosure":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["5-Y_kvJBo3ni_JNNUrFnIA","family_name","Doe"],["VyJ47aH6-hysFuthAZJP-A","email","johndoe@example.com"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"],["5XsSIXmaZbf5ikQgMSVGjQ","phone_number_verified",true],["br5gmh-cSRNAvocKCmAD0A","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["6UasczRKmme8SOUwelXq2w","birthdate","1940-01-01"]],"jwt":{"header":{"alg":"ES256","typ":"JWT"},"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo"],"_sd_alg":"sha-256","iss":"http://example.org","sub":"user 42"},"signature":"i95SyUjPhs5/PQinx1cHsOHXwbDGlr11ONaXrk13vFLvSo8Dn3rtw7xvcmROsB6LX3q7wFaaFmE3m5t8xTPxOw=="}}}'
 }
 
 @test "Verify the validity of signed sd-jwt" {
@@ -284,7 +285,7 @@ Scenario 'es256'
 
 Given I am known as 'Alice'
 Given I have my 'es256 public key'
-Given I have 'selective disclosure presentation'
+Given I have a 'signed selective disclosure' named 'selective disclosure presentation'
 
 When I verify sd jwt 'selective_disclosure_presentation' issued by 'Alice' is valid
 
