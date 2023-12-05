@@ -367,10 +367,6 @@ ZEN:add_schema(
         sd_jwt = {
             import = import_sd_jwt,
             export = export_sd_jwt,
-        },
-        selective_disclosure_presentation = {
-            import = import_signed_selective_disclosure,
-            export = export_signed_selective_disclosure,
         }
     }
 )
@@ -495,10 +491,10 @@ When("create selective disclosure presentation of '' with disclosures ''", funct
     local disclosed_keys = have(lis)
     local disclosure = SD_JWT.retrive_disclosures(ssd, disclosed_keys)
     ACK.selective_disclosure_presentation = {
-        jwt = ssd.jwt,
+        jwt = deepcopy(ssd.jwt),
         disclosures = disclosure,
     }
-    new_codec('selective_disclosure_presentation')
+    new_codec('selective_disclosure_presentation', {zentype = 'e', schema = 'signed_selective_disclosure', encoding = 'complex'})
 end)
 
 -- for reference see Section 8.1 of https://datatracker.ietf.org/doc/draft-ietf-oauth-selective-disclosure-jwt/
