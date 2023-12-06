@@ -102,6 +102,7 @@ typedef struct {
         int memcount_ecp2;
         int memcount_ecdhs;
         int memcount_floats;
+        int memcount_times;
 	int exitcode;
 } zenroom_t;
 

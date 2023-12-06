@@ -1,0 +1,7 @@
+assert(tostring(T.new(1)) == '1')
+assert(tostring(T.new(12)) == '12')
+assert(tostring(T.new(123)) == '123')
+assert(tostring(T.new(1234)) == '1234')
+assert(tostring(T.new(12345)) == '12345')
+assert(tostring(T.new(123456)) == '123456')
+assert(tostring(T.new(1701857230)) == '1701857230')

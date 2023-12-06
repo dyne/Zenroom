@@ -323,7 +323,7 @@
     return nil
  end
 
-local function to_float_f(data)
+local function to_number_f(data)
   local res = tonumber(tostring(data))
   zencode_assert(res, "Could not read the float number")
   return res
@@ -341,16 +341,16 @@ end
        if dt == 'number' or dt == 'boolean' then
 		  return data
        elseif dt == 'zenroom.big' then
-        zencode_assert(fun ~= to_float_f and fun ~= O.to_mnemonic, "Encoding not valid for integers")
+        zencode_assert(fun ~= to_number_f and fun ~= O.to_mnemonic, "Encoding not valid for integers")
         if fun == O.to_string then fun = BIG.to_decimal end
         if fun ~= BIG.to_decimal then
           zencode_assert(BIG.zenpositive(data), "Negative integers can not be encoded")
           data = data:octet()
         end
         return fun(data)
-       elseif dt == 'zenroom.float' then
+       elseif dt == 'zenroom.float' or dt == 'zenroom.time' then
         zencode_assert(fun ~= BIG.to_decimal and fun ~= O.to_mnemonic, "Encoding not valid for floats")
-        if fun ~= to_float_f then
+        if fun ~= to_number_f then
           data = data:octet()
         end
 		    return fun(data)
@@ -393,9 +393,10 @@ function get_encoding_function(cast)
     binary = O.to_bin,
     bin = O.to_bin,
     mnemonic = O.to_mnemonic,
-    float = to_float_f,
-    number = to_float_f,
-    integer = BIG.to_decimal
+    float = to_number_f,
+    number = to_number_f,
+    integer = BIG.to_decimal,
+    time = to_number_f,
   }
   if encoding_table[cast] then
     return f_factory_outcast(encoding_table[cast])
