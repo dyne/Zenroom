@@ -247,7 +247,7 @@ Then print the 'New-ABC-TransactionsSum'
 and print the 'New-ABC-TransactionsSum.signature'
 EOF
     save_output 'dictionariesFind_max_transactions.json'
-    assert_output '{"New-ABC-TransactionsSum":{"TransactionProductAmountSums":1500,"TransactionValueSums":6000,"timestamp":1.597573e+09},"New-ABC-TransactionsSum.signature":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"NeeOCvb7hhawMPsGwfyUWLZesndeLxAYRnA69iM+xp4="}}'
+    assert_output '{"New-ABC-TransactionsSum":{"TransactionProductAmountSums":1500,"TransactionValueSums":6000,"timestamp":1597573330},"New-ABC-TransactionsSum.signature":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"5mCGhcixImaeCcfp6TxMbz4rbRt3XwwoMaqLXap+9LQ="}}'
 }
 
 @test "Random dictionary" {
@@ -257,7 +257,7 @@ When I create the random dictionary with '3' random objects from 'ABC-Transactio
 Then print the 'random dictionary'
 EOF
     save_output 'random_dictionary.json'
-    assert_output '{"random_dictionary":{"ABC-Transactions2Data":{"PricePerKG":2,"TransactionValue":1000,"TransferredProductAmount":500,"timestamp":1.597573e+09},"ABC-Transactions3Data":{"PricePerKG":2,"TransactionValue":1000,"TransferredProductAmount":500,"timestamp":1.597573e+09},"ABC-Transactions5Data":{"PricePerKG":4,"TransactionValue":2000,"TransferredProductAmount":500,"timestamp":1.597574e+09}}}'
+    assert_output '{"random_dictionary":{"ABC-Transactions2Data":{"PricePerKG":2,"TransactionValue":1000,"TransferredProductAmount":500,"timestamp":1597573239},"ABC-Transactions3Data":{"PricePerKG":2,"TransactionValue":1000,"TransferredProductAmount":500,"timestamp":1597573339},"ABC-Transactions5Data":{"PricePerKG":4,"TransactionValue":2000,"TransferredProductAmount":500,"timestamp":1597573539}}}'
 }
 
 @test "Another random dictionary" {
@@ -272,7 +272,7 @@ When I create the random dictionary with 'few' random objects from 'ABC-Transact
 Then print the 'random dictionary'
 EOF
     save_output 'another_random_dictionary.json'
-    assert_output '{"random_dictionary":{"ABC-Transactions2Data":{"PricePerKG":2,"TransactionValue":1000,"TransferredProductAmount":500,"timestamp":1.597573e+09},"ABC-Transactions5Data":{"PricePerKG":4,"TransactionValue":2000,"TransferredProductAmount":500,"timestamp":1.597574e+09}}}'
+    assert_output '{"random_dictionary":{"ABC-Transactions2Data":{"PricePerKG":2,"TransactionValue":1000,"TransferredProductAmount":500,"timestamp":1597573239},"ABC-Transactions5Data":{"PricePerKG":4,"TransactionValue":2000,"TransferredProductAmount":500,"timestamp":1597573539}}}'
 }
 
 @test "Nested dictionaries" {
@@ -406,7 +406,7 @@ When I remove the 'random object' from 'TransactionsBatchA'
 Then print the 'salesReport'
 EOF
     save_output 'dictionary_iter.json'
-    assert_output '{"salesReport":{"maxPricePerKG":100,"sumValueAllTransactions":3800,"transferredProductAmountafterSalesStart":10}}'
+    assert_output '{"salesReport":{"maxPricePerKG":100,"sumValueAllTransactions":3800,"transferredProductAmountafterSalesStart":30}}'
 }
 
 @test "Append foreach" {
@@ -442,7 +442,7 @@ When I copy contents of 'blockchains' in 'TransactionsBatchA'
 Then print 'TransactionsBatchA'
 EOF
     save_output 'copy_contents_in.json'
-    assert_output '{"TransactionsBatchA":{"ABC-Transactions1Data":{"PricePerKG":"100","ProductPurchasePrice":"50","TransactionValue":"1500","TransferredProductAmount":"15","UndeliveredProductAmount":"7","timestamp":"1.597573e+09"},"ABC-Transactions2Data":{"PricePerKG":"80","TransactionValue":"1600","TransferredProductAmount":"20","timestamp":"1.597573e+09"},"ABC-Transactions3Data":{"PricePerKG":"70","TransactionValue":"700","TransferredProductAmount":"10","timestamp":"1.597573e+09"},"Information":{"Buyer":"John Doe","Metadata":"TransactionsBatchB6789"},"MetaData":"This var is Not a Table","b1":{"endpoint":"http://pesce.com/","last-transaction":"123"},"b2":{"endpoint":"http://fresco.com/","last-transaction":"234"},"number":"1234"}}'
+    assert_output '{"TransactionsBatchA":{"ABC-Transactions1Data":{"PricePerKG":"100","ProductPurchasePrice":"50","TransactionValue":"1500","TransferredProductAmount":"15","UndeliveredProductAmount":"7","timestamp":1597573139},"ABC-Transactions2Data":{"PricePerKG":"80","TransactionValue":"1600","TransferredProductAmount":"20","timestamp":1597573239},"ABC-Transactions3Data":{"PricePerKG":"70","TransactionValue":"700","TransferredProductAmount":"10","timestamp":1597573340},"Information":{"Buyer":"John Doe","Metadata":"TransactionsBatchB6789"},"MetaData":"This var is Not a Table","b1":{"endpoint":"http://pesce.com/","last-transaction":"123"},"b2":{"endpoint":"http://fresco.com/","last-transaction":"234"},"number":"1234"}}'
 }
 
 @test "Dictionary named by" {

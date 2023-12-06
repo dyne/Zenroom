@@ -98,6 +98,8 @@ local function _initial_set(number, name, arr)
         enc = "float"
     elseif t == "zenroom.big" then
         enc = "integer"
+    elseif t == "zenroom.time" then
+        enc = "time"
     else
         error(name.." inside dictionaires in "..arr.." is neither a integer nor a float")
     end
@@ -183,7 +185,7 @@ When("create sum value '' for dictionaries in '' where '' > ''", function(name,a
 		conditions = { },
 		cmp = function(l,r) return l > r end,
 		op = function(v)
-            if not sum then
+            if sum == nil then
                 sum, sum_enc = _initial_set(v, name, arr)
             else sum = sum + v end
         end

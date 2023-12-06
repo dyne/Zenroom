@@ -212,6 +212,54 @@ end:
 	END(1);
 }
 
+static int time_eq(lua_State *L) {
+	BEGIN();
+	ztime_t *a,*b;
+	a = time_arg(L,1);
+	b = time_arg(L,2);
+	if(a && b) {
+		lua_pushboolean(L, *a == *b);
+	}
+	time_free(L,a);
+	time_free(L,b);
+	if(!a || !b) {
+		THROW("Could not allocate float number");
+	}
+	END(1);
+}
+
+static int time_lt(lua_State *L) {
+	BEGIN();
+	ztime_t *a = time_arg(L,1);
+	ztime_t *b = time_arg(L,2);
+	if(a && b) {
+		lua_pushboolean(L, *a < *b);
+	}
+	time_free(L,a);
+	time_free(L,b);
+	if(!a || !b) {
+		THROW("Could not allocate time number");
+	}
+	END(1);
+}
+
+// TODO: could be wrong due to equality
+static int time_lte(lua_State *L) {
+	BEGIN();
+	ztime_t *a = time_arg(L,1);
+	ztime_t *b = time_arg(L,2);
+	if(a && b) {
+		lua_pushboolean(L, *a <= *b);
+	}
+	time_free(L,a);
+	time_free(L,b);
+	if(!a || !b) {
+		THROW("Could not allocate time number");
+	}
+	END(1);
+}
+
+
 static int time_to_string(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -246,6 +294,9 @@ int luaopen_time(lua_State *L) {
 	const struct luaL_Reg time_methods[] = {
 		{"octet", time_to_octet},
 		{"__tostring", time_to_string},
+		{"__eq", time_eq},
+		{"__lt", time_lt},
+		{"__lte", time_lte},
 		{NULL, NULL}
 	};
 	zen_add_class(L, "time", time_class, time_methods);

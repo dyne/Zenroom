@@ -100,8 +100,9 @@ zenroom_src = [
     '../src/zen_random.c',
     '../src/zenroom.c',
     '../src/zen_ecdh_factory.c',
-	'../src/p256-m.c',
-	'../src/zen_p256.c'
+    '../src/p256-m.c',
+    '../src/zen_p256.c',
+    '../src/zen_time.c'
 ]
 
 zenroom_lib = library(

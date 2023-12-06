@@ -280,7 +280,11 @@
 	  -- wrap all conversion functions nested in deepmaps
 	  -- TODO: optimize
 	  if dt == 'number' then
-	     return FLOAT.new(data)
+       if data==math.floor(data) and data >= 1500000000 and data < 2000000000 then
+          return U.new(data)
+       else
+          return FLOAT.new(data)
+       end
 	  elseif dt == 'boolean' then
 	     return data
 	  end
@@ -318,6 +322,8 @@
        return f_factory_encoder('integer', BIG.from_decimal, BIG.is_integer)
     elseif what == 'float' or what == 'num' or what == 'number' then
        return f_factory_encoder('float', FLOAT.new, FLOAT.is_float)
+    elseif what == 'time' then
+       return f_factory_encoder('time', U.new, nil)
     end
     error("Input encoding not found: " .. what, 2)
     return nil
@@ -348,12 +354,14 @@ end
           data = data:octet()
         end
         return fun(data)
-       elseif dt == 'zenroom.float' or dt == 'zenroom.time' then
+       elseif dt == 'zenroom.float' then
         zencode_assert(fun ~= BIG.to_decimal and fun ~= O.to_mnemonic, "Encoding not valid for floats")
         if fun ~= to_number_f then
           data = data:octet()
         end
 		    return fun(data)
+       elseif dt == 'zenroom.time' then
+         return to_number_f(data)
        elseif iszen(dt) then
 		  -- leverage first class citizen method on zenroom data
 		  return fun(data:octet())

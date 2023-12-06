@@ -113,7 +113,10 @@ When("write number '' in ''", function(content, dest)
 --		error('Overflow of number object over 32bit signed size')
 		-- TODO: maybe support unsigned native here
 --	end
-	ACK[dest] = F.new(content)
+
+    --- simulate input from Given to add a new number
+    --- in order to make it distinguish float and time
+	ACK[dest] = input_encoding('float').fun(num)
     new_codec(dest, {zentype = 'e', encoding = 'number'})
 end)
 
