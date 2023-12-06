@@ -69,7 +69,7 @@ sudo ln -s zencode-exec.command zencode-exec
 ***
 ## 🎮 Usage
 
-Two main calls are exposed, one to run `zencode` and one for `zenroom scripts`.
+The main call is to run `zencode`: `zencode_exec`
 
 If you don't know what `zencode` is, you can start with this blogpost
 https://decodeproject.eu/blog/smart-contracts-english-speaker
@@ -82,22 +82,15 @@ A good set of examples of `zencode` contracts could be found on
 
 ### 🐍 Python wrapper
 
-the wrapper exposes two simple calls:
-
-* `zenroom_exec`
-* `zencode_exec`
-
-as the names suggest are the two methods to execute zenroom (lua scripts) and zencode.
+The wrapper exposes one simple calls: `zencode_exec`
 
 #### args
-Both functions accept the same arguments:
-
-- `script` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** the lua script or
+- `script` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)**
  the zencode script to be executed
 - `keys` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** the optional keys
- string to pass in execution as documented in zenroom docs [here](https://dev.zenroom.org/wiki/how-to-exec/#keys-string)
+ string to pass in execution as documented in zenroom docs
 - `data` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** the optional data
- string to pass in execution as documented in zenroom docs [here](https://dev.zenroom.org/wiki/how-to-exec/#data-string)
+ string to pass in execution as documented in zenroom docs
 - `conf` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** the optional conf
  string to pass according to zen_config [here](https://github.com/dyne/Zenroom/blob/master/src/zen_config.c#L99-L104)
 
@@ -117,27 +110,71 @@ from zenroom import zenroom
 
 contract = """Scenario ecdh: Create a keypair"
 Given that I am known as 'identifier'
-When I create the keypair
-Then print my data
+When I create the ecdh key
+Then print the 'keyring'
 """
 
 result = zenroom.zencode_exec(contract)
 print(result.output)
 ```
 
-
-Example usage of `zenroom_exec(script, keys=None, data=None, conf=None)`
-
-```python
+Next, we show a more complex example
+```
 from zenroom import zenroom
+import json
 
-script = "print('Hello world')"
-result = zenroom.zenroom_exec(script)
+conf = ""
 
+keys = {
+    "participant": {
+        "keyring": {
+            "ethereum": "6b4f32fc48ff19f0c184f1b7c593fbe26633421798191931c210a3a9bb46ae22"
+        }
+    }
+}
+
+data = {
+    "myString": "I love the Beatles, all but 3",
+    "participant ethereum address": "0x2B8070975AF995Ef7eb949AE28ee7706B9039504"
+}
+
+contract = """Scenario ethereum: sign ethereum message
+
+# Here we are loading the private key and the message to be signed
+Given I am 'participant'
+Given I have my 'keyring'
+Given I have a 'string' named 'myString'
+Given I have a 'ethereum address' named 'participant ethereum address'
+
+
+# Here we are creating the signature according to EIP712
+When I create the ethereum signature of 'myString'
+When I rename the 'ethereum signature' to 'myString.ethereum-signature'
+
+# Here we copy the signature, which we'll print in a different format
+When I copy 'myString.ethereum-signature' to 'myString.ethereum-signature.rsv'
+
+# Here we print the signature in the regular 65 bytes long 'signaure hash' format
+When I create ethereum address from ethereum signature 'myString.ethereum-signature' of 'myString'
+When I copy 'ethereum address' to 'newEthereumAddress'
+
+
+If I verify 'newEthereumAddress' is equal to 'participant ethereum address'
+Then print string 'all good, the recovered ethereum address matches the original one'
+Endif
+
+Then print the 'myString.ethereum-signature'
+Then print the 'newEthereumAddress'
+
+
+# Here we print the copy of the signature in the [r,s,v], simply printing it as 'hex'
+Then print the 'myString.ethereum-signature.rsv' as 'hex'
+"""
+
+result = zenroom.zencode_exec(contract, conf, json.dumps(keys), json.dumps(data))
 print(result.output)
 ```
 
-The same arguments and the same result are applied as the `zencode_exec` call.
 
 ***
 ## 📋 Testing
