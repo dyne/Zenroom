@@ -76,7 +76,7 @@ BTC = require('crypto_bitcoin') -- Bitcoin primitives imported by default
 O = OCTET -- alias
 INT = BIG -- alias
 F = FLOAT
-T = TIME
+U = TIME -- alias U = Unix timestamp
 I = INSPECT -- alias
 H = HASH -- alias
 PAIR = ECP2 -- alias
