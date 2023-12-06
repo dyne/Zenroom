@@ -206,6 +206,7 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	ZZ->memcount_ecp = 0;
 	ZZ->memcount_ecp2 = 0;
 	ZZ->memcount_floats = 0;
+	ZZ->memcount_times = 0;
 	ZZ->memcount_ecdhs = 0;
 
 	if(conf) {
@@ -327,11 +328,13 @@ void zen_teardown(zenroom_t *ZZ) {
 		ZZ->memcount_bigs);
 	func(ZZ->lua,"Number of FLOATs left unallocated: %d",
 		ZZ->memcount_floats);
+	func(ZZ->lua,"Number of TIMEs left unallocated: %d",
+		ZZ->memcount_times);
 	func(ZZ->lua,"Number of ECDHs left unallocated: %d",
 		ZZ->memcount_ecdhs);
 	int memcount = ZZ->memcount_octets + ZZ->memcount_ecp
 	  + ZZ->memcount_ecp2 + ZZ->memcount_hashes + ZZ->memcount_bigs
-	  + ZZ->memcount_floats + ZZ->memcount_ecdhs;
+	  + ZZ->memcount_floats + ZZ->memcount_ecdhs + ZZ->memcount_times;
 	if(memcount>0)
 	  warning(ZZ->lua, "Zenroom memory left allocated: %u B", memcount);
 

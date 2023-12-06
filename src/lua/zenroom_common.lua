@@ -351,7 +351,7 @@ end
 
 local oldtonumber = tonumber
 function tonumber(obj, ...)
-    if type(obj) == "zenroom.float" then
+    if type(obj) == "zenroom.float" or type(obj) == "zenroom.time" then
         obj = tostring(obj)
     end
     return oldtonumber(obj, ...)
