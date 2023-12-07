@@ -6,7 +6,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 # Zenroom crypto VM
 
-[![Zenroom logo](https://files.dyne.org/zenroom/logos/zenroom_logotype.png)](https://zenroom.org)
+[![Zenroom logo](docs/_media/images/zenroom_logotype.png)](https://zenroom.org)
 
 Zenroom is a **secure language interpreter** of the domain-specific Zencode, making it easy to execute fast cryptographic operations on any data structure.
 
