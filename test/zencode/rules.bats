@@ -283,8 +283,8 @@ EOF
     assert_output '{"float_num":1.978469e+09,"int_num":"1978468946","time_num":1978468946}'
 }
 
-@test "Rule input number strict fails" {
-    cat << EOF | save_asset rule_input_number_strict_fails.data
+@test "Rule input number strict with dictionaries" {
+    cat << EOF | save_asset rule_input_number_strict_dictionaries.data
 {
     "string_dict_with_number": {
         "string": "hello",
@@ -293,12 +293,12 @@ EOF
     }
 }
 EOF
-    cat << EOF | zexe rule_input_number_strict_fails.zen rule_input_number_strict_fails.data
+    cat << EOF | zexe rule_input_number_strict_dictionaries.zen rule_input_number_strict_dictionaries.data
 Rule input number strict
 
 Given I have a 'string dictionary' named 'string_dict_with_number'
 Then print the data
 EOF
-    save_output rule_input_number_strict_fails.out
+    save_output rule_input_number_strict_dictionaries.out
     assert_output '{"string_dict_with_number":{"bool":true,"num":"1978468946","string":"hello"}}'
 }
