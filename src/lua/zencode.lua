@@ -269,6 +269,11 @@ function ZEN:begin(new_heap)
 			 CONF.input.tagged = false
 			 return true
 		  end,
+		  ['input number'] = function (what)
+			if not what or what ~= 'strict' then return false end
+			CONF.input.number_strict = true
+			return true
+		  end,
 		  ['output encoding'] = function (encoding)
 			 if not encoding then return false end
 			 CONF.output.encoding = { fun = get_encoding_function(encoding),

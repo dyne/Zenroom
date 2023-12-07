@@ -199,6 +199,7 @@ EOF
     }
 EOF
     cat <<EOF | zexe print_float_encoded.zen print_float_encoded.data
+Rule input number strict
 Given I have a 'float' named 'small_float'
 Given I have a 'float' named 'big_float'
 
