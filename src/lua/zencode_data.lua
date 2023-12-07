@@ -277,17 +277,19 @@
     else
        res.fun = function(data)
 	  local dt = luatype(data)
+    if dt == 'boolean' then
+      return data
+    end
 	  -- wrap all conversion functions nested in deepmaps
 	  -- TODO: optimize
-	  if dt == 'number' then
+	  if dt == 'number' and not CONF.input.number_strict then
        if data==math.floor(data) and data >= 1500000000 and data < 2000000000 then
+          warn("Number value imported as timestamp: "..data)
           return U.new(data)
        else
           return FLOAT.new(data)
        end
-	  elseif dt == 'boolean' then
-	     return data
-	  end
+  end
 	  return encoder_f(data)
        end
     end
