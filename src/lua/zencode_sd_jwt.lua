@@ -371,12 +371,18 @@ ZEN:add_schema(
     }
 )
 
-When("use supported selective disclosure to disclose '' named '' with id ''", function(disp_name, named, id_name)
+function is_probably_array(t)
+  return #t > 0 and next(t, #t) == nil
+end
+
+When("use supported selective disclosure to disclose '' with id ''", function(disps_name, id_name)
     local ssd = have'supported selective disclosure'
-    local disp = have(disp_name)
-    local name = have(named)
+    local disps = have(disps_name)
     local id = have(id_name)
-    check_display(disp)
+    zencode_assert(is_probably_array(disps), "Must be an array of displays: " .. disps_name)
+    for _, v in pairs(disps) do
+        zencode_assert(check_display(v), "Must be an array of displays " .. disps_name)
+    end
 
     local credential = nil
 
@@ -392,21 +398,18 @@ When("use supported selective disclosure to disclose '' named '' with id ''", fu
 
     found = false
     for i =1,#credential.order do
-        if credential.order[i] == name then
+        if credential.order[i] == disps_name then
             found = true
         end
     end
 
     if not found then
-        credential.order[#credential.order+1] = name
-        credential.credentialSubject[name:string()] = {
-            display = {
-                disp
-            }
+        credential.order[#credential.order+1] = O.from_string(disps_name)
+        credential.credentialSubject[disps_name] = {
+            display = disps
         }
     else
-        curr = credential.credentialSubject[name].display
-        curr[#curr+1] = disp
+        credential.credentialSubject[name].display = disps
     end
 end)
 
