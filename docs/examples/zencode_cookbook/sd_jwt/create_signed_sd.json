@@ -1,0 +1,35 @@
+{
+    "The Issuer": {
+        "es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg==",
+        "keyring":{
+            "es256":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="
+        }
+    },
+    "selective_disclosure_request": {
+        "fields":[
+            "given_name","family_name","email","phone_number",
+            "phone_number_verified","address","birthdate"
+        ],
+        "object": {
+            "given_name": "John",
+            "family_name": "Doe",
+            "email": "johndoe@example.com",
+            "phone_number": "+1-202-555-0101",
+            "phone_number_verified": true,
+            "address": {
+                "street_address": "123 Main St",
+                "locality": "Anytown",
+                "region": "Anystate",
+                "country": "US"
+            },
+            "birthdate": "1940-01-01",
+            "updated_at": 1570000000,
+            "nationalities": [
+                "US",
+                "DE"
+            ],
+            "iss":"http://example.org",
+            "sub":"user 42"
+        }
+}
+}

@@ -29,6 +29,7 @@
   - [Scenario 'schnorr': Signature](/pages/zencode-scenarios-schnorr.md "Zencode schnorr")
   - [Scenario 'qp': KEM, signature](/pages/zencode-scenarios-qp.md "Zencode qp")
  <!--- --->
+  - [Scenario 'sd-jwt': Selective Disclosure](/pages/zencode-scenarios-sdJwt.md "Zencode SD-JWT")
   - [Scenario 'bitcoin': Create bitcoin transactions](/pages/zencode-scenarios-bitcoin.md "Create bitcoin transactions")
   - [Scenario 'ethereum': Create ethereum transactions](/pages/zencode-scenarios-ethereum.md "Create ethereum transactions")
   - [Zencode "rules"](/pages/zencode-rules.md "Zencode encoding and format rules")

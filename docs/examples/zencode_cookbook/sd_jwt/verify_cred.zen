@@ -1,0 +1,11 @@
+Scenario 'sd_jwt'
+Scenario 'es256'
+
+Given I am known as 'The Issuer'
+Given I have my 'es256 public key'
+
+Given I have a 'signed selective disclosure' named 'selective disclosure presentation'
+
+When I verify sd jwt 'selective_disclosure_presentation' issued by 'The Issuer' is valid
+
+Then print data
