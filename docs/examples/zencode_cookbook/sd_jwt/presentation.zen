@@ -1,0 +1,9 @@
+Scenario 'sd_jwt'
+Scenario 'es256'
+
+Given I have 'signed selective disclosure'
+Given I have a 'string array' named 'some disclosure'
+
+When I create the selective disclosure presentation of 'signed selective disclosure' with disclosures 'some disclosure'
+
+Then print 'selective disclosure presentation'

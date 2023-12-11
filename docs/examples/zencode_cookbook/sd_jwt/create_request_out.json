@@ -1,0 +1,16 @@
+{
+    "selective_disclosure_request": {
+      "fields": [
+        "given_name",
+        "family_name"
+      ],
+      "object": {
+        "age": 42,
+        "degree": "math",
+        "family_name": "Lippo",
+        "given_name": "Mimmo",
+        "iss": "http://example.org",
+        "sub": "user 42"
+      }
+    }
+}
