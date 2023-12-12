@@ -64,7 +64,7 @@ Then print 'pointer'
 and print 'dataFromEndpoint'
 EOF
     save_output 'pointer.out'
-    assert_output '{"dataFromEndpoint":{"cod":"200","count":"1","list":[{"clouds":{"all":"20"},"coord":{"lat":"43.766701","lon":"11.25"},"dt":"1.624277e+09","id":"3.176959e+06","main":{"feels_like":"305.320007","humidity":"48","key_inside_list":"main","pressure":"1010","temp":"304.109985","temp_max":"304.820007","temp_min":"303.149994"},"name":"Florence","sys":{"country":"IT"},"weather":[{"description":"few clouds","icon":"02d","id":"801","main":"Clouds"}],"wind":{"deg":"0","speed":"2.06"}}],"message":"accurate"},"pointer":{"feels_like":"305.320007","humidity":"48","key_inside_list":"main","pressure":"1010","temp":"304.109985","temp_max":"304.820007","temp_min":"303.149994"}}'
+    assert_output '{"dataFromEndpoint":{"cod":"200","count":"1","list":[{"clouds":{"all":"20"},"coord":{"lat":"43.766701","lon":"11.25"},"dt":1624277371,"id":"3.176959e+06","main":{"feels_like":"305.320007","humidity":"48","key_inside_list":"main","pressure":"1010","temp":"304.109985","temp_max":"304.820007","temp_min":"303.149994"},"name":"Florence","sys":{"country":"IT"},"weather":[{"description":"few clouds","icon":"02d","id":"801","main":"Clouds"}],"wind":{"deg":"0","speed":"2.06"}}],"message":"accurate"},"pointer":{"feels_like":"305.320007","humidity":"48","key_inside_list":"main","pressure":"1010","temp":"304.109985","temp_max":"304.820007","temp_min":"303.149994"}}'
 }
 
 @test "pointer fails" {
