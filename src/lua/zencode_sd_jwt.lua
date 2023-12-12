@@ -202,15 +202,7 @@ local function import_jwk_key_binding(obj)
 end
 
 local function import_str_dict(obj)
-    return deepmap(function(o)
-        if type(o) == 'string' then
-            return O.from_str(o)
-        elseif type(o) == 'number' then
-            return F.new(o)
-        else
-            return o
-        end
-    end, obj)
+    return deepmap(input_encoding("str").fun, obj)
 end
 
 local function export_str_dict(obj)
@@ -297,11 +289,15 @@ local function export_signed_selective_disclosure(obj)
 end
 
 local function import_jwt(obj)
+    local function import_jwt_dict(d)
+        return import_str_dict(
+            JSON.raw_decode(O.from_url64(d):str()))
+    end
     local toks = strtok(obj, ".")
     -- TODO: verify this is a valid jwt
-    return import_str_dict{
-        header = JSON.raw_decode(O.from_url64(toks[1]):str()),
-        payload = JSON.raw_decode(O.from_url64(toks[2]):str()),
+    return {
+        header = import_jwt_dict(toks[1]),
+        payload = import_jwt_dict(toks[2]),
         signature = O.from_url64(toks[3]),
     }
 end
@@ -313,9 +309,9 @@ local function import_sd_jwt(obj)
     for i=2,#toks do
         disclosures[#disclosures+1] = JSON.raw_decode(O.from_url64(toks[i]):str())
     end
-    return import_str_dict{
+    return {
         jwt = import_jwt(toks[1]),
-        disclosures = disclosures,
+        disclosures = import_str_dict(disclosures),
     }
 end
 
@@ -473,7 +469,6 @@ end)
 When("create selective disclosure payload of ''", function(sdr_name)
     local sdr = have(sdr_name)
     local sdp = SD_JWT.create_sd(sdr)
-    sdp.payload = import_str_dict(sdp.payload)
     ACK.selective_disclosure_payload = sdp
     new_codec('selective_disclosure_payload')
 end)
