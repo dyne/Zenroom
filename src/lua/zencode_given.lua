@@ -260,7 +260,7 @@ local function ack(what)
 
 end
 
-Given('nothing',function()
+Given("nothing",function()
       zencode_assert(
          (next(IN) == nil),
          'Undesired data passed as input'
