@@ -69,7 +69,7 @@ tests = [
 'generic_es256', 'generic_mldsa44', 'generic_schnorr', 'given',
 'hash', 'http', 'keys', 'kyber', 'mlkem512', 'ntrup', 'numbers',
 'output', 'pack', 'parser', 'planetmint', 'pvss', 'random',
-'reflow','rules', 'scope', 'sd_jwt', 'secshare', 'then', 'time',
+'reflow','rules', 'scope', 'sd_jwt', 'secshare', 'table', 'then', 'time',
 'w3c', 'w3c_did', 'when', 'zenswarm', 'zkp', 'zkp_multi_petitions'
 ]
 # non-portable: 'cookbook_hash_pdf'
@@ -114,8 +114,8 @@ benches = [ 'and', 'array', 'bbs_sha', 'bbs_shake', 'bbs_zkp',
 'foreach', 'generic_bbs', 'generic_dilithium', 'generic_ecdh',
 'generic_eddsa', 'generic_schnorr', 'given', 'hash', 'kyber', 'ntrup',
 'numbers', 'output', 'pack', 'parser', 'planetmint', 'pvss', 'random',
-'reflow', 'sd_jwt', 'secshare', 'then', 'time', 'w3c', 'w3c_did', 'when',
-'zencode_exec', 'zenswarm', 'zkp', 'zkp_multi_petitions',
+'reflow', 'sd_jwt', 'secshare', 'table', 'then', 'time', 'w3c', 'w3c_did',
+'when', 'zencode_exec', 'zenswarm', 'zkp', 'zkp_multi_petitions',
 'fsp' ]
 foreach test_suite: benches
     benchmark('zencode_'+test_suite.underscorify(),
