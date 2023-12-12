@@ -280,7 +280,6 @@ end)
 When("set pointer to ''", function(obj_name)
     local obj, obj_codec = have(obj_name)
     empty "pointer"
-    zencode_assert(obj_codec.zentype ~= "e", "Cannot set pointer to an element")
     ACK.pointer = obj
     new_codec("pointer", nil, obj_name)
 end)
@@ -299,10 +298,6 @@ When("enter '' with pointer", function(key_name)
         zencode_assert(key_s, "Pointer is an array but key is not a position number: "..key_name)
     end
     zencode_assert(p[key_s], "Cannot find "..key_s.." in pointer")
-    zencode_assert(luatype(p[key_s]) == "table",
-        "Cannot enter a "..luatype(p[key_s])..", is not a table")
-    -- do not point to elements
-    zencode_assert(not p_codec.schema, "Cannot set pointer to an element")
     ACK.pointer = p[key_s]
     local n_codec = {encoding = p_codec.encoding}
     if p_codec.schema then
