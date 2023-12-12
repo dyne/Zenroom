@@ -229,11 +229,11 @@ Then("print my '' from ''",function(k, f)
 	OUT[WHO][k] = then_outcast( val, k, codec.encoding )[k]
 end)
 
-Then('print keyring',function()
+Then("print keyring",function()
 	local val = have'keyring'
 	OUT.keyring = ZEN.schemas['keyring'].export(val)
 end)
-Then('print my keyring',function()
+Then("print my keyring",function()
 	Iam()
 	local val = have'keyring'
 	OUT[WHO] = { keyring = ZEN.schemas['keyring'].export(val) }
@@ -248,7 +248,7 @@ end)
 -- my data from
 -- my data from as
 
-Then('print data',function()
+Then("print data",function()
 	for k, v in pairs(ACK) do
 	   if k ~= 'keyring' then
 	      OUT[k] = then_outcast(v, k)
@@ -286,7 +286,7 @@ Then("print data from '' as ''", function(src, e)
 	end
 end)
 
-Then('print my data',function()
+Then("print my data",function()
 	Iam() -- sanity checks
 	OUT[WHO] = { }
 	for k, v in pairs(ACK) do
