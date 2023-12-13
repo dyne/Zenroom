@@ -299,4 +299,11 @@ Then print the data
 EOF
     save_output rule_input_number_strict_dictionaries.out
     assert_output '{"string_dict_with_number":{"bool":true,"num":1.978469e+09,"string":"hello"}}'
+
+    cat << EOF | zexe not_rule_input_number_strict_dictionaries.zen rule_input_number_strict_dictionaries.data
+Given I have a 'string dictionary' named 'string_dict_with_number'
+Then print the data
+EOF
+    save_output not_rule_input_number_strict_dictionaries.out
+    assert_output '{"string_dict_with_number":{"bool":true,"num":1978468946,"string":"hello"}}'
 }
