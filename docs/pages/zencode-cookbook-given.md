@@ -40,7 +40,9 @@ Given I have a 'string' named 'myString'
 Some of you may find surprising referring to a ***string*** as an ***encoding***: this is due to the internal mechanics of the Zenroom virtual machine, which converts all data (to an internal encoding called ***OCTET***) when processing it and converts it back to the data original encoding when the output is being generated. The encodings supported in Zencode are: 
 
 - ***string***
-- ***number*** 
+- ***number*** or ***float***
+- ***time***
+- ***integer***
 - ***hex***
 - ***bin***
 - ***base64*** 
@@ -213,7 +215,9 @@ Time to talk about the *arrays*, we have already loaded one but we also mentione
 
 The data types allowed are: 
  - string 
- - number 
+ - number or float
+ - time
+ - integer
  - bin 
  - hex
  - base64
@@ -372,7 +376,29 @@ Then print data
 
 When doing so, you would incur in errors, cause Zenroom doesn't load objects with empty or *null* values. On the other hand, Zenroom doesn't normally allow you to set or change the value of an existing object, so importing an empty object expecting to fill it later, doesn't make much sense. You may instead create, copy and rename new objects at execution time, you will read about this in the [When](/pages/zencode-cookbook-when?id=manipulation-sumsubtract-rename-remove-append) section of this manual.
 
- 
+
+## Numbers in complex objects
+
+When loading a complex objects, say a ***string dictionary***, that contains a ***number***, a fuzzy logic is applied to the dictionary. Let see it with an example.
+Suppose to have the following data:
+
+[](../_media/examples/zencode_cookbook/then/dictionary_string_float_time.json ':include :type=code json')
+
+and to load the dictionary as in the following script:
+
+[](../_media/examples/zencode_cookbook/then/dictionary_string_float_time.zen ':include :type=code gherkin')
+
+the reuslt will be:
+
+[](../_media/examples/zencode_cookbook/then/dictionary_string_float_time.out ':include :type=code')
+
+This happens because when Zenroom encounters a number during the loading phase does not look at the encoding specified in the statement, but it import it as a ***float*** or a ***time*** data type.
+By deafult it will import numbers that are integers in the range from 1500000000 (included) to 2000000000 (not included) as ***time***, while all the others as ***floats***.
+
+Be careful, ***time*** and ***floats*** data type are not comparable and the only operations that can be done between two ***time*** variables are comparison (equal, less then, more than and not equal).
+
+To avoid importing ***floats*** as ***time*** you can use [Rule input number strict](/pages/zencode-rules.md?id=rule-input-number-strict).
+
 
 <!-- Temp removed, 
 
