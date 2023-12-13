@@ -1,0 +1,7 @@
+{
+    "string_dict_with_number": {
+        "string": "hello",
+        "num": 1978468946,
+        "bool": true
+    }
+}
