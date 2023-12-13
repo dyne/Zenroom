@@ -476,3 +476,21 @@ EOF
     save_output "hex_0x_prefix.out"
     assert_output '{"0xprefix":"0x7d6df85bDBCe99151c813fd1DDE6BC007c523C27","myhex":"7d6df85bdbce99151c813fd1dde6bc007c523c27"}'
 }
+
+@test "Load a wrong formatted time fails" {
+    cat << EOF | save_asset fail_wrong_time.data
+{
+	"num": {
+		"key_1": "1.2",
+		"key_2": "100"
+	}
+}
+EOF
+    cat <<EOF | save_asset fail_wrong_time.zen fail_wrong_time.data
+Given I have a 'time dictionary' named 'num'
+
+then print the data
+EOF
+    run $ZENROOM_EXECUTABLE -a fail_wrong_time.data -z fail_wrong_time.zen
+    assert_line --partial 'Could not read unix timestamp 1.2'
+}

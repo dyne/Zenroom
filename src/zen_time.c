@@ -120,13 +120,13 @@ static int newtime(lua_State *L) {
 		const char* arg = lua_tostring(L, 1);
 		ztime_t *tm = time_new(L);
 		if(!tm) {
-			zerror(L, "Could not create time object");
+			lerror(L, "Could not create time object");
 			return 0;
 		}
 		char *pEnd;
 		*tm = strtol(arg, &pEnd, 10);
 		if(*pEnd) {
-			zerror(L, "Could not parse unix timestamp %s", arg);
+			lerror(L, "Could not read unix timestamp %s", arg);
 			return 0;
 		}
 		return 1;
