@@ -1,0 +1,9 @@
+Rule unknown ignore
+
+Given a statement that does not exist
+and what about this one?
+Given nothing
+When I write string 'test passed' in 'result'
+Then print the data
+Then another statement that does not exist
+and maybe another one

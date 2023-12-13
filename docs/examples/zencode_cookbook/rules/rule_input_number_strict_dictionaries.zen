@@ -1,0 +1,4 @@
+Rule input number strict
+
+Given I have a 'string dictionary' named 'string_dict_with_number'
+Then print the data
