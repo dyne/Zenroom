@@ -508,7 +508,7 @@ and print the 'contents flat array'
 EOF
 
     output=`cat $TMP/out`
-    assert_output '{"contents_flat_array":["1644878787666","1644878787611","1644878787367","1644878787754","1644878787679","1644878787692","1644878787628","135","18485"],"keys_flat_array":["allTimestamps","1","2","3","4","5","6","average","standard_deviation","variance"]}'
+    assert_output '{"contents_flat_array":["1644878787666","1644878787611","1644878787367","1644878787754","1644878787679","1644878787692","1644878787628","135","18485"],"keys_flat_array":["allTimestamps",1,2,3,4,5,6,"average","standard_deviation","variance"]}'
 }
 
 @test "Consensusroom flatten" {

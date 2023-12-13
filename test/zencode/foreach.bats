@@ -50,7 +50,7 @@ Endif
 Then print 'new array' as 'string'
 EOF
     save_output "foreach_in_if.out"
-    assert_output '{"new_array":["1","2","3","4","5","6","7","8","9","1","2","3","4","5","6","7","8","9","1","2","3","4","5","6","7","8","9"]}'
+    assert_output '{"new_array":[1,2,3,4,5,6,7,8,9,1,2,3,4,5,6,7,8,9,1,2,3,4,5,6,7,8,9]}'
 }
 
 
