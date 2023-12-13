@@ -287,8 +287,8 @@
     end
 	  -- wrap all conversion functions nested in deepmaps
 	  -- TODO: optimize
-	  if dt == 'number' and not CONF.input.number_strict then
-       if data==math.floor(data) and data >= 1500000000 and data < 2000000000 then
+	  if dt == 'number' and encoder_n ~= 'float' and encoder_n ~= 'time' then
+       if data==math.floor(data) and data >= 1500000000 and data < 2000000000 and not CONF.input.number_strict then
           warn("Number value imported as timestamp: "..data)
           return U.new(data)
        else
@@ -361,14 +361,8 @@ end
           data = data:octet()
         end
         return fun(data)
-       elseif dt == 'zenroom.float' then
-        zencode_assert(fun ~= BIG.to_decimal and fun ~= O.to_mnemonic, "Encoding not valid for floats")
-        if fun ~= to_number_f then
-          data = data:octet()
-        end
-		    return fun(data)
-       elseif dt == 'zenroom.time' then
-         return to_number_f(data)
+       elseif dt == 'zenroom.float' or dt == 'zenroom.time' then
+		    return to_number_f(data)
        elseif iszen(dt) then
 		  -- leverage first class citizen method on zenroom data
 		  return fun(data:octet())
