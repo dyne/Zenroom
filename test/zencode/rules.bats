@@ -274,13 +274,11 @@ Given I have a 'float' named 'num'
 and I rename 'num' to 'float_num'
 Given I have a 'time' named 'num'
 and I rename 'num' to 'time_num'
-Given I have a 'integer' named 'num'
-and I rename 'num' to 'int_num'
 
 Then print the data
 EOF
     save_output 'rule_input_number_strict.out'
-    assert_output '{"float_num":1.978469e+09,"int_num":"1978468946","time_num":1978468946}'
+    assert_output '{"float_num":1.978469e+09,"time_num":1978468946}'
 }
 
 @test "Rule input number strict with dictionaries" {
@@ -300,5 +298,5 @@ Given I have a 'string dictionary' named 'string_dict_with_number'
 Then print the data
 EOF
     save_output rule_input_number_strict_dictionaries.out
-    assert_output '{"string_dict_with_number":{"bool":true,"num":"1978468946","string":"hello"}}'
+    assert_output '{"string_dict_with_number":{"bool":true,"num":1.978469e+09,"string":"hello"}}'
 }

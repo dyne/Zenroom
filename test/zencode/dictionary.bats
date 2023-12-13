@@ -71,7 +71,7 @@ and print the 'HistoryOfTransactions'
 and print the 'HistoryOfTransactions.signature'
 EOF
     save_output 'dictionaries_Identity_signed.json'
-    assert_output '{"HistoryOfTransactions":{"CanceledTransactions":"6","DateOfFirstTransaction":"2019-01-01","NumberOfCurrentPeriodTransactions":"57","NumberOfPreviouslyExecutedTransactions":"1020","Remarks":"none","TotalPurchasedWithTransactions":"1005","TotalSoldWithTransactions":"2160"},"HistoryOfTransactions.signature":{"r":"hLj1fqGCCrGQ4BccC7lbmcCEgo2H+YqMcdZToKeq8t0=","s":"1ZGjmzK4KqBW2EcyiHTT5TgLFX33txPktvntqJqSZdI="},"Identity":{"Address":"Piazza Venezia","DateOfBirth":"1977-01-01","DateOfIssue":"2020-01-01","FirstNames":"Rossi","Name":"Giacomo","PlaceOfBirth":"Milano","RecordNo":"22","TelephoneNo":"327 1234567","UserNo":"1021"},"Identity.signature":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"cuFsBvc4QLGWJaB3uyWXQf50SgiwNJ3dqESrCiIBymg="}}'
+    assert_output '{"HistoryOfTransactions":{"CanceledTransactions":6,"DateOfFirstTransaction":"2019-01-01","NumberOfCurrentPeriodTransactions":57,"NumberOfPreviouslyExecutedTransactions":1020,"Remarks":"none","TotalPurchasedWithTransactions":1005,"TotalSoldWithTransactions":2160},"HistoryOfTransactions.signature":{"r":"hLj1fqGCCrGQ4BccC7lbmcCEgo2H+YqMcdZToKeq8t0=","s":"1ZGjmzK4KqBW2EcyiHTT5TgLFX33txPktvntqJqSZdI="},"Identity":{"Address":"Piazza Venezia","DateOfBirth":"1977-01-01","DateOfIssue":"2020-01-01","FirstNames":"Rossi","Name":"Giacomo","PlaceOfBirth":"Milano","RecordNo":22,"TelephoneNo":"327 1234567","UserNo":1021},"Identity.signature":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"cuFsBvc4QLGWJaB3uyWXQf50SgiwNJ3dqESrCiIBymg="}}'
 }
 
 @test "Anyone can verify the Authority's signature of the Identity" {
@@ -108,7 +108,7 @@ and I move 'AverageAmountPerTransaction' in 'ABC-TransactionsStatement'
 Then print the 'ABC-TransactionsStatement'
 EOF
     save_output 'dictionariesCreate_transaction_entry.json'
-    assert_output '{"ABC-TransactionsStatement":{"AverageAmountPerTransaction":"21","TransactionsConcluded":"108","nameOfDictionary":"Transaction_Control_Dictionary"}}'
+    assert_output '{"ABC-TransactionsStatement":{"AverageAmountPerTransaction":21,"TransactionsConcluded":108,"nameOfDictionary":"Transaction_Control_Dictionary"}}'
 
 }
 
@@ -202,17 +202,17 @@ and I have my 'keyring'
 # import the blockchain data
 Given I have a 'string dictionary' named 'ABC-TransactionListSecondBatch'
 and I have a 'string dictionary' named 'ABC-TransactionListFirstBatch'
-and I have a 'number' named 'timestamp'
+and I have a 'time' named 'timestamp'
 
 # find the last (most recent) sum
 When I find the max value 'timestamp' for dictionaries in 'ABC-TransactionListSecondBatch'
 and rename the 'max value' to 'last sum'
-and I write number '1597573440' in 'last sum known'
+and I set 'last sum known' to '1597573440' as 'time'
 and I verify 'last sum' is equal to 'last sum known'
 
 When I find the min value 'timestamp' for dictionaries in 'ABC-TransactionListSecondBatch'
 and rename the 'min value' to 'first sum'
-and I write number '1597573040' in 'first sum known'
+and I set 'first sum known' to '1597573040' as 'time'
 and I verify 'first sum' is equal to 'first sum known'
 
 # compute the total values of recent transactions not included in last sum
@@ -252,7 +252,7 @@ EOF
 
 @test "Random dictionary" {
     cat <<EOF | zexe random_dictionary.zen dictionariesBlockchain.json
-Given I have a 'float dictionary' named 'ABC-TransactionListFirstBatch'
+Given I have a 'string dictionary' named 'ABC-TransactionListFirstBatch'
 When I create the random dictionary with '3' random objects from 'ABC-TransactionListFirstBatch'
 Then print the 'random dictionary'
 EOF
@@ -266,7 +266,7 @@ EOF
 EOF
 
     cat <<EOF | zexe another_random_dictionary.zen num.json dictionariesBlockchain.json
-Given I have a 'number dictionary' named 'ABC-TransactionListFirstBatch'
+Given I have a 'string dictionary' named 'ABC-TransactionListFirstBatch'
 and I have a 'number' named 'few'
 When I create the random dictionary with 'few' random objects from 'ABC-TransactionListFirstBatch'
 Then print the 'random dictionary'
@@ -366,7 +366,7 @@ Rule check version 2.0.0
 Given that I have a 'string' named 'dictionaryToBeFound'
 Given that I have a 'string' named 'numberToBeFound'
 Given that I have a 'string dictionary' named 'TransactionsBatchA'
-Given that I have a 'number' named 'salesStartTimestamp'
+Given that I have a 'time' named 'salesStartTimestamp'
 
 # Here we search if a certain dictionary and a number exists in the list
 When I verify the 'dictionaryToBeFound' is found in 'TransactionsBatchA'
@@ -442,7 +442,7 @@ When I copy contents of 'blockchains' in 'TransactionsBatchA'
 Then print 'TransactionsBatchA'
 EOF
     save_output 'copy_contents_in.json'
-    assert_output '{"TransactionsBatchA":{"ABC-Transactions1Data":{"PricePerKG":"100","ProductPurchasePrice":"50","TransactionValue":"1500","TransferredProductAmount":"15","UndeliveredProductAmount":"7","timestamp":1597573139},"ABC-Transactions2Data":{"PricePerKG":"80","TransactionValue":"1600","TransferredProductAmount":"20","timestamp":1597573239},"ABC-Transactions3Data":{"PricePerKG":"70","TransactionValue":"700","TransferredProductAmount":"10","timestamp":1597573340},"Information":{"Buyer":"John Doe","Metadata":"TransactionsBatchB6789"},"MetaData":"This var is Not a Table","b1":{"endpoint":"http://pesce.com/","last-transaction":"123"},"b2":{"endpoint":"http://fresco.com/","last-transaction":"234"},"number":"1234"}}'
+    assert_output '{"TransactionsBatchA":{"ABC-Transactions1Data":{"PricePerKG":100,"ProductPurchasePrice":50,"TransactionValue":1500,"TransferredProductAmount":15,"UndeliveredProductAmount":7,"timestamp":1597573139},"ABC-Transactions2Data":{"PricePerKG":80,"TransactionValue":1600,"TransferredProductAmount":20,"timestamp":1597573239},"ABC-Transactions3Data":{"PricePerKG":70,"TransactionValue":700,"TransferredProductAmount":10,"timestamp":1597573340},"Information":{"Buyer":"John Doe","Metadata":"TransactionsBatchB6789"},"MetaData":"This var is Not a Table","b1":{"endpoint":"http://pesce.com/","last-transaction":"123"},"b2":{"endpoint":"http://fresco.com/","last-transaction":"234"},"number":1234}}'
 }
 
 @test "Dictionary named by" {
