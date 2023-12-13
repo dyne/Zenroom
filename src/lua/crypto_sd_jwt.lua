@@ -22,6 +22,9 @@
 local ES256 = require'es256'
 local sd_jwt = {}
 
+local function export_str_dict(obj)
+    return deepmap(get_encoding_function("string"), obj)
+end
 -- Given as input a "disclosure array" of the form {salt, key, value}
 -- Return: disclosure = the array in octet form
 --         hashed = the sha256 digest of the encoded array (for _sd)
@@ -29,7 +32,7 @@ local sd_jwt = {}
 function sd_jwt.create_disclosure(dis_arr)
     -- TODO: disclosure of disctionary
     -- TODO: problems sub, updated_at
-    local encoded_dis = O.from_string(JSON.raw_encode(dis_arr, true)):url64()
+    local encoded_dis = O.from_string(JSON.raw_encode(export_str_dict(dis_arr), true)):url64()
     local disclosure = {}
     for i = 1, #dis_arr do
         if type(dis_arr[i]) == 'table' then
@@ -100,17 +103,6 @@ function sd_jwt.create_sd(sdr)
     }
 end
 
-function sd_jwt.export_str_dict(obj)
-    return deepmap(function(o)
-        if type(o) == 'zenroom.octet' then
-            return o:string()
-        elseif type(o) == 'zenroom.float' then
-            return tonumber(o)
-        else
-            return o
-        end
-    end, obj)
-end
 -- TODO: add test from section A.3 of
 -- https://www.rfc-editor.org/rfc/rfc7515.html
 -- WARNING: the JSON encode is not unique, so I should
@@ -124,7 +116,7 @@ function sd_jwt.create_jwt_es256(payload, sk)
         alg=O.from_string("ES256"),
         typ=O.from_string("JWT")
     }
-    local payload_str = sd_jwt.export_str_dict(payload)
+    local payload_str = export_str_dict(payload)
     b64payload = O.from_string(JSON.raw_encode(payload_str)):url64()
 
     local signature = ES256.sign(sk, b64payload)
@@ -154,7 +146,7 @@ end
 -- for reference see Section 8.1 of https://datatracker.ietf.org/doc/draft-ietf-oauth-selective-disclosure-jwt/
 
 function sd_jwt.verify_jws_signature(jws, pk)
-    local payload_str = sd_jwt.export_str_dict(jws.payload)
+    local payload_str = export_str_dict(jws.payload)
     local b64payload = O.from_string(JSON.raw_encode(payload_str)):url64()
     return ES256.verify(pk, jws.signature, b64payload)
 end
@@ -212,7 +204,7 @@ end
 function sd_jwt.verify_sd_fields(jwt, disclosures)
     local match = true
     local digest_arr = jwt._sd
-    local disclosures_arr = sd_jwt.export_str_dict(disclosures)
+    local disclosures_arr = export_str_dict(disclosures)
     local claim_names = {}
     for i = 1, #disclosures_arr do
         if not disclosure_array_is_valid(disclosures_arr[i]) then
