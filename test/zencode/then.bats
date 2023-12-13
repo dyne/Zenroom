@@ -250,3 +250,22 @@ EOF
     run $ZENROOM_EXECUTABLE -z -a float_from_base64_fail.data float_from_base64_fail.zen
     assert_line --partial 'Could not read the float number'
 }
+
+
+@test "String dictionary with float and time" {
+    cat <<EOF | save_asset dictionary_string_float_time.json
+{
+    "dictionary": {
+        "str": "hello world!",
+        "num": 12345678910,
+        "time": 1702474699
+    }
+}
+EOF
+    cat <<EOF | zexe dictionary_string_float_time.zen dictionary_string_float_time.json
+Given I have the 'string dictionary' named 'dictionary'
+Then print all data
+EOF
+    save_output 'dictionary_string_float_time.out'
+    assert_output '{"dictionary":{"num":1.234568e+10,"str":"hello world!","time":1702474699}}'
+}
