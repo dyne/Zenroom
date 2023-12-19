@@ -31,5 +31,5 @@
             "iss":"http://example.org",
             "sub":"user 42"
         }
-}
+    }
 }

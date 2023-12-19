@@ -64,15 +64,16 @@ The output file should look like:
 [](../_media/examples/zencode_cookbook/sd_jwt/create_request_out.json  ':include :type=code json')
 
 When the Issuer has a Selective Disclosure Request, 
-it creates the **Selective Disclosure Payload**, which contains the JWT payload of the SD-JWT and the list of all the Disclosures.
-Then the Issuer sign the payload contructing a JWS and return the **Signed Selective Disclosure** that contains also the list of all the Disclosures.
+it creates the **Selective Disclosure**, which contains the JWT payload of the SD-JWT and the list of all the Disclosures.
+Then the Issuer sign the payload contructing a JWS and return the **Signed Selective Disclosure** that contains also the list of all the Disclosures in serialized form.
+
 The Disclosures should be kept private by the Holder, unless he wants to prove to a Verifier some specific claims.
 
 The input file to create the SD-JWT should look like:
 
 [](../_media/examples/zencode_cookbook/sd_jwt/create_signed_sd.json ':include :type=code json')
 
-The following contract construct the SD Payload and the Signed SD:
+The following contract construct the SD and the Signed SD:
 
 [](../_media/examples/zencode_cookbook/sd_jwt/create_signed_sd.zen ':include :type=code gherkin')
 
@@ -80,16 +81,21 @@ The output file should look like:
 
 [](../_media/examples/zencode_cookbook/sd_jwt/create_signed_sd_out.json  ':include :type=code json')
 
-It is also possible to return the SD-JWT in serialized format substituting the last line of the contract above with the following:
+It is also possible to return the SD-JWT as a JWT substituting the last line of the contract above with the following:
 
 ```gherkin
-Then print 'signed_selective_disclosure' as 'sd_jwt'
+Then print 'signed_selective_disclosure' as 'decoded_selective_disclosure'
 ```
 
 This should give an output like:
 
 [](../_media/examples/zencode_cookbook/sd_jwt/create_signed_sd_out_sdjwt.json  ':include :type=code json')
 
+**Note** that one can also upload a SD-JWT in decoded form with a statement like:
+
+```gherkin
+Given I have a 'decoded_selective_disclosure' named 'signed_selective_disclosure'
+```
 
 ## Credential Presentation
 

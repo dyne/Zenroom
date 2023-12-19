@@ -1,6 +1,6 @@
 {
     "es256_public_key": "gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg==",
-    "selective_disclosure_presentation": {
+    "signed_selective_disclosure": {
       "disclosures": [
         [
           "XdjAYj-RY95-uyYMI8fR3w",
