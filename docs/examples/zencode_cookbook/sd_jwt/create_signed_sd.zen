@@ -8,8 +8,8 @@ and I have my 'es256 public key'
 
 Given I have 'selective_disclosure_request'
 
-When I create selective disclosure payload of 'selective_disclosure_request'
+When I create selective disclosure of 'selective_disclosure_request'
+When I create the signed selective disclosure of 'selective disclosure'
 
-When I create the signed selective disclosure of 'selective disclosure payload'
-Then print 'selective_disclosure_payload'
+Then print 'selective_disclosure'
 Then print 'signed_selective_disclosure'

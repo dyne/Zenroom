@@ -1,3 +1,67 @@
 {
-    "signed_selective_disclosure": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJfc2QiOlsiUzg0MWhFU20yRHc3SEh1V0hQandUanQ4TG84dlA5MG5lRjBwWFlET05lWSIsIjhQTDVWNW01YlZrUzR3MTJxUWFiN2tKZGNZVThReWV1cmlfalgwMzc0YkkiLCJyS0V2SGtTaHNYUzJHaDg3TGdPMVZQTVNjZzFSbFR0LS1QM3hnQ0NZUHdFIiwiZk84cjFxcWJiQm13Y1d6MXNuZlpYZFEtR0pmNXRiS1BFOXBKT2E0V0x1cyIsInlzem9JdUs2S2x6VnV4ZGwwZEZqQi1QU3ZrMWt6RlhEWF9LemFiR1R4R2ciLCI5TlBtZURwQUo0SFIyVGR5THpRYnVhNzFEUjNfWmZjUE1FN2RhN2sxaFpFIiwidmRXbVV4aE1MS1RUQVNUY3YxQmRCLWtqczc4U3NwMFFtVWFyQ1B6aDJZdyJdLCJfc2RfYWxnIjoic2hhLTI1NiIsImlzcyI6Imh0dHA6Ly9leGFtcGxlLm9yZyIsInN1YiI6InVzZXIgNDIifQ.rn7EoGKAFWAXV5NYBdHuYJBnF3A35OLQxDJSvQ5Hd59AS7pdxtfEPhxk9CH6uV6AyVtYnIfKFh9JAQ7jQVn5xQ~WyJEdy11aDBPTTVHRldkanB1SWNpUXd3IiwgImdpdmVuX25hbWUiLCAiSm9obiJd~WyJXMGF6ZVMtS2VUalI2UzJUZFhJSkRnIiwgImZhbWlseV9uYW1lIiwgIkRvZSJd~WyJEUlRVbmpqYVZmVjRWeUVxVW1QaVRBIiwgImVtYWlsIiwgImpvaG5kb2VAZXhhbXBsZS5jb20iXQ~WyJLeVNfVV9nTTdNcFp1blVsMG5RLTdRIiwgInBob25lX251bWJlciIsICIrMS0yMDItNTU1LTAxMDEiXQ~WyJXeVRpekhoMWlJMHpjOVpLZzgwdlFnIiwgInBob25lX251bWJlcl92ZXJpZmllZCIsIHRydWVd~WyJrckVwRThBTHVMR1Btdy1RamNNOXVRIiwgImFkZHJlc3MiLCB7ImNvdW50cnkiOiAiVVMiLCAibG9jYWxpdHkiOiAiQW55dG93biIsICJyZWdpb24iOiAiQW55c3RhdGUiLCAic3RyZWV0X2FkZHJlc3MiOiAiMTIzIE1haW4gU3QifV0~WyJ3VkZXYlNaaXdnY0VaYTFzWV96X01nIiwgImJpcnRoZGF0ZSIsICIxOTQwLTAxLTAxIl0~"
+    "signed_selective_disclosure": {
+        "disclosures": [
+          [
+            "SXIfLdi88UgmS8yQd-pISg",
+            "given_name",
+            "John"
+          ],
+          [
+            "djk3tB6tg-b9YreywNcWZA",
+            "family_name",
+            "Doe"
+          ],
+          [
+            "BtAfeH3MnnhxEsb5iffykw",
+            "email",
+            "johndoe@example.com"
+          ],
+          [
+            "ux1iQm3xqjOg8HybkyaOFQ",
+            "phone_number",
+            "+1-202-555-0101"
+          ],
+          [
+            "mN461iU9OjmED9eUWOLC3Q",
+            "phone_number_verified",
+            true
+          ],
+          [
+            "OrLGw1Iq6Y9QX-T9V0v5gQ",
+            "address",
+            {
+              "country": "US",
+              "locality": "Anytown",
+              "region": "Anystate",
+              "street_address": "123 Main St"
+            }
+          ],
+          [
+            "crgoJmpiHJD8t7oM3FhA_Q",
+            "birthdate",
+            "1940-01-01"
+          ]
+        ],
+        "jwt": {
+          "header": {
+            "alg": "ES256",
+            "typ": "JWT"
+          },
+          "payload": {
+            "_sd": [
+              "cTJ5M6ejWPSBGe17aB7P-3ZkiuUtV_iEaWZdNGluwqo",
+              "RFhdE3udH0Gva9WydmjL1jUM7W-4dA_eWclR0xZHSuE",
+              "zDO99vBzYsph-y7FpSNTG923nR4jbbHO0n1dsCzWjNA",
+              "xC36UWhgAXlWP7do45jGzJ9Z_h1C1YsW_LypG7nkDlY",
+              "LgXHYyBFlbIZm-4TM7_wrWuWHcfoEF3HhEBWZFuDYTE",
+              "W0isfL7tTKz0jxat6C_S_HqypMRcRJ4TC4W1K-68neY",
+              "xbBbiPCdkrEzHqXRt4QBDNlXu4ZfU1YPWjweBuKxMCE"
+            ],
+            "_sd_alg": "sha-256",
+            "iss": "http://example.org",
+            "sub": "user 42"
+          },
+          "signature": "bh8bcp+eD0Ffar2QGLLgF+tRhadBAT1xwD8w1j05rmro3faRLjeSyFvEOSXxsbNo7p0xJy0zn1k5Wx0KLe3MQw=="
+        }
+      }
 }
