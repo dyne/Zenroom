@@ -27,11 +27,74 @@ local CRED = require_once('crypto_credential')
 local G2 = ECP2.generator()
 
 local function import_issuer_pk_f(obj)
-	return {
-		alpha = schema_get(obj, 'alpha', ECP2.new),
-		beta = schema_get(obj, 'beta', ECP2.new)
-	}
+    return {
+        alpha = schema_get(obj, 'alpha', ECP2.new),
+        beta = schema_get(obj, 'beta', ECP2.new)
+    }
 end
+
+local function import_credential_request_f(obj)
+    local req = {
+        sign = {
+            a = schema_get(obj.sign, 'a', ECP.new),
+            b = schema_get(obj.sign, 'b', ECP.new)
+        },
+        pi_s = {
+            rr = schema_get(obj.pi_s, 'rr', INT.new, O.from_base64),
+            rm = schema_get(obj.pi_s, 'rm', INT.new, O.from_base64),
+            rk = schema_get(obj.pi_s, 'rk', INT.new, O.from_base64),
+            commit = schema_get(obj.pi_s, 'commit', INT.new, O.from_base64),
+        },
+        commit = schema_get(obj, 'commit', ECP.new),
+        public = schema_get(obj, 'public', ECP.new)
+    }
+    zencode_assert(
+        CRED.verify_pi_s(req),
+        'Error in credential request: proof is invalid (verify_pi_s)'
+    )
+    return req
+end
+
+-- exported function (non local) for use in zencode_petition
+function import_credential_proof_f(obj)
+    return {
+        nu = schema_get(obj, 'nu', ECP.new),
+        kappa = schema_get(obj, 'kappa', ECP2.new),
+        pi_v = {
+            c = schema_get(obj.pi_v, 'c', INT.new, O.from_base64),
+            rm = schema_get(obj.pi_v, 'rm', INT.new, O.from_base64),
+            rr = schema_get(obj.pi_v, 'rr', INT.new, O.from_base64)
+        },
+        sigma_prime = {
+            h_prime = schema_get(obj.sigma_prime, 'h_prime', ECP.new),
+            s_prime = schema_get(obj.sigma_prime, 's_prime', ECP.new)
+        }
+    }
+end
+
+function export_credential_proof_f(obj)
+    obj.pi_v.rr = obj.pi_v.rr:octet()
+    obj.pi_v.rm = obj.pi_v.rm:octet()
+    obj.pi_v.c = obj.pi_v.c:octet()
+    return obj
+end
+
+ZEN:add_schema(
+    {
+        -- theta: blind proof of certification
+        credential_proof = {
+            import = import_credential_proof_f,
+            export = export_credential_proof_f,
+        },
+        issuer_public_key = {
+            import = import_issuer_pk_f,
+            export = export_issuer_pk_f
+        },
+        credential_request = {
+            import = import_credential_request_f
+        }
+    }
+)
 
 -- credential keypair operations
 When("create credential key",function()
@@ -64,41 +127,6 @@ When("create issuer public key",function()
 	}
 	new_codec'issuer public key'
 end)
-
-local function import_credential_request_f(obj)
-   local req = {
-      sign = {
-	 a = schema_get(obj.sign, 'a', ECP.new),
-	 b = schema_get(obj.sign, 'b', ECP.new)
-      },
-      pi_s = {
-          rr = schema_get(obj.pi_s, 'rr', INT.new, O.from_base64),
-          rm = schema_get(obj.pi_s, 'rm', INT.new, O.from_base64),
-          rk = schema_get(obj.pi_s, 'rk', INT.new, O.from_base64),
-          commit = schema_get(obj.pi_s, 'commit', INT.new, O.from_base64),
-      },
-      commit = schema_get(obj, 'commit', ECP.new),
-      public = schema_get(obj, 'public', ECP.new)
-   }
-   zencode_assert(
-      CRED.verify_pi_s(req),
-      'Error in credential request: proof is invalid (verify_pi_s)'
-   )
-   return req
-end
-
--- request credential signatures
-ZEN:add_schema(
-   {
-      issuer_public_key = {
-		 import = import_issuer_pk_f,
-		 export = export_issuer_pk_f
-	  },
-      credential_request = {
-          import = import_credential_request_f
-      }
-   }
-)
 
 When("create credential request", function()
 	havekey'credential'
@@ -163,41 +191,6 @@ When("aggregate credentials in ''",function(creds)
 		 CRED.aggregate_creds(ACK.keyring.credential, cred_t)
       new_codec'credentials'
    end
-)
-
-
--- exported function (non local) for use in zencode_petition
-function import_credential_proof_f(obj)
-   return {
-      nu = schema_get(obj, 'nu', ECP.new),
-      kappa = schema_get(obj, 'kappa', ECP2.new),
-      pi_v = {
-	 c = schema_get(obj.pi_v, 'c', INT.new, O.from_base64),
-	 rm = schema_get(obj.pi_v, 'rm', INT.new, O.from_base64),
-	 rr = schema_get(obj.pi_v, 'rr', INT.new, O.from_base64)
-      },
-      sigma_prime = {
-	 h_prime = schema_get(obj.sigma_prime, 'h_prime', ECP.new),
-	 s_prime = schema_get(obj.sigma_prime, 's_prime', ECP.new)
-      }
-   }
-end
-
-function export_credential_proof_f(obj)
-    obj.pi_v.rr = obj.pi_v.rr:octet()
-    obj.pi_v.rm = obj.pi_v.rm:octet()
-    obj.pi_v.c = obj.pi_v.c:octet()
-    return obj
-end
-
-ZEN:add_schema(
-   {
-      -- theta: blind proof of certification
-      credential_proof = {
-          import = import_credential_proof_f,
-          export = export_credential_proof_f,
-      }
-   }
 )
 
 When("aggregate issuer public keys",function()
