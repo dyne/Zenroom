@@ -27,10 +27,20 @@ local CRED = require_once('crypto_credential')
 local G2 = ECP2.generator()
 
 local function import_issuer_pk_f(obj)
-    return {
-        alpha = schema_get(obj, 'alpha', ECP2.new),
-        beta = schema_get(obj, 'beta', ECP2.new)
-    }
+    local res = {}
+    local supp = schema_get(obj, '.')
+    if (type(supp) == 'zenroom.octet') then
+        res.alpha = ECP2.from_zcash(supp:sub(1, 96))
+        res.beta = ECP2.from_zcash(supp:sub(97, 192))
+    else
+        res.alpha = schema_get(obj, 'alpha', ECP2.new)
+        res.beta = schema_get(obj, 'beta', ECP2.new)
+    end
+    return res
+end
+
+local function export_compressed_issuer_pk_f(obj)
+    return obj.alpha:to_zcash()..obj.beta:to_zcash()
 end
 
 local function import_credential_request_f(obj)
@@ -87,8 +97,11 @@ ZEN:add_schema(
             export = export_credential_proof_f,
         },
         issuer_public_key = {
+            import = import_issuer_pk_f
+        },
+        compressed_issuer_public_key = {
             import = import_issuer_pk_f,
-            export = export_issuer_pk_f
+            export = export_compressed_issuer_pk_f
         },
         credential_request = {
             import = import_credential_request_f

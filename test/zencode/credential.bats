@@ -49,6 +49,30 @@ EOF
     assert_output '{"MadHatter":{"issuer_public_key":{"alpha":"DCVR1myU23U3freVJYRhzFy20WPOhzqn/JyEZMNN/y+gj7KvdEDKfuVjBMy6z7O4AbU9noh14cse4Dxs06XyQW7skeIDzX8r1P1Ldf4D6w6/xI2tbpdC65LeZYkKpTe0ABWqN14boyg0tZhdFaXti3+MKbZx4A6isA+c9tGoDLhVbFtvvXAY3gyzD4paCwG/AL5yjOcrIqiTiOaHJbEtwkQ/OfC3j/xfuPR1yTTq7sgTlk0HbiTemeopEn10F5pO","beta":"FwWLOfRBAoZKfykEvq26iNn2D64gvwgCfinWWZnG4HotCuomB6EB9qJ0sinpV5LNB6GdkrKU3wvYMUU+fBMX8mtR77E3x/ljbqpwwpcmjB9YtONG1peywJvRhXqhIBJSALFTXAB2Y1XtM63Uw5/CBex8zH3wXyYU6sv/ctKi5bUZ2Zzqua9Q8LMqtgLsrrB9GDKbmPT1einkXVMLX0kuJV/AOTnA57q91HKXMCvlvlKs/sr5mJ70FchdEZl0UHIV"}}}'
 }
 
+@test "Credential compressed issuer public key" {
+	  cat << EOF | zexe credentialCompressedIssuerPublishpublic_key.zen credentialIssuerKeyring.json
+Scenario credential: publish public_key
+Given that I am known as 'MadHatter'
+and I have my 'keyring'
+When I create the issuer public key
+and I copy the 'issuer public key' to 'compressed_ipk'
+Then print the 'issuer public key'
+and print the 'compressed_ipk' as 'compressed_issuer_public_key'
+EOF
+    save_output 'credentialCompressedIssuerPublishpublic_key.json'
+    assert_output '{"compressed_ipk":"gbU9noh14cse4Dxs06XyQW7skeIDzX8r1P1Ldf4D6w6/xI2tbpdC65LeZYkKpTe0DCVR1myU23U3freVJYRhzFy20WPOhzqn/JyEZMNN/y+gj7KvdEDKfuVjBMy6z7O4p6GdkrKU3wvYMUU+fBMX8mtR77E3x/ljbqpwwpcmjB9YtONG1peywJvRhXqhIBJSFwWLOfRBAoZKfykEvq26iNn2D64gvwgCfinWWZnG4HotCuomB6EB9qJ0sinpV5LN","issuer_public_key":{"alpha":"DCVR1myU23U3freVJYRhzFy20WPOhzqn/JyEZMNN/y+gj7KvdEDKfuVjBMy6z7O4AbU9noh14cse4Dxs06XyQW7skeIDzX8r1P1Ldf4D6w6/xI2tbpdC65LeZYkKpTe0ABWqN14boyg0tZhdFaXti3+MKbZx4A6isA+c9tGoDLhVbFtvvXAY3gyzD4paCwG/AL5yjOcrIqiTiOaHJbEtwkQ/OfC3j/xfuPR1yTTq7sgTlk0HbiTemeopEn10F5pO","beta":"FwWLOfRBAoZKfykEvq26iNn2D64gvwgCfinWWZnG4HotCuomB6EB9qJ0sinpV5LNB6GdkrKU3wvYMUU+fBMX8mtR77E3x/ljbqpwwpcmjB9YtONG1peywJvRhXqhIBJSALFTXAB2Y1XtM63Uw5/CBex8zH3wXyYU6sv/ctKi5bUZ2Zzqua9Q8LMqtgLsrrB9GDKbmPT1einkXVMLX0kuJV/AOTnA57q91HKXMCvlvlKs/sr5mJ70FchdEZl0UHIV"}}'
+
+    cat << EOF | zexe assert_pk_are_equal.zen credentialCompressedIssuerPublishpublic_key.json
+Scenario credential: assert public_key
+Given I have a 'issuer_public_key'
+and I have a 'issuer_public_key' named 'compressed_ipk'
+When I verify 'issuer_public_key' is equal to 'compressed_ipk'
+Then print the string 'the pks are equal'
+EOF
+    save_output 'assert_pk_are_equal.json'
+    assert_output '{"output":["the_pks_are_equal"]}'
+}
+
 @test "Credential issuer sign request" {
     cat << EOF | zexe credentialIssuerSignRequest.zen credentialParticipantSignatureRequest.json credentialIssuerKeyring.json
 Scenario credential: issuer sign
