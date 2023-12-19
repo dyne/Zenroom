@@ -238,21 +238,21 @@ local function export_selective_disclosure_request(obj)
     }
 end
 
-local function import_selective_disclosure_payload(obj)
+local function import_selective_disclosure(obj)
     return {
         payload = import_str_dict(obj.payload),
         disclosures = import_str_dict(obj.disclosures),
     }
 end
 
-local function export_selective_disclosure_payload(obj)
+local function export_selective_disclosure(obj)
     return {
         disclosures = export_str_dict(obj.disclosures),
         payload = export_str_dict(obj.payload),
     }
 end
 
-local function import_signed_selective_disclosure(obj)
+local function import_decoded_selective_disclosure(obj)
     -- export the whole obj as string dictionary but the signature
     local signature = obj.jwt.signature
     obj.jwt.signature = nil
@@ -266,7 +266,7 @@ local function import_signed_selective_disclosure(obj)
     }
 end
 
-local function export_signed_selective_disclosure(obj)
+local function export_decoded_selective_disclosure(obj)
     -- export the whole obj as string dictionary but the signature
     local signature = obj.jwt.signature
     obj.jwt.signature = nil
@@ -294,7 +294,7 @@ local function import_jwt(obj)
     }
 end
 
-local function import_sd_jwt(obj)
+local function import_signed_selective_disclosure(obj)
     zencode_assert(obj:sub(#obj, #obj) == '~', "JWT binding not implemented")
     local toks = strtok(obj, "~")
     disclosures = {}
@@ -315,7 +315,7 @@ local function export_jwt(obj)
     }, ".")
 end
 
-local function export_sd_jwt(obj)
+local function export_signed_selective_disclosure(obj)
     local records = {
         export_jwt(obj.jwt)
     }
@@ -344,17 +344,17 @@ ZEN:add_schema(
             import = import_selective_disclosure_request,
             export = export_selective_disclosure_request,
         },
-        selective_disclosure_payload = {
-            import = import_selective_disclosure_payload,
-            export = export_selective_disclosure_payload,
+        selective_disclosure = {
+            import = import_selective_disclosure,
+            export = export_selective_disclosure,
+        },
+        decoded_selective_disclosure = {
+            import = import_decoded_selective_disclosure,
+            export = export_decoded_selective_disclosure,
         },
         signed_selective_disclosure = {
             import = import_signed_selective_disclosure,
             export = export_signed_selective_disclosure,
-        },
-        sd_jwt = {
-            import = import_sd_jwt,
-            export = export_sd_jwt,
         }
     }
 )
@@ -402,7 +402,7 @@ When("use supported selective disclosure to disclose '' with id ''", function(di
 end)
 
 -- for reference on JSON Web Key see RFC7517
-When("create es256 public jwk with ''", function(pk)
+When("create jwk with es256 public key ''", function(pk)
     local pubk = load_pubkey_compat(pk, 'es256')
     zencode_assert(#pubk == 64, "Invalid es256 public key: expected length is 64, given is "..#pubk)
     local jwk = {
@@ -458,11 +458,11 @@ When("create selective disclosure request from '' with id '' for ''", function(s
     new_codec("selective_disclosure_request")
 end)
 
-When("create selective disclosure payload of ''", function(sdr_name)
+When("create selective disclosure of ''", function(sdr_name)
     local sdr = have(sdr_name)
     local sdp = SD_JWT.create_sd(sdr)
-    ACK.selective_disclosure_payload = sdp
-    new_codec('selective_disclosure_payload')
+    ACK.selective_disclosure = sdp
+    new_codec('selective_disclosure')
 end)
 
 When("create signed selective disclosure of ''", function(sdp_name)
@@ -476,19 +476,15 @@ When("create signed selective disclosure of ''", function(sdp_name)
     new_codec('signed_selective_disclosure')
 end)
 
-When("create selective disclosure presentation of '' with disclosures ''", function(ssd_name, lis)
+When("use signed selective disclosure '' only with disclosures ''", function(ssd_name, lis)
     local ssd = have(ssd_name)
     local disclosed_keys = have(lis)
     local disclosure = SD_JWT.retrive_disclosures(ssd, disclosed_keys)
-    ACK.selective_disclosure_presentation = {
-        jwt = deepcopy(ssd.jwt),
-        disclosures = disclosure,
-    }
-    new_codec('selective_disclosure_presentation', {zentype = 'e', schema = 'signed_selective_disclosure', encoding = 'complex'})
+    ssd.disclosures = disclosure
 end)
 
 -- for reference see Section 8.1 of https://datatracker.ietf.org/doc/draft-ietf-oauth-selective-disclosure-jwt/
-When("verify sd jwt '' issued by '' is valid", function(obj, by)
+When("verify signed selective disclosure '' issued by '' is valid", function(obj, by)
     local signed_sd = have(obj)
     local iss_pk = load_pubkey_compat(by, 'es256')
     local jwt = signed_sd.jwt
