@@ -24,8 +24,8 @@ local ES256 = require('es256')
 
 ZEN:add_schema(
    {
-      es256_public_key = { import = O.from_base64 },
-      es256_signature = { import = O.from_base64 }
+       es256_public_key = { import = function(obj) return schema_get(obj, '.') end },
+      es256_signature = { import = function(obj) return schema_get(obj, '.') end }
    }
 )
 
