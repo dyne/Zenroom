@@ -84,19 +84,19 @@ EOF
 @test "The user creates its did document request" {
     cat <<EOF | save_asset context_data.json
 {
-	"@context":[
-		"https://www.w3.org/ns/did/v1",
-		"https://w3id.org/security/suites/ed25519-2018/v1",
-		"https://w3id.org/security/suites/secp256k1-2019/v1",
-		"https://w3id.org/security/suites/secp256k1-2020/v1",
-		"https://dyne.github.io/W3C-DID/specs/ReflowBLS12381.json",
+    "@context":[
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/ed25519-2018/v1",
+        "https://w3id.org/security/suites/secp256k1-2019/v1",
+        "https://w3id.org/security/suites/secp256k1-2020/v1",
+        "https://dyne.github.io/W3C-DID/specs/ReflowBLS12381.json",
         "https://dyne.github.io/W3C-DID/specs/Bbs.json",
         "https://dyne.github.io/W3C-DID/specs/EcdsaSecp256r1.json",
         "https://dyne.github.io/W3C-DID/specs/Coconut.json",
-		{
-			"description":"https://schema.org/description",
-		}
-	],
+        {
+            "description":"https://schema.org/description",
+        }
+    ],
     "did_spec": "sandbox.zenroomtest"
 }
 EOF
@@ -286,10 +286,9 @@ When I move 'verificationMethod' in 'did document'
 
 # print did document
 Then print the 'did document' as 'string' in 'request'
-
 EOF
     save_output "did_document.json"
-    assert_output '{"request":{"did_document":{"@context":["https://www.w3.org/ns/did/v1","https://w3id.org/security/suites/ed25519-2018/v1","https://w3id.org/security/suites/secp256k1-2019/v1","https://w3id.org/security/suites/secp256k1-2020/v1","https://dyne.github.io/W3C-DID/specs/ReflowBLS12381.json","https://dyne.github.io/W3C-DID/specs/Bbs.json","https://dyne.github.io/W3C-DID/specs/EcdsaSecp256r1.json","https://dyne.github.io/W3C-DID/specs/Coconut.json",{"description":"https://schema.org/description"}],"description":"test_user","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","verificationMethod":[{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#ecdh_public_key","publicKeyBase58":"Prv7EbvuXevABNJytdsoXPqjJFJxnuiHVk3QqcuWHtn7yzEQHkctuEgezzjG9tCCNriD4HsmFNnFPFDcGfMs3kmR","type":"EcdsaSecp256k1VerificationKey2019"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#reflow_public_key","publicKeyBase58":"aeEZAeKXLcuWLEgCY3q8L7kN9qyakvnNeZCS4TzYgVM8LqeuJaZQjVffAZB4QYxk33Cw2bTtXRUmBBBGPFMtMFVCKNhTbMgwUQwwXPoq8YFg6ENMKMCRhHxCfpXd8Ta5WEn2itA1gp8zZnsu8Gj37tDUDHA9twiszDxV7KPWdYNdD4at1shUcSyovuNuUcXwtLCdF9QPKWm5uQ6qrcbk6wimhpT6yNZQtWiZrCXMWrKyk14Yi4kXxaJwquvzUkHL87hZT","type":"ReflowBLS12381VerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#bitcoin_public_key","publicKeyBase58":"gR5grNVtEvyM7Uy1L455q1WLkr5piE4yocyQ2stsMPiu","type":"EcdsaSecp256k1VerificationKey2019"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#eddsa_public_key","publicKeyBase58":"DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","type":"Ed25519VerificationKey2018"},{"blockchainAccountId":"eip155:1:0x03379e512bb00f0f8669eaec392225dde018fa6c","controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#ethereum_address","type":"EcdsaSecp256k1RecoveryMethod2020"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#es256_public_key","publicKeyBase58":"2UrGDZp9qf5oENNUsa9KarYcqPPjSopq7riR8Gzu7xrYuomPPjtGCzQdTYg6DLySPTzwGgdtUdLvNfj2wmYVSUzEgpv","type":"EcdsaSecp256r1VerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#bbs_public_key","publicKeyBase58":"ykbNb4QcyqA4EmRVa8AP2gAu5kWwzmnhXwCZ421XQnYPC3m7gXZ29yEnkToitHgnc3y1TWscseCd9G3hSvh7tp9QKSyGxDM15KQjGaQUekwZQ9Z1BXW2iATYD9uVEkM2wHu","type":"BbsVerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#issuer_public_key","publicKeyBase58":"2eeoyWMdUh1KxbLNydhZxpbNDqh1aGiJaCMwMWP4PpqyD1oEBW9rmBaET5ZugQvocw3w5NzL1znB2SmSJLmd5J13QNnP4xGtmT8itf3j7jyakGBLmy3zg2sXJvkqZLsDySoHEfjJLGP8c5CbZvQCSydphNo4NWoi6s2RXBLotSXMQ2NsrcL6HoYsnJxTFcEDcFMuYiDGyyzpATPLBBNEVQ4VypdKtwrzgqwkMk1SDjiEqhwy61hYHknCJM6bDhirnjptpxL","type":"CoconutVerificationKey"}]}}}'
+    assert_output '{"request":{"did_document":{"@context":["https://www.w3.org/ns/did/v1","https://w3id.org/security/suites/ed25519-2018/v1","https://w3id.org/security/suites/secp256k1-2019/v1","https://w3id.org/security/suites/secp256k1-2020/v1","https://dyne.github.io/W3C-DID/specs/ReflowBLS12381.json","https://dyne.github.io/W3C-DID/specs/Bbs.json","https://dyne.github.io/W3C-DID/specs/EcdsaSecp256r1.json","https://dyne.github.io/W3C-DID/specs/Coconut.json",{"description":"https://schema.org/description"}],"description":"test_user","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","verificationMethod":[{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#ecdh_public_key","publicKeyBase58":"Prv7EbvuXevABNJytdsoXPqjJFJxnuiHVk3QqcuWHtn7yzEQHkctuEgezzjG9tCCNriD4HsmFNnFPFDcGfMs3kmR","type":"EcdsaSecp256k1VerificationKey2019"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#reflow_public_key","publicKeyBase58":"aeEZAeKXLcuWLEgCY3q8L7kN9qyakvnNeZCS4TzYgVM8LqeuJaZQjVffAZB4QYxk33Cw2bTtXRUmBBBGPFMtMFVCKNhTbMgwUQwwXPoq8YFg6ENMKMCRhHxCfpXd8Ta5WEn2itA1gp8zZnsu8Gj37tDUDHA9twiszDxV7KPWdYNdD4at1shUcSyovuNuUcXwtLCdF9QPKWm5uQ6qrcbk6wimhpT6yNZQtWiZrCXMWrKyk14Yi4kXxaJwquvzUkHL87hZT","type":"ReflowBLS12381VerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#bitcoin_public_key","publicKeyBase58":"gR5grNVtEvyM7Uy1L455q1WLkr5piE4yocyQ2stsMPiu","type":"EcdsaSecp256k1VerificationKey2019"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#eddsa_public_key","publicKeyBase58":"DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","type":"Ed25519VerificationKey2018"},{"blockchainAccountId":"eip155:1:0x03379e512bb00f0f8669eaec392225dde018fa6c","controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#ethereum_address","type":"EcdsaSecp256k1RecoveryMethod2020"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#es256_public_key","publicKeyBase58":"3Gjh6x5oHB3e14VXMtN74PEPwMSDDFxQEr3W88STaGXFHXhVZDH4AP85sU2rJ95o3aqkUuYzLDfR4jYCqHh6jakP","type":"EcdsaSecp256r1VerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#bbs_public_key","publicKeyBase58":"ykbNb4QcyqA4EmRVa8AP2gAu5kWwzmnhXwCZ421XQnYPC3m7gXZ29yEnkToitHgnc3y1TWscseCd9G3hSvh7tp9QKSyGxDM15KQjGaQUekwZQ9Z1BXW2iATYD9uVEkM2wHu","type":"BbsVerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#issuer_public_key","publicKeyBase58":"2eeoyWMdUh1KxbLNydhZxpbNDqh1aGiJaCMwMWP4PpqyD1oEBW9rmBaET5ZugQvocw3w5NzL1znB2SmSJLmd5J13QNnP4xGtmT8itf3j7jyakGBLmy3zg2sXJvkqZLsDySoHEfjJLGP8c5CbZvQCSydphNo4NWoi6s2RXBLotSXMQ2NsrcL6HoYsnJxTFcEDcFMuYiDGyyzpATPLBBNEVQ4VypdKtwrzgqwkMk1SDjiEqhwy61hYHknCJM6bDhirnjptpxL","type":"CoconutVerificationKey"}]}}}'
 }
 
 @test "An Admin sign the did document" {
@@ -364,7 +363,7 @@ Then print the 'ecdh signature'
 Then print the 'id'
 EOF
     save_output "did_document_signed.json"
-    assert_output '{"did_document":{"@context":["https://www.w3.org/ns/did/v1","https://w3id.org/security/suites/ed25519-2018/v1","https://w3id.org/security/suites/secp256k1-2019/v1","https://w3id.org/security/suites/secp256k1-2020/v1","https://dyne.github.io/W3C-DID/specs/ReflowBLS12381.json","https://dyne.github.io/W3C-DID/specs/Bbs.json","https://dyne.github.io/W3C-DID/specs/EcdsaSecp256r1.json","https://dyne.github.io/W3C-DID/specs/Coconut.json",{"description":"https://schema.org/description"}],"description":"test_user","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","verificationMethod":[{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#ecdh_public_key","publicKeyBase58":"Prv7EbvuXevABNJytdsoXPqjJFJxnuiHVk3QqcuWHtn7yzEQHkctuEgezzjG9tCCNriD4HsmFNnFPFDcGfMs3kmR","type":"EcdsaSecp256k1VerificationKey2019"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#reflow_public_key","publicKeyBase58":"aeEZAeKXLcuWLEgCY3q8L7kN9qyakvnNeZCS4TzYgVM8LqeuJaZQjVffAZB4QYxk33Cw2bTtXRUmBBBGPFMtMFVCKNhTbMgwUQwwXPoq8YFg6ENMKMCRhHxCfpXd8Ta5WEn2itA1gp8zZnsu8Gj37tDUDHA9twiszDxV7KPWdYNdD4at1shUcSyovuNuUcXwtLCdF9QPKWm5uQ6qrcbk6wimhpT6yNZQtWiZrCXMWrKyk14Yi4kXxaJwquvzUkHL87hZT","type":"ReflowBLS12381VerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#bitcoin_public_key","publicKeyBase58":"gR5grNVtEvyM7Uy1L455q1WLkr5piE4yocyQ2stsMPiu","type":"EcdsaSecp256k1VerificationKey2019"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#eddsa_public_key","publicKeyBase58":"DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","type":"Ed25519VerificationKey2018"},{"blockchainAccountId":"eip155:1:0x03379e512bb00f0f8669eaec392225dde018fa6c","controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#ethereum_address","type":"EcdsaSecp256k1RecoveryMethod2020"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#es256_public_key","publicKeyBase58":"2UrGDZp9qf5oENNUsa9KarYcqPPjSopq7riR8Gzu7xrYuomPPjtGCzQdTYg6DLySPTzwGgdtUdLvNfj2wmYVSUzEgpv","type":"EcdsaSecp256r1VerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#bbs_public_key","publicKeyBase58":"ykbNb4QcyqA4EmRVa8AP2gAu5kWwzmnhXwCZ421XQnYPC3m7gXZ29yEnkToitHgnc3y1TWscseCd9G3hSvh7tp9QKSyGxDM15KQjGaQUekwZQ9Z1BXW2iATYD9uVEkM2wHu","type":"BbsVerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#issuer_public_key","publicKeyBase58":"2eeoyWMdUh1KxbLNydhZxpbNDqh1aGiJaCMwMWP4PpqyD1oEBW9rmBaET5ZugQvocw3w5NzL1znB2SmSJLmd5J13QNnP4xGtmT8itf3j7jyakGBLmy3zg2sXJvkqZLsDySoHEfjJLGP8c5CbZvQCSydphNo4NWoi6s2RXBLotSXMQ2NsrcL6HoYsnJxTFcEDcFMuYiDGyyzpATPLBBNEVQ4VypdKtwrzgqwkMk1SDjiEqhwy61hYHknCJM6bDhirnjptpxL","type":"CoconutVerificationKey"}]},"ecdh_signature":{"r":"93ATLLmV3MZXoYLPPtS9KxAXacaPaDFozTsETeeJwjXX","s":"FWXB3ciFxeYQf8c4saL14aYBg5yMDimyt98Kj77Tq8u2"},"eddsa_signature":"5sDSMJisgMyT276aHKrDUDruNwQhJJ2wdEi2Ke8Ta3vQHaDkwb2QSeW6qbuLgoXTDTR2waFNWLwDzUAbbFA8zPBq","id":"did:dyne:sandbox.zenroomtest_A:HCA7GceXsWmHaZJQCfHNPF1PdNKpr3o1fpnWjEDUzDsv","timestamp":"1703064997357"}'
+    assert_output '{"did_document":{"@context":["https://www.w3.org/ns/did/v1","https://w3id.org/security/suites/ed25519-2018/v1","https://w3id.org/security/suites/secp256k1-2019/v1","https://w3id.org/security/suites/secp256k1-2020/v1","https://dyne.github.io/W3C-DID/specs/ReflowBLS12381.json","https://dyne.github.io/W3C-DID/specs/Bbs.json","https://dyne.github.io/W3C-DID/specs/EcdsaSecp256r1.json","https://dyne.github.io/W3C-DID/specs/Coconut.json",{"description":"https://schema.org/description"}],"description":"test_user","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","verificationMethod":[{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#ecdh_public_key","publicKeyBase58":"Prv7EbvuXevABNJytdsoXPqjJFJxnuiHVk3QqcuWHtn7yzEQHkctuEgezzjG9tCCNriD4HsmFNnFPFDcGfMs3kmR","type":"EcdsaSecp256k1VerificationKey2019"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#reflow_public_key","publicKeyBase58":"aeEZAeKXLcuWLEgCY3q8L7kN9qyakvnNeZCS4TzYgVM8LqeuJaZQjVffAZB4QYxk33Cw2bTtXRUmBBBGPFMtMFVCKNhTbMgwUQwwXPoq8YFg6ENMKMCRhHxCfpXd8Ta5WEn2itA1gp8zZnsu8Gj37tDUDHA9twiszDxV7KPWdYNdD4at1shUcSyovuNuUcXwtLCdF9QPKWm5uQ6qrcbk6wimhpT6yNZQtWiZrCXMWrKyk14Yi4kXxaJwquvzUkHL87hZT","type":"ReflowBLS12381VerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#bitcoin_public_key","publicKeyBase58":"gR5grNVtEvyM7Uy1L455q1WLkr5piE4yocyQ2stsMPiu","type":"EcdsaSecp256k1VerificationKey2019"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#eddsa_public_key","publicKeyBase58":"DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","type":"Ed25519VerificationKey2018"},{"blockchainAccountId":"eip155:1:0x03379e512bb00f0f8669eaec392225dde018fa6c","controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#ethereum_address","type":"EcdsaSecp256k1RecoveryMethod2020"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#es256_public_key","publicKeyBase58":"3Gjh6x5oHB3e14VXMtN74PEPwMSDDFxQEr3W88STaGXFHXhVZDH4AP85sU2rJ95o3aqkUuYzLDfR4jYCqHh6jakP","type":"EcdsaSecp256r1VerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#bbs_public_key","publicKeyBase58":"ykbNb4QcyqA4EmRVa8AP2gAu5kWwzmnhXwCZ421XQnYPC3m7gXZ29yEnkToitHgnc3y1TWscseCd9G3hSvh7tp9QKSyGxDM15KQjGaQUekwZQ9Z1BXW2iATYD9uVEkM2wHu","type":"BbsVerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#issuer_public_key","publicKeyBase58":"2eeoyWMdUh1KxbLNydhZxpbNDqh1aGiJaCMwMWP4PpqyD1oEBW9rmBaET5ZugQvocw3w5NzL1znB2SmSJLmd5J13QNnP4xGtmT8itf3j7jyakGBLmy3zg2sXJvkqZLsDySoHEfjJLGP8c5CbZvQCSydphNo4NWoi6s2RXBLotSXMQ2NsrcL6HoYsnJxTFcEDcFMuYiDGyyzpATPLBBNEVQ4VypdKtwrzgqwkMk1SDjiEqhwy61hYHknCJM6bDhirnjptpxL","type":"CoconutVerificationKey"}]},"ecdh_signature":{"r":"93ATLLmV3MZXoYLPPtS9KxAXacaPaDFozTsETeeJwjXX","s":"B12drfhoFKQxbCdSBmr78qTZacPDnVupmvufymwLXcR6"},"eddsa_signature":"2xZcwdTTetbk8vwNtSZ452mthAR6qcsZACR6HXNxcjwQvMm5CYkirtyuZrC6M1czRSqjcV8p3ZeTZY1pNR9fA8k7","id":"did:dyne:sandbox.zenroomtest_A:HCA7GceXsWmHaZJQCfHNPF1PdNKpr3o1fpnWjEDUzDsv","timestamp":"1703064997357"}'
 }
 
 @test "Server accept did document (not the real contract only crypto checks)" {
@@ -453,51 +452,110 @@ EOF
     and I move 'verificationMethod' in 'proof'
     and I move 'proof' in 'did document'
 
-    Then print the 'did document' 
+    Then print the 'did document'
 EOF
     save_output "accepted_did_document.json"
-    assert_output '{"did_document":{"@context":["https://www.w3.org/ns/did/v1","https://w3id.org/security/suites/ed25519-2018/v1","https://w3id.org/security/suites/secp256k1-2019/v1","https://w3id.org/security/suites/secp256k1-2020/v1","https://dyne.github.io/W3C-DID/specs/ReflowBLS12381.json","https://dyne.github.io/W3C-DID/specs/Bbs.json","https://dyne.github.io/W3C-DID/specs/EcdsaSecp256r1.json","https://dyne.github.io/W3C-DID/specs/Coconut.json",{"description":"https://schema.org/description"}],"description":"test_user","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","proof":{"created":"1703064997357","jws":"eyJhbGciOiJFUzI1NksiLCJiNjQiOnRydWUsImNyaXQiOiJiNjQifQ..d2tYw0FFyVU7UjX-IRpiN8SLkLR4S8bYZmCwI2rzurLXk5POaVcRfiR2Ee8Sj7ZAvCAKYt6hBllmFtMWn9MDJQ","proofPurpose":"assertionMethod","type":"EcdsaSecp256k1Signature2019","verificationMethod":"did:dyne:sandbox.zenroomtest_A:HCA7GceXsWmHaZJQCfHNPF1PdNKpr3o1fpnWjEDUzDsv#ecdh_public_key"},"verificationMethod":[{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#ecdh_public_key","publicKeyBase58":"Prv7EbvuXevABNJytdsoXPqjJFJxnuiHVk3QqcuWHtn7yzEQHkctuEgezzjG9tCCNriD4HsmFNnFPFDcGfMs3kmR","type":"EcdsaSecp256k1VerificationKey2019"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#reflow_public_key","publicKeyBase58":"aeEZAeKXLcuWLEgCY3q8L7kN9qyakvnNeZCS4TzYgVM8LqeuJaZQjVffAZB4QYxk33Cw2bTtXRUmBBBGPFMtMFVCKNhTbMgwUQwwXPoq8YFg6ENMKMCRhHxCfpXd8Ta5WEn2itA1gp8zZnsu8Gj37tDUDHA9twiszDxV7KPWdYNdD4at1shUcSyovuNuUcXwtLCdF9QPKWm5uQ6qrcbk6wimhpT6yNZQtWiZrCXMWrKyk14Yi4kXxaJwquvzUkHL87hZT","type":"ReflowBLS12381VerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#bitcoin_public_key","publicKeyBase58":"gR5grNVtEvyM7Uy1L455q1WLkr5piE4yocyQ2stsMPiu","type":"EcdsaSecp256k1VerificationKey2019"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#eddsa_public_key","publicKeyBase58":"DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","type":"Ed25519VerificationKey2018"},{"blockchainAccountId":"eip155:1:0x03379e512bb00f0f8669eaec392225dde018fa6c","controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#ethereum_address","type":"EcdsaSecp256k1RecoveryMethod2020"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#es256_public_key","publicKeyBase58":"2UrGDZp9qf5oENNUsa9KarYcqPPjSopq7riR8Gzu7xrYuomPPjtGCzQdTYg6DLySPTzwGgdtUdLvNfj2wmYVSUzEgpv","type":"EcdsaSecp256r1VerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#bbs_public_key","publicKeyBase58":"ykbNb4QcyqA4EmRVa8AP2gAu5kWwzmnhXwCZ421XQnYPC3m7gXZ29yEnkToitHgnc3y1TWscseCd9G3hSvh7tp9QKSyGxDM15KQjGaQUekwZQ9Z1BXW2iATYD9uVEkM2wHu","type":"BbsVerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#issuer_public_key","publicKeyBase58":"2eeoyWMdUh1KxbLNydhZxpbNDqh1aGiJaCMwMWP4PpqyD1oEBW9rmBaET5ZugQvocw3w5NzL1znB2SmSJLmd5J13QNnP4xGtmT8itf3j7jyakGBLmy3zg2sXJvkqZLsDySoHEfjJLGP8c5CbZvQCSydphNo4NWoi6s2RXBLotSXMQ2NsrcL6HoYsnJxTFcEDcFMuYiDGyyzpATPLBBNEVQ4VypdKtwrzgqwkMk1SDjiEqhwy61hYHknCJM6bDhirnjptpxL","type":"CoconutVerificationKey"}]}}'
+    assert_output '{"did_document":{"@context":["https://www.w3.org/ns/did/v1","https://w3id.org/security/suites/ed25519-2018/v1","https://w3id.org/security/suites/secp256k1-2019/v1","https://w3id.org/security/suites/secp256k1-2020/v1","https://dyne.github.io/W3C-DID/specs/ReflowBLS12381.json","https://dyne.github.io/W3C-DID/specs/Bbs.json","https://dyne.github.io/W3C-DID/specs/EcdsaSecp256r1.json","https://dyne.github.io/W3C-DID/specs/Coconut.json",{"description":"https://schema.org/description"}],"description":"test_user","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","proof":{"created":"1703064997357","jws":"eyJhbGciOiJFUzI1NksiLCJiNjQiOnRydWUsImNyaXQiOiJiNjQifQ..d2tYw0FFyVU7UjX-IRpiN8SLkLR4S8bYZmCwI2rzurKUlrfuIGEau1AsYLTkoKLnrF5RvbIvnHFBUo5BJnGbAQ","proofPurpose":"assertionMethod","type":"EcdsaSecp256k1Signature2019","verificationMethod":"did:dyne:sandbox.zenroomtest_A:HCA7GceXsWmHaZJQCfHNPF1PdNKpr3o1fpnWjEDUzDsv#ecdh_public_key"},"verificationMethod":[{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#ecdh_public_key","publicKeyBase58":"Prv7EbvuXevABNJytdsoXPqjJFJxnuiHVk3QqcuWHtn7yzEQHkctuEgezzjG9tCCNriD4HsmFNnFPFDcGfMs3kmR","type":"EcdsaSecp256k1VerificationKey2019"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#reflow_public_key","publicKeyBase58":"aeEZAeKXLcuWLEgCY3q8L7kN9qyakvnNeZCS4TzYgVM8LqeuJaZQjVffAZB4QYxk33Cw2bTtXRUmBBBGPFMtMFVCKNhTbMgwUQwwXPoq8YFg6ENMKMCRhHxCfpXd8Ta5WEn2itA1gp8zZnsu8Gj37tDUDHA9twiszDxV7KPWdYNdD4at1shUcSyovuNuUcXwtLCdF9QPKWm5uQ6qrcbk6wimhpT6yNZQtWiZrCXMWrKyk14Yi4kXxaJwquvzUkHL87hZT","type":"ReflowBLS12381VerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#bitcoin_public_key","publicKeyBase58":"gR5grNVtEvyM7Uy1L455q1WLkr5piE4yocyQ2stsMPiu","type":"EcdsaSecp256k1VerificationKey2019"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#eddsa_public_key","publicKeyBase58":"DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","type":"Ed25519VerificationKey2018"},{"blockchainAccountId":"eip155:1:0x03379e512bb00f0f8669eaec392225dde018fa6c","controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#ethereum_address","type":"EcdsaSecp256k1RecoveryMethod2020"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#es256_public_key","publicKeyBase58":"3Gjh6x5oHB3e14VXMtN74PEPwMSDDFxQEr3W88STaGXFHXhVZDH4AP85sU2rJ95o3aqkUuYzLDfR4jYCqHh6jakP","type":"EcdsaSecp256r1VerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#bbs_public_key","publicKeyBase58":"ykbNb4QcyqA4EmRVa8AP2gAu5kWwzmnhXwCZ421XQnYPC3m7gXZ29yEnkToitHgnc3y1TWscseCd9G3hSvh7tp9QKSyGxDM15KQjGaQUekwZQ9Z1BXW2iATYD9uVEkM2wHu","type":"BbsVerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#issuer_public_key","publicKeyBase58":"2eeoyWMdUh1KxbLNydhZxpbNDqh1aGiJaCMwMWP4PpqyD1oEBW9rmBaET5ZugQvocw3w5NzL1znB2SmSJLmd5J13QNnP4xGtmT8itf3j7jyakGBLmy3zg2sXJvkqZLsDySoHEfjJLGP8c5CbZvQCSydphNo4NWoi6s2RXBLotSXMQ2NsrcL6HoYsnJxTFcEDcFMuYiDGyyzpATPLBBNEVQ4VypdKtwrzgqwkMk1SDjiEqhwy61hYHknCJM6bDhirnjptpxL","type":"CoconutVerificationKey"}]}}'
 }
 
 @test "now the User sign different documents with its keys" {
     cat <<EOF | save_asset to_sign.json
 {
-	"json": {
-		"simple message": "hello world",
-		"simple dictionary": { "hello" : "world" },
-		"simple array": [ "hello", "world" ]
-	}
+    "json": {
+        "simple message": "hello world",
+        "simple dictionary": { "hello" : "world" },
+        "simple array": [ "hello", "world" ]
+    },
+    "Alice": {
+        "credential_request": {
+            "commit": "AxcTRhBzHHzouliDOtqeuFAsi/6LOznjxnMWv7EMTrEMVmfj5nH16mt7IDGmAD5sfw==",
+            "pi_s": {
+                "commit": "V5MhEif2WgMQnbLZZUvmwT8ceYHJE/ClZyxa4Bf1XvU=",
+                "rk": "SJRd1H/6SCq0jNg01VjGc0593OeAJS8aF2Q0HtwsjkQ=",
+                "rm": "PFl5c9fSaJf9bTD87tWqh5cF5o3HGS59edrEF69/yhg=",
+                "rr": "OLcRY+Bf9E8tdEnwEyej71/lKFYt11owGfzWcwSbBn8="
+            },
+            "public": "AwXpUBZJjRwqU2gFtBoTkE0D2d/hKc7kr96E3GxyDg5ztqabmmUBr0x0JG1TnN0KZw==",
+            "sign": {
+                "a": "Aw9KT0TdteM9ZNJwoEAaKIuBnUc1WAoZbG6F4484Y2lNzVClM3s5GmyxixCWAQ/X3g==",
+                "b": "Ag8p0qlo6/yjb5ju9TyhvnpIe8pKWPSia5tQiJFMvY7CQnFwKAqcx3bB/UHxqVIp1A=="
+            }
+        }
+    },
+    "reflow_seal": {
+        "SM": "AgszTl/cnllWhVbD9gtJal2fVDhdeW4seLbtvwUHEu2qOG7EkXx/0pwhfuABLIorog==",
+        "identity": "Agy3w73Mu1b155J5FD5CsUIdx3YQ5C5m8qvHABelVjdvIDF+j79mJ+4iosp1waOMAA==",
+        "verifier": "Ba76hy9H7Gkrpr0Pa+HQBWL6wefi7XLKNeV42YF/NOFwaOPHIvzwlUwrZT9big73EF60VEoPQqLBw9SnXsGRFAfpoW+4zDXZu1xHkNGxg7oRphsKNY4n7i7LhVcshPyPCjW2PrEyh3+2fBaGK4v05GfxWUoJSv7kXvUgC/VWT3/kYuBcNE/JpkPWggbMnNYLDvq+fLfO/75+TGG1wNq4JdJ4lye4idTftUV0takDxxozzNPrzosAgkXnxJ1ek4yA"
+    },
+    "issuer_public_key": "2eeoyWMdUh1KxbLNydhZxpbNDqh1aGiJaCMwMWP4PpqyD1oEBW9rmBaET5ZugQvocw3w5NzL1znB2SmSJLmd5J13QNnP4xGtmT8itf3j7jyakGBLmy3zg2sXJvkqZLsDySoHEfjJLGP8c5CbZvQCSydphNo4NWoi6s2RXBLotSXMQ2NsrcL6HoYsnJxTFcEDcFMuYiDGyyzpATPLBBNEVQ4VypdKtwrzgqwkMk1SDjiEqhwy61hYHknCJM6bDhirnjptpxL"
 }
 EOF
     cat <<EOF | zexe oracle_signature.zen privatekey_gen.json to_sign.json
 Scenario 'ecdh': sign
 Scenario 'eddsa': sign
+Scenario 'ethereum': sign
+Scenario 'reflow': sign
+Scenario 'credential': sign
+Scenario 'bbs': sign
+Scenario 'es256': sign
 
 Given my name is in a 'string' named 'controller'
 and I have my 'keyring'
 Given I have a 'string dictionary' named 'json'
+and I have a 'string' named 'simple message' in 'json'
+# and I have a 'credential request' inside 'Alice'
+# and I have a 'reflow seal'
+# and I have a 'issuer public key'
 
 When I create the ecdh signature of 'json'
 When I create the eddsa signature of 'json'
+When I create the es256 signature of 'json'
+
+# do not sign nested tables strings
+When I create the ethereum signature of 'simple message'
+When I create the bbs signature of 'simple message'
+
+# TODO: undesratnd how to use them
+# credential
+# When I create the credential signature
+# reflow
+# When I create the reflow signature
 
 Then print the 'ecdh signature'
 Then print the 'eddsa signature'
+Then print the 'es256 signature'
+Then print the 'bbs signature'
+# Then print the 'reflow signature'
+Then print the 'ethereum signature'
+# Then print the 'credential signature'
 Then print the 'json'
 EOF
     save_output "signed.json"
+    assert_output '{"bbs_signature":"h+MszTbzjQ/gb8NYgSKDhjcYDSDyYO/TJ/7PYfQut/UeiOl9/6y1dmTjQgDZ9CmgBsbmrQSQkeAgnSYiiqLz1nGAHq3Fg1aGER9z5OxHX143/Qpn0LRHlERg6unrqUkAWx55zRmrp727UIBw6LtG6w==","ecdh_signature":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"c2WtqHdx9a/2r4aJuZfACHxGCkgGeQpzHZUttAx+VFQ="},"eddsa_signature":"4SvE9ari9BUvBgxiUJDzqpjTuogXJ8F42qc9rXYHgGXADjspjW9r6SJfG1VW8pxm7yjKSmEUPbv5CxKMjKemGD88","es256_signature":"bRd93MYGuiVye/3QVLtvyxGmyGejx/HXQcC+z3m/PtjyOX+wkgvZn+MpBgUZe4fvoPsj0tSkvK5VKz6zlGFgDw==","ethereum_signature":"0x904a3a6e4b685f93cf65f700493397cc35f1783beac55f29bcd903fa4d28975903fee504b28c64588df6182af8e6994499b1aea202287198f6a94a973ce6829a1b","json":{"simple_array":["hello","world"],"simple_dictionary":{"hello":"world"},"simple_message":"hello world"}}'
 }
 
 @test "Everyone that has the did document can now verify the signatures" {
-cat <<EOF | zexe verify_signatures.zen accepted_did_document.json signed.json
+    cat <<EOF | zexe verify_signatures.zen accepted_did_document.json signed.json
 Scenario 'w3c': did document
 Scenario 'ecdh': verify sign
-Scenario 'eddsa':verify sign
+Scenario 'eddsa': verify sign
+Scenario 'ethereum': verify sign
+Scenario 'reflow': verify sign
+Scenario 'credential': verify sign
+Scenario 'bbs': verify sign
+Scenario 'es256': verify sign
 
 # load did document and signatures
 Given I have a 'did document'
 and I have a 'ecdh signature'
 and I have a 'eddsa signature'
+and I have a 'ethereum signature'
+# and I have a 'credential signature'
+# and I have a 'reflow signature'
+and I have a 'bbs signature'
+and I have a 'es256 signature'
 and I have a 'string dictionary' named 'json'
+and I have a 'string' named 'simple message' in 'json'
 
 # Here I retrieve all the public keys/address from
 # the verififcationMethod
@@ -511,8 +569,19 @@ When I verify the 'json' has a ecdh signature in 'ecdh signature' by 'ecdh publi
 When I pickup from path 'verificationMethod.eddsa_public_key'
 When I verify the 'json' has a eddsa signature in 'eddsa signature' by 'eddsa public key'
 
+When I pickup from path 'verificationMethod.ethereum_address'
+When I verify the 'simple message' has a ethereum signature in 'ethereum signature' by 'ethereum_address'
+
+When I pickup from path 'verificationMethod.bbs_public_key'
+When I verify the 'simple message' has a bbs signature in 'bbs signature' by 'bbs public key'
+
+When I pickup from path 'verificationMethod.es256_public_key'
+When I verify the 'json' has a es256 signature in 'es256 signature' by 'es256 public key'
+
 # verification is succesfull
 Then print the string 'signature verified!!!'
 EOF
+    save_output 'verify_signatures.json'
+    assert_output '{"output":["signature_verified!!!"]}'
 }
 
