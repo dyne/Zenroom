@@ -60,29 +60,29 @@ Given I have a 'url64' named 'kid'
 When I create the es256 public key
 
 When I create jwk with es256 public key 'es256 public key'
-When I create the jwt key binding with jwk 'es256 public jwk'
+When I create the jwt key binding with jwk 'jwk'
 
-Then print 'es256 public jwk'
+Then print 'jwk'
 Then print 'kid'
 Then print 'jwk key binding'
 EOF
     save_output jwk_es256_out.json
-    assert_output '{"es256_public_jwk":{"alg":"ES256","crv":"P-256","kty":"EC","use":"sig","x":"Z_zRBEUbhtqDzme6kcGbtV3X4BxARVC8ySoC02IbQu8","y":"zXFljZyvxo9cgvCdcJfrmww9HeSiJUFbI98UUwMkPss"},"jwk_key_binding":{"cnf":{"jwk":{"alg":"ES256","crv":"P-256","kty":"EC","use":"sig","x":"Z_zRBEUbhtqDzme6kcGbtV3X4BxARVC8ySoC02IbQu8","y":"zXFljZyvxo9cgvCdcJfrmww9HeSiJUFbI98UUwMkPss"}}},"kid":"1Jdpq0-Eu0KnZ4R9mapqSiFQfTVvHFg_SrLYifwz8Fc"}'
+    assert_output '{"jwk":{"alg":"ES256","crv":"P-256","kty":"EC","use":"sig","x":"Z_zRBEUbhtqDzme6kcGbtV3X4BxARVC8ySoC02IbQu8","y":"zXFljZyvxo9cgvCdcJfrmww9HeSiJUFbI98UUwMkPss"},"jwk_key_binding":{"cnf":{"jwk":{"alg":"ES256","crv":"P-256","kty":"EC","use":"sig","x":"Z_zRBEUbhtqDzme6kcGbtV3X4BxARVC8ySoC02IbQu8","y":"zXFljZyvxo9cgvCdcJfrmww9HeSiJUFbI98UUwMkPss"}}},"kid":"1Jdpq0-Eu0KnZ4R9mapqSiFQfTVvHFg_SrLYifwz8Fc"}'
 }
 
 @test "Set kid value in JWK with es256 public key" {
     cat <<EOF | zexe jwk_es256_imp.zen jwk_es256_out.json
 Scenario 'sd_jwt'
 
-Given I have 'es256 public jwk'
+Given I have 'jwk'
 Given I have a 'url64' named 'kid'
 Given I have a 'jwk_key_binding'
-When I set kid in jwk 'es256 public jwk' to 'kid'
-Then print 'es256 public jwk'
+When I set kid in jwk 'jwk' to 'kid'
+Then print 'jwk'
 Then print 'jwk_key_binding'
 EOF
     save_output jwk_es256_imp_out.json
-    assert_output '{"es256_public_jwk":{"alg":"ES256","crv":"P-256","kid":"1Jdpq0-Eu0KnZ4R9mapqSiFQfTVvHFg_SrLYifwz8Fc","kty":"EC","use":"sig","x":"Z_zRBEUbhtqDzme6kcGbtV3X4BxARVC8ySoC02IbQu8","y":"zXFljZyvxo9cgvCdcJfrmww9HeSiJUFbI98UUwMkPss"},"jwk_key_binding":{"cnf":{"jwk":{"alg":"ES256","crv":"P-256","kty":"EC","use":"sig","x":"Z_zRBEUbhtqDzme6kcGbtV3X4BxARVC8ySoC02IbQu8","y":"zXFljZyvxo9cgvCdcJfrmww9HeSiJUFbI98UUwMkPss"}}}}'
+    assert_output '{"jwk":{"alg":"ES256","crv":"P-256","kid":"1Jdpq0-Eu0KnZ4R9mapqSiFQfTVvHFg_SrLYifwz8Fc","kty":"EC","use":"sig","x":"Z_zRBEUbhtqDzme6kcGbtV3X4BxARVC8ySoC02IbQu8","y":"zXFljZyvxo9cgvCdcJfrmww9HeSiJUFbI98UUwMkPss"},"jwk_key_binding":{"cnf":{"jwk":{"alg":"ES256","crv":"P-256","kty":"EC","use":"sig","x":"Z_zRBEUbhtqDzme6kcGbtV3X4BxARVC8ySoC02IbQu8","y":"zXFljZyvxo9cgvCdcJfrmww9HeSiJUFbI98UUwMkPss"}}}}'
 }
 
 @test "Import and export SDR" {

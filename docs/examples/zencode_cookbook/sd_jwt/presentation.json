@@ -1,6 +1,6 @@
 {
     "some_disclosure":["given_name", "family_name", "email"],
-    "signed_selective_disclosure":{
+    "decoded_selective_disclosure":{
         "disclosures":[
             ["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],
             ["5-Y_kvJBo3ni_JNNUrFnIA","family_name","Doe"],
