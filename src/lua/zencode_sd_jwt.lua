@@ -135,6 +135,7 @@ local function export_supported_selective_disclosure(obj)
 end
 
 --for reference on JSON Web Key see RFC7517
+-- TODO: implement jwk for other private/public keys
 local function import_jwk(obj)
     zencode_assert(obj.kty, "The input is not a valid JSON Web Key, missing kty")
     zencode_assert(obj.kty == "EC", "kty must be EC, given is "..obj.kty)
@@ -332,7 +333,7 @@ ZEN:add_schema(
             import = import_supported_selective_disclosure,
             export = export_supported_selective_disclosure
         },
-        es256_public_jwk = {
+        jwk = {
             import = import_jwk,
             export = export_jwk
         },
@@ -413,9 +414,9 @@ When("create jwk with es256 public key ''", function(pk)
         x = pubk:sub(1,32),
         y = pubk:sub(33,64)
     }
-    empty'es256_public_jwk'
-    ACK.es256_public_jwk = jwk
-    new_codec("es256_public_jwk")
+    empty'jwk'
+    ACK.jwk = jwk
+    new_codec("jwk")
 end)
 
 When("set kid in jwk '' to ''", function(jw, kid)
