@@ -806,7 +806,7 @@ EOF
 
     cat <<EOF | zexe remove-table-from-table.zen table-arrays.json
 Given I have a 'string array' named 'identities'
-Given I have a 'string array' named 'identity'
+Given I have a 'string dictionary' named 'identity'
 When I create the size of 'identities'
 and I rename 'size' to 'before'
 and I remove the 'identity' from 'identities'
