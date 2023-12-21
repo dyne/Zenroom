@@ -132,7 +132,7 @@ end)
 When("aggregate reflow public key from array ''",function(arr)
       empty 'reflow public key'
       local s = have(arr)
-      zencode_assert(#s ~= 0, "Empty array: "..arr)
+      zencode_assert(luatype(s) == 'table' and next(s) ~= nil, "Empty table: "..arr)
       local val
       for k, v in pairs(s) do
 	 if k == 'reflow_public_key' then val = v
