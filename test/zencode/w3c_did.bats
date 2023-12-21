@@ -468,17 +468,17 @@ EOF
     },
     "Alice": {
         "credential_request": {
-            "commit": "AxcTRhBzHHzouliDOtqeuFAsi/6LOznjxnMWv7EMTrEMVmfj5nH16mt7IDGmAD5sfw==",
+            "commit": "AgxaE6cXstFWa7aMZ8xnhaFFhsNx+M425Oze3eQRBGz875bTCkX1/9bPjEn0Lu0O0w==",
             "pi_s": {
-                "commit": "V5MhEif2WgMQnbLZZUvmwT8ceYHJE/ClZyxa4Bf1XvU=",
-                "rk": "SJRd1H/6SCq0jNg01VjGc0593OeAJS8aF2Q0HtwsjkQ=",
-                "rm": "PFl5c9fSaJf9bTD87tWqh5cF5o3HGS59edrEF69/yhg=",
-                "rr": "OLcRY+Bf9E8tdEnwEyej71/lKFYt11owGfzWcwSbBn8="
+                "commit": "CnOREb3Rx6Kf552vZfN8tzrNIn+palJ+6PdbhHOIdco=",
+                "rk": "UE/pxMeN6hA4lUhYB3/zkan28cjTMPu0VyvDhEKGX1Y=",
+                "rm": "cWkRLdKYyTYLq8leeOlAw1yQEJopHv8/2JGcmOQl1bQ=",
+                "rr": "UoSW5ojkyLofT5cW+4f2GAYihUTPrtBnwh7bDFDzKHs="
             },
-            "public": "AwXpUBZJjRwqU2gFtBoTkE0D2d/hKc7kr96E3GxyDg5ztqabmmUBr0x0JG1TnN0KZw==",
+            "public": "AhYCP1Ct2ZapJuTYNTzWMUIlgPwFNweJFTrJ/0UWg9a/UwvY8g/9VPTgRJCV0X1SXA==",
             "sign": {
-                "a": "Aw9KT0TdteM9ZNJwoEAaKIuBnUc1WAoZbG6F4484Y2lNzVClM3s5GmyxixCWAQ/X3g==",
-                "b": "Ag8p0qlo6/yjb5ju9TyhvnpIe8pKWPSia5tQiJFMvY7CQnFwKAqcx3bB/UHxqVIp1A=="
+                "a": "AwtH8piZkVF/uPhjvzHFIjWWYee0HLBVtJ/UaSaUaBJJZrkiSibB4kvOCQAvmUpK9Q==",
+                "b": "AgBioegDQ1mmgsphlFPCq61bASzVPi6ugpixwOuIUZP11z9aX51WzeU/cp8bw82SEw=="
             }
         }
     },
@@ -503,7 +503,7 @@ Given my name is in a 'string' named 'controller'
 and I have my 'keyring'
 Given I have a 'string dictionary' named 'json'
 and I have a 'string' named 'simple message' in 'json'
-# and I have a 'credential request' inside 'Alice'
+and I have a 'credential request' inside 'Alice'
 # and I have a 'reflow seal'
 # and I have a 'issuer public key'
 
@@ -515,9 +515,8 @@ When I create the es256 signature of 'json'
 When I create the ethereum signature of 'simple message'
 When I create the bbs signature of 'simple message'
 
-# TODO: undesratnd how to use them
-# credential
-# When I create the credential signature
+# participant credential request
+When I create the credential signature
 # reflow
 # When I create the reflow signature
 
@@ -527,15 +526,68 @@ Then print the 'es256 signature'
 Then print the 'bbs signature'
 # Then print the 'reflow signature'
 Then print the 'ethereum signature'
-# Then print the 'credential signature'
+Then print the 'credential signature'
 Then print the 'json'
 EOF
     save_output "signed.json"
-    assert_output '{"bbs_signature":"h+MszTbzjQ/gb8NYgSKDhjcYDSDyYO/TJ/7PYfQut/UeiOl9/6y1dmTjQgDZ9CmgBsbmrQSQkeAgnSYiiqLz1nGAHq3Fg1aGER9z5OxHX143/Qpn0LRHlERg6unrqUkAWx55zRmrp727UIBw6LtG6w==","ecdh_signature":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"c2WtqHdx9a/2r4aJuZfACHxGCkgGeQpzHZUttAx+VFQ="},"eddsa_signature":"4SvE9ari9BUvBgxiUJDzqpjTuogXJ8F42qc9rXYHgGXADjspjW9r6SJfG1VW8pxm7yjKSmEUPbv5CxKMjKemGD88","es256_signature":"bRd93MYGuiVye/3QVLtvyxGmyGejx/HXQcC+z3m/PtjyOX+wkgvZn+MpBgUZe4fvoPsj0tSkvK5VKz6zlGFgDw==","ethereum_signature":"0x904a3a6e4b685f93cf65f700493397cc35f1783beac55f29bcd903fa4d28975903fee504b28c64588df6182af8e6994499b1aea202287198f6a94a973ce6829a1b","json":{"simple_array":["hello","world"],"simple_dictionary":{"hello":"world"},"simple_message":"hello world"}}'
+    assert_output '{"bbs_signature":"h+MszTbzjQ/gb8NYgSKDhjcYDSDyYO/TJ/7PYfQut/UeiOl9/6y1dmTjQgDZ9CmgBsbmrQSQkeAgnSYiiqLz1nGAHq3Fg1aGER9z5OxHX143/Qpn0LRHlERg6unrqUkAWx55zRmrp727UIBw6LtG6w==","credential_signature":{"a_tilde":"Awhly/tk9sKexvuK+e3F8zUqlSN4OyKsGMI15xtZ7sJFQt6wLXBfr+G+pExs7FH3Yg==","b_tilde":"Ag+KjcPOJuR56iNpOyCndff0gjWNYZRUXYvOQo0ZBb2TeJfpWVoRWfwVEuiw4g2qgg==","h":"AgxaE6cXstFWa7aMZ8xnhaFFhsNx+M425Oze3eQRBGz875bTCkX1/9bPjEn0Lu0O0w=="},"ecdh_signature":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"c2WtqHdx9a/2r4aJuZfACHxGCkgGeQpzHZUttAx+VFQ="},"eddsa_signature":"4SvE9ari9BUvBgxiUJDzqpjTuogXJ8F42qc9rXYHgGXADjspjW9r6SJfG1VW8pxm7yjKSmEUPbv5CxKMjKemGD88","es256_signature":"bRd93MYGuiVye/3QVLtvyxGmyGejx/HXQcC+z3m/PtjyOX+wkgvZn+MpBgUZe4fvoPsj0tSkvK5VKz6zlGFgDw==","ethereum_signature":"0x904a3a6e4b685f93cf65f700493397cc35f1783beac55f29bcd903fa4d28975903fee504b28c64588df6182af8e6994499b1aea202287198f6a94a973ce6829a1b","json":{"simple_array":["hello","world"],"simple_dictionary":{"hello":"world"},"simple_message":"hello world"}}'
 }
 
-@test "Everyone that has the did document can now verify the signatures" {
-    cat <<EOF | zexe verify_signatures.zen accepted_did_document.json signed.json
+@test "participant create credential proof" {
+    cat <<EOF | save_asset participant.json
+{
+	"Participant": {
+		"keyring": {
+			"credential": "OKjpJsVG3es9KpFXdQDNS+tFc1LdGziRxwYZpd+YMKM="
+		}
+	},
+    "issuer_public_key": "tqCtdVUttGpPAfHcmrHF4zYDzNPZLzLyqoX9oMkf4Y3FtYWEq1+pQIMgdkooSaogGHxdKQYZb78EQyAChMbxbiguBOcSLP2JjIz1s5KZLotGI+ghA5LMxa3CVe0c39h2gIc/0PH9+xrzVrTGQNwwr3MoyWBZMbODSYWS1XZDHWClw0DRp6miZd+kUzFQGTEeBZkGgDaWWsJUkkyeOQ5vjJuqOX3xcfb7H7OfBNO9129ojTOoyDNDa0gA4OjfuKMN"
+}
+EOF
+    cat <<EOF | zexe oracle_signature.zen signed.json participant.json
+Scenario 'ecdh': sign
+Scenario 'eddsa': sign
+Scenario 'ethereum': sign
+Scenario 'reflow': sign
+Scenario 'credential': sign
+Scenario 'bbs': sign
+Scenario 'es256': sign
+
+# Here we load the the keyring of the participant, containing their secret key
+Given that I am known as 'Participant'
+Given I have my 'keyring'
+
+Given I have a 'credential signature'
+and I have a 'issuer public key'
+
+# other signatures
+Given I have a 'string dictionary' named 'json'
+Given I have a 'ecdh signature'
+Given I have a 'eddsa signature'
+Given I have a 'es256 signature'
+Given I have a 'bbs signature'
+# Given I have a 'reflow signature'
+Given I have a 'ethereum signature'
+
+When I aggregate all the issuer public keys
+When I create the credentials
+When I create the credential proof
+
+Then print the 'credential proof'
+Then print the 'ecdh signature'
+Then print the 'eddsa signature'
+Then print the 'es256 signature'
+Then print the 'bbs signature'
+# Then print the 'reflow signature'
+Then print the 'ethereum signature'
+Then print the 'json'
+EOF
+    save_output "sign_and_proof.json"
+    assert_output '{"bbs_signature":"h+MszTbzjQ/gb8NYgSKDhjcYDSDyYO/TJ/7PYfQut/UeiOl9/6y1dmTjQgDZ9CmgBsbmrQSQkeAgnSYiiqLz1nGAHq3Fg1aGER9z5OxHX143/Qpn0LRHlERg6unrqUkAWx55zRmrp727UIBw6LtG6w==","credential_proof":{"kappa":"GUSmv59MQMHsQLpJ/Dwi0IHjz1jaL67Gc4N8Cy9/S7WLWh8IRbMGxnESUfgTRKDEEIR3OmscHitO5ePffc8Y6BYeBTTUt/bx2sx1+ieslKnHryORfr4hQF4zvK5U6p/QCAD8pJDAf2scR5LVvS+pe0dqen17vznUORUcSbcZcysePYHlLF8uhRsroQYGP7/hEcXJyx/O8JTr6lBEptUpjwGELJpXTF77QT5XMhhchh35Q3d3gXQTn+f/vLz6C64Y","nu":"AhIwE+dgi1tzShob5gPZpqGhgN/7H2rTSVr84OhLSFk8It1RDEABvRJ/Wqho4hYpMQ==","pi_v":{"c":"DqjqxudiEEuCoJhv8MiVht2/u30CiM5rLwKtbabGcZU=","rm":"CrTepSf2RUVxAwp2s6/aL7bAtQc3Dnm0JIX/5fMxFiY=","rr":"WvEtYhUN5blxdOvGq0D8mZCOCrdI+WEMKLqxD66Jn7E="},"sigma_prime":{"h_prime":"Axl2kddFpvkI72HODi/xGZEJU+nTMWSfnDk4AD02FfKU4c0lUi+xi27/lndBQFfJGw==","s_prime":"AgQZlr5s05CMVeIwzcvZQolMCmsjI0pv5FXVGbpPyANpWt01aNG2jF1awG8Q3DAhKQ=="}},"ecdh_signature":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"c2WtqHdx9a/2r4aJuZfACHxGCkgGeQpzHZUttAx+VFQ="},"eddsa_signature":"4SvE9ari9BUvBgxiUJDzqpjTuogXJ8F42qc9rXYHgGXADjspjW9r6SJfG1VW8pxm7yjKSmEUPbv5CxKMjKemGD88","es256_signature":"bRd93MYGuiVye/3QVLtvyxGmyGejx/HXQcC+z3m/PtjyOX+wkgvZn+MpBgUZe4fvoPsj0tSkvK5VKz6zlGFgDw==","ethereum_signature":"0x904a3a6e4b685f93cf65f700493397cc35f1783beac55f29bcd903fa4d28975903fee504b28c64588df6182af8e6994499b1aea202287198f6a94a973ce6829a1b","json":{"simple_array":["hello","world"],"simple_dictionary":{"hello":"world"},"simple_message":"hello world"}}'
+}
+
+@test "Everyone that has the did document can now verify the signatures or the proof" {
+    cat <<EOF | zexe verify_signatures.zen accepted_did_document.json sign_and_proof.json
 Scenario 'w3c': did document
 Scenario 'ecdh': verify sign
 Scenario 'eddsa': verify sign
@@ -550,12 +602,14 @@ Given I have a 'did document'
 and I have a 'ecdh signature'
 and I have a 'eddsa signature'
 and I have a 'ethereum signature'
-# and I have a 'credential signature'
 # and I have a 'reflow signature'
 and I have a 'bbs signature'
 and I have a 'es256 signature'
 and I have a 'string dictionary' named 'json'
 and I have a 'string' named 'simple message' in 'json'
+
+# proof
+Given and I have a 'credential proof'
 
 # Here I retrieve all the public keys/address from
 # the verififcationMethod
@@ -578,6 +632,10 @@ When I verify the 'simple message' has a bbs signature in 'bbs signature' by 'bb
 When I pickup from path 'verificationMethod.es256_public_key'
 When I verify the 'json' has a es256 signature in 'es256 signature' by 'es256 public key'
 
+When I pickup a 'issuer public key' from path 'verificationMethod.issuer_public_key'
+When I aggregate all the issuer public keys
+When I verify the credential proof
+
 # verification is succesfull
 Then print the string 'signature verified!!!'
 EOF
@@ -585,3 +643,52 @@ EOF
     assert_output '{"output":["signature_verified!!!"]}'
 }
 
+@test "Everyone that has the did document can now verify the signatures or the proof with the other statement" {
+    cat <<EOF | zexe verify_signatures.zen accepted_did_document.json sign_and_proof.json
+Scenario 'w3c': did document
+Scenario 'ecdh': verify sign
+Scenario 'eddsa': verify sign
+# Scenario 'ethereum': verify sign
+Scenario 'reflow': verify sign
+Scenario 'credential': verify sign
+Scenario 'bbs': verify sign
+Scenario 'es256': verify sign
+
+# load did document and signatures
+Given I have a 'did document'
+and I have a 'ecdh signature'
+and I have a 'eddsa signature'
+# and I have a 'ethereum signature'
+# and I have a 'reflow signature'
+and I have a 'bbs signature'
+and I have a 'es256 signature'
+and I have a 'string dictionary' named 'json'
+and I have a 'string' named 'simple message' in 'json'
+
+# proof
+Given and I have a 'credential proof'
+
+# Here I use the publc keys to verify the sgnatures
+
+When I create 'ecdh' public key from did document 'did document'
+When I verify the 'json' has a ecdh signature in 'ecdh signature' by 'ecdh public key'
+
+When I create 'eddsa' public key from did document 'did document'
+When I verify the 'json' has a eddsa signature in 'eddsa signature' by 'eddsa public key'
+
+When I create 'bbs' public key from did document 'did document'
+When I verify the 'simple message' has a bbs signature in 'bbs signature' by 'bbs public key'
+
+When I create 'es256' public key from did document 'did document'
+When I verify the 'json' has a es256 signature in 'es256 signature' by 'es256 public key'
+
+When I create 'issuer' public key from did document 'did document'
+When I aggregate all the issuer public keys
+When I verify the credential proof
+
+# verification is succesfull
+Then print the string 'signature verified!!!'
+EOF
+    save_output 'verify_signatures.json'
+    assert_output '{"output":["signature_verified!!!"]}'
+}
