@@ -309,6 +309,18 @@ When("create serviceEndpoint of ''", function(did_doc)
                                        zentype = 'd' })
 end)
 
+local function _import_pk_f(pk_name, pk_value, dest)
+    local issuer_pk = 'issuer_public_key'
+    local res = O.from_base58(O.to_string(pk_value))
+    if string.sub(pk_name, 1, #issuer_pk) == issuer_pk then
+        res = {
+            alpha = ECP2.from_zcash(res:sub(1, 96)),
+            beta = ECP2.from_zcash(res:sub(97, 192))
+        }
+    end
+    dest[pk_name] = res
+end
+
 When("create verificationMethod of ''", function(did_doc)
     local doc = have(did_doc)
     zencode_assert(doc.verificationMethod, 'verificationMethod not found')
@@ -322,8 +334,7 @@ When("create verificationMethod of ''", function(did_doc)
                 O.to_string(ver_method.blockchainAccountId), ':' )[3]
             ACK.verificationMethod[pub_key_name] = O.from_hex(address)
         else
-            local pub_key = O.to_string(ver_method.publicKeyBase58)
-            ACK.verificationMethod[pub_key_name] = O.from_base58(pub_key)
+            _import_pk_f(pub_key_name, ver_method.publicKeyBase58, ACK.verificationMethod)
         end
     end
     new_codec('verificationMethod')
@@ -338,7 +349,7 @@ When("create '' public key from did document ''", function(algo, did_doc)
     local i = 1
     repeat
         if doc.verificationMethod[i].id == id then
-            ACK[pk_name] = O.from_base58(O.to_string((doc.verificationMethod[i].publicKeyBase58)))
+            _import_pk_f(pk_name, doc.verificationMethod[i].publicKeyBase58, ACK)
         end
         i = i+1
     until( ( not doc.verificationMethod[i] ) or ACK[pk_name] )
