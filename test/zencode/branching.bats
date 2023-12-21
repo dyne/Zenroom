@@ -453,23 +453,24 @@ EOF
 
     cat <<EOF | zexe print_the.zen print_the.data
 # Rule caller restroom-mw
-Given I have a 'string' named 'id'
+# Given I have a 'string' named 'id'
 # Given I have a valid redis connection on 'redis://localhost:6379'
 # Given I read from redis the data under the key named 'id' and save the output into 'W3C-DID'
 
-Given I have a 'string array' named 'W3C-DID'
+Given I have a 'string dictionary' named 'W3C-DID'
 
 If I verify the 'id' is not found in 'W3C-DID'
 When I set 'title' to 'Identifier Not Found' as 'string'
 When I set 'type' to 'about:blank' as 'string'
 When I set 'status' to '404' as 'number'
-Then print 'id'
+# Then print 'id'
 Then print 'status'
 Then print 'type'
 Then print 'title'
 Endif
 
 If I verify the 'id' is  found in 'W3C-DID'
+When I pickup from path 'W3C-DID.id'
 Then print 'W3C-DID'
 Then print the 'id'
 Endif

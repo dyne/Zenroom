@@ -494,3 +494,40 @@ EOF
     run $ZENROOM_EXECUTABLE -a fail_wrong_time.data -z fail_wrong_time.zen
     assert_line --partial 'Could not read unix timestamp 1.2'
 }
+
+@test "Load tables with wrong data type fails" {
+    cat << EOF | save_asset fail_table_wrong_dt.data
+{
+	"dict": {
+        "hello": "world"
+    },
+    "array": [
+        "hello",
+        "world"
+    ],
+    "ecdh_pks": [
+        "BLOYXryyAI7rPuyNbI0/1CfLFd7H/NbX+osqyQHjPR9BPK1lYSPOixZQWvFK+rkkJ+aJbYp6kii2Y3+fZ5vl2MA=",
+        "BKRCtsZf8PxlIO5C/rQ8brFimDMgITrqKGiD/9YMdrdeIThLoN7Zm6oAQcVGBYso6aWQmkY70I3Dg2GRAv2gCog="
+    ]
+}
+EOF
+    cat <<EOF | save_asset fail_table_wrong_dt_1.zen
+Given I have a 'string dictionary' named 'array'
+Then print the data
+EOF
+    cat <<EOF | save_asset fail_table_wrong_dt_2.zen
+Given I have a 'string array' named 'dict'
+Then print the data
+EOF
+    cat <<EOF | save_asset fail_table_wrong_dt_3.zen
+Scenario ecdh
+Given I have a 'ecdh public key dictionary' named 'ecdh pks'
+Then print the data
+EOF
+    run $ZENROOM_EXECUTABLE -a fail_table_wrong_dt.data -z fail_table_wrong_dt_1.zen
+    assert_line --partial 'Incorrect data type, expected dictionary for array'
+    run $ZENROOM_EXECUTABLE -a fail_table_wrong_dt.data -z fail_table_wrong_dt_2.zen
+    assert_line --partial 'Incorrect data type, expected array for dict'
+    run $ZENROOM_EXECUTABLE -a fail_table_wrong_dt.data -z fail_table_wrong_dt_3.zen
+    assert_line --partial 'Incorrect data type, expected dictionary for ecdh_pks'
+}

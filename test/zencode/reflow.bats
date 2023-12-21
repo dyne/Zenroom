@@ -113,7 +113,7 @@ EOF
 
     cat <<EOF | zexe seal_start.zen uid.json public_key_array.json
 Scenario reflow
-Given I have a 'reflow public key array' named 'public keys'
+Given I have a 'reflow public key dictionary' named 'public keys'
 and I have a 'string dictionary' named 'Sale'
 When I aggregate the reflow public key from array 'public keys'
 and I create the reflow identity of 'Sale'
