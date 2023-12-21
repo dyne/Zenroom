@@ -152,6 +152,12 @@ function operate_conversion(guessed)
    if luatype(fun) == 'table' then fun = fun.import end
    local lt = luatype(guessed.raw)
    if lt == 'table' then
+        -- check correctness of the data type
+        if guessed.zentype == "a" then assert(isarray(guessed.raw),
+            "Incorrect data type, expected array for "..guessed.name)
+        elseif guessed.zentype == "d" then assert(isdictionary(guessed.raw),
+            "Incorrect data type, expected dictionary for "..guessed.name)
+        end
 	  if guessed.schema then
 		 -- error('Invalid schema conversion for encoding: '..guessed.encoding, 2)
 		 local res = {}
