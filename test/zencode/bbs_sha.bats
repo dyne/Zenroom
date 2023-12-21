@@ -309,3 +309,57 @@ Then print the 'myStringArray'
 EOF
     save_output verified_bbs_docs.json
 }
+
+
+@test "BBS sign a dict or nested table fails" {
+    cat <<EOF | save_asset sign_fail.json
+{
+    "dict": {
+        "this": "dict",
+        "should": "not",
+        "be": "signed"
+    },
+    "nested_table": [
+        [
+            "hello",
+            "world"
+        ],
+        [
+            "this should also not be signed"
+        ]
+    ]
+}
+EOF
+    cat <<EOF | save_asset sign_fail_1.zen
+Scenario 'bbs': sign
+
+# data
+Given I have a 'string dictionary' named 'dict'
+
+# keys
+Given I am known as 'Alice'
+and I have my 'keyring'
+
+When I create the bbs signature of 'dict'
+
+Then print the data
+EOF
+    cat <<EOF | save_asset sign_fail_2.zen
+Scenario 'bbs': sign
+
+# data
+Given I have a 'string array' named 'nested_table'
+
+# keys
+Given I am known as 'Alice'
+and I have my 'keyring'
+
+When I create the bbs signature of 'nested_table'
+
+Then print the data
+EOF
+    run $ZENROOM_EXECUTABLE -z -k alice_keys_sha.json -a sign_fail.json sign_fail_1.zen
+    assert_line --partial 'BBS signature can be done only on strings or an array of strings'
+    run $ZENROOM_EXECUTABLE -z -k alice_keys_sha.json -a sign_fail.json sign_fail_2.zen
+    assert_line --partial 'BBS signature can be done only on strings or an array of strings'
+}

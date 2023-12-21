@@ -179,9 +179,12 @@ end)
 
 local function generic_bbs_signature(doc, h)
     local sk = havekey'bbs'
-    local obj = have(doc)
+    local obj, obj_codec = have(doc)
     local hash = O.to_string(mayhave(h)) or h
     local ciphersuite = BBS.ciphersuite(hash)
+    -- first check on h, checks on nested table is done in BBS.sign for optimization
+    zencode_assert(obj_codec.zentype == 'e' or obj_codec.zentype == 'a',
+        'BBS signature can be done only on strings or an array of strings')
     if (type(obj) ~= 'table') then
         obj = {obj}
     end
