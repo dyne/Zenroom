@@ -541,6 +541,7 @@ function bbs.sign(ciphersuite, sk, pk, messages_octets, header)
     -- Converting generic octet messages into scalars
     local messages = {}
     for k,v in pairs(messages_octets) do
+        assert(type(v) ~= 'table', 'BBS signature can be done only on strings or an array of strings')
         messages[k] = bbs.MapMessageToScalarAsHash(ciphersuite, v)
     end
 
