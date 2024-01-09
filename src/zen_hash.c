@@ -71,7 +71,7 @@ extern void RMD160_hash(dword *MDbuf, byte *hashcode);
 
    @param string indicating the type of hash algorithm
    @function HASH.new(string)
-   @return a new hash object ready to process data.
+   @return a new hash object ready to process data via :process() method
    @see process
 */
 
@@ -106,13 +106,13 @@ hash* hash_new(lua_State *L, const char *hashtype) {
 		h->algo = _SHA512;
 		h->sha512 = (hash512*)malloc(sizeof(hash512));
 		HASH512_init(h->sha512);
-	} else if(strncasecmp(hashtype,"sha3_256",7) == 0) {
+	} else if(strncasecmp(hashtype,"sha3_256",8) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 32;
 		h->algo = _SHA3_256;
 		h->sha3_256 = (sha3*)malloc(sizeof(sha3));
 		SHA3_init(h->sha3_256, h->len);
-	} else if(strncasecmp(hashtype,"sha3_512",7) == 0) {
+	} else if(strncasecmp(hashtype,"sha3_512",8) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 64;
 		h->algo = _SHA3_512;
