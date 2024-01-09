@@ -51,7 +51,7 @@ When("create ephemeral ids for today", function()
 		local zero = OCTET.zero(epd*16) -- 0 byte buffer
 		ACK.ephemeral_ids = { }
 		for i = 0,epd,1 do
-		   local PRG = AES.ctr(PRF, zero, O.from_number(i))
+		   local PRG = AES.ctr_encrypt(PRF, zero, O.from_number(i))
 		   local l,r = OCTET.chop(PRG,16)
 		   table.insert(ACK.ephemeral_ids, l)
 		end
@@ -70,7 +70,7 @@ When("create proximity tracing of infected ids", function()
 		for n,sk in ipairs(ACK.list_of_infected) do
 		   local PRF = SHA256:hmac(sk, ACK.broadcast_key)
 		   for i = 0,epd,1 do
-			  local PRG = OCTET.chop( AES.ctr(PRF, zero, O.from_number(i)), 16)
+			  local PRG = OCTET.chop( AES.ctr_encrypt(PRF, zero, O.from_number(i)), 16)
 			  for nn,eph in next, ACK.ephemeral_ids, nil do
 				 if eph == PRG then
 					table.insert(ACK.proximity_tracing, sk)

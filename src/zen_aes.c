@@ -199,7 +199,7 @@ end:
 	END(2);
 }
 
-static int ctr_process(lua_State *L) {
+static int ctr_encrypt(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	octet *k = NULL, *in = NULL, *iv = NULL;
@@ -247,19 +247,66 @@ end:
 	END(1);
 }
 
+static int ctr_decrypt(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *k = NULL, *in = NULL, *iv = NULL;
+	amcl_aes a;
+	k = o_arg(L, 1);
+	if(k == NULL) {
+		failed_msg = "failed to allocate space for the aes key";
+		goto end;
+	}
+	if(k->len != 16 && k->len != 32) {
+		zerror(L, "AES.ctr_process accepts only keys of 16 or 32 bytes, this is %u", k->len);
+		failed_msg = "AES-CTR process aborted";
+		goto end;
+	}
+	in = o_arg(L, 2);
+	if(in == NULL) {
+		failed_msg = "failed to allocate space for the messsage text";
+		goto end;
+	}
+	iv = o_arg(L, 3);
+	if(iv == NULL) {
+		failed_msg = "failed to allocate space for the iv";
+		goto end;
+	}
+	if (iv->len < 12) {
+		zerror(L, "AES.ctr_process accepts an iv of 12 bytes minimum, this is %u", iv->len);
+		failed_msg = "AES-CTR process aborted";
+		goto end;
+	}
+	AES_init(&a, CTR16, k->len, k->val, iv->val);
+	octet *out = o_dup(L, in);
+	if(out == NULL) {
+		failed_msg = "failed to allocate space for the output";
+		goto end;
+	}
+	AMCL_(AES_decrypt)(&a, out->val);
+	AES_end(&a);
+end:
+	o_free(L, iv);
+	o_free(L, in);
+	o_free(L, k);
+	if(failed_msg != NULL) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
 
 int luaopen_aes(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg aes_class[] = {
 		{"gcm_encrypt", gcm_encrypt},
 		{"gcm_decrypt", gcm_decrypt},
-		{"ctr_process", ctr_process},
-		{"ctr", ctr_process},
+		{"ctr_encrypt", ctr_encrypt},
+		{"ctr_decrypt", ctr_decrypt},
 		{NULL, NULL}};
 	const struct luaL_Reg aes_methods[] = {
 		{NULL, NULL}
 	};
-
 
 	zen_add_class(L, "aes", aes_class, aes_methods);
 	return 1;
