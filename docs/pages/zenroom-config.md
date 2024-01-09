@@ -79,3 +79,9 @@ Defines the function used to print the output.
 
 - **sys** = uses system defined print, typically "sprintf" or "vsprintf"
 - **stb** = internal print function based on [stb](https://github.com/nothings/stb) to be used with on embedded systems with RTOS, baremetal
+
+## Log format
+Since Zenroom 3, the default error log is printed out in base64. To print out the errors in text, use
+```shell
+logfmt=text
+```
