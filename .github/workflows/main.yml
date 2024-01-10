@@ -52,11 +52,11 @@ jobs:
             ,-whitespace/operators\
             ,-whitespace/parens\
             ,-whitespace/tab\
-            " # Optional
-        #    - name: Fail fast?!
-        #      if: steps.linter.outputs.checks-failed > 0
-        #      run: |
-        #        echo "😤 Some files failed the C linting checks!"
+            "
+#    - name: Fail fast?!
+#      if: steps.linter.outputs.checks-failed > 0
+#      run: |
+#        echo "😤 Some files failed the C linting checks!"
 
   lua-lint:
     name: 🚨 Lua lint
