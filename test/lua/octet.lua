@@ -142,5 +142,8 @@ assert((oct .. oct):elide_at_start(prefix) == nil)
 assert(oct:elide_at_start(prefix) == nil)
 assert(oct:elide_at_start(oct .. oct) == nil)
 assert((oct .. prefix):elide_at_start(prefix) == nil)
+assert(oct:elide_at_start(oct) == O.empty())
+assert(oct:elide_at_start(O.empty()) == oct)
+assert(O.empty():elide_at_start(prefix) == nil)
 
 print '= OK'
