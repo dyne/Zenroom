@@ -17,7 +17,7 @@ Let's create an **index.html** file, the first thing that we want is to import o
 
 ```html
 <script type="module">
-  import { zencode_exec } from "https://jspm.dev/zenroom@next";
+  import { zencode_exec } from "https://jspm.dev/zenroom";
 </script>
 ```
 
@@ -35,7 +35,7 @@ So this is handy and neat, let's move on. Remember the encryption function? Let'
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>ECDH Encrypt/Decrypt online</title>
     <script type="module">
-      import { zencode_exec } from "https://jspm.dev/zenroom@next";
+      import { zencode_exec } from "https://jspm.dev/zenroom";
       
       const conf = "memmanager=lw";
       
@@ -88,7 +88,7 @@ Let's add a couple lines of styling (not so much) and some visual feedback on su
       href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css"
     />
     <script type="module">
-      import { zencode_exec } from "https://jspm.dev/zenroom@next";
+      import { zencode_exec } from "https://jspm.dev/zenroom";
 
       const conf = "memmanager=lw";
 
@@ -179,7 +179,7 @@ Let's add also the decrypt function and we are ready to deploy our static and su
       href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css"
     />
     <script type="module">
-      import { zencode_exec } from "https://jspm.dev/zenroom@next";
+      import { zencode_exec } from "https://jspm.dev/zenroom";
 
       const conf = "memmanager=lw";
 

@@ -46,7 +46,7 @@ You should now have into `zencode-encrypt` a file structure like this
 Let's add **zenroom** as a dependency
 
 ```bash
-$ yarn add — dev zenroom@next
+$ yarn add — dev zenroom
 yarn add v1.22.10
 [1/4] 🔍 Resolving packages…
 [2/4] 🚚 Fetching packages…
