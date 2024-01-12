@@ -1799,6 +1799,49 @@ end:
 	return 1;
 }
 
+/***
+	Create a new octet with the prefix removed.
+	If the prefix doesn't match, it returns nil.
+
+	@function octet:eq(prefix)
+	@return initial octet without the prefix or nil
+*/
+static int elide_at_start(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *o = o_arg(L,1);
+	if(!o) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	octet *prefix = o_arg(L,2);
+	if(!prefix) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	int i = 0;
+	while (i < o->len && i < prefix->len && o->val[i] == prefix->val[i]) {
+        	i++;
+    	}
+
+	if (i != prefix->len) {
+		lua_pushnil(L);
+	} else {
+		octet* res = o_new(L, o->len - prefix->len); SAFE(res);
+		if (i < o->len) {
+			memmove(res->val, o->val + i, o->len - i);
+			res->len = o->len - prefix->len;
+		}
+	}
+
+end:
+	o_free(L, o);
+	o_free(L, prefix);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
 // The following function has been split up into zen_ecp.c and zen_ecp2.c
 
 // TODO: remove magic numbers
@@ -2020,6 +2063,7 @@ int luaopen_octet(lua_State *L) {
 		{"charcount", charcount},
 		{"rmchar", remove_char},
 		{"compact_ascii", compact_ascii},
+		{"elide_at_start", elide_at_start},
 		// {"zcash_topoint", zcash_topoint},
 		// idiomatic operators
 		{"__len",size},

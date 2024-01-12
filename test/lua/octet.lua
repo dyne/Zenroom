@@ -132,4 +132,18 @@ jsoncryptotest('base64')
 jsoncryptotest('url64')
 jsoncryptotest('bin')
 
+
+print '== elide'
+prefix = O.from_hex('8e7145956f12de8d8ca23ac3d022e6b503c0c6e9828500fbe0069821d233d5e7')
+oct = O.from_hex('4d79207665727920736563726574206d657373616765')
+
+assert((prefix .. oct):elide_at_start(prefix) == oct)
+assert((oct .. oct):elide_at_start(prefix) == nil)
+assert(oct:elide_at_start(prefix) == nil)
+assert(oct:elide_at_start(oct .. oct) == nil)
+assert((oct .. prefix):elide_at_start(prefix) == nil)
+assert(oct:elide_at_start(oct) == O.empty())
+assert(oct:elide_at_start(O.empty()) == oct)
+assert(O.empty():elide_at_start(prefix) == nil)
+
 print '= OK'
