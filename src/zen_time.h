@@ -30,5 +30,8 @@ ztime_t* time_dup(lua_State *L, ztime_t *c);
 
 ztime_t* type_arg(lua_State *L, int n);
 
+// internal conversion from float to octet
+octet *new_octet_from_time(lua_State *L, ztime_t c);
+
 #endif
 

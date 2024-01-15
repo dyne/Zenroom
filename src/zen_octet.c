@@ -71,6 +71,7 @@
 #include <zen_octet.h>
 #include <zen_big.h>
 #include <zen_float.h>
+#include <zen_time.h>
 
 #include <zen_ecp.h>
 
@@ -264,6 +265,16 @@ octet* o_arg(lua_State *L, int n) {
 		o = new_octet_from_big(L, b);
 		if(!o) {
 			zerror(L, "Could not allocate OCTET from BIG");
+			return NULL;
+		}
+		return(o);
+	}
+	ud = luaL_testudata(L, n, "zenroom.time");
+	if(ud) {
+		ztime_t *b = (ztime_t*)ud;
+		o = new_octet_from_time(L, *b);
+		if(!o) {
+			zerror(L, "Could not allocate OCTET from TIME");
 			return NULL;
 		}
 		return(o);
@@ -1810,11 +1821,12 @@ static int elide_at_start(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	octet *o = o_arg(L,1);
+	octet *prefix = NULL;
 	if(!o) {
 		failed_msg = "Could not allocate OCTET";
 		goto end;
 	}
-	octet *prefix = o_arg(L,2);
+	prefix = o_arg(L,2);
 	if(!prefix) {
 		failed_msg = "Could not allocate OCTET";
 		goto end;
