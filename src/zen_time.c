@@ -53,7 +53,7 @@ int _string_from_time(char dest[1024], ztime_t src) {
 ztime_t *time_new(lua_State *L) {
 	ztime_t *number = (ztime_t *)lua_newuserdata(L, sizeof(ztime_t));
 	if(!number) {
-		zerror(L, "Error allocating a new int in %s", __func__);
+		zerror(L, "Error allocating a new time in %s", __func__);
 		return NULL;
 	}
 	*number = 0;
@@ -80,20 +80,37 @@ ztime_t* time_arg(lua_State *L, int n) {
 	void *ud = luaL_testudata(L, n, "zenroom.time");
 	if(ud) {
 		*result = *(ztime_t*)ud;
-		Z->memcount_times++;
-		return result;
+		goto end;
+	}
+	if(lua_isstring(L, 1)) {
+		const char* arg = lua_tostring(L, 1);
+		char *pEnd;
+		*result = strtol(arg, &pEnd, 10);
+		if(*pEnd) {
+			free(result);
+			lerror(L, "Could not read unix timestamp %s", arg);
+			return NULL;
+		}
+		goto end;
+	}
+	// number argument, import
+	if(lua_isnumber(L, 1)) {
+		lua_Number number = lua_tonumber(L, 1);
+		*result = (int)number;
+		goto end;
 	}
 	octet *o = o_arg(L, n);
 	if(o) {
-		char *pEnd = NULL;
-		*result = strtol(o->val, &pEnd, 10);
-		if(*pEnd) {
+		if(o->len != sizeof(ztime_t)) {
 			free(result);
-			result = NULL;
+			zerror(L, "Wrong size timestamp %s", __func__);
+			return NULL;
 		}
+		memcpy(result, o->val, sizeof(ztime_t));
 		o_free(L, o);
+		goto end;
 	}
-
+end:
 	if(result) Z->memcount_times++;
 	return result;
 }
@@ -107,7 +124,7 @@ octet *new_octet_from_time(lua_State *L, ztime_t t) {
 	return o;
 }
 /***
-    Create a new float number. If an argument is present,
+    Create a new time. If an argument is present,
     import it as @{OCTET} and initialise it with its value.
 
     @param[opt] octet value
@@ -116,55 +133,18 @@ octet *new_octet_from_time(lua_State *L, ztime_t t) {
 */
 static int newtime(lua_State *L) {
 	BEGIN();
-	if(lua_isstring(L, 1)) {
-		const char* arg = lua_tostring(L, 1);
-		ztime_t *tm = time_new(L);
-		if(!tm) {
-			lerror(L, "Could not create time object");
-			return 0;
-		}
-		char *pEnd;
-		*tm = strtol(arg, &pEnd, 10);
-		if(*pEnd) {
-			lerror(L, "Could not read unix timestamp %s", arg);
-			return 0;
-		}
-		return 1;
-	}
-	// number argument, import
-	if(lua_isnumber(L, 1)) {
-		lua_Number number = lua_tonumber(L, 1);
-		ztime_t *tm = time_new(L);
-		if(!tm) {
-			lerror(L, "Could not create time object");
-			return 0;
-		}
-		*tm = (int)number;
-		END(1);
-	}
-	// octet argument, import
-	char *failed_msg = NULL;
-	octet *o = o_arg(L, 1);
-	if(!o) {
-		failed_msg = "Could not allocate octet";
-		goto end;
-	}
-	char *pEnd = NULL;
-	ztime_t* tm = time_new(L);
+	ztime_t *tm = time_new(L);
 	if(!tm) {
-		failed_msg = "Could not create float number";
-		goto end;
+		lerror(L, "Could not create time object");
+		return 0;
 	}
-	*tm = strtol(o->val, &pEnd, 10);
-	if(*pEnd) {
-		failed_msg = "Could not parse float number";
-		goto end;
+	ztime_t *c = time_arg(L,1);
+	if(!c) {
+		lerror(L, "Could not read time input");
+		return 0;
 	}
-end:
-	o_free(L, o);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
+	*tm = *c;
+	time_free(L, c);
 	END(1);
 }
 
@@ -193,7 +173,7 @@ static int time_to_octet(lua_State *L) {
 	octet *o = NULL;
 	ztime_t *c = time_arg(L,1);
 	if(!c) {
-		failed_msg = "Could not read float input";
+		failed_msg = "Could not read time input";
 		goto end;
 	}
 	o = new_octet_from_time(L, *c);

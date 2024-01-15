@@ -28,7 +28,7 @@ float* float_dup(lua_State *L, float *c);
 
 float* float_arg(lua_State *L, int n);
 
-// internal conversion from d/big to octet
+// internal conversion from float to octet
 octet *new_octet_from_float(lua_State *L, float *c);
 
 #endif
