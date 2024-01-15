@@ -33,15 +33,6 @@ yarn add zenroom
 npm install zenroom
 ```
 
-For more cutting edge functionalities there is a pre-release aligned with
-the last zenroom commit, automatically published, that you can install with
-
-```bash
-yarn add zenroom@next
-# or if you use npm
-npm install zenroom@next
-```
-
 ---
 
 ## 🎮 Usage
