@@ -84,7 +84,6 @@ PAIR.ate = ECP2.miller --alias
 if _G['ZENCODE_SCOPE'] ~= 'GIVEN' then
    MPACK = require('zenroom_msgpack')
    BENCH = require('zenroom_bench')
-   TIME = require('timetable')
 end
 ------------------------------
 -- ZENCODE starts here

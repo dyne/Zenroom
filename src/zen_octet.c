@@ -459,11 +459,25 @@ static int xor_n(lua_State *L) {
 		failed_msg = "Could not allocate OCTET";
 		goto end;
 	}
-	octet *n = o_new(L,_max(x->len, y->len));
+	int max = _max(x->len, y->len);
+	octet *n = o_new(L,max);
 	if(!n) {
 		failed_msg = "Could not create OCTET";
 		goto end;
 	}
+
+	// pad first arg with zeroes
+	if(x->len < max) {
+	  x->val = realloc(x->val, max);
+	  x->max = max;
+	  OCT_pad(x, max);
+	}
+	if(y->len < max) {
+	  y->val = realloc(y->val, max);
+	  y->max = max;
+	  OCT_pad(y, max);
+	}
+
 	OCT_copy(n, x);
 	OCT_xor(n, y);
 end:
