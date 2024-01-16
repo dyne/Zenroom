@@ -18,13 +18,13 @@ print'French Servant Protocol (TRANSCEND 2024)'
 -- setup
 IV = OCTET.zero(32)
 SS = OCTET.from_hex('1e3f2ec68a14fe9c6812df91bb5f76e5b8c221afebf03a44975342e76e2a2ff9')
-payload = OCTET.from_string('My very secret message')
-payload2 = OCTET.from_string('My very secret response')
+alice = OCTET.from_string('My very secret message')
+bob = OCTET.from_string('My very secret response')
 hash = HASH.new('sha256')
 
 nonce = os.time() -- concatenated to a semantic parameter
 RSK_len = 32 -- chose according to message length
-Peel_len = 32 -- for MAC and ACK
+-- Peel_len = 32 -- for MAC and ACK
 
 -- random session key
 RSK = OCTET.random(RSK_len)
@@ -33,38 +33,36 @@ RSK = OCTET.random(RSK_len)
 -- Message:
 -- {<Public key>,
 -- AES(RSK, SS) XOR AES (<Public key>,SS) : Key transfer
--- (AES ((Hash(RSK XOR SS)||<Payload1>) XOR RSK,RSK) : Payload / MAC
+-- (AES ((Hash(RSK XOR SS)||<Alice1>) XOR RSK,RSK) : Alice / MAC
 
 
 -- sender side
 message = {
    n = nonce,
-   k = AES.ctr_encrypt(SS, RSK, IV) ~ AES.ctr_decrypt(SS, nonce, IV),
-   p = AES.ctr_encrypt(RSK, hash:process(RSK ~ SS) .. payload, IV) ~ RSK
+   k = AES.ctr_encrypt(SS, RSK, IV) ~ AES.ctr_encrypt(SS, nonce, IV),
+   p = AES.ctr_encrypt(RSK, hash:process(RSK ~ SS) .. alice, IV) ~ RSK
 }
 I.print({message = message})
 
 -- receiver side
-local rsk = AES.ctr_decrypt(SS, message.k ~ AES.ctr_decrypt(SS, message.n, IV), IV)
+local rsk = AES.ctr_decrypt(SS, message.k ~ AES.ctr_encrypt(SS, message.n, IV), IV)
 assert(rsk == RSK)
 
-local recv_payload = AES.ctr_decrypt(RSK, message.p ~ rsk, IV)
+local recv_alice = AES.ctr_decrypt(RSK, message.p ~ rsk, IV)
 local mac = hash:process(rsk ~ SS)
-assert(recv_payload == hash:process(rsk ~ SS) .. payload)
-print(recv_payload:elide_at_start(mac):string())
+assert(recv_alice == hash:process(rsk ~ SS) .. alice)
+print(recv_alice:elide_at_start(mac):string())
 
--- AES(RSK XOR (Hash(<Public key> XOR RSK)||<payload2>), SS) : Payload / ACK
+-- AES(RSK XOR (Hash(<Public key> XOR RSK)||<bob>), SS) : Payload / ACK
 response = {
-   ACK = AES.ctr_encrypt(SS, (hash:process(nonce ~ RSK) .. payload2) ~ rsk, IV)
+   ACK = AES.ctr_encrypt(SS, (hash:process(nonce ~ rsk) .. bob) ~ rsk, IV)
 }
 I.print({response = response})
 
 -- sender side
-local recv_payload2 = AES.ctr_decrypt(SS, response.ACK, IV) ~ RSK
+local recv_bob = AES.ctr_decrypt(SS, response.ACK, IV) ~ RSK
 local mac_response = hash:process(nonce ~ RSK)
-print(recv_payload2:elide_at_start(mac_response):string())
-
-
+print(recv_bob:elide_at_start(mac_response):string())
 
 
 
