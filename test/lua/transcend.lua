@@ -24,8 +24,8 @@ IV = OCTET.zero(32)
 SS = OCTET.zero(64)
 -- message = OCTET.from_string('My very secret message'):pad(32)
 -- response = OCTET.from_string('My very secret response'):pad(32)
-message = OCTET.random(128)
-response = OCTET.random(12)
+raw_message = OCTET.random(128)
+raw_response = OCTET.random(12)
 hash = HASH.new('sha256')
 
 nonce = TIME.new(os.time()) -- TODO: concatenate to semantic parameter
@@ -33,9 +33,9 @@ nonce = TIME.new(os.time()) -- TODO: concatenate to semantic parameter
 
 -- random session key length -32 marks the maximum message length
 -- in other words: rsk is max length + 32 (hash len)
-local max = math.max(#message, #response)
-message = message:pad(max)
-response = response:pad(max)
+local max = math.max(#raw_message, #raw_response)
+message = raw_message:pad(max)
+response = raw_response:pad(max)
 RSK = OCTET.random(max + 32)
 print("MSG length: ".. max)
 print("RSK length: ".. #RSK)
@@ -80,7 +80,7 @@ assert(response == recv_response:elide_at_start(mac_response))
 
 
 T = require'crypto_transcend'
-Tm = T.encode_message(SS, nonce, message, IV, RSK)
+Tm = T.encode_message(SS, nonce, raw_message, IV, RSK)
 assert(zencode_serialize(ciphertext)
 	   ==
 	   zencode_serialize(Tm))
@@ -89,7 +89,7 @@ Tmr, Trsk = T.decode_message(SS, nonce, Tm, IV)
 assert(Trsk == RSK)
 assert(Tmr == message)
 
-Tr = T.encode_response(SS, nonce, Trsk, response, IV)
+Tr = T.encode_response(SS, nonce, Trsk, raw_response, IV)
 assert(zencode_serialize(ciphertext_response)
 	   ==
 	   zencode_serialize(Tr))

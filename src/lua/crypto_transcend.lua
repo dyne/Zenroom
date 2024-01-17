@@ -54,9 +54,12 @@ T.decode_message = function(SS, nonce, ciphertext, IV)
 end
 
 T.encode_response = function(SS, nonce, rsk, cleartext, IV)
+   local r_len = #rsk - 32
+   -- response length must be smaller or equal to message len
+   assert(#cleartext <= r_len)
    return AES.ctr_encrypt(
 	  T.HASH:process(SS),
-	  (T.HASH:process(nonce ~ rsk) .. cleartext)
+	  (T.HASH:process(nonce ~ rsk) .. cleartext:pad(r_len))
 	  ~ rsk, IV)
 end
 
