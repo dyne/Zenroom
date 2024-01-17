@@ -30,4 +30,5 @@ load ../bats_setup
     Z bbs.lua
     Z zcash.lua
     Z hkdf.lua
+	Z transcend.lua
 }

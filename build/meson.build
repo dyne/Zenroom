@@ -207,7 +207,8 @@ tests = [
 'given', 'hash', 'http', 'keys', 'kyber', 'ntrup', 'numbers',
 'output', 'pack', 'parser', 'planetmint', 'pvss', 'random', 'reflow',
 'rules', 'secshare', 'then', 'w3c', 'w3c_did', 'when', 'zencode_exec',
-'zenswarm', 'zkp', 'zkp_multi_petitions', 'logfmt', 'scope'
+'zenswarm', 'zkp', 'zkp_multi_petitions', 'logfmt', 'scope',
+'transcend'
 ]
 foreach test_suite : tests
     test('zencode_'+test_suite.underscorify(),
@@ -224,7 +225,8 @@ benches = [ 'and', 'array', 'bbs_sha', 'bbs_shake', 'bbs_zkp',
 'generic_eddsa', 'generic_schnorr', 'given', 'hash', 'kyber', 'ntrup',
 'numbers', 'output', 'pack', 'parser', 'planetmint', 'pvss', 'random',
 'reflow', 'secshare', 'then', 'w3c', 'w3c_did', 'when',
-'zencode_exec', 'zenswarm', 'zkp', 'zkp_multi_petitions' ]
+'zencode_exec', 'zenswarm', 'zkp', 'zkp_multi_petitions',
+'transcend' ]
 
 foreach test_suite: benches
     benchmark('zencode_'+test_suite.underscorify(),
