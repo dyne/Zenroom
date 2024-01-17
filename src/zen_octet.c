@@ -1654,11 +1654,11 @@ static int entropy(lua_State *L) {
 	octet *o = o_arg(L,1); SAFE(o);
 	register int i; // register
 	// byte frequency table
-	char *bfreq = malloc(0xff);
-	memset(bfreq, 0x0, 0xff);
+	char *bfreq = malloc(0xff+0x0f);
+	memset(bfreq, 0x0, 0xff+0x0f);
 	// probability of recurring for each byte
-	float *bprob = (float*)malloc(sizeof(float)*0xff);
-	memset(bprob, 0x0, sizeof(float)*0xff);
+	float *bprob = (float*)malloc(sizeof(float)*(0xff+0x0f));
+	memset(bprob, 0x0, sizeof(float)*(0xff+0x0f));
 	// calculate freqency of byte values
 	register char *p = o->val;
 	for(i=0; i<o->len; i++, p++) bfreq[(uint8_t)*p]++;
