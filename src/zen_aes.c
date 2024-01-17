@@ -216,7 +216,7 @@ static int ctr_encrypt(lua_State *L) {
 	}
 	in = o_arg(L, 2);
 	if(in == NULL) {
-		failed_msg = "failed to allocate space for the messsage text";
+		failed_msg = "failed to allocate space for the message text";
 		goto end;
 	}
 	iv = o_arg(L, 3);
@@ -264,7 +264,7 @@ static int ctr_decrypt(lua_State *L) {
 	}
 	in = o_arg(L, 2);
 	if(in == NULL) {
-		failed_msg = "failed to allocate space for the messsage text";
+		failed_msg = "failed to allocate space for the message text";
 		goto end;
 	}
 	iv = o_arg(L, 3);
