@@ -1,19 +1,23 @@
--- This file is part of Zenroom (https://zenroom.dyne.org)
+--[[
+--This file is part of zenroom
 --
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU Affero General Public License as
--- published by the Free Software Foundation, either version 3 of the
--- License, or (at your option) any later version.
+--Copyright (C) 2024 Dyne.org foundation
+--Written by Denis Roio
 --
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU Affero General Public License for more details.
+--This program is free software: you can redistribute it and/or modify
+--it under the terms of the GNU Affero General Public License v3.0
 --
--- You should have received a copy of the GNU Affero General Public License
--- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+--This program is distributed in the hope that it will be useful,
+--but WITHOUT ANY WARRANTY; without even the implied warranty of
+--MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--GNU Affero General Public License for more details.
+--
+--Along with this program you should have received a copy of the
+--GNU Affero General Public License v3.0
+--If not, see http://www.gnu.org/licenses/agpl.txt
+--]]
 
-print'French Servant Protocol (TRANSCEND 2024)'
+print'Lua TEST: French Servant Protocol (TRANSCEND 2024)'
 
 -- setup
 IV = OCTET.zero(32)
@@ -51,8 +55,8 @@ ciphertext = {
 --   p = AES.ctr_encrypt(RSK, hash:process(RSK ~ SS) .. message, IV) ~ RSK
 }
 
-I.print({ciphertext = ciphertext})
-I.print({entropy = deepmap(OCTET.entropy, ciphertext)})
+-- I.print({ciphertext = ciphertext})
+-- I.print({entropy = deepmap(OCTET.entropy, ciphertext)})
 -- receiver side
 local rsk = AES.ctr_decrypt(hash:process(SS), ciphertext.k ~ AES.ctr_encrypt(hash:process(SS), ciphertext.n, IV), IV)
 assert(rsk == RSK)
@@ -63,17 +67,45 @@ assert(recv_message == hash:process(rsk ~ SS) .. message)
 assert(message == recv_message:elide_at_start(mac))
 
 -- AES(RSK XOR (Hash(<Public key> XOR RSK)||<response>), SS) : Payload / ACK
-ciphertext = AES.ctr_encrypt(hash:process(SS), (hash:process(nonce ~ rsk) .. response) ~ rsk, IV)
+ciphertext_response = AES.ctr_encrypt(hash:process(SS), (hash:process(nonce ~ rsk) .. response) ~ rsk, IV)
 
-I.print({response = ciphertext,
-		 entropy = ciphertext:entropy()})
 
 -- sender side
-local recv_response = AES.ctr_decrypt(hash:process(SS), ciphertext, IV) ~ RSK
+local recv_response = AES.ctr_decrypt(hash:process(SS), ciphertext_response, IV) ~ RSK
 local mac_response = hash:process(nonce ~ RSK)
 assert(response == recv_response:elide_at_start(mac_response))
-
-
-
 -- AES(Hash(RSK XOR SS)||<Payload1>, RSK) XOR RSK : Payload / MAC
 -- AES(RSK, (Hash(RSK XOR SS) .. Payload) XOR RSK)
+
+
+
+T = require'crypto_transcend'
+Tm = T.encode_message(SS, nonce, message, IV, RSK)
+assert(zencode_serialize(ciphertext)
+	   ==
+	   zencode_serialize(Tm))
+
+Tmr, Trsk = T.decode_message(SS, nonce, Tm, IV)
+assert(Trsk == RSK)
+assert(Tmr == message)
+
+Tr = T.encode_response(SS, nonce, Trsk, response, IV)
+assert(zencode_serialize(ciphertext_response)
+	   ==
+	   zencode_serialize(Tr))
+
+Trd = T.decode_response(SS, nonce, Trsk, Tr, IV)
+assert(Trd == response)
+
+-- ciphertext entropy check
+entropy = {
+   k = FLOAT.new( Tm.k:entropy() ),
+   p = FLOAT.new( Tm.p:entropy() ),
+   r = FLOAT.new( Tr:entropy() )
+}
+-- I.print({entropy = entropy})
+assert(entropy.k > FLOAT.new(0.9))
+assert(entropy.p > FLOAT.new(0.9))
+assert(entropy.r > FLOAT.new(0.9))
+
+print'-- OK'
