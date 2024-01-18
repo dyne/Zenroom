@@ -85,7 +85,7 @@ assert(zencode_serialize(ciphertext)
 	   ==
 	   zencode_serialize(Tm))
 
-Tmr, Trsk = T.decode_message(SS, nonce, Tm, IV)
+Tmr, Trsk = T.decode_message(SS, Tm, IV)
 assert(Trsk == RSK)
 assert(Tmr == message)
 
