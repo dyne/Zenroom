@@ -1,7 +1,7 @@
 --[[
 --This file is part of zenroom
 --
---Copyright (C) 2018-2023 Dyne.org foundation
+--Copyright (C) 2018-2024 Dyne.org foundation
 --designed, written and maintained by Denis Roio <jaromil@dyne.org>
 --
 --This program is free software: you can redistribute it and/or modify
@@ -15,10 +15,8 @@
 --Along with this program you should have received a copy of the
 --GNU Affero General Public License v3.0
 --If not, see http://www.gnu.org/licenses/agpl.txt
---
---Last modified by Denis Roio
---on Saturday, 13th November 2021
 --]]
+--
 --- <h1>Zencode language parser</h1>
 --
 -- <a href="https://dev.zenroom.org/zencode/">Zencode</a> is a Domain
@@ -31,7 +29,7 @@
 --
 -- @author Denis "Jaromil" Roio
 -- @license AGPLv3
--- @copyright Dyne.org foundation 2018-2023
+-- @copyright Dyne.org foundation 2018-2024
 --
 -- The Zenroom VM is capable of parsing specific scenarios written in
 -- Zencode and execute high-level cryptographic operations described
@@ -98,6 +96,7 @@ function ZEN:begin(new_heap)
 	  ACK = {} -- When processing,  destination for push*
 	  OUT = {} -- print out
 	  CODEC = {} -- metadata
+	  CACHE = {} -- contract-wide computation cache
 	  WHO = nil
 	  traceback = {}
    end
@@ -646,6 +645,9 @@ function ZEN:run()
 			runtime_error(x, err)
 			fatal({msg=x.source, linenum=x.linenum}) -- traceback print inside
 		 end
+		 -- give a notice about the CACHE being used
+		 -- TODO: print it in debug
+		 if #CACHE > 0 then xxx('Contract CACHE is in use') end
 		 collectgarbage 'collect'
 	  end
 	  --	::continue::
@@ -771,6 +773,13 @@ end
 
 ---------------------------
 -- ZENCODE GLOBAL UTILITIES
+function zencode_cache(key, val)
+   if not key then error("zencode_cache called with empty key", 2) end
+   if not val then error("zencode_cache called with empty value", 2) end
+   xxx("zencode_cache set value: "..key)
+   CACHE[key] = val
+end
+
 function Iam(name)
 	if name then
 		zencode_assert(not WHO, 'Identity already defined in WHO')

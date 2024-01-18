@@ -1,7 +1,7 @@
 --[[
 --This file is part of zenroom
 --
---Copyright (C) 2021 Dyne.org foundation
+--Copyright (C) 2021-2024 Dyne.org foundation
 --designed, written and maintained by Denis Roio <jaromil@dyne.org>
 --
 --This program is free software: you can redistribute it and/or modify
@@ -15,9 +15,6 @@
 --Along with this program you should have received a copy of the
 --GNU Affero General Public License v3.0
 --If not, see http://www.gnu.org/licenses/agpl.txt
---
---Last modified by Denis Roio
---on Saturday, 13th November 2021
 --]]
 
 
@@ -87,7 +84,8 @@ local function debug_heap_dump()
 			   {GIVEN_data = IN,
 				CODEC = CODEC,
 				WHEN = ack,
-				THEN = OUT})))
+				THEN = OUT,
+				CACHE = CACHE})))
 	  if LOGFMT == 'JSON' then tmp = '"'..tmp..'",' end
 	  printerr(tmp)
    else -- CONF.debug.format == 'log'
@@ -99,6 +97,7 @@ local function debug_heap_dump()
 	  I.warn({a_GIVEN_in = IN,
 			  c_WHEN_ack = ack,
 			  c_CODEC_ack = CODEC,
+			  c_CACHE_ack = CACHE,
 			  d_THEN_out = OUT})
 	  ack.keyring = keyring
    end
@@ -108,6 +107,7 @@ local function debug_heap_schema()
    I.schema({SCHEMA = {a_GIVEN_in = IN,
 					   c_WHEN_ack = ACK,
 					   c_CODEC_ack = CODEC,
+					   c_CACHE_ack = CACHE,
 					   d_THEN_out = OUT}})
    -- print only keys without values
 end
