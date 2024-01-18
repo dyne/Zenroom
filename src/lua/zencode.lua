@@ -773,13 +773,6 @@ end
 
 ---------------------------
 -- ZENCODE GLOBAL UTILITIES
-function zencode_cache(key, val)
-   if not key then error("zencode_cache called with empty key", 2) end
-   if not val then error("zencode_cache called with empty value", 2) end
-   xxx("zencode_cache set value: "..key)
-   CACHE[key] = val
-end
-
 function Iam(name)
 	if name then
 		zencode_assert(not WHO, 'Identity already defined in WHO')
