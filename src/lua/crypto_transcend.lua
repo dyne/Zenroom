@@ -42,7 +42,7 @@ T.encode_message = function(SS, nonce, cleartext, IV, RSK)
    return m
 end
 
-T.decode_message = function(SS, nonce, ciphertext, IV)
+T.decode_message = function(SS, ciphertext, IV)
    local rsk = AES.ctr_decrypt(
 	  T.HASH:process(SS), ciphertext.k
 	  ~ AES.ctr_encrypt(T.HASH:process(SS), ciphertext.n, IV),
