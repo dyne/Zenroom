@@ -435,6 +435,15 @@ end
     return nil
  end
 
+-- CACHE format: { key = val, ... }
+-- r/w memory invisible to zencode (used inside statements)
+-- can overwrite existing data
+function new_cache(key, val)
+   if not key then error("new_cache called with empty key", 2) end
+   if not val then error("new_cache called with empty value", 2) end
+   xxx("zencode_cache set value: "..key)
+   CACHE[uscore(key)] = val
+end
 
  -- CODEC format:
  -- { name: string,
