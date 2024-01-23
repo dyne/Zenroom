@@ -38,26 +38,6 @@ local function schnorr_signature_f(obj)
    return res
 end
 
--- check various locations to find the public key
---  Given I have a 's' from 't'            --> ACK.s[t]
-local function _pubkey_compat(_key)
-   local pubkey = ACK[_key]
-   if not pubkey then
-      local pubkey_arr = ACK.schnorr_public_key
-      if luatype(pubkey_arr) == 'table' then
-	 pubkey = pubkey_arr[_key]
-      else
-	 pubkey = pubkey_arr
-      end
-      zencode_assert(
-	 pubkey,
-	 'Public key not found for: ' .. _key
-      )
-   end
-   return pubkey
-end
-
-
 ZEN:add_schema(
    {
       schnorr_public_key = schnorr_public_key_f,
@@ -113,7 +93,7 @@ When("create schnorr signature of ''",function(doc)
 end)
 
 IfWhen("verify '' has a schnorr signature in '' by ''",function(doc, sig, by)
-	  local pk = _pubkey_compat(by)
+	  local pk = load_pubkey_compat(by, 'schnorr')
 	  local obj = have(doc)
 	  local s = have(sig)
 	  zencode_assert(
