@@ -80,7 +80,7 @@ assert(response == recv_response:elide_at_start(mac_response))
 
 
 T = require'crypto_transcend'
-Tm = T.encode_message(SS, nonce, raw_message, IV, RSK)
+Tm = T.encode_message(SS, nonce, raw_message, RSK, IV)
 assert(zencode_serialize(ciphertext)
 	   ==
 	   zencode_serialize(Tm))

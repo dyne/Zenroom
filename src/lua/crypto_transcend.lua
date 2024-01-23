@@ -27,11 +27,11 @@ T.HASH = HASH.new('sha256') -- do not change
 
 -- TODO: check IV length
 
-T.encode_message = function(SS, nonce, cleartext, RSK)
+T.encode_message = function(SS, nonce, cleartext, RSK, IV)
    local len = #cleartext
    -- RSK arg is only used to verify vectors
    local rsk = RSK or OCTET.random(len + 32) -- + hash size
-   local iv = T.HASH:process(nonce) or IV
+   local iv = IV or T.HASH:process(nonce)
    -- hash result must be 32 bytes to fit as AES.ctr key
    local m = {
 	  n = nonce,
@@ -46,7 +46,7 @@ T.encode_message = function(SS, nonce, cleartext, RSK)
 end
 
 T.decode_message = function(SS, ciphertext, IV)
-   local iv = T.HASH:process(nonce) or IV
+   local iv = IV or T.HASH:process(nonce)
    local rsk = AES.ctr_decrypt(
 	  T.HASH:process(SS), ciphertext.k
 	  ~ AES.ctr_encrypt(T.HASH:process(SS), ciphertext.n, iv),
@@ -61,7 +61,7 @@ T.encode_response = function(SS, nonce, rsk, cleartext, IV)
    local r_len = #rsk - 32
    -- response length must be smaller or equal to message len
    assert(#cleartext <= r_len)
-   local iv = T.HASH:process(nonce) or IV
+   local iv = IV or T.HASH:process(nonce)
    return AES.ctr_encrypt(
 	  T.HASH:process(SS),
 	  (T.HASH:process(nonce ~ rsk) .. cleartext:pad(r_len))
@@ -69,7 +69,7 @@ T.encode_response = function(SS, nonce, rsk, cleartext, IV)
 end
 
 T.decode_response = function(SS, nonce, rsk, ciphertext, IV)
-   local iv = T.HASH:process(nonce) or IV
+   local iv = IV or T.HASH:process(nonce)
    local m = AES.ctr_decrypt(
 	  T.HASH:process(SS), ciphertext, iv) ~ rsk
    local mac = T.HASH:process(nonce ~ rsk)
