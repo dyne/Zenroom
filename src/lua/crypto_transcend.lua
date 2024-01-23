@@ -30,7 +30,10 @@ T.HASH = HASH.new('sha256') -- do not change
 
 T.encode_message = function(SS, nonce, cleartext, RSK, IV)
     local len = #cleartext
-    if len < 32 then cleartext = cleartext:pad(32) end
+    if len < 32 then
+        cleartext = cleartext:pad(32)
+        len = 32
+    end
     -- RSK arg is only used to verify vectors
     if RSK then assert(#RSK >= len+32, "RSK length must be grater than message length + 32 bytes") end
     local rsk = RSK or OCTET.random(len + 32) -- + hash size
