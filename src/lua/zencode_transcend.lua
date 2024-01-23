@@ -54,10 +54,11 @@ When("create transcend key with secret ''",
 When("create transcend ciphertext of ''",function(msg)
 		local SS = havekey'transcend'
 		local message = have(msg)
-		local IV,IV_codec = mayhave'IV' or octet.zero(32)
+		-- RSK session key is not imported because should be generated
+		-- every new session.
 		local nonce = mayhave'nonce' or TIME.new(os.time())
 		ACK.transcend_ciphertext =
-		   T.encode_message(SS, nonce, message, IV)
+		   T.encode_message(SS, nonce, message)
 		new_codec'transcend ciphertext'
 end)
 
@@ -65,14 +66,12 @@ end)
 When("create transcend cleartext of ''",function(ctxt)
 		local SS = havekey'transcend'
 		local ciphertext = have(ctxt)
-		local IV = mayhave'IV' or octet.zero(32)
 		local RSK
 		ACK.transcend_cleartext, RSK =
-		   T.decode_message(SS, ciphertext, IV)
+		   T.decode_message(SS, ciphertext)
 		new_codec'transcend cleartext'
 		new_cache('transcend session key', RSK)
 		new_cache('transcend session nonce', ciphertext.n)
-		new_cache('transcend session IV', IV)
 end)
 
 When("create transcend response with ''",function(msg)
@@ -81,14 +80,11 @@ When("create transcend response with ''",function(msg)
 		local RSK =
 		   mayhave'transcend session key' or CACHE.transcend_session_key or
 		   error("Transcend session key (RSK) not found")
-		local IV =
-		   mayhave'IV' or CACHE.transcend_session_IV or
-		   octet.zero(32)
 		local nonce =
 		   mayhave'nonce' or CACHE.transcend_session_nonce or
 		   error("Transcend session nonce not found")
 		ACK.transcend_response =
-		   T.encode_response(SS, nonce, RSK, response, IV)
+		   T.encode_response(SS, nonce, RSK, response)
 		new_codec'transcend response'
 end)
 
@@ -96,24 +92,18 @@ When("create transcend response of '' with ''",function(ctxt, msg)
 		local SS = havekey'transcend'
 		local ciphertext = have(ctxt)
 		local response = have(msg)
-		local IV =
-		   mayhave'IV' or CACHE.transcend_session_IV or
-		   octet.zero(32)
-		local _, RSK = T.decode_message(SS, ciphertext, IV)
+		local _, RSK = T.decode_message(SS, ciphertext)
 		local nonce = ciphertext.n or
 		   mayhave'nonce' or CACHE.transcend_session_nonce or
 		   TIME.new(os.time())
 		ACK.transcend_response =
-		   T.encode_response(SS, nonce, RSK, response, IV)
+		   T.encode_response(SS, nonce, RSK, response)
 		new_codec'transcend response'
 end)
 
 When("create transcend cleartext of response ''",function(ctxt)
 		local SS = havekey'transcend'
 		local ciphertext = have(ctxt)
-		local IV =
-		   mayhave'transcend session IV' or CACHE.transcend_session_IV or
-		   octet.zero(32)
 		local RSK =
 		   mayhave'transcend session key' or CACHE.transcend_session_key or
 		   error("Transcend session key (RSK) not found")
@@ -122,7 +112,7 @@ When("create transcend cleartext of response ''",function(ctxt)
 		   CACHE.transcend_session_nonce or
 		   TIME.new(os.time())
 		ACK.transcend_cleartext =
-		   T.decode_response(SS, nonce, RSK, ciphertext, IV)
+		   T.decode_response(SS, nonce, RSK, ciphertext)
 		new_codec'transcend cleartext'
 end)
 
@@ -130,15 +120,12 @@ When("create transcend cleartext of response '' to ''",function(cres, cmsg)
 		local SS = havekey'transcend'
 		local response = have(cres)
 		local message = have(cmsg)
-		local IV =
-		   mayhave'transcend session IV' or CACHE.transcend_session_IV or
-		   octet.zero(32)
 		local nonce = message.n or
 		   mayhave'transcend session nonce' or
 		   CACHE.transcend_session_nonce or
 		   TIME.new(os.time())
-		local _, RSK = T.decode_message(SS, message, IV)
+		local _, RSK = T.decode_message(SS, message)
 		ACK.transcend_cleartext =
-		   T.decode_response(SS, nonce, RSK, response, IV)
+		   T.decode_response(SS, nonce, RSK, response)
 		new_codec'transcend cleartext'
 end)
