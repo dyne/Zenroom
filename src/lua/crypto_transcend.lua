@@ -39,6 +39,7 @@ T.encode_message = function(SS, nonce, cleartext, RSK, IV)
     local rsk = RSK or OCTET.random(len + 32) -- + hash size
     local iv = IV or T.HASH:process(nonce)
     -- hash result must be 32 bytes to fit as AES.ctr key
+    assert(#nonce < #rsk, "RSK length must be grater than nonce length")
     local m = {
         n = nonce,
         k = AES.ctr_encrypt(T.HASH:process(SS), rsk, iv)

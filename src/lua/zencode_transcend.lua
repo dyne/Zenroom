@@ -5,6 +5,32 @@ T = require'crypto_transcend'
 -- TRANSCEND.encode_response
 -- TRANSCEND.decode_response
 
+-- length of k and p must be at least 32 bytes
+local function transcend_ciphertext_f(obj)
+    local res = {}
+    res.p = schema_get(obj, 'p')
+    zencode_assert(#res.p >= 32, "Transcend ciphertext component p must be at least 32 bytes long")
+    res.k = schema_get(obj, 'k')
+    zencode_assert(#res.k >= 32, "Transcend ciphertext component k must be at least 32 bytes long")
+    res.n = schema_get(obj, 'n')
+    zencode_assert(#res.n < #res.k, "Transcend ciphertext component n must be smaller than k")
+    zencode_assert(#res.p == #res.k, "Transcend ciphertext component p length must be equal to k")
+    return res
+end
+
+local function transcend_32_bound(obj, name)
+    local res = schema_get(obj, '.')
+    zencode_assert(#res > 32, "Transcend " .. name .. " must be at least 32 bytes long")
+    return res
+end
+
+ZEN:add_schema(
+    {
+        transcend_ciphertext = transcend_ciphertext_f,
+        transcend_response = function(obj) return transcend_32_bound(obj, "response") end,
+        transcend_session_key = function(obj) return transcend_32_bound(obj, "session key") end
+    }
+)
 
 local function _keygen()
     -- method for obtaining a valid EC secret key at random
@@ -56,7 +82,7 @@ When("create transcend ciphertext of ''",function(msg)
          local message = have(msg)
          -- RSK session key is not imported because should be generated
          -- every new session.
-         local nonce = mayhave'nonce' or TIME.new(os.time())
+         local nonce = mayhave'nonce' or TIME.new(os.time()):octet()
          ACK.transcend_ciphertext =
              T.encode_message(SS, nonce, message)
          new_codec'transcend ciphertext'

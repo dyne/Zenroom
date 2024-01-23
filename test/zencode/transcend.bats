@@ -36,7 +36,7 @@ EOF
 	cat << EOF | zexe decode_message.zen SSkey.json message_ciphertext.json
 	Scenario transcend
 	Given I have a 'keyring'
-	and I have a 'base64 dictionary' named 'transcend ciphertext'
+	and I have a 'transcend ciphertext'
 	When I create the transcend cleartext of 'transcend ciphertext'
 	and I create the random 'response'
 	and I create the transcend response with 'response'
@@ -52,7 +52,7 @@ EOF
 	cat << EOF | zexe encode_response.zen SSkey.json message_ciphertext.json
 	Scenario transcend
 	Given I have a 'keyring'
-	and I have a 'base64 dictionary' named 'transcend ciphertext'
+	and I have a 'transcend ciphertext'
 	When I set 'response' to 'this is my response' as 'string'
 	and I create the transcend response of 'transcend ciphertext' with 'response'
 	Then print the 'transcend response'
@@ -74,7 +74,7 @@ EOF
 	cat << EOF | save_asset encode_response.zen
 	Scenario transcend
 	Given I have a 'keyring'
-	and I have a 'base64 dictionary' named 'transcend ciphertext'
+	and I have a 'transcend ciphertext'
 	When I set 'response' to 'tainted love' as 'string'
 	and I create the transcend response of 'transcend ciphertext' with 'response'
 	Then print the 'transcend response'
@@ -88,8 +88,8 @@ EOF
 	cat << EOF | zexe decode_response.zen SSkey.json message_and_response.json
 	Scenario transcend
 	Given I have a 'keyring'
-	and I have a 'base64 dictionary' named 'transcend ciphertext'
-	and I have a 'base64' named 'transcend response'
+	and I have a 'transcend ciphertext'
+	and I have a 'transcend response'
 	When I create the transcend cleartext of response 'transcend response' to 'transcend ciphertext'
 	Then print the 'transcend cleartext'
 EOF
@@ -111,8 +111,8 @@ EOF
 	cat << EOF | save_asset decode_response.zen
 	Scenario transcend
 	Given I have a 'keyring'
-	and I have a 'base64 dictionary' named 'transcend ciphertext'
-	and I have a 'base64' named 'transcend response'
+	and I have a 'transcend ciphertext'
+	and I have a 'transcend response'
 	When I create the transcend cleartext of response 'transcend response' to 'transcend ciphertext'
 	Then print the 'transcend cleartext' as 'string'
 EOF
