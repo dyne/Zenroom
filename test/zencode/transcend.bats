@@ -61,7 +61,7 @@ EOF
 	assert_output '{"transcend_response":"dn9SRJuGgu4eeVxWnn80aOoRRt2SzVOa+yBIttEQf7DlexIheZplt/mKRCAxJUaNGtYJ6UD1Okwtx9h4bxNzv4c1yQ=="}'
 }
 
-@test "Create a false transcend response from tainted ciphertext" {
+@test "Decrypt a tainted ciphertext (fail)" {
 	cat << EOF | save_asset tainted_ciphertext.json
 {
     "transcend_ciphertext":{
@@ -71,7 +71,7 @@ EOF
     }
 }
 EOF
-	cat << EOF | zexe encode_response.zen SSkey.json tainted_ciphertext.json
+	cat << EOF | save_asset encode_response.zen
 	Scenario transcend
 	Given I have a 'keyring'
 	and I have a 'base64 dictionary' named 'transcend ciphertext'
@@ -80,8 +80,8 @@ EOF
 	Then print the 'transcend response'
 	and print the 'transcend ciphertext'
 EOF
-	save_output 'tainted_response.json'
-	assert_output '{"transcend_ciphertext":{"k":"cEFesPf7cmzbs30YDi/4V591AgvEm/0C8XvWkwdOUjnk5nekfTy84h1wZ+HNRSZBLSHFW45Tl51+cm3VF4UUmFWFUCmQp/xkHUfZruoMtaIEt5swMbCPC00IlnO0P9qXkUmjtdzdkP7gLZAQ3Am4n1VQwGgLnEDImeDQ0F9OgBmtey6Q/XwuN9IULQQuJT9cai89NFbwdC02k4Q9nUzUhA==","n":"0J2vZQ==","p":"8Isvkbst2a0CoxJYhMrKGeRei2clhPqfdi5LBFoM3+K5PrfGQq3fPGPLQe3ugveeysf6yXwSNOScjv6YRTRzuAKnKMQxXQZ4sVEyz+ue+lq4Ml1WXVgxcQvlmYstfbasdDKxlKVH9UkZp9Qw7Sz+EjvuoPIUAAnb2V5X2lUug8mELzVS3LdMGpwA2WcMe68MNhZTWiV5f2DWfCboNW0PTg=="},"transcend_response":"zonSH3eyWk9OtXFNDczSxRY9NYj7byXQRwyqZ0lOcXrk5nekfTy84h1wZ+HNRSZBLSHFW45Tl51+cm3VF4UUmFWFUCmQp/xkHUfZruoMtaIEt5swMbCPC00IlnO0P9qXkUmjtdzdkP7gLZAQ3Am4n1VQwGgLnEDImeDQ0F9OgBmtey6Q/XwuN9IULQQuJT9cai89NCKRHUNC9uBiBFmpYQ=="}'
+	run $ZENROOM_EXECUTABLE -z -k SSkey.json -a tainted_ciphertext.json encode_response.zen
+    assert_line --partial "Invalid authentication of transcend ciphertext"
 }
 
 @test "Create a transcend cleartext from response to ciphertext" {
@@ -97,8 +97,18 @@ EOF
 	assert_output '{"transcend_cleartext":"AAAAXdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="}'
 }
 
-@test "Create a false transcend cleartext from tainted response to ciphertext" {
-	cat << EOF | zexe decode_response.zen SSkey.json tainted_response.json
+@test "Decrypt a tainted response (fail)" {
+    cat << EOF | save_asset tainted_response.json
+{
+    "transcend_response":"fn9SRJuGgu4eeVxWnn80aOoRRt2SzVOa+yBIttEQf7DlexIheZplt/mKRCAxJUaNGtYJ6UD1Okwtx9h4bxNzv4c1yQ==",
+    "transcend_ciphertext": {
+        "k":"Lp377tyx75tXJECe1sHwnLyFxmZs6L56Ru0P+JlCbDvlexIFHtkE9SP8HaW4qLV5+tDbffmj2+EBHf7o9vNOglghjA==",
+        "n":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA=",
+        "p":"Ft5EQTbjYOBvEphqBq9smOoRRt2SzVOa+yBIttEQf7CHCXtPHroI0tnrZENeQyDoQp4Q9nr9OnZunsprcwJm8J0xww=="
+    }
+}
+EOF
+	cat << EOF | save_asset decode_response.zen
 	Scenario transcend
 	Given I have a 'keyring'
 	and I have a 'base64 dictionary' named 'transcend ciphertext'
@@ -106,8 +116,8 @@ EOF
 	When I create the transcend cleartext of response 'transcend response' to 'transcend ciphertext'
 	Then print the 'transcend cleartext' as 'string'
 EOF
-	save_output 'cleartext_response.json'
-	assert_output '{"transcend_cleartext":"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000tainted_love"}'
+    run $ZENROOM_EXECUTABLE -z -k SSkey.json -a tainted_response.json decode_response.zen
+	assert_line --partial 'Invalid authentication of transcend response'
 }
 
 #TODO: check that both responses from previous tests are the same
