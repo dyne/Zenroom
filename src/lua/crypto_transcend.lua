@@ -55,7 +55,8 @@ T.decode_message = function(SS, ciphertext, IV)
         iv)
     local m = AES.ctr_decrypt(T.HASH:process(rsk),
                               ciphertext.p ~ rsk, iv)
-    local mac = T.HASH:process(rsk ~ SS)
+    zencode_assert(T.HASH:process(rsk ~ SS) == m:sub(1,32),
+        "Invalid authentication of transcend ciphertext")
     return m:sub(33,#m), rsk
 end
 
@@ -74,7 +75,8 @@ T.decode_response = function(SS, nonce, rsk, ciphertext, IV)
     local iv = IV or T.HASH:process(nonce)
     local m = AES.ctr_decrypt(
         T.HASH:process(SS), ciphertext, iv) ~ rsk
-    local mac = T.HASH:process(nonce ~ rsk)
+    zencode_assert(T.HASH:process(rsk ~ SS) == m:sub(1,32),
+        "Invalid authentication of transcend response")
     return m:sub(33,#m), mac
 end
 
