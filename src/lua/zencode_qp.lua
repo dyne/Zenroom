@@ -108,26 +108,6 @@ local function ntrup_import_kem(obj)
    return res
 end
 
--- check various locations to find the public key
--- algo can be either 'dilithium' or 'kyber'
---  Given I have a 's' from 't'            --> ACK.s[t] 
-local function _pubkey_compat(_key, algo)
-   local pubkey = ACK[_key]
-   if not pubkey then
-      local pubkey_arr = ACK[algo..'_public_key']
-      if luatype(pubkey_arr) == 'table' then
-	 pubkey = pubkey_arr[_key]
-      else
-	 pubkey = pubkey_arr
-      end
-      zencode_assert(
-	 pubkey,
-	 'Public key not found for: ' .. _key
-      )
-   end
-   return pubkey
-end
-
 ZEN:add_schema(
    {
       dilithium_public_key = {import=dilithium_public_key_f},
@@ -176,7 +156,7 @@ When("create dilithium signature of ''",function(doc)
 end)
 
 IfWhen("verify '' has a dilithium signature in '' by ''",function(msg, sig, by)
-	  local pk = _pubkey_compat(by, 'dilithium')
+	  local pk = load_pubkey_compat(by, 'dilithium')
 	  local m = have(msg)
 	  local s = have(sig)
 	  zencode_assert(
@@ -210,7 +190,7 @@ end)
 
 -- create a secret message and its ciphertext
 When("create kyber kem for ''",function(pub)
-	local pk = _pubkey_compat(pub, 'kyber')
+	local pk = load_pubkey_compat(pub, 'kyber')
 	empty'kyber kem'
 	ACK.kyber_kem = {}
 	local enc = QP.enc(pk)
@@ -252,7 +232,7 @@ end)
 
 -- create a secret message and its ciphertext
 When("create ntrup kem for ''",function(pub)
-	local pk = _pubkey_compat(pub, 'ntrup')
+	local pk = load_pubkey_compat(pub, 'ntrup')
 	empty'ntrup kem'
 	ACK.ntrup_kem = {}
 	local enc = QP.ntrup_enc(pk)
