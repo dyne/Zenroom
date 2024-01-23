@@ -48,7 +48,7 @@ T.encode_message = function(SS, nonce, cleartext, RSK, IV)
 end
 
 T.decode_message = function(SS, ciphertext, IV)
-    local iv = IV or T.HASH:process(nonce)
+    local iv = IV or T.HASH:process(ciphertext.n)
     local rsk = AES.ctr_decrypt(
         T.HASH:process(SS), ciphertext.k
         ~ AES.ctr_encrypt(T.HASH:process(SS), ciphertext.n, iv),
@@ -56,7 +56,7 @@ T.decode_message = function(SS, ciphertext, IV)
     local m = AES.ctr_decrypt(T.HASH:process(rsk),
                               ciphertext.p ~ rsk, iv)
     local mac = T.HASH:process(rsk ~ SS)
-    return m:sub(33,#m+32), rsk
+    return m:sub(33,#m), rsk
 end
 
 T.encode_response = function(SS, nonce, rsk, cleartext, IV)
@@ -75,7 +75,7 @@ T.decode_response = function(SS, nonce, rsk, ciphertext, IV)
     local m = AES.ctr_decrypt(
         T.HASH:process(SS), ciphertext, iv) ~ rsk
     local mac = T.HASH:process(nonce ~ rsk)
-    return m:sub(33,#m+32), mac
+    return m:sub(33,#m), mac
 end
 
 return T
