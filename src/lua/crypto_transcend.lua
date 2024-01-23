@@ -26,12 +26,13 @@ T.RSK_length = 32
 T.HASH = HASH.new('sha256') -- do not change
 
 -- TODO: check IV length
--- pad message if smaller than 32
 -- find minimum length of k
 
 T.encode_message = function(SS, nonce, cleartext, RSK, IV)
     local len = #cleartext
+    if len < 32 then cleartext = cleartext:pad(32) end
     -- RSK arg is only used to verify vectors
+    if RSK then assert(#RSK >= len+32, "RSK length must be grater than message length + 32 bytes") end
     local rsk = RSK or OCTET.random(len + 32) -- + hash size
     local iv = IV or T.HASH:process(nonce)
     -- hash result must be 32 bytes to fit as AES.ctr key
