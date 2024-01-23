@@ -56,6 +56,20 @@ EOF
 	assert_output '{"transcend_response":"BVieo98xOGThUgd1lZAKldeUPPfUGI8+DoNmh0pBGtPk5nekfTy84h1wZ+HNRSZBLSHFW45Tl51+cm3VF4UUmFWFUCmQp/xkHUfZruoMtaIEt5swMbCPC00IlnO0P9qXkUmjtdzdkP7gLZAQ3Am4n1VQwGgLnEDImeDQ0F9OgBkwsVlD12y1o17zGltV6ZQI/63XRusrPzXpUpoeU7sxbQ=="}'
 }
 
+@test "Create a false transcend response from tainted ciphertext" {
+	echo '{"transcend_ciphertext":{"k":"cEFesPf7cmzbs30YDi/4V591AgvEm/0C8XvWkwdOUjnk5nekfTy84h1wZ+HNRSZBLSHFW45Tl51+cm3VF4UUmFWFUCmQp/xkHUfZruoMtaIEt5swMbCPC00IlnO0P9qXkUmjtdzdkP7gLZAQ3Am4n1VQwGgLnEDImeDQ0F9OgBmtey6Q/XwuN9IULQQuJT9cai89NFbwdC02k4Q9nUzUhA==","n":"0J2vZQ==","p":"8Isvkbst2a0CoxJYhMrKGeRei2clhPqfdi5LBFoM3+K5PrfGQq3fPGPLQe3ugveeysf6yXwSNOScjv6YRTRzuAKnKMQxXQZ4sVEyz+ue+lq4Ml1WXVgxcQvlmYstfbasdDKxlKVH9UkZp9Qw7Sz+EjvuoPIUAAnb2V5X2lUug8mELzVS3LdMGpwA2WcMe68MNhZTWiV5f2DWfCboNW0PTg=="}}' > tainted_ciphertext.json
+	cat << EOF | zexe encode_response.zen SSkey.json tainted_ciphertext.json
+	Scenario transcend
+	Given I have a 'keyring'
+	and I have a 'base64 dictionary' named 'transcend ciphertext'
+	When I create the random 'response'
+	and I create the transcend response of 'transcend ciphertext' with 'response'
+	Then print the 'transcend response'
+EOF
+	save_output 'tainted_response.json'
+	assert_output '{"transcend_response":"LIixEzTca/N92nxlGKYcg+P4nxfnkcwZW2aa+n0Hrtvk5nekfTy84h1wZ+HNRSZBLSHFW45Tl51+cm3VF4UUmFWFUCmQp/xkHUfZruoMtaIEt5swMbCPC00IlnO0P9qXkUmjtdzdkP7gLZAQ3Am4n1VQwGgLnEDImeDQ0F9OgBnwo+7ywu1N6ayvCwgN4u6DjckCpqSx11TUbxdw0m3dJQ=="}'
+}
+
 @test "Create a transcend cleartext from response to ciphertext" {
 	cat << EOF | zexe decode_response.zen SSkey.json message_and_response.json
 	Scenario transcend
