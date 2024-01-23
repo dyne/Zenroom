@@ -23,7 +23,9 @@ local T = { }
 -- to make sure that its XOR covers the whole message
 -- it is limited to 32 because of the AES.ctr limit.
 T.RSK_length = 32
-T.HASH = HASH.new('sha256')
+T.HASH = HASH.new('sha256') -- do not change
+
+-- TODO: check IV length
 
 T.encode_message = function(SS, nonce, cleartext, IV, RSK)
    local len = #cleartext
@@ -50,7 +52,7 @@ T.decode_message = function(SS, ciphertext, IV)
    local m = AES.ctr_decrypt(T.HASH:process(rsk),
 							 ciphertext.p ~ rsk, IV)
    local mac = T.HASH:process(rsk ~ SS)
-   return m:elide_at_start(mac), rsk
+   return m:sub(33,#m), rsk
 end
 
 T.encode_response = function(SS, nonce, rsk, cleartext, IV)
@@ -67,7 +69,7 @@ T.decode_response = function(SS, nonce, rsk, ciphertext, IV)
    local m = AES.ctr_decrypt(
 	  T.HASH:process(SS), ciphertext, IV) ~ rsk
    local mac = T.HASH:process(nonce ~ rsk)
-   return m:elide_at_start(mac), mac
+   return m:sub(33,#m), mac
 end
 
 return T
