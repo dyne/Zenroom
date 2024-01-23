@@ -27,30 +27,32 @@ T.HASH = HASH.new('sha256') -- do not change
 
 -- TODO: check IV length
 
-T.encode_message = function(SS, nonce, cleartext, IV, RSK)
+T.encode_message = function(SS, nonce, cleartext, RSK)
    local len = #cleartext
    -- RSK arg is only used to verify vectors
    local rsk = RSK or OCTET.random(len + 32) -- + hash size
+   local iv = T.HASH:process(nonce) or IV
    -- hash result must be 32 bytes to fit as AES.ctr key
    local m = {
 	  n = nonce,
-	  k = AES.ctr_encrypt(T.HASH:process(SS), rsk, IV)
-		 ~ AES.ctr_encrypt(T.HASH:process(SS), nonce, IV),
+	  k = AES.ctr_encrypt(T.HASH:process(SS), rsk, iv)
+		 ~ AES.ctr_encrypt(T.HASH:process(SS), nonce, iv),
 	  p = AES.ctr_encrypt(
 		 T.HASH:process(rsk),
-		 T.HASH:process(rsk ~ SS) .. cleartext, IV)
+		 T.HASH:process(rsk ~ SS) .. cleartext, iv)
 		 ~ rsk
    }
    return m
 end
 
 T.decode_message = function(SS, ciphertext, IV)
+   local iv = T.HASH:process(nonce) or IV
    local rsk = AES.ctr_decrypt(
 	  T.HASH:process(SS), ciphertext.k
-	  ~ AES.ctr_encrypt(T.HASH:process(SS), ciphertext.n, IV),
-	  IV)
+	  ~ AES.ctr_encrypt(T.HASH:process(SS), ciphertext.n, iv),
+	  iv)
    local m = AES.ctr_decrypt(T.HASH:process(rsk),
-							 ciphertext.p ~ rsk, IV)
+							 ciphertext.p ~ rsk, iv)
    local mac = T.HASH:process(rsk ~ SS)
    return m:sub(33,#m), rsk
 end
@@ -59,15 +61,17 @@ T.encode_response = function(SS, nonce, rsk, cleartext, IV)
    local r_len = #rsk - 32
    -- response length must be smaller or equal to message len
    assert(#cleartext <= r_len)
+   local iv = T.HASH:process(nonce) or IV
    return AES.ctr_encrypt(
 	  T.HASH:process(SS),
 	  (T.HASH:process(nonce ~ rsk) .. cleartext:pad(r_len))
-	  ~ rsk, IV)
+	  ~ rsk, iv)
 end
 
 T.decode_response = function(SS, nonce, rsk, ciphertext, IV)
+   local iv = T.HASH:process(nonce) or IV
    local m = AES.ctr_decrypt(
-	  T.HASH:process(SS), ciphertext, IV) ~ rsk
+	  T.HASH:process(SS), ciphertext, iv) ~ rsk
    local mac = T.HASH:process(nonce ~ rsk)
    return m:sub(33,#m), mac
 end
