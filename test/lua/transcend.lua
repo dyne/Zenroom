@@ -22,22 +22,20 @@ print'Lua TEST: French Servant Protocol (TRANSCEND 2024)'
 -- setup
 IV = OCTET.zero(32)
 SS = OCTET.zero(64)
--- message = OCTET.from_string('My very secret message'):pad(32)
--- response = OCTET.from_string('My very secret response'):pad(32)
-raw_message = OCTET.random(128)
-raw_response = OCTET.random(12)
+message = OCTET.from_string('My very secret message that none can reade excpet the receiver')
+response = OCTET.from_string('My very secret response')
 hash = HASH.new('sha256')
 
-nonce = TIME.new(os.time()) -- TODO: concatenate to semantic parameter
+nonce = TIME.new(os.time()):octet() -- TODO: concatenate to semantic parameter
 
 
 -- random session key length -32 marks the maximum message length
 -- in other words: rsk is max length + 32 (hash len)
-local max = math.max(#raw_message, #raw_response)
-message = raw_message:pad(max)
-response = raw_response:pad(max)
+local max = math.max(#message, #response)
+local padded_response = response:pad(max)
 RSK = OCTET.random(max + 32)
-print("MSG length: ".. max)
+print("MSG length: ".. #message)
+print("RSP length: ".. #response)
 print("RSK length: ".. #RSK)
 -- from the paper:
 -- Message:
@@ -67,20 +65,20 @@ assert(recv_message == hash:process(rsk ~ SS) .. message)
 assert(message == recv_message:elide_at_start(mac))
 
 -- AES(RSK XOR (Hash(<Public key> XOR RSK)||<response>), SS) : Payload / ACK
-ciphertext_response = AES.ctr_encrypt(hash:process(SS), (hash:process(nonce ~ rsk) .. response) ~ rsk, IV)
+ciphertext_response = AES.ctr_encrypt(hash:process(SS), (hash:process(nonce ~ rsk) .. padded_response) ~ rsk, IV)
 
 
 -- sender side
 local recv_response = AES.ctr_decrypt(hash:process(SS), ciphertext_response, IV) ~ RSK
-local mac_response = hash:process(nonce ~ RSK)
-assert(response == recv_response:elide_at_start(mac_response))
+local mac_response = hash:process(nonce ~ rsk)
+assert(padded_response == recv_response:elide_at_start(mac_response))
 -- AES(Hash(RSK XOR SS)||<Payload1>, RSK) XOR RSK : Payload / MAC
 -- AES(RSK, (Hash(RSK XOR SS) .. Payload) XOR RSK)
 
 
 
 T = require'crypto_transcend'
-Tm = T.encode_message(SS, nonce, raw_message, RSK, IV)
+Tm = T.encode_message(SS, nonce, message, RSK, IV)
 assert(zencode_serialize(ciphertext)
 	   ==
 	   zencode_serialize(Tm))
@@ -89,13 +87,13 @@ Tmr, Trsk = T.decode_message(SS, Tm, IV)
 assert(Trsk == RSK)
 assert(Tmr == message)
 
-Tr = T.encode_response(SS, nonce, Trsk, raw_response, IV)
+Tr = T.encode_response(SS, nonce, Trsk, response, IV)
 assert(zencode_serialize(ciphertext_response)
 	   ==
 	   zencode_serialize(Tr))
 
 Trd = T.decode_response(SS, nonce, Trsk, Tr, IV)
-assert(Trd == response)
+assert(Trd == padded_response)
 
 -- ciphertext entropy check
 entropy = {
