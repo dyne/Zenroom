@@ -18,6 +18,7 @@
 --]]
 
 print'Lua TEST: French Servant Protocol (FSP, TRANSCEND 2024)'
+T = require'crypto_fsp'
 
 -- setup
 IV = OCTET.zero(32)
@@ -37,47 +38,55 @@ RSK = OCTET.random(max + 32)
 print("MSG length: ".. #message)
 print("RSP length: ".. #response)
 print("RSK length: ".. #RSK)
+print("probHASH: "..T.PROB)
 -- from the paper:
 -- Message:
 -- {<Public key>,
 -- AES(RSK, SS) XOR AES (<Public key>,SS) : Key transfer
 -- (AES ((Hash(RSK XOR SS)||<Message1>) XOR RSK,RSK) : Message / MAC
 
+local function _enc(key, msg)
+    return AES.ctr_encrypt(hash:process(key), msg, IV)
+end
+local function _dec(key, msg)
+    return AES.ctr_decrypt(hash:process(key), msg, IV)
+end
 
 -- sender side
 ciphertext = {
    n = nonce,
-   k = AES.ctr_encrypt(hash:process(SS), RSK, IV) ~ AES.ctr_encrypt(hash:process(SS), nonce, IV),
+   k = _enc(SS, RSK) ~ _enc(SS, nonce),
 --   p = hash:process(RSK ~ SS) .. message ~ RSK
-   p = AES.ctr_encrypt(hash:process(RSK), hash:process(RSK ~ SS) .. message, IV) ~ RSK
+   p = _enc(RSK, (hash:process(RSK ~ SS):chop(T.PROB) .. message) ~ RSK)
 --   p = AES.ctr_encrypt(RSK, hash:process(RSK ~ SS) .. message, IV) ~ RSK
 }
 
 -- I.print({ciphertext = ciphertext})
 -- I.print({entropy = deepmap(OCTET.entropy, ciphertext)})
 -- receiver side
-local rsk = AES.ctr_decrypt(hash:process(SS), ciphertext.k ~ AES.ctr_encrypt(hash:process(SS), ciphertext.n, IV), IV)
+local rsk = _dec(SS, ciphertext.k ~ _enc(SS, ciphertext.n))
 assert(rsk == RSK)
 
-local recv_message = AES.ctr_decrypt(hash:process(RSK), ciphertext.p ~ rsk, IV)
-local mac = hash:process(rsk ~ SS)
-assert(recv_message == hash:process(rsk ~ SS) .. message)
+local recv_message = _dec(RSK, ciphertext.p ~ rsk):trim()
+local mac = hash:process(rsk ~ SS):chop(T.PROB)
+assert(recv_message == hash:process(rsk ~ SS):chop(T.PROB) .. message)
 assert(message == recv_message:elide_at_start(mac))
 
 -- AES(RSK XOR (Hash(<Public key> XOR RSK)||<response>), SS) : Payload / ACK
-ciphertext_response = AES.ctr_encrypt(hash:process(SS), (hash:process(nonce ~ rsk) .. padded_response) ~ rsk, IV)
+ciphertext_response = _enc(SS, (hash:process(nonce ~ rsk):chop(T.PROB) .. response) ~ rsk)
 
 
 -- sender side
-local recv_response = AES.ctr_decrypt(hash:process(SS), ciphertext_response, IV) ~ RSK
-local mac_response = hash:process(nonce ~ rsk)
-assert(padded_response == recv_response:elide_at_start(mac_response))
+local recv_response = _dec(SS, ciphertext_response ~ RSK):trim()
+local mac_response = hash:process(nonce ~ rsk):chop(T.PROB)
+assert(response == recv_response:elide_at_start(mac_response))
 -- AES(Hash(RSK XOR SS)||<Payload1>, RSK) XOR RSK : Payload / MAC
 -- AES(RSK, (Hash(RSK XOR SS) .. Payload) XOR RSK)
+---
+
+-- CRYPTO LIB
 
 
-
-T = require'crypto_fsp'
 Tm = T.encode_message(SS, nonce, message, RSK, IV)
 assert(zencode_serialize(ciphertext)
 	   ==
@@ -93,7 +102,7 @@ assert(zencode_serialize(ciphertext_response)
 	   zencode_serialize(Tr))
 
 Trd = T.decode_response(SS, nonce, Trsk, Tr, IV)
-assert(Trd == padded_response)
+assert(Trd == response)
 
 -- ciphertext entropy check
 entropy = {

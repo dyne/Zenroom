@@ -24,9 +24,15 @@ local T = { }
 -- it is limited to 32 because of the AES.ctr limit.
 T.RSK_length = 32
 T.HASH = HASH.new('sha256') -- do not change
+T.PROB = 4 -- probhash bytes for MAC
 
 -- TODO: check IV length
 -- find minimum length of k
+
+-- probabilistic hash function returning only N bytes
+local function probhash(fsp, obj)
+    return fsp.HASH:process(obj):octet():chop(fsp.PROB)
+end
 
 T.encode_message = function(SS, nonce, cleartext, RSK, IV)
     local len = #cleartext
@@ -46,8 +52,7 @@ T.encode_message = function(SS, nonce, cleartext, RSK, IV)
             ~ AES.ctr_encrypt(T.HASH:process(SS), nonce, iv),
         p = AES.ctr_encrypt(
             T.HASH:process(rsk),
-            T.HASH:process(rsk ~ SS) .. cleartext, iv)
-            ~ rsk
+            (probhash(T,rsk ~ SS) .. cleartext) ~ rsk, iv)
     }
     return m
 end
@@ -59,10 +64,11 @@ T.decode_message = function(SS, ciphertext, IV)
         ~ AES.ctr_encrypt(T.HASH:process(SS), ciphertext.n, iv),
         iv)
     local m = AES.ctr_decrypt(T.HASH:process(rsk),
-                              ciphertext.p ~ rsk, iv)
-    assert(T.HASH:process(rsk ~ SS) == m:sub(1,32),
-        "Invalid authentication of fsp ciphertext")
-    return m:sub(33,#m), rsk
+                              ciphertext.p ~ rsk, iv):trim()
+    if not probhash(T,rsk ~ SS) == m:sub(1,T.PROB) then
+        error("Invalid authentication of fsp ciphertext", 2)
+    end
+    return m:sub(T.PROB+1,#m), rsk
 end
 
 T.encode_response = function(SS, nonce, rsk, cleartext, IV)
@@ -72,17 +78,17 @@ T.encode_response = function(SS, nonce, rsk, cleartext, IV)
     local iv = IV or T.HASH:process(nonce)
     return AES.ctr_encrypt(
         T.HASH:process(SS),
-        (T.HASH:process(nonce ~ rsk) .. cleartext:pad(r_len))
+        (probhash(T,nonce ~ rsk) .. cleartext)
         ~ rsk, iv)
 end
 
 T.decode_response = function(SS, nonce, rsk, ciphertext, IV)
     local iv = IV or T.HASH:process(nonce)
     local m = AES.ctr_decrypt(
-        T.HASH:process(SS), ciphertext, iv) ~ rsk
-    assert(T.HASH:process(nonce ~ rsk) == m:sub(1,32),
+        T.HASH:process(SS), ciphertext ~ rsk, iv):trim()
+    assert(probhash(T,nonce ~ rsk) == m:sub(1,T.PROB),
         "Invalid authentication of fsp response")
-    return m:sub(33,#m), mac
+    return m:sub(T.PROB+1,#m), mac
 end
 
 return T
