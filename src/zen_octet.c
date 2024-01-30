@@ -1407,13 +1407,18 @@ static int zero(lua_State *L) {
 */
 static int trim(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	octet *src = o_arg(L,1);
+	if(!src) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
 	octet *res;
 	const char* front;
 	const char* end;
 	size_t size = src->len;
 	front = src->val;
-	end = src->val+size;
+	end = src->val+size-1;
 	while(size && *front == 0) {
 		size--;
 		front++;
@@ -1430,6 +1435,11 @@ static int trim(lua_State *L) {
 		res = o_new(L, size+4);
 		memcpy(res->val,front,size);
 		res->len = size;
+	}
+end:
+	o_free(L, src);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
