@@ -1952,10 +1952,10 @@ end:
 	Creates a new octet of given size repeating the octet as
 	input
 
-	@function octet:fill(size)
+	@function octet:fillrepeat(size)
 	@return octet of given size
 */
-static int fill(lua_State *L) {
+static int fillrepeat(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	octet *o = o_arg(L,1);
@@ -2212,7 +2212,7 @@ int luaopen_octet(lua_State *L) {
 		{"rmchar", remove_char},
 		{"compact_ascii", compact_ascii},
 		{"elide_at_start", elide_at_start},
-		{"fill", fill},
+		{"fillrepeat", fillrepeat},
 		// {"zcash_topoint", zcash_topoint},
 		// idiomatic operators
 		{"__len",size},

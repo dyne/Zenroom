@@ -150,10 +150,10 @@ assert(O.empty():elide_at_start(prefix) == nil)
 print '== fill'
 oct = O.from_hex('0011223344')
 -- dotest(oct:fill(0),O.empty())
-dotest(oct:fill(1),O.from_hex('00'))
-dotest(oct:fill(2),O.from_hex('0011'))
-dotest(oct:fill(6),O.from_hex('001122334400'))
-dotest(oct:fill(10),O.from_hex('00112233440011223344'))
-dotest(oct:fill(14),O.from_hex('0011223344001122334400112233'))
+dotest(oct:fillrepeat(1),O.from_hex('00'))
+dotest(oct:fillrepeat(2),O.from_hex('0011'))
+dotest(oct:fillrepeat(6),O.from_hex('001122334400'))
+dotest(oct:fillrepeat(10),O.from_hex('00112233440011223344'))
+dotest(oct:fillrepeat(14),O.from_hex('0011223344001122334400112233'))
 
 print '= OK'
