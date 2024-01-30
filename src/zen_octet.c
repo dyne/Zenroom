@@ -2134,6 +2134,9 @@ int luaopen_octet(lua_State *L) {
 	};
 	const struct luaL_Reg octet_methods[] = {
 		{"crc",  crc8},
+		{"xor",   xor_shrink},
+		{"xor_shrink", xor_shrink},
+		{"xor_grow", xor_grow},
 		{"trim", trim},
 		{"chop",  chop},
 		{"sub",   sub},

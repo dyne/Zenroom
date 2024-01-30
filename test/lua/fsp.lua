@@ -55,30 +55,30 @@ end
 -- sender side
 ciphertext = {
    n = nonce,
-   k = _enc(SS, RSK) ~ _enc(SS, nonce),
+   k = _enc(SS, RSK):xor_grow( _enc(SS, nonce) ),
 --   p = hash:process(RSK ~ SS) .. message ~ RSK
-   p = _enc(RSK, (hash:process(RSK ~ SS):chop(T.PROB) .. message) ~ RSK)
+   p = _enc(RSK, (hash:process(RSK:xor_grow( SS)):chop(T.PROB) .. message):xor_grow(RSK))
 --   p = AES.ctr_encrypt(RSK, hash:process(RSK ~ SS) .. message, IV) ~ RSK
 }
 
 -- I.print({ciphertext = ciphertext})
 -- I.print({entropy = deepmap(OCTET.entropy, ciphertext)})
 -- receiver side
-local rsk = _dec(SS, ciphertext.k ~ _enc(SS, ciphertext.n))
+local rsk = _dec(SS, ciphertext.k:xor_grow( _enc(SS, ciphertext.n) ))
 assert(rsk == RSK)
 
-local recv_message = _dec(RSK, ciphertext.p ~ rsk):trim()
-local mac = hash:process(rsk ~ SS):chop(T.PROB)
-assert(recv_message == hash:process(rsk ~ SS):chop(T.PROB) .. message)
+local recv_message = _dec(RSK, ciphertext.p:xor_grow( rsk )):trim()
+local mac = hash:process(rsk:xor_grow(SS)):chop(T.PROB)
+assert(recv_message == hash:process(rsk:xor_grow( SS )):chop(T.PROB) .. message)
 assert(message == recv_message:elide_at_start(mac))
 
 -- AES(RSK XOR (Hash(<Public key> XOR RSK)||<response>), SS) : Payload / ACK
-ciphertext_response = _enc(SS, (hash:process(nonce ~ rsk):chop(T.PROB) .. response) ~ rsk)
+ciphertext_response = _enc(SS, (hash:process(nonce:xor_grow( rsk )):chop(T.PROB) .. response):xor_grow( rsk ))
 
 
 -- sender side
 local recv_response = _dec(SS, ciphertext_response ~ RSK):trim()
-local mac_response = hash:process(nonce ~ rsk):chop(T.PROB)
+local mac_response = hash:process(nonce:xor_grow(rsk)):chop(T.PROB)
 assert(response == recv_response:elide_at_start(mac_response))
 -- AES(Hash(RSK XOR SS)||<Payload1>, RSK) XOR RSK : Payload / MAC
 -- AES(RSK, (Hash(RSK XOR SS) .. Payload) XOR RSK)

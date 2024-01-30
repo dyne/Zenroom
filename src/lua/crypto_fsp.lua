@@ -49,10 +49,10 @@ T.encode_message = function(SS, nonce, cleartext, RSK, IV)
     local m = {
         n = nonce,
         k = AES.ctr_encrypt(T.HASH:process(SS), rsk, iv)
-            ~ AES.ctr_encrypt(T.HASH:process(SS), nonce, iv),
+            :xor_grow( AES.ctr_encrypt(T.HASH:process(SS), nonce, iv) ),
         p = AES.ctr_encrypt(
             T.HASH:process(rsk),
-            (probhash(T,rsk ~ SS) .. cleartext) ~ rsk, iv)
+            (probhash(T,rsk:xor_grow(SS)) .. cleartext):xor_grow(rsk), iv)
     }
     return m
 end
@@ -61,11 +61,11 @@ T.decode_message = function(SS, ciphertext, IV)
     local iv = IV or T.HASH:process(ciphertext.n)
     local rsk = AES.ctr_decrypt(
         T.HASH:process(SS), ciphertext.k
-        ~ AES.ctr_encrypt(T.HASH:process(SS), ciphertext.n, iv),
+        :xor_grow( AES.ctr_encrypt(T.HASH:process(SS), ciphertext.n, iv) ),
         iv)
     local m = AES.ctr_decrypt(T.HASH:process(rsk),
-                              ciphertext.p ~ rsk, iv):trim()
-    if not probhash(T,rsk ~ SS) == m:sub(1,T.PROB) then
+                              ciphertext.p:xor_grow(rsk), iv):trim()
+    if not probhash(T,rsk:xor_grow(SS)) == m:sub(1,T.PROB) then
         error("Invalid authentication of fsp ciphertext", 2)
     end
     return m:sub(T.PROB+1,#m), rsk
@@ -78,15 +78,14 @@ T.encode_response = function(SS, nonce, rsk, cleartext, IV)
     local iv = IV or T.HASH:process(nonce)
     return AES.ctr_encrypt(
         T.HASH:process(SS),
-        (probhash(T,nonce ~ rsk) .. cleartext)
-        ~ rsk, iv)
+        (probhash(T,nonce:xor_grow(rsk)) .. cleartext):xor_grow(rsk), iv)
 end
 
 T.decode_response = function(SS, nonce, rsk, ciphertext, IV)
     local iv = IV or T.HASH:process(nonce)
     local m = AES.ctr_decrypt(
-        T.HASH:process(SS), ciphertext ~ rsk, iv):trim()
-    assert(probhash(T,nonce ~ rsk) == m:sub(1,T.PROB),
+        T.HASH:process(SS), ciphertext:xor_grow(rsk), iv):trim()
+    assert(probhash(T,nonce:xor_grow(rsk)) == m:sub(1,T.PROB),
         "Invalid authentication of fsp response")
     return m:sub(T.PROB+1,#m), mac
 end
