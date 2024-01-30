@@ -92,7 +92,7 @@ extern int _ecp_to_octet(octet *o, ecp *e);
 extern int _ecp2_to_octet(octet *o, ecp2 *e);
 
 static inline int _max(int x, int y) { if(x > y) return x;	else return y; }
-// static int _min(int x, int y) { if(x < y) return x;	else return y; }
+static int _min(int x, int y) { if(x < y) return x;	else return y; }
 
 #include <ctype.h>
 
@@ -440,17 +440,15 @@ static int filloctet(lua_State *L) {
 
 /***
 
-Bitwise XOR operation on two octets, returns a new octet. This is also
-executed when using the '<b>~</b>' operator between two
-octets. Results in a newly allocated octet, does not change the
-contents of any other octet involved.
+Bitwise XOR operation on two octets padded to reach the same length, returns a new octet.
+Results in a newly allocated octet, does not change the contents of any other octet involved.
 
 	@param dest leftmost octet used in XOR operation
 	@param source rightmost octet used in XOR operation
-	@function OCTET.xor(dest, source)
+	@function OCTET.xor_grow(dest, source)
 	@return a new octet resulting from the operation
 */
-static int xor_n(lua_State *L) {
+static int xor_grow(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	octet *x = o_arg(L, 1);
@@ -478,6 +476,44 @@ static int xor_n(lua_State *L) {
 	  OCT_pad(y, max);
 	}
 
+	OCT_copy(n, x);
+	OCT_xor(n, y);
+end:
+	o_free(L, x);
+	o_free(L, y);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/***
+
+Bitwise XOR operation on two octets truncating at the shortest one length, returns a new octet.
+This is also executed when using the '<b>~</b>' operator between two
+octets. Results in a newly allocated octet, does not change the
+contents of any other octet involved.
+
+	@param dest leftmost octet used in XOR operation
+	@param source rightmost octet used in XOR operation
+	@function OCTET.xor_shrink(dest, source)
+	@return a new octet resulting from the operation
+*/
+static int xor_shrink(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *x = o_arg(L, 1);
+	octet *y = o_arg(L, 2);
+	if(!x || !y) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	int min = _min(x->len, y->len);
+	octet *n = o_new(L,min);
+	if(!n) {
+		failed_msg = "Could not create OCTET";
+		goto end;
+	}
 	OCT_copy(n, x);
 	OCT_xor(n, y);
 end:
@@ -2012,7 +2048,9 @@ int luaopen_octet(lua_State *L) {
 		{"zero",  zero},
 		{"crc",  crc8},
 		{"concat",concat_n},
-		{"xor",   xor_n},
+		{"xor",   xor_shrink},
+		{"xor_shrink", xor_shrink},
+		{"xor_grow", xor_grow},
 		{"chop",  chop},
 		{"sub",   sub},
 		{"is_base64", lua_is_base64},
@@ -2094,7 +2132,7 @@ int luaopen_octet(lua_State *L) {
 		// idiomatic operators
 		{"__len",size},
 		{"__concat",concat_n},
-		{"__bxor",xor_n},
+		{"__bxor",xor_shrink},
 		{"__eq",eq},
 		{"__gc", o_destroy},
 		{"__tostring",to_base64},
