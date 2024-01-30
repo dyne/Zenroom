@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --]]
 
-print'Lua TEST: French Servant Protocol (TRANSCEND 2024)'
+print'Lua TEST: French Servant Protocol (FSP, TRANSCEND 2024)'
 
 -- setup
 IV = OCTET.zero(32)
@@ -77,7 +77,7 @@ assert(padded_response == recv_response:elide_at_start(mac_response))
 
 
 
-T = require'crypto_transcend'
+T = require'crypto_fsp'
 Tm = T.encode_message(SS, nonce, message, RSK, IV)
 assert(zencode_serialize(ciphertext)
 	   ==
