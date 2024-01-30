@@ -65,7 +65,7 @@ T.decode_message = function(SS, ciphertext, IV)
         iv)
     local m = AES.ctr_decrypt(T.HASH:process(rsk),
                               ciphertext.p:xor_grow(rsk), iv):trim()
-    if not probhash(T,rsk:xor_grow(SS)) == m:sub(1,T.PROB) then
+    if not (probhash(T,rsk:xor_grow(SS)) == m:sub(1,T.PROB)) then
         error("Invalid authentication of fsp ciphertext", 2)
     end
     return m:sub(T.PROB+1,#m), rsk
