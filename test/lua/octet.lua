@@ -134,8 +134,8 @@ jsoncryptotest('bin')
 
 
 print '== elide'
-prefix = O.from_hex('8e7145956f12de8d8ca23ac3d022e6b503c0c6e9828500fbe0069821d233d5e7')
-oct = O.from_hex('4d79207665727920736563726574206d657373616765')
+local prefix = O.from_hex('8e7145956f12de8d8ca23ac3d022e6b503c0c6e9828500fbe0069821d233d5e7')
+local oct = O.from_hex('4d79207665727920736563726574206d657373616765')
 
 assert((prefix .. oct):elide_at_start(prefix) == oct)
 assert((oct .. oct):elide_at_start(prefix) == nil)
@@ -145,5 +145,15 @@ assert((oct .. prefix):elide_at_start(prefix) == nil)
 assert(oct:elide_at_start(oct) == O.empty())
 assert(oct:elide_at_start(O.empty()) == oct)
 assert(O.empty():elide_at_start(prefix) == nil)
+
+
+print '== fill'
+oct = O.from_hex('0011223344')
+-- dotest(oct:fill(0),O.empty())
+dotest(oct:fill(1),O.from_hex('00'))
+dotest(oct:fill(2),O.from_hex('0011'))
+dotest(oct:fill(6),O.from_hex('001122334400'))
+dotest(oct:fill(10),O.from_hex('00112233440011223344'))
+dotest(oct:fill(14),O.from_hex('0011223344001122334400112233'))
 
 print '= OK'

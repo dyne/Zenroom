@@ -1946,6 +1946,43 @@ end:
 	}
 	END(1);
 }
+
+
+/***
+	Creates a new octet of given size repeating the octet as
+	input
+
+	@function octet:fill(size)
+	@return octet of given size
+*/
+static int fill(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *o = o_arg(L,1);
+	if(!o) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	int tn;
+	lua_Integer size = lua_tointegerx(L,2,&tn);
+	if(!tn || size < 0) {
+		lerror(L, "size is not a positive number");
+		return 0;
+	}
+	octet* res = o_new(L, size); SAFE(res);
+	res->len = size;
+	int i;
+	for(i=0; i<res->len; i++) {
+		res->val[i] = o->val[i % o->len];
+	}
+
+end:
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
 // The following function has been split up into zen_ecp.c and zen_ecp2.c
 
 // TODO: remove magic numbers
@@ -2175,6 +2212,7 @@ int luaopen_octet(lua_State *L) {
 		{"rmchar", remove_char},
 		{"compact_ascii", compact_ascii},
 		{"elide_at_start", elide_at_start},
+		{"fill", fill},
 		// {"zcash_topoint", zcash_topoint},
 		// idiomatic operators
 		{"__len",size},
