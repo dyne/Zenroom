@@ -1402,6 +1402,38 @@ static int zero(lua_State *L) {
 	END(1);
 }
 
+/*** Trim all leading and following zeros in an octet and return a new
+     one of equal length or smaller.
+*/
+static int trim(lua_State *L) {
+	BEGIN();
+	octet *src = o_arg(L,1);
+	octet *res;
+	const char* front;
+	const char* end;
+	size_t size = src->len;
+	front = src->val;
+	end = src->val+size;
+	while(size && *front == 0) {
+		size--;
+		front++;
+	}
+	while(size && *end == 0) {
+		size--;
+		end--;
+	}
+	if(size == (size_t)src->len) {
+		// no changes
+		res = o_dup(L, src);
+	} else {
+		// new octet
+		res = o_new(L, size+4);
+		memcpy(res->val,front,size);
+		res->len = size;
+	}
+	END(1);
+}
+
 static int chop(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -2051,6 +2083,7 @@ int luaopen_octet(lua_State *L) {
 		{"xor",   xor_shrink},
 		{"xor_shrink", xor_shrink},
 		{"xor_grow", xor_grow},
+		{"trim", trim},
 		{"chop",  chop},
 		{"sub",   sub},
 		{"is_base64", lua_is_base64},
@@ -2101,6 +2134,7 @@ int luaopen_octet(lua_State *L) {
 	};
 	const struct luaL_Reg octet_methods[] = {
 		{"crc",  crc8},
+		{"trim", trim},
 		{"chop",  chop},
 		{"sub",   sub},
 		{"reverse",  reverse},
