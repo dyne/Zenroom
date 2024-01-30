@@ -1966,8 +1966,8 @@ static int fill(lua_State *L) {
 	int tn;
 	lua_Integer size = lua_tointegerx(L,2,&tn);
 	if(!tn || size < 0) {
-		lerror(L, "size is not a positive number");
-		return 0;
+		failed_msg = "size is not a positive number";
+		goto end;
 	}
 	octet* res = o_new(L, size); SAFE(res);
 	res->len = size;
