@@ -67,7 +67,7 @@ local keytypes = {
     kyber = true,
     ntrup = true,
     eddsa = true,
-	transcend = true,
+	fsp = true,
 }
 
 function havekey(ktype)
@@ -152,8 +152,8 @@ local function import_keyring(obj)
    if obj.eddsa then
       res.eddsa = schema_get(obj, 'eddsa', nop, O.from_base58)
    end
-   if obj.transcend then
-      res.transcend = schema_get(obj, 'transcend', nop, O.from_base64)
+   if obj.fsp then
+      res.fsp = schema_get(obj, 'fsp', nop, O.from_base64)
    end
    return (res)
 end
@@ -188,7 +188,7 @@ function export_keyring(obj)
    if obj.schnorr then   res.schnorr   = CONF.output.encoding.fun(obj.schnorr) end
    if obj.ntrup then     res.ntrup     = CONF.output.encoding.fun(obj.ntrup) end
    if obj.eddsa then     res.eddsa     = O.to_base58(obj.eddsa) end
-   if obj.transcend then res.transcend = obj.transcend:octet():base64() end
+   if obj.fsp then res.fsp = obj.fsp:octet():base64() end
    return (res)
 end
 

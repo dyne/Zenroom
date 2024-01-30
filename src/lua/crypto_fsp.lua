@@ -61,7 +61,7 @@ T.decode_message = function(SS, ciphertext, IV)
     local m = AES.ctr_decrypt(T.HASH:process(rsk),
                               ciphertext.p ~ rsk, iv)
     assert(T.HASH:process(rsk ~ SS) == m:sub(1,32),
-        "Invalid authentication of transcend ciphertext")
+        "Invalid authentication of fsp ciphertext")
     return m:sub(33,#m), rsk
 end
 
@@ -81,7 +81,7 @@ T.decode_response = function(SS, nonce, rsk, ciphertext, IV)
     local m = AES.ctr_decrypt(
         T.HASH:process(SS), ciphertext, iv) ~ rsk
     assert(T.HASH:process(nonce ~ rsk) == m:sub(1,32),
-        "Invalid authentication of transcend response")
+        "Invalid authentication of fsp response")
     return m:sub(33,#m), mac
 end
 
