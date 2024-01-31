@@ -113,27 +113,25 @@ function T:decode_message(SS, ciphertext, nonce)
         iv)
     local m = self:decrypt(rsk,
                            ciphertext.p:xor_grow(rsk), iv)
-    if not (self:probhash(SS ~ rsk) == m:sub(1,T.PROB)) then
+    if not (self:probhash(SS ~ rsk) == m:sub(1,self.PROB)) then
         error("Invalid authentication of fsp ciphertext", 2)
     end
-    return self:decodetxt(m:sub(T.PROB+1,#m)), rsk
+    return self:decodetxt(m:sub(self.PROB+1,#m)), rsk
 end
 
 function T:encode_response(SS, nonce, rsk, cleartext)
     return self:encrypt(
         SS,
-        (self:probhash(nonce:xor_grow(rsk)) .. cleartext):xor_grow(rsk),
+        rsk ~ (self:probhash(rsk ~ nonce) .. self:encodetxt(cleartext)),
         nonce)
 end
 
 function T:decode_response(SS, nonce, rsk, ciphertext)
-    local m = self:decrypt(
-        SS,
-        ciphertext:xor_grow(rsk),
-        nonce):trim()
-    assert(self:probhash(nonce:xor_grow(rsk)) == m:sub(1,T.PROB),
+    local m = self:decodetxt(
+	   self:decrypt(SS, rsk ~ ciphertext, nonce) )
+    assert(self:probhash(rsk ~ nonce) == m:sub(1,self.PROB),
         "Invalid authentication of fsp response")
-    return m:sub(T.PROB+1,#m), mac
+    return m:sub(self.PROB+1,#m), mac
 end
 
 return T
