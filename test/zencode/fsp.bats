@@ -23,12 +23,12 @@ EOF
 	Scenario fsp
 	Given I have a 'keyring'
     and I have a 'string' named 'message'
-	When I create the random 'nonce'
+	When I create the random 'fsp nonce'
 	and I create the fsp ciphertext of 'message'
 	Then print the 'fsp ciphertext'
 EOF
 	save_output 'message_ciphertext.json'
-	assert_output '{"fsp_ciphertext":{"k":"Lp377tyx75tXJECe1sHwnLyFxmZs6L56Ru0P+JlCbDvlexIFHtkE9SP8HaW4qLV5+tDbffmj2+EBHf7o9vNOglghjA==","n":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA=","p":"Tjzt63HUDZUmT4SiThGobLyFxmZs6L56Ru0P+MGgxZGHCXtPHroI0tnrZENeQyDoQp4Q9nr9OnZunsprcwJm8J0xww=="}}'
+	assert_output '{"fsp_ciphertext":{"k":"MLFZQ9dstaNe8xpbVemUCP+t10brKz816VKaHlO7MW3GY6cZNNfVx5k8hDfSw76denOm8/meGfYngrq24HWHzllXs64z4WThkGJD6QVV4T9rBoZK6VgayMh28GdYPwbdWAFPsPJYpLpUXE0HURsar4ded50A/0Y3RT+y0nUV9I3GJT2mtCZuj/F3XNy7gEEyK4eUlJDtch2USxa3szwDJBnOSI7scDzlY7wlHM9oqxKDVT3dQ/0kMYegRvJlZXNBmQlf7BRNEkSzJSMOsDkP0KY3h8y8qhXMh49lY2G4iMJ2BWk3QKetaOwToJmtSA4MewXLJ1qENxZR2w/9XsptvQ==","n":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA=","p":"NJqJPHzOmR7LOeMIK4q5aHctjrE1Suwgbs96Ni8qGyzi2QJbfzHZGffR7KFONBV5J1jpj9Z4pUNEcO6vYUIt7OsYJhK+UWB/LHvOlPw64DAsjuyHVp/+s2tqfGqZl0HBIQQI8DDYy4Pvs/YYELj6s39F7XK3NEbMNnPiO+APXlB1it7L+otDfZ/jnQUlzUKOjq84f0hvWcthX1Z/9dX1/+zDW1zmYgw8hwKHviTmBFRcinifpsgfc9uJvXn8AFodzRTF/Z5pqPyPeE1fX3Un3b9ZE1PVl3+/i9GQLvv6eksFMRSDMdTMKGu2uzjLvzX4jIfyPZSvl60w6p94bl4vxQ=="}}'
 }
 
 
@@ -45,7 +45,7 @@ EOF
 	and print the 'fsp ciphertext'
 EOF
 	save_output 'message_and_response.json'
-	assert_output '{"fsp_ciphertext":{"k":"Lp377tyx75tXJECe1sHwnLyFxmZs6L56Ru0P+JlCbDvlexIFHtkE9SP8HaW4qLV5+tDbffmj2+EBHf7o9vNOglghjA==","n":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA=","p":"Tjzt63HUDZUmT4SiThGobLyFxmZs6L56Ru0P+MGgxZGHCXtPHroI0tnrZENeQyDoQp4Q9nr9OnZunsprcwJm8J0xww=="},"fsp_cleartext":"bring me a coffe, please. Maybe two","fsp_response":"Lp377tyx75tXJECe1sHwnLyFxmZs6L56Ru0P+JlCbDvlexIheZplt/mKRCBpx+8nGtYJ6UD1Okwtx9h4bxNzv4c1yQ=="}'
+	assert_output '{"fsp_ciphertext":{"k":"MLFZQ9dstaNe8xpbVemUCP+t10brKz816VKaHlO7MW3GY6cZNNfVx5k8hDfSw76denOm8/meGfYngrq24HWHzllXs64z4WThkGJD6QVV4T9rBoZK6VgayMh28GdYPwbdWAFPsPJYpLpUXE0HURsar4ded50A/0Y3RT+y0nUV9I3GJT2mtCZuj/F3XNy7gEEyK4eUlJDtch2USxa3szwDJBnOSI7scDzlY7wlHM9oqxKDVT3dQ/0kMYegRvJlZXNBmQlf7BRNEkSzJSMOsDkP0KY3h8y8qhXMh49lY2G4iMJ2BWk3QKetaOwToJmtSA4MewXLJ1qENxZR2w/9XsptvQ==","n":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA=","p":"NJqJPHzOmR7LOeMIK4q5aHctjrE1Suwgbs96Ni8qGyzi2QJbfzHZGffR7KFONBV5J1jpj9Z4pUNEcO6vYUIt7OsYJhK+UWB/LHvOlPw64DAsjuyHVp/+s2tqfGqZl0HBIQQI8DDYy4Pvs/YYELj6s39F7XK3NEbMNnPiO+APXlB1it7L+otDfZ/jnQUlzUKOjq84f0hvWcthX1Z/9dX1/+zDW1zmYgw8hwKHviTmBFRcinifpsgfc9uJvXn8AFodzRTF/Z5pqPyPeE1fX3Un3b9ZE1PVl3+/i9GQLvv6eksFMRSDMdTMKGu2uzjLvzX4jIfyPZSvl60w6p94bl4vxQ=="},"fsp_cleartext":"bring me a coffe, please. Maybe two","fsp_response":"92beYOHeqomEE+T3zASlwX04mLt3GflMVnbJMT6bNZPlAEF3KIFnxgBhnakDRcw7f2kKLFlu3a+SXFEWEz4a8qiZmK0N4kjHUlyjg0p6jprKDbYgglvVis/xcQtzFARK/FPL8vzsgelEWQuRbUCCYyAGzwX43uaeToWN7BPuCcontRj08eLniqGRwV6kVHPBEbOEvVbLiGd7qPOvwPvzdHfCJZL8xNHsb2PW8KM1kqxZjo8hLfoFgdgQSuv02Ak33upeu1LdfZFS6wcJV2UjDbCqbs1JpeSMgZWBik41UwA2rc60snPo97+JQ84A3EhO4pGZYL9AgPfmosyZnNz2+Q=="}'
 }
 
 @test "Create a fsp response from ciphertext" {
@@ -58,18 +58,12 @@ EOF
 	Then print the 'fsp response'
 EOF
 	save_output 'message_response.json'
-	assert_output '{"fsp_response":"Lp377tyx75tXJECe1sHwnLyFxmZs6L56Ru0P+JlCbDvlexIheZplt/mKRCBpx+8nGtYJ6UD1Okwtx9h4bxNzv4c1yQ=="}'
+	assert_output '{"fsp_response":"92beYOHeqomEE+T3zASlwX04mLt3GflMVnbJMT6bNZPlAEF3KIFnxgBhnakDRcw7f2kKLFlu3a+SXFEWEz4a8qiZmK0N4kjHUlyjg0p6jprKDbYgglvVis/xcQtzFARK/FPL8vzsgelEWQuRbUCCYyAGzwX43uaeToWN7BPuCcontRj08eLniqGRwV6kVHPBEbOEvVbLiGd7qPOvwPvzdHfCJZL8xNHsb2PW8KM1kqxZjo8hLfoFgdgQSuv02Ak33upeu1LdfZFS6wcJV2UjDbCqbs1JpeSMgZWBik41UwA2rc60snPo97+JQ84A3EhO4pGZYL9AgPfmosyZnNz2+Q=="}'
 }
 
 @test "Decrypt a tainted ciphertext (fail)" {
 	cat << EOF | save_asset tainted_ciphertext.json
-{
-    "fsp_ciphertext":{
-        "k":"Qp377tyx75tXJECe1sHwnLyFxmZs6L56Ru0P+JlCbDvlexIFHtkE9SP8HaW4qLV5+tDbffmj2+EBHf7o9vNOglghjA==",
-        "n":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA=",
-        "p":"Ajzt63HUDZUmT4SiThGobLyFxmZs6L56Ru0P+MGgxZGHCXtPHroI0tnrZENeQyDoQp4Q9nr9OnZunsprcwJm8J0xww=="
-    }
-}
+{"fsp_ciphertext":{"k":"PLFZQ9dstaNe8xpbVemUCP+t10brKz816VKaHlO7MW3GY6cZNNfVx5k8hDfSw76denOm8/meGfYngrq24HWHzllXs64z4WThkGJD6QVV4T9rBoZK6VgayMh28GdYPwbdWAFPsPJYpLpUXE0HURsar4ded50A/0Y3RT+y0nUV9I3GJT2mtCZuj/F3XNy7gEEyK4eUlJDtch2USxa3szwDJBnOSI7scDzlY7wlHM9oqxKDVT3dQ/0kMYegRvJlZXNBmQlf7BRNEkSzJSMOsDkP0KY3h8y8qhXMh49lY2G4iMJ2BWk3QKetaOwToJmtSA4MewXLJ1qENxZR2w/9XsptvQ==","n":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA=","p":"NJqJPHzOmR7LOeMIK4q5aHctjrE1Suwgbs96Ni8qGyzi2QJbfzHZGffR7KFONBV5J1jpj9Z4pUNEcO6vYUIt7OsYJhK+UWB/LHvOlPw64DAsjuyHVp/+s2tqfGqZl0HBIQQI8DDYy4Pvs/YYELj6s39F7XK3NEbMNnPiO+APXlB1it7L+otDfZ/jnQUlzUKOjq84f0hvWcthX1Z/9dX1/+zDW1zmYgw8hwKHviTmBFRcinifpsgfc9uJvXn8AFodzRTF/Z5pqPyPeE1fX3Un3b9ZE1PVl3+/i9GQLvv6eksFMRSDMdTMKGu2uzjLvzX4jIfyPZSvl60w6p94bl4vxQ=="}}
 EOF
 	cat << EOF | save_asset encode_response.zen
 	Scenario fsp
@@ -99,14 +93,7 @@ EOF
 
 @test "Decrypt a tainted response (fail)" {
     cat << EOF | save_asset tainted_response.json
-{
-    "fsp_response":"fn9SRJuGgu4eeVxWnn80aOoRRt2SzVOa+yBIttEQf7DlexIheZplt/mKRCAxJUaNGtYJ6UD1Okwtx9h4bxNzv4c1yQ==",
-    "fsp_ciphertext": {
-        "k":"Lp377tyx75tXJECe1sHwnLyFxmZs6L56Ru0P+JlCbDvlexIFHtkE9SP8HaW4qLV5+tDbffmj2+EBHf7o9vNOglghjA==",
-        "n":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA=",
-        "p":"Ft5EQTbjYOBvEphqBq9smOoRRt2SzVOa+yBIttEQf7CHCXtPHroI0tnrZENeQyDoQp4Q9nr9OnZunsprcwJm8J0xww=="
-    }
-}
+{"fsp_ciphertext":{"k":"MLFZQ9dstaNe8xpbVemUCP+t10brKz816VKaHlO7MW3GY6cZNNfVx5k8hDfSw76denOm8/meGfYngrq24HWHzllXs64z4WThkGJD6QVV4T9rBoZK6VgayMh28GdYPwbdWAFPsPJYpLpUXE0HURsar4ded50A/0Y3RT+y0nUV9I3GJT2mtCZuj/F3XNy7gEEyK4eUlJDtch2USxa3szwDJBnOSI7scDzlY7wlHM9oqxKDVT3dQ/0kMYegRvJlZXNBmQlf7BRNEkSzJSMOsDkP0KY3h8y8qhXMh49lY2G4iMJ2BWk3QKetaOwToJmtSA4MewXLJ1qENxZR2w/9XsptvQ==","n":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA=","p":"NJqJPHzOmR7LOeMIK4q5aHctjrE1Suwgbs96Ni8qGyzi2QJbfzHZGffR7KFONBV5J1jpj9Z4pUNEcO6vYUIt7OsYJhK+UWB/LHvOlPw64DAsjuyHVp/+s2tqfGqZl0HBIQQI8DDYy4Pvs/YYELj6s39F7XK3NEbMNnPiO+APXlB1it7L+otDfZ/jnQUlzUKOjq84f0hvWcthX1Z/9dX1/+zDW1zmYgw8hwKHviTmBFRcinifpsgfc9uJvXn8AFodzRTF/Z5pqPyPeE1fX3Un3b9ZE1PVl3+/i9GQLvv6eksFMRSDMdTMKGu2uzjLvzX4jIfyPZSvl60w6p94bl4vxQ=="},"fsp_response":"Z2beYOHeqomEE+T3zASlwX04mLt3GflMVnbJMT6bNZPlAEF3KIFnxgBhnakDRcw7f2kKLFlu3a+SXFEWEz4a8qiZmK0N4kjHUlyjg0p6jprKDbYgglvVis/xcQtzFARK/FPL8vzsgelEWQuRbUCCYyAGzwX43uaeToWN7BPuCcontRj08eLniqGRwV6kVHPBEbOEvVbLiGd7qPOvwPvzdHfCJZL8xNHsb2PW8KM1kqxZjo8hLfoFgdgQSuv02Ak33upeu1LdfZFS6wcJV2UjDbCqbs1JpeSMgZWBik41UwA2rc60snPo97+JQ84A3EhO4pGZYL9AgPfmosyZnNz2+w=="}
 EOF
 	cat << EOF | save_asset decode_response.zen
 	Scenario fsp
