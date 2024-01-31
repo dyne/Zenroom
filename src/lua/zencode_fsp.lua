@@ -82,7 +82,7 @@ When("create fsp ciphertext of ''",function(msg)
          local message = have(msg)
          -- RSK session key is not imported because should be generated
          -- every new session.
-         local nonce = mayhave'nonce' or TIME.new(os.time()):octet()
+         local nonce = mayhave'nonce' or FSP:makenonce()
          ACK.fsp_ciphertext =
              FSP:encode_message(SS, nonce, message)
          new_codec'fsp ciphertext'

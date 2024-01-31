@@ -21,10 +21,14 @@ local T = { }
 
 -- The length of RSK marks the maximum message length
 -- to make sure that its XOR covers the whole message
--- it is limited to 32 because of the AES.ctr limit.
+
+-- Default SS size 256 bit or 32 bytes
+-- Default Probabilistic hash size 32 bits / 4 bytes
+-- Default RSK size 256 bytes
 T.RSK_length = 256
-T.HASH = HASH.new('sha256') -- do not change
 T.PROB = 4 -- probhash bytes for MAC
+
+T.HASH = HASH.new('sha256') -- do not change
 
 -- TODO: check IV length
 -- find minimum length of k
@@ -35,6 +39,7 @@ function T:probhash(fobj)
 end
 
 function T:encrypt(key, message, nonce)
+   if not nonce then error("FSP encrypt missing nonce",2) end
     return AES.ctr_encrypt(
         self.HASH:process(key),
         message,
@@ -42,6 +47,7 @@ function T:encrypt(key, message, nonce)
     )
 end
 function T:decrypt(key, cipher, nonce)
+   if not nonce then error("FSP decrypt missing nonce",2) end
     return AES.ctr_encrypt(
         self.HASH:process(key),
         cipher,
@@ -49,22 +55,47 @@ function T:decrypt(key, cipher, nonce)
     )
 end
 
+-- generate a nonce with default format
+function T:makenonce()
+   return OCTET.from_string(os.date("%Y%m%d%H%M%S", os.time()))
+end
+
+-- prepare a clear text message to be encrypted
+function T:encodetxt(text)
+   local max = self.RSK_length - self.PROB -1 -- EOM is [1] 00
+   local len = #text
+   -- message too long for encoding
+   if (len > max) then return nil
+   elseif (len == max) then return text
+   end
+   -- len<max: message needs filling with random
+   return ( text .. OCTET.zero(1) .. OCTET.random(max-len) )
+end
+
+function T:decodetxt(text)
+   -- read out the null terminated string
+   return OCTET.from_string(text:string())
+end
+
 function T:encode_message(SS, nonce, cleartext, RSK)
     -- RSK arg is only used to verify vectors
+   if not SS then error("FSP secret key missing",2) end
+	if not ( #SS == 32 ) then
+			error("FSP secret key length must be 32 bytes", 2) end
     if RSK then
         if not ( #RSK == self.RSK_length ) then
-            error("RSK length must be "..self.RSK_length, 2) end
+            error("FSP session key length must be "..self.RSK_length.." bytes", 2) end
     end
-    local rsk = RSK or OCTET.random(self.RSK_length) -- + hash size
+    local rsk = RSK or OCTET.random(self.RSK_length)
     local m = {
         n = nonce,
         k = self:encrypt(SS, rsk, nonce)
-            :xor_grow(
-                self:encrypt(SS, nonce, nonce )),
+		   ~
+		   self:encrypt(SS, nonce:fillrepeat(self.RSK_length), nonce),
         p = self:encrypt(
             rsk,
-            (self:probhash(T,rsk:xor_grow(SS)) .. cleartext)
-            :xor_grow(rsk), nonce)
+            rsk ~ (self:probhash(SS ~ rsk) .. self:encodetxt(cleartext)),
+			nonce)
     }
     return m
 end
@@ -74,22 +105,24 @@ function T:decode_message(SS, ciphertext, nonce)
     if not iv then
         error("Undefined nonce in FSP:decode_message",2)
     end
+	-- decode rsk from k
     local rsk = self:decrypt(
         SS,
-        ciphertext.k:xor_grow( self:encrypt(SS, iv, iv) ),
+        ciphertext.k
+		~ self:encrypt(SS, iv:fillrepeat(self.RSK_length), iv),
         iv)
     local m = self:decrypt(rsk,
-                           ciphertext.p:xor_grow(rsk), iv):trim()
-    if not (self:probhash(rsk:xor_grow(SS)) == m:sub(1,T.PROB)) then
+                           ciphertext.p:xor_grow(rsk), iv)
+    if not (self:probhash(SS ~ rsk) == m:sub(1,T.PROB)) then
         error("Invalid authentication of fsp ciphertext", 2)
     end
-    return m:sub(T.PROB+1,#m), rsk
+    return self:decodetxt(m:sub(T.PROB+1,#m)), rsk
 end
 
 function T:encode_response(SS, nonce, rsk, cleartext)
     return self:encrypt(
         SS,
-        (self:probhash(T,nonce:xor_grow(rsk)) .. cleartext):xor_grow(rsk),
+        (self:probhash(nonce:xor_grow(rsk)) .. cleartext):xor_grow(rsk),
         nonce)
 end
 
@@ -98,7 +131,7 @@ function T:decode_response(SS, nonce, rsk, ciphertext)
         SS,
         ciphertext:xor_grow(rsk),
         nonce):trim()
-    assert(self:probhash(T,nonce:xor_grow(rsk)) == m:sub(1,T.PROB),
+    assert(self:probhash(nonce:xor_grow(rsk)) == m:sub(1,T.PROB),
         "Invalid authentication of fsp response")
     return m:sub(T.PROB+1,#m), mac
 end

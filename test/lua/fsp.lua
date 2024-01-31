@@ -28,8 +28,9 @@ hash = HASH.new('sha256')
 
 -- random session key length -32 marks the maximum message length
 -- in other words: rsk is max length + 32 (hash len)
+SS = OCTET.zero(32)
 RSK = OCTET.random(256)
-NONCE = TIME.new(os.time()):octet() -- TODO: concatenate to semantic parameter
+NONCE = FSP:makenonce()
 print("MSG length: ".. #message)
 print("RSP length: ".. #response)
 print("RSK length: ".. #RSK)
@@ -64,8 +65,7 @@ assert(Trd == response)
 entropy = {
    k = FLOAT.new( Tm.k:entropy() ),
    p = FLOAT.new( Tm.p:entropy() ),
-   r = FLOAT.new( Tr:entropy() ),
-   kr = FLOAT.new( (Tm.k..Tr):entropy() )
+   r = FLOAT.new( Tr:entropy() )
 }
 I.print({entropy = entropy,
          cipher = { k = Tm.k,
