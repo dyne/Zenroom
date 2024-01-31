@@ -1,5 +1,5 @@
 
-T = require'crypto_fsp'
+FSP = require'crypto_fsp'
 -- FSP.encode_message
 -- FSP.decode_message
 -- FSP.encode_response
@@ -84,7 +84,7 @@ When("create fsp ciphertext of ''",function(msg)
          -- every new session.
          local nonce = mayhave'nonce' or TIME.new(os.time()):octet()
          ACK.fsp_ciphertext =
-             T.encode_message(SS, nonce, message)
+             FSP:encode_message(SS, nonce, message)
          new_codec'fsp ciphertext'
 end)
 
@@ -94,7 +94,7 @@ When("create fsp cleartext of ''",function(ctxt)
          local ciphertext = have(ctxt)
          local RSK
          ACK.fsp_cleartext, RSK =
-             T.decode_message(SS, ciphertext)
+             FSP:decode_message(SS, ciphertext)
          new_codec'fsp cleartext'
          new_cache('fsp session key', RSK)
          new_cache('fsp session nonce', ciphertext.n)
@@ -110,7 +110,7 @@ When("create fsp response with ''",function(msg)
              mayhave'nonce' or CACHE.fsp_session_nonce or
              error("Fsp session nonce not found")
          ACK.fsp_response =
-             T.encode_response(SS, nonce, RSK, response)
+             FSP:encode_response(SS, nonce, RSK, response)
          new_codec'fsp response'
 end)
 
@@ -118,12 +118,12 @@ When("create fsp response of '' with ''",function(ctxt, msg)
          local SS = havekey'fsp'
          local ciphertext = have(ctxt)
          local response = have(msg)
-         local _, RSK = T.decode_message(SS, ciphertext)
+         local _, RSK = FSP:decode_message(SS, ciphertext)
          local nonce = ciphertext.n or
              mayhave'nonce' or CACHE.fsp_session_nonce or
              TIME.new(os.time())
          ACK.fsp_response =
-             T.encode_response(SS, nonce, RSK, response)
+             FSP:encode_response(SS, nonce, RSK, response)
          new_codec'fsp response'
 end)
 
@@ -138,7 +138,7 @@ When("create fsp cleartext of response ''",function(ctxt)
              CACHE.fsp_session_nonce or
              TIME.new(os.time())
          ACK.fsp_cleartext =
-             T.decode_response(SS, nonce, RSK, ciphertext)
+             FSP:decode_response(SS, nonce, RSK, ciphertext)
          new_codec'fsp cleartext'
 end)
 
@@ -150,8 +150,8 @@ When("create fsp cleartext of response '' to ''",function(cres, cmsg)
              mayhave'fsp session nonce' or
              CACHE.fsp_session_nonce or
              TIME.new(os.time())
-         local _, RSK = T.decode_message(SS, message)
+         local _, RSK = FSP:decode_message(SS, message)
          ACK.fsp_cleartext =
-             T.decode_response(SS, nonce, RSK, response)
+             FSP:decode_response(SS, nonce, RSK, response)
          new_codec'fsp cleartext'
 end)

@@ -22,7 +22,7 @@ local T = { }
 -- The length of RSK marks the maximum message length
 -- to make sure that its XOR covers the whole message
 -- it is limited to 32 because of the AES.ctr limit.
-T.RSK_length = 32
+T.RSK_length = 256
 T.HASH = HASH.new('sha256') -- do not change
 T.PROB = 4 -- probhash bytes for MAC
 
@@ -30,62 +30,75 @@ T.PROB = 4 -- probhash bytes for MAC
 -- find minimum length of k
 
 -- probabilistic hash function returning only N bytes
-local function probhash(fsp, obj)
-    return fsp.HASH:process(obj):octet():chop(fsp.PROB)
+function T:probhash(fobj)
+    return self.HASH:process(obj):chop(self.PROB)
 end
 
-T.encode_message = function(SS, nonce, cleartext, RSK, IV)
-    local len = #cleartext
-    if len < 32 then
-        cleartext = cleartext:pad(32)
-        len = 32
-    end
+function T:encrypt(key, message, nonce)
+    return AES.ctr_encrypt(
+        self.HASH:process(key),
+        message,
+        self.HASH:process(nonce)
+    )
+end
+function T:decrypt(key, cipher, nonce)
+    return AES.ctr_encrypt(
+        self.HASH:process(key),
+        cipher,
+        self.HASH:process(nonce)
+    )
+end
+
+function T:encode_message(SS, nonce, cleartext, RSK)
     -- RSK arg is only used to verify vectors
-    if RSK then assert(#RSK >= len+32, "RSK length must be grater than message length + 32 bytes") end
-    local rsk = RSK or OCTET.random(len + 32) -- + hash size
-    local iv = IV or T.HASH:process(nonce)
-    -- hash result must be 32 bytes to fit as AES.ctr key
-    assert(#nonce < #rsk, "RSK length must be grater than nonce length")
+    if RSK then
+        if not ( #RSK == self.RSK_length ) then
+            error("RSK length must be "..self.RSK_length, 2) end
+    end
+    local rsk = RSK or OCTET.random(self.RSK_length) -- + hash size
     local m = {
         n = nonce,
-        k = AES.ctr_encrypt(T.HASH:process(SS), rsk, iv)
-            :xor_grow( AES.ctr_encrypt(T.HASH:process(SS), nonce, iv) ),
-        p = AES.ctr_encrypt(
-            T.HASH:process(rsk),
-            (probhash(T,rsk:xor_grow(SS)) .. cleartext):xor_grow(rsk), iv)
+        k = self:encrypt(SS, rsk, nonce)
+            :xor_grow(
+                self:encrypt(SS, nonce, nonce )),
+        p = self:encrypt(
+            rsk,
+            (self:probhash(T,rsk:xor_grow(SS)) .. cleartext)
+            :xor_grow(rsk), nonce)
     }
     return m
 end
 
-T.decode_message = function(SS, ciphertext, IV)
-    local iv = IV or T.HASH:process(ciphertext.n)
-    local rsk = AES.ctr_decrypt(
-        T.HASH:process(SS), ciphertext.k
-        :xor_grow( AES.ctr_encrypt(T.HASH:process(SS), ciphertext.n, iv) ),
+function T:decode_message(SS, ciphertext, nonce)
+    local iv = nonce or ciphertext.n
+    if not iv then
+        error("Undefined nonce in FSP:decode_message",2)
+    end
+    local rsk = self:decrypt(
+        SS,
+        ciphertext.k:xor_grow( self:encrypt(SS, iv, iv) ),
         iv)
-    local m = AES.ctr_decrypt(T.HASH:process(rsk),
-                              ciphertext.p:xor_grow(rsk), iv):trim()
-    if not (probhash(T,rsk:xor_grow(SS)) == m:sub(1,T.PROB)) then
+    local m = self:decrypt(rsk,
+                           ciphertext.p:xor_grow(rsk), iv):trim()
+    if not (self:probhash(rsk:xor_grow(SS)) == m:sub(1,T.PROB)) then
         error("Invalid authentication of fsp ciphertext", 2)
     end
     return m:sub(T.PROB+1,#m), rsk
 end
 
-T.encode_response = function(SS, nonce, rsk, cleartext, IV)
-    local r_len = #rsk - 32
-    -- response length must be smaller or equal to message len
-    assert(#cleartext <= r_len, "Response length must be smaller or equal to message len")
-    local iv = IV or T.HASH:process(nonce)
-    return AES.ctr_encrypt(
-        T.HASH:process(SS),
-        (probhash(T,nonce:xor_grow(rsk)) .. cleartext):xor_grow(rsk), iv)
+function T:encode_response(SS, nonce, rsk, cleartext)
+    return self:encrypt(
+        SS,
+        (self:probhash(T,nonce:xor_grow(rsk)) .. cleartext):xor_grow(rsk),
+        nonce)
 end
 
-T.decode_response = function(SS, nonce, rsk, ciphertext, IV)
-    local iv = IV or T.HASH:process(nonce)
-    local m = AES.ctr_decrypt(
-        T.HASH:process(SS), ciphertext:xor_grow(rsk), iv):trim()
-    assert(probhash(T,nonce:xor_grow(rsk)) == m:sub(1,T.PROB),
+function T:decode_response(SS, nonce, rsk, ciphertext)
+    local m = self:decrypt(
+        SS,
+        ciphertext:xor_grow(rsk),
+        nonce):trim()
+    assert(self:probhash(T,nonce:xor_grow(rsk)) == m:sub(1,T.PROB),
         "Invalid authentication of fsp response")
     return m:sub(T.PROB+1,#m), mac
 end
