@@ -281,7 +281,7 @@ docker build --tag dyne/restroom_mw:latest .
 After the image is build, assuming that you're using th in order to run it, you can use:
 
 ```bash
-docker run -d -p 3300:3300 -p 3301:3301 dyne/restroom_mw:latest
+docker run -p 3300:3300 -p 3301:3301 dyne/restroom_mw:latest
 ```
 
 If everything worked fine, by going to **http://localhost:3300/docs** you should see something like this:
