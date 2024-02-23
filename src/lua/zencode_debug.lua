@@ -99,8 +99,8 @@ local function debug_heap_dump()
 			  c_CODEC_ack = CODEC,
 			  c_CACHE_ack = CACHE,
 			  d_THEN_out = OUT})
-	  ack.keyring = keyring
    end
+   ack.keyring = keyring
 end
 
 local function debug_heap_schema()

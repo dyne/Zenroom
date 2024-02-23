@@ -78,6 +78,11 @@ Then print the data
 EOF
 }
 
+@test "debug-debug-json" {
+    conf="logfmt=json"
+    cat ${R}/docs/examples/zencode_cookbook/cookbook_debug/debug_script.zen | zexe debug_script_json.zen input.json
+}
+
 @test "debug-schema" {
     cat <<EOF | zexe schema_script.zen input.json
 Scenario 'eddsa': Generate the public key
