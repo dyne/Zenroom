@@ -160,6 +160,7 @@ local function jws_octet_to_signature(obj)
         verify_f = ECDH.verify
         pk = ACK.ecdh_public_key
     elseif header.alg == 'ES256' then
+        local ES256 = require_once 'es256'
         res = OCTET.from_url64(toks[3])
         verify_f = ES256.verify
         pk = ACK.es256_public_key
