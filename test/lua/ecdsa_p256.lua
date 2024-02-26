@@ -21,8 +21,8 @@ local tot = 0
 
 while (tot<100) do
 	sig = P256.sign(alice_sk, m)
-	assert(P256.verify(alice_pk, sig, m), "ecdh verify failed")
-	assert(not P256.verify(alice_pk, sig, sha256(m)), "ecdh verify failed")
+	assert(P256.verify(alice_pk, m, sig), "ecdh verify failed")
+	assert(not P256.verify(alice_pk, sha256(m), sig), "ecdh verify failed")
 	tot = tot+1
 end
 

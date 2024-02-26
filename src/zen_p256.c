@@ -185,16 +185,16 @@ static int p256_verify(lua_State *L)
 		failed_msg = "Could not allocate public key";
 		goto end;
 	}
-	sig = o_arg(L, 2);
-	if (!sig)
-	{
-		failed_msg = "Could not allocate signature";
-		goto end;
-	}
-	m = o_arg(L, 3);
+	m = o_arg(L, 2);
 	if (!m)
 	{
 		failed_msg = "Could not allocate message";
+		goto end;
+	}
+	sig = o_arg(L, 3);
+	if (!sig)
+	{
+		failed_msg = "Could not allocate signature";
 		goto end;
 	}
 

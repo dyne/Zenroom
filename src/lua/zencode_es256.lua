@@ -82,7 +82,7 @@ IfWhen("verify '' has a es256 signature in '' by ''",function(msg, sig, by)
 	  local m = have(msg)
 	  local s = have(sig)
 	  zencode_assert(
-	     ES256.verify(pk, s, zencode_serialize(m)),
+	     ES256.verify(pk, zencode_serialize(m), s),
 	     'The es256 signature by '..by..' is not authentic'
 	  )
 end)
