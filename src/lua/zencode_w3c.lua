@@ -185,7 +185,7 @@ local function jws_signature_to_octet(s, h, p)
     end
     local payload = ""
     if p then
-        zencode_assert(luatype(p) == 'string', "The payload should be a string")
+        zencode_assert(type(p) == 'zenroom.octet', "The payload should be a string")
         payload = O.to_url64(p)
     end
     local signature = s
@@ -250,6 +250,8 @@ When("create jws signature with header '' payload '' and signature ''", function
     ACK.jws = O.from_string(
         jws_signature_to_octet(o_signature, o_header, o_payload)
     )
+    new_codec('jws', { zentype = 'e',
+                       encoding = 'string' })
 end)
 
 IfWhen("verify jws signature of ''", function(src)
