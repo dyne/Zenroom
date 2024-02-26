@@ -149,26 +149,36 @@ ZEN:add_schema(
 local function jws_octet_to_signature(obj)
     local toks = strtok(OCTET.to_string(obj), '.')
     -- parse header
+    local pk
     local header = JSON.decode( OCTET.from_url64(toks[1]):string())
+    if header.jwk then
+        -- kty MUST be present
+        zencode_assert(header.jwk.kty == 'EC',
+                       'JWS public key type supported by zenroom is only EC')
+        -- if kty == EC, crv MUST be present
+        zencode_assert(header.jwk.crv == 'P-256' or header.crv == 'secp256k1',
+                       'JWS public key curve supported by zenroom are only P-256 or secp256k1')
+        pk = O.from_url64(header.jwk.x) .. O.from_url64(header.jwk.y)
+    end
     -- possibility to have puublic key in the header?
     zencode_assert(header.alg, 'JWS header is missing alg specification')
-    local payload = ""
-    if toks[2] ~= "" then payload = O.from_url64(toks[2]) end
-    local signature, verify_f, pk
+    local signed = ""
+    if toks[2] ~= "" then signed = O.from_string(toks[1]..'.'..toks[2]) end
+    local signature, verify_f
     if header.alg == 'ES256K' then
         signature = {}
         signature.r, signature.s = OCTET.chop(OCTET.from_url64(toks[3]), 32)
         verify_f = ECDH.verify
-        pk = ACK.ecdh_public_key
+        pk = pk or ACK.ecdh_public_key
     elseif header.alg == 'ES256' then
         local ES256 = require_once 'es256'
         signature = OCTET.from_url64(toks[3])
         verify_f = ES256.verify
-        pk = ACK.es256_public_key
+        pk = pk or ACK.es256_public_key
     else
         error(header.alg .. ' algorithm not yet supported by zenroom jws verification')
     end
-    return signature, verify_f, pk, payload
+    return signature, verify_f, pk, signed
 end
 
 -- return octet string suitable for JWS encapsulation
@@ -271,11 +281,11 @@ end)
 
 IfWhen("verify jws signature in ''", function(sign)
     local jws = have(sign)
-    local signature, verify_f, pub, payload = jws_octet_to_signature(jws)
+    local signature, verify_f, pub, signed = jws_octet_to_signature(jws)
     zencode_assert(pub, "Public key to verify the jws signature not found")
     zencode_assert(payload ~= "", "Payload not found in "..sign)
     zencode_assert(
-        verify_f(pub, payload, signature),
+        verify_f(pub, signed, signature),
         'The signature does not validate: ' .. sign
     )
 end)
