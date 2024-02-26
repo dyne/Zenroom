@@ -206,9 +206,9 @@ tests = [
 'generic_ecdh', 'generic_eddsa', 'generic_schnorr', 'generic_es256',
 'given', 'hash', 'http', 'keys', 'kyber', 'ntrup', 'numbers',
 'output', 'pack', 'parser', 'planetmint', 'pvss', 'random', 'reflow',
-'rules', 'secshare', 'then', 'w3c', 'w3c_did', 'when', 'zencode_exec',
-'zenswarm', 'zkp', 'zkp_multi_petitions', 'logfmt', 'scope',
-'fsp'
+'rules', 'secshare', 'table', 'then', 'w3c', 'w3c_did', 'when',
+'zencode_exec', 'zenswarm', 'zkp', 'zkp_multi_petitions', 'logfmt',
+'scope', 'fsp'
 ]
 foreach test_suite : tests
     test('zencode_'+test_suite.underscorify(),
@@ -224,7 +224,7 @@ benches = [ 'and', 'array', 'bbs_sha', 'bbs_shake', 'bbs_zkp',
 'foreach', 'generic_bbs', 'generic_dilithium', 'generic_ecdh',
 'generic_eddsa', 'generic_schnorr', 'given', 'hash', 'kyber', 'ntrup',
 'numbers', 'output', 'pack', 'parser', 'planetmint', 'pvss', 'random',
-'reflow', 'secshare', 'then', 'w3c', 'w3c_did', 'when',
+'reflow', 'secshare', 'table', 'then', 'w3c', 'w3c_did', 'when',
 'zencode_exec', 'zenswarm', 'zkp', 'zkp_multi_petitions',
 'fsp' ]
 
