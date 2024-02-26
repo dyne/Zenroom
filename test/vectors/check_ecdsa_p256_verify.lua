@@ -36,9 +36,9 @@ for line in newline_iter(DATA) do
             local pk = test.qx .. test.qy
             local sig = test.r .. test.s
             if test.result:lower() == "p" then
-                assert(P256.verify(pk, sig, test.msg), "error with test vector ".. nr.." verification should NOT fail")
+                assert(P256.verify(pk, test.msg, sig), "error with test vector ".. nr.." verification should NOT fail")
             else
-                assert(not P256.verify(pk, sig, test.msg), "error with test vector ".. nr.." verification should fail")
+                assert(not P256.verify(pk, test.msg, sig), "error with test vector ".. nr.." verification should fail")
             end
         end
     end

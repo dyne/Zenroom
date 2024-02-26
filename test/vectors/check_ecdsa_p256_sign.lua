@@ -26,7 +26,7 @@ for line in newline_iter(DATA) do
     end
     if curr_fields == 7 then
         assert(test.qx .. test.qy == P256.pubgen(test.d))
-        assert(P256.verify(test.qx .. test.qy, test.r .. test.s, test.msg))
+        assert(P256.verify(test.qx .. test.qy, test.msg, test.r .. test.s))
         assert(test.r .. test.s == P256.sign(test.d, test.msg, test.k))
         curr_fields = 0
         test = {}

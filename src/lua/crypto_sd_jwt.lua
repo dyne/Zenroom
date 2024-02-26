@@ -148,7 +148,7 @@ end
 function sd_jwt.verify_jws_signature(jws, pk)
     local payload_str = export_str_dict(jws.payload)
     local b64payload = O.from_string(JSON.raw_encode(payload_str)):url64()
-    return ES256.verify(pk, jws.signature, b64payload)
+    return ES256.verify(pk, b64payload, jws.signature)
 end
 
 function sd_jwt.verify_jws_header(jws)
