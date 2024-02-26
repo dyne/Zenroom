@@ -741,11 +741,7 @@ EOF
 @test "JWS es256" {
     cat <<EOF | save_asset jws_es256.data
 {
-    "header": {
-              "alg": "ES256",
-              "b64": true,
-              "crit": "b64"
-    },
+    "header": "eyJhbGciOiJFUzI1NiIsImI2NCI6dHJ1ZSwiY3JpdCI6ImI2NCJ9",
     "payload": "eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ",
     "keyring": {
                "es256": "hqQUHoEbLJIqcoLEvEtu8kJ3WbhaskDb5Sl/ygPN220="
@@ -756,24 +752,32 @@ EOF
 Scenario 'w3c': did document manipulation
 Scenario 'es256': signature
 
-Given I have a 'string dictionary' named 'header'
+Given I have a 'string' named 'header'
+and I rename 'header' to 'header_string'
+and I have a 'url64' named 'header'
+Given I have a 'string' named 'payload'
+and I rename 'payload' to 'payload_string'
 and I have a 'url64' named 'payload'
 and I have a 'keyring'
 
-When I create the es256 signature of 'payload'
+When I rename 'header_string' to 'header.payload'
+and I append the string '.' to 'header.payload'
+and I append the 'payload_string' to 'header.payload'
+
+When I create the es256 signature of 'header.payload'
 and I create jws signature with header 'header' payload 'payload' and signature 'es256 signature'
 
 Then print the 'jws'
 EOF
     save_output jws_es256.json
-    assert_output '{"jws":"eyJhbGciOiJFUzI1NiIsImI2NCI6dHJ1ZSwiY3JpdCI6ImI2NCJ9.eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ.gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sazY9W0wCLKXFLg51sWsllAxI98E6CEb3AoZI88C_LLyyg"}'
+    assert_output '{"jws":"eyJhbGciOiJFUzI1NiIsImI2NCI6dHJ1ZSwiY3JpdCI6ImI2NCJ9.eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ.gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawf5AhwVjrVPuAcCM8vTssWdU4Rh2nR51WRSwg_4YRxkQ"}'
 }
 
 @test "verify JWS es256" {
     cat <<EOF | save_asset verify_jsw_es256.data
 {
     "es256_public_key": "LzOheBTJ7wIcII4MWkzoETuGroDn9ihIGEeVSbByUig7mO264C94nBIqM6cU7Pa5Nq+GiLd+ibejPXnfwbEV6A==",
-    "payload": "eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ"
+    "header.payload": "eyJhbGciOiJFUzI1NiIsImI2NCI6dHJ1ZSwiY3JpdCI6ImI2NCJ9.eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ"
 }
 EOF
     cat <<EOF | zexe verify_jws_es256.zen jws_es256.json verify_jsw_es256.data
@@ -782,14 +786,34 @@ Scenario 'w3c': jws
 
 Given I have a 'string' named 'jws'
 and I have a 'es256 public key'
-and I have a 'url64' named 'payload'
+and I have a 'string' named 'header.payload'
 
-When I verify the jws signature of 'payload'
+When I verify the jws signature of 'header.payload'
 and I verify the jws signature in 'jws'
 
 Then print the string 'signature verified'
 EOF
     save_output verify_jws_es256.json
+    assert_output '{"output":["signature_verified"]}'
+}
+
+
+@test "verify JWS es256 without external public key" {
+    cat <<EOF | save_asset verify_jws_es256_alone.data
+{
+    "jws": "eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6IkVDIiwieCI6Iml5dWFIZ2pzZWlXVGRLZF9FdWh4TzQzb2F5SzA1el93RWIyU2xzeG9mU28iLCJ5IjoiRUpCcmdaRV93cW0zUDBiUHV1WXBPLTV3YkViazl4eS04aGRPaVZPRGpPTSIsImNydiI6IlAtMjU2In19.eyJqdGkiOiJCV3NfOEU3cjRrZm5qWElLd0NmeVZnIiwiaHRtIjoiUE9TVCIsImh0dSI6Imh0dHBzOi8vc2VydmVyLmV4YW1wbGUuY29tL3Rva2VuIiwiaWF0IjoxNzA4OTY2NjY0ODczfQ.A5G12A0hEMg9E54ZvaERkP-xlnD1cWGUJc1WRM_G0Ge8EjEv7wjscxKHnbbcdy_ZOeo7MQiyBy90bmMc5pTFsg"
+}
+EOF
+    cat <<EOF | zexe verify_jws_es256_alone.zen verify_jws_es256_alone.data
+Scenario 'w3c': jws
+
+Given I have a 'string' named 'jws'
+
+When I verify the jws signature in 'jws'
+
+Then print the string 'signature verified'
+EOF
+    save_output verify_jws_es256_alone.json
     assert_output '{"output":["signature_verified"]}'
 }
 
