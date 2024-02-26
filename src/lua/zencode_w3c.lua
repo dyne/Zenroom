@@ -150,19 +150,23 @@ local function jws_octet_to_signature(obj)
     local toks = strtok(OCTET.to_string(obj), '.')
     -- parse header
     local header = JSON.decode( OCTET.from_url64(toks[1]):string())
+    -- possibility to have puublic key in the header?
     zencode_assert(header.alg, 'JWS header is missing alg specification')
-    local res, verify_f
+    -- TODO: if payload is present return and verify the signature from it
+    local res, verify_f, pk
     if header.alg == 'ES256K' then
         res = {}
         res.r, res.s = OCTET.chop(OCTET.from_url64(toks[3]), 32)
         verify_f = ECDH.verify
+        pk = ACK.ecdh_public_key
     elseif header.alg == 'ES256' then
         res = OCTET.from_url64(toks[3])
         verify_f = ES256.verify
+        pk = ACK.es256_public_key
     else
         error(header.alg .. ' algorithm not yet supported by zenroom jws verification')
     end
-    return res, verify_f
+    return res, verify_f, pk
 end
 
 -- return octet string suitable for JWS encapsulation
@@ -178,8 +182,6 @@ local function jws_signature_to_octet(s, h, p)
                 }
             )
         )
-    elseif luatype(h) == 'table' then
-        header = O.from_string(JSON.encode(h))
     else
         header = h
     end
@@ -243,7 +245,7 @@ When("create jws signature using ecdh signature in ''", function(sign)
 end)
 
 When("create jws signature with header '' payload '' and signature ''", function(header, payload, signature)
-    local o_header = have(header)
+    local o_header = _json_encoding(header)
     local o_payload = have(payload)
     local o_signature = have(signature)
     empty 'jws'
@@ -256,9 +258,9 @@ end)
 
 IfWhen("verify jws signature of ''", function(src)
     local jws = have'jws'
-    local pub = have 'ecdh public key'
     local source_str = _json_encoding(src)
-    local signature, verify_f = jws_octet_to_signature(jws)
+    local signature, verify_f, pub = jws_octet_to_signature(jws)
+    zencode_assert(pub, "Public key to verify the jws signature not found")
     zencode_assert(
         verify_f(pub, source_str, signature),
         'The signature does not validate: ' .. src
