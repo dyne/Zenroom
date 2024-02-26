@@ -148,27 +148,54 @@ ZEN:add_schema(
 -- return { r , s } table suitable for signature verification
 local function jws_octet_to_signature(obj)
     local toks = strtok(OCTET.to_string(obj), '.')
-    -- header parsing may be skipped
-    -- local header = JSON.decode( OCTET.from_url64(toks[1]):to_string() )
-    local res = {}
-    res.r, res.s = OCTET.chop(OCTET.from_url64(toks[3]), 32)
-    return (res)
+    -- parse header
+    local header = JSON.decode( OCTET.from_url64(toks[1]):string())
+    zencode_assert(header.alg, 'JWS header is missing alg specification')
+    local res, verify_f
+    if header.alg == 'ES256K' then
+        res = {}
+        res.r, res.s = OCTET.chop(OCTET.from_url64(toks[3]), 32)
+        verify_f = ECDH.verify
+    elseif header.alg == 'ES256' then
+        res = OCTET.from_url64(toks[3])
+        verify_f = ES256.verify
+    else
+        error(header.alg .. ' algorithm not yet supported by zenroom jws verification')
+    end
+    return res, verify_f
 end
 
 -- return octet string suitable for JWS encapsulation
-local function jws_signature_to_octet(obj, algo)
-    local header =
-        OCTET.from_string(
-        JSON.encode(
-            {
-                alg = algo or 'ES256K', -- default secp256k1
-                b64 = true,
-                crit = 'b64'
-            }
+local function jws_signature_to_octet(s, h, p)
+    local header
+    if not h then
+        header = O.from_string(
+            JSON.encode(
+                {
+                    alg = algo or 'ES256K', -- default secp256k1
+                    b64 = true,
+                    crit = 'b64'
+                }
+            )
         )
-    )
+    elseif luatype(h) == 'table' then
+        header = O.from_string(JSON.encode(h))
+    else
+        header = h
+    end
+    local payload = ""
+    if p then
+        zencode_assert(luatype(p) == 'string', "The payload should be a string")
+        payload = O.to_url64(p)
+    end
+    local signature = s
+    if luatype(signature) == 'table' then
+        zencode_assert(s.r and s.s, "The signature table does not contains r and s")
+        signature = s.r .. s.s
+    end
     return (OCTET.to_url64(header) ..
-        '..' .. OCTET.to_url64(obj.r .. obj.s))
+            '.' .. payload ..
+            '.' .. OCTET.to_url64(signature))
 end
 
 When("set verification method in '' to ''", function(vc, meth)
@@ -215,13 +242,23 @@ When("create jws signature using ecdh signature in ''", function(sign)
                         encoding = 'string' })
 end)
 
+When("create jws signature with header '' payload '' and signature ''", function(header, payload, signature)
+    local o_header = have(header)
+    local o_payload = have(payload)
+    local o_signature = have(signature)
+    empty 'jws'
+    ACK.jws = O.from_string(
+        jws_signature_to_octet(o_signature, o_header, o_payload)
+    )
+end)
+
 IfWhen("verify jws signature of ''", function(src)
     local jws = have'jws'
     local pub = have 'ecdh public key'
     local source_str = _json_encoding(src)
-    local signature = jws_octet_to_signature(jws)
+    local signature, verify_f = jws_octet_to_signature(jws)
     zencode_assert(
-        ECDH.verify(pub, source_str, signature),
+        verify_f(pub, source_str, signature),
         'The signature does not validate: ' .. src
     )
 end)
@@ -245,7 +282,7 @@ When("sign verifiable credential named ''", function(vc)
 end)
 
 local function _verification_f(src, document, public_key)
-    local signature = jws_octet_to_signature(document.proof.jws)
+    local signature, verify_f = jws_octet_to_signature(document.proof.jws)
 
     -- omit proof subtable from verification
     local proof = document.proof
@@ -253,7 +290,7 @@ local function _verification_f(src, document, public_key)
     local document_str = _json_encoding(src)
     document.proof = proof
     zencode_assert(
-        ECDH.verify(public_key, document_str, signature),
+        verify_f(public_key, document_str, signature),
         'The signature does not validate: ' .. src
     )
 end
