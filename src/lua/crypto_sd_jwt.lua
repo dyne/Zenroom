@@ -118,8 +118,10 @@ function sd_jwt.create_jwt_es256(payload, sk)
     }
     local payload_str = export_str_dict(payload)
     b64payload = O.from_string(JSON.raw_encode(payload_str)):url64()
+    local header_str = export_str_dict(header)
+    b64header = O.from_string(JSON.raw_encode(header_str)):url64()
 
-    local signature = ES256.sign(sk, b64payload)
+    local signature = ES256.sign(sk, O.from_string(b64header .. "." .. b64payload))
     return {
         header=header,
         payload=payload,
@@ -148,7 +150,10 @@ end
 function sd_jwt.verify_jws_signature(jws, pk)
     local payload_str = export_str_dict(jws.payload)
     local b64payload = O.from_string(JSON.raw_encode(payload_str)):url64()
-    return ES256.verify(pk, b64payload, jws.signature)
+    local header_str = export_str_dict(jws.header)
+    local b64header = O.from_string(JSON.raw_encode(header_str)):url64()
+
+    return ES256.verify(pk, jws.signature, O.from_string(b64header .. "." .. b64payload))
 end
 
 function sd_jwt.verify_jws_header(jws)
