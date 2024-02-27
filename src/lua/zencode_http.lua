@@ -43,6 +43,15 @@ local function _normalize_percent_encoding (s)
     end)
 end
 
+local function _to_percent_encoding(s)
+    -- percent-encode all non-unreserved characters (except spaces)
+    local str = s:gsub("([^%w%-%.%_%~ ])", function (char)
+                             return string.format("%%%02X", string.byte(char))
+    end)
+    -- spaces to plus signs
+    return str:gsub(" ", "+")
+end
+
 local function _is_ip4_literal (s)
     if not s:find("^[0-9]+%.[0-9]+%.[0-9]+%.[0-9]+$") then return false end
 
@@ -132,15 +141,25 @@ When("create url from ''", function(src)
 	new_codec('url',{zentype='e',content='url', encoding='string'})
 end)
 
-When("append '' as http request to ''", function(ele, dst)
-	local arg = have(ele):str():lower()
-	local url = have(dst):str():lower()
-	local codec = CODEC[dst]
-	zencode_assert(codec.content=='url',
+local function _append_to_url(ele, dst, encoding_f)
+    local arg, arg_c = have(ele)
+    local url, url_c = have(dst)
+    zencode_assert(url_c.encoding == 'string',
+		   "Cannot append http request that are not strings: "..ele)
+    zencode_assert(url_c.content == 'url',
 		   "Cannot append http request to invalid url: "..dst)
-	local separator = fif( url:find('?'), '&', '?' )
-	ACK[dst] = O.from_string( url .. separator ..
-				  _normalize_percent_encoding(ele)
-				  .. '=' ..
-				  _normalize_percent_encoding(arg) )
+	local separator = fif( url:str():find('?'), '&', '?' )
+	ACK[dst] = O.from_string(url:str() .. separator ..
+                             encoding_f(ele)
+                             .. '=' ..
+                             encoding_f(arg:str())
+    )
+end
+
+When("append '' as http request to ''", function(ele, dst)
+    _append_to_url(ele, dst, _normalize_percent_encoding)
+end)
+
+When("append percent encoding of '' as http request to ''", function(ele, dst)
+    _append_to_url(ele, dst, _to_percent_encoding)
 end)
