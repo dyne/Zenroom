@@ -31,7 +31,7 @@ EOF
 Scenario 'sd_jwt': sign JSON
 Given I have a 'supported selective disclosure'
 Given I have a 'string' named 'id'
-Given I have a 'string dictionary' named 'is_over_18'
+Given I have a 'string array' named 'is_over_18'
 When I use supported selective disclosure to disclose 'is_over_18' with id 'id'
 Then print data
 EOF
@@ -199,7 +199,7 @@ Then print the 'selective disclosure'
 Then print the 'keyring'
 EOF
     save_output sd_payload.out.json
-    assert_output '{"es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg==","keyring":{"es256":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="},"selective_disclosure":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["5-Y_kvJBo3ni_JNNUrFnIA","family_name","Doe"],["VyJ47aH6-hysFuthAZJP-A","email","johndoe@example.com"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"],["5XsSIXmaZbf5ikQgMSVGjQ","phone_number_verified",true],["br5gmh-cSRNAvocKCmAD0A","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["6UasczRKmme8SOUwelXq2w","birthdate","1940-01-01"],["Ll27jjwT4yzd0i-7NGdZAw","updated_at",1570000000]],"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo","GRAVzz7ZmE5-g1siHKrMLibaQQKdgkJGitjrx1D0JBs"],"_sd_alg":"sha-256","exp":1883000000,"iat":1683000000,"iss":"http://example.org","sub":"user 42"}},"selective_disclosure_request":{"fields":["given_name","family_name","email","phone_number","phone_number_verified","address","birthdate","updated_at"],"object":{"address":{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"},"birthdate":"1940-01-01","email":"johndoe@example.com","exp":1883000000,"family_name":"Doe","given_name":"John","iat":1683000000,"iss":"http://example.org","nationalities":["US","DE"],"phone_number":"+1-202-555-0101","phone_number_verified":true,"sub":"user 42","updated_at":1570000000}},"signed_selective_disclosure":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["5-Y_kvJBo3ni_JNNUrFnIA","family_name","Doe"],["VyJ47aH6-hysFuthAZJP-A","email","johndoe@example.com"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"],["5XsSIXmaZbf5ikQgMSVGjQ","phone_number_verified",true],["br5gmh-cSRNAvocKCmAD0A","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["6UasczRKmme8SOUwelXq2w","birthdate","1940-01-01"],["Ll27jjwT4yzd0i-7NGdZAw","updated_at",1570000000]],"jwt":{"header":{"alg":"ES256","typ":"JWT"},"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo","GRAVzz7ZmE5-g1siHKrMLibaQQKdgkJGitjrx1D0JBs"],"_sd_alg":"sha-256","exp":1883000000,"iat":1683000000,"iss":"http://example.org","sub":"user 42"},"signature":"bRd93MYGuiVye/3QVLtvyxGmyGejx/HXQcC+z3m/PtgGXSj2tkiaVhsgK3wJs2V/cvky4wMco+SplCUJZVSgLg=="}}}'
+    assert_output '{"es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg==","keyring":{"es256":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="},"selective_disclosure":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["5-Y_kvJBo3ni_JNNUrFnIA","family_name","Doe"],["VyJ47aH6-hysFuthAZJP-A","email","johndoe@example.com"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"],["5XsSIXmaZbf5ikQgMSVGjQ","phone_number_verified",true],["br5gmh-cSRNAvocKCmAD0A","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["6UasczRKmme8SOUwelXq2w","birthdate","1940-01-01"],["Ll27jjwT4yzd0i-7NGdZAw","updated_at",1570000000]],"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo","GRAVzz7ZmE5-g1siHKrMLibaQQKdgkJGitjrx1D0JBs"],"_sd_alg":"sha-256","exp":1883000000,"iat":1683000000,"iss":"http://example.org","sub":"user 42"}},"selective_disclosure_request":{"fields":["given_name","family_name","email","phone_number","phone_number_verified","address","birthdate","updated_at"],"object":{"address":{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"},"birthdate":"1940-01-01","email":"johndoe@example.com","exp":1883000000,"family_name":"Doe","given_name":"John","iat":1683000000,"iss":"http://example.org","nationalities":["US","DE"],"phone_number":"+1-202-555-0101","phone_number_verified":true,"sub":"user 42","updated_at":1570000000}},"signed_selective_disclosure":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["5-Y_kvJBo3ni_JNNUrFnIA","family_name","Doe"],["VyJ47aH6-hysFuthAZJP-A","email","johndoe@example.com"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"],["5XsSIXmaZbf5ikQgMSVGjQ","phone_number_verified",true],["br5gmh-cSRNAvocKCmAD0A","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["6UasczRKmme8SOUwelXq2w","birthdate","1940-01-01"],["Ll27jjwT4yzd0i-7NGdZAw","updated_at",1570000000]],"jwt":{"header":{"alg":"ES256","typ":"JWT"},"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo","GRAVzz7ZmE5-g1siHKrMLibaQQKdgkJGitjrx1D0JBs"],"_sd_alg":"sha-256","exp":1883000000,"iat":1683000000,"iss":"http://example.org","sub":"user 42"},"signature":"bRd93MYGuiVye/3QVLtvyxGmyGejx/HXQcC+z3m/PtgR11pTSVPQUIuK0URkzBCfxwnfGe0de+rIIIkUPhsLlg=="}}}'
 }
 
 @test "Import and export SD Payload" {
@@ -240,7 +240,7 @@ Then print 'signed selective disclosure' as 'decoded selective disclosure'
 
 EOF
     save_output sd_presentation.out.json
-    assert_output '{"signed_selective_disclosure":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"]],"jwt":{"header":{"alg":"ES256","typ":"JWT"},"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo","GRAVzz7ZmE5-g1siHKrMLibaQQKdgkJGitjrx1D0JBs"],"_sd_alg":"sha-256","exp":1883000000,"iat":1683000000,"iss":"http://example.org","sub":"user 42"},"signature":"bRd93MYGuiVye/3QVLtvyxGmyGejx/HXQcC+z3m/PtgGXSj2tkiaVhsgK3wJs2V/cvky4wMco+SplCUJZVSgLg=="}}}'
+    assert_output '{"signed_selective_disclosure":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"]],"jwt":{"header":{"alg":"ES256","typ":"JWT"},"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo","GRAVzz7ZmE5-g1siHKrMLibaQQKdgkJGitjrx1D0JBs"],"_sd_alg":"sha-256","exp":1883000000,"iat":1683000000,"iss":"http://example.org","sub":"user 42"},"signature":"bRd93MYGuiVye/3QVLtvyxGmyGejx/HXQcC+z3m/PtgR11pTSVPQUIuK0URkzBCfxwnfGe0de+rIIIkUPhsLlg=="}}}'
 }
 
 @test "Verify the validity of signed sd-jwt" {
@@ -278,7 +278,7 @@ Then print data
 
 EOF
     save_output sd_verification.out.json
-    assert_output '{"es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg==","signed_selective_disclosure":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["5-Y_kvJBo3ni_JNNUrFnIA","family_name","Doe"],["VyJ47aH6-hysFuthAZJP-A","email","johndoe@example.com"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"],["5XsSIXmaZbf5ikQgMSVGjQ","phone_number_verified",true],["br5gmh-cSRNAvocKCmAD0A","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["6UasczRKmme8SOUwelXq2w","birthdate","1940-01-01"],["Ll27jjwT4yzd0i-7NGdZAw","updated_at",1570000000]],"jwt":{"header":{"alg":"ES256","typ":"JWT"},"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo","GRAVzz7ZmE5-g1siHKrMLibaQQKdgkJGitjrx1D0JBs"],"_sd_alg":"sha-256","exp":1883000000,"iat":1683000000,"iss":"http://example.org","sub":"user 42"},"signature":"bRd93MYGuiVye/3QVLtvyxGmyGejx/HXQcC+z3m/PtgGXSj2tkiaVhsgK3wJs2V/cvky4wMco+SplCUJZVSgLg=="}}}'
+    assert_output '{"es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg==","signed_selective_disclosure":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["5-Y_kvJBo3ni_JNNUrFnIA","family_name","Doe"],["VyJ47aH6-hysFuthAZJP-A","email","johndoe@example.com"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"],["5XsSIXmaZbf5ikQgMSVGjQ","phone_number_verified",true],["br5gmh-cSRNAvocKCmAD0A","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["6UasczRKmme8SOUwelXq2w","birthdate","1940-01-01"],["Ll27jjwT4yzd0i-7NGdZAw","updated_at",1570000000]],"jwt":{"header":{"alg":"ES256","typ":"JWT"},"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo","GRAVzz7ZmE5-g1siHKrMLibaQQKdgkJGitjrx1D0JBs"],"_sd_alg":"sha-256","exp":1883000000,"iat":1683000000,"iss":"http://example.org","sub":"user 42"},"signature":"bRd93MYGuiVye/3QVLtvyxGmyGejx/HXQcC+z3m/PtgR11pTSVPQUIuK0URkzBCfxwnfGe0de+rIIIkUPhsLlg=="}}}'
 }
 
 @test "Verify selective disclosure presentation" {
@@ -296,7 +296,7 @@ Then print data
 
 EOF
     save_output ver_presentation.out.json
-    assert_output '{"es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg==","signed_selective_disclosure":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"]],"jwt":{"header":{"alg":"ES256","typ":"JWT"},"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo","GRAVzz7ZmE5-g1siHKrMLibaQQKdgkJGitjrx1D0JBs"],"_sd_alg":"sha-256","exp":1883000000,"iat":1683000000,"iss":"http://example.org","sub":"user 42"},"signature":"bRd93MYGuiVye/3QVLtvyxGmyGejx/HXQcC+z3m/PtgGXSj2tkiaVhsgK3wJs2V/cvky4wMco+SplCUJZVSgLg=="}}}'
+    assert_output '{"es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg==","signed_selective_disclosure":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"]],"jwt":{"header":{"alg":"ES256","typ":"JWT"},"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo","GRAVzz7ZmE5-g1siHKrMLibaQQKdgkJGitjrx1D0JBs"],"_sd_alg":"sha-256","exp":1883000000,"iat":1683000000,"iss":"http://example.org","sub":"user 42"},"signature":"bRd93MYGuiVye/3QVLtvyxGmyGejx/HXQcC+z3m/PtgR11pTSVPQUIuK0URkzBCfxwnfGe0de+rIIIkUPhsLlg=="}}}'
 }
 
 @test "Fail verify on invalid sd-jwt: wrong header" {
@@ -330,16 +330,12 @@ EOF
         "es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg=="
     },
     "signed_selective_disclosure":{
-        "disclosures":[["VyJ47aH6-hysFuthAZJP-A","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","family_name","Doe"],["5XsSIXmaZbf5ikQgMSVGjQ","email","johndoe@example.com"],["br5gmh-cSRNAvocKCmAD0A","phone_number","+1-202-555-0101"],["6UasczRKmme8SOUwelXq2w","phone_number_verified"],["Ll27jjwT4yzd0i-7NGdZAw","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["DR92VSF2l3Az1K1-LyWO1w","birthdate","1940-01-01"]],
+        "disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["5-Y_kvJBo3ni_JNNUrFnIA","family_name","Doe"],["VyJ47aH6-hysFuthAZJP-A","email","johndoe@example.com"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"],["5XsSIXmaZbf5ikQgMSVGjQ","phone_number_verified",true],["br5gmh-cSRNAvocKCmAD0A","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["6UasczRKmme8SOUwelXq2w","birthdate","1940-01-01"],["Ll27jjwT4yzd0i-7NGdZAw","updated_at",1570000000]],
         "jwt":{
             "header":{"alg":"ES256","typ":"JWT"},
-            "payload":{"_sd":["cMZilhOF9uEyvW_vCKx8IkbqfmntjqkV8HCFQ_lgPq0","DjUC3iXDmUj0QQgbZM7PQhhOLI3EjqSNzz3IhCpqQhg","wyoSepSkpJXnOxKlsypeqjr9PMFXf024GlIBPgVKnrg","MW58zqUyooJw5zGmASCETNi4qORcewuTRWDhLMLavis","sftnu87bkbl62AB38gmuyQdX5yD95TxMuzhvyiD7Wb8","dydbjYL8bcTkcXtLZ2e8514B7n7QDnOgOWD5Fniwjdo","84Vp4ymg-8VScgYletGB4TfHboLPkIXLaP3djL2Km0U"],
-                        "_sd_alg":"sha-256",
-                        "iss":"http://example.org",
-                        "sub":"user 42"
-                    },
-            "signature":"zFjnEY9fHtkPtOL0b97DCa7zjV5h13Yazxolw9sfZrcFax8G7xSG4+Ai8uCNZgm+KpfpBANXo5NB2x2oWjqiWA=="
-        }
+            "payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo","GRAVzz7ZmE5-g1siHKrMLibaQQKdgkJGitjrx1D0JBs"],"_sd_alg":"sha-256","exp":1883000000,"iat":1683000000,"iss":"http://example.org","sub":"user 42"},
+            "signature":"VRd93MYGuiVye/3QVLtvyxGmyGejx/HXQcC+z3m/PtgR11pTSVPQUIuK0URkzBCfxwnfGe0de+rIIIkUPhsLlg=="
+            }
     }
 }
 EOF
@@ -376,18 +372,14 @@ EOF
 {
     "Alice": {
         "es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg=="
-    },
+    },   
     "signed_selective_disclosure":{
-        "disclosures":[["VyJ47aH6-hysFuthAZJP-A","given_name","Paolo"],["vIXGZmzovnpG7Q_4mUJsOw","family_name","Doe"],["5XsSIXmaZbf5ikQgMSVGjQ","email","johndoe@example.com"],["br5gmh-cSRNAvocKCmAD0A","phone_number","+1-202-555-0101"],["6UasczRKmme8SOUwelXq2w","phone_number_verified",true],["Ll27jjwT4yzd0i-7NGdZAw","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["DR92VSF2l3Az1K1-LyWO1w","birthdate","1940-01-01"]],
+        "disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["5-Y_kvJBo3ni_JNNUrFnIA","family_name","Doe"],["VyJ47aH6-hysFuthAZJP-A","email","johndoe@example.com"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"],["5XsSIXmaZbf5ikQgMSVGjQ","phone_number_verified",true],["br5gmh-cSRNAvocKCmAD0A","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["6UasczRKmme8SOUwelXq2w","birthdate","1940-01-01"],["Ll27jjwT4yzd0i-7NGdZAw","updated_at",1570000000]],
         "jwt":{
             "header":{"alg":"ES256","typ":"JWT"},
-            "payload":{"_sd":["cMZilhOF9uEyvW_vCKx8IkbqfmntjqkV8HCFQ_lgPq0","DjUC3iXDmUj0QQgbZM7PQhhOLI3EjqSNzz3IhCpqQhg","wyoSepSkpJXnOxKlsypeqjr9PMFXf024GlIBPgVKnrg","MW58zqUyooJw5zGmASCETNi4qORcewuTRWDhLMLavis","sftnu87bkbl62AB38gmuyQdX5yD95TxMuzhvyiD7Wb8","dydbjYL8bcTkcXtLZ2e8514B7n7QDnOgOWD5Fniwjdo","84Vp4ymg-8VScgYletGB4TfHboLPkIXLaP3djL2Km0U"],
-                        "_sd_alg":"sha-256",
-                        "iss":"http://example.org",
-                        "sub":"user 42"
-                    },
-            "signature":"zfJnEY9fHtkPtOL0b97DCa7zjV5h13Yazxolw9sfZrcFax8G7xSG4+Ai8uCNZgm+KpfpBANXo5NB2x2oWjqiWA=="
-        }
+            "payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKGy","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo","GRAVzz7ZmE5-g1siHKrMLibaQQKdgkJGitjrx1D0JBs"],"_sd_alg":"sha-256","exp":1883000000,"iat":1683000000,"iss":"http://example.org","sub":"user 42"},
+            "signature":"bRd93MYGuiVye/3QVLtvyxGmyGejx/HXQcC+z3m/PtgR11pTSVPQUIuK0URkzBCfxwnfGe0de+rIIIkUPhsLlg=="
+            }
     }
 }
 EOF
@@ -400,18 +392,14 @@ EOF
 {
     "Alice": {
         "es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg=="
-    },
+    }, 
     "signed_selective_disclosure":{
-        "disclosures":[["VyJ47aH6-hysFuthAZJP-A","iss","John"],["vIXGZmzovnpG7Q_4mUJsOw","family_name","Doe"],["5XsSIXmaZbf5ikQgMSVGjQ","email","johndoe@example.com"],["br5gmh-cSRNAvocKCmAD0A","phone_number","+1-202-555-0101"],["6UasczRKmme8SOUwelXq2w","phone_number_verified",true],["Ll27jjwT4yzd0i-7NGdZAw","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["DR92VSF2l3Az1K1-LyWO1w","birthdate","1940-01-01"]],
+        "disclosures":[["XdjAYj-RY95-uyYMI8fR3w","name","John"],["5-Y_kvJBo3ni_JNNUrFnIA","family_name","Doe"],["VyJ47aH6-hysFuthAZJP-A","email","johndoe@example.com"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"],["5XsSIXmaZbf5ikQgMSVGjQ","phone_number_verified",true],["br5gmh-cSRNAvocKCmAD0A","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["6UasczRKmme8SOUwelXq2w","birthdate","1940-01-01"],["Ll27jjwT4yzd0i-7NGdZAw","updated_at",1570000000]],
         "jwt":{
             "header":{"alg":"ES256","typ":"JWT"},
-            "payload":{"_sd":["cMZilhOF9uEyvW_vCKx8IkbqfmntjqkV8HCFQ_lgPq0","DjUC3iXDmUj0QQgbZM7PQhhOLI3EjqSNzz3IhCpqQhg","wyoSepSkpJXnOxKlsypeqjr9PMFXf024GlIBPgVKnrg","MW58zqUyooJw5zGmASCETNi4qORcewuTRWDhLMLavis","sftnu87bkbl62AB38gmuyQdX5yD95TxMuzhvyiD7Wb8","dydbjYL8bcTkcXtLZ2e8514B7n7QDnOgOWD5Fniwjdo","84Vp4ymg-8VScgYletGB4TfHboLPkIXLaP3djL2Km0U"],
-                        "_sd_alg":"sha-256",
-                        "iss":"http://example.org",
-                        "sub":"user 42"
-                    },
-            "signature":"zfJnEY9fHtkPtOL0b97DCa7zjV5h13Yazxolw9sfZrcFax8G7xSG4+Ai8uCNZgm+KpfpBANXo5NB2x2oWjqiWA=="
-        }
+            "payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo","GRAVzz7ZmE5-g1siHKrMLibaQQKdgkJGitjrx1D0JBs"],"_sd_alg":"sha-256","exp":1883000000,"iat":1683000000,"iss":"http://example.org","sub":"user 42"},
+            "signature":"bRd93MYGuiVye/3QVLtvyxGmyGejx/HXQcC+z3m/PtgR11pTSVPQUIuK0URkzBCfxwnfGe0de+rIIIkUPhsLlg=="
+            }
     }
 }
 EOF
@@ -438,7 +426,7 @@ EOF
 {   "Alice": {
         "es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg=="
     },
-    "signed_selective_disclosure":"eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJfc2QiOlsiY01aaWxoT0Y5dUV5dldfdkNLeDhJa2JxZm1udGpxa1Y4SENGUV9sZ1BxMCIsIkRqVUMzaVhEbVVqMFFRZ2JaTTdQUWhoT0xJM0VqcVNOenozSWhDcHFRaGciLCJ3eW9TZXBTa3BKWG5PeEtsc3lwZXFqcjlQTUZYZjAyNEdsSUJQZ1ZLbnJnIiwiTVc1OHpxVXlvb0p3NXpHbUFTQ0VUTmk0cU9SY2V3dVRSV0RoTE1MYXZpcyIsInNmdG51ODdia2JsNjJBQjM4Z211eVFkWDV5RDk1VHhNdXpodnlpRDdXYjgiLCJkeWRiallMOGJjVGtjWHRMWjJlODUxNEI3bjdRRG5PZ09XRDVGbml3amRvIiwiODRWcDR5bWctOFZTY2dZbGV0R0I0VGZIYm9MUGtJWExhUDNkakwyS20wVSJdLCJfc2RfYWxnIjoic2hhLTI1NiIsImlzcyI6Imh0dHA6Ly9leGFtcGxlLm9yZyIsInN1YiI6InVzZXIgNDIifQ.zfJnEY9fHtkPtOL0b97DCa7zjV5h13Yazxolw9sfZrcFax8G7xSG4-Ai8uCNZgm-KpfpBANXo5NB2x2oWjqiWA~WyJWeUo0N2FINi1oeXNGdXRoQVpKUC1BIiwgImdpdmVuX25hbWUiLCAiSm9obiJd~WyJ2SVhHWm16b3ZucEc3UV80bVVKc093IiwgImZhbWlseV9uYW1lIiwgIkRvZSJd~WyI1WHNTSVhtYVpiZjVpa1FnTVNWR2pRIiwgImVtYWlsIiwgImpvaG5kb2VAZXhhbXBsZS5jb20iXQ~WyJicjVnbWgtY1NSTkF2b2NLQ21BRDBBIiwgInBob25lX251bWJlciIsICIrMS0yMDItNTU1LTAxMDEiXQ~WyI2VWFzY3pSS21tZThTT1V3ZWxYcTJ3IiwgInBob25lX251bWJlcl92ZXJpZmllZCIsIHRydWVd~WyJMbDI3amp3VDR5emQwaS03TkdkWkF3IiwgImFkZHJlc3MiLCB7ImNvdW50cnkiOiAiVVMiLCAibG9jYWxpdHkiOiAiQW55dG93biIsICJyZWdpb24iOiAiQW55c3RhdGUiLCAic3RyZWV0X2FkZHJlc3MiOiAiMTIzIE1haW4gU3QifV0~WyJEUjkyVlNGMmwzQXoxSzEtTHlXTzF3IiwgImJpcnRoZGF0ZSIsICIxOTQwLTAxLTAxIl0~"}
+    "signed_selective_disclosure":"eyJhbGciOiAiRVMyNTYiLCAidHlwIjogIkpXVCJ9.eyJfc2QiOiBbInQwQ2h1cDYyZmlhRDZTd3pfWllIdTR2YmhJRU9UaWdWZzd6Mmx5TkJLZ1kiLCAiV19WeFZLR2YxX25jV2ZBalJvSlVHeDdZZUhSaEt6Yl91Y1ZoQ0xVNjlEYyIsICJQdGVORDVEZHdINnlCdXhVS0Qza3BTVFdVTlppRE5JQ3hNdzNsOUxYSlE4IiwgIndweVV3N2tEREVUSmZNbm5iQjc0Vm5vbGNUSXcxYWNGRHBRaUFuR1V3cVEiLCAicWROXzY3aTEyaDFJdXZBUlFxNjdyQ1d4ZC11UElBOThIUmphaXEySHl3TSIsICJtRnRGT1M0WjJjaUdSWnBzQWZzU1I3R0xpX3FiM0lGYmlRU2hFOUR3UlVZIiwgIm5CWnQzaEFxQkk1Q1BVSlJFek1sWGRaaDZ0cmlUa1dzMmRzU1hUZkx6bG8iLCAiR1JBVnp6N1ptRTUtZzFzaUhLck1MaWJhUVFLZGdrSkdpdGpyeDFEMEpCcyJdLCAiX3NkX2FsZyI6ICJzaGEtMjU2IiwgImV4cCI6IDE4ODMwMDAwMDAsICJpYXQiOiAxNjgzMDAwMDAwLCAiaXNzIjogImh0dHA6Ly9leGFtcGxlLm9yZyIsICJzdWIiOiAidXNlciA0MiJ9.bRd93MYGuiVye_3QVLtvyxGmyGejx_HXQcC-z3m_PtgR11pTSVPQUIuK0URkzBCfxwnfGe0de-rIIIkUPhsLlg~WyJYZGpBWWotUlk5NS11eVlNSThmUjN3IiwgImdpdmVuX25hbWUiLCAiSm9obiJd~WyJ2SVhHWm16b3ZucEc3UV80bVVKc093IiwgInBob25lX251bWJlciIsICIrMS0yMDItNTU1LTAxMDEiXQ~"}
 EOF
     cat <<EOF | zexe verify_sd_jwt_encoded ver-sd-jwt.data.json
 Scenario 'sd_jwt'
@@ -451,7 +439,7 @@ When I verify signed selective disclosure 'signed_selective_disclosure' issued b
 Then print the 'signed selective disclosure'
 EOF
     save_output verify_sd_jwt_encoded.out.json
-    assert_output '{"signed_selective_disclosure":"eyJhbGciOiAiRVMyNTYiLCAidHlwIjogIkpXVCJ9.eyJfc2QiOiBbImNNWmlsaE9GOXVFeXZXX3ZDS3g4SWticWZtbnRqcWtWOEhDRlFfbGdQcTAiLCAiRGpVQzNpWERtVWowUVFnYlpNN1BRaGhPTEkzRWpxU056ejNJaENwcVFoZyIsICJ3eW9TZXBTa3BKWG5PeEtsc3lwZXFqcjlQTUZYZjAyNEdsSUJQZ1ZLbnJnIiwgIk1XNTh6cVV5b29KdzV6R21BU0NFVE5pNHFPUmNld3VUUldEaExNTGF2aXMiLCAic2Z0bnU4N2JrYmw2MkFCMzhnbXV5UWRYNXlEOTVUeE11emh2eWlEN1diOCIsICJkeWRiallMOGJjVGtjWHRMWjJlODUxNEI3bjdRRG5PZ09XRDVGbml3amRvIiwgIjg0VnA0eW1nLThWU2NnWWxldEdCNFRmSGJvTFBrSVhMYVAzZGpMMkttMFUiXSwgIl9zZF9hbGciOiAic2hhLTI1NiIsICJpc3MiOiAiaHR0cDovL2V4YW1wbGUub3JnIiwgInN1YiI6ICJ1c2VyIDQyIn0.zfJnEY9fHtkPtOL0b97DCa7zjV5h13Yazxolw9sfZrcFax8G7xSG4-Ai8uCNZgm-KpfpBANXo5NB2x2oWjqiWA~WyJWeUo0N2FINi1oeXNGdXRoQVpKUC1BIiwgImdpdmVuX25hbWUiLCAiSm9obiJd~WyJ2SVhHWm16b3ZucEc3UV80bVVKc093IiwgImZhbWlseV9uYW1lIiwgIkRvZSJd~WyI1WHNTSVhtYVpiZjVpa1FnTVNWR2pRIiwgImVtYWlsIiwgImpvaG5kb2VAZXhhbXBsZS5jb20iXQ~WyJicjVnbWgtY1NSTkF2b2NLQ21BRDBBIiwgInBob25lX251bWJlciIsICIrMS0yMDItNTU1LTAxMDEiXQ~WyI2VWFzY3pSS21tZThTT1V3ZWxYcTJ3IiwgInBob25lX251bWJlcl92ZXJpZmllZCIsIHRydWVd~WyJMbDI3amp3VDR5emQwaS03TkdkWkF3IiwgImFkZHJlc3MiLCB7ImNvdW50cnkiOiAiVVMiLCAibG9jYWxpdHkiOiAiQW55dG93biIsICJyZWdpb24iOiAiQW55c3RhdGUiLCAic3RyZWV0X2FkZHJlc3MiOiAiMTIzIE1haW4gU3QifV0~WyJEUjkyVlNGMmwzQXoxSzEtTHlXTzF3IiwgImJpcnRoZGF0ZSIsICIxOTQwLTAxLTAxIl0~"}'
+    assert_output '{"signed_selective_disclosure":"eyJhbGciOiAiRVMyNTYiLCAidHlwIjogIkpXVCJ9.eyJfc2QiOiBbInQwQ2h1cDYyZmlhRDZTd3pfWllIdTR2YmhJRU9UaWdWZzd6Mmx5TkJLZ1kiLCAiV19WeFZLR2YxX25jV2ZBalJvSlVHeDdZZUhSaEt6Yl91Y1ZoQ0xVNjlEYyIsICJQdGVORDVEZHdINnlCdXhVS0Qza3BTVFdVTlppRE5JQ3hNdzNsOUxYSlE4IiwgIndweVV3N2tEREVUSmZNbm5iQjc0Vm5vbGNUSXcxYWNGRHBRaUFuR1V3cVEiLCAicWROXzY3aTEyaDFJdXZBUlFxNjdyQ1d4ZC11UElBOThIUmphaXEySHl3TSIsICJtRnRGT1M0WjJjaUdSWnBzQWZzU1I3R0xpX3FiM0lGYmlRU2hFOUR3UlVZIiwgIm5CWnQzaEFxQkk1Q1BVSlJFek1sWGRaaDZ0cmlUa1dzMmRzU1hUZkx6bG8iLCAiR1JBVnp6N1ptRTUtZzFzaUhLck1MaWJhUVFLZGdrSkdpdGpyeDFEMEpCcyJdLCAiX3NkX2FsZyI6ICJzaGEtMjU2IiwgImV4cCI6IDE4ODMwMDAwMDAsICJpYXQiOiAxNjgzMDAwMDAwLCAiaXNzIjogImh0dHA6Ly9leGFtcGxlLm9yZyIsICJzdWIiOiAidXNlciA0MiJ9.bRd93MYGuiVye_3QVLtvyxGmyGejx_HXQcC-z3m_PtgR11pTSVPQUIuK0URkzBCfxwnfGe0de-rIIIkUPhsLlg~WyJYZGpBWWotUlk5NS11eVlNSThmUjN3IiwgImdpdmVuX25hbWUiLCAiSm9obiJd~WyJ2SVhHWm16b3ZucEc3UV80bVVKc093IiwgInBob25lX251bWJlciIsICIrMS0yMDItNTU1LTAxMDEiXQ~"}'
 }
 
 @test "Import of sd-jwt from section A.3" {

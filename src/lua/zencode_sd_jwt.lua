@@ -498,13 +498,13 @@ When("verify signed selective disclosure '' issued by '' is valid", function(obj
 -- Check that the sd-jwt contains all the mandatory claims
     zencode_assert(SD_JWT.check_mandatory_claim_names(jwt.payload), "The JWT payload does not contain the mandatory claims")
 
+-- Process the Disclosures and embedded digests in the Issuersigned JWT and compare the value with the digests calculated
+    zencode_assert(SD_JWT.verify_sd_fields(jwt.payload, disclosures), "The disclosure is not valid")
+
 -- Validate the signature over the Issuer-signed JWT.
     zencode_assert(SD_JWT.verify_jws_signature(jwt, iss_pk), "The issuer signature is not valid")
 
 -- TODO?: Validate the Issuer and that the signing key belongs to this Issuer.
-
--- Process the Disclosures and embedded digests in the Issuersigned JWT and compare the value with the digests calculated
-    zencode_assert(SD_JWT.verify_sd_fields(jwt.payload, disclosures), "The disclosure is not valid")
 
 -- TODO: Check that the SD-JWT is valid using claims such as nbf, iat and exp in the processed payload.
 end)
