@@ -380,6 +380,21 @@ end
 	end
  end
 
+ local data_encoding_table = {
+    string = O.to_string,
+    hex = O.to_hex,
+    base64 = O.to_base64,
+    url64 = O.to_url64,
+    base58 = O.to_base58,
+    binary = O.to_bin,
+    bin = O.to_bin,
+    mnemonic = O.to_mnemonic,
+    float = to_number_f,
+    number = to_number_f,
+    integer = BIG.to_decimal,
+    time = to_number_f
+ }
+
 -- takes a string returns the function, good for use in deepmap(fun,table)
 function get_encoding_function(cast)
   if not cast then
@@ -393,22 +408,9 @@ function get_encoding_function(cast)
   elseif cast == 'boolean' then
     return function(data) return data end
   end
-  local encoding_table = {
-    string = O.to_string,
-    hex = O.to_hex,
-    base64 = O.to_base64,
-    url64 = O.to_url64,
-    base58 = O.to_base58,
-    binary = O.to_bin,
-    bin = O.to_bin,
-    mnemonic = O.to_mnemonic,
-    float = to_number_f,
-    number = to_number_f,
-    integer = BIG.to_decimal,
-    time = to_number_f,
-  }
-  if encoding_table[cast] then
-    return f_factory_outcast(encoding_table[cast])
+  local _enc <const> = data_encoding_table[cast]
+  if _enc then
+    return f_factory_outcast(_enc)
   end
   -- try schemas
   local fun = ZEN.schemas[uscore(cast)]
