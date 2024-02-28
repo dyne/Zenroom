@@ -23,7 +23,36 @@ local ES256 = require'es256'
 local sd_jwt = {}
 
 local function export_str_dict(obj)
-    return deepmap(get_encoding_function("string"), obj)
+   -- values in input may be string, number or bool
+   local fun = function(v)
+	  local res
+	  local tv <const> = type(v)
+	  if tv == 'string' then return v
+	  elseif tv == 'number' then res = v
+	  elseif tv == 'zenroom.time' then
+		 res = tonumber(tostring(v))
+		 if tostring(res) ~= tostring(v) then
+			-- safety check on some conversions
+			error("Invalid conversion in SD-JWT value: "..tv)
+		 end
+	  elseif tv == 'zenroom.big' then
+		 res = tonumber(v:decimal())
+		 if tostring(res) ~= tostring(v) then
+			error("Invalid conversion in SD-JWT value: "..tv)
+		 end
+	  elseif tv == 'zenroom.float' then
+		 res = tostring(v)
+		 if tostring(res) ~= tostring(v) then
+			error("Invalid conversion in SD-JWT value: "..tv)
+		 end
+	  elseif tv == 'zenroom.octet' then res = v:str()
+	  elseif tv == 'boolean' then res = v
+	  else
+ 		 error("Invalid value found in SD-JWT array: "..tv)
+	  end
+	  return res
+   end
+   return deepmap(fun, obj)
 end
 
 -- Given as input a "disclosure array" of the form {salt, key, value}
