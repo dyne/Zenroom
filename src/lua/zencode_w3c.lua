@@ -319,12 +319,12 @@ local function _create_jws(header, payload, detached)
                           encoding = 'string' })
 end
 
-When("create jws signature with header '' and payload ''", function(header, payload)
+When("create jws signature of header '' and payload ''", function(header, payload)
     _create_jws(header, payload, false)
 end)
 
 -- jws result will be without pyaload, signature is always perform on header.payload
-When("create jws detached signature with header '' and payload ''", function(header, payload)
+When("create jws detached signature of header '' and payload ''", function(header, payload)
     _create_jws(header, payload, true)
 end)
 

@@ -358,7 +358,7 @@ EndIf
 When I verify 'payload' is found
 
 # did document signature
-When I create the jws detached signature with header 'header' and payload 'payload'
+When I create the jws detached signature of header 'header' and payload 'payload'
 
 # signer id
 When I create the eddsa public key

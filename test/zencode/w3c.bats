@@ -107,7 +107,7 @@ EOF
 }
 
 
-@test "When I create jws detached signature with header '' and payload ''" {
+@test "When I create jws detached signature of header '' and payload ''" {
     cat <<EOF | save_asset simple_string.json
 { "simple": { "simple": "once upon a time... there was a wolf" }, "header": {"alg": "ES256K" } }
 EOF
@@ -119,7 +119,7 @@ Given that I am 'Authority'
 Given I have my 'keyring'
 Given I have a 'string dictionary' named 'simple'
 Given I have a 'string dictionary' named 'header'
-When I create jws detached signature with header 'header' and payload 'simple'
+When I create jws detached signature of header 'header' and payload 'simple'
 Then print the 'jws detached'
 and print the 'simple'
 EOF
@@ -279,7 +279,7 @@ When I create the 'string dictionary' named 'header'
 and I set 'alg' to 'ES256K' as 'string'
 and I move 'alg' in 'header'
 
-When I create the jws detached signature with header 'header' and payload 'did document'
+When I create the jws detached signature of header 'header' and payload 'did document'
 When I create the 'string dictionary' named 'proof'
 When I move 'jws detached' to 'jws' in 'proof'
 When I move 'proof' in 'did document'
@@ -671,7 +671,7 @@ EOF
     assert_line --partial 'The signer id in proof is different from the one in not_signer_did_document'
 }
 @test "JWT HS256 creation" {
-    cat <<EOF > jwt_hs256.data
+    cat <<EOF | save_asset jwt_hs256.data
 {
 	"payload": {
         "iat": "15162",
@@ -732,7 +732,7 @@ Given I have a 'string dictionary' named 'header'
 Given I have a 'string dictionary' named 'payload'
 Given I have a 'keyring'
 
-When I create jws signature with header 'header' and payload 'payload'
+When I create jws signature of header 'header' and payload 'payload'
 
 Then print the 'jws'
 EOF
@@ -804,7 +804,7 @@ Given I have a 'string dictionary' named 'header'
 Given I have a 'string' named 'payload'
 Given I have a 'keyring'
 
-When I create jws signature with header 'header' and payload 'payload'
+When I create jws signature of header 'header' and payload 'payload'
 
 Then print the 'jws'
 EOF
