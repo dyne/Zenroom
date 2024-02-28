@@ -107,9 +107,9 @@ EOF
 }
 
 
-@test "When I create the jws signature of ''" {
+@test "When I create jws detached signature with header '' and payload ''" {
     cat <<EOF | save_asset simple_string.json
-{ "simple": "once upon a time... there was a wolf" }
+{ "simple": { "simple": "once upon a time... there was a wolf" }, "header": {"alg": "ES256K" } }
 EOF
 
 cat <<EOF | zexe W3C-jws_sign.zen simple_string.json W3C-VC_issuerKeypair.json
@@ -117,66 +117,30 @@ Scenario 'w3c': sign JSON
 Scenario 'ecdh': (required)
 Given that I am 'Authority'
 Given I have my 'keyring'
-Given I have a 'string' named 'simple'
-When I create the jws signature of 'simple'
-Then print the 'jws'
+Given I have a 'string dictionary' named 'simple'
+Given I have a 'string dictionary' named 'header'
+When I create jws detached signature with header 'header' and payload 'simple'
+Then print the 'jws detached'
 and print the 'simple'
 EOF
     save_output 'W3C-jws_signed.json'
-    assert_output '{"jws":"eyJhbGciOiJFUzI1NksiLCJiNjQiOnRydWUsImNyaXQiOiJiNjQifQ..d2tYw0FFyVU7UjX-IRpiN8SLkLR4S8bYZmCwI2rzurJTP4L6hseBhAMa0UR05xHREChrzQeeTAhRh9sWQX1Hwg","simple":"once upon a time... there was a wolf"}'
+    assert_output '{"jws_detached":"eyJhbGciOiJFUzI1NksifQ..d2tYw0FFyVU7UjX-IRpiN8SLkLR4S8bYZmCwI2rzurJjDUpRUUIAZrK5HM4VgPSVGCdQ4-XQWBimu2mPMDmZ6w","simple":{"simple":"once upon a time... there was a wolf"}}'
 }
 
-@test "When I verify the jws signature of ''" {
+@test "When I verify '' has a jws signature in ''" {
     cat <<EOF | zexe W3C-jws_verify.zen W3C-jws_signed.json W3C-VC_pubkey.json
 Scenario 'w3c': verify signature
 Scenario 'ecdh': (required)
 Given I have a 'ecdh public key' inside 'Authority'
-and I have a 'string' named 'jws'
-and I have a 'string' named 'simple'
-When I verify the jws signature of 'simple'
+and I have a 'string' named 'jws detached'
+and I have a 'string dictionary' named 'simple'
+When I verify 'simple' has a jws signature in 'jws detached'
 Then print the string 'W3C JWS IS VALID'
 EOF
     save_output 'W3C-jws_verify.out'
     assert_output '{"output":["W3C_JWS_IS_VALID"]}'
 
 
-}
-
-@test "When I create the jws signature using the ecdh signature in ''" {
-    cat <<EOF | save_asset simple_json.json
-{
-   "simple": {
-      "tale": "once upon a time... there was a wolf",
-      "ending": "it didn't went well"
-   }
-}
-EOF
-
-cat <<EOF | zexe W3C-jws__crafted_signature.zen simple_json.json W3C-VC_issuerKeypair.json
-Scenario 'w3c': sign JSON
-Scenario 'ecdh': (required)
-Given that I am 'Authority'
-Given I have my 'keyring'
-Given I have a 'string dictionary' named 'simple'
-When I create the json escaped string of 'simple'
-and I create the ecdh signature of 'json escaped string'
-and I create the jws signature using the ecdh signature in 'ecdh signature'
-Then print the 'json escaped string'
-Then print the 'jws'
-and print the 'simple'
-EOF
-    save_output 'W3C-jws_crafter_sigature.json'
-cat <<EOF | zexe W3C-jws_crafted_verify.zen W3C-jws_crafter_sigature.json W3C-VC_pubkey.json
-Scenario 'w3c': verify signature
-Scenario 'ecdh': (required)
-Given I have a 'ecdh public key' inside 'Authority'
-and I have a 'string' named 'jws'
-and I have a 'string dictionary' named 'simple'
-When I verify the jws signature of 'simple'
-Then print the string 'W3C JWS IS VALID'
-EOF
-    save_output 'W3C-jws_crafted_verify.out'
-    assert_output '{"output":["W3C_JWS_IS_VALID"]}'
 }
 
 @test "reading did documents" {
@@ -310,9 +274,14 @@ Given that I am 'Authority'
 Given I have my 'keyring'
 Given I have a 'string dictionary' named 'did document'
 
-When I create the jws signature of 'did document'
+# generate header
+When I create the 'string dictionary' named 'header'
+and I set 'alg' to 'ES256K' as 'string'
+and I move 'alg' in 'header'
+
+When I create the jws detached signature with header 'header' and payload 'did document'
 When I create the 'string dictionary' named 'proof'
-When I move 'jws' in 'proof'
+When I move 'jws detached' to 'jws' in 'proof'
 When I move 'proof' in 'did document'
 
 Then print the 'did document'
@@ -741,8 +710,15 @@ EOF
 @test "JWS es256" {
     cat <<EOF | save_asset jws_es256.data
 {
-    "header": "eyJhbGciOiJFUzI1NiIsImI2NCI6dHJ1ZSwiY3JpdCI6ImI2NCJ9",
-    "payload": "eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ",
+    "header": {
+              "alg": "ES256",
+              "b64": true,
+              "crit": ["b64"]
+    },
+    "payload": {
+               "iss": "joe",
+               "http://example.com/is_root": true
+    },
     "keyring": {
                "es256": "hqQUHoEbLJIqcoLEvEtu8kJ3WbhaskDb5Sl/ygPN220="
     }
@@ -752,32 +728,23 @@ EOF
 Scenario 'w3c': did document manipulation
 Scenario 'es256': signature
 
-Given I have a 'string' named 'header'
-and I rename 'header' to 'header_string'
-and I have a 'url64' named 'header'
-Given I have a 'string' named 'payload'
-and I rename 'payload' to 'payload_string'
-and I have a 'url64' named 'payload'
-and I have a 'keyring'
+Given I have a 'string dictionary' named 'header'
+Given I have a 'string dictionary' named 'payload'
+Given I have a 'keyring'
 
-When I rename 'header_string' to 'header.payload'
-and I append the string '.' to 'header.payload'
-and I append the 'payload_string' to 'header.payload'
-
-When I create the es256 signature of 'header.payload'
-and I create jws signature with header 'header' payload 'payload' and signature 'es256 signature'
+When I create jws signature with header 'header' and payload 'payload'
 
 Then print the 'jws'
 EOF
     save_output jws_es256.json
-    assert_output '{"jws":"eyJhbGciOiJFUzI1NiIsImI2NCI6dHJ1ZSwiY3JpdCI6ImI2NCJ9.eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ.gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawf5AhwVjrVPuAcCM8vTssWdU4Rh2nR51WRSwg_4YRxkQ"}'
+    assert_output '{"jws":"eyJhbGciOiJFUzI1NiIsImI2NCI6dHJ1ZSwiY3JpdCI6WyJiNjQiXX0.eyJodHRwOi8vZXhhbXBsZS5jb20vaXNfcm9vdCI6dHJ1ZSwiaXNzIjoiam9lIn0.gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39say1hkpC57hS3cqQliE3S1GaKrQKT6mUMpqLDf_rovjHMQ"}'
 }
 
 @test "verify JWS es256" {
     cat <<EOF | save_asset verify_jsw_es256.data
 {
     "es256_public_key": "LzOheBTJ7wIcII4MWkzoETuGroDn9ihIGEeVSbByUig7mO264C94nBIqM6cU7Pa5Nq+GiLd+ibejPXnfwbEV6A==",
-    "header.payload": "eyJhbGciOiJFUzI1NiIsImI2NCI6dHJ1ZSwiY3JpdCI6ImI2NCJ9.eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ"
+    "payload": "eyJodHRwOi8vZXhhbXBsZS5jb20vaXNfcm9vdCI6dHJ1ZSwiaXNzIjoiam9lIn0"
 }
 EOF
     cat <<EOF | zexe verify_jws_es256.zen jws_es256.json verify_jsw_es256.data
@@ -786,10 +753,10 @@ Scenario 'w3c': jws
 
 Given I have a 'string' named 'jws'
 and I have a 'es256 public key'
-and I have a 'string' named 'header.payload'
+and I have a 'string' named 'payload'
 
-When I verify the jws signature of 'header.payload'
-and I verify the jws signature in 'jws'
+When I verify 'payload' has a jws signature in 'jws'
+When I verify the jws signature in 'jws'
 
 Then print the string 'signature verified'
 EOF
@@ -817,3 +784,30 @@ EOF
     assert_output '{"output":["signature_verified"]}'
 }
 
+@test "JWS es256 with payload string fails" {
+    cat <<EOF | save_asset jws_es256_fail.data
+{
+    "header": {
+              "alg": "ES256"
+    },
+    "payload": "joe",
+    "keyring": {
+               "es256": "hqQUHoEbLJIqcoLEvEtu8kJ3WbhaskDb5Sl/ygPN220="
+    }
+}
+EOF
+    cat <<EOF | save_asset jws_es256_fail.zen
+Scenario 'w3c': did document manipulation
+Scenario 'es256': signature
+
+Given I have a 'string dictionary' named 'header'
+Given I have a 'string' named 'payload'
+Given I have a 'keyring'
+
+When I create jws signature with header 'header' and payload 'payload'
+
+Then print the 'jws'
+EOF
+    run $ZENROOM_EXECUTABLE -z -a jws_es256_fail.data jws_es256_fail.zen
+    assert_line --partial 'payload is not a json or an encoded json'
+}
