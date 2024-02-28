@@ -302,7 +302,10 @@ EOF
                 "eddsa": "Bbad7evauGKhpgrCjAyTJMpdLZSQY2pL7vi8ySJurYVG"
             }
         },
-        "signer_did_spec": "sandbox.zenroomtest_A"
+        "signer_did_spec": "sandbox.zenroomtest_A",
+        "header": {
+                  "alg": "ES256K"
+        }
     }
 EOF
     cat <<EOF | zexe did_doc_sign.zen admin_fake_keyring.json did_document.json
@@ -324,6 +327,8 @@ and I have my 'keyring'
 Given I have a 'string dictionary' named 'request'
 and I have a 'string' named 'signer_did_spec'
 
+Given I have a 'string dictionary' named 'header'
+
 If I verify 'did_document' is found in 'request'
 When I pickup from path 'request.did_document'
 
@@ -335,7 +340,7 @@ and I create the json escaped string of 'result'
 and I create the eddsa signature of 'json escaped string'
 and I remove 'json escaped string'
 
-When I create the json escaped string of 'did_document'
+When I copy 'did_document' to 'payload'
 
 Then print the 'did document'
 and print the 'timestamp'
@@ -343,14 +348,17 @@ and print the 'eddsa signature'
 EndIf
 
 If I verify 'deactivate_id' is found in 'request'
-When I copy the 'deactivate_id' from 'request' to 'json escaped string'
+When I create the 'string dictionary' named 'payload'
+and I copy the 'deactivate_id' from 'request' to 'deactivate_id'
+and I copy the 'deactivate_id' in 'payload'
+
 Then print the 'deactivate_id' from 'request'
 EndIf
 
-When I verify 'json escaped string' is found
+When I verify 'payload' is found
 
 # did document signature
-When I create the ecdh signature of 'json escaped string'
+When I create the jws detached signature with header 'header' and payload 'payload'
 
 # signer id
 When I create the eddsa public key
@@ -359,11 +367,11 @@ and I append 'signer_did_spec' to 'id'
 and I append the string ':' to 'id'
 and I append the 'base58' of 'eddsa public key' to 'id'
 
-Then print the 'ecdh signature'
+Then print the 'jws detached'
 Then print the 'id'
 EOF
     save_output "did_document_signed.json"
-    assert_output '{"did_document":{"@context":["https://www.w3.org/ns/did/v1","https://w3id.org/security/suites/ed25519-2018/v1","https://w3id.org/security/suites/secp256k1-2019/v1","https://w3id.org/security/suites/secp256k1-2020/v1","https://dyne.github.io/W3C-DID/specs/ReflowBLS12381.json","https://dyne.github.io/W3C-DID/specs/Bbs.json","https://dyne.github.io/W3C-DID/specs/EcdsaSecp256r1.json","https://dyne.github.io/W3C-DID/specs/Coconut.json",{"description":"https://schema.org/description"}],"description":"test_user","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","verificationMethod":[{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#ecdh_public_key","publicKeyBase58":"Prv7EbvuXevABNJytdsoXPqjJFJxnuiHVk3QqcuWHtn7yzEQHkctuEgezzjG9tCCNriD4HsmFNnFPFDcGfMs3kmR","type":"EcdsaSecp256k1VerificationKey2019"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#reflow_public_key","publicKeyBase58":"aeEZAeKXLcuWLEgCY3q8L7kN9qyakvnNeZCS4TzYgVM8LqeuJaZQjVffAZB4QYxk33Cw2bTtXRUmBBBGPFMtMFVCKNhTbMgwUQwwXPoq8YFg6ENMKMCRhHxCfpXd8Ta5WEn2itA1gp8zZnsu8Gj37tDUDHA9twiszDxV7KPWdYNdD4at1shUcSyovuNuUcXwtLCdF9QPKWm5uQ6qrcbk6wimhpT6yNZQtWiZrCXMWrKyk14Yi4kXxaJwquvzUkHL87hZT","type":"ReflowBLS12381VerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#bitcoin_public_key","publicKeyBase58":"gR5grNVtEvyM7Uy1L455q1WLkr5piE4yocyQ2stsMPiu","type":"EcdsaSecp256k1VerificationKey2019"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#eddsa_public_key","publicKeyBase58":"DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","type":"Ed25519VerificationKey2018"},{"blockchainAccountId":"eip155:1:0x03379e512bb00f0f8669eaec392225dde018fa6c","controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#ethereum_address","type":"EcdsaSecp256k1RecoveryMethod2020"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#es256_public_key","publicKeyBase58":"3Gjh6x5oHB3e14VXMtN74PEPwMSDDFxQEr3W88STaGXFHXhVZDH4AP85sU2rJ95o3aqkUuYzLDfR4jYCqHh6jakP","type":"EcdsaSecp256r1VerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#bbs_public_key","publicKeyBase58":"ykbNb4QcyqA4EmRVa8AP2gAu5kWwzmnhXwCZ421XQnYPC3m7gXZ29yEnkToitHgnc3y1TWscseCd9G3hSvh7tp9QKSyGxDM15KQjGaQUekwZQ9Z1BXW2iATYD9uVEkM2wHu","type":"BbsVerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#issuer_public_key","publicKeyBase58":"2eeoyWMdUh1KxbLNydhZxpbNDqh1aGiJaCMwMWP4PpqyD1oEBW9rmBaET5ZugQvocw3w5NzL1znB2SmSJLmd5J13QNnP4xGtmT8itf3j7jyakGBLmy3zg2sXJvkqZLsDySoHEfjJLGP8c5CbZvQCSydphNo4NWoi6s2RXBLotSXMQ2NsrcL6HoYsnJxTFcEDcFMuYiDGyyzpATPLBBNEVQ4VypdKtwrzgqwkMk1SDjiEqhwy61hYHknCJM6bDhirnjptpxL","type":"CoconutVerificationKey"}]},"ecdh_signature":{"r":"93ATLLmV3MZXoYLPPtS9KxAXacaPaDFozTsETeeJwjXX","s":"B12drfhoFKQxbCdSBmr78qTZacPDnVupmvufymwLXcR6"},"eddsa_signature":"2xZcwdTTetbk8vwNtSZ452mthAR6qcsZACR6HXNxcjwQvMm5CYkirtyuZrC6M1czRSqjcV8p3ZeTZY1pNR9fA8k7","id":"did:dyne:sandbox.zenroomtest_A:HCA7GceXsWmHaZJQCfHNPF1PdNKpr3o1fpnWjEDUzDsv","timestamp":"1703064997357"}'
+    assert_output '{"did_document":{"@context":["https://www.w3.org/ns/did/v1","https://w3id.org/security/suites/ed25519-2018/v1","https://w3id.org/security/suites/secp256k1-2019/v1","https://w3id.org/security/suites/secp256k1-2020/v1","https://dyne.github.io/W3C-DID/specs/ReflowBLS12381.json","https://dyne.github.io/W3C-DID/specs/Bbs.json","https://dyne.github.io/W3C-DID/specs/EcdsaSecp256r1.json","https://dyne.github.io/W3C-DID/specs/Coconut.json",{"description":"https://schema.org/description"}],"description":"test_user","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","verificationMethod":[{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#ecdh_public_key","publicKeyBase58":"Prv7EbvuXevABNJytdsoXPqjJFJxnuiHVk3QqcuWHtn7yzEQHkctuEgezzjG9tCCNriD4HsmFNnFPFDcGfMs3kmR","type":"EcdsaSecp256k1VerificationKey2019"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#reflow_public_key","publicKeyBase58":"aeEZAeKXLcuWLEgCY3q8L7kN9qyakvnNeZCS4TzYgVM8LqeuJaZQjVffAZB4QYxk33Cw2bTtXRUmBBBGPFMtMFVCKNhTbMgwUQwwXPoq8YFg6ENMKMCRhHxCfpXd8Ta5WEn2itA1gp8zZnsu8Gj37tDUDHA9twiszDxV7KPWdYNdD4at1shUcSyovuNuUcXwtLCdF9QPKWm5uQ6qrcbk6wimhpT6yNZQtWiZrCXMWrKyk14Yi4kXxaJwquvzUkHL87hZT","type":"ReflowBLS12381VerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#bitcoin_public_key","publicKeyBase58":"gR5grNVtEvyM7Uy1L455q1WLkr5piE4yocyQ2stsMPiu","type":"EcdsaSecp256k1VerificationKey2019"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#eddsa_public_key","publicKeyBase58":"DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","type":"Ed25519VerificationKey2018"},{"blockchainAccountId":"eip155:1:0x03379e512bb00f0f8669eaec392225dde018fa6c","controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#ethereum_address","type":"EcdsaSecp256k1RecoveryMethod2020"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#es256_public_key","publicKeyBase58":"3Gjh6x5oHB3e14VXMtN74PEPwMSDDFxQEr3W88STaGXFHXhVZDH4AP85sU2rJ95o3aqkUuYzLDfR4jYCqHh6jakP","type":"EcdsaSecp256r1VerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#bbs_public_key","publicKeyBase58":"ykbNb4QcyqA4EmRVa8AP2gAu5kWwzmnhXwCZ421XQnYPC3m7gXZ29yEnkToitHgnc3y1TWscseCd9G3hSvh7tp9QKSyGxDM15KQjGaQUekwZQ9Z1BXW2iATYD9uVEkM2wHu","type":"BbsVerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#issuer_public_key","publicKeyBase58":"2eeoyWMdUh1KxbLNydhZxpbNDqh1aGiJaCMwMWP4PpqyD1oEBW9rmBaET5ZugQvocw3w5NzL1znB2SmSJLmd5J13QNnP4xGtmT8itf3j7jyakGBLmy3zg2sXJvkqZLsDySoHEfjJLGP8c5CbZvQCSydphNo4NWoi6s2RXBLotSXMQ2NsrcL6HoYsnJxTFcEDcFMuYiDGyyzpATPLBBNEVQ4VypdKtwrzgqwkMk1SDjiEqhwy61hYHknCJM6bDhirnjptpxL","type":"CoconutVerificationKey"}]},"eddsa_signature":"2xZcwdTTetbk8vwNtSZ452mthAR6qcsZACR6HXNxcjwQvMm5CYkirtyuZrC6M1czRSqjcV8p3ZeTZY1pNR9fA8k7","id":"did:dyne:sandbox.zenroomtest_A:HCA7GceXsWmHaZJQCfHNPF1PdNKpr3o1fpnWjEDUzDsv","jws_detached":"eyJhbGciOiJFUzI1NksifQ..d2tYw0FFyVU7UjX-IRpiN8SLkLR4S8bYZmCwI2rzurLXlf19-Z2n8wUNoVhf99s5W_MnhimXM4YYAxY2aaU0lA","timestamp":"1703064997357"}'
 }
 
 @test "Server accept did document (not the real contract only crypto checks)" {
@@ -419,7 +427,7 @@ EOF
     Given I have a 'string dictionary' named 'did document'
     and I have a 'string' named 'timestamp'
     and I have a 'eddsa signature'
-    and I have a 'ecdh signature'
+    and I have a 'string' named 'jws detached'
     and I have a 'string' named 'id'
 
     Given I have a 'string dictionary' named 'proof'
@@ -438,12 +446,10 @@ EOF
     and I remove 'json escaped string'
 
     # verify ecdsa
-    When I create the json escaped string of 'did document'
-    and I verify the 'json escaped string' has a ecdh signature in 'ecdh signature' by 'ecdh public key'
+    When I verify the 'did document' has a jws signature in 'jws detached'
 
     # create proof
-    When I create the jws signature using the ecdh signature in 'ecdh signature'
-    and I move 'jws' in 'proof'
+    and I move 'jws detached' to 'jws' in 'proof'
     and I copy the 'timestamp' to 'created' in 'proof'
 
     # proof's verification method
@@ -455,7 +461,7 @@ EOF
     Then print the 'did document'
 EOF
     save_output "accepted_did_document.json"
-    assert_output '{"did_document":{"@context":["https://www.w3.org/ns/did/v1","https://w3id.org/security/suites/ed25519-2018/v1","https://w3id.org/security/suites/secp256k1-2019/v1","https://w3id.org/security/suites/secp256k1-2020/v1","https://dyne.github.io/W3C-DID/specs/ReflowBLS12381.json","https://dyne.github.io/W3C-DID/specs/Bbs.json","https://dyne.github.io/W3C-DID/specs/EcdsaSecp256r1.json","https://dyne.github.io/W3C-DID/specs/Coconut.json",{"description":"https://schema.org/description"}],"description":"test_user","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","proof":{"created":"1703064997357","jws":"eyJhbGciOiJFUzI1NksiLCJiNjQiOnRydWUsImNyaXQiOiJiNjQifQ..d2tYw0FFyVU7UjX-IRpiN8SLkLR4S8bYZmCwI2rzurKUlrfuIGEau1AsYLTkoKLnrF5RvbIvnHFBUo5BJnGbAQ","proofPurpose":"assertionMethod","type":"EcdsaSecp256k1Signature2019","verificationMethod":"did:dyne:sandbox.zenroomtest_A:HCA7GceXsWmHaZJQCfHNPF1PdNKpr3o1fpnWjEDUzDsv#ecdh_public_key"},"verificationMethod":[{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#ecdh_public_key","publicKeyBase58":"Prv7EbvuXevABNJytdsoXPqjJFJxnuiHVk3QqcuWHtn7yzEQHkctuEgezzjG9tCCNriD4HsmFNnFPFDcGfMs3kmR","type":"EcdsaSecp256k1VerificationKey2019"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#reflow_public_key","publicKeyBase58":"aeEZAeKXLcuWLEgCY3q8L7kN9qyakvnNeZCS4TzYgVM8LqeuJaZQjVffAZB4QYxk33Cw2bTtXRUmBBBGPFMtMFVCKNhTbMgwUQwwXPoq8YFg6ENMKMCRhHxCfpXd8Ta5WEn2itA1gp8zZnsu8Gj37tDUDHA9twiszDxV7KPWdYNdD4at1shUcSyovuNuUcXwtLCdF9QPKWm5uQ6qrcbk6wimhpT6yNZQtWiZrCXMWrKyk14Yi4kXxaJwquvzUkHL87hZT","type":"ReflowBLS12381VerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#bitcoin_public_key","publicKeyBase58":"gR5grNVtEvyM7Uy1L455q1WLkr5piE4yocyQ2stsMPiu","type":"EcdsaSecp256k1VerificationKey2019"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#eddsa_public_key","publicKeyBase58":"DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","type":"Ed25519VerificationKey2018"},{"blockchainAccountId":"eip155:1:0x03379e512bb00f0f8669eaec392225dde018fa6c","controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#ethereum_address","type":"EcdsaSecp256k1RecoveryMethod2020"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#es256_public_key","publicKeyBase58":"3Gjh6x5oHB3e14VXMtN74PEPwMSDDFxQEr3W88STaGXFHXhVZDH4AP85sU2rJ95o3aqkUuYzLDfR4jYCqHh6jakP","type":"EcdsaSecp256r1VerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#bbs_public_key","publicKeyBase58":"ykbNb4QcyqA4EmRVa8AP2gAu5kWwzmnhXwCZ421XQnYPC3m7gXZ29yEnkToitHgnc3y1TWscseCd9G3hSvh7tp9QKSyGxDM15KQjGaQUekwZQ9Z1BXW2iATYD9uVEkM2wHu","type":"BbsVerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#issuer_public_key","publicKeyBase58":"2eeoyWMdUh1KxbLNydhZxpbNDqh1aGiJaCMwMWP4PpqyD1oEBW9rmBaET5ZugQvocw3w5NzL1znB2SmSJLmd5J13QNnP4xGtmT8itf3j7jyakGBLmy3zg2sXJvkqZLsDySoHEfjJLGP8c5CbZvQCSydphNo4NWoi6s2RXBLotSXMQ2NsrcL6HoYsnJxTFcEDcFMuYiDGyyzpATPLBBNEVQ4VypdKtwrzgqwkMk1SDjiEqhwy61hYHknCJM6bDhirnjptpxL","type":"CoconutVerificationKey"}]}}'
+    assert_output '{"did_document":{"@context":["https://www.w3.org/ns/did/v1","https://w3id.org/security/suites/ed25519-2018/v1","https://w3id.org/security/suites/secp256k1-2019/v1","https://w3id.org/security/suites/secp256k1-2020/v1","https://dyne.github.io/W3C-DID/specs/ReflowBLS12381.json","https://dyne.github.io/W3C-DID/specs/Bbs.json","https://dyne.github.io/W3C-DID/specs/EcdsaSecp256r1.json","https://dyne.github.io/W3C-DID/specs/Coconut.json",{"description":"https://schema.org/description"}],"description":"test_user","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","proof":{"created":"1703064997357","jws":"eyJhbGciOiJFUzI1NksifQ..d2tYw0FFyVU7UjX-IRpiN8SLkLR4S8bYZmCwI2rzurLXlf19-Z2n8wUNoVhf99s5W_MnhimXM4YYAxY2aaU0lA","proofPurpose":"assertionMethod","type":"EcdsaSecp256k1Signature2019","verificationMethod":"did:dyne:sandbox.zenroomtest_A:HCA7GceXsWmHaZJQCfHNPF1PdNKpr3o1fpnWjEDUzDsv#ecdh_public_key"},"verificationMethod":[{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#ecdh_public_key","publicKeyBase58":"Prv7EbvuXevABNJytdsoXPqjJFJxnuiHVk3QqcuWHtn7yzEQHkctuEgezzjG9tCCNriD4HsmFNnFPFDcGfMs3kmR","type":"EcdsaSecp256k1VerificationKey2019"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#reflow_public_key","publicKeyBase58":"aeEZAeKXLcuWLEgCY3q8L7kN9qyakvnNeZCS4TzYgVM8LqeuJaZQjVffAZB4QYxk33Cw2bTtXRUmBBBGPFMtMFVCKNhTbMgwUQwwXPoq8YFg6ENMKMCRhHxCfpXd8Ta5WEn2itA1gp8zZnsu8Gj37tDUDHA9twiszDxV7KPWdYNdD4at1shUcSyovuNuUcXwtLCdF9QPKWm5uQ6qrcbk6wimhpT6yNZQtWiZrCXMWrKyk14Yi4kXxaJwquvzUkHL87hZT","type":"ReflowBLS12381VerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#bitcoin_public_key","publicKeyBase58":"gR5grNVtEvyM7Uy1L455q1WLkr5piE4yocyQ2stsMPiu","type":"EcdsaSecp256k1VerificationKey2019"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#eddsa_public_key","publicKeyBase58":"DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","type":"Ed25519VerificationKey2018"},{"blockchainAccountId":"eip155:1:0x03379e512bb00f0f8669eaec392225dde018fa6c","controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#ethereum_address","type":"EcdsaSecp256k1RecoveryMethod2020"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#es256_public_key","publicKeyBase58":"3Gjh6x5oHB3e14VXMtN74PEPwMSDDFxQEr3W88STaGXFHXhVZDH4AP85sU2rJ95o3aqkUuYzLDfR4jYCqHh6jakP","type":"EcdsaSecp256r1VerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#bbs_public_key","publicKeyBase58":"ykbNb4QcyqA4EmRVa8AP2gAu5kWwzmnhXwCZ421XQnYPC3m7gXZ29yEnkToitHgnc3y1TWscseCd9G3hSvh7tp9QKSyGxDM15KQjGaQUekwZQ9Z1BXW2iATYD9uVEkM2wHu","type":"BbsVerificationKey"},{"controller":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu","id":"did:dyne:sandbox.zenroomtest:DBzNYB3ft2ncfeGaVV8aR5x95tU5hKUqGLYpDJifEVwu#issuer_public_key","publicKeyBase58":"2eeoyWMdUh1KxbLNydhZxpbNDqh1aGiJaCMwMWP4PpqyD1oEBW9rmBaET5ZugQvocw3w5NzL1znB2SmSJLmd5J13QNnP4xGtmT8itf3j7jyakGBLmy3zg2sXJvkqZLsDySoHEfjJLGP8c5CbZvQCSydphNo4NWoi6s2RXBLotSXMQ2NsrcL6HoYsnJxTFcEDcFMuYiDGyyzpATPLBBNEVQ4VypdKtwrzgqwkMk1SDjiEqhwy61hYHknCJM6bDhirnjptpxL","type":"CoconutVerificationKey"}]}}'
 }
 
 @test "now the User sign different documents with its keys" {
