@@ -144,7 +144,7 @@ end)
 local function _append_to_url(ele, dst, encoding_f)
     local arg, arg_c = have(ele)
     local url, url_c = have(dst)
-    zencode_assert(url_c.encoding == 'string',
+    zencode_assert(arg_c.encoding == 'string' and luatype(arg) ~= 'table',
 		   "Cannot append http request that are not strings: "..ele)
     zencode_assert(url_c.content == 'url',
 		   "Cannot append http request to invalid url: "..dst)
