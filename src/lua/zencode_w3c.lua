@@ -150,12 +150,14 @@ ZEN:add_schema(
 --]]
 
 -- parse JWS string
+-- @param o_jws the jws as octet (from string)
+-- @param o_payload the payload as octet, to verify detached signature
 -- @return signature (table {r,s} in case of ecdsa on secp256k1)
 -- @return verifification function to verify the signature based on the algorithm present in the header
 -- @return public key, tsake the one in the header (if present) or the correct key in zenroom memory
 -- @return header.payload, if payload is differenet from the empty string
-local function jws_octet_to_signature(obj)
-    local toks = strtok(OCTET.to_string(obj), '.')
+local function jws_octet_to_signature(o_jws, o_payload)
+    local toks = strtok(OCTET.to_string(o_jws), '.')
     -- parse header
     local pk
     local header = JSON.decode( OCTET.from_url64(toks[1]):string())
@@ -169,9 +171,13 @@ local function jws_octet_to_signature(obj)
         pk = O.from_url64(header.jwk.x) .. O.from_url64(header.jwk.y)
     end
     zencode_assert(header.alg, 'JWS header is missing alg specification')
-    -- if payload is present then header.payload is what it was signed
-    local signed = ""
-    if toks[2] ~= "" then signed = O.from_string(toks[1]..'.'..toks[2]) end
+    -- header.payload is what should be signed
+    zencode_assert(o_payload or toks[2] ~= "", 'No payload provided during jws verification')
+    if o_payload and toks[2] ~= "" then
+        zencode_assert(toks[2] == O.to_string(o_payload),
+                       'JWS payload does not match the payload in input')
+    end
+    local signed = O.from_string(toks[1]..'.')..(o_payload or O.from_string(toks[2]))
     -- signature
     local signature, verify_f
     if header.alg == 'ES256K' then
@@ -191,21 +197,42 @@ local function jws_octet_to_signature(obj)
 end
 
 -- generate a JWS signature
--- @param s the signature
+-- @param s the signature, if not present payload can not be empty string
 -- @param h the header (optional), default is ecdsa on secp256k1
 -- @param p the payload (optional), default is empty string
+-- @param d the detached falg, if set to true and payload is present, remove payload from jws
 -- @return octet string containing the jws
-local function jws_signature_to_octet(s, h, p)
+local function jws_signature_to_octet(s, h, p, d)
     local header = h or
         O.from_string(JSON.encode(
                           {
-                              alg = 'ES256K', -- default secp256k1
+                              alg = 'ES256K',
                               b64 = true,
-                              crit = 'b64'
+                              crit = {'b64'}
                           }
         ))
     local payload = (p and O.to_url64(p)) or ""
     local signature = s
+    if not signature then
+        local header_json = JSON.decode(header:string())
+        zencode_assert(header_json.alg,
+                       'Algorithm not specified in jws header')
+        zencode_assert(payload and payload ~= "",
+                       'Can not create a jws signature without the payload')
+        local to_be_signed = O.from_string(O.to_url64(header)..'.'..payload)
+        if header_json.alg == 'ES256K' then
+            local sk = havekey'ecdh'
+            local signature_table = ECDH.sign(sk, to_be_signed)
+            signature = signature_table.r .. signature_table.s
+        elseif header_json.alg == 'ES256' then
+            local ES256 = require_once 'es256'
+            local sk = havekey'es256'
+            signature = ES256.sign(sk, to_be_signed)
+        else
+            error(header_json.alg .. ' algorithm not yet supported by zenroom jws signature')
+        end
+    end
+    payload = (d and "") or payload
     if luatype(signature) == 'table' then
         zencode_assert(s.r and s.s, "The signature table does not contains r and s")
         signature = s.r .. s.s
@@ -216,7 +243,8 @@ local function jws_signature_to_octet(s, h, p)
 end
 
 -- utlity to encode a JSON as octet string based on its original encoding
--- if octet are passed as input nothing happen
+-- if octet are passed as input it will check that the original string was
+-- a json or a json encoded in url64
 -- @param src the json to encode
 -- @return octet string containg the encoded json
 local function _json_encoding(src)
@@ -226,61 +254,101 @@ local function _json_encoding(src)
         local encoding = codec.schema or codec.encoding
 		   or CODEC.output.encoding.name
         source_str = O.from_string( JSON.encode(source, encoding) )
+    else
+        -- check that before encoding it was a table
+        -- this should ensure that we are signing only json
+        local input = get_encoding_function(codec.encoding)(source)
+        if O.is_url64(input) then
+            input = O.from_url64(input):string()
+        end
+        if not JSON.validate(input) then
+            error(src..' is not a json or an encoded json')
+        end
     end
     return source_str
 end
 
-When("create jws signature of ''", function(src)
-    local source_str = _json_encoding(src)
-    empty'jws'
-    local sk = havekey'ecdh' -- assuming secp256k1
-    ACK.jws = O.from_string(
-        jws_signature_to_octet(ECDH.sign(sk, source_str)) )
-    new_codec('jws', { zentype = 'e',
-                        encoding = 'string' })
-end)
+When(deprecated("create jws signature of ''",
+                "create jws detached signature with header '' and payload ''",
+                function(src)
+                    warn('raw signature of the payload, non standard jws')
+                    local source_str = _json_encoding(src)
+                    empty'jws'
+                    local sk = havekey'ecdh' -- assuming secp256k1
+                    ACK.jws = O.from_string(
+                        jws_signature_to_octet(ECDH.sign(sk, source_str)) )
+                    new_codec('jws', { zentype = 'e',
+                                       encoding = 'string' })
+               end)
+)
 
-When("create jws signature using ecdh signature in ''", function(sign)
-    local signature = have(sign)
-    empty'jws'
-    ACK.jws = O.from_string(jws_signature_to_octet(signature))
-    new_codec('jws', { zentype = 'e',
-                        encoding = 'string' })
-end)
+When(deprecated("create jws signature using ecdh signature in ''",
+                "create jws detached signature with header '' and payload ''",
+                function(sign)
+                    warn('external signature can be not jws compliant')
+                    local signature = have(sign)
+                    empty'jws'
+                    ACK.jws = O.from_string(jws_signature_to_octet(signature))
+                    new_codec('jws', { zentype = 'e',
+                                       encoding = 'string' })
+end))
 
-When("create jws signature with header '' payload '' and signature ''", function(header, payload, signature)
+local function _create_jws(header, payload, detached)
+    local n_output = (detached and 'jws_detached') or 'jws'
     local o_header = _json_encoding(header)
     local o_payload = _json_encoding(payload)
-    local o_signature = have(signature)
-    empty 'jws'
-    ACK.jws = O.from_string(
-        jws_signature_to_octet(o_signature, o_header, o_payload)
+    empty(n_output)
+    ACK[n_output] = O.from_string(
+        jws_signature_to_octet(nil, o_header, o_payload, detached)
     )
-    new_codec('jws', { zentype = 'e',
-                       encoding = 'string' })
+    new_codec(n_output, { zentype = 'e',
+                          encoding = 'string' })
+end
+
+When("create jws signature with header '' and payload ''", function(header, payload)
+    _create_jws(header, payload, false)
 end)
 
-IfWhen("verify jws signature of ''", function(src)
-    local jws = have'jws'
-    local source_str = _json_encoding(src)
-    local signature, verify_f, pub = jws_octet_to_signature(jws)
-    zencode_assert(pub, "Public key to verify the jws signature not found")
-    zencode_assert(
-        verify_f(pub, source_str, signature),
-        'The signature does not validate: ' .. src
-    )
+-- jws result will be without pyaload, signature is always perform on header.payload
+When("create jws detached signature with header '' and payload ''", function(header, payload)
+    _create_jws(header, payload, true)
 end)
 
-IfWhen("verify jws signature in ''", function(sign)
-    local jws = have(sign)
-    local signature, verify_f, pub, signed = jws_octet_to_signature(jws)
+local function _verify_jws(payload, jws)
+    local n_jws = jws or 'jws'
+    local o_jws = have(n_jws)
+    local o_payload = payload and _json_encoding(payload)
+    local enc_payload
+    if o_payload then
+        local c_payload = CODEC[payload].encoding
+        if c_payload == 'url64' or luatype(ACK[payload]) == 'table' then
+            enc_payload = O.from_string(O.to_url64(o_payload)) 
+        elseif c_payload == 'string' then
+            enc_payload = o_payload
+        else
+            error('encoding for payload not accpeted: '..c_payload)
+        end
+    end
+    local signature, verify_f, pub, signed = jws_octet_to_signature(o_jws, enc_payload)
     zencode_assert(pub, "Public key to verify the jws signature not found")
-    zencode_assert(payload ~= "", "Payload not found in "..sign)
-    zencode_assert(
-        verify_f(pub, signed, signature),
-        'The signature does not validate: ' .. sign
-    )
-end)
+    if not verify_f(pub, signed, signature) then
+        -- retro compatibility, but non jws compliant signature
+        if o_payload and verify_f(pub, o_payload, signature) then
+            warn('Raw signature of the payload verified, but is non standard jws')
+        else
+            error('The signature does not validate: ' .. n_jws)
+        end
+    end
+end
+
+IfWhen(deprecated("verify jws signature of ''",
+                  "verify '' has a jws signature in ''",
+                  _verify_jws
+))
+
+IfWhen("verify '' has a jws signature in ''", _verify_jws)
+
+IfWhen("verify jws signature in ''", function(jws) _verify_jws(nil, jws) end)
 
 --[[
 --    Verifiable Cerdential
@@ -319,25 +387,32 @@ When("sign verifiable credential named ''", function(vc)
     ACK[vc].proof = deepmap(OCTET.from_string, proof)
 end)
 
-local function _verification_f(src, document, public_key)
-    local signature, verify_f = jws_octet_to_signature(document.proof.jws)
-
+local function _verify_jws_from_proof(src, document, public_key)
     -- omit proof subtable from verification
     local proof = document.proof
     document.proof = nil
     local document_str = _json_encoding(src)
+    local document_enc = O.from_string(O.to_url64(document_str))
     document.proof = proof
-    zencode_assert(
-        verify_f(public_key, document_str, signature),
-        'The signature does not validate: ' .. src
-    )
+
+    local signature, verify_f, pub, signed = jws_octet_to_signature(document.proof.jws, document_enc)
+
+    local pk = public_key or pub
+    if not verify_f(pk, signed, signature) then
+        -- retro compatibility, but non jws compliant signature
+        if verify_f(pk, document_str, signature) then
+            warn('Raw signature of the payload verified, but is non standard jws')
+        else
+            error('The signature does not validate: ' .. src)
+        end
+    end
 end
 
 IfWhen("verify verifiable credential named ''", function(src)
     local document = have(src)
     zencode_assert(document.proof and document.proof.jws,
                 'The object has no signature: ' .. src)
-    _verification_f(src, document, have('ecdh public key'))
+    _verify_jws_from_proof(src, document)
 end)
 
 --[[
@@ -348,7 +423,7 @@ IfWhen("verify did document named ''", function(src)
     local document = have(src)
     zencode_assert(document.proof and document.proof.jws,
                 'The object has no signature: ' .. src)
-    _verification_f(src, document, have('ecdh public key'))
+    _verify_jws_from_proof(src, document)
 end)
 
 IfWhen("verify did document named '' is signed by ''", function(src, signer_did_doc)
@@ -372,7 +447,7 @@ IfWhen("verify did document named '' is signed by ''", function(src, signer_did_
         i = i+1
     until( ( not signer_document.verificationMethod[i] ) or pk )
     zencode_assert(pk , data[2]..' used to sign '..src..' not found in the did document '..signer_did_doc)
-    _verification_f(src, document, pk)
+    _verify_jws_from_proof(src, document, pk)
 end)
 
 -- operations on the did-document
