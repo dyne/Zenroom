@@ -138,3 +138,45 @@ EOF
     save_output 'api-compose-percent-output.json'
     assert_output '{"url":"http://www.7timer.info/bin/api.pl?colon=%3A&slash=%2F&question_mark=%3F&hash=%23&percentage=%25&square_bracket_open=%5B&square_bracket_close=%5D&at=%40&esclamation_mark=%21&single_quote=%27&parenthesis_open=%28&parenthesis_close=%29&asterisk=%2A&plus=%2B&comma=%2C&semicolon=%3B&equal=%3D&space=+"}'
 }
+
+
+@test "real HTTP url percentage encoding" {
+    cat <<EOF | save_asset append_values.data
+{
+    "base-url": "http://",
+	"client_id": "did:dyne:sandbox.signroom:PTDvvQn1iWQiVxkfsDnUid8FbieKbHq46Qs8c9CZx67",
+    "code": "eyJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJlYWMyMjNmOTMwYmRkNzk1NDdlNzI2ZGRjZTg5ZTlmYTA1NWExZTFjIiwiaWF0IjoxNzA5MDQ4MzkzMjk1LCJpc3MiOiJodHRwczovL3ZhbGlkLmlzc3Vlci51cmwiLCJhdWQiOiJkaWQ6ZHluZTpzYW5kYm94LmdlbmVyaWNpc3N1ZXI6NkNwOG1QVXZKbVFhTXhRUFNuTnloYjc0ZjlHYTRXcWZYQ2tCbmVGZ2lrbTUiLCJleHAiOjE3MDkwNTE5OTN9.TahF8CqDDj5yynvtvkhr-Gt6RjzHSvKMosOhFf5sVmWGohKBPMNFhI8WlBlWj7aRauXB0lsvbQk03lf4eZN-2g",
+    "code_verifier": "JYTDgtxcjiNqa3AvJjfubMX6gx98-wCH7iTydBYAeFg",
+    "grant_type": "authorization_code",
+    "redirectUris": "https://didroom.com/"
+}
+EOF
+    cat <<EOF | zexe append_values.zen append_values.data
+Scenario 'http': create a GET request concatenating values on a HTTP url
+
+# The base URL and the parameters are loaded as strings
+Given I have a 'string' named 'base-url'
+Given I have a 'string' named 'client_id'
+Given I have a 'string' named 'code'
+Given I have a 'string' named 'code_verifier'
+Given I have a 'string' named 'grant_type'
+Given I have a 'string' named 'redirectUris'
+
+# The statement 'create the url' creates an object to which parameters
+# can be appended to create a valid GET request
+When I create the url from 'base-url'
+When I append the percent encoding of 'grant_type'     as http request to 'url'
+When I append the percent encoding of 'client_id'      as http request to 'url'
+When I append the percent encoding of 'code_verifier'  as http request to 'url'
+When I append the percent encoding of 'redirectUris'   as http request to 'url'
+When I append the percent encoding of 'code'           as http request to 'url'
+
+When I split the leftmost '8' bytes of 'url'
+When I rename the 'url' to 'body'
+
+Then print the 'body'
+
+EOF
+    save_output 'append_values.json'
+    assert_output '{"body":"grant_type=authorization_code&client_id=did%3Adyne%3Asandbox.signroom%3APTDvvQn1iWQiVxkfsDnUid8FbieKbHq46Qs8c9CZx67&code_verifier=JYTDgtxcjiNqa3AvJjfubMX6gx98-wCH7iTydBYAeFg&redirectUris=https%3A%2F%2Fdidroom.com%2F&code=eyJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJlYWMyMjNmOTMwYmRkNzk1NDdlNzI2ZGRjZTg5ZTlmYTA1NWExZTFjIiwiaWF0IjoxNzA5MDQ4MzkzMjk1LCJpc3MiOiJodHRwczovL3ZhbGlkLmlzc3Vlci51cmwiLCJhdWQiOiJkaWQ6ZHluZTpzYW5kYm94LmdlbmVyaWNpc3N1ZXI6NkNwOG1QVXZKbVFhTXhRUFNuTnloYjc0ZjlHYTRXcWZYQ2tCbmVGZ2lrbTUiLCJleHAiOjE3MDkwNTE5OTN9.TahF8CqDDj5yynvtvkhr-Gt6RjzHSvKMosOhFf5sVmWGohKBPMNFhI8WlBlWj7aRauXB0lsvbQk03lf4eZN-2g"}'
+}
