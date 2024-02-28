@@ -76,4 +76,12 @@ J.auto = function(obj)
    end
 end
 
+-- validate a JSON
+-- @param input string encoded json
+-- @return status: true if input was valid json, false otherwise
+-- @return value: error in case status is false, table if status is true
+J.validate = function(input)
+    return pcall(JSON.decode, input)
+end
+
 return J
