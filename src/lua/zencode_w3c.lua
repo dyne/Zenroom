@@ -166,7 +166,7 @@ local function jws_octet_to_signature(o_jws, o_payload)
         zencode_assert(header.jwk.kty == 'EC',
                        'JWS public key type supported by zenroom is only EC')
         -- if kty == EC, crv MUST be present
-        zencode_assert(header.jwk.crv == 'P-256' or header.crv == 'secp256k1',
+        zencode_assert(header.jwk.crv == 'P-256' or header.jwk.crv == 'secp256k1',
                        'JWS public key curve supported by zenroom are only P-256 or secp256k1')
         pk = O.from_url64(header.jwk.x) .. O.from_url64(header.jwk.y)
     end
