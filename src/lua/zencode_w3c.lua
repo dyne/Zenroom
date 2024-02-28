@@ -161,37 +161,47 @@ local function jws_octet_to_signature(o_jws, o_payload)
     -- parse header
     local pk
     local header = JSON.decode( OCTET.from_url64(toks[1]):string())
+    local alg = header.alg
+    if not alg then error('JWS header is missing alg specification', 2) end
     if header.jwk then
         -- kty MUST be present
-        zencode_assert(header.jwk.kty == 'EC',
-                       'JWS public key type supported by zenroom is only EC')
+        if header.jwk.kty ~= 'EC' then
+            error('JWS public key type supported by zenroom is only EC', 2)
+        end
         -- if kty == EC, crv MUST be present
-        zencode_assert(header.jwk.crv == 'P-256' or header.jwk.crv == 'secp256k1',
-                       'JWS public key curve supported by zenroom are only P-256 or secp256k1')
+        local alg_table = {['P-256'] = 'ES256', ['secp256k1'] = 'ES256K'}
+        local alg_from_crv = alg_table[header.jwk.crv]
+        if not alg_from_crv then
+            error('JWS public key curve supported by zenroom are only P-256 or secp256k1, found: '..header.jwk.crv, 2)
+        elseif alg ~= alg_from_crv then
+            error('JWS public key curve '..header.jwk.crv..' does not match the alg '..alg, 2)
+        end
         pk = O.from_url64(header.jwk.x) .. O.from_url64(header.jwk.y)
     end
-    zencode_assert(header.alg, 'JWS header is missing alg specification')
     -- header.payload is what should be signed
-    zencode_assert(o_payload or toks[2] ~= "", 'No payload provided during jws verification')
+    if not o_payload and toks[2] == "" then
+        error('No payload provided during jws verification', 2)
+    end
     if o_payload and toks[2] ~= "" then
-        zencode_assert(toks[2] == O.to_string(o_payload),
-                       'JWS payload does not match the payload in input')
+        if toks[2] ~= O.to_string(o_payload) then
+            error('JWS payload does not match the payload in input', 2)
+        end
     end
     local signed = O.from_string(toks[1]..'.')..(o_payload or O.from_string(toks[2]))
     -- signature
     local signature, verify_f
-    if header.alg == 'ES256K' then
+    if alg == 'ES256K' then
         signature = {}
         signature.r, signature.s = OCTET.chop(OCTET.from_url64(toks[3]), 32)
         verify_f = ECDH.verify
         pk = pk or ACK.ecdh_public_key
-    elseif header.alg == 'ES256' then
+    elseif alg == 'ES256' then
         local ES256 = require_once 'es256'
         signature = OCTET.from_url64(toks[3])
         verify_f = ES256.verify
         pk = pk or ACK.es256_public_key
     else
-        error(header.alg .. ' algorithm not yet supported by zenroom jws verification')
+        error(alg .. ' algorithm not yet supported by zenroom jws verification', 2)
     end
     return signature, verify_f, pk, signed
 end
@@ -215,10 +225,12 @@ local function jws_signature_to_octet(s, h, p, d)
     local signature = s
     if not signature then
         local header_json = JSON.decode(header:string())
-        zencode_assert(header_json.alg,
-                       'Algorithm not specified in jws header')
-        zencode_assert(payload and payload ~= "",
-                       'Can not create a jws signature without the payload')
+        if not header_json.alg then
+            error('Algorithm not specified in jws header', 2)
+        end
+        if not payload or payload == "" then
+            error('Can not create a jws signature without the payload', 2)
+        end
         local to_be_signed = O.from_string(O.to_url64(header)..'.'..payload)
         if header_json.alg == 'ES256K' then
             local sk = havekey'ecdh'
@@ -229,12 +241,14 @@ local function jws_signature_to_octet(s, h, p, d)
             local sk = havekey'es256'
             signature = ES256.sign(sk, to_be_signed)
         else
-            error(header_json.alg .. ' algorithm not yet supported by zenroom jws signature')
+            error(header_json.alg .. ' algorithm not yet supported by zenroom jws signature', 2)
         end
     end
     payload = (d and "") or payload
     if luatype(signature) == 'table' then
-        zencode_assert(s.r and s.s, "The signature table does not contains r and s")
+        if not(s.r and s.s) then
+            error('The signature table does not contains r and s', 2)
+        end
         signature = s.r .. s.s
     end
     return (OCTET.to_url64(header) ..
@@ -262,7 +276,7 @@ local function _json_encoding(src)
             input = O.from_url64(input):string()
         end
         if not JSON.validate(input) then
-            error(src..' is not a json or an encoded json')
+            error(src..' is not a json or an encoded json', 2)
         end
     end
     return source_str
@@ -326,17 +340,19 @@ local function _verify_jws(payload, jws)
         elseif c_payload == 'string' then
             enc_payload = o_payload
         else
-            error('encoding for payload not accpeted: '..c_payload)
+            error('encoding for payload not accpeted: '..c_payload, 2)
         end
     end
     local signature, verify_f, pub, signed = jws_octet_to_signature(o_jws, enc_payload)
-    zencode_assert(pub, "Public key to verify the jws signature not found")
+    if not pub then
+        error('Public key to verify the jws signature not found', 2)
+    end
     if not verify_f(pub, signed, signature) then
         -- retro compatibility, but non jws compliant signature
         if o_payload and verify_f(pub, o_payload, signature) then
             warn('Raw signature of the payload verified, but is non standard jws')
         else
-            error('The signature does not validate: ' .. n_jws)
+            error('The signature does not validate: ' .. n_jws, 2)
         end
     end
 end
@@ -403,7 +419,7 @@ local function _verify_jws_from_proof(src, document, public_key)
         if verify_f(pk, document_str, signature) then
             warn('Raw signature of the payload verified, but is non standard jws')
         else
-            error('The signature does not validate: ' .. src)
+            error('The signature does not validate: ' .. src, 2)
         end
     end
 end
