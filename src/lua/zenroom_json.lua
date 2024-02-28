@@ -49,7 +49,7 @@ J.decode = function(data)
    return res
 end
 
-J.encode = function(tab,enc)
+J.encode = function(tab,enc,whitespace)
    -- tab not a table
    if luatype(tab) ~= 'table' then
     error("JSON encode input is not a table", 2)
@@ -58,7 +58,8 @@ J.encode = function(tab,enc)
       JSON.raw_encode(
 	 -- process encodes zencode types
 	 -- it is part of inspect.lua
-	 INSPECT.process(tab, enc or CONF.output.encoding.name)
+	 INSPECT.process(tab, enc or CONF.output.encoding.name),
+	 whitespace
       )
 end
 
