@@ -260,7 +260,7 @@ local function import_decoded_selective_disclosure(obj)
     local jwt = import_str_dict(obj.jwt)
     obj.jwt.signature = signature
 
-    jwt.signature = O.from_base64(signature)
+    jwt.signature = O.from_url64(signature)
     return {
         jwt = jwt,
         disclosures = import_str_dict(obj.disclosures),
@@ -273,8 +273,7 @@ local function export_decoded_selective_disclosure(obj)
     obj.jwt.signature = nil
     local jwt = export_str_dict(obj.jwt)
     obj.jwt.signature = signature
-
-    jwt.signature = signature:base64()
+    jwt.signature = O.to_url64(signature)
     return {
         jwt = jwt,
         disclosures = export_str_dict(obj.disclosures),
@@ -312,7 +311,7 @@ local function export_jwt(obj)
     return table.concat({
         O.from_string(JSON.raw_encode(export_str_dict(obj.header), true)):url64(),
         O.from_string(JSON.raw_encode(export_str_dict(obj.payload), true)):url64(),
-        obj.signature:url64(),
+        O.to_url64(obj.signature),
     }, ".")
 end
 

@@ -143,12 +143,12 @@ function sd_jwt.create_jwt_es256(payload, sk)
     local header, b64header, b64payload, hmac
     header = {
         alg=O.from_string("ES256"),
-        typ=O.from_string("JWT")
+        typ=O.from_string("vc+sd-jwt")
     }
     local payload_str = export_str_dict(payload)
-    b64payload = O.from_string(JSON.raw_encode(payload_str)):url64()
+    b64payload = O.from_string(JSON.raw_encode(payload_str, true)):url64()
     local header_str = export_str_dict(header)
-    b64header = O.from_string(JSON.raw_encode(header_str)):url64()
+    b64header = O.from_string(JSON.raw_encode(header_str, true)):url64()
 
     local signature = ES256.sign(sk, O.from_string(b64header .. "." .. b64payload))
     return {
@@ -178,15 +178,14 @@ end
 
 function sd_jwt.verify_jws_signature(jws, pk)
     local payload_str = export_str_dict(jws.payload)
-    local b64payload = O.from_string(JSON.raw_encode(payload_str)):url64()
+    local b64payload = O.from_string(JSON.raw_encode(payload_str, true)):url64()
     local header_str = export_str_dict(jws.header)
-    local b64header = O.from_string(JSON.raw_encode(header_str)):url64()
-
-    return ES256.verify(pk, jws.signature, O.from_string(b64header .. "." .. b64payload))
+    local b64header = O.from_string(JSON.raw_encode(header_str, true)):url64()
+    return ES256.verify(pk, O.from_string(b64header .. "." .. b64payload), jws.signature)
 end
 
 function sd_jwt.verify_jws_header(jws)
-    return jws.header.alg == O.from_string("ES256") and jws.header.typ == O.from_string("JWT")
+    return jws.header.alg == O.from_string("ES256") --and jws.header.typ == O.from_string("JWT")
 end
 
 function sd_jwt.verify_sd_alg(jwt)
