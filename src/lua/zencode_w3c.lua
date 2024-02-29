@@ -308,7 +308,7 @@ When(deprecated("create jws signature using ecdh signature in ''",
 end))
 
 local function _create_jws(header, payload, detached)
-    local n_output = (detached and 'jws_detached') or 'jws'
+    local n_output = (detached and 'jws_detached_signature') or 'jws_signature'
     local o_header = _json_encoding(header)
     local o_payload = _json_encoding(payload)
     empty(n_output)
