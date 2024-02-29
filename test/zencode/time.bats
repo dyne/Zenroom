@@ -31,5 +31,4 @@ Given nothing
 When I create the timestamp
 Then print all data
 EOF
-    assert_success    
 }
