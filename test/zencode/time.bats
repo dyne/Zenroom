@@ -22,6 +22,14 @@ and debug
 Then print all data
 EOF
     save_output 'import_times.out.json'
-    assert_output '{"real_timestamp":1701865412,"time_in_dict":{"exp":1901865412,"iat":1701865412,"this_is_float":"50000"},"time_small":2000}'
+    assert_output '{"real_timestamp":1701865412,"time_in_dict":{"exp":1901865412,"iat":1701865412,"this_is_float":50000},"time_small":2000}'
 }
 
+@test "create time" {
+    cat <<EOF | zexe create_time.zen
+Given nothing
+When I create the timestamp
+Then print all data
+EOF
+    assert_success    
+}
