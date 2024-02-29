@@ -307,6 +307,52 @@ When(deprecated("create jws signature using ecdh signature in ''",
                                        encoding = 'string' })
 end))
 
+-- return a header for jws
+-- @param alg alg in jws header
+-- @param pk pk flag, is true the alg pk is set in the header in jwk format
+local function _create_jws_header(alg, pk)
+    local header = {['alg'] = alg}
+    if pk then
+        local jwk = {}
+        jwk.kty = 'EC'
+        local sk, pubgen_f
+        if alg == 'ES256K' then
+            sk = havekey'ecdh'
+            pubgen_f = ECDH.pubgen
+            jwk.crv = 'secp256k1'
+        elseif alg == 'ES256' then
+            local ES256 = require_once 'es256'
+            sk = havekey'es256'
+            pubgen_f = ES256.pubgen
+            jwk.crv = 'P-256'
+        else
+            error('can not create the jws header for algorithm '..alg, 2)
+        end
+        local pk = pubgen_f(sk)
+        local x, y = O.chop(pk, 32)
+        jwk.x = O.to_url64(x)
+        jwk.y = O.to_url64(y)
+        header.jwk = jwk
+    end
+    ACK.jws_header = deepmap(O.from_string, header)
+    new_codec('jws_header', { zentype = 'd',
+                              encoding = 'string' })
+end
+
+When("create jws header for p256 signature", function() _create_jws_header('ES256') end)
+When("create jws header for es256 signature", function() _create_jws_header('ES256') end)
+When("create jws header for secp256r1 signature", function() _create_jws_header('ES256') end)
+When("create jws header for p256 signature with public key", function() _create_jws_header('ES256', true) end)
+When("create jws header for es256 signature with public key", function() _create_jws_header('ES256', true) end)
+When("create jws header for secp256r1 signature with public key", function() _create_jws_header('ES256', true) end)
+
+When("create jws header for ecdh signature", function() _create_jws_header('ES256K') end)
+When("create jws header for es256k signature", function() _create_jws_header('ES256K') end)
+When("create jws header for secp256k1 signature", function() _create_jws_header('ES256K') end)
+When("create jws header for ecdh signature with public key", function() _create_jws_header('ES256K', true) end)
+When("create jws header for es256k signature with public key", function() _create_jws_header('ES256K', true) end)
+When("create jws header for secp256k1 signature with public key", function() _create_jws_header('ES256K', true) end)
+
 local function _create_jws(header, payload, detached)
     local n_output = (detached and 'jws_detached_signature') or 'jws_signature'
     local o_header = _json_encoding(header)

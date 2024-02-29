@@ -109,7 +109,7 @@ EOF
 
 @test "When I create jws detached signature of header '' and payload ''" {
     cat <<EOF | save_asset simple_string.json
-{ "simple": { "simple": "once upon a time... there was a wolf" }, "header": {"alg": "ES256K" } }
+{ "simple": { "simple": "once upon a time... there was a wolf" } }
 EOF
 
 cat <<EOF | zexe W3C-jws_sign.zen simple_string.json W3C-VC_issuerKeypair.json
@@ -118,8 +118,8 @@ Scenario 'ecdh': (required)
 Given that I am 'Authority'
 Given I have my 'keyring'
 Given I have a 'string dictionary' named 'simple'
-Given I have a 'string dictionary' named 'header'
-When I create jws detached signature of header 'header' and payload 'simple'
+When I create the jws header for es256k signature
+When I create jws detached signature of header 'jws header' and payload 'simple'
 Then print the 'jws detached signature'
 and print the 'simple'
 EOF
@@ -274,12 +274,8 @@ Given that I am 'Authority'
 Given I have my 'keyring'
 Given I have a 'string dictionary' named 'did document'
 
-# generate header
-When I create the 'string dictionary' named 'header'
-and I set 'alg' to 'ES256K' as 'string'
-and I move 'alg' in 'header'
-
-When I create the jws detached signature of header 'header' and payload 'did document'
+When I create jws header for secp256k1 signature
+When I create the jws detached signature of header 'jws header' and payload 'did document'
 When I create the 'string dictionary' named 'proof'
 When I move 'jws detached signature' to 'jws' in 'proof'
 When I move 'proof' in 'did document'
@@ -810,4 +806,35 @@ Then print the 'jws signature'
 EOF
     run $ZENROOM_EXECUTABLE -z -a jws_es256_fail.data jws_es256_fail.zen
     assert_line --partial 'payload is not a json or an encoded json'
+}
+
+
+@test "create jws header for es256 signature with public key" {
+    cat <<EOF | zexe jws_header_with_pk.zen jws_es256.data
+Scenario 'w3c': jws
+
+Given I have a 'string dictionary' named 'payload'
+Given I have a 'keyring'
+
+When I create jws header for es256 signature with public key
+When I create jws signature of header 'jws header' and payload 'payload'
+
+Then print the 'jws signature'
+and print the 'jws header'
+EOF
+    save_output jws_header_with_pk.json
+    assert_output '{"jws_header":{"alg":"ES256","jwk":{"crv":"P-256","kty":"EC","x":"LzOheBTJ7wIcII4MWkzoETuGroDn9ihIGEeVSbByUig","y":"O5jtuuAveJwSKjOnFOz2uTavhoi3fom3oz1538GxFeg"}},"jws_signature":"eyJhbGciOiJFUzI1NiIsImp3ayI6eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6Ikx6T2hlQlRKN3dJY0lJNE1Xa3pvRVR1R3JvRG45aWhJR0VlVlNiQnlVaWciLCJ5IjoiTzVqdHV1QXZlSndTS2pPbkZPejJ1VGF2aG9pM2ZvbTNvejE1MzhHeEZlZyJ9fQ.eyJodHRwOi8vZXhhbXBsZS5jb20vaXNfcm9vdCI6dHJ1ZSwiaXNzIjoiam9lIn0.gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39saxXORooFUl7iHYvEu_SU-IjKDbeDde7n7QG5hxOziTVUQ"}'
+
+    cat <<EOF | zexe verify_jws_header_with_pk.zen jws_header_with_pk.json
+Scenario 'w3c': jws
+
+Given I have a 'string' named 'jws signature'
+
+When I verify the jws signature in 'jws signature'
+
+Then print the string 'signature verified'
+EOF
+    save_output verify_jws_header_with_pk.json
+    assert_output '{"output":["signature_verified"]}'
+
 }
