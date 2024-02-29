@@ -120,11 +120,11 @@ Given I have my 'keyring'
 Given I have a 'string dictionary' named 'simple'
 Given I have a 'string dictionary' named 'header'
 When I create jws detached signature of header 'header' and payload 'simple'
-Then print the 'jws detached'
+Then print the 'jws detached signature'
 and print the 'simple'
 EOF
     save_output 'W3C-jws_signed.json'
-    assert_output '{"jws_detached":"eyJhbGciOiJFUzI1NksifQ..d2tYw0FFyVU7UjX-IRpiN8SLkLR4S8bYZmCwI2rzurJjDUpRUUIAZrK5HM4VgPSVGCdQ4-XQWBimu2mPMDmZ6w","simple":{"simple":"once upon a time... there was a wolf"}}'
+    assert_output '{"jws_detached_signature":"eyJhbGciOiJFUzI1NksifQ..d2tYw0FFyVU7UjX-IRpiN8SLkLR4S8bYZmCwI2rzurJjDUpRUUIAZrK5HM4VgPSVGCdQ4-XQWBimu2mPMDmZ6w","simple":{"simple":"once upon a time... there was a wolf"}}'
 }
 
 @test "When I verify '' has a jws signature in ''" {
@@ -132,9 +132,9 @@ EOF
 Scenario 'w3c': verify signature
 Scenario 'ecdh': (required)
 Given I have a 'ecdh public key' inside 'Authority'
-and I have a 'string' named 'jws detached'
+and I have a 'string' named 'jws detached signature'
 and I have a 'string dictionary' named 'simple'
-When I verify 'simple' has a jws signature in 'jws detached'
+When I verify 'simple' has a jws signature in 'jws detached signature'
 Then print the string 'W3C JWS IS VALID'
 EOF
     save_output 'W3C-jws_verify.out'
@@ -281,7 +281,7 @@ and I move 'alg' in 'header'
 
 When I create the jws detached signature of header 'header' and payload 'did document'
 When I create the 'string dictionary' named 'proof'
-When I move 'jws detached' to 'jws' in 'proof'
+When I move 'jws detached signature' to 'jws' in 'proof'
 When I move 'proof' in 'did document'
 
 Then print the 'did document'
@@ -734,10 +734,10 @@ Given I have a 'keyring'
 
 When I create jws signature of header 'header' and payload 'payload'
 
-Then print the 'jws'
+Then print the 'jws signature'
 EOF
     save_output jws_es256.json
-    assert_output '{"jws":"eyJhbGciOiJFUzI1NiIsImI2NCI6dHJ1ZSwiY3JpdCI6WyJiNjQiXX0.eyJodHRwOi8vZXhhbXBsZS5jb20vaXNfcm9vdCI6dHJ1ZSwiaXNzIjoiam9lIn0.gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39say1hkpC57hS3cqQliE3S1GaKrQKT6mUMpqLDf_rovjHMQ"}'
+    assert_output '{"jws_signature":"eyJhbGciOiJFUzI1NiIsImI2NCI6dHJ1ZSwiY3JpdCI6WyJiNjQiXX0.eyJodHRwOi8vZXhhbXBsZS5jb20vaXNfcm9vdCI6dHJ1ZSwiaXNzIjoiam9lIn0.gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39say1hkpC57hS3cqQliE3S1GaKrQKT6mUMpqLDf_rovjHMQ"}'
 }
 
 @test "verify JWS es256" {
@@ -751,12 +751,12 @@ EOF
 Scenario 'es256': signature verifcation
 Scenario 'w3c': jws
 
-Given I have a 'string' named 'jws'
+Given I have a 'string' named 'jws signature'
 and I have a 'es256 public key'
 and I have a 'string' named 'payload'
 
-When I verify 'payload' has a jws signature in 'jws'
-When I verify the jws signature in 'jws'
+When I verify 'payload' has a jws signature in 'jws signature'
+When I verify the jws signature in 'jws signature'
 
 Then print the string 'signature verified'
 EOF
@@ -806,7 +806,7 @@ Given I have a 'keyring'
 
 When I create jws signature of header 'header' and payload 'payload'
 
-Then print the 'jws'
+Then print the 'jws signature'
 EOF
     run $ZENROOM_EXECUTABLE -z -a jws_es256_fail.data jws_es256_fail.zen
     assert_line --partial 'payload is not a json or an encoded json'
