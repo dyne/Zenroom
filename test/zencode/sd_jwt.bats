@@ -477,3 +477,75 @@ EOF
    # Below the solution given in section A.3 of https://www.rfc-editor.org/rfc/rfc7515.html
    # assert_output '{"signed_selective_disclosure":"eyJhbGciOiAiRVMyNTYifQ.eyJfc2QiOiBbIjBuOXl6RlNXdktfQlVIaWFNaG0xMmdockN0VmFockdKNl8ta1pQLXlTcTQiLCAiQ2gtREJjTDNrYjRWYkhJd3Rrbm5aZE5VSHRoRXE5TVpqb0ZkZzZpZGlobyIsICJEVzdnRlZaU3V5cjQyWVNZeDhwOHJWS0VrdEp6SjN1RkltZW5tSkJJbWRzIiwgIkkwMGZjRlVvRFhDdWNwNXl5MnVqcVBzc0RWR2FXTmlVbGlOel9hd0QwZ2MiLCAiWDlNYVBhRldtUVlwZkhFZHl0UmRhY2xuWW9FcnU4RXp0QkVVUXVXT2U0NCIsICJkOHFrZlBkb2UyUFlFOTNkNU1fZ0JMMWdabHBGUktDYzBkMWxhb2RfX3MwIiwgImxJM0wwaHNlQ1JXbVVQZzgyVkNVTl9hMTdzTUxfNjRRZ0E0SkZUWURGREUiLCAicHVNcEdMb0FHUmJjc0FnNTBVWjBoaFFMS0NMNnF6eFNLNDMwNGtCbjNfSSIsICJ6VTQ1MmxrR2JFS2g4WnVIXzhLeDNDVXZuMUY0eTFnWkxxbERUZ1hfOFBrIl0sICJpc3MiOiAiaHR0cHM6Ly9waWQtcHJvdmlkZXIubWVtYmVyc3RhdGUuZXhhbXBsZS5ldSIsICJpYXQiOiAxNTQxNDkzNzI0LCAiZXhwIjogMTg4MzAwMDAwMCwgInR5cGUiOiAiUGVyc29uSWRlbnRpZmljYXRpb25EYXRhIiwgIl9zZF9hbGciOiAic2hhLTI1NiIsICJjbmYiOiB7Imp3ayI6IHsia3R5IjogIkVDIiwgImNydiI6ICJQLTI1NiIsICJ4IjogIlRDQUVSMTladnUzT0hGNGo0VzR2ZlNWb0hJUDFJTGlsRGxzN3ZDZUdlbWMiLCAieSI6ICJaeGppV1diWk1RR0hWV0tWUTRoYlNJaXJzVmZ1ZWNDRTZ0NGpUOUYySFpRIn19fQ.9hyAKjlth_-BLWKYWkzg-oshIAKIauwC-y8w-a2bWyPGnZ8SE9ijvDEPEdddIi2EFJlt76fK-vN2QcMLCrNR7Q~WyIyR0xDNDJzS1F2ZUNmR2ZyeU5STjl3IiwgImZpcnN0X25hbWUiLCAiRXJpa2EiXQ~WyJlbHVWNU9nM2dTTklJOEVZbnN4QV9BIiwgImZhbWlseV9uYW1lIiwgIk11c3Rlcm1hbm4iXQ~WyI2SWo3dE0tYTVpVlBHYm9TNXRtdlZBIiwgIkRFIl0~WyJlSThaV205UW5LUHBOUGVOZW5IZGhRIiwgIm5hdGlvbmFsaXRpZXMiLCBbeyIuLi4iOiAiSnVMMzJRWER6aXpsLUw2Q0xyZnhmanBac1gzTzZ2c2ZwQ1ZkMWprd0pZZyJ9XV0~WyJRZ19PNjR6cUF4ZTQxMmExMDhpcm9BIiwgImJpcnRoX2ZhbWlseV9uYW1lIiwgIlNjaG1pZHQiXQ~WyJBSngtMDk1VlBycFR0TjRRTU9xUk9BIiwgImJpcnRoZGF0ZSIsICIxOTczLTAxLTAxIl0~WyJQYzMzSk0yTGNoY1VfbEhnZ3ZfdWZRIiwgImFkZHJlc3MiLCB7InBvc3RhbF9jb2RlIjogIjEyMzQ1IiwgImxvY2FsaXR5IjogIklyZ2VuZHdvIiwgInN0cmVldF9hZGRyZXNzIjogIlNvbm5lbnN0cmFzc2UgMjMiLCAiY291bnRyeV9jb2RlIjogIkRFIn1d~WyJHMDJOU3JRZmpGWFE3SW8wOXN5YWpBIiwgImlzX292ZXJfMTgiLCB0cnVlXQ~WyJsa2x4RjVqTVlsR1RQVW92TU5JdkNBIiwgImlzX292ZXJfMjEiLCB0cnVlXQ~WyJuUHVvUW5rUkZxM0JJZUFtN0FuWEZBIiwgImlzX292ZXJfNjUiLCBmYWxzZV0~"}'
 }
+@test "Create SD_JWT from test vector A.3" {
+    cat <<EOF | save_asset test.A3.data.json
+{   
+    "The Issuer": {
+        "es256_public_key":"b28d4MwZMjw8+00CG4xfnn9SLMVMM19SlqZpVb/uNtRe/nNbC6hpOB1LqFXjfIjqAHBOeO6SYVBCcn+QLHOqTw==",
+        "keyring":{"es256":"Ur2bNKuBPOrAaxsRnbSH6hIhmNTxSGXshDSUD1a1y7g="}
+    },
+      "selective_disclosure": {
+        "disclosures": [
+            ["2GLC42sKQveCfGfryNRN9w", "first_name", "Erika"],
+            ["eluV5Og3gSNII8EYnsxA_A", "family_name", "Mustermann"],
+            ["6Ij7tM-a5iVPGboS5tmvVA", "DE"],
+            ["eI8ZWm9QnKPpNPeNenHdhQ", "nationalities", [{"...": "JuL32QXDzizl-L6CLrfxfjpZsX3O6vsfpCVd1jkwJYg"}]],
+            ["Qg_O64zqAxe412a108iroA", "birth_family_name", "Schmidt"],
+            ["AJx-095VPrpTtN4QMOqROA", "birthdate", "1973-01-01"],
+            ["Pc33JM2LchcU_lHggv_ufQ", "address", {"postal_code":"12345", "locality": "Irgendwo", "street_address": "Sonnenstrasse 23", "country_code": "DE"}],
+            ["G02NSrQfjFXQ7Io09syajA", "is_over_18", true],
+            ["lklxF5jMYlGTPUovMNIvCA", "is_over_21", true],
+            ["nPuoQnkRFq3BIeAm7AnXFA", "is_over_65", false]
+        ],
+        "payload": {
+            "_sd": [
+                "0n9yzFSWvK_BUHiaMhm12ghrCtVahrGJ6_-kZP-ySq4",
+                "Ch-DBcL3kb4VbHIwtknnZdNUHthEq9MZjoFdg6idiho",
+                "DW7gFVZSuyr42YSYx8p8rVKEktJzJ3uFImenmJBImds",
+                "I00fcFUoDXCucp5yy2ujqPssDVGaWNiUliNz_awD0gc",
+                "X9MaPaFWmQYpfHEdytRdaclnYoEru8EztBEUQuWOe44",
+                "d8qkfPdoe2PYE93d5M_gBL1gZlpFRKCc0d1laod__s0",
+                "lI3L0hseCRWmUPg82VCUN_a17sML_64QgA4JFTYDFDE",
+                "puMpGLoAGRbcsAg50UZ0hhQLKCL6qzxSK4304kBn3_I",
+                "zU452lkGbEKh8ZuH_8Kx3CUvn1F4y1gZLqlDTgX_8Pk"
+            ],
+            "iss": "https://pid-provider.memberstate.example.eu",
+            "iat": 1541493724,
+            "exp": 1883000000,
+            "vct": "PersonIdentificationData",
+            "_sd_alg": "sha-256",
+            "cnf": {
+                "jwk": {
+                    "kty": "EC",
+                    "crv": "P-256",
+                    "x": "TCAER19Zvu3OHF4j4W4vfSVoHIP1ILilDls7vCeGemc",
+                    "y": "ZxjiWWbZMQGHVWKVQ4hbSIirsVfuecCE6t4jT9F2HZQ"
+                }
+            }
+        }
+    }
+}
+EOF
+    cat <<EOF | zexe test_A3.zen test.A3.data.json
+Scenario 'sd_jwt'
+Scenario 'es256'
+
+Given I am known as 'The Issuer'
+and I have my 'keyring'
+
+Given I have 'selective_disclosure'
+
+When I create the signed selective disclosure of 'selective_disclosure'
+
+Then print the 'signed selective disclosure'
+
+
+EOF
+    save_output test_A3.out.json
+    assert_output '{"signed_selective_disclosure":"eyJhbGciOiAiRVMyNTYiLCAidHlwIjogInZjK3NkLWp3dCJ9.eyJfc2QiOiBbIjBuOXl6RlNXdktfQlVIaWFNaG0xMmdockN0VmFockdKNl8ta1pQLXlTcTQiLCAiQ2gtREJjTDNrYjRWYkhJd3Rrbm5aZE5VSHRoRXE5TVpqb0ZkZzZpZGlobyIsICJEVzdnRlZaU3V5cjQyWVNZeDhwOHJWS0VrdEp6SjN1RkltZW5tSkJJbWRzIiwgIkkwMGZjRlVvRFhDdWNwNXl5MnVqcVBzc0RWR2FXTmlVbGlOel9hd0QwZ2MiLCAiWDlNYVBhRldtUVlwZkhFZHl0UmRhY2xuWW9FcnU4RXp0QkVVUXVXT2U0NCIsICJkOHFrZlBkb2UyUFlFOTNkNU1fZ0JMMWdabHBGUktDYzBkMWxhb2RfX3MwIiwgImxJM0wwaHNlQ1JXbVVQZzgyVkNVTl9hMTdzTUxfNjRRZ0E0SkZUWURGREUiLCAicHVNcEdMb0FHUmJjc0FnNTBVWjBoaFFMS0NMNnF6eFNLNDMwNGtCbjNfSSIsICJ6VTQ1MmxrR2JFS2g4WnVIXzhLeDNDVXZuMUY0eTFnWkxxbERUZ1hfOFBrIl0sICJfc2RfYWxnIjogInNoYS0yNTYiLCAiY25mIjogeyJqd2siOiB7ImNydiI6ICJQLTI1NiIsICJrdHkiOiAiRUMiLCAieCI6ICJUQ0FFUjE5WnZ1M09IRjRqNFc0dmZTVm9ISVAxSUxpbERsczd2Q2VHZW1jIiwgInkiOiAiWnhqaVdXYlpNUUdIVldLVlE0aGJTSWlyc1ZmdWVjQ0U2dDRqVDlGMkhaUSJ9fSwgImV4cCI6IDE4ODMwMDAwMDAsICJpYXQiOiAxNTQxNDkzNzI0LCAiaXNzIjogImh0dHBzOi8vcGlkLXByb3ZpZGVyLm1lbWJlcnN0YXRlLmV4YW1wbGUuZXUiLCAidmN0IjogIlBlcnNvbklkZW50aWZpY2F0aW9uRGF0YSJ9.gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39saxeyzVATniAdMmanPdAkHCo1NDslnJfFvO5iIuMIzys5w~WyIyR0xDNDJzS1F2ZUNmR2ZyeU5STjl3IiwgImZpcnN0X25hbWUiLCAiRXJpa2EiXQ~WyJlbHVWNU9nM2dTTklJOEVZbnN4QV9BIiwgImZhbWlseV9uYW1lIiwgIk11c3Rlcm1hbm4iXQ~WyI2SWo3dE0tYTVpVlBHYm9TNXRtdlZBIiwgIkRFIl0~WyJlSThaV205UW5LUHBOUGVOZW5IZGhRIiwgIm5hdGlvbmFsaXRpZXMiLCBbeyIuLi4iOiAiSnVMMzJRWER6aXpsLUw2Q0xyZnhmanBac1gzTzZ2c2ZwQ1ZkMWprd0pZZyJ9XV0~WyJRZ19PNjR6cUF4ZTQxMmExMDhpcm9BIiwgImJpcnRoX2ZhbWlseV9uYW1lIiwgIlNjaG1pZHQiXQ~WyJBSngtMDk1VlBycFR0TjRRTU9xUk9BIiwgImJpcnRoZGF0ZSIsICIxOTczLTAxLTAxIl0~WyJQYzMzSk0yTGNoY1VfbEhnZ3ZfdWZRIiwgImFkZHJlc3MiLCB7ImNvdW50cnlfY29kZSI6ICJERSIsICJsb2NhbGl0eSI6ICJJcmdlbmR3byIsICJwb3N0YWxfY29kZSI6ICIxMjM0NSIsICJzdHJlZXRfYWRkcmVzcyI6ICJTb25uZW5zdHJhc3NlIDIzIn1d~WyJHMDJOU3JRZmpGWFE3SW8wOXN5YWpBIiwgImlzX292ZXJfMTgiLCB0cnVlXQ~WyJsa2x4RjVqTVlsR1RQVW92TU5JdkNBIiwgImlzX292ZXJfMjEiLCB0cnVlXQ~WyJuUHVvUW5rUkZxM0JJZUFtN0FuWEZBIiwgImlzX292ZXJfNjUiLCBmYWxzZV0~"}'
+
+    #the output should be the following:
+    #assert_output '{"signed_selective_disclosure": "eyJhbGciOiAiRVMyNTYiLCAidHlwIjogInZjK3NkLWp3dCJ9.eyJfc2QiOiBbIjBuOXl6RlNXdktfQlVIaWFNaG0xMmdockN0VmFockdKNl8ta1pQLXlTcTQiLCAiQ2gtREJjTDNrYjRWYkhJd3Rrbm5aZE5VSHRoRXE5TVpqb0ZkZzZpZGlobyIsICJEVzdnRlZaU3V5cjQyWVNZeDhwOHJWS0VrdEp6SjN1RkltZW5tSkJJbWRzIiwgIkkwMGZjRlVvRFhDdWNwNXl5MnVqcVBzc0RWR2FXTmlVbGlOel9hd0QwZ2MiLCAiWDlNYVBhRldtUVlwZkhFZHl0UmRhY2xuWW9FcnU4RXp0QkVVUXVXT2U0NCIsICJkOHFrZlBkb2UyUFlFOTNkNU1fZ0JMMWdabHBGUktDYzBkMWxhb2RfX3MwIiwgImxJM0wwaHNlQ1JXbVVQZzgyVkNVTl9hMTdzTUxfNjRRZ0E0SkZUWURGREUiLCAicHVNcEdMb0FHUmJjc0FnNTBVWjBoaFFMS0NMNnF6eFNLNDMwNGtCbjNfSSIsICJ6VTQ1MmxrR2JFS2g4WnVIXzhLeDNDVXZuMUY0eTFnWkxxbERUZ1hfOFBrIl0sICJpc3MiOiAiaHR0cHM6Ly9waWQtcHJvdmlkZXIubWVtYmVyc3RhdGUuZXhhbXBsZS5ldSIsICJpYXQiOiAxNTQxNDkzNzI0LCAiZXhwIjogMTg4MzAwMDAwMCwgInZjdCI6ICJQZXJzb25JZGVudGlmaWNhdGlvbkRhdGEiLCAiX3NkX2FsZyI6ICJzaGEtMjU2IiwgImNuZiI6IHsiandrIjogeyJrdHkiOiAiRUMiLCAiY3J2IjogIlAtMjU2IiwgIngiOiAiVENBRVIxOVp2dTNPSEY0ajRXNHZmU1ZvSElQMUlMaWxEbHM3dkNlR2VtYyIsICJ5IjogIlp4amlXV2JaTVFHSFZXS1ZRNGhiU0lpcnNWZnVlY0NFNnQ0alQ5RjJIWlEifX19.VStKGOA5TdLsrjahM4dRfDrbsy7BmrUNGw3jaBuxZnHYvmS2EnQ-ib7zSCUVBGGbcyORDFCMd_F6gr8CM9N3WQ~WyIyR0xDNDJzS1F2ZUNmR2ZyeU5STjl3IiwgImZpcnN0X25hbWUiLCAiRXJpa2EiXQ~WyJlbHVWNU9nM2dTTklJOEVZbnN4QV9BIiwgImZhbWlseV9uYW1lIiwgIk11c3Rlcm1hbm4iXQ~WyI2SWo3dE0tYTVpVlBHYm9TNXRtdlZBIiwgIkRFIl0~WyJlSThaV205UW5LUHBOUGVOZW5IZGhRIiwgIm5hdGlvbmFsaXRpZXMiLCBbeyIuLi4iOiAiSnVMMzJRWER6aXpsLUw2Q0xyZnhmanBac1gzTzZ2c2ZwQ1ZkMWprd0pZZyJ9XV0~WyJRZ19PNjR6cUF4ZTQxMmExMDhpcm9BIiwgImJpcnRoX2ZhbWlseV9uYW1lIiwgIlNjaG1pZHQiXQ~WyJBSngtMDk1VlBycFR0TjRRTU9xUk9BIiwgImJpcnRoZGF0ZSIsICIxOTczLTAxLTAxIl0~WyJQYzMzSk0yTGNoY1VfbEhnZ3ZfdWZRIiwgImFkZHJlc3MiLCB7InBvc3RhbF9jb2RlIjogIjEyMzQ1IiwgImxvY2FsaXR5IjogIklyZ2VuZHdvIiwgInN0cmVldF9hZGRyZXNzIjogIlNvbm5lbnN0cmFzc2UgMjMiLCAiY291bnRyeV9jb2RlIjogIkRFIn1d~WyJHMDJOU3JRZmpGWFE3SW8wOXN5YWpBIiwgImlzX292ZXJfMTgiLCB0cnVlXQ~WyJsa2x4RjVqTVlsR1RQVW92TU5JdkNBIiwgImlzX292ZXJfMjEiLCB0cnVlXQ~WyJuUHVvUW5rUkZxM0JJZUFtN0FuWEZBIiwgImlzX292ZXJfNjUiLCBmYWxzZV0~"}'
+    #test vector from App. A.3 of https://www.ietf.org/archive/id/draft-ietf-oauth-selective-disclosure-jwt-07.txt
+    #issuer key from https://github.com/oauth-wg/oauth-selective-disclosure-jwt/blob/master/examples/settings.yml
+}
