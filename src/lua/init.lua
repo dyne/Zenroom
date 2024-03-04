@@ -148,6 +148,7 @@ _G['CONF'] = {
 	  encoding = { fun = get_encoding_function('base64'),
 				   name = 'base64' },
 	  format = { fun = JSON.auto, name = 'json' },
+	  sorting = true,
 	  versioning = false
    },
    debug = { encoding = { fun = get_encoding_function('hex'),

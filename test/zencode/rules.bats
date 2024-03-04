@@ -2,6 +2,24 @@ load ../bats_setup
 load ../bats_zencode
 SUBDOC=rules
 
+@test "Rule output unsorted" {
+    cat << EOF | save_asset rule_input_unsorted.data
+{ "reverse_order": { "c": 3, "b": 2, "a": 1 } }
+EOF
+	>&3 cat rule_input_unsorted.data
+	cat <<EOF | zexe rule_input_unsorted.zen rule_input_unsorted.data
+rule output sorting false
+
+Given I have a 'string dictionary' named 'reverse order'
+and debug
+Then print all data
+EOF
+
+	save_output rule_input_unsorted.out
+	assert_output '{"reverse_order":{"c":3,"b":2,"a":1}}'
+}
+
+
 # --- version --- #
 @test "Rule check version" {
     cat <<EOF | zexe check_version.zen
