@@ -98,21 +98,18 @@ static const Node dummynode_ = {
 
 static const TValue absentkey = {ABSTKEYCONSTANT};
 
-
 /*
-** Hash for integers. To allow a good hash, use the remainder operator
-** ('%'). If integer fits as a non-negative int, compute an int
-** remainder, which is faster. Otherwise, use an unsigned-integer
-** remainder, which uses all bits and ensures a non-negative result.
+** Hash for integers. Modified for Zenroom
+https://luyuhuang.tech/2021/07/30/hash-collision.html
 */
-static Node *hashint (const Table *t, lua_Integer i) {
-  lua_Unsigned ui = l_castS2U(i);
-  if (ui <= cast_uint(INT_MAX))
-    return hashmod(t, cast_int(ui));
-  else
-    return hashmod(t, ui);
+inline uint64_t betterhash(uint64_t x) {
+    x = (x ^ (x >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
+    x = (x ^ (x >> 27)) * UINT64_C(0x94d049bb133111eb);
+    x = x ^ (x >> 31);
+    return x;
 }
 
+#define hashint(t,i)		hashpow2(t, betterhash(i))
 
 /*
 ** Hash for floating-point numbers.
