@@ -531,3 +531,52 @@ EOF
     run $ZENROOM_EXECUTABLE -a fail_table_wrong_dt.data -z fail_table_wrong_dt_3.zen
     assert_line --partial 'Incorrect data type, expected dictionary for ecdh_pks'
 }
+
+
+@test "Given I have a '' in path '' with arrays" {
+    cat << EOF | save_asset given_in_path_array.data
+{
+    "my_dict": {
+        "result": {
+            "my_string_array": [
+                "hello",
+                "world"
+            ],
+            "my_number_array": [
+                1,
+                2,
+                3
+            ]
+        }
+    },
+    "my_array": [
+        {
+            "1": "hello"
+        },
+        [
+            "one",
+            {
+                "hi": "world"
+            }
+        ]
+    ]
+}
+EOF
+
+    cat << EOF | zexe given_in_path_array.zen given_in_path_array.data
+Given I have a 'number' in path 'my_dict.result.my_number_array.1'
+and I rename '1' to 'my_number_array_1'
+Given I have a 'string' in path 'my_dict.result.my_string_array.2'
+and I rename '2' to 'my_string_array_2'
+Given I have a 'string' in path 'my_array.1.1'
+and I rename '1' to 'my_array_1_1'
+Given I have a 'string' in path 'my_array.2.1'
+and I rename '1' to 'my_array_2_1'
+Given I have a 'string' in path 'my_array.2.2.hi'
+and I rename 'hi' to 'my_array_2_2_hi'
+
+Then print the data
+EOF
+    save_output 'given_in_path.json'
+    assert_output '{"my_array_1_1":"hello","my_array_2_1":"one","my_array_2_2_hi":"world","my_number_array_1":1,"my_string_array_2":"world"}'
+}

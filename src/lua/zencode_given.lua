@@ -441,10 +441,15 @@ Given("'' in path ''", function(enc, path)
     table.remove(path_array, 1)
     local dest = path_array[#path_array]
     local res = IN[root]
-    for k,v in pairs(path_array) do
+    for _,v in pairs(path_array) do
         zencode_assert(luatype(res) == 'table', "Object is not a table: "..root)
-        zencode_assert(res[v] ~= nil, "Key "..v.." not found in "..root)
-        res = res[v]
+        if res[v] == nil then
+            local v_number = tonumber(v)
+            zencode_assert(res[v_number] ~= nil, "Key "..v.." not found in "..root)
+            res = res[v_number]
+        else
+            res = res[v]
+        end
         root = v
     end
     ZEN.TMP = guess_conversion(res, enc)
