@@ -880,7 +880,7 @@ EOF
     "es256_public_key": "LzOheBTJ7wIcII4MWkzoETuGroDn9ihIGEeVSbByUig7mO264C94nBIqM6cU7Pa5Nq+GiLd+ibejPXnfwbEV6A=="
 }
 EOF
-    cat <<EOF | zexe jwk.zen jwk.data
+    cat <<EOF | zexe jwk.zen jwk_from_pk.data
 Scenario 'w3c': jwk
 Scenario 'ecdh': jwk
 Scenario 'es256': jwk
