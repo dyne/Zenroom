@@ -436,23 +436,8 @@ Given("'' part of '' before string suffix ''", function(enc, src, sfx)
 end)
 
 Given("'' in path ''", function(enc, path)
-    local path_array = strtok(uscore(path), '.')
-    local root = path_array[1]
-    table.remove(path_array, 1)
-    local dest = path_array[#path_array]
-    local res = IN[root]
-    for _,v in pairs(path_array) do
-        zencode_assert(luatype(res) == 'table', "Object is not a table: "..root)
-        if res[v] == nil then
-            local v_number = tonumber(v)
-            zencode_assert(res[v_number] ~= nil, "Key "..v.." not found in "..root)
-            res = res[v_number]
-        else
-            res = res[v]
-        end
-        root = v
-    end
-    ZEN.TMP = guess_conversion(res, enc)
+    local ele_from_path, dest = pick_from_path(path)
+    ZEN.TMP = guess_conversion(ele_from_path, enc)
     ZEN.TMP.name = dest
     ack(dest)
     gc()

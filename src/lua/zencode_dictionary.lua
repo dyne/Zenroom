@@ -259,24 +259,15 @@ When("create copy of object named by '' from dictionary ''", function(name, dict
 end)
 
 local function take_out_f(path, dest, format)
-	local parr = strtok(uscore(path), '.')
-	local root = parr[1] -- first
-	table.remove(parr, 1)
-	if not dest then
-	   dest = parr[#parr]
-	   table.remove(parr, #parr)
-	end
-	empty(dest)
-	local res = have(root)
-	for k,v in pairs(parr) do
-	   res = _extract(res, v)
-	end
-	ACK[dest] = _extract(res, dest)
-	if format then
-	   new_codec(dest, guess_conversion(ACK[dest], format))
-	else
-	   new_codec(dest, { encoding = CODEC[root].encoding })
-	end
+    if dest then path = path..'.'..dest end
+    local ele, dest = pick_from_path(path)
+    ACK[dest] = ele
+    if format then
+        new_codec(dest, guess_conversion(ACK[dest], format))
+    else
+        local root = strtok(uscore(path), '.')[1]
+        new_codec(dest, { encoding = CODEC[root].encoding })
+    end
 end
 
 When("pickup from path ''", function(path)
