@@ -227,13 +227,13 @@ When("create copy of last element from ''", function(obj_name)
 end)
 
 local function take_out_f(path, dest, format)
-    if dest then path = path..'.'..dest end
+    if dest then path = path..CONF.path.separator..dest end
     local ele, dest = pick_from_path(path)
     ACK[dest] = ele
     if format then
         new_codec(dest, guess_conversion(ACK[dest], format))
     else
-        local root = strtok(uscore(path), '.')[1]
+        local root = strtok(uscore(path), CONF.path.separator)[1]
         new_codec(dest, { encoding = CODEC[root].encoding })
     end
 end

@@ -161,6 +161,7 @@ _G['CONF'] = {
    missing = { fatal = true },
    heap = { check_collision = true },
    hash = 'sha256',
+   path = { separator = '.' },
 }
 -- turn on heapguard when DEBUG or linux-debug build
 if DEBUG > 1 or MAKETARGET == "linux-debug" then

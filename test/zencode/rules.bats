@@ -307,3 +307,49 @@ EOF
     save_output not_rule_input_number_strict_dictionaries.out
     assert_output '{"string_dict_with_number":{"bool":true,"num":1978468946,"string":"hello"}}'
 }
+
+
+# --- Rule path separator --- #
+@test "Rule path separator" {
+    cat << EOF | save_asset rule_path_separator.data
+{
+    "my_dict": {
+        "my_array": [
+            [
+                {
+                    "hello": "world"
+                },
+                {
+                    "world": "hello"
+                }
+            ]
+        ]
+    }
+}
+EOF
+    cat << EOF | zexe rule_path_separator.zen rule_path_separator.data
+Rule path separator -
+
+Given I have a 'string dictionary' named 'my_dict'
+Given I have a 'string' in path 'my_dict-my_array-1-2-world'
+
+When I pickup from path 'my_dict-my_array-1-1-hello'
+
+Then print the 'world'
+Then print the 'hello'
+EOF
+    save_output 'rule_path_separator.out'
+    assert_output '{"hello":"world","world":"hello"}'
+}
+
+@test "Rule path separator longer than one char fails" {
+    cat << EOF | save_asset rule_path_separator_fail.zen
+Rule path separator --
+
+Given I have a 'string' in path 'my_dict--my_array--1--2--world'
+
+Then print the data
+EOF
+    run $ZENROOM_EXECUTABLE -z -a rule_path_separator.data rule_path_separator_fail.zen
+    assert_line --partial 'Rule invalid: Rule path separator --'
+}
