@@ -551,7 +551,7 @@ EOF
 @test "Pickup from path" {
     cat <<EOF | zexe pickup.zen dict-into-array.data
 Given I have a 'string dictionary' named 'data' inside 'dataFromEndpoint'
-When I pickup from path 'data.batches.header_signature'
+When I pickup from path 'data.batches.1.header_signature'
 When I pickup a 'string' from path 'data.header.previous_block_id'
 When I pickup a 'string array' from path 'data.batches'
 When I move 'previous block id' in 'batches'
