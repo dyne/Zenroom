@@ -258,30 +258,6 @@ When("create copy of object named by '' from dictionary ''", function(name, dict
   create_copy_f(dict, label:string())
 end)
 
-local function take_out_f(path, dest, format)
-    if dest then path = path..'.'..dest end
-    local ele, dest = pick_from_path(path)
-    ACK[dest] = ele
-    if format then
-        new_codec(dest, guess_conversion(ACK[dest], format))
-    else
-        local root = strtok(uscore(path), '.')[1]
-        new_codec(dest, { encoding = CODEC[root].encoding })
-    end
-end
-
-When("pickup from path ''", function(path)
-	take_out_f(path, nil, nil)
-end)
-
-When("pickup a '' from path ''", function(format, path)
-	take_out_f(path, nil, format)
-end)
-
-When("take '' from path ''", function(target, path)
-	take_out_f(path, uscore(target), nil)
-end)
-
 When("for each dictionary in '' append '' to ''", function(arr, right, left)
 	local dicts = have(arr)
 	zencode_assert(luatype(dicts) == 'table', 'Object is not a table: '..arr)

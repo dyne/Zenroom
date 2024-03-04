@@ -225,3 +225,27 @@ When("create copy of last element from ''", function(obj_name)
     end
     new_codec('copy_of_last_element', n_codec)
 end)
+
+local function take_out_f(path, dest, format)
+    if dest then path = path..'.'..dest end
+    local ele, dest = pick_from_path(path)
+    ACK[dest] = ele
+    if format then
+        new_codec(dest, guess_conversion(ACK[dest], format))
+    else
+        local root = strtok(uscore(path), '.')[1]
+        new_codec(dest, { encoding = CODEC[root].encoding })
+    end
+end
+
+When("pickup from path ''", function(path)
+    take_out_f(path, nil, nil)
+end)
+
+When("pickup a '' from path ''", function(format, path)
+    take_out_f(path, nil, format)
+end)
+
+When("take '' from path ''", function(target, path)
+    take_out_f(path, uscore(target), nil)
+end)
