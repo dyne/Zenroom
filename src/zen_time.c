@@ -85,12 +85,17 @@ ztime_t* time_arg(lua_State *L, int n) {
 	if(lua_isstring(L, 1)) {
 		const char* arg = lua_tostring(L, 1);
 		char *pEnd;
-		*result = strtol(arg, &pEnd, 10);
+		long l_result = strtol(arg, &pEnd, 10);
 		if(*pEnd) {
 			free(result);
 			lerror(L, "Could not read unix timestamp %s", arg);
 			return NULL;
+		} else if (l_result < INT_MIN || l_result > INT_MAX) {
+			free(result);
+			lerror(L, "Could not read unix timestamp %s out of range", arg);
+			return NULL;
 		}
+		*result = (ztime_t)l_result;
 		goto end;
 	}
 	// number argument, import
