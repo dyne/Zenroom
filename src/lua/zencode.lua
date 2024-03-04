@@ -284,6 +284,14 @@ function ZEN:begin(new_heap)
 			 CONF.output.format = get_format(format)
 			 return true and CONF.output.format
 		  end,
+		  ['output sorting'] = function(what)
+			 if what == 'true' then
+				CONF.output.sorting = true
+			 else
+				CONF.output.sorting = false
+			 end
+			 return true
+		  end,
 		  ['output versioning'] = function ()
 			 CONF.output.versioning = true
 			 return true

@@ -71,6 +71,9 @@ local function encode_table(val, stack, whitespaces)
 
   stack[val] = true
 
+  local _ipairs <const> = fif(CONF.output.sorting,sort_ipairs,ipairs)
+  local _pairs <const> = fif(CONF.output.sorting,sort_pairs,pairs)
+
   if rawget(val, 1) ~= nil or next(val) == nil then
     -- Treat as array -- check keys are valid and it is not sparse
     local n = 0
@@ -85,15 +88,15 @@ local function encode_table(val, stack, whitespaces)
       error("invalid table: sparse array (n="..n..", #val="..#val..")")
     end
     -- Encode
-    for i, v in sort_ipairs(val) do
-        res[#res+1] = encode(v, stack, whitespaces)
-    end
+	for i, v in _ipairs(val) do
+	   res[#res+1] = encode(v, stack, whitespaces)
+	end
     stack[val] = nil
     return "[" .. table.concat(res, separator) .. "]"
 
   else
     -- Treat as an object
-    for k, v in sort_pairs(val) do
+    for k, v in _pairs(val) do
       if type(k) ~= "string" then
         error("invalid table: mixed or invalid key types")
       end
