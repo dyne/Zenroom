@@ -838,3 +838,72 @@ EOF
     assert_output '{"output":["signature_verified"]}'
 
 }
+
+@test "create jwk from keyring" {
+    cat <<EOF | save_asset jwk_from_keyring.data
+{
+    "keyring": {
+               "es256": "hqQUHoEbLJIqcoLEvEtu8kJ3WbhaskDb5Sl/ygPN220=",
+               "ecdh": "wffXCldmMihxqkSrIj5a0stleXtfR7g7fqRuh5LX+cM="
+    }
+}
+EOF
+    cat <<EOF | zexe jwk_from_keyring.zen jwk_from_keyring.data
+Scenario 'w3c': jwk
+
+Given I have a 'keyring'
+
+# es256
+When I create the jwk of es256 public key
+and I rename the 'jwk' to 'jwk_pk_from_sk_es256'
+
+When I create the jwk of es256 public key with private key
+and I rename the 'jwk' to 'jwk_keypair_from_sk_es256'
+
+# es256k
+When I create the jwk of es256k public key
+and I rename the 'jwk' to 'jwk_pk_from_sk_es256k'
+
+When I create the jwk of es256k public key with private key
+and I rename the 'jwk' to 'jwk_keypair_from_sk_es256k'
+
+Then print the data
+EOF
+    save_output jwk_from_keyring.json
+    assert_output '{"jwk_keypair_from_sk_es256":{"crv":"P-256","d":"hqQUHoEbLJIqcoLEvEtu8kJ3WbhaskDb5Sl_ygPN220","kty":"EC","x":"LzOheBTJ7wIcII4MWkzoETuGroDn9ihIGEeVSbByUig","y":"O5jtuuAveJwSKjOnFOz2uTavhoi3fom3oz1538GxFeg"},"jwk_keypair_from_sk_es256k":{"crv":"secp256k1","d":"wffXCldmMihxqkSrIj5a0stleXtfR7g7fqRuh5LX-cM","kty":"EC","x":"BMFN1t9Rly7t5gOicIGyMS45xGTQu5zsiPK2YhW5ANg","y":"D0RyutFR_y9T5gHsPe8zZrwRwe5gyg7KdO33x_VDXjAE"},"jwk_pk_from_sk_es256":{"crv":"P-256","kty":"EC","x":"LzOheBTJ7wIcII4MWkzoETuGroDn9ihIGEeVSbByUig","y":"O5jtuuAveJwSKjOnFOz2uTavhoi3fom3oz1538GxFeg"},"jwk_pk_from_sk_es256k":{"crv":"secp256k1","kty":"EC","x":"BMFN1t9Rly7t5gOicIGyMS45xGTQu5zsiPK2YhW5ANg","y":"D0RyutFR_y9T5gHsPe8zZrwRwe5gyg7KdO33x_VDXjAE"}}'
+}
+
+@test "create jwk from public keys" {
+    cat <<EOF | save_asset jwk_from_pk.data
+{
+    "ecdh_public_key": "BMFN1t9Rly7t5gOicIGyMS45xGTQu5zsiPK2YhW5ANgPRHK60VH/L1PmAew97zNmvBHB7mDKDsp07ffH9UNeMAQ=",
+    "es256_public_key": "LzOheBTJ7wIcII4MWkzoETuGroDn9ihIGEeVSbByUig7mO264C94nBIqM6cU7Pa5Nq+GiLd+ibejPXnfwbEV6A=="
+}
+EOF
+    cat <<EOF | zexe jwk.zen jwk.data
+Scenario 'w3c': jwk
+Scenario 'ecdh': jwk
+Scenario 'es256': jwk
+
+Given I have a 'ecdh public key'
+and I have a 'es256 public key'
+
+# es256
+When I create the jwk of es256 public key
+and I rename the 'jwk' to 'jwk_pk_from_sk_es256'
+
+When I create the jwk of es256 public key 'es256 public key'
+and I rename the 'jwk' to 'jwk_pk_from_pk_es256'
+
+# es256k
+When I create the jwk of es256k public key
+and I rename the 'jwk' to 'jwk_pk_from_sk_es256k'
+
+When I create the jwk of es256k public key 'ecdh public key'
+and I rename the 'jwk' to 'jwk_pk_from_pk_es256k'
+
+Then print the data
+EOF
+    save_output jws_header_with_pk.json
+    assert_output '{"ecdh_public_key":"BMFN1t9Rly7t5gOicIGyMS45xGTQu5zsiPK2YhW5ANgPRHK60VH/L1PmAew97zNmvBHB7mDKDsp07ffH9UNeMAQ=","es256_public_key":"LzOheBTJ7wIcII4MWkzoETuGroDn9ihIGEeVSbByUig7mO264C94nBIqM6cU7Pa5Nq+GiLd+ibejPXnfwbEV6A==","jwk_pk_from_pk_es256":{"crv":"P-256","kty":"EC","x":"LzOheBTJ7wIcII4MWkzoETuGroDn9ihIGEeVSbByUig","y":"O5jtuuAveJwSKjOnFOz2uTavhoi3fom3oz1538GxFeg"},"jwk_pk_from_pk_es256k":{"crv":"secp256k1","kty":"EC","x":"BMFN1t9Rly7t5gOicIGyMS45xGTQu5zsiPK2YhW5ANg","y":"D0RyutFR_y9T5gHsPe8zZrwRwe5gyg7KdO33x_VDXjAE"},"jwk_pk_from_sk_es256":{"crv":"P-256","kty":"EC","x":"LzOheBTJ7wIcII4MWkzoETuGroDn9ihIGEeVSbByUig","y":"O5jtuuAveJwSKjOnFOz2uTavhoi3fom3oz1538GxFeg"},"jwk_pk_from_sk_es256k":{"crv":"secp256k1","kty":"EC","x":"BMFN1t9Rly7t5gOicIGyMS45xGTQu5zsiPK2YhW5ANg","y":"D0RyutFR_y9T5gHsPe8zZrwRwe5gyg7KdO33x_VDXjAE"}}'
+}

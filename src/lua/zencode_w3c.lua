@@ -146,6 +146,87 @@ ZEN:add_schema(
 )
 
 --[[
+--    Json Web Key
+--]]
+
+-- create a jwk encoded key starting from the realtive sk/pk
+-- @param alg alg in jwk
+-- @param sk_falg sk flag, if true the alg sk will be inserted in the jwk
+-- @param pk a specific public key to be used
+-- @return jwk as a string dictionary (need to be transformed in octet before store in ACK)
+local function _create_string_jwk(alg, sk_flag, pk)
+    if sk_flag and pk then error('JWK can not be created with zenroom sk and custom pk', 2) end
+    if alg ~= 'ES256K' and alg ~= 'ES256' then error(alg.. ' not yet supported by zenroom jwk', 2) end
+    local alg_to_pk = {['ES256K']= 'ecdh_public_key', ['ES256']= 'es256_public_key'}
+    local jwk = {}
+    jwk.kty = 'EC'
+    jwk.crv = fif(alg == 'ES256K', 'secp256k1', 'P-256')
+    local pub
+    -- explicit pk
+    if pk then
+        local pub_codec
+        pub, pub_codec = have(pk)
+        if alg_to_pk[alg] ~= pub_codec.schema then
+            error('The '..alg..' algorithm does not match the public key schema '..pub_codec.schema, 2)
+        end
+    else
+        local sk, pub_f
+        if alg == 'ES256K' then
+            sk = ACK.keyring and ACK.keyring.ecdh
+            pub_f = ECDH.pubgen
+        else
+            local ES256 = require_once 'es256'
+            sk = ACK.keyring and ACK.keyring.es256
+            pub_f = ES256.pubgen
+        end
+        -- sk found
+        if sk then
+            if sk_flag then jwk.d = O.to_url64(sk) end
+            pub = pub_f(sk)
+        -- sk not found search for default public key
+        else
+            if sk_flag then error('Private key for '..alg..' algorithm not found in the keyring', 2) end
+            local pub_codec
+            pub, pub_codec = have(alg_to_pk[alg])
+            if alg_to_pk[alg] ~= pub_codec.schema then
+                error('The '..alg..' algorithm does not match the public key schema '..pub_codec.schema, 2)
+            end
+        end
+    end
+    local x, y = O.chop(pub, 32)
+    jwk.x = O.to_url64(x)
+    jwk.y = O.to_url64(y)
+    return jwk
+end
+
+local function _create_jwk(alg, sk_flag, pk)
+    empty 'jwk'
+    ACK.jwk = deepmap(O.from_string, _create_string_jwk(alg, sk_flag, pk))
+    new_codec('jwk', { zentype = 'd',
+                       encoding = 'string' })
+end
+
+When("create jwk of p256 public key", function() _create_jwk('ES256') end)
+When("create jwk of es256 public key", function() _create_jwk('ES256') end)
+When("create jwk of secp256r1 public key", function() _create_jwk('ES256') end)
+When("create jwk of p256 public key with private key", function() _create_jwk('ES256', true) end)
+When("create jwk of es256 public key with private key", function() _create_jwk('ES256', true) end)
+When("create jwk of secp256r1 public key with private key", function() _create_jwk('ES256', true) end)
+When("create jwk of p256 public key ''", function(pk) _create_jwk('ES256', false, pk) end)
+When("create jwk of es256 public key ''", function(pk) _create_jwk('ES256', false, pk) end)
+When("create jwk of secp256r1 public key ''", function(pk) _create_jwk('ES256', false, pk) end)
+
+When("create jwk of ecdh public key", function() _create_jwk('ES256K') end)
+When("create jwk of es256k public key", function() _create_jwk('ES256K') end)
+When("create jwk of secp256k1 public key", function() _create_jwk('ES256K') end)
+When("create jwk of ecdh public key with private key", function() _create_jwk('ES256K', true) end)
+When("create jwk of es256k public key with private key", function() _create_jwk('ES256K', true) end)
+When("create jwk of secp256k1 public key with private key", function() _create_jwk('ES256K', true) end)
+When("create jwk of ecdh public key ''", function(pk) _create_jwk('ES256K', false, pk) end)
+When("create jwk of es256k public key ''", function(pk) _create_jwk('ES256K', false, pk) end)
+When("create jwk of secp256k1 public key ''", function(pk) _create_jwk('ES256K', false, pk) end)
+
+--[[
 --    Json Web Signature
 --]]
 
@@ -313,26 +394,7 @@ end))
 local function _create_jws_header(alg, pk)
     local header = {['alg'] = alg}
     if pk then
-        local jwk = {}
-        jwk.kty = 'EC'
-        local sk, pubgen_f
-        if alg == 'ES256K' then
-            sk = havekey'ecdh'
-            pubgen_f = ECDH.pubgen
-            jwk.crv = 'secp256k1'
-        elseif alg == 'ES256' then
-            local ES256 = require_once 'es256'
-            sk = havekey'es256'
-            pubgen_f = ES256.pubgen
-            jwk.crv = 'P-256'
-        else
-            error('can not create the jws header for algorithm '..alg, 2)
-        end
-        local pk = pubgen_f(sk)
-        local x, y = O.chop(pk, 32)
-        jwk.x = O.to_url64(x)
-        jwk.y = O.to_url64(y)
-        header.jwk = jwk
+        header.jwk = _create_string_jwk(alg)
     end
     ACK.jws_header = deepmap(O.from_string, header)
     new_codec('jws_header', { zentype = 'd',
