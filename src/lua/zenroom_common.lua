@@ -394,7 +394,7 @@ end
 -- @return element found following the path
 -- @return name of the destination
 function pick_from_path(path)
-    local path_array = strtok(uscore(path), '.')
+    local path_array = strtok(uscore(path), CONF.path.separator)
     local root = path_array[1]
     table.remove(path_array, 1)
     local dest = path_array[#path_array]
