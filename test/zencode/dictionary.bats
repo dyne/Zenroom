@@ -678,10 +678,10 @@ Given I have a 'string' named 'name'
 
 When I move 'myString' in 'myDict'
 When I move named by 'name' in 'myArray'
-When I move 'surname' from 'myDict' to 'myArray'
+When I move 'surname' from 'myDict' in 'myArray'
 
 When I create the 'string array' named 'myNewArray'
-When I move 'name' from 'myDict' to 'myNewArray'
+When I move 'name' from 'myDict' in 'myNewArray'
 
 Then print the 'myDict'
 and print the 'myArray'
