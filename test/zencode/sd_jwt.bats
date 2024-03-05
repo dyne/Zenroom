@@ -457,7 +457,8 @@ Scenario 'es256'
 Given I am known as 'Alice'
 Given I have my 'es256 public key'
 Given I have a 'signed selective disclosure'
-#When I verify signed selective disclosure 'signed_selective_disclosure' issued by 'Alice' is valid
+# TODO: verification is broken by sorting table
+# When I verify signed selective disclosure 'signed_selective_disclosure' issued by 'Alice' is valid
 Then print the 'signed selective disclosure' as 'decoded selective disclosure' 
 EOF
     save_output testVector.out.json
