@@ -490,17 +490,24 @@ When("verify signed selective disclosure '' issued by '' is valid", function(obj
     local jwt = signed_sd.jwt
     local disclosures = signed_sd.disclosures
 -- Ensure that a signing algorithm was used that was deemed secure for the application.
+-- TODO: may break due to non-alphabetic sorting of header elements
     zencode_assert(SD_JWT.verify_jws_header(jwt), "The JWT header is not valid")
+
 -- Check that the _sd_alg claim value is understood and the hash algorithm is deemed secure.
     zencode_assert(SD_JWT.verify_sd_alg(jwt), "The hash algorithm is not supported")
 
 -- Check that the sd-jwt contains all the mandatory claims
+-- TODO: break due to non-alphabetic sorting of string dictionary
+-- elements when re-encoded to JSON. The payload may be a nested
+-- dictionary at 3 or more depth.
     zencode_assert(SD_JWT.check_mandatory_claim_names(jwt.payload), "The JWT payload does not contain the mandatory claims")
 
 -- Process the Disclosures and embedded digests in the Issuersigned JWT and compare the value with the digests calculated
+-- Disclosures are an array and sorting is kept so this validation passes.
     zencode_assert(SD_JWT.verify_sd_fields(jwt.payload, disclosures), "The disclosure is not valid")
 
 -- Validate the signature over the Issuer-signed JWT.
+-- TODO: break due to non-alphabetic sorting of objects mentioned above in this function
     zencode_assert(SD_JWT.verify_jws_signature(jwt, iss_pk), "The issuer signature is not valid")
 
 -- TODO?: Validate the Issuer and that the signing key belongs to this Issuer.
