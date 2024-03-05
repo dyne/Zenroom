@@ -241,26 +241,6 @@ When("copy '' to ''", function(old,new)
 	new_codec(new, { }, old)
 end)
 
-local function _copy_move_in(old, new, inside, delete)
-	local src = have(old)
-	local dst = have(inside)
-	zencode_assert(luatype(dst) == 'table', "Destination is not a table: "..inside)
-	zencode_assert(not dst[new],
-			   "Cannot overwrite destination: "..new.." inside "..inside)
-	dst[new] = deepcopy(src)
-	ACK[inside] = dst
-	if delete then
-	   ACK[old] = nil
-	   CODEC[old] = nil
-	end
-end
-When("copy '' to '' in ''", function(old,new,inside)
-		_copy_move_in(old, new, inside, false)
-end)
-When("move '' to '' in ''", function(old,new,inside)
-		_copy_move_in(old, new, inside, true)
-end)
-
 When("copy contents of '' in ''", function(src,dst)
 	local obj = have(src)
 	have(dst)
