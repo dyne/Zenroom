@@ -62,7 +62,7 @@ When("move '' in ''", function(src, dest)
     CODEC[src] = nil
 end)
 
-When("move '' from '' to ''", function(name, src, dest)
+When("move '' from '' in ''", function(name, src, dest)
     move_or_copy_in(have({src, name}), name, dest)
     ACK[src][name] = nil
 end)
