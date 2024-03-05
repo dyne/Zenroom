@@ -720,12 +720,13 @@ Given I have a 'string' named 'name'
 When I copy 'myArray' in 'myDict'
 When I copy 'myDict' in 'myArray'
 When I copy named by 'name' in 'myArray'
+When I copy 'surname' from 'myDict' in 'myArray'
 
 Then print the 'myDict'
 and print the 'myArray'
 EOF
     save_output 'copy.json'
-    assert_output '{"myArray":["John","Doe","42",{"age":"44","myArray":["John","Doe","42"],"name":"Bruce","surname":"Wayne"},"where?"],"myDict":{"age":"44","myArray":["John","Doe","42"],"name":"Bruce","surname":"Wayne"}}'
+    assert_output '{"myArray":["John","Doe","42",{"age":"44","myArray":["John","Doe","42"],"name":"Bruce","surname":"Wayne"},"where?","Wayne"],"myDict":{"age":"44","myArray":["John","Doe","42"],"name":"Bruce","surname":"Wayne"}}'
 }
 
 @test "fail to move element in a close schema" {

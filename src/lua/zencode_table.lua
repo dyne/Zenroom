@@ -87,6 +87,10 @@ When("copy '' to '' in ''", function(src, new, dest)
     move_or_copy_in(have(src), src, dest, new)
 end)
 
+When("copy '' from '' in ''", function(name, src, dest)
+    move_or_copy_in(have({src, name}), name, dest)
+end)
+
 local function _when_remove_dictionary(ele, from)
     -- ele is just the name (key) of object to remove
     local dict = have(from)
