@@ -20,9 +20,10 @@
 --on Monday, 28th August 2023
 --]]
 
-local function move_or_copy_in(src_value, src_name, dest)
+local function move_or_copy_in(src_value, src_name, dest, new)
     local d = have(dest)
     if luatype(d) ~= 'table' then error("Object is not a table: "..dest, 2) end
+    local new_name = new or src_name
     local cdest = CODEC[dest]
     if cdest.zentype == 'e' and cdest.schema then
         local sdest = ZEN.schemas[cdest.schema]
@@ -31,16 +32,16 @@ local function move_or_copy_in(src_value, src_name, dest)
         elseif not sdest.schematype or sdest.schematype ~= 'open' then
             error("Schema is not open to accept extra objects: "..dest)
         end
-        if d[src_name] then
-            error("Cannot overwrite: "..src_name.." in "..dest,2)
+        if d[new_name] then
+            error("Cannot overwrite: "..new_name.." in "..dest,2)
         end
-        d[src_name] = src_value
+        d[new_name] = src_value
         ACK[dest] = d
     elseif cdest.zentype == 'd' then
-        if d[src_name] then
-            error("Cannot overwrite: "..src_name.." in "..dest,2)
+        if d[new_name] then
+            error("Cannot overwrite: "..new_name.." in "..dest,2)
         end
-        d[src_name] = src_value
+        d[new_name] = src_value
         ACK[dest] = d
     elseif cdest.zentype == 'a' then
         table.insert(ACK[dest], src_value)
@@ -62,6 +63,12 @@ When("move '' in ''", function(src, dest)
     CODEC[src] = nil
 end)
 
+When("move '' to '' in ''", function(src, new, dest)
+    move_or_copy_in(have(src), src, dest, new) ---old, new, inside, true)
+    ACK[src] = nil
+    CODEC[src] = nil
+end)
+
 When("move '' from '' in ''", function(name, src, dest)
     move_or_copy_in(have({src, name}), name, dest)
     ACK[src][name] = nil
@@ -74,6 +81,10 @@ end)
 
 When("copy '' in ''", function(src, dest)
     move_or_copy_in(deepcopy(have(src)), src, dest)
+end)
+
+When("copy '' to '' in ''", function(src, new, dest)
+    move_or_copy_in(have(src), src, dest, new)
 end)
 
 local function _when_remove_dictionary(ele, from)
