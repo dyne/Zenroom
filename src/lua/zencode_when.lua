@@ -294,18 +294,29 @@ When("copy contents of '' named '' in ''", function(src,name,dst)
     end
 end)
 
-When("copy '' from '' to ''", function(old,inside,new)
-    zencode_assert(ACK[inside][old], "Object not found: "..old.." inside "..inside)
-    empty(new)
-    ACK[new] = deepcopy(ACK[inside][old])
-    local o_codec = CODEC[inside]
-    local n_codec = { encoding = o_codec.encoding }
-	-- table of schemas can only contain elements
-	if o_codec.schema then
-		n_codec.schema = o_codec.schema
-		n_codec.zentype = "e"
-	end
+local function move_or_copy_from_to(ele, source, new)
+    local src, src_codec = have(source)
+    zencode_assert(src[ele], "Object not found: "..ele.." inside "..source)
+    if ACK[new] then
+        error("Cannot overwrite existing object: "..new.."\n"..
+              "To copy/move element in existing element use:\n"..
+              "When I move/copy '' from '' in ''", 2)
+    end
+    ACK[new] = deepcopy(src[ele])
+    local n_codec = { encoding = src_codec.encoding }
+    -- table of schemas can only contain elements
+    if src_codec.schema then
+        n_codec.schema = src_codec.schema
+        n_codec.zentype = "e"
+    end
     new_codec(new, n_codec)
+end
+
+When("copy '' from '' to ''", move_or_copy_from_to)
+
+When("move '' from '' to ''", function(ele, source, new)
+    move_or_copy_from_to(ele, source, new)
+    ACK[source][ele] = nil
 end)
 
 When("split rightmost '' bytes of ''", function(len, src)
