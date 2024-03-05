@@ -242,23 +242,56 @@ When("copy '' to ''", function(old,new)
 end)
 
 When("copy contents of '' in ''", function(src,dst)
-	local obj = have(src)
-	have(dst)
-	for k, v in pairs(obj) do
-	   ACK[dst][k] = v -- no deepcopy
-	   -- no new codec (using dst)
-	end
+    local obj, obj_codec = have(src)
+    zencode_assert(luatype(obj) == 'table', "Object is not a table: "..src)
+    local dest, dest_codec = have(dst)
+    zencode_assert(luatype(dest) == 'table', "Object is not a table: "..src)
+    if dest_codec.zentype == 'a' then
+        for _, v in pairs(obj) do
+            table.insert(ACK[dst], v)
+        end
+    elseif dest_codec.zentype == 'd' then
+        zencode_assert(obj_codec.zentype == 'd', "Can not copy contents of an array into a dictionary")
+        for k, v in pairs(obj) do
+            if ACK[dst][k] then error("Cannot overwrite: "..k.." in "..dst) end
+            ACK[dst][k] = v
+        end
+    elseif dest_codec.zentype == 'e' and dest_codec.schema then
+        local dest_schema = ZEN.schemas[dest_codec.schema]
+        if luatype(dest_schema) ~= 'table' then -- old schema types are not open
+            error("Schema is not open to accept extra objects: "..dst)
+        elseif not dest_schema.schematype or dest_schema.schematype ~= 'open' then
+            error("Schema is not open to accept extra objects: "..dst)
+        end
+        for k, v in pairs(obj) do
+            if ACK[dst][k] then error("Cannot overwrite: "..k.." in "..dst) end
+            ACK[dst][k] = v
+        end
+    end
 end)
 
 When("copy contents of '' named '' in ''", function(src,name,dst)
-	local obj = have(src)
-	have(dst)
-	for k, v in pairs(obj) do
-	   if k == name then
-	      ACK[dst][k] = v -- no deepcopy
-	   end
-	   -- no new codec (using dst)
-	end
+    local obj, obj_codec = have(src)
+    zencode_assert(luatype(obj) == 'table', "Object is not a table: "..src)
+    zencode_assert(obj_codec.zentype == 'd', "Object is not a dictionary: "..src)
+    zencode_assert(obj[name], "Object not found: "..name.." inside ".. src)
+    local dest, dest_codec = have(dst)
+    zencode_assert(luatype(dest) == 'table', "Object is not a table: "..src)
+    if dest_codec.zentype == 'a' then
+        table.insert(ACK[dst], obj[name])
+    elseif dest_codec.zentype == 'd' then
+        zencode_assert(dest[name], "Cannot overwrite: "..name.." in "..dst)
+        ACK[dst][name] = obj[name]
+    elseif dest_codec.zentype == 'e' and dest_codec.schema then
+        local dest_schema = ZEN.schemas[dest_codec.schema]
+        if luatype(dest_schema) ~= 'table' then -- old schema types are not open
+            error("Schema is not open to accept extra objects: "..dst)
+        elseif not dest_schema.schematype or dest_schema.schematype ~= 'open' then
+            error("Schema is not open to accept extra objects: "..dst)
+        end
+        zencode_assert(dest[name], "Cannot overwrite: "..name.." in "..dst)
+        ACK[dst][name] = obj[name]
+    end
 end)
 
 When("copy '' from '' to ''", function(old,inside,new)
