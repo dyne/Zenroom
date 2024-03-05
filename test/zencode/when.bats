@@ -401,3 +401,30 @@ EOF
     save_output json_validation.out.json
     assert_output '{"output":["validate_json_encoded_dicr"]}'
 }
+
+@test "try to move element from table to existing object" {
+    cat <<EOF | save_asset move_from_to_existing_obj.json
+{
+    "dict_from": {
+        "str_3": "!"
+    },
+    "dict_to": {
+            "str_1": "hello",
+            "str_2": "world"
+    }
+}
+EOF
+
+    cat <<EOF | save_asset move_from_to_existing_obj.zen
+Given I  have a 'string dictionary' named 'dict_from'
+and I have a 'string dictionary' named 'dict_to'
+
+When I move 'str_3' from 'dict_from' to 'dict_to'
+
+Then print the 'dict_to'
+EOF
+    run $ZENROOM_EXECUTABLE -z -a move_from_to_existing_obj.json move_from_to_existing_obj.zen
+    assert_line --partial 'Cannot overwrite existing object: dict_to'
+    assert_line --partial 'To copy/move element in existing element use:'
+    assert_line --partial "When I move/copy '' from '' in ''"
+}
