@@ -600,5 +600,5 @@ Then print the 'payload'
 Then print the 'bearer'
 EOF
     save_output 'prefix_from_varibale.json'
-    assert_output '{"bearer":"BEARER","payload":{"aud":"did:dyne:sandbox.signroom:PTDvvQn1iWQiVxkfsDnUid8FbieKbHq46Qs8c9CZx67","exp":1.709896e+09,"iat":1.709892e+09,"iss":"https://authz-server1.zenswarm.forkbomb.eu:3100","sub":"6da2cb24972337faa55406d60bfdbe5038495879"}}'
+    assert_output '{"bearer":"BEARER","payload":{"aud":"did:dyne:sandbox.signroom:PTDvvQn1iWQiVxkfsDnUid8FbieKbHq46Qs8c9CZx67","exp":1709896027,"iat":1709892427,"iss":"https://authz-server1.zenswarm.forkbomb.eu:3100","sub":"6da2cb24972337faa55406d60bfdbe5038495879"}}'
 }

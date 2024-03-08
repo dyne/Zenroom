@@ -86,29 +86,27 @@ local function export_verification_method(doc)
     return res
 end
 
+local function decode_jwt_parts(s)
+    if type(s) == 'string' then
+        return O.from_string(s)
+    elseif type(s) == 'number' then
+        if s==math.floor(s) and s >= 1500000000 and s < 2000000000 then
+            return U.new(s)
+        else
+            return FLOAT.new(s)
+        end
+    else
+        return s
+    end
+end
+
 local function import_jwt(obj)
     local res = {}
     local toks = strtok(obj, '.')
     res.header = JSON.decode(schema_get(toks[1], '.', O.from_url64, tostring):string())
-    res.header = deepmap(function(s)
-        if type(s) == 'string' then
-            return O.from_string(s)
-        elseif type(s) == 'number' then
-            return F.new(s)
-        else
-            return s
-        end
-    end, res.header)
+    res.header = deepmap(decode_jwt_parts, res.header)
     res.payload = JSON.decode(schema_get(toks[2], '.', O.from_url64, tostring):string())
-    res.payload = deepmap(function(s)
-        if type(s) == 'string' then
-            return O.from_string(s)
-        elseif type(s) == 'number' then
-            return F.new(s)
-        else
-            return s
-        end
-    end, res.payload)
+    res.payload = deepmap(decode_jwt_parts, res.payload)
     res.signature = schema_get(toks[3], '.', O.from_url64, tostring)
     return res
 end
