@@ -20,8 +20,18 @@
 --on Thursday, 29th February 2024
 --]]
 
-When('create timestamp', function()
+When("create timestamp", function()
     zencode_assert(os, 'Could not find os')
     ACK.timestamp = U.new(os.time())
     new_codec('timestamp', { zentype = 'e', encoding = 'time'})
+end)
+
+When("create integer '' cast of timestamp ''", function(dest, source)
+    empty(dest)
+    local src = have(source)
+    if type(src) ~= 'zenroom.time' then
+        src = U.new(src)
+    end
+    ACK[dest] = BIG.from_decimal(tostring(src))
+    new_codec(dest, { zentype = 'e', encoding = 'integer'})
 end)

@@ -55,3 +55,26 @@ EOF
     run $ZENROOM_EXECUTABLE -z -a time_too_big.data.json time_too_big_number.zen
     assert_line --partial 'Could not read unix timestamp 1.709304e+12'
 }
+
+@test "time to integer" {
+    cat <<EOF | save_asset intr_from_time.data.json
+{
+    "string_dictionary": {
+        "time": 1709303629
+    }
+}
+EOF
+    cat <<EOF | zexe intr_from_time.zen intr_from_time.data.json
+Given I have a 'string dictionary' named 'string_dictionary'
+
+When I pickup from path 'string_dictionary.time'
+and I create integer 'int_from_dict' cast of timestamp 'time'
+
+When I create timestamp
+and I create integer 'int_from_timestamp' cast of timestamp 'timestamp'
+
+Then print the data
+EOF
+    save_output intr_from_time.out.json
+    assert_output --partial '{"int_from_dict":"1709303629","int_from_timestamp":'
+}
