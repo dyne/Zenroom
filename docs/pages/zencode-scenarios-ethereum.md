@@ -22,18 +22,18 @@ You want to store this into the file
 
 Key generation in Zenroom uses by default a pseudo-random as seed, that is internally generated. 
 
-You can also opt to use a seed generated elsewhere, for example by using the [keypairoom](https://github.com/ledgerproject/keypairoom) library or it's [npm package](https://www.npmjs.com/package/keypair-lib). Suppose you have an Ethereum private key:
+You can also opt to use a seed generated elsewhere, for example by using the [keypairoom](https://github.com/ledgerproject/keypairoom) library or its [npm package](https://www.npmjs.com/package/keypair-lib). Suppose you have an Ethereum private key:
 
 [](../_media/examples/zencode_cookbook/ethereum/doc_key.json ':include :type=code json')
 
-Then you can upload it with a script that look like the following script:
+Then you can upload it with a script that looks like the following script:
 
 [](../_media/examples/zencode_cookbook/ethereum/doc_key_upload.zen ':include :type=code gherkin')
 
 
 ## Public key
 
-Ethereum does not use explicitly a public key, it use it only to create an Ethereum address that represents an account. So in Zencode there are no sentences to produce the public keys, but only the address.
+Ethereum does not use explicitly a public key, it uses it only to create an Ethereum address that represents an account. So in Zencode there are no sentences to produce the public keys, but only the address.
 
 If, for any reason, you need the ethereum public key, then you can simply compute it by understanding that the Ethereum private key is an ECDH private key so the following script will do the trick:
 
@@ -61,7 +61,7 @@ The output should look like:
 
 # The transaction: setup and execution
 
-The statements used to manage a transaction, follow closely the logic of the Ethereum protocol. With Ethereum we can store data on the chain or transafer eth from an address to another. What we'll do here is:
+The statements used to manage a transaction, follow closely the logic of the Ethereum protocol. With Ethereum we can store data on the chain or transfer eth from an address to another. What we'll do here is:
 
 * Prepare a JSON file containing:
   * the **ethereum nonce**, it is the number of transactions sent from the sender address
@@ -83,7 +83,7 @@ Now prepare a JSON file containing the nonce, the gas price and the gas limit. T
 
 ### Eth transfer
 
-Now, if you want to transfer eth, then you will need to add the recipient address and the value to be transfer in the JSON file. That will look like:
+Now, if you want to transfer eth, then you will need to add the recipient address and the value to be transferred in the JSON file. That will look like:
 
 [](../_media/examples/zencode_cookbook/ethereum/doc_tx_information_eth.json ':include :type=code json')
 
@@ -133,7 +133,7 @@ that use 1337 as default chain id.
 
 ## Broadcast and read ethereum transactions
 
-Once you have created your signed ethereum transaction then you can use [RESTroom-mw](https://dev.zenroom.org/#/pages/restroom-mw) to connect to a node and broadcast your transaction in the Ethereum chain you have choosen. Obviously you have to have some Eth in your address to broadcast the transaction, if you want to do some test you can use the [fabchain](https://github.com/dyne/fabchain) test network, where you can claim 1 eth per day inserting your ethreum address [here](http://test.fabchain.net:5000/).
+Once you have created your signed ethereum transaction then you can use [RESTroom-mw](https://dev.zenroom.org/#/pages/restroom-mw) to connect to a node and broadcast your transaction in the Ethereum chain you have chosen. Obviously you have to have some Eth in your address to broadcast the transaction, if you want to do some test you can use the [fabchain](https://github.com/dyne/fabchain) test network, where you can claim 1 eth per day inserting your ethereum address [here](http://test.fabchain.net:5000/).
 
 Now that you have broadcasted your transaction you can use also RESTroom-mw to retrieve the data stored in the transaction, but the data you will get will be of the form:
 
@@ -151,11 +151,11 @@ The output will be:
 
 A user may want to sign an object different from a transaction, and may want others to be able to verify such signature using only the ethereum address. 
 
-**Note:** the resulting ethereum signature uses the ECDSA determinitsic algorithm as specified in [RFC-6979](https://www.rfc-editor.org/rfc/rfc6979).
+**Note:** the resulting ethereum signature uses the ECDSA deterministic algorithm as specified in [RFC-6979](https://www.rfc-editor.org/rfc/rfc6979).
 
 ## Creation of the signature
 
-Given a string of which we want to compute the signature, assuming that the user already has a ethereum private key in the keyring, the signature can be created using the following script:
+Given a string of which we want to compute the signature, assuming that the user already has an ethereum private key in the keyring, the signature can be created using the following script:
 
 [](../_media/examples/zencode_cookbook/ethereum/doc_signtest_str.zen ':include :type=code gherkin')
 
@@ -189,11 +189,11 @@ Given an array that contains pairs of ethereum address and signature and a signe
 
 [](../_media/examples/zencode_cookbook/ethereum/signature_array.data ':include :type=code json')
 
-anyone may verify all the signatures usign the following script:
+anyone may verify all the signatures using the following script:
 
 [](../_media/examples/zencode_cookbook/ethereum/signature_array.zen ':include :type=code gherkin')
 
-This code will fail if at least one signature is not verified, to obtain a list that associate each address to the result of the verification the folowing script can be used:
+This code will fail if at least one signature is not verified, to obtain a list that associates each address to the result of the verification the following script can be used:
 
 [](../_media/examples/zencode_cookbook/ethereum/verification_result.zen ':include :type=code gherkin')
 
