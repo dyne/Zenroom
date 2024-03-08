@@ -580,3 +580,25 @@ EOF
     save_output 'given_in_path.json'
     assert_output '{"my_array_1_1":"hello","my_array_2_1":"one","my_array_2_2_hi":"world","my_number_array_1":1,"my_string_array_2":"world"}'
 }
+
+
+@test "Given to decode partials with string prefix and suffix in other variable" {
+	  cat << EOF | save_asset prefix_from_varibale.json
+{
+    "token": "BEARER eyJhbGciOiJFUzI1NiJ9.eyJzdWIiOiI2ZGEyY2IyNDk3MjMzN2ZhYTU1NDA2ZDYwYmZkYmU1MDM4NDk1ODc5IiwiaWF0IjoxNzA5ODkyNDI3LCJpc3MiOiJodHRwczovL2F1dGh6LXNlcnZlcjEuemVuc3dhcm0uZm9ya2JvbWIuZXU6MzEwMCIsImF1ZCI6ImRpZDpkeW5lOnNhbmRib3guc2lnbnJvb206UFREdnZRbjFpV1FpVnhrZnNEblVpZDhGYmllS2JIcTQ2UXM4YzlDWng2NyIsImV4cCI6MTcwOTg5NjAyN30.OReIXP6ZjSL8iHyno1nDwWw32SqlG3HIoFqoBpIb1OwuvOgUbGmdCNgfJToq7dT8kG2gsgIJYr40BcnNJDVX_Q",
+    "prefix": "BEARER ",
+    "suffix": " eyJhbGciOiJFUzI1NiJ9.eyJzdWIiOiI2ZGEyY2IyNDk3MjMzN2ZhYTU1NDA2ZDYwYmZkYmU1MDM4NDk1ODc5IiwiaWF0IjoxNzA5ODkyNDI3LCJpc3MiOiJodHRwczovL2F1dGh6LXNlcnZlcjEuemVuc3dhcm0uZm9ya2JvbWIuZXU6MzEwMCIsImF1ZCI6ImRpZDpkeW5lOnNhbmRib3guc2lnbnJvb206UFREdnZRbjFpV1FpVnhrZnNEblVpZDhGYmllS2JIcTQ2UXM4YzlDWng2NyIsImV4cCI6MTcwOTg5NjAyN30.OReIXP6ZjSL8iHyno1nDwWw32SqlG3HIoFqoBpIb1OwuvOgUbGmdCNgfJToq7dT8kG2gsgIJYr40BcnNJDVX_Q"
+ }
+EOF
+    cat << EOF | zexe prefix_from_varibale.zen prefix_from_varibale.json
+Scenario 'w3c': token
+Given I have a 'string' part of 'token' before string suffix 'suffix'
+and I rename 'token' to 'bearer'
+Given I have a 'json web token' part of 'token' after string prefix 'prefix'
+When I pickup a 'string dictionary' from path 'token.payload'
+Then print the 'payload'
+Then print the 'bearer'
+EOF
+    save_output 'prefix_from_varibale.json'
+    assert_output '{"bearer":"BEARER","payload":{"aud":"did:dyne:sandbox.signroom:PTDvvQn1iWQiVxkfsDnUid8FbieKbHq46Qs8c9CZx67","exp":1.709896e+09,"iat":1.709892e+09,"iss":"https://authz-server1.zenswarm.forkbomb.eu:3100","sub":"6da2cb24972337faa55406d60bfdbe5038495879"}}'
+}

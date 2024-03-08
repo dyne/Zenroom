@@ -403,15 +403,16 @@ Given("rename '' to ''",function(old, new)
        CODEC[old] = nil
 end)
 
-Given("'' part of '' after string prefix ''", function(enc, src, pfx)
+Given("'' part of '' after string prefix ''", function(enc, src, pfx_name)
 		 local whole = IN[src]
 		 zencode_assert(whole, "Cannot find '" .. src .. "' anywhere (null value?)")
+		 local pfx = IN[pfx_name] or pfx_name
 		 local plen = #pfx
 		 local wlen = #whole
 		 zencode_assert(wlen > plen, "String too short: "
 					.. src.. "("..wlen..") prefix("..plen..")")
 		 zencode_assert(string.sub(whole, 1, plen) == pfx,
-					"Prefix not found in "..src..": "..pfx)
+					"Prefix not found in "..src..": "..pfx_name)
 		 -- if not conv and ZEN.schemas[what] then conv = what end
 		 ZEN.TMP = guess_conversion(string.sub(whole,plen+1,wlen), enc)
 		 ZEN.TMP.name = src
@@ -419,15 +420,16 @@ Given("'' part of '' after string prefix ''", function(enc, src, pfx)
 		 gc()
 end)
 
-Given("'' part of '' before string suffix ''", function(enc, src, sfx)
+Given("'' part of '' before string suffix ''", function(enc, src, sfx_name)
 		 local whole = IN[src]
 		 zencode_assert(whole, "Cannot find '" .. src .. "' anywhere (null value?)")
+		 local sfx = IN[sfx_name] or sfx_name
 		 local slen = #sfx
 		 local wlen = #whole
 		 zencode_assert(wlen > slen, "String too short: "
 					.. src.. "("..wlen..") suffix("..slen..")")
 		 zencode_assert(string.sub(whole, wlen-slen+1, wlen) == sfx,
-					"Suffix not found in "..src..": "..sfx)
+					"Suffix not found in "..src..": "..sfx_name)
 		 -- if not conv and ZEN.schemas[what] then conv = what end
 		 ZEN.TMP = guess_conversion(string.sub(whole,1,wlen-slen), enc)
 		 ZEN.TMP.name = src
