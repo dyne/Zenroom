@@ -513,7 +513,7 @@ When("verify signed selective disclosure '' issued by '' is valid", function(obj
 -- TODO?: Validate the Issuer and that the signing key belongs to this Issuer.
 
     zencode_assert(os, 'Could not find os to check timestamps')
-    local time_now = U.new(os.time())
+    local time_now = TIME.new(os.time())
     zencode_assert(jwt.payload.iat < time_now, 'The iat claim is not valid')
     zencode_assert(jwt.payload.exp > time_now, 'The exp claim is not valid')
     if(jwt.payload.nbf) then
