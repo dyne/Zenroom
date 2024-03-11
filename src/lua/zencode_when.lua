@@ -780,3 +780,16 @@ When("create result of ''", function(expr)
 			   zentype = 'e' })
   end
 end)
+
+When("exit with error message ''", function(err)
+    local e, e_codec = mayhave(err)
+    if e then
+        zencode_assert(luatype(e) ~= 'table', "Error message can not be a table "..err)
+        zencode_assert(e_codec.encoding == 'string', "Error message must be a string "..err)
+        e = O.to_string(e)
+    else
+        e = err
+    end
+    error(space(e))
+    ZEN.OK = false
+end)
