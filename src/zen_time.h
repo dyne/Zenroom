@@ -21,6 +21,9 @@
 #ifndef __ZEN_TIME_H__
 #define __ZEN_TIME_H__
 
+#define AUTODETECTED_TIME_MIN 1500000000
+#define AUTODETECTED_TIME_MAX 2000000000
+
 typedef int ztime_t;
 
 // new or dup already push the object in LUA's stack

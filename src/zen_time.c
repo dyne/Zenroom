@@ -172,6 +172,22 @@ static int newtime(lua_State *L) {
 	END(1);
 }*/
 
+static int is_autodetected_time(lua_State *L) {
+	BEGIN();
+	int result = 0;
+	if(lua_isnumber(L, 1)) {
+		int n = lua_tonumber(L, 1);
+		result = n >= AUTODETECTED_TIME_MIN && n <= AUTODETECTED_TIME_MAX;
+	} else if(lua_isstring(L, 1)) {
+		const char* arg = lua_tostring(L, 1);
+		char *pEnd;
+		long l_result = strtol(arg, &pEnd, 10);
+		result = (*pEnd == '\0' && l_result >= AUTODETECTED_TIME_MIN && l_result <= AUTODETECTED_TIME_MAX);
+	}
+	lua_pushboolean(L, result);
+	END(1);
+}
+
 static int time_to_octet(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -274,6 +290,7 @@ int luaopen_time(lua_State *L) {
 		{"new", newtime},
 		{"to_octet", time_to_octet},
 		//{"is_time", is_time},
+		{"is_autodetected_time", is_autodetected_time},
 		{NULL, NULL}
 	};
 	const struct luaL_Reg time_methods[] = {
