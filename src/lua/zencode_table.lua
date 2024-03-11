@@ -20,17 +20,54 @@
 --on Monday, 28th August 2023
 --]]
 
-local function move_or_copy_in(src_value, src_name, dest, new)
-    local d = have(dest)
+local function encode_from_to(src_name, src_enc, dest_enc)
+    local src_value, src_codec = have(src_name)
+    f_src_enc = get_encoding_function(src_enc)
+    if not f_src_enc then error("Encoding format not found: "..src_enc, 2) end
+    local encoded_src
+    -- accpet also schemas as encoding
+    if ZEN.schemas[uscore(src_enc)] then
+        if uscore(src_enc) ~= src_codec.schema then
+            error("Source schema: "..src_codec.schema.." does not match encoding "..src_enc)
+        end
+        if f_src_enc == default_export_f then
+            f_src_enc = function (obj)
+                if luatype(obj) == "table" then
+                    return deepmap(CONF.output.encoding.fun, obj)
+                else
+                    return CONF.output.encoding.fun(obj)
+                end
+            end
+        end
+        if src_codec.zentype == "e" then
+            encoded_src = I.spy(f_src_enc(I.spy(src_value)))
+        else
+            encoded_src = {}
+            for k,v in src_value do
+                encoded_src[k] = f_src_enc(src_value)
+            end
+        end
+    else
+        encoded_src = deepmap(f_src_enc, src_value)
+    end
+    f_dest_enc = input_encoding(dest_enc)
+    if not f_dest_enc then error("Destination encoding format not found: "..dest_enc, 2) end
+    return deepmap(f_dest_enc.fun, I.spy(encoded_src))
+end
+
+local function move_or_copy_in(src_value, src_name, dest, new, enc)
+    local d, cdest = have(dest)
     if luatype(d) ~= 'table' then error("Object is not a table: "..dest, 2) end
     local new_name = new or src_name
-    local cdest = CODEC[dest]
+    if enc then
+        src_value = encode_from_to(src_name, enc, cdest.encoding)
+    end
     if cdest.zentype == 'e' and cdest.schema then
         local sdest = ZEN.schemas[cdest.schema]
         if luatype(sdest) ~= 'table' then -- old schema types are not open
-            error("Schema is not open to accept extra objects: "..dest)
+            error("Schema is not open to accept extra objects: "..dest, 2)
         elseif not sdest.schematype or sdest.schematype ~= 'open' then
-            error("Schema is not open to accept extra objects: "..dest)
+            error("Schema is not open to accept extra objects: "..dest, 2)
         end
         if d[new_name] then
             error("Cannot overwrite: "..new_name.." in "..dest,2)
@@ -64,7 +101,13 @@ When("move '' in ''", function(src, dest)
 end)
 
 When("move '' to '' in ''", function(src, new, dest)
-    move_or_copy_in(have(src), src, dest, new) ---old, new, inside, true)
+    move_or_copy_in(have(src), src, dest, new)
+    ACK[src] = nil
+    CODEC[src] = nil
+end)
+
+When("move '' as '' in ''", function(src, enc, dest)
+    move_or_copy_in(have(src), src, dest, nil, enc)
     ACK[src] = nil
     CODEC[src] = nil
 end)
@@ -85,6 +128,10 @@ end)
 
 When("copy '' to '' in ''", function(src, new, dest)
     move_or_copy_in(have(src), src, dest, new)
+end)
+
+When("copy '' as '' in ''", function(src, enc, dest)
+    move_or_copy_in(have(src), src, dest, nil, enc)
 end)
 
 When("copy '' from '' in ''", function(name, src, dest)
