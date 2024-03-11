@@ -234,11 +234,33 @@ When("create '' string of ''", function(encoding, src)
 							  encoding = 'string' })
 end)
 
-When("copy '' to ''", function(old,new)
-	have(old)
-	empty(new)
-	ACK[new] = deepcopy(ACK[old])
-	new_codec(new, { }, old)
+local function move_or_copy_to(src, dest, enc)
+    empty(dest)
+    if not enc then
+        ACK[dest] = deepcopy(ACK[src])
+        new_codec(dest, { }, src)
+    else
+        ACK[dest] = apply_encoding(src, enc, "string")
+        new_codec(dest, { encoding = 'string' })
+    end
+end
+
+When("copy '' to ''", move_or_copy_to)
+
+When("copy '' as '' to ''", function(src, enc, dest)
+    move_or_copy_to(src, dest, enc)
+end)
+
+When("move '' to ''", function(src, dest)
+    move_or_copy_to(src, dest)
+    ACK[src] = nil
+    CODEC[src] = nil
+end)
+
+When("move '' as '' to ''", function(src, enc, dest)
+    move_or_copy_to(src, dest, enc)
+    ACK[src] = nil
+    CODEC[src] = nil
 end)
 
 When("copy contents of '' in ''", function(src,dst)

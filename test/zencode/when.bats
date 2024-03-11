@@ -428,3 +428,28 @@ EOF
     assert_line --partial 'To copy/move element in existing element use:'
     assert_line --partial "When I move/copy '' from '' in ''"
 }
+
+@test "move/copy as to" {
+    cat <<EOF | save_asset move_from_to_existing_obj.data.json
+{
+    "base64_string": "aGVsbG8gbXkgZnJpZW5k",
+    "ecdh_signature": {
+        "r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=",
+        "s":"vUljXtnKkBqle/Ik7y3GfMa1o3wEIi4lRC+b/KmVbaI="
+    }
+}
+EOF
+    cat <<EOF | zexe move_copy_as_to.zen move_from_to_existing_obj.data.json
+Scenario 'ecdh': sign
+Given I have a 'ecdh signature'
+and I have a 'base64' named 'base64_string'
+
+When I copy 'base64_string' as 'string' to 'string_from_base64'
+When I move 'ecdh signature' as 'ecdh signature' to 'new_ecdh_siganture_with_string_encoding'
+
+Then print the 'string_from_base64'
+Then print the 'new_ecdh_siganture_with_string_encoding'
+EOF
+    save_output move_from_to_existing_obj.out.json
+    assert_output '{"new_ecdh_siganture_with_string_encoding":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"vUljXtnKkBqle/Ik7y3GfMa1o3wEIi4lRC+b/KmVbaI="},"string_from_base64":"hello my friend"}'
+}
