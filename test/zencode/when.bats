@@ -348,3 +348,31 @@ EOF
     save_output 'found.out'
     assert_output '{"output":["found_everything"]}'
 }
+
+@test "exit with error message" {
+    cat <<EOF | save_asset error_message.data.json
+{
+    "error": "object not found"
+}
+EOF
+    cat <<EOF | save_asset error_message.zen
+    Given I have a 'string' named 'error'
+    If I verify 'object' is not found
+    When I exit with error message 'error'
+    EndIf
+    Then print the string 'object found'
+EOF
+    cat <<EOF | save_asset error_message_inline.zen
+    Given nothing
+    If I verify 'object' is not found
+    When I exit with error message 'Object not found'
+    EndIf
+    Then print the string 'object found'
+EOF
+    run $ZENROOM_EXECUTABLE -z -a error_message.data.json error_message.zen
+    assert_failure
+    assert_line '[!] object not found'
+    run $ZENROOM_EXECUTABLE -z error_message_inline.zen
+    assert_failure
+    assert_line '[!] Object not found'
+}
