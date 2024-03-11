@@ -172,7 +172,7 @@ static int newtime(lua_State *L) {
 	END(1);
 }*/
 
-static int is_autodetected_time(lua_State *L) {
+static int detect_time_value(lua_State *L) {
 	BEGIN();
 	int result = 0;
 	if(lua_isnumber(L, 1)) {
@@ -290,7 +290,7 @@ int luaopen_time(lua_State *L) {
 		{"new", newtime},
 		{"to_octet", time_to_octet},
 		//{"is_time", is_time},
-		{"is_autodetected_time", is_autodetected_time},
+		{"detect_time_value", detect_time_value},
 		{NULL, NULL}
 	};
 	const struct luaL_Reg time_methods[] = {

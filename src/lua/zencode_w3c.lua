@@ -90,7 +90,7 @@ local function decode_jwt_parts(s)
     if type(s) == 'string' then
         return O.from_string(s)
     elseif type(s) == 'number' then
-        return fif(TIME.is_autodetected_time(s), TIME.new, FLOAT.new)(s)
+        return fif(TIME.detect_time_value(s), TIME.new, FLOAT.new)(s)
     else
         return s
     end

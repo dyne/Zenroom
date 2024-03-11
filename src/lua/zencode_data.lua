@@ -288,7 +288,7 @@
 	  -- wrap all conversion functions nested in deepmaps
 	  -- TODO: optimize
 	  if dt == 'number' and encoder_n ~= 'float' and encoder_n ~= 'time' then
-       if TIME.is_autodetected_time(data) and not CONF.input.number_strict then
+       if TIME.detect_time_value(data) and not CONF.input.number_strict then
           warn("Number value imported as timestamp: "..data)
           return TIME.new(data)
        else
