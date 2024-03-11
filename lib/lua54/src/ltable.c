@@ -25,6 +25,7 @@
 
 #include <math.h>
 #include <limits.h>
+#include <stdint.h>
 
 #include "lua.h"
 
@@ -102,7 +103,7 @@ static const TValue absentkey = {ABSTKEYCONSTANT};
 ** Hash for integers. Modified for Zenroom
 https://luyuhuang.tech/2021/07/30/hash-collision.html
 */
-inline uint64_t betterhash(uint64_t x) {
+static uint64_t betterhash(uint64_t x) {
     x = (x ^ (x >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
     x = (x ^ (x >> 27)) * UINT64_C(0x94d049bb133111eb);
     x = x ^ (x >> 31);
