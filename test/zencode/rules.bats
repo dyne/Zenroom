@@ -2,24 +2,6 @@ load ../bats_setup
 load ../bats_zencode
 SUBDOC=rules
 
-@test "Rule output unsorted" {
-    cat << EOF | save_asset rule_input_unsorted.data
-{ "reverse_order": { "c": 3, "b": 2, "a": 1 } }
-EOF
-	>&3 cat rule_input_unsorted.data
-	cat <<EOF | zexe rule_input_unsorted.zen rule_input_unsorted.data
-rule output sorting false
-
-Given I have a 'string dictionary' named 'reverse order'
-and debug
-Then print all data
-EOF
-
-	save_output rule_input_unsorted.out
-	assert_output '{"reverse_order":{"c":3,"b":2,"a":1}}'
-}
-
-
 # --- version --- #
 @test "Rule check version" {
     cat <<EOF | zexe check_version.zen
@@ -370,4 +352,26 @@ Then print the data
 EOF
     run $ZENROOM_EXECUTABLE -z -a rule_path_separator.data rule_path_separator_fail.zen
     assert_line --partial 'Rule invalid: Rule path separator --'
+}
+
+@test "Rule output unsorted" {
+    cat << EOF | save_asset rule_input_unsorted.data
+{ "reverse_order": { "c": 3, "b": 2, "a": 1 } }
+EOF
+	>&3 cat rule_input_unsorted.data
+	cat <<EOF | zexe rule_input_unsorted.zen rule_input_unsorted.data
+rule output sorting false
+
+Given I have a 'string dictionary' named 'reverse order'
+and debug
+Then print all data
+EOF
+
+# TODO: switching off sorting makes results non-deterministic
+# we may want to code a way to keep same order as input
+# but that may require a custom JSON parser to fill in CODEC
+# and even further complexity.
+
+#	save_output rule_input_unsorted.out
+#	assert_output '{"reverse_order":{"c":3,"b":2,"a":1}}'
 }
