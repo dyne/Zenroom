@@ -90,11 +90,7 @@ local function decode_jwt_parts(s)
     if type(s) == 'string' then
         return O.from_string(s)
     elseif type(s) == 'number' then
-        if s==math.floor(s) and s >= 1500000000 and s < 2000000000 then
-            return U.new(s)
-        else
-            return FLOAT.new(s)
-        end
+        return fif(TIME.is_autodetected_time(s), TIME.new, FLOAT.new)(s)
     else
         return s
     end

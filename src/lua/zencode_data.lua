@@ -288,9 +288,9 @@
 	  -- wrap all conversion functions nested in deepmaps
 	  -- TODO: optimize
 	  if dt == 'number' and encoder_n ~= 'float' and encoder_n ~= 'time' then
-       if data==math.floor(data) and data >= 1500000000 and data < 2000000000 and not CONF.input.number_strict then
+       if TIME.is_autodetected_time(data) and not CONF.input.number_strict then
           warn("Number value imported as timestamp: "..data)
-          return U.new(data)
+          return TIME.new(data)
        else
           return FLOAT.new(data)
        end
@@ -330,7 +330,7 @@
     elseif what == 'float' or what == 'num' or what == 'number' then
        return f_factory_encoder('float', FLOAT.new, FLOAT.is_float)
     elseif what == 'time' then
-       return f_factory_encoder('time', U.new, nil)
+       return f_factory_encoder('time', TIME.new, nil)
     end
     error("Input encoding not found: " .. what, 2)
     return nil
