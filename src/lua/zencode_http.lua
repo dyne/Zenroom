@@ -164,8 +164,8 @@ When("append percent encoding of '' as http request to ''", function(ele, dst)
     _append_to_url(ele, dst, _to_percent_encoding)
 end)
 
-local function _get_parameters_from_table(table_params, dest, encoding_f)
-    empty(dest)
+local function _get_parameters_from_table(table_params, encoding_f)
+    empty('http_get_parameters')
     local params, params_c = have(table_params)
     if(params_c.zentype ~= 'd') then
         error("Expected dictionary, found "..params_c.zentype.." for "..table_params, 2)
@@ -177,14 +177,14 @@ local function _get_parameters_from_table(table_params, dest, encoding_f)
     for k,v in pairs(params) do
         res = res..encoding_f(k).."="..encoding_f(v:str())
     end
-    ACK[dest] = O.from_string(res)
-    new_codec(dest, { zentype = 'e', encoding = 'string' })
+    ACK.http_get_parameters = O.from_string(res)
+    new_codec('http_get_parameters', { zentype = 'e', encoding = 'string' })
 end
 
-When("create get parameters from ''", function(table_params)
-    _get_parameters(table_params, 'get_parameters', _normalize_percent_encoding)
+When("create http get parameters from ''", function(table_params)
+    _get_parameters_from_table(table_params, _normalize_percent_encoding)
 end)
 
-When("create percent encoded get parameters from ''", function(table_params)
-    _get_parameters(table_params, 'percent_encoded_get_parameters', _to_percent_encoding)
+When("create http get parameters from '' using percent encoding", function(table_params)
+    _get_parameters_from_table(table_params, _to_percent_encoding)
 end)
