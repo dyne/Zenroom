@@ -163,3 +163,28 @@ end)
 When("append percent encoding of '' as http request to ''", function(ele, dst)
     _append_to_url(ele, dst, _to_percent_encoding)
 end)
+
+local function _get_parameters_from_table(table_params, dest, encoding_f)
+    empty(dest)
+    local params, params_c = have(table_params)
+    if(params_c.zentype ~= 'd') then
+        error("Expected dictionary, found "..params_c.zentype.." for "..table_params, 2)
+    end
+    if(params_c.encoding ~= 'string') then
+        error("Parameters in "..table_params.." must be strings")
+    end
+    local res = ""
+    for k,v in pairs(params) do
+        res = res..encoding_f(k).."="..encoding_f(v:str())
+    end
+    ACK[dest] = O.from_string(res)
+    new_codec(dest, { zentype = 'e', encoding = 'string' })
+end
+
+When("create get parameters from ''", function(table_params)
+    _get_parameters(table_params, 'get_parameters', _normalize_percent_encoding)
+end)
+
+When("create percent encoded get parameters from ''", function(table_params)
+    _get_parameters(table_params, 'percent_encoded_get_parameters', _to_percent_encoding)
+end)

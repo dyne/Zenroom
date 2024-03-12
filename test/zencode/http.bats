@@ -180,3 +180,33 @@ EOF
     save_output 'append_values.json'
     assert_output '{"body":"grant_type=authorization_code&client_id=did%3Adyne%3Asandbox.signroom%3APTDvvQn1iWQiVxkfsDnUid8FbieKbHq46Qs8c9CZx67&code_verifier=JYTDgtxcjiNqa3AvJjfubMX6gx98-wCH7iTydBYAeFg&redirectUris=https%3A%2F%2Fdidroom.com%2F&code=eyJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJlYWMyMjNmOTMwYmRkNzk1NDdlNzI2ZGRjZTg5ZTlmYTA1NWExZTFjIiwiaWF0IjoxNzA5MDQ4MzkzMjk1LCJpc3MiOiJodHRwczovL3ZhbGlkLmlzc3Vlci51cmwiLCJhdWQiOiJkaWQ6ZHluZTpzYW5kYm94LmdlbmVyaWNpc3N1ZXI6NkNwOG1QVXZKbVFhTXhRUFNuTnloYjc0ZjlHYTRXcWZYQ2tCbmVGZ2lrbTUiLCJleHAiOjE3MDkwNTE5OTN9.TahF8CqDDj5yynvtvkhr-Gt6RjzHSvKMosOhFf5sVmWGohKBPMNFhI8WlBlWj7aRauXB0lsvbQk03lf4eZN-2g"}'
 }
+
+@test "create a GET parameters from a table" {
+    cat <<EOF | save_asset append_values.data
+{
+    "parameters": {
+        "client_id": "did:dyne:sandbox.signroom:PTDvvQn1iWQiVxkfsDnUid8FbieKbHq46Qs8c9CZx67",
+        "code": "eyJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJlYWMyMjNmOTMwYmRkNzk1NDdlNzI2ZGRjZTg5ZTlmYTA1NWExZTFjIiwiaWF0IjoxNzA5MDQ4MzkzMjk1LCJpc3MiOiJodHRwczovL3ZhbGlkLmlzc3Vlci51cmwiLCJhdWQiOiJkaWQ6ZHluZTpzYW5kYm94LmdlbmVyaWNpc3N1ZXI6NkNwOG1QVXZKbVFhTXhRUFNuTnloYjc0ZjlHYTRXcWZYQ2tCbmVGZ2lrbTUiLCJleHAiOjE3MDkwNTE5OTN9.TahF8CqDDj5yynvtvkhr-Gt6RjzHSvKMosOhFf5sVmWGohKBPMNFhI8WlBlWj7aRauXB0lsvbQk03lf4eZN-2g",
+        "code_verifier": "JYTDgtxcjiNqa3AvJjfubMX6gx98-wCH7iTydBYAeFg",
+        "grant_type": "authorization_code",
+        "redirectUris": "https://didroom.com/"
+    }
+}
+EOF
+    cat <<EOF | zexe append_values.zen append_values.data
+Scenario 'http': create a GET request concatenating values on a HTTP url
+
+# the parameters are loaded as string dictionary
+Given I have a 'string dictionary' named 'parameters'
+
+# create the get parameters string
+When I create the get parameters from 'parameters'
+When I create the percent encoded get parameters from 'parameters'
+
+Then print the 'get_parameters'
+and print the 'percent_encoded_get_parameters'
+
+EOF
+    save_output 'append_values.json'
+    assert_output '{"get_parameters":"client_id=did:dyne:sandbox.signroom:PTDvvQn1iWQiVxkfsDnUid8FbieKbHq46Qs8c9CZx67code=eyJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJlYWMyMjNmOTMwYmRkNzk1NDdlNzI2ZGRjZTg5ZTlmYTA1NWExZTFjIiwiaWF0IjoxNzA5MDQ4MzkzMjk1LCJpc3MiOiJodHRwczovL3ZhbGlkLmlzc3Vlci51cmwiLCJhdWQiOiJkaWQ6ZHluZTpzYW5kYm94LmdlbmVyaWNpc3N1ZXI6NkNwOG1QVXZKbVFhTXhRUFNuTnloYjc0ZjlHYTRXcWZYQ2tCbmVGZ2lrbTUiLCJleHAiOjE3MDkwNTE5OTN9.TahF8CqDDj5yynvtvkhr-Gt6RjzHSvKMosOhFf5sVmWGohKBPMNFhI8WlBlWj7aRauXB0lsvbQk03lf4eZN-2gredirectUris=https://didroom.com/grant_type=authorization_codecode_verifier=JYTDgtxcjiNqa3AvJjfubMX6gx98-wCH7iTydBYAeFg","percent_encoded_get_parameters":"client_id=did%3Adyne%3Asandbox.signroom%3APTDvvQn1iWQiVxkfsDnUid8FbieKbHq46Qs8c9CZx67code=eyJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJlYWMyMjNmOTMwYmRkNzk1NDdlNzI2ZGRjZTg5ZTlmYTA1NWExZTFjIiwiaWF0IjoxNzA5MDQ4MzkzMjk1LCJpc3MiOiJodHRwczovL3ZhbGlkLmlzc3Vlci51cmwiLCJhdWQiOiJkaWQ6ZHluZTpzYW5kYm94LmdlbmVyaWNpc3N1ZXI6NkNwOG1QVXZKbVFhTXhRUFNuTnloYjc0ZjlHYTRXcWZYQ2tCbmVGZ2lrbTUiLCJleHAiOjE3MDkwNTE5OTN9.TahF8CqDDj5yynvtvkhr-Gt6RjzHSvKMosOhFf5sVmWGohKBPMNFhI8WlBlWj7aRauXB0lsvbQk03lf4eZN-2gredirectUris=https%3A%2F%2Fdidroom.com%2Fgrant_type=authorization_codecode_verifier=JYTDgtxcjiNqa3AvJjfubMX6gx98-wCH7iTydBYAeFg"}'
+}
