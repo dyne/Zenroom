@@ -376,3 +376,28 @@ EOF
     assert_failure
     assert_line '[!] Object not found'
 }
+
+@test "json validation" {
+    cat <<EOF | save_asset json_validation.data.json
+{
+    "json_encoded_dict": "{\"first\":\"hello\",\"second\":\"world!\"}",
+    "not_json_encoded_dict": "this is not a json"
+}
+EOF
+    cat <<EOF | zexe json_validation.zen json_validation.data.json
+Given I have a 'string' named 'json_encoded_dict'
+Given I have a 'string' named 'not_json_encoded_dict'
+
+When I verify 'json_encoded_dict' is a json
+# equivalently
+When I verify 'json_encoded_dict' is a valid json
+
+If I verify 'not_json_encoded_dict' is a json
+Then print the string '[!] validte not_json_encoded_dict'
+EndIf
+
+Then print the string 'validate json encoded dicr'
+EOF
+    save_output json_validation.out.json
+    assert_output '{"output":["validate_json_encoded_dicr"]}'
+}

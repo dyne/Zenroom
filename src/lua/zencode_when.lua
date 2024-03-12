@@ -136,6 +136,13 @@ When("set '' to '' as ''", function(dest, content, format)
 --	new_codec(dest, { luatype = luatype(ACK[dest]), zentype = 'e' })
 end)
 
+IfWhen("verify '' is a json", function(src)
+    local obj, obj_c = have(src)
+    zencode_assert(obj_c.zentype == 'e', "Encoded JSON is not an element: "..src)
+    zencode_assert(obj_c.encoding == 'string', "Encoded JSON is not an string: "..src)
+    zencode_assert(JSON.validate(O.to_string(obj)), "Invalid JSON object: "..src)
+end)
+
 When("create json escaped string of ''", function(src)
     local obj, codec = have(src)
     empty 'json_escaped_string'
