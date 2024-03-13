@@ -69,7 +69,9 @@ local function import_supported_selective_disclosure(obj)
         else 
             found = obj[what] == needed
         end
-        assert(found, " not supported in " .. what)
+        if(not found) then
+            error("Found parameter not supported in " .. what, 3)
+        end
     end
 
     local res = {}
@@ -85,10 +87,15 @@ local function import_supported_selective_disclosure(obj)
         check_support(creds[i], 'credential_signing_alg_values_supported', {'ES256'})
         check_support(creds[i], 'cryptographic_binding_methods_supported', {"jwk", "did:dyne:sandbox.signroom"})
        -- check_support(creds[i], 'proof_types_supported', {jwt = { proof_signing_alg_values_supported = {"ES256"}}})
-        assert(creds[i].credential_definition)
-        assert(creds[i].credential_definition.type)
-        assert(creds[i].credential_definition.credentialSubject)
-
+        if(not creds[i].credential_definition) then
+            error("Invalid supported selective disclosure: missing parameter credential_definition", 2)
+        end
+        if(not creds[i].credential_definition.type) then
+            error("Invalid supported selective disclosure: missing type parameter in credential_definition", 2)
+        end
+        if(not creds[i].credential_definition.credentialSubject) then
+            error("Invalid supported selective disclosure: missing credentialSubject parameter in credential_definition", 2)
+        end
         for j=1,#creds[i].credential_definition.credentialSubject do
             local display = creds[i].credential_definition.credentialSubject[j]
             if display then
