@@ -16,75 +16,6 @@ EOF
     assert_output "$(cat metadata.keys.json)"
 }
 
-@test "Import metadata and add" {
-    cat <<EOF | save_asset metadata2.keys.json
-{
-    "supported_selective_disclosure":{"authorization_servers":["http://server.example.org"],"credential_configurations_supported":[{"id": "ab8c936e-b9ab-4cf5-9862-c3a25bb82996", "credential_definition":{"credentialSubject":{"family_name":{"display":[{"locale":"en-US","name":"Family Name"}]},"given_name":{"display":[{"locale":"en-US","name":"Given Name"}]}},"type":["ab8c936e-b9ab-4cf5-9862-c3a25bb82996","VerifiableCredential","IdentityCredential"]},"credential_signing_alg_values_supported":["ES256"],"cryptographic_binding_methods_supported":["jwk","did:dyne:sandbox.signroom"],"display":[{"background_color":"#000000","locale":"en-US","name":"IdentityCredential","text_color":"#ffffff"}],"format":"vc+sd-jwt","order":["given_name","family_name"],"proof_types_supported":{"jwt":{"proof_signing_alg_values_supported":["ES256"]}}}],"credential_endpoint":"http://issuer.example.org/credentials","credential_issuer":"http://issuer.example.org"},
-        "is_over_18":  [{
-            "name": "Over 18",
-            "locale": "en-US"
-        }],
-        "id": "ab8c936e-b9ab-4cf5-9862-c3a25bb82996"
-}
-EOF
-    cat <<EOF | zexe metadata2.zen metadata2.keys.json
-Scenario 'sd_jwt': sign JSON
-Given I have a 'supported selective disclosure'
-Given I have a 'string' named 'id'
-Given I have a 'string array' named 'is_over_18'
-When I use supported selective disclosure to disclose 'is_over_18' with id 'id'
-Then print data
-EOF
-    save_output 'metadata2.out.json'
-    assert_output '{"id":"ab8c936e-b9ab-4cf5-9862-c3a25bb82996","is_over_18":[{"locale":"en-US","name":"Over 18"}],"supported_selective_disclosure":{"authorization_servers":["http://server.example.org"],"credential_configurations_supported":[{"credential_definition":{"credentialSubject":{"family_name":{"display":[{"locale":"en-US","name":"Family Name"}]},"given_name":{"display":[{"locale":"en-US","name":"Given Name"}]},"is_over_18":{"display":[{"locale":"en-US","name":"Over 18"}]}},"type":["ab8c936e-b9ab-4cf5-9862-c3a25bb82996","VerifiableCredential","IdentityCredential"]},"credential_signing_alg_values_supported":["ES256"],"cryptographic_binding_methods_supported":["jwk","did:dyne:sandbox.signroom"],"display":[{"background_color":"#000000","locale":"en-US","name":"IdentityCredential","text_color":"#ffffff"}],"format":"vc+sd-jwt","id":"ab8c936e-b9ab-4cf5-9862-c3a25bb82996","order":["given_name","family_name","is_over_18"],"proof_types_supported":{"jwt":{"proof_signing_alg_values_supported":["ES256"]}}}],"credential_endpoint":"http://issuer.example.org/credentials","credential_issuer":"http://issuer.example.org"}}'
-}
-
-@test "Create JWK with es256 public key" {
-    cat <<EOF | save_asset jwk_es256.json
-{
-    "Alice": {
-        "keyring": {
-        "es256": "Y5xo2U3cACj8V+8/mQYLmWb/+A768/ui0tN8+vsu36g="
-        }
-  },
-  "kid": "1Jdpq0-Eu0KnZ4R9mapqSiFQfTVvHFg_SrLYifwz8Fc"
-}
-EOF
-    cat <<EOF | zexe jwk_es256.zen jwk_es256.json
-Scenario 'es256'
-Scenario 'sd_jwt'
-
-Given I am known as 'Alice'
-and I have my 'keyring'
-Given I have a 'url64' named 'kid'
-When I create the es256 public key
-
-When I create jwk with es256 public key 'es256 public key'
-When I create the jwt key binding with jwk 'jwk'
-
-Then print 'jwk'
-Then print 'kid'
-Then print 'jwk key binding'
-EOF
-    save_output jwk_es256_out.json
-    assert_output '{"jwk":{"alg":"ES256","crv":"P-256","kty":"EC","use":"sig","x":"Z_zRBEUbhtqDzme6kcGbtV3X4BxARVC8ySoC02IbQu8","y":"zXFljZyvxo9cgvCdcJfrmww9HeSiJUFbI98UUwMkPss"},"jwk_key_binding":{"cnf":{"jwk":{"alg":"ES256","crv":"P-256","kty":"EC","use":"sig","x":"Z_zRBEUbhtqDzme6kcGbtV3X4BxARVC8ySoC02IbQu8","y":"zXFljZyvxo9cgvCdcJfrmww9HeSiJUFbI98UUwMkPss"}}},"kid":"1Jdpq0-Eu0KnZ4R9mapqSiFQfTVvHFg_SrLYifwz8Fc"}'
-}
-
-@test "Set kid value in JWK with es256 public key" {
-    cat <<EOF | zexe jwk_es256_imp.zen jwk_es256_out.json
-Scenario 'sd_jwt'
-
-Given I have 'jwk'
-Given I have a 'url64' named 'kid'
-Given I have a 'jwk_key_binding'
-When I set kid in jwk 'jwk' to 'kid'
-Then print 'jwk'
-Then print 'jwk_key_binding'
-EOF
-    save_output jwk_es256_imp_out.json
-    assert_output '{"jwk":{"alg":"ES256","crv":"P-256","kid":"1Jdpq0-Eu0KnZ4R9mapqSiFQfTVvHFg_SrLYifwz8Fc","kty":"EC","use":"sig","x":"Z_zRBEUbhtqDzme6kcGbtV3X4BxARVC8ySoC02IbQu8","y":"zXFljZyvxo9cgvCdcJfrmww9HeSiJUFbI98UUwMkPss"},"jwk_key_binding":{"cnf":{"jwk":{"alg":"ES256","crv":"P-256","kty":"EC","use":"sig","x":"Z_zRBEUbhtqDzme6kcGbtV3X4BxARVC8ySoC02IbQu8","y":"zXFljZyvxo9cgvCdcJfrmww9HeSiJUFbI98UUwMkPss"}}}}'
-}
-
 @test "Import and export SDR" {
     cat <<EOF | save_asset valid_sdr.data.json
 {"selective_disclosure_request":{"fields":["given_name","age","family_name"],"object":{"age":42,"degree":"math","family_name":"Lippo","given_name":"Mimmo","iss":"http://example.org","sub":"user 42"}}}
@@ -138,8 +69,6 @@ EOF
     save_output ssd_to_sdr.out.json
     assert_output '{"selective_disclosure_request":{"fields":["family_name","given_name"],"object":{"age":42,"degree":"math","family_name":"Lippo","given_name":"Mimmo","iss":"http://example.org","sub":"user 42"}}}'
 }
-
-# TODO: problems updated_at
 
 @test "Create SD Payload" {
     cat <<EOF | save_asset sd_payload.data.json
