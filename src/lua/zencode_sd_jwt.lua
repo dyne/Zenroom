@@ -27,49 +27,49 @@ local function import_url_f(obj)
 end
 
 local URLS_METADATA = {
-    "issuer",
     "credential_issuer",
-    "authorization_endpoint",
-    "token_endpoint",
-    "pushed_authorization_request_endpoint",
-    "credential_endpoint",
-    "jwks_uri",
+    "credential_endpoint"
 }
+--"authorization_servers",
 
-local DICTS_METADATA = {
-    "grant_types_supported",
-    "code_challenge_methods_supported",
-    "response_modes_supported",
-    "response_types_supported",
-    "scopes_supported",
-    "subject_types_supported",
-    "token_endpoint_auth_methods_supported",
-    "id_token_signing_alg_values_supported",
-    "request_object_signing_alg_values_supported",
-    "claim_types_supported",
-}
+-- local DICTS_METADATA = {
+--     "grant_types_supported",
+--     "code_challenge_methods_supported",
+--     "response_modes_supported",
+--     "response_types_supported",
+--     "scopes_supported",
+--     "subject_types_supported",
+--     "token_endpoint_auth_methods_supported",
+--     "id_token_signing_alg_values_supported",
+--     "request_object_signing_alg_values_supported",
+--     "claim_types_supported",
+-- }
 
-local BOOLS_METADATA = {
-    "claims_parameter_supported",
-    "authorization_response_iss_parameter_supported",
-    "request_parameter_supported",
-    "request_uri_parameter_supported",
-}
+-- local BOOLS_METADATA = {
+--     "claims_parameter_supported",
+--     "authorization_response_iss_parameter_supported",
+--     "request_parameter_supported",
+--     "request_uri_parameter_supported",
+-- }
 
 local function check_display(display)
     return display.name and display.locale
 end
 
 local function import_supported_selective_disclosure(obj)
-    local check_support = function(what, needed)
+    local check_support = function(obj, what, needed)
         found = false
-        for i=1,#obj[what] do
-            if obj[what][i] == needed then
-                found = true
-                break
+        if(type(obj[what]) == 'table') then
+            for k,v in pairs(obj[what]) do
+               if v == needed[k] then
+                    found = true
+                    break
+               end 
             end
+        else 
+            found = obj[what] == needed
         end
-        assert(found, needed .. " not supported in " .. what)
+        assert(found, " not supported in " .. what)
     end
 
     local res = {}
@@ -77,60 +77,44 @@ local function import_supported_selective_disclosure(obj)
         res[URLS_METADATA[i]] =
             schema_get(obj, URLS_METADATA[i], import_url_f, tostring)
     end
-
-    local creds = obj.credentials_supported
+    res.authorization_servers = schema_get(obj, 'authorization_servers', import_url_f, tostring)
+    local creds = obj.credential_configurations_supported
     for i=1,#creds do
         check_display(creds[i].display)
-        local count = 0
-        for j=1,#creds[i].order do
-            local display = creds[i].credentialSubject[creds[i].order[j]]
+        check_support(creds[i], 'format', 'vc+sd-jwt')
+        check_support(creds[i], 'credential_signing_alg_values_supported', {'ES256'})
+        check_support(creds[i], 'cryptographic_binding_methods_supported', {"jwk", "did:dyne:sandbox.signroom"})
+       -- check_support(creds[i], 'proof_types_supported', {jwt = { proof_signing_alg_values_supported = {"ES256"}}})
+        assert(creds[i].credential_definition)
+        assert(creds[i].credential_definition.type)
+        assert(creds[i].credential_definition.credentialSubject)
+
+        for j=1,#creds[i].credential_definition.credentialSubject do
+            local display = creds[i].credential_definition.credentialSubject[j]
             if display then
                 check_display(display)
-                count = count + 1
             end
         end
-        assert(count == #creds[i].order)
     end
 
-    res.credentials_supported =
-        schema_get(obj, 'credentials_supported', O.from_str, tostring)
-    -- we support authroization_code
-    check_support('grant_types_supported', "authorization_code")
-    -- we support ES256
-    check_support('request_object_signing_alg_values_supported', "ES256")
-    check_support('id_token_signing_alg_values_supported', "ES256")
-    -- TODO: claims_parameter_supported is a boolean
-    -- res.claims_parameter_supported =
-    --     schema_get(obj, 'claims_parameter_supported', , tostring)
+    res.credential_configurations_supported =
+        schema_get(obj, 'credential_configurations_supported', O.from_str, tostring)
 
-    for i=1,#DICTS_METADATA do
-        res[DICTS_METADATA[i]] =
-            schema_get(obj, DICTS_METADATA[i], O.from_str, tostring)
-    end
-
-    for i=1,#BOOLS_METADATA do
-        res[BOOLS_METADATA[i]] = schema_get(obj, BOOLS_METADATA[i])
-    end
     return res
 end
 
 local function export_supported_selective_disclosure(obj)
     local res = {}
-    res.issuer = obj.issuer:str()
     for i=1,#URLS_METADATA do
         res[URLS_METADATA[i]] = obj[URLS_METADATA[i]]:str()
     end
-    res.credentials_supported =
+    res.authorization_servers = {}
+    for k,v in pairs(obj.authorization_servers) do
+        res.authorization_servers[k] = v:str()
+    end
+    res.credential_configurations_supported =
         deepmap(function(obj) return obj:str() end,
-            obj.credentials_supported)
-    for i=1,#DICTS_METADATA do
-        res[DICTS_METADATA[i]] =
-            deepmap(function(obj) return obj:str() end,
-                obj[DICTS_METADATA[i]])
-    end
-    for i=1,#BOOLS_METADATA do
-        res[BOOLS_METADATA[i]] = obj[BOOLS_METADATA[i]]
-    end
+            obj.credential_configurations_supported)
     return res
 end
 
@@ -375,9 +359,9 @@ When("use supported selective disclosure to disclose '' with id ''", function(di
     local credential = nil
 
     -- search for credentials supported id
-    for i=1,#ssd.credentials_supported do
-        if ssd.credentials_supported[i].id == id then
-            credential = ssd.credentials_supported[i]
+    for i=1,#ssd.credential_configurations_supported do
+        if ssd.credential_configurations_supported[i].id == id then
+            credential = ssd.credential_configurations_supported[i]
             break
         end
     end
@@ -393,11 +377,11 @@ When("use supported selective disclosure to disclose '' with id ''", function(di
 
     if not found then
         credential.order[#credential.order+1] = O.from_string(disps_name)
-        credential.credentialSubject[disps_name] = {
+        credential.credential_definition.credentialSubject[disps_name] = {
             display = disps
         }
     else
-        credential.credentialSubject[name].display = disps
+        credential.credential_definition.credentialSubject[name].display = disps
     end
 end)
 
@@ -441,18 +425,25 @@ When("create selective disclosure request from '' with id '' for ''", function(s
     local id = have(id_name)
     local object = have(object_name)
 
-    local creds = ssd.credentials_supported
+    local creds = ssd.credential_configurations_supported
     local pos = 0
     for i=1,#creds do
-        if creds[i].id == id then
-	    pos = i
-	    break
-	end
+        local cred_def = creds[i].credential_definition
+        for _,v in pairs(cred_def.type) do
+            if v == id then
+                pos = i
+                break
+            end
+	    end
     end
     zencode_assert(pos > 0, "Unknown credential id")
-
+    local credSubject = creds[pos].credential_definition.credentialSubject
+    local fields = {}
+    for k,_ in pairs(credSubject) do
+        table.insert(fields, O.from_str(k))
+    end
     ACK.selective_disclosure_request = {
-        fields = creds[pos].order,
+        fields = fields,
         object = object,
     }
     new_codec("selective_disclosure_request")
