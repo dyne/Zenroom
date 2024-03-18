@@ -940,5 +940,5 @@ When I pickup a 'string dictionary' from path 'token.payload'
 Then print the 'payload'
 EOF
     run $ZENROOM_EXECUTABLE -z -a not_bearer_jwt.data.json not_bearer_jwt.zen
-    assert_line --partial "Beaer json web token is missing 'BEARER ' prefix"
+    assert_line --partial "Bearer json web token is missing 'BEARER ' prefix"
 }

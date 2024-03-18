@@ -116,7 +116,7 @@ end
 -- bearer tokens to access OAuth 2.0-protected resources (RFC 6750)
 local function import_bearer_jwt(obj)
     local toks = strtok(obj)
-    if toks[1] ~= 'BEARER' then error("Beaer json web token is missing 'BEARER ' prefix", 2) end
+    if toks[1] ~= 'BEARER' then error("Bearer json web token is missing 'BEARER ' prefix", 2) end
     return import_jwt(toks[2])
 end
 
