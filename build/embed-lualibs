@@ -37,13 +37,20 @@ libs=`find src/lua -type f -name '*.lua'`
 
 typeset -A emptyarray=()
 extarray=()
+scenarios=()
 c=0
+
+# TODO: to remove Zsh dependency substitute the (f) modifier here
+# it is used to parse a newline separated list of strings including whitespace
+# else the output of find would be tokenized to strings instead of newlines
 for i in ${(f)libs}; do
     p=`basename $i`
+	# n = the filename without path nor extension, i.e: zencode_ecdh
     n=${p[(ws:.:)1]}
     f="lualib_${n}.c"
     print "+ $i $opts"
 	tmp=`mktemp -d`
+	# bytecompile lua in case requested by opts
 	if [[ "$opts" = "compile" ]]; then
 		curl -Ls -o luac54 https://github.com/dyne/luabinaries/releases/latest/download/luac54
 		chmod +x luac54
@@ -51,6 +58,7 @@ for i in ${(f)libs}; do
 	else
 		cp $i ${tmp}/${n}
 	fi
+	# generate C embedding of lua sources in hex
 	pushd $tmp
 	print         >>  ${dst}
 	print "// $i" >>  ${dst}
@@ -63,16 +71,21 @@ for i in ${(f)libs}; do
 	print         >>  ${dst}
 	popd
 	rm -rf $tmp
+	# save the extension for later outside this loop, to generate a
+	# function declaration othat returns its contents
 	ext="{\"${n}\", &${n}_len, (const char *)${n}},"
 	extarray+=($ext)
 	emptyarray+=($ext "{\"${n}\", &fakelen, \"/$p\"},")
+	# save the scenario name of the extension in case it is zencode
+	[[ "${n[(ws:_:)1]}" == "zencode" ]] && scenarios+="${n[(ws:_:)2]}"
+
 	c=$(( c + 1 ))
 done
 
 cat <<EOF >> ${dst}
 #endif // __EMSCRIPTEN__
 
-zen_extension_t zen_extensions[] = {
+const zen_extension_t zen_extensions[] = {
 EOF
 for i in $extarray; do
 	cat <<EOF >> ${dst}
@@ -86,4 +99,15 @@ done
 cat <<EOF >> ${dst}
     { NULL, NULL, NULL }
 };
+EOF
+
+# save the list of zencode scenarios
+cat <<EOF >> ${dst}
+const char* const zen_scenarios[] = {
+EOF
+for i in $scenarios; do
+	print -n "\"$i\", " >> ${dst}
+done
+cat <<EOF >> ${dst}
+NULL};
 EOF
