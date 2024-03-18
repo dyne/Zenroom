@@ -113,6 +113,16 @@ local function export_jwt(obj)
     return header .. '.' .. payload .. '.' .. obj.signature:url64()
 end
 
+-- bearer tokens to access OAuth 2.0-protected resources (RFC 6750)
+local function import_bearer_jwt(obj)
+    local toks = strtok(obj)
+    if toks[1] ~= 'BEARER' then error("Bearer json web token is missing 'BEARER ' prefix", 2) end
+    return import_jwt(toks[2])
+end
+
+local function export_bearer_jwt(obj)
+    return 'BEARER ' .. export_jwt(obj)
+end
 
 ZEN:add_schema(
     {
@@ -136,6 +146,8 @@ ZEN:add_schema(
         end,
         json_web_token = { import = import_jwt,
                            export = export_jwt },
+        bearer_json_web_token = { import = import_bearer_jwt,
+                                  export = export_bearer_jwt }
     }
 )
 
