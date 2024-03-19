@@ -119,3 +119,22 @@ EOF
 		$TMP/err > trace_dump
     cat trace_dump | base64 -d | jq .
 }
+
+@test "invalid transition error json logs" {
+	echo "logfmt=json" > zencode_exec_stdin
+	cat <<EOF | base64 -w0 >> zencode_exec_stdin
+Rule unknown ignore
+Given a ignored statement
+Scenario 'ecdh': signature
+Given nothing
+Then print the string 'done'
+EOF
+    echo >> zencode_exec_stdin # keys
+    echo >> zencode_exec_stdin # data
+    echo >> zencode_exec_stdin # extra
+    echo >> zencode_exec_stdin # context
+
+	cat zencode_exec_stdin | ${TR}/zencode-exec > $TMP/out 2>$TMP/err \
+                                  || true
+	cat $TMP/err | jq .
+}
