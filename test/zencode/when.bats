@@ -349,6 +349,59 @@ EOF
     assert_output '{"output":["found_everything"]}'
 }
 
+@test "try to move element from table to existing object" {
+    cat <<EOF | save_asset move_from_to_existing_obj.json
+{
+    "dict_from": {
+        "str_3": "!"
+    },
+    "dict_to": {
+            "str_1": "hello",
+            "str_2": "world"
+    }
+}
+EOF
+
+    cat <<EOF | save_asset move_from_to_existing_obj.zen
+Given I  have a 'string dictionary' named 'dict_from'
+and I have a 'string dictionary' named 'dict_to'
+
+When I move 'str_3' from 'dict_from' to 'dict_to'
+
+Then print the 'dict_to'
+EOF
+    run $ZENROOM_EXECUTABLE -z -a move_from_to_existing_obj.json move_from_to_existing_obj.zen
+    assert_line --partial 'Cannot overwrite existing object: dict_to'
+    assert_line --partial 'To copy/move element in existing element use:'
+    assert_line --partial "When I move/copy '' from '' in ''"
+}
+
+
+@test "move/copy as to" {
+    cat <<EOF | save_asset move_from_to_existing_obj.data.json
+{
+    "base64_string": "aGVsbG8gbXkgZnJpZW5k",
+    "ecdh_signature": {
+        "r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=",
+        "s":"vUljXtnKkBqle/Ik7y3GfMa1o3wEIi4lRC+b/KmVbaI="
+    }
+}
+EOF
+    cat <<EOF | zexe move_copy_as_to.zen move_from_to_existing_obj.data.json
+Scenario 'ecdh': sign
+Given I have a 'ecdh signature'
+and I have a 'base64' named 'base64_string'
+
+When I copy 'base64_string' as 'string' to 'string_from_base64'
+When I move 'ecdh signature' as 'ecdh signature' to 'new_ecdh_siganture_with_string_encoding'
+
+Then print the 'string_from_base64'
+Then print the 'new_ecdh_siganture_with_string_encoding'
+EOF
+    save_output move_from_to_existing_obj.out.json
+    assert_output '{"new_ecdh_siganture_with_string_encoding":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"vUljXtnKkBqle/Ik7y3GfMa1o3wEIi4lRC+b/KmVbaI="},"string_from_base64":"hello my friend"}'
+}
+
 @test "exit with error message" {
     cat <<EOF | save_asset error_message.data.json
 {
@@ -401,3 +454,4 @@ EOF
     save_output json_validation.out.json
     assert_output '{"output":["validate_json_encoded_dicr"]}'
 }
+

@@ -678,10 +678,10 @@ Given I have a 'string' named 'name'
 
 When I move 'myString' in 'myDict'
 When I move named by 'name' in 'myArray'
-When I move 'surname' from 'myDict' to 'myArray'
+When I move 'surname' from 'myDict' in 'myArray'
 
 When I create the 'string array' named 'myNewArray'
-When I move 'name' from 'myDict' to 'myNewArray'
+When I move 'name' from 'myDict' in 'myNewArray'
 
 Then print the 'myDict'
 and print the 'myArray'
@@ -720,12 +720,13 @@ Given I have a 'string' named 'name'
 When I copy 'myArray' in 'myDict'
 When I copy 'myDict' in 'myArray'
 When I copy named by 'name' in 'myArray'
+When I copy 'surname' from 'myDict' in 'myArray'
 
 Then print the 'myDict'
 and print the 'myArray'
 EOF
     save_output 'copy.json'
-    assert_output '{"myArray":["John","Doe","42",{"age":"44","myArray":["John","Doe","42"],"name":"Bruce","surname":"Wayne"},"where?"],"myDict":{"age":"44","myArray":["John","Doe","42"],"name":"Bruce","surname":"Wayne"}}'
+    assert_output '{"myArray":["John","Doe","42",{"age":"44","myArray":["John","Doe","42"],"name":"Bruce","surname":"Wayne"},"where?","Wayne"],"myDict":{"age":"44","myArray":["John","Doe","42"],"name":"Bruce","surname":"Wayne"}}'
 }
 
 @test "fail to move element in a close schema" {
@@ -799,4 +800,52 @@ Then print the 'copy'
 EOF
     save_output 'copy_from_schema_dictionary.json'
     assert_output '{"copy":{"address":"0x2B8070975AF995Ef7eb949AE28ee7706B9039504","signature":"0xed8f36c71989f8660e8f5d4adbfd8f1c0288cca90d3a5330b7bf735d71ab52fe7ba0a7827dc4ba707431f1c10babd389f658f8e208b89390a9be3c097579a2ff1b"}}'
+}
+
+# TODO: move to table.bats (not doing in this moment since will create a lot of conflicts with another PR)
+@test "move and copy statements" {
+    cat <<EOF | save_asset move_and_copy_statements.data.json
+{
+    "my_dict": {
+        "str": "hello"
+    },
+	"keyring": {
+		"eddsa": "Cwj9CcqHNoBnXBo8iDfnhFkQeDun4Y4LStd2m3TEAYAg",
+        "ecdh": "yxL8P0pLHxsl3m8Nt6m9Zm0wSMzrWlD0JTAWlaheQg4="
+	},
+	"to_be_signed": "some data to be signed",
+    "base64_string": "aGVsbG8gbXkgZnJpZW5k"
+}
+EOF
+    cat <<EOF | zexe move_and_copy_statements.zen move_and_copy_statements.data.json
+Scenario 'eddsa': sign
+Scenario 'ecdh': sign
+Given I have a 'keyring'
+and I have a 'base64' named 'base64_string'
+and I have a 'string' named 'to_be_signed'
+and I have a 'string dictionary' named 'my_dict'
+
+# sign
+When I create the eddsa signature of 'to_be_signed'
+and I create the ecdh signature of 'to_be_signed'
+
+# copy
+When I copy 'my_dict' to 'result_copy'
+and I copy 'to_be_signed' to 'signed' in 'result_copy'
+and I copy 'eddsa signature' as 'base58' in 'result_copy'
+and I copy 'ecdh signature' as 'ecdh_signature' in 'result_copy'
+and I copy 'base64_string' as 'string' in 'result_copy'
+
+# move statement
+When I rename 'my_dict' to 'result_move'
+and I move 'to_be_signed' to 'signed' in 'result_move'
+and I move 'eddsa signature' as 'base58' in 'result_move'
+and I move 'ecdh signature' as 'ecdh_signature' in 'result_move'
+and I move 'base64_string' as 'string' in 'result_move'
+
+Then print the 'result_copy'
+Then print the 'result_move'
+EOF
+    save_output move_and_copy_statements.out.json
+    assert_output '{"result_copy":{"base64_string":"hello my friend","ecdh_signature":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"vUljXtnKkBqle/Ik7y3GfMa1o3wEIi4lRC+b/KmVbaI="},"eddsa_signature":"2iSCa9YxtYTQtmcUHHKsYZXVsqnSWSa7E2skWZqN4EdY8wBX9UuBgCYx7Np3hJmDVQ2NiHSebLHmz5BGH3cuZ4um","signed":"some data to be signed","str":"hello"},"result_move":{"base64_string":"hello my friend","ecdh_signature":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"vUljXtnKkBqle/Ik7y3GfMa1o3wEIi4lRC+b/KmVbaI="},"eddsa_signature":"2iSCa9YxtYTQtmcUHHKsYZXVsqnSWSa7E2skWZqN4EdY8wBX9UuBgCYx7Np3hJmDVQ2NiHSebLHmz5BGH3cuZ4um","signed":"some data to be signed","str":"hello"}}'
 }

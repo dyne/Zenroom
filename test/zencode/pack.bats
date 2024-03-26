@@ -38,10 +38,10 @@ EOF
     cat << EOF | zexe newblock.zen L1_newheads_ethereum.json
 Given I have a 'hex dictionary' named 'result' in 'params'
 When I create the 'hex dictionary' named 'newblock'
-When I move 'hash' from 'result' to 'newblock'
-When I move 'number' from 'result' to 'newblock'
-When I move 'parentHash' from 'result' to 'newblock'
-When I move 'timestamp' from 'result' to 'newblock'
+When I move 'hash' from 'result' in 'newblock'
+When I move 'number' from 'result' in 'newblock'
+When I move 'parentHash' from 'result' in 'newblock'
+When I move 'timestamp' from 'result' in 'newblock'
 Then print the 'newblock'
 EOF
     save_output "newblock.json"
