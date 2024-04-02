@@ -899,7 +899,7 @@ function bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages
         disclosed_messages[k] = bbs.MapMessageToScalarAsHash(ciphersuite, v)
     end
 
-    --Deserialization
+    --Deserializations
     local proof_result = octets_to_proof(proof)
     local Aprime, Abar, D, c, ehat, r2hat, r3hat, shat, commitments = table.unpack(proof_result)
     local W = bbs.octets_to_pub_key(pk)
