@@ -53,7 +53,7 @@ cat not_to_be_documented.txt \
 echo
 echo "-----------------------------------------------"
 echo "        all statements that do not need        "
-echo "        documentattion have been loaded        "
+echo "        documentation have been loaded        "
 echo "-----------------------------------------------"
 echo
 
