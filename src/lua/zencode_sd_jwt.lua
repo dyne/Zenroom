@@ -416,6 +416,21 @@ When("use signed selective disclosure '' only with disclosures ''", function(ssd
     ssd.disclosures = disclosure
 end)
 
+IfWhen("verify selective disclosure '' contains disclosures ''", function(ssd_name, lis)
+    local ssd = have(ssd_name)
+    local disclosed_keys = have(lis)
+    for _,k in pairs(disclosed_keys) do
+        local found = false
+        for _, v in pairs(ssd.disclosures) do
+            if v[2] == k then
+                found = true
+                break
+            end
+        end
+        zencode_assert(found, "Disclosure key not found: "..k:octet():string())
+    end
+end)
+
 -- for reference see Section 8.1 of https://datatracker.ietf.org/doc/draft-ietf-oauth-selective-disclosure-jwt/
 When("verify signed selective disclosure '' issued by '' is valid", function(obj, by)
     local signed_sd = have(obj)
