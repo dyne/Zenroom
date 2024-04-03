@@ -671,6 +671,7 @@ local function core_verify(ciphersuite, pk, signature, generators, messages, hea
     return LHS == RHS
 end
 
+<<<<<<< HEAD
 
 --[[
 DESCRIPTION:    The Verify operation validates a BBS signature, given a public key (PK), a header and a set of messages.
@@ -694,27 +695,22 @@ end
 ---------------------------------
 ---------------------------------
 ---------------------------------
+=======
+>>>>>>> 56a2e14754b40bd4453e7a7cb94b710f0c303a46
 
--- draft-irtf-cfrg-bbs-signatures-latest Section 4.1
--- It returns count random scalar.
-function bbs.calculate_random_scalars(count)
-    local scalar_array = {}
-    local scalar = nil
-    --[[ This does not seem uniformly random:
-    for i = 1, count do
-        scalar_array[i] = BIG.mod(O.random(48), PRIME_R)
-    end
-    --]]
-    -- We leave it like this because it should yield a more uniform distribution.
-    while #scalar_array < count do
-        scalar = os2ip(O.random(32))
-        if scalar < PRIME_R then
-            table.insert(scalar_array, scalar)
-        end
-    end
-    return scalar_array
+--[[
+DESCRIPTION:    The Verify operation validates a BBS signature, given a public key (PK), a header and a set of messages.
+INPUT: ciphersuite (a table), pk (as zenroom.octet), signature (as zenroom.octet), messages (array of octet strings as zenroom.octet), header (as zenroom.octet).
+OUTPUT: a boolean, true or false 
+]]
+function bbs.verify(ciphersuite, pk ,signature, header, messages_octets)
+    messages_octets = messages_octets or O.empty{}
+    local messages = bbs.messages_to_scalars(ciphersuite,messages_octets)
+    local generators = bbs.create_generators(ciphersuite, #messages +1)
+    return core_verify(ciphersuite, pk,signature, generators, messages, header)
 end
 
+<<<<<<< HEAD
 --[[
 DESCRIPTION: This functio calcluates the challange scalar value needed for both the CoreProofGen and the CoreProofVerify
 INPUT: ciphersuite (a table), init_res (a vector consisting of five points of G1 and a scalar value in that order), disclosed_messages (vector of scalar values), 
@@ -754,77 +750,137 @@ local function proof_challenge_calculate(ciphersuite, init_res, disclosed_messag
     local challenge = hash_to_scalar(ciphersuite, c_octs)
 
     return challenge
+=======
+
+--return bbs
+
+--TEST
+print('----------------------')
+print("Keygen test")
+local key_material = O.from_hex("746869732d49532d6a7573742d616e2d546573742d494b4d2d746f2d67656e65726174652d246528724074232d6b6579")
+local key_info = O.from_hex("746869732d49532d736f6d652d6b65792d6d657461646174612d746f2d62652d757365642d696e2d746573742d6b65792d67656e")
+local key_dst = O.from_hex("4242535f424c53313233383147315f584f463a5348414b452d3235365f535357555f524f5f4832475f484d32535f4b455947454e5f4453545f")
+local ciphersuite = bbs.ciphersuite("shake256")
+local sk_shake = bbs.keygen(ciphersuite,key_material,key_info,key_dst)
+local pk_shake = bbs.sk2pk(sk_shake)
+
+
+key_dst = O.from_hex("4242535f424c53313233383147315f584d443a5348412d3235365f535357555f524f5f4832475f484d32535f4b455947454e5f4453545f")
+ciphersuite = bbs.ciphersuite("sha256")
+local sk_sha = bbs.keygen(ciphersuite,key_material,key_info,key_dst)
+local pk_sha = bbs.sk2pk(sk_sha)
+
+local testSK = ("2eee0f60a8a3a8bec0ee942bfd46cbdae9a0738ee68f5a64e7238311cf09a079" == sk_shake:octet():hex()) and ("60e55110f76883a13d030b2f6bd11883422d5abde717569fc0731f51237169fc"== sk_sha:octet():hex())
+local testPK = (pk_shake:octet():hex() == "92d37d1d6cd38fea3a873953333eab23a4c0377e3e049974eb62bd45949cdeb18fb0490edcd4429adff56e65cbce42cf188b31bddbd619e419b99c2c41b38179eb001963bc3decaae0d9f702c7a8c004f207f46c734a5eae2e8e82833f3e7ea5") and ("a820f230f6ae38503b86c70dc50b61c58a77e45c39ab25c0652bbaa8fa136f2851bd4781c9dcde39fc9d1d52c9e60268061e7d7632171d91aa8d460acee0e96f1e7c4cfb12d3ff9ab5d5dc91c277db75c845d649ef3c4f63aebc364cd55ded0c"== pk_sha:octet():hex())
+
+if testSK then print("Test  SK passed") else print("Test SK failed") end
+if testPK then print("Test  PK passed") else print("Test PK failed") end 
+
+
+local Q_1 = ECP.from_zcash(O.from_hex("a9d40131066399fd41af51d883f4473b0dcd7d028d3d34ef17f3241d204e28507d7ecae032afa1d5490849b7678ec1f8"))
+local H_1 = ECP.from_zcash(O.from_hex("903c7ca0b7e78a2017d0baf74103bd00ca8ff9bf429f834f071c75ffe6bfdec6d6dca15417e4ac08ca4ae1e78b7adc0e"))
+local H_2 = ECP.from_zcash(O.from_hex("84321f5855bfb6b001f0dfcb47ac9b5cc68f1a4edd20f0ec850e0563b27d2accee6edff1a26b357762fb24e8ddbb6fcb"))
+local H_3 = ECP.from_zcash(O.from_hex("b3060dff0d12a32819e08da00e61810676cc9185fdd750e5ef82b1a9798c7d76d63de3b6225d6c9a479d6c21a7c8bf93"))
+local H_4 = ECP.from_zcash(O.from_hex("8f1093d1e553cdead3c70ce55b6d664e5d1912cc9edfdd37bf1dad11ca396a0a8bb062092d391ebf8790ea5722413f68"))
+local H_5 = ECP.from_zcash(O.from_hex("990824e00b48a68c3d9a308e8c52a57b1bc84d1cf5d3c0f8c6fb6b1230e4e5b8eb752fb374da0b1ef687040024868140"))
+local H_6 = ECP.from_zcash(O.from_hex("b86d1c6ab8ce22bc53f625d1ce9796657f18060fcb1893ce8931156ef992fe56856199f8fa6c998e5d855a354a26b0dd"))
+local H_7 = ECP.from_zcash(O.from_hex("b4cdd98c5c1e64cb324e0c57954f719d5c5f9e8d991fd8e159b31c8d079c76a67321a30311975c706578d3a0ddc313b7"))
+local H_8 = ECP.from_zcash(O.from_hex("8311492d43ec9182a5fc44a75419b09547e311251fe38b6864dc1e706e29446cb3ea4d501634eb13327245fd8a574f77"))
+local H_9 = ECP.from_zcash(O.from_hex("ac00b493f92d17837a28d1f5b07991ca5ab9f370ae40d4f9b9f2711749ca200110ce6517dc28400d4ea25dddc146cacc"))
+local H_10 = ECP.from_zcash(O.from_hex("965a6c62451d4be6cb175dec39727dc665762673ee42bf0ac13a37a74784fbd61e84e0915277a6f59863b2bb4f5f6005"))
+
+
+local test_generators= {Q_1,H_1,H_2,H_3,H_4,H_5,H_6,H_7,H_8,H_9,H_10}
+local count_test = 11
+local ciphersuite = bbs.ciphersuite("shake256")
+local function run_test_create_generators (test)
+    local output_generators = bbs.create_generators(ciphersuite, count_test)
+    for i = 1, count_test do
+        print("Test case ".. i)
+        assert(output_generators[i] == test[i])
+    end
+>>>>>>> 56a2e14754b40bd4453e7a7cb94b710f0c303a46
 end
+print('----------------------')
+print("Generators test for shake256")
+run_test_create_generators(test_generators)
 
--- draft-irtf-cfrg-bbs-signatures-latest Section 3.4.3
-function bbs.proof_gen(ciphersuite, pk, signature, header, ph, messages_octets, disclosed_indexes)
+Q_1 = ECP.from_zcash(O.from_hex("a9ec65b70a7fbe40c874c9eb041c2cb0a7af36ccec1bea48fa2ba4c2eb67ef7f9ecb17ed27d38d27cdeddff44c8137be"))
+H_1 = ECP.from_zcash(O.from_hex("98cd5313283aaf5db1b3ba8611fe6070d19e605de4078c38df36019fbaad0bd28dd090fd24ed27f7f4d22d5ff5dea7d4"))
+H_2 = ECP.from_zcash(O.from_hex("a31fbe20c5c135bcaa8d9fc4e4ac665cc6db0226f35e737507e803044093f37697a9d452490a970eea6f9ad6c3dcaa3a"))
+H_3 = ECP.from_zcash(O.from_hex("b479263445f4d2108965a9086f9d1fdc8cde77d14a91c856769521ad3344754cc5ce90d9bc4c696dffbc9ef1d6ad1b62"))
+H_4 = ECP.from_zcash(O.from_hex("ac0401766d2128d4791d922557c7b4d1ae9a9b508ce266575244a8d6f32110d7b0b7557b77604869633bb49afbe20035"))
+H_5 = ECP.from_zcash(O.from_hex("b95d2898370ebc542857746a316ce32fa5151c31f9b57915e308ee9d1de7db69127d919e984ea0747f5223821b596335"))
+H_6 = ECP.from_zcash(O.from_hex("8f19359ae6ee508157492c06765b7df09e2e5ad591115742f2de9c08572bb2845cbf03fd7e23b7f031ed9c7564e52f39"))
+H_7 = ECP.from_zcash(O.from_hex("abc914abe2926324b2c848e8a411a2b6df18cbe7758db8644145fefb0bf0a2d558a8c9946bd35e00c69d167aadf304c1"))
+H_8 = ECP.from_zcash(O.from_hex("80755b3eb0dd4249cbefd20f177cee88e0761c066b71794825c9997b551f24051c352567ba6c01e57ac75dff763eaa17"))
+H_9 = ECP.from_zcash(O.from_hex("82701eb98070728e1769525e73abff1783cedc364adb20c05c897a62f2ab2927f86f118dcb7819a7b218d8f3fee4bd7f"))
+H_10 = ECP.from_zcash(O.from_hex("a1f229540474f4d6f1134761b92b788128c7ac8dc9b0c52d59493132679673032ac7db3fb3d79b46b13c1c41ee495bca"))
 
-    -- disclosed_indexes is a STRICTLY INCREASING array of POSITIVE integers.
-    header = header or O.empty()
-    ph = ph or O.empty()
-    messages_octets = messages_octets or {}
-    disclosed_indexes = disclosed_indexes or {}
+test_generators= {Q_1,H_1,H_2,H_3,H_4,H_5,H_6,H_7,H_8,H_9,H_10}
 
-    -- Converting generic octet messages into scalars
-    local messages = {}
-    for k,v in pairs(messages_octets) do
-        messages[k] = bbs.MapMessageToScalarAsHash(ciphersuite, v)
-    end
+ciphersuite = bbs.ciphersuite("sha256")
+print('----------------------')
+print("Generators test for sha256")
+run_test_create_generators(test_generators)
 
-    -- Deserialisation
-    local signature_result = octets_to_signature(signature)
-    local AA, e, s = table.unpack(signature_result)
-    local msg_len = #messages
-    local disclosed_messages = {}
-    local secret_messages = {}
-    local secret_indexes = {}
-    local pointer = 1
-    if #disclosed_indexes == 0 then
-        for i =1, msg_len do
-            secret_indexes[i] = true
-        end
-    else
-        for i = 1, msg_len do
-            if i == disclosed_indexes[pointer] then
-                disclosed_messages[pointer] = messages[i]
-                pointer = pointer + 1
-            else
-                secret_indexes[i] = true
-            end
-        end
-    end
+local messages = {}
+messages[1] = O.from_hex("9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02")
+messages[2] = O.from_hex("c344136d9ab02da4dd5908bbba913ae6f58c2cc844b802a6f811f5fb075f9b80")
+messages[3] = O.from_hex("7372e9daa5ed31e6cd5c825eac1b855e84476a1d94932aa348e07b73")
+messages[4] = O.from_hex("77fe97eb97a1ebe2e81e4e3597a3ee740a66e9ef2412472c")
+messages[5] = O.from_hex("496694774c5604ab1b2544eababcf0f53278ff50")
+messages[6] = O.from_hex("515ae153e22aae04ad16f759e07237b4")
+messages[7] = O.from_hex("d183ddc6e2665aa4e2f088af")
+messages[8] = O.from_hex("ac55fb33a75909ed")
+messages[9] = O.from_hex("96012096")
+messages[10] = O.empty()
 
-    local secret_len = msg_len - #disclosed_indexes
-    local points_array = bbs.create_generators(ciphersuite, msg_len + 2)
-    local Q_1, Q_2 = table.unpack(points_array,1,2)
-    local all_H_points = {table.unpack(points_array, 3, msg_len+2)}
-    local secret_H_points = {}
+ciphersuite = bbs.ciphersuite("shake256")
+print('----------------------')
+print("TEST: Single message signature SHAKE 256")
+print("Test case 1")
+local SECRET_KEY = "2eee0f60a8a3a8bec0ee942bfd46cbdae9a0738ee68f5a64e7238311cf09a079"
+local PUBLIC_KEY = "92d37d1d6cd38fea3a873953333eab23a4c0377e3e049974eb62bd45949cdeb18fb0490edcd4429adff56e65cbce42cf188b31bddbd619e419b99c2c41b38179eb001963bc3decaae0d9f702c7a8c004f207f46c734a5eae2e8e82833f3e7ea5"
+local HEADER = "11223344556677889900aabbccddeeff"
+local SINGLE_MSG_ARRAY = { O.from_hex("9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02") }
+local VALID_SIGNATURE = "98eb37fceb31115bf647f2983aef578ad895e55f7451b1add02fa738224cb89a31b148eace4d20d001be31d162c58d12574f30e68665b6403956a83b23a16f1daceacce8c5fde25d3defd52d6d5ff2e1"
+local output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(HEADER), SINGLE_MSG_ARRAY)
+assert(output_signature == O.from_hex(VALID_SIGNATURE))
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER),SINGLE_MSG_ARRAY) == true)
 
-    for i = 1, msg_len do
-        if secret_indexes[i] then
-            table.insert(secret_H_points, all_H_points[i])
-            table.insert(secret_messages, messages[i])
-        end
-    end
+print('----------------------')
+print("TEST: Multiple messages signature SHAKE 256")
+print("Test case 1")
+local VALID_SIGNATURE ="97a296c83ed3626fe254d26021c5e9a087b580f1e8bc91bb51efb04420bfdaca215fe376a0bc12440bcc52224fb33c696cca9239b9f28dcddb7bd850aae9cd1a9c3e9f3639953fe789dbba53b8f0dd6f"
+local output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(HEADER), messages)
+assert(output_signature == O.from_hex(VALID_SIGNATURE))
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), messages) == true)
 
-    local domain = calculate_domain(ciphersuite, pk, Q_1, Q_2, all_H_points, header)
+ciphersuite = bbs.ciphersuite("sha256")
+print('----------------------')
+print("TEST: Single message signature SHA 256")
+print("Test case 1")
 
-    local random_scalars = bbs.calculate_random_scalars(6 + secret_len)
-    local r1, r2, et, r2t, r3t, st = table.unpack(random_scalars,1,6)
-    local mjt = {table.unpack(random_scalars, 7, 6 + secret_len)}
+local SECRET_KEY = "60e55110f76883a13d030b2f6bd11883422d5abde717569fc0731f51237169fc"
+local PUBLIC_KEY = "a820f230f6ae38503b86c70dc50b61c58a77e45c39ab25c0652bbaa8fa136f2851bd4781c9dcde39fc9d1d52c9e60268061e7d7632171d91aa8d460acee0e96f1e7c4cfb12d3ff9ab5d5dc91c277db75c845d649ef3c4f63aebc364cd55ded0c"
+local HEADER = "11223344556677889900aabbccddeeff"
+local SINGLE_MSG_ARRAY = { O.from_hex("9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02") }
+local VALID_SIGNATURE ="88c0eb3bc1d97610c3a66d8a3a73f260f95a3028bccf7fff7d9851e2acd9f3f32fdf58a5b34d12df8177adf37aa318a20f72be7d37a8e8d8441d1bc0bc75543c681bf061ce7e7f6091fe78c1cb8af103"
+local output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(HEADER), SINGLE_MSG_ARRAY)
+assert(output_signature == O.from_hex(VALID_SIGNATURE))
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER),SINGLE_MSG_ARRAY) == true)
 
-    local BB = ciphersuite.P1 + (Q_1 * s) + (Q_2 * domain)
-    for i = 1, msg_len do
-        BB = BB + (all_H_points[i] * messages[i])
-    end
+print('----------------------')
+print("TEST: Multiple messages signature SHA 256")
+print("Test case 1")
+local VALID_SIGNATURE ="895cd9c0ccb9aca4de913218655346d718711472f2bf1f3e68916de106a0d93cf2f47200819b45920bbda541db2d91480665df253fedab2843055bdc02535d83baddbbb2803ec3808e074f71f199751e"
+local output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(HEADER), messages)
+assert(output_signature == O.from_hex(VALID_SIGNATURE))
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), messages) == true)
 
-    local r3 = BIG.modinv(r1, PRIME_R)
-    local Aprime = AA * r1
-    local Abar = (Aprime * BIG.modneg( e, PRIME_R)) + (BB * r1)
-    local D = (BB * r1) + (Q_1 * r2)
-    local sprime = BIG.mod( BIG.modmul(r2, r3, PRIME_R) + s, PRIME_R)
-    local C1 = (Aprime * et) + (Q_1 * r2t)
 
+<<<<<<< HEAD
     local C2 = (D * BIG.modneg( r3t, PRIME_R)) + (Q_1 * st)
     for i = 1, secret_len do
         C2 = C2 + (secret_H_points[i] * mjt[i])
@@ -1136,3 +1192,5 @@ assert(output_signature == O.from_hex(VALID_SIGNATURE))
 assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), messages) == true)
 
 ]]
+=======
+>>>>>>> 56a2e14754b40bd4453e7a7cb94b710f0c303a46

@@ -506,8 +506,7 @@ function ZEN:parse(text)
 			warn('Zencode line '..self.linenum..' pattern ignored: ' .. line, 1)
 		 else
 			assert(fm(self.machine, { msg = tline, Z = self }),
-				   line.."\n    "..
-				   "Invalid transition from: "..self.machine.current)
+				"Invalid transition from: "..self.machine.current.." to: "..line)
 		 end
 	  end
 	  -- continue

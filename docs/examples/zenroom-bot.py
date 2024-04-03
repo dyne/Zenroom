@@ -39,7 +39,7 @@ def encrypt_wait_password(update, context):
     return ENCRYPT_WAIT_MESSAGE
 
 
-# The strucutre of the secret message depends on the AES protocol
+# The structure of the secret message depends on the AES protocol
 # it must include a "message" and a "header"
 def encrypt_wait_message(update, context):
     user = update.message.from_user
