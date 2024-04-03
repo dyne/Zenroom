@@ -172,6 +172,45 @@ EOF
     assert_output '{"signed_selective_disclosure":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"]],"jwt":{"header":{"alg":"ES256","typ":"vc+sd-jwt"},"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo","GRAVzz7ZmE5-g1siHKrMLibaQQKdgkJGitjrx1D0JBs"],"_sd_alg":"sha-256","exp":1883000000,"iat":1683000000,"iss":"http://example.org","sub":"user 42"},"signature":"bRd93MYGuiVye_3QVLtvyxGmyGejx_HXQcC-z3m_PtgZLMOV-TnEy_FSpyqsMXT-qqSj7ZIdca8tWrZrwZT72w"}}}'
 }
 
+@test "verify selective disclosure contains disclosures" {
+    cat <<EOF | save_asset verify_disclosure.json
+{
+    "present_disclosure":["given_name", "phone_number"],
+    "missing_disclosure":["given_name", "phone_number", "age"]
+}
+EOF
+    cat <<EOF | zexe verify_disclosure.zen verify_disclosure.json sd_payload2.out.json
+Scenario 'sd_jwt'
+Scenario 'es256'
+
+Given I have a 'decoded selective disclosure' named 'signed selective disclosure'
+Given I have a 'string array' named 'present_disclosure'
+Given I have a 'string array' named 'missing_disclosure'
+
+If I verify selective disclosure 'signed selective disclosure' contains disclosures 'present_disclosure'
+Then print the 'present_disclosure'
+EndIf
+If I verify selective disclosure 'signed selective disclosure' contains disclosures 'missing_disclosure'
+Then print the 'missing_disclosure'
+EndIf
+EOF
+    save_output verify_disclosure.out.json
+    assert_output '{"present_disclosure":["given_name","phone_number"]}'
+    cat <<EOF | save_asset verify_disclosure_fail.zen
+Scenario 'sd_jwt'
+Scenario 'es256'
+
+Given I have a 'decoded selective disclosure' named 'signed selective disclosure'
+Given I have a 'string array' named 'missing_disclosure'
+
+When I verify selective disclosure 'signed selective disclosure' contains disclosures 'missing_disclosure'
+
+Then print the data
+EOF
+    run $ZENROOM_EXECUTABLE -z -a verify_disclosure.json -k sd_payload2.out.json verify_disclosure_fail.zen
+    assert_line --partial 'Disclosure key not found: age'
+}
+
 @test "Verify the validity of signed sd-jwt" {
     cat <<EOF | save_asset alice_es256_keys.json
 {
