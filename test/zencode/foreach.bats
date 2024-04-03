@@ -271,3 +271,47 @@ EOF
     assert_output '{"floats":[5,6,10,9,8,7,6,5,4,3]}'
 }
 
+@test "exit from foreach loop" {
+    cat << EOF | save_asset exit_from_foreach.data
+{
+  "numbers":  [1,2,3,4,5,6,7,8],
+  "limit": 4,
+  "zero": 0,
+  "two": 2,
+  "ten": 10
+}
+EOF
+
+    cat << EOF | zexe exit_from_foreach.zen exit_from_foreach.data
+Given I have a 'float array' named 'numbers'
+Given I have a 'float' named 'limit'
+Given I have a 'float' named 'zero'
+Given I have a 'float' named 'two'
+Given I have a 'float' named 'ten'
+
+When I create the 'float array' named 'y'
+Foreach 'x' in 'numbers'
+If I verify 'x' is equal to 'limit'
+When I exit from foreach loop
+EndIf
+When I move 'x' in 'y'
+EndForeach
+
+If I verify 'x' is found
+When I remove 'x'
+EndIf
+
+When I create the 'float array' named 'z'
+Foreach 'x' in sequence from 'zero' to 'ten' with step 'two'
+If I verify 'x' is equal to 'limit'
+When I exit from foreach loop
+EndIf
+When I copy 'x' in 'z'
+EndForeach
+
+Then print 'y'
+Then print 'z'
+EOF
+    save_output "exit_from_foreach.out"
+    assert_output '{"y":[1,2,3],"z":[0,2]}'
+}
