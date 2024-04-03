@@ -64,3 +64,8 @@ Foreach("'' in sequence from '' to '' with step ''", function(name, from_name, t
         end
     end
 end)
+
+When("exit from foreach loop", function()
+    zencode_assert(ZEN.ITER and ZEN.ITER.pos ~=0, "Can only exit from foreach loop")
+    ZEN.ITER.pos = 0
+end)
