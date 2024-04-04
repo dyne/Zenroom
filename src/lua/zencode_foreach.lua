@@ -1,3 +1,12 @@
+local function clear_iterators()
+    if not ZEN.ITER.names then return end
+    for _,v in pairs(ZEN.ITER.names) do
+        ACK[v] = nil
+        CODEC[v] = nil
+    end
+    ZEN.ITER.names = nil
+end
+
 Foreach("'' in ''", function(name, collection)
     local info = ZEN.ITER
     local col = have(collection)
@@ -5,11 +14,14 @@ Foreach("'' in ''", function(name, collection)
     -- in the first itaration decale the index variable
     if info.pos == 1 or not ACK[name] then
         empty(name)
+        if info.names then table.insert(info.names, name)
+        else info.names = {name} end
     end
 
     -- skip execution in the last iteration
     if info.pos == #col+1 then
         info.pos = 0
+        clear_iterators()
     else
         -- for each iteration read the value in the collection
         ACK[name] = col[info.pos]
@@ -27,6 +39,8 @@ Foreach("'' in sequence from '' to '' with step ''", function(name, from_name, t
 
     if info.pos == 1 or not ACK[name] then
         empty(name)
+        if info.names then table.insert(info.names, name)
+        else info.names = {name} end
     end
 
     zencode_assert(type(from) == type(to) and type(to) == type(step), "Types must be equal in foreach declaration")
@@ -56,6 +70,7 @@ Foreach("'' in sequence from '' to '' with step ''", function(name, from_name, t
 
     if finished then
         info.pos = 0
+        clear_iterators()
     else
         ACK[name] = current_value
         if not CODEC[name] then
@@ -68,4 +83,5 @@ end)
 When("exit from foreach loop", function()
     zencode_assert(ZEN.ITER and ZEN.ITER.pos ~=0, "Can only exit from foreach loop")
     ZEN.ITER.pos = 0
+    clear_iterators()
 end)
