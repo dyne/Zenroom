@@ -292,7 +292,7 @@ Given I have a 'float' named 'ten'
 When I create the 'float array' named 'y'
 Foreach 'x' in 'numbers'
 If I verify 'x' is equal to 'limit'
-When I exit from foreach loop
+When I break foreach
 EndIf
 When I move 'x' in 'y'
 EndForeach
@@ -304,7 +304,7 @@ EndIf
 When I create the 'float array' named 'z'
 Foreach 'x' in sequence from 'zero' to 'ten' with step 'two'
 If I verify 'x' is equal to 'limit'
-When I exit from foreach loop
+When I exit foreach
 EndIf
 When I copy 'x' in 'z'
 EndForeach
