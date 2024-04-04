@@ -315,3 +315,34 @@ EOF
     save_output "exit_from_foreach.out"
     assert_output '{"y":[1,2,3],"z":[0,2]}'
 }
+
+@test "Two foreach with the same iterator variable name" {
+    cat << EOF | save_asset two_foreach_same_var.data
+{
+    "arr1": [
+        "str1",
+        "str2"
+    ],
+    "arr2": [
+        "str3"
+    ]
+}
+EOF
+    cat << EOF | zexe two_foreach_same_var.zen two_foreach_same_var.data
+Given I have a 'string array' named 'arr1'
+Given I have a 'string array' named 'arr2'
+
+When I create the 'string array' named 'res'
+Foreach 'x' in 'arr1'
+When I copy 'x' in 'res'
+Endforeach
+
+Foreach 'x' in 'arr2'
+When I copy 'x' in 'res'
+Endforeach
+
+Then print the 'res'
+EOF
+    save_output two_foreach_same_var.out
+    assert_output '{"res":["str1","str2","str3"]}'
+}
