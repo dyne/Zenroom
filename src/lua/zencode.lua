@@ -399,7 +399,7 @@ function ZEN:begin(new_heap)
 		  {name = 'enter_ifforeach', from = {'foreach', 'whenforeach', 'ifforeach', 'endifforeach'}, to = 'ifforeach'},
 		  {name = 'enter_whenifforeach', from = {'ifforeach', 'whenifforeach'}, to = 'whenifforeach'},
 		  {name = 'enter_endifforeach', from = {'ifforeach', 'whenifforeach'}, to = 'endifforeach'},
-		  {name = 'enter_foreach', from = {'given', 'when', 'endif', 'foreach'}, to = 'foreach'},
+		  {name = 'enter_foreach', from = {'given', 'when', 'endif', 'foreach', 'endforeach'}, to = 'foreach'},
 		  {name = 'enter_whenforeach', from = {'foreach', 'whenforeach', 'endifforeach'}, to = 'whenforeach'},
 		  {name = 'enter_endforeach', from = {'whenforeach', 'endifforeach'}, to = 'endforeach'},
 		  {name = 'enter_and', from = 'when', to = 'when'},
