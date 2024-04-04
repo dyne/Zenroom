@@ -437,7 +437,7 @@ IfWhen("verify disclosures '' are found in signed selective disclosure ''", func
 end)
 
 -- for reference see Section 8.1 of https://datatracker.ietf.org/doc/draft-ietf-oauth-selective-disclosure-jwt/
-When("verify signed selective disclosure '' issued by '' is valid", function(obj, by)
+IfWhen("verify signed selective disclosure '' issued by '' is valid", function(obj, by)
     local signed_sd = have(obj)
     local iss_pk = load_pubkey_compat(by, 'es256')
     local jwt = signed_sd.jwt
