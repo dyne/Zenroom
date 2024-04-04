@@ -80,8 +80,11 @@ Foreach("'' in sequence from '' to '' with step ''", function(name, from_name, t
     end
 end)
 
-When("exit from foreach loop", function()
+local function break_foreach()
     zencode_assert(ZEN.ITER and ZEN.ITER.pos ~=0, "Can only exit from foreach loop")
     ZEN.ITER.pos = 0
     clear_iterators()
-end)
+end
+
+When("exit foreach", break_foreach)
+When("break foreach", break_foreach)
