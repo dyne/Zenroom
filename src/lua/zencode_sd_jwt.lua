@@ -416,9 +416,14 @@ When("use signed selective disclosure '' only with disclosures ''", function(ssd
     ssd.disclosures = disclosure
 end)
 
-IfWhen("verify selective disclosure '' contains disclosures ''", function(ssd_name, lis)
+IfWhen("verify disclosures '' are found in signed selective disclosure ''", function(lis, ssd_name)
     local ssd = have(ssd_name)
-    local disclosed_keys = have(lis)
+    local disclosed_keys, c_disclosed_keys = have(lis)
+    zencode_assert(c_disclosed_keys.zentype ~= 'd', "Disclosures must be a single value or an array")
+    if c_disclosed_keys.zentype == 'e' then
+        zencode_assert(type(disclosed_keys) == 'zenroom.octet', "Disclosures must a single value or an array")
+        disclosed_keys = {disclosed_keys}
+    end
     for _,k in pairs(disclosed_keys) do
         local found = false
         for _, v in pairs(ssd.disclosures) do
