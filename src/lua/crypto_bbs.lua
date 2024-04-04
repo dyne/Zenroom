@@ -62,7 +62,6 @@ local K = nil -- see function K_INIT() below
 
 -- Added api_id
 
-local interface_id = O.from_string("H2G_HM2S")
 local CIPHERSUITE_SHAKE = {
     expand = HASH.expand_message_xof,
     ciphersuite_ID = O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_"),
@@ -707,8 +706,8 @@ function bbs.calculate_random_scalars(count)
     --]]
     -- We leave it like this because it should yield a more uniform distribution.
     while #scalar_array < count do
-        scalar = os2ip(O.random(32))
-        if scalar < PRIME_R then
+        scalar = os2ip(O.random(32)) -- è un BIG
+        if scalar < PRIME_R then 
             table.insert(scalar_array, scalar)
         end
     end
@@ -716,7 +715,7 @@ function bbs.calculate_random_scalars(count)
 end
 
 --[[
-DESCRIPTION: This functio calcluates the challange scalar value needed for both the CoreProofGen and the CoreProofVerify
+DESCRIPTION: This function calculates the challange scalar value needed for both the CoreProofGen and the CoreProofVerify
 INPUT: ciphersuite (a table), init_res (a vector consisting of five points of G1 and a scalar value in that order), disclosed_messages (vector of scalar values), 
 disclosed_indexes (vector of non-negative integers in ascending order), ph( an octet string)
 
@@ -756,94 +755,145 @@ local function proof_challenge_calculate(ciphersuite, init_res, disclosed_messag
     return challenge
 end
 
--- draft-irtf-cfrg-bbs-signatures-latest Section 3.4.3
-function bbs.proof_gen(ciphersuite, pk, signature, header, ph, messages_octets, disclosed_indexes)
+--[[
+INPUT: pk (zenroom.octet), signature_result (a pair zenroom.ecp, zenroom.BIG), generators (vector of points of G1 in zenroom.ecp),
+random_scalars (vector zenroom.BIG) header (zenroom.octet), messages (vector of scalars in zenroom.BIG), undisclosed_indexes (vector of numbers),
+ciphersuite (table).
+OUTPUT: init_res a table with 5 points on G1 (zenroom.ecp) and a scalar (zenroom.BIG)
+]]
 
-    -- disclosed_indexes is a STRICTLY INCREASING array of POSITIVE integers.
-    header = header or O.empty()
-    ph = ph or O.empty()
-    messages_octets = messages_octets or {}
-    disclosed_indexes = disclosed_indexes or {}
+local function proof_init(ciphersuite, pk, signature_result, generators, random_scalars, header, messages, undisclosed_indexes)
+    local AA, e = table.unpack(signature_result)
+    local L = #messages
+    local U = #undisclosed_indexes
+    local j = {table.unpack(undisclosed_indexes)}
+    local r1, r2, et, r1t, r3t = table.unpack(random_scalars,1,5)
+    local mjt = {table.unpack(random_scalars, 6, 5 + U)}
 
-    -- Converting generic octet messages into scalars
-    local messages = {}
-    for k,v in pairs(messages_octets) do
-        messages[k] = bbs.MapMessageToScalarAsHash(ciphersuite, v)
+    if #generators ~= L+1 then error('Wrong generators length') end
+    local Q_1 = table.unpack(generators, 1)
+    local MsgGenerators = {table.unpack(generators, 2, 1 + L)}
+    local H_j = {}
+    for i = 1, U do
+        H_j[i] = MsgGenerators[j[i]]
     end
-
-    -- Deserialisation
-    local signature_result = octets_to_signature(signature)
-    local AA, e, s = table.unpack(signature_result)
-    local msg_len = #messages
-    local disclosed_messages = {}
-    local secret_messages = {}
-    local secret_indexes = {}
-    local pointer = 1
-    if #disclosed_indexes == 0 then
-        for i =1, msg_len do
-            secret_indexes[i] = true
-        end
-    else
-        for i = 1, msg_len do
-            if i == disclosed_indexes[pointer] then
-                disclosed_messages[pointer] = messages[i]
-                pointer = pointer + 1
-            else
-                secret_indexes[i] = true
-            end
-        end
+    
+    if U > L then error('number of undisclosed indexes is bigger than the number of messages') end
+    for i = 1, U do
+        if undisclosed_indexes[i] <= 0 or undisclosed_indexes[i] > L then error('Wrong undisclosed indexes') end
     end
-
-    local secret_len = msg_len - #disclosed_indexes
-    local points_array = bbs.create_generators(ciphersuite, msg_len + 2)
-    local Q_1, Q_2 = table.unpack(points_array,1,2)
-    local all_H_points = {table.unpack(points_array, 3, msg_len+2)}
-    local secret_H_points = {}
-
-    for i = 1, msg_len do
-        if secret_indexes[i] then
-            table.insert(secret_H_points, all_H_points[i])
-            table.insert(secret_messages, messages[i])
-        end
+    
+    local domain = calculate_domain(ciphersuite, pk, Q_1, MsgGenerators, header)
+    
+    local BB = ciphersuite.P1 + (Q_1 * domain)
+    for i = 1, L do
+        BB = BB + (MsgGenerators[i] * messages[i])
     end
-
-    local domain = calculate_domain(ciphersuite, pk, Q_1, Q_2, all_H_points, header)
-
-    local random_scalars = bbs.calculate_random_scalars(6 + secret_len)
-    local r1, r2, et, r2t, r3t, st = table.unpack(random_scalars,1,6)
-    local mjt = {table.unpack(random_scalars, 7, 6 + secret_len)}
-
-    local BB = ciphersuite.P1 + (Q_1 * s) + (Q_2 * domain)
-    for i = 1, msg_len do
-        BB = BB + (all_H_points[i] * messages[i])
+    
+    local D = BB * r2
+    local Abar = AA * (r1 * r2)
+    local Bbar = (D * r1) - (Abar * e)
+    local T1 = (Abar * et) + (D * r1t)
+    local T2 = (D * r3t)
+    for i = 1, U do
+        T2 = T2 + H_j[i] * mjt[i]
     end
+    local init_res = {Abar, Bbar, D, T1, T2, domain}
+    return init_res
 
-    local r3 = BIG.modinv(r1, PRIME_R)
-    local Aprime = AA * r1
-    local Abar = (Aprime * BIG.modneg( e, PRIME_R)) + (BB * r1)
-    local D = (BB * r1) + (Q_1 * r2)
-    local sprime = BIG.mod( BIG.modmul(r2, r3, PRIME_R) + s, PRIME_R)
-    local C1 = (Aprime * et) + (Q_1 * r2t)
+end
 
-    local C2 = (D * BIG.modneg( r3t, PRIME_R)) + (Q_1 * st)
-    for i = 1, secret_len do
-        C2 = C2 + (secret_H_points[i] * mjt[i])
+--[[
+INPUT: init_res (output of ProofInit), challenge (output of ProofChallengeCalculate), e_value (scalar zenroom.BIG), random_scalars (vector of
+scalars, zenroom.BIG), undisclosed_messages (vector of scalars, zenroom.BIG)
+OUTPUT:
+]]
+
+local function proof_finalize(init_res, challenge, e_value, random_scalars, undisclosed_messages)
+    local U = #undisclosed_messages
+
+    if #random_scalars ~= U + 5 then error('Wrong number of random scalars') end
+    
+    local r1, r2, et, r1t, r3t = table.unpack(random_scalars,1,5)
+
+    local mjt = {table.unpack(random_scalars, 6, 5 + U)}
+    
+
+    local Abar, Bbar, D = table.unpack(init_res)
+    local r3 = BIG.moddiv(BIG.new(1), r2, PRIME_R)
+    local es = BIG.mod(et + BIG.modmul(e_value, challenge, PRIME_R),PRIME_R)
+    local r1s = BIG.mod(r1t - BIG.modmul(r1, challenge,PRIME_R),PRIME_R)
+    local r3s = BIG.mod(r3t - BIG.modmul(r3,challenge,PRIME_R),PRIME_R)
+    local ms = {}
+    for j = 1, U do
+        ms[j] = BIG.mod(mjt[j] + (undisclosed_messages[j] * challenge), PRIME_R)
     end
-
-    local c = proof_challenge_calculate(ciphersuite ,Aprime, Abar, D, C1, C2, disclosed_indexes, disclosed_messages, domain, ph)
-
-    local ehat = BIG.mod(BIG.modmul(c, e, PRIME_R) + et, PRIME_R)
-    local r2hat = BIG.mod( BIG.modmul(c, r2, PRIME_R) + r2t, PRIME_R)
-    local r3hat = BIG.mod( BIG.modmul(c, r3, PRIME_R) + r3t, PRIME_R)
-    local shat = BIG.mod( BIG.modmul(c, sprime, PRIME_R) + st, PRIME_R)
-
-    local proof = { Aprime, Abar, D, c, ehat, r2hat, r3hat, shat}
-    for j = 1, secret_len do
-        proof[j+8] = BIG.mod( BIG.modmul(c, secret_messages[j], PRIME_R) + mjt[j], PRIME_R)
+    local proof = {Abar, Bbar, D, es, r1s, r3s} --ms, challenge
+    for i = 1, U do
+        proof[6 + i] = ms[i]
     end
-
+    proof[6 + U + 1] = challenge
     return serialization(proof)
+end
 
+--[[
+INPUT: ciphersuite (table), pk (zenroom.octet), signature (zenroom.octet), generators (vector of zenroom.ecp on G1), header (zenroom.octet),
+ph (zenroom.octet), messages (vector of scalars in zenroom.BIG), disclosed_indexes (vector of numbers)
+OUTPUT: proof (output of ProofFinalize)
+]]
+
+local function core_proof_gen(ciphersuite, pk, signature, generators, header, ph, messages, disclosed_indexes)
+
+    local L = #messages
+    local R = #disclosed_indexes
+    if R > L then error('number of disclosed indexes is bigger than the number of messages') end
+    local U = L - R
+    local signature_result = octets_to_signature(signature)
+    local AA, e = table.unpack(signature_result)
+    local undisclosed_indexes = {}
+    local index = 1
+    local j = 1
+    for i = 1, L do
+        if i ~= disclosed_indexes[j] then
+            undisclosed_indexes[index] = i
+            index = index + 1
+        else
+            j = j + 1
+        end
+    end
+    
+    local disclosed_messages = {}
+    local undisclosed_messages = {}
+    for i = 1, #disclosed_indexes do
+        disclosed_messages[i] = messages[disclosed_indexes[i]]
+    end
+    for i = 1, #undisclosed_indexes do
+        undisclosed_messages[i] = messages[undisclosed_indexes[i]]
+    end
+    
+    local random_scalars = bbs.calculate_random_scalars(5 + U)
+
+    local init_res = proof_init(ciphersuite, pk, signature_result, generators, random_scalars, header, messages, undisclosed_indexes)
+    
+    local challenge =  proof_challenge_calculate(ciphersuite, init_res, disclosed_messages, disclosed_indexes, ph)
+    
+    local proof = proof_finalize(init_res, challenge, e, random_scalars, undisclosed_messages)
+
+    return proof
+end
+
+--[[
+INPUT: ciphersuite (table), pk (zenroom.octet), signature (zenroom.octet), header (zenroom.octet), ph (zenroom.octet), messages (vector of
+zenroom.octet), disclosed_indexes (vector of number)
+OUTPUT: proof (output of CoreProofGen)
+]]
+
+function bbs.proof_gen(ciphersuite, pk, signature, header, ph, messages, disclosed_indexes)
+    local messages = bbs.messages_to_scalars(ciphersuite,messages)
+    local generators = bbs.create_generators(ciphersuite, #messages + 1)
+    local proof = core_proof_gen(ciphersuite, pk, signature, generators, header, ph, messages, disclosed_indexes)
+
+    return proof
 end
 
 --[[
@@ -872,6 +922,7 @@ local function octets_to_proof(proof_octets)
         local end_index = index + OCTET_SCALAR_LENGTH -1
         return_array[j] = os2ip(proof_octets:sub(index, end_index))
         if (return_array[j] == BIG.new(0)) or (return_array[j]>=PRIME_R) then
+            print(j)
             error("Not a scalar in octets_to_proof", 2)
         end
         index = index + OCTET_SCALAR_LENGTH
@@ -963,7 +1014,6 @@ local function core_proof_verify(ciphersuite, pk , proof, generators, header, ph
     local init_res = proof_verify_init(ciphersuite, pk , Abar, Bbar, D , ehat, r1hat, r3hat , commitments, cp, generators, header, disclosed_messages, disclosed_indexes)
     local challenge = proof_challenge_calculate(ciphersuite, init_res, disclosed_messages, disclosed_indexes, ph)
     if (cp ~= challenge) then
-        print("here")
         return false
     end
 
@@ -999,10 +1049,48 @@ function bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages
 
 end
 
---return bbs
+return bbs
 
 --[[
 --TEST
+
+local function seeded_random_scalars_xmd(count)
+    local EXPAND_LEN = 48
+    local SEED = O.from_hex("332e313431353932363533353839373933323338343632363433333833323739")
+    local r = ECP.order()
+    local out_len = EXPAND_LEN * count
+    assert(out_len <= 65535)
+    local v = HASH.expand_message_xmd(SEED, O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_H2G_HM2S_MOCK_RANDOM_SCALARS_DST_"), out_len)
+    -- if v is INVALID return INVALID
+
+    local arr = {}
+    for i = 1, count do
+        local start_idx = 1 + (i-1)*EXPAND_LEN
+        local end_idx = i * EXPAND_LEN
+        arr[i] = BIG.mod(v:sub(start_idx, end_idx), r) -- = os2ip(v:sub(start_idx, end_idx)) % r
+    end
+    return arr
+end
+
+local function seeded_random_scalars_xof(count)
+    local EXPAND_LEN = 48
+    local SEED = O.from_hex("332e313431353932363533353839373933323338343632363433333833323739")
+    local r = ECP.order()
+    local out_len = EXPAND_LEN * count
+    assert(out_len <= 65535)
+    local v = HASH.expand_message_xof(SEED, O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_H2G_HM2S_MOCK_RANDOM_SCALARS_DST_"), out_len)
+    -- if v is INVALID return INVALID
+
+    local arr = {}
+    for i = 1, count do
+        local start_idx = 1 + (i-1)*EXPAND_LEN
+        local end_idx = i * EXPAND_LEN
+        arr[i] = BIG.mod(v:sub(start_idx, end_idx), r) -- = os2ip(v:sub(start_idx, end_idx)) % r
+    end
+    return arr
+end
+
+
 print('----------------------')
 print("Keygen test")
 local key_material = O.from_hex("746869732d49532d6a7573742d616e2d546573742d494b4d2d746f2d67656e65726174652d246528724074232d6b6579")
@@ -1084,6 +1172,8 @@ messages[9] = O.from_hex("96012096")
 messages[10] = O.empty()
 
 ciphersuite = bbs.ciphersuite("shake256")
+
+bbs.calculate_random_scalars = seeded_random_scalars_xof
 print('----------------------')
 print("TEST: Single message signature SHAKE 256")
 print("Test case 1")
@@ -1098,6 +1188,8 @@ assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_
 
 local ph = O.from_hex("bed231d880675ed101ead304512e043ade9958dd0241ea70b4b3957fba941501") 
 local proof = O.from_hex("89b485c2c7a0cd258a5d265a6e80aae416c52e8d9beaf0e38313d6e5fe31e7f7dcf62023d130fbc1da747440e61459b1929194f5527094f56a7e812afb7d92ff2c081654c6d5a70e369474267f1c7f769d47160cd92d79f66bb86e994c999226b023d58ee44d660434e6ba60ed0da1a5d2cde031b483684cd7c5b13295a82f57e209b584e8fe894bcc964117bf3521b468cc9c6ba22419b3e567c7f72b6af815ddeca161d6d5270c3e8f269cdabb7d60230b3c66325dcf6caf39bcca06d889f849d301e7f30031fdeadc443a7575de547259ffe5d21a45e5a0da9b113512f7b124f031b0b8329a8625715c9245033ae13dfadd6bdb0b4364952647db3d7b91faa4c24cbb65344c03473c5065bb414ff7")
+local proof2 = bbs.proof_gen(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), ph, SINGLE_MSG_ARRAY, {1})
+assert(proof2 == proof)
 assert(bbs.proof_verify(ciphersuite,O.from_hex(PUBLIC_KEY), proof, O.from_hex(HEADER), ph,  SINGLE_MSG_ARRAY, {1})== true)
 
 print('----------------------')
@@ -1108,12 +1200,19 @@ local output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), 
 assert(output_signature == O.from_hex(VALID_SIGNATURE))
 assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), messages) == true)
 
+
+
 local disclosed_indexes = {1,3,5,7}
 local disclosed_messages = {messages[1],messages[3],messages[5], messages[7]}
 local proof = O.from_hex("853f4927bd7e4998af27df65566c0a071a33a5207d1af33ef7c3be04004ac5da860f34d35c415498af32729720ca4d92977bbbbd60fdc70ddbb2588878675b90815273c9eaf0caa1123fe5d0c4833fefc459d18e1dc83d669268ec702c0e16a6b73372346feb94ab16189d4c525652b8d3361bab43463700720ecfb0ee75e595ea1b13330615011050a0dfcffdb21af36ac442df87545e0e8303260a97a0d251de15fc1447b82fff6b47ffb0ff94022869b315dc48c9302523b2715ddec9f56975a0892f5f3aeed3203c29c7a03cfc79187eef45f72b7c5bf0d4fc852adcc7528c05b0ba9554f2eb9b39c168a4dd6bdc3ac603ce14856184f6d713139f9d3930efcc9842e724517dbccff6912088b399447ff786e2f9db8b1061cc89a1636ba9282344729bcd19228ccde2318286c5a115baaf317b48341ac7906c6cc957f94b060351563907dca7f598a4cbdaeab26c4a4fcb6aa7ff6fd999c5f9bc0c9a9b0e4f4a3301de901a6c68b174ed24ccf5cd0cac6726766c91aded6947c4b446a9dfc8ec0aa11ec9ddda57dcc22c554a83a25471be93ae69ad9234b1fc3d133550d7ff570a4bc6555cd0bf23ee1b2a994b2434ea222bc221ba1615adc53b47ba99fc5a66495585d4c86f1f0aecb18df802b8")
-assert(bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), proof, O.from_hex(HEADER), ph, disclosed_messages, disclosed_indexes))
+local proof2 = bbs.proof_gen(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), ph, messages, disclosed_indexes)
+assert(proof==proof2)
+assert(bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), proof2, O.from_hex(HEADER), ph, disclosed_messages, disclosed_indexes))
+
 
 ciphersuite = bbs.ciphersuite("sha256")
+bbs.calculate_random_scalars = seeded_random_scalars_xmd
+
 print('----------------------')
 print("TEST: Single message signature SHA 256")
 print("Test case 1")
@@ -1127,6 +1226,12 @@ local output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), 
 assert(output_signature == O.from_hex(VALID_SIGNATURE))
 assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER),SINGLE_MSG_ARRAY) == true)
 
+local ph = O.from_hex("bed231d880675ed101ead304512e043ade9958dd0241ea70b4b3957fba941501") 
+local proof = O.from_hex("a7c217109e29ecab846691eaad757beb8cc93356daf889856d310af5fc5587ea4f8b70b0d960c68b7aefa62cae806baa8edeca19ca3dd884fb977fc43d946dc2a0be8778ec9ff7a1dae2b49c1b5d75d775ba37652ae759b9bb70ba484c74c8b2aeea5597befbb651827b5eed5a66f1a959bb46cfd5ca1a817a14475960f69b32c54db7587b5ee3ab665fbd37b506830a0fdc9a7f71072daabd4cdb49038f5c55e84623400d5f78043a18f76b272fd65667373702763570c8a2f7c837574f6c6c7d9619b0834303c0f55b2314cec804b33833c7047865587b8e55619123183f832021dd97439f324fa3ad90ec45417070067fb8c56b2af454562358b1509632f92f2116c020fe7de1ba242effdb36e980")
+local proof2 = bbs.proof_gen(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), ph, SINGLE_MSG_ARRAY, {1})
+assert(proof2 == proof)
+assert(bbs.proof_verify(ciphersuite,O.from_hex(PUBLIC_KEY), proof, O.from_hex(HEADER), ph,  SINGLE_MSG_ARRAY, {1})== true)
+
 print('----------------------')
 print("TEST: Multiple messages signature SHA 256")
 print("Test case 1")
@@ -1134,5 +1239,13 @@ local VALID_SIGNATURE ="895cd9c0ccb9aca4de913218655346d718711472f2bf1f3e68916de1
 local output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(HEADER), messages)
 assert(output_signature == O.from_hex(VALID_SIGNATURE))
 assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), messages) == true)
+
+local disclosed_indexes = {1,3,5,7}
+local disclosed_messages = {messages[1],messages[3],messages[5], messages[7]}
+local proof = O.from_hex("a8da259a5ae7a9a8e5e4e809b8e7718b4d7ab913ed5781ebbff4814c762033eda4539973ed9bf557f882192518318cc4916fdffc857514082915a31df5bbb79992a59fd68dc3b48d19d2b0ad26be92b4cf78a30f472c0fd1e558b9d03940b077897739228c88afc797916dca01e8f03bd9c5375c7a7c59996e514bb952a436afd24457658acbaba5ddac2e693ac481352bb6fce6084eb1867c71caeac2afc4f57f4d26504656b798b3e4009eb227c7fa41b6ae00daae0436d853e86b32b366b0a9929e1570369e9c61b7b177eb70b7ff27326c467c362120dfeacc0692d25ccdd62d733ff6e8614abd16b6b63a7b78d11632cf41bc44856aee370fee6690a637b3b1d8d8525aff01cd3555c39d04f8ee1606964c2da8b988897e3d27cb444b8394acc80876d3916c485c9f36098fed6639f12a6a6e67150a641d7485656408e9ae22b9cb7ec77e477f71c1fe78cab3ee5dd62c34dd595edb15cbce061b29192419dfadcdee179f134dd8feb9323c426c51454168ffacb65021995848e368a5c002314b508299f67d85ad0eaaaac845cb029927191152edee034194cca3ae0d45cbd2f5e5afd1f9b8a3dd903adfa17ae43a191bf3119df57214f19e662c7e01e8cc2eb6b038bc7d707f2f3e13545909e0")
+local proof2 = bbs.proof_gen(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), ph, messages, disclosed_indexes)
+assert(proof==proof2)
+assert(bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), proof2, O.from_hex(HEADER), ph, disclosed_messages, disclosed_indexes))
+
 
 ]]
