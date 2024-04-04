@@ -10,7 +10,8 @@ end
 Foreach("'' in ''", function(name, collection)
     local info = ZEN.ITER
     local col = have(collection)
-    zencode_assert(CODEC[collection].zentype == "a", "Can only iterate over arrays")
+    local collection_codec = CODEC[collection]
+    zencode_assert(collection_codec.zentype == "a", "Can only iterate over arrays")
     -- in the first itaration decale the index variable
     if info.pos == 1 or not ACK[name] then
         empty(name)
@@ -26,7 +27,12 @@ Foreach("'' in ''", function(name, collection)
         -- for each iteration read the value in the collection
         ACK[name] = col[info.pos]
         if not CODEC[name] then
-            new_codec(name, {encoding = CODEC[collection].encoding})
+            local n_codec = {encoding = collection_codec.encoding}
+            if collection_codec.schema then
+                n_codec.schema = collection_codec.schema
+                n_codec.zentype = "e"
+            end
+            new_codec(name, n_codec)
         end
     end
 end)
