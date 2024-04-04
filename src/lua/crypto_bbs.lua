@@ -195,7 +195,7 @@ end
 
 --[[ 
 INPUT: ciphersuite (a table), msg_octects (as zenroom.octet), dst (as zenroom.octet)
-OUTPUT: hashed_scalar (as zenroom.octet), represents an integer between 1 and ECP.order() - 1
+OUTPUT: hashed_scalar (as zenroom.BIG), represents an integer between 1 and ECP.order() - 1
 ]]
 local function hash_to_scalar(ciphersuite, msg_octects, dst)
     local BIG_0 = BIG.new(0)
@@ -1049,9 +1049,9 @@ function bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages
 
 end
 
-return bbs
+--return bbs
 
---[[
+
 --TEST
 
 local function seeded_random_scalars_xmd(count)
@@ -1248,4 +1248,3 @@ assert(proof==proof2)
 assert(bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), proof2, O.from_hex(HEADER), ph, disclosed_messages, disclosed_indexes))
 
 
-]]

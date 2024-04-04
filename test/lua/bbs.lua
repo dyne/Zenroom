@@ -10,12 +10,12 @@ print('----------------------')
 print("TEST: key pair")
 local ikm = O.from_hex('746869732d49532d6a7573742d616e2d546573742d494b4d2d746f2d67656e65726174652d246528724074232d6b6579')
 local key_info = O.from_hex('746869732d49532d736f6d652d6b65792d6d657461646174612d746f2d62652d757365642d696e2d746573742d6b65792d67656e')
-local sk = bbs.keygen(ikm, key_info)
+local key_dst = O.from_hex("4242535f424c53313233383147315f584d443a5348412d3235365f535357555f524f5f4832475f484d32535f4b455947454e5f4453545f")
+local sk = bbs.keygen(ciphersuite, ikm, key_info, key_dst)
 print("Test Case 1")
-assert(sk == BIG.new(O.from_hex('4a39afffd624d69e81808b2e84385cc80bf86adadf764e030caa46c231f2a8d7')))
--- p=bbs.sk2pk(sk)
--- oct = O.from_hex('aaff983278257afc45fa9d44d156c454d716fb1a250dfed132d65b2009331f618c623c14efa16245f50cc92e60334051087f1ae92669b89690f5feb92e91568f95a8e286d110b011e9ac9923fd871238f57d1295395771331ff6edee43e4ccc6')
-assert(bbs.sk2pk(sk) == O.from_hex('aaff983278257afc45fa9d44d156c454d716fb1a250dfed132d65b2009331f618c623c14efa16245f50cc92e60334051087f1ae92669b89690f5feb92e91568f95a8e286d110b011e9ac9923fd871238f57d1295395771331ff6edee43e4ccc6'))
+assert(sk == BIG.new(O.from_hex('60e55110f76883a13d030b2f6bd11883422d5abde717569fc0731f51237169fc')))
+
+assert(bbs.sk2pk(sk) == O.from_hex('a820f230f6ae38503b86c70dc50b61c58a77e45c39ab25c0652bbaa8fa136f2851bd4781c9dcde39fc9d1d52c9e60268061e7d7632171d91aa8d460acee0e96f1e7c4cfb12d3ff9ab5d5dc91c277db75c845d649ef3c4f63aebc364cd55ded0c'))
 
 print('----------------------')
 print("TEST: hash_to_field_m1_c2")
@@ -174,40 +174,41 @@ print("TEST: MapMessageToScalarAsHash")
 
 -- Test vectors originated from:
 -- draft-irtf-cfrg-bbs-signatures-latest Sections 7.3 AND 7.5.1
-local DST_MAP_MESSAGES_TO_SCALAR = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MAP_MSG_TO_SCALAR_AS_HASH_') -- '4242535f424c53313233383147315f584d443a5348412d3235365f535357555f524f5f4d41505f4d53475f544f5f5343414c41525f41535f484153485f'
 
 local map_messages_to_scalar_messages = {
-    '9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02',
-    '87a8bd656d49ee07b8110e1d8fd4f1dcef6fb9bc368c492d9bc8c4f98a739ac6',
-    '96012096adda3f13dd4adbe4eea481a4c4b5717932b73b00e31807d3c5894b90',
-    'ac55fb33a75909edac8994829b250779298aa75d69324a365733f16c333fa943',
-    'd183ddc6e2665aa4e2f088af9297b78c0d22b4290273db637ed33ff5cf703151',
-    '515ae153e22aae04ad16f759e07237b43022cb1ced4c176e0999c6a8ba5817cc',
-    '496694774c5604ab1b2544eababcf0f53278ff5040c1e77c811656e8220417a2',
-    '77fe97eb97a1ebe2e81e4e3597a3ee740a66e9ef2412472c23364568523f8b91',
-    '7372e9daa5ed31e6cd5c825eac1b855e84476a1d94932aa348e07b7320912416',
-    'c344136d9ab02da4dd5908bbba913ae6f58c2cc844b802a6f811f5fb075f9b80'
+    O.from_hex('9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02'),
+    O.from_hex("c344136d9ab02da4dd5908bbba913ae6f58c2cc844b802a6f811f5fb075f9b80"),
+    O.from_hex('7372e9daa5ed31e6cd5c825eac1b855e84476a1d94932aa348e07b73'),
+    O.from_hex('77fe97eb97a1ebe2e81e4e3597a3ee740a66e9ef2412472c'),
+    O.from_hex('496694774c5604ab1b2544eababcf0f53278ff50'),
+    O.from_hex('515ae153e22aae04ad16f759e07237b4'),
+    O.from_hex('d183ddc6e2665aa4e2f088af'),
+    O.from_hex('ac55fb33a75909ed'),
+    O.from_hex('96012096'),
+    O.empty()
 }
 
 local map_messages_to_scalar_test = {
-    '0e95c55a6ba91b0ed5e9425151dca52fff8748d935e780c828ad00031b93ed7f',
-    '1b8a006679df6534aca94caf0fed58234b1d7f575a2646308e6c9d5fdf4bba60',
-    '0060ba23303163460a943404fa505b5e039bb11d6efd3689560cc9985094d0c2',
-    '4380b070a45f309c3abed92324a15a8a6ccdc6972f9735e043e267745b50b3a0',
-    '6df7849922283ab15f3dfe1b4699f33d5820acf5dede3e48e33df5e7fcf3762c',
-    '0e1aa2ed096260ebd262673b5d3613c44371374849b9f3dd25c456a41f56ecc1',
-    '4ceec5a33e7c25c95e6234825b013f846243f492805a81a65b242c2422b516e6',
-    '05dfbcc38db8c56cd638903805a0068be05c8201afebc04926b6332f44ff46f0',
-    '313750e2398ea3547d558aa8d25ad2426c8cea82d68d9f159f08c72223e1673a',
-    '364dd864673c8b33ebd7a1f8a1249f5735c757f08e3c94e2265b61a019cb4bd3'
+    BIG.new(O.from_hex('1cb5bb86114b34dc438a911617655a1db595abafac92f47c5001799cf624b430')),
+    BIG.new(O.from_hex('154249d503c093ac2df516d4bb88b510d54fd97e8d7121aede420a25d9521952')),
+    BIG.new(O.from_hex('0c7c4c85cdab32e6fdb0de267b16fa3212733d4e3a3f0d0f751657578b26fe22')),
+    BIG.new(O.from_hex('4a196deafee5c23f630156ae13be3e46e53b7e39094d22877b8cba7f14640888')),
+    BIG.new(O.from_hex('34c5ea4f2ba49117015a02c711bb173c11b06b3f1571b88a2952b93d0ed4cf7e')),
+    BIG.new(O.from_hex('4045b39b83055cd57a4d0203e1660800fabe434004dbdc8730c21ce3f0048b08')),
+    BIG.new(O.from_hex('064621da4377b6b1d05ecc37cf3b9dfc94b9498d7013dc5c4a82bf3bb1750743')),
+    BIG.new(O.from_hex('34ac9196ace0a37e147e32319ea9b3d8cc7d21870d3c3ba071246859cca49b02')),
+    BIG.new(O.from_hex('57eb93f417c43200e9784fa5ea5a59168d3dbc38df707a13bb597c871b2a5f74')),
+    BIG.new(O.from_hex('08e3afeb2b4f2b5f907924ef42856616e6f2d5f1fb373736db1cca32707a7d16'))
 }
 
-for k = 1, #map_messages_to_scalar_test do
-    print("Test Case " .. k)
-    local output_scalar = bbs.MapMessageToScalarAsHash(ciphersuite, O.from_hex(map_messages_to_scalar_messages[k]), DST_MAP_MESSAGES_TO_SCALAR)
-    assert(output_scalar == BIG.new(O.from_hex(map_messages_to_scalar_test[k])), "Wrong scalar")
+
+local output_scalar = bbs.messages_to_scalars(ciphersuite,map_messages_to_scalar_messages)
+for i = 1, 10 do
+    assert(output_scalar[i] == map_messages_to_scalar_test[i], "Wrong scalar")
 end
 
+
+--[[
 print('----------------------')
 print("TEST: MapMessageToScalarAsHash (BBS paper, C.2.7)")
 print("(literally only first test vector of the above test with same name)")
@@ -223,31 +224,33 @@ local BBS_SHA_256_H2S_TEST = '669e7db2fcd926d6ec6ff14cbb3143f50cce0242627f1389d5
 
 print('Test case 1')
 assert(bbs.MapMessageToScalarAsHash(ciphersuite, O.from_hex(INPUT_MSG_BBS_SHA_256), O.from_hex(DEFAULT_DST_HASH_TO_SCALAR)) == BIG.new(O.from_hex(BBS_SHA_256_H2S_TEST)))
+--]]
 
 print('----------------------')
 print("TEST: create_generators")
 
 -- Section 7.5.2
 local create_generators_test = {
-    ECP.from_zcash(O.from_hex('b57ec5e001c28d4063e0b6f5f0a6eee357b51b64d789a21cf18fd11e73e73577910182d421b5a61812f5d1ca751fa3f0')),
-    ECP.from_zcash(O.from_hex('909573cbb9da401b89d2778e8a405fdc7d504b03f0158c31ba64cdb9b648cc35492b18e56088b44c8b4dc6310afb5e49')),
-    ECP.from_zcash(O.from_hex('90248350d94fd550b472a54269e28b680757d8cbbe6bb2cb000742c07573138276884c2872a8285f4ecf10df6029be15')),
-    ECP.from_zcash(O.from_hex('8fb7d5c43273a142b6fc445b76a8cdfc0f96c5fdac7cdd73314ac4f7ec4990a0a6f28e4ad97fb0a3a22efb07b386e3ff')),
-    ECP.from_zcash(O.from_hex('8241e3e861aaac2a54a8d7093301143d7d3e9911c384a2331fcc232a3e64b4882498ce4d9da8904ffcbe5d6eadafc82b')),
-    ECP.from_zcash(O.from_hex('99bb19d202a4019c14a36933264ae634659994076bf02a94135e1026ea309c7d3fd6da60c7929d30b656aeaba7c0dcec')),
-    ECP.from_zcash(O.from_hex('81779fa5268e75a980799c0a01677a763e14ba82cbf0a66c653edc174057698636507ac58e73522a59585558dca80b42')),
-    ECP.from_zcash(O.from_hex('98a3f9af71d391337bc6ae5d26980241b6317d5d71570829ce03d63c17e0d2164e1ad793645e1762bfcc049a17f5994b')),
-    ECP.from_zcash(O.from_hex('aca6a84770bb1f515591b4b95d69777856ddc52d5439325839e31ce5b6237618a9bc01a04b0057d33eab14341504c7e9')),
-    ECP.from_zcash(O.from_hex('b96e206d6cf32b51d2f4d543972d488a4c4cbc5d994f6ebb0bdffbc5459dcb9a8e5ab045c5949dc7eb33b0545b62aae3')),
-    ECP.from_zcash(O.from_hex('8edf840b56ecf8d7c5a9c4a0aaf8a5525f3480df735743298dd2f4ae1cbb56f56ed6a04ef6fa7c92cd68d9101c7b8c8f')),
-    ECP.from_zcash(O.from_hex('86d4ae04738dc082eb37e753bc8ec35a8d982e463559214d0f777599f71aa1f95780b3dccbdcae45e146e5c7623dfe7d'))
+    ECP.from_zcash(O.from_hex("a9ec65b70a7fbe40c874c9eb041c2cb0a7af36ccec1bea48fa2ba4c2eb67ef7f9ecb17ed27d38d27cdeddff44c8137be")),
+    ECP.from_zcash(O.from_hex("98cd5313283aaf5db1b3ba8611fe6070d19e605de4078c38df36019fbaad0bd28dd090fd24ed27f7f4d22d5ff5dea7d4")),
+    ECP.from_zcash(O.from_hex("a31fbe20c5c135bcaa8d9fc4e4ac665cc6db0226f35e737507e803044093f37697a9d452490a970eea6f9ad6c3dcaa3a")),
+    ECP.from_zcash(O.from_hex("b479263445f4d2108965a9086f9d1fdc8cde77d14a91c856769521ad3344754cc5ce90d9bc4c696dffbc9ef1d6ad1b62")),
+    ECP.from_zcash(O.from_hex("ac0401766d2128d4791d922557c7b4d1ae9a9b508ce266575244a8d6f32110d7b0b7557b77604869633bb49afbe20035")),
+    ECP.from_zcash(O.from_hex("b95d2898370ebc542857746a316ce32fa5151c31f9b57915e308ee9d1de7db69127d919e984ea0747f5223821b596335")),
+    ECP.from_zcash(O.from_hex("8f19359ae6ee508157492c06765b7df09e2e5ad591115742f2de9c08572bb2845cbf03fd7e23b7f031ed9c7564e52f39")),
+    ECP.from_zcash(O.from_hex("abc914abe2926324b2c848e8a411a2b6df18cbe7758db8644145fefb0bf0a2d558a8c9946bd35e00c69d167aadf304c1")),
+    ECP.from_zcash(O.from_hex("80755b3eb0dd4249cbefd20f177cee88e0761c066b71794825c9997b551f24051c352567ba6c01e57ac75dff763eaa17")),
+    ECP.from_zcash(O.from_hex("82701eb98070728e1769525e73abff1783cedc364adb20c05c897a62f2ab2927f86f118dcb7819a7b218d8f3fee4bd7f")),
+    ECP.from_zcash(O.from_hex("a1f229540474f4d6f1134761b92b788128c7ac8dc9b0c52d59493132679673032ac7db3fb3d79b46b13c1c41ee495bca"))
 }
-local count_test = 12
+
+local count_test = 11
 
 local function run_test_create_generators (test)
     local output_generators = bbs.create_generators(ciphersuite, count_test)
     for i = 1, count_test do
         print("Test case ".. i)
+        print(output_generators[1]:to_zcash():hex())
         assert(output_generators[i] == test[i])
     end
 end
@@ -266,7 +269,7 @@ local function seeded_random_scalars_xmd(count)
     local r = ECP.order()
     local out_len = EXPAND_LEN * count
     assert(out_len <= 65535)
-    local v = HASH.expand_message_xmd(SEED, O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MOCK_RANDOM_SCALARS_DST_"), out_len)
+    local v = HASH.expand_message_xmd(SEED, O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_H2G_HM2S_MOCK_RANDOM_SCALARS_DST_"), out_len)
     -- if v is INVALID return INVALID
 
     local arr = {}
@@ -284,7 +287,7 @@ local function seeded_random_scalars_xof(count)
     local r = ECP.order()
     local out_len = EXPAND_LEN * count
     assert(out_len <= 65535)
-    local v = HASH.expand_message_xof(SEED, O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MOCK_RANDOM_SCALARS_DST_"), out_len)
+    local v = HASH.expand_message_xof(SEED, O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_H2G_HM2S_MOCK_RANDOM_SCALARS_DST_"), out_len)
     -- if v is INVALID return INVALID
 
     local arr = {}
@@ -303,16 +306,16 @@ bbs.calculate_random_scalars = seeded_random_scalars_xmd
 -- Test vectors originated from
 -- draft-irtf-cfrg-bbs-signatures-latest Section 7.5.4
 local MOCKED_RANDOM_SCALARS_TEST = {
-    '41b5e116922813fab50e1bcafd5a68f38c977fe4b01b3992424bc4ff1f1490bc',
-    '57062c3eb0b030cbb45535bc7e8b3756288cfeee52ab6e2d1a56aedcfee668ba',
-    '20a1f16c18342bc8650655783cd87b4491ce3986d0942e863d62053914bb3da1',
-    '21ba43b4e1da365c6062b8cb00e3c22b0d49d68e30fae8a21ff9a476912a49ee',
-    '2d34df08a57d8d7c6d3a8bdd34f45f0db539a4fc17b3e8948cb36360190248ed',
-    '4840669faf2ab03e2b8a80d3ebc597cabfe35642680cec12f622daf63529be52',
-    '3151326acfc6ec15b68ce67d52ce75abbe17d4224e78abb1c31f410f5664fc1a',
-    '4cb74272bc2673959a3c72d992485057b1312cd8d2bf32747741324a92152c81',
-    '2af0ebadecd3e43aefaafcfd3f426dca179140cdaf356a838381e584dfa0e4d1',
-    '3aa6190cb2ae26ba433c3f6ff01504088cead97687f417f4bc80ac906201356c'
+    '04f8e2518993c4383957ad14eb13a023c4ad0c67d01ec86eeb902e732ed6df3f',
+    '5d87c1ba64c320ad601d227a1b74188a41a100325cecf00223729863966392b1',
+    '0444607600ac70482e9c983b4b063214080b9e808300aa4cc02a91b3a92858fe',
+    '548cd11eae4318e88cda10b4cd31ae29d41c3a0b057196ee9cf3a69d471e4e94',
+    '2264b06a08638b69b4627756a62f08e0dc4d8240c1b974c9c7db779a769892f4',
+    '4d99352986a9f8978b93485d21525244b21b396cf61f1d71f7c48e3fbc970a42',
+    '5ed8be91662386243a6771fbdd2c627de31a44220e8d6f745bad5d99821a4880',
+    '62ff1734b939ddd87beeb37a7bbcafa0a274cbc1b07384198f0e88398272208d',
+    '05c2a0af016df58e844db8944082dcaf434de1b1e2e7136ec8a99b939b716223',
+    '485e2adab17b76f5334c95bf36c03ccf91cef77dcfcdc6b8a69e2090b3156663'
 }
 
 local function run_test_mocked_random (test)
@@ -329,36 +332,36 @@ print('----------------------')
 print("TEST: Single message signature SHA 256")
 print("Test case 1")
 
-local SECRET_KEY = "4a39afffd624d69e81808b2e84385cc80bf86adadf764e030caa46c231f2a8d7"
-local PUBLIC_KEY = "aaff983278257afc45fa9d44d156c454d716fb1a250dfed132d65b2009331f618c623c14efa16245f50cc92e60334051087f1ae92669b89690f5feb92e91568f95a8e286d110b011e9ac9923fd871238f57d1295395771331ff6edee43e4ccc6"
+local SECRET_KEY = "60e55110f76883a13d030b2f6bd11883422d5abde717569fc0731f51237169fc"
+local PUBLIC_KEY = "a820f230f6ae38503b86c70dc50b61c58a77e45c39ab25c0652bbaa8fa136f2851bd4781c9dcde39fc9d1d52c9e60268061e7d7632171d91aa8d460acee0e96f1e7c4cfb12d3ff9ab5d5dc91c277db75c845d649ef3c4f63aebc364cd55ded0c"
 local HEADER = "11223344556677889900aabbccddeeff"
 local SINGLE_MSG_ARRAY = { O.from_hex("9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02") }
-local VALID_SIGNATURE = "8fb17415378ec4462bc167be75583989e0528913da142239848ae88309805bfb3656bcff322e5d8fd1a7e40a660a62266099f27fa81ff5010443f36285f6f0758e4d701c444b20447cded906a3f2001714087f165f760369b901ccbe5173438b32ad195b005e2747492cf002cf51e498"
+local VALID_SIGNATURE = "88c0eb3bc1d97610c3a66d8a3a73f260f95a3028bccf7fff7d9851e2acd9f3f32fdf58a5b34d12df8177adf37aa318a20f72be7d37a8e8d8441d1bc0bc75543c681bf061ce7e7f6091fe78c1cb8af103"
 
 -- FROM trinsic-id / bbs BRANCH update result.
 -- 0x8fb17415378ec4462bc167be75583989e0528913da142239848ae88309805bfb3656bcff322e5d8fd1a7e40a660a62266099f27fa81ff5010443f36285f6f0758e4d701c444b20447cded906a3f2001714087f165f760369b901ccbe5173438b32ad195b005e2747492cf002cf51e498
 
-local output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), SINGLE_MSG_ARRAY, O.from_hex(HEADER))
+local output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(HEADER), SINGLE_MSG_ARRAY)
 assert(output_signature == O.from_hex(VALID_SIGNATURE))
-assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, SINGLE_MSG_ARRAY, O.from_hex(HEADER)) == true)
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), SINGLE_MSG_ARRAY) == true)
 
 print("Test case 2")
 -- Test vectors originated from
--- draft-irtf-cfrg-bbs-signatures-latest Appendix C.2.1
-local MODIFIED_MSG_ARR = { O.from_hex("c344136d9ab02da4dd5908bbba913ae6f58c2cc844b802a6f811f5fb075f9b80") }
+-- draft-irtf-cfrg-bbs-signatures-latest Appendix D.2.1.2
+local MODIFIED_MSG_ARR = { O.empty() }
 
-assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE), MODIFIED_MSG_ARR, O.from_hex(HEADER)) == false)
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE),O.from_hex(HEADER), MODIFIED_MSG_ARR) == false)
 -- RETURNS AN ERROR: fail signature validation due to the message value being different from what was signed.
 
 print("Test case 3")
 -- Test vectors originated from
--- draft-irtf-cfrg-bbs-signatures-latest Appendix C.2.2
+-- draft-irtf-cfrg-bbs-signatures-latest Appendix D.2.1.3
 local TWO_MESSAGES = {
     O.from_hex('9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02'),
-    O.from_hex('87a8bd656d49ee07b8110e1d8fd4f1dcef6fb9bc368c492d9bc8c4f98a739ac6')
+    O.from_hex('c344136d9ab02da4dd5908bbba913ae6f58c2cc844b802a6f811f5fb075f9b80')
 }
 
-assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE),  TWO_MESSAGES, O.from_hex(HEADER)) == false)
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE), O.from_hex(HEADER), TWO_MESSAGES) == false)
 -- fails signature validation due to an additional message being supplied that was not signed
 
 print('----------------------')
@@ -367,7 +370,7 @@ print("Test case 1")
 
 local PRESENTATION_HEADER = O.from_hex("bed231d880675ed101ead304512e043ade9958dd0241ea70b4b3957fba941501")
 
-local PROOF_GEN_OUT = O.from_hex('99b6215be8357400353057b57b440e3998c259d34bce12e1d24dc7f9b63762122d4144cacefc5f3231172308907e3f2c8cf98d238dccf7e1eecf66441f27a7e140fc1a11788f24c634c5e4e6675c904670be71cdd44e613d1436f6badc4d9f31b6b575ab7a165dd120bb97d2b5a481f43e202477fdf5798af07c6ee639c80b3ec83c727cbe4a98da6c2966489524c26e3d84d7985370e3628271ec8cf5dafcb0e39de2d90f6fcdd2b72f2793e6cb985f60143f2a320e875036b5a0bb85e8548b531f2b60f3f9ed5b3d490eecd9ae44916098e8f293efeeeffe51ed4cac07bb46677b65f7de0ab3096f5ab39b4bcc187d25a14520bbf0cfe1c861bda63e0afdd2c030e4862b52cdaee5d6d9ace784493a576d96a3e0b29205aeaa2fea8bd5888eead49c7b06bba9c7d642260887756cd7')
+local PROOF_GEN_OUT = O.from_hex('a7c217109e29ecab846691eaad757beb8cc93356daf889856d310af5fc5587ea4f8b70b0d960c68b7aefa62cae806baa8edeca19ca3dd884fb977fc43d946dc2a0be8778ec9ff7a1dae2b49c1b5d75d775ba37652ae759b9bb70ba484c74c8b2aeea5597befbb651827b5eed5a66f1a959bb46cfd5ca1a817a14475960f69b32c54db7587b5ee3ab665fbd37b506830a0fdc9a7f71072daabd4cdb49038f5c55e84623400d5f78043a18f76b272fd65667373702763570c8a2f7c837574f6c6c7d9619b0834303c0f55b2314cec804b33833c7047865587b8e55619123183f832021dd97439f324fa3ad90ec45417070067fb8c56b2af454562358b1509632f92f2116c020fe7de1ba242effdb36e980')
 
 --con PH empty
 --local PROOF_GEN_OUT = O.from_hex('99b6215be8357400353057b57b440e3998c259d34bce12e1d24dc7f9b63762122d4144cacefc5f3231172308907e3f2c8cf98d238dccf7e1eecf66441f27a7e140fc1a11788f24c634c5e4e6675c904670be71cdd44e613d1436f6badc4d9f319380b42122f33e956e861ad5e01d1bb2355015cd3d510f9636a1a746f496142a709f9d4914cdaffdf1ca936e12244e4850c9bdb7570028bb16233a92c0c4af229e528b4074fba2266dfd3023ee622b0832e92251e1b29d356111cb50cffae36c88b11baaaceb02553b5dcd6b348eb88370c8d06c93b3b56f91d1c3d7969f732d1ffc7620c68936f2d0e04b515dda8e41661706b3f851e51d154a8efbd036acee9b5cbbfec266d45acd5fd9f2fe47c54b15b0e30ba2e0e26bae6228ffdb499beea962ec564dabc3010e6f4021340ad77b')
@@ -395,52 +398,61 @@ print("Test case 1")
 local MULTI_MSG_ARRAY = { }
 
 for i = 1, 10 do
-    MULTI_MSG_ARRAY[i] = O.from_hex(map_messages_to_scalar_messages[i])
+    MULTI_MSG_ARRAY[i] = map_messages_to_scalar_messages[i]
 end
 
-local VALID_MULTI_SIGNATURE = O.from_hex("b058678021dba2313c65fadc469eb4f030264719e40fb93bbf68bdf79079317a0a36193288b7dcb983fae0bc3e4c077f145f99a66794c5d0510cb0e12c0441830817822ad4ba74068eb7f34eb11ce3ee606d86160fecd844dda9d04bed759a676b0c8868d3f97fbe2e8b574169bd73a3")
+local VALID_MULTI_SIGNATURE = O.from_hex("895cd9c0ccb9aca4de913218655346d718711472f2bf1f3e68916de106a0d93cf2f47200819b45920bbda541db2d91480665df253fedab2843055bdc02535d83baddbbb2803ec3808e074f71f199751e")
 
-local output_multi_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), MULTI_MSG_ARRAY, O.from_hex(HEADER))
+local output_multi_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(HEADER),MULTI_MSG_ARRAY)
 assert( output_multi_signature == VALID_MULTI_SIGNATURE)
-assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_multi_signature, MULTI_MSG_ARRAY, O.from_hex(HEADER)) == true)
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_multi_signature, O.from_hex(HEADER), MULTI_MSG_ARRAY) == true)
 
 print("Test case 2")
 -- Test vectors originated from
--- draft-irtf-cfrg-bbs-signatures-latest Appendix C.2.3
-assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, TWO_MESSAGES, O.from_hex(HEADER)) == false)
--- fail signature validation due to missing messages that were originally present during the signing.
+-- draft-irtf-cfrg-bbs-signatures-latest Appendix D.2.1.1
+local VALID_MULTI_SIGNATURE_NO_HEADER= O.from_hex("ae0b1807865598b3884e3e9b110e8faec662050dc9b4d95309d957fd30f6fc24161f6f8b5680f1f5d1b547be221547915ca665c7b3087a336d5e0c5fcfea62576afd13e563b730ef6d6d81f9944ab95b") 
+
+local output_multi_signature_no_header = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY),nil, MULTI_MSG_ARRAY)
+assert( output_multi_signature_no_header == VALID_MULTI_SIGNATURE_NO_HEADER)
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_multi_signature_no_header, nil , MULTI_MSG_ARRAY) == true)
 
 print("Test case 3")
 -- Test vectors originated from
--- draft-irtf-cfrg-bbs-signatures-latest Appendix C.2.4
-local REORDERED_MSGS = {
-    O.from_hex('c344136d9ab02da4dd5908bbba913ae6f58c2cc844b802a6f811f5fb075f9b80'),
-    O.from_hex('7372e9daa5ed31e6cd5c825eac1b855e84476a1d94932aa348e07b7320912416'),
-    O.from_hex('77fe97eb97a1ebe2e81e4e3597a3ee740a66e9ef2412472c23364568523f8b91'),
-    O.from_hex('496694774c5604ab1b2544eababcf0f53278ff5040c1e77c811656e8220417a2'),
-    O.from_hex('515ae153e22aae04ad16f759e07237b43022cb1ced4c176e0999c6a8ba5817cc'),
-    O.from_hex('d183ddc6e2665aa4e2f088af9297b78c0d22b4290273db637ed33ff5cf703151'),
-    O.from_hex('ac55fb33a75909edac8994829b250779298aa75d69324a365733f16c333fa943'),
-    O.from_hex('96012096adda3f13dd4adbe4eea481a4c4b5717932b73b00e31807d3c5894b90'),
-    O.from_hex('87a8bd656d49ee07b8110e1d8fd4f1dcef6fb9bc368c492d9bc8c4f98a739ac6'),
-    O.from_hex('9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02')
-}
-
-assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, REORDERED_MSGS, O.from_hex(HEADER)) == false)
--- fails signature validation due to messages being re-ordered from the order in which they were signed.
+-- draft-irtf-cfrg-bbs-signatures-latest Appendix D.2.1.4
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, O.from_hex(HEADER), TWO_MESSAGES) == false)
+-- fail signature validation due to missing messages that were originally present during the signing.
 
 print("Test case 4")
 -- Test vectors originated from
--- draft-irtf-cfrg-bbs-signatures-latest Appendix C.2.5 (WRONG SENTENCES THOUGH)
-assert(bbs.verify(ciphersuite, bbs.sk2pk(bbs.keygen(O.from_hex('0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b'))), VALID_MULTI_SIGNATURE, MULTI_MSG_ARRAY, O.from_hex(HEADER)) == false)
--- fails signature validation due to public key used to verify is incorrect.
+-- draft-irtf-cfrg-bbs-signatures-latest Appendix D.2.1.5
+local REORDERED_MSGS = {
+    O.empty(),
+    O.from_hex('96012096'),
+    O.from_hex('ac55fb33a75909ed'),
+    O.from_hex('d183ddc6e2665aa4e2f088af'),
+    O.from_hex('515ae153e22aae04ad16f759e07237b4'),
+    O.from_hex('496694774c5604ab1b2544eababcf0f53278ff50'),
+    O.from_hex('77fe97eb97a1ebe2e81e4e3597a3ee740a66e9ef2412472c'),
+    O.from_hex('7372e9daa5ed31e6cd5c825eac1b855e84476a1d94932aa348e07b73'),
+    O.from_hex('c344136d9ab02da4dd5908bbba913ae6f58c2cc844b802a6f811f5fb075f9b80'),
+    O.from_hex('9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02')
+}
+
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, O.from_hex(HEADER), REORDERED_MSGS) == false)
+-- fails signature validation due to messages being re-ordered from the order in which they were signed.
 
 print("Test case 5")
 -- Test vectors originated from
--- draft-irtf-cfrg-bbs-signatures-latest Appendix C.2.6
+-- draft-irtf-cfrg-bbs-signatures-latest Appendix D.2.1.6(WRONG SENTENCES THOUGH)
+assert(bbs.verify(ciphersuite, O.from_hex("b064bd8d1ba99503cbb7f9d7ea00bce877206a85b1750e5583dd9399828a4d20610cb937ea928d90404c239b2835ffb104220a9c66a4c9ed3b54c0cac9ea465d0429556b438ceefb59650ddf67e7a8f103677561b7ef7fe3c3357ec6b94d41c6"), VALID_MULTI_SIGNATURE, O.from_hex(HEADER), MULTI_MSG_ARRAY) == false)
+-- fails signature validation due to public key used to verify is incorrect.
+
+print("Test case 6")
+-- Test vectors originated from
+-- draft-irtf-cfrg-bbs-signatures-latest Appendix D.2.1.7
 local WRONG_HEADER = 'ffeeddccbbaa00998877665544332211'
 
-assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, MULTI_MSG_ARRAY, O.from_hex(WRONG_HEADER)) == false)
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, O.from_hex(WRONG_HEADER), MULTI_MSG_ARRAY) == false)
 -- fails signature validation due to header value being modified from what was originally signed.
 
 print('----------------------')
@@ -449,10 +461,9 @@ print("Test case 1 : disclose all messages")
 
 local DISCLOSED_INDEXES = {1,2,3,4,5,6,7,8,9,10}
 
-local PROOF_GEN_MULTI_OUT = O.from_hex('b95e27fc635eeb7e47bf2e488fca4b3f8930bb2f6343bf0c9d585abd8b8112160a540566417bac3c77ad40ff7d00cc4a85f5a98a9f1f1e57d4c1444830c5493108b393a2b309c4980071f71eda6fc84ce0432443d463b47fbcf0841be0f1e472b031e2564cd615d89e9e7ed344c7f87bddebe02ed8cd77dd91a06b0d2119f47a00220164e49117d5b3ee3c009f5e537b66502ea4435cb042ddea1e0fc4e9688f81b0568917205481eccef5443e4f45f33043eb3e70a442dce23c4247e8f0804b2396ead74bd44977f6425d02db3fc20860a4fa9531c98fb443f8cd9062dc90c4c2917a39f58cbce7c7a5dcff72b1afa35e6d0651a3968a5d6589967a601142e7a8085b9dfbb2335adb89ece7411e64812672bf715352c24e3c0c35796e7ae667ec8244b994324fcb928dc1288ffe6594')
+local PROOF_GEN_MULTI_OUT = O.from_hex('a6faacf33f935d1910f21b1bbe380adcd2de006773896a5bd2afce31a13874298f92e602a4d35aef5880786cffc5aaf08978484f303d0c85ce657f463b71905ee7c3c0c9038671d8fb925525f623745dc825b14fc50477f3de79ce8d915d841ba73c8c97264177a76c4a03341956d2ae45ed3438ce598d5cda4f1bf9507fecef47855480b7b30b5e4052c92a4360110c322b4cb2d9796ff2d741979226249dc14d4b1fd5ca1a8f6fdfc16f726fc7683e3605d5ec28d331111a22ed81729cbb3c8c3732c7593e445f802fc3169c26857622ed31bc058fdfe68d25f0c3b9615279719c64048ea9cdb74104b27757c2d01035507d39667d77d990ec5bda22c866fcc9fe70bb5b7826a2b4e861b6b8124fbd')
 
 local pg_multi_output = bbs.proof_gen(ciphersuite, O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, O.from_hex(HEADER), PRESENTATION_HEADER, MULTI_MSG_ARRAY, DISCLOSED_INDEXES)
-
 assert(PROOF_GEN_MULTI_OUT == pg_multi_output)
 
 print("Test ProofVerify")
@@ -464,7 +475,7 @@ print("Test case 2 : disclose some messages")
 
 local disclosed_some_indexes = {1,3,5,7}
 
-local PROOF_GEN_MULTI_D_OUT = O.from_hex('8ee5a0c7fc62e6058bfac10b1489cb872283faee59c4132a076f01660eb3f28dd03fcf44fb8dadf8794e314a33b6b84cb95bfd630da6fe9f10b818b51f205d08143ea55bc05f6ad85a332b2acb3567c9134aeb29b9fa1e26ba8db63f956949ff846e9ff2cccfee820c4ffaf1aaa161cf04af8b7f27bede66c42f18c9289007972f0f0230f4cda28beb5885aa71bcbe9b27d4dca32aae82f02961e982bb7f50483924087180f9ca76efdd1b3534b5b393614b51070a6f5d088fb464ccb2d296ccb69e31ef0f84d25f286186a6ab36ce4a257eacf0c7e3ad362ae00738d876999f44228c085ffd0a97961280c05113ed21075115770819d9afbcb40d4fae6c40e3d66a324637d3b1b79e5abd86fb3a1a8d3404ffa0019cacdf988f065009fe8bb27fd99e804ab679c96fe559bbf2e3a95b2183b54eb4238c4a268e04c51036dd24139c6d001698614484d285e55e3911af18af4fc1b241f2f168565ffa74dc082aaf15d7b82cc598896ad34efe960bbcb06cea9ee551d65080cae87181e50463b9348cbfb05f5242174197b3d34efa56f513fc11cb31591d199e61af4f46bcbcca67d46cd16e2ec83694767780e0c8ccbc70d7fc61c0bda6209e22d17049e90e61c940104ca0cc69310393dc14b6c2b512219257782c19e185e3bbc85cfe0bc432a91082fd148044fbd14092702bd39e81')
+local PROOF_GEN_MULTI_D_OUT = O.from_hex('a8da259a5ae7a9a8e5e4e809b8e7718b4d7ab913ed5781ebbff4814c762033eda4539973ed9bf557f882192518318cc4916fdffc857514082915a31df5bbb79992a59fd68dc3b48d19d2b0ad26be92b4cf78a30f472c0fd1e558b9d03940b077897739228c88afc797916dca01e8f03bd9c5375c7a7c59996e514bb952a436afd24457658acbaba5ddac2e693ac481352bb6fce6084eb1867c71caeac2afc4f57f4d26504656b798b3e4009eb227c7fa41b6ae00daae0436d853e86b32b366b0a9929e1570369e9c61b7b177eb70b7ff27326c467c362120dfeacc0692d25ccdd62d733ff6e8614abd16b6b63a7b78d11632cf41bc44856aee370fee6690a637b3b1d8d8525aff01cd3555c39d04f8ee1606964c2da8b988897e3d27cb444b8394acc80876d3916c485c9f36098fed6639f12a6a6e67150a641d7485656408e9ae22b9cb7ec77e477f71c1fe78cab3ee5dd62c34dd595edb15cbce061b29192419dfadcdee179f134dd8feb9323c426c51454168ffacb65021995848e368a5c002314b508299f67d85ad0eaaaac845cb029927191152edee034194cca3ae0d45cbd2f5e5afd1f9b8a3dd903adfa17ae43a191bf3119df57214f19e662c7e01e8cc2eb6b038bc7d707f2f3e13545909e0')
 
 local pg_multi_d_output = bbs.proof_gen(ciphersuite, O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, O.from_hex(HEADER), PRESENTATION_HEADER, MULTI_MSG_ARRAY, disclosed_some_indexes)
 
@@ -473,6 +484,37 @@ assert(PROOF_GEN_MULTI_D_OUT == pg_multi_d_output)
 print("Test ProofVerify")
 local DISC_MSG = {MULTI_MSG_ARRAY[1], MULTI_MSG_ARRAY[3],MULTI_MSG_ARRAY[5], MULTI_MSG_ARRAY[7]}
 assert( bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_multi_d_output, O.from_hex(HEADER), PRESENTATION_HEADER, DISC_MSG, disclosed_some_indexes) == true)
+
+print("Test case 3: no header")
+
+local disclosed_some_indexes = {1,3,5,7}
+
+local PROOF_GEN_MULTI_D_OUT_NO_HEADER = O.from_hex('958783d7d535fe1860a71ad5a7cf42df6527246300e3f3d94d67639c7e8a7dbcf3f082f63e3b1bcc1cdad71e1f6d5f0d821c4c6bb4b2dcdfe945491d4f4a23d10752431d364fcbdd199c753f0beee7ffe02abbad57384244294ef7c2031d9c50ac310574f509c712bb1a181d64ea3c1ee075c018a2bc773e2480b5c033ccb9bfea5af347a88ab83746c9342ba76db36771c74f1feec7f67b30e3805d71c8f893837b455d734d360c80e119b00dc63e2756b81a320d659a9a0f1ee57c41773f304c37c278d169faec5f6720bb9187e9333b793a57ba69f27e4b0c2ea35271276fc0011306d6c909cf4d4a7a50dbc9f6ef35d43e2043046dc3041ac0a9b893dfd2dcd147910d719e818b4189a76f791a3600acd76623573c1796262a3914921ec504d0f727c63e16b432f6256db62b9667016e516e97e2ef0bfa3bd192306564df28e019af18c50ca86a0e1d8d6b08b0641e549accd5e34ada8903d55021780865edfa70f63b85f0ddaf50787f8ced8eee658f2dd61673d2cbeca2aa2a5b649c22501b72cc7ee2d10bc9fe3aa3a7e169dc070d90b37735488cd0c27517ffd634b99c1dc016a4086d24feff6f19f3c92fa11cc198830295ccc56e5f9527216765105eee34324c5f3834154943608a8ca652')
+
+local pg_multi_d_output_no_header = bbs.proof_gen(ciphersuite, O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE_NO_HEADER, nil, PRESENTATION_HEADER, MULTI_MSG_ARRAY, disclosed_some_indexes)
+
+assert(PROOF_GEN_MULTI_D_OUT_NO_HEADER == pg_multi_d_output_no_header)
+
+print("Test ProofVerify")
+local DISC_MSG = {MULTI_MSG_ARRAY[1], MULTI_MSG_ARRAY[3],MULTI_MSG_ARRAY[5], MULTI_MSG_ARRAY[7]}
+assert( bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_multi_d_output_no_header, nil, PRESENTATION_HEADER, DISC_MSG, disclosed_some_indexes) == true)
+
+print("Test case 4: no presentation header")
+
+local disclosed_some_indexes = {1,3,5,7}
+
+local PROOF_GEN_MULTI_D_OUT_NO_PH = O.from_hex('a8da259a5ae7a9a8e5e4e809b8e7718b4d7ab913ed5781ebbff4814c762033eda4539973ed9bf557f882192518318cc4916fdffc857514082915a31df5bbb79992a59fd68dc3b48d19d2b0ad26be92b4cf78a30f472c0fd1e558b9d03940b077897739228c88afc797916dca01e8f03bd9c5375c7a7c59996e514bb952a436afd24457658acbaba5ddac2e693ac481356d60aa96c9b53ff5c63b3930bbcb3940f2132b7dcd800be4afbffd3325ecedaf033d354de52e12e924b32dd13c2f7cebef3614a4a519ff94d1bcceb7e22562ab4a5729a74cc3746558e25469651d7da37f714951c2ca03fc364a2272d13b2dee53412f97f42dfd6b57ae92fc7cb4859f418d6a912f5c446002cbf96ee6b8f4a849577a43ef303592c33e03608a9ca93066084bdfb3d3974ba322b7523d48fc9b35227e776c994b0e2da1587b496660836a7307a2125eae5912be3ea839bb4db16a21cc394c9a63fce91040d8321b30313677f7cbc4a9119fd0849aacef25fe9336db2dcbd85a2e3fd2ca2efff623c13e6c48b832c9e07dbe4337320dd0264a573f25bb46876e8153db47de2f0176db68cca1f55406a78c89c1a65716c00e9230098c6a9690a190b20720a7662ccd13b392fe08d045b99d5010f625cd74f7e90a')
+
+local pg_multi_d_output_no_ph = bbs.proof_gen(ciphersuite, O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, O.from_hex(HEADER), nil, MULTI_MSG_ARRAY, disclosed_some_indexes)
+
+assert(PROOF_GEN_MULTI_D_OUT_NO_PH == pg_multi_d_output_no_ph)
+
+print("Test ProofVerify")
+local DISC_MSG = {MULTI_MSG_ARRAY[1], MULTI_MSG_ARRAY[3],MULTI_MSG_ARRAY[5], MULTI_MSG_ARRAY[7]}
+assert( bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_multi_d_output_no_ph, O.from_hex(HEADER), nil, DISC_MSG, disclosed_some_indexes) == true)
+
+
+
 
 bbs.calculate_random_scalars = old_random
 
