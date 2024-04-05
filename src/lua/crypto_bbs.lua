@@ -48,7 +48,6 @@ implemented in C and it is rather fast.
 --]]
 
 local bbs = {}
-
 local OCTET_SCALAR_LENGTH = 32 -- ceil(log2(PRIME_R)/8)
 local OCTET_POINT_LENGTH = 48 --ceil(log2(p)/8)
 
@@ -843,7 +842,6 @@ OUTPUT: proof (output of ProofFinalize)
 ]]
 
 local function core_proof_gen(ciphersuite, pk, signature, generators, header, ph, messages, disclosed_indexes)
-
     local L = #messages
     local R = #disclosed_indexes
     if R > L then error('number of disclosed indexes is bigger than the number of messages') end
@@ -889,6 +887,8 @@ OUTPUT: proof (output of CoreProofGen)
 ]]
 
 function bbs.proof_gen(ciphersuite, pk, signature, header, ph, messages, disclosed_indexes)
+    header = header or O.empty()
+    ph = ph or O.empty()
     local messages = bbs.messages_to_scalars(ciphersuite,messages)
     local generators = bbs.create_generators(ciphersuite, #messages + 1)
     local proof = core_proof_gen(ciphersuite, pk, signature, generators, header, ph, messages, disclosed_indexes)
@@ -1049,9 +1049,9 @@ function bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages
 
 end
 
---return bbs
+return bbs
 
-
+--[[
 --TEST
 
 local function seeded_random_scalars_xmd(count)
@@ -1246,5 +1246,4 @@ local proof = O.from_hex("a8da259a5ae7a9a8e5e4e809b8e7718b4d7ab913ed5781ebbff481
 local proof2 = bbs.proof_gen(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), ph, messages, disclosed_indexes)
 assert(proof==proof2)
 assert(bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), proof2, O.from_hex(HEADER), ph, disclosed_messages, disclosed_indexes))
-
-
+]]
