@@ -298,7 +298,7 @@ static int time_add(lua_State *L) {
 	if(*a > 0 && *b > 0 && *a > INT_MAX - *b) {
 		failed_msg = "Result of addition out of range";
 		goto end;
-	} else if( *a < 0 && *b < 0 && *a < INT_MIN+1 - *b) {
+	} else if( *a < 0 && *b < 0 && *a < INT_MIN - *b) {
 		failed_msg = "Result of addition out of range";
 		goto end;
 	}
