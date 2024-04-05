@@ -78,3 +78,22 @@ EOF
     save_output intr_from_time.out.json
     assert_output --partial '{"int_from_dict":"1709303629","int_from_timestamp":'
 }
+
+@test "some of timestamps" {
+    cat <<EOF | save_asset sum_timestamp.data.json
+{
+    "exp": 60,
+    "timestamp": 1712324515
+}
+EOF
+    cat <<EOF | zexe sum_timestamp.zen sum_timestamp.data.json
+Given I have a 'time' named 'exp'
+Given I have a 'time' named 'timestamp'
+
+When I create the result of 'timestamp' + 'exp'
+
+Then print the 'result'
+EOF
+    save_output sum_timestamp.out.json
+    assert_output '{"result":1712324575}'
+}
