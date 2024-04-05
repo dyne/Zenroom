@@ -337,7 +337,7 @@ local function _numinput(num)
 	end
 	if t == 'zenroom.octet' then
 		return BIG.new(num)
-	elseif t == 'zenroom.big' or t == 'zenroom.float' then
+	elseif t == 'zenroom.big' or t == 'zenroom.float' or t == 'zenroom.time' then
 		return num
 	else
 		return BIG.from_decimal(num:octet():string()) -- may give internal errors
@@ -372,6 +372,10 @@ local function _math_op(op, l, r, res)
         n_codec.encoding = 'integer'
         op = big_ops[op]
         if not op then error("Operation not supported on big integers", 2) end
+    elseif lz == "zenroom.time" then
+        n_codec.encoding = 'time'
+        -- TODO: when other operations on time are supported remove this checks
+        if op ~= _add then error("Operation not supported on time", 2) end
 	else
 		n_codec.encoding = 'float'
 	end
