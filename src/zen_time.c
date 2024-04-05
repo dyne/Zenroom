@@ -284,6 +284,46 @@ end:
 	END(1);
 }
 
+static int time_add(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	ztime_t *a = time_arg(L, 1);
+	ztime_t *b = time_arg(L, 2);
+	ztime_t *c = time_new(L);
+	if(!a || !b || !c) {
+		failed_msg = "Could not allocate time number";
+		goto end;
+	}
+	// manage possible overflow and underflow
+	if(*a >= 0) {
+		if((*b >= 0) && (*a >= INT_MAX - *b)) {
+			failed_msg = "Result of addition out of range (overflow)";
+			goto end;
+		}
+		if((*b < 0) && (*a < INT_MIN - *b)) {
+			failed_msg = "Result of addition out of range (underflow)";
+			goto end;
+		}
+	} else {
+		if((*b >= 0) && (*b <= INT_MIN - *a)) {
+			failed_msg = "Result of addition out of range (underflow)";
+			goto end;
+		}
+		if((*b < 0) && (*b > INT_MAX - *a)) {
+			failed_msg = "Result of addition out of range (overflow)";
+			goto end;
+		}
+	}
+	*c = *a + *b;
+end:
+	time_free(L, a);
+	time_free(L, b);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
 int luaopen_time(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg time_class[] = {
@@ -291,6 +331,7 @@ int luaopen_time(lua_State *L) {
 		{"to_octet", time_to_octet},
 		//{"is_time", is_time},
 		{"detect_time_value", detect_time_value},
+		{"add", time_add},
 		{NULL, NULL}
 	};
 	const struct luaL_Reg time_methods[] = {
@@ -299,6 +340,7 @@ int luaopen_time(lua_State *L) {
 		{"__eq", time_eq},
 		{"__lt", time_lt},
 		{"__lte", time_lte},
+		{"__add", time_add},
 		{NULL, NULL}
 	};
 	zen_add_class(L, "time", time_class, time_methods);
