@@ -79,7 +79,7 @@ EOF
     assert_output --partial '{"int_from_dict":"1709303629","int_from_timestamp":'
 }
 
-@test "some of timestamps" {
+@test "sum of timestamps" {
     cat <<EOF | save_asset sum_timestamp.data.json
 {
     "exp": 60,
