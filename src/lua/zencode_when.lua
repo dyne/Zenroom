@@ -352,184 +352,110 @@ local function _sub(l,r) return(l - r) end
 local function _mul(l,r) return(l * r) end
 local function _div(l,r) return(l / r) end
 local function _mod(l,r) return(l % r) end
+local big_ops = {
+    [_add] = BIG.zenadd,
+    [_sub] = BIG.zensub,
+    [_mul] = BIG.zenmul,
+    [_div] = BIG.zendiv,
+    [_mod] = BIG.zenmod
+}
 
-local function _math_op(op, l, r, bigop)
+local function _math_op(op, l, r, res)
+    empty(res)
 	local left  = _numinput(l)
 	local right = _numinput(r)
 	local lz = type(left)
 	local rz = type(right)
 	if lz ~= rz then error("Incompatible numeric arguments", 2) end
-	ACK.result = true -- new_codec checks existance
+    local n_codec = {zentype = 'e'}
 	if lz == "zenroom.big" then
-		new_codec('result',
-				  {encoding = 'integer',
-				   zentype = 'e'}
-		)
-
+        n_codec.encoding = 'integer'
+        op = big_ops[op]
+        if not op then error("Operation not supported on big integers", 2) end
 	else
-		new_codec('result',
-				  {encoding = 'float',
-				   zentype = 'e'}
-		)
+		n_codec.encoding = 'float'
 	end
-        if type(left) == 'zenroom.big'
-          and type(right) == 'zenroom.big' then
-          if bigop then
-            op = bigop
-          -- -- We should check if the operatoin is supported
-          --else
-          --  error("Operation not supported on big integers")
-          end
-        end
-	return op(left, right)
+	ACK[res] = op(left, right)
+    new_codec(res, n_codec)
 end
 
 When("create result of '' inverted sign", function(left)
 	local l = have(left)
-	empty 'result'
         local zero = 0;
         if type(l) == "zenroom.big" then
             zero = INT.new(0)
         elseif type(l) == "zenroom.float" then
             zero = F.new(0)
         end
-	ACK.result = _math_op(_sub, zero, l, BIG.zensub)
+	_math_op(_sub, zero, l, 'result')
 end)
 
 When("create result of '' + ''", function(left,right)
-	local l = have(left)
-	local r = have(right)
-	empty 'result'
-	ACK.result = _math_op(_add, l, r, BIG.zenadd)
+    _math_op(_add, have(left), have(right), 'result')
 end)
 
 When("create result of '' in '' + ''", function(left, dict, right)
-	local d = have(dict)
-	local l = d[left]
-	local r = have(right)
-	empty 'result'
-	ACK.result = _math_op(_add, l, r, BIG.zenadd)
+    _math_op(_add, have({dict, left}), have(right), 'result')
 end)
 
 When("create result of '' in '' + '' in ''", function(left, ldict, right, rdict)
-	local ld = have(ldict)
-	local l = ld[left]
-	local rd = have(rdict)
-	local r = rd[right]
-	empty 'result'
-	ACK.result = _math_op(_add, l, r, BIG.zenadd)
+    _math_op(_add, have({ldict, left}), have({rdict, right}), 'result')
 end)
 
 When("create result of '' - ''", function(left,right)
-	local l = have(left)
-	local r = have(right)
-	empty 'result'
-	ACK.result = _math_op(_sub, l, r, BIG.zensub)
+    _math_op(_sub, have(left), have(right), 'result')
 end)
 
 When("create result of '' in '' - ''", function(left, dict, right)
-	local d = have(dict)
-	local l = d[left]
-	local r = have(right)
-	empty 'result'
-	ACK.result = _math_op(_sub, l, r, BIG.zensub)
+    _math_op(_sub, have({dict, left}), have(right), 'result')
 end)
 
 When("create result of '' in '' - '' in ''", function(left, ldict, right, rdict)
-	local ld = have(ldict)
-	local l = ld[left]
-	local rd = have(rdict)
-	local r = rd[right]
-	empty 'result'
-	ACK.result = _math_op(_sub, l, r, BIG.zensub)
+    _math_op(_sub, have({ldict, left}), have({rdict, right}), 'result')
 end)
 
 When("create result of '' * ''", function(left,right)
-	local l = have(left)
-	local r = have(right)
-	empty 'result'
-	ACK.result = _math_op(_mul, l, r, BIG.zenmul)
+    _math_op(_mul, have(left), have(right), 'result')
 end)
 
 When("create result of '' in '' * ''", function(left, dict, right)
-	local d = have(dict)
-	local l = d[left]
-	local r = have(right)
-	empty 'result'
-	ACK.result = _math_op(_mul, l, r, BIG.zenmul)
+    _math_op(_mul, have({dict, left}), have(right), 'result')
 end)
 
 When("create result of '' * '' in ''", function(left, right, dict)
-	local l = have(left)
-	local d = have(dict)
-	local r = d[right]
-	empty 'result'
-	ACK.result = _math_op(_mul, l, r, BIG.zenmul)
+    _math_op(_mul, have(left), have({dict, right}), 'result')
 end)
 
 When("create result of '' in '' * '' in ''", function(left, ldict, right, rdict)
-	local ld = have(ldict)
-	local l = ld[left]
-	local rd = have(rdict)
-	local r = rd[right]
-	empty 'result'
-	ACK.result = _math_op(_mul, l, r, BIG.zenmul)
+    _math_op(_mul, have({ldict, left}), have({rdict, right}), 'result')
 end)
 
 When("create result of '' / ''", function(left,right)
-	local l = have(left)
-	local r = have(right)
-	empty 'result'
-	ACK.result = _math_op(_div, l, r, BIG.zendiv)
+    _math_op(_div, have(left), have(right), 'result')
 end)
 
 When("create result of '' in '' / ''", function(left, dict, right)
-	local d = have(dict)
-	local l = d[left]
-	local r = have(right)
-	empty 'result'
-	ACK.result = _math_op(_div, l, r, BIG.zendiv)
+    _math_op(_div, have({dict, left}), have(right), 'result')
 end)
 
 When("create result of '' / '' in ''", function(left, right, dict)
-	local l = have(left)
-	local d = have(dict)
-	local r = d[right]
-	empty 'result'
-	ACK.result = _math_op(_div, l, r, BIG.zendiv)
+    _math_op(_div, have(left), have({dict, right}), 'result')
 end)
 
 When("create result of '' in '' / '' in ''", function(left, ldict, right, rdict)
-	local ld = have(ldict)
-	local l = ld[left]
-	local rd = have(rdict)
-	local r = rd[right]
-	empty 'result'
-	ACK.result = _math_op(_div, l, r, BIG.zendiv)
+    _math_op(_div, have({ldict, left}), have({rdict, right}), 'result')
 end)
 
 When("create result of '' % ''", function(left,right)
-	local l = have(left)
-	local r = have(right)
-	empty 'result'
-	ACK.result = _math_op(_mod, l, r, BIG.zenmod)
+    _math_op(_mod, have(left), have(right), 'result')
 end)
 
 When("create result of '' in '' % ''", function(left, dict, right)
-	local d = have(dict)
-	local l = d[left]
-	local r = have(right)
-	empty 'result'
-	ACK.result = _math_op(_mod, l, r, BIG.zendiv)
+    _math_op(_mod, have({dict, left}), have(right), 'result')
 end)
 
 When("create result of '' in '' % '' in ''", function(left, ldict, right, rdict)
-	local ld = have(ldict)
-	local l = ld[left]
-	local rd = have(rdict)
-	local r = rd[right]
-	empty 'result'
-	ACK.result = _math_op(_mod, l, r, BIG.zendiv)
+    _math_op(_mod, have({ldict, left}), have({rdict, right}), 'result')
 end)
 
 local function _countchar(haystack, needle)
