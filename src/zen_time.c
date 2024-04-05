@@ -294,25 +294,13 @@ static int time_add(lua_State *L) {
 		failed_msg = "Could not allocate time number";
 		goto end;
 	}
-	// manage possible overflow and underflow
-	if(*a >= 0) {
-		if((*b >= 0) && (*a >= INT_MAX - *b)) {
-			failed_msg = "Result of addition out of range (overflow)";
-			goto end;
-		}
-		if((*b < 0) && (*a < INT_MIN - *b)) {
-			failed_msg = "Result of addition out of range (underflow)";
-			goto end;
-		}
-	} else {
-		if((*b >= 0) && (*b <= INT_MIN - *a)) {
-			failed_msg = "Result of addition out of range (underflow)";
-			goto end;
-		}
-		if((*b < 0) && (*b > INT_MAX - *a)) {
-			failed_msg = "Result of addition out of range (overflow)";
-			goto end;
-		}
+	// manage possible overflow
+	if(*a > 0 && *b > 0 && *a > INT_MAX - *b) {
+		failed_msg = "Result of addition out of range";
+		goto end;
+	} else if( *a < 0 && *b < 0 && *a < INT_MIN+1 - *b) {
+		failed_msg = "Result of addition out of range";
+		goto end;
 	}
 	*c = *a + *b;
 end:
