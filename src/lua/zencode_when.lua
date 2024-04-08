@@ -375,7 +375,7 @@ local function _math_op(op, l, r, res)
     elseif lz == "zenroom.time" then
         n_codec.encoding = 'time'
         -- TODO: when other operations on time are supported remove this checks
-        if op ~= _add then error("Operation not supported on time", 2) end
+        if op ~= _add and op ~= _sub then error("Operation not supported on time", 2) end
 	else
 		n_codec.encoding = 'float'
 	end
