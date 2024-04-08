@@ -79,7 +79,7 @@ EOF
     assert_output --partial '{"int_from_dict":"1709303629","int_from_timestamp":'
 }
 
-@test "sum of timestamps" {
+@test "sum and subtraction of timestamps" {
     cat <<EOF | save_asset sum_timestamp.data.json
 {
     "exp": 60,
@@ -91,9 +91,13 @@ Given I have a 'time' named 'exp'
 Given I have a 'time' named 'timestamp'
 
 When I create the result of 'timestamp' + 'exp'
+and I rename 'result' to 'sum'
+When I create the result of 'timestamp' - 'exp'
+and I rename 'result' to 'sub'
 
-Then print the 'result'
+Then print the 'sum'
+and print the 'sub'
 EOF
     save_output sum_timestamp.out.json
-    assert_output '{"result":1712324575}'
+    assert_output '{"sub":1712324455,"sum":1712324575}'
 }
