@@ -585,32 +585,35 @@ When("seed random with ''",
      end
 )
 
-local int_ops2 = {['+'] = BIG.zenadd, ['-'] = BIG.zensub, ['*'] = BIG.zenmul, ['/'] = BIG.zendiv}
-local float_ops2 = {['+'] = F.add, ['-'] = F.sub, ['*'] = F.mul, ['/'] = F.div}
+local ops2 = {
+    ['zenroom.big'] = {['+'] = BIG.zenadd, ['-'] = BIG.zensub, ['*'] = BIG.zenmul, ['/'] = BIG.zendiv},
+    ['zenroom.float'] = {['+'] = F.add, ['-'] = F.sub, ['*'] = F.mul, ['/'] = F.div},
+    ['zenroom.time'] = {['+'] = TIME.add, ['-'] = TIME.sub}
+}
 
 local function apply_op2(op, a, b)
-  local fop = nil
-  if type(a) == 'zenroom.big' and type(b) == 'zenroom.big' then
-    fop = int_ops2[op]
-  elseif type(a) == 'zenroom.float' and type(b) == 'zenroom.float' then
-    fop = float_ops2[op]
-  end
-  zencode_assert(fop, "Unknown types to do arithmetics on", 2)
-  return fop(a, b)
+    local a_type = type(a)
+    if a_type ~= type(b) then error("Different types to do arithmetics on: "..type(a).." and "..type(b), 2) end
+    if ops2[a_type] and ops2[a_type][op] then
+        return ops2[a_type][op](a, b)
+    else
+        error("Unknown type to do arithmetics on: "..type(a), 2)
+    end
 end
 
-local int_ops1 = {['~'] = BIG.zenopposite}
-local float_ops1 = {['~'] = F.opposite}
+local ops1 = {
+    ['zenroom.big'] = {['~'] = BIG.zenopposite},
+    ['zenroom.float'] = {['~'] = F.opposite},
+    ['zenroom.time'] = {['~'] = TIME.opposite}
+}
 
 local function apply_op1(op, a)
-  local fop = nil
-  if type(a) == 'zenroom.big' then
-    fop = int_ops1[op]
-  elseif type(a) == 'zenroom.float' then
-    fop = float_ops1[op]
-  end
-  zencode_assert(fop, "Unknown type to do arithmetics on", 2)
-  return fop(a)
+    local a_type = type(a)
+    if ops1[a_type] and ops1[a_type][op] then
+        return ops1[a_type][op](a)
+    else
+        error("Unknown type to do arithmetics on: "..type(a), 2)
+    end
 end
 
 
@@ -707,15 +710,15 @@ When("create result of ''", function(expr)
 
   zencode_assert(#values == 1, "Invalid arithmetical expression", 2)
   ACK.result = values[1]
+  local n_codec = {zentype = 'e'}
   if type(values[1]) == 'zenroom.big' then
-    new_codec('result',
-			  {encoding = 'integer',
-			   zentype = 'e' })
+    n_codec.encoding = 'integer'
   elseif type(values[1]) == 'zenroom.float' then
-    new_codec('result',
-			  {encoding = 'number',
-			   zentype = 'e' })
+    n_codec.encoding = 'float'
+  elseif type(values[1]) == 'zenroom.time' then
+    n_codec.encoding = 'time'
   end
+  new_codec('result', n_codec)
 end)
 
 When("exit with error message ''", function(err)

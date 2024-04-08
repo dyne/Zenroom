@@ -422,6 +422,38 @@ EOF
     assert_output '{"a":1,"b":2,"c":-3,"d":4,"expr1":10.5,"expr2":-0.75,"expr3":-0.166667,"expr4":-0.541667,"expr5":6,"the_solution":42}'
 }
 
+@test "When I create the result of '', with timestamps" {
+    cat <<EOF | save_asset expressions_time.data
+{
+  "a": 60,
+  "b": 120,
+  "c": 212324515,
+  "d": 1500000000,
+  "the solution": 1712324515,
+}
+EOF
+
+cat <<EOF | zexe expressions_time.zen expressions_time.data
+Given I have a 'time' named 'a'
+Given I have a 'time' named 'b'
+Given I have a 'time' named 'c'
+Given I have a 'time' named 'd'
+Given I have a 'time' named 'the solution'
+When I create the result of 'd + c + b'
+and I rename 'result' to 'expr1'
+When I create the result of 'a+a'
+and I rename 'result' to 'expr2'
+When I create the result of '-expr2'
+and I rename 'result' to 'expr3'
+When I create the result of 'expr1 + expr3'
+and I rename 'result' to 'expr4'
+When I verify 'expr4' is equal to 'the solution'
+Then print 'the solution'
+EOF
+    save_output 'expressions_time.out'
+    assert_output '{"the_solution":1712324515}'
+}
+
 @test "Compare zeros with floats" {
     cat <<EOF | save_asset compare_zero_float.data
 {
