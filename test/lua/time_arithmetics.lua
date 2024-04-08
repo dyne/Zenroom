@@ -46,3 +46,10 @@ assert_error(function() local r = real_min - one  end, "fatal time_sub: Result o
 assert_error(function() local r = max - negative_one end, "fatal time_sub: Result of subtraction out of range")
 assert_error(function() local r = max - min end, "fatal time_sub: Result of subtraction out of range")
 assert_error(function() local r = min - max end, "fatal time_sub: Result of subtraction out of range")
+
+-- opposite test
+assert(-zero == zero, "Error zero opposite")
+assert(-one  == negative_one, "Error one opposite")
+assert(-two  == negative_two, "Error two opposite")
+assert(-max  == min, "Error max opposite")
+assert(-min  == max, "Error min opposite")
