@@ -23,7 +23,8 @@
 local function _eq(left, right)
   if (luatype(left) == 'number' and luatype(right) == 'number')
       or (type(left) == 'zenroom.float' and type(right) == 'zenroom.float')
-      or (type(left) == 'zenroom.big' and type(right) == 'zenroom.big') then
+      or (type(left) == 'zenroom.big' and type(right) == 'zenroom.big')
+      or (type(left) == 'zenroom.time' and type(right) == 'zenroom.time') then
     return (left == right)
   elseif luatype(left) == 'table' and luatype(right) == 'table' then
      if(#left ~= #right) then return false end -- optimization
@@ -39,7 +40,8 @@ local function _neq(left, right)
   if luatype(left) == 'number' and luatype(right) == 'number' then
     return (left ~= right)
   elseif (type(left) == 'zenroom.float' and type(right) == 'zenroom.float')
-      or (type(left) == 'zenroom.big' and type(right) == 'zenroom.big') then
+      or (type(left) == 'zenroom.big' and type(right) == 'zenroom.big')
+      or (type(left) == 'zenroom.time' and type(right) == 'zenroom.time') then
     return not (left == right)
   elseif luatype(left) == 'table' and luatype(right) == 'table' then
      if(#left ~= #right) then return true end -- optimization
@@ -116,7 +118,7 @@ local function numcheck(l, r, op)
     end
     if tl == 'zenroom.octet' then
         al = BIG.new(left)
-    elseif tl == 'zenroom.big' or tl == 'number' or tl == 'zenroom.float' then
+    elseif tl == 'zenroom.big' or tl == 'number' or tl == 'zenroom.float' or tl == 'zenroom.time' then
         al = left
     else
         al = left:octet()
@@ -133,7 +135,7 @@ local function numcheck(l, r, op)
     end
     if tr == 'zenroom.octet' then
         ar = BIG.new(right)
-    elseif tr == 'zenroom.big' or tr == 'number' or tr == 'zenroom.float' then
+    elseif tr == 'zenroom.big' or tr == 'number' or tr == 'zenroom.float' or tr == 'zenroom.time' then
         ar = right
     else
         ar = right:octet()

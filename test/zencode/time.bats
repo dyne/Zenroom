@@ -101,3 +101,25 @@ EOF
     save_output sum_timestamp.out.json
     assert_output '{"sub":1712324455,"sum":1712324575}'
 }
+
+@test "timestamps comparison" {
+    cat <<EOF | save_asset timestamp_comparison.data.json
+{
+    "lower": 60,
+    "grater": 1712324515
+}
+EOF
+    cat <<EOF | zexe timestamp_comparison.zen timestamp_comparison.data.json
+Given I have a 'time' named 'lower'
+Given I have a 'time' named 'grater'
+
+When I verify number 'grater' is more than 'lower'
+and I verify number 'lower' is less than 'grater'
+and I verify 'grater' is equal to 'grater'
+and I verify 'lower' is not equal to 'grater'
+
+Then print the string 'OK'
+EOF
+    save_output sum_timestamp.out.json
+    assert_output '{"output":["OK"]}'
+}
