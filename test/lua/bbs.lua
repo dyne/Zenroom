@@ -4,6 +4,7 @@ local HASH = require'hash'
 print('----------------- TEST SHA256 ------------------')
 
 local ciphersuite = bbs.ciphersuite('sha256')
+
 -- Key Pair
 print('----------------------')
 print("TEST: key pair")
@@ -172,7 +173,7 @@ print('----------------------')
 print("TEST: MapMessageToScalarAsHash")
 
 -- Test vectors originated from:
--- draft-irtf-cfrg-bbs-signatures-latest Sections 7.3 AND 7.5.1
+-- draft-irtf-cfrg-bbs-signatures-latest Sections 8.3.2 AND 8.4.2
 
 local map_messages_to_scalar_messages = {
     O.from_hex('9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02'),
@@ -228,7 +229,7 @@ assert(bbs.MapMessageToScalarAsHash(ciphersuite, O.from_hex(INPUT_MSG_BBS_SHA_25
 print('----------------------')
 print("TEST: create_generators")
 
--- Section 7.5.2
+-- Section 8.3.3
 local create_generators_test = {
     ECP.from_zcash(O.from_hex("a9ec65b70a7fbe40c874c9eb041c2cb0a7af36ccec1bea48fa2ba4c2eb67ef7f9ecb17ed27d38d27cdeddff44c8137be")),
     ECP.from_zcash(O.from_hex("98cd5313283aaf5db1b3ba8611fe6070d19e605de4078c38df36019fbaad0bd28dd090fd24ed27f7f4d22d5ff5dea7d4")),
@@ -249,8 +250,8 @@ local function run_test_create_generators (test)
     local output_generators = bbs.create_generators(ciphersuite, count_test)
     for i = 1, count_test do
         print("Test case ".. i)
-        ---print(output_generators[1]:to_zcash():hex())
-        assert(output_generators[i] == test[i], 'Wrong point')
+        print(output_generators[1]:to_zcash():hex())
+        assert(output_generators[i] == test[i])
     end
 end
 
@@ -259,7 +260,7 @@ run_test_create_generators(create_generators_test)
 print('----------------------')
 print("TEST: Mocked/Seeded random scalars")
 
--- draft-irtf-cfrg-bbs-signatures-latest Section 7.1
+-- draft-irtf-cfrg-bbs-signatures-latest Section 8.1
 -- It SIMULATES a random generation of scalars.
 -- DO NOT USE IN FINAL ProofGen
 local function seeded_random_scalars_xmd(count)
@@ -303,7 +304,7 @@ local old_random = bbs.calculate_random_scalars
 bbs.calculate_random_scalars = seeded_random_scalars_xmd
 
 -- Test vectors originated from
--- draft-irtf-cfrg-bbs-signatures-latest Section 7.5.4
+-- draft-irtf-cfrg-bbs-signatures-latest Section 8.3.5
 local MOCKED_RANDOM_SCALARS_TEST = {
     '04f8e2518993c4383957ad14eb13a023c4ad0c67d01ec86eeb902e732ed6df3f',
     '5d87c1ba64c320ad601d227a1b74188a41a100325cecf00223729863966392b1',
@@ -511,6 +512,7 @@ assert(PROOF_GEN_MULTI_D_OUT_NO_PH == pg_multi_d_output_no_ph)
 print("Test ProofVerify")
 local DISC_MSG = {MULTI_MSG_ARRAY[1], MULTI_MSG_ARRAY[3],MULTI_MSG_ARRAY[5], MULTI_MSG_ARRAY[7]}
 assert( bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_multi_d_output_no_ph, O.from_hex(HEADER), nil, DISC_MSG, disclosed_some_indexes) == true)
+
 
 bbs.calculate_random_scalars = old_random
 
