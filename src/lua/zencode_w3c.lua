@@ -263,7 +263,9 @@ local function jws_octet_to_signature(o_jws, o_payload)
         elseif alg ~= alg_from_crv then
             error('JWS public key curve '..header.jwk.crv..' does not match the alg '..alg, 2)
         end
-        pk = O.from_url64(header.jwk.x) .. O.from_url64(header.jwk.y)
+        if header.jwk.x and header.jwk.y then
+            pk = O.from_url64(header.jwk.x) .. O.from_url64(header.jwk.y)
+        end
     end
     -- header.payload is what should be signed
     if not o_payload and toks[2] == "" then
