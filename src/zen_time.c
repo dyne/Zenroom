@@ -339,6 +339,20 @@ end:
 	END(1);
 }
 
+static int time_opposite(lua_State *L) {
+	BEGIN();
+	ztime_t *a = time_arg(L,1);
+	ztime_t *b = time_new(L);
+	if(a && b) {
+		*b = -(*a);
+	}
+	time_free(L,a);
+	if(!a || !b) {
+		THROW("Could not allocate time number");
+	}
+	END(1);
+}
+
 int luaopen_time(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg time_class[] = {
@@ -348,6 +362,7 @@ int luaopen_time(lua_State *L) {
 		{"detect_time_value", detect_time_value},
 		{"add", time_add},
 		{"sub", time_sub},
+		{"opposite", time_opposite},
 		{NULL, NULL}
 	};
 	const struct luaL_Reg time_methods[] = {
@@ -358,6 +373,7 @@ int luaopen_time(lua_State *L) {
 		{"__lte", time_lte},
 		{"__add", time_add},
 		{"__sub", time_sub},
+		{"__unm", time_opposite},
 		{NULL, NULL}
 	};
 	zen_add_class(L, "time", time_class, time_methods);
