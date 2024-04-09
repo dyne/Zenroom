@@ -180,6 +180,7 @@ function export_keyring(obj)
       res.issuer = deepmap(fun, res.issuer)
    end
    if obj.es256 then res.es256 = O.to_base64(obj.es256) end
+   if obj.bbs then res.bbs = obj.bbs:octet():base64() end
    if obj.bbs_shake then res.bbs_shake = obj.bbs_shake:octet():base64() end
    if obj.pvss then res.pvss = obj.pvss:octet():base64() end
    if obj.reflow then res.reflow = obj.reflow:octet():base64() end

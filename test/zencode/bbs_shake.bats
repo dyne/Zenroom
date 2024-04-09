@@ -141,8 +141,7 @@ Then print the 'bbs shake signature'
 Then print the string 'Test vectors originated from: draft-irtf-cfrg-bbs-signatures-latest Sections 7.3'
 EOF
     save_output test_sign_bbs_shake256_shake.json
-#    assert_output '{"bbs_signature":"tv2DC23+7N2jviGTgVpUniZGaihTZ9+TXgmS4hnq73F+LEXDg7oWL0JasvOlusSRc52BHja7vF/0olZNNiJAIGH3OYpNXzSkC1ZbvyELOAw=","output":["Test_vectors_originated_from:_draft-irtf-cfrg-bbs-signatures-latest_Sections_7.3"]}
-#    assert_output '{"bbs_signature":"g+YpSgMblmV4WO63sXRFncese07+tsObJgJAk2DDtPQkhrnaK6MiTiaD51XQhC91Sl03iDUv3+A36vi5qSK99V3ONWVIk5hPOAydtpDCqURMQ6tnyShA2m4Z93nUEu2MfJeaeP3fukCpw40e4SSd5g==","output":["Test_vectors_originated_from:_draft-irtf-cfrg-bbs-signatures-latest_Sections_7.3"]}'
+    assert_output '{"bbs_shake_signature":"tv2DC23+7N2jviGTgVpUniZGaihTZ9+TXgmS4hnq73F+LEXDg7oWL0JasvOlusSRc52BHja7vF/0olZNNiJAIGH3OYpNXzSkC1ZbvyELOAw=","output":["Test_vectors_originated_from:_draft-irtf-cfrg-bbs-signatures-latest_Sections_7.3"]}'
 }
 
 

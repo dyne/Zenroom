@@ -11,6 +11,7 @@ and I create the bbs key
 Then print my 'keyring'
 EOF
     save_output alice_keys_sha.json
+    >&3 cat alice_keys_sha.json
     cat << EOF | rngzexe pubkey_sha.zen alice_keys_sha.json
 Scenario bbs
 Given I am known as 'Alice'
@@ -72,7 +73,7 @@ Scenario bbs
 Given that I am known as 'Alice'
 and I have my 'keyring'
 When I write string 'This is my authenticated message.' in 'message'
-When I create the bbs signature of 'message' using 'sha256'
+When I create the bbs signature of 'message'
 Then print the 'message'
 and print the 'bbs signature'
 EOF
@@ -96,7 +97,7 @@ Scenario bbs
 Given that I am known as 'Alice'
 and I have my 'keyring'
 Given I have a 'string array' named 'myStringArray'
-When I create the bbs signature of 'myStringArray' using 'sha256'
+When I create the bbs signature of 'myStringArray'
 Then print the 'myStringArray'
 and print the 'bbs signature'
 EOF
@@ -136,13 +137,12 @@ Scenario bbs
 Given I am 'Alice' 
 Given I have my 'keyring' 
 Given I have a 'hex array' named 'myStringArray'
-Given I have a 'string' named 'bbs hash'
-When I create the bbs signature of 'myStringArray' using 'bbs hash'
+When I create the bbs signature of 'myStringArray'
 Then print the 'bbs signature'
 Then print the string 'Test vectors originated from: draft-irtf-cfrg-bbs-signatures-latest Sections 7.3'
 EOF
     save_output test_sign_bbs_sha256_sha.json
-    assert_output '{"bbs_signature":"la4UuUo4JKPd9JtXPs1buL8v0RYNjeil6MS4GI3bASvhj/jM4rY8F3wSnT0/SW7pQZL6cuLm9/puzJGrNV2+csHUyUyR2aDI0T5pdJVqH2cGyEYjzdCtFTj3iNd4Bb33z0QcLdwuS0wz1I1LlzPl+w==","output":["Test_vectors_originated_from:_draft-irtf-cfrg-bbs-signatures-latest_Sections_7.3"]}'
+    assert_output '{"bbs_signature":"lELFpdZSrrgigZyCKqdZAD1xUfDXzsFleFBZemOQw0sRy2CrhaJTuiICr3Tl1ze+Nqw0gtWaszCjMbQ4lUBdofXnAziUvT/oVmplI0OdNBs=","output":["Test_vectors_originated_from:_draft-irtf-cfrg-bbs-signatures-latest_Sections_7.3"]}'
 }
 
 
@@ -169,8 +169,7 @@ Scenario bbs
 Given I have a 'bbs public key'
 and I have a 'bbs signature'
 and I have a 'hex array' named 'myStringArray'
-and I have a 'string' named 'bbs hash'
-When I verify the 'myStringArray' has a bbs signature in 'bbs signature' by 'Alice' using 'bbs hash'
+When I verify the 'myStringArray' has a bbs signature in 'bbs signature' by 'Alice'
 Then print the string 'Signature is valid'
 EOF
     save_output verify_alice_signature_sha.json
@@ -184,7 +183,7 @@ Scenario bbs
 Given I have a 'bbs public key'
 and I have a 'bbs signature'
 and I have a 'string array' named 'myStringArray'
-When I verify the 'myStringArray' has a bbs signature in 'bbs signature' by 'Alice' using 'sha256'
+When I verify the 'myStringArray' has a bbs signature in 'bbs signature' by 'Alice'
 Then print the string 'Signature is valid'
 EOF
     run $ZENROOM_EXECUTABLE -z -a '3messages_sha.json' -k sign_pubkey_sha.json wrong_message_sha.zen 
@@ -206,7 +205,7 @@ Scenario bbs
 Given I have a 'bbs public key'
 and I have a 'bbs signature'
 and I have a 'hex array' named 'myStringArray'
-When I verify the 'myStringArray' has a bbs signature in 'bbs signature' by 'Alice' using 'sha256'
+When I verify the 'myStringArray' has a bbs signature in 'bbs signature' by 'Alice'
 Then print the string 'Signature is valid'
 EOF
     run $ZENROOM_EXECUTABLE -z -a multi_msg_data_sha.json -k sign_pubkey_sha.json verify_from_wrong_pk_sha.zen
@@ -258,10 +257,10 @@ When I rename the 'bbs signature' to 'myMessage.signature'
 
 #If we want we can specify the hash function used by the algorithm
 
-When I create the bbs signature of 'myStringArray' using 'sha256'
+When I create the bbs signature of 'myStringArray'
 When I rename the 'bbs signature' to 'myStringArray.signature.sha' 
 
-When I create the bbs signature of 'myMessage' using 'sha256'
+When I create the bbs signature of 'myMessage'
 When I rename the 'bbs signature' to 'myMessage.signature.sha' 
 
 # Here we are printing out the signatures  
@@ -298,8 +297,8 @@ When I verify the 'myMessage' has a bbs signature in 'myMessage.signature' by 'A
 When I verify the 'myStringArray' has a bbs signature in 'myStringArray.signature' by 'Alice'
 
 # You can specify either 'SHA256' or 'SHAKE256' as input like this:
-When I verify the 'myMessage' has a bbs signature in 'myMessage.signature.sha' by 'Alice' using 'sha256'
-When I verify the 'myStringArray' has a bbs signature in 'myStringArray.signature.sha' by 'Alice' using 'sha256'
+When I verify the 'myMessage' has a bbs signature in 'myMessage.signature.sha' by 'Alice'
+When I verify the 'myStringArray' has a bbs signature in 'myStringArray.signature.sha' by 'Alice'
 
 # Here we print out the result: if the verifications succeeded, a string will be printed out
 # If the verifications failed, Zenroom will throw an error.
