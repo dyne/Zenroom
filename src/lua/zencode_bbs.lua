@@ -1,7 +1,7 @@
 --[[
 --This file is part of zenroom
 --
---Copyright (C) 2023 Dyne.org foundation
+--Copyright (C) 2023-2024 Dyne.org foundation
 --designed, written and maintained by Rebecca Selvaggini, Luca Di Domenico and Alberto Lerda
 --
 --This program is free software: you can redistribute it and/or modify
@@ -15,9 +15,6 @@
 --Along with this program you should have received a copy of the
 --GNU Affero General Public License v3.0
 --If not, see http://www.gnu.org/licenses/agpl.txt
---
---Last modified by Rebecca Selvaggini
---on Thursday, 11th May 2023
 --]]
 
 --[[
@@ -91,14 +88,14 @@ local function bbs_signature_f(obj)
     local e = BIG.new(signature_octets:sub(index, end_index))
     local PRIME_R = ECP.order()
     if not ( e ~= BIG_0 and e < PRIME_R ) then
-        error("Invalid BBS signature: wrong e in deserialization", 3)
+        error("Invalid BBS signature: wrong e in deserialization",3)
     end
-    index = index + 32
-    end_index = index + 31
-    local s = BIG.new(signature_octets:sub(index, end_index))
-    if not ( s ~= BIG_0 and s < PRIME_R ) then
-        error("Invalid BBS signature: wrong s in deserialization", 3)
-    end
+    -- index = index + 32
+    -- end_index = index + 31
+    -- local s = BIG.new(signature_octets:sub(index, end_index))
+    -- if not ( s ~= BIG_0 and s < PRIME_R ) then
+    --     error("Invalid BBS signature: wrong s in deserialization", 3)
+    -- end
     return obj
 end
 
