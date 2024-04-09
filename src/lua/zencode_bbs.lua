@@ -106,6 +106,12 @@ ZEN:add_schema(
       end,
       bbs_signature = function(obj)
         return schema_get(obj, '.', bbs_signature_f)
+      end,
+      bbs_shake_public_key = function(obj)
+        return schema_get(obj, '.', bbs_public_key_f)
+      end,
+      bbs_shake_signature = function(obj)
+        return schema_get(obj, '.', bbs_signature_f)
       end
    }
 )
@@ -128,6 +134,13 @@ When("create bbs key",function()
     ACK.keyring.bbs = BBS.keygen(ciphersuite)
 end)
 
+-- generate the private key
+When("create bbs shake key",function()
+    initkeyring'bbs_shake'
+    local ciphersuite = BBS.ciphersuite('shake256')
+    ACK.keyring.bbs_shake = BBS.keygen(ciphersuite)
+end)
+
 -- generate the public key
 When("create bbs public key",function()
     empty'bbs public key'
@@ -136,9 +149,20 @@ When("create bbs public key",function()
     new_codec('bbs public key', { zentype = 'e'})
 end)
 
-local function _key_from_secret(sec)
+-- generate the public key
+When("create bbs shake public key",function()
+    empty'bbs shake public key'
+    local sk = havekey'bbs shake'
+    ACK.bbs_shake_public_key = BBS.sk2pk(sk)
+    new_codec('bbs shake public key', { zentype = 'e'})
+end)
+
+local function _key_from_secret(sec, path)
    local sk = have(sec)
-   initkeyring'bbs'
+   local name = uscore(path) or 'bbs'
+   if name ~= 'bbs' and name ~= 'bbs_shake' then
+       error('Unsupported BBS key format: '..name, 3) end
+   initkeyring(name)
    -- Check if the user-provided sk is reasonable
    if type(sk) ~= "zenroom.big" then
            error("Invalid BBS secret key: must be a BIG integer", 2)
@@ -146,26 +170,32 @@ local function _key_from_secret(sec)
    if sk >= ECP.order() then
        error("Invalid BBS secret key: scalar exceeds order", 2)
    end
-   ACK.keyring.bbs = sk
+   ACK.keyring[name] = sk
 end
 
-When("create bbs key with secret key ''",
-     _key_from_secret
-)
+When("create bbs key with secret key ''", _key_from_secret)
+When("create bbs key with secret ''", _key_from_secret)
 
-When("create bbs key with secret ''",
-     _key_from_secret
-)
+When("create bbs shake key with secret key ''", function(sk) _key_from_secret(sk, 'bbs_shake') end)
+When("create bbs shake key with secret ''", function(sk) _key_from_secret(sk, 'bbs_shake') end)
 
 When("create bbs public key with secret key ''",function(sec)
     local sk = have(sec)
     -- Check if the user-provided sk is reasonable
     zencode_assert(type(sk) == "zenroom.big", "sk must have type integer")
     zencode_assert(sk < ECP.order(), "sk is not a scalar")
-
     empty'bbs public key'
     ACK.bbs_public_key = BBS.sk2pk(sk)
     new_codec('bbs public key', { zentype = 'e'})
+end)
+When("create bbs shake public key with secret key ''",function(sec)
+    local sk = have(sec)
+    -- Check if the user-provided sk is reasonable
+    zencode_assert(type(sk) == "zenroom.big", "sk must have type integer")
+    zencode_assert(sk < ECP.order(), "sk is not a scalar")
+    empty'bbs shake public key'
+    ACK.bbs_shake_public_key = BBS.sk2pk(sk)
+    new_codec('bbs shake public key', { zentype = 'e'})
 end)
 
 --[[ The function BBS.sign may take as input also a string octet HEADER containing context 
@@ -173,46 +203,48 @@ end)
 --]]
 
 local function generic_bbs_signature(doc, h)
-    empty'bbs signature'
-    local sk = havekey'bbs'
     local obj, obj_codec = have(doc)
-    -- TODO: here SHA256 is the standard, keygen cannot select it
     local hash = O.to_string(mayhave(h)) or h or 'sha256'
+    local name = fif(hash=='sha256', 'bbs')
+        or fif(hash=='shake256','bbs_shake')
+        or error("Invalid signature hash: "..hash)
+    empty(name..' signature')
+    local sk = havekey(name)
     local ciphersuite = BBS.ciphersuite(hash)
     -- first check on h, checks on nested table is done in BBS.sign for optimization
     zencode_assert(obj_codec.zentype == 'e' or obj_codec.zentype == 'a',
         'BBS signature can be done only on strings or an array of strings')
     if (luatype(obj) ~= 'table') then obj = {obj} end
-    local pk = ACK.bbs_public_key or BBS.sk2pk(sk)
-
-    ACK.bbs_signature = BBS.sign(ciphersuite, sk, pk, nil, obj)
-    new_codec('bbs signature', { zentype = 'e'})
+    local pk = ACK[name..'_public_key'] or BBS.sk2pk(sk)
+    ACK[name..'_signature'] = BBS.sign(ciphersuite, sk, pk, nil, obj)
+    new_codec(name..' signature', { zentype = 'e'})
 end
 
-When("create bbs signature of ''", function(doc)
-    return generic_bbs_signature(doc, 'sha256')
-end)
-
-When("create bbs signature of '' using ''", generic_bbs_signature)
+When("create bbs signature of ''", function(doc) generic_bbs_signature(doc, 'sha256') end)
+When("create bbs shake signature of ''", function(doc) generic_bbs_signature(doc, 'shake256') end)
 
 local function generic_verify(doc, sig, by, h)
     local s = have(sig)
     local obj = have(doc)
-    local pk = load_pubkey_compat(by, 'bbs')
     local hash = O.to_string(mayhave(h)) or h or 'sha256'
+    local name = fif(hash=='sha256', 'bbs')
+        or fif(hash=='shake256','bbs_shake')
+        or error("Invalid signature hash: "..hash)
+    local pk = load_pubkey_compat(by, name)
     local ciphersuite = BBS.ciphersuite(hash)
     if (type(obj) ~= 'table') then obj = {obj} end
     zencode_assert(
         BBS.verify(ciphersuite, pk, s, nil, obj),
-       'The bbs signature by '..by..' is not authentic'
+       'The '..space(name)..' signature by '..by..' is not authentic'
     )
 end
 
 IfWhen("verify '' has a bbs signature in '' by ''", function(doc, sig, by)
     return generic_verify(doc, sig, by, 'sha256')
 end)
-
-IfWhen("verify '' has a bbs signature in '' by '' using ''", generic_verify)
+IfWhen("verify '' has a bbs shake signature in '' by ''", function(doc, sig, by)
+    return generic_verify(doc, sig, by, 'shake256')
+end)
 
 --[[
     Participant generates proof with the function bbs.proof_gen(ciphersuite, pk, signature, 
