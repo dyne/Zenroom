@@ -66,8 +66,8 @@ local function bbs_public_key_f(obj)
     if point:isinf() then
         error('Invalid BBS public key (infinite)', 3) end
     -- TODO: restore this test using the right multiplier
-    -- if (point*ECP.order()):isinf() then
-    --     error('Invalid BBS public key (point*order to infinite)',3) end
+    if not (point*ECP.order()):isinf() then
+        error('Invalid BBS public key (point*order not infinite)',3) end
     return obj
 end
 
