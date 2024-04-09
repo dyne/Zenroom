@@ -217,8 +217,9 @@ OUTPUT: sk (as zenroom.octet), it represents a scalar between 1 and the order of
 ]]
 function bbs.keygen(ciphersuite, key_material, key_info, key_dst)
     key_material = key_material or O.random(32) -- O.random is a secure RNG.
-
-
+    if not ciphersuite then
+        error('Ciphersuite not initialized in BBS.keygen',2)
+    end
     -- TODO: add warning on curve must be BLS12-381
     if not key_info then
         key_info = O.empty()
@@ -587,9 +588,10 @@ OUTPUT: the signature (A,e)
 function bbs.sign(ciphersuite, sk, pk, header, messages_octets)
 
     -- Default values for header and messages.
+    if not messages_octets then
+            error('Empty message argument in BBS.sign',2)
+    end
     header = header or O.empty()
-    messages_octets = messages_octets or {}
-
     local messages = bbs.messages_to_scalars(ciphersuite,messages_octets)
 
     local generators = bbs.create_generators(ciphersuite, #messages +1)
