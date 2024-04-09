@@ -305,15 +305,14 @@ When("create bbs disclosed messages", function()
     new_codec('bbs disclosed messages', { zentype = 'a', encoding = 'string'})
 end)
 
-When("create bbs proof using ''", function(h)
+When("create bbs proof", function()
     empty'bbs proof'
     local ph = have'bbs presentation header':octet()
     local message_octets = have'bbs messages'
     local float_indexes = have'bbs disclosed indexes'
     local pubk = have'bbs public key'
     local signature = have'bbs credential'
-    local hash =  O.to_string(mayhave(h)) or h or 'sha256'
-    local ciphersuite = BBS.ciphersuite(hash)
+    local ciphersuite = BBS.ciphersuite('sha256')
     if(type(message_octets) ~= 'table') then
         message_octets = {message_octets}
     end
@@ -325,9 +324,27 @@ When("create bbs proof using ''", function(h)
     new_codec('bbs proof', { zentype = 'e'})
 end)
 
-IfWhen("verify bbs proof using ''", function(h)
-    local hash =  O.to_string(mayhave(h)) or h or 'sha256'
-    local ciphersuite = BBS.ciphersuite(hash)
+When("create bbs shake proof", function()
+    empty'bbs shake proof'
+    local ph = have'bbs presentation header':octet()
+    local message_octets = have'bbs messages'
+    local float_indexes = have'bbs disclosed indexes'
+    local pubk = have'bbs shake public key'
+    local signature = have'bbs shake credential'
+    local ciphersuite = BBS.ciphersuite('shake256')
+    if(type(message_octets) ~= 'table') then
+        message_octets = {message_octets}
+    end
+    local disclosed_indexes = {}
+    for k,v in pairs(float_indexes) do
+        disclosed_indexes[k] = tonumber(v)
+    end
+    ACK.bbs_shake_proof = BBS.proof_gen(ciphersuite, pubk, signature, nil, ph, message_octets, disclosed_indexes)
+    new_codec('bbs shake proof', { zentype = 'e'})
+end)
+
+IfWhen("verify bbs proof", function()
+    local ciphersuite = BBS.ciphersuite('sha256')
     local pubk = have'bbs public key'
     local proof = have'bbs proof'
     local ph = have'bbs presentation header':octet()
@@ -342,15 +359,30 @@ IfWhen("verify bbs proof using ''", function(h)
        'The bbs proof is not valid')
 end)
 
+IfWhen("verify bbs shake proof", function()
+    local ciphersuite = BBS.ciphersuite('shake256')
+    local pubk = have'bbs shake public key'
+    local proof = have'bbs shake proof'
+    local ph = have'bbs presentation header':octet()
+    local disclosed_messages_octets = have'bbs disclosed messages'
+    local float_indexes = have'bbs disclosed indexes'
+    local disclosed_indexes = {}
+    for k,v in pairs(float_indexes) do
+        disclosed_indexes[k] = tonumber(v)
+    end
+    zencode_assert(
+        BBS.proof_verify(ciphersuite, pubk, proof, nil, ph, disclosed_messages_octets, disclosed_indexes),
+       'The bbs shake proof is not valid')
+end)
+
 --bbs.proof_gen(ciphersuite, pk, signature, header, ph, messages_octets, disclosed_indexes)
-When("create bbs proof of signature '' of messages '' using '' with public key '' presentation header '' and disclosed indexes ''", function(sig, msg, h, pk, prh, dis_ind)
+When("create bbs proof of signature '' of messages '' with public key '' presentation header '' and disclosed indexes ''", function(sig, msg, pk, prh, dis_ind)
     empty'bbs proof'
     local message_octets = have(msg)
     local float_indexes = have(dis_ind)
     local pubk = have(pk)
     local signature = have(sig)
-    local hash =  O.to_string(mayhave(h)) or h or 'sha256'
-    local ciphersuite = BBS.ciphersuite(hash)
+    local ciphersuite = BBS.ciphersuite('sha256')
     local ph = have(prh):octet()
     if(type(message_octets) ~= 'table') then
         message_octets = {message_octets}
@@ -364,14 +396,13 @@ When("create bbs proof of signature '' of messages '' using '' with public key '
 end)
 
 --bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages_octets, disclosed_indexes)
-IfWhen("verify bbs proof using '' with public key '' presentation header '' disclosed messages '' and disclosed indexes ''", function(h, pk, prh, dis_msg, dis_ind)
+IfWhen("verify bbs proof with public key '' presentation header '' disclosed messages '' and disclosed indexes ''", function(pk, prh, dis_msg, dis_ind)
     local pubk = have(pk)
     local proof = have'bbs proof'
     local ph = have(prh):octet()
     local disclosed_messages_octets = have(dis_msg)
     local float_indexes = have(dis_ind)
-    local hash =  O.to_string(mayhave(h)) or h or 'sha256'
-    local ciphersuite = BBS.ciphersuite(hash)
+    local ciphersuite = BBS.ciphersuite('sha256')
     local disclosed_indexes = {}
     for k,v in pairs(float_indexes) do
         disclosed_indexes[k] = tonumber(v)
