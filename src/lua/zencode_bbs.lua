@@ -203,7 +203,7 @@ local function generic_verify(doc, sig, by, h)
     local ciphersuite = BBS.ciphersuite(hash)
     if (type(obj) ~= 'table') then obj = {obj} end
     zencode_assert(
-        BBS.verify(ciphersuite, pk, s, obj),
+        BBS.verify(ciphersuite, pk, s, nil, obj),
        'The bbs signature by '..by..' is not authentic'
     )
 end
