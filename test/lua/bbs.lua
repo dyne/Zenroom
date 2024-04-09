@@ -4,7 +4,6 @@ local HASH = require'hash'
 print('----------------- TEST SHA256 ------------------')
 
 local ciphersuite = bbs.ciphersuite('sha256')
-
 -- Key Pair
 print('----------------------')
 print("TEST: key pair")
@@ -173,7 +172,7 @@ print('----------------------')
 print("TEST: MapMessageToScalarAsHash")
 
 -- Test vectors originated from:
--- draft-irtf-cfrg-bbs-signatures-latest Sections 8.3.2 AND 8.4.2
+-- draft-irtf-cfrg-bbs-signatures-latest Sections 8.3.2
 
 local map_messages_to_scalar_messages = {
     O.from_hex('9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02'),
@@ -250,8 +249,8 @@ local function run_test_create_generators (test)
     local output_generators = bbs.create_generators(ciphersuite, count_test)
     for i = 1, count_test do
         print("Test case ".. i)
-        print(output_generators[1]:to_zcash():hex())
-        assert(output_generators[i] == test[i])
+        ---print(output_generators[1]:to_zcash():hex())
+        assert(output_generators[i] == test[i], 'Wrong point')
     end
 end
 
@@ -512,7 +511,6 @@ assert(PROOF_GEN_MULTI_D_OUT_NO_PH == pg_multi_d_output_no_ph)
 print("Test ProofVerify")
 local DISC_MSG = {MULTI_MSG_ARRAY[1], MULTI_MSG_ARRAY[3],MULTI_MSG_ARRAY[5], MULTI_MSG_ARRAY[7]}
 assert( bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_multi_d_output_no_ph, O.from_hex(HEADER), nil, DISC_MSG, disclosed_some_indexes) == true)
-
 
 bbs.calculate_random_scalars = old_random
 
