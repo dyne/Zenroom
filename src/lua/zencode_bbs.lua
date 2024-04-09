@@ -143,8 +143,12 @@ local function _key_from_secret(sec)
    local sk = have(sec)
    initkeyring'bbs'
    -- Check if the user-provided sk is reasonable
-   assert(type(sk) == "zenroom.big", "sk must have type integer")
-   assert(sk < ECP.order(), "sk is not a scalar")
+   if type(sk) ~= "zenroom.big" then
+           error("Invalid BBS secret key: must be a BIG integer", 2)
+   end
+   if sk >= ECP.order() then
+       error("Invalid BBS secret key: scalar exceeds order", 2)
+   end
    ACK.keyring.bbs = sk
 end
 
@@ -159,8 +163,8 @@ When("create bbs key with secret ''",
 When("create bbs public key with secret key ''",function(sec)
     local sk = have(sec)
     -- Check if the user-provided sk is reasonable
-    assert(type(sk) == "zenroom.big", "sk must have type integer")
-    assert(sk < ECP.order(), "sk is not a scalar")
+    zencode_assert(type(sk) == "zenroom.big", "sk must have type integer")
+    zencode_assert(sk < ECP.order(), "sk is not a scalar")
 
     empty'bbs public key'
     ACK.bbs_public_key = BBS.sk2pk(sk)
@@ -172,6 +176,7 @@ end)
 --]]
 
 local function generic_bbs_signature(doc, h)
+    empty'bbs signature'
     local sk = havekey'bbs'
     local obj, obj_codec = have(doc)
     -- TODO: here SHA256 is the standard, keygen cannot select it
@@ -180,31 +185,26 @@ local function generic_bbs_signature(doc, h)
     -- first check on h, checks on nested table is done in BBS.sign for optimization
     zencode_assert(obj_codec.zentype == 'e' or obj_codec.zentype == 'a',
         'BBS signature can be done only on strings or an array of strings')
-    if (type(obj) ~= 'table') then
-        obj = {obj}
-    end
+    if (luatype(obj) ~= 'table') then obj = {obj} end
     local pk = ACK.bbs_public_key or BBS.sk2pk(sk)
 
-    empty'bbs signature'
     ACK.bbs_signature = BBS.sign(ciphersuite, sk, pk, nil, obj)
     new_codec('bbs signature', { zentype = 'e'})
 end
 
 When("create bbs signature of ''", function(doc)
-    return generic_bbs_signature(doc, 'shake256')
+    return generic_bbs_signature(doc, 'sha256')
 end)
 
 When("create bbs signature of '' using ''", generic_bbs_signature)
 
 local function generic_verify(doc, sig, by, h)
+    local s = have(sig)
+    local obj = have(doc)
     local pk = load_pubkey_compat(by, 'bbs')
     local hash = O.to_string(mayhave(h)) or h or 'sha256'
-    local obj = have(doc)
     local ciphersuite = BBS.ciphersuite(hash)
-    if (type(obj) ~= 'table') then
-        obj = {obj}
-    end
-    local s = have(sig)
+    if (type(obj) ~= 'table') then obj = {obj} end
     zencode_assert(
         BBS.verify(ciphersuite, pk, s, obj),
        'The bbs signature by '..by..' is not authentic'
@@ -212,7 +212,7 @@ local function generic_verify(doc, sig, by, h)
 end
 
 IfWhen("verify '' has a bbs signature in '' by ''", function(doc, sig, by)
-    return generic_verify(doc, sig, by, 'shake256')
+    return generic_verify(doc, sig, by, 'sha256')
 end)
 
 IfWhen("verify '' has a bbs signature in '' by '' using ''", generic_verify)
@@ -267,7 +267,6 @@ ZEN:add_schema(
 When("create bbs disclosed messages", function()
     local dis_ind = have'bbs disclosed indexes'
     local all_msgs = have'bbs messages'
-
     empty'bbs disclosed messages'
     local dis_msgs = {}
     for k,v in pairs(dis_ind) do
@@ -278,23 +277,21 @@ When("create bbs disclosed messages", function()
 end)
 
 When("create bbs proof using ''", function(h)
-    local hash =  O.to_string(mayhave(h)) or h or 'sha256'
-    local ciphersuite = BBS.ciphersuite(hash)
+    empty'bbs proof'
     local ph = have'bbs presentation header':octet()
     local message_octets = have'bbs messages'
+    local float_indexes = have'bbs disclosed indexes'
+    local pubk = have'bbs public key'
+    local signature = have'bbs credential'
+    local hash =  O.to_string(mayhave(h)) or h or 'sha256'
+    local ciphersuite = BBS.ciphersuite(hash)
     if(type(message_octets) ~= 'table') then
         message_octets = {message_octets}
     end
-    local float_indexes = have'bbs disclosed indexes'
     local disclosed_indexes = {}
     for k,v in pairs(float_indexes) do
         disclosed_indexes[k] = tonumber(v)
     end
-
-    local pubk = have'bbs public key'
-    local signature = have'bbs credential'
-
-    empty'bbs proof'
     ACK.bbs_proof = BBS.proof_gen(ciphersuite, pubk, signature, nil, ph, message_octets, disclosed_indexes)
     new_codec('bbs proof', { zentype = 'e'})
 end)
@@ -318,36 +315,34 @@ end)
 
 --bbs.proof_gen(ciphersuite, pk, signature, header, ph, messages_octets, disclosed_indexes)
 When("create bbs proof of signature '' of messages '' using '' with public key '' presentation header '' and disclosed indexes ''", function(sig, msg, h, pk, prh, dis_ind)
+    empty'bbs proof'
+    local message_octets = have(msg)
+    local float_indexes = have(dis_ind)
+    local pubk = have(pk)
+    local signature = have(sig)
     local hash =  O.to_string(mayhave(h)) or h or 'sha256'
     local ciphersuite = BBS.ciphersuite(hash)
     local ph = have(prh):octet()
-    local message_octets = have(msg)
     if(type(message_octets) ~= 'table') then
         message_octets = {message_octets}
     end
-    local float_indexes = have(dis_ind)
     local disclosed_indexes = {}
     for k,v in pairs(float_indexes) do
         disclosed_indexes[k] = tonumber(v)
     end
-
-    local pubk = have(pk)
-    local signature = have(sig)
-
-    empty'bbs proof'
     ACK.bbs_proof = BBS.proof_gen(ciphersuite, pubk, signature, nil, ph, message_octets, disclosed_indexes)
     new_codec('bbs proof', { zentype = 'e'})
 end)
 
 --bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages_octets, disclosed_indexes)
 IfWhen("verify bbs proof using '' with public key '' presentation header '' disclosed messages '' and disclosed indexes ''", function(h, pk, prh, dis_msg, dis_ind)
-    local hash =  O.to_string(mayhave(h)) or h or 'sha256'
-    local ciphersuite = BBS.ciphersuite(hash)
     local pubk = have(pk)
     local proof = have'bbs proof'
     local ph = have(prh):octet()
     local disclosed_messages_octets = have(dis_msg)
     local float_indexes = have(dis_ind)
+    local hash =  O.to_string(mayhave(h)) or h or 'sha256'
+    local ciphersuite = BBS.ciphersuite(hash)
     local disclosed_indexes = {}
     for k,v in pairs(float_indexes) do
         disclosed_indexes[k] = tonumber(v)
