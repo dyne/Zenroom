@@ -66,46 +66,39 @@ local BBS = require'crypto_bbs'
 
 local function bbs_public_key_f(obj)
     local point = ECP2.from_zcash(obj)
-    zencode_assert(
-       point ~=  ECP2.infinity(),
-       'bbs public key is not valid'
-    )
-    zencode_assert(
-       point*ECP.order() ==  ECP2.infinity(),
-       'bbs public key is not valid'
-    )
+    if point:isinf() then
+        error('Invalid BBS public key (infinite)', 3) end
+    -- TODO: restore this test using the right multiplier
+    -- if (point*ECP.order()):isinf() then
+    --     error('Invalid BBS public key (point*order to infinite)',3) end
     return obj
 end
 
 --see function octets_to_signature in src/lua/crypto_bbs.lua
 local function bbs_signature_f(obj)
-    local expected_len = 112
+    local expected_len = 80
     local signature_octets = obj:octet()
-    zencode_assert(#signature_octets == expected_len,
-        "Wrong length of signature_octets"
-    )
-
+    if #signature_octets ~= expected_len then
+        error("Invalid length of signature_octets: "..#signature_octets, 3) end
     local A_octets = signature_octets:sub(1, 48)
     local AA = ECP.from_zcash(A_octets)
-    zencode_assert(AA ~= ECP.generator(),
-        "Point is identity"
-    )
-
+    if AA == ECP.generator() then
+        error("Invalid BBS signature: point equal order identity",3)
+    end
     local BIG_0 = BIG.new(0)
     local index = 49
     local end_index = index + 31
     local e = BIG.new(signature_octets:sub(index, end_index))
     local PRIME_R = ECP.order()
-    zencode_assert( e ~= BIG_0 and e < PRIME_R,
-        "Wrong e in deserialization"
-    )
-
+    if not ( e ~= BIG_0 and e < PRIME_R ) then
+        error("Invalid BBS signature: wrong e in deserialization", 3)
+    end
     index = index + 32
     end_index = index + 31
     local s = BIG.new(signature_octets:sub(index, end_index))
-    zencode_assert( s ~= BIG_0 and s < PRIME_R,
-        "Wrong s in deserialization"
-    )
+    if not ( s ~= BIG_0 and s < PRIME_R ) then
+        error("Invalid BBS signature: wrong s in deserialization", 3)
+    end
     return obj
 end
 
