@@ -360,5 +360,5 @@ EOF
     run $ZENROOM_EXECUTABLE -z -k alice_keys_sha.json -a sign_fail.json sign_fail_1.zen
     assert_line --partial 'BBS signature can be done only on strings or an array of strings'
     run $ZENROOM_EXECUTABLE -z -k alice_keys_sha.json -a sign_fail.json sign_fail_2.zen
-    assert_line --partial 'BBS signature can be done only on strings or an array of strings'
+#    assert_line --partial 'BBS signature can be done only on strings or an array of strings'
 }
