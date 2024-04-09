@@ -134,7 +134,8 @@ ZEN:add_schema(
 -- generate the private key
 When("create bbs key",function()
     initkeyring'bbs'
-    ACK.keyring.bbs = BBS.keygen()
+    local ciphersuite = BBS.ciphersuite('sha256')
+    ACK.keyring.bbs = BBS.keygen(ciphersuite)
 end)
 
 -- generate the public key
@@ -180,7 +181,8 @@ end)
 local function generic_bbs_signature(doc, h)
     local sk = havekey'bbs'
     local obj, obj_codec = have(doc)
-    local hash = O.to_string(mayhave(h)) or h
+    -- TODO: here SHA256 is the standard, keygen cannot select it
+    local hash = O.to_string(mayhave(h)) or h or 'sha256'
     local ciphersuite = BBS.ciphersuite(hash)
     -- first check on h, checks on nested table is done in BBS.sign for optimization
     zencode_assert(obj_codec.zentype == 'e' or obj_codec.zentype == 'a',
@@ -191,7 +193,7 @@ local function generic_bbs_signature(doc, h)
     local pk = ACK.bbs_public_key or BBS.sk2pk(sk)
 
     empty'bbs signature'
-    ACK.bbs_signature = BBS.sign(ciphersuite, sk, pk, obj)
+    ACK.bbs_signature = BBS.sign(ciphersuite, sk, pk, nil, obj)
     new_codec('bbs signature', { zentype = 'e'})
 end
 
@@ -203,7 +205,7 @@ When("create bbs signature of '' using ''", generic_bbs_signature)
 
 local function generic_verify(doc, sig, by, h)
     local pk = load_pubkey_compat(by, 'bbs')
-    local hash = O.to_string(mayhave(h)) or h
+    local hash = O.to_string(mayhave(h)) or h or 'sha256'
     local obj = have(doc)
     local ciphersuite = BBS.ciphersuite(hash)
     if (type(obj) ~= 'table') then
@@ -283,7 +285,7 @@ When("create bbs disclosed messages", function()
 end)
 
 When("create bbs proof using ''", function(h)
-    local hash =  O.to_string(mayhave(h)) or h
+    local hash =  O.to_string(mayhave(h)) or h or 'sha256'
     local ciphersuite = BBS.ciphersuite(hash)
     local ph = have'bbs presentation header':octet()
     local message_octets = have'bbs messages'
@@ -305,7 +307,7 @@ When("create bbs proof using ''", function(h)
 end)
 
 IfWhen("verify bbs proof using ''", function(h)
-    local hash =  O.to_string(mayhave(h)) or h
+    local hash =  O.to_string(mayhave(h)) or h or 'sha256'
     local ciphersuite = BBS.ciphersuite(hash)
     local pubk = have'bbs public key'
     local proof = have'bbs proof'
@@ -323,7 +325,7 @@ end)
 
 --bbs.proof_gen(ciphersuite, pk, signature, header, ph, messages_octets, disclosed_indexes)
 When("create bbs proof of signature '' of messages '' using '' with public key '' presentation header '' and disclosed indexes ''", function(sig, msg, h, pk, prh, dis_ind)
-    local hash =  O.to_string(mayhave(h)) or h
+    local hash =  O.to_string(mayhave(h)) or h or 'sha256'
     local ciphersuite = BBS.ciphersuite(hash)
     local ph = have(prh):octet()
     local message_octets = have(msg)
@@ -346,7 +348,7 @@ end)
 
 --bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages_octets, disclosed_indexes)
 IfWhen("verify bbs proof using '' with public key '' presentation header '' disclosed messages '' and disclosed indexes ''", function(h, pk, prh, dis_msg, dis_ind)
-    local hash =  O.to_string(mayhave(h)) or h
+    local hash =  O.to_string(mayhave(h)) or h or 'sha256'
     local ciphersuite = BBS.ciphersuite(hash)
     local pubk = have(pk)
     local proof = have'bbs proof'
