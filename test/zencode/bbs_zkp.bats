@@ -112,15 +112,11 @@ EOF
 @test "DOCS: create issuer keys" {
     cat <<EOF | zexe issuer_keys_docs.zen
 Scenario 'bbs': authority generates its keys
-
 Given I am 'The Authority'
-
 When I create the bbs key
 When I create the bbs public key
-
 Then print my 'bbs public key'
 Then print my 'keyring'
-
 EOF
     save_output issuer_keys_output_docs.json
 }
@@ -129,9 +125,9 @@ EOF
     cat << EOF | save_asset data_credential_docs.json
 {
     "The_Authority": {
-        "bbs_public_key": "o+JuJ0zDfbRzXkXsgBZ9t2YvM+OGOFWqByaQeYxplqUU/2SNEYTcP5QQh1mSN9xxDyNW/s6Lm/fR8D6c7kfbdRwSPcx+xb0iemsNxhwFtVqo/KrAtpsOaBugtUh8P0xY",
+        "bbs_public_key": "i33+cqmLXaneXsvmCv9EE+4GU1+cxO8uZYV+wTLjU0UL7uXbsBW2D0Pd34j5I2E6BFxcFdaVfACQutLX3kQ1TaO0V9Iz1KTn03/OHzyNKhWBkXEYolZ6mdc75DZQDy1k",
         "keyring": {
-            "bbs": "MXuDMAavZ9URy0VSwIxQwl9gCTXL1ePQfyWpHQCL9Wk="
+            "bbs": "EIRxtRfx2zDcSEogGyVJ29yj4wHwncuNQMrCpLnfknA="
         }
     },
     "bbs_messages": [
@@ -160,13 +156,14 @@ Then print the 'bbs messages'
 Then print the 'bbs credential'
 EOF
     save_output output_credential_docs.json
+
 }
 
 @test "DOCS: create proof example" {
     cat << EOF | save_asset proof_data_docs.json
 {
 	"The_Authority": {
-		"bbs_public_key": "o+JuJ0zDfbRzXkXsgBZ9t2YvM+OGOFWqByaQeYxplqUU/2SNEYTcP5QQh1mSN9xxDyNW/s6Lm/fR8D6c7kfbdRwSPcx+xb0iemsNxhwFtVqo/KrAtpsOaBugtUh8P0xY"
+        "bbs_public_key": "i33+cqmLXaneXsvmCv9EE+4GU1+cxO8uZYV+wTLjU0UL7uXbsBW2D0Pd34j5I2E6BFxcFdaVfACQutLX3kQ1TaO0V9Iz1KTn03/OHzyNKhWBkXEYolZ6mdc75DZQDy1k"
 	},
     "bbs_credential": "oamUr6F4m2WuHNhn2zah0TCy/oBb2r09ozWn/bmzvv/KMaBcN0tTySjJCESBUXi8M050WIdBiYg6pxd87UQeBVgfNKK39OGNlnZM2GNZFfE=",
 	"bbs_messages": [

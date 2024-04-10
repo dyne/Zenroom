@@ -284,12 +284,10 @@ end
 
 ZEN:add_schema(
     {
-        bbs_proof = function(obj)
-            return schema_get(obj, '.', bbs_proof_f)
-        end,
-        bbs_credential = function(obj)
-            return schema_get(obj, '.', bbs_signature_f)
-          end
+        bbs_proof = function(obj) return schema_get(obj, '.', bbs_proof_f) end,
+        bbs_shake_proof = function(obj) return schema_get(obj, '.', bbs_proof_f) end,
+        bbs_credential = function(obj) return schema_get(obj, '.', bbs_signature_f) end,
+        bbs_shake_credential = function(obj) return schema_get(obj, '.', bbs_signature_f) end
     }
 )
 
@@ -395,8 +393,29 @@ When("create bbs proof of signature '' of messages '' with public key '' present
     new_codec('bbs proof', { zentype = 'e'})
 end)
 
+--bbs.proof_gen(ciphersuite, pk, signature, header, ph, messages_octets, disclosed_indexes)
+When("create bbs shake proof of signature '' of messages '' with public key '' presentation header '' and disclosed indexes ''", function(sig, msg, pk, prh, dis_ind)
+    empty'bbs proof'
+    local message_octets = have(msg)
+    local float_indexes = have(dis_ind)
+    local pubk = have(pk)
+    local signature = have(sig)
+    local ciphersuite = BBS.ciphersuite('shake256')
+    local ph = have(prh):octet()
+    if(type(message_octets) ~= 'table') then
+        message_octets = {message_octets}
+    end
+    local disclosed_indexes = {}
+    for k,v in pairs(float_indexes) do
+        disclosed_indexes[k] = tonumber(v)
+    end
+    ACK.bbs_shake_proof = BBS.proof_gen(ciphersuite, pubk, signature, nil, ph, message_octets, disclosed_indexes)
+    new_codec('bbs shake proof', { zentype = 'e'})
+end)
+
 --bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages_octets, disclosed_indexes)
-IfWhen("verify bbs proof with public key '' presentation header '' disclosed messages '' and disclosed indexes ''", function(pk, prh, dis_msg, dis_ind)
+IfWhen("verify bbs proof with public key '' presentation header '' disclosed messages '' and disclosed indexes ''",
+       function(pk, prh, dis_msg, dis_ind)
     local pubk = have(pk)
     local proof = have'bbs proof'
     local ph = have(prh):octet()
@@ -410,4 +429,22 @@ IfWhen("verify bbs proof with public key '' presentation header '' disclosed mes
     zencode_assert(
         BBS.proof_verify(ciphersuite, pubk, proof, nil, ph, disclosed_messages_octets, disclosed_indexes),
        'The bbs proof is not valid')
+end)
+
+--bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages_octets, disclosed_indexes)
+IfWhen("verify bbs shake proof with public key '' presentation header '' disclosed messages '' and disclosed indexes ''",
+       function(pk, prh, dis_msg, dis_ind)
+    local pubk = have(pk)
+    local proof = have'bbs shake proof'
+    local ph = have(prh):octet()
+    local disclosed_messages_octets = have(dis_msg)
+    local float_indexes = have(dis_ind)
+    local ciphersuite = BBS.ciphersuite('shake256')
+    local disclosed_indexes = {}
+    for k,v in pairs(float_indexes) do
+        disclosed_indexes[k] = tonumber(v)
+    end
+    zencode_assert(
+        BBS.proof_verify(ciphersuite, pubk, proof, nil, ph, disclosed_messages_octets, disclosed_indexes),
+       'The bbs shake proof is not valid')
 end)
