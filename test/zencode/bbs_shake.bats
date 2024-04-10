@@ -7,7 +7,7 @@ SUBDOC=bbs
 Scenario bbs
 Given I am known as 'Alice'
 When I create the keyring
-and I create the bbs key
+and I create the bbs shake key
 Then print my 'keyring'
 EOF
     save_output alice_keys_shake.json
@@ -15,15 +15,15 @@ EOF
 Scenario bbs
 Given I am known as 'Alice'
 Given I have my 'keyring'
-When I create the bbs public key
-Then print my 'bbs public key'
+When I create the bbs shake public key
+Then print my 'bbs shake public key'
 EOF
     save_output alice_pubkey_shake.json
     cat <<EOF | rngzexe keygen_shake.zen
 Scenario bbs
 Given I am known as 'Bob'
 When I create the keyring
-and I create the bbs key
+and I create the bbs shake key
 Then print my 'keyring'
 EOF
     save_output bob_keys_shake.json
@@ -31,8 +31,8 @@ EOF
 Scenario bbs
 Given I am known as 'Bob'
 Given I have my 'keyring'
-When I create the bbs public key
-Then print my 'bbs public key'
+When I create the bbs shake public key
+Then print my 'bbs shake public key'
 EOF
     save_output bob_pubkey_shake.json
 }
@@ -41,10 +41,10 @@ EOF
     cat << EOF | zexe keygen_immutable_shake.zen
 Scenario bbs
 Given I am known as 'Carl'
-When I create the bbs key
-and I copy the 'bbs' from 'keyring' to 'bbs before'
-and I create the bbs public key
-and I copy the 'bbs' from 'keyring' to 'bbs after'
+When I create the bbs shake key
+and I copy the 'bbs shake' from 'keyring' to 'bbs before'
+and I create the bbs shake public key
+and I copy the 'bbs shake' from 'keyring' to 'bbs after'
 and I verify 'bbs before' is equal to 'bbs after'
 Then print 'bbs before' as 'hex'
 and print 'bbs after' as 'hex'
@@ -58,8 +58,8 @@ EOF
     cat << EOF | zexe sk2pk_shake.zen bbssk_shake.json
 Scenario bbs
 Given I have a 'integer' named 'bbssk'
-When I create the bbs public key with secret key 'bbssk'
-Then print 'bbs public key'
+When I create the bbs shake public key with secret key 'bbssk'
+Then print 'bbs shake public key'
 EOF
     save_output pubkey_from_sk_shake.json
 }
@@ -72,9 +72,9 @@ Scenario bbs
 Given that I am known as 'Alice'
 and I have my 'keyring'
 When I write string 'This is my authenticated message.' in 'message'
-When I create the bbs signature of 'message' using 'shake256'
+When I create the bbs shake signature of 'message'
 Then print the 'message'
-and print the 'bbs signature'
+and print the 'bbs shake signature'
 EOF
     save_output alice_single_sign_shake.json
 }
@@ -96,9 +96,9 @@ Scenario bbs
 Given that I am known as 'Alice'
 and I have my 'keyring'
 Given I have a 'string array' named 'myStringArray'
-When I create the bbs signature of 'myStringArray' using 'shake256'
+When I create the bbs shake signature of 'myStringArray'
 Then print the 'myStringArray'
-and print the 'bbs signature'
+and print the 'bbs shake signature'
 EOF
     save_output sign_bbs_shake256_shake.json
 }
@@ -108,7 +108,7 @@ EOF
 {
     "Alice": {
         "keyring": {
-            "bbs": "Sjmv/9Yk1p6BgIsuhDhcyAv4atrfdk4DDKpGwjHyqNc="        
+            "bbs_shake": "Sjmv/9Yk1p6BgIsuhDhcyAv4atrfdk4DDKpGwjHyqNc="        
             }
     }
 }
@@ -136,13 +136,12 @@ Scenario bbs
 Given I am 'Alice' 
 Given I have my 'keyring' 
 Given I have a 'hex array' named 'myStringArray'
-Given I have a 'string' named 'bbs hash'
-When I create the bbs signature of 'myStringArray' using 'bbs hash'
-Then print the 'bbs signature'
+When I create the bbs shake signature of 'myStringArray'
+Then print the 'bbs shake signature'
 Then print the string 'Test vectors originated from: draft-irtf-cfrg-bbs-signatures-latest Sections 7.3'
 EOF
     save_output test_sign_bbs_shake256_shake.json
-    assert_output '{"bbs_signature":"g+YpSgMblmV4WO63sXRFncese07+tsObJgJAk2DDtPQkhrnaK6MiTiaD51XQhC91Sl03iDUv3+A36vi5qSK99V3ONWVIk5hPOAydtpDCqURMQ6tnyShA2m4Z93nUEu2MfJeaeP3fukCpw40e4SSd5g==","output":["Test_vectors_originated_from:_draft-irtf-cfrg-bbs-signatures-latest_Sections_7.3"]}'
+    assert_output '{"bbs_shake_signature":"tv2DC23+7N2jviGTgVpUniZGaihTZ9+TXgmS4hnq73F+LEXDg7oWL0JasvOlusSRc52BHja7vF/0olZNNiJAIGH3OYpNXzSkC1ZbvyELOAw=","output":["Test_vectors_originated_from:_draft-irtf-cfrg-bbs-signatures-latest_Sections_7.3"]}'
 }
 
 
@@ -150,27 +149,26 @@ EOF
     cat << EOF | save_asset alice_pubkey_shake.json
 {
     "Alice":{
-        "bbs_public_key" : "qv+YMnglevxF+p1E0VbEVNcW+xolDf7RMtZbIAkzH2GMYjwU76FiRfUMyS5gM0BRCH8a6SZpuJaQ9f65LpFWj5Wo4obRELAR6ayZI/2HEjj1fRKVOVdxMx/27e5D5MzG"  
+        "bbs_shake_public_key" : "qv+YMnglevxF+p1E0VbEVNcW+xolDf7RMtZbIAkzH2GMYjwU76FiRfUMyS5gM0BRCH8a6SZpuJaQ9f65LpFWj5Wo4obRELAR6ayZI/2HEjj1fRKVOVdxMx/27e5D5MzG"  
     } 
 }
 EOF
     cat <<EOF | zexe join_sign_pubkey_shake.zen test_sign_bbs_shake256_shake.json alice_pubkey_shake.json
 Scenario bbs
-Given I have a 'bbs public key' in 'Alice'
-and I have a 'bbs signature'
-Then print the 'bbs signature'
-and print the 'bbs public key'
+Given I have a 'bbs shake public key' in 'Alice'
+and I have a 'bbs shake signature'
+Then print the 'bbs shake signature'
+and print the 'bbs shake public key'
 EOF
     save_output sign_pubkey_shake.json
 
     cat <<EOF | zexe verify_from_alice_shake.zen multi_msg_data_shake.json sign_pubkey_shake.json
 Rule check version 2.0.0
 Scenario bbs
-Given I have a 'bbs public key'
-and I have a 'bbs signature'
+Given I have a 'bbs shake public key'
+and I have a 'bbs shake signature'
 and I have a 'hex array' named 'myStringArray'
-and I have a 'string' named 'bbs hash'
-When I verify the 'myStringArray' has a bbs signature in 'bbs signature' by 'Alice' using 'bbs hash'
+When I verify the 'myStringArray' has a bbs shake signature in 'bbs shake signature' by 'Alice'
 Then print the string 'Signature is valid'
 EOF
     save_output verify_alice_signature_shake.json
@@ -181,34 +179,34 @@ EOF
     cat <<EOF | save_asset wrong_message_shake.zen
 Rule check version 2.0.0
 Scenario bbs
-Given I have a 'bbs public key'
-and I have a 'bbs signature'
+Given I have a 'bbs shake public key'
+and I have a 'bbs shake signature'
 and I have a 'string array' named 'myStringArray'
-When I verify the 'myStringArray' has a bbs signature in 'bbs signature' by 'Alice' using 'shake256'
+When I verify the 'myStringArray' has a bbs shake signature in 'bbs shake signature' by 'Alice'
 Then print the string 'Signature is valid'
 EOF
     run $ZENROOM_EXECUTABLE -z -a '3messages_shake.json' -k sign_pubkey_shake.json wrong_message_shake.zen
-    assert_line --partial 'The bbs signature by Alice is not authentic'
+    assert_line --partial 'The bbs shake signature by Alice is not authentic'
 }
 
 @test "Fail verification on a different public key" {
     cat <<EOF | zexe join_sign_pubkey_shake.zen test_sign_bbs_shake256_shake.json bob_pubkey_shake.json
 Scenario bbs
-Given I have a 'bbs public key' in 'Bob'
-and I have a 'bbs signature'
-Then print the 'bbs signature'
-and print the 'bbs public key'
+Given I have a 'bbs shake public key' in 'Bob'
+and I have a 'bbs shake signature'
+Then print the 'bbs shake signature'
+and print the 'bbs shake public key'
 EOF
     save_output sign_pubkey_shake.json
 
     cat <<EOF | save_asset verify_from_wrong_pk_shake.zen  
 Scenario bbs
-Given I have a 'bbs public key'
-and I have a 'bbs signature'
+Given I have a 'bbs shake public key'
+and I have a 'bbs shake signature'
 and I have a 'hex array' named 'myStringArray'
-When I verify the 'myStringArray' has a bbs signature in 'bbs signature' by 'Alice' using 'shake256'
+When I verify the 'myStringArray' has a bbs shake signature in 'bbs shake signature' by 'Alice'
 Then print the string 'Signature is valid'
 EOF
     run $ZENROOM_EXECUTABLE -z -a multi_msg_data_shake.json -k sign_pubkey_shake.json verify_from_wrong_pk_shake.zen
-    assert_line --partial 'The bbs signature by Alice is not authentic'
+    assert_line --partial 'The bbs shake signature by Alice is not authentic'
 }

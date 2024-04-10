@@ -1,7 +1,7 @@
 --[[
 --This file is part of zenroom
 --
---Copyright (C) 2021-2022 Dyne.org foundation
+--Copyright (C) 2021-2024 Dyne.org foundation
 --designed, written and maintained by Denis Roio <jaromil@dyne.org>
 --
 --This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,6 @@
 --Along with this program you should have received a copy of the
 --GNU Affero General Public License v3.0
 --If not, see http://www.gnu.org/licenses/agpl.txt
---
 --]]
 
 
@@ -57,6 +56,7 @@ local keytypes = {
     credential = true,
     issuer = true,
     bbs = true,
+    bbs_shake = true,
     pvss = true,
     reflow = true,
     bitcoin = true,
@@ -83,22 +83,28 @@ end
 local function nop(x) return(x) end
 -- the length of the kyber, dilithium and ntrup keys can be found in Zenroom/src/zen_qp.c
 local function dilithium_f(o)
-   zencode_assert(#o == 2528, 'Dilithium key length` is not correct')
+   if #o ~= 2528 then
+       error('Dilithium key length is not correct: '..#o, 3)
+   end
    return o
 end
 local function kyber_f(o)
-   zencode_assert(#o == 1632, 'Kyber key length is not correct')
+   if #o ~= 1632 then
+       error('Kyber key length is not correct: '..#o, 3)
+   end
    return o
 end
 local function ntrup_f(o)
-   zencode_assert(#o == 1763, 'Ntrup key length is not correct')
+   if #o ~= 1763 then
+       error('Ntrup key length is not correct: '..#o, 3)
+   end
    return o
 end  
 
 local function import_keyring(obj)
    for k,_ in pairs(obj) do
       if not keytypes[k] then
-	 error("Unsupported key type found in keyring: "..k, 2)
+          error("Unsupported key type found in keyring: "..k, 2)
       end
    end
    -- ecdh_curve
@@ -121,6 +127,9 @@ local function import_keyring(obj)
    end
    if obj.bbs then
       res.bbs = schema_get(obj, 'bbs', INT.new, O.from_base64)
+   end
+   if obj.bbs_shake then
+      res.bbs_shake = schema_get(obj, 'bbs_shake', INT.new, O.from_base64)
    end
    if obj.pvss then
       res.pvss = schema_get(obj, 'pvss', INT.new, O.from_base64)
@@ -172,6 +181,7 @@ function export_keyring(obj)
    end
    if obj.es256 then res.es256 = O.to_base64(obj.es256) end
    if obj.bbs then res.bbs = obj.bbs:octet():base64() end
+   if obj.bbs_shake then res.bbs_shake = obj.bbs_shake:octet():base64() end
    if obj.pvss then res.pvss = obj.pvss:octet():base64() end
    if obj.reflow then res.reflow = obj.reflow:octet():base64() end
    if obj.bitcoin then
