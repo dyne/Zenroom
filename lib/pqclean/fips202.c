@@ -593,6 +593,11 @@ void shake256_inc_ctx_release(shake256incctx *state) {
     free(state->ctx);
 }
 
+// aux function added by jrml, needs init first (malloc)
+void shake256_inc_ctx_reset(shake128incctx *state) {
+    keccak_inc_init(state->ctx);
+}
+
 
 /*************************************************
  * Name:        shake128_absorb
