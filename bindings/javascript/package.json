@@ -8,7 +8,7 @@
   "repository": "https://github.com/dyne/zenroom.git",
   "homepage": "https://dev.zenroom.org/#/pages/javascript",
   "author": "Puria Nafisi Azizi <puria@dyne.org>",
-  "license": "AGPL-3.0",
+  "license": "AGPL-3.0-only",
   "keywords": [
     "zenroom",
     "crypto-language-processing",
@@ -80,9 +80,6 @@
     "standard": "^16.0.4",
     "ts-node": "^10.7.0",
     "typescript": "^4.6.3"
-  },
-  "dependencies": {
-    "yarn": "^1.22.19"
   },
   "standard": {
     "ignore": [
