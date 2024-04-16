@@ -68,6 +68,7 @@
 #include <zenroom.h>
 #include <encoding.h>
 #include <zen_memory.h>
+#include <zen_error.h>
 #include <zen_octet.h>
 #include <zen_big.h>
 #include <zen_float.h>
@@ -595,11 +596,11 @@ static int from_number(lua_State *L) {
 	BEGIN();
 	// number argument, import
 	int tn;
-	lua_Number n = lua_tointegerx(L,1,&tn);
+	lua_Integer n = lua_tointegerx(L,1,&tn);
 	if(!tn) {
 		lerror(L, "O.from_number input is not a number");
 		return 0; }
-	const uint64_t v = floorf(n);
+	const uint64_t v = n;
 	octet *o = o_new(L, 16); SAFE(o);
 	// conversion from int64 to binary
 	// TODO: check endian portability issues
