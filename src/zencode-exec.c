@@ -139,10 +139,11 @@ int main(int argc, char **argv) {
 
   // TODO(jaromil): if used elsewhere promote to conf directives
   // heap and trace dumps in base64 encoded json
-  zen_exec_script(Z, "CONF.debug.format='compact'");
-  // import DATA and KEYS from base64
-  zen_exec_script(Z, "CONF.input.format.fun = function(obj) return JSON.decode(OCTET.from_base64(obj):str()) end");
-  zen_exec_script(Z, "CONF.code.encoding.fun = function(obj) return OCTET.from_base64(obj):str() end");
+  zen_exec_lua(Z, "\
+CONF.debug.format='compact' \n\
+CONF.input.format.fun = function(obj) return JSON.decode(OCTET.from_base64(obj):str()) end \n\
+CONF.code.encoding.fun = function(obj) return OCTET.from_base64(obj):str() end \
+");
 
   zen_exec_zencode(Z, script_b64);
 

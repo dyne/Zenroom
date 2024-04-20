@@ -276,7 +276,7 @@ int main(void)
       goto failed;
     }
   }
-  else if (zen_exec_script(Z, script))
+  else if (zen_exec_lua(Z, script))
   {
     retcode = EXIT_FAILURE;
     goto failed;

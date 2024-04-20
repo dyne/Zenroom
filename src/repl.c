@@ -38,7 +38,7 @@
 #include <readline/history.h>
 #endif
 
-extern int zen_exec_script(zenroom_t *Z, const char *script);
+extern int zen_exec_lua(zenroom_t *Z, const char *script);
 
 int repl_read(lua_State *lua) {
 	char *line = NULL;
@@ -93,7 +93,7 @@ int repl_loop(zenroom_t *Z) {
 	char *line = malloc(MAX_STRING);
 	int ret =0;
 	while(repl_prompt(ret, line)) {
-		ret = zen_exec_script(Z, line);
+		ret = zen_exec_lua(Z, line);
 		if(ret) break;
 	}
 	free(line);

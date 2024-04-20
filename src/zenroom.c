@@ -404,21 +404,31 @@ int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
   return ZZ->exitcode;
 }
 
-int zen_exec_script(zenroom_t *ZZ, const char *script) {
-  SAFE_EXEC;
+int protect_exec_lua(lua_State *L) {
+	const char *s = lua_tostring(L, 1);
+	luaL_argcheck(L, s != NULL, 1, "missing lua script string argument");
+	luaL_dostring(L, s);
+	return 0;
+}
+
+int zen_exec_lua(zenroom_t *ZZ, const char *script) {
+	SAFE_EXEC;
 	int ret;
 	lua_State* L = (lua_State*)ZZ->lua;
-	// introspection on code being executed
-	zen_setenv(L,"CODE",(char*)script);
-	ret = luaL_dostring(L, script);
-	if(ret == SUCCESS) {
-	  func(L, "Lua script successfully executed");
-	  ZZ->exitcode = SUCCESS;
+	zen_setenv(L,"CODE",(char*)script); // introspect code executed
+	lua_pushcfunction(ZZ->lua, &protect_exec_lua);
+	lua_pushstring(ZZ->lua, script);
+	int status = lua_pcall(ZZ->lua, 1,   1,  0);
+	if(status != LUA_OK) {
+		char *_err = (status == LUA_ERRRUN) ? "Runtime error at initialization" :
+			(status == LUA_ERRMEM) ? "Memory allocation error at initalization" :
+			(status == LUA_ERRERR) ? "Error handler fault at initalization" :
+			"Unknown error at initalization";
+		zerror(ZZ->lua, "%s: %s\n    %s", __func__, _err,
+		      lua_tostring(ZZ->lua, 1)); // lua's traceback string
 	} else {
-	  zerror(L, "Lua script error:");
-	  zerror(L, "%s", lua_tostring(L, -1));
-	  zerror(L, "Execution aborted");
-	  ZZ->exitcode = ZZ->exitcode==SUCCESS ? ERR_GENERIC : ZZ->exitcode;
+		func(L, "Lua script successfully executed");
+		ZZ->exitcode = SUCCESS;
 	}
 	return ZZ->exitcode;
 }
@@ -513,7 +523,7 @@ int zenroom_exec(const char *script, const char *conf, const char *keys, const c
 
 	zenroom_t *Z = zen_init(c, k, d);
 	if (_check_zenroom_init(Z) != SUCCESS) return ERR_INIT;
-	zen_exec_script(Z, script);
+	zen_exec_lua(Z, script);
 	return( _check_zenroom_result(Z));
 }
 
@@ -560,7 +570,7 @@ int zenroom_exec_tobuf(const char *script, const char *conf, const char *keys, c
 	Z->stdout_len = stdout_len;
 	Z->stderr_buf = stderr_buf;
 	Z->stderr_len = stderr_len;
-	zen_exec_script(Z, script);
+	zen_exec_lua(Z, script);
 	return( _check_zenroom_result(Z));
 }
 

@@ -300,7 +300,7 @@ int main(int argc, char **argv) {
 		if(sideload[0]!='\0') {
 			fprintf(stderr,"Side loading library: %s\n",sideload);
 			load_file(sidescript, fopen(sideload,"rb"));
-			zen_exec_script(Z, sidescript);
+			zen_exec_lua(Z, sidescript);
 			if(Z->exitcode!=0)
 				fprintf(stderr,"Side load exit code error: %u\n",Z->exitcode);
 		}
@@ -393,7 +393,7 @@ int main(int argc, char **argv) {
 	if(sideload[0]!='\0') {
 		fprintf(stderr,"Side loading library: %s\n",sideload);
 		load_file(sidescript, fopen(sideload,"rb"));
-		zen_exec_script(Z, sidescript);
+		zen_exec_lua(Z, sidescript);
 		// TODO: detect error
 	}
 
@@ -420,14 +420,14 @@ int main(int argc, char **argv) {
 	if(zencode)
 		zen_exec_zencode(Z, script);
 	else
-		zen_exec_script(Z, script);
+		zen_exec_lua(Z, script);
 
 #else /* POSIX */
 	if (!use_seccomp) {
 		if(zencode) {
 			zen_exec_zencode(Z, script);
 		} else {
-			zen_exec_script(Z, script);
+			zen_exec_lua(Z, script);
 		}
 	} else {
 		fprintf(stderr, "protected mode (seccomp isolation) activated\n");
@@ -455,7 +455,7 @@ int main(int argc, char **argv) {
 			if(zencode) {
 				exitcode = zen_exec_zencode(Z, script);
 			} else {
-				exitcode = zen_exec_script(Z, script);
+				exitcode = zen_exec_lua(Z, script);
 			}
 			zen_teardown(Z);
 			cli_free_buffers();
