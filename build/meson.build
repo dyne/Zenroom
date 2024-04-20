@@ -42,8 +42,7 @@ ecdh_curve = get_option('ecdh_curve')
 ecp_curve = get_option('ecp_curve')
 
 add_project_link_arguments(
-    '-lpthread',
-    '-lm',
+    '-lm', '-lreadline',
     'milagro-crypto-c/lib/libamcl_core.a',
     'milagro-crypto-c/lib/libamcl_curve_' + ecdh_curve + '.a',
     'milagro-crypto-c/lib/libamcl_pairing_' + ecp_curve + '.a',
