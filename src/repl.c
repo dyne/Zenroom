@@ -1,6 +1,6 @@
 /* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Copyright (C) 2017-2019 Dyne.org foundation
+ * Copyright (C) 2017-2024 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,6 +18,8 @@
  *
  */
 
+#ifndef LIBRARY
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <ctype.h>
@@ -31,9 +33,12 @@
 
 #include <zen_memory.h>
 
-extern int zen_exec_script(zenroom_t *Z, const char *script);
+#ifdef ARCH_LINUX
+#include <readline/readline.h>
+#include <readline/history.h>
+#endif
 
-#ifndef LIBRARY
+extern int zen_exec_script(zenroom_t *Z, const char *script);
 
 int repl_read(lua_State *lua) {
 	char *line = NULL;
@@ -66,19 +71,26 @@ int repl_write(lua_State *lua) {
 size_t repl_prompt(int ret, char *line) {
 	size_t len = 0;
 	char *prompt;
-	if(ret) prompt="zen! \0";
-	else prompt="zen> \0";
+	if(ret) prompt="lua! \0";
+	else prompt="lua> \0";
 	int nop = write(STDOUT_FILENO, prompt, 5);
 	(void)nop;
+#ifdef ARCH_LINUX
+	char *r = NULL;
+	r = readline(prompt);
+	if(!r) return 0; // quit
+	len = strlen(r);
+	memcpy(line, r, len);
+#else
 	len = read(STDIN_FILENO, line, MAX_STRING);
+#endif
 	line[len] = '\0';
 	return(len);
 }
 
 int repl_loop(zenroom_t *Z) {
-	char *line = NULL;
-	line = malloc(MAX_STRING);
 	if(!Z) return EXIT_FAILURE;
+	char *line = malloc(MAX_STRING);
 	int ret =0;
 	while(repl_prompt(ret, line)) {
 		ret = zen_exec_script(Z, line);

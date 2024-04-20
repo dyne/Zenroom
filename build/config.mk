@@ -123,7 +123,7 @@ endif
 ifneq (,$(findstring linux,$(MAKECMDGOALS)))
 defines += $(if ${COMPILE_LUA}, -DLUA_COMPILED)
 cflags := ${cflags} -fPIC ${cflags_protection} -D'ARCH=\"LINUX\"' -DARCH_LINUX ${defines}
-ldflags := -lm -lpthread
+ldflags := -lm -lpthread -lreadline
 system := Linux
 endif
 

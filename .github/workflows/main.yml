@@ -121,7 +121,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: install dependencies
-        run: sudo apt install -y zsh jq musl-dev meson
+        run: sudo apt install -y zsh jq musl-dev meson libreadline-dev
       - name: Build mimalloc
         run: make mimalloc
       - name: Build x86_64 with musl-system
@@ -129,7 +129,8 @@ jobs:
           make musl-system
           make clean
       - name: Build x86_64 shlib
-        run: make linux-meson-clang-release
+        run: |
+          make linux-meson-clang-release
 
   windows-build:
     name: 🪟 Windows build
@@ -178,8 +179,9 @@ jobs:
           python-version: '3.10'
       - run: |
           pip3 install meson ninja
-          sudo apt-get install --force-yes zsh
-      - run: make linux
+          sudo apt-get install --force-yes zsh libreadline-dev
+      - run: |
+          make linux
       - run: cp src/zencode-exec /usr/local/bin/
       - name: 🧪 test bindings go-${{ matrix.go }}
         working-directory: bindings/golang/zenroom
@@ -204,7 +206,7 @@ jobs:
           toolchain: ${{ matrix.rust }}
       - run: |
           pip3 install meson ninja
-          sudo apt-get install --force-yes zsh
+          sudo apt-get install --force-yes zsh libreadline-dev
       - run: make linux
       - run: cp src/zencode-exec /usr/local/bin/
       - name: 🧪 test bindings rust-${{ matrix.rust }}
@@ -287,9 +289,9 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - run: sudo apt update
-        if: runner.os == 'Linux'
-      - run: sudo apt install -y zsh cmake
+      - run: |
+          sudo apt update
+          sudo apt install -y zsh cmake libreadline-dev
         if: runner.os == 'Linux'
       - run: brew install zsh
         if: runner.os == 'macOS'
@@ -385,7 +387,7 @@ jobs:
             build/release-intro.md
       - name: Install build deps
         run: |
-          sudo apt install zsh tree jq cmake make gcc g++ musl-dev meson clang gcc-mingw-w64 g++-mingw-w64
+          sudo apt install zsh tree jq cmake make gcc g++ musl-dev meson clang gcc-mingw-w64 g++-mingw-w64 libreadline-dev
       - name: Build mimalloc
         run: make mimalloc
       - name: Build x86_64 with musl-system
@@ -400,7 +402,8 @@ jobs:
       - name: Clean for next build
         run: make clean
       - name: Build x86_64 shlib
-        run: make linux-meson-clang-release
+        run: |
+          make linux-meson-clang-release
       - name: Upload artifact linux-lib-amd64
         uses: actions/upload-artifact@v3
         with:
