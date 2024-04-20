@@ -296,6 +296,15 @@ int main(int argc, char **argv) {
 		zen_add_function(L, repl_flush, "flush");
 		zen_add_function(L, repl_read, "read");
 		zen_add_function(L, repl_write, "write");
+
+		if(sideload[0]!='\0') {
+			fprintf(stderr,"Side loading library: %s\n",sideload);
+			load_file(sidescript, fopen(sideload,"rb"));
+			zen_exec_script(Z, sidescript);
+			if(Z->exitcode!=0)
+				fprintf(stderr,"Side load exit code error: %u\n",Z->exitcode);
+		}
+
 		int res;
 		if(verbosity) fprintf(stderr, "Interactive console, press ctrl-d to quit.\n");
 		res = repl_loop(Z);
