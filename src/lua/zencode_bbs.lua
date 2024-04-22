@@ -395,7 +395,7 @@ end)
 
 --bbs.proof_gen(ciphersuite, pk, signature, header, ph, messages_octets, disclosed_indexes)
 When("create bbs shake proof of signature '' of messages '' with public key '' presentation header '' and disclosed indexes ''", function(sig, msg, pk, prh, dis_ind)
-    empty'bbs proof'
+    empty'bbs shake proof'
     local message_octets = have(msg)
     local float_indexes = have(dis_ind)
     local pubk = have(pk)
