@@ -413,22 +413,18 @@ int protect_exec_lua(lua_State *L) {
 
 int zen_exec_lua(zenroom_t *ZZ, const char *script) {
 	SAFE_EXEC;
-	int ret;
-	lua_State* L = (lua_State*)ZZ->lua;
-	zen_setenv(L,"CODE",(char*)script); // introspect code executed
-	lua_pushcfunction(ZZ->lua, &protect_exec_lua);
-	lua_pushstring(ZZ->lua, script);
-	int status = lua_pcall(ZZ->lua, 1,   1,  0);
-	if(status != LUA_OK) {
-		char *_err = (status == LUA_ERRRUN) ? "Runtime error at initialization" :
-			(status == LUA_ERRMEM) ? "Memory allocation error at initalization" :
-			(status == LUA_ERRERR) ? "Error handler fault at initalization" :
-			"Unknown error at initalization";
-		zerror(ZZ->lua, "%s: %s\n    %s", __func__, _err,
-		      lua_tostring(ZZ->lua, 1)); // lua's traceback string
-	} else {
+	lua_State *L = (lua_State*)ZZ->lua;
+	// introspection on code being executed
+	zen_setenv(L,"CODE",(char*)script);
+	int ret = luaL_dostring(L, script);
+	if(ret == SUCCESS) {
 		func(L, "Lua script successfully executed");
 		ZZ->exitcode = SUCCESS;
+        } else {
+		zerror(L, "Lua script error:");
+		zerror(L, "%s", lua_tostring(L, -1));
+		zerror(L, "Execution aborted");
+		ZZ->exitcode = ZZ->exitcode==SUCCESS ? ERR_GENERIC : ZZ->exitcode;
 	}
 	return ZZ->exitcode;
 }
