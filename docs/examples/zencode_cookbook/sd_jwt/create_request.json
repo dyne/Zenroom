@@ -1,43 +1,115 @@
 {
-    "supported_selective_disclosure":{
-        "authorization_endpoint":"http://issuer.example.org/authorize",
-        "authorization_response_iss_parameter_supported":true,
-        "claim_types_supported":["normal"],
-        "claims_parameter_supported":false,
-        "code_challenge_methods_supported":["S256"],
-        "credential_endpoint":"http://issuer.example.org/credentials",
-        "credential_issuer":"http://issuer.example.org",
-        "credentials_supported":[
+    "supported_selective_disclosure": {
+        "credential_issuer": "https://issuer1.zenswarm.forkbomb.eu/credential_issuer",
+        "credential_endpoint": "https://issuer1.zenswarm.forkbomb.eu/credential_issuer/credential",
+        "authorization_servers": [
+            "https://authz-server1.zenswarm.forkbomb.eu/authz_server"
+        ],
+        "display": [
             {
-                "credentialSubject":{
-                    "family_name":{"display":[{"locale":"en-US","name":"Family Name"}]},
-                    "given_name":{"display":[{"locale":"en-US","name":"Given Name"}]}
-                },
-                "cryptographic_binding_methods_supported":["did:jwk"],
-                "cryptographic_suites_supported":["ES256"],
-                "display":[
-                    {"background_color":"#000000",
-                    "locale":"en-US",
-                    "name":"IdentityCredential",
-                    "text_color":"#ffffff"}
-                ],
-                "format":"vc+sd-jwt",
-                "id":"ab8c936e-b9ab-4cf5-9862-c3a25bb82996",
-                "order":["given_name","family_name"],
-                "types":["VerifiableCredential","IdentityCredential"]
+                "name": "DIDroom_Issuer1",
+                "locale": "en-US"
             }
         ],
-        "grant_types_supported":["authorization_code","urn:ietf:params:oauth:grant-type:pre-authorized_code"],"id_token_signing_alg_values_supported":["ES256"],"issuer":"http://issuer.example.org","jwks_uri":"http://issuer.example.org/jwks","pushed_authorization_request_endpoint":"http://issuer.example.org/par","request_object_signing_alg_values_supported":["ES256"],"request_parameter_supported":true,"request_uri_parameter_supported":true,"response_modes_supported":["query"],"response_types_supported":["code"],"scopes_supported":["openid","IdentityCredential"],"subject_types_supported":["public"],"token_endpoint":"http://issuer.example.org/token",
-        "token_endpoint_auth_methods_supported":["none"]
+        "jwks": {
+            "keys": [
+                {
+                    "kid": "did:dyne:sandbox.genericissuer:GPgX3sS1nNp7fgLWvvTSw4jUaEDLuBTNq5eJhvkVD9ER#es256_public_key",
+                    "crv": "P-256",
+                    "alg": "ES256",
+                    "kty": "EC"
+                }
+            ]
+        },
+        "credential_configurations_supported": [
+            {
+                "format": "vc+sd-jwt",
+                "cryptographic_binding_methods_supported": [
+                    "jwk",
+                    "did:dyne:sandbox.signroom"
+                ],
+                "credential_signing_alg_values_supported": [
+                    "ES256"
+                ],
+                "proof_types_supported": {
+                    "jwt": {
+                        "proof_signing_alg_values_supported": [
+                            "ES256"
+                        ]
+                    }
+                },
+                "display": [
+                    {
+                        "name": "Above 18 identity",
+                        "locale": "en-US",
+                        "logo": {
+                            "url": "https://avatars.githubusercontent.com/u/481963",
+                            "alt_text": "Dyne.org Logo"
+                        },
+                        "background_color": "#12107c",
+                        "text_color": "#FFFFFF",
+                        "description": "You can use this credential to prove your identity as name and surname, to prove your date of birth and if your age is above 18 or not."
+                    }
+                ],
+                "credential_definition": {
+                    "type": [
+                        "Identity"
+                    ],
+                    "credentialSubject": {
+                        "given_name": {
+                            "mandatory": true,
+                            "display": [
+                                {
+                                    "name": "Current First Name",
+                                    "locale": "en-US"
+                                }
+                            ],
+                            "value_type": "string"
+                        },
+                        "family_name": {
+                            "mandatory": true,
+                            "display": [
+                                {
+                                    "name": "Current Family Name",
+                                    "locale": "en-US"
+                                }
+                            ],
+                            "value_type": "string"
+                        },
+                        "birth_date": {
+                            "mandatory": true,
+                            "display": [
+                                {
+                                    "name": "Date of Birth",
+                                    "locale": "en-US"
+                                }
+                            ],
+                            "value_type": "number"
+                        },
+                        "above_18": {
+                            "mandatory": true,
+                            "display": [
+                                {
+                                    "name": "Is above 18",
+                                    "locale": "en-US"
+                                }
+                            ],
+                            "value_type": "string"
+                        }
+                    }
+                }
+            }
+        ]
     },
-    
-    "object":{
-        "age":42,
-        "degree":"math",
-        "family_name":"Lippo",
-        "given_name":"Mimmo",
-        "iss":"http://example.org",
-        "sub":"user 42"
-        }, 
-    "id": "ab8c936e-b9ab-4cf5-9862-c3a25bb82996"
+    "object": {
+        "family_name": "Lippo",
+        "given_name": "Mimmo",
+        "birth_date": 640856826,
+        "above_18": true,
+        "iss": "http://example.org",
+        "sub": "user 42",
+        "iat": 1713859327,
+        "exp": 1903161721
+    },
+    "id": "Identity"
 }

@@ -1,67 +1,46 @@
 {
-    "signed_selective_disclosure": {
-        "disclosures": [
-          [
-            "SXIfLdi88UgmS8yQd-pISg",
-            "given_name",
-            "John"
-          ],
-          [
-            "djk3tB6tg-b9YreywNcWZA",
-            "family_name",
-            "Doe"
-          ],
-          [
-            "BtAfeH3MnnhxEsb5iffykw",
-            "email",
-            "johndoe@example.com"
-          ],
-          [
-            "ux1iQm3xqjOg8HybkyaOFQ",
-            "phone_number",
-            "+1-202-555-0101"
-          ],
-          [
-            "mN461iU9OjmED9eUWOLC3Q",
-            "phone_number_verified",
-            true
-          ],
-          [
-            "OrLGw1Iq6Y9QX-T9V0v5gQ",
-            "address",
-            {
-              "country": "US",
-              "locality": "Anytown",
-              "region": "Anystate",
-              "street_address": "123 Main St"
-            }
-          ],
-          [
-            "crgoJmpiHJD8t7oM3FhA_Q",
-            "birthdate",
-            "1940-01-01"
-          ]
+  "signed_selective_disclosure": {
+    "disclosures": [
+      [
+        "RLdC7X_9G2F1wWh5MV-3eg",
+        "given_name",
+        "Mimmo"
+      ],
+      [
+        "LKvfDcEeWUG7_C2MpxKfIg",
+        "family_name",
+        "Lippo"
+      ],
+      [
+        "9RZKoww0KRG2B3pifootyA",
+        "birth_date",
+        640856800
+      ],
+      [
+        "OuTKYvHV8Y0vYf2xey9X-Q",
+        "above_18",
+        true
+      ]
+    ],
+    "jwt": {
+      "header": {
+        "alg": "ES256",
+        "typ": "vc+sd-jwt"
+      },
+      "payload": {
+        "_sd": [
+          "M3RP6ySmblfFkv27XzNPmN5F6W_NsupnlpaAqeWPYho",
+          "72sgBajcha4T0FWC7an7DKxciCKXcyhmHCbt7XkTFRs",
+          "jL4iW-7zzPMc7Qjlh2Ct_RWFN0vPjacptJ8w-RHgR88",
+          "szIFS-AzE6PR7b0MsNVybDZ2-4cjiWduyzXFIN1S-70"
         ],
-        "jwt": {
-          "header": {
-            "alg": "ES256",
-            "typ": "JWT"
-          },
-          "payload": {
-            "_sd": [
-              "cTJ5M6ejWPSBGe17aB7P-3ZkiuUtV_iEaWZdNGluwqo",
-              "RFhdE3udH0Gva9WydmjL1jUM7W-4dA_eWclR0xZHSuE",
-              "zDO99vBzYsph-y7FpSNTG923nR4jbbHO0n1dsCzWjNA",
-              "xC36UWhgAXlWP7do45jGzJ9Z_h1C1YsW_LypG7nkDlY",
-              "LgXHYyBFlbIZm-4TM7_wrWuWHcfoEF3HhEBWZFuDYTE",
-              "W0isfL7tTKz0jxat6C_S_HqypMRcRJ4TC4W1K-68neY",
-              "xbBbiPCdkrEzHqXRt4QBDNlXu4ZfU1YPWjweBuKxMCE"
-            ],
-            "_sd_alg": "sha-256",
-            "iss": "http://example.org",
-            "sub": "user 42"
-          },
-          "signature": "bh8bcp+eD0Ffar2QGLLgF+tRhadBAT1xwD8w1j05rmro3faRLjeSyFvEOSXxsbNo7p0xJy0zn1k5Wx0KLe3MQw=="
-        }
-      }
+        "_sd_alg": "sha-256",
+        "exp": 1903161721,
+        "iat": 1713859327,
+        "iss": "http://example.org",
+        "sub": "user 42"
+      },
+      "signature": "hek_HnH0jb2wYimlJfZhqLYOD66tFScj-9CgbV1JlIYma5G5IhFYzmYIw6NqLo_htJF10kGItSkzbP2YRB0IYQ"
+    }
+  }
 }

@@ -1,16 +1,20 @@
 {
-    "selective_disclosure_request": {
-      "fields": [
-        "given_name",
-        "family_name"
-      ],
-      "object": {
-        "age": 42,
-        "degree": "math",
-        "family_name": "Lippo",
-        "given_name": "Mimmo",
-        "iss": "http://example.org",
-        "sub": "user 42"
-      }
+  "selective_disclosure_request": {
+    "fields": [
+      "given_name",
+      "family_name",
+      "birth_date",
+      "above_18"
+    ],
+    "object": {
+      "above_18": true,
+      "birth_date": 640856800,
+      "exp": 1903161721,
+      "family_name": "Lippo",
+      "given_name": "Mimmo",
+      "iat": 1713859327,
+      "iss": "http://example.org",
+      "sub": "user 42"
     }
+  }
 }

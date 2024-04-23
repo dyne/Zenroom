@@ -1,4 +1,4 @@
-Scenario 'sd_jwt'
+Scenario 'sd_jwt': create request
 
 Given I have 'supported_selective_disclosure'
 Given I have a 'string' named 'id'
