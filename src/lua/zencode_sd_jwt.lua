@@ -467,8 +467,12 @@ IfWhen("verify signed selective disclosure '' issued by '' is valid", function(o
 
     zencode_assert(os, 'Could not find os to check timestamps')
     local time_now = TIME.new(os.time())
-    zencode_assert(jwt.payload.iat < time_now, 'The iat claim is not valid')
-    zencode_assert(jwt.payload.exp > time_now, 'The exp claim is not valid')
+    if(jwt.payload.iat) then
+        zencode_assert(jwt.payload.iat < time_now, 'The iat claim is not valid')
+    end
+    if(jwt.payload.exp) then
+        zencode_assert(jwt.payload.exp > time_now, 'The exp claim is not valid')
+    end
     if(jwt.payload.nbf) then
         zencode_assert(jwt.payload.nbf < time_now, 'The nbf claim is not valid')
     end
