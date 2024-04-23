@@ -719,7 +719,7 @@ end:
 /*#######################################*/
 /*              ML-DSA-44                */
 /*#######################################*/
-static int ml-dsa-44-keypair(lua_State *L)   {
+static int ml_dsa_44_keypair(lua_State *L)   {
 /*************************************************
 * Name:        crypto_sign_keypair
 *
@@ -732,8 +732,11 @@ static int ml-dsa-44-keypair(lua_State *L)   {
 *
 * Returns 0 (success)
 **************************************************/
- END(1); }
-static int ml-dsa-44-signature(lua_State *L) {
+	BEGIN();
+//
+	END(1);
+}
+static int ml_dsa_44_signature(lua_State *L) {
 /*************************************************
 * Name:        crypto_sign_signature
 *
@@ -743,35 +746,17 @@ static int ml-dsa-44-signature(lua_State *L) {
 *              - size_t *siglen: pointer to output length of signature
 *              - uint8_t *m:     pointer to message to be signed
 *              - size_t mlen:    length of message
-*              - uint8_t *sk:    pointer to bit-packed secret key
+*              - uint8_t *sk:    pointer to bit_packed secret key
 *
 * Returns 0 (success)
 **************************************************/
  END(1); }
-static int ml-dsa-44-sign(lua_State *L)      {
-/*************************************************
-* Name:        crypto_sign
-*
-* Description: Compute signed message.
-*
-* Arguments:   - uint8_t *sm: pointer to output signed message (allocated
-*                             array with CRYPTO_BYTES + mlen bytes),
-*                             can be equal to m
-*              - size_t *smlen: pointer to output length of signed
-*                               message
-*              - const uint8_t *m: pointer to message to be signed
-*              - size_t mlen: length of message
-*              - const uint8_t *sk: pointer to bit-packed secret key
-*
-* Returns 0 (success)
-**************************************************/
- END(1); }
-static int ml-dsa-44-verify(lua_State *L)    {/*************************************************
+static int ml_dsa_44_verify(lua_State *L)    {/*************************************************
 * Name:        crypto_sign_verify
 *
 * Description: Verifies signature.
 *
-* Arguments:   - uint8_t *m: pointer to input signature
+* Arguments:   _ uint8_t *m: pointer to input signature
 *              - size_t siglen: length of signature
 *              - const uint8_t *m: pointer to message
 *              - size_t mlen: length of message
@@ -780,7 +765,7 @@ static int ml-dsa-44-verify(lua_State *L)    {/*********************************
 * Returns 0 if signature could be verified correctly and -1 otherwise
 **************************************************/
  END(1); }
-static int ml-dsa-44-open(lua_State *L)      {
+static int ml_dsa_44_open(lua_State *L)      {
 /*************************************************
 * Name:        crypto_sign_open
 *
