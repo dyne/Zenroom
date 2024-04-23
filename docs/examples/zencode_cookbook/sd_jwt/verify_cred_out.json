@@ -1,44 +1,47 @@
 {
-    "es256_public_key": "gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg==",
-    "signed_selective_disclosure": {
-      "disclosures": [
-        [
-          "XdjAYj-RY95-uyYMI8fR3w",
-          "given_name",
-          "John"
-        ],
-        [
-          "5-Y_kvJBo3ni_JNNUrFnIA",
-          "family_name",
-          "Doe"
-        ],
-        [
-          "VyJ47aH6-hysFuthAZJP-A",
-          "email",
-          "johndoe@example.com"
-        ]
+  "es256_public_key": "gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg==",
+  "signed_selective_disclosure": {
+    "disclosures": [
+      [
+        "RLdC7X_9G2F1wWh5MV-3eg",
+        "given_name",
+        "Mimmo"
       ],
-      "jwt": {
-        "header": {
-          "alg": "ES256",
-          "typ": "JWT"
-        },
-        "payload": {
-          "_sd": [
-            "t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY",
-            "W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc",
-            "PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8",
-            "wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ",
-            "qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM",
-            "mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY",
-            "nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo"
-          ],
-          "_sd_alg": "sha-256",
-          "iss": "http://example.org",
-          "sub": "user 42"
-        },
-        "signature": "i95SyUjPhs5/PQinx1cHsOHXwbDGlr11ONaXrk13vFLvSo8Dn3rtw7xvcmROsB6LX3q7wFaaFmE3m5t8xTPxOw=="
-      }
+      [
+        "LKvfDcEeWUG7_C2MpxKfIg",
+        "family_name",
+        "Lippo"
+      ],
+      [
+        "9RZKoww0KRG2B3pifootyA",
+        "birth_date",
+        640856800
+      ],
+      [
+        "OuTKYvHV8Y0vYf2xey9X-Q",
+        "above_18",
+        true
+      ]
+    ],
+    "jwt": {
+      "header": {
+        "alg": "ES256",
+        "typ": "vc+sd-jwt"
+      },
+      "payload": {
+        "_sd": [
+          "M3RP6ySmblfFkv27XzNPmN5F6W_NsupnlpaAqeWPYho",
+          "72sgBajcha4T0FWC7an7DKxciCKXcyhmHCbt7XkTFRs",
+          "jL4iW-7zzPMc7Qjlh2Ct_RWFN0vPjacptJ8w-RHgR88",
+          "szIFS-AzE6PR7b0MsNVybDZ2-4cjiWduyzXFIN1S-70"
+        ],
+        "_sd_alg": "sha-256",
+        "exp": 1903161721,
+        "iat": 1713859327,
+        "iss": "http://example.org",
+        "sub": "user 42"
+      },
+      "signature": "hek_HnH0jb2wYimlJfZhqLYOD66tFScj-9CgbV1JlIYma5G5IhFYzmYIw6NqLo_htJF10kGItSkzbP2YRB0IYQ"
     }
   }
-  
+}

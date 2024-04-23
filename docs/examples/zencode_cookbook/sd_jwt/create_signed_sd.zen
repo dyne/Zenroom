@@ -1,5 +1,5 @@
-Scenario 'sd_jwt'
-Scenario 'es256'
+Scenario 'sd_jwt': create sd-jwt
+Scenario 'es256': public key
 
 Given I am known as 'The Issuer'
 and I have my 'keyring'

@@ -1,11 +1,11 @@
-Scenario 'sd_jwt'
-Scenario 'es256'
+Scenario 'sd_jwt': verify presentation
+Scenario 'es256': public key
 
 Given I am known as 'The Issuer'
 Given I have my 'es256 public key'
 
-Given I have a 'signed selective disclosure'
+Given I have a 'decoded selective disclosure' named 'signed selective disclosure'
 
-When I verify signed selective disclosure 'selective_disclosure_presentation' issued by 'The Issuer' is valid
+When I verify signed selective disclosure 'signed_selective_disclosure' issued by 'The Issuer' is valid
 
 Then print data
