@@ -813,11 +813,11 @@ int luaopen_qp(lua_State *L) {
 		{"ntrup_enc", qp_sntrup_kem_enc},
 		{"ntrup_dec", qp_sntrup_kem_dec},
 		// ML-DSA-44
-		{"mldsa44_keypair",   ml-dsa-44-keypair},
-		{"mldsa44_signature", ml-dsa-44-signature},
-		{"mldsa44_sign",      ml-dsa-44-sign},
-		{"mldsa44_verify",    ml-dsa-44-verify},
-		{"mldsa44_open",      ml-dsa-44-open},
+		{"mldsa44_keypair",   ml_dsa_44_keypair},
+		{"mldsa44_signature", ml_dsa_44_signature},
+		{"mldsa44_sign",      ml_dsa_44_sign},
+		{"mldsa44_verify",    ml_dsa_44_verify},
+		{"mldsa44_open",      ml_dsa_44_open},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg qp_methods[] = {
