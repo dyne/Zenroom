@@ -80,14 +80,14 @@ extern int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_dec(uint8_t *ss, const uint8_t *ct
 /*
   Quantum proof ML-DSA-44 with pqcrystals dilithium2
 */
-#define pqcrystals_dilithium2_PUBLICKEYBYTES 1312
-#define pqcrystals_dilithium2_SECRETKEYBYTES 2560
-#define pqcrystals_dilithium2_BYTES 2420
-int pqcrystals_dilithium2_ref_keypair(uint8_t *pk, uint8_t *sk);
-int pqcrystals_dilithium2_ref_signature(uint8_t *sig, size_t *siglen, const uint8_t *m, size_t mlen, const uint8_t *sk);
-int pqcrystals_dilithium2_ref(uint8_t *sm, size_t *smlen, const uint8_t *m, size_t mlen, const uint8_t *sk);
-int pqcrystals_dilithium2_ref_verify(const uint8_t *sig, size_t siglen, const uint8_t *m, size_t mlen, const uint8_t *pk);
-int pqcrystals_dilithium2_ref_open(uint8_t *m, size_t *mlen, const uint8_t *sm, size_t smlen, const uint8_t *pk);
+#define pqcrystals_ml_dsa_44_ipd_PUBLICKEYBYTES 1312
+#define pqcrystals_ml_dsa_44_ipd_SECRETKEYBYTES 2560
+#define pqcrystals_ml_dsa_44_ipd_BYTES 2420
+int pqcrystals_ml_dsa_44_ipd_ref_keypair(uint8_t *pk, uint8_t *sk);
+int pqcrystals_ml_dsa_44_ipd_ref_signature(uint8_t *sig, size_t *siglen, const uint8_t *m, size_t mlen, const uint8_t *sk);
+int pqcrystals_ml_dsa_44_ipd_ref(uint8_t *sm, size_t *smlen, const uint8_t *m, size_t mlen, const uint8_t *sk);
+int pqcrystals_ml_dsa_44_ipd_ref_verify(const uint8_t *sig, size_t siglen, const uint8_t *m, size_t mlen, const uint8_t *pk);
+int pqcrystals_ml_dsa_44_ipd_ref_open(uint8_t *m, size_t *mlen, const uint8_t *sm, size_t smlen, const uint8_t *pk);
 
 
 
@@ -735,23 +735,23 @@ static int ml_dsa_44_keypair(lua_State *L)   {
 	BEGIN();
 	char *failed_msg = NULL;
 	lua_createtable(L, 0, 2);
-	octet *private = o_new(L, pqcrystals_dilithium2_SECRETKEYBYTES);
+	octet *private = o_new(L, pqcrystals_ml_dsa_44_ipd_SECRETKEYBYTES);
 	if(private == NULL) {
 		failed_msg = "Could not allocate private key";
 		goto end;
 	}
 	lua_setfield(L, -2, "private");
-	octet *public = o_new(L, pqcrystals_dilithium2_PUBLICKEYBYTES);
+	octet *public = o_new(L, pqcrystals_ml_dsa_44_ipd_PUBLICKEYBYTES);
 	if(public == NULL) {
 		failed_msg = "Could not allocate public key";
 		goto end;
 	}
 	lua_setfield(L, -2, "public");
 
-	pqcrystals_dilithium2_ref_keypair((unsigned char*)public->val,
+	pqcrystals_ml_dsa_44_ipd_ref_keypair((unsigned char*)public->val,
 						     (unsigned char*)private->val);
-	public->len = pqcrystals_dilithium2_PUBLICKEYBYTES;
-	private->len = pqcrystals_dilithium2_SECRETKEYBYTES;
+	public->len = pqcrystals_ml_dsa_44_ipd_PUBLICKEYBYTES;
+	private->len = pqcrystals_ml_dsa_44_ipd_SECRETKEYBYTES;
 
 end:
 	if(failed_msg) {
@@ -787,16 +787,16 @@ static int ml_dsa_44_signature(lua_State *L) {
 		goto end;
 	}
 
-	if(sk->len != pqcrystals_dilithium2_SECRETKEYBYTES) {
+	if(sk->len != pqcrystals_ml_dsa_44_ipd_SECRETKEYBYTES) {
 		failed_msg = "wrong secret key length";
 		goto end;
 	}
-	octet *sig = o_new(L, pqcrystals_dilithium2_BYTES);
+	octet *sig = o_new(L, pqcrystals_ml_dsa_44_ipd_BYTES);
 	if(sig == NULL) {
 		failed_msg = "failed to allocate space for signature";
 		goto end;
 	}
-	if(pqcrystals_dilithium2_ref_signature((unsigned char*)sig->val,
+	if(pqcrystals_ml_dsa_44_ipd_ref_signature((unsigned char*)sig->val,
 							  (size_t*)&sig->len,
 							  (unsigned char*)m->val, m->len,
 							  (unsigned char*)sk->val)
