@@ -733,7 +733,30 @@ static int ml_dsa_44_keypair(lua_State *L)   {
 * Returns 0 (success)
 **************************************************/
 	BEGIN();
-//
+	char *failed_msg = NULL;
+	lua_createtable(L, 0, 2);
+	octet *private = o_new(L, pqcrystals_dilithium2_SECRETKEYBYTES);
+	if(private == NULL) {
+		failed_msg = "Could not allocate private key";
+		goto end;
+	}
+	lua_setfield(L, -2, "private");
+	octet *public = o_new(L, pqcrystals_dilithium2_PUBLICKEYBYTES);
+	if(public == NULL) {
+		failed_msg = "Could not allocate public key";
+		goto end;
+	}
+	lua_setfield(L, -2, "public");
+
+	pqcrystals_dilithium2_ref_keypair((unsigned char*)public->val,
+						     (unsigned char*)private->val);
+	public->len = pqcrystals_dilithium2_PUBLICKEYBYTES;
+	private->len = pqcrystals_dilithium2_SECRETKEYBYTES;
+
+end:
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 static int ml_dsa_44_signature(lua_State *L) {
@@ -750,7 +773,46 @@ static int ml_dsa_44_signature(lua_State *L) {
 *
 * Returns 0 (success)
 **************************************************/
- END(1); }
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *sk = NULL, *m = NULL;
+	sk = o_arg(L, 1);
+	if(sk == NULL) {
+		failed_msg = "failed to allocate space for secret key";
+		goto end;
+	}
+	m = o_arg(L, 2);
+	if(m == NULL) {
+		failed_msg = "failed to allocate space for message";
+		goto end;
+	}
+
+	if(sk->len != pqcrystals_dilithium2_SECRETKEYBYTES) {
+		failed_msg = "wrong secret key length";
+		goto end;
+	}
+	octet *sig = o_new(L, pqcrystals_dilithium2_BYTES);
+	if(sig == NULL) {
+		failed_msg = "failed to allocate space for signature";
+		goto end;
+	}
+	if(pqcrystals_dilithium2_ref_signature((unsigned char*)sig->val,
+							  (size_t*)&sig->len,
+							  (unsigned char*)m->val, m->len,
+							  (unsigned char*)sk->val)
+	   && sig->len > 0) {
+		failed_msg = "error in the signature";
+		goto end;
+	}
+end:
+	o_free(L,m);
+	o_free(L,sk);
+
+	if(failed_msg != NULL) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
 static int ml_dsa_44_verify(lua_State *L)    {/*************************************************
 * Name:        crypto_sign_verify
 *
@@ -815,7 +877,7 @@ int luaopen_qp(lua_State *L) {
 		// ML-DSA-44
 		{"mldsa44_keypair",   ml_dsa_44_keypair},
 		{"mldsa44_signature", ml_dsa_44_signature},
-		{"mldsa44_sign",      ml_dsa_44_sign},
+		//{"mldsa44_sign",      ml_dsa_44_sign},
 		{"mldsa44_verify",    ml_dsa_44_verify},
 		{"mldsa44_open",      ml_dsa_44_open},
 		{NULL,NULL}
