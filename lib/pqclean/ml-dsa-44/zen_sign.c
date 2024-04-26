@@ -1,4 +1,6 @@
 #include <stdint.h>
+#include <string.h>
+
 #include "params.h"
 #include "sign.h"
 #include "packing.h"
