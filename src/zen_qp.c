@@ -813,6 +813,67 @@ end:
 	}
 	END(1);
 }
+
+// generate an octet which is signature+message
+static int ml_dsa_44_sign(lua_State *L) {
+/*************************************************
+* Name:        crypto_sign
+*
+* Description: Compute signed message.
+*
+* Arguments:   - uint8_t *sm: pointer to output signed message (allocated
+*                             array with CRYPTO_BYTES + mlen bytes),
+*                             can be equal to m
+*              - size_t *smlen: pointer to output length of signed
+*                               message
+*              - const uint8_t *m: pointer to message to be signed
+*              - size_t mlen: length of message
+*              - const uint8_t *sk: pointer to bit-packed secret key
+*
+* Returns 0 (success)
+**************************************************/
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *sk = NULL, *m = NULL;
+	sk = o_arg(L, 1);
+	if(sk == NULL) {
+		failed_msg = "failed to allocate space for secret key";
+		goto end;
+	}
+	m = o_arg(L, 2);
+	if(m == NULL) {
+		failed_msg = "failed to allocate space for message";
+		goto end;
+	}
+
+	if(sk->len != pqcrystals_ml_dsa_44_ipd_SECRETKEYBYTES) {
+		failed_msg = "invalid size for secret key";
+		goto end;
+	}
+	octet *sig = o_new(L, pqcrystals_ml_dsa_44_ipd_BYTES+m->len);
+	if(sig == NULL) {
+		failed_msg = "could not allocate space for signature";
+		goto end;
+	}
+
+	if(pqcrystals_ml_dsa_44_ipd_ref((unsigned char*)sig->val,
+						(size_t*)&sig->len,
+						(unsigned char*)m->val, m->len,
+						(unsigned char*)sk->val)
+	   && sig->len > 0) {
+		failed_msg = "error in the signature";
+		goto end;
+	}
+
+end:
+	o_free(L,m);
+	o_free(L,sk);
+	if(failed_msg != NULL) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
 static int ml_dsa_44_verify(lua_State *L)    {/*************************************************
 * Name:        crypto_sign_verify
 *
@@ -826,7 +887,45 @@ static int ml_dsa_44_verify(lua_State *L)    {/*********************************
 *
 * Returns 0 if signature could be verified correctly and -1 otherwise
 **************************************************/
- END(1); }
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *pk = NULL, *sig = NULL, *m = NULL;
+	pk = o_arg(L, 1);
+	if(pk == NULL) {
+		failed_msg = "Could not allocate space for public key";
+		goto end;
+	}
+	sig = o_arg(L, 2);
+	if(sig == NULL) {
+		failed_msg = "Could not allocate space for signature";
+		goto end;
+	}
+	m = o_arg(L, 3);
+	if(m == NULL) {
+		failed_msg = "Could not allocate space for message";
+		goto end;
+	}
+
+	if(pk->len != pqcrystals_ml_dsa_44_ipd_PUBLICKEYBYTES) {
+		failed_msg = "invalid size for public key";
+		goto end;
+	}
+
+	int result = pqcrystals_ml_dsa_44_ipd_ref_verify((unsigned char*)sig->val,
+								 (size_t)sig->len,
+								 (unsigned char*)m->val, m->len,
+								 (unsigned char*)pk->val);
+	lua_pushboolean(L, result == 0);
+end:
+	o_free(L, m);
+	o_free(L, sig);
+	o_free(L, pk);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
 static int ml_dsa_44_open(lua_State *L)      {
 /*************************************************
 * Name:        crypto_sign_open
@@ -877,7 +976,7 @@ int luaopen_qp(lua_State *L) {
 		// ML-DSA-44
 		{"mldsa44_keypair",   ml_dsa_44_keypair},
 		{"mldsa44_signature", ml_dsa_44_signature},
-		//{"mldsa44_sign",      ml_dsa_44_sign},
+		{"mldsa44_sign",      ml_dsa_44_sign},
 		{"mldsa44_verify",    ml_dsa_44_verify},
 		{"mldsa44_open",      ml_dsa_44_open},
 		{NULL,NULL}
