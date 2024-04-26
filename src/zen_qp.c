@@ -26,6 +26,7 @@
 #include <zen_memory.h>
 #include <lua_functions.h>
 #include <zen_octet.h>
+#include <zen_error.h>
 
 /*
   Quantum proof dilithium digital signature
@@ -84,10 +85,8 @@ extern int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_dec(uint8_t *ss, const uint8_t *ct
 #define pqcrystals_ml_dsa_44_ipd_SECRETKEYBYTES 2560
 #define pqcrystals_ml_dsa_44_ipd_BYTES 2420
 extern int pqcrystals_ml_dsa_44_ipd_ref_keypair(uint8_t *pk, uint8_t *sk);
-extern int pqcrystals_ml_dsa_44_ipd_ref_signature(uint8_t *sig, size_t *siglen, const uint8_t *m, size_t mlen, const uint8_t *sk);
-extern int pqcrystals_ml_dsa_44_ipd_ref(uint8_t *sm, size_t *smlen, const uint8_t *m, size_t mlen, const uint8_t *sk);
+extern int pqcrystals_ml_dsa_44_ipd_zen_signature(uint8_t *sig, size_t *siglen, const uint8_t *m, size_t mlen, const uint8_t *sk, const uint8_t *randbytes);
 extern int pqcrystals_ml_dsa_44_ipd_ref_verify(const uint8_t *sig, size_t siglen, const uint8_t *m, size_t mlen, const uint8_t *pk);
-extern int pqcrystals_ml_dsa_44_ipd_ref_open(uint8_t *m, size_t *mlen, const uint8_t *sm, size_t smlen, const uint8_t *pk);
 
 
 
@@ -774,6 +773,7 @@ static int ml_dsa_44_signature(lua_State *L) {
 * Returns 0 (success)
 **************************************************/
 	BEGIN();
+	uint8_t randbytes[32];
 	char *failed_msg = NULL;
 	octet *sk = NULL, *m = NULL;
 	sk = o_arg(L, 1);
@@ -796,10 +796,14 @@ static int ml_dsa_44_signature(lua_State *L) {
 		failed_msg = "failed to allocate space for signature";
 		goto end;
 	}
-	if(pqcrystals_ml_dsa_44_ipd_ref_signature((unsigned char*)sig->val,
-							  (size_t*)&sig->len,
-							  (unsigned char*)m->val, m->len,
-							  (unsigned char*)sk->val)
+	Z(L);
+	for(uint8_t i=0;i<32;i++) randbytes[i] = RAND_byte(Z->random_generator);
+	if(pqcrystals_ml_dsa_44_ipd_zen_signature
+	   ((unsigned char*)sig->val,
+	    (size_t*)&sig->len,
+	    (unsigned char*)m->val, m->len,
+	    (unsigned char*)sk->val,
+	    randbytes)
 	   && sig->len > 0) {
 		failed_msg = "error in the signature";
 		goto end;
@@ -808,66 +812,6 @@ end:
 	o_free(L,m);
 	o_free(L,sk);
 
-	if(failed_msg != NULL) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-// generate an octet which is signature+message
-static int ml_dsa_44_sign(lua_State *L) {
-/*************************************************
-* Name:        crypto_sign
-*
-* Description: Compute signed message.
-*
-* Arguments:   - uint8_t *sm: pointer to output signed message (allocated
-*                             array with CRYPTO_BYTES + mlen bytes),
-*                             can be equal to m
-*              - size_t *smlen: pointer to output length of signed
-*                               message
-*              - const uint8_t *m: pointer to message to be signed
-*              - size_t mlen: length of message
-*              - const uint8_t *sk: pointer to bit-packed secret key
-*
-* Returns 0 (success)
-**************************************************/
-	BEGIN();
-	char *failed_msg = NULL;
-	octet *sk = NULL, *m = NULL;
-	sk = o_arg(L, 1);
-	if(sk == NULL) {
-		failed_msg = "failed to allocate space for secret key";
-		goto end;
-	}
-	m = o_arg(L, 2);
-	if(m == NULL) {
-		failed_msg = "failed to allocate space for message";
-		goto end;
-	}
-
-	if(sk->len != pqcrystals_ml_dsa_44_ipd_SECRETKEYBYTES) {
-		failed_msg = "invalid size for secret key";
-		goto end;
-	}
-	octet *sig = o_new(L, pqcrystals_ml_dsa_44_ipd_BYTES+m->len);
-	if(sig == NULL) {
-		failed_msg = "could not allocate space for signature";
-		goto end;
-	}
-
-	if(pqcrystals_ml_dsa_44_ipd_ref((unsigned char*)sig->val,
-						(size_t*)&sig->len,
-						(unsigned char*)m->val, m->len,
-						(unsigned char*)sk->val)
-	   && sig->len > 0) {
-		failed_msg = "error in the signature";
-		goto end;
-	}
-
-end:
-	o_free(L,m);
-	o_free(L,sk);
 	if(failed_msg != NULL) {
 		THROW(failed_msg);
 	}
@@ -926,24 +870,6 @@ end:
 	END(1);
 }
 
-static int ml_dsa_44_open(lua_State *L)      {
-/*************************************************
-* Name:        crypto_sign_open
-*
-* Description: Verify signed message.
-*
-* Arguments:   - uint8_t *m: pointer to output message (allocated
-*                            array with smlen bytes), can be equal to sm
-*              - size_t *mlen: pointer to output length of message
-*              - const uint8_t *sm: pointer to signed message
-*              - size_t smlen: length of signed message
-*              - const uint8_t *pk: pointer to bit-packed public key
-*
-* Returns 0 if signed message could be verified correctly and -1 otherwise
-**************************************************/
- END(1); }
-
-
 int luaopen_qp(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg qp_class[] = {
@@ -976,9 +902,7 @@ int luaopen_qp(lua_State *L) {
 		// ML-DSA-44
 		{"mldsa44_keypair",   ml_dsa_44_keypair},
 		{"mldsa44_signature", ml_dsa_44_signature},
-		{"mldsa44_sign",      ml_dsa_44_sign},
 		{"mldsa44_verify",    ml_dsa_44_verify},
-		{"mldsa44_open",      ml_dsa_44_open},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg qp_methods[] = {
