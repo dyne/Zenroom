@@ -9,7 +9,7 @@ KIBER512=kyber512/cbd.o kyber512/indcpa.o kyber512/kem.o kyber512/ntt.o kyber512
 # LIB=libdilithium2_clean.a
 DILITHIUM2=dilithium2/ntt.o dilithium2/packing.o dilithium2/poly.o dilithium2/polyvec.o dilithium2/reduce.o dilithium2/rounding.o dilithium2/sign.o dilithium2/symmetric-shake.o
 
-ML_DSA_44=ml-dsa-44/ntt.o ml-dsa-44/poly.o ml-dsa-44/reduce.o ml-dsa-44/sign.o ml-dsa-44/packing.o ml-dsa-44/polyvec.o ml-dsa-44/rounding.o ml-dsa-44/symmetric-shake.o
+ML_DSA_44=ml-dsa-44/ntt.o ml-dsa-44/poly.o ml-dsa-44/reduce.o ml-dsa-44/sign.o ml-dsa-44/packing.o ml-dsa-44/polyvec.o ml-dsa-44/rounding.o ml-dsa-44/symmetric-shake.o ml-dsa-44/zen_sign.o
 
 # LIB=libsntrup761_clean.a
 SNTRUP761=sntrup761/crypto_core_inv3sntrup761.o sntrup761/crypto_core_invsntrup761.o sntrup761/crypto_core_mult3sntrup761.o sntrup761/crypto_core_multsntrup761.o sntrup761/crypto_core_scale3sntrup761.o sntrup761/crypto_core_weightsntrup761.o sntrup761/crypto_core_wforcesntrup761.o sntrup761/crypto_decode_761x1531.o sntrup761/crypto_decode_761x3.o sntrup761/crypto_decode_761x4591.o sntrup761/crypto_decode_761xint16.o sntrup761/crypto_decode_761xint32.o sntrup761/crypto_encode_761x1531.o sntrup761/crypto_encode_761x1531round.o sntrup761/crypto_encode_761x3.o sntrup761/crypto_encode_761x4591.o sntrup761/crypto_encode_761xfreeze3.o sntrup761/crypto_encode_761xint16.o sntrup761/crypto_encode_int16.o sntrup761/crypto_sort_int32.o sntrup761/crypto_sort_uint32.o sntrup761/crypto_verify_1039.o sntrup761/kem.o
