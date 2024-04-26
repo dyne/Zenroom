@@ -15,7 +15,7 @@ It also compiles to a Windows 64-bit native and fully static executable. At last
 <!-- tabs:start -->
 #### **Devuan / Debian / Ubuntu**
 ```bash
-apt-get install -y git build-essential cmake zsh xxd
+apt-get install -y git build-essential cmake zsh xxd libreadline-dev
 ```
 <!-- tabs:end -->
 
