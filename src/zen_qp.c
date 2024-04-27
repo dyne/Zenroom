@@ -84,7 +84,7 @@ extern int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_dec(uint8_t *ss, const uint8_t *ct
 #define pqcrystals_ml_dsa_44_ipd_PUBLICKEYBYTES 1312
 #define pqcrystals_ml_dsa_44_ipd_SECRETKEYBYTES 2560
 #define pqcrystals_ml_dsa_44_ipd_BYTES 2420
-extern int pqcrystals_ml_dsa_44_ipd_ref_keypair(uint8_t *pk, uint8_t *sk);
+extern int pqcrystals_ml_dsa_44_ipd_zen_keypair(uint8_t *pk, uint8_t *sk, const uint8_t *randbytes);
 extern int pqcrystals_ml_dsa_44_ipd_zen_signature(uint8_t *sig, size_t *siglen, const uint8_t *m, size_t mlen, const uint8_t *sk, const uint8_t *randbytes);
 extern int pqcrystals_ml_dsa_44_ipd_ref_verify(const uint8_t *sig, size_t siglen, const uint8_t *m, size_t mlen, const uint8_t *pk);
 
@@ -732,6 +732,7 @@ static int ml_dsa_44_keypair(lua_State *L)   {
 * Returns 0 (success)
 **************************************************/
 	BEGIN();
+	uint8_t randbytes[32];
 	char *failed_msg = NULL;
 	lua_createtable(L, 0, 2);
 	octet *private = o_new(L, pqcrystals_ml_dsa_44_ipd_SECRETKEYBYTES);
@@ -746,9 +747,10 @@ static int ml_dsa_44_keypair(lua_State *L)   {
 		goto end;
 	}
 	lua_setfield(L, -2, "public");
-
-	pqcrystals_ml_dsa_44_ipd_ref_keypair((unsigned char*)public->val,
-						     (unsigned char*)private->val);
+	Z(L);
+	for(uint8_t i=0;i<32;i++) randbytes[i] = RAND_byte(Z->random_generator);
+	pqcrystals_ml_dsa_44_ipd_zen_keypair((unsigned char*)public->val,
+						     (unsigned char*)private->val, randbytes);
 	public->len = pqcrystals_ml_dsa_44_ipd_PUBLICKEYBYTES;
 	private->len = pqcrystals_ml_dsa_44_ipd_SECRETKEYBYTES;
 
