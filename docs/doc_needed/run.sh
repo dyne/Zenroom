@@ -6,7 +6,7 @@
 count=0 #count the number of scenarios
 echo -n "loading statements: ..." 
 for i in `ls ../../src/lua/zencode_*`; do
-    ../../src/zenroom -D `echo $i | cut -d _ -f 2 | cut -d . -f 1`  2>/dev/null \
+    ../../src/zenroom -D `echo $i | cut -d _ -f 2- | cut -d . -f 1`  2>/dev/null \
 	| jq .  > temp.json;
     count=$((count+1))
     echo >> introspection.txt
@@ -30,11 +30,11 @@ for i in ../_media/examples/zencode_cookbook/**/*.zen; do
 	| sed 's/^[ \t]*//' \
 	| grep "^Given\|^given\|^If\|^if\|^When\|^when\|^Then\|^then\|^And\|^and" >> documented.txt
 done
-for i in ../_media/examples/zencode_cookbook/*.zen; do
-    cat $i \
-	| sed 's/^[ \t]*//' \
-	| grep "^Given\|^given\|^If\|^if\|^When\|^when\|^Then\|^then\|^And\|^and" >> documented.txt
-done
+#for i in ../_media/examples/zencode_cookbook/*.zen; do
+#    cat $i \
+#	| sed 's/^[ \t]*//' \
+#	| grep "^Given\|^given\|^If\|^if\|^When\|^when\|^Then\|^then\|^And\|^and" >> documented.txt
+#done
 
 echo
 echo "-----------------------------------------------"
