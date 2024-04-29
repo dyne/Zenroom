@@ -25,7 +25,7 @@ echo
 
 # taking all the documented statements till now
 echo -n "loading documented statements: ... "
-for i in ../_media/examples/zencode_cookbook/**/*.zen; do
+for i in `find ../_media/examples/zencode_cookbook/ -name "*.zen" -type f`; do
     cat $i \
 	| sed 's/^[ \t]*//' \
 	| grep "^Given\|^given\|^If\|^if\|^When\|^when\|^Then\|^then\|^And\|^and" >> documented.txt
