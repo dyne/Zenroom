@@ -340,7 +340,7 @@ jobs:
     if: ${{ needs.semantic-release.outputs.release == 'True' }}
     runs-on: ubuntu-latest
     env:
-      EM_VERSION: 3.1.26
+      EM_VERSION: 3.1.58
     defaults:
       run:
         working-directory: bindings/javascript
@@ -351,7 +351,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16.x
-      - uses: mymindstorm/setup-emsdk@v12
+      - uses: mymindstorm/setup-emsdk@v14
         with:
           version: ${{ env.EM_VERSION }}
       - run: sudo apt-get update; sudo apt-get install zsh meson ninja-build
