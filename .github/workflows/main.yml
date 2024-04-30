@@ -350,7 +350,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v3
         with:
-          node-version: 16.x
+          node-version: 20.x
       - uses: mymindstorm/setup-emsdk@v14
         with:
           version: ${{ env.EM_VERSION }}
