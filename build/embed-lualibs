@@ -38,6 +38,10 @@ libs=`find src/lua -type f -name '*.lua'`
 typeset -A emptyarray=()
 extarray=()
 c=0
+[ -r luac45 ] || {
+	curl -Ls -o luac54 https://github.com/dyne/luabinaries/releases/latest/download/luac54
+	chmod +x luac54
+}
 for i in ${(f)libs}; do
     p=`basename $i`
     n=${p[(ws:.:)1]}
@@ -45,8 +49,6 @@ for i in ${(f)libs}; do
     print "+ $i $opts"
 	tmp=`mktemp -d`
 	if [[ "$opts" = "compile" ]]; then
-		curl -Ls -o luac54 https://github.com/dyne/luabinaries/releases/latest/download/luac54
-		chmod +x luac54
 		./luac54 -o ${tmp}/${n} $i
 	else
 		cp $i ${tmp}/${n}
