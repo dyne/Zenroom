@@ -1,3 +1,4 @@
+const ITERATIONS = 300
 import bench from 'nanobench';
 
 
@@ -94,11 +95,9 @@ const signverify = async () => {
   verify;
 }
 
-bench('sign and verify 1000 times', (b) => {
+bench('sign and verify '+ITERATIONS+' times', (b) => {
   b.start();
-
-  // TODO: with more than 200 iteration wasm goes out of memory
-  for(let i=0; i<100; i++) {
+  for(let i=0; i<ITERATIONS; i++) {
     signverify();
   }
   b.end();
