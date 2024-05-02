@@ -3,6 +3,9 @@
 
 # {{{ DEFAULTS
 
+JS_INIT_MEM := 8MB
+JS_MAX_MEM := 256MB
+
 pwd := $(shell pwd)
 mil := ${pwd}/build/milagro
 website := ${pwd}/docs
@@ -219,7 +222,7 @@ system := Javascript
 ld_emsdk_settings := -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
 ld_emsdk_settings += -sMODULARIZE=1	-sSINGLE_FILE=1 --embed-file lua@/
 ld_emsdk_settings += -sMALLOC=dlmalloc --no-heap-copy -sALLOW_MEMORY_GROWTH=1
-ld_emsdk_settings += -sINITIAL_MEMORY=4MB -sMAXIMUM_MEMORY=64MB
+ld_emsdk_settings += -sINITIAL_MEMORY=${JS_INIT_MEM} -sMAXIMUM_MEMORY=${JS_MAX_MEM}
 ld_emsdk_settings += -sINCOMING_MODULE_JS_API=print,printErr -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zencode_exec\",\"_zenroom_hash_init\",\"_zenroom_hash_update\",\"_zenroom_hash_final\",\"_zencode_valid_input\"]'" -s "EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'"
 ld_emsdk_optimizations := -O3 -sSTRICT -flto -sUSE_SDL=0 -sEVAL_CTORS=1
 cc_emsdk_settings := -DARCH_WASM -D'ARCH=\"WASM\"'

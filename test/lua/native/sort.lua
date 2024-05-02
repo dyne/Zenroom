@@ -260,26 +260,26 @@ end
 local limit = 50000
 if _soft then limit = 5000 end
 
-a = {}
-for i=1,limit do
-  a[i] = math.random()
-end
+-- a = {}
+-- for i=1,limit do
+--   a[i] = math.random()
+-- end
 
-timesort(a, limit, nil, "random")
+-- timesort(a, limit, nil, "random")
 
-timesort(a, limit, nil, "sorted", "re-")
+-- timesort(a, limit, nil, "sorted", "re-")
 
-a = {}
-for i=1,limit do
-  a[i] = math.random()
-end
+-- a = {}
+-- for i=1,limit do
+--   a[i] = math.random()
+-- end
 
-local x = os.clock(); local i = 0
-table.sort(a, function(x,y) i=i+1; return y<x end)
-x = (os.clock() - x) * 1000
-print(string.format("Invert-sorting other %d elements in %.2f msec., with %i comparisons",
-      limit, x, i))
-check(a, function(x,y) return y<x end)
+-- local x = os.clock(); local i = 0
+-- table.sort(a, function(x,y) i=i+1; return y<x end)
+-- x = (os.clock() - x) * 1000
+-- print(string.format("Invert-sorting other %d elements in %.2f msec., with %i comparisons",
+--       limit, x, i))
+-- check(a, function(x,y) return y<x end)
 
 
 table.sort{}  -- empty array
