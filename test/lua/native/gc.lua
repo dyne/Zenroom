@@ -434,7 +434,7 @@ else
 end
 
 
--- __gc x weak tables
+print'__gc x weak tables'
 local u = setmetatable({}, {__gc = true})
 -- __gc metamethod should be collected before running
 setmetatable(getmetatable(u), {__mode = "v"})
@@ -453,32 +453,34 @@ u, m = nil
 collectgarbage()
 assert(m==10)
 
-do   -- tests for string keys in weak tables
-  collectgarbage(); collectgarbage()
-  local m = collectgarbage("count")         -- current memory
-  local a = setmetatable({}, {__mode = "kv"})
-  a[string.rep("a", 2^22)] = 25   -- long string key -> number value
-  a[string.rep("b", 2^22)] = {}   -- long string key -> colectable value
-  a[{}] = 14                     -- colectable key
-  assert(collectgarbage("count") > m + 2^13)    -- 2^13 == 2 * 2^22 in KB
-  collectgarbage()
-  assert(collectgarbage("count") >= m + 2^12 and
-        collectgarbage("count") < m + 2^13)    -- one key was collected
-  local k, v = next(a)   -- string key with number value preserved
-  assert(k == string.rep("a", 2^22) and v == 25)
-  assert(next(a, k) == nil)  -- everything else cleared
-  assert(a[string.rep("b", 2^22)] == undef)
-  a[k] = undef        -- erase this last entry
-  k = nil
-  collectgarbage()
-  assert(next(a) == nil)
-  -- make sure will not try to compare with dead key
-  assert(a[string.rep("b", 100)] == undef)
-  assert(collectgarbage("count") <= m + 1)   -- eveything collected
-end
+-- deactivate to respect memory limit
+-- print'tests for string keys in weak tables'
+-- do
+--   collectgarbage(); collectgarbage()
+--   local m = collectgarbage("count")         -- current memory
+--   local a = setmetatable({}, {__mode = "kv"})
+--   a[string.rep("a", 2^22)] = 25   -- long string key -> number value
+--   a[string.rep("b", 2^22)] = {}   -- long string key -> colectable value
+--   a[{}] = 14                     -- colectable key
+--   assert(collectgarbage("count") > m + 2^13)    -- 2^13 == 2 * 2^22 in KB
+--   collectgarbage()
+--   assert(collectgarbage("count") >= m + 2^12 and
+--         collectgarbage("count") < m + 2^13)    -- one key was collected
+--   local k, v = next(a)   -- string key with number value preserved
+--   assert(k == string.rep("a", 2^22) and v == 25)
+--   assert(next(a, k) == nil)  -- everything else cleared
+--   assert(a[string.rep("b", 2^22)] == undef)
+--   a[k] = undef        -- erase this last entry
+--   k = nil
+--   collectgarbage()
+--   assert(next(a) == nil)
+--   -- make sure will not try to compare with dead key
+--   assert(a[string.rep("b", 100)] == undef)
+--   assert(collectgarbage("count") <= m + 1)   -- eveything collected
+-- end
 
 
--- errors during collection
+print'errors during collection'
 if T then
   warn("@store")
   u = setmetatable({}, {__gc = function () error "@expected error" end})

@@ -51,8 +51,13 @@ src/zen_big_factory.c:
 
 apply-patches: src/zen_ecdh_factory.c src/zen_ecp_factory.c src/zen_big_factory.c
 
-# build targets for javascript (emscripten)
-include ${pwd}/build/javascript.mk
+# build target for javascript (emscripten)
+javascript: ${BUILDS}
+	CC="${gcc}" AR="${ar}" CFLAGS="${cflags}" \
+	LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	make -C src js
+	@mkdir -p build/npm
+	@cp -v src/zenroom.js      build/npm/
 
 # build targets for windows (mingw32 cross compile on Linux)
 include ${pwd}/build/windows.mk

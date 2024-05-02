@@ -216,11 +216,17 @@ ar := ${EMSCRIPTEN}/emar
 ld := ${gcc}
 ranlib := ${EMSCRIPTEN}/emranlib
 system := Javascript
-cc_emsdk_optimizations := -sSTRICT -flto -fno-rtti -fno-exceptions
-ld_emsdk_optimizations := -sSTRICT -flto -sUSE_SDL=0 -sEVAL_CTORS=1
+ld_emsdk_settings := -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
+ld_emsdk_settings += -sMODULARIZE=1	-sSINGLE_FILE=1 --embed-file lua@/
+ld_emsdk_settings += -sMALLOC=dlmalloc --no-heap-copy -sALLOW_MEMORY_GROWTH=1
+ld_emsdk_settings += -sINITIAL_MEMORY=4MB -sMAXIMUM_MEMORY=64MB
+ld_emsdk_settings += -sINCOMING_MODULE_JS_API=print,printErr -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zencode_exec\",\"_zenroom_hash_init\",\"_zenroom_hash_update\",\"_zenroom_hash_final\",\"_zencode_valid_input\"]'" -s "EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'"
+ld_emsdk_optimizations := -O3 -sSTRICT -flto -sUSE_SDL=0 -sEVAL_CTORS=1
+cc_emsdk_settings := -DARCH_WASM -D'ARCH=\"WASM\"'
+cc_emsdk_optimizations := -O3 -sSTRICT -flto -fno-rtti -fno-exceptions
 # lua_embed_opts := "compile"
-ldflags := -s MALLOC=dlmalloc -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zencode_exec\",\"_zenroom_hash_init\",\"_zenroom_hash_update\",\"_zenroom_hash_final\",\"_zencode_valid_input\"]'" -sINCOMING_MODULE_JS_API=print,printErr -s "EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -lm ${ld_emsdk_optimizations}
-cflags := -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY ${defines} ${cc_emsdk_optimizations}
+ldflags := -lm ${ld_emsdk_optimizations} ${ld_emsdk_settings}
+cflags := ${cc_emsdk_settings} ${defines} ${cc_emsdk_optimizations}
 endif
 
 ifneq (,$(findstring esp32,$(MAKECMDGOALS)))
