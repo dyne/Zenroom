@@ -74,3 +74,9 @@ print''
 print( 'Total Zencode statements: '..#statements)
 print( 'Total unique word tokens: '..table_size(tokens))
 print''
+
+SPELL.model = tokens
+assert( SPELL:correct('crate') == 'create' )
+assert( SPELL:correct('cruute') == 'create' )
+assert( SPELL:correct('frr') == 'for' )
+assert( SPELL:correct('uerfy') == 'verify' )
