@@ -30,3 +30,19 @@ assert(BIG.from_decimal(num):decimal() == num)
 
 local num = "4590989214817463456238493812468796952385932489143279876421643219463"
 assert(BIG.from_decimal(num):decimal() == num)
+
+-- make sure large integers are well converted
+-- https://github.com/dyne/Zenroom/issues/857
+
+local large = 2^25
+-- print('large integer 2^25: '..large)
+assert(O.from_number(large) == O.from_number(2^25))
+assert(O.from_number(large-1) == O.from_number(2^25-1))
+assert(O.from_number(large-2) == O.from_number(2^25-2))
+assert(O.from_number(large-3) == O.from_number(2^25-3))
+
+assert(BIG.new(large) == BIG.new(2^25))
+assert(BIG.new(large-1) == BIG.new(2^25-1))
+assert(BIG.new(large-2) == BIG.new(2^25-2))
+assert(BIG.new(large-3) == BIG.new(2^25-3))
+assert(BIG.new(large) == BIG.new(BIG.new(large):decimal()))

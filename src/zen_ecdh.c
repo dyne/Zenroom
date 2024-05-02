@@ -452,7 +452,7 @@ static int ecdh_dsa_sign_det(lua_State *L) {
 	}
 	
 	int max_size = 0;
-	lua_Number n = lua_tointegerx(L, 3, &max_size);
+	lua_Integer n = lua_tointegerx(L, 3, &max_size);
 	if(max_size == 0) {
 		failed_msg = "invalid size zero for material to sign";
 		goto end;
@@ -508,7 +508,7 @@ static int ecdh_dsa_sign_det_hashed(lua_State *L) {
 
 	int max_size;
 	int parity;
-	lua_Number n = lua_tointegerx(L, 3, &max_size);
+	lua_Integer n = lua_tointegerx(L, 3, &max_size);
 	if(max_size==0) {
 		failed_msg = "missing 3rd argument: byte size of octet to sign";
 		goto end;
@@ -577,7 +577,7 @@ static int ecdh_dsa_sign_hashed(lua_State *L) {
 	// pre-calculated vectors.
 	int max_size;
 	int parity;
-	lua_Number n = lua_tointegerx(L, 3, &max_size);
+	lua_Integer n = lua_tointegerx(L, 3, &max_size);
 	if(max_size==0) {
 		failed_msg = "missing 3rd argument: byte size of octet to sign";
 		goto end;
@@ -755,7 +755,7 @@ static int ecdh_dsa_verify_det(lua_State *L) {
 		goto end;
 	}
 	int max_size = 0;
-	lua_Number n = lua_tointegerx(L, 4, &max_size);
+	lua_Integer n = lua_tointegerx(L, 4, &max_size);
 	if(max_size == 0) {
 		failed_msg = "invalid size zero for material to sign";
 		goto end;
@@ -814,7 +814,7 @@ static int ecdh_dsa_verify_hashed(lua_State *L) {
 		goto end;
 	}
 	int max_size = 0;
-	lua_Number n = lua_tointegerx(L, 4, &max_size);
+	lua_Integer n = lua_tointegerx(L, 4, &max_size);
 	if(max_size == 0) {
 		failed_msg = "invalid size zero for material to sign";
 		goto end;
@@ -1071,7 +1071,7 @@ static int ecdh_dsa_recovery(lua_State *L) {
 		goto end;
 	}
 	int i;
-	lua_Number y = lua_tointegerx(L, 2, &i);
+	lua_Integer y = lua_tointegerx(L, 2, &i);
 	if(!i) {
 		failed_msg = "parity of y coordinate has to be a integer";
 		goto end;
