@@ -1985,6 +1985,18 @@ end:
 	END(1);
 }
 
+static int lesser_than(lua_State *L) {
+	BEGIN();
+	octet *l = o_arg(L,1); SAFE(l);
+	octet *r = o_arg(L,2); SAFE(r);
+	size_t minlen = (l->len < r->len) ? l->len : r->len;
+	if( memcmp(l->val,r->val,minlen) < 0 ) lua_pushboolean(L, 1);
+	else lua_pushboolean(L, 0);
+	o_free(L,l);
+	o_free(L,r);
+	END(1);
+}
+
 int luaopen_octet(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg octet_class[] = {
@@ -2087,6 +2099,7 @@ int luaopen_octet(lua_State *L) {
 		{"__eq",eq},
 		{"__gc", o_destroy},
 		{"__tostring",to_base64},
+		{"__lt",lesser_than},
 		{NULL,NULL}
 	};
 	zen_add_class(L, "octet", octet_class, octet_methods);
