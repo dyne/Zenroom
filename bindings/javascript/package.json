@@ -34,7 +34,7 @@
   "scripts": {
     "lint": "npx standard",
     "build": "run-s build:*",
-    "build:zenroom": "cd ../.. && COMPILE_LUA=1 make javascript-npm",
+    "build:zenroom": "cd ../.. && COMPILE_LUA=1 make javascript",
     "build:clean": "rimraf dist/*",
     "build:copylibs": "mkdirp dist/main && mkdirp dist/module && cp -v ../../build/npm/* dist/main/ && cp -v ../../build/npm/* dist/module",
     "build:copylibssrc": "cp -v ../../build/npm/* src/",
