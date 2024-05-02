@@ -349,10 +349,10 @@ static int newbig(lua_State *L) {
 
 	// number argument, import
 	int tn;
-	lua_Number n = lua_tointegerx(L,1,&tn);
+	lua_Integer n = lua_tointegerx(L,1,&tn);
 	if(tn) {
-		if(n > 0xffff)
-			warning(L, "Import of number to BIG limit exceeded (>16bit)");
+		// if(n > 0xffff)
+		// 	warning(L, "Import of number to BIG limit exceeded (>16bit)");
 		big *c = big_new(L); SAFE(c);
 		big_init(L,c);
 		BIG_zero(c->val);
@@ -486,7 +486,7 @@ static int big_to_fixed_octet(lua_State *L) {
 		goto end;
 	}
 	int i;
-	lua_Number len = lua_tointegerx(L,2,&i);
+	lua_Integer len = lua_tointegerx(L,2,&i);
 	if(!i) {
 		failed_msg = "O.from_number input is not a number";
 		o_free(L, o);
@@ -1775,7 +1775,7 @@ static int big_shiftr(lua_State *L) {
 		goto end;
 	}
 	int i;
-	lua_Number n = lua_tointegerx(L, 2, &i);
+	lua_Integer n = lua_tointegerx(L, 2, &i);
 	if(!i) {
 		failed_msg = "the number of bits to shift has to be a number";
 		goto end;

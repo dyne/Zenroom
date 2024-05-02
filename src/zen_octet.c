@@ -627,7 +627,7 @@ static int from_rawlen (lua_State *L) {
 	s = lua_tolstring(L, 1, &len);  /* get result */
 	luaL_argcheck(L, s != NULL, 1, "string expected");
 	int tn;
-	lua_Number n = lua_tointegerx(L,2,&tn);
+	lua_Integer n = lua_tointegerx(L,2,&tn);
 	if(!tn) {
 		lerror(L, "O.new 2nd arg is not a number");
 		return 0; }
@@ -857,7 +857,7 @@ static int to_segwit_address(lua_State *L) {
 	}
 	if(!o->len) { lua_pushnil(L); goto end; }
 	int tn;
-	lua_Number witver = lua_tointegerx(L, 2, &tn);
+	lua_Integer witver = lua_tointegerx(L, 2, &tn);
 	if(!tn) {
 		failed_msg = "segwit version is not a number";
 		goto end;
