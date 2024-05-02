@@ -20,6 +20,7 @@ milib := ${pwd}/lib/milagro-crypto-c/build/lib
 ldadd += ${milib}/libamcl_curve_${ecp_curve}.a
 ldadd += ${milib}/libamcl_pairing_${ecp_curve}.a
 ldadd += ${milib}/libamcl_curve_${ecdh_curve}.a
+ldadd += ${milib}/libamcl_rsa_2048.a ${milib}/libamcl_rsa_4096.a
 ldadd += ${milib}/libamcl_core.a
 ldadd += ${pwd}/lib/pqclean/libqpz.a
 ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
@@ -308,7 +309,7 @@ lua_cflags = -DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE -DLUA_COMPAT_BITLIB -I${pwd}/l
 
 # ----------------
 # milagro settings
-rsa_bits := ""
+rsa_bits := "2048,4096"
 # other ecdh curves := ED25519 C25519 NIST256 BRAINPOOL ANSSI HIFIVE
 # GOLDILOCKS NIST384 C41417 NIST521 NUMS256W NUMS256E NUMS384W
 # NUMS384E NUMS512W NUMS512E SECP256K1 BN254 BN254CX BLS381 BLS383
