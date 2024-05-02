@@ -67,6 +67,7 @@ TIME = require'time'
 INSPECT = require('inspect')
 QSORT = require('qsort_op') -- optimized table sort
 table.sort = QSORT -- override native table sort
+SPELL = require('spell')
 JSON = require('zenroom_json')
 ECDH = require('zenroom_ecdh')
 -- ECDH public keys cannot function as ECP because of IANA 7303
