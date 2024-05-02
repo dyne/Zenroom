@@ -39,8 +39,12 @@ make osx
 
 #### ** Windows **
 
+Builds a Windows 64bit executable with no DLL dependancy, containing
+the LUA interpreter and all crypto functions, for client side
+operations on windows desktops.
+
 ```bash
-make win # builds a Windows 64bit executable with no DLL dependancy, containing the LUA interpreter and all crypto functions (for client side operations on windows desktops)
+make win
 ```
 
 #### ** BSD **
@@ -107,28 +111,21 @@ make musl
 
 ## Javascript builds
 
-For the Javascript and WebAssembly modules the Zenroom provides various targets provided by emscripten which must be installed and loaded in the environment according to the emsdk's instructions and linked inside the `build` directory of zenroom sources:
+For the Javascript and WebAssembly modules the Zenroom provides various targets using [Emscripten](https://emscripten.org/) which must be installed and loaded in the environment according to the emsdk's instructions, then linked inside the `build` directory of zenroom sources.
 
-!> (need EMSDK env) builds different flavors of Javascript modules to be operated from a browser or NodeJS
+!> (needs NodeJS) To build you need to have [NodeJS](https://nodejs.org) and [Yarn](https://yarnpkg.com/) installed, as well Lua5.3
 
-```bash
-make javascript-wasm # For the webassembly build node/web
-make javascript-rn   # For react native
-```
+1. Download the latest EMSDK from https://github.com/emscripten-core/emsdk/tags inside the root of Zenroom source folder, extract it, rename the resulting subfolder to `emsdk`
+2. enter the folder and run `./emsdk install latest`, wait until the installation is complete, then run `./emsdk activate latest`
+3. go back in the zenroom root and activate emsdk with `. emsdk/emsdk_env.sh` (please note the dot followed by space at beginning)
+4. Launch `yarn --cwd bindings/javascript` to install nodejs dependencies
+5. Make sure the Zenroom source is clean with `make clean`
+5. Launch `yarn --cwd bindings/javascript build` to build Zenroom WASM
+6. Launch `yarn --cwd bindings/javascript test` to run all javascript tests
 
-There is another target to create the [`playground`](https://dev.zenroom.org/demo/)
-locally a simple web page with a REPL and some boilerplate code to show how to
-use the WebAssembly binary.
+The resulting `zenroom.js` module will be found in `bindings/javascript/dist/` and should have zero dependencies from other NodeJS packages.
 
-!> for the `javascript-demo` target the generated files should be served by a http server
-
-```bash
-make javascript-demo
-cd docs
-make preview
-```
-
-then point your browser to http://localhost:3000/demo
+Keep in mind there is some boilerplate needed to include it inside your application, which is provided automatically if you simply use our [npm zenroom package](https://www.npmjs.com/package/zenroom).
 
 ## Build instructions for Mobile libraries
 
