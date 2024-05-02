@@ -214,10 +214,12 @@ gcc := ${EMSCRIPTEN}/emcc
 ar := ${EMSCRIPTEN}/emar
 ld := ${gcc}
 ranlib := ${EMSCRIPTEN}/emranlib
-system:= Javascript
+system := Javascript
+cc_emsdk_optimizations := -flto -fno-rtti -fno-exceptions
+ld_emsdk_optimizations := -flto -sUSE_SDL=0 -sUSE_PTHREADS=0 -sEVAL_CTORS=1
 # lua_embed_opts := "compile"
-ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zencode_exec\",\"_zenroom_hash_init\",\"_zenroom_hash_update\",\"_zenroom_hash_final\",\"_zencode_valid_input\"]'" -s "EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\",\"printErr\",\"print\"]'" -s USE_SDL=0 -s USE_PTHREADS=0 -lm
-cflags := -O2 -Wall -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY ${defines}
+ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zencode_exec\",\"_zenroom_hash_init\",\"_zenroom_hash_update\",\"_zenroom_hash_final\",\"_zencode_valid_input\"]'" -sINCOMING_MODULE_JS_API=print,printErr -s "EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -lm ${ld_emsdk_optimizations}
+cflags := -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY ${defines} ${cc_emsdk_optimizations}
 endif
 
 ifneq (,$(findstring esp32,$(MAKECMDGOALS)))
