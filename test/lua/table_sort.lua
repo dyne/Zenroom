@@ -62,3 +62,55 @@ end
 for k,v in sort_pairs(masked_claims) do
    I.print({k=k,v=v})
 end
+
+print'QSORT Benchmark'
+
+
+function check (a, f)
+  f = f or function (x,y) return x<y end;
+  for n = #a, 2, -1 do
+    assert(not f(a[n], a[n-1]))
+  end
+end
+
+local function timesort (a, n, func, msg, pre, sort, name)
+  local x = os.clock()
+  sort(a, func)
+  x = (os.clock() - x) * 1000
+  pre = pre or ""
+  print(string.format(name..":\t %ssorting %d %s elements in %.2f msec.", pre, n, msg, x))
+  check(a, func)
+end
+
+local limit = 50000
+if _soft then limit = 5000 end
+
+a = {}
+for i=1,limit do
+  a[i] = math.random()
+end
+
+timesort(a, limit, nil, "random", nil, table.sort, 'table.sort')
+timesort(a, limit, nil, "random", nil, QSORT, 'QSORT bench')
+
+timesort(a, limit, nil, "sorted", "re-", table.sort, 'table.sort')
+timesort(a, limit, nil, "sorted", "re-", QSORT, 'QSORT bench')
+
+a = {}
+for i=1,limit do
+  a[i] = math.random()
+end
+
+local x = os.clock(); local i = 0
+table.sort(a, function(x,y) i=i+1; return y<x end)
+x = (os.clock() - x) * 1000
+print(string.format("table.sort:\t Invert-sorting other %d elements in %.2f msec., with %i comparisons",
+      limit, x, i))
+check(a, function(x,y) return y<x end)
+
+local x = os.clock(); local i = 0
+QSORT(a, function(x,y) i=i+1; return y<x end)
+x = (os.clock() - x) * 1000
+print(string.format("QSORT bench:\t Invert-sorting other %d elements in %.2f msec., with %i comparisons",
+      limit, x, i))
+check(a, function(x,y) return y<x end)
