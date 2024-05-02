@@ -340,7 +340,7 @@ jobs:
     if: ${{ needs.semantic-release.outputs.release == 'True' }}
     runs-on: ubuntu-latest
     env:
-      EM_VERSION: 3.1.58
+      EM_VERSION: 3.1.59
     defaults:
       run:
         working-directory: bindings/javascript
