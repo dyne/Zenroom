@@ -210,15 +210,18 @@ endif
 
 ifneq (,$(findstring javascript,$(MAKECMDGOALS)))
 EMSCRIPTEN ?= ${EMSDK}/upstream/emscripten
+defines := -DLIBCMALLOC
+BUILDS := $(filter-out mimalloc,$(BUILDS))
+ldadd := $(filter-out ${pwd}/lib/mimalloc/build/libmimalloc-static.a,${ldadd})
 gcc := ${EMSCRIPTEN}/emcc
 ar := ${EMSCRIPTEN}/emar
 ld := ${gcc}
 ranlib := ${EMSCRIPTEN}/emranlib
 system := Javascript
-cc_emsdk_optimizations := -flto -fno-rtti -fno-exceptions
-ld_emsdk_optimizations := -flto -sUSE_SDL=0 -sUSE_PTHREADS=0 -sEVAL_CTORS=1
+cc_emsdk_optimizations := -sSTRICT -flto -fno-rtti -fno-exceptions
+ld_emsdk_optimizations := -sSTRICT -flto -sUSE_SDL=0 -sEVAL_CTORS=1
 # lua_embed_opts := "compile"
-ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zencode_exec\",\"_zenroom_hash_init\",\"_zenroom_hash_update\",\"_zenroom_hash_final\",\"_zencode_valid_input\"]'" -sINCOMING_MODULE_JS_API=print,printErr -s "EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -lm ${ld_emsdk_optimizations}
+ldflags := -s MALLOC=mimalloc -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zencode_exec\",\"_zenroom_hash_init\",\"_zenroom_hash_update\",\"_zenroom_hash_final\",\"_zencode_valid_input\"]'" -sINCOMING_MODULE_JS_API=print,printErr -s "EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -lm ${ld_emsdk_optimizations}
 cflags := -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY ${defines} ${cc_emsdk_optimizations}
 endif
 
