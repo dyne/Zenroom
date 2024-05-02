@@ -102,7 +102,7 @@ endif
 # cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM -DARCH_OSX
 # endif
 ifneq (,$(findstring ios,$(MAKECMDGOALS)))
-cflags := $(filter-out -DMIMALLOC,$(cflags))
+defines := -DLIBCMALLOC
 BUILDS := $(filter-out mimalloc,$(BUILDS))
 ldadd := $(filter-out ${pwd}/lib/mimalloc/build/libmimalloc-static.a,${ldadd})
 milagro_cmake_flags += -DCMAKE_SYSTEM_PROCESSOR="arm" -DCMAKE_CROSSCOMPILING=1 -DCMAKE_C_COMPILER_WORKS=1
@@ -152,7 +152,7 @@ system := Java
 endif
 
 ifneq (,$(findstring android,$(MAKECMDGOALS)))
-cflags := $(filter-out -DMIMALLOC,$(cflags))
+defines := -DLIBCMALLOC
 BUILDS := $(filter-out mimalloc,$(BUILDS))
 ldadd := $(filter-out ${pwd}/lib/mimalloc/build/libmimalloc-static.a,${ldadd})
 ndk = ${NDK_HOME}
@@ -168,7 +168,7 @@ android := 18
 endif
 
 ifneq (,$(findstring android-arm,$(MAKECMDGOALS)))
-cflags := $(filter-out -DMIMALLOC,$(cflags))
+defines := -DLIBCMALLOC
 BUILDS := $(filter-out mimalloc,$(BUILDS))
 ldadd := $(filter-out ${pwd}/lib/mimalloc/build/libmimalloc-static.a,${ldadd})
 target = arm-linux-androideabi
@@ -179,7 +179,7 @@ milagro_cmake_flags += -DCMAKE_SYSTEM_NAME=${system} -DCMAKE_ANDROID_NDK=${ndk} 
 endif
 
 ifneq (,$(findstring android-x86,$(MAKECMDGOALS)))
-cflags := $(filter-out -DMIMALLOC,$(cflags))
+defines := -DLIBCMALLOC
 BUILDS := $(filter-out mimalloc,$(BUILDS))
 ldadd := $(filter-out ${pwd}/lib/mimalloc/build/libmimalloc-static.a,${ldadd})
 target = x86
@@ -190,7 +190,7 @@ milagro_cmake_flags += -DCMAKE_SYSTEM_NAME=${system} -DCMAKE_ANDROID_NDK=${ndk} 
 endif
 
 ifneq (,$(findstring android-aarch64,$(MAKECMDGOALS)))
-cflags := $(filter-out -DMIMALLOC,$(cflags))
+defines := -DLIBCMALLOC
 BUILDS := $(filter-out mimalloc,$(BUILDS))
 ldadd := $(filter-out ${pwd}/lib/mimalloc/build/libmimalloc-static.a,${ldadd})
 target = aarch64-linux-android
