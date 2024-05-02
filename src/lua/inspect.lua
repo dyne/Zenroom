@@ -174,7 +174,7 @@ local function getNonSequentialKeys(t)
   for k,_ in pairs(t) do
     if not isSequenceKey(k, sequenceLength) then table.insert(keys, k) end
   end
-  table.sort(keys, sortKeys)
+  QSORT(keys, sortKeys)
   return keys, sequenceLength
 end
 

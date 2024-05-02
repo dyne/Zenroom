@@ -107,7 +107,7 @@ _G["lua_ipairs"] = _G["ipairs"]
 local function _pairs(t)
    local a = {}
    for n in lua_pairs(t) do table.insert(a, n) end
-   table.sort(a) -- TODO: cannot sort over zenroom types
+   QSORT(a) -- TODO: cannot sort over zenroom types
    local i = 0      -- iterator variable
    return function ()   -- iterator function
 	  i = i + 1
@@ -118,7 +118,7 @@ end
 local function _ipairs(t)
    local a = {}
    for n in lua_ipairs(t) do table.insert(a, n) end
-   table.sort(a)
+   QSORT(a)
    local i = 0      -- iterator variable
    return function ()   -- iterator function
 	  i = i + 1
