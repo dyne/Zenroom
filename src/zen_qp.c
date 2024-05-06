@@ -799,7 +799,18 @@ static int ml_dsa_44_signature(lua_State *L) {
 		goto end;
 	}
 	Z(L);
-	for(uint8_t i=0;i<32;i++) randbytes[i] = RAND_byte(Z->random_generator);
+	if ( Z->random_external){
+		int sum = 0;
+		for (int i = 0; i < 64; i++) {
+			sum += Z->random_seed[i];
+		}
+		if (sum == 0) {
+			for(uint8_t i=0;i<32;i++) randbytes[i] = 0;
+			
+		}
+		else for(uint8_t i=0;i<32;i++) randbytes[i] = RAND_byte(Z->random_generator);
+	}
+	else for(uint8_t i=0;i<32;i++) randbytes[i] = RAND_byte(Z->random_generator);
 	if(pqcrystals_ml_dsa_44_ipd_zen_signature
 	   ((unsigned char*)sig->val,
 	    (size_t*)&sig->len,
