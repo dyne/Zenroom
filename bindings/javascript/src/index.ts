@@ -207,7 +207,6 @@ export const introspect = async (zencode, props?: ZenroomProps) => {
     const { result } = await zencode_valid_input(zencode, props);
     return JSON.parse(result).CODEC;
   } catch ({ logs }) {
-    console.error(logs);
     const heap = JSON.parse(logs)
       .filter((l) => l.startsWith("J64 HEAP:"))
       .map((l) => l.replace("J64 HEAP:", "").trim())[0];
