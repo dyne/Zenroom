@@ -63,6 +63,7 @@ local keytypes = {
     testnet = true,
     ethereum = true,
     dilithium = true,
+    mldsa44 = true,
     schnorr = true,
     kyber = true,
     ntrup = true,
@@ -100,6 +101,12 @@ local function ntrup_f(o)
    end
    return o
 end  
+local function mldsa44_f(o)
+   if #o ~= 2560 then
+       error('mldsa44 key length is not correct: '..#o, 3)
+   end
+   return o
+end 
 
 local function import_keyring(obj)
    for k,_ in pairs(obj) do
@@ -149,6 +156,9 @@ local function import_keyring(obj)
    if obj.dilithium then
       res.dilithium = schema_get(obj, 'dilithium', dilithium_f, O.from_base64)
    end
+   if obj.mldsa44 then
+      res.mldsa44 = schema_get(obj, 'mldsa44', mldsa44_f, O.from_base64)
+   end
    if obj.kyber then
       res.kyber = schema_get(obj, 'kyber', kyber_f, O.from_base64)
    end
@@ -194,6 +204,7 @@ function export_keyring(obj)
       res.ethereum = O.to_hex(obj.ethereum)
    end
    if obj.dilithium then res.dilithium = CONF.output.encoding.fun(obj.dilithium) end
+   if obj.mldsa44 then res.mldsa44 = CONF.output.encoding.fun(obj.mldsa44) end
    if obj.kyber then     res.kyber     = CONF.output.encoding.fun(obj.kyber) end
    if obj.schnorr then   res.schnorr   = CONF.output.encoding.fun(obj.schnorr) end
    if obj.ntrup then     res.ntrup     = CONF.output.encoding.fun(obj.ntrup) end
