@@ -912,6 +912,42 @@ end:
 	END(1);
 }
 
+static int mldsa44_signature_pubcheck(lua_State *L) {
+	BEGIN();
+	octet *pk = o_arg(L, 1);
+	if(pk == NULL) {
+		THROW("failed to allocate space for public key");
+	} else {
+		if(pk->len == pqcrystals_ml_dsa_44_ipd_PUBLICKEYBYTES)
+			lua_pushboolean(L, 1);
+		else
+			lua_pushboolean(L, 0);
+		o_free(L, pk);
+	}
+	END(1);
+}
+
+static int mldsa44_signature_check(lua_State *L){
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *sign = o_arg(L, 1);
+	if(sign == NULL) {
+		failed_msg = "Cuold not allocate signature";
+		goto end;
+	}
+	if(sign->len == pqcrystals_ml_dsa_44_ipd_BYTES)
+		lua_pushboolean(L, 1);
+	else
+		lua_pushboolean(L, 0);
+end:
+	o_free(L, sign);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+
 int luaopen_qp(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg qp_class[] = {
@@ -946,6 +982,8 @@ int luaopen_qp(lua_State *L) {
 		{"mldsa44_signature", ml_dsa_44_signature},
 		{"mldsa44_verify",    ml_dsa_44_verify},
 		{"mldsa44_pubgen", ml_dsa_44_signature_pubgen},
+		{"mldsa44_pubcheck", mldsa44_signature_pubcheck},
+		{"mldsa44_signature_check", mldsa44_signature_check},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg qp_methods[] = {

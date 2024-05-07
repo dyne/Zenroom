@@ -35,7 +35,7 @@ local function dilithium_signature_f(obj)
    local res = schema_get(obj, '.')
    zencode_assert(
       QP.signature_check(res),
-      'Dilithium signature length is not correcr'
+      'Dilithium signature length is not correct'
    )
    return res
 end
@@ -108,6 +108,24 @@ local function ntrup_import_kem(obj)
    return res
 end
 
+local function mldsa44_public_key_f(obj)
+	local res = schema_get(obj, '.')
+	zencode_assert(
+	   QP.mldsa44_pubcheck(res),
+	   'mldsa44 public key length is not correct'
+	)
+	return res
+ end
+ 
+ local function mldsa44_signature_f(obj)
+	local res = schema_get(obj, '.')
+	zencode_assert(
+	   QP.mldsa44_signature_check(res),
+	   'mldsa44 signature length is not correct'
+	)
+	return res
+ end
+
 ZEN:add_schema(
    {
       dilithium_public_key = {import=dilithium_public_key_f},
@@ -119,7 +137,9 @@ ZEN:add_schema(
       ntrup_public_key = {import=ntrup_public_key_f},
       ntrup_secret = {import=ntrup_secret_f},
       ntrup_ciphertext = {import=ntrup_ciphertext_f},
-      ntrup_kem = {import=ntrup_import_kem}
+      ntrup_kem = {import=ntrup_import_kem},
+	  mldsa44_public_key = {import=mldsa44_public_key_f},
+	  mldsa44_signature = {import=mldsa44_signature_f}
    }
 )
 
@@ -247,4 +267,46 @@ When("create ntrup secret from ''",function(ciphertext)
 	empty'ntrup secret'
 	ACK.ntrup_secret = QP.ntrup_dec(sk, ct)
 	new_codec('ntrup secret')
+end)
+
+--# ML DSA 44 #--
+
+-- generate the private key
+When("create mldsa44 key",function()
+	initkeyring'mldsa44'
+	ACK.keyring.mldsa44 = QP.mldsa44_keypair().private
+end)
+
+-- generate the public key
+When("create mldsa44 public key",function()
+	empty'mldsa44 public key'
+	local sk = havekey'mldsa44'
+	ACK.mldsa44_public_key = QP.mldsa44_pubgen(sk)
+	new_codec('mldsa44 public key')
+end)
+
+When("create mldsa44 public key with secret key ''",function(sec)
+	local sk = have(sec)
+	empty'mldsa44 public key'
+	ACK.mldsa44_public_key = QP.mldsa44_pubgen(sk)
+	new_codec('mldsa44 public key')
+end)
+
+-- generate the sign for a msg and verify
+When("create mldsa44 signature of ''",function(doc)
+	local sk = havekey'mldsa44'
+	local obj = have(doc)
+	empty'mldsa44 signature'
+	ACK.mldsa44_signature = QP.mldsa44_signature(sk, zencode_serialize(obj))
+	new_codec('mldsa44 signature')
+end)
+
+IfWhen("verify '' has a mldsa44 signature in '' by ''",function(msg, sig, by)
+	  local pk = load_pubkey_compat(by, 'mldsa44')
+	  local m = have(msg)
+	  local s = have(sig)
+	  zencode_assert(
+	     QP.mldsa44_verify(pk, s, zencode_serialize(m)),
+	     'The mldsa44 signature by '..by..' is not authentic'
+	  )
 end)
