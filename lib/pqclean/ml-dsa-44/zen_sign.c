@@ -56,6 +56,35 @@ int pqcrystals_ml_dsa_44_ipd_zen_keypair(uint8_t *pk, uint8_t *sk, const uint8_t
 }
 
 
+int pqcrystals_ml_dsa_44_ipd_zen_pub_gen(uint8_t *pk, uint8_t *sk){
+  uint8_t rho[SEEDBYTES], key[SEEDBYTES], tr[TRBYTES];
+  polyveck s2, t1, t0;
+  polyvecl mat[K];
+  polyvecl s1;
+
+  /* Unpack the secret-key */
+  unpack_sk(rho, tr, key, &t0, &s1, &s2, sk);
+  
+  /* Expand matrix */
+  polyvec_matrix_expand(mat, rho);
+
+  /* Matrix-vector multiplication */
+  polyvecl_ntt(&s1); 
+  polyvec_matrix_pointwise_montgomery(&t1, mat, &s1);  
+  polyveck_reduce(&t1);
+  polyveck_invntt_tomont(&t1);
+  /* Add error vector s2 */
+  polyveck_add(&t1, &t1, &s2);
+
+  /* Extract t1 and write public key */
+  polyveck_caddq(&t1);
+  polyveck_power2round(&t1, &t0, &t1);
+  pack_pk(pk, rho, &t1);
+
+  return 0;  
+}
+
+
 int pqcrystals_ml_dsa_44_ipd_zen_signature(uint8_t *sig,
 			size_t *siglen,
 			const uint8_t *m,

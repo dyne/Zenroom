@@ -87,7 +87,7 @@ extern int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_dec(uint8_t *ss, const uint8_t *ct
 extern int pqcrystals_ml_dsa_44_ipd_zen_keypair(uint8_t *pk, uint8_t *sk, const uint8_t *randbytes);
 extern int pqcrystals_ml_dsa_44_ipd_zen_signature(uint8_t *sig, size_t *siglen, const uint8_t *m, size_t mlen, const uint8_t *sk, const uint8_t *randbytes);
 extern int pqcrystals_ml_dsa_44_ipd_ref_verify(const uint8_t *sig, size_t siglen, const uint8_t *m, size_t mlen, const uint8_t *pk);
-
+extern int pqcrystals_ml_dsa_44_ipd_zen_pub_gen(uint8_t *pk, uint8_t *sk);
 
 
 /*#######################################*/
@@ -760,6 +760,35 @@ end:
 	}
 	END(1);
 }
+
+static int ml_dsa_44_signature_pubgen(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *sk = NULL, *pk = NULL;
+	sk = o_arg(L, 1);
+	if(sk == NULL) {
+		failed_msg = "failed to allocate space for secret key";
+		goto end;
+	}
+	pk = o_new(L, pqcrystals_ml_dsa_44_ipd_PUBLICKEYBYTES);
+	if(pk == NULL) {
+		failed_msg = "failed to allocate space for public key";
+		goto end;
+	}
+
+	pqcrystals_ml_dsa_44_ipd_zen_pub_gen((unsigned char*)pk->val,
+						(unsigned char*)sk->val);
+	pk->len = pqcrystals_ml_dsa_44_ipd_PUBLICKEYBYTES;
+
+end:
+	o_free(L,sk);
+	if(failed_msg != NULL) {
+		THROW(failed_msg);
+	}
+
+	END(1);
+}
+
 static int ml_dsa_44_signature(lua_State *L) {
 /*************************************************
 * Name:        crypto_sign_signature
@@ -916,6 +945,7 @@ int luaopen_qp(lua_State *L) {
 		{"mldsa44_keypair",   ml_dsa_44_keypair},
 		{"mldsa44_signature", ml_dsa_44_signature},
 		{"mldsa44_verify",    ml_dsa_44_verify},
+		{"mldsa44_pubgen", ml_dsa_44_signature_pubgen},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg qp_methods[] = {
