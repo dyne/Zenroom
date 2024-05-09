@@ -5,6 +5,7 @@ The QP stands for [Quantum-Proof](https://en.wikipedia.org/wiki/Post-quantum_cry
 
 In Zenroom, using the *Scenario qp*, you will have access to the following Quantum-Proof algorithms:
 - **Dilithium2** signature scheme
+- **ML-DSA-44** signature scheme
 - **Kyber512** Key Encapsulation Mechanism
 - **Streamlined NTRU Prime 761** Key Encapsulation Mechanism
 
@@ -74,6 +75,67 @@ The result should look like:
 
 [](../_media/examples/zencode_cookbook/qp/dilithium/Dilithium_verifysign.json ':include :type=code json')
 
+# ML-DSA-44
+
+ML-DSA-44 is a Quantum-Proof signature algorithm defined over lattices as an extension of the dilithium algorithm. From the user side it works as a modern signature scheme:
+- **Key generation**: The *signer* create its private and public keys
+- **Signature**: The *signer* use its private key to sign a certain message and sent it to the verifier
+- **Verification**: The *verifier*, using the *signer* public key, can verify the authenticity of the message
+
+## Key Generation
+
+### Private key
+
+The script below generates a **mldsa44** private key.
+
+[](../_media/examples/zencode_cookbook/mldsa44/keygen.zen ':include :type=code gherkin')
+
+The output should look like this:
+
+[](../_media/examples/zencode_cookbook/mldsa44/alice_keys.json ':include :type=code json')
+
+### Public key
+
+Once you have created a private key, you can feed it to the following script to generate the **public key**:
+
+[](../_media/examples/zencode_cookbook/mldsa44/pubkey.zen ':include :type=code gherkin')
+
+The output should look like this:
+
+[](../_media/examples/zencode_cookbook/mldsa44/alice_pubkey.json ':include :type=code json')
+
+## Signature
+
+In this example we'll sign a string that we'll verify in the next script. In this script we create the data to be signed in the code, but it can also be loaded from the extern as we do with the the private key. The private key is in the file we have generate with the first script. The script to **sign** the message look like this:
+
+[](../_media/examples/zencode_cookbook/mldsa44/sign_from_alice.zen ':include :type=code gherkin')
+
+And the output should look like this:
+
+[](../_media/examples/zencode_cookbook/mldsa44/sign_alice_output.json ':include :type=code json')
+
+You can now merge this file with the one where your mldsa44 public key is, so that the verifier has everything he needs in one file. You can do it by either use the command:
+
+```bash
+jq -s '.[0]*[1]' pubkey.json signature.json | tee data.json
+```
+
+where pubkey.json contains the output of the second script and signature.json the output of the above script, or by adding two rows in the previous script, one where you compute the dilithium public key and the other where you print it.
+
+
+## Verification
+
+In this section we will **verify** the signature produced in the previous step. As mentioned above what we will need is the signature, the message and the signer public key. So the input file should look like:
+
+[](../_media/examples/zencode_cookbook/mldsa44/sign_pubkey.json ':include :type=code json')
+
+The script to verify these signatures is the following:
+
+[](../_media/examples/zencode_cookbook/mldsa44/verify_from_alice.zen ':include :type=code gherkin')
+
+The result should look like:
+
+[](../_media/examples/zencode_cookbook/mldsa44/verify_alice_signature.json ':include :type=code json')
 
 
 # Kyber
