@@ -3,7 +3,7 @@ load ../bats_zencode
 SUBDOC=mldsa44
 
 @test "Generate asymmetric keys for Alice and Bob" {
-    cat <<EOF | rngzexe keygen.zen
+    cat <<EOF | rngzexe alice_keygen.zen
 Scenario qp
 Given I am known as 'Alice'
 When I create the keyring
@@ -11,7 +11,7 @@ and I create the mldsa44 key
 Then print my 'keyring'
 EOF
     save_output alice_keys.json
-    cat << EOF | zexe pubkey.zen alice_keys.json
+    cat << EOF | zexe alice_pubkey.zen alice_keys.json
 Scenario qp
 Given I am known as 'Alice'
 Given I have my 'keyring'
@@ -19,7 +19,7 @@ When I create the mldsa44 public key
 Then print my 'mldsa44 public key'
 EOF
     save_output alice_pubkey.json
-    cat <<EOF | rngzexe keygen.zen
+    cat <<EOF | rngzexe bob_keygen.zen
 Scenario qp
 Given I am known as 'Bob'
 When I create the keyring
@@ -27,7 +27,7 @@ and I create the mldsa44 key
 Then print my 'keyring'
 EOF
     save_output bob_keys.json
-    cat << EOF | zexe pubkey.zen bob_keys.json
+    cat << EOF | zexe bob_pubkey.zen bob_keys.json
 Scenario qp
 Given I am known as 'Bob'
 Given I have my 'keyring'
