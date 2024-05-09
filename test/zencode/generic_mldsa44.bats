@@ -62,17 +62,19 @@ and I create the mldsa44 signature of 'message'
 Then print the 'message'
 and print the 'mldsa44 signature'
 EOF
-    save_output sign_alice_keyring.json
+    save_output sign_alice_output.json
 }
 
 
 @test "Verify a message signed by Alice" {
-    cat <<EOF | zexe join_sign_pubkey.zen sign_alice_keyring.json alice_pubkey.json
+    cat <<EOF | zexe join_sign_pubkey.zen sign_alice_output.json alice_pubkey.json
 Scenario qp
 Given I have a 'mldsa44 public key' in 'Alice'
 and I have a 'mldsa44 signature'
+and I have a 'string' named 'message'
 Then print the 'mldsa44 signature'
 and print the 'mldsa44 public key'
+and print the 'message'
 EOF
     save_output sign_pubkey.json
 
@@ -81,8 +83,8 @@ Rule check version 2.0.0
 Scenario qp
 Given I have a 'mldsa44 public key'
 and I have a 'mldsa44 signature'
-When I write string 'This is my authenticated message.' in 'message'
-and I verify the 'message' has a mldsa44 signature in 'mldsa44 signature' by 'Alice'
+and I have a 'string' named 'message'
+When I verify the 'message' has a mldsa44 signature in 'mldsa44 signature' by 'Alice'
 Then print the string 'Signature is valid'
 and print the 'message'
 EOF
@@ -106,13 +108,15 @@ EOF
 }
 
 @test "Fail verification on a different public key" {
-    cat <<EOF | rngzexe create_wrong_pubkey.zen sign_alice_keyring.json
+    cat <<EOF | rngzexe create_wrong_pubkey.zen sign_alice_output.json
 Scenario qp
 Given I have a 'mldsa44 signature'
+and I have a 'string' named 'message'
 When I create the mldsa44 key
 and I create the mldsa44 public key
 Then print the 'mldsa44 signature'
 and print the 'mldsa44 public key'
+and print the 'message'
 EOF
     save_output wrong_pubkey.json
     cat <<EOF > wrong_pubkey.zen
@@ -120,8 +124,8 @@ Rule check version 2.0.0
 Scenario qp
 Given I have a 'mldsa44 public key'
 and I have a 'mldsa44 signature'
-When I write string 'This is my authenticated message.' in 'message'
-and I verify the 'message' has a mldsa44 signature in 'mldsa44 signature' by 'Alice'
+and I have a 'string' named 'message'
+When I verify the 'message' has a mldsa44 signature in 'mldsa44 signature' by 'Alice'
 Then print the string 'Signature is valid'
 and print the 'message'
 EOF
@@ -158,9 +162,9 @@ and I have a 'mldsa44 signature'
 Then print the 'mldsa44 signature'
 and print the 'mldsa44 public key'
 EOF
-    save_output sign_pubkey.json
+    save_output sign_pubkey_big.json
 
-    cat <<EOF | zexe verify_from_alice.zen sign_pubkey.json bigfile.json
+    cat <<EOF | zexe verify_from_alice_big.zen sign_pubkey_big.json bigfile.json
 Rule check version 2.0.0
 Scenario qp
 Given I have a 'mldsa44 public key'
@@ -169,6 +173,6 @@ and I have a 'base64' named 'bigfile'
 When I verify the 'bigfile' has a mldsa44 signature in 'mldsa44 signature' by 'Alice'
 Then print the string 'Bigfile Signature is valid'
 EOF
-    save_output verify_alice_signature.json
+    save_output verify_alice_signature_big.json
     assert_output '{"output":["Bigfile_Signature_is_valid"]}'
 }
