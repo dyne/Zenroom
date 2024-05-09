@@ -1,5 +1,5 @@
 Scenario qp
-Given I am known as 'Bob'
+Given I am known as 'Alice'
 Given I have my 'keyring'
 When I create the mldsa44 public key
 Then print my 'mldsa44 public key'

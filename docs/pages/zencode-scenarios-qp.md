@@ -88,7 +88,7 @@ ML-DSA-44 is a Quantum-Proof signature algorithm defined over lattices as an ext
 
 The script below generates a **mldsa44** private key.
 
-[](../_media/examples/zencode_cookbook/mldsa44/keygen.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/mldsa44/alice_keygen.zen ':include :type=code gherkin')
 
 The output should look like this:
 
@@ -98,7 +98,7 @@ The output should look like this:
 
 Once you have created a private key, you can feed it to the following script to generate the **public key**:
 
-[](../_media/examples/zencode_cookbook/mldsa44/pubkey.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/mldsa44/alice_pubkey.zen ':include :type=code gherkin')
 
 The output should look like this:
 
