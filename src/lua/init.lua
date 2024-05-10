@@ -157,7 +157,8 @@ _G['CONF'] = {
 						  name = 'hex' },
 			 format = 'log' -- or 'compact' for base64 encoded json
 		   },
-   parser = {strict_match = true},
+   parser = {strict_match = true,
+             strict_parse = true},
    exec = { scope = 'full' }, -- from conf scope=given, triggers:
                               -- parser.strict_match=false
                               -- missing.fatal=false
