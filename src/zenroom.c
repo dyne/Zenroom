@@ -583,3 +583,36 @@ int zencode_valid_input(const char *script, const char *conf, const char *keys, 
 	zen_exec_zencode(Z, script);
 	return( _check_zenroom_result(Z));
 }
+
+int zencode_parse_contract(const char *script) {
+	if (_check_script_arg(script) != SUCCESS) return ERR_INIT;
+	zenroom_t *Z = zen_init(NULL, NULL, NULL);
+	if (_check_zenroom_init(Z) != SUCCESS) return ERR_INIT;
+	// disable strict parsing
+	luaL_dostring(Z->lua, "CONF.parser.strict_parse=false");
+	// ZEN:begin()
+	lua_getglobal(Z->lua, "ZEN");
+	lua_getfield(Z->lua, -1, "begin");
+	lua_getglobal(Z->lua, "ZEN");
+	if (lua_pcall(Z->lua, 1, 0, 0) != LUA_OK) {
+		zerror(Z->lua, "Zencode init error");
+		zerror(Z->lua, "%s", lua_tostring(Z->lua, -1));
+		Z->exitcode = ERR_GENERIC;
+	} else {
+		// ZEN:parse(script)
+		lua_getglobal(Z->lua, "ZEN");
+		lua_getfield(Z->lua, -1, "parse");
+		lua_getglobal(Z->lua, "ZEN");
+		lua_pushstring(Z->lua, (char*)script);
+		if (lua_pcall(Z->lua, 2, 1, 0) != LUA_OK) {
+			zerror(Z->lua, "Zencode parse error");
+			zerror(Z->lua, "%s", lua_tostring(Z->lua, -1));
+			Z->exitcode = ERR_GENERIC;
+		} else {
+			const char * res = lua_tostring(Z->lua, -1);
+			_out("%s", res);
+			Z->exitcode = SUCCESS;
+		}
+	}
+	return( _check_zenroom_result(Z));
+}
