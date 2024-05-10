@@ -8,6 +8,7 @@ import {
   zenroom_hash_final,
   zenroom_hash,
   introspect,
+  zencode_parse_contract,
 } from "./index";
 import { TextEncoder } from "util";
 var enc = new TextEncoder();
@@ -331,3 +332,137 @@ test("Check the introspection with data", async (t) => {
     },
   });
 });
+
+test("parse simple contract", async (t) => {
+  const { result } = await zencode_parse_contract(`Scenario ecdh
+  Given nothing
+  Then print all data`);
+  t.deepEqual(JSON.parse(result), {invalid: [], ignored: []});
+})
+
+test("parse contract with an invalid statement", async (t) => {
+  const { result } = await zencode_parse_contract(`Scenario ecdh
+  Given gibberish
+  Given nothing
+  Then print all data`);
+  const expected = {
+    invalid: [
+      [
+        "  Given gibberish",
+        2,
+        "/zencode.lua:208: Zencode line 2 pattern not found (given): Given gibberish",
+      ],
+    ],
+    ignored: [],
+  };
+  t.deepEqual(JSON.parse(result), expected);
+})
+
+test("parse contract with more than one invalid statement", async (t) => {
+  const { result } = await zencode_parse_contract(`Scenario ecdh
+  Given gibberish
+  Given nothing
+  When gibberish
+  some other stuff
+  Then print all data
+  Then gibberish`);
+  const expected = {
+    "ignored":[],
+    "invalid":[
+      [
+        "  Given gibberish",
+        2,
+        "/zencode.lua:208: Zencode line 2 pattern not found (given): Given gibberish"
+      ],[
+        "  When gibberish",
+        4,
+        "/zencode.lua:208: Zencode line 4 pattern not found (when): When gibberish"
+      ],[
+        "  some other stuff",
+        5,
+        "Invalid Zencode prefix"
+      ],[
+        "  Then gibberish",
+        7,
+        "/zencode.lua:208: Zencode line 7 pattern not found (then): Then gibberish"
+      ]
+    ]
+  }
+  t.deepEqual(JSON.parse(result), expected);
+})
+
+
+test("parse contract with ingnore statements", async (t) => {
+  const { result } = await zencode_parse_contract(`Rule unknown ignore
+  Scenario ecdh
+  Given gibberish
+  and more gibberish
+  Given nothing
+  When done
+  Then print all data
+  Then gibberish`);
+  const expected = {
+    "ignored": [
+      [
+        '  Given gibberish',
+        3,
+      ],[
+        '  and more gibberish',
+        4,
+      ],[
+        '  Then gibberish',
+        8,
+      ],
+    ],
+    "invalid":[]
+  }
+  t.deepEqual(JSON.parse(result), expected);  
+})
+
+test("parse contract with muliple ingnore and invalid statements", async (t) => {
+  const { result } = await zencode_parse_contract(`Rule unknown ignore
+  Scenario ecdh
+  Given gibberish
+  and more gibberish
+  Given nothing
+  When gibberish
+  Not a real statement
+  When done
+  Something more
+  Then print all data
+  Is it clear?
+  Then gibberish`);
+  const expected = {
+    "ignored": [
+      [
+        '  Given gibberish',
+        3,
+      ],[
+        '  and more gibberish',
+        4,
+      ],[
+        '  Is it clear?',
+        11,
+      ],[
+        '  Then gibberish',
+        12,
+      ],
+    ],
+    "invalid":[
+      [
+        '  When gibberish',
+        6,
+        '/zencode.lua:219: Zencode line 6 found invalid statement out of given or then phase: When gibberish',
+      ],[
+        '  Not a real statement',
+        7,
+        'Invalid Zencode line',
+      ],[
+        '  Something more',
+        9,
+        'Invalid Zencode line',
+      ]
+    ]
+  }
+  t.deepEqual(JSON.parse(result), expected);  
+})

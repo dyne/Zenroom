@@ -214,3 +214,28 @@ export const introspect = async (zencode, props?: ZenroomProps) => {
     return JSON.parse(Buffer.from(heap, "base64").toString("utf-8"));
   }
 };
+
+export const zencode_parse_contract = async (
+  zencode: string
+): Promise<ZenroomResult> => {
+  const Module = await getModule();
+  return new Promise((resolve, reject) => {
+    let result = "";
+    let logs = "";
+    const _exec = Module.cwrap("zencode_parse_contract", "number", [
+      "string",
+    ]);
+    Module.print = (t: string) => (result += t);
+    Module.printErr = (t: string) => (logs += t);
+    Module.exec_ok = () => {
+      resolve({ result, logs });
+    };
+    Module.exec_error = () => {
+      reject({ result, logs });
+    };
+    Module.onAbort = () => {
+      reject({ result, logs });
+    };
+    _exec(zencode);
+  });
+}
