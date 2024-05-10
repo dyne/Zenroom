@@ -530,7 +530,11 @@ function ZEN:parse(text)
 	  -- continue
    end
    collectgarbage'collect'
-   return res
+   if res == true then
+	  return true
+   else
+	  return JSON.encode(res)
+   end
 end
 
 
