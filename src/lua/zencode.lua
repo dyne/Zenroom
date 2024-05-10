@@ -459,6 +459,7 @@ function ZEN:parse(text)
    local prefixes = {}
    local parse_prefix <const> = parse_prefix -- optimization
    self.linenum = 0
+   local res = fif(CONF.parser.strict_parse, true, { ignored={}, invalid={} })
    for line in zencode_newline_iter(text) do
 	  self.linenum = self.linenum + 1
 	  local tline = trim(line) -- saves trims in isempty / iscomment
@@ -467,7 +468,12 @@ function ZEN:parse(text)
 		 -- max length for single zencode line is #define MAX_LINE
 		 -- hard-coded inside zenroom.h
 		 local prefix = parse_prefix(line) -- trim is included
-		 assert(prefix, "Invalid Zencode line "..self.linenum..": "..line)
+		 if not prefix then
+			if CONF.parser.strict_parse then
+			   error("Invalid Zencode line "..self.linenum..": "..line)
+			end
+			table.insert(res.invalid, {line, self.linenum, 'Invalid Zencode line'})
+		 end
 		 self.OK = true
 		 exitcode(0)
 		 if CONF.exec.scope == 'given' and
@@ -500,19 +506,31 @@ function ZEN:parse(text)
 		 -- xxx("Zencode machine enter_"..prefix..": "..text, 3)
 		 local fm <const> = self.machine["enter_"..prefix]
 		 if CONF.parser.strict_match == true and not fm then
-			assert(fm, "Invalid Zencode prefix "..self.linenum..": '"..line.."'")
+			if CONF.parser.strict_parse then
+			   error("Invalid Zencode prefix "..self.linenum..": '"..line.."'")
+			end
+			table.insert(res.invalid, {line, self.linenum, 'Invalid Zencode prefix'})
 		 elseif not fm then
-			table.insert(traceback, '-'..self.linenum..'	'..line)
-			warn('Zencode line '..self.linenum..' pattern ignored: ' .. line, 1)
+			if CONF.parser.strict_parse then
+			   table.insert(traceback, '-'..self.linenum..'	'..line)
+			   warn('Zencode line '..self.linenum..' pattern ignored: ' .. line, 1)
+			else
+			   table.insert(res.ignored, {line, self.linenum})
+			end
 		 else
-			assert(fm(self.machine, { msg = tline, Z = self }),
-				"Invalid transition from: "..self.machine.current.." to: "..line)
+			local ok, err <const> = pcall(fm, self.machine, { msg = tline, Z = self })
+			if not ok or (ok and not err) then
+			   if CONF.parser.strict_parse then
+				  error(err or "Invalid transition from: "..self.machine.current.." to: "..line)
+			   end
+			   table.insert(res.invalid, {line, self.linenum, err or 'Invalid transition from '..self.machine.current})
+			end
 		 end
 	  end
 	  -- continue
    end
    collectgarbage'collect'
-   return true
+   return res
 end
 
 
