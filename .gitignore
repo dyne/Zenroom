@@ -76,3 +76,6 @@ lib/zstd/obj/
 
 # used to build javascript
 emsdk
+
+# lua binary installed during build
+luac54
