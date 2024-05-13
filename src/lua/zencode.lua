@@ -519,7 +519,7 @@ function ZEN:parse(text)
 		 elseif not fm then
 			if ZEN.phase == 'g' and not ZEN.last_valid_statement then
 				if CONF.parser.strict_parse then
-					table.insert(traceback, '-'..self.linenum..'	'..line)
+					table.insert(traceback, '-'..self.linenum..'  '..line)
 					warn('Zencode line '..self.linenum..' pattern ignored: ' .. line, 1)
 				else
 					table.insert(res.ignored, {line, self.linenum})
@@ -527,7 +527,7 @@ function ZEN:parse(text)
 			elseif ZEN.phase == 't' then
 				ZEN.last_valid_statement = false
 				if CONF.parser.strict_parse then
-					table.insert(traceback, '-'..self.linenum..'	'..line)
+					table.insert(traceback, '-'..self.linenum..'  '..line)
 					warn('Zencode line '..self.linenum..' pattern ignored: ' .. line, 1)
 				 else
 					table.insert(res.ignored, {line, self.linenum})
