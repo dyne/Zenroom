@@ -269,3 +269,27 @@ EOF
     save_output 'dictionary_string_float_time.out'
     assert_output '{"dictionary":{"num":1.234568e+10,"str":"hello world!","time":1702474699}}'
 }
+
+@test "Tables with empty strings" {
+    cat <<EOF | save_asset tables_with_empty_strings.json
+{
+    "dictionary": {
+        "str": "hello world!",
+        "empty_str": "",
+        "another_str": "goodbye world!",
+    },
+    "array": [
+        "hello world!",
+        "",
+        "goodbye world!"
+    ]
+}
+EOF
+    cat <<EOF | zexe tables_with_empty_strings.zen tables_with_empty_strings.json
+Given I have the 'string dictionary' named 'dictionary'
+Given I have the 'string array' named 'array'
+Then print all data
+EOF
+    save_output 'tables_with_empty_strings.out'
+    assert_output '{"array":["hello world!","","goodbye world!"],"dictionary":{"another_str":"goodbye world!","empty_str":"","str":"hello world!"}}'
+}
