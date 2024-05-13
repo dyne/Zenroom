@@ -217,6 +217,7 @@ export const introspect = async (zencode, props?: ZenroomProps) => {
 
 export const zencode_valid_code = async (
   zencode: string,
+  conf: string | null = null,
   strict: number = 1
 ): Promise<ZenroomResult> => {
   const Module = await getModule();
@@ -224,6 +225,7 @@ export const zencode_valid_code = async (
     let result = "";
     let logs = "";
     const _exec = Module.cwrap("zencode_valid_code", "number", [
+      "string",
       "string",
       "number",
     ]);
@@ -238,12 +240,13 @@ export const zencode_valid_code = async (
     Module.onAbort = () => {
       reject({ result, logs });
     };
-    _exec(zencode, strict);
+    _exec(zencode, conf, strict);
   });
 }
 
 export const safe_zencode_valid_code = async (
-  zencode: string
+  zencode: string,
+  conf: string | null = null
 ): Promise<ZenroomResult> => {
-  return zencode_valid_code(zencode, 0);
+  return zencode_valid_code(zencode, conf, 0);
 }
