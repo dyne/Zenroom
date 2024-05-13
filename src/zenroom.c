@@ -584,12 +584,14 @@ int zencode_valid_input(const char *script, const char *conf, const char *keys, 
 	return( _check_zenroom_result(Z));
 }
 
-int zencode_parse_contract(const char *script) {
+int zencode_parse_contract(const char *script, const int strict) {
 	if (_check_script_arg(script) != SUCCESS) return ERR_INIT;
 	zenroom_t *Z = zen_init(NULL, NULL, NULL);
 	if (_check_zenroom_init(Z) != SUCCESS) return ERR_INIT;
 	// disable strict parsing
-	luaL_dostring(Z->lua, "CONF.parser.strict_parse=false");
+	if (!strict) {
+		luaL_dostring(Z->lua, "CONF.parser.strict_parse=false");
+	}
 	// ZEN:begin()
 	lua_getglobal(Z->lua, "ZEN");
 	lua_getfield(Z->lua, -1, "begin");

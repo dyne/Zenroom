@@ -43,8 +43,9 @@ int zencode_exec_tobuf(const char *script, const char *conf, const char *keys, c
 // validate the input data processing only Given scope and print the CODEC
 int zencode_valid_input(const char *script, const char *conf, const char *keys, const char *data, const char *extra);
 
-// parse the contract returing ignored and invalid statements
-int zencode_parse_contract(const char *script);
+// parse the contract failing on wrong syntax when strict is set to 1
+// otherwise return an array of ignored and invalid statements when strict is set to 0
+int zencode_parse_contract(const char *script, const int strict);
 
 // direct access hash calls
 // hash_type may be a string of: 'sha256' or 'sha512'
