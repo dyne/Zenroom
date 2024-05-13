@@ -293,3 +293,14 @@ EOF
     save_output 'tables_with_empty_strings.out'
     assert_output '{"array":["hello world!","","goodbye world!"],"dictionary":{"another_str":"goodbye world!","empty_str":"","str":"hello world!"}}'
 }
+
+@test "Fail with tables with empty strings" {
+    cat <<EOF | save_asset fail_tables_with_empty_strings.zen
+Rule unknown ignore
+Given I have the 'string array' named 'array'
+Given I have the 'string array' named 'dictionary'
+Then print all data
+EOF
+    run $ZENROOM_EXECUTABLE -z -a tables_with_empty_strings.json fail_tables_with_empty_strings.zen
+    assert_line --partial "Incorrect data type, expected array for dictionary"
+}
