@@ -223,7 +223,7 @@ ld_emsdk_settings := -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
 ld_emsdk_settings += -sMODULARIZE=1	-sSINGLE_FILE=1 --embed-file lua@/
 ld_emsdk_settings += -sMALLOC=dlmalloc --no-heap-copy -sALLOW_MEMORY_GROWTH=1
 ld_emsdk_settings += -sINITIAL_MEMORY=${JS_INIT_MEM} -sMAXIMUM_MEMORY=${JS_MAX_MEM}
-ld_emsdk_settings += -sINCOMING_MODULE_JS_API=print,printErr -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zencode_exec\",\"_zenroom_hash_init\",\"_zenroom_hash_update\",\"_zenroom_hash_final\",\"_zencode_valid_input\",\"_zencode_parse_contract\"]'" -s "EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'"
+ld_emsdk_settings += -sINCOMING_MODULE_JS_API=print,printErr -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zencode_exec\",\"_zenroom_hash_init\",\"_zenroom_hash_update\",\"_zenroom_hash_final\",\"_zencode_valid_input\",\"_zencode_valid_code\"]'" -s "EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'"
 ld_emsdk_optimizations := -O3 -sSTRICT -flto -sUSE_SDL=0 -sEVAL_CTORS=1
 cc_emsdk_settings := -DARCH_WASM -D'ARCH=\"WASM\"'
 cc_emsdk_optimizations := -O3 -sSTRICT -flto -fno-rtti -fno-exceptions

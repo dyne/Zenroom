@@ -8,8 +8,8 @@ import {
   zenroom_hash_final,
   zenroom_hash,
   introspect,
-  zencode_parse_contract,
-  safe_zencode_parse_contract,
+  zencode_valid_code,
+  safe_zencode_valid_code,
 } from "./index";
 import { TextEncoder } from "util";
 var enc = new TextEncoder();
@@ -335,14 +335,14 @@ test("Check the introspection with data", async (t) => {
 });
 
 test("parse simple contract", async (t) => {
-  const { result } = await safe_zencode_parse_contract(`Scenario ecdh
+  const { result } = await safe_zencode_valid_code(`Scenario ecdh
   Given nothing
   Then print all data`);
   t.deepEqual(JSON.parse(result), {invalid: [], ignored: []});
 })
 
 test("parse contract with an invalid statement", async (t) => {
-  const { result } = await safe_zencode_parse_contract(`Scenario ecdh
+  const { result } = await safe_zencode_valid_code(`Scenario ecdh
   Given gibberish
   Given nothing
   Then print all data`);
@@ -360,7 +360,7 @@ test("parse contract with an invalid statement", async (t) => {
 })
 
 test("parse contract with more than one invalid statement", async (t) => {
-  const { result } = await safe_zencode_parse_contract(`Scenario ecdh
+  const { result } = await safe_zencode_valid_code(`Scenario ecdh
   Given gibberish
   Given nothing
   When gibberish
@@ -394,7 +394,7 @@ test("parse contract with more than one invalid statement", async (t) => {
 
 
 test("parse contract with ingnore statements", async (t) => {
-  const { result } = await safe_zencode_parse_contract(`Rule unknown ignore
+  const { result } = await safe_zencode_valid_code(`Rule unknown ignore
   Scenario ecdh
   Given gibberish
   and more gibberish
@@ -421,7 +421,7 @@ test("parse contract with ingnore statements", async (t) => {
 })
 
 test("parse contract with muliple ingnore and invalid statements", async (t) => {
-  const { result } = await safe_zencode_parse_contract(`Rule unknown ignore
+  const { result } = await safe_zencode_valid_code(`Rule unknown ignore
   Scenario ecdh
   Given gibberish
   and more gibberish
@@ -470,7 +470,7 @@ test("parse contract with muliple ingnore and invalid statements", async (t) => 
 
 test("strict parse of contract", async (t) => {
   try {
-    await zencode_parse_contract(`Rule unknown ignore
+    await zencode_valid_code(`Rule unknown ignore
     Scenario ecdh
     Given gibberish
     and more gibberish
