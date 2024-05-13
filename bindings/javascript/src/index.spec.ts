@@ -9,6 +9,7 @@ import {
   zenroom_hash,
   introspect,
   zencode_parse_contract,
+  safe_zencode_parse_contract,
 } from "./index";
 import { TextEncoder } from "util";
 var enc = new TextEncoder();
@@ -334,14 +335,14 @@ test("Check the introspection with data", async (t) => {
 });
 
 test("parse simple contract", async (t) => {
-  const { result } = await zencode_parse_contract(`Scenario ecdh
+  const { result } = await safe_zencode_parse_contract(`Scenario ecdh
   Given nothing
   Then print all data`);
   t.deepEqual(JSON.parse(result), {invalid: [], ignored: []});
 })
 
 test("parse contract with an invalid statement", async (t) => {
-  const { result } = await zencode_parse_contract(`Scenario ecdh
+  const { result } = await safe_zencode_parse_contract(`Scenario ecdh
   Given gibberish
   Given nothing
   Then print all data`);
@@ -359,7 +360,7 @@ test("parse contract with an invalid statement", async (t) => {
 })
 
 test("parse contract with more than one invalid statement", async (t) => {
-  const { result } = await zencode_parse_contract(`Scenario ecdh
+  const { result } = await safe_zencode_parse_contract(`Scenario ecdh
   Given gibberish
   Given nothing
   When gibberish
@@ -393,7 +394,7 @@ test("parse contract with more than one invalid statement", async (t) => {
 
 
 test("parse contract with ingnore statements", async (t) => {
-  const { result } = await zencode_parse_contract(`Rule unknown ignore
+  const { result } = await safe_zencode_parse_contract(`Rule unknown ignore
   Scenario ecdh
   Given gibberish
   and more gibberish
@@ -420,7 +421,7 @@ test("parse contract with ingnore statements", async (t) => {
 })
 
 test("parse contract with muliple ingnore and invalid statements", async (t) => {
-  const { result } = await zencode_parse_contract(`Rule unknown ignore
+  const { result } = await safe_zencode_parse_contract(`Rule unknown ignore
   Scenario ecdh
   Given gibberish
   and more gibberish
@@ -465,4 +466,23 @@ test("parse contract with muliple ingnore and invalid statements", async (t) => 
     ]
   }
   t.deepEqual(JSON.parse(result), expected);  
+})
+
+test("strict parse of contract", async (t) => {
+  try {
+    await zencode_parse_contract(`Rule unknown ignore
+    Scenario ecdh
+    Given gibberish
+    and more gibberish
+    Given nothing
+    When gibberish
+    Not a real statement
+    When done
+    Something more
+    Then print all data
+    Is it clear?
+    Then gibberish`);
+  } catch(error) {
+    t.true(error.logs.includes('Zencode line 6 found invalid statement out of given or then phase: When gibberish'));
+  }
 })
