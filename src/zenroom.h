@@ -45,7 +45,7 @@ int zencode_valid_input(const char *script, const char *conf, const char *keys, 
 
 // parse the contract failing on wrong syntax when strict is set to 1
 // otherwise return an array of ignored and invalid statements when strict is set to 0
-int zencode_parse_contract(const char *script, const int strict);
+int zencode_valid_code(const char *script, const char *conf, const int strict);
 
 // direct access hash calls
 // hash_type may be a string of: 'sha256' or 'sha512'

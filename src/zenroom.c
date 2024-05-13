@@ -584,9 +584,11 @@ int zencode_valid_input(const char *script, const char *conf, const char *keys, 
 	return( _check_zenroom_result(Z));
 }
 
-int zencode_parse_contract(const char *script, const int strict) {
+int zencode_valid_code(const char *script, const char *conf, const int strict) {
 	if (_check_script_arg(script) != SUCCESS) return ERR_INIT;
-	zenroom_t *Z = zen_init(NULL, NULL, NULL);
+	const char *c, *k, *d;
+	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
+	zenroom_t *Z = zen_init(c, NULL, NULL);
 	if (_check_zenroom_init(Z) != SUCCESS) return ERR_INIT;
 	// disable strict parsing
 	if (!strict) {

@@ -215,7 +215,7 @@ export const introspect = async (zencode, props?: ZenroomProps) => {
   }
 };
 
-export const zencode_parse_contract = async (
+export const zencode_valid_code = async (
   zencode: string,
   strict: number = 1
 ): Promise<ZenroomResult> => {
@@ -223,7 +223,7 @@ export const zencode_parse_contract = async (
   return new Promise((resolve, reject) => {
     let result = "";
     let logs = "";
-    const _exec = Module.cwrap("zencode_parse_contract", "number", [
+    const _exec = Module.cwrap("zencode_valid_code", "number", [
       "string",
       "number",
     ]);
@@ -242,8 +242,8 @@ export const zencode_parse_contract = async (
   });
 }
 
-export const safe_zencode_parse_contract = async (
+export const safe_zencode_valid_code = async (
   zencode: string
 ): Promise<ZenroomResult> => {
-  return zencode_parse_contract(zencode, 0);
+  return zencode_valid_code(zencode, 0);
 }
