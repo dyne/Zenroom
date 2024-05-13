@@ -364,8 +364,9 @@ end
        elseif dt == 'zenroom.float' or dt == 'zenroom.time' then
 		    return to_number_f(data)
        elseif iszen(dt) then
-		  -- leverage first class citizen method on zenroom data
-		  return fun(data:octet())
+        if fun == O.to_string and fun(data) == nil then return "" end
+        -- leverage first class citizen method on zenroom data
+        return fun(data:octet())
        end
        return fun(data)
     end
