@@ -65,6 +65,24 @@ extern int PQCLEAN_KYBER512_CLEAN_crypto_kem_enc(uint8_t *ct, uint8_t *ss, const
 extern int PQCLEAN_KYBER512_CLEAN_crypto_kem_dec(uint8_t *ss, const uint8_t *ct, const uint8_t *sk);
 
 /*
+	Quantum proof ml-kem-512
+*/
+
+#define pqcrystals_ml_kem_512_ipd_ref_SECRETKEYBYTES 1632
+#define pqcrystals_ml_kem_512_ipd_ref_PUBLICKEYBYTES 800
+#define pqcrystals_ml_kem_512_ipd_ref_CIPHERTEXTBYTES 768
+#define pqcrystals_ml_kem_512_ipd_ref_KEYPAIRCOINBYTES 64
+#define pqcrystals_ml_kem_512_ipd_ref_ENCCOINBYTES 32
+#define pqcrystals_ml_kem_512_ipd_ref_BYTES 32
+
+extern int pqcrystals_ml_kem_512_ipd_ref_keypair_derand(uint8_t *pk, uint8_t *sk, const uint8_t *coins);
+extern int pqcrystals_ml_kem_512_ipd_ref_keypair(uint8_t *pk, uint8_t *sk);
+extern int pqcrystals_ml_kem_512_ipd_ref_enc_derand(uint8_t *ct, uint8_t *ss, const uint8_t *pk, const uint8_t *coins);
+extern int pqcrystals_ml_kem_512_ipd_ref_enc(uint8_t *ct, uint8_t *ss, const uint8_t *pk);
+extern int pqcrystals_ml_kem_512_ipd_ref_dec(uint8_t *ss, const uint8_t *ct, const uint8_t *sk);
+
+
+/*
   Quantum proof Streamlined NTRU Prime kem/cipher
 */
 #define PQCLEAN_SNTRUP761_CLEAN_CRYPTO_SECRETKEYBYTES  1763
@@ -536,6 +554,24 @@ end:
 	END(1);
 }
 
+/*#######################################*/
+/*               ML-KEM 512               */
+/*#######################################*/
+static int qp_ml_kem_512_keygen(lua_State *L) {
+	BEGIN();
+	lua_createtable(L, 0, 2);
+	octet *private = o_new(L, pqcrystals_ml_kem_512_ipd_ref_SECRETKEYBYTES); SAFE(private);
+	lua_setfield(L, -2, "private");
+	octet *public = o_new(L, pqcrystals_ml_kem_512_ipd_ref_PUBLICKEYBYTES); SAFE(public);
+	lua_setfield(L, -2, "public");
+
+	pqcrystals_ml_kem_512_ipd_ref_keypair((unsigned char*)public->val, (unsigned char*)private->val);
+	public->len = pqcrystals_ml_kem_512_ipd_ref_PUBLICKEYBYTES;
+	private->len = pqcrystals_ml_kem_512_ipd_ref_SECRETKEYBYTES;
+
+	END(1);
+}
+
 
 /*#######################################*/
 /*              SNTRUP 761               */
@@ -969,6 +1005,8 @@ int luaopen_qp(lua_State *L) {
 		{"kemctcheck", qp_kem_ctcheck},
 		{"enc", qp_enc},
 		{"dec", qp_dec},
+		// ML-KEM-512
+		{"mlkem512_keygen", qp_ml_kem_512_keygen},
 		// SNTRUP761
 		{"ntrup_keygen", qp_sntrup_kem_keygen},
 		{"ntrup_pubgen", qp_sntrup_kem_pubgen},
