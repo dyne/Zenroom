@@ -561,6 +561,11 @@ void shake128_inc_ctx_release(shake128incctx *state) {
     free(state->ctx);
 }
 
+void shake128_inc_ctx_reset(shake128incctx *state) {
+	keccak_inc_init(state->ctx);
+}
+
+
 void shake256_inc_init(shake256incctx *state) {
     state->ctx = malloc(PQC_SHAKEINCCTX_BYTES);
     if (state->ctx == NULL) {
@@ -594,7 +599,7 @@ void shake256_inc_ctx_release(shake256incctx *state) {
 }
 
 // aux function added by jrml, needs init first (malloc)
-void shake256_inc_ctx_reset(shake128incctx *state) {
+void shake256_inc_ctx_reset(shake128incctx *state) { //Should here be shake256incctx?
     keccak_inc_init(state->ctx);
 }
 
@@ -616,6 +621,12 @@ void shake128_absorb(shake128ctx *state, const uint8_t *input, size_t inlen) {
         exit(111);
     }
     keccak_absorb(state->ctx, SHAKE128_RATE, input, inlen, 0x1F);
+}
+
+void shake128_absorb_once(shake128incctx *state, const uint8_t *in, size_t inlen) {
+	shake128_inc_ctx_reset(state);
+	shake128_inc_absorb(state, in, inlen);
+	shake128_inc_finalize(state);
 }
 
 /*************************************************
@@ -666,6 +677,11 @@ void shake256_absorb(shake256ctx *state, const uint8_t *input, size_t inlen) {
     keccak_absorb(state->ctx, SHAKE256_RATE, input, inlen, 0x1F);
 }
 
+void shake256_absorb_once(shake256incctx *state, const uint8_t *in, size_t inlen) {
+	shake256_inc_ctx_reset(state);
+	shake256_inc_absorb(state, in, inlen);
+	shake256_inc_finalize(state);
+}
 /*************************************************
  * Name:        shake256_squeezeblocks
  *
