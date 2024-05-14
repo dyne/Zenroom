@@ -55,6 +55,7 @@ typedef struct {
  * with the same state.
  */
 void shake128_absorb(shake128ctx *state, const uint8_t *input, size_t inlen);
+void shake128_absorb_once(shake128incctx *state, const uint8_t *in, size_t inlen);
 /* Squeeze output out of the sponge.
  *
  * Supports being called multiple times
@@ -83,6 +84,8 @@ void shake128_inc_squeeze(uint8_t *output, size_t outlen, shake128incctx *state)
 void shake128_inc_ctx_clone(shake128incctx* dest, const shake128incctx *src);
 /* Free the context of the SHAKE128 XOF */
 void shake128_inc_ctx_release(shake128incctx *state);
+/* Re-initialize the state */
+void shake128_inc_ctx_reset(shake128incctx *state);
 
 /* Initialize the state and absorb the provided input.
  *
@@ -90,6 +93,7 @@ void shake128_inc_ctx_release(shake128incctx *state);
  * with the same state.
  */
 void shake256_absorb(shake256ctx *state, const uint8_t *input, size_t inlen);
+void shake256_absorb_once(shake256incctx *state, const uint8_t *in, size_t inlen);
 /* Squeeze output out of the sponge.
  *
  * Supports being called multiple times
