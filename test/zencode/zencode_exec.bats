@@ -196,25 +196,23 @@ EOF
 	assert_output '{"myMessage":"Dear Bob, your name is too short, goodbye - Alice.","output":["Zenroom_certifies_that_signatures_are_all_correct!"]}'
 }
 
-# TODO: how to test failure and error message with zencode_exec?
 @test "failing test print encoded trace with empty string in it" {
-    skip
 
-	# empty conf
-	echo > zencode_exec_stdin
+    # empty conf
+    echo > zencode_exec_stdin
 
     # zencode
-	cat <<EOF | base64 -w0 >> zencode_exec_stdin
+    cat <<EOF | base64 -w0 >> zencode_exec_stdin
 Rule unknown ignore
 Given I have the 'string array' named 'array'
 Given I have the 'string array' named 'dictionary'
 Then print all data
 
 EOF
-	echo >> zencode_exec_stdin
+    echo >> zencode_exec_stdin
 
     # keys
-	cat <<EOF | base64 -w0 >> zencode_exec_stdin
+    cat <<EOF | base64 -w0 >> zencode_exec_stdin
 {
     "dictionary": {
         "str": "hello world!",
@@ -228,11 +226,12 @@ EOF
     ]
 }
 EOF
-	echo >> zencode_exec_stdin
+    echo >> zencode_exec_stdin
 
     echo >> zencode_exec_stdin # data
     echo >> zencode_exec_stdin # extra
     echo >> zencode_exec_stdin # context
 
-	cat zencode_exec_stdin | ${TR}/zencode-exec
+    run ${TR}/zencode-exec < zencode_exec_stdin
+    assert_line --partial "Zencode line 3: Given I have the 'string array' named 'dictionary'"
 }
