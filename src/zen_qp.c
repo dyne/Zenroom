@@ -74,6 +74,7 @@ extern int PQCLEAN_KYBER512_CLEAN_crypto_kem_dec(uint8_t *ss, const uint8_t *ct,
 #define pqcrystals_ml_kem_512_ipd_ref_KEYPAIRCOINBYTES 64
 #define pqcrystals_ml_kem_512_ipd_ref_ENCCOINBYTES 32
 #define pqcrystals_ml_kem_512_ipd_ref_BYTES 32
+#define pqcrystal_mlkem_512_INDCPA_SECRETKEYBYTES 768
 
 extern int pqcrystals_ml_kem_512_ipd_ref_keypair_derand(uint8_t *pk, uint8_t *sk, const uint8_t *coins);
 extern int pqcrystals_ml_kem_512_ipd_ref_keypair(uint8_t *pk, uint8_t *sk);
@@ -559,6 +560,23 @@ end:
 /*#######################################*/
 static int qp_ml_kem_512_keygen(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
+	uint8_t randbytes[64];
+	for(int j=1; j<3; j++){
+	void *ud =luaL_testudata(L,j,"zenroom.octet");
+	if (ud){
+		octet * rnd = (octet*) ud; SAFE(rnd);
+		if (rnd->len != 32) {
+			failed_msg = "Wrong seed size";
+			goto end;	
+		}
+		for(uint8_t i=0;i<32;i++) randbytes[i+32*(j-1)] = rnd->val[i];
+	}
+	else {
+		Z(L);
+		for(uint8_t i=0;i<32;i++) randbytes[i+32*(j-1)] = RAND_byte(Z->random_generator);
+	}
+	}
 	lua_createtable(L, 0, 2);
 	octet *private = o_new(L, pqcrystals_ml_kem_512_ipd_ref_SECRETKEYBYTES); SAFE(private);
 	lua_setfield(L, -2, "private");
@@ -568,7 +586,151 @@ static int qp_ml_kem_512_keygen(lua_State *L) {
 	pqcrystals_ml_kem_512_ipd_ref_keypair((unsigned char*)public->val, (unsigned char*)private->val);
 	public->len = pqcrystals_ml_kem_512_ipd_ref_PUBLICKEYBYTES;
 	private->len = pqcrystals_ml_kem_512_ipd_ref_SECRETKEYBYTES;
+end:
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
 
+static int qp_ml_kem_512_pubgen(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *sk = NULL, *pk = NULL;
+	sk = o_arg(L, 1);
+	if(sk == NULL) {
+		failed_msg = "Could not allocate secret key";
+		goto end;
+	}
+	pk = o_new(L, pqcrystals_ml_kem_512_ipd_ref_PUBLICKEYBYTES);
+	if(pk == NULL) {
+		failed_msg = "Could not allocate private key";
+		goto end;
+	}
+
+	memcpy((unsigned char*)pk->val,
+				(unsigned char*)sk->val + pqcrystal_mlkem_512_INDCPA_SECRETKEYBYTES, pqcrystals_ml_kem_512_ipd_ref_PUBLICKEYBYTES);
+	pk->len = PQCLEAN_KYBER512_CLEAN_CRYPTO_PUBLICKEYBYTES;
+
+
+end:
+	o_free(L, sk);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+// checks the public key length
+static int qp_ml_kem_512_pubcheck(lua_State *L) {
+	BEGIN();
+	octet *pk = o_arg(L, 1);
+	if(pk == NULL) {
+		THROW("Could not allocate public key");
+	} else {
+		if(pk->len == PQCLEAN_KYBER512_CLEAN_CRYPTO_PUBLICKEYBYTES)
+			lua_pushboolean(L, 1);
+		else
+			lua_pushboolean(L, 0);
+		o_free(L,pk);
+	}
+	END(1);
+}
+
+static int qp_ml_kem_512_enc(lua_State *L) {
+	BEGIN();
+	uint8_t randbytes[32];
+	char *failed_msg = NULL;
+	void *ud = luaL_testudata(L, 2, "zenroom.octet");
+	if (ud){
+		octet *rnd = (octet *) ud; SAFE(rnd);
+		if (rnd->len != 32) {
+			failed_msg = "Wrong seed size";
+			goto end;	
+		}
+		for(uint8_t i = 0; i < 32; i++) randbytes[i] = rnd -> val[i];
+	}
+	else {
+		Z(L);
+		for(uint8_t i = 0; i < 32; i++) randbytes[i] = RAND_byte(Z -> random_generator);
+	}
+	octet *pk = NULL, *ss = NULL, *ct = NULL;
+	pk = o_arg(L, 1);
+	if(pk == NULL) {
+		failed_msg = "Cuold not allocate public key";
+		goto end;
+	}
+	if(pk->len != pqcrystals_ml_kem_512_ipd_ref_PUBLICKEYBYTES) {
+		failed_msg = "invalid size for public key";
+		goto end;
+	}
+	lua_createtable(L, 0, 2);
+	ss = o_new(L, KYBER_SSBYTES);
+	if(ss == NULL) {
+		failed_msg = "Could not allocate kem secret";
+		goto end;
+	}
+	lua_setfield(L, -2, "secret"); // shared secret
+	ct = o_new(L, pqcrystals_ml_kem_512_ipd_ref_CIPHERTEXTBYTES);
+	if(ct == NULL) {
+		failed_msg = "Could not allocate kem ciphertext";
+		goto end;
+	}
+	lua_setfield(L, -2, "cipher");
+
+	if(pqcrystals_ml_kem_512_ipd_ref_enc_derand((unsigned char*)ct->val,
+						 (unsigned char*)ss->val,
+						 (unsigned char*)pk->val,
+						 randbytes)) {
+		failed_msg = "error in the creation of the shared secret";
+		goto end;
+	}
+	ss->len = KYBER_SSBYTES;
+	ct->len = pqcrystals_ml_kem_512_ipd_ref_CIPHERTEXTBYTES;
+end:
+	o_free(L,pk);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+static int qp_ml_kem_512_dec(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *sk = NULL, *ct = NULL;
+	sk = o_arg(L, 1);
+	ct = o_arg(L, 2);
+	if(sk == NULL || ct == NULL) {
+		failed_msg = "Could not allocate memory during decription";
+		goto end;
+	}
+	if(sk->len != pqcrystals_ml_kem_512_ipd_ref_SECRETKEYBYTES) {
+		failed_msg = "invalid size for secret key";
+		goto end;
+	}
+	if(ct->len != pqcrystals_ml_kem_512_ipd_ref_CIPHERTEXTBYTES) {
+		failed_msg = "invalid size for ciphertext key";
+		goto end;
+	}
+	octet *ss = o_new(L, KYBER_SSBYTES);
+	if(ss == NULL) {
+		failed_msg = "Could not allocate kem secret";
+		goto end;
+	}
+	if(pqcrystals_ml_kem_512_ipd_ref_dec((unsigned char*)ss->val,
+						 (unsigned char*)ct->val,
+						 (unsigned char*)sk->val)) {
+		failed_msg = "error in while deciphering the shared secret";
+		goto end;
+	}
+	ss->len = KYBER_SSBYTES;
+end:
+	o_free(L,sk);
+	o_free(L,ct);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
