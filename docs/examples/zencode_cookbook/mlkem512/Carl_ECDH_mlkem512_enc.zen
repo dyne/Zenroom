@@ -1,0 +1,18 @@
+Rule check version 2.0.0
+Scenario ecdh : Bob encrypts a secret message for Carl
+Scenario qp : Bob creates a secret and its ciphertext for Carl
+Given I am 'Bob'
+and I have a 'mlkem512 public key' from 'Carl'
+and I have a 'ecdh public key' from 'Carl'
+When I create the mlkem512 kem for 'Carl'
+and I create the ecdh key
+and I write string 'This is my secret message.' in 'message'
+and I write string 'This is the header' in 'header'
+and I encrypt the secret message of 'message' for 'Carl'
+and I rename the 'ecdh public key' to 'Carl ecdh public key'
+and I create the ecdh public key
+Then print the 'secret message'
+and print the 'message'
+and print my 'ecdh public key'
+and print the 'mlkem512 ciphertext' from 'mlkem512 kem'
+and print the 'mlkem512 secret' from 'mlkem512 kem'

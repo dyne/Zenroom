@@ -119,7 +119,7 @@ void shake256_inc_ctx_clone(shake256incctx* dest, const shake256incctx *src);
 /* Free the state */
 void shake256_inc_ctx_release(shake256incctx *state);
 /* Re-initialize the state */
-void shake256_inc_ctx_reset(shake128incctx *state);
+void shake256_inc_ctx_reset(shake256incctx *state);
 
 /* One-stop SHAKE128 call */
 void shake128(uint8_t *output, size_t outlen,

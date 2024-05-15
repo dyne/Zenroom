@@ -1,0 +1,13 @@
+Rule check version 2.0.0
+Scenario qp : Alice create the mlkem512 secret
+
+# Here I declare my identity
+Given that I am known as 'Alice'
+# Here I load my keyring and the ciphertext
+and I have the 'keyring'
+and I have a 'mlkem512 ciphertext'
+
+# Here I recreate the secret starting from the ciphertext
+When I create the mlkem512 secret from 'mlkem512 ciphertext'
+
+Then print the 'mlkem512 secret'
