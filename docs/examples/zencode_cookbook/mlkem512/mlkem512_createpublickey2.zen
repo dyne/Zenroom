@@ -1,0 +1,7 @@
+Rule check version 2.0.0
+Scenario qp : Create and publish the mlkem512 public key
+Given I am 'Alice'
+#and I have a 'mlkem512 private key'
+and I have a 'hex' named 'private key'
+When I create the mlkem512 public key with secret key 'private key'
+Then print my 'mlkem512 public key'

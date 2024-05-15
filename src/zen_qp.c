@@ -583,7 +583,7 @@ static int qp_ml_kem_512_keygen(lua_State *L) {
 	octet *public = o_new(L, pqcrystals_ml_kem_512_ipd_ref_PUBLICKEYBYTES); SAFE(public);
 	lua_setfield(L, -2, "public");
 
-	pqcrystals_ml_kem_512_ipd_ref_keypair((unsigned char*)public->val, (unsigned char*)private->val);
+	pqcrystals_ml_kem_512_ipd_ref_keypair_derand((unsigned char*)public->val, (unsigned char*)private->val, randbytes);
 	public->len = pqcrystals_ml_kem_512_ipd_ref_PUBLICKEYBYTES;
 	private->len = pqcrystals_ml_kem_512_ipd_ref_SECRETKEYBYTES;
 end:
@@ -637,10 +637,44 @@ static int qp_ml_kem_512_pubcheck(lua_State *L) {
 	END(1);
 }
 
+// checks the shared secret length
+static int qp_ml_kem_512_sscheck(lua_State *L) {
+	BEGIN();
+	octet *ss = o_arg(L, 1);
+	if(ss == NULL) {
+		THROW("Could not allocate kem secret");
+	} else {
+		if(ss->len == pqcrystals_ml_kem_512_ipd_ref_BYTES)
+			lua_pushboolean(L, 1);
+		else
+			lua_pushboolean(L, 0);
+		o_free(L, ss);
+	}
+	END(1);
+}
+
+// check the ciphertext length
+static int qp_ml_kem_512_ctcheck(lua_State *L) {
+	BEGIN();
+	octet *ct = o_arg(L, 1);
+	if(ct == NULL) {
+		THROW("Could not allocate kem ciphertext");
+	} else {
+		if(ct->len == pqcrystals_ml_kem_512_ipd_ref_CIPHERTEXTBYTES)
+			lua_pushboolean(L, 1);
+		else
+			lua_pushboolean(L, 0);
+		o_free(L, ct);
+	}
+	END(1);
+}
+
 static int qp_ml_kem_512_enc(lua_State *L) {
 	BEGIN();
 	uint8_t randbytes[32];
 	char *failed_msg = NULL;
+	octet *pk = NULL, *ss = NULL, *ct = NULL;
+	pk = o_arg(L, 1);
 	void *ud = luaL_testudata(L, 2, "zenroom.octet");
 	if (ud){
 		octet *rnd = (octet *) ud; SAFE(rnd);
@@ -654,8 +688,6 @@ static int qp_ml_kem_512_enc(lua_State *L) {
 		Z(L);
 		for(uint8_t i = 0; i < 32; i++) randbytes[i] = RAND_byte(Z -> random_generator);
 	}
-	octet *pk = NULL, *ss = NULL, *ct = NULL;
-	pk = o_arg(L, 1);
 	if(pk == NULL) {
 		failed_msg = "Cuold not allocate public key";
 		goto end;
@@ -1169,6 +1201,12 @@ int luaopen_qp(lua_State *L) {
 		{"dec", qp_dec},
 		// ML-KEM-512
 		{"mlkem512_keygen", qp_ml_kem_512_keygen},
+		{"mlkem512_pubgen",qp_ml_kem_512_pubgen},
+		{"mlkem512_pubcheck",qp_ml_kem_512_pubcheck},
+		{"mlkem512_sscheck",qp_ml_kem_512_sscheck},
+		{"mlkem512_ctcheck",qp_ml_kem_512_ctcheck},
+		{"mlkem512_enc",qp_ml_kem_512_enc},
+		{"mlkem512_dec",qp_ml_kem_512_dec},
 		// SNTRUP761
 		{"ntrup_keygen", qp_sntrup_kem_keygen},
 		{"ntrup_pubgen", qp_sntrup_kem_pubgen},

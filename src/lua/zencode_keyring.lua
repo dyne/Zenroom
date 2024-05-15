@@ -66,6 +66,7 @@ local keytypes = {
     mldsa44 = true,
     schnorr = true,
     kyber = true,
+    mlkem512 = true,
     ntrup = true,
     eddsa = true,
 	fsp = true,
@@ -92,6 +93,12 @@ end
 local function kyber_f(o)
    if #o ~= 1632 then
        error('Kyber key length is not correct: '..#o, 3)
+   end
+   return o
+end
+local function mlkem512_f(o)
+   if #o ~= 1632 then
+       error('ML-KEM-512 key length is not correct: '..#o, 3)
    end
    return o
 end
@@ -162,6 +169,9 @@ local function import_keyring(obj)
    if obj.kyber then
       res.kyber = schema_get(obj, 'kyber', kyber_f, O.from_base64)
    end
+   if obj.mlkem512 then
+      res.mlkem512 = schema_get(obj, 'mlkem512', mlkem512_f, O.from_base64)
+   end
    if obj.schnorr then
       res.schnorr = schema_get(obj, 'schnorr', nop, O.from_base64)
    end
@@ -206,6 +216,7 @@ function export_keyring(obj)
    if obj.dilithium then res.dilithium = CONF.output.encoding.fun(obj.dilithium) end
    if obj.mldsa44 then res.mldsa44 = CONF.output.encoding.fun(obj.mldsa44) end
    if obj.kyber then     res.kyber     = CONF.output.encoding.fun(obj.kyber) end
+   if obj.mlkem512 then     res.mlkem512     = CONF.output.encoding.fun(obj.mlkem512) end
    if obj.schnorr then   res.schnorr   = CONF.output.encoding.fun(obj.schnorr) end
    if obj.ntrup then     res.ntrup     = CONF.output.encoding.fun(obj.ntrup) end
    if obj.eddsa then     res.eddsa     = O.to_base58(obj.eddsa) end
