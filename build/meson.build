@@ -201,13 +201,13 @@ tests = [
 'cookbook_ecdh', 'cookbook_ecdh_encrypt_json', 'cookbook_given',
 'cookbook_hash_pdf', 'cookbook_intro', 'cookbook_then',
 'cookbook_when', 'credential', 'dictionary', 'dp3t', 'ecdh',
-'ethereum', 'float', 'foreach', 'generic_bbs', 'generic_dilithium',
-'generic_ecdh', 'generic_eddsa', 'generic_schnorr', 'generic_es256',
-'given', 'hash', 'http', 'keys', 'kyber', 'ntrup', 'numbers',
-'output', 'pack', 'parser', 'planetmint', 'pvss', 'random', 'reflow',
-'rules', 'sd_jwt', 'secshare', 'then', 'time', 'w3c', 'w3c_did', 'when',
-'zencode_exec', 'zenswarm', 'zkp', 'zkp_multi_petitions', 'logfmt',
-'scope', 'fsp'
+'ethereum', 'float', 'foreach', 'fsp', 'generic_bbs', 'generic_dilithium',
+'generic_ecdh', 'generic_eddsa', 'generic_es256', 'generic_mldsa44',
+'generic_schnorr', 'given', 'hash', 'http', 'keys', 'kyber', 'logfmt',
+'mlkem512', 'ntrup', 'numbers', 'output', 'pack', 'parser',
+'planetmint', 'pvss', 'random', 'reflow', 'rules', 'scope',
+'sd_jwt', 'secshare', 'then', 'time', 'w3c', 'w3c_did', 'when',
+'zencode_exec', 'zenswarm', 'zkp', 'zkp_multi_petitions'
 ]
 foreach test_suite : tests
     test('zencode_'+test_suite.underscorify(),
