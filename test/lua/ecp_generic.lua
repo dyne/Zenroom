@@ -5,6 +5,11 @@ print()
 g1 = ECP.generator()
 o = ECP.order()
 
+-- invariant argument position in multiplication
+l = ECP.random()
+r = INT.random()
+assert(l*r == r*l)
+
 -- octet serialization back and forth
 a = ECP.hashtopoint(O.random(64))
 -- print("ECP serialized length: "..#a:octet().." bytes")
