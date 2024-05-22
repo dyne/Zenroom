@@ -142,7 +142,7 @@ end)
 
 -- The issuer generates the encrypted shares for n participants with quorum t
 When("create pvss public shares of '' with '' quorum '' using public keys ''", function(sec, num, thr, pubks)
-    local s = have(sec)
+    local s = BIG.new( have(sec) )
 	local n = tonumber(have(num):decimal())
 	zencode_assert(n, "Total shares is not a number: "..num)
 	local t = tonumber(have(thr):decimal())
