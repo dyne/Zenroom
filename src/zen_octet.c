@@ -1020,8 +1020,8 @@ static int concat_n(lua_State *L) {
 	OCT_copy(n, x);
 	OCT_joctet(n, y);
 end:
-	o_free(L, y);
-	o_free(L, x);
+	if(y!=&ys) o_free(L, y);
+	if(x!=&xs) o_free(L, x);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
