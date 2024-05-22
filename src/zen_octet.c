@@ -978,14 +978,8 @@ static int concat_n(lua_State *L) {
 	char *sx = NULL, *sy = NULL;
 	octet xs, ys;
 	void *ud;
-	ud = luaL_testudata(L, 1, "zenroom.octet");
+	ud = luaL_testudata(L, 1, "string");
 	if(ud) {
-		x = o_arg(L, 1);
-		if(!x) {
-			failed_msg = "Could not allocate OCTET";
-			goto end;
-		}
-	} else {
 		x = &xs;
 		sx = (char*) lua_tostring(L, 1);
 		if(!sx) {
@@ -994,15 +988,15 @@ static int concat_n(lua_State *L) {
 		}
 		xs.len = strlen(sx);
 		xs.val = sx;
-	}
-	ud = luaL_testudata(L, 2, "zenroom.octet");
-	if(ud) {
-		y = o_arg(L, 2);
-		if(!y) {
-			failed_msg = "Could not allocate OCTET";
+	} else {
+		x = o_arg(L, 1);
+		if(!x) {
+			failed_msg = "octet or string expected in concat";
 			goto end;
 		}
-	} else {
+	}
+	ud = luaL_testudata(L, 2, "string");
+	if(ud) {
 		y = &ys;
 		sy = (char*) lua_tostring(L, 2);
 		if(!sy) {
@@ -1011,6 +1005,12 @@ static int concat_n(lua_State *L) {
 		}
 		ys.len = strlen(sy);
 		ys.val = sy;
+	} else {
+		y = o_arg(L, 2);
+		if(!y) {
+			failed_msg = "octet or string expected in concat";
+			goto end;
+		}
 	}
 	octet *n = o_new(L, x->len+y->len);
 	if(!n) {
