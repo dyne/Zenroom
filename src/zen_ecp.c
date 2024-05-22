@@ -514,9 +514,24 @@ end:
 static int ecp_mul(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
+	ecp *e = NULL;
+	big *b = NULL;
 	ecp *out = NULL;
-	ecp *e = ecp_arg(L, 1);
-	big *b = big_arg(L, 2);
+	uint8_t ecpos, bigpos = 0;
+	ecpos = luaL_testudata(L, 1, "zenroom.ecp") ? 1 : 0;
+	if(!ecpos) ecpos = luaL_testudata(L, 2, "zenroom.ecp") ? 2 : 0;
+	if(!ecpos) {
+		failed_msg = "ECP not found among multiplication arguments";
+		goto end;
+	}
+	bigpos = luaL_testudata(L, 1, "zenroom.big") ? 1 : 0;
+	if(!bigpos) bigpos = luaL_testudata(L, 2, "zenroom.big") ? 2 : 0;
+	if(!bigpos) {
+		failed_msg = "BIG not found among multiplication arguments";
+		goto end;
+	}
+	e = ecp_arg(L, ecpos);
+	b = big_arg(L, bigpos);
 	if(!e || !b) {
 		failed_msg = "Could not instantiate input";
 		goto end;
