@@ -10,7 +10,7 @@ SUBDOC=mlkem512
 EOF
 
     cat <<EOF | zexe mlkem512_createprivatekey.zen
-Rule check version 2.0.0
+Rule check version 4.32.0
 Scenario qp : Create the mlkem512 private key
 Given I am 'Alice'
 When I create the mlkem512 key
@@ -21,7 +21,7 @@ EOF
 
 @test "Read keys" {
     cat <<EOF | zexe mlkem512_readkeys.zen Alice_mlkem512_privatekey.keys
-Rule check version 2.0.0
+Rule check version 4.32.0
 Scenario qp : Upload the mlkem512 private key
 Given I am 'Alice'
 and I have the 'keyring'
@@ -34,7 +34,7 @@ EOF
 
 @test "Create public key" {
     cat <<EOF | zexe mlkem512_createpublickey.zen Alice_mlkem512_privatekey.keys
-Rule check version 2.0.0
+Rule check version 4.32.0
 Scenario qp : Create the mlkem512 public key
 Given I am 'Alice'
 and I have the 'keyring'
@@ -47,7 +47,7 @@ EOF
 
 @test "Create and publish the mlkem512 public key" {
     cat <<EOF | zexe mlkem512_createpublickey2.zen mlkem512_readsecretkeys.keys
-Rule check version 2.0.0
+Rule check version 4.32.0
 Scenario qp : Create and publish the mlkem512 public key
 Given I am 'Alice'
 #and I have a 'mlkem512 private key'
@@ -64,7 +64,7 @@ EOF
 
 @test "mlkem512 KEM" {
     cat <<EOF | zexe mlkem512_enc.zen Alice_mlkem512_pubkey.json
-Rule check version 2.0.0
+Rule check version 4.32.0
 Scenario qp : Bob create the mlkem512 secret for Alice
 
 # Here I declare my identity
@@ -90,7 +90,7 @@ EOF
 
 @test "When I create the mlkem512 secret from ''" {
     cat <<EOF | zexe mlkem512_dec.zen Alice_mlkem512_privatekey.keys mlkem512_ciphertext.json
-Rule check version 2.0.0
+Rule check version 4.32.0
 Scenario qp : Alice create the mlkem512 secret
 
 # Here I declare my identity
@@ -110,7 +110,7 @@ EOF
 #--- Creating together mlkem512 and ECDH private and public keys ---#
 @test "generating the private keys for ECDH and mlkem512" {
         cat << EOF |zexe Carl_ECDH_mlkem512_secretkeys.zen
-Rule check version 2.0.0
+Rule check version 4.32.0
 Scenario ecdh : Create the private key
 Scenario qp : Create the private key
 Given I am known as 'Carl'
@@ -123,7 +123,7 @@ EOF
 
 @test "generating the public keys for ECDH and mlkem512" {
     cat << EOF | zexe Carl_ECDH_mlkem512_pubkeys.zen Carl_secretkeys_ECDH_mlkem512.keys
-Rule check version 2.0.0
+Rule check version 4.32.0
 Scenario ecdh : Create the public key
 Scenario qp : Create the public key
 Given I am known as 'Carl'
@@ -139,7 +139,7 @@ EOF
 #--- Encrypting and decrypting together mlkem512 and ECDH secret messages ---#
 @test "encrypting a message with ECDH while creating a secret and its ciphertext with mlkem512" {
     cat <<EOF | zexe Carl_ECDH_mlkem512_enc.zen Carl_pubkeys_ECDH_mlkem512.json
-Rule check version 2.0.0
+Rule check version 4.32.0
 Scenario ecdh : Bob encrypts a secret message for Carl
 Scenario qp : Bob creates a secret and its ciphertext for Carl
 Given I am 'Bob'
@@ -165,7 +165,7 @@ EOF
 
 @test "" {
     cat <<EOF | zexe Carl_ECDH_mlkem512_dec.zen Carl_secretkeys_ECDH_mlkem512.keys Ciphertexts_ECDH_mlkem512.json
-Rule check version 2.0.0
+Rule check version 4.32.0
 Scenario ecdh : Carl decrypts the secret message from Bob using ECDH
 Scenario qp : Carl creates the mlkem512 secret
 Given that I am known as 'Carl'
