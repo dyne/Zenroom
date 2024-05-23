@@ -1,4 +1,4 @@
-Rule check version 2.0.0
+Rule check version 4.32.0
 Scenario qp : Bob create the mlkem512 secret for Alice
 
 # Here I declare my identity
