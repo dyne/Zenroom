@@ -49,6 +49,11 @@ Aw2 = (g1*k) * c + g1 * rk
 
 assert(Aw1 == Aw2, 'Error in zero-knowledge proof')
 
-
+-- test import / export octet
+e = ECP.random()
+eo = e:octet()
+b = BIG.random()
+z = ECP.to_zcash(eo)
+I.print({ecp = e, octet = eo, zcash = z})
 print "OK"
 print''
