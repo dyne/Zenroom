@@ -59,15 +59,43 @@
 
 extern int _octet_to_big(lua_State *L, big *dst, octet *src);
 
+static const char* _ecp_from_octet(ecp *e, octet *o) {
+	// protect well this entrypoint since parsing any input is at
+	// risk: Milagro's _fromOctet() uses ECP_BLS_set(ECP_BLS *P,
+	// BIG x) then converts the BIG to an FP modulo using
+	// FP_BLS_nres.
+	const char *err_octsmall =
+		"ECP total length too small to contain Octet";
+	const char *err_invalid =
+		"Octet is not a valid ECP (point is not on this curve)";
+	const char *err_notfound =
+		"Octet doesn't contains a valid ECP";
+	if(o->len > e->totlen) // buffer safety not checked by Milagro
+		return err_octsmall;
+	if(o->len == 2 && o->val[0] == SCHAR_MAX
+	   && o->val[1] == SCHAR_MAX) {
+		ECP_inf(&e->val);
+		return NULL; } // tolerated as ECP Infinity
+	if(ECP_validate(o) < 0)
+		// test in Milagro's ecdh_*.h ECP_*_PUBLIC_KEY_VALIDATE
+		return err_invalid;
+	if(! ECP_fromOctet(&e->val, o) )
+		return err_notfound;
+	// success
+	return NULL;
+}
+
 ecp* ecp_new(lua_State *L) {
 	ecp *e = (ecp *)lua_newuserdata(L, sizeof(ecp));
 	if(!e) {
 		zerror(L, "Error allocating new ecp in %s", __func__);
 		return NULL; }
+	// Z(L);
 	e->halflen = sizeof(BIG);
 	e->totlen = (MODBYTES*2)+1; // length of ECP.new(rng:modbig(o), 0):octet()
 	luaL_getmetatable(L, "zenroom.ecp");
 	lua_setmetatable(L, -2);
+	// Z->memcount_ecp++;
 	return(e);
 }
 
@@ -87,6 +115,22 @@ ecp* ecp_arg(lua_State *L, int n) {
 		*result = *(ecp*)ud;
 		Z->memcount_ecp++;
 		return result;
+	}
+	// octet first class citizen
+	octet *o = o_arg(L,n);
+	if(o) {
+		const char *failed_msg = NULL;
+		ecp *e = ecp_new(L); SAFE(e);
+		//Z->memcount_ecp++;
+		failed_msg = _ecp_from_octet(e, o);
+		o_free(L,o);
+		if(failed_msg) {
+			zerror(L, failed_msg);
+			lua_pop(L, 1);
+			ecp_free(L, e);
+			return NULL;
+		}
+		return e;
 	}
 	zerror(L, "invalid ECP in argument");
 	return NULL;
@@ -111,7 +155,6 @@ int _fp_to_big(big *dst, FP *src) {
 	FP_redc(dst->val, src);
 	return 1;
 }
-
 /***
     Create a new ECP point from an @{OCTET} argument containing its coordinates.
 
@@ -125,7 +168,7 @@ static int lua_new_ecp(lua_State *L) {
 	// unsafe parsing into BIG, only necessary for tests
 	// deactivate when not running tests
 	void *tx;
-	char *failed_msg = NULL;
+	const char *failed_msg = NULL;
 	octet *o = NULL;
 	tx = luaL_testudata(L, 1, "zenroom.big");
 	void *ty = luaL_testudata(L, 2, "zenroom.big");
@@ -196,35 +239,25 @@ end_big:
 	// then converts the BIG to an FP modulo using FP_BLS_nres.
 	o = o_arg(L, 1);
 	if(!o) {
-		failed_msg = "Could not allocate input";
+		failed_msg = "Could not allocate octet";
 		goto end;
 	}
 	ecp *e = ecp_new(L); SAFE(e);
-	if(o->len == 2 && o->val[0] == SCHAR_MAX && o->val[1] == SCHAR_MAX) {
-		ECP_inf(&e->val);
-		goto end; } // ECP Infinity
-	if(o->len > e->totlen) { // quick and dirty safety
+	if(o->len > e->totlen) { // double safety
 		lua_pop(L, 1);
-		zerror(L, "Octet length %u instead of %u bytes", o->len, e->totlen);
-		failed_msg = "Invalid octet length to parse an ECP point";
+		ecp_free(L,e);
+		zerror(L, "%s: octet length %u instead of %u bytes", __func__, o->len, e->totlen);
 		goto end;
 	}
-	int res = ECP_validate(o);
-	if(res<0) { // test in Milagro's ecdh_*.h ECP_*_PUBLIC_KEY_VALIDATE
+	failed_msg = _ecp_from_octet(e, o);
+	if(failed_msg) {
 		lua_pop(L, 1);
-		failed_msg = "Octet is not a valid ECP (point is not on this curve)";
-		goto end;
-	}
-	if(! ECP_fromOctet(&e->val, o) ) {
-		lua_pop(L, 1);
-		failed_msg = "Octet doesn't contains a valid ECP";
-		goto end;
+		ecp_free(L,e);
 	}
 end:
 	o_free(L,o);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -739,23 +772,24 @@ char gf_sign(BIG y) {
 
 static int ecp_zcash_export(lua_State *L) {
 	BEGIN();
-	char *failed_msg = NULL;
+	const char *failed_msg = NULL;
 	ecp *e = ecp_arg(L, 1);
 	if(e == NULL) {
 		THROW("Could not create ECP point");
 		return 0;
 	}
 
-	octet *o = o_new(L, 48);
+	octet *o = o_new(L, 48); // TODO: make this value adapt to ECP
+				 // curve configured at build time
 	if(o == NULL) {
 		failed_msg = "Could not allocate ECP point";
 		goto end;
 	}
 
 	if(ECP_isinf(&e->val)) {
-		o->len = 48;
+		o->len = 48; // TODO
 		o->val[0] = (char)0xc0;
-		memset(o->val+1, 0, 47);
+		memset(o->val+1, 0, 47); // TODO
 	} else {
 		BIG x, y;
 		const char c_bit = 1;
@@ -767,13 +801,13 @@ static int ecp_zcash_export(lua_State *L) {
 		char m_byte = (char)((c_bit << 7)+(i_bit << 6)+(s_bit << 5));
 
 		BIG_toBytes(o->val, x);
-		o->len = 48;
+		o->len = 48; // TODO
 
 		o->val[0] |= m_byte;
 	}
 
 end:
-	ecp_free(L, e);
+	ecp_free(L, e); // TODO: this crashes, still unsure why
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
