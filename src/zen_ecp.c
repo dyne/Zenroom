@@ -90,12 +90,10 @@ ecp* ecp_new(lua_State *L) {
 	if(!e) {
 		zerror(L, "Error allocating new ecp in %s", __func__);
 		return NULL; }
-	// Z(L);
 	e->halflen = sizeof(BIG);
 	e->totlen = (MODBYTES*2)+1; // length of ECP.new(rng:modbig(o), 0):octet()
 	luaL_getmetatable(L, "zenroom.ecp");
 	lua_setmetatable(L, -2);
-	// Z->memcount_ecp++;
 	return(e);
 }
 
@@ -109,9 +107,9 @@ void ecp_free(lua_State *L, ecp* e) {
 
 ecp* ecp_arg(lua_State *L, int n) {
 	Z(L);
+	ecp* result = (ecp*)malloc(sizeof(ecp));
 	void *ud = luaL_testudata(L, n, "zenroom.ecp");
 	if(ud) {
-		ecp* result = (ecp*)malloc(sizeof(ecp));
 		*result = *(ecp*)ud;
 		Z->memcount_ecp++;
 		return result;
@@ -120,19 +118,19 @@ ecp* ecp_arg(lua_State *L, int n) {
 	octet *o = o_arg(L,n);
 	if(o) {
 		const char *failed_msg = NULL;
-		ecp *e = ecp_new(L); SAFE(e);
-		//Z->memcount_ecp++;
-		failed_msg = _ecp_from_octet(e, o);
+		result->totlen = (MODBYTES*2)+1;
+		failed_msg = _ecp_from_octet(result, o);
 		o_free(L,o);
 		if(failed_msg) {
 			zerror(L, failed_msg);
-			lua_pop(L, 1);
-			ecp_free(L, e);
-			return NULL;
+			free(result);
+			result = NULL;
 		}
-		return e;
+		if(result) Z->memcount_ecp++;
+		return result;
 	}
 	zerror(L, "invalid ECP in argument");
+	free(result);
 	return NULL;
 }
 
@@ -245,14 +243,12 @@ end_big:
 	ecp *e = ecp_new(L); SAFE(e);
 	if(o->len > e->totlen) { // double safety
 		lua_pop(L, 1);
-		ecp_free(L,e);
 		zerror(L, "%s: octet length %u instead of %u bytes", __func__, o->len, e->totlen);
 		goto end;
 	}
 	failed_msg = _ecp_from_octet(e, o);
 	if(failed_msg) {
 		lua_pop(L, 1);
-		ecp_free(L,e);
 	}
 end:
 	o_free(L,o);
