@@ -70,6 +70,12 @@ ZEN = {
 	phase = "g"
 }
 
+local parse_error = function(linenum, err)
+	table.insert(traceback, '[!] Error at Zencode line ' .. linenum)
+	table.insert(traceback, '[!] '.. (err.msg or err))
+	ZEN.debug()
+	error('' .. err, 0)
+end
 
 function ZEN:add_schema(arr)
 	local _illegal_schemas = {
@@ -203,7 +209,7 @@ function ZEN:begin(new_heap)
 		  ctx.Z.OK = true
 	   end
 	   if not ctx.Z.OK and CONF.parser.strict_match then
-		  ctx.Z.debug()
+		  -- ctx.Z.debug()
 		  exitcode(1)
 		  error('Zencode line '..linenum..' pattern not found ('..index..'): ' .. trim(sentence), 1)
 		  return false
@@ -315,13 +321,24 @@ function ZEN:begin(new_heap)
 			 return true
 		  end,
 	   }
-	   local res
-	   if rule[2] == 'set' then
-		  res = rules[rule[2]](rule[3], rule[4])
-	   else
-		  res = rules[rule[2]..' '..rule[3]] and rules[rule[2]..' '..rule[3]](rule[4])
-	   end
-	   if res then act(text.msg) else error('Rule invalid: ' .. text.msg, 3) end
+		local ok, res
+		if rule[2] == 'set' then
+			ok, res = pcall(rules[rule[2]], rule[3], rule[4])
+		else
+			if rules[rule[2]..' '..rule[3]] then
+				ok, res = pcall(rules[rule[2]..' '..rule[3]], rule[4])
+			else
+				ok = false
+				res = 'Unknown rule \'' ..text.msg.. '\''
+			end
+		end
+		if ok and res then
+			act(text.msg)
+		elseif ok and not res then
+			error('Rule invalid: ' .. text.msg)
+		else
+			error('Rule error: ' .. res)
+		end
 	   return res
 	end
 	-- END local function set_rule
@@ -471,7 +488,7 @@ function ZEN:parse(text)
 		 local prefix = parse_prefix(line) -- trim is included
 		 if not prefix then
 			if CONF.parser.strict_parse then
-			   error("Invalid Zencode line "..self.linenum..": "..line)
+			   parse_error(self.linenum, "Invalid Zencode line "..self.linenum..": "..line)
 			end
 			table.insert(res.invalid, {line, self.linenum, 'Invalid Zencode line'})
 		 end
@@ -509,11 +526,11 @@ function ZEN:parse(text)
 			ZEN.phase = "t"
 		 end
 		 -- try to enter the machine state named in prefix
-		 -- xxx("Zencode machine enter_"..prefix..": "..text, 3)
+		 -- xxx("Zencode machine enter_"..prefix..": "..line, 3)
 		 local fm <const> = self.machine["enter_"..prefix]
 		 if CONF.parser.strict_match == true and not fm then
 			if CONF.parser.strict_parse then
-			   error("Invalid Zencode prefix "..self.linenum..": '"..line.."'")
+			   parse_error(self.linenum, "Invalid Zencode prefix "..self.linenum..": '"..line.."'")
 			end
 			table.insert(res.invalid, {line, self.linenum, 'Invalid Zencode prefix'})
 		 elseif not fm then
@@ -534,7 +551,7 @@ function ZEN:parse(text)
 				 end
 			else
 				if CONF.parser.strict_parse then
-					error("Invalid Zencode line "..self.linenum..": '"..line.."'")
+					parse_error(self.linenum, "Invalid Zencode line "..self.linenum..": '"..line.."'")
 				 else
 					table.insert(res.invalid, {line, self.linenum, 'Invalid Zencode line'})
 				 end
@@ -543,7 +560,7 @@ function ZEN:parse(text)
 			local ok, err <const> = pcall(fm, self.machine, { msg = tline, Z = self })
 			if not ok or (ok and not err) then
 			   if CONF.parser.strict_parse then
-				  error(err or "Invalid transition from: "..self.machine.current.." to: "..line)
+				  parse_error(self.linenum, err or "Invalid transition from: "..self.machine.current.." to: "..line)
 			   end
 			   if type(err) == 'string' and err.find(err, 'pattern ignored') then
 				  table.insert(res.ignored, {line, self.linenum})
