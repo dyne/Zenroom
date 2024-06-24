@@ -171,12 +171,13 @@ local function _get_parameters_from_table(table_params, encoding_f)
         error("Expected dictionary, found "..params_c.zentype.." for "..table_params, 2)
     end
     if(params_c.encoding ~= 'string') then
-        error("Parameters in "..table_params.." must be strings")
+        error("Parameters in "..table_params.." must be strings", 2)
     end
     local res = ""
     for k,v in pairs(params) do
-        res = res..encoding_f(k).."="..encoding_f(v:str())
+        res = res..encoding_f(k).."="..encoding_f(v:str()).."&"
     end
+    if #res > 1 then res = res:sub(1, -2) end
     ACK.http_get_parameters = O.from_string(res)
     new_codec('http_get_parameters', { zentype = 'e', encoding = 'string' })
 end
