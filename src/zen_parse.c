@@ -256,6 +256,19 @@ static int lua_strtok(lua_State* L) {
 }
 #endif
 
+// list scenarios embedded at build time in lualibs_detected.c
+extern const char* const zen_scenarios[];
+static int lua_list_scenarios(lua_State* L) {
+  lua_newtable(L);
+  register int i;
+  for(i=0; zen_scenarios[i] != NULL; i++) {
+	lua_pushnumber(L, i + 1);  // Lua arrays are 1-indexed
+	lua_pushstring(L, zen_scenarios[i]);
+	lua_settable(L, -3);
+  }
+  return 1;
+}
+
 void zen_add_parse(lua_State *L) {
 	// override print() and io.write()
 	static const struct luaL_Reg custom_parser [] =
@@ -264,6 +277,7 @@ void zen_add_parse(lua_State *L) {
 		  {"trim", lua_trim_spaces},
 		  {"trimq", lua_trim_quotes},
 		  {"jsontok", lua_unserialize_json},
+		  {"zencode_scenarios", lua_list_scenarios},
 		  {NULL, NULL} };
 	lua_getglobal(L, "_G");
 	luaL_setfuncs(L, custom_parser, 0);  // for Lua versions 5.2 or greater
