@@ -584,3 +584,44 @@ end
     local pruned_tables = prune_in(pruned_values)
     return pruned_tables
  end
+
+-- encode the octet in ACK[src_name] following the src_enc
+-- and then it transform it back to octet following the dest_enc
+-- @param src_name name of the variable in ACK
+-- @param src_enc the encoding to use when transforming ACK[src_name] into string
+-- @param dest_enc the encoding to use when transfroming back the string into octet
+-- @return the octet/table of octets of the above transformation
+function apply_encoding(src_name, src_enc, dest_enc)
+  local src_value, src_codec = have(src_name)
+  f_src_enc = get_encoding_function(src_enc)
+  if not f_src_enc then error("Encoding format not found: "..src_enc, 2) end
+  local encoded_src
+  -- accpet also schemas as encoding
+  if ZEN.schemas[uscore(src_enc)] then
+      if uscore(src_enc) ~= src_codec.schema then
+          error("Source schema: "..src_codec.schema.." does not match encoding "..src_enc)
+      end
+      if f_src_enc == default_export_f then
+          f_src_enc = function (obj)
+              if luatype(obj) == "table" then
+                  return deepmap(CONF.output.encoding.fun, obj)
+              else
+                  return CONF.output.encoding.fun(obj)
+              end
+          end
+      end
+      if src_codec.zentype == "e" then
+          encoded_src = f_src_enc(src_value)
+      else
+          encoded_src = {}
+          for k,v in src_value do
+              encoded_src[k] = f_src_enc(src_value)
+          end
+      end
+  else
+      encoded_src = deepmap(f_src_enc, src_value)
+  end
+  f_dest_enc = input_encoding(dest_enc)
+  if not f_dest_enc then error("Destination encoding format not found: "..dest_enc, 2) end
+  return deepmap(f_dest_enc.fun, encoded_src)
+end
