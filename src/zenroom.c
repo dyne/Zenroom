@@ -429,10 +429,11 @@ int zen_exec_lua(zenroom_t *ZZ, const char *script) {
 	return ZZ->exitcode;
 }
 
-int _check_script_arg(const char *s) {
+int _check_script_arg(zenroom_t *ZZ, const char *s) {
   if(!s) {
-    _err( "NULL string as script argument");
-    _err( "Execution aborted");
+    zerror(ZZ->lua, "NULL string as script argument");
+    zerror(ZZ->lua, "Execution aborted");
+    zen_teardown(ZZ);
 #ifdef __EMSCRIPTEN__
     EM_ASM({Module.exec_error();});
     EM_ASM(Module.onAbort(););
@@ -440,8 +441,9 @@ int _check_script_arg(const char *s) {
     return ERR_INIT;
   }
   if(s[0] == '\0') {
-    _err( "Empty string as script argument");
-    _err( "Execution aborted");
+    zerror(ZZ->lua, "Empty string as script argument");
+    zerror(ZZ->lua, "Execution aborted");
+    zen_teardown(ZZ);
 #ifdef __EMSCRIPTEN__
     EM_ASM({Module.exec_error();});
     EM_ASM(Module.onAbort(););
@@ -495,23 +497,21 @@ int _check_zenroom_result(zenroom_t *zz) {
 
 int zencode_exec(const char *script, const char *conf, const char *keys, const char *data) {
 
-	if (_check_script_arg(script) != SUCCESS) return ERR_INIT;
-
 	const char *c, *k, *d;
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
-	zenroom_t *Z = zen_init(c, k, d);
 
+	zenroom_t *Z = zen_init(c, k, d);
 	if (_check_zenroom_init(Z) != SUCCESS) return ERR_INIT;
+	if (_check_script_arg(Z, script) != SUCCESS) return ERR_INIT;
+
 	zen_exec_zencode(Z, script);
 	return( _check_zenroom_result(Z) );
 }
 
 int zenroom_exec(const char *script, const char *conf, const char *keys, const char *data) {
 
-	if (_check_script_arg(script) != SUCCESS) return ERR_INIT;
-
 	const char *c, *k, *d;
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
@@ -519,6 +519,8 @@ int zenroom_exec(const char *script, const char *conf, const char *keys, const c
 
 	zenroom_t *Z = zen_init(c, k, d);
 	if (_check_zenroom_init(Z) != SUCCESS) return ERR_INIT;
+	if (_check_script_arg(Z, script) != SUCCESS) return ERR_INIT;
+
 	zen_exec_lua(Z, script);
 	return( _check_zenroom_result(Z));
 }
@@ -527,8 +529,6 @@ int zencode_exec_tobuf(const char *script, const char *conf, const char *keys, c
 		char *stdout_buf, size_t stdout_len,
 		char *stderr_buf, size_t stderr_len) {
 
-	if (_check_script_arg(script) != SUCCESS) return ERR_INIT;
-
 	const char *c, *k, *d;
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
@@ -536,6 +536,7 @@ int zencode_exec_tobuf(const char *script, const char *conf, const char *keys, c
 
 	zenroom_t *Z = zen_init(c, k, d);
 	if (_check_zenroom_init(Z) != SUCCESS) return ERR_INIT;
+	if (_check_script_arg(Z, script) != SUCCESS) return ERR_INIT;
 
 	// setup stdout and stderr buffers
 	Z->stdout_buf = stdout_buf;
@@ -551,8 +552,6 @@ int zenroom_exec_tobuf(const char *script, const char *conf, const char *keys, c
 		char *stdout_buf, size_t stdout_len,
 		char *stderr_buf, size_t stderr_len) {
 
-	if (_check_script_arg(script) != SUCCESS) return ERR_INIT;
-
 	const char *c, *k, *d;
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
@@ -560,6 +559,7 @@ int zenroom_exec_tobuf(const char *script, const char *conf, const char *keys, c
 
 	zenroom_t *Z = zen_init(c, k, d);
 	if (_check_zenroom_init(Z) != SUCCESS) return ERR_INIT;
+	if (_check_script_arg(Z, script) != SUCCESS) return ERR_INIT;
 
 	// setup stdout and stderr buffers
 	Z->stdout_buf = stdout_buf;
@@ -572,24 +572,24 @@ int zenroom_exec_tobuf(const char *script, const char *conf, const char *keys, c
 
 int zencode_valid_input(const char *script, const char *conf, const char *keys, const char *data, const char *extra) {
 
-	if (_check_script_arg(script) != SUCCESS) return ERR_INIT;
-
 	const char *c = "scope=given";
 	const char *k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	const char *d = data ? (data[0] == '\0') ? NULL : data : NULL;
 
 	zenroom_t *Z = zen_init(c, k, d);
 	if (_check_zenroom_init(Z) != SUCCESS) return ERR_INIT;
+	if (_check_script_arg(Z, script) != SUCCESS) return ERR_INIT;
+
 	zen_exec_zencode(Z, script);
 	return( _check_zenroom_result(Z));
 }
 
 int zencode_valid_code(const char *script, const char *conf, const int strict) {
-	if (_check_script_arg(script) != SUCCESS) return ERR_INIT;
-	const char *c, *k, *d;
+	const char *c;
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	zenroom_t *Z = zen_init(c, NULL, NULL);
 	if (_check_zenroom_init(Z) != SUCCESS) return ERR_INIT;
+	if (_check_script_arg(Z, script) != SUCCESS) return ERR_INIT;
 	// disable strict parsing
 	if (!strict) {
 		luaL_dostring(Z->lua, "CONF.parser.strict_parse=false");
