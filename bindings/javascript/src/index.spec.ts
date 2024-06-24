@@ -46,26 +46,34 @@ test("does broke gracefully", async (t) => {
 test("does handle empty zencode", async (t) => {
   try {
     await zencode_exec(null);
+    t.fail("NULL zencode script does not fail");
   } catch (e) {
-    t.true(e.logs.includes("NULL string as script argument"));
+    const lines = JSON.parse(e.logs);
+    t.true(lines.includes("[!] NULL string as script argument"), e.logs);
   }
   try {
     await zencode_exec(``);
-  } catch (e) {
-    t.true(e.logs.includes("Empty string as script argument"));
+    t.fail("empty zencode script does not fail");
+  } catch(e) {
+    const lines = JSON.parse(e.logs);
+    t.true(lines.includes("[!] Empty string as script argument"), e.logs);
   }
 });
 
 test("does handle empty lua", async (t) => {
   try {
     await zenroom_exec(null);
+    t.fail("NULL lua script does not fail");
   } catch (e) {
-    t.true(e.logs.includes("NULL string as script argument"));
+    const lines = JSON.parse(e.logs);
+    t.true(lines.includes("[!] NULL string as script argument"), e.logs);
   }
   try {
     await zenroom_exec(``);
+    t.fail("empty lua script does not fail");
   } catch (e) {
-    t.true(e.logs.includes("Empty string as script argument"));
+    const lines = JSON.parse(e.logs);
+    t.true(lines.includes("[!] Empty string as script argument"), e.logs);
   }
 });
 
