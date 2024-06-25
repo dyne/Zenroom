@@ -235,7 +235,7 @@ The script to generate a secret and encapsulate it is as follows:
 
 And the output should look like this:
 
-[](../_media/examples/zencode_cookbook/qp/kyber/mlkem512_Kem.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/mlkem512/mlkem512_Kem.json ':include :type=code json')
 
 Now you have to extract and sent to Alice the ciphertext, you can do it for example using the bash command:
 
