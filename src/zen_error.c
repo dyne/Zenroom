@@ -86,13 +86,19 @@ void get_log_prefix(void *Z, log_priority prio, char dest[5]) {
 
 // error reported with lua context
 int lerror(void *LL, const char *fmt, ...) {
+  char msg[MAX_ERRMSG+4];
+  int len;
   lua_State *L = (lua_State*)LL;
-  va_list argp;
+  va_list argp, argp_copy;
   va_start(argp, fmt);
-  zerror(L, fmt, argp); // logs on all platforms
+  va_copy(argp_copy, argp);
+  len = mutt_vsnprintf(msg, MAX_ERRMSG, fmt, argp);
+  msg[len] = 0x0;
+  zerror(L, msg); // logs on all platforms
   luaL_where(L, 1); // 1 is the function which called the running function
-  lua_pushvfstring(L, fmt, argp);
+  lua_pushvfstring(L, fmt, argp_copy);
   va_end(argp);
+  va_end(argp_copy);
   lua_concat(L, 2);
   return lua_error(L); // fatal
 }
