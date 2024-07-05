@@ -494,3 +494,19 @@ test("strict parse of contract", async (t) => {
     t.true(error.logs.includes('Zencode line 6 found invalid statement out of given or then phase: When gibberish'));
   }
 })
+
+test("correctly fails on huge input", async (t) => {
+  // 6MiB base64 -> 4718592 bytes in octets
+  const data = `{"keyring":{"ecdh":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM="}, "bytes": "${"a".repeat(6*1024*1024)}"}`;
+  try {
+    await zencode_exec(`Scenario ecdh
+      Given I have a 'keyring'
+      Given I have a 'base64' named 'bytes'
+      When I create the ecdh signature of 'bytes'
+      Then print the 'ecdh signature'`, { data: data, keys: null });
+    t.fail("input of size bigger than 4MiB should not pass");
+  } catch(error) {
+    const lines = JSON.parse(error.logs);
+    t.is(lines.includes('[!] Cannot create octet, size too big: 4718592'), true, error.logs);
+  } 
+})
