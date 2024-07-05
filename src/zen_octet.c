@@ -646,7 +646,7 @@ static int from_base64(lua_State *L) {
 	if(!len) {
 		lerror(L, "base64 string contains invalid characters");
 		return 0; }
-	int nlen = len + len + len;
+	int nlen = B64decoded_len(len);
 	octet *o = o_new(L, nlen); // 4 byte header
 	SAFE(o);
 	OCT_frombase64(o, (char*)s);
