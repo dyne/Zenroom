@@ -504,8 +504,9 @@ test("correctly fails on huge input", async (t) => {
       Given I have a 'base64' named 'bytes'
       When I create the ecdh signature of 'bytes'
       Then print the 'ecdh signature'`, { data: data, keys: null });
+    t.fail("input of size 4286808 should not pass");
   } catch(error) {
     const lines = JSON.parse(error.logs);
-    t.is(lines.includes('[!] from_string: invalid string size: 4443896'), true, error.logs);
+    t.is(lines.includes('[!] Cannot create octet, size too big: 4286808'), true, error.logs);
   } 
 })
