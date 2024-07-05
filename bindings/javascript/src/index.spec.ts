@@ -1,4 +1,5 @@
 import test from "ava";
+import fs from "node:fs/promises";
 
 import {
   zencode_exec,
@@ -493,4 +494,18 @@ test("strict parse of contract", async (t) => {
   } catch(error) {
     t.true(error.logs.includes('Zencode line 6 found invalid statement out of given or then phase: When gibberish'));
   }
+})
+
+test("correctly fails on huge input", async (t) => {
+  const data = await fs.readFile("huge_input.json", { encoding: 'utf8' });
+  try {
+    await zencode_exec(`Scenario ecdh
+      Given I have a 'keyring'
+      Given I have a 'base64' named 'bytes'
+      When I create the ecdh signature of 'bytes'
+      Then print the 'ecdh signature'`, { data: data, keys: null });
+  } catch(error) {
+    const lines = JSON.parse(error.logs);
+    t.is(lines.includes('[!] from_string: invalid string size: 4443896'), true, error.logs);
+  } 
 })
