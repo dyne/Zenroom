@@ -61,7 +61,7 @@ int zenroom_hash_final(const char *hash_ctx);
 
 // zenroom_eddsa_keygen(rngseed) will print a new hex encoded secret key, optionally takes an external random seed
 int zenroom_sign_keygen(const char *algo, const char *rngseed);
-
+int zenroom_sign_pubgen(const char *algo, const char *key);
 ////////////////////////////////////////
 
 
