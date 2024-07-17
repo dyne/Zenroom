@@ -76,18 +76,20 @@ When("create ecdh public key",function()
 		new_codec('ecdh public key')
 	end
 )
-When("create ecdh key with secret key ''",function(sec)
-	local sk = have(sec)
+
+local function _ecdh_key_from_secret(sec)
+    local sk = have(sec)
 	initkeyring'ecdh'
 	ECDH.pubgen(sk)
 	ACK.keyring.ecdh = sk
-end)
-When("create ecdh key with secret ''",function(sec)
-	local sk = have(sec)
-	initkeyring'ecdh'
-	ECDH.pubgen(sk)
-	ACK.keyring.ecdh = sk
-end)
+end
+
+When("create ecdh key with secret key ''",
+     _ecdh_key_from_secret
+)
+When("create ecdh key with secret ''",
+    _ecdh_key_from_secret
+)
 
 -- encrypt with a header and secret
 When("encrypt secret message '' with ''",function(msg, sec)
