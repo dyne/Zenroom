@@ -57,6 +57,11 @@ int zenroom_hash_init(const char *hash_type);
 int zenroom_hash_update(const char *hash_ctx, const char *buffer, const int buffer_size);
 // zenroom_hash_final(hash_ctx) will print the base64 encoded hash of the data so far
 int zenroom_hash_final(const char *hash_ctx);
+
+
+// zenroom_eddsa_keygen(rngseed) will print a new hex encoded secret key, optionally takes an external random seed
+int zenroom_sign_keygen(const char *algo, const char *rngseed);
+
 ////////////////////////////////////////
 
 

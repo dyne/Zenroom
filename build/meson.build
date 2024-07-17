@@ -82,6 +82,7 @@ zenroom_src = [
     '../src/randombytes.c',
     '../src/repl.c',
     '../src/api_hash.c',
+	'../src/api_sign.c',
     '../src/zen_aes.c',
     '../src/zen_big.c',
     '../src/zen_float.c',
@@ -241,7 +242,7 @@ endforeach
 ## BATS tests in test/api
 test_dir = meson.source_root() + '/../test/'
 bats_bin = find_program(test_dir+'bats/bin/bats')
-tests = [ 'hash' ]
+tests = [ 'hash', 'sign' ]
 foreach test_suite : tests
     test('api_'+test_suite.underscorify(),
 	 bats_bin,
