@@ -45,7 +45,6 @@ end
 debug( r )
 
 
-
 print'QSORT Test #4: table sorted by zenroom type keys (octets)'
 claims = { "I am over 18",
 		   "Born in Pescara",
@@ -60,8 +59,15 @@ for _,v in sort_pairs(hashed_claims) do
    masked_claims[v] = v +  mask
 end
 for k,v in sort_pairs(masked_claims) do
-   I.print({k=k,v=v})
+   I.print({k=k,v=v,vk=masked_claims[k]})
 end
+
+masked_claims = { }
+for _,v in pairs(claims) do
+    local h = sha256(v)
+    masked_claims[h] = v
+end
+I.print(masked_claims)
 
 print'QSORT Benchmark'
 
