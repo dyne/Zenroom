@@ -163,15 +163,17 @@ static int ecdh_pubgen(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	octet *sk = o_arg(L, 1);
-	if(sk == NULL) {
+	if(sk == NULL || sk->len > ECDH.fieldsize) {
 		failed_msg = "Could not allocate secret key";
 		goto end;
 	}
-	octet *tmp = o_dup(L, sk);
-	if(sk == NULL) {
+	octet *tmp = o_new(L, ECDH.fieldsize);
+	if(tmp == NULL) {
 		failed_msg = "Could not duplicate secret key";
 		goto end;
 	}
+	OCT_copy(tmp, sk);
+	OCT_pad(tmp, ECDH.fieldsize);
 	octet *pk = o_new(L,ECDH.fieldsize*2 +1);
 	if(pk == NULL) {
 		failed_msg = "Could not create public key";
