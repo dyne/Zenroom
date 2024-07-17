@@ -23,6 +23,7 @@ save() {
     LDADD="-L$R/meson -lzenroom"
     CFLAGS="$CFLAGS -I$R/src"
     cc ${CFLAGS} -ggdb -o sign_keygen   $T/sign_keygen.c ${LDADD}
+    cc ${CFLAGS} -ggdb -o sign_pubgen   $T/sign_pubgen.c ${LDADD}
 }
 
 @test "SIGN API :: eddsa keygen" {
@@ -34,5 +35,11 @@ save() {
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 \
   > eddsa_sk_seed
     save eddsa_sk_seed
-    assert_output '06b4c6f4caf4234be9dedc6983412aaf5'
+    assert_output '06b4c6f4caf4234be9dedc6983412aaf50773e788e144e3e2cd09b56f21f744d'
+}
+
+@test "SIGN API :: eddsa pubgen" {
+    LD_LIBRARY_PATH=$R/meson ./sign_pubgen eddsa `cat eddsa_sk_seed` > eddsa_pk
+    save eddsa_pk
+    assert_output 'e78735703bf56140a00a6f867ca926fa0945e8b5752325e6593ea680d55d41bc'
 }

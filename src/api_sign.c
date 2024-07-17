@@ -20,10 +20,12 @@
 
 // external API function for signatures
 #include <stdio.h>
+#include <unistd.h>
 #include <strings.h>
 #include <inttypes.h>
 #include <zen_error.h>
 #include <encoding.h> // zenroom
+#include <mutt_sprintf.h>
 
 // #include <zen_memory.h>
 #include <ed25519.h>
@@ -39,7 +41,7 @@
 // hexseed is an optional hex input sequence
 // result is an opaque struct to be used with RAND_byte()
 // it should be free'd before exiting
-void *api_rng_alloc(const char *hexseed) {
+static void *api_rng_alloc(const char *hexseed) {
 	csprng *rng = (csprng*)malloc(sizeof(csprng));
 	if(!rng) {
 		_err( "%s : cannot allocate the random generator");
@@ -68,21 +70,40 @@ void *api_rng_alloc(const char *hexseed) {
 	return(rng);
 }
 
-int print_buf_hex(const uint8_t *in, const size_t len) {
+#define MAX_ERRMSG 256 // maximum length of an error message line
+
+static int debugf(const char *fmt, ...) {
+	char msg[MAX_ERRMSG+4];
+	int len, res;
+	va_list argp, argp_copy;
+	va_start(argp, fmt);
+	va_copy(argp_copy, argp);
+	len = mutt_vsnprintf(msg, MAX_ERRMSG, fmt, argp);
+	msg[len] = '\n';
+	msg[len+1] = 0x0;
+	res = write(3,"XXX: ",5);
+	res = write(3,msg,len+1);
+	(void)res; // avoid warnings
+	va_end(argp);
+	va_end(argp_copy);
+	return(len);
+}
+
+static int print_buf_hex(const uint8_t *in, const size_t len) {
 	char *out = malloc((len<<1)+2);
 	if(!out) {
 		_err("%s :: cannot allocate output buffer",__func__);
 		return -1;
 	}
 	buf2hex(out, (const char*)in, len);
-	out[len+1] = 0x0;
+	out[(len<<1)+1] = 0x0;
 	_out("%s",out);
 	free(out);
 	return(1);
 }
 
 int zenroom_sign_keygen(const char *algo, const char *rngseed) {
-	(void)rngseed; // TODO:
+	if(!algo) { _err("%s :: missing argument: algo",__func__); return FAIL(); }
 	if(strcmp(algo,"eddsa")==0) {
 		register const size_t sksize = sizeof(ed25519_secret_key);
 		uint8_t *sk = malloc(sksize);
@@ -90,12 +111,12 @@ int zenroom_sign_keygen(const char *algo, const char *rngseed) {
 			_err("%s :: cannot allocate output buffer",__func__);
 			return FAIL();
 		}
-		register size_t i;
 		csprng *rng = api_rng_alloc(rngseed);
 		if(!rng) {
 			_err("%s :: error initializing the random generator",__func__);
 			return FAIL();
 		}
+		register size_t i;
 		for(i=0; i < sksize; i++)
 			sk[i] = RAND_byte(rng);
 		if( print_buf_hex(sk, sksize) < 1 ) {
@@ -109,5 +130,30 @@ int zenroom_sign_keygen(const char *algo, const char *rngseed) {
 		_err("%s :: unknown sign algo: %s",__func__,algo);
 		return FAIL();
 	}
+	return OK();
+}
+
+
+int zenroom_sign_pubgen(const char *algo, const char *key) {
+	if(!algo) { _err("%s :: missing argument: algo",__func__); return FAIL(); }
+	if(!key)  { _err("%s :: missing argument: key", __func__); return FAIL(); }
+	unsigned char *pk = NULL;
+	if(strcmp(algo,"eddsa")==0) {
+		register const size_t sksize = sizeof(ed25519_secret_key);
+		size_t keylen= strlen(key) /2;
+		if(keylen!=sksize) {
+			_err("%s :: wrong key size: %u",__func__,keylen);
+			return FAIL(); }
+		char *sk = malloc(sksize);
+		if(!sk) { _err("%s :: cannot allocate sk",__func__); return FAIL(); }
+		hex2buf(sk,key); // TODO: more safety?
+		pk = malloc(sizeof(ed25519_public_key));
+		if(!pk) { _err("%s :: cannot allocate pk",__func__); return FAIL(); }
+		ed25519_publickey((const unsigned char*)sk,pk);
+		free(sk);
+	} else { _err("%s :: unknown sign algo: %s",__func__,algo); return FAIL(); }
+	if(!pk) { _err("%s :: error in pk",__func__); return FAIL(); }
+	print_buf_hex(pk,sizeof(ed25519_public_key));
+	free(pk);
 	return OK();
 }
