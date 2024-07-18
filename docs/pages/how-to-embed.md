@@ -95,16 +95,24 @@ Each data object will have a corresponding `CODEC` entry describing it
 when using input validation: the entry will be part of a dictionary
 and its name will be used as key.
 
-### Direct Hash calls
+### API direct calls (skip VM init)
 
-Zenroom offers direct API calls to certain basic cryptographic functions, so that calling applications can run them without the need to initialize the whole VM. These calls are much faster than executing a Zencode script.
+Zenroom offers direct API calls to certain cryptographic primitives, executing very fast when there is no need to initialize the whole VM. These calls may be just simplier to use for expert developers doing simple things.
 
 All direct API calls return 0 on success, anything else is an error.
 
-All their input arguments are encoded string values.
+All their input arguments and output are encoded string values, their encoding may vary: it is almost everywhere HEX (base 16), but Base64 is used for hashes.
 
-Their output result is always an encoded string value.
+The output is an encoded string printed to stdout, easy to collect from Javascript.
 
+#### Zenroom_hash* API
+
+The encoding of of all arguments is:
+- `hash_type` ASCII
+- `hash_ctx` HEX
+- `buffer` Base64
+
+The `zennrom_hash*` functions:
 ```c
 // hash_type may be one of these two strings: 'sha256' or 'sha512'
 int zenroom_hash_init(const char *hash_type);
