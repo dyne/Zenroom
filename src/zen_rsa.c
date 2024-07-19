@@ -168,8 +168,8 @@ static int rsa_encrypt(lua_State *L) {
 		failed_msg = "failed to allocate space for the public key";
 		goto end;
 	}
-	if(octet_pk->len != 516) {
-		zerror(L, "Public key size should be 516 byte, this is %u", octet_pk->len);
+	if(octet_pk->len != RSA_4096_PUBLIC_KEY_BYTES) {
+		zerror(L, "Public key size should be %u byte, this is %u",RSA_4096_PUBLIC_KEY_BYTES, octet_pk->len);
 		failed_msg = "RSA encryption aborted";
 		goto end;
 	}
@@ -208,7 +208,7 @@ static int rsa_decrypt(lua_State *L) {
 		goto end;
 	}
 	if(octet_sk->len != RSA_4096_PRIVATE_KEY_BYTES) {
-		zerror(L, "Public key size should be %u byte, this is %u",RSA_4096_PRIVATE_KEY_BYTES, octet_sk->len);
+		zerror(L, "Private key size should be %u byte, this is %u",RSA_4096_PRIVATE_KEY_BYTES, octet_sk->len);
 		failed_msg = "RSA encryption aborted";
 		goto end;
 	}
@@ -218,7 +218,6 @@ static int rsa_decrypt(lua_State *L) {
 		goto end;
 	}
 	
-    /* convert octet of public key into struct rsa_public_key_4096 */
     rsa_private_key_4096 sk; 
 	RSA_octet_to_sk(octet_sk, &sk);
     octet *p = o_new(L, RFS_4096);
@@ -227,7 +226,9 @@ static int rsa_decrypt(lua_State *L) {
 
 
 
+
 end:
+	RSA_4096_PRIVATE_KEY_KILL(&sk);
 	o_free(L, octet_sk);
 	o_free(L, c);
 	if(failed_msg != NULL) {
@@ -235,12 +236,101 @@ end:
 	}
 	END(1);
 }
+static int rsa_sign(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *octet_sk = NULL, *msg = NULL;
+	octet_sk =  o_arg(L, 1);
+	if(octet_sk == NULL) {
+		failed_msg = "failed to allocate space for the private key";
+		goto end;
+	}
+	if(octet_sk->len != RSA_4096_PRIVATE_KEY_BYTES) {
+		zerror(L, "Private key size should be %u byte, this is %u",RSA_4096_PRIVATE_KEY_BYTES, octet_sk->len);
+		failed_msg = "RSA encryption aborted";
+		goto end;
+	}
+	msg = o_arg(L, 2);
+	if(msg == NULL) {
+		failed_msg = "failed to allocate space for the messsage text";
+		goto end;
+	}
+	
+
+    rsa_private_key_4096 sk; 
+	RSA_octet_to_sk(octet_sk, &sk);
+    octet *p = o_alloc(L, RFS_4096);
+	octet *sig = o_new(L,RFS_4096);
+	PKCS15(HASH_TYPE_RSA_4096,msg,p);
+    RSA_4096_DECRYPT(&sk, p, sig);
+
+end:
+	RSA_4096_PRIVATE_KEY_KILL(&sk);
+	o_free(L, octet_sk);
+	o_free(L, msg);
+	o_free(L,p);
+	if(failed_msg != NULL) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+static int rsa_verify(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *octet_pk = NULL, *msg = NULL, *sig = NULL;
+	octet_pk =  o_arg(L, 1);
+
+	if(octet_pk == NULL) {
+		failed_msg = "failed to allocate space for the public key";
+		goto end;
+	}
+	if(octet_pk->len != RSA_4096_PUBLIC_KEY_BYTES) {
+		zerror(L, "Public key size should be %u byte, this is %u", RSA_4096_PUBLIC_KEY_BYTES, octet_pk->len);
+		failed_msg = "RSA encryption aborted";
+		goto end;
+	}
+	msg = o_arg(L, 2);
+	if(msg == NULL) {
+		failed_msg = "failed to allocate space for the messsage text";
+		goto end;
+	}
+	sig = o_arg(L, 3);
+	if(sig == NULL) {
+		failed_msg = "failed to allocate space for the signature";
+		goto end;
+	}
+
+    rsa_public_key_4096 pk;
+    RSA_octet_to_pk(L, octet_pk, &pk);
+	
+	octet* p = o_alloc(L, RFS_4096);
+	PKCS15(HASH_TYPE_RSA_4096,msg,p);
+
+    octet *c = o_alloc(L, RFS_4096);
+    RSA_4096_ENCRYPT(&pk, sig, c);
+
+	lua_pushboolean(L, OCT_comp(c,p));
+end:
+	o_free(L, sig);
+	o_free(L, octet_pk);
+	o_free(L, msg);
+	o_free(L,p);
+	o_free(L,c);
+	if(failed_msg != NULL) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
 int luaopen_rsa(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg rsa_class[] = {
 		{"keygen",rsa_keypair},
 		{"encrypt", rsa_encrypt},
 		{"decrypt", rsa_decrypt},
+		{"sign", rsa_sign},
+		{"verify", rsa_verify},
 
 		{NULL,NULL}
 	};
