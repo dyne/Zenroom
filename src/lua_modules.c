@@ -45,7 +45,7 @@ extern zen_extension_t zen_extensions[];
 
 // extern int luaopen_crypto(lua_State *L);
 extern int luaopen_octet(lua_State *L);
-extern int luaopen_rsa();
+extern int luaopen_rsa(lua_State *L);
 extern int luaopen_ecdh(lua_State *L);
 extern int luaopen_aes(lua_State *L);
 extern int luaopen_ecp(lua_State *L);
