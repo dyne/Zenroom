@@ -107,8 +107,8 @@ static int rsa_keypair(lua_State *L)   {
 		goto end;
 		}
 		sign32 e = (int32_t) lua_tointeger(L, 1);
-		void *p =luaL_testudata(L,1,"zenroom.octet");
-		void* q =luaL_testudata(L,2,"zenroom.octet");
+		void *p =luaL_testudata(L,2,"zenroom.octet");
+		void* q =luaL_testudata(L,3,"zenroom.octet");
 		if ((p) && (q)){
 			octet *P = o_alloc(L, sizeof(p));
 			P = (octet*) p; SAFE(P);
