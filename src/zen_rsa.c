@@ -158,6 +158,50 @@ end:
 	END(1);
 }
 
+static int rsa_pubgen(lua_State *L){
+	BEGIN();
+	char *failed_msg = NULL;
+	BIG_512_29 p[HFLEN_4096], e[HFLEN_4096], n[FFLEN_4096];
+	octet *octet_sk = o_arg(L, 1);
+	if(octet_sk == NULL) {
+		failed_msg = "Could not allocate secret key";
+		goto end;
+	}
+
+	rsa_private_key_4096 sk;
+
+	RSA_octet_to_sk(octet_sk, &sk);
+
+	FF_4096_mul(n, (&sk)->p ,(&sk)->q, HFLEN_4096);
+	FF_4096_copy(p,(&sk)->p,HFLEN_4096);
+
+	FF_4096_dec(p,1, HFLEN_4096);
+	FF_4096_shr(p,HFLEN_4096);
+
+	FF_4096_invmodp(e, (&sk)->dp, p, HFLEN_4096);
+	if (FF_4096_parity(e)==0) FF_4096_add(e,e,p,HFLEN_4096);
+    FF_4096_norm(e,HFLEN_4096);
+
+	octet *e_octet =o_alloc(L, RFS_4096);
+	FF_4096_toOctet(e_octet,e, HFLEN_4096);
+	OCT_shl(e_octet,RSA_4096_PRIVATE_KEY_BIG_BYTES-4);
+
+	octet *octet_pk = o_new(L, RSA_4096_PUBLIC_KEY_BYTES);
+	FF_4096_toOctet(octet_pk,n ,FFLEN_4096);
+	OCT_joctet(octet_pk,e_octet);
+
+	end:
+	o_free(L, octet_sk);
+	o_free(L, e_octet);
+	RSA_4096_PRIVATE_KEY_KILL(&sk);
+	FF_4096_zero(p,HFLEN_4096);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+
 static int rsa_encrypt(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -331,6 +375,7 @@ int luaopen_rsa(lua_State *L) {
 		{"decrypt", rsa_decrypt},
 		{"sign", rsa_sign},
 		{"verify", rsa_verify},
+		{"pubgen", rsa_pubgen},
 
 		{NULL,NULL}
 	};
