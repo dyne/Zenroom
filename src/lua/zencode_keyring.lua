@@ -67,6 +67,7 @@ local keytypes = {
     schnorr = true,
     kyber = true,
     mlkem512 = true,
+    rsa = true,
     ntrup = true,
     eddsa = true,
 	fsp = true,
@@ -113,7 +114,13 @@ local function mldsa44_f(o)
        error('mldsa44 key length is not correct: '..#o, 3)
    end
    return o
-end 
+end
+local function rsa_f(o)
+   if #o ~= 1280 then
+       error('rsa key length is not correct: '..#o, 3)
+   end
+   return o
+end
 
 local function import_keyring(obj)
    for k,_ in pairs(obj) do
@@ -184,6 +191,9 @@ local function import_keyring(obj)
    if obj.fsp then
       res.fsp = schema_get(obj, 'fsp', nop, O.from_base64)
    end
+   if obj.rsa then
+      res.rsa = schema_get(obj, 'rsa', rsa_f, O.from_base64)
+   end
    return (res)
 end
 
@@ -221,6 +231,7 @@ function export_keyring(obj)
    if obj.ntrup then     res.ntrup     = CONF.output.encoding.fun(obj.ntrup) end
    if obj.eddsa then     res.eddsa     = O.to_base58(obj.eddsa) end
    if obj.fsp then res.fsp = obj.fsp:octet():base64() end
+   if obj.rsa then res.rsa = CONF.output.encoding.fun(obj.rsa) end
    return (res)
 end
 
