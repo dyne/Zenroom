@@ -234,65 +234,111 @@ When("create '' string of ''", function(encoding, src)
 							  encoding = 'string' })
 end)
 
-When("copy '' to ''", function(old,new)
-	have(old)
-	empty(new)
-	ACK[new] = deepcopy(ACK[old])
-	new_codec(new, { }, old)
+local function move_or_copy_to(src, dest, enc)
+    empty(dest)
+    if not enc then
+        ACK[dest] = deepcopy(ACK[src])
+        new_codec(dest, { }, src)
+    else
+        ACK[dest] = apply_encoding(src, enc, "string")
+        new_codec(dest, { encoding = 'string' })
+    end
+end
+
+When("copy '' to ''", move_or_copy_to)
+
+When("copy '' as '' to ''", function(src, enc, dest)
+    move_or_copy_to(src, dest, enc)
 end)
 
-local function _copy_move_in(old, new, inside, delete)
-	local src = have(old)
-	local dst = have(inside)
-	zencode_assert(luatype(dst) == 'table', "Destination is not a table: "..inside)
-	zencode_assert(not dst[new],
-			   "Cannot overwrite destination: "..new.." inside "..inside)
-	dst[new] = deepcopy(src)
-	ACK[inside] = dst
-	if delete then
-	   ACK[old] = nil
-	   CODEC[old] = nil
-	end
-end
-When("copy '' to '' in ''", function(old,new,inside)
-		_copy_move_in(old, new, inside, false)
+When("move '' to ''", function(src, dest)
+    move_or_copy_to(src, dest)
+    ACK[src] = nil
+    CODEC[src] = nil
 end)
-When("move '' to '' in ''", function(old,new,inside)
-		_copy_move_in(old, new, inside, true)
+
+When("move '' as '' to ''", function(src, enc, dest)
+    move_or_copy_to(src, dest, enc)
+    ACK[src] = nil
+    CODEC[src] = nil
 end)
 
 When("copy contents of '' in ''", function(src,dst)
-	local obj = have(src)
-	have(dst)
-	for k, v in pairs(obj) do
-	   ACK[dst][k] = v -- no deepcopy
-	   -- no new codec (using dst)
-	end
+    local obj, obj_codec = have(src)
+    zencode_assert(luatype(obj) == 'table', "Object is not a table: "..src)
+    local dest, dest_codec = have(dst)
+    zencode_assert(luatype(dest) == 'table', "Object is not a table: "..src)
+    if dest_codec.zentype == 'a' then
+        for _, v in pairs(obj) do
+            table.insert(ACK[dst], v)
+        end
+    elseif dest_codec.zentype == 'd' then
+        zencode_assert(obj_codec.zentype == 'd', "Can not copy contents of an array into a dictionary")
+        for k, v in pairs(obj) do
+            if ACK[dst][k] then error("Cannot overwrite: "..k.." in "..dst) end
+            ACK[dst][k] = v
+        end
+    elseif dest_codec.zentype == 'e' and dest_codec.schema then
+        local dest_schema = ZEN.schemas[dest_codec.schema]
+        if luatype(dest_schema) ~= 'table' then -- old schema types are not open
+            error("Schema is not open to accept extra objects: "..dst)
+        elseif not dest_schema.schematype or dest_schema.schematype ~= 'open' then
+            error("Schema is not open to accept extra objects: "..dst)
+        end
+        for k, v in pairs(obj) do
+            if ACK[dst][k] then error("Cannot overwrite: "..k.." in "..dst) end
+            ACK[dst][k] = v
+        end
+    end
 end)
 
 When("copy contents of '' named '' in ''", function(src,name,dst)
-	local obj = have(src)
-	have(dst)
-	for k, v in pairs(obj) do
-	   if k == name then
-	      ACK[dst][k] = v -- no deepcopy
-	   end
-	   -- no new codec (using dst)
-	end
+    local obj, obj_codec = have(src)
+    zencode_assert(luatype(obj) == 'table', "Object is not a table: "..src)
+    zencode_assert(obj_codec.zentype == 'd', "Object is not a dictionary: "..src)
+    zencode_assert(obj[name], "Object not found: "..name.." inside ".. src)
+    local dest, dest_codec = have(dst)
+    zencode_assert(luatype(dest) == 'table', "Object is not a table: "..src)
+    if dest_codec.zentype == 'a' then
+        table.insert(ACK[dst], obj[name])
+    elseif dest_codec.zentype == 'd' then
+        zencode_assert(dest[name], "Cannot overwrite: "..name.." in "..dst)
+        ACK[dst][name] = obj[name]
+    elseif dest_codec.zentype == 'e' and dest_codec.schema then
+        local dest_schema = ZEN.schemas[dest_codec.schema]
+        if luatype(dest_schema) ~= 'table' then -- old schema types are not open
+            error("Schema is not open to accept extra objects: "..dst)
+        elseif not dest_schema.schematype or dest_schema.schematype ~= 'open' then
+            error("Schema is not open to accept extra objects: "..dst)
+        end
+        zencode_assert(dest[name], "Cannot overwrite: "..name.." in "..dst)
+        ACK[dst][name] = obj[name]
+    end
 end)
 
-When("copy '' from '' to ''", function(old,inside,new)
-    zencode_assert(ACK[inside][old], "Object not found: "..old.." inside "..inside)
-    empty(new)
-    ACK[new] = deepcopy(ACK[inside][old])
-    local o_codec = CODEC[inside]
-    local n_codec = { encoding = o_codec.encoding }
-	-- table of schemas can only contain elements
-	if o_codec.schema then
-		n_codec.schema = o_codec.schema
-		n_codec.zentype = "e"
-	end
+local function move_or_copy_from_to(ele, source, new)
+    local src, src_codec = have(source)
+    zencode_assert(src[ele], "Object not found: "..ele.." inside "..source)
+    if ACK[new] then
+        error("Cannot overwrite existing object: "..new.."\n"..
+              "To copy/move element in existing element use:\n"..
+              "When I move/copy '' from '' in ''", 2)
+    end
+    ACK[new] = deepcopy(src[ele])
+    local n_codec = { encoding = src_codec.encoding }
+    -- table of schemas can only contain elements
+    if src_codec.schema then
+        n_codec.schema = src_codec.schema
+        n_codec.zentype = "e"
+    end
     new_codec(new, n_codec)
+end
+
+When("copy '' from '' to ''", move_or_copy_from_to)
+
+When("move '' from '' to ''", function(ele, source, new)
+    move_or_copy_from_to(ele, source, new)
+    ACK[source][ele] = nil
 end)
 
 When("split rightmost '' bytes of ''", function(len, src)
