@@ -201,7 +201,40 @@ static int rsa_pubgen(lua_State *L){
 	END(1);
 }
 
+static int rsa_signature_pubcheck(lua_State *L) {
+	BEGIN();
+	octet *pk = o_arg(L, 1);
+	if(pk == NULL) {
+		THROW("failed to allocate space for public key");
+	} else {
+		if(pk->len == RSA_4096_PUBLIC_KEY_BYTES)
+			lua_pushboolean(L, 1);
+		else
+			lua_pushboolean(L, 0);
+		o_free(L, pk);
+	}
+	END(1);
+}
 
+static int rsa_signature_check(lua_State *L){
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *sign = o_arg(L, 1);
+	if(sign == NULL) {
+		failed_msg = "Cuold not allocate signature";
+		goto end;
+	}
+	if(sign->len == 512)
+		lua_pushboolean(L, 1);
+	else
+		lua_pushboolean(L, 0);
+end:
+	o_free(L, sign);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
 static int rsa_encrypt(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -376,6 +409,8 @@ int luaopen_rsa(lua_State *L) {
 		{"sign", rsa_sign},
 		{"verify", rsa_verify},
 		{"pubgen", rsa_pubgen},
+		{"pubcheck", rsa_signature_pubcheck},
+		{"signature_check", rsa_signature_check},
 
 		{NULL,NULL}
 	};
