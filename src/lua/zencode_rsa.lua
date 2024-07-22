@@ -21,65 +21,65 @@
 local RSA = require'rsa'
 
 local function rsa_public_key_f(obj)
-	local res = schema_get(obj, '.')
-	zencode_assert(
-	   RSA.pubcheck(res),
-	   'rsa public key length is not correct'
-	)
-	return res
- end
+    local res = schema_get(obj, '.')
+    zencode_assert(
+        RSA.pubcheck(res),
+        'rsa public key length is not correct'
+    )
+    return res
+end
  
- local function rsa_signature_f(obj)
-	local res = schema_get(obj, '.')
-	zencode_assert(
-	   RSA.signature_check(res),
-	   'rsa signature length is not correct'
-	)
-	return res
- end
+local function rsa_signature_f(obj)
+    local res = schema_get(obj, '.')
+    zencode_assert(
+        RSA.signature_check(res),
+        'rsa signature length is not correct'
+    )
+    return res
+end
 
- ZEN:add_schema(
-   {
-	  rsa_public_key = {import=rsa_public_key_f},
-	  rsa_signature = {import=rsa_signature_f}
-   }
+ZEN:add_schema(
+    {
+        rsa_public_key = {import=rsa_public_key_f},
+        rsa_signature = {import=rsa_signature_f}
+    }
 )
 
 When("create rsa key",function()
-	initkeyring'rsa'
-	ACK.keyring.rsa = RSA.keygen().private
+    initkeyring'rsa'
+    ACK.keyring.rsa = RSA.keygen().private
 end)
 
 -- generate the public key
 When("create rsa public key",function()
-	empty'rsa public key'
-	local sk = havekey'rsa'
-	ACK.rsa_public_key = RSA.pubgen(sk)
-	new_codec('rsa public key')
+    empty'rsa public key'
+    local sk = havekey'rsa'
+    ACK.rsa_public_key = RSA.pubgen(sk)
+    new_codec('rsa public key')
 end)
 
 When("create rsa public key with secret key ''",function(sec)
-	local sk = have(sec)
-	empty'rsa public key'
-	ACK.rsa_public_key = RSA.pubgen(sk)
-	new_codec('rsa public key')
+    local sk = have(sec)
+    empty'rsa public key'
+    ACK.rsa_public_key = RSA.pubgen(sk)
+    new_codec('rsa public key')
 end)
 
 -- generate the sign for a msg and verify
 When("create rsa signature of ''",function(doc)
-	local sk = havekey'rsa'
-	local obj = have(doc)
-	empty'rsa signature'
-	ACK.rsa_signature = RSA.sign(sk, zencode_serialize(obj))
-	new_codec('rsa signature')
+    local sk = havekey'rsa'
+    local obj = have(doc)
+    empty'rsa signature'
+    ACK.rsa_signature = RSA.sign(sk, zencode_serialize(obj))
+    new_codec('rsa signature')
 end)
 
 IfWhen("verify '' has a rsa signature in '' by ''",function(msg, sig, by)
-	  local pk = load_pubkey_compat(by, 'rsa')
-	  local m = have(msg)
-	  local s = have(sig)
-	  zencode_assert(
-	     RSA.verify(pk, zencode_serialize(m), s),
-	     'The rsa signature by '..by..' is not authentic'
-	  )
+    local pk = load_pubkey_compat(by, 'rsa')
+    local m = have(msg)
+    local s = have(sig)
+    zencode_assert(
+        RSA.verify(pk, zencode_serialize(m), s),
+        'The rsa signature by '..by..' is not authentic'
+    )
 end)

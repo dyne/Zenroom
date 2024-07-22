@@ -17,17 +17,17 @@
 #define RSA_4096_PUBLIC_EXPONENT (int32_t) 65537
 
 void RSA_sk_to_octet(lua_State *L, rsa_private_key_4096 *sk, octet *o) {
-    octet *x = o_alloc(L,RSA_4096_PRIVATE_KEY_BIG_BYTES);
-    FF_4096_toOctet(x, sk->p, RSA_4096_PRIVATE_KEY_BIG_SIZE);
-    OCT_copy(o, x);
-    FF_4096_toOctet(x, sk->q, RSA_4096_PRIVATE_KEY_BIG_SIZE);
-    OCT_joctet(o, x);
-    FF_4096_toOctet(x, sk->dp, RSA_4096_PRIVATE_KEY_BIG_SIZE);
-    OCT_joctet(o, x);
-    FF_4096_toOctet(x, sk->dq, RSA_4096_PRIVATE_KEY_BIG_SIZE);
-    OCT_joctet(o, x);
-    FF_4096_toOctet(x, sk->c, RSA_4096_PRIVATE_KEY_BIG_SIZE);
-    OCT_joctet(o, x);
+	octet *x = o_alloc(L,RSA_4096_PRIVATE_KEY_BIG_BYTES);
+	FF_4096_toOctet(x, sk->p, RSA_4096_PRIVATE_KEY_BIG_SIZE);
+	OCT_copy(o, x);
+	FF_4096_toOctet(x, sk->q, RSA_4096_PRIVATE_KEY_BIG_SIZE);
+	OCT_joctet(o, x);
+	FF_4096_toOctet(x, sk->dp, RSA_4096_PRIVATE_KEY_BIG_SIZE);
+	OCT_joctet(o, x);
+	FF_4096_toOctet(x, sk->dq, RSA_4096_PRIVATE_KEY_BIG_SIZE);
+	OCT_joctet(o, x);
+	FF_4096_toOctet(x, sk->c, RSA_4096_PRIVATE_KEY_BIG_SIZE);
+	OCT_joctet(o, x);
 	o_free(L, x);
 }
 
@@ -43,9 +43,9 @@ void RSA_octet_to_pk(lua_State *L, octet *o, rsa_public_key_4096 *pk){
 	FF_4096_fromOctet(pk->n, x, FFLEN_4096);
 	OCT_shl(x, MODBYTES_512_29 * FFLEN_4096);
 	pk->e =  ((uint32_t)x->val[3] & 0xFF) |
-                     ((uint32_t)x->val[2] << 8 & 0xFF00) |
-                     ((uint32_t)x->val[1] << 16 & 0xFF0000) |
-                     ((uint32_t)x->val[0] << 24 & 0xFF000000);
+					((uint32_t)x->val[2] << 8 & 0xFF00) |
+					((uint32_t)x->val[1] << 16 & 0xFF0000) |
+					((uint32_t)x->val[0] << 24 & 0xFF000000);
 	o_free(L,x);
 }
 
@@ -180,7 +180,7 @@ static int rsa_pubgen(lua_State *L){
 
 	FF_4096_invmodp(e, (&sk)->dp, p, HFLEN_4096);
 	if (FF_4096_parity(e)==0) FF_4096_add(e,e,p,HFLEN_4096);
-    FF_4096_norm(e,HFLEN_4096);
+	FF_4096_norm(e,HFLEN_4096);
 
 	octet *e_octet =o_alloc(L, RFS_4096);
 	FF_4096_toOctet(e_octet,e, HFLEN_4096);
@@ -255,16 +255,16 @@ static int rsa_encrypt(lua_State *L) {
 		failed_msg = "failed to allocate space for the messsage text";
 		goto end;
 	}
-    /* convert octet of public key into struct rsa_public_key_4096 */
-    rsa_public_key_4096 pk;
-    RSA_octet_to_pk(L, octet_pk, &pk);
-    octet *padmsg = o_alloc(L, RFS_4096);
+	/* convert octet of public key into struct rsa_public_key_4096 */
+	rsa_public_key_4096 pk;
+	RSA_octet_to_pk(L, octet_pk, &pk);
+	octet *padmsg = o_alloc(L, RFS_4096);
 	Z(L);
 	csprng *RNG = Z-> random_generator;
 
-    OAEP_ENCODE(HASH_TYPE_RSA_4096, msg, RNG, NULL, padmsg);
-    octet *c = o_new(L, RFS_4096);
-    RSA_4096_ENCRYPT(&pk, padmsg, c);
+	OAEP_ENCODE(HASH_TYPE_RSA_4096, msg, RNG, NULL, padmsg);
+	octet *c = o_new(L, RFS_4096);
+	RSA_4096_ENCRYPT(&pk, padmsg, c);
 end:
 	o_free(L, padmsg);
 	o_free(L, octet_pk);
@@ -295,11 +295,11 @@ static int rsa_decrypt(lua_State *L) {
 		goto end;
 	}
 	
-    rsa_private_key_4096 sk; 
+	rsa_private_key_4096 sk; 
 	RSA_octet_to_sk(octet_sk, &sk);
-    octet *p = o_new(L, RFS_4096);
-    RSA_4096_DECRYPT(&sk, c, p);
-    OAEP_DECODE(HASH_TYPE_RSA_4096,NULL,p);
+	octet *p = o_new(L, RFS_4096);
+	RSA_4096_DECRYPT(&sk, c, p);
+	OAEP_DECODE(HASH_TYPE_RSA_4096,NULL,p);
 
 
 
@@ -334,12 +334,12 @@ static int rsa_sign(lua_State *L) {
 	}
 	
 
-    rsa_private_key_4096 sk; 
+	rsa_private_key_4096 sk; 
 	RSA_octet_to_sk(octet_sk, &sk);
-    octet *p = o_alloc(L, RFS_4096);
+	octet *p = o_alloc(L, RFS_4096);
 	octet *sig = o_new(L,RFS_4096);
 	PKCS15(HASH_TYPE_RSA_4096,msg,p);
-    RSA_4096_DECRYPT(&sk, p, sig);
+	RSA_4096_DECRYPT(&sk, p, sig);
 
 end:
 	RSA_4096_PRIVATE_KEY_KILL(&sk);
@@ -378,14 +378,14 @@ static int rsa_verify(lua_State *L) {
 		goto end;
 	}
 
-    rsa_public_key_4096 pk;
-    RSA_octet_to_pk(L, octet_pk, &pk);
+	rsa_public_key_4096 pk;
+	RSA_octet_to_pk(L, octet_pk, &pk);
 	
 	octet* p = o_alloc(L, RFS_4096);
 	PKCS15(HASH_TYPE_RSA_4096,msg,p);
 
-    octet *c = o_alloc(L, RFS_4096);
-    RSA_4096_ENCRYPT(&pk, sig, c);
+	octet *c = o_alloc(L, RFS_4096);
+	RSA_4096_ENCRYPT(&pk, sig, c);
 
 	lua_pushboolean(L, OCT_comp(c,p));
 end:
