@@ -47,6 +47,8 @@ add_project_link_arguments(
     'milagro-crypto-c/lib/libamcl_curve_' + ecdh_curve + '.a',
     'milagro-crypto-c/lib/libamcl_pairing_' + ecp_curve + '.a',
     'milagro-crypto-c/lib/libamcl_curve_' + ecp_curve + '.a',
+	'milagro-crypto-c/lib/libamcl_rsa_2048.a',
+	'milagro-crypto-c/lib/libamcl_rsa_4096.a',
     'liblua.a',
     'libqpz.a',
     'libed25519.a',
