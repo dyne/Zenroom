@@ -20,6 +20,39 @@
 --on Thursday, 29th February 2024
 --]]
 
+local function import_date_table(obj)
+    local res = {}
+    res.year = TIME.new(obj.year or 0)
+    res.month = TIME.new(obj.month or 0)
+    res.day = TIME.new(obj.day or 0)
+    res.hour = TIME.new(obj.hour or 0)
+    res.min = TIME.new(obj.min or 0)
+    res.sec = TIME.new(obj.sec or 0)
+    res.isdst = obj.isdst or false
+    return res
+end
+
+local function export_date_table(obj)
+    local res = {}
+    res.year = tonumber(obj.year)
+    res.month = tonumber(obj.month)
+    res.day = tonumber(obj.day)
+    res.hour = tonumber(obj.hour)
+    res.min = tonumber(obj.min)
+    res.sec = tonumber(obj.sec)
+    res.isdst = obj.isdst
+    return res
+end
+
+ZEN:add_schema(
+    {
+        date_table = {
+            import = import_date_table,
+            export = export_date_table
+        }
+    }
+)
+
 When("create timestamp", function()
     zencode_assert(os, 'Could not find os')
     ACK.timestamp = TIME.new(os.time())
@@ -34,6 +67,28 @@ When("create integer '' cast of timestamp ''", function(dest, source)
     end
     ACK[dest] = BIG.from_decimal(tostring(src))
     new_codec(dest, { zentype = 'e', encoding = 'integer'})
+end)
+
+When("create timestamp of date table ''", function(dt)
+    zencode_assert(os, 'Could not find os')
+    local date_table, date_table_codec = have(dt)
+    zencode_assert(
+        date_table_codec.encoding == 'complex' and date_table_codec.schema == 'date_table',
+        'Invalid date table encoding: ' .. date_table_codec.schema)
+    zencode_assert(date_table.year >= TIME.new(1970),
+        'Data table ' .. dt .. ' can not be converted to timestamp, ' .. tostring(date_table.year) .. ' < 1970')
+    local t = os.time(export_date_table(date_table))
+    ACK.timestamp = TIME.new(t)
+    new_codec('timestamp', { zentype = 'e', encoding = 'time'})
+end)
+
+When("create date table of timestamp ''", function(t)
+    zencode_assert(os, 'Could not find os')
+    local timestamp, timestamp_codec = have(t)
+    zencode_assert(timestamp_codec.encoding == 'time',
+        'Invalid time encoding: ' .. timestamp_codec.encoding)
+    ACK.date_table = import_date_table(os.date("*t", tonumber(timestamp)))
+    new_codec('date_table', { zentype = 'e', encoding = 'date_table'})
 end)
 
 When("create timestamp in future cast of date table ''", function(dt)
