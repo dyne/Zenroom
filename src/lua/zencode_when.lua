@@ -321,6 +321,8 @@ local function _numinput(num)
 	local t = type(num)
 	if not iszen(t) then
 		if t == 'table' then
+            -- TODO: only for testing improve this check
+            if num.year and type(num.year) == 'zenroom.time' then return num end
 			local aggr = nil
 			for _,v in pairs(num) do
 				if aggr then
@@ -359,6 +361,23 @@ local big_ops = {
     [_div] = BIG.zendiv,
     [_mod] = BIG.zenmod
 }
+local function date_ops(op)
+    return function(l, r)
+        local res = {}
+        local lc = type(l) == 'zenroom.time' and os.date("*t", tonumber(l)) or l
+        local rc = type(r) == 'zenroom.time' and os.date("*t", tonumber(r)) or r
+        local fields = { 'year', 'month', 'day', 'hour', 'min', 'sec' }
+        for _, v in pairs(fields) do
+            res[v] = op(tonumber(lc[v]) or 0, tonumber(rc[v]) or 0)
+        end
+        -- TODO: this can fail if date is < 1970
+        return TIME.new(os.time(res))
+    end
+end
+local date_ops = {
+    [_add] = date_ops(_add),
+    [_sub] = date_ops(_sub)
+}
 
 local function _math_op(op, l, r, res)
     empty(res)
@@ -366,16 +385,22 @@ local function _math_op(op, l, r, res)
 	local right = _numinput(r)
 	local lz = type(left)
 	local rz = type(right)
-	if lz ~= rz then error("Incompatible numeric arguments", 2) end
+    if lz ~= rz and not(
+        (lz == 'zenroom.time' and rz == 'table') or
+        (rz == 'zenroom.time' and lz == 'table')
+    ) then
+        error("Incompatible numeric arguments " .. lz .. " and " .. rz, 2)
+    end
     local n_codec = {zentype = 'e'}
 	if lz == "zenroom.big" then
         n_codec.encoding = 'integer'
         op = big_ops[op]
         if not op then error("Operation not supported on big integers", 2) end
-    elseif lz == "zenroom.time" then
+    elseif lz == "zenroom.time" or lz == "table" then
         n_codec.encoding = 'time'
         -- TODO: when other operations on time are supported remove this checks
         if op ~= _add and op ~= _sub then error("Operation not supported on time", 2) end
+        if lz == "table" or rz == "table" then op = date_ops[op] end
 	else
 		n_codec.encoding = 'float'
 	end
