@@ -33,6 +33,9 @@ local function import_date_table(obj)
 end
 
 local function export_date_table(obj)
+    if type(obj) == 'zenroom.time' then
+        return os.date("*t", tonumber(obj))
+    end
     local res = {}
     res.year = tonumber(obj.year)
     res.month = tonumber(obj.month)
