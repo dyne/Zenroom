@@ -93,25 +93,3 @@ When("create date table of timestamp ''", function(t)
     ACK.date_table = import_date_table(os.date("*t", tonumber(timestamp)))
     new_codec('date_table', { zentype = 'e', encoding = 'complex', schema = 'date_table'})
 end)
-
-When("create timestamp in future cast of date table ''", function(dt)
-    zencode_assert(os, 'Could not find os')
-    local now = os.date("*t", os.time())
-    local date_table = have(dt)
-    local date_table_fields = {
-        year = true,
-        month = true,
-        day = true,
-        hour = true,
-        min = true,
-        sec = true
-    }
-    for k, v in pairs(date_table) do
-        if not date_table_fields[k] then
-            error("Invalid date table field: " .. k)
-        end
-        now[k] = now[k] + ((v and tonumber(v)) or 0)
-    end
-    ACK.timestamp = TIME.new(os.time(now))
-    new_codec('timestamp', { zentype = 'e', encoding = 'time'})
-end)
