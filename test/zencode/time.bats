@@ -123,3 +123,102 @@ EOF
     save_output sum_timestamp.out.json
     assert_output '{"output":["OK"]}'
 }
+
+@test "timestamp to date table" {
+    cat <<EOF | save_asset timestamp_to_date_table.data.json
+{
+    "timestamp": 0
+}
+EOF
+    cat <<EOF | zexe timestamp_to_date_table.zen timestamp_to_date_table.data.json
+    Given I have a 'time' named 'timestamp'
+
+    When I create date table of timestamp 'timestamp'
+
+    Then print the 'date table'
+EOF
+    save_output timestamp_to_date_table.out.json
+    assert_output '{"date_table":{"day":1,"hour":1,"isdst":false,"min":0,"month":1,"sec":0,"year":1970}}'
+}
+
+@test "date table to timestamp" {
+    cat <<EOF | zexe date_table_to_timestamp.zen timestamp_to_date_table.out.json
+    Given I have a 'date table' named 'date_table'
+
+    When I create timestamp of date table 'date_table'
+
+    Then print the 'timestamp'
+EOF
+    save_output date_table_to_timestamp.out.json
+    assert_output '{"timestamp":0}'
+}
+
+@test "failing date table to timestamp" {
+    cat <<EOF | save_asset fail_date_table_to_timestamp.data.json
+{
+    "date_table": {
+        "year": 3
+    }
+}
+EOF
+    cat <<EOF | save_asset fail_date_table_to_timestamp.zen
+    Given I have a 'date table' named 'date_table'
+
+    When I create timestamp of date table 'date_table'
+
+    Then print the 'timestamp'
+EOF
+    run $ZENROOM_EXECUTABLE -z -a fail_date_table_to_timestamp.data.json fail_date_table_to_timestamp.zen
+    assert_line --partial 'Date table date_table can not be converted to timestamp, 3 < 1970'
+}
+
+@test "sum of date tables and timestamp" {
+    cat <<EOF | save_asset sum_of_date_table.data.json
+{
+    "date_table": {
+        "year": 1,
+        "month": 1,
+        "day": 5
+    },
+    "another_date_table": {
+        "year": 25000,
+        "moth": 3,
+        "day": 20,
+        "sec": 200
+    },
+    "timestamp": 0,
+    "another_timestamp": 1712324515
+}
+EOF
+    cat <<EOF | zexe sum_of_date_table.zen sum_of_date_table.data.json
+    Given I have a 'date table' named 'date_table'
+    Given I have a 'date table' named 'another_date_table'
+    Given I have a 'time' named 'timestamp'
+    Given I have a 'time' named 'another_timestamp'
+
+    When I create the result of 'date_table' + 'another_date_table'
+    and I rename 'result' to 'sum_of_date_tables'
+
+    When I create the result of 'timestamp' + 'another_timestamp'
+    and I rename 'result' to 'sum_of_timestamp'
+
+    When I create the result of 'date_table' + 'timestamp'
+    and I rename 'result' to 'sum_of_date_table_and_timestamp'
+
+    When I create the result of 'timestamp' + 'date_table'
+    and I rename 'result' to 'sum_of_timestamp_and_date_table'
+
+    When I verify 'sum_of_timestamp_and_date_table' is equal to 'sum_of_date_table_and_timestamp'
+
+    When I create the result of 'another_date_table' + 'another_timestamp'
+    and I rename 'result' to 'sum_of_timestamp_and_another_date_table'
+
+    Then print the 'sum_of_timestamp_and_another_date_table'
+    Then print the 'sum_of_timestamp_and_date_table'
+    Then print the 'sum_of_date_table_and_timestamp'
+    Then print the 'sum_of_timestamp'
+    Then print the 'sum_of_date_tables'
+EOF
+    save_output sum_of_date_table.out.json
+    assert_output '{"sum_of_date_table_and_timestamp":{"day":6,"hour":1,"min":0,"month":2,"sec":0,"year":1971},"sum_of_date_tables":{"day":25,"hour":0,"min":0,"month":1,"sec":200,"year":3},"sum_of_timestamp":1712324515,"sum_of_timestamp_and_date_table":{"day":6,"hour":1,"min":0,"month":2,"sec":0,"year":1971}}'
+}
