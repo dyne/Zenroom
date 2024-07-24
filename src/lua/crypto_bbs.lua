@@ -560,8 +560,8 @@ local function core_sign(ciphersuite, sk, pk, header, messages, generators)
 
     --Procedure
     local domain = calculate_domain(ciphersuite, pk , Q_1, H_array, header)
-
-    local serialize_array = {sk, domain, table.unpack(messages)}
+    local serialize_array = {sk, table.unpack(messages)}
+    table.insert(serialize_array, domain)
     local e = hash_to_scalar(ciphersuite, serialization(serialize_array))
 
     local BB = ciphersuite.P1 + Q_1* domain
@@ -570,7 +570,6 @@ local function core_sign(ciphersuite, sk, pk, header, messages, generators)
             BB = BB + (H_array[i]* messages[i])
         end
     end
-
     if (BIG.mod(sk + e, PRIME_R) == BIG.new(0))  then
         error("Invalid value for e",2)   
     end
@@ -736,18 +735,16 @@ local function proof_challenge_calculate(ciphersuite, init_res, disclosed_messag
     local c_array = {}
 
     if R_len ~= 0 then
-        c_array = {table.unpack(init_res, 1, 5)}
-        table.insert(c_array,R_len)
+        c_array = {R_len}       
         for i = 1, R_len do
-            c_array[i+6] = disclosed_indexes[i] -1
+            table.insert(c_array, disclosed_indexes[i]-1)
+            table.insert(c_array, disclosed_messages[i])
         end
-        for i = 1, R_len do
-            c_array[i+6+R_len] = disclosed_messages[i]
-            
+        for i = 1, 6 do
+           table.insert(c_array,init_res[i])
         end
-        c_array[7+2*R_len] = init_res[6]
     else
-        c_array = {table.unpack(init_res,1,5), R_len, init_res[6]}
+        c_array = {R_len, table.unpack(init_res,1,6)}
     end
     local c_octs = serialization(c_array) .. i2osp(#ph, 8) .. ph
     
