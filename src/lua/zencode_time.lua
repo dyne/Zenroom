@@ -79,7 +79,7 @@ When("create timestamp of date table ''", function(dt)
         date_table_codec.encoding == 'complex' and date_table_codec.schema == 'date_table',
         'Invalid date table encoding: ' .. date_table_codec.schema)
     zencode_assert(date_table.year >= TIME.new(1970),
-        'Data table ' .. dt .. ' can not be converted to timestamp, ' .. tostring(date_table.year) .. ' < 1970')
+        'Date table ' .. dt .. ' can not be converted to timestamp, ' .. tostring(date_table.year) .. ' < 1970')
     local t = os.time(export_date_table(date_table))
     ACK.timestamp = TIME.new(t)
     new_codec('timestamp', { zentype = 'e', encoding = 'time'})
