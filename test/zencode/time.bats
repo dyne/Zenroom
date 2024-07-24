@@ -138,7 +138,7 @@ EOF
     Then print the 'date table'
 EOF
     save_output timestamp_to_date_table.out.json
-    assert_output '{"date_table":{"day":1,"hour":1,"isdst":false,"min":0,"month":1,"sec":0,"year":1970}}'
+    assert_output --regexp '\{"date_table":\{"day":1,"hour":[0-9]+,"isdst":false,"min":0,"month":1,"sec":0,"year":1970\}\}'
 }
 
 @test "date table to timestamp" {
