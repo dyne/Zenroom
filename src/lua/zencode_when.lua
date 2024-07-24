@@ -371,10 +371,9 @@ local function date_ops(op)
         local rc = type(r) == 'zenroom.time' and os.date("*t", tonumber(r)) or r
         local fields = { 'year', 'month', 'day', 'hour', 'min', 'sec' }
         for _, v in pairs(fields) do
-            res[v] = op(tonumber(lc[v]) or 0, tonumber(rc[v]) or 0)
+            res[v] = TIME.new(op(tonumber(lc[v]) or 0, tonumber(rc[v]) or 0))
         end
-        -- TODO: this can fail if date is < 1970
-        return TIME.new(os.time(res))
+        return res
     end
 end
 local date_ops = {
@@ -403,7 +402,11 @@ local function _math_op(op, la, ra, res)
         n_codec.encoding = 'time'
         -- TODO: when other operations on time are supported remove this checks
         if op ~= _add and op ~= _sub then error("Operation not supported on time", 2) end
-        if lz == "table" or rz == "table" then op = date_ops[op] end
+        if lz == "table" or rz == "table" then
+            n_codec.encoding = 'complex'
+            n_codec.schema = 'date_table'
+            op = date_ops[op]
+        end
 	else
 		n_codec.encoding = 'float'
 	end
