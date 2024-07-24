@@ -220,5 +220,5 @@ EOF
     Then print the 'sum_of_date_tables'
 EOF
     save_output sum_of_date_table.out.json
-    assert_output '{"sum_of_date_table_and_timestamp":{"day":6,"hour":1,"min":0,"month":2,"sec":0,"year":1971},"sum_of_date_tables":{"day":25,"hour":0,"min":0,"month":1,"sec":200,"year":3},"sum_of_timestamp":1712324515,"sum_of_timestamp_and_date_table":{"day":6,"hour":1,"min":0,"month":2,"sec":0,"year":1971}}'
+    assert_output '{"sum_of_date_table_and_timestamp":{"day":6,"hour":1,"min":0,"month":2,"sec":0,"year":1971},"sum_of_date_tables":{"day":25,"hour":0,"min":0,"month":1,"sec":200,"year":25001},"sum_of_timestamp":1712324515,"sum_of_timestamp_and_another_date_table":{"day":25,"hour":15,"min":41,"month":4,"sec":255,"year":27024},"sum_of_timestamp_and_date_table":{"day":6,"hour":1,"min":0,"month":2,"sec":0,"year":1971}}'
 }
