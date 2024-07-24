@@ -91,7 +91,7 @@ When("create date table of timestamp ''", function(t)
     zencode_assert(timestamp_codec.encoding == 'time',
         'Invalid time encoding: ' .. timestamp_codec.encoding)
     ACK.date_table = import_date_table(os.date("*t", tonumber(timestamp)))
-    new_codec('date_table', { zentype = 'e', encoding = 'date_table'})
+    new_codec('date_table', { zentype = 'e', encoding = 'complex', schema = 'date_table'})
 end)
 
 When("create timestamp in future cast of date table ''", function(dt)
