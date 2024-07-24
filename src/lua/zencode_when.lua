@@ -317,12 +317,15 @@ When("split leftmost '' bytes of ''", function(len, src)
 	new_codec('leftmost', { }, src)
 end)
 
-local function _numinput(num)
+local function _numinput(num, codec)
 	local t = type(num)
 	if not iszen(t) then
 		if t == 'table' then
-            -- TODO: only for testing improve this check
-            if num.year and type(num.year) == 'zenroom.time' then return num end
+            if codec
+            and codec.encoding == 'complex'
+            and codec.schema == 'date_table' then
+                return num
+            end
 			local aggr = nil
 			for _,v in pairs(num) do
 				if aggr then
@@ -379,10 +382,10 @@ local date_ops = {
     [_sub] = date_ops(_sub)
 }
 
-local function _math_op(op, l, r, res)
+local function _math_op(op, la, ra, res)
     empty(res)
-	local left  = _numinput(l)
-	local right = _numinput(r)
+    local left  = _numinput(la[1], la[2])
+    local right = _numinput(ra[1], ra[2])
 	local lz = type(left)
 	local rz = type(right)
     if lz ~= rz and not(
@@ -420,71 +423,71 @@ When("create result of '' inverted sign", function(left)
 end)
 
 When("create result of '' + ''", function(left,right)
-    _math_op(_add, have(left), have(right), 'result')
+    _math_op(_add, table.pack(have(left)), table.pack(have(right)), 'result')
 end)
 
 When("create result of '' in '' + ''", function(left, dict, right)
-    _math_op(_add, have({dict, left}), have(right), 'result')
+    _math_op(_add, table.pack(have({dict, left})), table.pack(have(right)), 'result')
 end)
 
 When("create result of '' in '' + '' in ''", function(left, ldict, right, rdict)
-    _math_op(_add, have({ldict, left}), have({rdict, right}), 'result')
+    _math_op(_add, table.pack(have({ldict, left})), table.pack(have({rdict, right})), 'result')
 end)
 
 When("create result of '' - ''", function(left,right)
-    _math_op(_sub, have(left), have(right), 'result')
+    _math_op(_sub, table.pack(have(left)), table.pack(have(right)), 'result')
 end)
 
 When("create result of '' in '' - ''", function(left, dict, right)
-    _math_op(_sub, have({dict, left}), have(right), 'result')
+    _math_op(_sub, table.pack(have({dict, left})), table.pack(have(right)), 'result')
 end)
 
 When("create result of '' in '' - '' in ''", function(left, ldict, right, rdict)
-    _math_op(_sub, have({ldict, left}), have({rdict, right}), 'result')
+    _math_op(_sub, table.pack(have({ldict, left})), table.pack(have({rdict, right})), 'result')
 end)
 
 When("create result of '' * ''", function(left,right)
-    _math_op(_mul, have(left), have(right), 'result')
+    _math_op(_mul, table.pack(have(left)), table.pack(have(right)), 'result')
 end)
 
 When("create result of '' in '' * ''", function(left, dict, right)
-    _math_op(_mul, have({dict, left}), have(right), 'result')
+    _math_op(_mul, table.pack(have({dict, left})), table.pack(have(right)), 'result')
 end)
 
 When("create result of '' * '' in ''", function(left, right, dict)
-    _math_op(_mul, have(left), have({dict, right}), 'result')
+    _math_op(_mul, table.pack(have(left)), table.pack(have({dict, right})), 'result')
 end)
 
 When("create result of '' in '' * '' in ''", function(left, ldict, right, rdict)
-    _math_op(_mul, have({ldict, left}), have({rdict, right}), 'result')
+    _math_op(_mul, table.pack(have({ldict, left})), table.pack(have({rdict, right})), 'result')
 end)
 
 When("create result of '' / ''", function(left,right)
-    _math_op(_div, have(left), have(right), 'result')
+    _math_op(_div, table.pack(have(left)), table.pack(have(right)), 'result')
 end)
 
 When("create result of '' in '' / ''", function(left, dict, right)
-    _math_op(_div, have({dict, left}), have(right), 'result')
+    _math_op(_div, table.pack(have({dict, left})), table.pack(have(right)), 'result')
 end)
 
 When("create result of '' / '' in ''", function(left, right, dict)
-    _math_op(_div, have(left), have({dict, right}), 'result')
+    _math_op(_div, table.pack(have(left)), table.pack(have({dict, right})), 'result')
 end)
 
 When("create result of '' in '' / '' in ''", function(left, ldict, right, rdict)
-    _math_op(_div, have({ldict, left}), have({rdict, right}), 'result')
+    _math_op(_div, table.pack(have({ldict, left})), table.pack(have({rdict, right})), 'result')
 end)
 
 When("create result of '' % ''", function(left,right)
-    _math_op(_mod, have(left), have(right), 'result')
+    _math_op(_mod, table.pack(have(left)), table.pack(have(right)), 'result')
 end)
 
 When("create result of '' in '' % ''", function(left, dict, right)
-    _math_op(_mod, have({dict, left}), have(right), 'result')
+    _math_op(_mod, table.pack(have({dict, left})), table.pack(have(right)), 'result')
 end)
 
 When("create result of '' in '' % '' in ''", function(left, ldict, right, rdict)
-    _math_op(_mod, have({ldict, left}), have({rdict, right}), 'result')
+    _math_op(_mod, table.pack(have({ldict, left})), table.pack(have({rdict, right})), 'result')
 end)
 
 local function _countchar(haystack, needle)
