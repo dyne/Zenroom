@@ -367,9 +367,9 @@ local big_ops = {
 local function date_ops(op)
     return function(l, r)
         local res = {}
-        local lc = type(l) == 'zenroom.time' and os.date("*t", tonumber(l)) or l
-        local rc = type(r) == 'zenroom.time' and os.date("*t", tonumber(r)) or r
-        local fields = { 'year', 'month', 'day', 'hour', 'min', 'sec' }
+        local lc <const> = type(l) == 'zenroom.time' and os.date("*t", tonumber(l)) or l -- type(table) checked already in math_op
+        local rc <const> = type(r) == 'zenroom.time' and os.date("*t", tonumber(r)) or r
+        local fields <const> = { 'year', 'month', 'day', 'hour', 'min', 'sec' }
         for _, v in pairs(fields) do
             res[v] = TIME.new(op(tonumber(lc[v]) or 0, tonumber(rc[v]) or 0))
         end
