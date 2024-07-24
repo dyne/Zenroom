@@ -415,14 +415,14 @@ local function _math_op(op, la, ra, res)
 end
 
 When("create result of '' inverted sign", function(left)
-	local l = have(left)
+	local l, lc = have(left)
         local zero = 0;
         if type(l) == "zenroom.big" then
             zero = INT.new(0)
         elseif type(l) == "zenroom.float" then
             zero = F.new(0)
         end
-	_math_op(_sub, zero, l, 'result')
+	_math_op(_sub, {zero}, {l, lc}, 'result')
 end)
 
 When("create result of '' + ''", function(left,right)
