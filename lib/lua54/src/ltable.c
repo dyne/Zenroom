@@ -25,6 +25,7 @@
 
 #include <math.h>
 #include <limits.h>
+#include <inttypes.h>
 
 #include "lua.h"
 
