@@ -12,10 +12,10 @@ When I rename the 'bbs signature' to 'myMessage.signature'
 
 #If we want we can specify the hash function used by the algorithm
 
-When I create the bbs signature of 'myStringArray' using 'sha256'
+When I create the bbs signature of 'myStringArray'
 When I rename the 'bbs signature' to 'myStringArray.signature.sha' 
 
-When I create the bbs signature of 'myMessage' using 'sha256'
+When I create the bbs signature of 'myMessage'
 When I rename the 'bbs signature' to 'myMessage.signature.sha' 
 
 # Here we are printing out the signatures  
