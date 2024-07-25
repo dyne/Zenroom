@@ -508,7 +508,7 @@ local function serialization(input_array)
         elseif (elt_type == "number") then
             el_octs = i2osp(elt, 8)
         else
-            error("Invalid type passed inside serialize", 2)
+            error("Invalid type passed inside serialize", 4)
         end
 
         octet_result = octet_result .. el_octs
@@ -552,7 +552,7 @@ local function core_sign(ciphersuite, sk, pk, header, messages, generators)
     -- Deserialization
     local LEN = #messages
     if (#generators ~= (LEN +1)) then
-        error("The numbers of generators must be #messages +1")
+        error("The numbers of generators must be #messages +1",3)
     end
 
     local Q_1 = generators[1]
@@ -571,7 +571,7 @@ local function core_sign(ciphersuite, sk, pk, header, messages, generators)
         end
     end
     if (BIG.mod(sk + e, PRIME_R) == BIG.new(0))  then
-        error("Invalid value for e",2)   
+        error("Invalid value for e",3)   
     end
     local AA = BB * BIG.moddiv(BIG.new(1), sk + e, PRIME_R)
     return serialization({AA, e})
@@ -604,12 +604,12 @@ end
 local function octets_to_signature(signature_octets)
     local expected_len = OCTET_SCALAR_LENGTH + OCTET_POINT_LENGTH
     if (#signature_octets ~= expected_len) then
-        error("Wrong length of signature_octets", 2)
+        error("Wrong length of signature_octets", 4)
     end
     local A_octets = signature_octets:sub(1, OCTET_POINT_LENGTH)
     local AA = ECP.from_zcash(A_octets:octet())
     if (AA == IDENTITY_G1) then
-        error("Point is identity", 2)
+        error("Point is identity", 4)
     end
 
     local index = OCTET_POINT_LENGTH + 1
@@ -617,7 +617,7 @@ local function octets_to_signature(signature_octets)
     -- os1ip transform a string into a BIG
     local s = os2ip(signature_octets:sub(index, end_index))
     if (s == BIG.new(0)) or (s >= PRIME_R) then
-        error("Wrong s in deserialization", 2)
+        error("Wrong s in deserialization", 4)
     end
 
     return {AA, s}
@@ -629,10 +629,10 @@ function bbs.octets_to_pub_key(pk)
 
     -- ECP2.infinity == Identity_G2
     if (W == ECP2.infinity()) then
-        error("W is identity G2", 2)
+        error("W is identity G2", 4)
     end
     if (W * PRIME_R ~= ECP2.infinity()) then
-        error("W is not in subgroup", 2)
+        error("W is not in subgroup", 4)
     end
 
     return W
@@ -729,7 +729,7 @@ local function proof_challenge_calculate(ciphersuite, init_res, disclosed_messag
     local R_len = #disclosed_indexes
     -- We avoid the check R_len < 2^64
     if R_len ~= #disclosed_messages then
-        error("disclosed_indexes length is not equal to disclosed_me length", 2)
+        error("disclosed_indexes length is not equal to disclosed_me length", 4)
     end
     -- We avoid the check #(ph) < 2^64
     local c_array = {}
@@ -777,9 +777,9 @@ local function proof_init(ciphersuite, pk, signature_result, generators, random_
         H_j[i] = MsgGenerators[j[i]]
     end
     
-    if U > L then error('number of undisclosed indexes is bigger than the number of messages') end
+    if U > L then error('number of undisclosed indexes is bigger than the number of messages', 4) end
     for i = 1, U do
-        if undisclosed_indexes[i] <= 0 or undisclosed_indexes[i] > L then error('Wrong undisclosed indexes') end
+        if undisclosed_indexes[i] <= 0 or undisclosed_indexes[i] > L then error('Wrong undisclosed indexes', 4) end
     end
     
     local domain = calculate_domain(ciphersuite, pk, Q_1, MsgGenerators, header)
@@ -811,7 +811,7 @@ OUTPUT:
 local function proof_finalize(init_res, challenge, e_value, random_scalars, undisclosed_messages)
     local U = #undisclosed_messages
 
-    if #random_scalars ~= U + 5 then error('Wrong number of random scalars') end
+    if #random_scalars ~= U + 5 then error('Wrong number of random scalars', 4) end
     
     local r1, r2, et, r1t, r3t = table.unpack(random_scalars,1,5)
 
@@ -844,7 +844,7 @@ OUTPUT: proof (output of ProofFinalize)
 local function core_proof_gen(ciphersuite, pk, signature, generators, header, ph, messages, disclosed_indexes)
     local L = #messages
     local R = #disclosed_indexes
-    if R > L then error('number of disclosed indexes is bigger than the number of messages') end
+    if R > L then error('number of disclosed indexes is bigger than the number of messages', 3) end
     local U = L - R
     local signature_result = octets_to_signature(signature)
     local AA, e = table.unpack(signature_result)
@@ -904,7 +904,7 @@ OUTPUT: proof ( an array of 3 points of G1 and 4 + U scalars)
 local function octets_to_proof(proof_octets)
     local proof_len_floor = 3*OCTET_POINT_LENGTH + 4*OCTET_SCALAR_LENGTH
     if #proof_octets < proof_len_floor then
-        error("proof_octets is too short", 2)
+        error("proof_octets is too short", 4)
     end
     local index = 1
     local return_array = {}
@@ -912,7 +912,7 @@ local function octets_to_proof(proof_octets)
         local end_index = index + OCTET_POINT_LENGTH - 1
         return_array[i] = ECP.from_zcash(proof_octets:sub(index, end_index))
         if return_array[i] == IDENTITY_G1 then
-            error("Invalid point", 2)
+            error("Invalid point", 4)
         end
         index = index + OCTET_POINT_LENGTH
     end
@@ -923,14 +923,14 @@ local function octets_to_proof(proof_octets)
         return_array[j] = os2ip(proof_octets:sub(index, end_index))
         if (return_array[j] == BIG.new(0)) or (return_array[j]>=PRIME_R) then
             print(j)
-            error("Not a scalar in octets_to_proof", 2)
+            error("Not a scalar in octets_to_proof", 4)
         end
         index = index + OCTET_SCALAR_LENGTH
         j = j+1
     end
 
     if index ~= #proof_octets +1 then
-        error("Index is not right length",2)
+        error("Index is not right length", 4)
     end
 
     local msg_commitments = {}
@@ -959,11 +959,11 @@ local function proof_verify_init(ciphersuite, pk, Abar, Bbar, D , ehat, r1hat, r
     --Preconditions
     for _,i in pairs(disclosed_indexes) do
         if (i < 1) or (i > len_L) then
-            error("disclosed_indexes out of range",2)
+            error("disclosed_indexes out of range", 4)
         end
     end
     if #disclosed_messages ~= len_R then
-        error("Unmatching indexes and messages", 2)
+        error("Unmatching indexes and messages", 4)
     end
 
     local Q_1 = generators[1]
