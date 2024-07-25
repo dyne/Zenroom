@@ -173,11 +173,11 @@ static int pmain(lua_State* L)
  int i;
  tmname=G(L)->tmname;
  if (!lua_checkstack(L,argc)) fatal("too many input files");
- // for (i=0; i<argc; i++)
- // {
- //  const char* filename=IS("-") ? NULL : argv[i];
- //  if (luaL_loadfile(L,filename)!=LUA_OK) fatal(lua_tostring(L,-1));
- // }
+ for (i=0; i<argc; i++)
+ {
+  const char* filename=IS("-") ? NULL : argv[i];
+  if (luaL_loadfile(L,filename)!=LUA_OK) fatal(lua_tostring(L,-1));
+ }
  f=combine(L,argc);
  if (listing) luaU_print(f,listing>1);
  if (dumping)
