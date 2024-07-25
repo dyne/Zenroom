@@ -19,8 +19,8 @@ When I verify the 'myMessage' has a bbs signature in 'myMessage.signature' by 'A
 When I verify the 'myStringArray' has a bbs signature in 'myStringArray.signature' by 'Alice'
 
 # You can specify either 'SHA256' or 'SHAKE256' as input like this:
-When I verify the 'myMessage' has a bbs signature in 'myMessage.signature.sha' by 'Alice' using 'sha256'
-When I verify the 'myStringArray' has a bbs signature in 'myStringArray.signature.sha' by 'Alice' using 'sha256'
+When I verify the 'myMessage' has a bbs signature in 'myMessage.signature.sha' by 'Alice'
+When I verify the 'myStringArray' has a bbs signature in 'myStringArray.signature.sha' by 'Alice'
 
 # Here we print out the result: if the verifications succeeded, a string will be printed out
 # If the verifications failed, Zenroom will throw an error.

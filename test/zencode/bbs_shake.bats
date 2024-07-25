@@ -108,7 +108,7 @@ EOF
 {
     "Alice": {
         "keyring": {
-            "bbs_shake": "Sjmv/9Yk1p6BgIsuhDhcyAv4atrfdk4DDKpGwjHyqNc="        
+            "bbs_shake": "Lu4PYKijqL7A7pQr/UbL2umgc47mj1pk5yODEc8JoHk="        
             }
     }
 }
@@ -116,16 +116,15 @@ EOF
 cat << EOF | save_asset multi_msg_data_shake.json
 {
     "myStringArray": [
-        "9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02",
-        "87a8bd656d49ee07b8110e1d8fd4f1dcef6fb9bc368c492d9bc8c4f98a739ac6",
-        "96012096adda3f13dd4adbe4eea481a4c4b5717932b73b00e31807d3c5894b90",
-        "ac55fb33a75909edac8994829b250779298aa75d69324a365733f16c333fa943",
-        "d183ddc6e2665aa4e2f088af9297b78c0d22b4290273db637ed33ff5cf703151",
-        "515ae153e22aae04ad16f759e07237b43022cb1ced4c176e0999c6a8ba5817cc",
-        "496694774c5604ab1b2544eababcf0f53278ff5040c1e77c811656e8220417a2",
-        "77fe97eb97a1ebe2e81e4e3597a3ee740a66e9ef2412472c23364568523f8b91",
-        "7372e9daa5ed31e6cd5c825eac1b855e84476a1d94932aa348e07b7320912416",
-        "c344136d9ab02da4dd5908bbba913ae6f58c2cc844b802a6f811f5fb075f9b80"
+    "9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02",
+    "c344136d9ab02da4dd5908bbba913ae6f58c2cc844b802a6f811f5fb075f9b80",
+    "7372e9daa5ed31e6cd5c825eac1b855e84476a1d94932aa348e07b73",
+    "77fe97eb97a1ebe2e81e4e3597a3ee740a66e9ef2412472c",
+    "496694774c5604ab1b2544eababcf0f53278ff50",
+    "515ae153e22aae04ad16f759e07237b4",
+    "d183ddc6e2665aa4e2f088af",
+    "ac55fb33a75909ed",
+    "96012096",
     ],
     "bbs_hash" : "shake256"
 }
@@ -136,12 +135,14 @@ Scenario bbs
 Given I am 'Alice' 
 Given I have my 'keyring' 
 Given I have a 'hex array' named 'myStringArray'
+When I write string '' in 'empty string'
+When I move 'empty string' in 'myStringArray'
 When I create the bbs shake signature of 'myStringArray'
 Then print the 'bbs shake signature'
-Then print the string 'Test vectors originated from: draft-irtf-cfrg-bbs-signatures-latest Sections 7.3'
+Then print the string 'Test vectors originated from: draft-irtf-cfrg-bbs-signatures-latest_Appendix_D.1.1.1'
 EOF
     save_output test_sign_bbs_shake256_shake.json
-    assert_output '{"bbs_shake_signature":"tv2DC23+7N2jviGTgVpUniZGaihTZ9+TXgmS4hnq73F+LEXDg7oWL0JasvOlusSRc52BHja7vF/0olZNNiJAIGH3OYpNXzSkC1ZbvyELOAw=","output":["Test_vectors_originated_from:_draft-irtf-cfrg-bbs-signatures-latest_Sections_7.3"]}'
+    assert_output '{"bbs_shake_signature":"iL7rlw+AMWDTBY6s3lBSB8V2qMnk5dx8UknLzyoEbBX43wRwMe7zQ24Et3nZKpzbH+TGzANboWNPF0D53UmBbTynRey+OfZV6mH7cAE3/e0=","output":["Test_vectors_originated_from:_draft-irtf-cfrg-bbs-signatures-latest_Appendix_D.1.1.1"]}'
 }
 
 
@@ -149,7 +150,7 @@ EOF
     cat << EOF | save_asset alice_pubkey_shake.json
 {
     "Alice":{
-        "bbs_shake_public_key" : "qv+YMnglevxF+p1E0VbEVNcW+xolDf7RMtZbIAkzH2GMYjwU76FiRfUMyS5gM0BRCH8a6SZpuJaQ9f65LpFWj5Wo4obRELAR6ayZI/2HEjj1fRKVOVdxMx/27e5D5MzG"  
+        "bbs_shake_public_key" : "ktN9HWzTj+o6hzlTMz6rI6TAN34+BJl062K9RZSc3rGPsEkO3NRCmt/1bmXLzkLPGIsxvdvWGeQZuZwsQbOBeesAGWO8Peyq4Nn3AseowATyB/Rsc0peri6OgoM/Pn6l"  
     } 
 }
 EOF
@@ -168,6 +169,8 @@ Scenario bbs
 Given I have a 'bbs shake public key'
 and I have a 'bbs shake signature'
 and I have a 'hex array' named 'myStringArray'
+When I write string '' in 'empty string'
+When I move 'empty string' in 'myStringArray'
 When I verify the 'myStringArray' has a bbs shake signature in 'bbs shake signature' by 'Alice'
 Then print the string 'Signature is valid'
 EOF
