@@ -30,7 +30,7 @@ test("does parse data", async (t) => {
   t.is(result, "DATA INSIDE\n");
 });
 
-test("does broke gracefully", async (t) => {
+test("does break gracefully", async (t) => {
   try {
     await zenroom_exec(`broken sapokdao`);
   } catch (e) {
