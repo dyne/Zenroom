@@ -45,6 +45,7 @@ extern zen_extension_t zen_extensions[];
 
 // extern int luaopen_crypto(lua_State *L);
 extern int luaopen_octet(lua_State *L);
+extern int luaopen_bbs(lua_State *L);
 extern int luaopen_rsa(lua_State *L);
 extern int luaopen_ecdh(lua_State *L);
 extern int luaopen_aes(lua_State *L);
@@ -190,6 +191,8 @@ int zen_require(lua_State *L) {
 		luaL_requiref(L, s, luaopen_ed, 1); }
 	else if(strcasecmp(s, "es256")  ==0) {
 		luaL_requiref(L, s, luaopen_p256, 1); }
+	else if(strcasecmp(s, "bbs")  ==0) {
+		luaL_requiref(L, s, luaopen_bbs, 1); }
 	else {
 		// shall we bail out and abort execution here?
 		warning(L, "required extension not found: %s", s);
