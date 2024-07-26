@@ -1,5 +1,6 @@
 local bbs = require'crypto_bbs'
 local HASH = require'hash'
+local BBS_C = require'bbs'
 
 print('----------------- TEST SHA256 ------------------')
 
@@ -95,54 +96,12 @@ for k,v in pairs(hash_to_curve_test) do
     run_test_hash_to_field_m1_c2(v)
 end 
 
---[[
-local function run_test_hash_to_field (test)
-    local output_u = bbs.hash_to_field(O.from_string(test.msg), 2, O.from_string(DST_hash_to_field))
-    assert(output_u[1][1] == BIG.new(O.from_hex(test.u_0)), "Wrong u_0")
-    assert(output_u[2][1] == BIG.new(O.from_hex(test.u_1)), "Wrong u_1") 
-end
-
-print('----------------------')
-print("TEST: hash_to_field")
-for k,v in pairs(hash_to_curve_test) do
-    print("Test Case " .. k)
-    run_test_hash_to_field(v)
-end 
---]]
---[[
-local function run_test_hash_to_field_m1 (test)
-    local output_u = bbs.hash_to_field_m1(O.from_string(test.msg), 2, O.from_string(DST_hash_to_field))
-    assert(output_u[1] == BIG.new(O.from_hex(test.u_0)), "Wrong u_0")
-    assert(output_u[2] == BIG.new(O.from_hex(test.u_1)), "Wrong u_1") 
-end
-
-print('----------------------')
-print("TEST: hash_to_field_m1")
-for k,v in pairs(hash_to_curve_test) do
-    print("Test Case " .. k)
-    run_test_hash_to_field_m1(v)
-end 
-
-local function run_test_hash_to_field_m1 (test)
-    local output_u = bbs.hash_to_field_m1(O.from_string(test.msg), 2, O.from_string(DST_hash_to_field))
-    assert(output_u[1] == BIG.new(O.from_hex(test.u_0)), "Wrong u_0")
-    assert(output_u[2] == BIG.new(O.from_hex(test.u_1)), "Wrong u_1") 
-end
-
-print('----------------------')
-print("TEST: hash_to_field_m1")
-for k,v in pairs(hash_to_curve_test) do
-    print("Test Case " .. k)
-    run_test_hash_to_field_m1(v)
-end 
---]]
-
 print('----------------------')
 print("TEST: map_to_curve")
 
 local function run_test_map_to_curve (test)
-    local output_Q0 = bbs.map_to_curve(BIG.new(O.from_hex(test.u_0)))
-    local output_Q1 = bbs.map_to_curve(BIG.new(O.from_hex(test.u_1)))
+    local output_Q0 = BBS_C.map_to_curve(BIG.new(O.from_hex(test.u_0)))
+    local output_Q1 = BBS_C.map_to_curve(BIG.new(O.from_hex(test.u_1)))
     assert(output_Q0:x() == BIG.new(O.from_hex(test.Q0_x)), "Wrong Q0_x")
     assert(output_Q0:y() == BIG.new(O.from_hex(test.Q0_y)), "Wrong Q0_y")
     assert(output_Q1:x() == BIG.new(O.from_hex(test.Q1_x)), "Wrong Q1_x")
@@ -159,6 +118,7 @@ print("TEST: hash_to_curve (and clear_cofactor)")
 
 local function run_test_hash_to_curve (test)
     local output_P = bbs.hash_to_curve(ciphersuite, O.from_string(test.msg), O.from_string(DST_hash_to_field))
+    print(output_P:x():hex())
     assert(output_P:x() == BIG.new(O.from_hex(test.P_x)), "Wrong P_x")
     assert(output_P:y() == BIG.new(O.from_hex(test.P_y)), "Wrong P_y")
 end
