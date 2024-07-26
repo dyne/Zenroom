@@ -1,8 +1,8 @@
 /*
  * This file is part of zenroom
  * 
- * Copyright (C) 2017-2024 Dyne.org foundation
- * designed, written and maintained by Denis Roio <jaromil@dyne.org>
+ * Copyright (C) 2024 Dyne.org foundation
+ * designed, written and maintained by Filippo Trotter and Denis Roio
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License v3.0
@@ -15,24 +15,20 @@
  * Along with this program you should have received a copy of the
  * GNU Affero General Public License v3.0
  * If not, see http://www.gnu.org/licenses/agpl.txt
- * 
- * Last modified by Filippo Trotter
  */
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-#include <zenroom.h>
-#include <zen_error.h>
-#include <zen_memory.h>
+
 #include <lua_functions.h>
-#include <zen_octet.h>
 #include <zen_error.h>
-#include <amcl.h>
 #include <zen_big.h>
 #include <zen_ecp.h>
 
 
+// ROM values for BBS mapped on BLS381
+// TODO: deactivate when Zenroom is built with other curves
+//       all BBS will not work then.
 
+// Below the ROMS are optimized functions for BBS including ECP_sswu
+// and mapping of a point from isogenous curve over BLS381
 
 BIG_384_29 SSWU_A1_BLS381 = {0xd584c1d, 0x07a14041, 0x183e5fd7, 0x06df1b41, 0x081ac989, 0xc0d77ec, 0x1aa363a2, 0x0a707dcc, 0x02b0ea98, 0x164b6a4c, 0x0f5a4e80, 0x0771d286, 0x0144698a, 0x0};
 BIG_384_29 SSWU_B1_BLS381 = {0xe172be0, 0x0e62474c, 0x1b3aa974, 0x0642b462, 0x15ef55a2, 0x0a7e779, 0x01c282e7, 0x1e1e49e8, 0x1b2016c1, 0x03a9f771, 0x0062c4ba, 0x02d10060, 0x0e2908d1, 0x9};
@@ -279,8 +275,7 @@ static int map_to_curve_G1(lua_State *L) {
 int luaopen_bbs(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg bbs_class[] = {
-        {"map_to_curve",map_to_curve_G1},
-
+		{"map_to_curve",map_to_curve_G1},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg bbs_methods[] = {
