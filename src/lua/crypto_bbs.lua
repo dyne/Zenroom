@@ -501,7 +501,7 @@ function bbs.calculate_random_scalars(count)
     --]]
     -- We leave it like this because it should yield a more uniform distribution.
     while #scalar_array < count do
-        scalar = os2ip(O.random(32)) -- è un BIG
+        scalar = os2ip(BIG.random()) -- è un BIG
         if scalar < PRIME_R then 
             table.insert(scalar_array, scalar)
         end
