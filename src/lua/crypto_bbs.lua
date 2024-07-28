@@ -268,7 +268,7 @@ OUTPUT: msg_scalars (a vector of scalars stored as zenroom.octet)
 
 function bbs.messages_to_scalars(ciphersuite, messages)
 
-    local L = #messages
+    local L = table_size(messages)
 
     -- for now api_id is in the ciphersuite so we already know it is always given as input since ciphersuite is always given
     -- later we may add a check: if api_id is unknown use an empty string
@@ -293,7 +293,7 @@ DESCRIPTION: The following function takes in input an array of elements that can
 local function serialization(input_array)
     local octet_result = O.empty()
     local el_octs = O.empty()
-    for i=1, #input_array do
+    for i=1, table_size(input_array) do
         local elt = input_array[i]
         local elt_type = type(elt)
         if (elt_type == "zenroom.ecp") or (elt_type == "zenroom.ecp2") then
@@ -558,13 +558,13 @@ OUTPUT: init_res a table with 5 points on G1 (zenroom.ecp) and a scalar (zenroom
 
 local function proof_init(ciphersuite, pk, signature_result, generators, random_scalars, header, messages, undisclosed_indexes)
     local AA, e = table.unpack(signature_result)
-    local L = #messages
-    local U = #undisclosed_indexes
+    local L = table_size(messages)
+    local U = table_size(undisclosed_indexes)
     local j = {table.unpack(undisclosed_indexes)}
     local r1, r2, et, r1t, r3t = table.unpack(random_scalars,1,5)
     local mjt = {table.unpack(random_scalars, 6, 5 + U)}
 
-    if #generators ~= L+1 then error('Wrong generators length') end
+    if table_size(generators) ~= L+1 then error('Wrong generators length') end
     local Q_1 = table.unpack(generators, 1)
     local MsgGenerators = {table.unpack(generators, 2, 1 + L)}
     local H_j = {}
@@ -604,9 +604,9 @@ OUTPUT:
 ]]
 
 local function proof_finalize(init_res, challenge, e_value, random_scalars, undisclosed_messages)
-    local U = #undisclosed_messages
+    local U = table_size(undisclosed_messages)
 
-    if #random_scalars ~= U + 5 then error('Wrong number of random scalars', 4) end
+    if table_size(random_scalars) ~= U + 5 then error('Wrong number of random scalars', 4) end
     
     local r1, r2, et, r1t, r3t = table.unpack(random_scalars,1,5)
 
@@ -637,10 +637,10 @@ OUTPUT: proof (output of ProofFinalize)
 ]]
 
 local function core_proof_gen(ciphersuite, pk, signature, generators, header, ph, messages, disclosed_indexes)
-    local L = #messages
-    local R = #disclosed_indexes
+    local L = table_size(messages)
+    local R = table_size(disclosed_indexes)
     if R > L then error('number of disclosed indexes is bigger than the number of messages', 3) end
-    local U = L - R
+    local U <const> = L - R
     local signature_result = octets_to_signature(signature)
     local AA, e = table.unpack(signature_result)
     local undisclosed_indexes = {}
@@ -685,7 +685,7 @@ function bbs.proof_gen(ciphersuite, pk, signature, header, ph, messages, disclos
     header = header or O.empty()
     ph = ph or O.empty()
     local messages = bbs.messages_to_scalars(ciphersuite,messages)
-    local generators = bbs.create_generators(ciphersuite, #messages + 1)
+    local generators = bbs.create_generators(ciphersuite, table_size(messages) + 1)
     local proof = core_proof_gen(ciphersuite, pk, signature, generators, header, ph, messages, disclosed_indexes)
 
     return proof
@@ -747,8 +747,8 @@ OUTPUT: an array consisting of 4 G1 points and a scalar
 ]]
 local function proof_verify_init(ciphersuite, pk, Abar, Bbar, D , ehat, r1hat, r3hat , commitments, c, generators, header, disclosed_messages, disclosed_indexes)
 
-    local len_U = #commitments
-    local len_R = #disclosed_indexes
+    local len_U = table_size(commitments)
+    local len_R = table_size(disclosed_indexes)
     local len_L = len_R + len_U
 
     --Preconditions
@@ -757,7 +757,7 @@ local function proof_verify_init(ciphersuite, pk, Abar, Bbar, D , ehat, r1hat, r
             error("disclosed_indexes out of range", 4)
         end
     end
-    if #disclosed_messages ~= len_R then
+    if table_size(disclosed_messages) ~= len_R then
         error("Unmatching indexes and messages", 4)
     end
 
@@ -835,7 +835,7 @@ function bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages
     disclosed_messages_octets = disclosed_messages_octets or {}
     disclosed_indexes = disclosed_indexes or {}
     local len_U = math.floor((#proof-proof_len_floor)/OCTET_SCALAR_LENGTH)
-    local len_R = #disclosed_indexes
+    local len_R = table_size(disclosed_indexes)
 
     local message_scalars = bbs.messages_to_scalars(ciphersuite, disclosed_messages_octets)
     local generators = bbs.create_generators(ciphersuite, len_U+len_R+1)

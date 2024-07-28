@@ -51,6 +51,9 @@ end
 -- reliable table size measurement
 _G['table_size'] = function(t)
    if not t then return 0 end
+   if luatype(t) ~= 'table' then
+       error("table_size argument is not a table: "..type(t),2)
+   end
    local c = 0
    for _ in pairs(t) do
 	  c = c + 1
