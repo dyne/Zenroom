@@ -644,27 +644,21 @@ local function core_proof_gen(ciphersuite, pk, signature, generators, header, ph
     local signature_result = octets_to_signature(signature)
     local AA, e = table.unpack(signature_result)
     local undisclosed_indexes = {}
-    local index = 1
-    local j = 1
     for i = 1, L do
-        if i ~= disclosed_indexes[j] then
-            undisclosed_indexes[index] = i
-            index = index + 1
-        else
-            j = j + 1
+        if not array_contains(disclosed_indexes, i) then
+            table.insert(undisclosed_indexes, i)
         end
     end
-    
     local disclosed_messages = {}
     local undisclosed_messages = {}
-    for i = 1, #disclosed_indexes do
-        disclosed_messages[i] = messages[disclosed_indexes[i]]
+    for _,v in ipairs(disclosed_indexes) do
+        table.insert(disclosed_messages, messages[v])
     end
-    for i = 1, #undisclosed_indexes do
-        undisclosed_messages[i] = messages[undisclosed_indexes[i]]
+    for _,v in ipairs(undisclosed_indexes) do
+        table.insert(undisclosed_messages, messages[v])
     end
-    
-    local random_scalars = bbs.calculate_random_scalars(5 + U)
+
+    local random_scalars <const> = bbs.calculate_random_scalars(5 + U)
 
     local init_res = proof_init(ciphersuite, pk, signature_result, generators, random_scalars, header, messages, undisclosed_indexes)
     
