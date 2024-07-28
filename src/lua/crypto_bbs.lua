@@ -493,18 +493,18 @@ end
 -- It returns count random scalar.
 function bbs.calculate_random_scalars(count)
     local scalar_array = {}
-    local scalar = nil
     --[[ This does not seem uniformly random:
     for i = 1, count do
         scalar_array[i] = BIG.mod(O.random(48), PRIME_R)
     end
     --]]
     -- We leave it like this because it should yield a more uniform distribution.
-    while #scalar_array < count do
-        scalar = os2ip(BIG.random()) -- è un BIG
-        if scalar < PRIME_R then 
-            table.insert(scalar_array, scalar)
+    for i=1,count do
+        local scalar = os2ip(BIG.random())
+        while scalar > PRIME_R do
+            scalar = os2ip(BIG.random())
         end
+        table.insert(scalar_array, scalar)
     end
     return scalar_array
 end
@@ -590,7 +590,11 @@ local function proof_init(ciphersuite, pk, signature_result, generators, random_
     local T1 = (Abar * et) + (D * r1t)
     local T2 = (D * r3t)
     for i = 1, U do
-        T2 = T2 + H_j[i] * mjt[i]
+        assert(mjt[i],"nil mjt")
+        -- I.warn({i=i,
+        --         H_j = type(H_j[i]),
+        --         mjt = type(mjt[i])})
+        T2 = T2 + (H_j[i] * mjt[i])
     end
     local init_res = {Abar, Bbar, D, T1, T2, domain}
     return init_res
@@ -760,11 +764,9 @@ local function proof_verify_init(ciphersuite, pk, Abar, Bbar, D , ehat, r1hat, r
 
     local disclosed_H = {}
     local secret_H = {}
-    local counter_d = 1
     for i = 1, len_L do
-        if i == disclosed_indexes[counter_d] then
+        if array_contains(disclosed_indexes,i) then
             table.insert(disclosed_H, MsgGenerators[i])
-            counter_d = counter_d +1
         else
             table.insert(secret_H, MsgGenerators[i])
         end
