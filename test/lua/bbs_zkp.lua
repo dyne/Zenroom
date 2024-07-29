@@ -11,11 +11,18 @@ B3 = BBS.ciphersuite'shake256'
 
 function random_indexes(arr, num)
     local max = #arr
+    local got = { }
+    if num == max then
+        for i = 1, max, 1 do
+            table.insert(got,i)
+        end
+        return got
+    end
     assert(num < max-1, "cannot generate disclosures, ratio too high: "..num.." of "..max)
     local pick
-    local got = { }
     for i=1,num do
         pick = random16() % max
+        if pick == 0 then pick = 1 end
         while array_contains(got, pick) do
             pick = random16() % max
             if pick == 0 then pick = 1 end
