@@ -323,9 +323,9 @@ function isdictionary(obj)
 end
 
 function array_contains(arr, obj)
-   assert(luatype(arr) == 'table', "Internal error: array_contains argument is not a table")
+   if luatype(arr) ~= 'table' then error("Internal error: array_contains argument is not a table",2) end
    for k, v in pairs(arr) do
-	  assert(luatype(k) == 'number', "Internal error: array_contains argument is not an array")
+	  if luatype(k) ~= 'number' then error("Internal error: array_contains argument is not an array", 2) end
 	  if v == obj then return true end
    end
    return false
