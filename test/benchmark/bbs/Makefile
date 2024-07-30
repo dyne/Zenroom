@@ -1,5 +1,5 @@
 
-all: keygen.png sign_verify.png
+all: keygen.png sign_verify.png zkp.png
 
 %.png: %.txt %.gnuplot
 	sed 's/TERM/pngcairo dashed rounded size 1024,768/' \
