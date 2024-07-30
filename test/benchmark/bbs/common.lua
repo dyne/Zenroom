@@ -52,17 +52,26 @@ function generate_messages(num)
   return cls
 end
 
-function generate_disclosures(arr, num)
+function random_indexes(arr, num)
     local max = #arr
-    assert(num < max/3, "cannot generate disclosures, ratio too high: "..num.." of "..max)
+    assert(num < max-1, "cannot generate disclosures, ratio too high: "..num.." of "..max)
     local pick
     local got = { }
     for i=1,num do
         pick = random16() % max
         while array_contains(got, pick) do
             pick = random16() % max
+            if pick == 0 then pick = 1 end
         end
         table.insert(got, pick)
     end
     return got
+end
+
+function disclosed_messages(arr, indexes)
+    local res = { }
+    for k,v in pairs(indexes) do
+        table.insert(res,arr[v])
+    end
+    return res
 end
