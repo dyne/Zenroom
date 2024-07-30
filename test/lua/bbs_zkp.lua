@@ -13,8 +13,8 @@ function random_indexes(arr, num)
     local max = #arr
     local got = { }
     if num == max then
-        for i = 1, max, 1 do
-            table.insert(got,i)
+        for k,v in ipairs(arr) do
+            table.insert(got,k)
         end
         return got
     end

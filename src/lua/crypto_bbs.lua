@@ -590,10 +590,6 @@ local function proof_init(ciphersuite, pk, signature_result, generators, random_
     local T1 = (Abar * et) + (D * r1t)
     local T2 = (D * r3t)
     for i = 1, U do
-        assert(mjt[i],"nil mjt")
-        -- I.warn({i=i,
-        --         H_j = type(H_j[i]),
-        --         mjt = type(mjt[i])})
         T2 = T2 + (H_j[i] * mjt[i])
     end
     local init_res = {Abar, Bbar, D, T1, T2, domain}
@@ -682,7 +678,7 @@ OUTPUT: proof (output of CoreProofGen)
 function bbs.proof_gen(ciphersuite, pk, signature, header, ph, messages, disclosed_indexes)
     header = header or O.empty()
     ph = ph or O.empty()
-    table.sort(disclosed_indexes)
+    table.sort(disclosed_indexes) -- make sure indexes are sorted
     local messages = bbs.messages_to_scalars(ciphersuite,messages)
     local generators = bbs.create_generators(ciphersuite, table_size(messages) + 1)
     local proof = core_proof_gen(ciphersuite, pk, signature, generators, header, ph, messages, disclosed_indexes)
@@ -827,6 +823,7 @@ function bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages
     if #proof < proof_len_floor then
         error("proof_octets is too short", 2)
     end
+    table.sort(disclosed_indexes) -- make sure indexes are sorted
     header = header or O.empty()
     ph = ph or O.empty()
     disclosed_messages_octets = disclosed_messages_octets or {}
