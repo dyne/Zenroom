@@ -10,7 +10,7 @@ all: keygen.png sign_verify.png
 		$(basename $@).gnuplot | gnuplot  > $(basename $@).eps
 
 %.txt:
-	zenroom -l common.lua ${basename $@}.lua | tee $@
+	../../../src/zenroom -l common.lua ${basename $@}.lua | tee $@
 
 clean:
 	rm -f *.txt *.png *.eps
