@@ -1,0 +1,8 @@
+Rule check version 4.32.6
+Scenario rsa
+Given that I am known as 'Alice'
+and I have my 'keyring'
+When I write string 'This is my authenticated message.' in 'message'
+and I create the rsa signature of 'message'
+Then print the 'message'
+and print the 'rsa signature'

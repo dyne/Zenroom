@@ -1,0 +1,5 @@
+Scenario rsa
+Given I am known as 'Alice'
+Given I have my 'keyring'
+When I create the rsa public key
+Then print my 'rsa public key'
