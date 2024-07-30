@@ -1,0 +1,5 @@
+# Scenario rsa
+# Given I am known as 'Alice'
+# When I create the keyring
+# and I create the rsa key
+# Then print my 'keyring'
