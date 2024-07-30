@@ -54,11 +54,18 @@ end
 
 function random_indexes(arr, num)
     local max = #arr
+    local got = { }
+    if num == max then
+        for k,v in ipairs(arr) do
+            table.insert(got,k)
+        end
+        return got
+    end
     assert(num < max-1, "cannot generate disclosures, ratio too high: "..num.." of "..max)
     local pick
-    local got = { }
     for i=1,num do
         pick = random16() % max
+        if pick == 0 then pick = 1 end
         while array_contains(got, pick) do
             pick = random16() % max
             if pick == 0 then pick = 1 end
