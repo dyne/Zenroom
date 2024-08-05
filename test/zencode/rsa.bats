@@ -88,10 +88,10 @@ and print the 'message'
 EOF
     save_output sign_rsa_pubkey.json
 
-    cat <<EOF | zexe verify_rsa_from_alice.zen sign_rsa_pubkey.json
+    cat <<EOF | zexe verify_rsa_from_alice.zen sign_rsa_alice_output.json alice_rsa_pubkey.json
 Rule check version 4.32.6
 Scenario rsa
-Given I have a 'rsa public key'
+Given I have a 'rsa public key' in 'Alice'
 and I have a 'rsa signature'
 and I have a 'string' named 'message'
 When I verify the 'message' has a rsa signature in 'rsa signature' by 'Alice'
