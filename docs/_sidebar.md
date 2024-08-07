@@ -27,7 +27,7 @@
   - [Scenario 'Reflow': Multisignature](/pages/zencode-scenario-reflow "Reflow Multisignature")
   - [Scenario 'http': Create GET requests](/pages/zencode-scenarios-http.md "create GET requests")
   - [Scenario 'schnorr': Signature](/pages/zencode-scenarios-schnorr.md "Zencode schnorr")
-  - [Scenario 'qp': KEM, signature](/pages/zencode-scenarios-qp.md "Zencode qp")
+  - [Scenario 'qp': Post-Quantum cryptography](/pages/zencode-scenarios-post-quantum-cryptography.md "Zencode qp")
   - [Scenario 'rsa': signature](/pages/zencode-scenarios-rsa.md "Zencode rsa")
  <!--- --->
   - [Scenario 'sd-jwt': Selective Disclosure](/pages/zencode-scenarios-sdJwt.md "Zencode SD-JWT")
