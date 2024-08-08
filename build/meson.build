@@ -104,7 +104,8 @@ zenroom_src = [
     '../src/zen_ecdh_factory.c',
     '../src/p256-m.c',
     '../src/zen_p256.c',
-    '../src/zen_time.c'
+    '../src/zen_time.c',
+    '../src/zen_bbs.c'
 ]
 
 zenroom_lib = library(

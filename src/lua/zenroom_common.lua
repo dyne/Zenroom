@@ -51,6 +51,9 @@ end
 -- reliable table size measurement
 _G['table_size'] = function(t)
    if not t then return 0 end
+   if luatype(t) ~= 'table' then
+       error("table_size argument is not a table: "..type(t),2)
+   end
    local c = 0
    for _ in pairs(t) do
 	  c = c + 1
@@ -320,9 +323,9 @@ function isdictionary(obj)
 end
 
 function array_contains(arr, obj)
-   assert(luatype(arr) == 'table', "Internal error: array_contains argument is not a table")
+   if luatype(arr) ~= 'table' then error("Internal error: array_contains argument is not a table",2) end
    for k, v in pairs(arr) do
-	  assert(luatype(k) == 'number', "Internal error: array_contains argument is not an array")
+	  if luatype(k) ~= 'number' then error("Internal error: array_contains argument is not an array", 2) end
 	  if v == obj then return true end
    end
    return false
