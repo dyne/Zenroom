@@ -1,5 +1,6 @@
 
-all: keygen.png sign_verify.png zkp.png
+all: keygen.png sign_verify.png zkp.png entropy.png
+	../../../src/zenroom -l common.lua sizes.lua
 
 %.png: %.txt %.gnuplot
 	sed 's/TERM/pngcairo dashed rounded size 1024,768/' \
