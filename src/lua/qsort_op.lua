@@ -118,10 +118,14 @@ end
 -- sort function.
 return function( t , comp )
 
-   assert( type( t ) == "table" )
+   if type( t ) ~= "table" then
+       error("QSort function argument not a table: "..type( t), 2)
+   end
 
    if comp then
-      assert( type( comp ) == "function" )
+      if type( comp ) ~= "function" then
+          error("QSort function argument not a function: "..type(comp), 2)
+      end
    end
 
    auxsort( t , 1 , #t , comp or default_comp )
