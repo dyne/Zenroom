@@ -221,6 +221,7 @@ Scenario bbs
 Given I am known as 'Alice'
 When I create the keyring
 and I create the bbs key
+and I create the bbs shake key
 Then print my 'keyring'
 EOF
     save_output alice_keys_docs.json
@@ -229,7 +230,9 @@ Scenario bbs
 Given I am known as 'Alice'
 Given I have my 'keyring'
 When I create the bbs public key
+When I create the bbs shake public key
 Then print my 'bbs public key'
+Then print my 'bbs shake public key'
 EOF
     save_output alice_pubkey_docs.json
 }
@@ -260,29 +263,30 @@ When I rename the 'bbs signature' to 'myMessage.signature'
 
 #If we want we can specify the hash function used by the algorithm
 
-When I create the bbs signature of 'myStringArray'
-When I rename the 'bbs signature' to 'myStringArray.signature.sha' 
+When I create the bbs shake signature of 'myStringArray'
+When I rename the 'bbs shake signature' to 'myStringArray.signature.shake' 
 
-When I create the bbs signature of 'myMessage'
-When I rename the 'bbs signature' to 'myMessage.signature.sha' 
+When I create the bbs shake signature of 'myMessage'
+When I rename the 'bbs shake signature' to 'myMessage.signature.shake' 
 
 # Here we are printing out the signatures  
 Then print the 'myStringArray' 
 Then print the 'myStringArray.signature' 
-Then print the 'myStringArray.signature.sha'
+Then print the 'myStringArray.signature.shake'
 Then print the 'myMessage' 
 Then print the 'myMessage.signature'
-Then print the 'myMessage.signature.sha'
+Then print the 'myMessage.signature.shake'
 EOF
     save_output signed_bbs_docs.json
 }
 
 @test "DOCS: verify signature example" {
-    cat <<EOF | zexe verify_bbs_docs.zen alice_pubkey_docs.json signed_bbs_docs.json
+    cat <<EOF | zexe verify_bbs_docs.zen alice_pubkey_docs.json  signed_bbs_docs.json
 Scenario 'bbs': Bob verifies the signature from Alice 
 
 # Here we load the pubkey we'll verify the signature against
 Given I have a 'bbs public key' from 'Alice' 
+Given I have a 'bbs shake public key' from 'Alice'
 
 # Here we load the objects to be verified
 Given I have a 'string' named 'myMessage' 
@@ -291,17 +295,17 @@ Given I have a 'string array' named 'myStringArray'
 # Here we load the objects' signatures
 Given I have a 'bbs signature' named 'myStringArray.signature'
 Given I have a 'bbs signature' named 'myMessage.signature' 
-Given I have a 'bbs signature' named 'myStringArray.signature.sha'
-Given I have a 'bbs signature' named 'myMessage.signature.sha' 
+Given I have a 'bbs signature' named 'myStringArray.signature.shake'
+Given I have a 'bbs signature' named 'myMessage.signature.shake' 
 
 # Here we perform the verifications.
-# When not specified, the bbs verification algorithm uses SHAKE-256. 
+# When not specified, the bbs verification algorithm uses SHA-256. 
 When I verify the 'myMessage' has a bbs signature in 'myMessage.signature' by 'Alice' 
 When I verify the 'myStringArray' has a bbs signature in 'myStringArray.signature' by 'Alice'
 
-# You can specify either 'SHA256' or 'SHAKE256' as input like this:
-When I verify the 'myMessage' has a bbs signature in 'myMessage.signature.sha' by 'Alice'
-When I verify the 'myStringArray' has a bbs signature in 'myStringArray.signature.sha' by 'Alice'
+# You can specify 'SHAKE256' as input like this:
+When I verify the 'myMessage' has a bbs shake signature in 'myMessage.signature.shake' by 'Alice'
+When I verify the 'myStringArray' has a bbs shake signature in 'myStringArray.signature.shake' by 'Alice'
 
 # Here we print out the result: if the verifications succeeded, a string will be printed out
 # If the verifications failed, Zenroom will throw an error.

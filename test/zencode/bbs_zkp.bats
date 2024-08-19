@@ -183,7 +183,7 @@ Scenario 'bbs': participant generates the bbs proof
 Given I have a 'bbs public key' inside 'The Authority'
 Given I have a 'bbs credential'
 Given I have a 'string array' named 'bbs messages'
-# This is the same hash function used by the Authority to sign the messages.
+
 
 Given I have a 'number array' named 'bbs disclosed indexes'
 
@@ -192,7 +192,7 @@ When I rename the 'random_object' to 'bbs presentation header'
 
 When I create the bbs disclosed messages
 
-# The SAME hash function must be used in BOTH the creation and the verification. 
+
 When I create the bbs proof of the signature 'bbs credential' of the messages 'bbs messages' with public key 'bbs public key' presentation header 'bbs presentation header' and disclosed indexes 'bbs disclosed indexes'
 When I rename the 'bbs proof' to 'bbs proof verbose'
 When I create the bbs proof
@@ -220,7 +220,7 @@ and I have a 'base64' named 'bbs presentation header'
 Given I have a 'number array' named 'bbs disclosed indexes'
 and I have a 'string array' named 'bbs disclosed messages'
 
-# The SAME hash function must be used in BOTH the creation and the verification.
+
 When I verify the bbs proof with public key 'bbs public key' presentation header 'bbs presentation header' disclosed messages 'bbs disclosed messages' and disclosed indexes 'bbs disclosed indexes'
 When I verify the bbs proof
 
