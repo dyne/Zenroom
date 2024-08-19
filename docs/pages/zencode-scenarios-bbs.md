@@ -19,11 +19,6 @@ The output should look like this:
 
 [](../_media/examples/zencode_cookbook/bbs/alice_keys_docs.json ':include :type=code json')
 
-
-The output should look like this:
-
-[](../_media/examples/zencode_cookbook/bbs/alice_keys_shake.json ':include :type=code json')
-
 ## Public key
 
 Once you have created a private key, you can feed it to the following script to generate the **public key**:
