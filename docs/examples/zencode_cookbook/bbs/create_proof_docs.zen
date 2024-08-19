@@ -3,8 +3,7 @@ Scenario 'bbs': participant generates the bbs proof
 Given I have a 'bbs public key' inside 'The Authority'
 Given I have a 'bbs credential'
 Given I have a 'string array' named 'bbs messages'
-# This is the same hash function used by the Authority to sign the messages.
-Given I have a 'string' named 'hash name'
+
 
 Given I have a 'number array' named 'bbs disclosed indexes'
 
@@ -13,10 +12,10 @@ When I rename the 'random_object' to 'bbs presentation header'
 
 When I create the bbs disclosed messages
 
-# The SAME hash function must be used in BOTH the creation and the verification. 
-When I create the bbs proof of the signature 'bbs credential' of the messages 'bbs messages' using 'hash name' with public key 'bbs public key' presentation header 'bbs presentation header' and disclosed indexes 'bbs disclosed indexes'
+
+When I create the bbs proof of the signature 'bbs credential' of the messages 'bbs messages' with public key 'bbs public key' presentation header 'bbs presentation header' and disclosed indexes 'bbs disclosed indexes'
 When I rename the 'bbs proof' to 'bbs proof verbose'
-When I create the bbs proof using 'hash name'
+When I create the bbs proof
 
 Then print the 'bbs proof verbose'
 Then print the 'bbs proof'
@@ -25,4 +24,3 @@ Then print the 'bbs disclosed messages'
 Then print the 'bbs disclosed indexes'
 Then print the 'bbs presentation header'
 Then print the 'bbs credential'
-Then print the 'hash name'

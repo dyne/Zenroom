@@ -1,10 +1,6 @@
 Scenario 'bbs': authority generates its keys
-
 Given I am 'The Authority'
-
 When I create the bbs key
 When I create the bbs public key
-
 Then print my 'bbs public key'
 Then print my 'keyring'
-

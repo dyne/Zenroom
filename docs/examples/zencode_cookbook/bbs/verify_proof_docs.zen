@@ -1,15 +1,15 @@
 Scenario bbs: verify a bbs proof
 
 # We load al the necessary objects one at a time
-Given I have a 'bbs public key' in 'The Authority'
+Given I have a 'bbs public key'
 and I have a 'bbs proof'
 and I have a 'base64' named 'bbs presentation header'
 Given I have a 'number array' named 'bbs disclosed indexes'
 and I have a 'string array' named 'bbs disclosed messages'
 
-# The SAME hash function must be used in BOTH the creation and the verification.
-When I verify the bbs proof using 'sha256' with public key 'bbs public key' presentation header 'bbs presentation header' disclosed messages 'bbs disclosed messages' and disclosed indexes 'bbs disclosed indexes'
-When I verify the bbs proof using 'sha256'
+
+When I verify the bbs proof with public key 'bbs public key' presentation header 'bbs presentation header' disclosed messages 'bbs disclosed messages' and disclosed indexes 'bbs disclosed indexes'
+When I verify the bbs proof
 
 # The print is executed only if the verification was successful
 Then print the string  'bbs zkp verification successful'
