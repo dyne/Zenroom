@@ -5,19 +5,24 @@ The implementation of the BBS scheme inside Zenroom is based on this [draft](htt
 
 The BBS is a digital signature algorithm categorised as a form of short group signature. It can sign multiple messages and produce a fixed-length output. Also, a zero-knowledge proof scheme can be mounted on top of it. Through this capability, the possessor of a signature can generate proofs by selectively disclosing subsets of the originally signed set of messages, whilst preserving the verifiable authenticity and integrity of the messages.
 
-In Zenroom, using the *Scenario bbs*, you will use the **BLS12-381** ciphersuite designed for this algorithm. Moreover, there is the possibility to use two different hash functions: *SHAKE-256*, that is set to be the default for the signature and verification algorithms, or *SHA-256*.
+In Zenroom, using the *Scenario bbs*, you will use the **BLS12-381** ciphersuite designed for this algorithm. Moreover, there is the possibility to use two different hash functions: *SHA-256*, that is set to be the default for the signature and verification algorithms, or *SHAKE-256*.
 
 # Key Generation
 
 ## Private key
 
-The script below generates a **BBS** private key.
+The script below generates two **BBS** private key. (To generate a *SHAKE-256* key , you need to specify the algorithm)
 
 [](../_media/examples/zencode_cookbook/bbs/keygen_docs.zen ':include :type=code gherkin')
 
 The output should look like this:
 
 [](../_media/examples/zencode_cookbook/bbs/alice_keys_docs.json ':include :type=code json')
+
+
+The output should look like this:
+
+[](../_media/examples/zencode_cookbook/bbs/alice_keys_shake.json ':include :type=code json')
 
 ## Public key
 
@@ -31,7 +36,7 @@ The output should look like this:
 
 # Signature
 
-In this example we'll sign two objects: a string and a string array, that we'll verify in the next script. We show how to sign the two objects with or without specifing the hash function used, when not declared the algorithm will use *SHAKE-256*.
+In this example we'll sign two objects: a string and a string array, that we'll verify in the next script. We show how to sign the two objects with or without specifing the hash function used, when not declared the algorithm will use *SHA-256*.
 Along with the data to be signed, we'll need the private key. The private key is in the file we have generated with the first script, while the one with the messages that we will sign is the following:
 
 [](../_media/examples/zencode_cookbook/bbs/messages_docs.json ':include :type=code json')
@@ -96,13 +101,13 @@ In this case, since we MUST give the hash function used to the participant, the 
 
 ## Generation of the proof
 
-In this section, the participant will create the **proof** for its private credential given from an issuer. In order to generate the proof a participant must have the credential of the messages (i.e. the signature produced by the issuer in the previous step), the public key of the issuer and the hash function used to create the credential.  
+In this section, the participant will create the **proof** for its private credential given from an issuer. In order to generate the proof a participant must have the credential of the messages (i.e. the signature produced by the issuer in the previous step) and the public key of the issuer.
 Moreover, the participant should generate a presentation header (in this example is a random bit string) and choose a set of disclosed indexes, that could be empty, corresponding to the messages that will be disclosed by the proof.  
 So the input file should look like:
 
 [](../_media/examples/zencode_cookbook/bbs/proof_data_docs.json ':include :type=code json')
 
-Given the inputs, one can choose either to use a verbose declaration of all the data needed to perform the operation, or to use an implicit statement that require only the hash function as input. When creating the proof, one also create the disclosed messages needed later for the verification of the proof.  
+Given the inputs, one can choose either to use a verbose declaration of all the data needed to perform the operation, or to use an implicit statement. When creating the proof, one also create the disclosed messages needed later for the verification of the proof.  
 The script to create the proof is the following:
 
 [](../_media/examples/zencode_cookbook/bbs/create_proof_docs.zen ':include :type=code gherkin')
@@ -112,15 +117,19 @@ The result should look like this:
 
 [](../_media/examples/zencode_cookbook/bbs/created_proof_docs.json ':include :type=code json')
 
+In order to generate a *SHAKE-256* proof, one should specify it. For example:
+
+[](../_media/examples/zencode_cookbook/bbs/create_shake_proof.zen ':include :type=code gherkin')
+
 ## Verification of the proof
 
-In this section we will **verify** the proof produced in the previous step. This task  can be performed by anyone that is in possession of the proof, together with the hash function, the disclosed indexes, the disclosed messages, the presentation header used for the proof generation, and the issuer public key.
+In this section we will **verify** the proof produced in the previous step. This task  can be performed by anyone that is in possession of the proof, together with  the disclosed indexes, the disclosed messages, the presentation header used for the proof generation, and the issuer public key.
 These data are contanined in the output of the last script. 
 So the input file should look like:
 
-[](../_media/examples/zencode_cookbook/bbs/proved_signature_docs.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/bbs/created_proof_docs.json ':include :type=code json')
 
-Given the inputs, one can choose either to use a verbose declaration of all the data needed to perform the operation, or to use an implicit statement that require only the hash function as input.  
+Given the inputs, one can choose either to use a verbose declaration of all the data needed to perform the operation, or to use an implicit statement. 
 The script to verify the proof is the following:
 
 [](../_media/examples/zencode_cookbook/bbs/verify_proof_docs.zen ':include :type=code gherkin')

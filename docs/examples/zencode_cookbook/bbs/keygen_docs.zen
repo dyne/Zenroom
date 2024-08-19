@@ -2,4 +2,5 @@ Scenario bbs
 Given I am known as 'Alice'
 When I create the keyring
 and I create the bbs key
+and I create the bbs shake key
 Then print my 'keyring'

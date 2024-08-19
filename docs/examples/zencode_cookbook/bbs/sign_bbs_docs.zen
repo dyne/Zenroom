@@ -12,16 +12,16 @@ When I rename the 'bbs signature' to 'myMessage.signature'
 
 #If we want we can specify the hash function used by the algorithm
 
-When I create the bbs signature of 'myStringArray'
-When I rename the 'bbs signature' to 'myStringArray.signature.sha' 
+When I create the bbs shake signature of 'myStringArray'
+When I rename the 'bbs shake signature' to 'myStringArray.signature.shake' 
 
-When I create the bbs signature of 'myMessage'
-When I rename the 'bbs signature' to 'myMessage.signature.sha' 
+When I create the bbs shake signature of 'myMessage'
+When I rename the 'bbs shake signature' to 'myMessage.signature.shake' 
 
 # Here we are printing out the signatures  
 Then print the 'myStringArray' 
 Then print the 'myStringArray.signature' 
-Then print the 'myStringArray.signature.sha'
+Then print the 'myStringArray.signature.shake'
 Then print the 'myMessage' 
 Then print the 'myMessage.signature'
-Then print the 'myMessage.signature.sha'
+Then print the 'myMessage.signature.shake'
