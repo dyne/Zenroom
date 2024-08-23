@@ -84,22 +84,25 @@ void* rng_alloc(zenroom_t *ZZ) {
 
 
 static int rng_uint8(lua_State *L) {
+	BEGIN();
 	Z(L);
 	uint8_t res = RAND_byte(Z->random_generator);
 	lua_pushinteger(L, (lua_Integer)res);
-	return(1);
+	END(1);
 }
 
 static int rng_uint16(lua_State *L) {
+	BEGIN();
 	Z(L);
 	uint16_t res =
 		RAND_byte(Z->random_generator)
 		| (uint32_t) RAND_byte(Z->random_generator) << 8;
 	lua_pushinteger(L, (lua_Integer)res);
-	return(1);
+	END(1);
 }
 
 static int rng_int32(lua_State *L) {
+	BEGIN();
 	Z(L);
 	uint32_t res =
 		RAND_byte(Z->random_generator)
@@ -107,9 +110,11 @@ static int rng_int32(lua_State *L) {
 		| (uint32_t) RAND_byte(Z->random_generator) << 16
 		| (uint32_t) RAND_byte(Z->random_generator) << 24;
 	lua_pushinteger(L, (lua_Integer)res);
-	return(1);
+	END(1);
 }
 
+// this is not really useful, however prints current seed as a table
+// of integer values. Current seed is the octet global RNGSEED.
 static int rng_rr256(lua_State *L) {
   Z(L);
 	lua_newtable(L);
