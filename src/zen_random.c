@@ -51,6 +51,7 @@
 
 #include <zenroom.h>
 #include <zen_memory.h>
+#include <zen_octet.h>
 #include <randombytes.h>
 
 void* rng_alloc(zenroom_t *ZZ) {
@@ -129,16 +130,40 @@ static int rng_rr256(lua_State *L) {
 	return 1;
 }
 
+static int rng_seed(lua_State *L) {
+	BEGIN();
+	Z(L);
+	bool failed = false;
+	octet *in = o_arg(L, 1);
+	if(in->len != RANDOM_SEED_LEN) {
+		zerror(L, "Random seed is not %u bytes long",
+		       RANDOM_SEED_LEN);
+		lua_pushnil(L);
+		goto end;
+	}
+	Z->random_external = 1;
+	memcpy(Z->random_seed, in->val, RANDOM_SEED_LEN);
+	free(Z->random_generator);
+	Z->random_generator = rng_alloc(Z);
+	o_dup(L,in); // push to Lua stack for setglobal
+	lua_setglobal(L, "RNGSEED");
+	end:
+	END(1);
+}
+
+
 void zen_add_random(lua_State *L) {
 	static const struct luaL_Reg rng_base [] =
 		{ {"random_int8",  rng_uint8  },
+		  {"random_byte",  rng_uint8  },
 		  {"random_int16", rng_uint16 },
+		  {"random_word", rng_uint16 },
 		  {"random_int32", rng_int32 },
 		  {"random8",  rng_uint8  },
 		  {"random16", rng_uint16 },
 		  {"random32", rng_int32 },
 		  {"random",  rng_uint16  },
-		  {"runtime_random256", rng_rr256 },
+		  {"random_seed", rng_seed },
 		  {NULL, NULL} };
 	lua_getglobal(L, "_G");
 	luaL_setfuncs(L, rng_base, 0);
