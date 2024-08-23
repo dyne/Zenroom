@@ -575,16 +575,6 @@ When("create float '' cast of integer in ''", function(dest, source)
 	new_codec(dest, {encoding = 'float'})
 end)
 
-When("seed random with ''",
-     function(seed)
-	local s = have(seed)
-	zencode_assert(iszen(type(s)), "New random seed is not a valid zenroom type: "..seed)
-	local fingerprint = random_seed(s) -- pass the seed for srand init
-	act("New random seed of "..#s.." bytes")
-	xxx("New random fingerprint: "..fingerprint:hex())
-     end
-)
-
 local ops2 = {
     ['zenroom.big'] = {['+'] = BIG.zenadd, ['-'] = BIG.zensub, ['*'] = BIG.zenmul, ['/'] = BIG.zendiv},
     ['zenroom.float'] = {['+'] = F.add, ['-'] = F.sub, ['*'] = F.mul, ['/'] = F.div},
