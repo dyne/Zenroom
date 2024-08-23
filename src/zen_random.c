@@ -114,43 +114,33 @@ static int rng_int32(lua_State *L) {
 	END(1);
 }
 
-// this is not really useful, however prints current seed as a table
-// of integer values. Current seed is the octet global RNGSEED.
-static int rng_rr256(lua_State *L) {
-  Z(L);
-	lua_newtable(L);
-	int c = PRNG_PREROLL;
-	int idx = 0;
-	while(c--) {
-		lua_pushnumber(L,idx+1);
-		lua_pushinteger(L,(lua_Integer) Z->runtime_random256[idx]);
-		lua_settable(L,-3);
-		idx++;
-	}
-	return 1;
-}
-
 static int rng_seed(lua_State *L) {
 	BEGIN();
 	Z(L);
-	bool failed = false;
-	octet *in = o_arg(L, 1);
-	if(in->len != RANDOM_SEED_LEN) {
-		zerror(L, "Random seed is not %u bytes long",
-		       RANDOM_SEED_LEN);
+	octet *in = o_arg(L, 1); SAFE(in);
+	if(in->len < 4) {
+		zerror(L, "Random seed error: too small (%u bytes)", in->len);
 		lua_pushnil(L);
 		goto end;
 	}
-	Z->random_external = 1;
-	memcpy(Z->random_seed, in->val, RANDOM_SEED_LEN);
-	free(Z->random_generator);
-	Z->random_generator = rng_alloc(Z);
-	o_dup(L,in); // push to Lua stack for setglobal
+	AMCL_(RAND_seed)(Z->random_generator, in->len, in->val);
+	o_dup(L,in); // push seed to Lua stack for setglobal
 	lua_setglobal(L, "RNGSEED");
+	octet *rr = o_new(L, PRNG_PREROLL); SAFE(rr);
+	for(register int i=0;i<PRNG_PREROLL;i++)
+		rr->val[i] = RAND_byte(Z->random_generator);
+	rr->len = PRNG_PREROLL;
+	// HEREoct(rr);
+	// plus 4 bytes used by Lua init
+	RAND_byte(Z->random_generator);
+	RAND_byte(Z->random_generator);
+	RAND_byte(Z->random_generator);
+	RAND_byte(Z->random_generator);
+	// return "runtime random" fingerprint
 	end:
+	o_free(L,in);
 	END(1);
 }
-
 
 void zen_add_random(lua_State *L) {
 	static const struct luaL_Reg rng_base [] =
