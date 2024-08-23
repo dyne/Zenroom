@@ -130,11 +130,12 @@ static int lua_trim_quotes(lua_State* L) {
 
 static int lua_unserialize_json(lua_State* L) {
 	const char *in;
-	size_t size;
 	register int level = 0;
 	register char *p;
 	register char in_literal_str = 0;
+	size_t size;
 	in = luaL_checklstring(L, 1, &size);
+	size_t orig_size = size;
 	char brakets[MAX_DEPTH];
 	p = (char*)in;
 	while (size && isspace(*p) ) { size--; p++; } // first char
@@ -187,6 +188,11 @@ static int lua_unserialize_json(lua_State* L) {
 		}
 	}
 	// should never be here
+	zerror(L, "JSON unknown parser error");
+	zerror(L, "JSON input string size: %u",orig_size);
+	zerror(L, "JSON parser level: %u", level);
+	for(int i=level; i>0; i--)
+		zerror(L,"JSON parser bracket[%u] = '%c'",i,brakets[i]);
 	lerror(L, "JSON has malformed beginning or end");
 	return 0;
 }
