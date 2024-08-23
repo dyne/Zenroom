@@ -115,19 +115,19 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 			if(strcasecmp(lex.string,"logfmt") ==0) { curconf = LOGFMT;  break; } // str
 			if(strcasecmp(lex.string,"maxiter")==0) { curconf = MAXITER; break; } // str
 			if(curconf==RNGSEED) {
-				int len = strlen(lex.string);
-				if( len-4 != RANDOM_SEED_LEN *2) { // hex doubles size
-					_err( "Invalid length of random seed: %u (must be %u)\n",
-					      len/2, RANDOM_SEED_LEN);
-					// free(lexbuf);
-					return 0;
-				}
 				if(strncasecmp(lex.string, "hex:", 4) != 0) { // hex: prefix needed
 					_err( "Invalid rngseed data prefix (must be hex:)\n");
 					// free(lexbuf);
 					return 0;
 				}
-				for(p=4; p<RANDOM_SEED_LEN*2; p++) {
+				int len = strlen(lex.string)-4;
+				if( len/2 != RANDOM_SEED_LEN) { // hex doubles size
+					_err( "Invalid length of random seed: %u (must be %u)\n",
+					      len/2, RANDOM_SEED_LEN);
+					// free(lexbuf);
+					return 0;
+				}
+				for(p=4; p<len; p++) {
 				  if(! isxdigit(lex.string[p]) ) {
 					_err( "Invalid hex digit in random seed: %c\n",
 						  lex.string[p]);
@@ -136,8 +136,8 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 				}
 
 				// copy string and null terminate
-				memcpy(ZZ->zconf_rngseed, lex.string+4, RANDOM_SEED_LEN*2);
-				ZZ->zconf_rngseed[(RANDOM_SEED_LEN*2)] = 0x0;
+				memcpy(ZZ->zconf_rngseed, lex.string+4, len);
+				ZZ->zconf_rngseed[len] = 0x0;
 				break;
 			}
 			if(curconf==LOGFMT) {
