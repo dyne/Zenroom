@@ -16,6 +16,16 @@ EOF
     assert_output '{"dest":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA=","random":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="}'
 }
 
+@test "Avoid regression bugs in random" {
+    cat <<EOF | zexe prng_regression.zen
+Given nothing
+When I create the random object of '32' bytes
+Then print the 'random object' as 'hex'
+EOF
+    save_output "prng_regression.out"
+    assert_output '{"random_object":"5dd8c0623f9163de7ebb260c23c7d1dfe7e63f92f241a379e2fc934d52b16720"}'
+}
+
 @test "Read seed for random" {
     cat <<EOF | save_asset zeroseed.json
 {"zeroseed": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"}
@@ -23,18 +33,18 @@ EOF
     cat <<EOF | zexe seed.zen zeroseed.json
 Given I have a 'hex' named 'zeroseed'
 
-When I create the random object of '16' bytes
+When I create the random object of '32' bytes
 and I rename 'random object' to 'first'
 
 When I seed the random with 'zeroseed'
-and I create the random object of '16' bytes
+and I create the random object of '32' bytes
 
 When I verify 'random object' is equal to 'first'
 
-Then print string 'random seed OK'
+Then print the 'random object' as 'hex'
 EOF
     save_output "seed.out"
-    assert_output '{"output":["random_seed_OK"]}'
+    assert_output '{"random_object":"5dd8c0623f9163de7ebb260c23c7d1dfe7e63f92f241a379e2fc934d52b16720"}'
 }
 
 @test "Random from array" {
