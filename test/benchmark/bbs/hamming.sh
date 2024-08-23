@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# entropy benchmark of BBS+ - for info see:
+# hamming distance benchmark of BBS+ - for info see:
 # https://news.dyne.org/benchmark-of-the-bbs-signature-scheme-v06/
 
 # 272 is the byte length of a BBS+ proof

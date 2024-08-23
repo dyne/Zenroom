@@ -1,5 +1,5 @@
 
-all: keygen.png sign_verify.png zkp.png entropy.png
+all: keygen.png sign_verify.png zkp.png
 	../../../src/zenroom -l common.lua sizes.lua
 
 %.png: %.txt %.gnuplot
