@@ -219,46 +219,6 @@ ZEN_PRINT(zen_act, zen_log(L, LOG_DEBUG, o))
 ZEN_PRINT(zen_notice, zen_log(L, LOG_INFO, o))
 ZEN_PRINT(zen_debug, zen_log(L, LOG_VERBOSE, o))
 
-
-static int zen_random_seed(lua_State *L) {
-  BEGIN();
-  Z(L);
-  char *failed_msg = NULL;
-  octet *seed = o_arg(L, 1);
-  if(seed == NULL) {
-	  failed_msg = "Could not allocate seed";
-	  goto end;
-  }
-  else if(seed->len <4) {
-    zerror(L,"Random seed error: too small (%u bytes)",seed->len);
-    failed_msg = "Random seed error: too small";
-    goto end;
-  }
-  AMCL_(RAND_seed)(Z->random_generator, seed->len, seed->val);
-  // fast-forward to runtime_random (256 bytes) and 4 bytes lua
-  octet *rr = o_new(L, PRNG_PREROLL);
-  if(rr == NULL) {
-	  failed_msg = "Could not allocate runtime random";
-	  goto end;
-  }
-  for(register int i=0;i<PRNG_PREROLL;i++)
-    rr->val[i] = RAND_byte(Z->random_generator);
-  rr->len = PRNG_PREROLL;
-  // plus 4 bytes used by Lua init
-  RAND_byte(Z->random_generator);
-  RAND_byte(Z->random_generator);
-  RAND_byte(Z->random_generator);
-  RAND_byte(Z->random_generator);
-  // return "runtime random" fingerprint
-end:
-  o_free(L,seed);
-  if(failed_msg) {
-	  lerror(L, failed_msg);
-	  lua_pushnil(L);
-  }
-  END(1);
-}
-
 void zen_add_io(lua_State *L) {
 	// override print() and io.write()
 	static const struct luaL_Reg custom_print [] =
@@ -269,7 +229,7 @@ void zen_add_io(lua_State *L) {
 		  {"warn", zen_warn},
 		  {"act", zen_act},
 		  {"xxx", zen_debug},
-		  {"random_seed", zen_random_seed},
+//		  {"random_seed", zen_random_seed},
 		  {NULL, NULL} };
 	lua_getglobal(L, "_G");
 	luaL_setfuncs(L, custom_print, 0);  // for Lua versions 5.2 or greater
