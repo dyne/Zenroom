@@ -68,19 +68,19 @@ extern int PQCLEAN_KYBER512_CLEAN_crypto_kem_dec(uint8_t *ss, const uint8_t *ct,
 	Quantum proof ml-kem-512
 */
 
-#define pqcrystals_ml_kem_512_ipd_ref_SECRETKEYBYTES 1632
-#define pqcrystals_ml_kem_512_ipd_ref_PUBLICKEYBYTES 800
-#define pqcrystals_ml_kem_512_ipd_ref_CIPHERTEXTBYTES 768
-#define pqcrystals_ml_kem_512_ipd_ref_KEYPAIRCOINBYTES 64
-#define pqcrystals_ml_kem_512_ipd_ref_ENCCOINBYTES 32
-#define pqcrystals_ml_kem_512_ipd_ref_BYTES 32
+#define pqcrystals_ml_kem_512_ref_SECRETKEYBYTES 1632
+#define pqcrystals_ml_kem_512_ref_PUBLICKEYBYTES 800
+#define pqcrystals_ml_kem_512_ref_CIPHERTEXTBYTES 768
+#define pqcrystals_ml_kem_512_ref_KEYPAIRCOINBYTES 64
+#define pqcrystals_ml_kem_512_ref_ENCCOINBYTES 32
+#define pqcrystals_ml_kem_512_ref_BYTES 32
 #define pqcrystal_mlkem_512_INDCPA_SECRETKEYBYTES 768
 
-extern int pqcrystals_ml_kem_512_ipd_ref_keypair_derand(uint8_t *pk, uint8_t *sk, const uint8_t *coins);
-extern int pqcrystals_ml_kem_512_ipd_ref_keypair(uint8_t *pk, uint8_t *sk);
-extern int pqcrystals_ml_kem_512_ipd_ref_enc_derand(uint8_t *ct, uint8_t *ss, const uint8_t *pk, const uint8_t *coins);
-extern int pqcrystals_ml_kem_512_ipd_ref_enc(uint8_t *ct, uint8_t *ss, const uint8_t *pk);
-extern int pqcrystals_ml_kem_512_ipd_ref_dec(uint8_t *ss, const uint8_t *ct, const uint8_t *sk);
+extern int pqcrystals_ml_kem_512_ref_keypair_derand(uint8_t *pk, uint8_t *sk, const uint8_t *coins);
+extern int pqcrystals_ml_kem_512_ref_keypair(uint8_t *pk, uint8_t *sk);
+extern int pqcrystals_ml_kem_512_ref_enc_derand(uint8_t *ct, uint8_t *ss, const uint8_t *pk, const uint8_t *coins);
+extern int pqcrystals_ml_kem_512_ref_enc(uint8_t *ct, uint8_t *ss, const uint8_t *pk);
+extern int pqcrystals_ml_kem_512_ref_dec(uint8_t *ss, const uint8_t *ct, const uint8_t *sk);
 
 
 /*
@@ -578,14 +578,14 @@ static int qp_ml_kem_512_keygen(lua_State *L) {
 	}
 	}
 	lua_createtable(L, 0, 2);
-	octet *private = o_new(L, pqcrystals_ml_kem_512_ipd_ref_SECRETKEYBYTES); SAFE(private);
+	octet *private = o_new(L, pqcrystals_ml_kem_512_ref_SECRETKEYBYTES); SAFE(private);
 	lua_setfield(L, -2, "private");
-	octet *public = o_new(L, pqcrystals_ml_kem_512_ipd_ref_PUBLICKEYBYTES); SAFE(public);
+	octet *public = o_new(L, pqcrystals_ml_kem_512_ref_PUBLICKEYBYTES); SAFE(public);
 	lua_setfield(L, -2, "public");
 
-	pqcrystals_ml_kem_512_ipd_ref_keypair_derand((unsigned char*)public->val, (unsigned char*)private->val, randbytes);
-	public->len = pqcrystals_ml_kem_512_ipd_ref_PUBLICKEYBYTES;
-	private->len = pqcrystals_ml_kem_512_ipd_ref_SECRETKEYBYTES;
+	pqcrystals_ml_kem_512_ref_keypair_derand((unsigned char*)public->val, (unsigned char*)private->val, randbytes);
+	public->len = pqcrystals_ml_kem_512_ref_PUBLICKEYBYTES;
+	private->len = pqcrystals_ml_kem_512_ref_SECRETKEYBYTES;
 end:
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -602,14 +602,14 @@ static int qp_ml_kem_512_pubgen(lua_State *L) {
 		failed_msg = "Could not allocate secret key";
 		goto end;
 	}
-	pk = o_new(L, pqcrystals_ml_kem_512_ipd_ref_PUBLICKEYBYTES);
+	pk = o_new(L, pqcrystals_ml_kem_512_ref_PUBLICKEYBYTES);
 	if(pk == NULL) {
 		failed_msg = "Could not allocate private key";
 		goto end;
 	}
 
 	memcpy((unsigned char*)pk->val,
-				(unsigned char*)sk->val + pqcrystal_mlkem_512_INDCPA_SECRETKEYBYTES, pqcrystals_ml_kem_512_ipd_ref_PUBLICKEYBYTES);
+				(unsigned char*)sk->val + pqcrystal_mlkem_512_INDCPA_SECRETKEYBYTES, pqcrystals_ml_kem_512_ref_PUBLICKEYBYTES);
 	pk->len = PQCLEAN_KYBER512_CLEAN_CRYPTO_PUBLICKEYBYTES;
 
 
@@ -644,7 +644,7 @@ static int qp_ml_kem_512_sscheck(lua_State *L) {
 	if(ss == NULL) {
 		THROW("Could not allocate kem secret");
 	} else {
-		if(ss->len == pqcrystals_ml_kem_512_ipd_ref_BYTES)
+		if(ss->len == pqcrystals_ml_kem_512_ref_BYTES)
 			lua_pushboolean(L, 1);
 		else
 			lua_pushboolean(L, 0);
@@ -660,7 +660,7 @@ static int qp_ml_kem_512_ctcheck(lua_State *L) {
 	if(ct == NULL) {
 		THROW("Could not allocate kem ciphertext");
 	} else {
-		if(ct->len == pqcrystals_ml_kem_512_ipd_ref_CIPHERTEXTBYTES)
+		if(ct->len == pqcrystals_ml_kem_512_ref_CIPHERTEXTBYTES)
 			lua_pushboolean(L, 1);
 		else
 			lua_pushboolean(L, 0);
@@ -692,7 +692,7 @@ static int qp_ml_kem_512_enc(lua_State *L) {
 		failed_msg = "Cuold not allocate public key";
 		goto end;
 	}
-	if(pk->len != pqcrystals_ml_kem_512_ipd_ref_PUBLICKEYBYTES) {
+	if(pk->len != pqcrystals_ml_kem_512_ref_PUBLICKEYBYTES) {
 		failed_msg = "invalid size for public key";
 		goto end;
 	}
@@ -703,14 +703,14 @@ static int qp_ml_kem_512_enc(lua_State *L) {
 		goto end;
 	}
 	lua_setfield(L, -2, "secret"); // shared secret
-	ct = o_new(L, pqcrystals_ml_kem_512_ipd_ref_CIPHERTEXTBYTES);
+	ct = o_new(L, pqcrystals_ml_kem_512_ref_CIPHERTEXTBYTES);
 	if(ct == NULL) {
 		failed_msg = "Could not allocate kem ciphertext";
 		goto end;
 	}
 	lua_setfield(L, -2, "cipher");
 
-	if(pqcrystals_ml_kem_512_ipd_ref_enc_derand((unsigned char*)ct->val,
+	if(pqcrystals_ml_kem_512_ref_enc_derand((unsigned char*)ct->val,
 						 (unsigned char*)ss->val,
 						 (unsigned char*)pk->val,
 						 randbytes)) {
@@ -718,7 +718,7 @@ static int qp_ml_kem_512_enc(lua_State *L) {
 		goto end;
 	}
 	ss->len = KYBER_SSBYTES;
-	ct->len = pqcrystals_ml_kem_512_ipd_ref_CIPHERTEXTBYTES;
+	ct->len = pqcrystals_ml_kem_512_ref_CIPHERTEXTBYTES;
 end:
 	o_free(L,pk);
 	if(failed_msg) {
@@ -737,11 +737,11 @@ static int qp_ml_kem_512_dec(lua_State *L) {
 		failed_msg = "Could not allocate memory during decription";
 		goto end;
 	}
-	if(sk->len != pqcrystals_ml_kem_512_ipd_ref_SECRETKEYBYTES) {
+	if(sk->len != pqcrystals_ml_kem_512_ref_SECRETKEYBYTES) {
 		failed_msg = "invalid size for secret key";
 		goto end;
 	}
-	if(ct->len != pqcrystals_ml_kem_512_ipd_ref_CIPHERTEXTBYTES) {
+	if(ct->len != pqcrystals_ml_kem_512_ref_CIPHERTEXTBYTES) {
 		failed_msg = "invalid size for ciphertext key";
 		goto end;
 	}
@@ -750,7 +750,7 @@ static int qp_ml_kem_512_dec(lua_State *L) {
 		failed_msg = "Could not allocate kem secret";
 		goto end;
 	}
-	if(pqcrystals_ml_kem_512_ipd_ref_dec((unsigned char*)ss->val,
+	if(pqcrystals_ml_kem_512_ref_dec((unsigned char*)ss->val,
 						 (unsigned char*)ct->val,
 						 (unsigned char*)sk->val)) {
 		failed_msg = "error in while deciphering the shared secret";
