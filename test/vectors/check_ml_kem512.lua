@@ -35,9 +35,6 @@ for line in newline_iter(DATA) do
         elseif rule[1]:lower() == "c" then
             test["c"] = O.from_hex(rule[3])
             curr_fields = curr_fields+1
-        elseif rule[1]:lower() == "kprime" then
-            test["kprime"] = O.from_hex(rule[3])
-            curr_fields = curr_fields+1
         end
       end
       if curr_fields == 4 then
@@ -57,8 +54,8 @@ for line in newline_iter(DATA) do
             assert(test.c == QP.mlkem512_enc(test.ek, test.m).cipher)
             print("cipher ok")
         end
-        if (test.kprime) then
-            assert(test.kprime == QP.mlkem512_dec(test.dk,test.c))
+        if (test.dk and test.k) then
+            assert(test.k == QP.mlkem512_dec(test.dk,test.c))
             print("dec ok")
         end
         curr_fields = 0
