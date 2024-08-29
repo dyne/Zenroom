@@ -1,4 +1,4 @@
-Rule check version 4.32.0
+Rule check version 4.37.0
 Scenario qp : Create the mlkem512 public key
 Given I am 'Alice'
 and I have the 'keyring'
