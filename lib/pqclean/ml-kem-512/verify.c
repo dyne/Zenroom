@@ -41,7 +41,35 @@ void cmov(uint8_t *r, const uint8_t *x, size_t len, uint8_t b)
 {
   size_t i;
 
+#if defined(__GNUC__) || defined(__clang__)
+  // Prevent the compiler from
+  //    1) inferring that b is 0/1-valued, and
+  //    2) handling the two cases with a branch.
+  // This is not necessary when verify.c and kem.c are separate translation
+  // units, but we expect that downstream consumers will copy this code and/or
+  // change how it is built.
+  __asm__("" : "+r"(b) : /* no inputs */);
+#endif
+
   b = -b;
   for(i=0;i<len;i++)
     r[i] ^= b & (r[i] ^ x[i]);
+}
+
+
+/*************************************************
+* Name:        cmov_int16
+*
+* Description: Copy input v to *r if b is 1, don't modify *r if b is 0. 
+*              Requires b to be in {0,1};
+*              Runs in constant time.
+*
+* Arguments:   int16_t *r:       pointer to output int16_t
+*              int16_t v:        input int16_t 
+*              uint8_t b:        Condition bit; has to be in {0,1}
+**************************************************/
+void cmov_int16(int16_t *r, int16_t v, uint16_t b)
+{
+  b = -b;
+  *r ^= b & ((*r) ^ v);
 }
