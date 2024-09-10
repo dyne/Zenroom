@@ -61,25 +61,25 @@
     "README.md"
   ],
   "devDependencies": {
-    "@ava/typescript": "^3.0.1",
+    "@ava/typescript": "^5.0.0",
     "@istanbuljs/nyc-config-typescript": "^1.0.2",
-    "@types/node": "^17.0.23",
-    "ava": "^4.1.0",
-    "codecov": "^3.8.1",
+    "@types/node": "^22.5.4",
+    "ava": "^6.1.3",
+    "codecov": "^3.8.3",
     "cross-env": "^7.0.2",
-    "documentation": "^13.1.0",
-    "eslint": "^8.11.0",
+    "documentation": "^14.0.3",
+    "eslint": "^9.10.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.25.4",
-    "mkdirp": "^1.0.4",
+    "mkdirp": "^3.0.1",
     "nanobench": "^3.0.0",
     "npm-run-all": "^4.1.5",
-    "nyc": "^15.1.0",
-    "release-it": "^14.13.1",
-    "rimraf": "^3.0.2",
-    "standard": "^16.0.4",
+    "nyc": "^17.0.0",
+    "release-it": "^17.6.0",
+    "rimraf": "^6.0.1",
+    "standard": "^17.1.0",
     "ts-node": "^10.7.0",
-    "typescript": "^4.6.3"
+    "typescript": "^5.6.2"
   },
   "standard": {
     "ignore": [
