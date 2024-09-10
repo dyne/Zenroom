@@ -218,3 +218,37 @@ EOF
     save_output 'append_values.json'
     assert_output '{"empty_get_parameters":"","get_parameters_with_percent_endoing":"client_id=did%3Adyne%3Asandbox.signroom%3APTDvvQn1iWQiVxkfsDnUid8FbieKbHq46Qs8c9CZx67&code=eyJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJlYWMyMjNmOTMwYmRkNzk1NDdlNzI2ZGRjZTg5ZTlmYTA1NWExZTFjIiwiaWF0IjoxNzA5MDQ4MzkzMjk1LCJpc3MiOiJodHRwczovL3ZhbGlkLmlzc3Vlci51cmwiLCJhdWQiOiJkaWQ6ZHluZTpzYW5kYm94LmdlbmVyaWNpc3N1ZXI6NkNwOG1QVXZKbVFhTXhRUFNuTnloYjc0ZjlHYTRXcWZYQ2tCbmVGZ2lrbTUiLCJleHAiOjE3MDkwNTE5OTN9.TahF8CqDDj5yynvtvkhr-Gt6RjzHSvKMosOhFf5sVmWGohKBPMNFhI8WlBlWj7aRauXB0lsvbQk03lf4eZN-2g&redirectUris=https%3A%2F%2Fdidroom.com%2F&grant_type=authorization_code&code_verifier=JYTDgtxcjiNqa3AvJjfubMX6gx98-wCH7iTydBYAeFg","get_parameters_without_percent_endoing":"client_id=did:dyne:sandbox.signroom:PTDvvQn1iWQiVxkfsDnUid8FbieKbHq46Qs8c9CZx67&code=eyJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJlYWMyMjNmOTMwYmRkNzk1NDdlNzI2ZGRjZTg5ZTlmYTA1NWExZTFjIiwiaWF0IjoxNzA5MDQ4MzkzMjk1LCJpc3MiOiJodHRwczovL3ZhbGlkLmlzc3Vlci51cmwiLCJhdWQiOiJkaWQ6ZHluZTpzYW5kYm94LmdlbmVyaWNpc3N1ZXI6NkNwOG1QVXZKbVFhTXhRUFNuTnloYjc0ZjlHYTRXcWZYQ2tCbmVGZ2lrbTUiLCJleHAiOjE3MDkwNTE5OTN9.TahF8CqDDj5yynvtvkhr-Gt6RjzHSvKMosOhFf5sVmWGohKBPMNFhI8WlBlWj7aRauXB0lsvbQk03lf4eZN-2g&redirectUris=https://didroom.com/&grant_type=authorization_code&code_verifier=JYTDgtxcjiNqa3AvJjfubMX6gx98-wCH7iTydBYAeFg"}'
 }
+
+@test "create a GET parameters from a with big and time" {
+    cat <<EOF | save_asset append_different_values.data
+{
+    "param1": "value1",
+    "param2": "1000",
+    "param3": 2000
+}
+EOF
+    cat <<EOF | zexe append_different_values.zen append_different_values.data
+Scenario 'http': create a GET request concatenating values on a HTTP url
+
+# the parameters are loaded as string dictionary
+Given I have a 'string' named 'param1'
+Given I have a 'integer' named 'param2'
+Given I have a 'time' named 'param3'
+
+When I create the 'string dictionary' named 'parameters'
+and I copy 'param1' in 'parameters'
+and I copy 'param2' in 'parameters'
+and I copy 'param3' in 'parameters'
+
+# create the get parameters string
+When I create the http get parameters from 'parameters'
+and I rename 'http_get_parameters' to 'get_parameters_without_percent_endoing'
+When I create the http get parameters from 'parameters' using percent encoding
+and I rename 'http_get_parameters' to 'get_parameters_with_percent_endoing'
+
+Then print the 'get_parameters_without_percent_endoing'
+and print the 'get_parameters_with_percent_endoing'
+EOF
+    save_output 'append_different_values.json'
+    assert_output '{"get_parameters_with_percent_endoing":"param2=1000&param3=2000&param1=value1","get_parameters_without_percent_endoing":"param2=1000&param3=2000&param1=value1"}'
+}
