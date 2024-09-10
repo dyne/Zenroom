@@ -144,15 +144,23 @@ end)
 local function _append_to_url(ele, dst, encoding_f)
     local arg, arg_c = have(ele)
     local url, url_c = have(dst)
-    zencode_assert(arg_c.encoding == 'string' and luatype(arg) ~= 'table',
-		   "Cannot append http request that are not strings: "..ele)
+    zencode_assert(arg_c.encoding == 'string' and luatype(arg) ~= 'table', 
+        "Cannot append http request that are not strings: "..ele)
     zencode_assert(url_c.content == 'url',
-		   "Cannot append http request to invalid url: "..dst)
-	local separator = fif( url:str():find('?'), '&', '?' )
-	ACK[dst] = O.from_string(url:str() .. separator ..
+        "Cannot append http request to invalid url: "..dst)
+    local separator = fif( url:str():find('?'), '&', '?' )
+    local tv = type(arg)
+    if tv == 'zenroom.time' or tv == 'zenroom.big' then
+        arg = tostring(arg)
+    elseif tv == 'zenroom.octet' then
+        arg = arg:str()
+    else
+        error("Unexpected value type '"..tv.."' for "..ele, 2)
+    end
+    ACK[dst] = O.from_string(url:str() .. separator ..
                              encoding_f(ele)
                              .. '=' ..
-                             encoding_f(arg:str())
+                             encoding_f(arg)
     )
 end
 
@@ -175,7 +183,15 @@ local function _get_parameters_from_table(table_params, encoding_f)
     end
     local res = ""
     for k,v in pairs(params) do
-        res = res..encoding_f(k).."="..encoding_f(v:str()).."&"
+        local tv = type(v)
+        if tv == 'zenroom.time' or tv == 'zenroom.big' then
+            v = tostring(v)
+        elseif tv == 'zenroom.octet' then
+            v = v:str()
+        else
+            error("Unexpected value type '"..tv.."' in "..table_params, 2)
+        end
+        res = res..encoding_f(k).."="..encoding_f(v).."&"
     end
     if #res > 1 then res = res:sub(1, -2) end
     ACK.http_get_parameters = O.from_string(res)
