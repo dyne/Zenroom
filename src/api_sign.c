@@ -173,7 +173,7 @@ int zenroom_sign_create(const char *algo, const char *key, const char *msg) {
 
 	// EDDSA
 	if(strcmp(algo,"eddsa")==0) {
-		ed25519_public_key pk = NULL;
+		ed25519_public_key pk;
 		const size_t sksize = sizeof(ed25519_secret_key);
 		size_t keylen= strlen(key) /2; // measure on hex
 		if(keylen!=sksize) {
