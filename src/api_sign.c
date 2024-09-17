@@ -112,7 +112,7 @@ static int print_buf_hex(const uint8_t *in, const size_t len) {
 // REMEMBER TO FREE THE OUTPUT AFTER USE
 static char* hex2buf_alloc(const char *name, const char *hex, size_t *size) {
 	// check that size is desired
-	const size_t hexlen = strlen(hex) / 2;
+	const size_t hexlen = strlen(hex) >>1;
 	char *out = NULL;
 	if(*size>0 && *size!=hexlen) {
 		_err("api_sign %s :: wrong size, found %u instead of %u",name,hexlen,*size);
