@@ -102,8 +102,34 @@ static int print_buf_hex(const uint8_t *in, const size_t len) {
 	return(1);
 }
 
+// allocate a binary buffer (pointer returned) from a hex value
+// args:
+// name is needed for correct debugging
+// hex is the input hexadecimal to be converted in binary output
+// size is a pointer to size_t value, if 0 then is filled with length
+//   of result, else it indicates the desired size to be enforced on
+//   input
+// REMEMBER TO FREE THE OUTPUT AFTER USE
+static char* hex2buf_alloc(const char *name, const char *hex, size_t *size) {
+	// check that size is desired
+	const size_t hexlen = strlen(hex) / 2;
+	char *out = NULL;
+	if(*size>0 && *size!=hexlen) {
+		_err("api_sign %s :: wrong size, found %u instead of %u",name,hexlen,*size);
+		return NULL;
+	}
+	out = malloc(hexlen);
+	if(!out) {
+		_err("api_sign %s :: cannot allocate %u bytes",name,hexlen);
+		return NULL;
+	}
+	hex2buf(out,hex);
+	if(*size<=0) *size = hexlen;
+	return(out);
+}
+
 int zenroom_sign_keygen(const char *algo, const char *rngseed) {
-	if(!algo) { _err("%s :: missing argument: algo",__func__); return FAIL(); }
+	if(!algo) {_err("%s :: missing arg: algo",__func__);return FAIL();}
 	if(strcmp(algo,"eddsa")==0) {
 		register const size_t sksize = sizeof(ed25519_secret_key);
 		uint8_t *sk = malloc(sksize);
@@ -135,29 +161,23 @@ int zenroom_sign_keygen(const char *algo, const char *rngseed) {
 
 
 int zenroom_sign_pubgen(const char *algo, const char *key) {
-	if(!algo) { _err("%s :: missing argument: algo",__func__); return FAIL(); }
-	if(!key)  { _err("%s :: missing argument: key", __func__); return FAIL(); }
+	if(!algo) {_err("%s :: missing arg: algo",__func__);return FAIL();}
+	if(!key) {_err("%s :: missing arg: key",__func__);return FAIL();}
 	unsigned char *pk = NULL;
 	size_t outlen;
 	// EDDSA
 	if(strcmp(algo,"eddsa")==0) {
 		const size_t sksize = sizeof(ed25519_secret_key);
-		size_t keylen= strlen(key) /2;
-		if(keylen!=sksize) {
-			_err("%s :: wrong key size: %u",__func__,keylen);
-			return FAIL(); }
-		char *sk = malloc(sksize);
-		if(!sk) { _err("%s :: cannot allocate sk",__func__); return FAIL(); }
-		hex2buf(sk,key); // TODO: more safety?
+		char *sk = hex2buf_alloc("ed25519_secret_key",key,&sksize);
+		if(!sk) {_err("%s :: invalid arg",__func__);return FAIL();}
+
 		outlen = sizeof(ed25519_public_key); // set output length
 		pk = malloc(outlen);
 		if(!pk) { _err("%s :: cannot allocate pk",__func__); return FAIL(); }
 		ed25519_publickey((const unsigned char*)sk,pk);
 		free(sk);
-
-
-	} else { _err("%s :: unknown sign algo: %s",__func__,algo); return FAIL(); }
-	if(!pk) { _err("%s :: error in pubgen",__func__); return FAIL(); }
+	}
+	else {_err("%s :: unknown algo: %s",__func__,algo);return FAIL();}
 	print_buf_hex(pk,outlen);
 	free(pk);
 	return OK();
@@ -165,78 +185,55 @@ int zenroom_sign_pubgen(const char *algo, const char *key) {
 
 
 int zenroom_sign_create(const char *algo, const char *key, const char *msg) {
-	if(!algo) { _err("%s :: missing argument: algo",__func__); return FAIL(); }
-	if(!key)  { _err("%s :: missing argument: key", __func__); return FAIL(); }
-	if(!msg)  { _err("%s :: missing argument: msg", __func__); return FAIL(); }
+	if(!algo) {_err("%s :: missing arg: algo",__func__);return FAIL();}
+	if(!key) {_err("%s :: missing arg: key",__func__);return FAIL();}
+	if(!msg) {_err("%s :: missing arg: msg",__func__);return FAIL();}
 	size_t outlen;
 	unsigned char *sig;
 
 	// EDDSA
 	if(strcmp(algo,"eddsa")==0) {
 		ed25519_public_key pk;
-		const size_t sksize = sizeof(ed25519_secret_key);
-		size_t keylen= strlen(key) /2; // measure on hex
-		if(keylen!=sksize) {
-			_err("%s :: wrong key size: %u",__func__,keylen);
-			return FAIL(); }
-		unsigned char *sk = malloc(sksize);
-		if(!sk) { _err("%s :: cannot allocate sk",__func__); return FAIL(); }
-		hex2buf(sk,key); // parse secret key from hex TODO: more safety?
+		const size_t keysize = sizeof(ed25519_secret_key);
+		char *sk = hex2buf_alloc("ed25519_secret_key",key,&keysize);
+		if(!sk) {_err("%s :: invalid arg: sk",__func__);return FAIL();}
 		ed25519_publickey(sk, pk); // calculate public key
-		if(!pk) { _err("%s :: cannot allocate pk",__func__); return FAIL(); }
 		outlen = sizeof(ed25519_signature); // set output length
 		sig = malloc(outlen);
-		size_t msglen = strlen(msg) /2; // measure message on hex
-		unsigned char *msgbin = malloc(msglen);
-		hex2buf((char*)msgbin,msg);
-		if(!msgbin) { _err("%s :: cannot allocate msgbin",__func__); return FAIL(); }
-		ed25519_sign((unsigned char*)msgbin, msglen, sk, pk, sig);
+		size_t msglen = 0;
+		char *msg_b = hex2buf_alloc("message",msg,&msglen);
+		if(!msg_b) { _err("%s :: invalid arg: msg",__func__); return FAIL(); }
+		ed25519_sign((unsigned char*)msg_b, msglen, sk, pk, sig);
 		free(sk);
-		free(msgbin);
-
+		free(msg_b);
 	} else { _err("%s :: unknown sign algo: %s",__func__,algo); return FAIL(); }
-	if(!sig) { _err("%s :: error in create sign",__func__); return FAIL(); }
 	print_buf_hex(sig,outlen);
 	free(sig);
 	return OK();
 }
 
 int zenroom_sign_verify(const char *algo, const char *pk, const char *msg, const char *sig) {
-	if(!algo) { _err("%s :: missing argument: algo",__func__); return FAIL(); }
-	if(!pk)  { _err("%s :: missing argument: pk", __func__); return FAIL(); }
-	if(!msg)  { _err("%s :: missing argument: msg", __func__); return FAIL(); }
-	if(!sig)  { _err("%s :: missing argument: sig", __func__); return FAIL(); }
+	if(!algo) {_err("%s :: missing argument: algo",__func__); return FAIL(); }
+	if(!pk) {_err("%s :: missing argument: pk", __func__);return FAIL();}
+	if(!msg){_err("%s :: missing argument: msg", __func__);return FAIL();}
+	if(!sig){_err("%s :: missing argument: sig", __func__);return FAIL();}
 	bool res = false;
 	// EDDSA
 	if(strcmp(algo,"eddsa")==0) {
 		const size_t pksize = sizeof(ed25519_public_key);
-		const size_t keylen= strlen(pk) /2; // measure on hex
-		if(keylen!=pksize) {
-			_err("%s :: wrong pk size: %u",__func__,keylen);
-			return FAIL(); }
-		const unsigned char *pk_b = malloc(pksize);
-		if(!pk_b) { _err("%s :: cannot allocate pk",__func__); return FAIL(); }
-		hex2buf(pk_b,pk); // parse secret key from hex TODO: more safety?
+		const ed25519_public_key *pk_b = hex2buf_alloc("ed25519_public_key",pk,&pksize);
+		if(!pk_b){_err("%s :: invalid arg pk",__func__);return FAIL();}
 		const size_t sigsize = sizeof(ed25519_signature);
-		const size_t siglen= strlen(sig) /2;
-		if(siglen!=sigsize) {
-			_err("%s :: wrong sig size: %u",__func__,siglen);
-			return FAIL(); }
-		const unsigned char *sig_b = malloc(sigsize);
-		if(!sig_b) { _err("%s :: cannot allocate sig",__func__); return FAIL(); }
-		hex2buf(sig_b,sig);
-
-		const size_t msglen = strlen(msg) /2; // measure message on hex
-		const unsigned char *msg_b = malloc(msglen);
-		hex2buf((char*)msg_b,msg);
-		if(!msg_b) { _err("%s :: cannot allocate msg",__func__); return FAIL(); }
-
+		const ed25519_signature *sig_b = hex2buf_alloc("ed25519_signature",sig,&sigsize);
+		if(!sig_b){_err("%s :: invalid arg sig",__func__);return FAIL();}
+		size_t msglen = 0;
+		char *msg_b = hex2buf_alloc("message",msg,&msglen);
+		if(!msg_b) { _err("%s :: invalid arg: msg",__func__); return FAIL(); }
 		res = 0==ed25519_sign_open(msg_b, msglen, pk_b, sig_b);
 		free(pk_b);
 		free(sig_b);
 		free(msg_b);
 	} else { _err("%s :: unknown sign algo: %s",__func__,algo); return FAIL(); }
-	if(!sig) { _err("%s :: error in verify",__func__); return FAIL(); }
 	_out("%u",res?1:0);
 	return OK();
 }
