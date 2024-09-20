@@ -49,14 +49,20 @@ ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
 
 # ----------------
 # zenroom defaults
-gcc := gcc
+cc := gcc
+zenroom_cc := ${cc}
+# defined further below
+# quantum_proof_cc := ${cc}
+# ed25519_cc := ${cc}
+# lua_cc := ${cc}
+ld := ld
 ar := $(shell which ar) # cmake requires full path
 ranlib := ranlib
-ld := ld
-cflags_protection := -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
-cflags_debug := -Og -ggdb -DDEBUG=1 -Wall -Wextra -pedantic ${defines}
+cflags_protection := -fstack-protector-all -D_FORTIFY_SOURCE=2
+cflags_protection += -fno-strict-overflow
+cflags_debug := -Og -ggdb -DDEBUG=1 -Wall -Wextra -pedantic
 cflags := ${ZEN_INCLUDES}
-musl := ${pwd}/build/musl
+musl := build/musl
 platform := posix
 
 ##########################
@@ -64,7 +70,7 @@ platform := posix
 
 # ------------
 # lua settings
-lua_cc ?= ${gcc}
+lua_cc ?= ${cc}
 lua_cflags = -DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE -DLUA_COMPAT_BITLIB -I${pwd}/lib/milagro-crypto-c/build/include -I${pwd}/src -I${pwd}/lib/milagro-crypto-c/build/include -I ${pwd}/lib/mimalloc/include
 
 # ----------------
@@ -79,12 +85,12 @@ milagro_cmake_flags += -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGE
 
 #-----------------
 # quantum-proof
-quantum_proof_cc ?= ${gcc}
+quantum_proof_cc ?= ${cc}
 quantum_proof_cflags ?= -I ${pwd}/src -I ${pwd}/lib/mimalloc/include -I.
 
 #-----------------
 # ed25519 settings
-ed25519_cc ?= ${gcc}
+ed25519_cc ?= ${cc}
 
 #-----------------
 # mimalloc settings

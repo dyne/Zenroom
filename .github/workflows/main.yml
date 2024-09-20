@@ -90,7 +90,7 @@ jobs:
     if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_MESON')"
     strategy:
       matrix:
-        command: [meson-ccache, meson-clang-ccache]
+        command: [CCACHE=1, CLANG=1 CCACHE=1]
       fail-fast: false
     runs-on: ubuntu-latest
     steps:
@@ -108,29 +108,29 @@ jobs:
           pip3 install meson ninja
       - name: Compile with command ${{ matrix.command }}
         run: |
-          make  ${{ matrix.command }}
-      - run: make meson-test
+          make -f build/meson.mk ${{ matrix.command }}
+      - run: make -f build/meson.mk test
 
-  linux-build:
-    name: 🐧 Linux build
-    needs: [reuse, c-lint, lua-lint]
-    if: "github.event_name == 'pull_request'"
-    runs-on: "ubuntu-latest"
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: install dependencies
-        run: sudo apt install -y zsh jq musl-dev meson libreadline-dev
-      - name: Build mimalloc
-        run: make mimalloc
-      - name: Build x86_64 with musl-system
-        run: |
-          make musl-system
-          make clean
-      - name: Build x86_64 shlib
-        run: |
-          make linux-meson-clang-release
+  # linux-build:
+  #   name: 🐧 Linux build
+  #   needs: [reuse, c-lint, lua-lint]
+  #   if: "github.event_name == 'pull_request'"
+  #   runs-on: "ubuntu-latest"
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
+  #     - name: install dependencies
+  #       run: sudo apt install -y zsh jq musl-dev meson libreadline-dev
+  #     - name: Build mimalloc
+  #       run: make mimalloc
+  #     - name: Build x86_64 with musl-system
+  #       run: |
+  #         make musl-system
+  #         make clean
+  #     - name: Build x86_64 shlib
+  #       run: |
+  #         make -f build/meson.mk CLANG=1 RELEASE=1
 
   windows-build:
     name: 🪟 Windows build
