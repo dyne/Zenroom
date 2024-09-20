@@ -20,6 +20,9 @@ ZEN_INCLUDES += -Isrc -Ilib/lua54/src									\
 -Ilib/milagro-crypto-c/build/include -Ilib/milagro-crypto-c/include		\
 -Ilib/ed25519-donna -Ilib/mimalloc/include -Ilib/tinycc -Wall -Wextra
 
+BUILD_DEPS := apply-patches milagro lua54 embed-lua quantum-proof	\
+ed25519-donna
+
 JS_INIT_MEM := 8MB
 JS_MAX_MEM := 256MB
 JS_STACK_SIZE := 7MB
@@ -42,7 +45,7 @@ ldadd += ${milib}/libamcl_rsa_2048.a ${milib}/libamcl_rsa_4096.a
 ldadd += ${milib}/libamcl_core.a
 ldadd += ${pwd}/lib/pqclean/libqpz.a
 ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
-ldadd += ${pwd}/lib/mimalloc/build/libmimalloc-static.a
+# ldadd += ${pwd}/lib/mimalloc/build/libmimalloc-static.a
 
 # ----------------
 # zenroom defaults

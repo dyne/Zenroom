@@ -1,6 +1,8 @@
 # hard-code build information
 .c.o:
-	$(gcc) $(cflags) -c $< -o $@ \
+	$(gcc) \
+	$(cflags) \
+	-c $< -o $@ \
 	-DVERSION=\"${VERSION}\" \
 	-DCURRENT_YEAR=\"${CURRENT_YEAR}\" \
 	-DMAKETARGET=\"${MAKECMDGOALS}\" \
