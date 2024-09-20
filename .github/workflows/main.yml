@@ -84,8 +84,8 @@ jobs:
       run: |
         luacheck --config .luacheckrc --std lua54 .
 
-  meson-build:
-    name: 🥷 meson/ninja build
+  meson-test:
+    name: 🥷 meson/ninja test
     needs: [reuse, c-lint, lua-lint]
     if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_MESON')"
     strategy:
@@ -309,7 +309,7 @@ jobs:
 
   semantic-release:
     name: 🤖 Semantic release
-    needs: [rust-build-check, go-build-check, meson-build, js-build-check]
+    needs: [rust-build-check, go-build-check, meson-test, js-build-check]
     runs-on: ubuntu-latest
     if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
     outputs:
