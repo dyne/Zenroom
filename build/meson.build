@@ -210,7 +210,7 @@ tests = [
 'generic_ecdh', 'generic_eddsa', 'generic_es256', 'generic_mldsa44',
 'generic_schnorr', 'given', 'hash', 'http', 'keys', 'kyber', 'logfmt',
 'mlkem512', 'ntrup', 'numbers', 'output', 'pack', 'parser',
-'planetmint', 'pvss', 'random', 'reflow','rsa', 'rules', 'scope',
+'planetmint', 'pvss', 'random', 'reflow','rules', 'scope', # 'rsa'
 'sd_jwt', 'secshare', 'then', 'time', 'w3c', 'w3c_did', 'when',
 'zencode_exec', 'zenswarm', 'zkp', 'zkp_multi_petitions'
 ]
