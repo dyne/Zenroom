@@ -54,8 +54,7 @@ ar := $(shell which ar) # cmake requires full path
 ranlib := ranlib
 ld := ld
 cflags_protection := -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
-defines := -DMIMALLOC
-defines += $(if ${COMPILE_LUA}, -DLUA_COMPILED)
+cflags_debug := -Og -ggdb -DDEBUG=1 -Wall -Wextra -pedantic ${defines}
 cflags := ${ZEN_INCLUDES}
 musl := ${pwd}/build/musl
 platform := posix
