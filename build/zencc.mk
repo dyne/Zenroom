@@ -2,7 +2,9 @@ include build/init.mk
 
 defines := -DLIBCMALLOC
 gcc := musl-gcc
-cflags := -Os -static -std=gnu99 -fPIC ${cflags_protection} -DARCH=\"MUSL\" -D__MUSL__ -DARCH_MUSL ${defines} ${ZEN_INCLUDES}
+cflags :=  ${ZEN_INCLUDES} ${cflags_protection} ${defines}
+cflags += -Os -static -std=gnu99 -fPIC
+cflags += -DARCH=\"MUSL\" -D__MUSL__ -DARCH_MUSL
 ldflags := -static
 system := Linux
 
@@ -16,11 +18,12 @@ ldadd += ${milib}/libamcl_rsa_2048.a ${milib}/libamcl_rsa_4096.a
 ldadd += ${milib}/libamcl_core.a
 ldadd += ${pwd}/lib/pqclean/libqpz.a
 ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
+# ldadd += /usr/lib/x86_64-linux-gnu/libtcc.a -lm
 ldadd += ${pwd}/lib/tinycc/libtcc.a
 
-zencc: ${BUILD_DEPS} ${ZEN_SOURCES} src/cli-zenroom.o
+zencc: ${BUILD_DEPS} ${ZEN_SOURCES} src/zencc.o
 	$(info Building zencc embedded C compiler)
-	${gcc} ${cflags} ${ZEN_SOURCES} src/cli-zenroom.o -o zencc	\
-	${ldflags} ${ldadd}
+	${gcc} ${cflags} ${ZEN_SOURCES} src/zencc.o -o zencc ${ldflags}	\
+	${ldadd}
 
 include build/deps.mk

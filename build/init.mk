@@ -16,9 +16,9 @@ ZEN_SOURCES := \
     src/api_hash.o src/randombytes.o \
     src/cortex_m.o src/p256-m.o src/zen_p256.o src/zen_rsa.o src/zen_bbs.o
 
-ZEN_INCLUDES += -Isrc -Ilib/lua54/src								\
--Ilib/milagro-crypto-c/build/include -Ilib/milagro-crypto-c/include	\
--Ilib/ed25519-donna -Ilib/mimalloc/include -Wall -Wextra
+ZEN_INCLUDES += -Isrc -Ilib/lua54/src									\
+-Ilib/milagro-crypto-c/build/include -Ilib/milagro-crypto-c/include		\
+-Ilib/ed25519-donna -Ilib/mimalloc/include -Ilib/tinycc -Wall -Wextra
 
 JS_INIT_MEM := 8MB
 JS_MAX_MEM := 256MB
