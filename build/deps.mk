@@ -1,6 +1,6 @@
 # hard-code build information
 .c.o:
-	$(gcc) \
+	$(cc) \
 	$(cflags) \
 	-c $< -o $@ \
 	-DVERSION=\"${VERSION}\" \
@@ -39,9 +39,9 @@ milagro:
 		cd ${pwd}/lib/milagro-crypto-c && \
 		mkdir -p build && \
 		cd build && \
-		CC=${gcc} LD=${ld} AR=${ar} \
+		CC=${cc} LD=${ld} AR=${ar} \
 		cmake ../ -DCMAKE_C_FLAGS="${cflags}" -DCMAKE_SYSTEM_NAME="${system}" \
-		-DCMAKE_AR=${ar} -DCMAKE_C_COMPILER=${gcc} ${milagro_cmake_flags}; \
+		-DCMAKE_AR=${ar} -DCMAKE_C_COMPILER=${cc} ${milagro_cmake_flags}; \
 	fi
 	if ! [ -r ${pwd}/lib/milagro-crypto-c/build/lib/libamcl_core.a ]; then \
 		RANLIB=${ranlib} LD=${ld} \
@@ -55,12 +55,12 @@ mimalloc:
 		cd ${pwd}/lib/mimalloc && \
                 mkdir -p build && \
                 cd build && \
-                CC=${gcc} LD=${ld} AR=${AR} \
+                CC=${cc} LD=${ld} AR=${AR} \
                 cmake ../ ${mimalloc_cmake_flags} \
                 -DCMAKE_C_FLAGS="${cflags} ${mimalloc_cflags}" \
                 -DCMAKE_SYSTEM_NAME="${system}" \
-                -DCMAKE_AR=${ar} -DCMAKE_C_COMPILER=${gcc} \
-	        -DCMAKE_CXX_COMPILER=$(subst gcc,g++,${gcc}); \
+                -DCMAKE_AR=${ar} -DCMAKE_C_COMPILER=${cc} \
+	        -DCMAKE_CXX_COMPILER=$(subst gcc,g++,${cc}); \
 	fi
 	if ! [ -r ${pwd}/lib/mimalloc/build/libmimalloc-static.a ]; then \
                 RANLIB=${ranlib} LD=${ld} \
@@ -81,7 +81,7 @@ quantum-proof:
 	${MAKE} -C ${pwd}/lib/pqclean
 
 check-milagro: milagro
-	CC=${gcc} CFLAGS="${cflags}" $(MAKE) -C ${pwd}/lib/milagro-crypto-c test
+	CC=${cc} CFLAGS="${cflags}" $(MAKE) -C ${pwd}/lib/milagro-crypto-c test
 
 ed25519-donna-ccache: ed25519-donna
 ed25519-donna:
@@ -95,6 +95,6 @@ ed25519-donna:
 tinycc-ccache: tinycc
 tinycc:
 	$(info -- Building tinycc embedded C compiler)
-	cd ${pwd}/lib/tinycc && CC="${gcc}" AR=${ar} CFLAGS="${cflags}"	\
+	cd ${pwd}/lib/tinycc && CC="${cc}" AR=${ar} CFLAGS="${cflags}"	\
 	LDFLAGS="${ldflags}" ./configure --config-musl && make libtcc.a	\
 	libtcc1.a

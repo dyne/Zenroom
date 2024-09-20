@@ -4,15 +4,36 @@ include build/init.mk
 BUILD_DEPS += mimalloc
 BUILD_DEPS += tinycc
 ## Specific compiler settings for all built dependencies
-cflags +=  ${cflags_debug} -fPIC
+ifdef RELEASE
+	cflags +=  -O3 ${cflags_protection} -fPIC
+else
+	cflags += ${cflags_debug} -fPIC
+endif
+ifdef CLANG
+	cc := clang
+	zenroom_cc := ${cc}
+	quantum_proof_cc := ${cc}
+	ed25519_cc := ${cc}
+	lua_cc := ${cc}
+endif
+ifdef CCACHE
+	milagro_cmake_flags += -DCMAKE_C_COMPILER_LAUNCHER=ccache
+	mimalloc_cmake_flags += -DCMAKE_C_COMPILER_LAUNCHER=ccache
+	mimalloc_cmake_flags += -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+	zenroom_cc := ccache ${cc}
+	quantum_proof_cc := ccache ${cc}
+	ed25519_cc := ccache ${cc}
+	lua_cc := ccache ${cc}
+endif
 
 # MAIN TARGETS
 all: ${BUILD_DEPS} prepare
-	CC="${gcc}" AR="${ar}" CFLAGS="${cflags}" LDFLAGS="${ldflags}"	\
-	LDADD="${ldadd}" meson -Dexamples=true -Ddocs=true				\
-	-Doptimization=3 -Decdh_curve=${ecdh_curve}						\
+	CC="${zenroom_cc}" AR="${ar}" CFLAGS="${cflags}"			\
+	LDFLAGS="${ldflags}" LDADD="${ldadd}" meson -Dexamples=true	\
+	-Ddocs=true -Doptimization=3 -Decdh_curve=${ecdh_curve}		\
 	-Decp_curve=${ecp_curve} -Ddefault_library=both build meson
 	ninja -C meson
+gcc: all
 
 asan:
 	CC="clang" CXX="clang++" AR="llvm-ar" CFLAGS="-fsanitize=address	\
