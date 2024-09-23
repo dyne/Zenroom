@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
 
 [[ ! -z "$MESON_SOURCE_ROOT" ]] && {
 	cd "$MESON_SOURCE_ROOT"
@@ -6,7 +6,7 @@
 }
 
 [[ -d src/lua ]] || {
-	print "error - directory not found: src/lua"
+	echo "error - directory not found: src/lua"
 	return 1
 }
 
@@ -35,18 +35,16 @@ libs=`find src/lua -type f -name '*.lua'`
 # emscripten doesn't supports embedding this way
 # will use --preload-file instead
 
-typeset -A emptyarray=()
-extarray=()
-c=0
+zen_extensions=""
 [ -r luac45 ] || {
 	curl -Ls -o luac54 https://github.com/dyne/luabinaries/releases/latest/download/luac54
 	chmod +x luac54
 }
-for i in ${(f)libs}; do
+for i in ${libs}; do
     p=`basename $i`
-    n=${p[(ws:.:)1]}
+    n=$(echo "$p" | cut -d'.' -f1)
     f="lualib_${n}.c"
-    print "+ $i $opts"
+    echo "+ $i $opts"
 	tmp=`mktemp -d`
 	if [[ "$opts" = "compile" ]]; then
 		./luac54 -o ${tmp}/${n} $i
@@ -54,38 +52,26 @@ for i in ${(f)libs}; do
 		cp $i ${tmp}/${n}
 	fi
 	pushd $tmp
-	print         >>  ${dst}
-	print "// $i" >>  ${dst}
+	echo "// $i" >>  ${dst}
 	xxd -i ${n}   >>  ${dst}
 	if [[ "`uname -s`" =~ "Linux" ]]; then
-	   sed -i 's/^unsigned/const unsigned/' ${dst}
-        else
-	   sed -e 's/^unsigned/const unsigned/' -i '' "${dst}"
+		sed -i 's/^unsigned/const unsigned/' ${dst}
+	else
+		sed -e 's/^unsigned/const unsigned/' -i '' "${dst}"
 	fi
-	print         >>  ${dst}
+	echo "" >>  ${dst}
 	popd
 	rm -rf $tmp
-	ext="{\"${n}\", &${n}_len, (const char *)${n}},"
-	extarray+=($ext)
-	emptyarray+=($ext "{\"${n}\", &fakelen, \"/$p\"},")
-	c=$(( c + 1 ))
+	ext_nes="{\"${n}\", &${n}_len, (const char *)${n}},"
+	ext_es="{\"${n}\", &fakelen, \"/$p\"},"
+	zen_extensions="${zen_extensions}\n#ifndef __EMSCRIPTEN__\n${ext_nes}\n#else\n${ext_es}\n#endif"
 done
 
 cat <<EOF >> ${dst}
 #endif // __EMSCRIPTEN__
 
 zen_extension_t zen_extensions[] = {
-EOF
-for i in $extarray; do
-	cat <<EOF >> ${dst}
-#ifndef __EMSCRIPTEN__
-$i
-#else
-${emptyarray[$i]}
-#endif
-EOF
-done
-cat <<EOF >> ${dst}
-    { NULL, NULL, NULL }
+	$(printf "%b" "$zen_extensions")
+	{ NULL, NULL, NULL }
 };
 EOF
