@@ -95,6 +95,6 @@ ed25519-donna:
 tinycc-ccache: tinycc
 tinycc:
 	$(info -- Building tinycc embedded C compiler)
-	cd ${pwd}/lib/tinycc && CC="${cc}" AR=${ar} CFLAGS="${cflags}"	\
+	cd ${pwd}/lib/tinycc && CC="${libcc_cc}" AR=${ar} CFLAGS="${cflags}"	\
 	LDFLAGS="${ldflags}" ./configure --config-musl && make libtcc.a	\
 	libtcc1.a
