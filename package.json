@@ -12,6 +12,7 @@
         "semantic-release": "^19.0.5"
     },
     "dependencies": {
-        "docsify-cli": "^4.4.4"
+        "docsify-cli": "^4.4.4",
+        "yarn": "^1.22.22"
     }
 }

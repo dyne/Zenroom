@@ -262,12 +262,12 @@ jobs:
         with:
           version: ${{ env.EM_VERSION }}
       - run: sudo apt-get update; sudo apt-get install zsh meson ninja-build
-      - run: yarn
-      - run: yarn build
+      - run: yarn --cwd bindings/javascript
+      - run: yarn --cwd bindings/javascript build
         env:
           EMSCRIPTEN: ${{ env.EMSDK }}/upstream/emscripten
       - name: 🧪 test bindings node-${{ matrix.node-version }}
-        run: yarn test
+        run: yarn --cwd bindings/javascript test
       - name: 🔐 check crypto with node-${{ matrix.node-version }}
         working-directory: ./
         run: make check-js
@@ -358,8 +358,8 @@ jobs:
         with:
           version: ${{ env.EM_VERSION }}
       - run: sudo apt-get update; sudo apt-get install zsh meson ninja-build
-      - run: yarn
-      - run: yarn build
+      - run: yarn --cwd bindings/javascript
+      - run: yarn --cwd bindings/javascript build
         env:
           EMSCRIPTEN: ${{ env.EMSDK }}/upstream/emscripten
       - uses: actions/upload-artifact@v4
