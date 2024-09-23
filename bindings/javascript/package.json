@@ -34,10 +34,10 @@
   "scripts": {
     "lint": "npx standard",
     "build": "run-s build:*",
-    "build:zenroom": "cd ../.. && COMPILE_LUA=1 make javascript",
+    "build:zenroom": "cd ../.. && make -f build/wasm.mk",
     "build:clean": "rimraf dist/*",
-    "build:copylibs": "mkdirp dist/main && mkdirp dist/module && cp -v ../../build/npm/* dist/main/ && cp -v ../../build/npm/* dist/module",
-    "build:copylibssrc": "cp -v ../../build/npm/* src/",
+    "build:copylibs": "mkdirp dist/main && mkdirp dist/module && cp -v ../../zenroom.js dist/main/ && cp -v ../../zenroom.js dist/module/",
+    "build:copylibssrc": "cp -v ../../zenroom.js src/",
     "build:typescript": "tsc -p tsconfig.json",
     "build:module": "tsc -p tsconfig.module.json",
     "coverage:old": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
@@ -107,5 +107,8 @@
       "**/*.spec.js",
       "**/zenroom.js"
     ]
+  },
+  "dependencies": {
+    "yarn": "^1.22.22"
   }
 }

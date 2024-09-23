@@ -60,7 +60,7 @@ check-linux: prepare-executables
 	@echo "----------------"
 
 
-check-js: test-exec := node ${pwd}/test/zenroom_exec.js ${pwd}/src/zenroom.js
+check-js: test-exec := node ${pwd}/test/zenroom_exec.js ${pwd}/zenroom.js
 check-js:
 	@echo "#!/bin/sh\n${test-exec} \$$@\n" > test/zenroom && chmod +x test/zenroom
 	$(call bats, test/lua/native.bats)

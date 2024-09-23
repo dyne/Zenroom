@@ -65,9 +65,6 @@ include ${pwd}/build/windows.mk
 # build targets for linux systems (also musl and android)
 include ${pwd}/build/linux.mk
 
-# build targets for the meson build system (mostly linux)
-include ${pwd}/build/meson.mk
-
 # build targets for apple systems (OSX and IOS)
 include ${pwd}/build/osx.mk
 
