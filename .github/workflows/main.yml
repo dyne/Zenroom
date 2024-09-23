@@ -142,7 +142,8 @@ jobs:
         with:
           fetch-depth: 0
       - name: install dependencies
-        run : sudo apt install -y zsh jq gcc-mingw-w64 g++-mingw-w64
+        run : |
+          sudo apt install -y zsh jq gcc-mingw-w64 g++-mingw-w64 ccache
       - name: Build x86_64 windows .exe
         run: |
           make -f build/win-exe.mk CCACHE=1
@@ -389,7 +390,7 @@ jobs:
             build/release-intro.md
       - name: Install build deps
         run: |
-          sudo apt install zsh tree jq cmake make gcc g++ musl-dev meson clang gcc-mingw-w64 g++-mingw-w64 libreadline-dev
+          sudo apt install zsh tree jq cmake make gcc g++ musl-dev meson clang gcc-mingw-w64 g++-mingw-w64 libreadline-dev ccache
       - name: Build mimalloc
         run: make mimalloc
       - name: Build x86_64 with musl-system
