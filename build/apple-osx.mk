@@ -17,9 +17,10 @@ endif
 
 all: ${BUILD_DEPS} zenroom.command zencode-exec.command
 
-zenroom.command: ${ZEN_SOURCES} src/cli-zenroom.o
+cli_sources := src/cli-zenroom.o src/repl.o
+zenroom.command: ${ZEN_SOURCES} ${cli_sources}
 	$(info === Building the zenroom CLI)
-	${zenroom_cc} ${cflags} ${ZEN_SOURCES} src/cli-zenroom.o -o $@ ${ldflags} ${ldadd}
+	${zenroom_cc} ${cflags} ${ZEN_SOURCES} ${cli_sources} -o $@ ${ldflags} ${ldadd}
 
 zencode-exec.command: ${ZEN_SOURCES} src/zencode-exec.o
 	$(info === Building the zencode-exec utility)
