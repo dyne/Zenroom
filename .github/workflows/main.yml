@@ -485,7 +485,7 @@ jobs:
           fetch-depth: 0
       - uses: hendrikmuhs/ccache-action@v1.2
       - run: |
-          make osx
+          make -f build/apple-osx.mk CCACHE=1
           make clean
           make -f build/apple-ios.mk ios-arm64 CCACHE=1
           make clean
@@ -495,8 +495,8 @@ jobs:
         with:
           name: release-apple-osx
           path: |
-            src/zenroom.command
-            src/zencode-exec.command
+            zenroom.command
+            zencode-exec.command
       - name: Upload artifacts for Apple iOS
         uses: actions/upload-artifact@v4
         with:
