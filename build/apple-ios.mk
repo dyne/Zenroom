@@ -20,6 +20,8 @@ platform := ios
 quantum_proof_cc := ${pfxcc} ${cc}
 ed25519_cc := ${pfxcc} ${cc}
 libcc_cc := ${pfxcc} ${cc}
+luacc_cc := ${pfxcc} ${cc}
+zenroom_cc := ${pfxcc} ${cc}
 
 ios-armv7: cflags += -arch armv7 -isysroot $(shell xcrun --sdk iphoneos --show-sdk-path 2>/dev/null)
 ios-armv7: ${BUILD_DEPS} ${ZEN_SOURCES}
@@ -39,6 +41,8 @@ ios-sim: cflags += -arch x86_64 -isysroot $(shell xcrun --sdk iphonesimulator --
 ios-sim: quantum_proof_cc := ${cc}
 ios-sim: ed25519_cc := ${cc}
 ios-sim: libcc_cc := ${cc}
+ios-sim: luacc_cc := ${cc}
+ios-sim: zenroom_cc := ${cc}
 ios-sim: ${BUILD_DEPS} ${ZEN_SOURCES}
 	TARGET=x86_64 libtool -static -o zenroom-ios-x86_64.a \
 		${ZEN_SOURCES} ${ldadd}
