@@ -32,9 +32,10 @@ endif
 
 all: ${BUILD_DEPS} zenroom zencode-exec zencc
 
-zenroom: ${ZEN_SOURCES} src/cli-zenroom.o
+cli_sources := src/cli-zenroom.o src/repl.o
+zenroom: ${ZEN_SOURCES} ${cli_sources}
 	$(info === Building the zenroom CLI)
-	${zenroom_cc} ${cflags} ${ZEN_SOURCES} src/cli-zenroom.o \
+	${zenroom_cc} ${cflags} ${ZEN_SOURCES} ${cli_sources} \
 		-o $@ ${ldflags} ${ldadd}
 
 zencode-exec: ${ZEN_SOURCES} src/zencode-exec.o

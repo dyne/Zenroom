@@ -35,9 +35,10 @@ all: ${BUILD_DEPS} stamp-exe-windres zenroom.exe zencode-exec.exe
 stamp-exe-windres:
 	sh build/stamp-exe.sh
 
-zenroom.exe: ${ZEN_SOURCES} src/cli-zenroom.o
+cli_sources := src/cli-zenroom.o src/repl.o
+zenroom.exe: ${ZEN_SOURCES} ${cli_sources}
 	$(info === Linking Windows zenroom.exe)
-	${cc} ${cflags} ${ZEN_SOURCES} src/cli-zenroom.o \
+	${cc} ${cflags} ${ZEN_SOURCES} ${cli_sources} \
 		-o $@ zenroom.res ${ldflags} ${ldadd}
 
 zencode-exec.exe: ${ZEN_SOURCES} src/zencode-exec.o

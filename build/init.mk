@@ -8,7 +8,7 @@ ZEN_SOURCES := \
     src/lua_functions.o src/lua_modules.o src/lualibs_detected.o src/lua_shims.o \
     src/encoding.o src/base58.o src/rmd160.o src/segwit_addr.o \
     src/zen_memory.o src/mutt_sprintf.o \
-    src/zen_io.o src/zen_parse.o src/repl.o src/zen_config.o \
+    src/zen_io.o src/zen_parse.o src/zen_config.o \
     src/zen_octet.o src/zen_ecp.o src/zen_ecp2.o src/zen_big.o \
     src/zen_fp12.o src/zen_random.o src/zen_hash.o \
     src/zen_ecdh_factory.o src/zen_ecdh.o \
