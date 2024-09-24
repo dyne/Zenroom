@@ -10,6 +10,13 @@ cc := ${EMSCRIPTEN}/emcc
 ar := ${EMSCRIPTEN}/emar
 ld := ${cc}
 ranlib := ${EMSCRIPTEN}/emranlib
+
+quantum_proof_cc := ${cc}
+ed25519_cc := ${cc}
+libcc_cc := ${cc}
+lua_cc := ${cc}
+zenroom_cc := ${cc}
+
 system := Javascript
 ld_emsdk_settings := -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
 ld_emsdk_settings += -sMODULARIZE=1	-sSINGLE_FILE=1 --embed-file 'src/lua@/'
