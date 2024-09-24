@@ -1,6 +1,6 @@
 # hard-code build information
 .c.o:
-	$(cc) \
+	$(zenroom_cc) \
 	$(cflags) \
 	-c $< -o $@ \
 	-DVERSION=\"${VERSION}\" \
@@ -96,5 +96,5 @@ tinycc-ccache: tinycc
 tinycc:
 	$(info -- Building tinycc embedded C compiler)
 	cd ${pwd}/lib/tinycc && CC="${libcc_cc}" AR=${ar} CFLAGS="${cflags}"	\
-	LDFLAGS="${ldflags}" ./configure --config-musl && make libtcc.a	\
-	libtcc1.a
+	LDFLAGS="${ldflags}" ./configure --config-musl && \
+	$(MAKE) libtcc.a libtcc1.a
