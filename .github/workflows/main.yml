@@ -173,6 +173,8 @@ jobs:
           make -f build/apple-osx.mk CCACHE=1
           make clean
           make -f build/apple-ios.mk ios-arm64 CCACHE=1
+          make clean
+          make -f build/apple-ios.mk ios-sim CCACHE=1
 
   go-build-check:
     name: 🐹 go build & checks
