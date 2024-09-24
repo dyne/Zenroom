@@ -31,7 +31,6 @@ lua54:
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
 	$(MAKE) -C ${pwd}/lib/lua54/src liblua.a
 
-milagro-debug: milagro
 milagro:
 	@echo "-- Building milagro (${system})"
 	if ! [ -r ${pwd}/lib/milagro-crypto-c/build/CMakeCache.txt ]; then \
@@ -47,7 +46,6 @@ milagro:
 		$(MAKE) -C ${pwd}/lib/milagro-crypto-c/build; \
 	fi
 
-mimalloc-debug: mimalloc
 mimalloc:
 	$(info -- Building mimalloc (${system}))
 	if ! [ -r ${pwd}/lib/mimalloc/build/CMakeCache.txt ]; then \
@@ -66,8 +64,6 @@ mimalloc:
                 ${MAKE} -C ${pwd}/lib/mimalloc/build; \
 	fi
 
-quantum-proof-ccache: quantum-proof
-quantum-proof-debug: quantum-proof
 quantum-proof:
 	$(info -- Building Quantum-Proof libs)
 	CC="${quantum_proof_cc}" \
@@ -82,7 +78,6 @@ quantum-proof:
 check-milagro: milagro
 	CC=${cc} CFLAGS="${cflags}" $(MAKE) -C ${pwd}/lib/milagro-crypto-c test
 
-ed25519-donna-ccache: ed25519-donna
 ed25519-donna:
 	echo "-- Building ED25519 for EDDSA"
 	CC="${ed25519_cc}" \
@@ -91,9 +86,8 @@ ed25519-donna:
 	LDFLAGS="${ldflags}" \
 	$(MAKE) -C ${pwd}/lib/ed25519-donna
 
-tinycc-ccache: tinycc
 tinycc:
 	$(info -- Building tinycc embedded C compiler)
-	cd ${pwd}/lib/tinycc && CC="${libtcc_cc}" AR=${ar} CFLAGS="${cflags}"	\
+	cd ${pwd}/lib/tinycc && CC="${libtcc_cc}" AR=${ar} CFLAGS="${cflags}" \
 	LDFLAGS="${ldflags}" ./configure --config-musl && \
 	$(MAKE) libtcc.a libtcc1.a
