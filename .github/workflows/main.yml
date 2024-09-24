@@ -106,31 +106,39 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y vim zsh luajit lua-cjson
           pip3 install meson ninja
-      - name: Compile with command ${{ matrix.command }}
+      - name: Build with command ${{ matrix.command }}
         run: |
           make -f build/meson.mk ${{ matrix.command }}
-      - run: make -f build/meson.mk test
+      - name: Run tests in meson
+        run: |
+          cp meson/zencode-exec test/
+          cp meson/zenroom      test/
+          cp meson/zencc        test/
+          ninja -C meson test
 
-  # linux-build:
-  #   name: 🐧 Linux build
-  #   needs: [reuse, c-lint, lua-lint]
-  #   if: "github.event_name == 'pull_request'"
-  #   runs-on: "ubuntu-latest"
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
-  #     - name: install dependencies
-  #       run: sudo apt install -y zsh jq musl-dev meson libreadline-dev
-  #     - name: Build mimalloc
-  #       run: make mimalloc
-  #     - name: Build x86_64 with musl-system
-  #       run: |
-  #         make musl-system
-  #         make clean
-  #     - name: Build x86_64 shlib
-  #       run: |
-  #         make -f build/meson.mk CLANG=1 RELEASE=1
+  linux-build:
+    name: 🐧 Linux build tests (musl and linux)
+    needs: [reuse, c-lint, lua-lint]
+    if: "github.event_name == 'pull_request'"
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: hendrikmuhs/ccache-action@v1.2
+      - name: install dependencies
+        run: |
+          sudo apt install -yq zsh jq musl-dev libreadline-dev
+      - name: Build x86_64 with musl-system
+        run: |
+          make -f build/musl.mk CCACHE=1
+          make clean
+      - name: Build x86_64 shlib with gcc
+        run: |
+          make -f build/linux.mk CCACHE=1
+      - name: Build x86_64 shlib with clang
+        run: |
+          make -f build/linux.mk CCACHE=1 COMPILER=clang
 
   windows-build:
     name: 🪟 Windows build test
