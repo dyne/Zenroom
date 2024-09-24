@@ -596,6 +596,12 @@ jobs:
           fail_on_unmatched_files: true
           generate_release_notes: true
 
+  publish_docker_image:
+    name: 🐳 Publish Docker image
+    needs: [semantic-release, js-build-release, build-release-on-osx, build-release-on-ubuntu]
+    uses: ForkbombEu/workflows/.github/workflows/publish-ghcr.yml@main
+    secrets: inherit
+
   remove-tag-on-fail:
     name: 🧻 Remove tag on fail
     needs: [semantic-release, js-build-release, build-release-on-osx, build-release-on-ubuntu]
