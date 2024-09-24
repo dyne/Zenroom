@@ -128,7 +128,7 @@ jobs:
       - uses: hendrikmuhs/ccache-action@v1.2
       - name: install dependencies
         run: |
-          sudo apt install -yq zsh jq musl-dev libreadline-dev
+          sudo apt install -yq zsh jq musl-tools musl-dev libreadline-dev
       - name: Build x86_64 with musl-system
         run: |
           make -f build/musl-linux.mk CCACHE=1
