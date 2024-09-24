@@ -435,7 +435,7 @@ jobs:
             build/release-intro.md
       - name: Install build deps
         run: |
-          sudo apt install -qy zsh tree jq cmake make gcc g++ musl-dev meson clang gcc-mingw-w64 g++-mingw-w64 libreadline-dev ccache
+          sudo apt install -qy zsh tree jq cmake make gcc g++ musl-tools musl-dev meson clang gcc-mingw-w64 g++-mingw-w64 libreadline-dev ccache
       - name: Build x86_64 with musl-system
         run: |
           make -f build/musl-linux.mk CCACHE=1
