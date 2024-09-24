@@ -68,6 +68,8 @@ lua_include_dirs = include_directories('../lib/lua54/src')
 
 ed25519_include_dirs = include_directories('../lib/ed25519-donna')
 
+tinycc_include_dirs = include_directories('../lib/tinycc')
+
 zenroom_src = [
     '../src/base58.c',
     '../src/rmd160.c',
@@ -110,32 +112,34 @@ zenroom_src = [
 ]
 
 zenroom_lib = library(
-    'zenroom',
-    zenroom_src,
-    include_directories: [
-        zenroom_include_dirs,
-        milagro_include_dirs,
-        milagro_generated_include_dirs,
+  'zenroom',
+  zenroom_src,
+  include_directories: [
+    zenroom_include_dirs,
+    milagro_include_dirs,
+    milagro_generated_include_dirs,
 	ed25519_include_dirs,
-        lua_include_dirs,
+    lua_include_dirs,
 	mimalloc_include_dirs,
-    ],
-    install: true,
+	tinycc_include_dirs,
+  ],
+  install: true,
 )
 
 pkg = import('pkgconfig')
 pkg.generate(zenroom_lib)
 
 zenroom_dep = declare_dependency(
-    link_with: zenroom_lib,
-    include_directories: [
-        zenroom_include_dirs,
-        milagro_include_dirs,
-        milagro_generated_include_dirs,
+  link_with: zenroom_lib.get_static_lib(),
+  include_directories: [
+    zenroom_include_dirs,
+    milagro_include_dirs,
+    milagro_generated_include_dirs,
 	ed25519_include_dirs,
-        lua_include_dirs,
+    lua_include_dirs,
 	mimalloc_include_dirs,
-    ],
+	tinycc_include_dirs,
+  ],
 )
 
 install_headers('../src/zenroom.h', subdir: 'zenroom')
@@ -152,6 +156,14 @@ zencode_exe = executable(
     '../src/zencode-exec.c',
     dependencies: zenroom_dep,
     install: true,
+)
+
+zencc_exe = executable(
+    'zencc',
+    ['../src/zencc.c','../src/cflag.c'],
+    dependencies: zenroom_dep,
+    install: true,
+	link_args : 'libtcc.a',
 )
 
 docdir = get_option('datadir') / 'doc' / 'zenroom'
