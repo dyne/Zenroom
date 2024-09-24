@@ -5,9 +5,12 @@
 
 FROM alpine:latest
 
-ADD . /
+COPY lib /lib
+COPY src /src
+COPY build /build
+COPY Makefile Makefile
 
-RUN apk add --no-cache linux-headers build-base cmake readline-dev bash
+RUN apk add --no-cache linux-headers build-base cmake readline-dev
 RUN make linux
 RUN cp /src/zenroom /usr/local/bin/zenroom
 
