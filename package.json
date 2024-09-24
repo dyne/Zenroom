@@ -6,10 +6,10 @@
     "author": "dyne",
     "description": "Secure VM for smart-contract execution in human-like language",
     "devDependencies": {
-        "@semantic-release/changelog": "^6.0.1",
-        "@semantic-release/commit-analyzer": "^9.0.2",
-        "@semantic-release/release-notes-generator": "^10.0.3",
-        "semantic-release": "^19.0.5"
+        "@semantic-release/changelog": "^6.0.3",
+        "@semantic-release/commit-analyzer": "^13.0.0",
+        "@semantic-release/release-notes-generator": "^14.0.1",
+        "semantic-release": "^24.1.1"
     },
     "dependencies": {
         "docsify-cli": "^4.4.4",
