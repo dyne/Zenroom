@@ -26,7 +26,7 @@ ios-arm64: ${BUILD_DEPS} ${ZEN_SOURCES}
 	TARGET=arm64 libtool -static -o zenroom-ios-arm64.a \
 		${ZEN_SOURCES} ${ldadd}
 
-ios-sim: cc := ${pfxcc} $(shell xcrun --sdk iphonesimulator -f gcc 2>/dev/null)
+ios-sim: cc := $(shell xcrun --sdk iphonesimulator -f gcc 2>/dev/null)
 ios-sim: ar := $(shell xcrun --sdk iphonesimulator -f ar 2>/dev/null)
 ios-sim: ld := $(shell xcrun --sdk iphonesimulator -f ld 2>/dev/null)
 ios-sim: ranlib := $(shell xcrun --sdk iphonesimulator -f ranlib 2>/dev/null)
