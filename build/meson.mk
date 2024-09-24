@@ -3,28 +3,18 @@ include build/init.mk
 
 BUILD_DEPS += mimalloc
 BUILD_DEPS += tinycc
+
+COMPILER ?= gcc
+
 ## Specific compiler settings for all built dependencies
 ifdef RELEASE
 	cflags +=  -O3 ${cflags_protection} -fPIC
 else
 	cflags += ${cflags_debug} -fPIC
 endif
-ifdef CLANG
-	cc := clang
-	zenroom_cc := ${cc}
-	quantum_proof_cc := ${cc}
-	ed25519_cc := ${cc}
-	lua_cc := ${cc}
-endif
-ifdef CCACHE
-	milagro_cmake_flags += -DCMAKE_C_COMPILER_LAUNCHER=ccache
-	mimalloc_cmake_flags += -DCMAKE_C_COMPILER_LAUNCHER=ccache
-	mimalloc_cmake_flags += -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-	zenroom_cc := ccache ${cc}
-	quantum_proof_cc := ccache ${cc}
-	ed25519_cc := ccache ${cc}
-	lua_cc := ccache ${cc}
-endif
+
+# activate CCACHE etc.
+include build/plugins.mk
 
 # MAIN TARGETS
 all: ${BUILD_DEPS} prepare
