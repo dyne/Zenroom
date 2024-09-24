@@ -1,4 +1,4 @@
-BRANCH := $(shell git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
+BRANCH := $(shell git symbolic-ref HEAD | cut -d/ -f3-)
 COMMIT := $(shell git rev-parse --short HEAD)
 VERSION := $(shell git describe --tags | cut -d- -f1)
 CURRENT_YEAR := $(shell date +%Y)
@@ -101,5 +101,6 @@ mimalloc_cmake_flags += -DMI_LIBATOMIC=0
 mimalloc_cflags += -fvisibility=hidden -Wstrict-prototypes
 mimalloc_cflags += -ftls-model=initial-exec -fno-builtin-malloc
 mimalloc_cflags += -DMI_USE_RTLGENRANDOM
+
 
 # }}}

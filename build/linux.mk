@@ -3,13 +3,6 @@ include build/init.mk
 
 COMPILER ?= gcc
 
-cc := ${COMPILER}
-quantum_proof_cc := ${cc}
-ed25519_cc := ${cc}
-libcc_cc := ${cc}
-lua_cc := ${cc}
-zenroom_cc := ${cc}
-
 ## Additional dependencies
 BUILD_DEPS += tinycc mimalloc
 ldadd += -lm
@@ -19,14 +12,6 @@ ldadd += ${pwd}/lib/mimalloc/build/libmimalloc-static.a
 cflags += -fPIC -D'ARCH="LINUX"' -DARCH_LINUX
 system := Linux
 
-ifdef CCACHE
-	milagro_cmake_flags += -DCMAKE_C_COMPILER_LAUNCHER=ccache
-	quantum_proof_cc := ccache ${cc}
-	ed25519_cc := ccache ${cc}
-	libcc_cc := ccache ${cc}
-	lua_cc := ccache ${cc}
-	zenroom_cc := ccache ${cc}
-endif
 # default is DEBUG
 ifdef RELEASE
 	cflags += -O3 ${cflags_protection}
@@ -34,7 +19,12 @@ else
 	cflags += ${cflags_debug}
 endif
 
-all: ${BUILD_DEPS} zenroom zencode-exec zencc
+# activate CCACHE etc.
+include build/plugins.mk
+
+all: deps zenroom zencode-exec zencc
+
+deps: ${BUILD_DEPS}
 
 cli_sources := src/cli-zenroom.o src/repl.o
 zenroom: ${ZEN_SOURCES} ${cli_sources}

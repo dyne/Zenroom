@@ -3,7 +3,7 @@ include build/init.mk
 
 BUILD_DEPS += mimalloc
 
-cc := $(shell which x86_64-w64-mingw32-gcc)
+COMPILER := $(shell which x86_64-w64-mingw32-gcc)
 ar  := $(shell which x86_64-w64-mingw32-ar)
 ranlib := $(shell which x86_64-w64-mingw32-ranlib)
 ld := $(shell which x86_64-w64-mingw32-ld)
@@ -18,17 +18,9 @@ ifdef RELEASE
 else
 	cflags += ${cflags_debug} -fPIC
 endif
-ifdef CCACHE
-	milagro_cmake_flags += -DCMAKE_C_COMPILER_LAUNCHER=ccache
-	mimalloc_cmake_flags += -DCMAKE_C_COMPILER_LAUNCHER=ccache
-	mimalloc_cmake_flags += -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-	zenroom_cc := ccache ${cc}
-	quantum_proof_cc := ccache ${cc}
-	ed25519_cc := ccache ${cc}
-	libcc_cc := ccache ${cc}
-	lua_cc := ccache ${cc}
-endif
 
+# activate CCACHE etc.
+include build/plugins.mk
 
 all: ${BUILD_DEPS} stamp-exe-windres zenroom.exe zencode-exec.exe
 

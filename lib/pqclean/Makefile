@@ -1,3 +1,6 @@
+# TODO: duplicate member names (cbd, symmetric shake) across ML- and others
+#       giving a warning on iOS, presumably can ignore as only on filename
+
 CFLAGS ?= -O2 -I../../src -I. -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
 CC ?= gcc
 

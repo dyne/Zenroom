@@ -1,21 +1,18 @@
 ## Initialize build defaults
 include build/init.mk
 
-ifdef CCACHE
-	milagro_cmake_flags += -DCMAKE_C_COMPILER_LAUNCHER=ccache
-	quantum_proof_cc := ccache ${cc}
-	ed25519_cc := ccache ${cc}
-	libcc_cc := ccache ${cc}
-	lua_cc := ccache ${cc}
-	zenroom_cc := ccache ${cc}
-endif
 ifdef DEBUG
 	cflags += ${cflags_debug}
 else
 	cflags += ${cflags_protection}
 endif
 
-all: ${BUILD_DEPS} zenroom.command zencode-exec.command
+# activate CCACHE etc.
+include build/plugins.mk
+
+all: deps zenroom.command zencode-exec.command
+
+deps: ${BUILD_DEPS}
 
 cli_sources := src/cli-zenroom.o src/repl.o
 zenroom.command: ${ZEN_SOURCES} ${cli_sources}
