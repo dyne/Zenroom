@@ -7,7 +7,7 @@ docker-build: _docker_build _output
 docker-release: _docker_build _docker_push _output
 
 # Image and binary can be overidden with env vars.
-DOCKER_IMAGE ?= decodeproject/zenroom
+DOCKER_IMAGE ?= dyne/zenroom
 
 # Get the latest commit.
 GIT_COMMIT = $(strip $(shell git rev-parse --short HEAD))
@@ -47,8 +47,9 @@ DOCKER_TAG = $(CODE_VERSION)-$(GIT_COMMIT)$(DOCKER_TAG_SUFFIX)
 endif
 
 
+# TODO: re-use the versioning values from environment variables, since
+# they are already rendered in the github action.
 _docker_build:
-	# Build Docker image
 	docker build \
   --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
   --build-arg VERSION=$(CODE_VERSION) \
@@ -57,14 +58,9 @@ _docker_build:
 	-t $(DOCKER_IMAGE):$(DOCKER_TAG) .
 
 _docker_push:
-	# Tag image as latest
 	docker tag $(DOCKER_IMAGE):$(DOCKER_TAG) $(DOCKER_IMAGE):latest
-
-	# Push to DockerHub
 	docker push $(DOCKER_IMAGE):$(DOCKER_TAG)
 	docker push $(DOCKER_IMAGE):latest
 
 _output:
 	@echo Docker Image: $(DOCKER_IMAGE):$(DOCKER_TAG)
-
-# readapted from https://github.com/microscaling/microscaling
