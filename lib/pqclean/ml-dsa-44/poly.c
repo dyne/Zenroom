@@ -21,7 +21,7 @@ extern uint64_t *tred, *tadd, *tmul, *tround, *tsample, *tpack;
 * Name:        poly_reduce
 *
 * Description: Inplace reduction of all coefficients of polynomial to
-*              representative in [-6283009,6283007].
+*              representative in [-6283008,6283008].
 *
 * Arguments:   - poly *a: pointer to input/output polynomial
 **************************************************/
@@ -335,7 +335,7 @@ static unsigned int rej_uniform(int32_t *a,
 *
 * Description: Sample polynomial with uniformly random coefficients
 *              in [0,Q-1] by performing rejection sampling on the
-*              output stream of SHAKE256(seed|nonce)
+*              output stream of SHAKE128(seed|nonce)
 *
 * Arguments:   - poly *a: pointer to output polynomial
 *              - const uint8_t seed[]: byte array with seed of length SEEDBYTES
@@ -487,16 +487,16 @@ void poly_uniform_gamma1(poly *a,
 *              SHAKE256(seed).
 *
 * Arguments:   - poly *c: pointer to output polynomial
-*              - const uint8_t mu[]: byte array containing seed of length SEEDBYTES
+*              - const uint8_t mu[]: byte array containing seed of length CTILDEBYTES
 **************************************************/
-void poly_challenge(poly *c, const uint8_t seed[SEEDBYTES]) {
+void poly_challenge(poly *c, const uint8_t seed[CTILDEBYTES]) {
   unsigned int i, b, pos;
   uint64_t signs;
   uint8_t buf[SHAKE256_RATE];
   shake256incctx state;
 
   shake256_inc_init(&state);
-  shake256_inc_absorb(&state, seed, SEEDBYTES);
+  shake256_inc_absorb(&state, seed, CTILDEBYTES);
   shake256_inc_finalize(&state);
   shake256_squeezeblocks(buf, 1, &state);
 

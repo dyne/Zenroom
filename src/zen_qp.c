@@ -100,13 +100,13 @@ extern int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_dec(uint8_t *ss, const uint8_t *ct
 /*
   Quantum proof ML-DSA-44 with pqcrystals dilithium2
 */
-#define pqcrystals_ml_dsa_44_ipd_PUBLICKEYBYTES 1312
-#define pqcrystals_ml_dsa_44_ipd_SECRETKEYBYTES 2560
-#define pqcrystals_ml_dsa_44_ipd_BYTES 2420
-extern int pqcrystals_ml_dsa_44_ipd_zen_keypair(uint8_t *pk, uint8_t *sk, const uint8_t *randbytes);
-extern int pqcrystals_ml_dsa_44_ipd_zen_signature(uint8_t *sig, size_t *siglen, const uint8_t *m, size_t mlen, const uint8_t *sk, const uint8_t *randbytes);
-extern int pqcrystals_ml_dsa_44_ipd_ref_verify(const uint8_t *sig, size_t siglen, const uint8_t *m, size_t mlen, const uint8_t *pk);
-extern int pqcrystals_ml_dsa_44_ipd_zen_pub_gen(uint8_t *pk, uint8_t *sk);
+#define pqcrystals_ml_dsa_44_PUBLICKEYBYTES 1312
+#define pqcrystals_ml_dsa_44_SECRETKEYBYTES 2560
+#define pqcrystals_ml_dsa_44_BYTES 2420
+extern int pqcrystals_ml_dsa_44_zen_keypair(uint8_t *pk, uint8_t *sk, const uint8_t *randbytes);
+extern int pqcrystals_ml_dsa_44_zen_signature(uint8_t *sig, size_t *siglen, const uint8_t *m, size_t mlen, const uint8_t *ctx, size_t ctxlen, const uint8_t *sk, const uint8_t *randbytes);
+extern int pqcrystals_ml_dsa_44_ref_verify(const uint8_t *sig, size_t siglen, const uint8_t *m, size_t mlen, const uint8_t *ctx, size_t ctxlen, const uint8_t *pk);
+extern int pqcrystals_ml_dsa_44_zen_pub_gen(uint8_t *pk, uint8_t *sk);
 
 
 /*#######################################*/
@@ -965,24 +965,35 @@ static int ml_dsa_44_keypair(lua_State *L)   {
 	uint8_t randbytes[32];
 	char *failed_msg = NULL;
 	lua_createtable(L, 0, 2);
-	octet *private = o_new(L, pqcrystals_ml_dsa_44_ipd_SECRETKEYBYTES);
+	octet *private = o_new(L, pqcrystals_ml_dsa_44_SECRETKEYBYTES);
 	if(private == NULL) {
 		failed_msg = "Could not allocate private key";
 		goto end;
 	}
 	lua_setfield(L, -2, "private");
-	octet *public = o_new(L, pqcrystals_ml_dsa_44_ipd_PUBLICKEYBYTES);
+	octet *public = o_new(L, pqcrystals_ml_dsa_44_PUBLICKEYBYTES);
 	if(public == NULL) {
 		failed_msg = "Could not allocate public key";
 		goto end;
 	}
 	lua_setfield(L, -2, "public");
-	Z(L);
-	for(uint8_t i=0;i<32;i++) randbytes[i] = RAND_byte(Z->random_generator);
-	pqcrystals_ml_dsa_44_ipd_zen_keypair((unsigned char*)public->val,
+	void *ud =luaL_testudata(L,1,"zenroom.octet");
+	if (ud){
+		octet * rnd = (octet*) ud; SAFE(rnd);
+		if (rnd->len != 32) {
+			failed_msg = "Wrong seed size";
+			goto end;	
+		}
+		for(uint8_t i=0;i<32;i++) randbytes[i] = rnd->val[i];
+	}
+	else {
+		Z(L);
+		for(uint8_t i=0;i<32;i++) randbytes[i] = RAND_byte(Z->random_generator);
+	}
+	pqcrystals_ml_dsa_44_zen_keypair((unsigned char*)public->val,
 						     (unsigned char*)private->val, randbytes);
-	public->len = pqcrystals_ml_dsa_44_ipd_PUBLICKEYBYTES;
-	private->len = pqcrystals_ml_dsa_44_ipd_SECRETKEYBYTES;
+	public->len = pqcrystals_ml_dsa_44_PUBLICKEYBYTES;
+	private->len = pqcrystals_ml_dsa_44_SECRETKEYBYTES;
 
 end:
 	if(failed_msg) {
@@ -1000,15 +1011,15 @@ static int ml_dsa_44_signature_pubgen(lua_State *L) {
 		failed_msg = "failed to allocate space for secret key";
 		goto end;
 	}
-	pk = o_new(L, pqcrystals_ml_dsa_44_ipd_PUBLICKEYBYTES);
+	pk = o_new(L, pqcrystals_ml_dsa_44_PUBLICKEYBYTES);
 	if(pk == NULL) {
 		failed_msg = "failed to allocate space for public key";
 		goto end;
 	}
 
-	pqcrystals_ml_dsa_44_ipd_zen_pub_gen((unsigned char*)pk->val,
+	pqcrystals_ml_dsa_44_zen_pub_gen((unsigned char*)pk->val,
 						(unsigned char*)sk->val);
-	pk->len = pqcrystals_ml_dsa_44_ipd_PUBLICKEYBYTES;
+	pk->len = pqcrystals_ml_dsa_44_PUBLICKEYBYTES;
 
 end:
 	o_free(L,sk);
@@ -1047,12 +1058,11 @@ static int ml_dsa_44_signature(lua_State *L) {
 		failed_msg = "failed to allocate space for message";
 		goto end;
 	}
-
-	if(sk->len != pqcrystals_ml_dsa_44_ipd_SECRETKEYBYTES) {
+	if(sk->len != pqcrystals_ml_dsa_44_SECRETKEYBYTES) {
 		failed_msg = "wrong secret key length";
 		goto end;
 	}
-	octet *sig = o_new(L, pqcrystals_ml_dsa_44_ipd_BYTES);
+	octet *sig = o_new(L, pqcrystals_ml_dsa_44_BYTES);
 	if(sig == NULL) {
 		failed_msg = "failed to allocate space for signature";
 		goto end;
@@ -1070,16 +1080,35 @@ static int ml_dsa_44_signature(lua_State *L) {
 		else for(uint8_t i=0;i<32;i++) randbytes[i] = RAND_byte(Z->random_generator);
 	}
 	else for(uint8_t i=0;i<32;i++) randbytes[i] = RAND_byte(Z->random_generator);
-	if(pqcrystals_ml_dsa_44_ipd_zen_signature
-	   ((unsigned char*)sig->val,
-	    (size_t*)&sig->len,
-	    (unsigned char*)m->val, m->len,
-	    (unsigned char*)sk->val,
-	    randbytes)
-	   && sig->len > 0) {
-		failed_msg = "error in the signature";
-		goto end;
+	
+	void *ud =luaL_testudata(L,3,"zenroom.octet");
+	if (ud){
+		octet * ctx = (octet*) ud; SAFE(ctx);
+		if (ctx->len > 255) {
+			failed_msg = "Wrong ctx size";
+			goto end;	
+		}
+		if (pqcrystals_ml_dsa_44_zen_signature((unsigned char *)sig->val,
+						       (size_t *)&sig->len,
+						       (unsigned char *)m->val, m->len,
+						       (unsigned char *)ctx->val, ctx->len,
+						       (unsigned char *)sk->val,
+						       randbytes) && sig->len > 0) {
+			failed_msg = "error in the signature";
+			goto end;
+		}
+	} else {
+		if (pqcrystals_ml_dsa_44_zen_signature((unsigned char *)sig->val,
+						       (size_t *)&sig->len,
+						       (unsigned char *)m->val, m->len,
+						       NULL, 0,
+						       (unsigned char *)sk->val,
+						       randbytes) && sig->len > 0) {
+			failed_msg = "error in the signature";
+			goto end;
+		}
 	}
+
 end:
 	o_free(L,m);
 	o_free(L,sk);
@@ -1122,16 +1151,27 @@ static int ml_dsa_44_verify(lua_State *L)    {/*********************************
 		goto end;
 	}
 
-	if(pk->len != pqcrystals_ml_dsa_44_ipd_PUBLICKEYBYTES) {
+	if(pk->len != pqcrystals_ml_dsa_44_PUBLICKEYBYTES) {
 		failed_msg = "invalid size for public key";
 		goto end;
 	}
-
-	int result = pqcrystals_ml_dsa_44_ipd_ref_verify((unsigned char*)sig->val,
-								 (size_t)sig->len,
-								 (unsigned char*)m->val, m->len,
-								 (unsigned char*)pk->val);
-	lua_pushboolean(L, result == 0);
+	void *ud =luaL_testudata(L,4,"zenroom.octet");
+	if (ud){
+		octet * ctx = (octet*) ud; SAFE(ctx);
+		int result = pqcrystals_ml_dsa_44_ref_verify((unsigned char*)sig->val,
+								(size_t)sig->len,
+								(unsigned char*)m->val, m->len,
+								(unsigned char *)ctx->val,ctx->len,
+								(unsigned char*)pk->val);
+		lua_pushboolean(L, result == 0);
+	} else {
+		int result = pqcrystals_ml_dsa_44_ref_verify((unsigned char*)sig->val,
+								(size_t)sig->len,
+								(unsigned char*)m->val, m->len,
+								NULL,0,
+								(unsigned char*)pk->val);
+		lua_pushboolean(L, result == 0);
+	}
 end:
 	o_free(L, m);
 	o_free(L, sig);
@@ -1148,7 +1188,7 @@ static int mldsa44_signature_pubcheck(lua_State *L) {
 	if(pk == NULL) {
 		THROW("failed to allocate space for public key");
 	} else {
-		if(pk->len == pqcrystals_ml_dsa_44_ipd_PUBLICKEYBYTES)
+		if(pk->len == pqcrystals_ml_dsa_44_PUBLICKEYBYTES)
 			lua_pushboolean(L, 1);
 		else
 			lua_pushboolean(L, 0);
@@ -1165,7 +1205,7 @@ static int mldsa44_signature_check(lua_State *L){
 		failed_msg = "Cuold not allocate signature";
 		goto end;
 	}
-	if(sign->len == pqcrystals_ml_dsa_44_ipd_BYTES)
+	if(sign->len == pqcrystals_ml_dsa_44_BYTES)
 		lua_pushboolean(L, 1);
 	else
 		lua_pushboolean(L, 0);
