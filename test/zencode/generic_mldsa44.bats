@@ -53,7 +53,7 @@ EOF
 
 @test "Alice signs a message" {
     cat <<EOF | zexe sign_from_alice.zen alice_keys.json
-Rule check version 2.0.0
+Rule check version 4.42.0
 Scenario qp
 Given that I am known as 'Alice'
 and I have my 'keyring'
@@ -79,7 +79,7 @@ EOF
     save_output sign_pubkey.json
 
     cat <<EOF | zexe verify_from_alice.zen sign_pubkey.json
-Rule check version 2.0.0
+Rule check version 4.42
 Scenario qp
 Given I have a 'mldsa44 public key'
 and I have a 'mldsa44 signature'
@@ -92,9 +92,54 @@ EOF
     assert_output '{"message":"This_is_my_authenticated_message.","output":["Signature_is_valid"]}'
 }
 
+@test "Alice signs a message with a ctx" {
+    cat <<EOF | zexe sign_from_alice_ctx.zen alice_keys.json
+Rule check version 4.42
+Scenario qp
+Given that I am known as 'Alice'
+and I have my 'keyring'
+When I write string 'This is my authenticated message.' in 'message'
+and I set 'ctx' to '480c658c0cb3e040bde084345cef0df7' as 'hex'
+and I create the mldsa44 signature of 'message'
+Then print the 'message'
+and print the 'mldsa44 signature'
+and print the 'ctx'
+EOF
+    save_output sign_alice_ctx_output.json
+}
+
+@test "Verify a message signed by Alice with a ctx" {
+    cat <<EOF | zexe join_sign_pubkey_ctx.zen sign_alice_ctx_output.json alice_pubkey.json
+Scenario qp
+Given I have a 'mldsa44 public key' in 'Alice'
+and I have a 'mldsa44 signature'
+and I have a 'string' named 'message'
+and I have an 'hex' named 'ctx'
+Then print the 'mldsa44 signature'
+and print the 'mldsa44 public key'
+and print the 'message'
+and print the 'ctx'
+EOF
+    save_output sign_pubkey_ctx.json
+
+    cat <<EOF | zexe verify_from_alice_ctx.zen sign_pubkey_ctx.json
+Rule check version 4.42
+Scenario qp
+Given I have a 'mldsa44 public key'
+and I have a 'mldsa44 signature'
+and I have a 'string' named 'message'
+and I have an 'hex' named 'ctx'
+When I verify the 'message' has a mldsa44 signature in 'mldsa44 signature' by 'Alice'
+Then print the string 'Signature is valid'
+and print the 'message'
+EOF
+    save_output verify_alice_signature_ctx.json
+    assert_output '{"message":"This_is_my_authenticated_message.","output":["Signature_is_valid"]}'
+}
+
 @test "Fail verification on a different message" {
     cat <<EOF > wrong_message.zen
-Rule check version 2.0.0
+Rule check version 4.42
 Scenario qp
 Given I have a 'mldsa44 public key'
 and I have a 'mldsa44 signature'
@@ -120,7 +165,7 @@ and print the 'message'
 EOF
     save_output wrong_pubkey.json
     cat <<EOF > wrong_pubkey.zen
-Rule check version 2.0.0
+Rule check version 4.42
 Scenario qp
 Given I have a 'mldsa44 public key'
 and I have a 'mldsa44 signature'
@@ -135,7 +180,7 @@ EOF
 
 @test "Alice signs a big file" {
     cat <<EOF | $ZENROOM_EXECUTABLE -z > bigfile.json
-Rule check version 2.0.0
+Rule check version 4.42
 Given Nothing
 When I create the random object of '1000000' bytes
 and I rename 'random object' to 'bigfile'
@@ -143,7 +188,7 @@ Then print the 'bigfile' as 'base64'
 EOF
 
     cat <<EOF | zexe sign_bigfile.zen alice_keys.json bigfile.json
-Rule check version 2.0.0
+Rule check version 4.42
 Scenario qp
 Given that I am known as 'Alice'
 and I have my 'keyring'
@@ -165,7 +210,7 @@ EOF
     save_output sign_pubkey_big.json
 
     cat <<EOF | zexe verify_from_alice_big.zen sign_pubkey_big.json bigfile.json
-Rule check version 2.0.0
+Rule check version 4.42
 Scenario qp
 Given I have a 'mldsa44 public key'
 and I have a 'mldsa44 signature'
