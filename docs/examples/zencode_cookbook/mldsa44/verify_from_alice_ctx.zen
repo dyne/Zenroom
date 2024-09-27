@@ -3,6 +3,7 @@ Scenario qp
 Given I have a 'mldsa44 public key'
 and I have a 'mldsa44 signature'
 and I have a 'string' named 'message'
+and I have an 'hex' named 'ctx'
 When I verify the 'message' has a mldsa44 signature in 'mldsa44 signature' by 'Alice'
 Then print the string 'Signature is valid'
 and print the 'message'
