@@ -10,7 +10,7 @@
 #include "symmetric.h"
 #include "fips202.h"
 
-int pqcrystals_ml_dsa_44_ipd_zen_keypair(uint8_t *pk, uint8_t *sk, const uint8_t *randbytes) {
+int pqcrystals_ml_dsa_44_zen_keypair(uint8_t *pk, uint8_t *sk, const uint8_t *randbytes) {
   uint8_t seedbuf[2*SEEDBYTES + CRHBYTES];
   uint8_t tr[TRBYTES];
   const uint8_t *rho, *rhoprime, *key;
@@ -21,7 +21,9 @@ int pqcrystals_ml_dsa_44_ipd_zen_keypair(uint8_t *pk, uint8_t *sk, const uint8_t
   // random from caller
   memcpy(seedbuf, randbytes, RNDBYTES);
 
-  shake256(seedbuf, 2*SEEDBYTES + CRHBYTES, seedbuf, SEEDBYTES);
+  seedbuf[SEEDBYTES+0] = K;
+  seedbuf[SEEDBYTES+1] = L;
+  shake256(seedbuf, 2*SEEDBYTES + CRHBYTES, seedbuf, SEEDBYTES+2);
   rho = seedbuf;
   rhoprime = rho + SEEDBYTES;
   key = rhoprime + CRHBYTES;
@@ -56,7 +58,7 @@ int pqcrystals_ml_dsa_44_ipd_zen_keypair(uint8_t *pk, uint8_t *sk, const uint8_t
 }
 
 
-int pqcrystals_ml_dsa_44_ipd_zen_pub_gen(uint8_t *pk, uint8_t *sk){
+int pqcrystals_ml_dsa_44_zen_pub_gen(uint8_t *pk, uint8_t *sk){
   uint8_t rho[SEEDBYTES], key[SEEDBYTES], tr[TRBYTES];
   polyveck s2, t1, t0;
   polyvecl mat[K];
@@ -85,10 +87,12 @@ int pqcrystals_ml_dsa_44_ipd_zen_pub_gen(uint8_t *pk, uint8_t *sk){
 }
 
 
-int pqcrystals_ml_dsa_44_ipd_zen_signature(uint8_t *sig,
+int pqcrystals_ml_dsa_44_zen_signature(uint8_t *sig,
 			size_t *siglen,
 			const uint8_t *m,
 			size_t mlen,
+			const uint8_t *ctx,
+                        size_t ctxlen,
 			const uint8_t *sk,
 			const uint8_t *randbytes)
 {
@@ -110,9 +114,13 @@ int pqcrystals_ml_dsa_44_ipd_zen_signature(uint8_t *sig,
   unpack_sk(rho, tr, key, &t0, &s1, &s2, sk);
 
 
-  /* Compute mu = CRH(tr, msg) */
+  /* Compute mu = CRH(tr, 0, 0, NULL, msg) */
+  mu[0] = 0;
+  mu[1] = ctxlen;
   shake256_inc_init(&state);
   shake256_inc_absorb(&state, tr, TRBYTES);
+  shake256_inc_absorb(&state, mu, 2);
+  shake256_inc_absorb(&state, ctx, ctxlen);
   shake256_inc_absorb(&state, m, mlen);
   shake256_inc_finalize(&state);
   shake256_inc_squeeze(mu, CRHBYTES, &state);
@@ -149,7 +157,7 @@ rej:
   shake256_inc_absorb(&state, sig, K*POLYW1_PACKEDBYTES);
   shake256_inc_finalize(&state);
   shake256_inc_squeeze(sig, CTILDEBYTES, &state);
-  poly_challenge(&cp, sig); /* uses only the first SEEDBYTES bytes of sig */
+  poly_challenge(&cp, sig);
   poly_ntt(&cp);
 
   /* Compute z, reject if it reveals secret */

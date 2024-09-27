@@ -376,8 +376,9 @@ end)
 When("create mldsa44 signature of ''",function(doc)
 	local sk = havekey'mldsa44'
 	local obj = have(doc)
+    local ctx = mayhave'ctx' or nil
 	empty'mldsa44 signature'
-	ACK.mldsa44_signature = QP.mldsa44_signature(sk, zencode_serialize(obj))
+	ACK.mldsa44_signature = QP.mldsa44_signature(sk, zencode_serialize(obj), ctx)
 	new_codec('mldsa44 signature')
 end)
 
@@ -385,8 +386,9 @@ IfWhen("verify '' has a mldsa44 signature in '' by ''",function(msg, sig, by)
 	  local pk = load_pubkey_compat(by, 'mldsa44')
 	  local m = have(msg)
 	  local s = have(sig)
+      local ctx = mayhave'ctx' or nil
 	  zencode_assert(
-	     QP.mldsa44_verify(pk, s, zencode_serialize(m)),
+	     QP.mldsa44_verify(pk, s, zencode_serialize(m), ctx),
 	     'The mldsa44 signature by '..by..' is not authentic'
 	  )
 end)
