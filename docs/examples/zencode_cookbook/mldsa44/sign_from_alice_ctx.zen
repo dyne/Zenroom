@@ -1,8 +1,10 @@
-Rule check version 4.42.0
+Rule check version 4.42
 Scenario qp
 Given that I am known as 'Alice'
 and I have my 'keyring'
 When I write string 'This is my authenticated message.' in 'message'
+and I set 'ctx' to '480c658c0cb3e040bde084345cef0df7' as 'hex'
 and I create the mldsa44 signature of 'message'
 Then print the 'message'
 and print the 'mldsa44 signature'
+and print the 'ctx'

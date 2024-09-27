@@ -6,11 +6,11 @@ The QP stands for [Post-Quantum](https://en.wikipedia.org/wiki/Post-quantum_cryp
 In Zenroom, using the *Scenario qp*, you will have access to the following Post-Quantum algorithms:
 - Signatures:
   - **Dilithium2** from the [NIST PQC Competition](https://csrc.nist.gov/Projects/post-quantum-cryptography/selected-algorithms-2022)
-  - **ML-DSA-44** under standardization by NIST in [FIPS-204](https://csrc.nist.gov/pubs/fips/204/ipd)
+  - **ML-DSA-44** under standardization by NIST in [FIPS-204](https://csrc.nist.gov/pubs/fips/204/final)
 - Key Encapsulation Mechanisms: 
   - **Kyber512** from the [NIST PQC Competition](https://csrc.nist.gov/Projects/post-quantum-cryptography/selected-algorithms-2022)
   - **Streamlined NTRU Prime 761** used by [OpenSSH](https://www.openssh.com/txt/release-9.0
-  - **ML-KEM-512** under standardization by NIST in [FIPS-203](https://csrc.nist.gov/pubs/fips/203/ipd)
+  - **ML-KEM-512** under standardization by NIST in [FIPS-203](https://csrc.nist.gov/pubs/fips/203/final)
 
 # Dilithium2
 
@@ -125,6 +125,9 @@ jq -s '.[0]*[1]' pubkey.json signature.json | tee data.json
 
 where pubkey.json contains the output of the second script and signature.json the output of the above script, or by adding two rows in the previous script, one where you compute the dilithium public key and the other where you print it.
 
+You can also specify a ctx to use as domain separation in the sign algorithm. For example:
+
+[](../_media/examples/zencode_cookbook/mldsa44/sign_from_alice_ctx.zen ':include :type=code gherkin')
 
 ## Verification
 
@@ -132,9 +135,17 @@ In this section we will **verify** the signature produced in the previous step. 
 
 [](../_media/examples/zencode_cookbook/mldsa44/sign_pubkey.json ':include :type=code json')
 
-The script to verify these signatures is the following:
+The script to verify this signature is the following:
 
 [](../_media/examples/zencode_cookbook/mldsa44/verify_from_alice.zen ':include :type=code gherkin')
+
+If a ctx is used during the sign then you have to use the same for verify. So the input should look like:
+
+[](../_media/examples/zencode_cookbook/mldsa44/sign_pubkey_ctx.json ':include :type=code json')
+
+And the script:
+
+[](../_media/examples/zencode_cookbook/mldsa44/verify_from_alice_ctx.zen ':include :type=code gherkin')
 
 The result should look like:
 
