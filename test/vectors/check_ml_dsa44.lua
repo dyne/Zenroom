@@ -14,33 +14,39 @@ for line in newline_iter(DATA) do
       local rule = strtok(line)
 
       if #rule > 0 then
-        if rule[1]:lower() == "message" then
-            test["message"] = O.from_hex(rule[3])
+        if rule[1]:lower() == "xi" then
+            test["xi"] = O.from_hex(rule[3])
             curr_fields = curr_fields+1
         elseif rule[1]:lower() == "sk" then
             test["sk"] = O.from_hex(rule[3])
             curr_fields = curr_fields+1
-        elseif rule[1]:lower() == "signature" then
-            test["signature"] = O.from_hex(rule[3])
-            curr_fields = curr_fields+1
         elseif rule[1]:lower() == "pk" then
             test["pk"] = O.from_hex(rule[3])
             curr_fields = curr_fields+1
+        elseif rule[1]:lower() == "msg" then
+            test["msg"] = O.from_hex(rule[3])
+            curr_fields = curr_fields+1
+        elseif rule[1]:lower() == "sm" then
+            test["sm"] = O.from_hex(rule[3])
+            curr_fields = curr_fields+1  
+
+        elseif rule[1]:lower() == "ctx" then
+            test["ctx"] = O.from_hex(rule[3])
+            curr_fields = curr_fields+1  
         end
       end
       
-      if curr_fields == 3 then
+      if curr_fields == 6 then
 	 -- Here starts the test
-    if (test.sk) then
-    assert(test.signature == QP.mldsa44_signature(test.sk,test.message))
-    print("sk ok")
-    end
-    if (test.pk) then
-        assert(QP.mldsa44_verify(test.pk, test.signature, test.message))
-        print("pk ok")
-    end
-	 curr_fields = 0
-	 test = { }
+        local keys = QP.mldsa44_keypair(test.xi)
+        assert(keys.private == test.sk)
+        assert(keys.public == test.pk)
+        assert(QP.mldsa44_pubgen(keys.private) == test.pk)
+        local signature = QP.mldsa44_signature(keys.private, test.msg, test.ctx)
+        assert(signature == test.sm:sub(1,2420))
+        assert(QP.mldsa44_verify(keys.public, signature, test.msg, test.ctx))
+        curr_fields = 0
+        test = { }
       end
    end
 end
