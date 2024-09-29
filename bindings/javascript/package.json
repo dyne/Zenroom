@@ -107,8 +107,5 @@
       "**/*.spec.js",
       "**/zenroom.js"
     ]
-  },
-  "dependencies": {
-    "yarn": "^1.22.22"
   }
 }
