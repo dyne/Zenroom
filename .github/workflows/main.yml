@@ -266,9 +266,6 @@ jobs:
         node-version: [20.x]
     env:
       EM_VERSION: latest
-    defaults:
-      run:
-        working-directory: bindings/javascript
     steps:
       - uses: actions/checkout@v4
         with:
@@ -295,7 +292,6 @@ jobs:
         run: |
           yarn --cwd bindings/javascript test
       - name: 🔐 check crypto with node-${{ matrix.node-version }}
-        working-directory: ./
         run: |
           make check-js
 
@@ -378,9 +374,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       EM_VERSION: 3.1.59
-    defaults:
-      run:
-        working-directory: bindings/javascript
     steps:
       - uses: actions/checkout@v4
         with:
