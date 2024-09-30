@@ -59,9 +59,6 @@ javascript: ${BUILDS}
 	@mkdir -p build/npm
 	@cp -v src/zenroom.js      build/npm/
 
-# build docker images and releasing
-include ${pwd}/build/docker.mk
-
 # build luarock module
 include ${pwd}/build/luarock.mk
 
