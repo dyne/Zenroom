@@ -28,8 +28,9 @@ test/**/*.zen
 # build targets in zenroom
 *.[oa]
 *.so
-src/zenroom
-src/zencode-exec
+zenroom
+zencode-exec
+zencc
 build/zenroom
 src/zenroom.js
 src/zenroom.js.mem
