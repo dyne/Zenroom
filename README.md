@@ -94,7 +94,7 @@ ready to deploy.
 
 ## Build
 
-Dependencies: makefile, cmake, zsh, gcc, libreadline-dev, xxd
+Dependencies: makefile, cmake, gcc, libreadline-dev, xxd
 
 Optional: musl-libc, emscripten for wasm builds
 

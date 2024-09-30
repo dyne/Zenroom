@@ -104,7 +104,7 @@ jobs:
       - name: install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y vim zsh luajit lua-cjson
+          sudo apt-get install -y vim luajit lua-cjson
           pip3 install meson ninja
       - name: Build with command ${{ matrix.command }}
         run: |
@@ -128,7 +128,7 @@ jobs:
       - uses: hendrikmuhs/ccache-action@v1.2
       - name: install dependencies
         run: |
-          sudo apt install -yq zsh jq musl-tools musl-dev libreadline-dev
+          sudo apt install -yq jq musl-tools musl-dev libreadline-dev
       - name: Build x86_64 with musl-system
         run: |
           make -f build/musl-linux.mk CCACHE=1
@@ -152,7 +152,7 @@ jobs:
       - uses: hendrikmuhs/ccache-action@v1.2
       - name: install dependencies
         run : |
-          sudo apt install -y zsh jq gcc-mingw-w64 g++-mingw-w64
+          sudo apt install -y jq gcc-mingw-w64 g++-mingw-w64
       - name: Build x86_64 windows .exe
         run: |
           make -f build/win-exe.mk CCACHE=1
@@ -198,7 +198,7 @@ jobs:
           python-version: '3.10'
       - run: |
           pip3 install meson ninja
-          sudo apt-get install -qy zsh libreadline-dev
+          sudo apt-get install -qy libreadline-dev
       - run: |
           make -f build/linux.mk deps zencode-exec CCACHE=1
           cp zencode-exec /usr/local/bin/
@@ -226,7 +226,7 @@ jobs:
           toolchain: ${{ matrix.rust }}
       - run: |
           pip3 install meson ninja
-          sudo apt-get install -qy zsh libreadline-dev
+          sudo apt-get install -qy libreadline-dev
       - run: |
           make -f build/linux.mk CCACHE=1
           cp zencode-exec /usr/local/bin/
@@ -246,7 +246,7 @@ jobs:
   #       with:
   #         fetch-depth: 0
   #     - uses: numworks/setup-arm-toolchain@2021-10
-  #     - run: sudo apt install zsh qemu-system-arm
+  #     - run: sudo apt install qemu-system-arm
   #     - name: Download cmsis
   #       run: |
   #         curl -LO https://github.com/ARM-software/CMSIS_5/archive/refs/tags/5.7.0.tar.gz
@@ -282,7 +282,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get -qy update
-          sudo apt-get install -qy zsh meson ninja-build
+          sudo apt-get install -qy meson ninja-build
       - name: Install yarn dependencies
         run: |
           yarn --cwd bindings/javascript
@@ -322,12 +322,8 @@ jobs:
       - name: Install dependencies on Linux
         run: |
           sudo apt update
-          sudo apt install -yq zsh cmake libreadline-dev
+          sudo apt install -yq cmake libreadline-dev
         if: runner.os == 'Linux'
-      - name: Install dependencies on Apple/OSX
-        run: |
-          brew install zsh
-        if: runner.os == 'macOS'
       - name: Build zencode-exec on Linux
         run: |
           cd ../..
@@ -398,7 +394,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get -qy update
-          sudo apt-get install -qy zsh meson ninja-build
+          sudo apt-get install -qy meson ninja-build
       - name: Install yarn dependencies
         run: |
           yarn --cwd bindings/javascript
@@ -435,7 +431,7 @@ jobs:
             build/release-intro.md
       - name: Install build deps
         run: |
-          sudo apt install -qy zsh tree jq cmake make gcc g++ musl-tools musl-dev meson clang gcc-mingw-w64 g++-mingw-w64 libreadline-dev ccache
+          sudo apt install -qy tree jq cmake make gcc g++ musl-tools musl-dev meson clang gcc-mingw-w64 g++-mingw-w64 libreadline-dev ccache
       - name: Build x86_64 with musl-system
         run: |
           make -f build/musl-linux.mk CCACHE=1
