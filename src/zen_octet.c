@@ -2010,7 +2010,7 @@ void OCT_shl_bits(octet *x, int n) {
 
 	if (byte_shift > 0) {
 		for (int i = 0; i < x->len- byte_shift; i++)  x->val[i] = x->val[i + byte_shift];
-		 for (int i = x->len - byte_shift; i < x->len; i++)  x->val[i] = 0;
+		for (int i = x->len - byte_shift; i < x->len; i++)  x->val[i] = 0;
 	}
 	if (bit_shift > 0) {
 		unsigned char carry = 0;
@@ -2067,8 +2067,7 @@ void OCT_shr_bits(octet *x, int n) {
 
 	if (bit_shift > 0) {
 		unsigned char carry = 0;
-		for (int i = 0; i < x->len; i++)
-		{
+		for (int i = 0; i < x->len; i++) {
 			unsigned char current = x->val[i];
 			x->val[i] = (current >> bit_shift) | carry;
 			carry = (current  & ((1 << (bit_shift)) - 1)) << carry_bits;
@@ -2097,6 +2096,97 @@ static int shift_right(lua_State *L) {
 	OCT_copy(out, o);
 
 	OCT_shr_bits(out, n);
+	end:
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+
+
+}
+
+// Circular shift octet to the left by n bits.
+static int shift_left_circular(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *o = o_arg(L,1); SAFE(o);
+	int isnum;
+	lua_Integer n = lua_tointegerx(L,2,&isnum);
+	if(!isnum) {
+		failed_msg = "shift input is not a number";
+		goto end; 
+	}
+	octet *out = o_new(L,o->len);
+
+	if(!out) {
+		failed_msg = "Could not create OCTET";
+		goto end;
+	}
+	OCT_copy(out, o);
+
+	OCT_circular_shl_bits(out, n);
+	end:
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+void OCT_circular_shr_bits(octet *x, int n) {
+	if (n >= 8 * x->len) {
+		n = n % (8 * x->len);
+	}
+
+	int byte_shift = n / 8;
+	int bit_shift = n % 8;
+	int carry_bits = 8 - bit_shift;
+
+	if (byte_shift > 0) {
+		unsigned char temp[x->len];
+		for (int i = 0; i < x->len; i++) {
+			temp[i] = x->val[i];
+		}
+
+		for (int i = 0; i < x->len; i++) {
+			x->val[i] = temp[(x->len + i - byte_shift) % x->len];
+		}
+	}
+
+	if (bit_shift > 0) {
+		unsigned char carry = 0;
+		unsigned char last_byte_carry = (x->val[x->len - 1] & ((1 << (bit_shift)) - 1)) << carry_bits;
+
+		for (int i = 0; i < x->len; i++) {
+			unsigned char current = x->val[i];
+			x->val[i] = (current >> bit_shift) | carry;
+			carry = (current & ((1 << (bit_shift)) - 1)) << carry_bits;
+		}
+		x->val[0] |= last_byte_carry;
+	}
+}
+
+// Circular shift octet to the right by n bits
+static int shift_right_circular(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *o = o_arg(L,1); SAFE(o);
+	int isnum;
+	lua_Integer n = lua_tointegerx(L,2,&isnum);
+	if(!isnum) {
+		failed_msg = "shift input is not a number";
+		goto end; 
+	}
+	octet *out = o_new(L,o->len);
+
+	if(!out) {
+		failed_msg = "Could not create OCTET";
+		goto end;
+	}
+	OCT_copy(out, o);
+
+	OCT_circular_shr_bits(out, n);
 	end:
 	o_free(L, o);
 	if(failed_msg) {
@@ -2137,14 +2227,14 @@ static int and_grow(lua_State *L) {
 
 	// pad first arg with zeroes
 	if(x->len < max) {
-	  x->val = realloc(x->val, max);
-	  x->max = max;
-	  OCT_pad(x, max);
+		x->val = realloc(x->val, max);
+		x->max = max;
+		OCT_pad(x, max);
 	}
 	if(y->len < max) {
-	  y->val = realloc(y->val, max);
-	  y->max = max;
-	  OCT_pad(y, max);
+		y->val = realloc(y->val, max);
+		y->max = max;
+		OCT_pad(y, max);
 	}
 
 	OCT_copy(n, x);
@@ -2220,14 +2310,14 @@ static int or_grow(lua_State *L) {
 
 	// pad first arg with zeroes
 	if(x->len < max) {
-	  x->val = realloc(x->val, max);
-	  x->max = max;
-	  OCT_pad(x, max);
+		x->val = realloc(x->val, max);
+		x->max = max;
+		OCT_pad(x, max);
 	}
 	if(y->len < max) {
-	  y->val = realloc(y->val, max);
-	  y->max = max;
-	  OCT_pad(y, max);
+		y->val = realloc(y->val, max);
+		y->max = max;
+		OCT_pad(y, max);
 	}
 
 	OCT_copy(n, x);
@@ -2530,7 +2620,12 @@ int luaopen_octet(lua_State *L) {
 		{"from_segwit", from_segwit_address},
 		{"fuzz_byte", fuzz_byte_random},
 		{"fuzz_byte_xor", fuzz_byte_xor},
+		{"fuzz_bit", fuzz_bit_random},
+		{"fuzz_byte_circular_shift", fuzz_byte_circular_shift_random},
+		{"fuzz_bit_circular_shift", fuzz_bit_circular_shift_random},
 		{"shl", shift_left},
+		{"shl_circular", shift_left_circular},
+		{"shr_circular", shift_right_circular},
 		{"shr", shift_right},
 		{"and",   and_shrink},
 		{"and_grow", and_grow},
@@ -2579,8 +2674,13 @@ int luaopen_octet(lua_State *L) {
 		{"fillrepeat", fillrepeat},
 		{"fuzz_byte", fuzz_byte_random},
 		{"fuzz_byte_xor", fuzz_byte_xor},
+		{"fuzz_bit", fuzz_bit_random},
+		{"fuzz_byte_circular_shift", fuzz_byte_circular_shift_random},
+		{"fuzz_bit_circular_shift", fuzz_bit_circular_shift_random},
 		{"shl", shift_left},
 		{"shr", shift_right},
+		{"shl_circular", shift_left_circular},
+		{"shr_circular", shift_right_circular},
 		{"and",   and_shrink},
 		{"and_grow", and_grow},
 		{"or",   or_shrink},

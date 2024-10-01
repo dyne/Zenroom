@@ -20,3 +20,7 @@
 
 int fuzz_byte_random(lua_State *L);
 int fuzz_byte_xor(lua_State *L);
+int fuzz_bit_random(lua_State *L);
+int fuzz_byte_circular_shift_random(lua_State *L);
+int fuzz_bit_circular_shift_random(lua_State *L);
+void OCT_circular_shl_bits(octet *x, int n);
