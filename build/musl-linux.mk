@@ -1,7 +1,7 @@
 ## Initialize build defaults
 include build/init.mk
 
-COMPILER := musl-gcc
+COMPILER ?= musl-gcc
 
 ## Additional dependencies
 BUILD_DEPS += tinycc
@@ -20,7 +20,9 @@ endif
 # activate CCACHE etc.
 include build/plugins.mk
 
-all: ${BUILD_DEPS} zenroom zencode-exec zencc
+all: deps zenroom zencode-exec zencc
+
+deps: ${BUILD_DEPS}
 
 cli_sources := src/cli-zenroom.o src/repl.o
 zenroom: ${ZEN_SOURCES} ${cli_sources}
