@@ -34,8 +34,9 @@ libs=$(find src/lua -type f -name '*.lua')
 
 # emscripten doesn't supports embedding this way
 # will use --preload-file instead
-
 zen_extensions=""
+scenarios=""
+
 [ -r luac45 ] || {
 	curl -Ls -o luac54 https://github.com/dyne/luabinaries/releases/latest/download/luac54
 	chmod +x luac54
@@ -63,16 +64,23 @@ for i in ${libs}; do
 	echo "" >>  ${dst}
 	cd - > /dev/null
 	rm -rf $tmp
-	ext_nes="{\"${n}\", &${n}_len, (const char *)${n}},"
-	ext_es="{\"${n}\", &fakelen, \"/$p\"},"
+	ext_nes="\t{\"${n}\", &${n}_len, (const char *)${n}},"
+	ext_es="\t{\"${n}\", &fakelen, \"/$p\"},"
 	zen_extensions="${zen_extensions}\n#ifndef __EMSCRIPTEN__\n${ext_nes}\n#else\n${ext_es}\n#endif"
+
+	[ "$(echo "$n" | cut -d'_' -f1)" = "zencode" ] && {
+		scenarios="${scenarios}\n\t\"$(echo "$n" | cut -d'_' -f2-)\","
+	}
 done
 
 cat <<EOF >> ${dst}
 #endif // __EMSCRIPTEN__
 
-zen_extension_t zen_extensions[] = {
-	$(printf "%b" "$zen_extensions")
+zen_extension_t zen_extensions[] = {$(printf "%b" "$zen_extensions")
 	{ NULL, NULL, NULL }
+};
+
+const char* const zen_scenarios[] = {$(printf "%b" "$scenarios")
+	NULL
 };
 EOF
