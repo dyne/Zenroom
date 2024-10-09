@@ -11,6 +11,5 @@ load ../bats_setup
     Z msgpack.lua
     Z zenroom_msgpack.lua
     Z zenroom_strings.lua
-    Z xor.lua
     Z trim.lua
 }

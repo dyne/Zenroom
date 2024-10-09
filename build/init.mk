@@ -13,7 +13,7 @@ ZEN_SOURCES := \
     src/zen_fp12.o src/zen_random.o src/zen_hash.o \
     src/zen_ecdh_factory.o src/zen_ecdh.o \
     src/zen_aes.o src/zen_qp.o src/zen_ed.o src/zen_float.o src/zen_time.o \
-    src/api_hash.o src/randombytes.o \
+    src/api_hash.o src/randombytes.o src/zen_fuzzer.o \
     src/cortex_m.o src/p256-m.o src/zen_p256.o src/zen_rsa.o src/zen_bbs.o
 
 ZEN_INCLUDES += -Isrc -Ilib/lua54/src									\

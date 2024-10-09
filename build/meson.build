@@ -102,6 +102,7 @@ zenroom_src = [
     '../src/zen_octet.c',
     '../src/zen_parse.c',
     '../src/zen_random.c',
+	'../src/zen_fuzzer.c',
     '../src/zenroom.c',
     '../src/zen_rsa.c',
     '../src/zen_ecdh_factory.c',

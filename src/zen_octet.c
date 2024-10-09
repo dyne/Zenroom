@@ -1,6 +1,6 @@
-/* This file is part of Zenroom (https://zenroom.dyne.org)
+/* This file is part of Zenroom (https://zenroom.org)
  *
- * Copyright (C) 2017-2021 Dyne.org foundation
+ * Copyright (C) 2017-2024 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -73,7 +73,7 @@
 #include <zen_big.h>
 #include <zen_float.h>
 #include <zen_time.h>
-
+#include <zen_fuzzer.h>
 #include <zen_ecp.h>
 
 #include <math.h> // for log2 in entropy calculation
@@ -327,12 +327,15 @@ octet* o_arg(lua_State *L, int n) {
 
 // allocates a new octet in LUA, duplicating the one in arg
 octet *o_dup(lua_State *L, octet *o) {
-	octet *n = o_new(L, o->len);
+	SAFE(o);
+	register size_t len = o->len;
+	octet *n = o_new(L, len);
 	if(!n) {
 		zerror(L, "Could not create OCTET");
 		return NULL;
 	}
 	OCT_copy(n,o);
+	n->max = len;
 	return(n);
 }
 
@@ -1997,6 +2000,398 @@ static int lesser_than(lua_State *L) {
 	END(1);
 }
 
+
+void OCT_shl_bits(octet *x, int n) {
+	if (n >= 8 * x->len) { // If shifting more bits than the entire octet length, clear it.
+		x->len = 0;
+		return;
+	}
+	
+	int byte_shift = n / 8;		
+	int bit_shift = n % 8;		
+	int carry_bits = 8 - bit_shift; 
+
+	if (byte_shift > 0) {
+		for (int i = 0; i < x->len- byte_shift; i++)  x->val[i] = x->val[i + byte_shift];
+		for (int i = x->len - byte_shift; i < x->len; i++)  x->val[i] = 0;
+	}
+	if (bit_shift > 0) {
+		unsigned char carry = 0; 
+		for (int i = x->len-1; i >= 0; i--) {
+			unsigned char current = x->val[i];			  
+			x->val[i] = (current << bit_shift) | carry;
+			carry = (current >> carry_bits) & ((1 << bit_shift) - 1); 
+		}
+	}
+}
+/* Shift octet to the left by n bits. Leftmost bits disappear 
+This is also executed when using the 'o << n' with o an octet and n an integer */
+static int shift_left(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *o = o_arg(L,1); SAFE(o);
+	int isnum;
+	lua_Integer n = lua_tointegerx(L,2,&isnum);
+	if(!isnum) {
+		failed_msg = "shift input is not a number";
+		goto end; 
+	}
+	octet *out = o_new(L,o->len);
+
+	if(!out) {
+		failed_msg = "Could not create OCTET";
+		goto end;
+	}
+	OCT_copy(out, o);
+
+	OCT_shl_bits(out, n);
+	end:
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+
+
+}
+
+void OCT_shr_bits(octet *x, int n) {
+	if (n >= 8 * x->len) { 
+		x->len = 0;
+		return;
+	}
+	int byte_shift = n / 8;
+	int bit_shift = n % 8;
+	int carry_bits = 8- bit_shift;
+	if (byte_shift > 0) {
+		for (int i = x->len - 1; i >= byte_shift; i--) x->val[i] = x->val[i - byte_shift];
+		for (int i = 0; i < byte_shift; i++) x->val[i] = 0;
+	}
+
+	if (bit_shift > 0) {
+		unsigned char carry = 0;
+		for (int i = 0; i < x->len; i++) {
+			unsigned char current = x->val[i];
+			x->val[i] = (current >> bit_shift) | carry;
+			carry = (current  & ((1 << (bit_shift)) - 1)) << carry_bits;
+		}
+	}
+}
+
+/* Shift octet to the right by n bits. Rightmost bits disappear
+ This is also executed when using the 'o >> n' with o an octet and n an integer */
+static int shift_right(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *o = o_arg(L,1); SAFE(o);
+	int isnum;
+	lua_Integer n = lua_tointegerx(L,2,&isnum);
+	if(!isnum) {
+		failed_msg = "shift input is not a number";
+		goto end; 
+	}
+	octet *out = o_new(L,o->len);
+
+	if(!out) {
+		failed_msg = "Could not create OCTET";
+		goto end;
+	}
+	OCT_copy(out, o);
+
+	OCT_shr_bits(out, n);
+	end:
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+
+
+}
+
+// Circular shift octet to the left by n bits.
+static int shift_left_circular(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *o = o_arg(L,1); SAFE(o);
+	int isnum;
+	lua_Integer n = lua_tointegerx(L,2,&isnum);
+	if(!isnum) {
+		failed_msg = "shift input is not a number";
+		goto end; 
+	}
+	octet *out = o_new(L,o->len);
+
+	if(!out) {
+		failed_msg = "Could not create OCTET";
+		goto end;
+	}
+	OCT_copy(out, o);
+
+	OCT_circular_shl_bits(out, n);
+	end:
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+void OCT_circular_shr_bits(octet *x, int n) {
+	if (n >= 8 * x->len) {
+		n = n % (8 * x->len);
+	}
+
+	int byte_shift = n / 8;
+	int bit_shift = n % 8;
+	int carry_bits = 8 - bit_shift;
+
+	if (byte_shift > 0) {
+		unsigned char temp[x->len];
+		for (int i = 0; i < x->len; i++) {
+			temp[i] = x->val[i];
+		}
+
+		for (int i = 0; i < x->len; i++) {
+			x->val[i] = temp[(x->len + i - byte_shift) % x->len];
+		}
+	}
+
+	if (bit_shift > 0) {
+		unsigned char carry = 0;
+		unsigned char last_byte_carry = (x->val[x->len - 1] & ((1 << (bit_shift)) - 1)) << carry_bits;
+
+		for (int i = 0; i < x->len; i++) {
+			unsigned char current = x->val[i];
+			x->val[i] = (current >> bit_shift) | carry;
+			carry = (current & ((1 << (bit_shift)) - 1)) << carry_bits;
+		}
+		x->val[0] |= last_byte_carry;
+	}
+}
+
+// Circular shift octet to the right by n bits
+static int shift_right_circular(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *o = o_arg(L,1); SAFE(o);
+	int isnum;
+	lua_Integer n = lua_tointegerx(L,2,&isnum);
+	if(!isnum) {
+		failed_msg = "shift input is not a number";
+		goto end; 
+	}
+	octet *out = o_new(L,o->len);
+
+	if(!out) {
+		failed_msg = "Could not create OCTET";
+		goto end;
+	}
+	OCT_copy(out, o);
+
+	OCT_circular_shr_bits(out, n);
+	end:
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+
+
+}
+
+void OCT_and(octet *y, octet *x)
+{
+	int i;
+	for (i = 0; i < x->len && i < y->len; i++) {
+		y->val[i] &= x->val[i];
+	}
+}
+
+/*
+Bitwise AND operation on two octets padded to reach the same length, returns a new octet.
+Results in a newly allocated octet, does not change the contents of any other octet involved.
+*/
+static int and_grow(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *x = o_arg(L, 1);
+	octet *y = o_arg(L, 2);
+	if(!x || !y) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	int max = _max(x->len, y->len);
+	octet *n = o_new(L,max);
+	if(!n) {
+		failed_msg = "Could not create OCTET";
+		goto end;
+	}
+
+	// pad first arg with zeroes
+	if(x->len < max) {
+		x->val = realloc(x->val, max);
+		x->max = max;
+		OCT_pad(x, max);
+	}
+	if(y->len < max) {
+		y->val = realloc(y->val, max);
+		y->max = max;
+		OCT_pad(y, max);
+	}
+
+	OCT_copy(n, x);
+	OCT_and(n, y);
+end:
+	o_free(L, x);
+	o_free(L, y);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/*
+Bitwise AND operation on two octets truncating at the shortest one length, returns a new octet.
+This is also executed when using the '<b>&</b>' operator between two
+octets. Results in a newly allocated octet, does not change the
+contents of any other octet involved.
+*/
+static int and_shrink(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *x = o_arg(L, 1);
+	octet *y = o_arg(L, 2);
+	if(!x || !y) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	int min = _min(x->len, y->len);
+	octet *n = o_new(L,min);
+	if(!n) {
+		failed_msg = "Could not create OCTET";
+		goto end;
+	}
+	OCT_copy(n, x);
+	OCT_and(n, y);
+end:
+	o_free(L, x);
+	o_free(L, y);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+void OCT_or(octet *y, octet *x)
+{
+	int i;
+	for (i = 0; i < x->len && i < y->len; i++) {
+		y->val[i] |= x->val[i];
+	}
+}
+
+/*
+Bitwise OR operation on two octets padded to reach the same length, returns a new octet.
+Results in a newly allocated octet, does not change the contents of any other octet involved.
+*/
+static int or_grow(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *x = o_arg(L, 1);
+	octet *y = o_arg(L, 2);
+	if(!x || !y) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	int max = _max(x->len, y->len);
+	octet *n = o_new(L,max);
+	if(!n) {
+		failed_msg = "Could not create OCTET";
+		goto end;
+	}
+
+	// pad first arg with zeroes
+	if(x->len < max) {
+		x->val = realloc(x->val, max);
+		x->max = max;
+		OCT_pad(x, max);
+	}
+	if(y->len < max) {
+		y->val = realloc(y->val, max);
+		y->max = max;
+		OCT_pad(y, max);
+	}
+
+	OCT_copy(n, x);
+	OCT_or(n, y);
+end:
+	o_free(L, x);
+	o_free(L, y);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/*
+Bitwise OR operation on two octets truncating at the shortest one length, returns a new octet.
+This is also executed when using the '<b>|</b>' operator between two
+octets. Results in a newly allocated octet, does not change the
+contents of any other octet involved.
+*/
+static int or_shrink(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *x = o_arg(L, 1);
+	octet *y = o_arg(L, 2);
+	if(!x || !y) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	int min = _min(x->len, y->len);
+	octet *n = o_new(L,min);
+	if(!n) {
+		failed_msg = "Could not create OCTET";
+		goto end;
+	}
+	OCT_copy(n, x);
+	OCT_or(n, y);
+end:
+	o_free(L, x);
+	o_free(L, y);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/*
+Bitwise NOT operation on an octet returns a new octet.
+This is also executed when using the '~</b>' operator. Results in a newly allocated octet.
+*/
+static int bit_not(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *x = o_arg(L, 1);
+	if(!x) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	octet *n = o_new(L,x->len);
+	OCT_copy(n, x);
+	int i;
+	for (i = 0; i < x->len; i++) {
+		n->val[i] = ~(x->val[i]);
+	}
+end:
+	o_free(L, x);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
 int luaopen_octet(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg octet_class[] = {
@@ -2055,6 +2450,20 @@ int luaopen_octet(lua_State *L) {
 		{"popcount_hamming", popcount_hamming_distance},
 		{"to_segwit", to_segwit_address},
 		{"from_segwit", from_segwit_address},
+		{"fuzz_byte", fuzz_byte_random},
+		{"fuzz_byte_xor", fuzz_byte_xor},
+		{"fuzz_bit", fuzz_bit_random},
+		{"fuzz_byte_circular_shift", fuzz_byte_circular_shift_random},
+		{"fuzz_bit_circular_shift", fuzz_bit_circular_shift_random},
+		{"shl", shift_left},
+		{"shl_circular", shift_left_circular},
+		{"shr_circular", shift_right_circular},
+		{"shr", shift_right},
+		{"and",   and_shrink},
+		{"and_grow", and_grow},
+		{"or",   or_shrink},
+		{"or_grow", or_grow},
+		{"not", bit_not},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg octet_methods[] = {
@@ -2091,6 +2500,20 @@ int luaopen_octet(lua_State *L) {
 		{"compact_ascii", compact_ascii},
 		{"elide_at_start", elide_at_start},
 		{"fillrepeat", fillrepeat},
+		{"fuzz_byte", fuzz_byte_random},
+		{"fuzz_byte_xor", fuzz_byte_xor},
+		{"fuzz_bit", fuzz_bit_random},
+		{"fuzz_byte_circular_shift", fuzz_byte_circular_shift_random},
+		{"fuzz_bit_circular_shift", fuzz_bit_circular_shift_random},
+		{"shl", shift_left},
+		{"shr", shift_right},
+		{"shl_circular", shift_left_circular},
+		{"shr_circular", shift_right_circular},
+		{"and",   and_shrink},
+		{"and_grow", and_grow},
+		{"or",   or_shrink},
+		{"or_grow", or_grow},
+		{"not", bit_not},
 		// {"zcash_topoint", zcash_topoint},
 		// idiomatic operators
 		{"__len",size},
@@ -2100,6 +2523,11 @@ int luaopen_octet(lua_State *L) {
 		{"__gc", o_destroy},
 		{"__tostring",to_base64},
 		{"__lt",lesser_than},
+		{"__shl", shift_left},
+		{"__shr", shift_right},
+		{"__band", and_shrink},
+		{"__bor", or_shrink},
+		{"__bnot", bit_not},
 		{NULL,NULL}
 	};
 	zen_add_class(L, "octet", octet_class, octet_methods);
