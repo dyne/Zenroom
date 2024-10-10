@@ -435,6 +435,7 @@ jobs:
           path: |
             zenroom
             zencode-exec
+            zencc
       - name: Clean for next build
         run: make clean
       - name: Build x86_64 shlib
