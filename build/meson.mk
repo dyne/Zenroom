@@ -16,23 +16,10 @@ endif
 # activate CCACHE etc.
 include build/plugins.mk
 
-# MAIN TARGETS
-all: ${BUILD_DEPS} prepare
-	CC="${zenroom_cc}" AR="${ar}" CFLAGS="${cflags}"			\
-	LDFLAGS="${ldflags}" LDADD="${ldadd}" meson -Dexamples=true	\
-	-Ddocs=true -Doptimization=3 -Decdh_curve=${ecdh_curve}		\
-	-Decp_curve=${ecp_curve} -Ddefault_library=both build meson
-	ninja -C meson
-gcc: all
+all: deps prepare config ninja
 
-asan:
-	CC="clang" CXX="clang++" AR="llvm-ar" CFLAGS="-fsanitize=address	\
-	-fno-omit-frame-pointer" LDFLAGS="-fsanitize=address ${ldflags}"	\
-	LDADD="${ldadd}" meson -Dexamples=false -Ddocs=false				\
-	-Doptimization=0 -Decdh_curve=${ecdh_curve}							\
-	-Decp_curve=${ecp_curve} -Ddefault_library=both						\
-	-Db_sanitize=address build meson
-	ninja -C meson
+# MAIN TARGETS
+deps: ${BUILD_DEPS}
 
 # subtargets
 prepare:
@@ -43,6 +30,24 @@ prepare:
 	ln -sf ../lib/ed25519-donna/libed25519.a meson/libed25519.a
 	ln -sf ../lib/mimalloc/build/libmimalloc-static.a meson/libmimalloc-static.a
 	ln -sf ../lib/tinycc/libtcc.a meson/libtcc.a
+
+config:
+	CC="${zenroom_cc}" AR="${ar}" CFLAGS="${cflags}"			\
+	LDFLAGS="${ldflags}" LDADD="${ldadd}" meson -Dexamples=true	\
+	-Ddocs=true -Doptimization=3 -Decdh_curve=${ecdh_curve}		\
+	-Decp_curve=${ecp_curve} -Ddefault_library=both build meson
+
+ninja:
+	ninja -C meson
+
+asan:
+	CC="clang" CXX="clang++" AR="llvm-ar" CFLAGS="-fsanitize=address	\
+	-fno-omit-frame-pointer" LDFLAGS="-fsanitize=address ${ldflags}"	\
+	LDADD="${ldadd}" meson -Dexamples=false -Ddocs=false				\
+	-Doptimization=0 -Decdh_curve=${ecdh_curve}							\
+	-Decp_curve=${ecp_curve} -Ddefault_library=both						\
+	-Db_sanitize=address build meson
+	ninja -C meson
 
 prepare-test:
 	echo '#!/bin/sh' > ${pwd}/test/zenroom

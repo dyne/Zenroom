@@ -3,159 +3,46 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+.PHONY: help
+
 pwd := $(shell pwd)
 # ARCH ?=$(shell uname -m)
 PREFIX ?= /usr/local
-# VERSION is set in src/Makefile
-# Targets to be build in this order
-BUILDS := apply-patches milagro lua54 embed-lua quantum-proof ed25519-donna mimalloc
-
+# VERSION is set in build/init.mk
 # DESTDIR is supported by install target
 
-# include platform specific configurations pattern-matching target labels
-include ${pwd}/build/config.mk
+help:
+	@echo "✨ Welcome to the Zenroom build system"
+	@awk 'BEGIN {FS = ":.*##"; printf "🛟 Usage: make \033[36m<target>\033[0m\n👇🏽 List of targets:\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf " \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5)} ' Makefile
 
-all:
-	@echo "Choose a target:"
-	@echo "- linux, linux-lib, linux-clang, linux-debug"
-	@echo "- javascript-web, javascript-wasm, javascript-demo, javascript-rn (need EMSDK)"
-	@echo "- linux-python3, linux-go, osx-python3, osx-go (language bindings)"
-	@echo "- osx, osx-lib, ios-lib, ios-armv7, ios-arm64, ios-sim (need Apple/OSX)"
-	@echo "- win, win-dll (cross-compile using MINGW on Linux)"
-	@echo "- musl, musl-local, musl-system (full static build)"
-	@echo "- android-arm android-x86 android-aarch64"
-	@echo "- cortex-arm, linux-riscv64, aarch64"
-	@echo "for android and ios see scripts in build/"
+# help: ## 🛟  Show this help message
+# 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf " \033[36m 👉 %-14s\033[0m %s\n", $$1, $$2}'
 
-# if ! [ -r build/luac ]; then ${gcc} -I${luasrc} -o build/luac ${luasrc}/luac.c ${luasrc}/liblua.a -lm; fi
+x86-linux: ## Dynamic executable for Linux x86 64bit
+	$(MAKE) -f build/linux.mk
 
-sonarqube:
-	@echo "Configure login token in build/sonarqube.sh"
-	cp -v build/sonar-project.properties .
-	./build/sonarqube.sh
+x86-musl: ## Static executable for Linux x86 64bit
+	$(MAKE) -f build/musl-linux.mk
 
-embed-lua: lua_embed_opts := $(if ${COMPILE_LUA}, compile)
-embed-lua:
-	@echo "Embedding all files in src/lua"
-	./build/embed-lualibs ${lua_embed_opts}
-	@echo "File generated: src/lualibs_detected.c"
+# bindings: ## Language binding for host platform
+# 	$(MAKE) -f build/linux.mk deps zencode-exec
 
-src/zen_ecdh_factory.c:
-	${pwd}/build/codegen_ecdh_factory.sh ${ecdh_curve}
+x86-win-exe: ## Executable for Windows x86 64bit
+	$(MAKE) -f build/win-exe.mk
 
-src/zen_ecp_factory.c:
-	${pwd}/build/codegen_ecp_factory.sh ${ecp_curve}
+x86-win-dll: ## Dynamic lib (DLL) for Windows x86 64bit
+	$(MAKE) -f build/win-dll.mk
 
-src/zen_big_factory.c:
-	${pwd}/build/codegen_ecp_factory.sh ${ecp_curve}
+arm64-ios: ## Dynamic lib (dylib) for Apple iOS ARM64
+	$(MAKE) -f build/apple-osx.mk ios-arm64
 
-apply-patches: src/zen_ecdh_factory.c src/zen_ecp_factory.c src/zen_big_factory.c
+sim-ios: ## Dynamic lib (dylib) for Apple iOS simulator
+	$(MAKE) -f build/apple-ios.mk ios-sim
 
-# build target for javascript (emscripten)
-javascript: ${BUILDS}
-	CC="${gcc}" AR="${ar}" CFLAGS="${cflags}" \
-	LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-	make -C src js
-	@mkdir -p build/npm
-	@cp -v src/zenroom.js      build/npm/
+wasm: ## WebAssembly (WASM) for Javascript in-browser (Emscripten)
+	yarn --cwd bindings/javascript
+	yarn --cwd bindings/javascript build
 
-# build luarock module
-include ${pwd}/build/luarock.mk
-
-# experimental target for xtensa embedded boards
-esp32: apply-patches milagro lua54
-	CC=${pwd}/build/xtensa-esp32-elf/bin/xtensa-esp32-elf-${gcc} \
-	LD=${pwd}/build/xtensa-esp32-elf/bin/xtensa-esp32-elf-ld \
-	CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-		$(MAKE) -C src linux
-
-# static dependencies in lib
-# lpeglabel:
-# 	CC=${gcc} CFLAGS="${cflags} -I${pwd}/lib/lua54/src" AR="${ar}" $(MAKE) -C lib/lpeglabel
-
-lua54:
-	CC="${lua_cc}" CFLAGS="${cflags} ${lua_cflags}" \
-	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
-	$(MAKE) -C ${pwd}/lib/lua54/src liblua.a
-
-android-lua54:
-	CC="${lua_cc}" CFLAGS="${cflags} ${lua_cflags}" \
-	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
-	$(MAKE) -C ${pwd}/lib/lua54/src ${platform}
-
-musl-lua54:
-	CC="${lua_cc}" CFLAGS="${cflags} ${lua_cflags}" \
-	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
-	$(MAKE) -C ${pwd}/lib/lua54/src ${platform}
-
-cortex-lua54:
-	CC="${lua_cc}" CFLAGS="${cflags} ${lua_cflags} -DLUA_BAREBONE" \
-	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
-	$(MAKE) -C ${pwd}/lib/lua54/src ${platform}
-
-milagro-debug: milagro
-milagro:
-	@echo "-- Building milagro (${system})"
-	if ! [ -r ${pwd}/lib/milagro-crypto-c/build/CMakeCache.txt ]; then \
-		cd ${pwd}/lib/milagro-crypto-c && \
-		mkdir -p build && \
-		cd build && \
-		CC=${gcc} LD=${ld} AR=${ar} \
-		cmake ../ -DCMAKE_C_FLAGS="${cflags}" -DCMAKE_SYSTEM_NAME="${system}" \
-		-DCMAKE_AR=${ar} -DCMAKE_C_COMPILER=${gcc} ${milagro_cmake_flags}; \
-	fi
-	if ! [ -r ${pwd}/lib/milagro-crypto-c/build/lib/libamcl_core.a ]; then \
-		RANLIB=${ranlib} LD=${ld} \
-		$(MAKE) -C ${pwd}/lib/milagro-crypto-c/build; \
-	fi
-
-mimalloc-debug: mimalloc
-mimalloc:
-	$(info -- Building mimalloc (${system}))
-	if ! [ -r ${pwd}/lib/mimalloc/build/CMakeCache.txt ]; then \
-		cd ${pwd}/lib/mimalloc && \
-                mkdir -p build && \
-                cd build && \
-                CC=${gcc} LD=${ld} AR=${AR} \
-                cmake ../ ${mimalloc_cmake_flags} \
-                -DCMAKE_C_FLAGS="${cflags} ${mimalloc_cflags}" \
-                -DCMAKE_SYSTEM_NAME="${system}" \
-                -DCMAKE_AR=${ar} -DCMAKE_C_COMPILER=${gcc} \
-	        -DCMAKE_CXX_COMPILER=$(subst gcc,g++,${gcc}); \
-	fi
-	if ! [ -r ${pwd}/lib/mimalloc/build/libmimalloc-static.a ]; then \
-                RANLIB=${ranlib} LD=${ld} \
-                ${MAKE} -C ${pwd}/lib/mimalloc/build; \
-	fi
-
-quantum-proof-ccache: quantum-proof
-quantum-proof-debug: quantum-proof
-quantum-proof:
-	$(info -- Building Quantum-Proof libs)
-	CC="${quantum_proof_cc}" \
-	LD=${ld} \
-	AR=${ar} \
-	RANLIB=${ranlib} \
-	LD=${ld} \
-	CFLAGS="${quantum_proof_cflags} ${cflags}" \
-	LDFLAGS="${ldflags}" \
-	${MAKE} -C ${pwd}/lib/pqclean
-
-check-milagro: milagro
-	CC=${gcc} CFLAGS="${cflags}" $(MAKE) -C ${pwd}/lib/milagro-crypto-c test
-
-ed25519-donna-ccache: ed25519-donna
-ed25519-donna:
-	echo "-- Building ED25519 for EDDSA"
-	CC="${ed25519_cc}" \
-	AR=${ar} \
-	CFLAGS="${cflags}" \
-	LDFLAGS="${ldflags}" \
-	$(MAKE) -C ${pwd}/lib/ed25519-donna
-
-# -------------------
-# Test suites for all platforms
-include ${pwd}/build/tests.mk
 
 install: destbin=${DESTDIR}${PREFIX}/bin
 install: destdocs=${DESTDIR}${PREFIX}/share/zenroom
@@ -168,12 +55,6 @@ install:
 	cp README.md ${destdocs}/README.txt
 	cp LICENSE.txt ${destdocs}/LICENSE.txt
 	cp ChangeLog.md ${destdocs}/ChangeLog.txt
-
-install-lua: destlib=${LIBDIR}
-install-lua:
-	mkdir -p ${destlib}
-	cp src/octet.so ${destlib}
-	cp src/ecdh.so ${destlib}
 
 clean:
 	rm -rf ${pwd}/meson
@@ -201,9 +82,6 @@ clean:
 clean-src:
 	rm -f src/zen_ecdh_factory.c src/zen_ecp_factory.c src/zen_big_factory.c
 	$(MAKE) clean -C src
-
-distclean:
-	rm -rf ${musl}
 
 # -------------------
 # Parsing the documentation
