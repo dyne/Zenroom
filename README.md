@@ -8,7 +8,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 [![Zenroom logo](docs/_media/images/zenroom_logotype.png)](https://zenroom.org)
 
-Zenroom is a **secure language interpreter** of the domain-specific Zencode, making it easy to execute fast cryptographic operations on any data structure.
+[Zenroom](https://zenroom.org/) is a **secure language interpreter** of the domain-specific Zencode, making it easy to execute fast cryptographic operations on any data structure.
 
 The Zenroom VM is very small, has **no external dependency**, is fully deterministic and is ready to run **end-to-end encryption** on any platform: desktop, embedded mobile, cloud micro-services, and web browsers. Zenroom works inside applications written in Javascript, Python3, Rust or Golang.
 
