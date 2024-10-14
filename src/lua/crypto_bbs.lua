@@ -644,15 +644,18 @@ local function core_proof_gen(ciphersuite, pk, signature, generators, header, ph
     local signature_result = octets_to_signature(signature)
     local AA, e = table.unpack(signature_result)
     local undisclosed_indexes = {}
+    local disclosed_messages = {}
+    local undisclosed_messages = {}
+    for i, v in ipairs(disclosed_indexes) do
+        if i > 1 and disclosed_indexes[i] == disclosed_indexes[i - 1] then
+            error('disclosed indexes contains duplicates', 3)
+        end
+        table.insert(disclosed_messages, messages[v])
+    end
     for i = 1, L do
         if not array_contains(disclosed_indexes, i) then
             table.insert(undisclosed_indexes, i)
         end
-    end
-    local disclosed_messages = {}
-    local undisclosed_messages = {}
-    for _,v in ipairs(disclosed_indexes) do
-        table.insert(disclosed_messages, messages[v])
     end
     for _,v in ipairs(undisclosed_indexes) do
         table.insert(undisclosed_messages, messages[v])
@@ -679,6 +682,7 @@ function bbs.proof_gen(ciphersuite, pk, signature, header, ph, messages, disclos
     header = header or O.empty()
     ph = ph or O.empty()
     table.sort(disclosed_indexes) -- make sure indexes are sorted
+    if (disclosed_indexes[1] <= 0 or disclosed_indexes[#disclosed_indexes] > #messages)  then error('disclosed indexes contains not valid integers', 2) end
     local messages = bbs.messages_to_scalars(ciphersuite,messages)
     local generators = bbs.create_generators(ciphersuite, table_size(messages) + 1)
     local proof = core_proof_gen(ciphersuite, pk, signature, generators, header, ph, messages, disclosed_indexes)
@@ -830,7 +834,14 @@ function bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages
     disclosed_indexes = disclosed_indexes or {}
     local len_U = math.floor((#proof-proof_len_floor)/OCTET_SCALAR_LENGTH)
     local len_R = table_size(disclosed_indexes)
-
+    if (disclosed_indexes[1] <= 0 or disclosed_indexes[#disclosed_indexes] > len_U + len_R) then
+        error('disclosed indexes contains not valid integers', 2)
+    end
+    for i = 2, len_R, 1 do
+        if disclosed_indexes[i] == disclosed_indexes[i - 1] then
+            error('disclosed indexes contains duplicates', 2)
+        end
+    end
     local message_scalars = bbs.messages_to_scalars(ciphersuite, disclosed_messages_octets)
     local generators = bbs.create_generators(ciphersuite, len_U+len_R+1)
 
