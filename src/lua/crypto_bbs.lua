@@ -682,7 +682,12 @@ function bbs.proof_gen(ciphersuite, pk, signature, header, ph, messages, disclos
     header = header or O.empty()
     ph = ph or O.empty()
     table.sort(disclosed_indexes) -- make sure indexes are sorted
-    if (disclosed_indexes[1] <= 0 or disclosed_indexes[#disclosed_indexes] > #messages)  then error('disclosed indexes contains not valid integers', 2) end
+    if disclosed_indexes[1] <= 0 then
+        error('Disclosed indexes contains an integer less than or equal to 0', 2)
+    end
+    if disclosed_indexes[#disclosed_indexes] > #messages then
+        error('Disclosed index contains an integer which exceeds the total  number of messages', 2)
+    end
     local messages = bbs.messages_to_scalars(ciphersuite,messages)
     local generators = bbs.create_generators(ciphersuite, table_size(messages) + 1)
     local proof = core_proof_gen(ciphersuite, pk, signature, generators, header, ph, messages, disclosed_indexes)
@@ -834,8 +839,11 @@ function bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages
     disclosed_indexes = disclosed_indexes or {}
     local len_U = math.floor((#proof-proof_len_floor)/OCTET_SCALAR_LENGTH)
     local len_R = table_size(disclosed_indexes)
-    if (disclosed_indexes[1] <= 0 or disclosed_indexes[#disclosed_indexes] > len_U + len_R) then
-        error('disclosed indexes contains not valid integers', 2)
+    if disclosed_indexes[1] <= 0 then
+        error('Disclosed indexes contains an integer less than or equal to 0', 2)
+    end
+    if disclosed_indexes[#disclosed_indexes] > len_R+len_U then
+        error('Disclosed index contains an integer which exceeds the total  number of messages', 2)
     end
     for i = 2, len_R, 1 do
         if disclosed_indexes[i] == disclosed_indexes[i - 1] then
