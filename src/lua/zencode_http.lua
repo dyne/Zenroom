@@ -19,6 +19,7 @@
 --Last modified by Denis Roio
 --on Saturday, 27th November 2021
 --]]
+
 local _UNRESERVED = "A-Za-z0-9%-._~"
 local _GEN_DELIMS = ":/?#%[%]@"
 local _SUB_DELIMS = "!$&'()*+,;="
@@ -126,19 +127,33 @@ local function _is_valid_host (host)
    return nil
 end
 
+function is_valid_uri(uri)
+    local parsed = {}
+    local uri_pattern =
+        "^(%a[%w+.-]*):" ..         -- Scheme
+        "//([^/?#]*)" ..            -- Authority
+        "([^?#]*)" ..               -- Path
+        "%%?([^#]*)" ..             -- Query
+        "#?(.*)"                    -- Fragment
+    parsed.scheme, parsed.authority, parsed.path, parsed.query, parsed.fragment = uri:str():match(uri_pattern)
+    if parsed.scheme == "" then
+        error("invalid uri, missing scheme in '" .. uri .. "'", 2)
+    end
+    if parsed.authority ~= "" then
+        local host_error = _is_valid_host(parsed.authority)
+        if host_error then
+            error(host_error, 2)
+        end
+    end
+    return parsed
+end
+
 When("create url from ''", function(src)
-	local obj = have(src)
-	local url = obj:str():lower()
-	empty'url'
-	local proto
-	if url:sub(1,7)=='http://' then proto = 'http://' end
-	if url:sub(1,8)=='https://' then proto = 'https://' end
-	zencode_assert(proto, "Invalid http prefix in url: "..obj:str())
-	local toks = strtok(url, '/') -- second is the host
-	local res = _is_valid_host(toks[2])
-	zencode_assert(not res, res)
-	ACK.url = obj
-	new_codec('url',{zentype='e',content='url', encoding='string'})
+    local obj = have(src)
+    is_valid_uri(obj)
+    empty'url'
+    ACK.url = obj
+    new_codec('url',{zentype='e',content='url', encoding='string'})
 end)
 
 local function _append_to_url(ele, dst, encoding_f)
