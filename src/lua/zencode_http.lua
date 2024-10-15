@@ -159,13 +159,15 @@ end)
 local function _append_to_url(ele, dst, encoding_f)
     local arg, arg_c = have(ele)
     local url, url_c = have(dst)
-    zencode_assert(arg_c.encoding == 'string' and luatype(arg) ~= 'table', 
-        "Cannot append http request that are not strings: "..ele)
-    zencode_assert(url_c.content == 'url',
-        "Cannot append http request to invalid url: "..dst)
+    if url_c.content ~= 'url' then
+        error("Cannot append http request to invalid url: "..dst, 2)
+    end
+    if luatype(arg) == 'table' then
+        error("Cannot append table to url: "..dst, 2)
+    end
     local separator = fif( url:str():find('?'), '&', '?' )
     local tv = type(arg)
-    if tv == 'zenroom.time' or tv == 'zenroom.big' then
+    if tv == 'zenroom.time' or tv == 'zenroom.big' or tv == 'zenroom.float' then
         arg = tostring(arg)
     elseif tv == 'zenroom.octet' then
         arg = arg:str()
@@ -193,13 +195,14 @@ local function _get_parameters_from_table(table_params, encoding_f)
     if(params_c.zentype ~= 'd') then
         error("Expected dictionary, found "..params_c.zentype.." for "..table_params, 2)
     end
-    if(params_c.encoding ~= 'string') then
-        error("Parameters in "..table_params.." must be strings", 2)
+    if( params_c.encoding ~= 'string' and params_c.encoding ~= 'float' and
+        params_c.encoding ~= 'integer' and params_c.encoding ~= 'time') then
+        error("Parameters in "..table_params.." must be of type 'string', 'float', 'integer' or 'time'", 2)
     end
     local res = ""
     for k,v in pairs(params) do
         local tv = type(v)
-        if tv == 'zenroom.time' or tv == 'zenroom.big' then
+        if tv == 'zenroom.time' or tv == 'zenroom.big' or tv == 'zenroom.float' then
             v = tostring(v)
         elseif tv == 'zenroom.octet' then
             v = v:str()
