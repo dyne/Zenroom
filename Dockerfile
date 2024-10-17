@@ -11,8 +11,11 @@ COPY build /build
 COPY Makefile Makefile
 
 RUN apk add --no-cache linux-headers build-base cmake readline-dev
-RUN make linux
-RUN cp /src/zenroom /usr/local/bin/zenroom
+RUN make -f build/musl-linux.mk COMPILER=gcc
+RUN mkdir -p /usr/local/bin/
+RUN cp zenroom /usr/local/bin/
+RUN cp zencode-exec /usr/local/bin/
+RUN cp zencc /usr/local/bin/
 
 ENTRYPOINT ["zenroom"]
 
