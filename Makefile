@@ -18,28 +18,28 @@ help:
 # help: ## 🛟  Show this help message
 # 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf " \033[36m 👉 %-14s\033[0m %s\n", $$1, $$2}'
 
-x86-linux: ## Dynamic executable for Linux x86 64bit
-	$(MAKE) -f build/linux.mk
+posix-x86: ## Dynamic executable for generic Posix x86 64bit
+	$(MAKE) -f build/posix.mk
 
-x86-musl: ## Static executable for Linux x86 64bit
-	$(MAKE) -f build/musl-linux.mk
+musl-x86: ## Static executable for Musl x86 64bit
+	$(MAKE) -f build/musl.mk
 
 # bindings: ## Language binding for host platform
-# 	$(MAKE) -f build/linux.mk deps zencode-exec
+# 	$(MAKE) -f build/posix.mk deps zencode-exec
 
-x86-win-exe: ## Executable for Windows x86 64bit
+win_exe-x86: ## Executable for Windows x86 64bit
 	$(MAKE) -f build/win-exe.mk
 
-x86-win-dll: ## Dynamic lib (DLL) for Windows x86 64bit
+win_dll-x86: ## Dynamic lib (DLL) for Windows x86 64bit
 	$(MAKE) -f build/win-dll.mk
 
-arm64-ios: ## Dynamic lib (dylib) for Apple iOS ARM64
+ios-arm64: ## Dynamic lib (dylib) for Apple iOS ARM64
 	$(MAKE) -f build/apple-osx.mk ios-arm64
 
-sim-ios: ## Dynamic lib (dylib) for Apple iOS simulator
+ios-sim: ## Dynamic lib (dylib) for Apple iOS simulator
 	$(MAKE) -f build/apple-ios.mk ios-sim
 
-wasm: ## WebAssembly (WASM) for Javascript in-browser (Emscripten)
+node-wasm: ## WebAssembly (WASM) for Javascript in-browser (Emscripten)
 	yarn --cwd bindings/javascript
 	yarn --cwd bindings/javascript build
 

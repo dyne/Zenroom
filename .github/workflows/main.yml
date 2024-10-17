@@ -131,14 +131,14 @@ jobs:
           sudo apt install -yq jq musl-tools musl-dev libreadline-dev
       - name: Build x86_64 with musl-system
         run: |
-          make -f build/musl-linux.mk CCACHE=1
+          make -f build/musl.mk CCACHE=1
           make clean
       - name: Build x86_64 shlib with gcc
         run: |
-          make -f build/linux.mk CCACHE=1
+          make -f build/posix.mk CCACHE=1
       - name: Build x86_64 shlib with clang
         run: |
-          make -f build/linux.mk CCACHE=1 COMPILER=clang
+          make -f build/posix.mk CCACHE=1 COMPILER=clang
 
   windows-build:
     name: 🪟 Windows build test
@@ -200,7 +200,7 @@ jobs:
           pip3 install meson ninja
           sudo apt-get install -qy libreadline-dev
       - run: |
-          make -f build/linux.mk deps zencode-exec CCACHE=1
+          make -f build/posix.mk deps zencode-exec CCACHE=1
           cp zencode-exec /usr/local/bin/
       - name: 🧪 test bindings go-${{ matrix.go }}
         working-directory: bindings/golang/zenroom
@@ -228,7 +228,7 @@ jobs:
           pip3 install meson ninja
           sudo apt-get install -qy libreadline-dev
       - run: |
-          make -f build/linux.mk CCACHE=1
+          make -f build/posix.mk CCACHE=1
           cp zencode-exec /usr/local/bin/
       - name: 🧪 test bindings rust-${{ matrix.rust }}
         working-directory: bindings/rust
@@ -323,7 +323,7 @@ jobs:
       - name: Build zencode-exec on Linux
         run: |
           cd ../..
-          make -f build/linux.mk deps zencode-exec
+          make -f build/posix.mk deps zencode-exec
           cp zencode-exec /usr/local/bin/
         if: runner.os == 'Linux'
       - name: Build zencode-exec on Apple/OSX
@@ -427,7 +427,7 @@ jobs:
           sudo apt install -qy tree jq cmake make gcc g++ musl-tools musl-dev meson clang gcc-mingw-w64 g++-mingw-w64 libreadline-dev ccache
       - name: Build x86_64 with musl-system
         run: |
-          make -f build/musl-linux.mk CCACHE=1
+          make -f build/musl.mk CCACHE=1
       - name: Upload artifact linux-amd64
         uses: actions/upload-artifact@v4
         with:
