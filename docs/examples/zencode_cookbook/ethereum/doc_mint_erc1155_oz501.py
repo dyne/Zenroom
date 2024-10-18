@@ -21,23 +21,24 @@ def get_private_key(password='My_pass', keystore_file='a.json'):
 
 load_dotenv()
 
-with open("./zen1155.sol", "r") as file:
+with open("./zen1155_oz501.sol", "r") as file:
     simple_storage_file = file.read()
 
-    install_solc("0.6.2")
+    install_solc("0.8.20")
 
     compiled_sol = compile_standard(
         {
             "language": "Solidity",
-            "sources": {"zen1155.sol": {"content": simple_storage_file}},
+            "sources": {"zen1155_oz501.sol": {"content": simple_storage_file}},
             "settings": {
                 "outputSelection": {
                     "*": {"*": ["abi", "metadata", "evm.bytecode", "evm.sourceMap"]}
-                }
+                },
+                "evmVersion": "paris"
             },
         },
-        solc_binary="/usr/local/lib/python3.9/site-packages/solcx/bin/solc-v0.6.2",
-        allow_paths="/root/3.1.0/"
+        solc_binary="/usr/local/lib/python3.9/site-packages/solcx/bin/solc-v0.8.20",
+        allow_paths="/root/5.0.1/"
     )
 
 with open("compiled_code.json", "w") as file:
@@ -45,10 +46,10 @@ with open("compiled_code.json", "w") as file:
 
 
 # get bytecode
-bytecode = compiled_sol["contracts"]["zen1155.sol"]["zen1155"]["evm"]["bytecode"]["object"]
+bytecode = compiled_sol["contracts"]["zen1155_oz501.sol"]["zen1155"]["evm"]["bytecode"]["object"]
 
 # get abi
-abi = json.loads(compiled_sol["contracts"]["zen1155.sol"]["zen1155"]["metadata"])["output"]["abi"]
+abi = json.loads(compiled_sol["contracts"]["zen1155_oz501.sol"]["zen1155"]["metadata"])["output"]["abi"]
 
 print(abi)
 
