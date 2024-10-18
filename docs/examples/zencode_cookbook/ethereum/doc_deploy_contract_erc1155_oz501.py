@@ -88,7 +88,7 @@ transaction = SimpleStorage.constructor().build_transaction(
         "gasPrice": w3.eth.gas_price,
         "from": my_address,
         "nonce": nonce,
-        'gas': 8000000,
+#        'gas': 8000000,
     }
 )
 
