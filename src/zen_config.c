@@ -26,6 +26,8 @@
 // print=sys|stb|mutt
 ///////////////////////
 
+#define _GNU_SOURCE
+
 #include <strings.h>
 #include <ctype.h>
 

@@ -33,13 +33,14 @@
 #if defined(__linux__)
 /* Linux */
 # define _GNU_SOURCE
-# if defined(__MUSL__)
+//# if defined(__MUSL__)
 #  undef SYS_getrandom
-# endif
+//# endif
 # include <assert.h>
 # include <errno.h>
 # include <fcntl.h>
 # if defined(SYS_getrandom)
+#  include <sys/syscall.h>
 #  include <linux/random.h>
 # endif
 # include <poll.h>
