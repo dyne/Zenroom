@@ -87,7 +87,7 @@ transaction = Zen721.constructor().build_transaction(
         "gasPrice": w3.eth.gas_price,
         "from": my_address,
         "nonce": nonce,
-        'gas': 2000000,
+        'gas': 8000000,
     }
 )
 
@@ -102,4 +102,6 @@ print("Waiting for transaction to finish...")
 tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
 print(f"Done! Contract deployed to {tx_receipt.contractAddress}")
 
-
+#Verification that code realy deployed (With OpenZeppilin 3.1.0 all work for ERC 1155)
+my_code = w3.eth.get_code(tx_receipt.contractAddress)
+print(f"Verify code after deployed (Must be NOT b\' \' or change gas value 8000000) {my_code}")
