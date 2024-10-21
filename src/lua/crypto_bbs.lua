@@ -647,7 +647,7 @@ local function core_proof_gen(ciphersuite, pk, signature, generators, header, ph
     local disclosed_messages = {}
     local undisclosed_messages = {}
     for i, v in ipairs(disclosed_indexes) do
-        if i > 1 and disclosed_indexes[i] == disclosed_indexes[i - 1] then
+        if i > 1 and disclosed_indexes[i] == disclosed_indexes[i - 1] then --Arrays are always sorted in proof_gen (line 684) before being passed as input to core_proof_gen
             error('disclosed indexes contains duplicates', 3)
         end
         table.insert(disclosed_messages, messages[v])
