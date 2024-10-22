@@ -156,6 +156,19 @@ jobs:
           otool -hv libzenroom.dylib
           make check-osx
 
+  arm32-build:
+    name: 🦾 ARM32 build test
+    needs: [reuse, c-lint, lua-lint]
+    if: "github.event_name == 'pull_request'"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pguyot/arm-runner-action@v2
+        with:
+          commands: |
+            sudo apt install -yq jq libreadline-dev cmake xxd
+            make -f build/linux.mk
+
   go-build-check:
     name: 🐹 go build & checks
     needs: [reuse, c-lint, lua-lint]
