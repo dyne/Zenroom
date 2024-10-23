@@ -287,3 +287,22 @@ EOF
     save_output 'append_different_values.json'
     assert_output '{"another_url":"openid-credential-issuer://www.example.com?param1=value1&param2=1000&param3=2000&param4=3000","url":"openid-credential-issuer://www.example.com?param1=value1&param2=1000&param3=2000&param4=3000"}'
 }
+
+@test "url with port" {
+    cat <<EOF | save_asset url_with_port.data
+{
+    "url_with_port": "http://127.0.0.1:8080/some/api"
+}
+EOF
+    cat <<EOF | zexe url_with_port.zen url_with_port.data
+Scenario 'http': url with port
+
+Given I have a 'string' named 'url_with_port'
+
+When I create the url from 'url_with_port'
+
+Then print the 'url'
+EOF
+    save_output 'url_with_port.json'
+    assert_output '{"url":"http://127.0.0.1:8080/some/api"}'
+}
