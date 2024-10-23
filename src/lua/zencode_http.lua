@@ -140,7 +140,12 @@ function is_valid_uri(uri)
         error("invalid uri, missing scheme in '" .. uri .. "'", 2)
     end
     if parsed.authority ~= "" then
-        local host_error = _is_valid_host(parsed.authority)
+        local authority_pattern = "^([^:]+):?(%d*)$"
+        parsed.hostname, parsed.port = parsed.authority:match(authority_pattern)
+        if parsed.port ~= "" and not tonumber(parsed.port) then
+            error("invalid port in '" .. parsed.authority .. "'", 2)
+        end
+        local host_error = _is_valid_host(parsed.hostname)
         if host_error then
             error(host_error, 2)
         end
