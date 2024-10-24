@@ -529,17 +529,17 @@ EOF
     #issuer key from https://github.com/oauth-wg/oauth-selective-disclosure-jwt/blob/master/examples/settings.yml
 }
 
-@test "create table of disclosed informations" {
-    cat <<EOF | zexe create_disclosed_informations.zen test_A3.out.json
+@test "create table of disclosed kv" {
+    cat <<EOF | zexe create_disclosed_kv.zen test_A3.out.json
 Scenario 'sd_jwt'
 
 Given I have 'signed_selective_disclosure'
 
-When I create the disclosed informations from signed selective disclosure 'signed_selective_disclosure'
+When I create the disclosed kv from signed selective disclosure 'signed_selective_disclosure'
 
-Then print the 'disclosed_informations'
+Then print the 'disclosed kv'
 
 EOF
-    save_output create_disclosed_informations.out.json
-    assert_output '{"disclosed_informations":{"address":{"country_code":"DE","locality":"Irgendwo","postal_code":"12345","street_address":"Sonnenstrasse 23"},"birth_family_name":"Schmidt","birthdate":"1973-01-01","family_name":"Mustermann","first_name":"Erika","is_over_18":true,"is_over_21":true,"is_over_65":false,"nationalities":[{"...":"JuL32QXDzizl-L6CLrfxfjpZsX3O6vsfpCVd1jkwJYg"}]}}'
+    save_output create_disclosed_kv.out.json
+    assert_output '{"disclosed_kv":{"address":{"country_code":"DE","locality":"Irgendwo","postal_code":"12345","street_address":"Sonnenstrasse 23"},"birth_family_name":"Schmidt","birthdate":"1973-01-01","family_name":"Mustermann","first_name":"Erika","is_over_18":true,"is_over_21":true,"is_over_65":false,"nationalities":[{"...":"JuL32QXDzizl-L6CLrfxfjpZsX3O6vsfpCVd1jkwJYg"}]}}'
 }
