@@ -479,16 +479,16 @@ IfWhen("verify signed selective disclosure '' issued by '' is valid", function(o
 
 end)
 
-When("create disclosed informations from signed selective disclosure ''", function(ssd_name)
+When("create disclosed kv from signed selective disclosure ''", function(ssd_name)
     local ssd, ssd_c = have(ssd_name)
     zencode_assert(ssd_c.schema and ssd_c.schema == "signed_selective_disclosure",
         "Object is not a signed selective disclosure: " .. ssd_name)
-    local disclosed_informations = {}
+    local disclosed_kv = {}
     for _, v in pairs(ssd.disclosures) do
-        disclosed_informations[v[2]:str()] = v[3]
+        disclosed_kv[v[2]:str()] = v[3]
     end
-    ACK.disclosed_informations = disclosed_informations
-    new_codec('disclosed_informations', {
+    ACK.disclosed_kv = disclosed_kv
+    new_codec('disclosed kv', {
         encoding = 'string',
         luatype = 'table',
         zentype = 'd'
