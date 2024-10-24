@@ -60,7 +60,7 @@ zenroom_include_dirs = include_directories('../src')
 
 milagro_include_dirs = include_directories('../lib/milagro-crypto-c/include')
 
-milagro_generated_include_dirs = include_directories('milagro-crypto-c/include')
+milagro_generated_include_dirs = include_directories('../lib/milagro-crypto-c/build/include')
 
 mimalloc_include_dirs = include_directories('../lib/mimalloc/include')
 
