@@ -219,26 +219,28 @@ EOF
     assert_output '{"empty_get_parameters":"","get_parameters_with_percent_endoing":"client_id=did%3Adyne%3Asandbox.signroom%3APTDvvQn1iWQiVxkfsDnUid8FbieKbHq46Qs8c9CZx67&code=eyJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJlYWMyMjNmOTMwYmRkNzk1NDdlNzI2ZGRjZTg5ZTlmYTA1NWExZTFjIiwiaWF0IjoxNzA5MDQ4MzkzMjk1LCJpc3MiOiJodHRwczovL3ZhbGlkLmlzc3Vlci51cmwiLCJhdWQiOiJkaWQ6ZHluZTpzYW5kYm94LmdlbmVyaWNpc3N1ZXI6NkNwOG1QVXZKbVFhTXhRUFNuTnloYjc0ZjlHYTRXcWZYQ2tCbmVGZ2lrbTUiLCJleHAiOjE3MDkwNTE5OTN9.TahF8CqDDj5yynvtvkhr-Gt6RjzHSvKMosOhFf5sVmWGohKBPMNFhI8WlBlWj7aRauXB0lsvbQk03lf4eZN-2g&redirectUris=https%3A%2F%2Fdidroom.com%2F&grant_type=authorization_code&code_verifier=JYTDgtxcjiNqa3AvJjfubMX6gx98-wCH7iTydBYAeFg","get_parameters_without_percent_endoing":"client_id=did:dyne:sandbox.signroom:PTDvvQn1iWQiVxkfsDnUid8FbieKbHq46Qs8c9CZx67&code=eyJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJlYWMyMjNmOTMwYmRkNzk1NDdlNzI2ZGRjZTg5ZTlmYTA1NWExZTFjIiwiaWF0IjoxNzA5MDQ4MzkzMjk1LCJpc3MiOiJodHRwczovL3ZhbGlkLmlzc3Vlci51cmwiLCJhdWQiOiJkaWQ6ZHluZTpzYW5kYm94LmdlbmVyaWNpc3N1ZXI6NkNwOG1QVXZKbVFhTXhRUFNuTnloYjc0ZjlHYTRXcWZYQ2tCbmVGZ2lrbTUiLCJleHAiOjE3MDkwNTE5OTN9.TahF8CqDDj5yynvtvkhr-Gt6RjzHSvKMosOhFf5sVmWGohKBPMNFhI8WlBlWj7aRauXB0lsvbQk03lf4eZN-2g&redirectUris=https://didroom.com/&grant_type=authorization_code&code_verifier=JYTDgtxcjiNqa3AvJjfubMX6gx98-wCH7iTydBYAeFg"}'
 }
 
-@test "create a GET parameters from a with big and time" {
-    cat <<EOF | save_asset append_different_values.data
+@test "create a GET parameters from a with big, time and numbers" {
+    cat <<EOF | save_asset create_get_parameters.data
 {
     "param1": "value1",
     "param2": "1000",
-    "param3": 2000
+    "param3": 2000,
+    "param4": 3000
 }
 EOF
-    cat <<EOF | zexe append_different_values.zen append_different_values.data
+    cat <<EOF | zexe create_get_parameters.zen create_get_parameters.data
 Scenario 'http': create a GET request concatenating values on a HTTP url
 
-# the parameters are loaded as string dictionary
 Given I have a 'string' named 'param1'
 Given I have a 'integer' named 'param2'
 Given I have a 'time' named 'param3'
+Given I have a 'number' named 'param4'
 
 When I create the 'string dictionary' named 'parameters'
 and I copy 'param1' in 'parameters'
 and I copy 'param2' in 'parameters'
 and I copy 'param3' in 'parameters'
+and I copy 'param4' in 'parameters'
 
 # create the get parameters string
 When I create the http get parameters from 'parameters'
@@ -249,6 +251,58 @@ and I rename 'http_get_parameters' to 'get_parameters_with_percent_endoing'
 Then print the 'get_parameters_without_percent_endoing'
 and print the 'get_parameters_with_percent_endoing'
 EOF
+    save_output 'create_get_parameters.json'
+    assert_output '{"get_parameters_with_percent_endoing":"param4=3000&param2=1000&param3=2000&param1=value1","get_parameters_without_percent_endoing":"param4=3000&param2=1000&param3=2000&param1=value1"}'
+}
+
+@test "append to a url strings, big, time and numbers" {
+    cat <<EOF | zexe append_different_values.zen create_get_parameters.data
+Scenario 'http': create a GET request concatenating values on a HTTP url
+
+Given I have a 'string' named 'param1'
+Given I have a 'integer' named 'param2'
+Given I have a 'time' named 'param3'
+Given I have a 'number' named 'param4'
+
+When I set 'string_url' to 'openid-credential-issuer://www.example.com' as 'string'
+and I create the url from 'string_url'
+and I copy 'url' to 'another_url'
+
+# no encoding
+When I append 'param1' as http request to 'url'
+When I append 'param2' as http request to 'url'
+When I append 'param3' as http request to 'url'
+When I append 'param4' as http request to 'url'
+
+# percent encoding
+When I append percent encoding of 'param1' as http request to 'another_url'
+When I append percent encoding of 'param2' as http request to 'another_url'
+When I append percent encoding of 'param3' as http request to 'another_url'
+When I append percent encoding of 'param4' as http request to 'another_url'
+
+
+Then print the 'url'
+and print the 'another_url'
+EOF
     save_output 'append_different_values.json'
-    assert_output '{"get_parameters_with_percent_endoing":"param2=1000&param3=2000&param1=value1","get_parameters_without_percent_endoing":"param2=1000&param3=2000&param1=value1"}'
+    assert_output '{"another_url":"openid-credential-issuer://www.example.com?param1=value1&param2=1000&param3=2000&param4=3000","url":"openid-credential-issuer://www.example.com?param1=value1&param2=1000&param3=2000&param4=3000"}'
+}
+
+@test "url with port" {
+    cat <<EOF | save_asset url_with_port.data
+{
+    "url_with_port": "http://127.0.0.1:8080/some/api"
+}
+EOF
+    cat <<EOF | zexe url_with_port.zen url_with_port.data
+Scenario 'http': url with port
+
+Given I have a 'string' named 'url_with_port'
+
+When I create the url from 'url_with_port'
+
+Then print the 'url'
+EOF
+    save_output 'url_with_port.json'
+    assert_output '{"url":"http://127.0.0.1:8080/some/api"}'
 }

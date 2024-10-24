@@ -19,7 +19,7 @@ def get_private_key(password='My_pass', keystore_file='a.json'):
 
 load_dotenv()
 
-with open("./zen721.sol", "r") as file:
+with open("./zen1155.sol", "r") as file:
     simple_storage_file = file.read()
 
     install_solc("0.6.2")
@@ -27,7 +27,7 @@ with open("./zen721.sol", "r") as file:
     compiled_sol = compile_standard(
         {
             "language": "Solidity",
-            "sources": {"zen721.sol": {"content": simple_storage_file}},
+            "sources": {"zen1155.sol": {"content": simple_storage_file}},
             "settings": {
                 "outputSelection": {
                     "*": {"*": ["abi", "metadata", "evm.bytecode", "evm.sourceMap"]}
@@ -43,21 +43,21 @@ with open("compiled_code.json", "w") as file:
 
 
 # get bytecode
-bytecode = compiled_sol["contracts"]["zen721.sol"]["zen721"]["evm"]["bytecode"]["object"]
-
-print(bytecode)
+bytecode = compiled_sol["contracts"]["zen1155.sol"]["zen1155"]["evm"]["bytecode"]["object"]
 
 # get abi
-abi = json.loads(compiled_sol["contracts"]["zen721.sol"]["zen721"]["metadata"])["output"]["abi"]
+abi = json.loads(compiled_sol["contracts"]["zen1155.sol"]["zen1155"]["metadata"])["output"]["abi"]
 
 print(abi)
+
+
 
 # For connecting to geth_rpc
 w3 = Web3(Web3.HTTPProvider(os.getenv("GETH_RPC_URL")))
 
 #Check Connection
 t=w3.is_connected()
-print(t)
+print(f"Connected {t}")
 
 chain_id = int(os.getenv("NETWORK_ID"))
 private_key = get_private_key()
@@ -67,22 +67,21 @@ PA=w3.eth.account.from_key(private_key)
 
 # Get public address from a signer wallet
 my_address = PA.address
-print(my_address)
-
-w3.eth.default_account = PA.address
+print(f"Address {my_address}")
+checksum_address = w3.to_checksum_address(my_address)
 
 #Print balance on current accaunt
 BA=w3.eth.get_balance(my_address)
-print(BA)
+print(f"Balance {BA}")
 
 # Create the contract in Python
-Zen721 = w3.eth.contract(abi=abi, bytecode=bytecode )
+SimpleStorage = w3.eth.contract(abi=abi, bytecode=bytecode)
 
 # Get the latest transaction
 nonce = w3.eth.get_transaction_count(my_address)
 
 # Submit the transaction that deploys the contract
-transaction = Zen721.constructor().build_transaction(
+transaction = SimpleStorage.constructor().build_transaction(
     {
         "chainId": chain_id,
         "gasPrice": w3.eth.gas_price,
@@ -103,6 +102,6 @@ print("Waiting for transaction to finish...")
 tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
 print(f"Done! Contract deployed to {tx_receipt.contractAddress}")
 
-#Verification that code realy deployed (With OpenZeppilin 3.1.0 all work for ERC 721)
+#Verification that code realy deployed (With OpenZeppilin 3.1.0 all work for ERC 1155)
 my_code = w3.eth.get_code(tx_receipt.contractAddress)
 print(f"Verify code after deployed (Must be NOT b\' \' or change gas value to maximum 8000000) {my_code}")

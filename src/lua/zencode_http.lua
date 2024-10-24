@@ -19,6 +19,7 @@
 --Last modified by Denis Roio
 --on Saturday, 27th November 2021
 --]]
+
 local _UNRESERVED = "A-Za-z0-9%-._~"
 local _GEN_DELIMS = ":/?#%[%]@"
 local _SUB_DELIMS = "!$&'()*+,;="
@@ -126,31 +127,52 @@ local function _is_valid_host (host)
    return nil
 end
 
+function is_valid_uri(uri)
+    local parsed = {}
+    local uri_pattern =
+        "^(%a[%w+.-]*):" ..         -- Scheme
+        "//([^/?#]*)" ..            -- Authority
+        "([^?#]*)" ..               -- Path
+        "%%?([^#]*)" ..             -- Query
+        "#?(.*)"                    -- Fragment
+    parsed.scheme, parsed.authority, parsed.path, parsed.query, parsed.fragment = uri:str():match(uri_pattern)
+    if parsed.scheme == "" then
+        error("invalid uri, missing scheme in '" .. uri .. "'", 2)
+    end
+    if parsed.authority ~= "" then
+        local authority_pattern = "^([^:]+):?(%d*)$"
+        parsed.hostname, parsed.port = parsed.authority:match(authority_pattern)
+        if parsed.port ~= "" and not tonumber(parsed.port) then
+            error("invalid port in '" .. parsed.authority .. "'", 2)
+        end
+        local host_error = _is_valid_host(parsed.hostname)
+        if host_error then
+            error(host_error, 2)
+        end
+    end
+    return parsed
+end
+
 When("create url from ''", function(src)
-	local obj = have(src)
-	local url = obj:str():lower()
-	empty'url'
-	local proto
-	if url:sub(1,7)=='http://' then proto = 'http://' end
-	if url:sub(1,8)=='https://' then proto = 'https://' end
-	zencode_assert(proto, "Invalid http prefix in url: "..obj:str())
-	local toks = strtok(url, '/') -- second is the host
-	local res = _is_valid_host(toks[2])
-	zencode_assert(not res, res)
-	ACK.url = obj
-	new_codec('url',{zentype='e',content='url', encoding='string'})
+    local obj = have(src)
+    is_valid_uri(obj)
+    empty'url'
+    ACK.url = obj
+    new_codec('url',{zentype='e',content='url', encoding='string'})
 end)
 
 local function _append_to_url(ele, dst, encoding_f)
     local arg, arg_c = have(ele)
     local url, url_c = have(dst)
-    zencode_assert(arg_c.encoding == 'string' and luatype(arg) ~= 'table', 
-        "Cannot append http request that are not strings: "..ele)
-    zencode_assert(url_c.content == 'url',
-        "Cannot append http request to invalid url: "..dst)
+    if url_c.content ~= 'url' then
+        error("Cannot append http request to invalid url: "..dst, 2)
+    end
+    if luatype(arg) == 'table' then
+        error("Cannot append table to url: "..dst, 2)
+    end
     local separator = fif( url:str():find('?'), '&', '?' )
     local tv = type(arg)
-    if tv == 'zenroom.time' or tv == 'zenroom.big' then
+    if tv == 'zenroom.time' or tv == 'zenroom.big' or tv == 'zenroom.float' then
         arg = tostring(arg)
     elseif tv == 'zenroom.octet' then
         arg = arg:str()
@@ -178,13 +200,14 @@ local function _get_parameters_from_table(table_params, encoding_f)
     if(params_c.zentype ~= 'd') then
         error("Expected dictionary, found "..params_c.zentype.." for "..table_params, 2)
     end
-    if(params_c.encoding ~= 'string') then
-        error("Parameters in "..table_params.." must be strings", 2)
+    if( params_c.encoding ~= 'string' and params_c.encoding ~= 'float' and
+        params_c.encoding ~= 'integer' and params_c.encoding ~= 'time') then
+        error("Parameters in "..table_params.." must be of type 'string', 'float', 'integer' or 'time'", 2)
     end
     local res = ""
     for k,v in pairs(params) do
         local tv = type(v)
-        if tv == 'zenroom.time' or tv == 'zenroom.big' then
+        if tv == 'zenroom.time' or tv == 'zenroom.big' or tv == 'zenroom.float' then
             v = tostring(v)
         elseif tv == 'zenroom.octet' then
             v = v:str()
