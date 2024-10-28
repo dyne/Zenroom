@@ -367,19 +367,9 @@ When("create selective disclosure request from '' with id '' for ''", function(s
     local id = have(id_name)
     local object = have(object_name)
 
-    local creds = ssd.credential_configurations_supported
-    local pos = 0
-    for i=1,#creds do
-        local cred_def = creds[i].credential_definition
-        for _,v in pairs(cred_def.type) do
-            if v == id then
-                pos = i
-                break
-            end
-	    end
-    end
-    zencode_assert(pos > 0, "Unknown credential id")
-    local credSubject = creds[pos].credential_definition.credentialSubject
+    local credential = ssd.credential_configurations_supported[O.to_string(id)]
+    zencode_assert(credential, "Unknown credential id")
+    local credSubject = credential.credential_definition.credentialSubject
     local fields = {}
     for k,_ in pairs(credSubject) do
         table.insert(fields, O.from_str(k))
