@@ -282,6 +282,46 @@ transaction = Zen721.constructor(my_address).build_transaction(....
 
 
 
+## Create the smart contract for token ERC 1155 by python
+
+To create the contract itself, you can use [OpenZeppelin Contracts Wizard](https://docs.openzeppelin.com/contracts/5.x/wizard)
+
+You can select the token type through the bookmarks in the wizard, and select the contract features through the menu on the left.
+
+We will get something like this code:
+
+[](../_media/examples/zencode_cookbook/ethereum/zen1155_oz501.sol ':include :type=code gherkin')
+
+We take the source codes of the contract from the repository [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts)
+
+In the contract, we replaced relative paths @openzeppelin  with the path in the current directory. To do this, we copied the directory with contracts inside the working directory.
+
+To deploy a contract we use a script:
+
+We add option "evmVersion": "paris" for support stable version of geth Ethereum Virtual Machine (EVM).
+May by your location of SmartContract OpenZeppilin repo different from  allow_paths="/root/5.0.1/". So you need change that.
+
+[](../_media/examples/zencode_cookbook/ethereum/doc_deploy_contract_erc1155_oz501.py ':include :type=code gherkin')
+
+You will also need an environment file .env
+
+GETH_RPC_URL=http://example.com:8545
+
+The ID of Ethereum Network
+
+NETWORK_ID=1337
+
+The password to create and access the primary account
+
+ACCOUNT_PASSWORD=My_pass
+
+For mint ERC1155 token, you can also use the sample:
+
+[](../_media/examples/zencode_cookbook/ethereum/doc_mint_erc1155_oz501.py ':include :type=code gherkin')
+
+This script also contains examples for a clear understanding of the need for a digital signature for each new token mint.
+
+
 # The script used to create the material in this page
 
 
