@@ -4,16 +4,69 @@ SUBDOC=sd_jwt
 
 @test "Import metadata" {
     cat <<EOF | save_asset metadata.keys.json
-{"supported_selective_disclosure":{"authorization_servers":["http://server.example.org"],"credential_configurations_supported":{"IdentityCredential":{"credential_definition":{"credentialSubject":{"family_name":{"display":[{"locale":"en-US","name":"Family Name"}]},"given_name":{"display":[{"locale":"en-US","name":"Given Name"}]}},"type":["ab8c936e-b9ab-4cf5-9862-c3a25bb82996","VerifiableCredential","IdentityCredential"]},"credential_signing_alg_values_supported":["ES256"],"cryptographic_binding_methods_supported":["jwk","did:dyne:sandbox.signroom"],"display":[{"background_color":"#000000","locale":"en-US","name":"IdentityCredential","text_color":"#ffffff"}],"format":"vc+sd-jwt","proof_types_supported":{"jwt":{"proof_signing_alg_values_supported":["ES256"]}}}},"credential_endpoint":"http://issuer.example.org/credentials","credential_issuer":"http://issuer.example.org"}}
+{
+    "supported_selective_disclosure":{
+        "credential_endpoint":"http://issuer.example.org/credentials",
+        "credential_issuer":"http://issuer.example.org",
+        "authorization_servers":[
+            "http://server.example.org"
+        ],
+        "credential_configurations_supported":{
+            "IdentityCredential":{
+                "credential_signing_alg_values_supported":[
+                    "ES256"
+                ],
+                "cryptographic_binding_methods_supported":[
+                    "jwk",
+                    "did:dyne:sandbox.signroom"
+                ],
+                "display":[
+                    {
+                        "background_color":"#000000",
+                        "locale":"en-US",
+                        "name":"IdentityCredential",
+                        "text_color":"#ffffff"
+                    }
+                ],
+                "format":"vc+sd-jwt",
+                "proof_types_supported":{
+                    "jwt":{
+                        "proof_signing_alg_values_supported":[
+                            "ES256"
+                        ]
+                    }
+                },
+                "vct": "IdentityCredential",
+                "claims":{
+                    "family_name":{
+                        "display":[
+                            {
+                                "locale":"en-US",
+                                "name":"Family Name"
+                            }
+                        ]
+                    },
+                    "given_name":{
+                        "display":[
+                            {
+                                "locale":"en-US",
+                                "name":"Given Name"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}
 EOF
     cat <<EOF | zexe metadata.zen metadata.keys.json
 Scenario 'sd_jwt': sign JSON
 Given I have a 'supported selective disclosure'
-and debug
 Then print data
 EOF
     save_output 'metadata.out.json'
-    assert_output "$(cat metadata.keys.json)"
+    assert_output "$(cat metadata.keys.json | jq -c --sort-keys)"
 }
 
 @test "Import and export SDR" {

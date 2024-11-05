@@ -81,27 +81,16 @@ local function import_supported_selective_disclosure(obj)
     end
     res.authorization_servers = schema_get(obj, 'authorization_servers', import_url_f, tostring)
     local creds = obj.credential_configurations_supported
-    for i=1,#creds do
-        check_display(creds[i].display)
-        check_support(creds[i], 'format', 'vc+sd-jwt')
-        check_support(creds[i], 'credential_signing_alg_values_supported', {'ES256'})
-        check_support(creds[i], 'cryptographic_binding_methods_supported', {"jwk", "did:dyne:sandbox.signroom"})
-       -- check_support(creds[i], 'proof_types_supported', {jwt = { proof_signing_alg_values_supported = {"ES256"}}})
-        if(not creds[i].credential_definition) then
-            error("Invalid supported selective disclosure: missing parameter credential_definition", 2)
+    for _,v in pairs(creds) do
+        check_display(v.display)
+        check_support(v, 'format', 'vc+sd-jwt')
+        check_support(v, 'credential_signing_alg_values_supported', {'ES256'})
+        check_support(v, 'cryptographic_binding_methods_supported', {"jwk", "did:dyne:sandbox.signroom"})
+        -- check_support(creds[i], 'proof_types_supported', {jwt = { proof_signing_alg_values_supported = {"ES256"}}})
+        if (not v.vct) then
+            error("Invalid supported selective disclosure: missing parameter vct", 2)
         end
-        if(not creds[i].credential_definition.type) then
-            error("Invalid supported selective disclosure: missing type parameter in credential_definition", 2)
-        end
-        if(not creds[i].credential_definition.credentialSubject) then
-            error("Invalid supported selective disclosure: missing credentialSubject parameter in credential_definition", 2)
-        end
-        for j=1,#creds[i].credential_definition.credentialSubject do
-            local display = creds[i].credential_definition.credentialSubject[j]
-            if display then
-                check_display(display)
-            end
-        end
+        -- claims and everything in it are optional
     end
 
     res.credential_configurations_supported =
@@ -367,11 +356,14 @@ When("create selective disclosure request from '' with id '' for ''", function(s
     local id = have(id_name)
     local object = have(object_name)
 
-    local credential = ssd.credential_configurations_supported[O.to_string(id)]
+    local credential
+    for _,v in pairs(ssd.credential_configurations_supported) do
+        if v.vct == id then credential = v end
+    end
     zencode_assert(credential, "Unknown credential id")
-    local credSubject = credential.credential_definition.credentialSubject
+    local claims = credential.claims
     local fields = {}
-    for k,_ in pairs(credSubject) do
+    for k,_ in pairs(claims) do
         table.insert(fields, O.from_str(k))
     end
     ACK.selective_disclosure_request = {
