@@ -10,7 +10,8 @@ setup() {
     load "$TR"/test_helper/bats-file/load
     ZTMP="$BATS_FILE_TMPDIR"
     if [ "$ZENROOM_EXECUTABLE" == "" ]; then
-	ZENROOM_EXECUTABLE="${TR}/zenroom"
+	ZENROOM_EXECUTABLE="${R}/zenroom"
+	ZENCODE_EXECUTABLE="${R}/zencode-exec"
     fi
     cd $ZTMP
 }

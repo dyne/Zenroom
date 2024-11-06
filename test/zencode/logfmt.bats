@@ -16,7 +16,7 @@ EOF
     echo >> zencode_exec_stdin # extra
     echo >> zencode_exec_stdin # context
 
-	cat zencode_exec_stdin | ${TR}/zencode-exec > $TMP/out 2>$TMP/err
+	cat zencode_exec_stdin | ${ZENCODE_EXECUTABLE} > $TMP/out 2>$TMP/err
 	cat $TMP/err | jq .
 
 }
@@ -35,7 +35,7 @@ EOF
     echo >> zencode_exec_stdin # extra
     echo >> zencode_exec_stdin # context
 
-	cat zencode_exec_stdin | ${TR}/zencode-exec > $TMP/out 2>$TMP/err
+	cat zencode_exec_stdin | ${ZENCODE_EXECUTABLE} > $TMP/out 2>$TMP/err
     cat $TMP/err | jq .
 
 }
@@ -52,7 +52,7 @@ EOF
     echo >> zencode_exec_stdin # extra
     echo >> zencode_exec_stdin # context
 
-    cat zencode_exec_stdin | ${TR}/zencode-exec > $TMP/out 2>$TMP/err \
+    cat zencode_exec_stdin | ${ZENCODE_EXECUTABLE} > $TMP/out 2>$TMP/err \
 		|| true
     cat $TMP/err | jq .
 
@@ -69,7 +69,7 @@ EOF
     echo >> zencode_exec_stdin # extra
     echo >> zencode_exec_stdin # context
 
-	cat zencode_exec_stdin | ${TR}/zencode-exec > $TMP/out 2>$TMP/err \
+	cat zencode_exec_stdin | ${ZENCODE_EXECUTABLE} > $TMP/out 2>$TMP/err \
 								  || true
     cat $TMP/err | jq .
 }
@@ -89,7 +89,7 @@ EOF
     echo >> zencode_exec_stdin # extra
     echo >> zencode_exec_stdin # context
 
-	cat zencode_exec_stdin | ${TR}/zencode-exec > $TMP/out 2>$TMP/err \
+	cat zencode_exec_stdin | ${ZENCODE_EXECUTABLE} > $TMP/out 2>$TMP/err \
 								  || true
 	# parse the HEAP line and remove the last double quote
 	awk '/J64.*HEAP:/ {print(substr($3,1,length($3)-2))}' \
@@ -112,7 +112,7 @@ EOF
     echo >> zencode_exec_stdin # extra
     echo >> zencode_exec_stdin # context
 
-	cat zencode_exec_stdin | ${TR}/zencode-exec > $TMP/out 2>$TMP/err \
+	cat zencode_exec_stdin | ${ZENCODE_EXECUTABLE} > $TMP/out 2>$TMP/err \
 								  || true
 	# parse the HEAP line and remove the last double quote
 	awk '/J64.*TRACE:/ {print(substr($3,1,length($3)-2))}' \
@@ -134,7 +134,7 @@ EOF
     echo >> zencode_exec_stdin # extra
     echo >> zencode_exec_stdin # context
 
-	cat zencode_exec_stdin | ${TR}/zencode-exec > $TMP/out 2>$TMP/err \
+	cat zencode_exec_stdin | ${ZENCODE_EXECUTABLE} > $TMP/out 2>$TMP/err \
                                   || true
 	cat $TMP/err | jq .
 }
