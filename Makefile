@@ -51,11 +51,9 @@ check: ## Run tests using the current binary executable build (meson/ninja)
 	ninja -C meson test
 
 check-js: ## Run tests using a wasm build for nodejs
-	yarn --cwd bindings/javascript
-	yarn --cwd bindings/javascript build
 	yarn --cwd bindings/javascript test
-	@echo "#!/bin/sh\nnode test/zenroom_exec.js src/zenroom.js \$$@\n" \
-		> test/zenroom && chmod +x test/zenroom
+	@sed 's@=ROOT=@'"${pwd}"'@' test/zexe_js_wrapper.sh > zenroom
+	@chmod +x zenroom
 
 install: destbin=${DESTDIR}${PREFIX}/bin
 install: destdocs=${DESTDIR}${PREFIX}/share/zenroom
