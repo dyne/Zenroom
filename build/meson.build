@@ -3,7 +3,7 @@ project(
     'c',
     version: run_command('meson_version.sh', capture:true, check: true).stdout().strip(),
     license: 'GPL3',
-     meson_version: '>=0.49.2',
+     meson_version: '>=1.1',
     default_options: [
         'c_std=c99',
         'warning_level=2',
@@ -175,46 +175,54 @@ project(
 #     install_subdir('../examples', install_dir: docdir, strip_directory: false)
 # endif
 
-root_dir = meson.source_root() + '/../'
+root_dir = meson.project_source_root() + '/../'
 find_program(root_dir+'zenroom')
-find_program(root_dir+'zencode-exec')
-
+if get_option('target') == 'x86'
+  find_program(root_dir+'zencode-exec')
+endif
 
 ## BATS tests in test/determinism
-test_dir = meson.source_root() + '/../test/'
-bats_bin = find_program(test_dir+'bats/bin/bats')
-tests = [ 'determinism' ]
-foreach test_suite : tests
+if get_option('target') == 'x86'
+  test_dir = meson.project_source_root() + '/../test/'
+  bats_bin = find_program(test_dir+'bats/bin/bats')
+  tests = [ 'determinism' ]
+  foreach test_suite : tests
     test('random_'+test_suite.underscorify(),
-	 bats_bin,
-	 args: [test_dir+test_suite],
-         timeout: 60)
-endforeach
+		 bats_bin,
+		 args: [test_dir+test_suite],
+		 timeout: 60
+		)
+  endforeach
+endif
 
 ## BATS tests in vectors
-test_dir = meson.source_root() + '/../test/'
-bats_bin = find_program(test_dir+'bats/bin/bats')
-tests = [ 'sha', 'aes', 'hmac', 'rsa' ]
-foreach test_suite : tests
+if get_option('target') == 'x86'
+  test_dir = meson.project_source_root() + '/../test/'
+  bats_bin = find_program(test_dir+'bats/bin/bats')
+  tests = [ 'sha', 'aes', 'hmac', 'rsa' ]
+  foreach test_suite : tests
     test('vectors_'+test_suite.underscorify(),
-	 bats_bin,
-	 args: [test_dir+'vectors/'+test_suite+'.bats'],
-         timeout: 60)
-endforeach
+		 bats_bin,
+		 args: [test_dir+'vectors/'+test_suite+'.bats'],
+		 timeout: 60
+		)
+  endforeach
+endif
 
 ## BATS tests in test/lua
-test_dir = meson.source_root() + '/../test/'
+test_dir = meson.project_source_root() + '/../test/'
 bats_bin = find_program(test_dir+'bats/bin/bats')
 tests = [ 'native', 'primitives', 'crypto' ]
 foreach test_suite : tests
     test('lua_'+test_suite.underscorify(),
 	 bats_bin,
 	 args: [test_dir+'lua/'+test_suite+'.bats'],
-         timeout: 60)
+     timeout: 60
+		)
 endforeach
 
 ## BATS tests in test/zencode
-test_dir = meson.source_root() + '/../test/'
+test_dir = meson.project_source_root() + '/../test/'
 bats_bin = find_program(test_dir+'bats/bin/bats')
 tests = [
 'and', 'array', 'bbs_sha', 'bbs_shake', 'bbs_zkp', 'bbs_zkp_shake',
@@ -234,9 +242,11 @@ foreach test_suite : tests
     test('zencode_'+test_suite.underscorify(),
 	 bats_bin,
 	 args: [test_dir+'zencode/'+test_suite+'.bats'],
-         timeout: 60)
+     timeout: 60
+		)
 endforeach
 
+if get_option('target') == 'x86'
 benches = [ 'and', 'array', 'bbs_sha', 'bbs_shake', 'bbs_zkp',
 'bbs_zkp_shake', 'bitcoin', 'branching', 'cookbook_dictionaries',
 'cookbook_ecdh', 'cookbook_given', 'cookbook_intro', 'cookbook_then',
@@ -247,21 +257,23 @@ benches = [ 'and', 'array', 'bbs_sha', 'bbs_shake', 'bbs_zkp',
 'reflow', 'sd_jwt', 'secshare', 'then', 'time', 'w3c', 'w3c_did', 'when',
 'zencode_exec', 'zenswarm', 'zkp', 'zkp_multi_petitions',
 'fsp' ]
-
 foreach test_suite: benches
     benchmark('zencode_'+test_suite.underscorify(),
         bats_bin,
         args: [test_dir+'zencode/'+test_suite+'.bats'],
-        timeout: 120)
+        timeout: 120
+			 )
 endforeach
 
 ## BATS tests in test/api
-test_dir = meson.source_root() + '/../test/'
+test_dir = meson.project_source_root() + '/../test/'
 bats_bin = find_program(test_dir+'bats/bin/bats')
 tests = [ 'hash', 'sign' ]
 foreach test_suite : tests
     test('api_'+test_suite.underscorify(),
 	 bats_bin,
 	 args: [test_dir+'api/'+test_suite+'.bats'],
-         timeout: 60)
+     timeout: 60
+		)
 endforeach
+endif # target == x86

@@ -1,0 +1,1 @@
+option('target', type : 'combo', choices : ['x86', 'wasm'], value : 'x86')
