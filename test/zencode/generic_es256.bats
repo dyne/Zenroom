@@ -130,14 +130,14 @@ EOF
 }
 
 @test "Alice signs a big file" {
-    cat <<EOF | $ZENROOM_EXECUTABLE -z > bigfile.json
+    cat <<EOF > bigfile.zen
 Rule check version 2.0.0
 Given Nothing
 When I create the random object of '1000000' bytes
 and I rename 'random object' to 'bigfile'
 Then print the 'bigfile' as 'base64'
 EOF
-
+	$ZENROOM_EXECUTABLE -z bigfile.zen > bigfile.json
     cat <<EOF | zexe sign_bigfile.zen alice_keys.json bigfile.json
 Rule check version 2.0.0
 Scenario es256
