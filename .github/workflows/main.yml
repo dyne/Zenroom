@@ -85,7 +85,7 @@ jobs:
         luacheck --config .luacheckrc --std lua54 .
 
   linux-test:
-    name: 🐧 Linux build tests (musl and linux)
+    name: 🐧 Linux check tests (gcc and clang)
     needs: [reuse, c-lint, lua-lint]
     if: "github.event_name == 'pull_request'"
     strategy:
@@ -234,7 +234,7 @@ jobs:
   #       run: make check-cortex-m
 
   js-build-check:
-    name: 🐯 js build & checks
+    name: 🐯 NodeJS WASM check tests
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
     if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_JS')"
@@ -257,20 +257,17 @@ jobs:
         run: |
           sudo apt-get -qy update
           sudo apt-get install -qy meson ninja-build
-      - name: Install yarn dependencies
-        run: |
-          yarn --cwd bindings/javascript
       - name: Build Zenroom Wasm
         run: |
-          yarn --cwd bindings/javascript build
+          make node-wasm
         env:
           EMSCRIPTEN: ${{ env.EMSDK }}/upstream/emscripten
       - name: 🧪 test bindings node-${{ matrix.node-version }}
         run: |
-          yarn --cwd bindings/javascript test
-      - name: 🔐 check crypto with node-${{ matrix.node-version }}
-        run: |
           make check-js
+      - name: 🔐 test zencode with node-${{ matrix.node-version }}
+        run: |
+          make check
 
   python-check:
     name: 🐍 Python checks
