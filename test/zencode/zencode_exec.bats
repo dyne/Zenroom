@@ -15,7 +15,7 @@ EOF
     echo >> zencode_exec_stdin # extra
     echo >> zencode_exec_stdin # context
 
-	cat zencode_exec_stdin | ${TR}/zencode-exec > $TMP/out
+	cat zencode_exec_stdin | ${ZENCODE_EXECUTABLE} > $TMP/out
     save_output empty.json
 }
 @test "Execute zencode-exec with keys and data stdin inputs" {
@@ -85,7 +85,7 @@ EOF
     # empty context
     echo >> zencode_exec_stdin
 
-	cat zencode_exec_stdin | ${TR}/zencode-exec > $TMP/out
+	cat zencode_exec_stdin | ${ZENCODE_EXECUTABLE} > $TMP/out
 	save_output verified.json
 	assert_output '{"myMessage":"Dear Bob, your name is too short, goodbye - Alice.","output":["Zenroom_certifies_that_signatures_are_all_correct!"]}'
 }
@@ -109,7 +109,7 @@ EOF
     echo >> zencode_exec_stdin # context
 
 	echo > $TMP/out
-	cat zencode_exec_stdin | ${TR}/zencode-exec 2>>full.json 1>>full.json
+	cat zencode_exec_stdin | ${ZENCODE_EXECUTABLE} 2>>full.json 1>>full.json
 
 	awk '/J64 HEAP:/ {print(substr($3,1,length($3)-2))}' full.json | sed 's/",//' | base64 -d > $TMP/out
     save_output heap.json
@@ -191,7 +191,7 @@ EOF
     # empty context
     echo >> zencode_exec_stdin
 
-	cat zencode_exec_stdin | ${TR}/zencode-exec > $TMP/out
+	cat zencode_exec_stdin | ${ZENCODE_EXECUTABLE} > $TMP/out
 	save_output verified.json
 	assert_output '{"myMessage":"Dear Bob, your name is too short, goodbye - Alice.","output":["Zenroom_certifies_that_signatures_are_all_correct!"]}'
 }
@@ -232,6 +232,6 @@ EOF
     echo >> zencode_exec_stdin # extra
     echo >> zencode_exec_stdin # context
 
-    run ${TR}/zencode-exec < zencode_exec_stdin
+    run ${ZENCODE_EXECUTABLE} < zencode_exec_stdin
     assert_line --partial "Zencode line 3: Given I have the 'string array' named 'dictionary'"
 }
