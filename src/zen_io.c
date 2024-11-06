@@ -187,8 +187,7 @@ int zen_log(lua_State *L, log_priority prio, octet *o) {
 	Z->stderr_buf[Z->stderr_pos] = '\0';
   } else {
 #if defined(__EMSCRIPTEN__)
-	EM_ASM_({Module.printErr(UTF8ToString($0))}, prefix);
-	EM_ASM_({Module.printErr(UTF8ToString($0))}, o->val);
+	EM_ASM_({Module.printErr(UTF8ToString($0)+UTF8ToString($1))}, prefix, o->val);
 #elif defined(ARCH_CORTEX)
 	_zen_io_write(SEMIHOSTING_STDOUT_FILENO, prefix, 5);
 	_zen_io_write(SEMIHOSTING_STDOUT_FILENO, o->val, tlen);
