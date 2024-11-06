@@ -4,7 +4,7 @@ SUBDOC=dilithium
 
 @test "Generate asymmetric keys for Alice and Bob" {
     cat <<EOF | rngzexe keygen.zen
-Scenario dilithium
+Scenario qp
 Given I am known as 'Alice'
 When I create the keyring
 and I create the dilithium key
@@ -12,7 +12,7 @@ Then print my 'keyring'
 EOF
     save_output alice_keys.json
     cat << EOF | zexe pubkey.zen alice_keys.json
-Scenario dilithium
+Scenario qp
 Given I am known as 'Alice'
 Given I have my 'keyring'
 When I create the dilithium public key
@@ -20,7 +20,7 @@ Then print my 'dilithium public key'
 EOF
     save_output alice_pubkey.json
     cat <<EOF | rngzexe keygen.zen
-Scenario dilithium
+Scenario qp
 Given I am known as 'Bob'
 When I create the keyring
 and I create the dilithium key
@@ -28,7 +28,7 @@ Then print my 'keyring'
 EOF
     save_output bob_keys.json
     cat << EOF | zexe pubkey.zen bob_keys.json
-Scenario dilithium
+Scenario qp
 Given I am known as 'Bob'
 Given I have my 'keyring'
 When I create the dilithium public key
@@ -39,7 +39,7 @@ EOF
 
 @test "check that secret key doesn't changes on pubkey generation" {
     cat << EOF | zexe keygen_immutable.zen
-Scenario dilithium
+Scenario qp
 Given I am known as 'Carl'
 When I create the dilithium key
 and I copy the 'dilithium' from 'keyring' to 'dilithium before'
@@ -54,7 +54,7 @@ EOF
 @test "Alice signs a message" {
     cat <<EOF | zexe sign_from_alice.zen alice_keys.json
 Rule check version 2.0.0
-Scenario dilithium
+Scenario qp
 Given that I am known as 'Alice'
 and I have my 'keyring'
 When I write string 'This is my authenticated message.' in 'message'
@@ -68,7 +68,7 @@ EOF
 
 @test "Verify a message signed by Alice" {
     cat <<EOF | zexe join_sign_pubkey.zen sign_alice_keyring.json alice_pubkey.json
-Scenario dilithium
+Scenario qp
 Given I have a 'dilithium public key' in 'Alice'
 and I have a 'dilithium signature'
 Then print the 'dilithium signature'
@@ -78,7 +78,7 @@ EOF
 
     cat <<EOF | zexe verify_from_alice.zen sign_pubkey.json
 Rule check version 2.0.0
-Scenario dilithium
+Scenario qp
 Given I have a 'dilithium public key'
 and I have a 'dilithium signature'
 When I write string 'This is my authenticated message.' in 'message'
@@ -93,7 +93,7 @@ EOF
 @test "Fail verification on a different message" {
     cat <<EOF > wrong_message.zen
 Rule check version 2.0.0
-Scenario dilithium
+Scenario qp
 Given I have a 'dilithium public key'
 and I have a 'dilithium signature'
 When I write string 'This is the wrong message.' in 'message'
@@ -107,7 +107,7 @@ EOF
 
 @test "Fail verification on a different public key" {
     cat <<EOF | rngzexe create_wrong_pubkey.zen sign_alice_keyring.json
-Scenario dilithium
+Scenario qp
 Given I have a 'dilithium signature'
 When I create the dilithium key
 and I create the dilithium public key
@@ -117,7 +117,7 @@ EOF
     save_output wrong_pubkey.json
     cat <<EOF > wrong_pubkey.zen
 Rule check version 2.0.0
-Scenario dilithium
+Scenario qp
 Given I have a 'dilithium public key'
 and I have a 'dilithium signature'
 When I write string 'This is my authenticated message.' in 'message'
@@ -140,7 +140,7 @@ EOF
 	$ZENROOM_EXECUTABLE -z bigfile.zen > bigfile.json
     cat <<EOF | zexe sign_bigfile.zen alice_keys.json bigfile.json
 Rule check version 2.0.0
-Scenario dilithium
+Scenario qp
 Given that I am known as 'Alice'
 and I have my 'keyring'
 and I have a 'base64' named 'bigfile'
@@ -152,7 +152,7 @@ EOF
 
 @test "Verify a big file signed by Alice" {
     cat <<EOF | zexe join_sign_pubkey.zen sign_bigfile_keyring.json alice_pubkey.json
-Scenario dilithium
+Scenario qp
 Given I have a 'dilithium public key' in 'Alice'
 and I have a 'dilithium signature'
 Then print the 'dilithium signature'
@@ -162,7 +162,7 @@ EOF
 
     cat <<EOF | zexe verify_from_alice.zen sign_pubkey.json bigfile.json
 Rule check version 2.0.0
-Scenario dilithium
+Scenario qp
 Given I have a 'dilithium public key'
 and I have a 'dilithium signature'
 and I have a 'base64' named 'bigfile'
