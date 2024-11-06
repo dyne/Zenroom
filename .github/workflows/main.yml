@@ -84,61 +84,36 @@ jobs:
       run: |
         luacheck --config .luacheckrc --std lua54 .
 
-  meson-test:
-    name: 🥷 meson/ninja test
+  linux-test:
+    name: 🐧 Linux build tests (musl and linux)
     needs: [reuse, c-lint, lua-lint]
-    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_MESON')"
+    if: "github.event_name == 'pull_request'"
     strategy:
       matrix:
-        command: [CCACHE=1, CLANG=1 CCACHE=1]
+        command: [COMPILER=gcc, COMPILER=clang]
       fail-fast: false
-    runs-on: ubuntu-latest
+    runs-on: "ubuntu-latest"
+    env:
+      CCACHE: 1
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.13'
       - uses: hendrikmuhs/ccache-action@v1.2
       - name: install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y vim luajit lua-cjson
+          sudo apt install -yq jq libreadline-dev
+          ${{ matrix.command }} sudo apt install -yq $COMPILER
           pip3 install meson ninja
-      - name: Build with command ${{ matrix.command }}
+      - name: Build x86_64 posix ${{ matrix.command }}
         run: |
-          make -f build/meson.mk ${{ matrix.command }}
-      - name: Run tests in meson
+          make posix-x86 ${{ matrix.command }}
+      - name: Check all tests on ${{ matrix.command }}
         run: |
-          cp meson/zencode-exec test/
-          cp meson/zenroom      test/
-          cp meson/zencc        test/
-          ninja -C meson test
-
-  linux-build:
-    name: 🐧 Linux build tests (musl and linux)
-    needs: [reuse, c-lint, lua-lint]
-    if: "github.event_name == 'pull_request'"
-    runs-on: "ubuntu-latest"
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: hendrikmuhs/ccache-action@v1.2
-      - name: install dependencies
-        run: |
-          sudo apt install -yq jq musl-tools musl-dev libreadline-dev
-      - name: Build x86_64 with musl-system
-        run: |
-          make -f build/musl.mk CCACHE=1
-          make clean
-      - name: Build x86_64 shlib with gcc
-        run: |
-          make -f build/posix.mk CCACHE=1
-      - name: Build x86_64 shlib with clang
-        run: |
-          make -f build/posix.mk CCACHE=1 COMPILER=clang
+          make check
 
   windows-build:
     name: 🪟 Windows build test
@@ -341,7 +316,7 @@ jobs:
 
   semantic-release:
     name: 🤖 Semantic release
-    needs: [rust-build-check, go-build-check, meson-test, js-build-check]
+    needs: [rust-build-check, go-build-check, linux-test, js-build-check]
     runs-on: ubuntu-latest
     if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
     outputs:
