@@ -111,6 +111,8 @@ jobs:
       - name: Build x86_64 posix ${{ matrix.command }}
         run: |
           make posix-x86 ${{ matrix.command }}
+          make -C src clean
+          make lib_posix-x86 ${{ matrix.command }}
       - name: Check all tests on ${{ matrix.command }}
         run: |
           make check

@@ -21,6 +21,9 @@ help:
 posix-x86: ## Dynamic executable for generic Posix x86 64bit
 	$(MAKE) -f build/posix.mk
 
+lib_posix-x86: ## Dynamic executable for generic Posix x86 64bit
+	$(MAKE) -f build/posix.mk libzenroom LIBRARY=1
+
 musl-x86: ## Static executable for Musl x86 64bit
 	$(MAKE) -f build/musl.mk
 

@@ -19,6 +19,10 @@ else
 	cflags += ${cflags_debug}
 endif
 
+ifdef LIBRARY
+	cflags += -DLIBRARY
+endif
+
 # activate CCACHE etc.
 include build/plugins.mk
 
@@ -42,5 +46,10 @@ zencc: ${ZEN_SOURCES} src/zencc.o src/cflag.o
 	$(info === Building the zencode-exec utility)
 	${zenroom_cc} ${cflags} ${ZEN_SOURCES} src/zencc.o src/cflag.o \
 		-o $@ ${ldflags} ${ldadd}
+
+libzenroom: deps ${ZEN_SOURCES}
+	$(info === Building the zenroom shared library)
+	${zenroom_cc} ${cflags} -shared ${ZEN_SOURCES} \
+		-o $@.so ${ldflags} ${ldadd}
 
 include build/deps.mk
