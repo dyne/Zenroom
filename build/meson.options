@@ -1,1 +1,4 @@
-option('target', type : 'combo', choices : ['x86', 'wasm'], value : 'x86')
+option('tests', type : 'array',
+				 choices : ['determinism', 'vectors', 'lua', 'zencode',
+				            'blockchain', 'bindings', 'api', 'benchmark'],
+				 value : ['lua', 'zencode'])
