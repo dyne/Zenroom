@@ -3,14 +3,16 @@ include build/init.mk
 
 COMPILER ?= gcc
 
-## Additional dependencies
-BUILD_DEPS += tinycc mimalloc
-ldadd += -lm
-ldadd += ${pwd}/lib/tinycc/libtcc.a
-ldadd += ${pwd}/lib/mimalloc/build/libmimalloc-static.a
+ifdef MIMALLOC
+	BUILD_DEPS += mimalloc
+	ldadd += ${pwd}/lib/mimalloc/build/libmimalloc-static.a
+endif
 
-cflags += -fPIC -D'ARCH="LINUX"' -DARCH_LINUX
-system := Linux
+ifdef LINUX
+	system := Linux
+	cflags += -fPIC -D'ARCH="LINUX"' -DARCH_LINUX
+	ldadd += -lm
+endif
 
 # default is DEBUG
 ifdef RELEASE
@@ -26,7 +28,7 @@ endif
 # activate CCACHE etc.
 include build/plugins.mk
 
-all: deps zenroom zencode-exec zencc
+all: deps zenroom zencode-exec
 
 deps: ${BUILD_DEPS}
 
@@ -39,12 +41,6 @@ zenroom: ${ZEN_SOURCES} ${cli_sources}
 zencode-exec: ${ZEN_SOURCES} src/zencode-exec.o
 	$(info === Building the zencode-exec utility)
 	${zenroom_cc} ${cflags} ${ZEN_SOURCES} src/zencode-exec.o \
-		-o $@ ${ldflags} ${ldadd}
-
-zencc: ldadd += ${pwd}/lib/tinycc/libtcc.a
-zencc: ${ZEN_SOURCES} src/zencc.o src/cflag.o
-	$(info === Building the zencode-exec utility)
-	${zenroom_cc} ${cflags} ${ZEN_SOURCES} src/zencc.o src/cflag.o \
 		-o $@ ${ldflags} ${ldadd}
 
 libzenroom: deps ${ZEN_SOURCES}

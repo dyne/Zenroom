@@ -110,9 +110,9 @@ jobs:
           pip3 install meson ninja
       - name: Build x86_64 posix ${{ matrix.command }}
         run: |
-          make posix-x86 ${{ matrix.command }}
+          make posix-exe ${{ matrix.command }}
           make -C src clean
-          make lib_posix-x86 ${{ matrix.command }}
+          make posix-lib ${{ matrix.command }}
       - name: Check all tests on ${{ matrix.command }}
         run: |
           make check
@@ -148,14 +148,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-      - name: install dependencies
+      - name: Install dependencies
         run: |
           pip3 install meson ninja
       - uses: hendrikmuhs/ccache-action@v1.2
       - run: |
-          make osx-arm64 CCACHE=1
-          mv zenroom.command zenroom
-          mv zencode-exec.command zencode-exec
+          make osx-exe CCACHE=1
+          make -C src clean
+          make osx-lib CCACHE=1
           make check
 
   go-build-check:
@@ -178,11 +178,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-      - run: |
+      - name: Install dependencies
+        run: |
           pip3 install meson ninja
           sudo apt-get install -qy libreadline-dev
       - run: |
-          make -f build/posix.mk deps zencode-exec CCACHE=1
+          make -f posix-exe CCACHE=1
           cp zencode-exec /usr/local/bin/
       - name: 🧪 test bindings go-${{ matrix.go }}
         working-directory: bindings/golang/zenroom
@@ -209,11 +210,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-      - run: |
+      - name: Install dependencies
+        run: |
           pip3 install meson ninja
           sudo apt-get install -qy libreadline-dev
       - run: |
-          make -f build/posix.mk deps zencode-exec CCACHE=1
+          make posix-exe CCACHE=1
           cp zencode-exec /usr/local/bin/
       - name: 🧪 test bindings rust-${{ matrix.rust }}
         working-directory: bindings/rust
@@ -307,13 +309,13 @@ jobs:
       - name: Build zencode-exec on Linux
         run: |
           cd ../..
-          make -f build/posix.mk deps zencode-exec RELEASE=1
+          make posix-exe RELEASE=1
           cp zencode-exec /usr/local/bin/
         if: runner.os == 'Linux'
       - name: Build zencode-exec on Apple/OSX
         run: |
           cd ../..
-          make -f build/apple-osx.mk deps zencode-exec.command RELEASE=1
+          make osx-exe RELEASE=1
           cp zencode-exec.command /usr/local/bin/zencode-exec
         if: runner.os == 'macOS'
       - run: |
@@ -368,16 +370,9 @@ jobs:
       - uses: mymindstorm/setup-emsdk@v14
         with:
           version: ${{ env.EM_VERSION }}
-      - name: Install dependencies
-        run: |
-          sudo apt-get -qy update
-          sudo apt-get install -qy meson ninja-build
-      - name: Install yarn dependencies
-        run: |
-          yarn --cwd bindings/javascript
       - name: Build Zenroom Wasm
         run: |
-          yarn --cwd bindings/javascript build
+          make node-wasm RELEASE=1
         env:
           EMSCRIPTEN: ${{ env.EMSDK }}/upstream/emscripten
       - uses: actions/upload-artifact@v4
@@ -425,7 +420,7 @@ jobs:
           make clean
       - name: Build x86_64 shlib
         run: |
-          make lib_posix-x86 CCACHE=1 RELEASE=1
+          make posix-lib CCACHE=1 RELEASE=1
       - name: Upload artifact linux-lib-amd64
         uses: actions/upload-artifact@v4
         with:
@@ -498,7 +493,9 @@ jobs:
           fetch-depth: 0
       - uses: hendrikmuhs/ccache-action@v1.2
       - run: |
-          make osx-arm64 CCACHE=1 RELEASE=1
+          make osx-exe CCACHE=1 RELEASE=1
+          make -C src clean
+          make osx-lib CCACHE=1 RELEASE=1
       - name: Upload artifacts for Apple OSX
         uses: actions/upload-artifact@v4
         with:
@@ -506,13 +503,7 @@ jobs:
           path: |
             zenroom.command
             zencode-exec.command
-      # - name: Upload artifacts for Apple iOS
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: release-apple-ios
-      #     path: |
-      #       zenroom-ios-arm64.a
-      #       zenroom-ios-x86_64.a
+            libzenroom.so
 
   npm-release:
     name: 📦 npm release
