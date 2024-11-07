@@ -90,10 +90,14 @@ ztime_t* time_arg(lua_State *L, int n) {
 			free(result);
 			lerror(L, "Could not read unix timestamp %s", arg);
 			return NULL;
-		} else if (l_result < INT_MIN || l_result > INT_MAX) {
-			free(result);
-			lerror(L, "Could not read unix timestamp %s out of range", arg);
-			return NULL;
+		} else {
+			char s_result[1024];
+			snprintf(s_result, 1024, "%ld", l_result);
+			if (l_result < INT_MIN || l_result > INT_MAX || strcmp(s_result, arg) != 0 ) {
+				free(result);
+				lerror(L, "Could not read unix timestamp %s out of range", arg);
+				return NULL;
+			}
 		}
 		*result = (ztime_t)l_result;
 		goto end;
