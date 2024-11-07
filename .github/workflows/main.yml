@@ -136,8 +136,8 @@ jobs:
           make clean -C src
           make -f build/win-dll.mk CCACHE=1
 
-  apple-ios-build:
-    name: 🍎 Apple iOS build test
+  osx-test:
+    name: 🍎 Apple OSX check tests
     needs: [reuse, c-lint, lua-lint]
     if: "github.event_name == 'pull_request'"
     runs-on: macos-latest
@@ -145,13 +145,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: install dependencies
+        run: |
+          pip3 install meson ninja
       - uses: hendrikmuhs/ccache-action@v1.2
       - run: |
-          make -f build/apple-osx.mk CCACHE=1
-          make clean
-          make -f build/apple-ios.mk ios-arm64 CCACHE=1
-          make clean
-          make -f build/apple-ios.mk ios-sim CCACHE=1
+          make osx-arm64 CCACHE=1
+          mv zenroom.command zenroom
+          mv zencode-exec.command zencode-exec
+          make check
 
   go-build-check:
     name: 🐹 go build & checks
@@ -172,7 +177,7 @@ jobs:
           cache: false
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.13'
       - run: |
           pip3 install meson ninja
           sudo apt-get install -qy libreadline-dev
@@ -201,11 +206,14 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ matrix.rust }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
       - run: |
           pip3 install meson ninja
           sudo apt-get install -qy libreadline-dev
       - run: |
-          make -f build/posix.mk CCACHE=1
+          make -f build/posix.mk deps zencode-exec CCACHE=1
           cp zencode-exec /usr/local/bin/
       - name: 🧪 test bindings rust-${{ matrix.rust }}
         working-directory: bindings/rust
@@ -250,13 +258,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
       - uses: mymindstorm/setup-emsdk@v14
         with:
           version: ${{ env.EM_VERSION }}
       - name: Install dependencies
         run: |
-          sudo apt-get -qy update
-          sudo apt-get install -qy meson ninja-build
+          pip3 install meson ninja
       - name: Build Zenroom Wasm
         run: |
           make node-wasm
@@ -297,13 +307,13 @@ jobs:
       - name: Build zencode-exec on Linux
         run: |
           cd ../..
-          make -f build/posix.mk deps zencode-exec
+          make -f build/posix.mk deps zencode-exec RELEASE=1
           cp zencode-exec /usr/local/bin/
         if: runner.os == 'Linux'
       - name: Build zencode-exec on Apple/OSX
         run: |
           cd ../..
-          make -f build/apple-osx.mk deps zencode-exec.command
+          make -f build/apple-osx.mk deps zencode-exec.command RELEASE=1
           cp zencode-exec.command /usr/local/bin/zencode-exec
         if: runner.os == 'macOS'
       - run: |
@@ -401,7 +411,7 @@ jobs:
           sudo apt install -qy tree jq cmake make gcc g++ musl-tools musl-dev meson clang gcc-mingw-w64 g++-mingw-w64 libreadline-dev ccache
       - name: Build x86_64 with musl-system
         run: |
-          make -f build/musl.mk CCACHE=1
+          make musl-x86 CCACHE=1 RELEASE=1
       - name: Upload artifact linux-amd64
         uses: actions/upload-artifact@v4
         with:
@@ -411,24 +421,24 @@ jobs:
             zencode-exec
             zencc
       - name: Clean for next build
-        run: make clean
+        run: |
+          make clean
       - name: Build x86_64 shlib
         run: |
-          make -f build/meson.mk
+          make lib_posix-x86 CCACHE=1 RELEASE=1
       - name: Upload artifact linux-lib-amd64
         uses: actions/upload-artifact@v4
         with:
           name: release-lib-linux-amd64
           path: |
-            meson/libzenroom.a
-            meson/libzenroom.so
+            libzenroom.so
       - name: Clean for next build
         run: make clean
       - name: Build x86_64 windows .exe
         run: |
-          make -f build/win-exe.mk CCACHE=1 RELEASE=1
+          make win_exe-x86 CCACHE=1 RELEASE=1
           make clean -C src
-          make -f build/win-dll.mk CCACHE=1 RELEASE=1
+          make win_dll-x86 CCACHE=1 RELEASE=1
       - name: Upload artifact win x86_64
         uses: actions/upload-artifact@v4
         with:
@@ -488,11 +498,7 @@ jobs:
           fetch-depth: 0
       - uses: hendrikmuhs/ccache-action@v1.2
       - run: |
-          make -f build/apple-osx.mk CCACHE=1
-          make clean
-          make -f build/apple-ios.mk ios-arm64 CCACHE=1
-          make clean
-          make -f build/apple-ios.mk ios-sim CCACHE=1
+          make osx-arm64 CCACHE=1 RELEASE=1
       - name: Upload artifacts for Apple OSX
         uses: actions/upload-artifact@v4
         with:
@@ -500,13 +506,13 @@ jobs:
           path: |
             zenroom.command
             zencode-exec.command
-      - name: Upload artifacts for Apple iOS
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-apple-ios
-          path: |
-            zenroom-ios-arm64.a
-            zenroom-ios-x86_64.a
+      # - name: Upload artifacts for Apple iOS
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: release-apple-ios
+      #     path: |
+      #       zenroom-ios-arm64.a
+      #       zenroom-ios-x86_64.a
 
   npm-release:
     name: 📦 npm release
