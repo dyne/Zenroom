@@ -36,10 +36,13 @@ win_exe-x86: ## Executable for Windows x86 64bit
 win_dll-x86: ## Dynamic lib (DLL) for Windows x86 64bit
 	$(MAKE) -f build/win-dll.mk
 
-ios-arm64: ## Dynamic lib (dylib) for Apple iOS ARM64
+osx-arm64: ## Executable for Apple MacOS native
+	$(MAKE) -f build/apple-osx.mk
+
+ios-arm64: # TODO: build/old/osx.mk Dynamic lib (dylib) for Apple iOS ARM64
 	$(MAKE) -f build/apple-osx.mk ios-arm64
 
-ios-sim: ## Dynamic lib (dylib) for Apple iOS simulator
+ios-sim: ## TODO: build/old/osx.mk Dynamic lib (dylib) for Apple iOS simulator
 	$(MAKE) -f build/apple-ios.mk ios-sim
 
 node-wasm: ## WebAssembly (WASM) for Javascript in-browser (Emscripten)
