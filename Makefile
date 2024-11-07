@@ -18,13 +18,19 @@ help:
 # help: ## 🛟  Show this help message
 # 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf " \033[36m 👉 %-14s\033[0m %s\n", $$1, $$2}'
 
-posix-x86: ## Dynamic executable for generic Posix x86 64bit
+posix-exe: ## Dynamic executable for generic POSIX
 	$(MAKE) -f build/posix.mk
 
-lib_posix-x86: ## Dynamic executable for generic Posix x86 64bit
+posix-lib: ## Dynamic library for generic POSIX
 	$(MAKE) -f build/posix.mk libzenroom LIBRARY=1
 
-musl-x86: ## Static executable for Musl x86 64bit
+linux-exe: ## Dynamic executable for GNU/Linux
+	$(MAKE) -f build/posix.mk LINUX=1
+
+linux-lib: ## Dynamic library for GNU/Linux
+	$(MAKE) -f build/posix.mk libzenroom LINUX=1 LIBRARY=1
+
+musl-x86: ## Static executable for Musl
 	$(MAKE) -f build/musl.mk
 
 # bindings: ## Language binding for host platform
@@ -36,14 +42,19 @@ win_exe-x86: ## Executable for Windows x86 64bit
 win_dll-x86: ## Dynamic lib (DLL) for Windows x86 64bit
 	$(MAKE) -f build/win-dll.mk
 
-osx-arm64: ## Executable for Apple MacOS native
-	$(MAKE) -f build/apple-osx.mk
+osx-exe: ## Executable for Apple MacOS
+	$(MAKE) -f build/posix.mk
+	mv zenroom zenroom.command
+	mv zencode-exec zencode-exec.command
 
-ios-arm64: # TODO: build/old/osx.mk Dynamic lib (dylib) for Apple iOS ARM64
-	$(MAKE) -f build/apple-osx.mk ios-arm64
+osx-lib: ## Library for Apple MacOS native
+	$(MAKE) -f build/posix.mk libzenroom LIBRARY=1
 
-ios-sim: ## TODO: build/old/osx.mk Dynamic lib (dylib) for Apple iOS simulator
-	$(MAKE) -f build/apple-ios.mk ios-sim
+# ios-arm64: # TODO: build/old/osx.mk Dynamic lib (dylib) for Apple iOS ARM64
+# 	$(MAKE) -f build/apple-osx.mk ios-arm64
+
+# ios-sim: ## TODO: build/old/osx.mk Dynamic lib (dylib) for Apple iOS simulator
+# 	$(MAKE) -f build/apple-ios.mk ios-sim
 
 node-wasm: ## WebAssembly (WASM) for Javascript in-browser (Emscripten)
 	yarn --cwd bindings/javascript
