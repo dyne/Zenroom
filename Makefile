@@ -72,6 +72,14 @@ check-js: ## Run tests using the WASM build for Node
 	meson setup meson/ build/ -D "tests=['lua','zencode']"
 	ninja -C meson test
 
+check-rs: test-exec := ${pwd}/test/zenroom_exec_rs/target/debug/zenroom_exec_rs
+check-rs:
+	cargo build --manifest-path ${pwd}/test/zenroom_exec_rs/Cargo.toml
+	@echo -e "#!/bin/sh\n${test-exec} \$$@\n" > zenroom
+	@chmod +x zenroom
+	meson setup meson/ build/ -D "tests=['lua']"
+	ninja -C meson test
+
 check-osx: ## Run tests using the OSX binary executable build
 	meson setup meson/ build/ -D \
 	"tests=['determinism','vectors','lua','zencode','bindings']"
