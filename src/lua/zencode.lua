@@ -56,8 +56,8 @@ ZEN = {
 	endforeach_steps = { endforeach = function() return end }, --nop
 	then_steps = {},
 	schemas = {},
-	branch = false,
-	branch_valid = false,
+	branch = 0,
+	branch_valid = 0,
 	id = 0,
 	checks = {version = false}, -- version, scenario checked, etc.
 	OK = true, -- set false by asserts
@@ -390,7 +390,7 @@ function ZEN:begin(new_heap)
 	   callbacks.onendifforeach = set_sentence
 	   local extra_events <const> = {
 		  {name = 'enter_when', from = {'given', 'when', 'then', 'endif', 'endforeach'}, to = 'when'},
-		  {name = 'enter_if', from = {'if', 'given', 'when', 'then', 'endif', 'endforeach'}, to = 'if'},
+		  {name = 'enter_if', from = {'if', 'given', 'when', 'then', 'endif', 'endforeach', 'whenif', 'thenif', 'endforeachif'}, to = 'if'},
 		  {name = 'enter_whenif', from = {'if', 'whenif', 'thenif', 'endforeachif'}, to = 'whenif'},
 		  {name = 'enter_thenif', from = {'if', 'whenif', 'thenif'}, to = 'thenif'},
 		  {name = 'enter_endif', from = {'whenif', 'thenif', 'endforeachif'}, to = 'endif'},
@@ -581,18 +581,31 @@ end
 -- return false: execute statement
 local function manage_branching(stack, x)
 	if string.match(x.section, '^if') then
-		--xxx("START conditional execution: "..x.source, 2)
-		if not stack.branch then stack.branch_valid = true end
-		stack.branch = true
-		return false
+		-- xxx("START conditional execution: "..x.source, 2)
+		-- if stack.branch == 0 then stack.branch_valid = true end
+		stack.branch = stack.branch+1
+		if stack.branch_valid == stack.branch-1 then
+			stack.branch_valid = stack.branch_valid+1
+			return false
+		end
+		return true
 	end
 	if string.match(x.section, '^endif') then
 		--xxx("END   conditional execution: "..x.source, 2)
-		stack.branch = false
+		stack.branch = 0
+		stack.branch_valid = 0
 		return true
 	end
-	if not stack.branch then return false end
-	if not stack.branch_valid then
+	if string.match(x.section, '^endoneif') then
+		--xxx("END   conditional execution: "..x.source, 2)
+		if stack.branch_valid == stack.branch then
+			stack.branch_valid = stack.branch_valid-1
+		end
+		stack.branch = stack.branch-1
+		return true
+	end
+	if stack.branch == 0 then return false end
+	if stack.branch > stack.branch_valid then
 		--xxx('skip execution in false conditional branch: '..x.source, 2)
 		return true
 	end
