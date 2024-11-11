@@ -10,8 +10,6 @@ lua_cc := ${cc}
 
 ifdef CCACHE
 	milagro_cmake_flags += -DCMAKE_C_COMPILER_LAUNCHER=ccache
-	mimalloc_cmake_flags += -DCMAKE_C_COMPILER_LAUNCHER=ccache
-	mimalloc_cmake_flags += -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 	quantum_proof_cc := ccache ${cc}
 	zenroom_cc := ccache ${cc}
 	ed25519_cc := ccache ${cc}

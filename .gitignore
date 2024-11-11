@@ -69,12 +69,6 @@ CTest*
 bindings/rust/target/
 bindings/rust/Cargo.lock
 
-# generated files by mimalloc
-lib/mimalloc/build/
-
-# generated files by zstd
-lib/zstd/obj/
-
 # used to build javascript
 emsdk
 

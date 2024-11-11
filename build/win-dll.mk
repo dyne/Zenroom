@@ -1,8 +1,6 @@
 ## Initialize build defaults
 include build/init.mk
 
-BUILD_DEPS += mimalloc
-
 cc := $(shell which x86_64-w64-mingw32-gcc)
 ar  := $(shell which x86_64-w64-mingw32-ar)
 ranlib := $(shell which x86_64-w64-mingw32-ranlib)
@@ -20,8 +18,6 @@ else
 endif
 ifdef CCACHE
 	milagro_cmake_flags += -DCMAKE_C_COMPILER_LAUNCHER=ccache
-	mimalloc_cmake_flags += -DCMAKE_C_COMPILER_LAUNCHER=ccache
-	mimalloc_cmake_flags += -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 	zenroom_cc := ccache ${cc}
 	quantum_proof_cc := ccache ${cc}
 	ed25519_cc := ccache ${cc}

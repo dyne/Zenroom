@@ -3,11 +3,6 @@ include build/init.mk
 
 COMPILER ?= gcc
 
-ifdef MIMALLOC
-	BUILD_DEPS += mimalloc
-	ldadd += ${pwd}/lib/mimalloc/build/libmimalloc-static.a
-endif
-
 ifdef LINUX
 	system := Linux
 	cflags += -fPIC -D'ARCH="LINUX"' -DARCH_LINUX

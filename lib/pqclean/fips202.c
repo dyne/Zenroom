@@ -11,13 +11,7 @@
 #include <string.h>
 
 #include "fips202.h"
-
-#ifdef MIMALLOC
-#include <mimalloc.h>
-#include <mimalloc-override.h>
-#else
 #include <stdlib.h>
-#endif
 
 #define NROUNDS 24
 #define ROL(a, offset) (((a) << (offset)) ^ ((a) >> (64 - (offset))))
