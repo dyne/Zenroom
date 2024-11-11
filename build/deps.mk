@@ -85,9 +85,3 @@ ed25519-donna:
 	CFLAGS="${cflags}" \
 	LDFLAGS="${ldflags}" \
 	$(MAKE) -C ${pwd}/lib/ed25519-donna
-
-tinycc:
-	$(info -- Building tinycc embedded C compiler)
-	cd ${pwd}/lib/tinycc && CC="${libtcc_cc}" AR=${ar} CFLAGS="${cflags}" \
-	LDFLAGS="${ldflags}" ./configure --config-musl && \
-	$(MAKE) libtcc.a libtcc1.a

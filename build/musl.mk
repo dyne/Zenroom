@@ -3,9 +3,6 @@ include build/init.mk
 
 COMPILER ?= musl-gcc
 
-## Additional dependencies
-BUILD_DEPS += tinycc
-
 cflags += -DLIBCMALLOC
 cflags += -static -std=gnu99 -fPIC -D'ARCH="MUSL"' -D__MUSL__ -DARCH_MUSL
 ldflags += -static
@@ -20,7 +17,7 @@ endif
 # activate CCACHE etc.
 include build/plugins.mk
 
-all: deps zenroom zencode-exec zencc
+all: deps zenroom zencode-exec
 
 deps: ${BUILD_DEPS}
 
@@ -33,12 +30,6 @@ zenroom: ${ZEN_SOURCES} ${cli_sources}
 zencode-exec: ${ZEN_SOURCES} src/zencode-exec.o
 	$(info === Building the zencode-exec utility)
 	${zenroom_cc} ${cflags} ${ZEN_SOURCES} src/zencode-exec.o \
-		-o $@ ${ldflags} ${ldadd}
-
-zencc: ldadd += ${pwd}/lib/tinycc/libtcc.a
-zencc: ${ZEN_SOURCES} src/zencc.o src/cflag.o
-	$(info === Building the zencode-exec utility)
-	${zenroom_cc} ${cflags} ${ZEN_SOURCES} src/zencc.o src/cflag.o \
 		-o $@ ${ldflags} ${ldadd}
 
 include build/deps.mk
