@@ -14,6 +14,10 @@ ifdef LINUX
 	ldadd += -lm
 endif
 
+ifdef OSX
+	cflags += -fPIC -D'ARCH="OSX"' -DARCH_OSX
+endif
+
 # default is DEBUG
 ifdef RELEASE
 	cflags += -O3 ${cflags_protection}
@@ -43,9 +47,15 @@ zencode-exec: ${ZEN_SOURCES} src/zencode-exec.o
 	${zenroom_cc} ${cflags} ${ZEN_SOURCES} src/zencode-exec.o \
 		-o $@ ${ldflags} ${ldadd}
 
-libzenroom: deps ${ZEN_SOURCES}
+libzenroom.so: deps ${ZEN_SOURCES}
 	$(info === Building the zenroom shared library)
 	${zenroom_cc} ${cflags} -shared ${ZEN_SOURCES} \
-		-o $@.so ${ldflags} ${ldadd}
+		-o $@ ${ldflags} ${ldadd}
+
+# OSX specific target
+libzenroom.dylib: deps ${ZEN_SOURCES}
+	$(info === Building the zenroom shared dynamic library)
+	${zenroom_cc} ${cflags} -shared ${ZEN_SOURCES} -dynamiclib \
+		-o $@ ${ldflags} ${ldadd}
 
 include build/deps.mk
