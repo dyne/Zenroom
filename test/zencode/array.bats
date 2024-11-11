@@ -11,7 +11,6 @@ and I rename the 'array' to 'bonnetjes'
 Then print the 'bonnetjes'
 EOF
     save_output arr.json
-  
 }
 
 @test "When I create the size of" {
@@ -331,7 +330,7 @@ Given I have a 'string array' named 'haystack'
 and I have a 'number' named 'quorum'
 and I have a 'string' named 'needle'
 When I verify the 'needle' is found in 'haystack' at least 'quorum' times
-Then Print the string 'Success' 
+Then Print the string 'Success'
 EOF
     save_output "needle_in_haystack.json"
     assert_output '{"output":["Success"]}'
@@ -685,6 +684,7 @@ If I verify the elements in 'dict' are all equal
 If I verify the elements in 'nested arr' are all equal
 If I verify the elements in 'empty dict' are all equal
 Then print string 'OK'
+EndIf
 EOF
     save_output "compare-equal.json"
     assert_output '{"output":["OK"]}'
@@ -716,6 +716,7 @@ If I verify the elements in 'arr' are not all equal
 If I verify the elements in 'dict' are not all equal
 If I verify the elements in 'nested arr' are not all equal
 Then print string 'OK'
+EndIf
 EOF
     save_output "compare-not-equal.json"
     assert_output '{"output":["OK"]}'
