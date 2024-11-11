@@ -52,6 +52,7 @@ ZEN = {
 	when_steps = {},
 	if_steps = {},
 	endif_steps = { endif = function() return end }, --nop
+	endoneif_steps = { endoneif = function() return end }, --nop
 	foreach_steps = {},
 	endforeach_steps = { endforeach = function() return end }, --nop
 	then_steps = {},
@@ -388,12 +389,14 @@ function ZEN:begin(new_heap)
 	   callbacks.onifforeach = set_sentence
 	   callbacks.onwhenifforeach = set_sentence
 	   callbacks.onendifforeach = set_sentence
+	   callbacks.onendoneif = set_sentence
 	   local extra_events <const> = {
-		  {name = 'enter_when', from = {'given', 'when', 'then', 'endif', 'endforeach'}, to = 'when'},
-		  {name = 'enter_if', from = {'if', 'given', 'when', 'then', 'endif', 'endforeach', 'whenif', 'thenif', 'endforeachif'}, to = 'if'},
-		  {name = 'enter_whenif', from = {'if', 'whenif', 'thenif', 'endforeachif'}, to = 'whenif'},
-		  {name = 'enter_thenif', from = {'if', 'whenif', 'thenif'}, to = 'thenif'},
-		  {name = 'enter_endif', from = {'whenif', 'thenif', 'endforeachif'}, to = 'endif'},
+		  {name = 'enter_when', from = {'given', 'when', 'then', 'endif', 'endoneif', 'endforeach'}, to = 'when'},
+		  {name = 'enter_if', from = {'if', 'given', 'when', 'then', 'endif', 'endoneif', 'endforeach', 'whenif', 'thenif', 'endforeachif'}, to = 'if'},
+		  {name = 'enter_whenif', from = {'if', 'whenif', 'thenif', 'endforeachif', 'endoneif'}, to = 'whenif'},
+		  {name = 'enter_thenif', from = {'if', 'whenif', 'thenif', 'endoneif'}, to = 'thenif'},
+		  {name = 'enter_endif', from = {'whenif', 'thenif', 'endforeachif', 'endoneif'}, to = 'endif'},
+		  {name = 'enter_endoneif', from = {'whenif', 'thenif', 'endforeachif', 'endoneif'}, to = 'endoneif'},
 		  {name = 'enter_foreachif', from = {'if', 'whenif', 'endforeachif', 'foreachif'}, to = 'foreachif'},
 		  {name = 'enter_whenforeachif', from = {'foreachif', 'whenforeachif'}, to = 'whenforeachif'},
 		  {name = 'enter_endforeachif', from = {'foreachif', 'whenforeachif'}, to = 'endforeachif'},
@@ -455,7 +458,7 @@ function ZEN:parse(text)
 	  error("Zencode text too short to parse")
 	  return false
    end
-   local branching = false
+   local branching = {}
    local looping = false
    local prefixes = {}
    local parse_prefix <const> = parse_prefix -- optimization
@@ -483,15 +486,22 @@ function ZEN:parse(text)
 			break -- stop parsing after given block
 		 end
 
-		 if not branching and prefix == 'if' then
-			branching = true
-			table.insert(prefixes, 1, 'if')
+		 if prefix == 'if' then
+			if #branching == 0 then
+				table.insert(prefixes, 1, 'if')
+			end
+			table.insert(branching, self.linenum)
 		 elseif not looping and prefix == 'foreach' then
 			looping = true
 			table.insert(prefixes, 1, 'foreach')
 		 elseif prefix == 'endif' then
-			branching = false
+			branching = {}
 			table.remove(prefixes, 1)
+		elseif prefix == 'endoneif' then
+			table.remove(branching)
+			if #branching == 0 then
+				table.remove(prefixes, 1)
+			end
 		 elseif prefix == 'endforeach' then
 			looping = false
 			table.remove(prefixes, 1)
@@ -555,6 +565,9 @@ function ZEN:parse(text)
 	  end
 	  -- continue
    end
+	if #branching > 0 then
+		error("Ivalid branching opened at lines "..table.concat(branching, ", ").." and never closed")
+	end
    collectgarbage'collect'
    if res == true then
 	  return true
