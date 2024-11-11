@@ -92,8 +92,6 @@ jobs:
         command: [COMPILER=gcc, COMPILER=clang]
       fail-fast: false
     runs-on: "ubuntu-latest"
-    env:
-      CCACHE: 1
     steps:
       - uses: actions/checkout@v4
         with:
@@ -121,8 +119,6 @@ jobs:
     needs: [reuse, c-lint, lua-lint]
     if: "github.event_name == 'pull_request'"
     runs-on: "ubuntu-latest"
-    env:
-      CCACHE: 1
     steps:
       - uses: actions/checkout@v4
         with:
@@ -133,17 +129,15 @@ jobs:
           sudo apt install -y jq gcc-mingw-w64 g++-mingw-w64
       - name: Build x86_64 windows .exe
         run: |
-          make win-exe
+          make win-exe CCACHE=1
           make clean -C src
-          make win-dll
+          make win-dll CCACHE=1
 
   osx-test:
     name: 🍎 Apple OSX check tests
     needs: [reuse, c-lint, lua-lint]
     if: "github.event_name == 'pull_request'"
     runs-on: macos-latest
-    env:
-      CCACHE: 1
     steps:
       - uses: actions/checkout@v4
         with:
@@ -156,9 +150,10 @@ jobs:
           pip3 install meson ninja
       - uses: hendrikmuhs/ccache-action@v1.2
       - run: |
-          make osx-exe
+          make osx-exe CCACHE=1
           make -C src clean
-          make osx-lib
+          make osx-lib CCACHE=1
+          otool -hv libzenroom.dylib
           make check-osx
 
   go-build-check:
@@ -169,8 +164,6 @@ jobs:
     strategy:
       matrix:
         go: ['1.23.1', '1.22.7']
-    env:
-      CCACHE: 1
     steps:
       - uses: actions/checkout@v4
         with:
@@ -188,7 +181,7 @@ jobs:
           pip3 install meson ninja
           sudo apt-get install -qy libreadline-dev
       - run: |
-          make linux-exe
+          make linux-exe CCACHE=1
           cp zencode-exec /usr/local/bin/
       - name: 🧪 test bindings go-${{ matrix.go }}
         working-directory: bindings/golang/zenroom
@@ -204,8 +197,6 @@ jobs:
     strategy:
       matrix:
         rust: ['stable', 'nightly']
-    env:
-      CCACHE: 1
     steps:
       - uses: actions/checkout@v4
         with:
@@ -222,7 +213,7 @@ jobs:
           pip3 install meson ninja
           sudo apt-get install -qy libreadline-dev
       - run: |
-          make linux-exe
+          make linux-exe CCACHE=1
           cp zencode-exec /usr/local/bin/
       - name: 🧪 test bindings rust-${{ matrix.rust }}
         working-directory: bindings/rust
@@ -237,9 +228,9 @@ jobs:
     if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_JS') && github.event_name == 'pull_request'"
     strategy:
       matrix:
-        node-version: [20.x]
+        node-version: [20.18.0]
     env:
-      EM_VERSION: latest
+      EM_VERSION: 3.1.71
     steps:
       - uses: actions/checkout@v4
         with:
@@ -258,7 +249,7 @@ jobs:
           pip3 install meson ninja
       - name: Build Zenroom Wasm
         run: |
-          make node-wasm
+          make node-wasm CCACHE=1
         env:
           EMSCRIPTEN: ${{ env.EMSDK }}/upstream/emscripten
       - name: 🧪 test zencode with node-${{ matrix.node-version }}
@@ -343,20 +334,20 @@ jobs:
     if: ${{ needs.semantic-release.outputs.release == 'True' }}
     runs-on: ubuntu-latest
     env:
-      EM_VERSION: 3.1.59
+      EM_VERSION: 3.1.71
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 20.18.0
       - uses: mymindstorm/setup-emsdk@v14
         with:
           version: ${{ env.EM_VERSION }}
       - name: Build Zenroom Wasm
         run: |
-          make node-wasm RELEASE=1
+          make node-wasm RELEASE=1 CCACHE=1
         env:
           EMSCRIPTEN: ${{ env.EMSDK }}/upstream/emscripten
       - uses: actions/upload-artifact@v4
@@ -374,9 +365,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [semantic-release]
     if: ${{ needs.semantic-release.outputs.release == 'True' }}
-    env:
-      CCACHE: 1
-      RELEASE: 1
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -393,7 +381,7 @@ jobs:
           sudo apt install -qy tree jq cmake make gcc g++ musl-tools musl-dev meson clang gcc-mingw-w64 g++-mingw-w64 libreadline-dev ccache
       - name: Build x86_64 with musl-system
         run: |
-          make musl RELEASE=1
+          make musl RELEASE=1 CCACHE=1
       - name: Upload artifact linux-amd64
         uses: actions/upload-artifact@v4
         with:
@@ -401,13 +389,12 @@ jobs:
           path: |
             zenroom
             zencode-exec
-            zencc
       - name: Clean for next build
         run: |
           make clean
       - name: Build x86_64 shlib
         run: |
-          make linux-lib
+          make linux-lib RELEASE=1 CCACHE=1
       - name: Upload artifact linux-lib-amd64
         uses: actions/upload-artifact@v4
         with:
@@ -418,9 +405,9 @@ jobs:
         run: make clean
       - name: Build x86_64 windows .exe
         run: |
-          make win-exe
+          make win-exe RELEASE=1 CCACHE=1
           make clean -C src
-          make win-dll
+          make win-dll RELEASE=1 CCACHE=1
       - name: Upload artifact win x86_64
         uses: actions/upload-artifact@v4
         with:
@@ -474,18 +461,15 @@ jobs:
     needs: [semantic-release]
     runs-on: macos-latest
     if: ${{ needs.semantic-release.outputs.release == 'True' }}
-    env:
-      CCACHE: 1
-      RELEASE: 1
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: hendrikmuhs/ccache-action@v1.2
       - run: |
-          make osx-exe
+          make osx-exe RELEASE=1 CCACHE=1
           make -C src clean
-          make osx-lib
+          make osx-lib RELEASE=1 CCACHE=1
       - name: Upload artifacts for Apple OSX
         uses: actions/upload-artifact@v4
         with:
@@ -493,7 +477,7 @@ jobs:
           path: |
             zenroom.command
             zencode-exec.command
-            libzenroom.so
+            libzenroom.dylib
 
   npm-release:
     name: 📦 npm release

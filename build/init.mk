@@ -18,7 +18,7 @@ ZEN_SOURCES := \
 
 ZEN_INCLUDES += -Isrc -Ilib/lua54/src									\
 -Ilib/milagro-crypto-c/build/include -Ilib/milagro-crypto-c/include		\
--Ilib/ed25519-donna -Ilib/mimalloc/include -Ilib/tinycc -Wall -Wextra
+-Ilib/ed25519-donna -Ilib/mimalloc/include -Wall -Wextra
 
 BUILD_DEPS := apply-patches milagro lua54 embed-lua quantum-proof	\
 ed25519-donna
