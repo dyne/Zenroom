@@ -22,13 +22,13 @@ posix-exe: ## Dynamic executable for generic POSIX
 	$(MAKE) -f build/posix.mk
 
 posix-lib: ## Dynamic library for generic POSIX
-	$(MAKE) -f build/posix.mk libzenroom LIBRARY=1
+	$(MAKE) -f build/posix.mk libzenroom.so LIBRARY=1
 
 linux-exe: ## Dynamic executable for GNU/Linux
 	$(MAKE) -f build/posix.mk LINUX=1
 
 linux-lib: ## Dynamic library for GNU/Linux
-	$(MAKE) -f build/posix.mk libzenroom LINUX=1 LIBRARY=1
+	$(MAKE) -f build/posix.mk libzenroom.so LINUX=1 LIBRARY=1
 
 musl: ## Static executable for Musl
 	$(MAKE) -f build/musl.mk
@@ -43,12 +43,12 @@ win-dll: ## Dynamic lib (DLL) for Windows x86 64bit
 	$(MAKE) -f build/win-dll.mk
 
 osx-exe: ## Executable for Apple MacOS
-	$(MAKE) -f build/posix.mk
+	$(MAKE) -f build/posix.mk OSX=1
 	@cp zenroom zenroom.command
 	@cp zencode-exec zencode-exec.command
 
 osx-lib: ## Library for Apple MacOS native
-	$(MAKE) -f build/posix.mk libzenroom LIBRARY=1
+	$(MAKE) -f build/posix.mk libzenroom.dylib OSX=1 LIBRARY=1
 
 # ios-arm64: # TODO: build/old/osx.mk Dynamic lib (dylib) for Apple iOS ARM64
 # 	$(MAKE) -f build/apple-osx.mk ios-arm64

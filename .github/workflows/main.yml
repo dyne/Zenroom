@@ -159,6 +159,7 @@ jobs:
           make osx-exe
           make -C src clean
           make osx-lib
+          otool -hv libzenroom.dylib
           make check-osx
 
   go-build-check:
@@ -477,6 +478,7 @@ jobs:
     env:
       CCACHE: 1
       RELEASE: 1
+      COMPILER: clang
     steps:
       - uses: actions/checkout@v4
         with:
@@ -493,7 +495,7 @@ jobs:
           path: |
             zenroom.command
             zencode-exec.command
-            libzenroom.so
+            libzenroom.dylib
 
   npm-release:
     name: 📦 npm release
