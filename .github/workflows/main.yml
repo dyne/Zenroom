@@ -228,9 +228,9 @@ jobs:
     if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_JS') && github.event_name == 'pull_request'"
     strategy:
       matrix:
-        node-version: [20.x]
+        node-version: [20.18.0]
     env:
-      EM_VERSION: latest
+      EM_VERSION: 3.1.71
     steps:
       - uses: actions/checkout@v4
         with:
@@ -334,20 +334,20 @@ jobs:
     if: ${{ needs.semantic-release.outputs.release == 'True' }}
     runs-on: ubuntu-latest
     env:
-      EM_VERSION: 3.1.59
+      EM_VERSION: 3.1.71
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 20.18.0
       - uses: mymindstorm/setup-emsdk@v14
         with:
           version: ${{ env.EM_VERSION }}
       - name: Build Zenroom Wasm
         run: |
-          make node-wasm RELEASE=1
+          make node-wasm RELEASE=1 CCACHE=1
         env:
           EMSCRIPTEN: ${{ env.EMSDK }}/upstream/emscripten
       - uses: actions/upload-artifact@v4
