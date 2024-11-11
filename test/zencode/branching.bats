@@ -688,3 +688,45 @@ EOF
     save_output 'nested_if.out.json'
     assert_output '{"credential_configuration_id":"openbadge_credential","credential_issuer":"https://ministerie-agent.dev.impierce.com/.well-known/openid-credential-issuer","pre-authorized_code":"ebb90f2db21a4708b93217a686f91e134b370b350aae18dc25a382507b141c13"}'
 }
+
+@test "Invalid signle endif and endoneif" {
+    cat << EOF | save_asset invalid_single_endif.zen
+Given nothing
+EndIf
+Then print the data
+EOF
+    run $ZENROOM_EXECUTABLE -z invalid_single_endif.zen
+    assert_line --partial "Ivalid branching closing at line 2: nothing to be closed"
+
+    cat << EOF | save_asset invalid_single_endoneif.zen
+Given nothing
+EndOneIf
+Then print the data
+EOF
+    run $ZENROOM_EXECUTABLE -z invalid_single_endoneif.zen
+    assert_line --partial "Ivalid branching closing at line 2: nothing to be closed"
+}
+
+@test "Invalid exit from an already closed branch" {
+    cat << EOF | save_asset endif_on_closed_branch.zen
+Given nothing
+When I set 'my_string' to 'test' as 'string'
+If I verify 'my_string' is found
+Then I print 'my string'
+EndIf
+EndOneIf
+EOF
+    run $ZENROOM_EXECUTABLE -z endif_on_closed_branch.zen
+    assert_line --partial "Ivalid branching closing at line 6: nothing to be closed"
+
+    cat << EOF | save_asset endoneif_on_closed_branch.zen
+Given nothing
+When I set 'my_string' to 'test' as 'string'
+If I verify 'my_string' is found
+Then I print 'my string'
+EndOneIf
+EndIf
+EOF
+    run $ZENROOM_EXECUTABLE -z endoneif_on_closed_branch.zen
+    assert_line --partial "Ivalid branching closing at line 6: nothing to be closed"
+}

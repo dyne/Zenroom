@@ -495,9 +495,15 @@ function ZEN:parse(text)
 			looping = true
 			table.insert(prefixes, 1, 'foreach')
 		 elseif prefix == 'endif' then
+			if #branching == 0 then
+				error('Ivalid branching closing at line '..self.linenum..': nothing to be closed')
+			end
 			branching = {}
 			table.remove(prefixes, 1)
 		elseif prefix == 'endoneif' then
+			if #branching == 0 then
+				error('Ivalid branching closing at line '..self.linenum..': nothing to be closed')
+			end
 			table.remove(branching)
 			if #branching == 0 then
 				table.remove(prefixes, 1)
