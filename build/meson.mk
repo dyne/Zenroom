@@ -2,7 +2,6 @@
 include build/init.mk
 
 BUILD_DEPS += mimalloc
-BUILD_DEPS += tinycc
 
 COMPILER ?= gcc
 
@@ -29,7 +28,6 @@ prepare:
 	ln -sf ../lib/lua54/src/liblua.a meson/liblua.a
 	ln -sf ../lib/ed25519-donna/libed25519.a meson/libed25519.a
 	ln -sf ../lib/mimalloc/build/libmimalloc-static.a meson/libmimalloc-static.a
-	ln -sf ../lib/tinycc/libtcc.a meson/libtcc.a
 
 config:
 	CC="${zenroom_cc}" AR="${ar}" CFLAGS="${cflags}"			\
