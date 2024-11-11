@@ -394,7 +394,7 @@ jobs:
           sudo apt install -qy tree jq cmake make gcc g++ musl-tools musl-dev meson clang gcc-mingw-w64 g++-mingw-w64 libreadline-dev ccache
       - name: Build x86_64 with musl-system
         run: |
-          make musl
+          make musl RELEASE=1
       - name: Upload artifact linux-amd64
         uses: actions/upload-artifact@v4
         with:
@@ -419,9 +419,9 @@ jobs:
         run: make clean
       - name: Build x86_64 windows .exe
         run: |
-          make win_exe-x86
+          make win-exe
           make clean -C src
-          make win_dll-x86
+          make win-dll
       - name: Upload artifact win x86_64
         uses: actions/upload-artifact@v4
         with:
