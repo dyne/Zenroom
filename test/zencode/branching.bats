@@ -599,3 +599,92 @@ EOF
 	save_output verify_length.json
 	assert_output '{"output":["all_comparison_succedded"]}'
 }
+
+@test "Detect open but not closed if branching" {
+    cat << EOF | save_asset not_closed_if.zen
+Given nothing
+When I set 'my_string' to 'test' as 'string'
+If I verify 'my_string' is found
+Then I print 'my string'
+EOF
+    run $ZENROOM_EXECUTABLE -z not_closed_if.zen
+    assert_line --partial 'Invalid branching opened at line 3 and never closed'
+}
+
+@test "Detect multiple open but not closed if branching" {
+    cat << EOF | save_asset multiple_not_closed_if.zen
+Given nothing
+When I set 'my_string' to 'test' as 'string'
+If I verify 'my_string' is found
+If I verify 'my_string' is equal to 'test'
+Then I print 'my string'
+If I verify 'my_string' is not equal to 'not_test'
+EOF
+    run $ZENROOM_EXECUTABLE -z multiple_not_closed_if.zen
+    assert_line --partial 'Invalid branching opened at line 3, 4, 6 and never closed'
+}
+
+@test "Invalid transition to if" {
+    cat << EOF | save_asset invalid_transition.zen
+If I verify 'my_string' is found
+Given nothing
+Then print the data
+EOF
+    run $ZENROOM_EXECUTABLE -z invalid_transition.zen
+    assert_line --partial "Invalid transition from: init to: If I verify 'my_string' is found"
+}
+
+@test "Nested if branching" {
+    cat << EOF | save_asset nested_if.data.json
+{
+    "external_qr_content": {
+        "credential_issuer": "https://ministerie-agent.dev.impierce.com/",
+        "credential_configuration_ids": [
+            "openbadge_credential"
+        ],
+        "grants": {
+            "urn:ietf:params:oauth:grant-type:pre-authorized_code": {
+                "pre-authorized_code": "ebb90f2db21a4708b93217a686f91e134b370b350aae18dc25a382507b141c13"
+            }
+       	}
+    }
+}
+EOF
+
+    cat << EOF | zexe nested_if.zen nested_if.data.json
+Given I have a 'string dictionary' named 'external_qr_content'
+Given I have a 'string' named 'credential_issuer' inside 'external_qr_content'
+Given I have a 'string array' named 'credential_configuration_ids' inside 'external_qr_content'
+
+If I verify 'grants' is found in 'external_qr_content'
+    When I pickup from path 'external_qr_content.grants'
+    If I verify 'authorization_code' is found in 'grants'
+        When I pickup from path 'grants.authorization_code'
+        If I verify 'authorization_server' is found in 'authorization_code'
+            When I pickup from path 'authorization_code.authorization_server'
+            Then print the 'authorization_server'
+        EndOneIf
+    EndOneIf
+    If I verify 'urn:ietf:params:oauth:grant-type:pre-authorized_code' is found in 'grants'
+        When I pickup from path 'grants.urn:ietf:params:oauth:grant-type:pre-authorized_code'
+        If I verify 'pre-authorized_code' is found in 'urn:ietf:params:oauth:grant-type:pre-authorized_code'
+            When I pickup from path 'urn:ietf:params:oauth:grant-type:pre-authorized_code.pre-authorized_code'
+            Then print the 'pre-authorized_code'
+        EndOneIf
+    EndOneIf
+EndOneIf
+
+When I create copy of element '1' from array 'credential_configuration_ids'
+When I rename the 'copy' to 'credential_configuration_id'
+
+If I verify 'credential_issuer' ends with '/'
+    When I split rightmost '1' bytes of 'credential_issuer'
+EndIf
+When I append the string '/.well-known/openid-credential-issuer' to 'credential_issuer'
+
+Then print the 'credential_configuration_id'
+Then print the 'credential_issuer'
+EOF
+    save_output 'nested_if.out.json'
+    assert_output '{"credential_configuration_id":"openbadge_credential","credential_issuer":"https://ministerie-agent.dev.impierce.com/.well-known/openid-credential-issuer","pre-authorized_code":"ebb90f2db21a4708b93217a686f91e134b370b350aae18dc25a382507b141c13"}'
+}
