@@ -21,15 +21,10 @@
 #ifndef __ZEN_MEMORY_H__
 #define __ZEN_MEMORY_H__
 
-#ifdef MIMALLOC
-  #include <mimalloc.h>
-  #include <mimalloc-override.h>
+#if defined(_WIN32)
+#include <malloc.h>
 #else
-  #if defined(_WIN32)
-    #include <malloc.h>
-  #else
-    #include <stdlib.h>
-  #endif
+#include <stdlib.h>
 #endif
 
 #endif

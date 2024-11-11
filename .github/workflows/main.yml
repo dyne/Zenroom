@@ -163,7 +163,7 @@ jobs:
     if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_GO') && github.event_name == 'pull_request'"
     strategy:
       matrix:
-        go: ['1.23.1', '1.22.7']
+        go: ['stable','oldstable']
     steps:
       - uses: actions/checkout@v4
         with:

@@ -18,7 +18,7 @@ ZEN_SOURCES := \
 
 ZEN_INCLUDES += -Isrc -Ilib/lua54/src									\
 -Ilib/milagro-crypto-c/build/include -Ilib/milagro-crypto-c/include		\
--Ilib/ed25519-donna -Ilib/mimalloc/include -Wall -Wextra
+-Ilib/ed25519-donna -Wall -Wextra
 
 BUILD_DEPS := apply-patches milagro lua54 embed-lua quantum-proof	\
 ed25519-donna
@@ -45,7 +45,6 @@ ldadd += ${milib}/libamcl_rsa_2048.a ${milib}/libamcl_rsa_4096.a
 ldadd += ${milib}/libamcl_core.a
 ldadd += ${pwd}/lib/pqclean/libqpz.a
 ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
-# ldadd += ${pwd}/lib/mimalloc/build/libmimalloc-static.a
 
 # ----------------
 # zenroom defaults
@@ -71,7 +70,7 @@ platform := posix
 # ------------
 # lua settings
 lua_cc ?= ${cc}
-lua_cflags := -DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE -DLUA_COMPAT_BITLIB -I${pwd}/lib/milagro-crypto-c/build/include -I${pwd}/src -I${pwd}/lib/milagro-crypto-c/build/include -I ${pwd}/lib/mimalloc/include
+lua_cflags := -DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE -DLUA_COMPAT_BITLIB -I${pwd}/lib/milagro-crypto-c/build/include -I${pwd}/src -I${pwd}/lib/milagro-crypto-c/build/include
 
 # ----------------
 # milagro settings
@@ -86,21 +85,11 @@ milagro_cmake_flags += -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGE
 #-----------------
 # quantum-proof
 quantum_proof_cc ?= ${cc}
-quantum_proof_cflags ?= -I ${pwd}/src -I ${pwd}/lib/mimalloc/include -I.
+quantum_proof_cflags ?= -I ${pwd}/src -I.
 
 #-----------------
 # ed25519 settings
 ed25519_cc ?= ${cc}
-
-#-----------------
-# mimalloc settings
-mimalloc_cmake_flags += -DMI_BUILD_SHARED=OFF -DMI_BUILD_OBJECT=OFF
-mimalloc_cmake_flags += -DMI_BUILD_TESTS=OFF -DMI_SECURE=ON
-mimalloc_cmake_flags += -DMI_LIBPTHREAD=0 -DMI_LIBRT=0
-mimalloc_cmake_flags += -DMI_LIBATOMIC=0
-mimalloc_cflags += -fvisibility=hidden -Wstrict-prototypes
-mimalloc_cflags += -ftls-model=initial-exec -fno-builtin-malloc
-mimalloc_cflags += -DMI_USE_RTLGENRANDOM
 
 
 # }}}

@@ -46,24 +46,6 @@ milagro:
 		$(MAKE) -C ${pwd}/lib/milagro-crypto-c/build; \
 	fi
 
-mimalloc:
-	$(info -- Building mimalloc (${system}))
-	if ! [ -r ${pwd}/lib/mimalloc/build/CMakeCache.txt ]; then \
-		cd ${pwd}/lib/mimalloc && \
-                mkdir -p build && \
-                cd build && \
-                CC=${cc} LD=${ld} AR=${AR} \
-                cmake ../ ${mimalloc_cmake_flags} \
-                -DCMAKE_C_FLAGS="${cflags} ${mimalloc_cflags}" \
-                -DCMAKE_SYSTEM_NAME="${system}" \
-                -DCMAKE_AR=${ar} -DCMAKE_C_COMPILER=${cc} \
-	        -DCMAKE_CXX_COMPILER=$(subst gcc,g++,${cc}); \
-	fi
-	if ! [ -r ${pwd}/lib/mimalloc/build/libmimalloc-static.a ]; then \
-                RANLIB=${ranlib} LD=${ld} \
-                ${MAKE} -C ${pwd}/lib/mimalloc/build; \
-	fi
-
 quantum-proof:
 	$(info -- Building Quantum-Proof libs)
 	CC="${quantum_proof_cc}" \

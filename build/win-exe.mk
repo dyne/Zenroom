@@ -1,8 +1,6 @@
 ## Initialize build defaults
 include build/init.mk
 
-BUILD_DEPS += mimalloc
-
 COMPILER := $(shell which x86_64-w64-mingw32-gcc)
 ar  := $(shell which x86_64-w64-mingw32-ar)
 ranlib := $(shell which x86_64-w64-mingw32-ranlib)
