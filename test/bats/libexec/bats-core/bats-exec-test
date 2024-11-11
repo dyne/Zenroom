@@ -178,7 +178,9 @@ bats_exit_trap() {
     fi
     cp "$BATS_OUT" "$BATS_GATHER_TEST_OUTPUTS_IN/$BATS_SUITE_TEST_NUMBER$try_suffix-$BATS_TEST_DESCRIPTION.log"
   fi
-  rm -f "$BATS_OUT"
+  rm -f "$BATS_OUT" || {
+	  >&2 echo "error: rm -f '$BATS_OUT'"
+  }
   exit "$status"
 }
 
