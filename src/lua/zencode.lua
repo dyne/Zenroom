@@ -566,7 +566,7 @@ function ZEN:parse(text)
 	  -- continue
    end
 	if #branching > 0 then
-		error("Ivalid branching opened at lines "..table.concat(branching, ", ").." and never closed")
+		error("Invalid branching opened at line "..table.concat(branching, ", ").." and never closed")
 	end
    collectgarbage'collect'
    if res == true then
