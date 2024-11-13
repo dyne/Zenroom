@@ -167,7 +167,7 @@ jobs:
         with:
           commands: |
             sudo apt install -yq jq libreadline-dev cmake xxd
-            make -f build/linux.mk
+            make linux-exe
 
   go-build-check:
     name: 🐹 go build & checks
