@@ -16,8 +16,14 @@ Zencode has a **no-code** approach. It is a domain-specific language (DSL) **sim
 
 Zencode helps developers to **empower people** who know what to do with data: one can write and review business logic and data-sensitive operations **without learning to code**.
 
+<p align="center">
+  <a href="https://dyne.org>
+    <img src="https://files.dyne.org/software_by_dyne.png" width=170>
+  </a>
 
 [![software by Dyne.org](https://files.dyne.org/software_by_dyne.png)](http://www.dyne.org)
+
+</p>
 
 ## Timeline
 
@@ -98,37 +104,23 @@ Dependencies: makefile, cmake, gcc, libreadline-dev, xxd
 
 Optional: musl-libc, emscripten for wasm builds
 
-Use this command sequence:
+There are various build targets, just type make to have a list:
 
 ```
-git clone https://github.com/dyne/zenroom
-cd zenroom
-make linux
+✨ Welcome to the Zenroom build system
+🛟 Usage: make <target>
+👇🏽 List of targets:
+ posix-exe        Dynamic executable for generic POSIX
+ posix-lib        Dynamic library for generic POSIX
+ linux-exe        Dynamic executable for GNU/Linux
+ linux-lib        Dynamic library for GNU/Linux
+ musl             Static executable for Musl
+ win-exe          Executable for Windows x86 64bit
+ win-dll          Dynamic lib (DLL) for Windows x86 64bit
+ osx-exe          Executable for Apple MacOS
+ osx-lib          Library for Apple MacOS native
+ node-wasm        WebAssembly (WASM) for Javascript in-browser (Emscripten)
 ```
-
-to create the CLI executable in `src/zenroom`
-
-```
-make linux-lib
-```
-
-to create the shared library in `src/libzenroom-x86_64.so`
-
-```
-make
-```
-
-to list more available targets
-
-### Meson + Ninja
-
-Practical build scripts for GNU/Linux are provided using Meson + Ninja
-
-```
-make meson
-```
-
-Will produce a `zenroom` executable and a `libzenroom` shared lib in `zenroom/build`.
 
 ## License
 
@@ -160,7 +152,7 @@ This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
 published by the Free Software Foundation, either version 3 of the
 License, or (at your option) any later version.
- 
+
 This program is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU

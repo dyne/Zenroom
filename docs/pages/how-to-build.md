@@ -28,13 +28,13 @@ Then first build the shared executable for your platform:
 #### ** Linux **
 
 ```bash
-make linux
+make linux-exe
 ```
 
 #### ** macOS **
 
 ```bash
-make osx
+make osx-exe
 ```
 
 #### ** Windows **
@@ -44,12 +44,7 @@ the LUA interpreter and all crypto functions, for client side
 operations on windows desktops.
 
 ```bash
-make win
-```
-
-#### ** BSD **
-```bash
-make bsd
+make win-exe
 ```
 
 <!-- tabs:end -->
@@ -62,21 +57,15 @@ To run tests:
 #### ** Functional **
 
 ```bash
+make check
 make check-osx
-make check-linux
 ```
 
 #### ** Integration **
 
 ```bash
 make check-js
-make check-py
-```
-
-#### **Crypto**
-```bash
-make check-crypto
-make check-crypto-lw
+make check-rp
 ```
 
 <!-- tabs:end -->
@@ -94,9 +83,10 @@ As a prerequisite you need the `musl-gcc` binary installed on your machine.
 To build the static environment with musl installed system wide run:
 
 ```bash
-make musl-system
+make musl
 ```
 
+<!---
 There are also two other targets that looks for the `libc` in other places.
 
 For `/usr/local/musl/lib/libc.a` run
@@ -108,6 +98,7 @@ For `/usr/lib/${ARCH}-linux-musl/libc.a`
 ```bash
 make musl
 ```
+-->
 
 ## Javascript builds
 
@@ -118,10 +109,9 @@ For the Javascript and WebAssembly modules the Zenroom provides various targets 
 1. Download the latest EMSDK from https://github.com/emscripten-core/emsdk/tags inside the root of Zenroom source folder, extract it, rename the resulting subfolder to `emsdk`
 2. enter the folder and run `./emsdk install latest`, wait until the installation is complete, then run `./emsdk activate latest`
 3. go back in the zenroom root and activate emsdk with `. emsdk/emsdk_env.sh` (please note the dot followed by space at beginning)
-4. Launch `yarn --cwd bindings/javascript` to install nodejs dependencies
 5. Make sure the Zenroom source is clean with `make clean`
-5. Launch `yarn --cwd bindings/javascript build` to build Zenroom WASM
-6. Launch `yarn --cwd bindings/javascript test` to run all javascript tests
+5. Launch `make node-wasm` to install nodejs dependencies and build Zenroom WASM
+6. Launch `make check-js` to run all javascript tests
 
 The resulting `zenroom.js` module will be found in `bindings/javascript/dist/` and should have zero dependencies from other NodeJS packages.
 
@@ -135,7 +125,7 @@ You need to have install `Xcode` with the `commandline-tools`
 
 There are 3 different targets `ios-sim` `ios-armv7` `ios-arm64` these targets creates an static library with the correct architecture (x86_64, ARMV7, ARM64).
 
-Finally once done all the libraries there is a final target `ios-fat` that put them together creating a fat-binary that you can include into your app. 
+Finally once done all the libraries there is a final target `ios-fat` that put them together creating a fat-binary that you can include into your app.
 
 Or you can just use the `build-ios.sh` that does all the steps for you!
 
@@ -172,5 +162,3 @@ src/main/jniLibs/
 └── x86
     └── libzenroom.so
 ```
-
-
