@@ -64,7 +64,7 @@ ZEN = {
 	OK = true, -- set false by asserts
 	current_instruction = 0, -- first instruction
 	next_instruction = 1, -- first instruction
-	ITER = nil, -- foreach infos
+	ITER = {}, -- foreach infos
 	traceback = {}, -- transferred into HEAP by zencode_begin
 	linenum = 0,
 	last_valid_statement = false,
@@ -126,6 +126,7 @@ function ZEN:begin(new_heap)
 		  whenifforeach = 'when',
 		  foreachif = 'foreach',
 		  endforeachif = 'endforeach',
+		  endforeachifforeach = 'endforeach',
 		  ifforeach = 'if',
 		  endifforeach = 'endif',
 	   }
@@ -390,22 +391,26 @@ function ZEN:begin(new_heap)
 	   callbacks.onwhenifforeach = set_sentence
 	   callbacks.onendifforeach = set_sentence
 	   callbacks.onendoneif = set_sentence
+	   callbacks.onendforeachifforeach = set_sentence
+	   callbacks.onendforeachforeach = set_sentence
 	   local extra_events <const> = {
 		  {name = 'enter_when', from = {'given', 'when', 'then', 'endif', 'endoneif', 'endforeach'}, to = 'when'},
-		  {name = 'enter_if', from = {'if', 'given', 'when', 'then', 'endif', 'endoneif', 'endforeach', 'whenif', 'thenif', 'endforeachif'}, to = 'if'},
+		  {name = 'enter_if', from = {'if', 'given', 'when', 'then', 'endif', 'endoneif', 'endforeach', 'whenif', 'thenif', 'endforeachif', 'foreachif'}, to = 'if'},
 		  {name = 'enter_whenif', from = {'if', 'whenif', 'thenif', 'endforeachif', 'endoneif'}, to = 'whenif'},
 		  {name = 'enter_thenif', from = {'if', 'whenif', 'thenif', 'endoneif'}, to = 'thenif'},
 		  {name = 'enter_endif', from = {'whenif', 'thenif', 'endforeachif', 'endoneif'}, to = 'endif'},
-		  {name = 'enter_endoneif', from = {'whenif', 'thenif', 'endforeachif', 'endoneif'}, to = 'endoneif'},
-		  {name = 'enter_foreachif', from = {'if', 'whenif', 'endforeachif', 'foreachif'}, to = 'foreachif'},
-		  {name = 'enter_whenforeachif', from = {'foreachif', 'whenforeachif'}, to = 'whenforeachif'},
-		  {name = 'enter_endforeachif', from = {'foreachif', 'whenforeachif'}, to = 'endforeachif'},
-		  {name = 'enter_ifforeach', from = {'foreach', 'whenforeach', 'ifforeach', 'endifforeach'}, to = 'ifforeach'},
-		  {name = 'enter_whenifforeach', from = {'ifforeach', 'whenifforeach'}, to = 'whenifforeach'},
+		  {name = 'enter_endoneif', from = {'whenif', 'thenif', 'endforeachif', 'endoneif', 'whenifforeach'}, to = 'endoneif'},
+		  {name = 'enter_foreachif', from = {'if', 'whenif', 'endforeachif', 'foreachif', 'endoneif', 'whenifforeach'}, to = 'foreachif'},
+		  {name = 'enter_whenforeachif', from = {'foreachif', 'whenforeachif', 'endoneif'}, to = 'whenforeachif'},
+		  {name = 'enter_endforeachif', from = {'foreachif', 'whenforeachif', 'endoneif'}, to = 'endforeachif'},
+		  {name = 'enter_ifforeach', from = {'foreach', 'whenforeach', 'ifforeach', 'endifforeach', 'foreachif', 'whenifforeach', 'endoneif'}, to = 'ifforeach'},
+		  {name = 'enter_whenifforeach', from = {'ifforeach', 'whenifforeach', 'endoneif', 'endforeachifforeach'}, to = 'whenifforeach'},
 		  {name = 'enter_endifforeach', from = {'ifforeach', 'whenifforeach'}, to = 'endifforeach'},
-		  {name = 'enter_foreach', from = {'given', 'when', 'endif', 'foreach', 'endforeach'}, to = 'foreach'},
-		  {name = 'enter_whenforeach', from = {'foreach', 'whenforeach', 'endifforeach'}, to = 'whenforeach'},
-		  {name = 'enter_endforeach', from = {'whenforeach', 'endifforeach'}, to = 'endforeach'},
+		  {name = 'enter_foreach', from = {'given', 'when', 'endif', 'foreach', 'endforeach', 'whenforeach'}, to = 'foreach'},
+		  {name = 'enter_whenforeach', from = {'foreach', 'whenforeach', 'endifforeach', 'endforeach'}, to = 'whenforeach'},
+		  {name = 'enter_endforeach', from = {'whenforeach', 'endifforeach', 'endforeach'}, to = 'endforeach'},
+		  {name = 'enter_endforeachforeach', from = {'whenforeach', 'endifforeach', 'endforeach'}, to = 'endforeach'},
+		  {name = 'enter_endforeachifforeach', from = {'foreachif', 'whenforeachif', 'endoneif'}, to = 'endforeachifforeach'},
 		  {name = 'enter_and', from = 'when', to = 'when'},
 		  {name = 'enter_and', from = 'whenif', to = 'whenif'},
 		  {name = 'enter_and', from = 'thenif', to = 'thenif'},
@@ -415,7 +420,8 @@ function ZEN:begin(new_heap)
 		  {name = 'enter_and', from = 'foreachif', to = 'foreachif'},
 		  {name = 'enter_and', from = 'whenforeach', to = 'whenforeach'},
 		  {name = 'enter_and', from = 'whenifforeach', to = 'whenifforeach'},
-		  {name = 'enter_then', from = {'given', 'when', 'then', 'endif', 'endforeach'}, to = 'then'},
+		  {name = 'enter_and', from = 'whenforeachif', to = 'whenforeachif'},
+		  {name = 'enter_then', from = {'given', 'when', 'then', 'endif', 'endforeach', 'endoneif'}, to = 'then'},
 		  {name = 'enter_and', from = 'then', to = 'then'},
 	   }
 	   for _,v in pairs(extra_events) do table.insert(events, v) end
@@ -459,7 +465,7 @@ function ZEN:parse(text)
 	  return false
    end
    local branching = {}
-   local looping = false
+   local looping = {}
    local prefixes = {}
    local parse_prefix <const> = parse_prefix -- optimization
    self.linenum = 0
@@ -487,13 +493,17 @@ function ZEN:parse(text)
 		 end
 
 		 if prefix == 'if' then
-			if #branching == 0 then
+			local already_if_prefix = prefixes[1] == 'if'
+			if not already_if_prefix then
 				table.insert(prefixes, 1, 'if')
 			end
-			table.insert(branching, self.linenum)
-		 elseif not looping and prefix == 'foreach' then
-			looping = true
-			table.insert(prefixes, 1, 'foreach')
+			table.insert(branching, { self.linenum, already_if_prefix })
+		 elseif prefix == 'foreach' then
+			local already_foreach_prefix = prefixes[1] == 'foreach'
+			if not already_foreach_prefix then
+				table.insert(prefixes, 1, 'foreach')
+			end
+			table.insert(looping, { self.linenum, already_foreach_prefix })
 		 elseif prefix == 'endif' then
 			if #branching == 0 then
 				error('Ivalid branching closing at line '..self.linenum..': nothing to be closed')
@@ -504,19 +514,24 @@ function ZEN:parse(text)
 			if #branching == 0 then
 				error('Ivalid branching closing at line '..self.linenum..': nothing to be closed')
 			end
-			table.remove(branching)
-			if #branching == 0 then
+			local removed = table.remove(branching)
+			if not removed[2] then
 				table.remove(prefixes, 1)
 			end
 		 elseif prefix == 'endforeach' then
-			looping = false
-			table.remove(prefixes, 1)
-		 end
+			if #looping == 0 then
+				error('Ivalid loop closing at line '..self.linenum..': nothing to be closed')
+			end
+			local removed = table.remove(looping)
+			if not removed[2] then
+				table.remove(prefixes, 1)
+			end
+		end
 		 if prefix == 'if' or prefix == 'foreach' then
-			prefix =  table.concat(prefixes,'')
+			prefix = prefixes[1]..(prefixes[2] or '')
 		 elseif prefix == 'when' or prefix == 'then'
 			or prefix == 'endif' or prefix == 'endforeach' then
-			prefix =  prefix .. table.concat(prefixes,'')
+			prefix = prefix .. (prefixes[1] or '').. (prefixes[2] or '')
 		 end
 
 		 if prefix == "when" or prefix == "if" or prefix == "foreach" then
@@ -572,7 +587,18 @@ function ZEN:parse(text)
 	  -- continue
    end
 	if #branching > 0 then
-		error("Invalid branching opened at line "..table.concat(branching, ", ").." and never closed")
+		local err_lines = {}
+		for _, v in pairs(branching) do
+			table.insert(err_lines, v[1])
+		end
+		error("Invalid branching opened at line "..table.concat(err_lines, ", ").." and never closed")
+	end
+	if #looping > 0 then
+		local err_lines = {}
+		for _, v in pairs(looping) do
+			table.insert(err_lines, v[1])
+		end
+		error("Invalid looping opened at line "..table.concat(err_lines, ", ").." and never closed")
 	end
    collectgarbage'collect'
    if res == true then
@@ -636,24 +662,31 @@ end
 -- TODO(optimization): introduce a second jump to skip all
 -- statements in the foreach in the last iteration
 local function manage_foreach(stack, x)
-	if string.match(x.section, '^foreach') and not stack.ITER then
-		stack.ITER = {jump = stack.current_instruction, pos = 1}
+	if string.match(x.section, '^foreach') and
+		( #stack.ITER == 0 or
+			( stack.ITER[#stack.ITER].jump ~= stack.current_instruction and
+			  stack.ITER[#stack.ITER].pos ~=0 )) then
+		table.insert(stack.ITER, {jump = stack.current_instruction, pos = 1})
 		return false
 	end
 	if string.match(x.section, '^endforeach') then
-		local info = stack.ITER
+		local info = stack.ITER[#stack.ITER]
+		if info.pos == 0 and info.end_line ~= x.linenum then
+			return true
+		end
+		if not info.end_line then info.end_line = x.linenum end
 		if info.pos > 0 then
 			info.pos = info.pos + 1
 			stack.next_instruction = info.jump
 			return true
 		else
-			stack.ITER = nil
+			table.remove(stack.ITER)
 		end
 	end
-	if stack.ITER and stack.ITER.pos >= MAXITER then
+	if #stack.ITER ~= 0 and stack.ITER[#stack.ITER].pos >= MAXITER then
 		error("Limit of iterations reached: " .. MAXITER)
 	end
-	return stack.ITER and stack.ITER.pos == 0
+	return #stack.ITER ~= 0 and stack.ITER[#stack.ITER].pos == 0
 end
 
 function ZEN:run()

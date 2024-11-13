@@ -729,4 +729,90 @@ EndIf
 EOF
     run $ZENROOM_EXECUTABLE -z endoneif_on_closed_branch.zen
     assert_line --partial "Ivalid branching closing at line 6: nothing to be closed"
+
+    cat << EOF | save_asset endoneif_on_closed_branch_2.zen
+Given nothing
+When I set 'my_string' to 'test' as 'string'
+If I verify 'my_string' is found
+Then I print 'my string'
+EndOneIf
+EndOneIf
+EOF
+    run $ZENROOM_EXECUTABLE -z endoneif_on_closed_branch_2.zen
+    assert_line --partial "Ivalid branching closing at line 6: nothing to be closed"
+}
+
+@test "Nested if branching in foreach" {
+    cat << EOF | save_asset nested_if_in_foreach.data.json
+{
+    "my_array": [
+        {
+            "data": {
+                "key": "value"
+            }
+        },
+        {
+            "other_data": {
+                "other_key": [
+                    "other_value_1",
+                    "other_value_2"
+                ]
+            }
+        }
+    ],
+    "one": 1,
+    "filter": "other_value_2"
+}
+EOF
+
+    cat << EOF | zexe nested_if_in_foreach.zen nested_if_in_foreach.data.json
+Given I have a 'string array' named 'my_array'
+and I have a 'number' named 'one'
+and I have a 'string' named 'filter'
+When I create the 'string array' named 'res'
+When I create the 'string array' named 'res_foreach'
+If I verify 'my_array' is found
+    If I verify size of 'my_array' is more than 'one'
+        Then print the string 'long array'
+    EndOneIf
+    Foreach 'el' in 'my_array'
+        If I verify 'data' is found in 'el'
+            When I pickup from path 'el.data'
+            If I verify 'other_key' is found in 'data'
+                When I pickup from path 'data.other_key'
+                Foreach 'e' in 'other_key'
+                    When I copy 'e' in 'res_foreach'
+                EndForeach
+                When I remove 'other_key'
+            EndOneIf
+            If I verify 'key' is found in 'data'
+                When I move 'key' from 'data' in 'res'
+            EndOneIf
+            When I remove 'data'
+        EndOneIf
+        If I verify 'other_data' is found in 'el'
+            When I pickup from path 'el.other_data'
+            If I verify 'other_key' is found in 'other_data'
+                When I pickup from path 'other_data.other_key'
+                Foreach 'e' in 'other_key'
+                    If I verify 'e' is equal to 'filter'
+                        When I copy 'e' in 'res_foreach'
+                    EndOneIf
+                    When done
+                EndForeach
+                When I remove 'other_key'
+            EndOneIf
+            If I verify 'key' is found in 'other_data'
+                When I move 'key' from 'other_data' in 'res'
+            EndOneIf
+            When I remove 'other_data'
+        EndOneIf
+    EndForeach
+EndOneIf
+
+Then print 'res'
+Then print 'res_foreach'
+EOF
+    save_output 'nested_if_in_foreach.out.json'
+    assert_output '{"output":["long_array"],"res":["value"],"res_foreach":["other_value_2"]}'
 }

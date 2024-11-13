@@ -371,3 +371,53 @@ EOF
     save_output foreach_schema.out
     assert_output '{"res":"eyJhbGciOiAiRVMyNTYiLCAidHlwIjogInZjK3NkLWp3dCJ9.eyJfc2QiOiBbInZucGt1cWZBSWFBTlBmZXl6WXhUVllWUGxJY3JBWlVvU3N5TGFhQ0tlWUkiLCAiM1BEeUhOMXphcklJMG1TdDUwMkV2ZVIwVHhlOHlTQ1hDOFlYd1NvV1lZWSIsICJFMS12Wnl1Wmhlbkhlam1nYi1kTFhtaDBPODFLTUtWU25RYjN2Mjl6SGlRIl0sICJfc2RfYWxnIjogInNoYS0yNTYiLCAiaXNzIjogImh0dHA6Ly9leGFtcGxlLm9yZyIsICJzdWIiOiAidXNlciA0MiJ9.-BY5L0dcz2p-nCIhmL_0RK5QjzmKOI45E7anmZqg0Vct16lyF2_em3R8GzewmcrVT-NnZaT6EKrO79F4VGkFeQ~WyJ1eURGMUgwQVlSYmI0TVFubUx2dmVBIiwgImdpdmVuX25hbWUiLCAiSm9obiJd~WyJWam9zM2ZoOFZVU3Z2NHVYUVhuSWlRIiwgImZhbWlseV9uYW1lIiwgIkRvZSJd~WyIzV2JpbGZtNk1rdDFBUzlERXFtOS1nIiwgImVtYWlsIiwgImpvaG5kb2VAZXhhbXBsZS5jb20iXQ~"}'
 }
+
+@test "Invalid signle endforeach" {
+    cat << EOF | save_asset invalid_single_endforeach.zen
+Given nothing
+EndForeach
+Then print the data
+EOF
+    run $ZENROOM_EXECUTABLE -z invalid_single_endforeach.zen
+    assert_line --partial "Ivalid loop closing at line 2: nothing to be closed"
+}
+
+@test "Detect multiple open but not closed foreach loop" {
+    cat << EOF | save_asset multiple_not_closed_foreach.zen
+Given nothing
+When I create the 'string array' named 'loop'
+When I write string '' in 'res'
+Foreach 'a' in 'loop'
+Foreach 'b' in 'loop'
+Foreach 'c' in 'loop'
+When I append 'c' to 'res'
+When I append 'b' to 'res'
+When I append 'a' to 'res'
+EOF
+    run $ZENROOM_EXECUTABLE -z multiple_not_closed_foreach.zen
+    assert_line --partial 'Invalid looping opened at line 4, 5, 6 and never closed'
+}
+
+@test "Nested foreach loop" {
+    cat << EOF | zexe multiple_not_closed_foreach.zen
+Given nothing
+When I create the 'string array' named 'loop'
+When I set 'str' to 'a' as 'string'
+and I move 'str' in 'loop'
+When I set 'str' to 'b' as 'string'
+and I move 'str' in 'loop'
+When I write string '' in 'res'
+Foreach 'a' in 'loop'
+    When I append 'a' to 'res'
+    Foreach 'b' in 'loop'
+        When I append 'b' to 'res'
+        Foreach 'c' in 'loop'
+            When I append 'c' to 'res'
+        EndForeach
+    EndForeach
+EndForeach
+Then print 'res'
+EOF
+    save_output multiple_not_closed_foreach.out
+    assert_output '{"res":"aaabbabbaabbab"}'
+}
