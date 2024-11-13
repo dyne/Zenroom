@@ -17,12 +17,9 @@ Zencode has a **no-code** approach. It is a domain-specific language (DSL) **sim
 Zencode helps developers to **empower people** who know what to do with data: one can write and review business logic and data-sensitive operations **without learning to code**.
 
 <p align="center">
-  <a href="https://dyne.org>
-    <img src="https://files.dyne.org/software_by_dyne.png" width=170>
+  <a href="https://dyne.org">
+    <img src="https://files.dyne.org/software_by_dyne.png" width="170">
   </a>
-
-[![software by Dyne.org](https://files.dyne.org/software_by_dyne.png)](http://www.dyne.org)
-
 </p>
 
 ## Timeline
