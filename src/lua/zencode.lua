@@ -127,6 +127,7 @@ function ZEN:begin(new_heap)
 		  foreachif = 'foreach',
 		  endforeachif = 'endforeach',
 		  endforeachifforeach = 'endforeach',
+		  endforeachforeach = 'endforeach',
 		  ifforeach = 'if',
 		  endifforeach = 'endif',
 	   }
@@ -402,14 +403,15 @@ function ZEN:begin(new_heap)
 		  {name = 'enter_endoneif', from = {'whenif', 'thenif', 'endforeachif', 'endoneif', 'whenifforeach'}, to = 'endoneif'},
 		  {name = 'enter_foreachif', from = {'if', 'whenif', 'endforeachif', 'foreachif', 'endoneif', 'whenifforeach'}, to = 'foreachif'},
 		  {name = 'enter_whenforeachif', from = {'foreachif', 'whenforeachif', 'endoneif'}, to = 'whenforeachif'},
-		  {name = 'enter_endforeachif', from = {'foreachif', 'whenforeachif', 'endoneif'}, to = 'endforeachif'},
+		  {name = 'enter_endforeachif', from = {'foreachif', 'whenforeachif', 'endoneif', 'endforeachforeachif'}, to = 'endforeachif'},
 		  {name = 'enter_ifforeach', from = {'foreach', 'whenforeach', 'ifforeach', 'endifforeach', 'foreachif', 'whenifforeach', 'endoneif'}, to = 'ifforeach'},
 		  {name = 'enter_whenifforeach', from = {'ifforeach', 'whenifforeach', 'endoneif', 'endforeachifforeach'}, to = 'whenifforeach'},
 		  {name = 'enter_endifforeach', from = {'ifforeach', 'whenifforeach'}, to = 'endifforeach'},
 		  {name = 'enter_foreach', from = {'given', 'when', 'endif', 'foreach', 'endforeach', 'whenforeach'}, to = 'foreach'},
 		  {name = 'enter_whenforeach', from = {'foreach', 'whenforeach', 'endifforeach', 'endforeach'}, to = 'whenforeach'},
-		  {name = 'enter_endforeach', from = {'whenforeach', 'endifforeach', 'endforeach'}, to = 'endforeach'},
-		  {name = 'enter_endforeachforeach', from = {'whenforeach', 'endifforeach', 'endforeach'}, to = 'endforeach'},
+		  {name = 'enter_endforeach', from = {'whenforeach', 'endifforeach', 'endforeach', 'endforeachforeach'}, to = 'endforeach'},
+		  {name = 'enter_endforeachforeach', from = {'whenforeach', 'endifforeach', 'endforeach', 'endforeachforeach'}, to = 'endforeachforeach'},
+		  {name = 'enter_endforeachforeachif', from = {'whenforeachif', 'endifforeach', 'endforeach'}, to = 'endforeachforeachif'},
 		  {name = 'enter_endforeachifforeach', from = {'foreachif', 'whenforeachif', 'endoneif'}, to = 'endforeachifforeach'},
 		  {name = 'enter_and', from = 'when', to = 'when'},
 		  {name = 'enter_and', from = 'whenif', to = 'whenif'},
@@ -671,10 +673,10 @@ local function manage_foreach(stack, x)
 	end
 	if string.match(x.section, '^endforeach') then
 		local info = stack.ITER[#stack.ITER]
+		if not info.end_line then info.end_line = x.linenum end
 		if info.pos == 0 and info.end_line ~= x.linenum then
 			return true
 		end
-		if not info.end_line then info.end_line = x.linenum end
 		if info.pos > 0 then
 			info.pos = info.pos + 1
 			stack.next_instruction = info.jump

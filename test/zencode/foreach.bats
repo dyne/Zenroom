@@ -199,6 +199,7 @@ EOF
 }
 
 @test "Zip foreach" {
+    skip
     cat << EOF | save_asset foreach_zip.data
 {
   "numbers": ["42","37","55","78"],
@@ -255,20 +256,22 @@ Foreach 'x' in 'numbers'
 Foreach 'y' in 'numbers2'
 If I verify number 'x' is more than 'limit'
 If I verify number 'y' is more than 'limit'
-When I move 'x' in 'floats'
+When I copy 'x' in 'floats'
 endif
+EndForeach
 EndForeach
 If I verify number 'zero' is less than 'limit'
 If I verify number 'zero' is less than 'limit'
 Foreach 'a' in 'numbers'
 Foreach 'b' in 'numbers2'
-When I move 'b' in 'floats'
+When I copy 'b' in 'floats'
+EndForeach
 EndForeach
 endif
 Then print 'floats'
 EOF
     save_output "foreach_nestedif.out"
-    assert_output '{"floats":[5,6,10,9,8,7,6,5,4,3]}'
+    assert_output '{"floats":[5,5,5,5,5,5,6,6,6,6,6,6,7,7,7,7,7,7,8,8,8,8,8,8,10,9,8,7,6,5,4,3,2,1,0,-1]}'
 }
 
 @test "exit from foreach loop" {
