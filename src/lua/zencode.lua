@@ -655,8 +655,6 @@ end
 
 -- return true: caller skip execution and go to ::continue::
 -- return false: execute statement
--- TODO(optimization): introduce a second jump to skip all
--- statements in the foreach in the last iteration
 local function manage_foreach(stack, x)
 	local last_iter = stack.ITER[#stack.ITER]
 	if string.match(x.section, '^foreach') and
@@ -667,8 +665,8 @@ local function manage_foreach(stack, x)
 		return false
 	end
 	if string.match(x.section, '^endforeach') then
-		if not last_iter.end_line then last_iter.end_line = x.linenum end
-		if last_iter.pos == 0 and last_iter.end_line ~= x.linenum then
+		if not last_iter.end_id then last_iter.end_id = x.id end
+		if last_iter.pos == 0 and last_iter.end_id ~= x.id then
 			return true
 		end
 		if last_iter.pos > 0 then
@@ -680,8 +678,14 @@ local function manage_foreach(stack, x)
 			last_iter = stack.ITER[#stack.ITER]
 		end
 	end
-	if last_iter and last_iter.pos >= MAXITER then
-		error("Limit of iterations reached: " .. MAXITER)
+	if last_iter then
+		if last_iter.pos >= MAXITER then
+			error("Limit of iterations reached: " .. MAXITER)
+		-- skip all statements on last (not valid) loop
+		elseif last_iter.pos == 0 and last_iter.end_id then
+			stack.next_instruction = last_iter.end_id
+			return true
+		end
 	end
 	return last_iter and last_iter.pos == 0
 end
