@@ -477,6 +477,14 @@ local function end_branching_and_looping(type, info, prefixes, ln)
 		table.remove(prefixes, 1)
 	end
 end
+local function check_open_branching_or_looping(type, info)
+	if #info == 0 then return end
+	local err_lines = {}
+	for _, v in pairs(info) do
+		table.insert(err_lines, v[1])
+	end
+	error('Invalid '..type..' opened at line '..table.concat(err_lines, ', ')..' and never closed', 2)
+end
 
 function ZEN:parse(text)
    self:crumb()
@@ -587,20 +595,8 @@ function ZEN:parse(text)
 	  end
 	  -- continue
    end
-	if #branching > 0 then
-		local err_lines = {}
-		for _, v in pairs(branching) do
-			table.insert(err_lines, v[1])
-		end
-		error("Invalid branching opened at line "..table.concat(err_lines, ", ").." and never closed")
-	end
-	if #looping > 0 then
-		local err_lines = {}
-		for _, v in pairs(looping) do
-			table.insert(err_lines, v[1])
-		end
-		error("Invalid looping opened at line "..table.concat(err_lines, ", ").." and never closed")
-	end
+	check_open_branching_or_looping('branching', branching)
+	check_open_branching_or_looping('looping', looping)
    collectgarbage'collect'
    if res == true then
 	  return true
