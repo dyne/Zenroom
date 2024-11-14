@@ -166,6 +166,7 @@ jobs:
       - uses: pguyot/arm-runner-action@v2
         with:
           commands: |
+            sudo apt update
             sudo apt install -yq jq libreadline-dev cmake xxd
             make linux-exe
 
