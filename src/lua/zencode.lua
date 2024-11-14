@@ -389,13 +389,13 @@ function ZEN:begin(new_heap)
 		  {name = 'enter_then', from = {'given', 'when', 'then', 'endif', 'endforeach'}, to = 'then'},
 		  {name = 'enter_if', from = {'if', 'given', 'when', 'then', 'endif', 'endforeach', 'whenif', 'thenif', 'endforeach', 'foreachif'}, to = 'if'},
 		  {name = 'enter_whenif', from = {'if', 'whenif', 'thenif', 'endforeach', 'endif'}, to = 'whenif'},
-		  {name = 'enter_thenif', from = {'if', 'whenif', 'thenif'}, to = 'thenif'},
+		  {name = 'enter_thenif', from = {'if', 'whenif', 'thenif', 'endforeach', 'endif'}, to = 'thenif'},
 		  {name = 'enter_endif', from = {'whenif', 'whenifforeach', 'thenif', 'endforeach', 'endif'}, to = 'endif'},
 		  {name = 'enter_foreach', from = {'given', 'when', 'endif', 'foreach', 'endforeach', 'whenforeach'}, to = 'foreach'},
 		  {name = 'enter_whenforeach', from = {'foreach', 'whenforeach', 'endif', 'endforeach'}, to = 'whenforeach'},
-		  {name = 'enter_foreachif', from = {'if', 'whenif', 'endforeach', 'foreachif', 'whenifforeach', 'endif'}, to = 'foreachif'},
-		  {name = 'enter_whenforeachif', from = {'foreachif', 'whenforeachif', 'endif'}, to = 'whenforeachif'},
-		  {name = 'enter_ifforeach', from = {'foreach', 'whenforeach', 'ifforeach', 'endif', 'foreachif', 'whenifforeach'}, to = 'ifforeach'},
+		  {name = 'enter_foreachif', from = {'if', 'whenif', 'endforeach', 'foreachif', 'ifforeach', 'whenifforeach', 'endif'}, to = 'foreachif'},
+		  {name = 'enter_whenforeachif', from = {'foreachif', 'whenforeachif', 'endif', 'endforeach'}, to = 'whenforeachif'},
+		  {name = 'enter_ifforeach', from = {'foreach', 'whenforeach', 'ifforeach', 'whenifforeach', 'foreachif', 'whenforeachif', 'endif' }, to = 'ifforeach'},
 		  {name = 'enter_whenifforeach', from = {'ifforeach', 'whenifforeach', 'endforeach', 'endif'}, to = 'whenifforeach'},
 		  {name = 'enter_endforeach', from = {'whenforeach', 'whenforeachif', 'endif', 'endforeach'}, to = 'endforeach'},
 		  {name = 'enter_and', from = 'when', to = 'when'},
@@ -634,12 +634,15 @@ end
 -- return false: execute statement
 local function manage_foreach(stack, x)
 	local last_iter = stack.ITER[#stack.ITER]
-	if string.match(x.section, '^foreach') and
-		( not last_iter or
-			( last_iter.jump ~= stack.current_instruction and
-			  last_iter.pos ~=0 )) then
-		table.insert(stack.ITER, {jump = stack.current_instruction, pos = 1})
-		return false
+	if string.match(x.section, '^foreach') then
+		if not last_iter then
+			table.insert(stack.ITER, {jump = stack.current_instruction, pos = 1 })
+			return false
+		elseif last_iter.jump ~= stack.current_instruction then
+			local not_valid_parent_loop = last_iter.pos == 0
+			table.insert(stack.ITER, {jump = stack.current_instruction, pos = fif(not_valid_parent_loop, 0, 1)})
+			return not_valid_parent_loop
+		end
 	end
 	if string.match(x.section, '^endforeach') then
 		if not last_iter.end_id then last_iter.end_id = x.id end
