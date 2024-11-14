@@ -458,6 +458,13 @@ local function zencode_iscomment(b)
 		return false
 	end
 end
+local function enter_branching_and_looping(type, info, prefixes, ln)
+	local already_prefix = prefixes[1] == type
+	if not already_prefix then
+		table.insert(prefixes, 1, type)
+	end
+	table.insert(info, { ln, already_prefix })
+end
 local function end_branching_and_looping(type, info, prefixes, ln)
 	local n = fif(type == 'if', 'branching', 'loop')
 	if #info == 0 then
@@ -506,17 +513,9 @@ function ZEN:parse(text)
 		 end
 
 		 if prefix == 'if' then
-			local already_if_prefix = prefixes[1] == 'if'
-			if not already_if_prefix then
-				table.insert(prefixes, 1, 'if')
-			end
-			table.insert(branching, { self.linenum, already_if_prefix })
+			enter_branching_and_looping('if', branching, prefixes, self.linenum)
 		 elseif prefix == 'foreach' then
-			local already_foreach_prefix = prefixes[1] == 'foreach'
-			if not already_foreach_prefix then
-				table.insert(prefixes, 1, 'foreach')
-			end
-			table.insert(looping, { self.linenum, already_foreach_prefix })
+			enter_branching_and_looping('foreach', looping, prefixes, self.linenum)
 		 elseif prefix == 'endif' then
 			-- back compatibility
 			if #branching == 0 then
