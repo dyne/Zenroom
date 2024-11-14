@@ -624,7 +624,6 @@ end
 local function manage_branching(stack, x)
 	if string.match(x.section, '^if') then
 		-- xxx("START conditional execution: "..x.source, 2)
-		-- if stack.branch == 0 then stack.branch_valid = true end
 		stack.branch = stack.branch+1
 		if stack.branch_valid == stack.branch-1 then
 			stack.branch_valid = stack.branch_valid+1
@@ -659,31 +658,32 @@ end
 -- TODO(optimization): introduce a second jump to skip all
 -- statements in the foreach in the last iteration
 local function manage_foreach(stack, x)
+	local last_iter = stack.ITER[#stack.ITER]
 	if string.match(x.section, '^foreach') and
-		( #stack.ITER == 0 or
-			( stack.ITER[#stack.ITER].jump ~= stack.current_instruction and
-			  stack.ITER[#stack.ITER].pos ~=0 )) then
+		( not last_iter or
+			( last_iter.jump ~= stack.current_instruction and
+			  last_iter.pos ~=0 )) then
 		table.insert(stack.ITER, {jump = stack.current_instruction, pos = 1})
 		return false
 	end
 	if string.match(x.section, '^endforeach') then
-		local info = stack.ITER[#stack.ITER]
-		if not info.end_line then info.end_line = x.linenum end
-		if info.pos == 0 and info.end_line ~= x.linenum then
+		if not last_iter.end_line then last_iter.end_line = x.linenum end
+		if last_iter.pos == 0 and last_iter.end_line ~= x.linenum then
 			return true
 		end
-		if info.pos > 0 then
-			info.pos = info.pos + 1
-			stack.next_instruction = info.jump
+		if last_iter.pos > 0 then
+			last_iter.pos = last_iter.pos + 1
+			stack.next_instruction = last_iter.jump
 			return true
 		else
 			table.remove(stack.ITER)
+			last_iter = stack.ITER[#stack.ITER]
 		end
 	end
-	if #stack.ITER ~= 0 and stack.ITER[#stack.ITER].pos >= MAXITER then
+	if last_iter and last_iter.pos >= MAXITER then
 		error("Limit of iterations reached: " .. MAXITER)
 	end
-	return #stack.ITER ~= 0 and stack.ITER[#stack.ITER].pos == 0
+	return last_iter and last_iter.pos == 0
 end
 
 function ZEN:run()
