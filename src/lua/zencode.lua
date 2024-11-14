@@ -458,7 +458,18 @@ local function zencode_iscomment(b)
 		return false
 	end
 end
-
+local function end_branching_and_looping(type, info, prefixes, ln)
+	local n = fif(type == 'if', 'branching', 'loop')
+	if #info == 0 then
+		error('Ivalid '..n..' closing at line '..ln..': nothing to be closed', 2)
+	elseif prefixes[1] ~= type then
+		error('Invalid '..n..' closing at line '..ln..': need to close first the '..prefixes[1], 2)
+	end
+	local rm = table.remove(info)
+	if not rm[2] then
+		table.remove(prefixes, 1)
+	end
+end
 
 function ZEN:parse(text)
    self:crumb()
@@ -507,27 +518,16 @@ function ZEN:parse(text)
 			end
 			table.insert(looping, { self.linenum, already_foreach_prefix })
 		 elseif prefix == 'endif' then
+			-- back compatibility
 			if #branching == 0 then
 				error('Ivalid branching closing at line '..self.linenum..': nothing to be closed')
 			end
 			branching = {}
 			table.remove(prefixes, 1)
 		elseif prefix == 'endoneif' then
-			if #branching == 0 then
-				error('Ivalid branching closing at line '..self.linenum..': nothing to be closed')
-			end
-			local removed = table.remove(branching)
-			if not removed[2] then
-				table.remove(prefixes, 1)
-			end
-		 elseif prefix == 'endforeach' then
-			if #looping == 0 then
-				error('Ivalid loop closing at line '..self.linenum..': nothing to be closed')
-			end
-			local removed = table.remove(looping)
-			if not removed[2] then
-				table.remove(prefixes, 1)
-			end
+			end_branching_and_looping('if', branching, prefixes, self.linenum)
+		elseif prefix == 'endforeach' then
+			end_branching_and_looping('foreach', looping, prefixes, self.linenum)
 		end
 		 if prefix == 'if' or prefix == 'foreach' then
 			prefix = prefixes[1]..(prefixes[2] or '')

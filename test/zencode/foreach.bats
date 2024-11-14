@@ -401,6 +401,36 @@ EOF
     assert_line --partial 'Invalid looping opened at line 4, 5, 6 and never closed'
 }
 
+@test "Detect the close of foreach before the if and viceversa" {
+    cat << EOF | save_asset error_closing_foreach_before_if.zen
+Given nothing
+When I create the 'string dictionary' named 'arr'
+Foreach 'el' in 'arr'
+If I verify 'el' is found
+When done
+# the following line are inverted
+Endforeach
+EndIf
+Then print the data
+EOF
+    run $ZENROOM_EXECUTABLE -z error_closing_foreach_before_if.zen
+    assert_line --partial "Invalid loop closing at line 7: need to close first the if"
+
+cat << EOF | save_asset error_closing_if_before_foreach.zen
+Given nothing
+When I create the 'string dictionary' named 'arr'
+If I verify 'arr' is found
+Foreach 'el' in 'arr'
+When done
+# the following line are inverted
+EndOneIf
+Endforeach
+Then print the data
+EOF
+    run $ZENROOM_EXECUTABLE -z error_closing_if_before_foreach.zen
+    assert_line --partial "Invalid branching closing at line 7: need to close first the foreach"
+}
+
 @test "Nested foreach loop" {
     cat << EOF | zexe multiple_not_closed_foreach.zen
 Given nothing
