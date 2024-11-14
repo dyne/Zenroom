@@ -3,7 +3,6 @@ include build/init.mk
 
 COMPILER ?= musl-gcc
 
-cflags += -DLIBCMALLOC
 cflags += -static -std=gnu99 -fPIC -D'ARCH="MUSL"' -D__MUSL__ -DARCH_MUSL
 ldflags += -static
 system := Linux

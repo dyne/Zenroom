@@ -19,7 +19,6 @@
  */
 
 #include <stdio.h>
-// #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -125,13 +124,8 @@ int zen_init_pmain(lua_State *L) { // protected mode init
 	zen_setenv(L, "GITLOG", GITLOG);
 #endif
 
-#ifdef MIMALLOC
-	zen_setenv(L, "MEMMANAGER", "mimalloc");
-	act(L,"Memory manager: mimalloc");
-#else
-	zen_setenv(L, "MEMMANAGER", "libc");
-	act(L,"Memory manager: libc");
-#endif
+	// zen_setenv(L, "MEMMANAGER", "libc");
+	// act(L,"Memory manager: libc");
 
 	// open all standard lua libraries
 	luaL_openlibs(L);
@@ -165,10 +159,6 @@ int zen_init_pmain(lua_State *L) { // protected mode init
 // initializes globals: Z, L (in this order)
 // zen_init_pmain is the Lua routine executed in protected mode
 zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
-
-#ifdef MIMALLOC
-  mi_stats_reset();
-#endif
 
 	zenroom_t *ZZ = (zenroom_t*)malloc(sizeof(zenroom_t));
 
@@ -351,12 +341,7 @@ void zen_teardown(zenroom_t *ZZ) {
 	lua_close((lua_State*)ZZ->lua);
 	ZZ->lua = NULL;
 
-#ifdef MIMALLOC
-	if(ZZ->debuglevel > 3) mi_stats_print(NULL);
-#endif
-
 	free(ZZ);
-
 }
 
 #define SAFE_EXEC \

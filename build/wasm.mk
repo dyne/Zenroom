@@ -28,7 +28,7 @@ cc_emsdk_settings := -DARCH_WASM -D'ARCH="WASM"'
 cc_emsdk_optimizations := -O2 -sSTRICT -flto -fno-rtti -fno-exceptions
 # lua_embed_opts := "compile"
 ldflags += -lm ${ld_emsdk_optimizations} ${ld_emsdk_settings}
-cflags += -DLIBCMALLOC ${cc_emsdk_settings} ${cc_emsdk_optimizations}
+cflags += ${cc_emsdk_settings} ${cc_emsdk_optimizations}
 
 all: ${BUILD_DEPS} zenroom.js
 
