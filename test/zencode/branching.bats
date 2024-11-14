@@ -797,7 +797,7 @@ When I create the 'string array' named 'res'
 If I verify 'arr' is found
     When done
     Foreach 'el1' in 'arr'
-        -- this statements are skipped since arr is empty
+        # this statements are skipped since arr is empty
         When I set 'pippo' to 'pippo' as 'string'
         and I move 'pippo' in 'res'
         If I verify 'el1' is found
