@@ -258,6 +258,7 @@ If I verify number 'x' is more than 'limit'
 If I verify number 'y' is more than 'limit'
 When I copy 'x' in 'floats'
 endif
+endif
 EndForeach
 EndForeach
 If I verify number 'zero' is less than 'limit'
@@ -268,10 +269,11 @@ When I copy 'b' in 'floats'
 EndForeach
 EndForeach
 endif
+endif
 Then print 'floats'
 EOF
     save_output "foreach_nestedif.out"
-    assert_output '{"floats":[5,5,5,5,5,5,6,6,6,6,6,6,7,7,7,7,7,7,8,8,8,8,8,8,10,9,8,7,6,5,4,3,2,1,0,-1]}'
+    assert_output '{"floats":[5,5,5,5,5,5,6,6,6,6,6,6,7,7,7,7,7,7,8,8,8,8,8,8,10,9,8,7,6,5,4,3,2,1,0,-1,10,9,8,7,6,5,4,3,2,1,0,-1,10,9,8,7,6,5,4,3,2,1,0,-1,10,9,8,7,6,5,4,3,2,1,0,-1,10,9,8,7,6,5,4,3,2,1,0,-1,10,9,8,7,6,5,4,3,2,1,0,-1,10,9,8,7,6,5,4,3,2,1,0,-1,10,9,8,7,6,5,4,3,2,1,0,-1]}'
 }
 
 @test "exit from foreach loop" {
@@ -423,7 +425,7 @@ If I verify 'arr' is found
 Foreach 'el' in 'arr'
 When done
 # the following line are inverted
-EndOneIf
+EndIf
 Endforeach
 Then print the data
 EOF

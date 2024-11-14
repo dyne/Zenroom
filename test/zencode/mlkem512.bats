@@ -183,6 +183,7 @@ If I verify 'Bob mlkem512 secret' is equal to 'mlkem512 secret'
 If I verify 'Dave message' is equal to 'text'
 Then print string 'Success!!!'
 Endif
+Endif
 EOF
     save_output 'Carl_ECDH_mlkem512_dec.out'
     assert_output '{"output":["Success!!!"]}'

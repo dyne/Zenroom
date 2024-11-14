@@ -52,7 +52,6 @@ ZEN = {
 	when_steps = {},
 	if_steps = {},
 	endif_steps = { endif = function() return end }, --nop
-	endoneif_steps = { endoneif = function() return end }, --nop
 	foreach_steps = {},
 	endforeach_steps = { endforeach = function() return end }, --nop
 	then_steps = {},
@@ -125,11 +124,7 @@ function ZEN:begin(new_heap)
 		  whenforeachif = 'when',
 		  whenifforeach = 'when',
 		  foreachif = 'foreach',
-		  endforeachif = 'endforeach',
-		  endforeachifforeach = 'endforeach',
-		  endforeachforeach = 'endforeach',
-		  ifforeach = 'if',
-		  endifforeach = 'endif',
+		  ifforeach = 'if'
 	   }
 	   local current <const> = self.current
 	   local index <const> = translate[current] or current
@@ -387,44 +382,33 @@ function ZEN:begin(new_heap)
 	   callbacks.onwhenforeach = set_sentence
 	   callbacks.onforeachif = set_sentence
 	   callbacks.onwhenforeachif = set_sentence
-	   callbacks.onendforeachif = set_sentence
 	   callbacks.onifforeach = set_sentence
 	   callbacks.onwhenifforeach = set_sentence
-	   callbacks.onendifforeach = set_sentence
-	   callbacks.onendoneif = set_sentence
-	   callbacks.onendforeachifforeach = set_sentence
-	   callbacks.onendforeachforeach = set_sentence
 	   local extra_events <const> = {
-		  {name = 'enter_when', from = {'given', 'when', 'then', 'endif', 'endoneif', 'endforeach'}, to = 'when'},
-		  {name = 'enter_if', from = {'if', 'given', 'when', 'then', 'endif', 'endoneif', 'endforeach', 'whenif', 'thenif', 'endforeachif', 'foreachif'}, to = 'if'},
-		  {name = 'enter_whenif', from = {'if', 'whenif', 'thenif', 'endforeachif', 'endoneif'}, to = 'whenif'},
-		  {name = 'enter_thenif', from = {'if', 'whenif', 'thenif', 'endoneif'}, to = 'thenif'},
-		  {name = 'enter_endif', from = {'whenif', 'thenif', 'endforeachif', 'endoneif'}, to = 'endif'},
-		  {name = 'enter_endoneif', from = {'whenif', 'thenif', 'endforeachif', 'endoneif', 'whenifforeach'}, to = 'endoneif'},
-		  {name = 'enter_foreachif', from = {'if', 'whenif', 'endforeachif', 'foreachif', 'endoneif', 'whenifforeach'}, to = 'foreachif'},
-		  {name = 'enter_whenforeachif', from = {'foreachif', 'whenforeachif', 'endoneif'}, to = 'whenforeachif'},
-		  {name = 'enter_endforeachif', from = {'foreachif', 'whenforeachif', 'endoneif', 'endforeachforeachif'}, to = 'endforeachif'},
-		  {name = 'enter_ifforeach', from = {'foreach', 'whenforeach', 'ifforeach', 'endifforeach', 'foreachif', 'whenifforeach', 'endoneif'}, to = 'ifforeach'},
-		  {name = 'enter_whenifforeach', from = {'ifforeach', 'whenifforeach', 'endoneif', 'endforeachifforeach'}, to = 'whenifforeach'},
-		  {name = 'enter_endifforeach', from = {'ifforeach', 'whenifforeach'}, to = 'endifforeach'},
+		  {name = 'enter_when', from = {'given', 'when', 'then', 'endif', 'endforeach'}, to = 'when'},
+		  {name = 'enter_then', from = {'given', 'when', 'then', 'endif', 'endforeach'}, to = 'then'},
+		  {name = 'enter_if', from = {'if', 'given', 'when', 'then', 'endif', 'endforeach', 'whenif', 'thenif', 'endforeach', 'foreachif'}, to = 'if'},
+		  {name = 'enter_whenif', from = {'if', 'whenif', 'thenif', 'endforeach', 'endif'}, to = 'whenif'},
+		  {name = 'enter_thenif', from = {'if', 'whenif', 'thenif'}, to = 'thenif'},
+		  {name = 'enter_endif', from = {'whenif', 'whenifforeach', 'thenif', 'endforeach', 'endif'}, to = 'endif'},
 		  {name = 'enter_foreach', from = {'given', 'when', 'endif', 'foreach', 'endforeach', 'whenforeach'}, to = 'foreach'},
-		  {name = 'enter_whenforeach', from = {'foreach', 'whenforeach', 'endifforeach', 'endforeach'}, to = 'whenforeach'},
-		  {name = 'enter_endforeach', from = {'whenforeach', 'endifforeach', 'endforeach', 'endforeachforeach'}, to = 'endforeach'},
-		  {name = 'enter_endforeachforeach', from = {'whenforeach', 'endifforeach', 'endforeach', 'endforeachforeach'}, to = 'endforeachforeach'},
-		  {name = 'enter_endforeachforeachif', from = {'whenforeachif', 'endifforeach', 'endforeach'}, to = 'endforeachforeachif'},
-		  {name = 'enter_endforeachifforeach', from = {'foreachif', 'whenforeachif', 'endoneif'}, to = 'endforeachifforeach'},
+		  {name = 'enter_whenforeach', from = {'foreach', 'whenforeach', 'endif', 'endforeach'}, to = 'whenforeach'},
+		  {name = 'enter_foreachif', from = {'if', 'whenif', 'endforeach', 'foreachif', 'whenifforeach', 'endif'}, to = 'foreachif'},
+		  {name = 'enter_whenforeachif', from = {'foreachif', 'whenforeachif', 'endif'}, to = 'whenforeachif'},
+		  {name = 'enter_ifforeach', from = {'foreach', 'whenforeach', 'ifforeach', 'endif', 'foreachif', 'whenifforeach'}, to = 'ifforeach'},
+		  {name = 'enter_whenifforeach', from = {'ifforeach', 'whenifforeach', 'endforeach', 'endif'}, to = 'whenifforeach'},
+		  {name = 'enter_endforeach', from = {'whenforeach', 'whenforeachif', 'endif', 'endforeach'}, to = 'endforeach'},
 		  {name = 'enter_and', from = 'when', to = 'when'},
+		  {name = 'enter_and', from = 'then', to = 'then'},
+		  {name = 'enter_and', from = 'if', to = 'if'},
 		  {name = 'enter_and', from = 'whenif', to = 'whenif'},
 		  {name = 'enter_and', from = 'thenif', to = 'thenif'},
-		  {name = 'enter_and', from = 'if', to = 'if'},
 		  {name = 'enter_and', from = 'foreach', to = 'foreach'},
-		  {name = 'enter_and', from = 'ifforeach', to = 'ifforeach'},
-		  {name = 'enter_and', from = 'foreachif', to = 'foreachif'},
 		  {name = 'enter_and', from = 'whenforeach', to = 'whenforeach'},
-		  {name = 'enter_and', from = 'whenifforeach', to = 'whenifforeach'},
+		  {name = 'enter_and', from = 'foreachif', to = 'foreachif'},
 		  {name = 'enter_and', from = 'whenforeachif', to = 'whenforeachif'},
-		  {name = 'enter_then', from = {'given', 'when', 'then', 'endif', 'endforeach', 'endoneif'}, to = 'then'},
-		  {name = 'enter_and', from = 'then', to = 'then'},
+		  {name = 'enter_and', from = 'ifforeach', to = 'ifforeach'},
+		  {name = 'enter_and', from = 'whenifforeach', to = 'whenifforeach'},
 	   }
 	   for _,v in pairs(extra_events) do table.insert(events, v) end
 	end
@@ -464,7 +448,9 @@ local function enter_branching_and_looping(type, info, prefixes, ln)
 		table.insert(prefixes, 1, type)
 	end
 	table.insert(info, { ln, already_prefix })
+	return prefixes[1]..(prefixes[2] or '')
 end
+
 local function end_branching_and_looping(type, info, prefixes, ln)
 	local n = fif(type == 'if', 'branching', 'loop')
 	if #info == 0 then
@@ -496,6 +482,7 @@ function ZEN:parse(text)
    local looping = {}
    local prefixes = {}
    local parse_prefix <const> = parse_prefix -- optimization
+   local last_prefix
    self.linenum = 0
    local res = fif(CONF.parser.strict_parse, true, { ignored={}, invalid={} })
    for line in zencode_newline_iter(text) do
@@ -520,28 +507,24 @@ function ZEN:parse(text)
 			break -- stop parsing after given block
 		 end
 
-		 if prefix == 'if' then
-			enter_branching_and_looping('if', branching, prefixes, self.linenum)
-		 elseif prefix == 'foreach' then
-			enter_branching_and_looping('foreach', looping, prefixes, self.linenum)
-		 elseif prefix == 'endif' then
-			-- back compatibility
-			if #branching == 0 then
-				error('Ivalid branching closing at line '..self.linenum..': nothing to be closed')
-			end
-			branching = {}
-			table.remove(prefixes, 1)
-		elseif prefix == 'endoneif' then
+		if prefix == 'if' or (prefix == 'and' and last_prefix == 'if') then
+			last_prefix = 'if'
+			prefix = enter_branching_and_looping('if', branching, prefixes, self.linenum)
+		elseif prefix == 'foreach' or (prefix == 'and' and last_prefix == 'foreach') then
+			last_prefix = 'foreach'
+			prefix = enter_branching_and_looping('foreach', looping, prefixes, self.linenum)
+		elseif prefix == 'endif' then
+			last_prefix = prefix
 			end_branching_and_looping('if', branching, prefixes, self.linenum)
 		elseif prefix == 'endforeach' then
+			last_prefix = prefix
 			end_branching_and_looping('foreach', looping, prefixes, self.linenum)
+		else
+			last_prefix = prefix
 		end
-		 if prefix == 'if' or prefix == 'foreach' then
-			prefix = prefixes[1]..(prefixes[2] or '')
-		 elseif prefix == 'when' or prefix == 'then'
-			or prefix == 'endif' or prefix == 'endforeach' then
+		if prefix == 'when' or prefix == 'then' then
 			prefix = prefix .. (prefixes[1] or '').. (prefixes[2] or '')
-		 end
+		end
 
 		 if prefix == "when" or prefix == "if" or prefix == "foreach" then
 			ZEN.phase = "w"
@@ -632,12 +615,6 @@ local function manage_branching(stack, x)
 		return true
 	end
 	if string.match(x.section, '^endif') then
-		--xxx("END   conditional execution: "..x.source, 2)
-		stack.branch = 0
-		stack.branch_valid = 0
-		return true
-	end
-	if string.match(x.section, '^endoneif') then
 		--xxx("END   conditional execution: "..x.source, 2)
 		if stack.branch_valid == stack.branch then
 			stack.branch_valid = stack.branch_valid-1

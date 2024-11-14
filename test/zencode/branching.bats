@@ -45,6 +45,7 @@ If I verify 'number_lower' is equal to 'number_higher'
 When I create the random 'random_this_is_impossible'
 Then print string 'the conditions can never be satisfied'
 Endif
+EndIf
 
 # You can also check if an object exists at a certain point of the execution, with the statement:
 # If I verify 'objectName' is found
@@ -128,6 +129,7 @@ If I verify number 'left' is less than 'right'
 and I verify 'right' is equal to 'right'
 Then print string 'right is higher'
 and print string 'and I am right'
+endif
 endif
 
 If I verify number 'left' is more than 'right'
@@ -663,16 +665,16 @@ If I verify 'grants' is found in 'external_qr_content'
         If I verify 'authorization_server' is found in 'authorization_code'
             When I pickup from path 'authorization_code.authorization_server'
             Then print the 'authorization_server'
-        EndOneIf
-    EndOneIf
+        EndIf
+    EndIf
     If I verify 'urn:ietf:params:oauth:grant-type:pre-authorized_code' is found in 'grants'
         When I pickup from path 'grants.urn:ietf:params:oauth:grant-type:pre-authorized_code'
         If I verify 'pre-authorized_code' is found in 'urn:ietf:params:oauth:grant-type:pre-authorized_code'
             When I pickup from path 'urn:ietf:params:oauth:grant-type:pre-authorized_code.pre-authorized_code'
             Then print the 'pre-authorized_code'
-        EndOneIf
-    EndOneIf
-EndOneIf
+        EndIf
+    EndIf
+EndIf
 
 When I create copy of element '1' from array 'credential_configuration_ids'
 When I rename the 'copy' to 'credential_configuration_id'
@@ -689,21 +691,13 @@ EOF
     assert_output '{"credential_configuration_id":"openbadge_credential","credential_issuer":"https://ministerie-agent.dev.impierce.com/.well-known/openid-credential-issuer","pre-authorized_code":"ebb90f2db21a4708b93217a686f91e134b370b350aae18dc25a382507b141c13"}'
 }
 
-@test "Invalid signle endif and endoneif" {
+@test "Invalid signle endif" {
     cat << EOF | save_asset invalid_single_endif.zen
 Given nothing
 EndIf
 Then print the data
 EOF
     run $ZENROOM_EXECUTABLE -z invalid_single_endif.zen
-    assert_line --partial "Ivalid branching closing at line 2: nothing to be closed"
-
-    cat << EOF | save_asset invalid_single_endoneif.zen
-Given nothing
-EndOneIf
-Then print the data
-EOF
-    run $ZENROOM_EXECUTABLE -z invalid_single_endoneif.zen
     assert_line --partial "Ivalid branching closing at line 2: nothing to be closed"
 }
 
@@ -714,31 +708,9 @@ When I set 'my_string' to 'test' as 'string'
 If I verify 'my_string' is found
 Then I print 'my string'
 EndIf
-EndOneIf
-EOF
-    run $ZENROOM_EXECUTABLE -z endif_on_closed_branch.zen
-    assert_line --partial "Ivalid branching closing at line 6: nothing to be closed"
-
-    cat << EOF | save_asset endoneif_on_closed_branch.zen
-Given nothing
-When I set 'my_string' to 'test' as 'string'
-If I verify 'my_string' is found
-Then I print 'my string'
-EndOneIf
 EndIf
 EOF
-    run $ZENROOM_EXECUTABLE -z endoneif_on_closed_branch.zen
-    assert_line --partial "Ivalid branching closing at line 6: nothing to be closed"
-
-    cat << EOF | save_asset endoneif_on_closed_branch_2.zen
-Given nothing
-When I set 'my_string' to 'test' as 'string'
-If I verify 'my_string' is found
-Then I print 'my string'
-EndOneIf
-EndOneIf
-EOF
-    run $ZENROOM_EXECUTABLE -z endoneif_on_closed_branch_2.zen
+    run $ZENROOM_EXECUTABLE -z endif_on_closed_branch.zen
     assert_line --partial "Ivalid branching closing at line 6: nothing to be closed"
 }
 
@@ -774,7 +746,7 @@ When I create the 'string array' named 'res_foreach'
 If I verify 'my_array' is found
     If I verify size of 'my_array' is more than 'one'
         Then print the string 'long array'
-    EndOneIf
+    EndIf
     Foreach 'el' in 'my_array'
         If I verify 'data' is found in 'el'
             When I pickup from path 'el.data'
@@ -784,12 +756,12 @@ If I verify 'my_array' is found
                     When I copy 'e' in 'res_foreach'
                 EndForeach
                 When I remove 'other_key'
-            EndOneIf
+            EndIf
             If I verify 'key' is found in 'data'
                 When I move 'key' from 'data' in 'res'
-            EndOneIf
+            EndIf
             When I remove 'data'
-        EndOneIf
+        EndIf
         If I verify 'other_data' is found in 'el'
             When I pickup from path 'el.other_data'
             If I verify 'other_key' is found in 'other_data'
@@ -797,18 +769,18 @@ If I verify 'my_array' is found
                 Foreach 'e' in 'other_key'
                     If I verify 'e' is equal to 'filter'
                         When I copy 'e' in 'res_foreach'
-                    EndOneIf
+                    EndIf
                     When done
                 EndForeach
                 When I remove 'other_key'
-            EndOneIf
+            EndIf
             If I verify 'key' is found in 'other_data'
                 When I move 'key' from 'other_data' in 'res'
-            EndOneIf
+            EndIf
             When I remove 'other_data'
-        EndOneIf
+        EndIf
     EndForeach
-EndOneIf
+EndIf
 
 Then print 'res'
 Then print 'res_foreach'

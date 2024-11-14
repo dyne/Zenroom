@@ -685,6 +685,9 @@ If I verify the elements in 'nested arr' are all equal
 If I verify the elements in 'empty dict' are all equal
 Then print string 'OK'
 EndIf
+EndIf
+EndIf
+EndIf
 EOF
     save_output "compare-equal.json"
     assert_output '{"output":["OK"]}'
@@ -716,6 +719,8 @@ If I verify the elements in 'arr' are not all equal
 If I verify the elements in 'dict' are not all equal
 If I verify the elements in 'nested arr' are not all equal
 Then print string 'OK'
+EndIf
+EndIf
 EndIf
 EOF
     save_output "compare-not-equal.json"
