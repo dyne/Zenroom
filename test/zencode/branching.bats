@@ -788,3 +788,34 @@ EOF
     save_output 'nested_if_in_foreach.out.json'
     assert_output '{"output":["long_array"],"res":["value"],"res_foreach":["other_value_2"]}'
 }
+
+@test "Some nested branching and loop tests" {
+cat << EOF | zexe nested_1.zen
+Given nothing
+When I create the 'string array' named 'arr'
+When I create the 'string array' named 'res'
+If I verify 'arr' is found
+    When done
+    Foreach 'el1' in 'arr'
+        -- this statements are skipped since arr is empty
+        When I set 'pippo' to 'pippo' as 'string'
+        and I move 'pippo' in 'res'
+        If I verify 'el1' is found
+            Foreach 'el2' in 'el1'
+                Foreach 'el3' in 'el2'
+                    If I verify 'el3' is found
+                        When done
+                    EndIf
+                Endforeach
+                When done
+            Endforeach
+        EndIf
+        When done
+    EndForeach
+    Then print the 'arr'
+EndIf
+Then print 'res'
+EOF
+    save_output nested_1.out.json
+    assert_output '{"arr":[],"res":[]}'
+}
