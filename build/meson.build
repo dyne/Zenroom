@@ -64,7 +64,7 @@ tests = [
 'bitcoin', 'branching', 'cookbook_debug', 'cookbook_dictionaries',
 'cookbook_ecdh', 'cookbook_ecdh_encrypt_json', 'cookbook_given',
 'cookbook_intro', 'cookbook_then', 'cookbook_when', 'credential',
-'dictionary', 'dp3t', 'ecdh', 'float', 'foreach', 'fsp',
+'dictionary', 'dp3t', 'ecdh', 'educational', 'float', 'foreach', 'fsp',
 'generic_bbs', 'generic_dilithium', 'generic_ecdh', 'generic_eddsa',
 'generic_es256', 'generic_mldsa44', 'generic_schnorr', 'given',
 'hash', 'http', 'keys', 'kyber', 'mlkem512', 'ntrup', 'numbers',
