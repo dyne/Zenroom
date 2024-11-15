@@ -114,21 +114,17 @@ end
 
 
 zencode_assert = function(condition, errmsg)
-   if condition then
-      return true
-   else
-      ZEN.branch_valid = fif(ZEN.branch_valid > 0, ZEN.branch_valid - 1, 0)
-   end
-   -- in conditional branching zencode_assert doesn't quit
-   if ZEN.branch ~= 0 then
-      table.insert(traceback, errmsg)
-   else
-      -- ZEN.debug() -- prints all data in memory
-      -- table.insert(traceback, '[!] '..errmsg)
-      ZEN.OK = false
-      exitcode(1)
-      error(errmsg, 3)
-   end
+    if condition then return true end
+    if ZEN.branch_condition then
+        ZEN.branch_valid = ZEN.branch_valid - 1
+        table.insert(traceback, errmsg)
+        return true
+    end
+    -- ZEN.debug() -- prints all data in memory
+    -- table.insert(traceback, '[!] '..errmsg)
+    ZEN.OK = false
+    exitcode(1)
+    error(errmsg, 3)
 end
 
 function ZEN:debug()

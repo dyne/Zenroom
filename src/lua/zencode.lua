@@ -393,9 +393,9 @@ function ZEN:begin(new_heap)
 		  {name = 'enter_endif', from = {'whenif', 'whenifforeach', 'thenif', 'endforeach', 'endif'}, to = 'endif'},
 		  {name = 'enter_foreach', from = {'given', 'when', 'endif', 'foreach', 'endforeach', 'whenforeach'}, to = 'foreach'},
 		  {name = 'enter_whenforeach', from = {'foreach', 'whenforeach', 'endif', 'endforeach'}, to = 'whenforeach'},
-		  {name = 'enter_foreachif', from = {'if', 'whenif', 'endforeach', 'foreachif', 'ifforeach', 'whenifforeach', 'endif'}, to = 'foreachif'},
+		  {name = 'enter_foreachif', from = {'if', 'whenif', 'endforeach', 'foreachif', 'whenforeachif', 'ifforeach', 'whenifforeach', 'endif'}, to = 'foreachif'},
 		  {name = 'enter_whenforeachif', from = {'foreachif', 'whenforeachif', 'endif', 'endforeach'}, to = 'whenforeachif'},
-		  {name = 'enter_ifforeach', from = {'foreach', 'whenforeach', 'ifforeach', 'whenifforeach', 'foreachif', 'whenforeachif', 'endif' }, to = 'ifforeach'},
+		  {name = 'enter_ifforeach', from = {'foreach', 'whenforeach', 'ifforeach', 'whenifforeach', 'foreachif', 'whenforeachif', 'endif', 'endforeach' }, to = 'ifforeach'},
 		  {name = 'enter_whenifforeach', from = {'ifforeach', 'whenifforeach', 'endforeach', 'endif'}, to = 'whenifforeach'},
 		  {name = 'enter_endforeach', from = {'whenforeach', 'whenforeachif', 'endif', 'endforeach'}, to = 'endforeach'},
 		  {name = 'enter_and', from = 'when', to = 'when'},
@@ -605,7 +605,9 @@ end
 -- return true: caller skip execution and go to ::continue::
 -- return false: execute statement
 local function manage_branching(stack, x)
+	stack.branch_condition = nil
 	if string.match(x.section, '^if') then
+		stack.branch_condition = true
 		-- xxx("START conditional execution: "..x.source, 2)
 		stack.branch = stack.branch+1
 		if stack.branch_valid == stack.branch-1 then
