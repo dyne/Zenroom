@@ -69,7 +69,6 @@ local function then_outcast(val, key, enc)
       error("Then outcast called on empty variable", 2)
    end
    local fun
-   local codec
    if enc then
 	  fun = get_encoding_function(enc)
       if ZEN.schemas[enc] then
@@ -88,7 +87,7 @@ local function then_outcast(val, key, enc)
    else
 	  fun = default_export_f
    end
-   return deepmap(fun,val)
+   return deepmap(fun, val)
 end
 
 local function then_insert(dest, val, key)
@@ -338,4 +337,3 @@ Then("print object named by ''", function(name)
 	   OUT[real_name] = then_outcast( val, real_name )
 	end
 end)
-
