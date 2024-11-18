@@ -683,7 +683,7 @@ local function AST_iterator()
 			return nil
 		end
 		local value = AST[i]
-		while manage_branching(ZEN, value) or manage_foreach(ZEN, value, i) do
+		while i < AST_size and (manage_branching(ZEN, value) or manage_foreach(ZEN, value, i)) do
 			if ZEN.jump then
 				i = ZEN.jump - 1
 				ZEN.jump = nil
