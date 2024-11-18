@@ -66,7 +66,8 @@ Foreach("'' in sequence from '' to '' with step ''", function(name, from_name, t
         -- current_value >  to
         -- current_value >= to + 1
         -- (current_value - (to+1)) >= 0
-        finished = BIG.zenpositive(BIG.zensub(info.cv, info.to_plus_1))
+        local diff = BIG.zensub(info.cv, info.to_plus_1)
+        finished = BIG.zenpositive(diff) or diff == BIG.new(0)
     else
         -- only on first iteration: do checks and save usefull values
         if info.pos == 1 then
