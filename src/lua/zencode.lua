@@ -61,8 +61,7 @@ ZEN = {
 	id = 0,
 	checks = {version = false}, -- version, scenario checked, etc.
 	OK = true, -- set false by asserts
-	current_instruction = 0, -- first instruction
-	next_instruction = 1, -- first instruction
+	jump = nil,
 	ITER = {}, -- foreach infos
 	traceback = {}, -- transferred into HEAP by zencode_begin
 	linenum = 0,
@@ -634,15 +633,15 @@ end
 
 -- return true: caller skip execution and go to ::continue::
 -- return false: execute statement
-local function manage_foreach(stack, x)
+local function manage_foreach(stack, x, ci)
 	local last_iter = stack.ITER[#stack.ITER]
 	if string.match(x.section, '^foreach') then
 		if not last_iter then
-			table.insert(stack.ITER, {jump = stack.current_instruction, pos = 1 })
+			table.insert(stack.ITER, {jump = ci, pos = 1 })
 			return false
-		elseif last_iter.jump ~= stack.current_instruction then
+		elseif last_iter.jump ~= ci then
 			local not_valid_parent_loop = last_iter.pos == 0
-			table.insert(stack.ITER, {jump = stack.current_instruction, pos = fif(not_valid_parent_loop, 0, 1)})
+			table.insert(stack.ITER, {jump = ci, pos = fif(not_valid_parent_loop, 0, 1)})
 			return not_valid_parent_loop
 		else
 			return false
@@ -655,7 +654,7 @@ local function manage_foreach(stack, x)
 		end
 		if last_iter.pos > 0 then
 			last_iter.pos = last_iter.pos + 1
-			stack.next_instruction = last_iter.jump
+			stack.jump = last_iter.jump
 			return true
 		else
 			table.remove(stack.ITER)
@@ -667,12 +666,35 @@ local function manage_foreach(stack, x)
 			error("Limit of iterations exceeded: " .. MAXITER)
 		-- skip all statements on last (not valid) loop
 		elseif last_iter.pos == 0 and last_iter.end_id then
-			stack.next_instruction = last_iter.end_id
+			stack.jump = last_iter.end_id
 			return true
 		end
 	end
 	return last_iter and last_iter.pos == 0
 end
+
+local function AST_iterator()
+	local i = 0
+	local AST_size <const> = table_size(AST)
+	return function()
+		i = i+1
+		-- End of iteration (i exceeds the AST length)
+		if i > AST_size then
+			return nil
+		end
+		local value = AST[i]
+		while manage_branching(ZEN, value) or manage_foreach(ZEN, value, i) do
+			if ZEN.jump then
+				i = ZEN.jump - 1
+				ZEN.jump = nil
+			end
+			i = i+1
+			value = AST[i]
+		end
+		return value
+	end
+end
+
 
 function ZEN:run()
    self:crumb()
@@ -724,44 +746,35 @@ function ZEN:run()
    -- convert all spaces in keys to underscore
    IN = IN_uscore(IN)
 
-   -- EXEC zencode
-   -- TODO: for optimization, to develop a lua iterator, which would save lookup time
-   -- https://www.lua.org/pil/7.1.html
-   local AST_size <const> = table_size(AST)
-   while self.next_instruction <= AST_size do
-	  self.current_instruction = self.next_instruction
-	  local x <const> = AST[self.current_instruction]
-	  self.next_instruction = self.next_instruction + 1
-	  if not manage_branching(self, x) and not manage_foreach(self, x) then
-		 -- trigger upon switch to when or then section
-		 if x.from == 'given' and x.to ~= 'given' then
+	-- EXEC zencode
+	for x in AST_iterator() do
+		-- trigger upon switch to when or then section
+		if x.from == 'given' and x.to ~= 'given' then
 			-- delete IN memory
 			IN = {}
 			collectgarbage 'collect'
-		 end
-		 -- HEAP integrity guard
-		 if CONF.heapguard then -- watchdog
+		end
+		-- HEAP integrity guard
+		if CONF.heapguard then -- watchdog
 			-- guard ACK's contents on section switch
 			deepmap(zenguard, ACK)
 			-- check that everythink in HEAP.ACK has a CODEC
 			self:codecguard()
-		 end
+		end
 
-		 self.OK = true
-		 exitcode(0)
-		 runtime_trace(x)
-		 local ok, err <const> = pcall(x.hook, table.unpack(x.args))
-		 if not ok or not self.OK then
+		self.OK = true
+		exitcode(0)
+		runtime_trace(x)
+		local ok, err <const> = pcall(x.hook, table.unpack(x.args))
+		if not ok or not self.OK then
 			runtime_error(x, err)
 			fatal({msg=x.source, linenum=x.linenum}) -- traceback print inside
-		 end
-		 -- give a notice about the CACHE being used
-		 -- TODO: print it in debug
-		 if #CACHE > 0 then xxx('Contract CACHE is in use') end
-		 collectgarbage 'collect'
-	  end
-	  --	::continue::
-   end
+		end
+		-- give a notice about the CACHE being used
+		-- TODO: print it in debug
+		if #CACHE > 0 then xxx('Contract CACHE is in use') end
+		collectgarbage 'collect'
+	end
    -- PRINT output
    self:ftrace('--- Zencode execution completed')
    if CONF.exec.scope == 'full' then
