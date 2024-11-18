@@ -644,6 +644,8 @@ local function manage_foreach(stack, x)
 			local not_valid_parent_loop = last_iter.pos == 0
 			table.insert(stack.ITER, {jump = stack.current_instruction, pos = fif(not_valid_parent_loop, 0, 1)})
 			return not_valid_parent_loop
+		else
+			return false
 		end
 	end
 	if string.match(x.section, '^endforeach') then
@@ -661,8 +663,8 @@ local function manage_foreach(stack, x)
 		end
 	end
 	if last_iter then
-		if last_iter.pos >= MAXITER then
-			error("Limit of iterations reached: " .. MAXITER)
+		if last_iter.pos > MAXITER then
+			error("Limit of iterations exceeded: " .. MAXITER)
 		-- skip all statements on last (not valid) loop
 		elseif last_iter.pos == 0 and last_iter.end_id then
 			stack.next_instruction = last_iter.end_id

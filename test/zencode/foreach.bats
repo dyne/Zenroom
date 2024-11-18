@@ -456,3 +456,114 @@ EOF
     save_output multiple_not_closed_foreach.out
     assert_output '{"res":"aaabbabbaabbab"}'
 }
+
+@test "maxiter" {
+    cat << EOF | save_asset maxiter.data.json
+{
+    "start_int": "1",
+    "step_int": "1",
+    "end_in_limit_int": "10",
+    "end_out_of_limit_int": "11",
+    "start_float": 1,
+    "step_float": 1,
+    "end_in_limit_float": 10,
+    "end_out_of_limit_float": 11,
+    "array_in_limit": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j"
+    ],
+    "array_out_of_limit": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j",
+        "k"
+    ]
+}
+EOF
+    conf="maxiter=dec:10"
+    cat << EOF | zexe maxiter.work.zen maxiter.data.json
+Given I have a 'integer' named 'start_int'
+Given I have a 'integer' named 'step_int'
+Given I have a 'integer' named 'end_in_limit_int'
+Given I have a 'float' named 'start_float'
+Given I have a 'float' named 'step_float'
+Given I have a 'float' named 'end_in_limit_float'
+Given I have a 'string array' named 'array_in_limit'
+
+When I create the 'string array' named 'res'
+
+Foreach 'i' in 'array_in_limit'
+    When I move 'i' in 'res'
+EndForeach
+Foreach 'i' in sequence from 'start_int' to 'end_in_limit_int' with step 'step_int'
+   When I move 'i' in 'res'
+EndForeach
+Foreach 'i' in sequence from 'start_float' to 'end_in_limit_float' with step 'step_float'
+   When I move 'i' in 'res'
+EndForeach
+Then print the 'res'
+EOF
+    save_output maxiter_work.out.json
+    assert_output '{"res":["a","b","c","d","e","f","g","h","i","j","1","2","3","4","5","6","7","8","9","10",1,2,3,4,5,6,7,8,9,10]}'
+
+    cat << EOF | save_asset maxiter_error_1.zen
+Given I have a 'integer' named 'start_int'
+Given I have a 'integer' named 'step_int'
+Given I have a 'integer' named 'end_out_of_limit_int'
+
+When I create the 'string array' named 'res'
+
+Foreach 'i' in sequence from 'start_int' to 'end_out_of_limit_int' with step 'step_int'
+   When I move 'i' in 'res'
+EndForeach
+
+Then print the 'res'
+EOF
+    run $ZENROOM_EXECUTABLE -c "maxiter=dec:10" -a maxiter.data.json -z maxiter_error_1.zen
+    assert_line --partial 'Limit of iterations exceeded: 10'
+
+    cat << EOF | save_asset maxiter_error_2.zen
+Given I have a 'float' named 'start_float'
+Given I have a 'float' named 'step_float'
+Given I have a 'float' named 'end_out_of_limit_float'
+
+When I create the 'string array' named 'res'
+
+Foreach 'i' in sequence from 'start_float' to 'end_out_of_limit_float' with step 'step_float'
+   When I move 'i' in 'res'
+EndForeach
+
+Then print the 'res'
+EOF
+    run $ZENROOM_EXECUTABLE -c "maxiter=dec:10" -a maxiter.data.json -z maxiter_error_2.zen
+    assert_line --partial 'Limit of iterations exceeded: 10'
+
+    cat << EOF | save_asset maxiter_error_3.zen
+Given I have a 'string array' named 'array_out_of_limit'
+
+When I create the 'string array' named 'res'
+
+Foreach 'i' in 'array_out_of_limit'
+    When I move 'i' in 'res'
+EndForeach
+
+Then print the 'res'
+EOF
+    run $ZENROOM_EXECUTABLE -c "maxiter=dec:10" -a maxiter.data.json -z maxiter_error_3.zen
+    assert_line --partial 'Limit of iterations exceeded: 10'
+}
