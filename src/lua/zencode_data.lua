@@ -355,12 +355,13 @@ end
 		  return data
        elseif dt == 'zenroom.big' then
         zencode_assert(fun ~= to_number_f and fun ~= O.to_mnemonic, "Encoding not valid for integers")
-        if fun == O.to_string then fun = BIG.to_decimal end
-        if fun ~= BIG.to_decimal then
+        local correct_fun = fun
+        if correct_fun == O.to_string then correct_fun = BIG.to_decimal end
+        if correct_fun ~= BIG.to_decimal then
           zencode_assert(BIG.zenpositive(data), "Negative integers can not be encoded")
           data = data:octet()
         end
-        return fun(data)
+        return correct_fun(data)
        elseif dt == 'zenroom.float' or dt == 'zenroom.time' then
 		    return to_number_f(data)
        elseif iszen(dt) then

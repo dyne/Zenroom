@@ -11,7 +11,7 @@ and I rename the 'array' to 'bonnetjes'
 Then print the 'bonnetjes'
 EOF
     save_output arr.json
-  
+
 }
 
 @test "When I create the size of" {
@@ -331,7 +331,7 @@ Given I have a 'string array' named 'haystack'
 and I have a 'number' named 'quorum'
 and I have a 'string' named 'needle'
 When I verify the 'needle' is found in 'haystack' at least 'quorum' times
-Then Print the string 'Success' 
+Then Print the string 'Success'
 EOF
     save_output "needle_in_haystack.json"
     assert_output '{"output":["Success"]}'
@@ -1019,4 +1019,28 @@ Then print the 'copy'
 EOF
     save_output 'copy_from_schema_array.json'
     assert_output '{"copy":{"address":"0x2B8070975AF995Ef7eb949AE28ee7706B9039504","signature":"0xed8f36c71989f8660e8f5d4adbfd8f1c0288cca90d3a5330b7bf735d71ab52fe7ba0a7827dc4ba707431f1c10babd389f658f8e208b89390a9be3c097579a2ff1b"}}'
+}
+
+@test "print array with integers in it" {
+    cat << EOF | save_asset print_array_with_int.data.json
+{
+  "integer": "5",
+  "string": "a",
+  "another_string": "b"
+}
+EOF
+    cat << EOF | zexe print_array_with_int.zen print_array_with_int.data.json
+Given I have a 'integer'
+Given I have a 'string'
+Given I have a 'string' named 'another_string'
+
+When I create the 'string array' named 'res'
+When I move 'string' in 'res'
+When I move 'integer' in 'res'
+When I move 'another_string' in 'res'
+
+Then print the 'res'
+EOF
+    save_output print_array_with_int.out.json
+    assert_output '{"res":["a","5","b"]}'
 }
