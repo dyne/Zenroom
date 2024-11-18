@@ -605,30 +605,26 @@ end
 -- return false: execute statement
 local function manage_branching(stack, x)
 	stack.branch_condition = nil
-	if string.match(x.section, '^if') then
+	local b = stack.branch
+	local v = stack.branch_valid
+	local s = x.section
+
+	if s:sub(1, 2) == 'if' then
 		stack.branch_condition = true
-		-- xxx("START conditional execution: "..x.source, 2)
-		stack.branch = stack.branch+1
-		if stack.branch_valid == stack.branch-1 then
-			stack.branch_valid = stack.branch_valid+1
+		stack.branch = b+1
+		if v == b then
+			stack.branch_valid = v+1
 			return false
 		end
 		return true
-	end
-	if string.match(x.section, '^endif') then
-		--xxx("END   conditional execution: "..x.source, 2)
-		if stack.branch_valid == stack.branch then
-			stack.branch_valid = stack.branch_valid-1
+	elseif s:sub(1, 5) == 'endif' then
+		if v == b then
+			stack.branch_valid = v-1
 		end
-		stack.branch = stack.branch-1
+		stack.branch = b-1
 		return true
 	end
-	if stack.branch == 0 then return false end
-	if stack.branch > stack.branch_valid then
-		--xxx('skip execution in false conditional branch: '..x.source, 2)
-		return true
-	end
-	return false
+	return b ~= 0 and b > v
 end
 
 -- return true: caller skip execution and go to ::continue::
