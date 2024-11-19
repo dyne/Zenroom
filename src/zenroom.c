@@ -193,8 +193,8 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	ZZ->str_maxiter[4] = '\0';
 	// default maxmem 1GB
 	ZZ->str_maxmem[0] = '1';
-	ZZ->str_maxmem[1] = '2';
-	ZZ->str_maxmem[2] = '0';
+	ZZ->str_maxmem[1] = '0';
+	ZZ->str_maxmem[2] = '2';
 	ZZ->str_maxmem[3] = '4';
 	ZZ->str_maxmem[4] = '\0';
 	ZZ->memcount_octets = 0;
