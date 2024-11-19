@@ -793,7 +793,9 @@ function ZEN:run()
 		-- give a notice about the CACHE being used
 		-- TODO: print it in debug
 		if #CACHE > 0 then xxx('Contract CACHE is in use') end
-		collectgarbage 'collect'
+		if collectgarbage('count') > MAXMEM then
+			collectgarbage('collect')
+		end
 	end
    -- PRINT output
    self:ftrace('--- Zencode execution completed')

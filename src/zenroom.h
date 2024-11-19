@@ -75,7 +75,7 @@ int zenroom_sign_verify(const char *algo, const char *pk, const char *msg, const
 
 // conf switches
 typedef enum { STB, MUTT, LIBC } printftype;
-typedef enum { NIL, VERBOSE, SCOPE, RNGSEED, LOGFMT, MAXITER } zconf;
+typedef enum { NIL, VERBOSE, SCOPE, RNGSEED, LOGFMT, MAXITER, MAXMEM } zconf;
 
 // zenroom context, also available as "_Z" global in lua space
 // contents are opaque in lua and available only as lightuserdata
@@ -106,6 +106,7 @@ typedef struct {
   	char zconf_rngseed[(RANDOM_SEED_LEN*2)+4]; // 0x and terminating \0
 
         char str_maxiter[STR_MAXITER_LEN + 1];
+        char str_maxmem[STR_MAXITER_LEN + 1];
 
         int memcount_octets;
         int memcount_bigs;

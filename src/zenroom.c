@@ -185,11 +185,18 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 #else
 	ZZ->logformat = LOG_TEXT;
 #endif
+	// default maxiter 1000 steps
 	ZZ->str_maxiter[0] = '1';
 	ZZ->str_maxiter[1] = '0';
 	ZZ->str_maxiter[2] = '0';
 	ZZ->str_maxiter[3] = '0';
 	ZZ->str_maxiter[4] = '\0';
+	// default maxmem 1GB
+	ZZ->str_maxmem[0] = '1';
+	ZZ->str_maxmem[1] = '2';
+	ZZ->str_maxmem[2] = '0';
+	ZZ->str_maxmem[3] = '4';
+	ZZ->str_maxmem[4] = '\0';
 	ZZ->memcount_octets = 0;
 	ZZ->memcount_bigs = 0;
 	ZZ->memcount_hashes = 0;
@@ -237,6 +244,9 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 
 	lua_pushstring(ZZ->lua, ZZ->str_maxiter);
 	lua_setglobal (ZZ->lua, "STR_MAXITER");
+
+	lua_pushstring(ZZ->lua, ZZ->str_maxmem);
+	lua_setglobal (ZZ->lua, "STR_MAXMEM");
 
 	if(ZZ->scope == SCOPE_GIVEN) {
 	  lua_pushstring(ZZ->lua, "GIVEN");
