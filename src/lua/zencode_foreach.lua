@@ -1,5 +1,5 @@
 local function clear_iterators()
-    local info = ZEN.ITER[#ZEN.ITER]
+    local info = ZEN.ITER_head
     if not info.names then return end
     for _,v in pairs(info.names) do
         ACK[v] = nil
@@ -9,7 +9,7 @@ local function clear_iterators()
 end
 
 Foreach("'' in ''", function(name, collection)
-    local info = ZEN.ITER[#ZEN.ITER]
+    local info = ZEN.ITER_head
     local col = have(collection)
     local collection_codec = CODEC[collection]
     zencode_assert(collection_codec.zentype == "a", "Can only iterate over arrays")
@@ -39,7 +39,7 @@ Foreach("'' in ''", function(name, collection)
 end)
 
 Foreach("'' in sequence from '' to '' with step ''", function(name, from_name, to_name, step_name)
-    local info = ZEN.ITER[#ZEN.ITER]
+    local info = ZEN.ITER_head
     local from = have(from_name)
     local to   = have(to_name)
     local step = have(step_name)
@@ -93,10 +93,10 @@ Foreach("'' in sequence from '' to '' with step ''", function(name, from_name, t
 end)
 
 local function break_foreach()
-    if #ZEN.ITER == 0 or not ZEN.ITER[#ZEN.ITER].pos then
+    if not ZEN.ITER_head then
        error("Can only exit from foreach loop", 2)
     end
-    ZEN.ITER[#ZEN.ITER].pos = 0
+    ZEN.ITER_head.pos = 0
     clear_iterators()
 end
 

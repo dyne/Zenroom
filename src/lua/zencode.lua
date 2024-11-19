@@ -62,7 +62,11 @@ ZEN = {
 	checks = {version = false}, -- version, scenario checked, etc.
 	OK = true, -- set false by asserts
 	jump = nil,
-	ITER = {}, -- foreach infos
+	ITER_present = false,
+	BRANCH_present = false,
+	ITER = {}, -- foreach infos,
+	ITER_parse = {},
+	ITER_head = nil,
 	traceback = {}, -- transferred into HEAP by zencode_begin
 	linenum = 0,
 	last_valid_statement = false,
@@ -194,9 +198,22 @@ function ZEN:begin(new_heap)
 				from = from,
 				to = to,
 				hook = func,
-				linenum = linenum
+				linenum = linenum,
+				f = index == 'foreach' or nil,
+				ef = index == 'endforeach' or nil,
+				i = index == 'if' or nil,
+				ei = index == 'endif' or nil
 			 }
 		  ) -- function
+		  if index == 'foreach' then
+			ctx.Z.ITER_present = true
+			ctx.Z.ITER[ctx.Z.id] = { jump = ctx.Z.id, pos = 1 }
+			table.insert(ctx.Z.ITER_parse, ctx.Z.id)
+		  elseif index == 'endforeach' then
+			local id = table.remove(ctx.Z.ITER_parse)
+			ctx.Z.ITER[id].end_id = ctx.Z.id
+		  end
+		  ctx.Z.BRANCH_present = ctx.Z.BRANCH_present or index == 'if'
 		  ctx.Z.OK = true
 	   end
 	   if not ctx.Z.OK and CONF.parser.strict_match then
@@ -609,7 +626,7 @@ local function manage_branching(stack, x)
 	local v = stack.branch_valid
 	local s = x.section
 
-	if s:sub(1, 2) == 'if' then
+	if x.i then
 		stack.branch_condition = true
 		stack.branch = b+1
 		if v == b then
@@ -617,7 +634,7 @@ local function manage_branching(stack, x)
 			return false
 		end
 		return true
-	elseif s:sub(1, 5) == 'endif' then
+	elseif x.ei then
 		if v == b then
 			stack.branch_valid = v-1
 		end
@@ -630,38 +647,35 @@ end
 -- return true: caller skip execution and go to ::continue::
 -- return false: execute statement
 local function manage_foreach(stack, x, ci)
-	local last_iter = stack.ITER[#stack.ITER]
-	if string.match(x.section, '^foreach') then
-		if not last_iter then
-			table.insert(stack.ITER, {jump = ci, pos = 1 })
-			return false
-		elseif last_iter.jump ~= ci then
-			local not_valid_parent_loop = last_iter.pos == 0
-			table.insert(stack.ITER, {jump = ci, pos = fif(not_valid_parent_loop, 0, 1)})
-			return not_valid_parent_loop
-		else
-			return false
-		end
-	end
-	if string.match(x.section, '^endforeach') then
-		if not last_iter.end_id then last_iter.end_id = x.id end
-		if last_iter.pos == 0 and last_iter.end_id ~= x.id then
+	local last_iter = stack.ITER_head
+	-- if no foreach is defined skip all
+	if not last_iter and not x.f then return false end
+	if x.f then
+		if last_iter and last_iter.pos == 0 then
+			stack.jump = last_iter.end_id
 			return true
 		end
+		stack.ITER_head = stack.ITER[x.id]
+		if last_iter and stack.ITER_head.pos == 1 then
+			stack.ITER_head.parent = last_iter
+		end
+		return false
+	elseif x.ef then
 		if last_iter.pos > 0 then
 			last_iter.pos = last_iter.pos + 1
 			stack.jump = last_iter.jump
 			return true
 		else
-			table.remove(stack.ITER)
-			last_iter = stack.ITER[#stack.ITER]
+			last_iter.pos = 1
+			last_iter = stack.ITER_head.parent
+			stack.ITER_head = last_iter
 		end
 	end
 	if last_iter then
 		if last_iter.pos > MAXITER then
 			error("Limit of iterations exceeded: " .. MAXITER)
 		-- skip all statements on last (not valid) loop
-		elseif last_iter.pos == 0 and last_iter.end_id then
+		elseif last_iter.pos == 0 then
 			stack.jump = last_iter.end_id
 			return true
 		end
@@ -672,6 +686,16 @@ end
 local function AST_iterator()
 	local i = 0
 	local AST_size <const> = table_size(AST)
+	local manage
+	if ZEN.ITER_present and ZEN.BRANCH_present then
+		manage = function(z, v, j) return manage_branching(z, v) or manage_foreach(z, v, j) end
+	elseif ZEN.ITER_present and not ZEN.BRANCH_present then
+		manage = function(z, v, j) return manage_foreach(z, v, j) end
+	elseif not ZEN.ITER_present and ZEN.BRANCH_present then
+		manage = function(z, v, j) return manage_branching(z, v) end
+	else
+		manage = function(z, v, j) return false end
+	end
 	return function()
 		i = i+1
 		-- End of iteration (i exceeds the AST length)
@@ -679,7 +703,7 @@ local function AST_iterator()
 			return nil
 		end
 		local value = AST[i]
-		while i < AST_size and (manage_branching(ZEN, value) or manage_foreach(ZEN, value, i)) do
+		while i < AST_size and manage(ZEN, value, i) do
 			if ZEN.jump then
 				i = ZEN.jump - 1
 				ZEN.jump = nil
