@@ -108,12 +108,13 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 		switch (lex.token) {
 			// first token parsed, set enum for value
 		case CLEX_id:
-			if(strcasecmp(lex.string,"debug")  ==0) { curconf = VERBOSE; break; } // bool
+			if(strcasecmp(lex.string,"debug")==0)   { curconf = VERBOSE; break; } // bool
 			if(strcasecmp(lex.string,"verbose")==0) { curconf = VERBOSE; break; } // int
-			if(strcasecmp(lex.string,"scope")==0) { curconf = SCOPE; break; } // str
+			if(strcasecmp(lex.string,"scope")==0)   { curconf = SCOPE;   break; } // str
 			if(strcasecmp(lex.string,"rngseed")==0) { curconf = RNGSEED; break; } // str
 			if(strcasecmp(lex.string,"logfmt") ==0) { curconf = LOGFMT;  break; } // str
 			if(strcasecmp(lex.string,"maxiter")==0) { curconf = MAXITER; break; } // str
+			if(strcasecmp(lex.string,"maxmem")==0)  { curconf = MAXMEM;  break; } // str
 			if(curconf==RNGSEED) {
 				if(strncasecmp(lex.string, "hex:", 4) != 0) { // hex: prefix needed
 					_err( "Invalid rngseed data prefix (must be hex:)\n");
@@ -193,6 +194,32 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 				// copy string and null terminate
 				memcpy(ZZ->str_maxiter, lex.string+4, len-4);
 				ZZ->str_maxiter[len-4] = 0x0;
+				break;
+			}
+			if(curconf==MAXMEM) {
+				int len = strlen(lex.string);
+				if( len-4 > STR_MAXITER_LEN || len < 5) {
+					_err( "Invalid length of maxmem, must be less than %u digits",
+						STR_MAXITER_LEN);
+					// free(lexbuf);
+					return 0;
+				}
+				if(strncasecmp(lex.string, "dec:", 4) != 0) { // dec: prefix needed
+					_err( "Invalid maxmem data prefix (must be dec:)\n");
+					// free(lexbuf);
+					return 0;
+				}
+				for(p=4; p<len; p++) {
+					if(! isdigit(lex.string[p]) ) {
+						_err( "Invalid digit in maxmem: %c\n",
+							lex.string[p]);
+						return 0;
+					}
+				}
+
+				// copy string and null terminate
+				memcpy(ZZ->str_maxmem, lex.string+4, len-4);
+				ZZ->str_maxmem[len-4] = 0x0;
 				break;
 			}
 			// free(lexbuf);
