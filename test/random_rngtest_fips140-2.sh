@@ -10,6 +10,6 @@ if ! [ $? = 0 ]; then
 fi
 # 1000 blocks of 20000 bits (2500 bytes)
 # 32 bits / 4 bytes rngtest header
-cat <<EOF | ./src/zenroom | rngtest -c $times
+cat <<EOF | ./zenroom | rngtest -c $times
 write(OCTET.random(4 + (2500 * $times)))
 EOF
