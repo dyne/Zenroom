@@ -1,0 +1,5 @@
+-Ilib/lua54/src
+-Ilib/milagro-crypto-c/build/include
+-Ilib/milagro-crypto-c/include
+-Ilib/ed25519-donna
+-Isrc
