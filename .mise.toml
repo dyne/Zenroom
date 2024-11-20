@@ -1,0 +1,4 @@
+[tools]
+emsdk = "3"
+meson = "1"
+rust = "stable"
