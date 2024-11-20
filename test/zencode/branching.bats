@@ -739,8 +739,8 @@ EOF
 
     cat << EOF | zexe nested_if_in_foreach.zen nested_if_in_foreach.data.json
 Given I have a 'string array' named 'my_array'
-and I have a 'number' named 'one'
-and I have a 'string' named 'filter'
+Given I have a 'number' named 'one'
+Given I have a 'string' named 'filter'
 When I create the 'string array' named 'res'
 When I create the 'string array' named 'res_foreach'
 If I verify 'my_array' is found

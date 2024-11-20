@@ -6,14 +6,15 @@
 
 
 - Zencode Basics
-  - [Quickstart](/pages/zencode-cookbook-intro.md "Zencode Quickstart") 
-  - [Zencode: "Given" phase](/pages/zencode-cookbook-given.md "Zencode cookbook Given")
-  - [Zencode: "When phase](/pages/zencode-cookbook-when.md "Zencode cookbook When")
-  - [Zencode: "Then" phase](/pages/zencode-cookbook-then.md "Zencode cookbook Then")
-  - [Zencode: "If/Endif" branching](/pages/zencode-if-endif.md "Zencode branching")
-  - [Zencode: debug](/pages/zencode-debug.md "Zencode debug")
+  - [Quickstart](/pages/zencode-cookbook-intro.md "Zencode Quickstart")
+  - [Given phase](/pages/zencode-cookbook-given.md "Zencode cookbook Given")
+  - [When phase](/pages/zencode-cookbook-when.md "Zencode cookbook When")
+  - [Then phase](/pages/zencode-cookbook-then.md "Zencode cookbook Then")
+  - [If/Endif branching](/pages/zencode-if-endif.md "Zencode branching")
+  - [Foreach/EndForeach looping](/pages/zencode-foreach-endforeach.md "Zencode looping")
+  - [Debug](/pages/zencode-debug.md "Zencode debug")
 
-- Zencode Advanced 
+- Zencode Advanced
   - [Cryptography](/pages/zencode-crypto.md "Zencode")
   - [Scenario 'credentials': zero knowledge proof and attribute based credentials](/pages/zencode-scenario-credentials.md "Zencode credentials")
   - [Scenario 'ecdh': encryption, signature](/pages/zencode-scenarios-ecdh "Zencode ecdh")
@@ -38,7 +39,7 @@
   - [Zencode command list](/pages/zencode-list.md "Zencode command list")
 
 - Bindings
-  - [ Use Zenroom as a library](/pages/how-to-embed.md "Embed") 
+  - [ Use Zenroom as a library](/pages/how-to-embed.md "Embed")
   - [JavaScript ](/pages/javascript.md "Use Zenroom in JavaScript")
   - [Python](/pages/python.md "Use Zenroom in JavaScript")
   - [Java](/pages/java.md "Use Zenroom in Java")
@@ -49,7 +50,7 @@
  - [Zenroom in the browser](/pages/zenroom-javascript2b.md "Use Zenroom in the browser")
  - [Zenroom in React](/pages/zenroom-javascript3.md "Use Zenroom in React")
  - [Zenroom in React Native](/pages/zenroom-react-native.md "Use Zenroom in React Native")
- - [Zenroom ClojureScript](/pages/zenroom-clojurescript.md "Zenroom ClojureScript]") 
+ - [Zenroom ClojureScript](/pages/zenroom-clojurescript.md "Zenroom ClojureScript]")
 
 - Extensions
  - [RESTroom-mw](/pages/restroom-mw)
@@ -60,7 +61,7 @@
 
 
 - Build & Test
- - [Build instructions](/pages/how-to-build.md "Build Zenroom")  
+ - [Build instructions](/pages/how-to-build.md "Build Zenroom")
  - [Zenroom on Cortex M](/pages/cortex.md "Zenroom on Cortex M")
  - [Random quality](/pages/random.md "Random quality measurement")
  - [Browser-encryption demo](/pages/encrypt.md "Browser-encryption demo")
@@ -70,8 +71,8 @@
 
 - Programming Lua
   - [Lua](/pages/lua.md "in Lua")
-  - [Lua full reference](/pages/ldoc/o/README.md "in Lua") 
- 
+  - [Lua full reference](/pages/ldoc/o/README.md "in Lua")
+
 - Misc
  - [Changelog](CHANGELOG)
  - [Contributing](CONTRIBUTING)
