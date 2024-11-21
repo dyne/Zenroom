@@ -12,101 +12,91 @@ Now let's add some interactivity and see how we can play and interact with Zenco
 
 Let’s start by creating a standard React project with the [CRA](https://reactjs.org/docs/create-a-new-react-app.html) tool, and add Zenroom as a dependency
 
-<!--- tabs:start -->
-
-### **npm**
-
 ```bash
-npx create-next-app@latest zenroom-react-test \
-    --js \
-    --src-dir \
-    --disable-git \
-    --app \
-    --use-npm \
-    --no-eslint \
-    --no-tailwind \
-    --no-turbopack \
-    --no-import-alias
+npx create-react-app zenroom-react-test
 ```
-
-### **yarn**
-
-```bash
-npx create-next-app@latest zenroom-react-test \
-    --js \
-    --src-dir \
-    --disable-git \
-    --app \
-    --use-yarn \
-    --no-eslint \
-    --no-tailwind \
-    --no-turbopack \
-    --no-import-alias
-```
-
-### **pnpm**
-
-```bash
-npx create-next-app@latest zenroom-react-test \
-    --js \
-    --src-dir \
-    --disable-git \
-    --app \
-    --use-pnpm \
-    --no-eslint \
-    --no-tailwind \
-    --no-turbopack \
-    --no-import-alias
-```
-
-### **bun**
-
-```bash
-npx create-next-app@latest zenroom-react-test \
-    --js \
-    --src-dir \
-    --disable-git \
-    --app \
-    --use-bun \
-    --no-eslint \
-    --no-tailwind \
-    --no-turbopack \
-    --no-import-alias
-```
-
-<!--- tabs:end -->
 
 Using npm you should now have into `zenroom-react-test` a file structure like this
 
 ```bash
 .
-├── README.md
 ├── package.json
 ├── package-lock.json
-├── jsconfig.json
-├── next.config.mjs
 ├── public
-│   ├── file.svg
-│   ├── globe.svg
-│   ├── next.svg
-│   ├── vercel.svg
-│   └── window.svg
-├── src
-│   └── app
-│   │   ├── favicon.ico
-│   │   ├── fonts
-│   │   │   ├── GeistMonoVF.woff
-│   │   │   └── GeistVF.woff
-│   │   ├── globals.css
-│   │   ├── layout.js
-│   │   ├── page.js
-│   │   └── page.module.css
+│   ├── favicon.ico
+│   ├── index.html
+│   ├── logo192.png
+│   ├── logo512.png
+│   ├── manifest.json
+│   └── robots.txt
+├── README.md
+└── src
+│   ├── App.css
+│   ├── App.js
+│   ├── App.test.js
+│   ├── index.css
+│   ├── index.js
+│   ├── logo.svg
+│   ├── reportWebVitals.js
+│   └── setupTests.js
 └── node_modules
 │   ├── ...
 ```
 
+Before proceeding the following steps are necessary since `react-scripts`v5 excluded the support
+for some node features and polyfills:
+* Install `react-app-rewired` as a dev dependency
 
-Let's add **zenroom** as a dependency
+<!--- tabs:start -->
+
+### **npm**
+
+```bash
+npm install --save-dev react-app-rewired
+```
+
+### **yarn**
+
+```bash
+yarn add --dev react-app-rewired
+```
+
+### **pnpm**
+
+```bash
+pnpm add --save-dev react-app-rewired
+```
+
+### **bun**
+
+```bash
+bun add --dev react-app-rewired
+```
+<!--- tabs:end -->
+* open the `package.json` and change the `scirpts` section with:
+```json
+{
+  "start": "react-app-rewired start",
+  "build": "react-app-rewired build",
+  "test": "react-app-rewired test",
+  "eject": "react-app-rewired eject"
+}
+```
+* create the `config-overrides.js` file and write in it:
+```js
+module.exports = function override(config) {
+    config.resolve.fallback = {
+        fs: false,
+        path: false,
+        crypto: false,
+        process: false,
+    };
+    return config;
+};
+```
+
+
+We are almost there! Now let's add **zenroom** as a dependency
 
 <!--- tabs:start -->
 
@@ -137,85 +127,62 @@ bun add zenroom
 <!--- tabs:end -->
 
 We are now ready to start with our `hello world` smart contract!
-
-Edit the `next.config.mjs`:
-
-```javascript
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  webpack: config => {
-    config.resolve.fallback = {
-      fs: false,
-      process: false,
-      path: false,
-      crypto: false
-    };
-    return config;
-  }
-};
-
-export default nextConfig;
-```
-
-Edit the `src/app/page.js` as such:
+Edit the `src/App.js` as such:
 
 ```javascript
-'use client'
+import {useEffect, useState} from 'react'
+import {zencode_exec} from 'zenroom'
 
-import { useEffect, useState } from 'react';
-import { zencode_exec } from 'zenroom';
-
-
-export default function Home() {
+function App() {
   const [result, setResult] = useState("");
 
   useEffect(() => {
     const exec = async () => {
       const smartContract = `Given that I have a 'string' named 'hello'
-                              Then print all data as 'string'`
+                             Then print all data as 'string'`
       const data = JSON.stringify({ hello: 'world!' })
-      const conf = 'debug=1'
-      const { result } = await zencode_exec(smartContract, { data, conf });
+      const conf = 'memmanager=lw'
+      const {result} = await zencode_exec(smartContract, {data, conf});
       setResult(result)
     }
 
     exec()
   })
+
+
   return (
     <h1>{result}</h1>
   );
 }
+
+export default App;
 ```
 
-build and start the app:
+and start the app:
 
 <!--- tabs:start -->
 
 ### **npm**
 
 ```bash
-npm run build
 npm start
 ```
 
 ### **yarn**
 
 ```bash
-yarn run build
 yarn start
 ```
 
 ### **pnpm**
 
 ```bash
-pnpm run build
 pnpm start
 ```
 
 ### **bun**
 
 ```bash
-bun run build
 bun start
 ```
 
@@ -240,42 +207,38 @@ Firstl install some other packages:
 ### **npm**
 
 ```bash
-npm install reactstrap react-json-view --legacy-peer-deps
+npm install reactstrap @microlink/react-json-view
 ```
 
 ### **yarn**
 
 ```bash
-yarn add reactstrap react-json-view --ignore-peer-deps
+yarn add reactstrap @microlink/react-json-view
 ```
 
 ### **pnpm**
 
 ```bash
-pnpm add reactstrap react-json-view --no-strict-peer-dependencies
+pnpm add reactstrap @microlink/react-json-view
 ```
 
 ### **bun**
 
 ```bash
-bun add reactstrap react-json-view
+bun add reactstrap @microlink/react-json-view
 ```
 
 <!--- tabs:end -->
 
-now edit again the `src/app/page.js` file:
+now edit again the `src/App.js` file:
 
 ```javascript
-'use client'
-
 import { useEffect, useState } from "react";
 import { zencode_exec } from "zenroom";
 import { Form, FormGroup, Label, Input, Container } from "reactstrap";
-import dynamic from "next/dynamic";
+import ReactJson from "@microlink/react-json-view";
 
-const ReactJson = dynamic(() => import("react-json-view"), { ssr: false });
-
-export default function Home() {
+function App() {
   const [result, setResult] = useState({});
   const [message, setMessage] = useState("");
   const [password, setPassword] = useState("");
@@ -327,6 +290,7 @@ export default function Home() {
     </Container>
   );
 }
+export default App;
 ```
 
 Et voila 🤯 as easy as the hello the world! We added an encryption function, and some component to give some styling. If you run it you’ll get something like:
