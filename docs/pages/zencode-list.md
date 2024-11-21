@@ -1,6 +1,6 @@
 # Zencode command list
 
-Start reading here to understand how Zencode smart contracts are written and the philosophy behind the technology. 
+Start reading here to understand how Zencode smart contracts are written and the philosophy behind the technology.
 
 # Smart contract setup
 
@@ -16,37 +16,37 @@ So each Zencode smart contract will contain at least three lines, each begining 
 
 ## Scenarios
 
-Scenarios are set in the beginning of a script and they make Zenroom use a certain set of rules to interpretate the Zencode contained in the smart contract. Different scenarios will typically contain different keywords. The syntax to set a scenario is: 
+Scenarios are set in the beginning of a script and they make Zenroom use a certain set of rules to interpretate the Zencode contained in the smart contract. Different scenarios will typically contain different keywords. The syntax to set a scenario is:
 
 ```gherkin
    Scenario 'simple': Create the keypair
 ```
 
-The scenario setting happens before the ```:```, everything right of that isn't processed by Zenroom and can be used as a title to the smart contract. 
+The scenario setting happens before the ```:```, everything right of that isn't processed by Zenroom and can be used as a title to the smart contract.
 
 ## Rules
 
-Rules are *optional*, they are used to define input and output formats of the smart contract, they have to be set after the scenario and before the rest of the smart contracts. Current rules: 
+Rules are *optional*, they are used to define input and output formats of the smart contract, they have to be set after the scenario and before the rest of the smart contracts. Current rules:
 
 ```txt
 rule input encoding [ url64 | base64 | hex | bin ]
 rule input format [ json ]
 ```
 
-For example, a valid config is: 
+For example, a valid config is:
 
 ```gherkin
 rule input encoding hex
 rule output encoding hex
 ```
 
-A rule can be set also check that Zenroom is at a certain version: if the rule is not satisfied, Zenroom will stop. 
+A rule can be set also check that Zenroom is at a certain version: if the rule is not satisfied, Zenroom will stop.
 
 ```gherkin
    rule check version 2.0.0
 ```
 
-## Configurations 
+## Configurations
 
 You can pass to Zenroom a configuration file, using the parameter ```-c```, description will follow soon.
 
@@ -113,6 +113,12 @@ Without extensions, all the following statementes are valid:
 - random functions
 
 [](../_media/zencode_utterances_reworked.yaml ':include :fragment=random :type=code gherkin')
+- table functions
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=table :type=code gherkin')
+- time functions
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=time :type=code gherkin')
 - verify functions
 
 [](../_media/zencode_utterances_reworked.yaml ':include :fragment=verify :type=code gherkin')
@@ -120,6 +126,9 @@ Without extensions, all the following statementes are valid:
 ## Extensions
 
 Each of the following scenario enable a set of sentences:
+- `bbs functions`
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=bbs :type=code gherkin')
 - `credential`
 
 [](../_media/zencode_utterances_reworked.yaml ':include :fragment=credential :type=code gherkin')
@@ -129,24 +138,45 @@ Each of the following scenario enable a set of sentences:
 - `ecdh`
 
 [](../_media/zencode_utterances_reworked.yaml ':include :fragment=ecdh :type=code gherkin')
+- `eddsa`
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=eddsa :type=code gherkin')
+- `es256`
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=es256 :type=code gherkin')
 - `ethereum`
 
 [](../_media/zencode_utterances_reworked.yaml ':include :fragment=ethereum :type=code gherkin')
+- `fsp`
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=fsp :type=code gherkin')
 - `http`
 
 [](../_media/zencode_utterances_reworked.yaml ':include :fragment=http :type=code gherkin')
 - `petition`
 
 [](../_media/zencode_utterances_reworked.yaml ':include :fragment=petition :type=code gherkin')
+- `planetmint`
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=planetmint :type=code gherkin')
+- `pvss`
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=pvss :type=code gherkin')
 - `qp`
 
 [](../_media/zencode_utterances_reworked.yaml ':include :fragment=qp :type=code gherkin')
 - `reflow`
 
 [](../_media/zencode_utterances_reworked.yaml ':include :fragment=reflow :type=code gherkin')
+- `rsa`
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=rsa :type=code gherkin')
 - `schnorr`
 
 [](../_media/zencode_utterances_reworked.yaml ':include :fragment=schnorr :type=code gherkin')
+- `sd_jwt`
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=sd_jwt :type=code gherkin')
 - `secshare`
 
 [](../_media/zencode_utterances_reworked.yaml ':include :fragment=secshare :type=code gherkin')
@@ -154,7 +184,17 @@ Each of the following scenario enable a set of sentences:
 
 [](../_media/zencode_utterances_reworked.yaml ':include :fragment=w3c :type=code gherkin')
 
+# *Foreach*
 
+The foreach statements can be used directly without adding any scenario.
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=foreach :type=code gherkin')
+
+# *If*
+
+The subset of the *When* statements that can be used with the *If* to create a conditional branch are:
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=if_subset :type=code gherkin')
 
 # *Then*
 
