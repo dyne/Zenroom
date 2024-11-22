@@ -47,7 +47,8 @@ Both of this functions accepts a mandatory **SCRIPT** to be executed and some op
 - DATA
 - KEYS
 - [CONF](https://dev.zenroom.org/#/pages/zenroom-config)
-  **All in form of strings.** This means that if you want to pass a JSON you have to `JSON.stringify` it before.
+
+**All in form of strings.** This means that if you want to pass a JSON you have to `JSON.stringify` it before.
 
 Both functions return a [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise).
 
@@ -100,7 +101,7 @@ const zenData = `
 zencode_exec(zencodeEncrypt, {
   data: zenData,
   keys: zenKeys,
-  conf: `color=0, debug=0`,
+  conf: `debug=1`,
 })
   .then((result) => {
     console.log(result);
@@ -126,7 +127,7 @@ try {
   const result = await zenroom_exec(`print(DATA)`, {
     data: "Some data",
     keys: "Some other data",
-    conf: `color=0, debug=0`,
+    conf: `debug=1`,
   });
   console.log(result); // => Some data
 } catch (e) {
@@ -144,7 +145,7 @@ console.log(introspection); // => an object described as https://dev.zenroom.org
 
 ## 😍 Acknowledgements
 
-Copyright (C) 2018-2022 by [Dyne.org](https://www.dyne.org) foundation, Amsterdam
+Copyright (C) 2018-2024 by [Dyne.org](https://www.dyne.org) foundation, Amsterdam
 
 Designed, written and maintained by Puria Nafisi Azizi.
 
@@ -170,7 +171,7 @@ Please first take a look at the [Dyne.org - Contributor License Agreement](CONTR
 ## 💼 License
 
       Zenroom js - a javascript wrapper of zenroom
-      Copyright (c) 2018-2022 Dyne.org foundation, Amsterdam
+      Copyright (c) 2018-2024 Dyne.org foundation, Amsterdam
 
       This program is free software: you can redistribute it and/or modify
       it under the terms of the GNU Affero General Public License as
