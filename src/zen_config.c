@@ -67,8 +67,6 @@
 #define STB_C_LEXER_DEFINITIONS
 #define STB_C_LEXER_IMPLEMENTATION
 
-extern void set_debug(int lev);
-
 #include <zenroom.h>
 #include <zen_error.h>
 
