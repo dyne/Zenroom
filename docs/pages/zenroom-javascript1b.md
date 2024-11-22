@@ -11,7 +11,7 @@ So first things first, let’s start by where to look for good information about
 - [https://dev.zenroom.org](https://dev.zenroom.org) this is the main source of technical documentation
 - [https://zenroom.org](https://zenroom.org) here you find more informative documentation and all the products related to the main project
 - [https://apiroom.net](https://apiroom.net) a very useful playground to try online your scripts
-- 
+
 ## 🌐 How a VM could live in a browser?
 
 So basically Zenroom is a virtual machine that is mostly written in C and high-level languages and has no access to I/O and no access to networking, this is the reason that makes it so portable.
@@ -46,14 +46,14 @@ const { zencode_exec } = require('zenroom')
 const smartContract = `Given that I have a 'string' named 'hello'
                        Then print all data as 'string'`
 const data = JSON.stringify({ hello: 'world!' })
-const conf = 'memmanager=lw'
+const conf = 'debug=1'
 
 zencode_exec(smartContract, { data, conf }).then(({ result }) => {
   console.log(result) // {"hello":"world!"}
 })
 ```
 
-run it with: 
+run it with:
 
 ```bash
 node index.js
@@ -88,16 +88,16 @@ Now that we saw how the basics works, let’s proceed with some sophistication: 
 ```javascript
 const { zencode_exec } = require('zenroom')
 
-const smartContract = `Scenario 'ecdh': Encrypt a message with a password/secret 
-                        Given that I have a 'string' named 'password' 
-                          and that I have a 'string' named 'message' 
-                        When I encrypt the secret message 'message' with 'password' 
+const smartContract = `Scenario 'ecdh': Encrypt a message with a password/secret
+                        Given that I have a 'string' named 'password'
+                        and that I have a 'string' named 'message'
+                        When I encrypt the secret message 'message' with 'password'
                         Then print the 'secret message'`
 const data = JSON.stringify({
   message: 'Dear Bob, your name is too short, goodbye - Alice.',
 })
 const keys = JSON.stringify({ password: 'myVerySecretPassword' })
-const conf = 'memmanager=lw'
+const conf = 'debug=1'
 
 zencode_exec(smartContract, { data, keys, conf }).then(({ result }) => {
   console.log(result)
@@ -108,31 +108,31 @@ Et voila 🤯 as easy as the hello the world… if you run it you'll get somethi
 
 ```json
 {
-   "secret_message": {
-      "checksum": "507cpFVzIjwFXhvieeXq/A==",
-      "header": "QSB2ZXJ5IGltcG9ydGFudCBzZWNyZXQ=",
-      "iv": "vd7/4KIb3ubXElbGRRTyM4qTVtROkcacnaOeN5Pa0Vo=",
-      "text": "HGsZTlnigSv6zlDpc1bZs40QMWbJxYf9CgjYLEpYI+t62WA6j+bPhfoUxxbnWkYVjX4="
-   }
+  "secret_message": {
+    "checksum": "507cpFVzIjwFXhvieeXq/A==",
+    "header": "QSB2ZXJ5IGltcG9ydGFudCBzZWNyZXQ=",
+    "iv": "vd7/4KIb3ubXElbGRRTyM4qTVtROkcacnaOeN5Pa0Vo=",
+    "text": "HGsZTlnigSv6zlDpc1bZs40QMWbJxYf9CgjYLEpYI+t62WA6j+bPhfoUxxbnWkYVjX4="
+  }
 }
 ```
 
-## 🔏 Next step: decryption 
+## 🔏 Next step: decryption
 
-But being able to encrypt without having a decrypt function is useless, so  let's tidy up a bit and create our own encryption/decryption library with some javascript fun: 
+But being able to encrypt without having a decrypt function is useless, so  let's tidy up a bit and create our own encryption/decryption library with some javascript fun:
 
 ```javascript
 const { zencode_exec } = require("zenroom");
 
-const conf = "memmanager=lw";
+const conf = "debug=1";
 
 const encrypt = async (message, password) => {
   const keys = JSON.stringify({ password });
   const data = JSON.stringify({ message });
-  const contract = `Scenario 'ecdh': Encrypt a message with a password/secret 
-    Given that I have a 'string' named 'password' 
-    and that I have a 'string' named 'message' 
-    When I encrypt the secret message 'message' with 'password' 
+  const contract = `Scenario 'ecdh': Encrypt a message with a password/secret
+    Given that I have a 'string' named 'password'
+    and that I have a 'string' named 'message'
+    When I encrypt the secret message 'message' with 'password'
     Then print the 'secret message'`;
   const { result } = await zencode_exec(contract, { data, keys, conf });
   return result;
@@ -141,10 +141,10 @@ const encrypt = async (message, password) => {
 const decrypt = async (encryptedMessage, password) => {
   const keys = JSON.stringify({ password });
   const data = encryptedMessage;
-  const contract = `Scenario 'ecdh': Decrypt the message with the password 
-    Given that I have a valid 'secret message' 
-    Given that I have a 'string' named 'password' 
-    When I decrypt the text of 'secret message' with 'password' 
+  const contract = `Scenario 'ecdh': Decrypt the message with the password
+    Given that I have a valid 'secret message'
+    Given that I have a 'string' named 'password'
+    When I decrypt the text of 'secret message' with 'password'
     Then print the 'text' as 'string'`;
   const { result } = await zencode_exec(contract, { data, keys, conf });
   const decrypted = JSON.parse(result).text;
@@ -170,4 +170,3 @@ const password = 0xBADA55;
 There you go encryption — decryption with password — secret over Elliptic-curve Diffie–Hellman on curve SECP256K1 in 30 super easy lines of code.
 
 The code used in this article is available on [Github](https://github.com/dyne/blog-code-samples).
-
