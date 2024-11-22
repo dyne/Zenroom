@@ -239,7 +239,6 @@ int main(void)
     load_file(data, datafile);
   }
 
-  // set_debug(verbosity);
   Z = zen_init(
       (conffile[0]) ? conffile : NULL,
       (keys[0]) ? keys : NULL,
