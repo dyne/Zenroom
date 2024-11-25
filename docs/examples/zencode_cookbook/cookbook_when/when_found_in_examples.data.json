@@ -1,0 +1,14 @@
+{
+    "dictionary": {
+        "key 1": "value_1",
+        "key 2": "value_2"
+    },
+    "array": [
+        "value_3",
+        "value_4",
+        "value_4"
+    ],
+    "key": "key_1",
+    "value": "value_4",
+    "N": "2"
+}
