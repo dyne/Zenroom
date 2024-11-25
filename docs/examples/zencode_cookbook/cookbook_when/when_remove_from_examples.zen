@@ -1,0 +1,13 @@
+Given I have a 'string dictionary' named 'dictionary'
+Given I have a 'string array' named 'array'
+
+Given I have a 'string' named 'value to be removed from array'
+
+# to remove an element from a dictionary specify the key you want to remove
+When I remove the 'key 1' from 'dictionary'
+
+# to remove an element from an array specify the value you want to remove
+When I remove the 'value to be removed from array' from 'array'
+
+Then print 'dictionary'
+Then print 'array'
