@@ -31,18 +31,20 @@ However, note that Zenroom does not allow overwriting elements already present i
 ensure that the element you are creating does not already exist! Later, we will learn how to handle
 such conflicts using the [rename and remove statements](#rename-and-remove-statements).
 
-Here’s a simple example:
+A quick example is to create an array or a dictionary:
 
 [](../_media/examples/zencode_cookbook/cookbook_when/when_create_new_array.zen ':include :type=code gherkin')
 
+the above statements will always create a new array called `string_array`, thus if you try to create another
+one you will get an error, to overcome this problem, other than using the `rename` or `remove` statement, you can
+also give a specific name to the new array or dictionary using:
 
-A more complex example involves [json manipulation]()
+[](../_media/examples/zencode_cookbook/cookbook_when/when_create_new_array_with_name.zen ':include :type=code gherkin')
 
-[](../_media/examples/zencode_cookbook/cookbook_when/when_create_escaped_string.zen ':include :type=code gherkin')
-
-The behavior changes slightly when creating a cryptographic secret key. For security reasons, all secret
-keys created in zencode are stored within an object called `keyring`. For instance, creating an
-[ECDH key](zencode-scenarios-ecdh?id=key-generation) looks like this:
+We will see a lot of `create` statements in the cookbook examples, but there is still a particular case
+in which the behavior of the `create` keyword changes a bit: creating a cryptographic secret key.
+For security reasons, all secret keys created in zencode are stored within an object called `keyring`.
+For instance, creating an [ECDH key](zencode-scenarios-ecdh?id=key-generation) looks like this:
 
 [](../_media/examples/zencode_cookbook/cookbook_when/when_create_new_key.zen ':include :type=code gherkin')
 
@@ -52,26 +54,32 @@ that outputs something like:
 
 As shown above, the `keyring` contains an element named `ecdh`, which holds the newly created `ecdh key`.
 
-## Check if object exists in memory or inside another object
+## Check if elements exists in memory or inside another object
 
-### found in memory
+Now that we have learnt how to create elements in memory, we can also check if they exist.
 
-```gherkin
-# in memory
-When I verify '' is found
-When I verify '' is not found
-```
+### Found in memory
 
-### found in another object
+To search if an element exists or not in the memory you can use:
 
-```gherkin
-# in other object
-When I verify '' is found in ''
-When I verify '' is not found in ''
+[](../_media/examples/zencode_cookbook/cookbook_when/when_found_examples.zen ':include :type=code gherkin')
 
-# in other object at least n times
-When I verify '' is found in '' at least '' times
-```
+Copy paste the above example in [Apiroom](https://apiroom.net) and see the result, now try to change `dictionary`,
+in the verify statement, to something that doesn't exist in the memory and see what happens.
+
+### Found in another object
+
+You can also check if an element exists in another object. Where the object is specified after the `in` keyword
+and it can be an array or a dictionary (a lua table). The search in a dictionary is done by key, while the search
+in an array is done by value.
+
+For example suppose to have the following objects:
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_found_in_examples.data.json ':include :type=code json')
+
+we can do some checks like:
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_found_in_examples.zen ':include :type=code gherkin')
 
 ## Managing Memory with Renaming and Removing Statements
 

@@ -559,31 +559,26 @@ EOF
     cat <<EOF | zexe when_create_new_array.zen
 Given nothing
 
-When I create the new array
+When I create the 'string array'
 
-Then print the 'new array'
+Then print the 'string array'
 EOF
     save_output when_create_new_array.out.json
-    assert_output '{"new_array":[]}'
+    assert_output '{"string_array":[]}'
 }
 
-@test "create: escpaed string" {
-    cat <<EOF | save_asset when_create_escaped_string.data.json
-{
-    "json": {
-        "hello": "world"
-    }
-}
-EOF
-    cat <<EOF | zexe when_create_escaped_string.zen when_create_escaped_string.data.json
-Given I have a 'string dictionary' named 'json'
+@test "create: new array with a name" {
+    cat <<EOF | zexe when_create_new_array_with_name.zen
+Given nothing
 
-When I create the json escaped string of 'json'
+When I create the 'string array' named 'array 1'
+When I create the 'string array' named 'array 2'
 
-Then print the 'json escaped string'
+Then print the 'array 1'
+Then print the 'array 2'
 EOF
-    save_output when_create_escaped_string.out.json
-    assert_output '{"json_escaped_string":"{\"hello\":\"world\"}"}'
+    save_output when_create_new_array_with_name.out.json
+    assert_output '{"array_1":[],"array_2":[]}'
 }
 
 @test "create: new key" {
@@ -691,4 +686,68 @@ Then print 'array'
 EOF
     save_output when_remove_from_examples.out.json
     assert_output '{"array":["value 4"],"dictionary":{"key_2":"value 2"}}'
+}
+
+@test "found: element in memory" {
+    cat <<EOF | zexe when_found_examples.zen
+Given nothing
+
+When I create the 'string dictionary' named 'dictionary'
+
+# check for the existance
+When I verify the 'dictionary' is found
+
+# check for the not existance
+When I verify the 'clearly not existing dictionary' is not found
+
+Then print the string 'success'
+EOF
+    save_output when_found_examples.out.json
+    assert_output '{"output":["success"]}'
+}
+
+@test "found: element in another object" {
+    cat <<EOF | save_asset when_found_in_examples.data.json
+{
+    "dictionary": {
+        "key 1": "value_1",
+        "key 2": "value_2"
+    },
+    "array": [
+        "value_3",
+        "value_4",
+        "value_4"
+    ],
+    "key": "key_1",
+    "value": "value_4",
+    "N": "2"
+}
+EOF
+    cat <<EOF | zexe when_found_in_examples.zen when_found_in_examples.data.json
+Given I have a 'string dictionary' named 'dictionary'
+Given I have a 'string array' named 'array'
+
+Given I have a 'string' named 'key'
+Given I have a 'string' named 'value'
+Given I have a 'integer' named 'N'
+
+# check by key in a dictionary
+When I verify the 'key 1' is found in 'dictionary'
+When I verify the 'key' is found in 'dictionary'
+# value_1 is a value in dictionary, not a key, thus it is not found
+When I verify the 'value 1' is not found in 'dictionary'
+
+# check by value in an array
+When I verify the 'value 4' is found in 'array'
+When I verify the 'value' is found in 'array'
+# 1 is a key in array, not a value, thus it is not found
+When I verify the '1' is not found in 'array'
+
+# check if found in an array at least N times
+When I verify the 'value' is found in 'array' at least 'N' times
+
+Then print the string 'success'
+EOF
+    save_output when_found_in_examples.out.json
+    assert_output '{"output":["success"]}'
 }

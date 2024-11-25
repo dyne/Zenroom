@@ -1,5 +1,5 @@
 Given nothing
 
-When I create the new array
+When I create the 'string array'
 
-Then print the 'new array'
+Then print the 'string array'
