@@ -381,10 +381,12 @@ When I create the result of 'the solution / (a + b + 1)'
 and I rename 'result' to 'expr8'
 When I create the result of '-a * (-b -c - (-c+d))'
 and I rename 'result' to 'expr9'
+When I create the result of '-b * a * ( b - a )'
+and I rename 'result' to 'expr10'
 Then print data
 EOF
     save_output 'expressions.out'
-    assert_output '{"a":"1","b":"2","c":"-3","d":"4","expr1":"-1","expr2":"-1","expr3":"-43","expr4":"7011","expr5":"-44","expr6":"17","expr7":"-404","expr8":"10","expr9":"6","the_solution":"42"}'
+    assert_output '{"a":"1","b":"2","c":"-3","d":"4","expr1":"-1","expr10":"-2","expr2":"-1","expr3":"-43","expr4":"7011","expr5":"-44","expr6":"17","expr7":"-404","expr8":"10","expr9":"6","the_solution":"42"}'
 
 }
 

@@ -716,8 +716,9 @@ When("create result of ''", function(expr)
   -- infix to RPN
   local rpn = {}
   local operators = {}
+  local last_token
   for k, v in pairs(tokens) do
-    if v == '-' and (#rpn == 0 or operators[#operators] == '(') then
+    if v == '-' and (#rpn == 0 or last_token == '(' ) then
         table.insert(operators, '~') -- unary minus (change sign)
     elseif priorities[v] then
       while #operators > 0 and operators[#operators] ~= '('
@@ -739,6 +740,7 @@ When("create result of ''", function(expr)
     else
       table.insert(rpn, v)
     end
+    last_token=v
   end
 
   -- all remaining operators have to be applied
