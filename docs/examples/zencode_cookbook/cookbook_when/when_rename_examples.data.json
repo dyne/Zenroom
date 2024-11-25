@@ -1,0 +1,10 @@
+{
+    "to_be_renamed_1": "rename to first",
+    "to_be_renamed_2": "rename to named by new_name_1",
+    "to_be_renamed_3": "rename named by old_name to third",
+    "to_be_renamed_4": "rename named by old_name to named by new_name_2",
+    "new_name_1": "second",
+    "old_name_1": "to_be_renamed_3",
+    "new_name_2": "fourth",
+    "old_name_2": "to_be_renamed_4"
+}

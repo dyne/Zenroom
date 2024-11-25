@@ -1,0 +1,5 @@
+Given nothing
+
+When I create the new array
+
+Then print the 'new array'
