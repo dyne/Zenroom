@@ -1,5 +1,0 @@
-Given I have a 'string dictionary' named 'json'
-
-When I create the json escaped string of 'json'
-
-Then print the 'json escaped string'
