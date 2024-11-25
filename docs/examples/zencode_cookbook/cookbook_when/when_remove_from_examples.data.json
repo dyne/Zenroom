@@ -1,0 +1,8 @@
+{
+    "dictionary": {
+        "key 1": "value 1",
+        "key 2": "value 2"
+    },
+    "array": ["value 3", "value 4"],
+    "value to be removed from array": "value 3"
+}
