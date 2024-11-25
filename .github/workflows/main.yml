@@ -156,7 +156,7 @@ jobs:
           otool -hv libzenroom.dylib
           make check-osx
 
-  arm32-build:
+  arm32-test:
     name: 🦾 ARM32 build test
     needs: [reuse, c-lint, lua-lint]
     if: "github.event_name == 'pull_request'"
@@ -167,7 +167,9 @@ jobs:
         with:
           commands: |
             sudo apt-get update -yq
-            sudo apt-get install -yq make cmake meson gcc jq libreadline-dev xxd git
+            sudo apt-get install -yq --no-install-recommends make cmake gcc jq libreadline-dev xxd git python3-venv
+            python3 -m venv .venv
+            . .venv/bin/activate && pip install --prefer-binary meson ninja
             make linux-exe
             make check
 
@@ -393,7 +395,7 @@ jobs:
             build/release-intro.md
       - name: Install build deps
         run: |
-          sudo apt install -qy tree jq cmake make gcc musl-tools musl-dev meson clang gcc-mingw-w64 libreadline-dev ccache
+          sudo apt install -qy tree jq cmake make gcc musl-tools musl-dev gcc-mingw-w64 libreadline-dev ccache
       - name: Build x86_64 with musl-system
         run: |
           make musl RELEASE=1 CCACHE=1
