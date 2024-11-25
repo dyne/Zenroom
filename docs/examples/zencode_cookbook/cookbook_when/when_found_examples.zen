@@ -1,0 +1,11 @@
+Given nothing
+
+When I create the 'string dictionary' named 'dictionary'
+
+# check for the existance
+When I verify the 'dictionary' is found
+
+# check for the not existance
+When I verify the 'clearly not existing dictionary' is not found
+
+Then print the string 'success'

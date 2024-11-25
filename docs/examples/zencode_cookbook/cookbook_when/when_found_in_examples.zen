@@ -1,0 +1,23 @@
+Given I have a 'string dictionary' named 'dictionary'
+Given I have a 'string array' named 'array'
+
+Given I have a 'string' named 'key'
+Given I have a 'string' named 'value'
+Given I have a 'integer' named 'N'
+
+# check by key in a dictionary
+When I verify the 'key 1' is found in 'dictionary'
+When I verify the 'key' is found in 'dictionary'
+# value_1 is a value in dictionary, not a key, thus it is not found
+When I verify the 'value 1' is not found in 'dictionary'
+
+# check by value in an array
+When I verify the 'value 4' is found in 'array'
+When I verify the 'value' is found in 'array'
+# 1 is a key in array, not a value, thus it is not found
+When I verify the '1' is not found in 'array'
+
+# check if found in an array at least N times
+When I verify the 'value' is found in 'array' at least 'N' times
+
+Then print the string 'success'
