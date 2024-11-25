@@ -33,6 +33,7 @@ If I verify 'number_lower' is equal to 'number_higher'
 When I create the random 'random_this_is_impossible'
 Then print string 'the conditions can never be satisfied'
 Endif
+EndIf
 
 # You can also check if an object exists at a certain point of the execution, with the statement:
 # If I verify 'objectName' is found

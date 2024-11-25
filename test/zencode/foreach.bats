@@ -11,13 +11,13 @@ EOF
 
     cat << EOF | zexe verysimple.zen verysimple.data
 Given I have a 'string array' named 'xs'
-When I create the new array
+When I create the 'string array' named 'new array'
 Foreach 'x' in 'xs'
 When I move 'x' in 'new array'
 EndForeach
-Then print 'new array' as 'string'
+Then print 'new array'
 EOF
-    save_output "very_simple.out"
+    save_output "verysimple.out"
     assert_output '{"new_array":["a","b"]}'
 }
 

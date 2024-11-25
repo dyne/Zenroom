@@ -1,0 +1,46 @@
+Given I have a 'string array' named 'my_array'
+Given I have a 'number' named 'one'
+Given I have a 'string' named 'filter'
+When I create the 'string array' named 'res'
+When I create the 'string array' named 'res_foreach'
+If I verify 'my_array' is found
+    If I verify size of 'my_array' is more than 'one'
+        Then print the string 'long array'
+    EndIf
+    Foreach 'el' in 'my_array'
+        If I verify 'data' is found in 'el'
+            When I pickup from path 'el.data'
+            If I verify 'other_key' is found in 'data'
+                When I pickup from path 'data.other_key'
+                Foreach 'e' in 'other_key'
+                    When I copy 'e' in 'res_foreach'
+                EndForeach
+                When I remove 'other_key'
+            EndIf
+            If I verify 'key' is found in 'data'
+                When I move 'key' from 'data' in 'res'
+            EndIf
+            When I remove 'data'
+        EndIf
+        If I verify 'other_data' is found in 'el'
+            When I pickup from path 'el.other_data'
+            If I verify 'other_key' is found in 'other_data'
+                When I pickup from path 'other_data.other_key'
+                Foreach 'e' in 'other_key'
+                    If I verify 'e' is equal to 'filter'
+                        When I copy 'e' in 'res_foreach'
+                    EndIf
+                    When done
+                EndForeach
+                When I remove 'other_key'
+            EndIf
+            If I verify 'key' is found in 'other_data'
+                When I move 'key' from 'other_data' in 'res'
+            EndIf
+            When I remove 'other_data'
+        EndIf
+    EndForeach
+EndIf
+
+Then print 'res'
+Then print 'res_foreach'

@@ -1,0 +1,31 @@
+# Problem:
+# display only those numbers from a list that satisfy the following conditions
+# 1. The number must be divisible by five
+# 2. If the number is greater than 150, then skip it and move to the following number
+# 3. If the number is greater than 500, then stop the loop
+
+Given I have a 'number array' named 'numbers'
+Given I have a 'number' named '0'
+Given I have a 'number' named '5'
+Given I have a 'number' named '150'
+Given I have a 'number' named '500'
+
+When I create the 'number array' named 'res'
+
+Foreach 'num' in 'numbers'
+    # point 3
+    If I verify number 'num' is more than '500'
+        When I break foreach
+    EndIf
+    # point 2
+    If I verify number 'num' is less or equal than '150'
+        When I create the result of 'num' % '5'
+        # point 1
+        If I verify 'result' is equal to '0'
+            When I copy 'num' in 'res'
+        EndIf
+        When I remove 'result'
+    EndIf
+EndForeach
+
+Then print the 'res'
