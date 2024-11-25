@@ -1,6 +1,6 @@
 # Make 💏 with Zencode and Javascript: use Zenroom in the browser
 
-This article is part of a series of tutorials about interacting with Zenroom VM inside the messy world of JavaScript/Typescript. 
+This article is part of a series of tutorials about interacting with Zenroom VM inside the messy world of JavaScript/Typescript.
 By the end of the article you should be able to launch a new encryption service with Elliptic-curve Diffie–Hellman within your browser (Plain JS and HTML).
 
 The code used in this article is available on [Github](https://github.com/dyne/blog-code-samples).
@@ -11,7 +11,7 @@ So you have just experimented how to encrypt and decrypt a message with a passwo
 Now say you love simple things and you just need some basic functions inside your HTML page (no npm, no nodejs, no fancy hipster new shiny stuff) with the good ol' Plain JavaScript.
 NO PROBLEM. You bet we love it.
 
-## 💻 Let’s get our hands dirty: 🔏 encryption 
+## 💻 Let’s get our hands dirty: 🔏 encryption
 
 Let's create an **index.html** file, the first thing that we want is to import our **zencode_exec** function
 
@@ -36,18 +36,18 @@ So this is handy and neat, let's move on. Remember the encryption function? Let'
     <title>ECDH Encrypt/Decrypt online</title>
     <script type="module">
       import { zencode_exec } from "https://jspm.dev/zenroom";
-      
-      const conf = "memmanager=lw";
-      
+
+      const conf = "debug=1";
+
       window.encrypt = () => {
         const password = document.getElementById('encryptPassword').value
         const message = document.getElementById('plainMessage').value
         const keys = JSON.stringify({ password });
         const data = JSON.stringify({ message });
-        const contract = `Scenario 'ecdh': Encrypt a message with a password/secret 
-          Given that I have a 'string' named 'password' 
-          and that I have a 'string' named 'message' 
-          When I encrypt the secret message 'message' with 'password' 
+        const contract = `Scenario 'ecdh': Encrypt a message with a password/secret
+          Given that I have a 'string' named 'password'
+          and that I have a 'string' named 'message'
+          When I encrypt the secret message 'message' with 'password'
           Then print the 'secret message'`;
         zencode_exec(contract, { data, keys, conf }).then(({result}) => {
           const rel = document.getElementById('encrypted')
@@ -90,17 +90,17 @@ Let's add a couple lines of styling (not so much) and some visual feedback on su
     <script type="module">
       import { zencode_exec } from "https://jspm.dev/zenroom";
 
-      const conf = "memmanager=lw";
+      const conf = "debug=1";
 
       window.encrypt = () => {
         const password = document.getElementById('encryptPassword').value
         const message = document.getElementById('plainMessage').value
         const keys = JSON.stringify({ password });
         const data = JSON.stringify({ message });
-        const contract = `Scenario 'ecdh': Encrypt a message with a password/secret 
-          Given that I have a 'string' named 'password' 
-          and that I have a 'string' named 'message' 
-          When I encrypt the secret message 'message' with 'password' 
+        const contract = `Scenario 'ecdh': Encrypt a message with a password/secret
+          Given that I have a 'string' named 'password'
+          and that I have a 'string' named 'message'
+          When I encrypt the secret message 'message' with 'password'
           Then print the 'secret message'`;
         zencode_exec(contract, { data, keys, conf }).then(({result}) => {
           const rel = document.getElementById('encrypted')
@@ -128,11 +128,11 @@ Let's add a couple lines of styling (not so much) and some visual feedback on su
             </div>
             <div class="field is-grouped">
               <div class="control">
-                  <input class="input" 
+                  <input class="input"
                     type="password" placeholder="password" id="encryptPassword">
               </div>
               <div class="control">
-                <button 
+                <button
                   class="button is-primary"
                   onClick="encrypt()">🔐 Encrypt</button>
               </div>
@@ -160,7 +160,7 @@ That will show something like:
 
 Yeah this is much better 💅🏼
 
-## 🔏 Next step: decryption 
+## 🔏 Next step: decryption
 
 
 Let's add also the decrypt function and we are ready to deploy our static and super fast ECDH encrypt/decrypt service over the WWW.
@@ -181,17 +181,17 @@ Let's add also the decrypt function and we are ready to deploy our static and su
     <script type="module">
       import { zencode_exec } from "https://jspm.dev/zenroom";
 
-      const conf = "memmanager=lw";
+      const conf = "debug=1";
 
       window.encrypt = () => {
         const password = document.getElementById('encryptPassword').value
         const message = document.getElementById('plainMessage').value
         const keys = JSON.stringify({ password });
         const data = JSON.stringify({ message });
-        const contract = `Scenario 'ecdh': Encrypt a message with a password/secret 
-          Given that I have a 'string' named 'password' 
-          and that I have a 'string' named 'message' 
-          When I encrypt the secret message 'message' with 'password' 
+        const contract = `Scenario 'ecdh': Encrypt a message with a password/secret
+          Given that I have a 'string' named 'password'
+          and that I have a 'string' named 'message'
+          When I encrypt the secret message 'message' with 'password'
           Then print the 'secret message'`;
         zencode_exec(contract, { data, keys, conf }).then(({result}) => {
           const rel = document.getElementById('encrypted')
@@ -200,7 +200,7 @@ Let's add also the decrypt function and we are ready to deploy our static and su
         }).catch(({logs}) => {
           const rel = document.getElementById('encrypted')
           rel.value = logs
-          rel.classList.add("is-danger");  
+          rel.classList.add("is-danger");
         })
       };
 
@@ -208,10 +208,10 @@ Let's add also the decrypt function and we are ready to deploy our static and su
         const password = document.getElementById('decryptPassword').value;
         const keys = JSON.stringify({ password });
         const data = document.getElementById('encryptedMessage').value;
-        const contract = `Scenario 'ecdh': Decrypt the message with the password 
-          Given that I have a valid 'secret message' 
-          Given that I have a 'string' named 'password' 
-          When I decrypt the text of 'secret message' with 'password' 
+        const contract = `Scenario 'ecdh': Decrypt the message with the password
+          Given that I have a valid 'secret message'
+          Given that I have a 'string' named 'password'
+          When I decrypt the text of 'secret message' with 'password'
           Then print the 'text' as 'string'`;
         zencode_exec(contract, { data, keys, conf }).then(({result}) => {
           const decrypted = JSON.parse(result).text;
@@ -220,8 +220,24 @@ Let's add also the decrypt function and we are ready to deploy our static and su
           rel.classList.add("is-success");
         }).catch(({logs}) => {
           const rel = document.getElementById('decrypted')
-          rel.value = logs
-          rel.classList.add("is-danger");  
+          // extract the error part of the logs
+          const err = JSON.parse(logs).reduce((x, l) => {
+            if (l.startsWith('J64 TRACE:')) {
+              const b64Trace = l.slice('J64 TRACE: '.length);
+              const arrayTrace = JSON.parse(atob(b64Trace));
+              for (const t of arrayTrace) {
+                if (t.startsWith('[!]')) {
+                  x.push(t);
+                }
+              }
+            } else if (l.startsWith('[!]')) {
+              x.push(l);
+              return x;
+            }
+            return x;
+          }, []);
+          rel.value = err.join("\n");
+          rel.classList.add("is-danger");
         });
       };
     </script>
@@ -313,6 +329,6 @@ The final result is something like
 
 You can try it by yourself, encrypt a message with a password, then copy/paste the result into the **Encrypted message** field and if you put the same password the message is decrypted and the result is correctly shown.
 
-What if the password is wrong? Validation is demanded just in the ZenroomVM so I've just added a *catch* to the *zencode_exec* promise (see line 51–55) that will show the logs in the result element if something goes wrong!
+What if the password is wrong? Validation is demanded just in the ZenroomVM so I've just added a *catch* to the *zencode_exec* promise (see line 51–71) that will show the logs in the result element if something goes wrong!
 
 The code used in this article is available on [Github](https://github.com/dyne/blog-code-samples).

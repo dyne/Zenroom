@@ -28,20 +28,36 @@
 Stable releases are published on https://www.npmjs.com/package/zenroom that
 have a slow pace release schedule that you can install with
 
+<!-- tabs:start -->
+
+### ** npm **
+
 ```bash
-yarn add zenroom
-# or if you use npm
 npm install zenroom
 ```
 
+### ** yarn **
+
+```bash
+yarn add zenroom
+```
+
+### ** pnpm **
+
+```bash
+pnpm add zenroom
+```
+
+<!-- tabs:end -->
 
 * * *
 
 ## 🎮 Usage
 
-The binding consists of one main function::
+The binding consists of two main functions:
 
-**zencode_exec** to execute [Zencode](https://dev.zenroom.org/#/pages/zencode-intro?id=smart-contracts-in-human-language). To learn more about zencode syntax look [here](https://dev.zenroom.org/#/pages/zencode-cookbook-intro)
+- **zencode_exec** to execute [Zencode](https://dev.zenroom.org/#/pages/zencode-intro?id=smart-contracts-in-human-language). To learn more about zencode syntax look [here](https://dev.zenroom.org/#/pages/zencode-cookbook-intro)
+- **zenroom_exec** to execute our special flavor of Lua enhanced with Zenroom's [special effects](https://dev.zenroom.org/#/pages/lua)
 
 This function accepts a mandatory **SCRIPT** to be executed and some optional parameters:
   * DATA
@@ -49,12 +65,12 @@ This function accepts a mandatory **SCRIPT** to be executed and some optional pa
   * [CONF](https://dev.zenroom.org/#/pages/zenroom-config)
 All in form of strings.
 
-This functions returns a [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise).
+These functions return a [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise).
 
 To start using the zenroom vm just do:
 
 ```js
-import { zenroom_exec, zencode_exec } from 'zenroom'
+import { zenroom_exec, zencode_exec, introspection } from "zenroom";
 // or if you don't use >ES6
 // const { zenroom_exec, zencode_exec } = require('zenroom')
 
@@ -62,65 +78,95 @@ import { zenroom_exec, zencode_exec } from 'zenroom'
 // Zencode: generate a random array. This script takes no extra input
 
 const zencodeRandom = `
-	Given nothing
-	When I create the array of '16' random objects of '32' bits
-    	Then print all data`
-	
+  Given nothing
+  When I create the array of '16' random objects of '32' bits
+  Then print all data
+`;
+
 zencode_exec(zencodeRandom)
-	.then((result) => {
-		console.log(result);
-	})
-	.catch((error) => {
-		throw new Error(error);
-	});
+  .then((result) => {
+    console.log(result);
+  })
+  .catch((error) => {
+    console.error(error);
+  });
 
 
-// Zencode: encrypt a message. 
+// Zencode: encrypt a message.
 // This script takes the options' object as the second parameter: you can include data and/or keys as input.
 // The "config" parameter is also optional.
 
 const zencodeEncrypt = `
-	Scenario 'ecdh': Encrypt a message with the password 
-	Given that I have a 'string' named 'password' 
-	Given that I have a 'string' named 'message' 
-	When I encrypt the secret message 'message' with 'password' 
-	Then print the 'secret message'`
-	
+  Scenario 'ecdh': Encrypt a message with the password
+  Given that I have a 'string' named 'password'
+  Given that I have a 'string' named 'message'
+  When I encrypt the secret message 'message' with 'password'
+  Then print the 'secret message'
+`;
+
 const zenKeys = `
-	{
-		"password": "myVerySecretPassword"
-	}
-`
+  {
+    "password": "myVerySecretPassword"
+  }
+`;
 
 const zenData = `
-	{
-			"message": "HELLO WORLD"
-	}
-`
-	
-zencode_exec(zencode, {data: zenData, keys: zenKeys, conf:`color=0, debug=0`})
-	.then((result) => {
-		console.log(result);
-	})
-	.catch((error) => {
-		throw new Error(error);
-	});
+  {
+    "message": "HELLO WORLD"
+  }
+`;
+
+zencode_exec(zencode, {
+  data: zenData,
+  keys: zenKeys,
+  conf:`debug=1`
+})
+  .then((result) => {
+    console.log(result);
+  })
+  .catch((error) => {
+    console.error(error);
+  });
+
+// Lua Hello World!
+
+const lua = `print("Hello World!")`;
+zenroom_exec(lua)
+  .then((result) => {
+    console.log(result);
+  })
+  .catch((error) => {
+    console.error(error);
+  });
 
 // to pass the optional parameters you pass an object literal eg.
+
 try {
-  const result = await zencode_exec(zencodeRandom, {data: "Some data", keys: "Some other data", conf:`color=0, debug=0`});
+  const result = await zenroom_exec(`print(DATA)`, {
+    data: "Some data",
+    keys: "Some other data",
+    conf: `debug=0`,
+  });
   console.log(result); // => Some data
 } catch (e) {
-  throw new Error(e)
+  console.error(e);
 }
 
 ```
 
+Other APIs are:
+* **zenroom_hash** that takes in input the hash type ("sha256" or "sha512") and an ArrayBuffer
+containing the data to be hashed
+* **introspect** that takes in input a zencode contract and return the data that should be present in input
+to that contract
+* **zencode_valid_code** that takes in input a zencode contract and throw an error in case invalid statements
+are found in the contract.
+
 ## 📖 Tutorials
 
 Here we wrote some tutorials on how to use Zenroom in the JS world
-  * [Node.js](/pages/zenroom-javascript1)
-  * [Browser](/pages/zenroom-javascript2)
+  * [Node.js](/pages/zenroom-javascript1b)
+  * [Browser](/pages/zenroom-javascript2b)
   * [React](/pages/zenroom-javascript3)
 
 For more information also see the [🌐Javascript NPM package](https://www.npmjs.com/package/zenroom).
