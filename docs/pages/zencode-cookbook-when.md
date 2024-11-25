@@ -3,7 +3,8 @@ TODO:
 * explain better inputs (sometimes they are the value in the statement, sometime they must points to a variable or both)
 * use more links to other sections
 * develop all the examples in the cookbook_when tests
-* maybe other sections?
+* maybe a section on `set` after the `create`?
+* 
 -->
 
 
@@ -286,7 +287,7 @@ The result will look something like this (actual order may vary):
 
 Zenroom also lets you pick random objects from a table:
 
-```
+```gherkin
 When I pick random object in ''
 When I create random dictionary with '' random objects from ''
 ```
@@ -294,6 +295,20 @@ When I create random dictionary with '' random objects from ''
 ## Numbers statements
 
 explain integers, float and time
+
+### Create a number
+
+```gherkin
+When I write number '' in ''
+When I create number from ''
+```
+
+### Possible casting between number types
+
+```gherkin
+When I create float '' cast of integer in ''
+When I create 'integer/float/time(?)' cast of strings in ''
+```
 
 ### Mathematical operations
 
@@ -379,19 +394,126 @@ When I split rightmost '' bytes of ''
 When I create array by splitting '' at ''
 ```
 
-### Remove specific characters
+### Remove characters
 
 ```gherkin
 When I remove spaces in ''
 When I remove newlines in ''
 When I remove all occurrences of character '' in ''
+When I compact ascii strings in ''
+```
+
+### Count character occurrences
+
+```gherkin
+When I create count of char '' found in ''
 ```
 
 ## Table operations statements
 
+### Works on both array and dictionary
+
+#### pickup from path
+
+```gherkin
+When I pickup from path ''
+When I pickup a '' from path ''
+When I take '' from path ''
+```
+
+#### table size
+
+```gherkin
+When I create the size of ''
+```
+
+#### json encoding/decoding
+
+```gherkin
+When I verify '' is a json
+When I create json escaped string of ''
+When I create json unescaped object of ''
+```
+
+#### remove zero values
+
+```gherkin
+When I remove zero values in ''
+```
+
 ### Only array statements
 
+#### create
+```gherkin
+When I create new array
+```
+
+#### insert
+```gherkin
+When I insert string '' in ''
+When I insert true in ''
+When I insert false in ''
+```
+
+#### math ops
+```gherkin
+When I create sum value of elements in array ''
+# equal to `When I create aggregation of array ''`
+When I create average of elements in array ''
+When I create variance of elements in array ''
+When I create standard deviation of elements in array ''
+```
+
+#### create flat array
+```gherkin
+When I create flat array of contents in ''
+When I create flat array of keys in ''
+```
+
+#### particular stuff
+```gherkin
+When I create array of objects named by '' found in ''
+When I create '' from '' in ''
+```
+
 ### Only dictionary statements
+
+#### create
+```gherkin
+When I create new dictionary
+When I create new dictionary named ''
+```
+
+#### math ops (?)
+```gherkin
+When I find max value '' for dictionaries in ''
+When I find min value '' for dictionaries in ''
+When I create sum value '' for dictionaries in ''
+When I create sum value '' for dictionaries in '' where '' > ''
+When I find '' for dictionaries in '' where '' = ''
+```
+
+#### filter fields
+```gherkin
+When I filter '' fields from ''
+```
+
+#### particular stuff
+```gherkin
+When I for each dictionary in '' append '' to ''
+```
+#### idk
+
+maybe deprecable using nested foreach?
+```gherkin
+When I create array of elements named '' for dictionaries in ''
+```
+
+## Throw an error
+
+```gherkin
+When I exit with error message ''
+```
 
 ## First crypto steps
 
@@ -420,11 +542,39 @@ When I create the multihash of 'source' using 'sha512'
 
 This way the multihash content will be usable in its pure binary form while being in the `When` phase, but will be printed out in multihash format by the `Then` phase.
 
+```gherkin
+When I create hash of ''
+When I create hash of '' using ''
+When I create hashes of each object in '' # maybe deprecable using foreach?
+```
+
+### hash to point
+
+```gherkin
+When I create hash to point '' of ''
+```
+
 ### hmac
+
+```gherkin
+When I create hmac of '' with key ''
+```
 
 ### kdf
 
+```gherkin
+When I create key derivation of ''
+When I create key derivations of each object in '' # maybe deprecable using foreach?
+```
+
 ### pbkdf
+
+```gherkin
+When I create key derivation of '' with password ''
+When I create key derivation of '' with '' rounds
+When I create key derivation of '' with '' rounds with password ''
+```
+
 
 <!---
 ## Manipulation: sum/subtract, rename, remove, append...
