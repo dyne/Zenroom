@@ -1,0 +1,24 @@
+Given I have a 'string' named 'to_be_renamed_1'
+Given I have a 'string' named 'to_be_renamed_2'
+Given I have a 'string' named 'to_be_renamed_3'
+Given I have a 'string' named 'to_be_renamed_4'
+Given I have a 'string' named 'new_name_1'
+Given I have a 'string' named 'old_name_1'
+Given I have a 'string' named 'new_name_2'
+Given I have a 'string' named 'old_name_2'
+
+# the new name can be passed directly with
+When I rename 'to_be_renamed_1' to 'first'
+
+# or indirectly by using the 'named by' followed
+# by the name of the variable that contains the new name
+When I rename 'to_be_renamed_2' to named by 'new_name_1'
+
+# you can also indicates the variable to be renamed using
+# another variable with
+When I rename object named by 'old_name_1' to 'third'
+
+# even further, you can use the 'named by' keyword on both fields
+When I rename object named by 'old_name_2' to named by 'new_name_2' 
+
+Then print the data

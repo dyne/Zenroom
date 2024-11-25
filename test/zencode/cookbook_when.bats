@@ -554,3 +554,141 @@ EOF
 	| zexe when5.zen myLargeNestedObjectWhen.json
     save_output whenCompleteOutputPart5.json
 }
+
+@test "create: new array" {
+    cat <<EOF | zexe when_create_new_array.zen
+Given nothing
+
+When I create the new array
+
+Then print the 'new array'
+EOF
+    save_output when_create_new_array.out.json
+    assert_output '{"new_array":[]}'
+}
+
+@test "create: escpaed string" {
+    cat <<EOF | save_asset when_create_escaped_string.data.json
+{
+    "json": {
+        "hello": "world"
+    }
+}
+EOF
+    cat <<EOF | zexe when_create_escaped_string.zen when_create_escaped_string.data.json
+Given I have a 'string dictionary' named 'json'
+
+When I create the json escaped string of 'json'
+
+Then print the 'json escaped string'
+EOF
+    save_output when_create_escaped_string.out.json
+    assert_output '{"json_escaped_string":"{\"hello\":\"world\"}"}'
+}
+
+@test "create: new key" {
+    cat <<EOF | zexe when_create_new_key.zen
+Scenario 'ecdh': create an ecdh key
+
+Given nothing
+
+When I create the ecdh key
+
+Then print the 'keyring'
+EOF
+    save_output when_create_new_key.out.json
+    assert_output '{"keyring":{"ecdh":"B4rYTWx6UMbc2YPWRNpl4w2M6gY9jqSa637n8Kr2pPc="}}'
+}
+
+@test "rename: all statements" {
+    cat <<EOF | save_asset when_rename_examples.data.json
+{
+    "to_be_renamed_1": "rename to first",
+    "to_be_renamed_2": "rename to named by new_name_1",
+    "to_be_renamed_3": "rename named by old_name to third",
+    "to_be_renamed_4": "rename named by old_name to named by new_name_2",
+    "new_name_1": "second",
+    "old_name_1": "to_be_renamed_3",
+    "new_name_2": "fourth",
+    "old_name_2": "to_be_renamed_4"
+}
+EOF
+    cat <<EOF | zexe when_rename_examples.zen when_rename_examples.data.json
+Given I have a 'string' named 'to_be_renamed_1'
+Given I have a 'string' named 'to_be_renamed_2'
+Given I have a 'string' named 'to_be_renamed_3'
+Given I have a 'string' named 'to_be_renamed_4'
+Given I have a 'string' named 'new_name_1'
+Given I have a 'string' named 'old_name_1'
+Given I have a 'string' named 'new_name_2'
+Given I have a 'string' named 'old_name_2'
+
+# the new name can be passed directly with
+When I rename 'to_be_renamed_1' to 'first'
+
+# or indirectly by using the 'named by' followed
+# by the name of the variable that contains the new name
+When I rename 'to_be_renamed_2' to named by 'new_name_1'
+
+# you can also indicates the variable to be renamed using
+# another variable with
+When I rename object named by 'old_name_1' to 'third'
+
+# even further, you can use the 'named by' keyword on both fields
+When I rename object named by 'old_name_2' to named by 'new_name_2' 
+
+Then print the data
+EOF
+    save_output when_rename_examples.out.json
+    assert_output '{"first":"rename to first","fourth":"rename named by old_name to named by new_name_2","new_name_1":"second","new_name_2":"fourth","old_name_1":"to_be_renamed_3","old_name_2":"to_be_renamed_4","second":"rename to named by new_name_1","third":"rename named by old_name to third"}'
+}
+
+@test "remove or delete: simply remove" {
+    cat <<EOF | zexe when_remove_examples.zen
+Given nothing
+
+# create a new array to be removed
+When I create the new array
+
+# remove the new array
+When I remove the 'new array'
+
+# equivalenty with the delete
+When I create the new array
+When I delete the 'new array'
+
+Then print the data
+EOF
+    save_output when_remove_examples.out.json
+    assert_output '[]'
+}
+
+@test "remove: element from an object" {
+    cat <<EOF | save_asset when_remove_from_examples.data.json
+{
+    "dictionary": {
+        "key 1": "value 1",
+        "key 2": "value 2"
+    },
+    "array": ["value 3", "value 4"],
+    "value to be removed from array": "value 3"
+}
+EOF
+    cat <<EOF | zexe when_remove_from_examples.zen when_remove_from_examples.data.json
+Given I have a 'string dictionary' named 'dictionary'
+Given I have a 'string array' named 'array'
+
+Given I have a 'string' named 'value to be removed from array'
+
+# to remove an element from a dictionary specify the key you want to remove
+When I remove the 'key 1' from 'dictionary'
+
+# to remove an element from an array specify the value you want to remove
+When I remove the 'value to be removed from array' from 'array'
+
+Then print 'dictionary'
+Then print 'array'
+EOF
+    save_output when_remove_from_examples.out.json
+    assert_output '{"array":["value 4"],"dictionary":{"key_2":"value 2"}}'
+}
