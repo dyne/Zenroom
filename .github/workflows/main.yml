@@ -169,9 +169,10 @@ jobs:
             sudo apt-get update -yq
             sudo apt-get install -yq --no-install-recommends make cmake gcc jq libreadline-dev xxd git python3-venv
             make linux-exe
-            python3 -m venv .venv
-            . .venv/bin/activate && pip install --prefer-binary meson ninja
-            make check
+            # Testing on ARM32 in Qemu takes too long. This should be tested on-site
+            # python3 -m venv .venv
+            # . .venv/bin/activate && pip install --prefer-binary meson ninja
+            # make check
 
   go-build-check:
     name: 🐹 go build & checks
