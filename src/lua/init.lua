@@ -56,8 +56,14 @@ end
 -- ZEN = { assert = assert } -- zencode shim when not loaded
 require('zenroom_common')
 MACHINE = require('statemachine')
+
+-- Stamp the VM with version (set externally at build)
+-- every official Dyne.org release should have this
 SEMVER = require('semver')
+-- returns nil and a warning if no VERSION found
 _G['ZENROOM_VERSION'] = SEMVER(VERSION)
+
+-- Cap the limit of iterations in branches
 _G['MAXITER'] = tonumber(STR_MAXITER)
 
 OCTET = require('zenroom_octet')
