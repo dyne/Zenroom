@@ -26,13 +26,12 @@
 -- inline input.
 
 -- data coming in is analyzed through a series of functions:
--- guess_conversion(raw, conv or name) -> zenode_data.lua L:100 approx 
+-- guess_conversion(raw, conv or name) -> zenode_data.lua L:100 approx
 --- |_ if luatype(string) && format -> input encoding(format)
 
 -- GIVEN
 local function gc()
    ZEN.TMP = {}
-   collectgarbage 'collect'
 end
 
 -- safely take any zenroom object as index
@@ -444,4 +443,3 @@ Given("'' in path ''", function(enc, path)
     ack(dest)
     gc()
 end)
-

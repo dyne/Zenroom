@@ -59,6 +59,7 @@ MACHINE = require('statemachine')
 SEMVER = require('semver')
 _G['ZENROOM_VERSION'] = SEMVER(VERSION)
 _G['MAXITER'] = tonumber(STR_MAXITER)
+_G['MAXMEM'] = tonumber(STR_MAXMEM) * 1024
 
 OCTET = require('zenroom_octet')
 BIG = require('zenroom_big')
@@ -203,4 +204,3 @@ function ZKP_challenge(list)
 end
 
 collectgarbage 'collect'
-

@@ -1,0 +1,19 @@
+{
+    "my_array": [
+        {
+            "data": {
+                "key": "value"
+            }
+        },
+        {
+            "other_data": {
+                "other_key": [
+                    "other_value_1",
+                    "other_value_2"
+                ]
+            }
+        }
+    ],
+    "one": 1,
+    "filter": "other_value_2"
+}

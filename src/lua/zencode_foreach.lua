@@ -1,14 +1,15 @@
 local function clear_iterators()
-    if not ZEN.ITER.names then return end
-    for _,v in pairs(ZEN.ITER.names) do
+    local info = ZEN.ITER_head
+    if not info.names then return end
+    for _,v in pairs(info.names) do
         ACK[v] = nil
         CODEC[v] = nil
     end
-    ZEN.ITER.names = nil
+    info.names = nil
 end
 
 Foreach("'' in ''", function(name, collection)
-    local info = ZEN.ITER
+    local info = ZEN.ITER_head
     local col = have(collection)
     local collection_codec = CODEC[collection]
     zencode_assert(collection_codec.zentype == "a", "Can only iterate over arrays")
@@ -38,7 +39,7 @@ Foreach("'' in ''", function(name, collection)
 end)
 
 Foreach("'' in sequence from '' to '' with step ''", function(name, from_name, to_name, step_name)
-    local info = ZEN.ITER
+    local info = ZEN.ITER_head
     local from = have(from_name)
     local to   = have(to_name)
     local step = have(step_name)
@@ -51,34 +52,39 @@ Foreach("'' in sequence from '' to '' with step ''", function(name, from_name, t
 
     zencode_assert(type(from) == type(to) and type(to) == type(step), "Types must be equal in foreach declaration")
     zencode_assert(type(from) == 'zenroom.big' or type(from) == 'zenroom.float', "Unknown number type")
-    local current_value
     local finished
-    -- TODO(optimization): we are currently doing multiplication at each iteration
     if type(from) == 'zenroom.big' then
-        zencode_assert(BIG.zenpositive(step)
-            and BIG.zenpositive(BIG.zensub(to, from)),
-            "only positive step is supported")
-        zencode_assert(step ~= BIG.new(0), "step cannot be zero")
-        local bigpos = BIG.new(info.pos-1)
-        current_value = BIG.zenadd(from, BIG.zenmul(bigpos, step))
+        -- only on first iteration: do checks and save usefull values
+        if info.pos == 1 then
+            zencode_assert(BIG.zenpositive(step) and step ~= BIG.new(0), "only positive step is supported")
+            zencode_assert(BIG.zenpositive(BIG.zensub(to, from)), "end of foreach must be bigger than the start")
+            info.to_plus_1 = BIG.zenadd(to, BIG.new(1)) -- store to avoid repeating at each step
+            info.cv = from
+        else
+            info.cv = BIG.zenadd(info.cv, step)
+        end
         -- current_value >  to
         -- current_value >= to + 1
         -- (current_value - (to+1)) >= 0
-        finished = BIG.zenpositive(
-            BIG.zensub(current_value, BIG.zenadd(to,BIG.new(1))))
+        local diff = BIG.zensub(info.cv, info.to_plus_1)
+        finished = BIG.zenpositive(diff) or diff == BIG.new(0)
     else
-        zencode_assert(step > F.new(0) and from < to,
-            "only positive step is supported")
-        local floatpos = F.new(info.pos-1)
-        current_value = from + floatpos * step
-        finished = current_value > to
+        -- only on first iteration: do checks and save usefull values
+        if info.pos == 1 then
+            zencode_assert(step > F.new(0) and from < to,
+                "only positive step is supported")
+            info.cv = from
+        else
+            info.cv = info.cv + step
+        end
+        finished = info.cv > to
     end
 
     if finished then
         info.pos = 0
         clear_iterators()
     else
-        ACK[name] = current_value
+        ACK[name] = info.cv
         if not CODEC[name] then
             new_codec(name, CODEC[from])
             CODEC[name].name = name
@@ -87,8 +93,10 @@ Foreach("'' in sequence from '' to '' with step ''", function(name, from_name, t
 end)
 
 local function break_foreach()
-    zencode_assert(ZEN.ITER and ZEN.ITER.pos ~=0, "Can only exit from foreach loop")
-    ZEN.ITER.pos = 0
+    if not ZEN.ITER_head then
+       error("Can only exit from foreach loop", 2)
+    end
+    ZEN.ITER_head.pos = 0
     clear_iterators()
 end
 

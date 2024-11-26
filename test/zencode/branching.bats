@@ -45,6 +45,7 @@ If I verify 'number_lower' is equal to 'number_higher'
 When I create the random 'random_this_is_impossible'
 Then print string 'the conditions can never be satisfied'
 Endif
+EndIf
 
 # You can also check if an object exists at a certain point of the execution, with the statement:
 # If I verify 'objectName' is found
@@ -128,6 +129,7 @@ If I verify number 'left' is less than 'right'
 and I verify 'right' is equal to 'right'
 Then print string 'right is higher'
 and print string 'and I am right'
+endif
 endif
 
 If I verify number 'left' is more than 'right'
@@ -598,4 +600,222 @@ Then print the string 'all comparison succedded'
 EOF
 	save_output verify_length.json
 	assert_output '{"output":["all_comparison_succedded"]}'
+}
+
+@test "Detect open but not closed if branching" {
+    cat << EOF | save_asset not_closed_if.zen
+Given nothing
+When I set 'my_string' to 'test' as 'string'
+If I verify 'my_string' is found
+Then I print 'my string'
+EOF
+    run $ZENROOM_EXECUTABLE -z not_closed_if.zen
+    assert_line --partial 'Invalid branching opened at line 3 and never closed'
+}
+
+@test "Detect multiple open but not closed if branching" {
+    cat << EOF | save_asset multiple_not_closed_if.zen
+Given nothing
+When I set 'my_string' to 'test' as 'string'
+If I verify 'my_string' is found
+If I verify 'my_string' is equal to 'test'
+Then I print 'my string'
+If I verify 'my_string' is not equal to 'not_test'
+EOF
+    run $ZENROOM_EXECUTABLE -z multiple_not_closed_if.zen
+    assert_line --partial 'Invalid branching opened at line 3, 4, 6 and never closed'
+}
+
+@test "Invalid transition to if" {
+    cat << EOF | save_asset invalid_transition.zen
+If I verify 'my_string' is found
+Given nothing
+Then print the data
+EOF
+    run $ZENROOM_EXECUTABLE -z invalid_transition.zen
+    assert_line --partial "Invalid transition from: init to: If I verify 'my_string' is found"
+}
+
+@test "Nested if branching" {
+    cat << EOF | save_asset nested_if.data.json
+{
+    "external_qr_content": {
+        "credential_issuer": "https://ministerie-agent.dev.impierce.com/",
+        "credential_configuration_ids": [
+            "openbadge_credential"
+        ],
+        "grants": {
+            "urn:ietf:params:oauth:grant-type:pre-authorized_code": {
+                "pre-authorized_code": "ebb90f2db21a4708b93217a686f91e134b370b350aae18dc25a382507b141c13"
+            }
+       	}
+    }
+}
+EOF
+
+    cat << EOF | zexe nested_if.zen nested_if.data.json
+Given I have a 'string dictionary' named 'external_qr_content'
+Given I have a 'string' named 'credential_issuer' inside 'external_qr_content'
+Given I have a 'string array' named 'credential_configuration_ids' inside 'external_qr_content'
+
+If I verify 'grants' is found in 'external_qr_content'
+    When I pickup from path 'external_qr_content.grants'
+    If I verify 'authorization_code' is found in 'grants'
+        When I pickup from path 'grants.authorization_code'
+        If I verify 'authorization_server' is found in 'authorization_code'
+            When I pickup from path 'authorization_code.authorization_server'
+            Then print the 'authorization_server'
+        EndIf
+    EndIf
+    If I verify 'urn:ietf:params:oauth:grant-type:pre-authorized_code' is found in 'grants'
+        When I pickup from path 'grants.urn:ietf:params:oauth:grant-type:pre-authorized_code'
+        If I verify 'pre-authorized_code' is found in 'urn:ietf:params:oauth:grant-type:pre-authorized_code'
+            When I pickup from path 'urn:ietf:params:oauth:grant-type:pre-authorized_code.pre-authorized_code'
+            Then print the 'pre-authorized_code'
+        EndIf
+    EndIf
+EndIf
+
+When I create copy of element '1' from array 'credential_configuration_ids'
+When I rename the 'copy' to 'credential_configuration_id'
+
+If I verify 'credential_issuer' ends with '/'
+    When I split rightmost '1' bytes of 'credential_issuer'
+EndIf
+When I append the string '/.well-known/openid-credential-issuer' to 'credential_issuer'
+
+Then print the 'credential_configuration_id'
+Then print the 'credential_issuer'
+EOF
+    save_output 'nested_if.out.json'
+    assert_output '{"credential_configuration_id":"openbadge_credential","credential_issuer":"https://ministerie-agent.dev.impierce.com/.well-known/openid-credential-issuer","pre-authorized_code":"ebb90f2db21a4708b93217a686f91e134b370b350aae18dc25a382507b141c13"}'
+}
+
+@test "Invalid signle endif" {
+    cat << EOF | save_asset invalid_single_endif.zen
+Given nothing
+EndIf
+Then print the data
+EOF
+    run $ZENROOM_EXECUTABLE -z invalid_single_endif.zen
+    assert_line --partial "Ivalid branching closing at line 2: nothing to be closed"
+}
+
+@test "Invalid exit from an already closed branch" {
+    cat << EOF | save_asset endif_on_closed_branch.zen
+Given nothing
+When I set 'my_string' to 'test' as 'string'
+If I verify 'my_string' is found
+Then I print 'my string'
+EndIf
+EndIf
+EOF
+    run $ZENROOM_EXECUTABLE -z endif_on_closed_branch.zen
+    assert_line --partial "Ivalid branching closing at line 6: nothing to be closed"
+}
+
+@test "Nested if branching in foreach" {
+    cat << EOF | save_asset nested_if_in_foreach.data.json
+{
+    "my_array": [
+        {
+            "data": {
+                "key": "value"
+            }
+        },
+        {
+            "other_data": {
+                "other_key": [
+                    "other_value_1",
+                    "other_value_2"
+                ]
+            }
+        }
+    ],
+    "one": 1,
+    "filter": "other_value_2"
+}
+EOF
+
+    cat << EOF | zexe nested_if_in_foreach.zen nested_if_in_foreach.data.json
+Given I have a 'string array' named 'my_array'
+Given I have a 'number' named 'one'
+Given I have a 'string' named 'filter'
+When I create the 'string array' named 'res'
+When I create the 'string array' named 'res_foreach'
+If I verify 'my_array' is found
+    If I verify size of 'my_array' is more than 'one'
+        Then print the string 'long array'
+    EndIf
+    Foreach 'el' in 'my_array'
+        If I verify 'data' is found in 'el'
+            When I pickup from path 'el.data'
+            If I verify 'other_key' is found in 'data'
+                When I pickup from path 'data.other_key'
+                Foreach 'e' in 'other_key'
+                    When I copy 'e' in 'res_foreach'
+                EndForeach
+                When I remove 'other_key'
+            EndIf
+            If I verify 'key' is found in 'data'
+                When I move 'key' from 'data' in 'res'
+            EndIf
+            When I remove 'data'
+        EndIf
+        If I verify 'other_data' is found in 'el'
+            When I pickup from path 'el.other_data'
+            If I verify 'other_key' is found in 'other_data'
+                When I pickup from path 'other_data.other_key'
+                Foreach 'e' in 'other_key'
+                    If I verify 'e' is equal to 'filter'
+                        When I copy 'e' in 'res_foreach'
+                    EndIf
+                    When done
+                EndForeach
+                When I remove 'other_key'
+            EndIf
+            If I verify 'key' is found in 'other_data'
+                When I move 'key' from 'other_data' in 'res'
+            EndIf
+            When I remove 'other_data'
+        EndIf
+    EndForeach
+EndIf
+
+Then print 'res'
+Then print 'res_foreach'
+EOF
+    save_output 'nested_if_in_foreach.out.json'
+    assert_output '{"output":["long_array"],"res":["value"],"res_foreach":["other_value_2"]}'
+}
+
+@test "Some nested branching and loop tests" {
+cat << EOF | zexe nested_1.zen
+Given nothing
+When I create the 'string array' named 'arr'
+When I create the 'string array' named 'res'
+If I verify 'arr' is found
+    When done
+    Foreach 'el1' in 'arr'
+        # this statements are skipped since arr is empty
+        When I set 'pippo' to 'pippo' as 'string'
+        and I move 'pippo' in 'res'
+        If I verify 'el1' is found
+            Foreach 'el2' in 'el1'
+                Foreach 'el3' in 'el2'
+                    If I verify 'el3' is found
+                        When done
+                    EndIf
+                Endforeach
+                When done
+            Endforeach
+        EndIf
+        When done
+    EndForeach
+    Then print the 'arr'
+EndIf
+Then print 'res'
+EOF
+    save_output nested_1.out.json
+    assert_output '{"arr":[],"res":[]}'
 }

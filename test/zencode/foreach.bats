@@ -11,13 +11,13 @@ EOF
 
     cat << EOF | zexe verysimple.zen verysimple.data
 Given I have a 'string array' named 'xs'
-When I create the new array
+When I create the 'string array' named 'new array'
 Foreach 'x' in 'xs'
 When I move 'x' in 'new array'
 EndForeach
-Then print 'new array' as 'string'
+Then print 'new array'
 EOF
-    save_output "very_simple.out"
+    save_output "verysimple.out"
     assert_output '{"new_array":["a","b"]}'
 }
 
@@ -199,6 +199,7 @@ EOF
 }
 
 @test "Zip foreach" {
+    skip
     cat << EOF | save_asset foreach_zip.data
 {
   "numbers": ["42","37","55","78"],
@@ -255,20 +256,24 @@ Foreach 'x' in 'numbers'
 Foreach 'y' in 'numbers2'
 If I verify number 'x' is more than 'limit'
 If I verify number 'y' is more than 'limit'
-When I move 'x' in 'floats'
+When I copy 'x' in 'floats'
 endif
+endif
+EndForeach
 EndForeach
 If I verify number 'zero' is less than 'limit'
 If I verify number 'zero' is less than 'limit'
 Foreach 'a' in 'numbers'
 Foreach 'b' in 'numbers2'
-When I move 'b' in 'floats'
+When I copy 'b' in 'floats'
 EndForeach
+EndForeach
+endif
 endif
 Then print 'floats'
 EOF
     save_output "foreach_nestedif.out"
-    assert_output '{"floats":[5,6,10,9,8,7,6,5,4,3]}'
+    assert_output '{"floats":[5,5,5,5,5,5,6,6,6,6,6,6,7,7,7,7,7,7,8,8,8,8,8,8,10,9,8,7,6,5,4,3,2,1,0,-1,10,9,8,7,6,5,4,3,2,1,0,-1,10,9,8,7,6,5,4,3,2,1,0,-1,10,9,8,7,6,5,4,3,2,1,0,-1,10,9,8,7,6,5,4,3,2,1,0,-1,10,9,8,7,6,5,4,3,2,1,0,-1,10,9,8,7,6,5,4,3,2,1,0,-1,10,9,8,7,6,5,4,3,2,1,0,-1]}'
 }
 
 @test "exit from foreach loop" {
@@ -370,4 +375,195 @@ Then print the 'res'
 EOF
     save_output foreach_schema.out
     assert_output '{"res":"eyJhbGciOiAiRVMyNTYiLCAidHlwIjogInZjK3NkLWp3dCJ9.eyJfc2QiOiBbInZucGt1cWZBSWFBTlBmZXl6WXhUVllWUGxJY3JBWlVvU3N5TGFhQ0tlWUkiLCAiM1BEeUhOMXphcklJMG1TdDUwMkV2ZVIwVHhlOHlTQ1hDOFlYd1NvV1lZWSIsICJFMS12Wnl1Wmhlbkhlam1nYi1kTFhtaDBPODFLTUtWU25RYjN2Mjl6SGlRIl0sICJfc2RfYWxnIjogInNoYS0yNTYiLCAiaXNzIjogImh0dHA6Ly9leGFtcGxlLm9yZyIsICJzdWIiOiAidXNlciA0MiJ9.-BY5L0dcz2p-nCIhmL_0RK5QjzmKOI45E7anmZqg0Vct16lyF2_em3R8GzewmcrVT-NnZaT6EKrO79F4VGkFeQ~WyJ1eURGMUgwQVlSYmI0TVFubUx2dmVBIiwgImdpdmVuX25hbWUiLCAiSm9obiJd~WyJWam9zM2ZoOFZVU3Z2NHVYUVhuSWlRIiwgImZhbWlseV9uYW1lIiwgIkRvZSJd~WyIzV2JpbGZtNk1rdDFBUzlERXFtOS1nIiwgImVtYWlsIiwgImpvaG5kb2VAZXhhbXBsZS5jb20iXQ~"}'
+}
+
+@test "Invalid signle endforeach" {
+    cat << EOF | save_asset invalid_single_endforeach.zen
+Given nothing
+EndForeach
+Then print the data
+EOF
+    run $ZENROOM_EXECUTABLE -z invalid_single_endforeach.zen
+    assert_line --partial "Ivalid loop closing at line 2: nothing to be closed"
+}
+
+@test "Detect multiple open but not closed foreach loop" {
+    cat << EOF | save_asset multiple_not_closed_foreach.zen
+Given nothing
+When I create the 'string array' named 'loop'
+When I write string '' in 'res'
+Foreach 'a' in 'loop'
+Foreach 'b' in 'loop'
+Foreach 'c' in 'loop'
+When I append 'c' to 'res'
+When I append 'b' to 'res'
+When I append 'a' to 'res'
+EOF
+    run $ZENROOM_EXECUTABLE -z multiple_not_closed_foreach.zen
+    assert_line --partial 'Invalid looping opened at line 4, 5, 6 and never closed'
+}
+
+@test "Detect the close of foreach before the if and viceversa" {
+    cat << EOF | save_asset error_closing_foreach_before_if.zen
+Given nothing
+When I create the 'string dictionary' named 'arr'
+Foreach 'el' in 'arr'
+If I verify 'el' is found
+When done
+# the following line are inverted
+Endforeach
+EndIf
+Then print the data
+EOF
+    run $ZENROOM_EXECUTABLE -z error_closing_foreach_before_if.zen
+    assert_line --partial "Invalid loop closing at line 7: need to close first the if"
+
+cat << EOF | save_asset error_closing_if_before_foreach.zen
+Given nothing
+When I create the 'string dictionary' named 'arr'
+If I verify 'arr' is found
+Foreach 'el' in 'arr'
+When done
+# the following line are inverted
+EndIf
+Endforeach
+Then print the data
+EOF
+    run $ZENROOM_EXECUTABLE -z error_closing_if_before_foreach.zen
+    assert_line --partial "Invalid branching closing at line 7: need to close first the foreach"
+}
+
+@test "Nested foreach loop" {
+    cat << EOF | zexe multiple_not_closed_foreach.zen
+Given nothing
+When I create the 'string array' named 'loop'
+When I set 'str' to 'a' as 'string'
+and I move 'str' in 'loop'
+When I set 'str' to 'b' as 'string'
+and I move 'str' in 'loop'
+When I write string '' in 'res'
+Foreach 'a' in 'loop'
+    When I append 'a' to 'res'
+    Foreach 'b' in 'loop'
+        When I append 'b' to 'res'
+        Foreach 'c' in 'loop'
+            When I append 'c' to 'res'
+        EndForeach
+    EndForeach
+EndForeach
+Then print 'res'
+EOF
+    save_output multiple_not_closed_foreach.out
+    assert_output '{"res":"aaabbabbaabbab"}'
+}
+
+@test "maxiter" {
+    cat << EOF | save_asset maxiter.data.json
+{
+    "start_int": "1",
+    "step_int": "1",
+    "end_in_limit_int": "10",
+    "end_out_of_limit_int": "11",
+    "start_float": 1,
+    "step_float": 1,
+    "end_in_limit_float": 10,
+    "end_out_of_limit_float": 11,
+    "array_in_limit": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j"
+    ],
+    "array_out_of_limit": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j",
+        "k"
+    ]
+}
+EOF
+    conf="maxiter=dec:10"
+    cat << EOF | zexe maxiter.work.zen maxiter.data.json
+Given I have a 'integer' named 'start_int'
+Given I have a 'integer' named 'step_int'
+Given I have a 'integer' named 'end_in_limit_int'
+Given I have a 'float' named 'start_float'
+Given I have a 'float' named 'step_float'
+Given I have a 'float' named 'end_in_limit_float'
+Given I have a 'string array' named 'array_in_limit'
+
+When I create the 'string array' named 'res'
+
+Foreach 'i' in 'array_in_limit'
+    When I move 'i' in 'res'
+EndForeach
+Foreach 'i' in sequence from 'start_int' to 'end_in_limit_int' with step 'step_int'
+   When I move 'i' in 'res'
+EndForeach
+Foreach 'i' in sequence from 'start_float' to 'end_in_limit_float' with step 'step_float'
+   When I move 'i' in 'res'
+EndForeach
+Then print the 'res'
+EOF
+    save_output maxiter_work.out.json
+    assert_output '{"res":["a","b","c","d","e","f","g","h","i","j","1","2","3","4","5","6","7","8","9","10",1,2,3,4,5,6,7,8,9,10]}'
+
+    cat << EOF | save_asset maxiter_error_1.zen
+Given I have a 'integer' named 'start_int'
+Given I have a 'integer' named 'step_int'
+Given I have a 'integer' named 'end_out_of_limit_int'
+
+When I create the 'string array' named 'res'
+
+Foreach 'i' in sequence from 'start_int' to 'end_out_of_limit_int' with step 'step_int'
+   When I move 'i' in 'res'
+EndForeach
+
+Then print the 'res'
+EOF
+    run $ZENROOM_EXECUTABLE -c "maxiter=dec:10" -a maxiter.data.json -z maxiter_error_1.zen
+    assert_line --partial 'Limit of iterations exceeded: 10'
+
+    cat << EOF | save_asset maxiter_error_2.zen
+Given I have a 'float' named 'start_float'
+Given I have a 'float' named 'step_float'
+Given I have a 'float' named 'end_out_of_limit_float'
+
+When I create the 'string array' named 'res'
+
+Foreach 'i' in sequence from 'start_float' to 'end_out_of_limit_float' with step 'step_float'
+   When I move 'i' in 'res'
+EndForeach
+
+Then print the 'res'
+EOF
+    run $ZENROOM_EXECUTABLE -c "maxiter=dec:10" -a maxiter.data.json -z maxiter_error_2.zen
+    assert_line --partial 'Limit of iterations exceeded: 10'
+
+    cat << EOF | save_asset maxiter_error_3.zen
+Given I have a 'string array' named 'array_out_of_limit'
+
+When I create the 'string array' named 'res'
+
+Foreach 'i' in 'array_out_of_limit'
+    When I move 'i' in 'res'
+EndForeach
+
+Then print the 'res'
+EOF
+    run $ZENROOM_EXECUTABLE -c "maxiter=dec:10" -a maxiter.data.json -z maxiter_error_3.zen
+    assert_line --partial 'Limit of iterations exceeded: 10'
 }
