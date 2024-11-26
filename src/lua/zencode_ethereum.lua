@@ -481,7 +481,7 @@ IfWhen("verify ethereum address signature pair array '' of ''", function(add_sig
     )
 end)
 
-IfWhen("use ethereum address signature pair array '' to create result array of ''", function(add_sig, doc)
+When("use ethereum address signature pair array '' to create result array of ''", function(add_sig, doc)
     empty 'result array'
     ACK.result_array = _verify_address_signature_array(add_sig, doc,
         function(address_signature_pair, hmsg)
