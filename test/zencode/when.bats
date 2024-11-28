@@ -453,3 +453,55 @@ EOF
     save_output move_from_to_existing_obj.out.json
     assert_output '{"new_ecdh_siganture_with_string_encoding":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"vUljXtnKkBqle/Ik7y3GfMa1o3wEIi4lRC+b/KmVbaI="},"string_from_base64":"hello my friend"}'
 }
+
+@test "move or copy from a dictiopnary and array" {
+    cat <<EOF | save_asset copy_move_from_to.data.json
+{
+    "dict_from": {
+        "str_1": "hello",
+        "str_2": "world",
+        "str_3": "!"
+    },
+    "array_from": [
+        "hello",
+        "world",
+        "!"
+    ],
+    "str_pos_for_dict": "str_3",
+    "str_pos_for_array": "3",
+    "int_pos": "3",
+    "float_pos": 3
+}
+EOF
+    cat <<EOF | zexe copy_move_from_to.zen copy_move_from_to.data.json
+Given I  have a 'string dictionary' named 'dict_from'
+and I have a 'string array' named 'array_from'
+and I have a 'integer' named 'int_pos'
+and I have a 'string' named 'str_pos_for_array'
+and I have a 'string' named 'str_pos_for_dict'
+and I have a 'float' named 'float_pos'
+
+
+When I copy 'str_2' from 'dict_from' to 'string_copied_from_dict'
+When I copy 'str_pos_for_dict' from 'dict_from' to 'string_copied_from_dict_with_str_pos'
+
+When I copy '2' from 'array_from' to 'string_copied_from_array'
+When I copy 'str_pos_for_array' from 'array_from' to 'string_copied_from_array_with_str_pos'
+When I copy 'int_pos' from 'array_from' to 'string_copied_from_array_with_int_pos'
+When I copy 'float_pos' from 'array_from' to 'string_copied_from_array_with_float_pos'
+
+When I move 'str_1' from 'dict_from' to 'string_moved_from_dict'
+When I move 'str_pos_for_dict' from 'dict_from' to 'string_moved_from_dict_with_str_pos'
+
+When I move 'str_pos_for_array' from 'array_from' to 'string_moved_from_array_with_str_pos'
+and I copy 'string_moved_from_array_with_str_pos' in 'array_from'
+When I move 'int_pos' from 'array_from' to 'string_moved_from_array_with_int_pos'
+and I copy 'string_moved_from_array_with_int_pos' in 'array_from'
+When I move 'float_pos' from 'array_from' to 'string_moved_from_array_with_float_pos'
+When I move '1' from 'array_from' to 'string_moved_from_array'
+
+Then print the data
+EOF
+    save_output copy_move_from_to.out.json
+    assert_output '{"array_from":["world"],"dict_from":{"str_2":"world"},"float_pos":3,"int_pos":"3","str_pos_for_array":"3","str_pos_for_dict":"str_3","string_copied_from_array":"world","string_copied_from_array_with_float_pos":"!","string_copied_from_array_with_int_pos":"!","string_copied_from_array_with_str_pos":"!","string_copied_from_dict":"world","string_copied_from_dict_with_str_pos":"!","string_moved_from_array":"hello","string_moved_from_array_with_float_pos":"!","string_moved_from_array_with_int_pos":"!","string_moved_from_array_with_str_pos":"!","string_moved_from_dict":"hello","string_moved_from_dict_with_str_pos":"!"}'
+}
