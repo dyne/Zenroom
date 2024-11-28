@@ -253,8 +253,7 @@ When I copy 'myFirstArray' to 'copyOfMyFirstArray'
 # You can copy a certain element from an array, to a new object named "copy", with the
 # same encoding of the array, in the root level of the data. 
 # We are immeediately renaming the outout for your convenience.
-When I create the copy of element '3' from array 'myFourthArray'
-and I rename the 'copy' to 'copyOfElement3OfmyFourthArray'
+When I copy '3' from 'myFourthArray' to 'copyOfElement3OfmyFourthArray'
 
 # SPLIT (leftmost, rightmost)
 # The "split" statements, take as input the name of a string and a numeric value,
@@ -525,7 +524,7 @@ When I create the variance of elements in array 'mySecondNumberArray'
 # COPY ELEMENT
 # This statement creates a an object named "copy" containing
 # the given element of the array
-When I create the copy of element '2' from array 'mySecondNumberArray'
+When I copy '2' from 'mySecondNumberArray' to 'copy'
 
 # REMOVE
 # The "remove" statement does the opposite of the one above:

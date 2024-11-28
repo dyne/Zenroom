@@ -892,7 +892,7 @@ EOF
 Given I have a 'string array' named 'array'
 
 When I create the size of 'array'
-and I create the copy of element 'size' from array 'array'
+and I copy 'size' from 'array' to 'copy'
 
 Then print the 'copy'
 EOF
@@ -1014,7 +1014,7 @@ EOF
     cat << EOF | zexe copy_from_schema_array.zen copy_from_schema_array.data
 Scenario 'ethereum': copy element
 Given I have a 'ethereum address signature pair array' named 'addresses_signatures'
-When I create the copy of element '1' from array 'addresses_signatures'
+When I copy '1' from 'addresses_signatures' to 'copy'
 Then print the 'copy'
 EOF
     save_output 'copy_from_schema_array.json'
