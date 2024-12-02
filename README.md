@@ -134,10 +134,10 @@ Reviews and suggestions contributed by: Richard Stallman, Daniele
 Lacamera, Enrico Zimuel, Sofía Celi, Sebastian Blichfeld, Adam Burns,
 Thomas Fuerstner and Jürgen Eckel.
 
-Zenroom [complies with the REUSE license specification](https://github.com/dyne/Zenroom/actions/workflows/reuse.yml) and redistributes:
+Zenroom [complies with the REUSE license specification](https://api.reuse.software/info/github.com/dyne/zenroom) and redistributes:
 - Lua 5.4 - Copyright © 1994–2023 Lua.org, PUC-Rio.
 - Apache Milagro Crypto Library (AMCL)
-- Various Lua libraries released under Apache/MIT license
+- Various Lua libraries released under Apache/MIT/CC0 license
 
 Special thanks to our colleagues in the [DECODE
 project](https://decodeproject.eu) whose research has inspired the
