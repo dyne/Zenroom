@@ -11,7 +11,6 @@ and I rename the 'array' to 'bonnetjes'
 Then print the 'bonnetjes'
 EOF
     save_output arr.json
-
 }
 
 @test "When I create the size of" {
@@ -685,6 +684,10 @@ If I verify the elements in 'dict' are all equal
 If I verify the elements in 'nested arr' are all equal
 If I verify the elements in 'empty dict' are all equal
 Then print string 'OK'
+EndIf
+EndIf
+EndIf
+EndIf
 EOF
     save_output "compare-equal.json"
     assert_output '{"output":["OK"]}'
@@ -716,6 +719,9 @@ If I verify the elements in 'arr' are not all equal
 If I verify the elements in 'dict' are not all equal
 If I verify the elements in 'nested arr' are not all equal
 Then print string 'OK'
+EndIf
+EndIf
+EndIf
 EOF
     save_output "compare-not-equal.json"
     assert_output '{"output":["OK"]}'

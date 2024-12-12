@@ -1,0 +1,6 @@
+Given I have a 'string array' named 'xs'
+When I create the 'string array' named 'new array'
+Foreach 'x' in 'xs'
+When I move 'x' in 'new array'
+EndForeach
+Then print 'new array'

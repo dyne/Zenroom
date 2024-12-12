@@ -6,11 +6,12 @@
 
 - Zencode Basics
   - [Quickstart](/pages/zencode-cookbook-intro.md "Zencode Quickstart")
-  - [Zencode: "Given" phase](/pages/zencode-cookbook-given.md "Zencode cookbook Given")
-  - [Zencode: "When phase](/pages/zencode-cookbook-when.md "Zencode cookbook When")
-  - [Zencode: "Then" phase](/pages/zencode-cookbook-then.md "Zencode cookbook Then")
-  - [Zencode: "If/Endif" branching](/pages/zencode-if-endif.md "Zencode branching")
-  - [Zencode: debug](/pages/zencode-debug.md "Zencode debug")
+  - [Given phase](/pages/zencode-cookbook-given.md "Zencode cookbook Given")
+  - [When phase](/pages/zencode-cookbook-when.md "Zencode cookbook When")
+  - [Then phase](/pages/zencode-cookbook-then.md "Zencode cookbook Then")
+  - [If/Endif branching](/pages/zencode-if-endif.md "Zencode branching")
+  - [Foreach/EndForeach looping](/pages/zencode-foreach-endforeach.md "Zencode looping")
+  - [Debug](/pages/zencode-debug.md "Zencode debug")
 
 - Zencode Advanced
   - [Cryptography](/pages/zencode-crypto.md "Zencode")
@@ -37,7 +38,7 @@
   - [Zencode command list](/pages/zencode-list.md "Zencode command list")
 
 - Bindings
-  - [ Use Zenroom as a library](/pages/how-to-embed.md "Embed")
+  - [Use Zenroom as a library](/pages/how-to-embed.md "Embed")
   - [JavaScript ](/pages/javascript.md "Use Zenroom in JavaScript")
   - [Python](/pages/python.md "Use Zenroom in JavaScript")
   - [Java](/pages/java.md "Use Zenroom in Java")

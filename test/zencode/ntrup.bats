@@ -170,7 +170,8 @@ and I create the kyber secret from 'kyber ciphertext'
 If I verify 'Bob ntrup secret' is equal to 'ntrup secret'
 If I verify 'Bob kyber secret' is equal to 'kyber secret'
 Then print string 'Success!!!'
-Endif
+EndIf
+EndIf
 EOF
     save_output 'Carl_dec.out'
     assert_output '{"output":["Success!!!"]}'
