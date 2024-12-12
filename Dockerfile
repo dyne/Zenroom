@@ -7,7 +7,7 @@ FROM alpine:latest
 
 RUN apk add --no-cache linux-headers build-base cmake readline-dev git
 RUN mkdir -p /zenroom
-RUN git config --global http.version HTTP/1.1 && RUN git clone --depth 1 https://github.com/dyne/zenroom
+RUN git config --global http.version HTTP/1.1 && git clone --depth 1 https://github.com/dyne/zenroom
 WORKDIR /zenroom
 RUN make musl COMPILER=clang RELEASE=1
 RUN mkdir -p /usr/local/bin/
