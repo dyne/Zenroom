@@ -5,16 +5,14 @@
 
 FROM alpine:latest
 
-COPY lib /lib
-COPY src /src
-COPY build /build
-COPY Makefile Makefile
-
-RUN apk add --no-cache linux-headers build-base cmake readline-dev
-RUN make musl COMPILER=gcc RELEASE=1
+RUN apk add --no-cache linux-headers build-base cmake readline-dev git
+RUN mkdir -p /zenroom
+RUN git config --global http.version HTTP/1.1 && RUN git clone --depth 1 https://github.com/dyne/zenroom
+WORKDIR /zenroom
+RUN make musl COMPILER=clang RELEASE=1
 RUN mkdir -p /usr/local/bin/
 RUN cp zenroom /usr/local/bin/
 RUN cp zencode-exec /usr/local/bin/
 
-ENTRYPOINT ["zenroom"]
+ENTRYPOINT ["/usr/local/bin/zenroom"]
 
