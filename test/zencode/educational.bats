@@ -83,8 +83,8 @@ and I rename 'result' to 'limit'
 
 Foreach 'i' in sequence from '0' to 'limit' with step '1'
     When I create the result of 'size' - 'i'
-    and I create the copy of element 'result' from array 'list'
-    and I move 'copy' in 'res'
+    and I copy 'result' from 'list' to 'temp'
+    and I move 'temp' in 'res'
     and I remove 'result'
 EndForeach
 

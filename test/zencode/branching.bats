@@ -676,8 +676,7 @@ If I verify 'grants' is found in 'external_qr_content'
     EndIf
 EndIf
 
-When I create copy of element '1' from array 'credential_configuration_ids'
-When I rename the 'copy' to 'credential_configuration_id'
+When I copy '1' from 'credential_configuration_ids' to 'credential_configuration_id'
 
 If I verify 'credential_issuer' ends with '/'
     When I split rightmost '1' bytes of 'credential_issuer'
