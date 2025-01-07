@@ -359,7 +359,7 @@ test("parse contract with an invalid statement", async (t) => {
       [
         "  Given gibberish",
         2,
-        "/zencode.lua:208: Zencode line 2 pattern not found (given): Given gibberish",
+        "/zencode.lua:222: Zencode line 2 pattern not found (given): Given gibberish",
       ],
     ],
     ignored: [],
@@ -381,11 +381,11 @@ test("parse contract with more than one invalid statement", async (t) => {
       [
         "  Given gibberish",
         2,
-        "/zencode.lua:208: Zencode line 2 pattern not found (given): Given gibberish"
+        "/zencode.lua:222: Zencode line 2 pattern not found (given): Given gibberish"
       ],[
         "  When gibberish",
         4,
-        "/zencode.lua:208: Zencode line 4 pattern not found (when): When gibberish"
+        "/zencode.lua:222: Zencode line 4 pattern not found (when): When gibberish"
       ],[
         "  some other stuff",
         5,
@@ -393,7 +393,7 @@ test("parse contract with more than one invalid statement", async (t) => {
       ],[
         "  Then gibberish",
         7,
-        "/zencode.lua:208: Zencode line 7 pattern not found (then): Then gibberish"
+        "/zencode.lua:222: Zencode line 7 pattern not found (then): Then gibberish"
       ]
     ]
   }
@@ -461,7 +461,7 @@ test("parse contract with muliple ingnore and invalid statements", async (t) => 
       [
         '  When gibberish',
         6,
-        '/zencode.lua:219: Zencode line 6 found invalid statement out of given or then phase: When gibberish',
+        '/zencode.lua:233: Zencode line 6 found invalid statement out of given or then phase: When gibberish',
       ],[
         '  Not a real statement',
         7,
