@@ -29,7 +29,8 @@ Zencode helps developers to **empower people** who know what to do with data: on
 - 2019 - Stable release series `v1` (now EOL)
 - 2022 - Stable release series [v2](https://github.com/dyne/Zenroom/tree/v2) until LTS `v2.22.1`
 - 2023 - Stable release series [v3](https://github.com/dyne/Zenroom/tree/v3) until LTS `v3.23.4`
-- 2024 - Current stable `v4` (latest HEAD)
+- 2024 - Stable release series [v4](https://github.com/dyne/Zenroom/tree/v4) until LTS `v4.47.0`
+- 2025 - Current stable `v5` (latest HEAD)
 
 ### [Read the full Changelog for more infos](https://github.com/dyne/Zenroom/blob/master/ChangeLog.md)
 
