@@ -316,15 +316,44 @@ When("copy contents of '' named '' in ''", function(src,name,dst)
     end
 end)
 
-local function move_or_copy_from_to(ele, source, new)
+local function move_or_copy_from_to(key_name, source, new)
     local src, src_codec = have(source)
-    zencode_assert(src[ele], "Object not found: "..ele.." inside "..source)
+    local key, key_enc = mayhave(key_name)
+    if src_codec.zentype == 'a' then
+        if key then
+            if key_enc.encoding == "string" then
+                key = key:str()
+            elseif key_enc.encoding == "integer" then
+                key = key:decimal()
+            elseif key_enc.encoding == "float" then
+                key = key:__tostring()
+            else
+                error("Invalid array key encoding: "..key_enc.encoding, 2)
+            end
+        else
+            key = key_name
+        end
+        local pos = tonumber(key)
+        if not pos then error("Invalid array index: "..key, 2) end
+        key = pos
+    else
+        if key then
+            if key_enc.encoding == "string" then
+                key = key:str()
+            else
+                error("Invalid dictionary key encoding: "..key_enc.encoding, 2)
+            end
+        else
+            key = key_name
+        end
+    end
+    if not src[key] then error("Object not found: "..key.." inside "..source, 2) end
     if ACK[new] then
         error("Cannot overwrite existing object: "..new.."\n"..
               "To copy/move element in existing element use:\n"..
               "When I move/copy '' from '' in ''", 2)
     end
-    ACK[new] = deepcopy(src[ele])
+    ACK[new] = deepcopy(src[key])
     local n_codec = { encoding = src_codec.encoding }
     -- table of schemas can only contain elements
     if src_codec.schema then
@@ -332,13 +361,18 @@ local function move_or_copy_from_to(ele, source, new)
         n_codec.zentype = "e"
     end
     new_codec(new, n_codec)
+    return src_codec.zentype == 'a', key
 end
 
 When("copy '' from '' to ''", move_or_copy_from_to)
 
 When("move '' from '' to ''", function(ele, source, new)
-    move_or_copy_from_to(ele, source, new)
-    ACK[source][ele] = nil
+    local is_array, to_remove = move_or_copy_from_to(ele, source, new)
+    if is_array then
+        table.remove(ACK[source], to_remove)
+    else
+        ACK[source][to_remove] = nil
+    end
 end)
 
 When("split rightmost '' bytes of ''", function(len, src)
@@ -716,8 +750,9 @@ When("create result of ''", function(expr)
   -- infix to RPN
   local rpn = {}
   local operators = {}
+  local last_token
   for k, v in pairs(tokens) do
-    if v == '-' and (#rpn == 0 or operators[#operators] == '(') then
+    if v == '-' and (#rpn == 0 or last_token == '(' ) then
         table.insert(operators, '~') -- unary minus (change sign)
     elseif priorities[v] then
       while #operators > 0 and operators[#operators] ~= '('
@@ -739,6 +774,7 @@ When("create result of ''", function(expr)
     else
       table.insert(rpn, v)
     end
+    last_token=v
   end
 
   -- all remaining operators have to be applied

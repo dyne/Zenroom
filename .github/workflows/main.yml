@@ -104,7 +104,7 @@ jobs:
         run: |
           sudo apt install -yq jq libreadline-dev
           ${{ matrix.command }} sudo apt install -yq $COMPILER
-          pip3 install meson ninja
+          pip3 install --prefer-binary meson ninja
       - name: Build GNU/Linux ${{ matrix.command }}
         run: |
           make linux-exe ${{ matrix.command }}
@@ -126,7 +126,7 @@ jobs:
       - uses: hendrikmuhs/ccache-action@v1.2
       - name: install dependencies
         run : |
-          sudo apt install -y jq gcc-mingw-w64 g++-mingw-w64
+          sudo apt install -y jq gcc-mingw-w64
       - name: Build x86_64 windows .exe
         run: |
           make win-exe CCACHE=1
@@ -147,7 +147,7 @@ jobs:
           python-version: '3.13'
       - name: Install dependencies
         run: |
-          pip3 install meson ninja
+          pip3 install --prefer-binary meson ninja
       - uses: hendrikmuhs/ccache-action@v1.2
       - run: |
           make osx-exe CCACHE=1
@@ -155,6 +155,24 @@ jobs:
           make osx-lib CCACHE=1
           otool -hv libzenroom.dylib
           make check-osx
+
+  arm32-test:
+    name: 🦾 ARM32 build test
+    needs: [reuse, c-lint, lua-lint]
+    if: "github.event_name == 'pull_request'"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pguyot/arm-runner-action@v2
+        with:
+          commands: |
+            sudo apt-get update -yq
+            sudo apt-get install -yq --no-install-recommends make cmake gcc jq libreadline-dev xxd git python3-venv
+            make linux-exe
+            # Testing on ARM32 in Qemu takes too long. This should be tested on-site
+            # python3 -m venv .venv
+            # . .venv/bin/activate && pip install --prefer-binary meson ninja
+            # make check
 
   go-build-check:
     name: 🐹 go build & checks
@@ -178,7 +196,7 @@ jobs:
           python-version: '3.13'
       - name: Install dependencies
         run: |
-          pip3 install meson ninja
+          pip3 install --prefer-binary meson ninja
           sudo apt-get install -qy libreadline-dev
       - run: |
           make linux-exe CCACHE=1
@@ -210,7 +228,7 @@ jobs:
           python-version: '3.13'
       - name: Install dependencies
         run: |
-          pip3 install meson ninja
+          pip3 install --prefer-binary meson ninja
           sudo apt-get install -qy libreadline-dev
       - run: |
           make linux-exe CCACHE=1
@@ -246,7 +264,7 @@ jobs:
           version: ${{ env.EM_VERSION }}
       - name: Install dependencies
         run: |
-          pip3 install meson ninja
+          pip3 install --prefer-binary meson ninja
       - name: Build Zenroom Wasm
         run: |
           make node-wasm CCACHE=1
@@ -378,7 +396,7 @@ jobs:
             build/release-intro.md
       - name: Install build deps
         run: |
-          sudo apt install -qy tree jq cmake make gcc g++ musl-tools musl-dev meson clang gcc-mingw-w64 g++-mingw-w64 libreadline-dev ccache
+          sudo apt install -qy tree jq cmake make gcc musl-tools musl-dev gcc-mingw-w64 libreadline-dev ccache
       - name: Build x86_64 with musl-system
         run: |
           make musl RELEASE=1 CCACHE=1
@@ -448,7 +466,7 @@ jobs:
         ref: master
         fetch-depth: 0
     - run: |
-        pip install ninja twine
+        pip install --prefer-binary ninja twine
         ./prepare.sh
     - run: pipx run build --sdist
     - run: twine check dist/*.tar.gz

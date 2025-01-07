@@ -189,7 +189,11 @@ function mt:__pow(other)
 end
 
 local function new(major, minor, patch, prerelease, build)
-   assert(major, "At least one parameter is needed")
+   if not major then
+       warn("Zenroom build misses version information")
+       warn("Running VM is not an official release by Dyne.org")
+       return nil
+   end
    local result = { }
    if type(major) == 'string' then
 	  result.original = major

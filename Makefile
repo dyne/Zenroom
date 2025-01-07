@@ -30,6 +30,10 @@ linux-exe: ## Dynamic executable for GNU/Linux
 linux-lib: ## Dynamic library for GNU/Linux
 	$(MAKE) -f build/posix.mk libzenroom.so LINUX=1 LIBRARY=1
 
+linux-asan: ## Address sanitizer debug build
+	$(MAKE) -f build/posix.mk deps BUILD_DEPS="apply-patches milagro"
+	$(MAKE) -f build/posix.mk ASAN=1
+
 musl: ## Static executable for Musl
 	$(MAKE) -f build/musl.mk
 
