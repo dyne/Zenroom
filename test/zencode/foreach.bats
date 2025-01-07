@@ -520,7 +520,9 @@ Then print the 'res'
 EOF
     save_output maxiter_work.out.json
     assert_output '{"res":["a","b","c","d","e","f","g","h","i","j","1","2","3","4","5","6","7","8","9","10",1,2,3,4,5,6,7,8,9,10]}'
+}
 
+@test "maxiter fails" {
     cat << EOF | save_asset maxiter_error_1.zen
 Given I have a 'integer' named 'start_int'
 Given I have a 'integer' named 'step_int'
@@ -529,7 +531,7 @@ Given I have a 'integer' named 'end_out_of_limit_int'
 When I create the 'string array' named 'res'
 
 Foreach 'i' in sequence from 'start_int' to 'end_out_of_limit_int' with step 'step_int'
-   When I move 'i' in 'res'
+    When I move 'i' in 'res'
 EndForeach
 
 Then print the 'res'
