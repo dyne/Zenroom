@@ -85,7 +85,8 @@ local function debug_heap_dump()
 				CODEC = CODEC,
 				WHEN = ack,
 				THEN = OUT,
-				CACHE = CACHE})))
+				CACHE = CACHE},
+                CONF.debug.encoding.name)))
 	  if LOGFMT == 'JSON' then tmp = '"'..tmp..'",' end
 	  printerr(tmp)
    else -- CONF.debug.format == 'log'
