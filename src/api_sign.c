@@ -194,7 +194,7 @@ int zenroom_sign_create(const char *algo, const char *key, const char *msg) {
 	// EDDSA
 	if(strcmp(algo,"eddsa")==0) {
 		ed25519_public_key pk;
-		const size_t keysize = sizeof(ed25519_secret_key);
+		size_t keysize = sizeof(ed25519_secret_key);
 		char *sk = hex2buf_alloc("ed25519_secret_key",key,&keysize);
 		if(!sk) {_err("%s :: invalid arg: sk",__func__);return FAIL();}
 		ed25519_publickey(sk, pk); // calculate public key
@@ -220,14 +220,14 @@ int zenroom_sign_verify(const char *algo, const char *pk, const char *msg, const
 	bool res = false;
 	// EDDSA
 	if(strcmp(algo,"eddsa")==0) {
-		const size_t pksize = sizeof(ed25519_public_key);
-		const ed25519_public_key *pk_b = hex2buf_alloc("ed25519_public_key",pk,&pksize);
+		size_t pksize = sizeof(ed25519_public_key);
+		const char *pk_b = hex2buf_alloc("ed25519_public_key",pk,&pksize);
 		if(!pk_b){_err("%s :: invalid arg pk",__func__);return FAIL();}
-		const size_t sigsize = sizeof(ed25519_signature);
-		const ed25519_signature *sig_b = hex2buf_alloc("ed25519_signature",sig,&sigsize);
+		size_t sigsize = sizeof(ed25519_signature);
+		const char *sig_b = hex2buf_alloc("ed25519_signature",sig,&sigsize);
 		if(!sig_b){_err("%s :: invalid arg sig",__func__);return FAIL();}
 		size_t msglen = 0;
-		char *msg_b = hex2buf_alloc("message",msg,&msglen);
+		const char *msg_b = hex2buf_alloc("message",msg,&msglen);
 		if(!msg_b) { _err("%s :: invalid arg: msg",__func__); return FAIL(); }
 		res = 0==ed25519_sign_open(msg_b, msglen, pk_b, sig_b);
 		free(pk_b);
