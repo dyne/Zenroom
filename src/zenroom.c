@@ -354,19 +354,10 @@ void zen_teardown(zenroom_t *ZZ) {
 	free(ZZ);
 }
 
-#define SAFE_EXEC \
-  if(!ZZ) {														\
-	_err("Execution error: Zenroom is not initialized\n");		\
-	return ERR_INIT;											\
-  }																\
-  if(!ZZ->lua) {												\
-  _err( "Execution error: Lua is not initialised\n");			\
-  ZZ->exitcode = ERR_INIT;										\
-  return ZZ->exitcode;											\
-  }
-
+HEDLEY_NON_NULL(1,2)
 int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
-  SAFE_EXEC;
+	HEDLEY_ASSUME(ZZ!=NULL);
+	HEDLEY_ASSUME(ZZ->lua!=NULL);
   int ret;
   lua_State* L = (lua_State*)ZZ->lua;
   // introspection on code being executed
@@ -407,7 +398,8 @@ int protect_exec_lua(lua_State *L) {
 }
 
 int zen_exec_lua(zenroom_t *ZZ, const char *script) {
-	SAFE_EXEC;
+	HEDLEY_ASSUME(ZZ!=NULL);
+	HEDLEY_ASSUME(ZZ->lua!=NULL);
 	lua_State *L = (lua_State*)ZZ->lua;
 	// introspection on code being executed
 	zen_setenv(L,"CODE",(char*)script);
