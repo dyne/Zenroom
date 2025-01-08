@@ -73,8 +73,6 @@ size_t repl_prompt(int ret, char *line) {
 	char *prompt;
 	if(ret) prompt="lua! \0";
 	else prompt="lua> \0";
-	int nop = write(STDOUT_FILENO, prompt, 5);
-	(void)nop;
 #ifdef ARCH_LINUX
 	char *r = NULL;
 	r = readline(prompt);
@@ -82,6 +80,8 @@ size_t repl_prompt(int ret, char *line) {
 	len = strlen(r);
 	memcpy(line, r, len);
 #else
+	int nop = write(STDOUT_FILENO, prompt, 5);
+	(void)nop;
 	len = read(STDIN_FILENO, line, MAX_STRING);
 #endif
 	line[len] = '\0';
