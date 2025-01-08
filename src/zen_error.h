@@ -23,12 +23,15 @@
 #ifndef __ZEN_ERROR_H__
 #define __ZEN_ERROR_H__
 
-// #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <hedley.h>
 
 // macro to obtain Z context from a lua_State
-#define Z(l) zenroom_t *Z=NULL; (void)Z; if (l) { void *_zv; lua_getallocf(l, &_zv); Z = _zv; } else { _err("NULL context in call: %s\n", __func__); }
+#define Z(l) \
+	if(HEDLEY_UNLIKELY(l==NULL) \
+	    lerror(l,"NULL lua_State in %s",__func__); \
+	zenroom_t *Z; lua_getallocf(l, &Z)
 
 // tracing wrappers for all C->Lua functions
 #define BEGIN() trace(L, "vv begin %s",__func__)
@@ -55,26 +58,37 @@ typedef enum log_priority {
 void get_log_prefix(void *Z, log_priority prio, char dest[5]);
 
 // context free print and error messages
+HEDLEY_PRINTF_FORMAT(1,2)
 void _out(const char *fmt, ...);
+HEDLEY_PRINTF_FORMAT(1,2)
 void _err(const char *fmt, ...);
 // context free results
 int OK();
 int FAIL();
 
 // lua context error message
+HEDLEY_PRINTF_FORMAT(2,3)
+HEDLEY_NO_RETURN
 int lerror(void *L, const char *fmt, ...);
 
+HEDLEY_PRINTF_FORMAT(2,3)
 int notice(void *L, const char *format, ...); // INFO
+HEDLEY_PRINTF_FORMAT(2,3)
 int func(void *L, const char *format, ...); // VERBOSE
+HEDLEY_PRINTF_FORMAT(2,3)
 int trace(void *L, const char *format, ...); // TRACE (VERY VERBOSE)
+HEDLEY_PRINTF_FORMAT(2,3)
 int zerror(void *L, const char *format, ...); // ERROR
+HEDLEY_PRINTF_FORMAT(2,3)
 int act(void *L, const char *format, ...); // DEBUG
+HEDLEY_PRINTF_FORMAT(2,3)
 int warning(void *L, const char *format, ...); // WARN
 
 void json_start(void *L);
 void json_end(void *L);
 
-#define SAFE(x) if(!x) lerror(L, "NULL variable in %s",__func__)
+#define SAFE(x) HEDLEY_REQUIRE_MSG(x!=NULL, __func__)
+// if(!x) lerror(L, "NULL variable in %s",__func__)
 
 // useful for debugging
 #if DEBUG == 1
