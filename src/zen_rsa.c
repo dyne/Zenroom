@@ -84,13 +84,13 @@ static int rsa_keypair(lua_State *L)   {
 		void* q =luaL_testudata(L,2,"zenroom.octet");
 		if ((p) && (q)){
 			octet *P = o_alloc(L, sizeof(p));
-			P = (octet*) p; SAFE(P);
+			P = (octet*) p;
 			if (P->len > RSA_4096_PRIVATE_KEY_BIG_BYTES) {
 				failed_msg = "Wrong prime size";
 				goto end;
 			}
 			octet *Q = o_alloc(L, sizeof(q));
-			Q = (octet*) q; SAFE(Q);
+			Q = (octet*) q;
 			if (Q->len > RSA_4096_PRIVATE_KEY_BIG_BYTES) {
 				failed_msg = "Wrong prime size";
 				goto end;
@@ -109,13 +109,13 @@ static int rsa_keypair(lua_State *L)   {
 		void* q =luaL_testudata(L,3,"zenroom.octet");
 		if ((p) && (q)){
 			octet *P = o_alloc(L, sizeof(p));
-			P = (octet*) p; SAFE(P);
+			P = (octet*) p;
 			if (P->len > RSA_4096_PRIVATE_KEY_BIG_BYTES) {
 				failed_msg = "Wrong prime size";
 				goto end;
 			}
 			octet *Q = o_alloc(L, sizeof(q));
-			Q = (octet*) q; SAFE(Q);
+			Q = (octet*) q;
 			if (Q->len > RSA_4096_PRIVATE_KEY_BIG_BYTES) {
 				failed_msg = "Wrong prime size";
 				goto end;
@@ -132,14 +132,14 @@ static int rsa_keypair(lua_State *L)   {
 	}
 
 	lua_createtable(L, 0, 2);
-	octet *private = o_new(L, RSA_4096_PRIVATE_KEY_BYTES); SAFE(private);
+	octet *private = o_new(L, RSA_4096_PRIVATE_KEY_BYTES);
 	
 	if(private == NULL) {
 		failed_msg = "Could not allocate private key";
 		goto end;
 	}
 	lua_setfield(L, -2, "private");
-	octet *public = o_new(L, RSA_4096_PUBLIC_KEY_BYTES); SAFE(public);
+	octet *public = o_new(L, RSA_4096_PUBLIC_KEY_BYTES);
 	if(public == NULL) {
 		failed_msg = "Could not allocate public key";
 		goto end;

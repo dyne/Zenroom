@@ -188,7 +188,6 @@ big* big_arg(lua_State *L,int n) {
 
 // allocates a new big in LUA, duplicating the one in arg
 big *big_dup(lua_State *L, big *s) {
-	SAFE(s);
 	big *n = big_new(L);
 	if(s->doublesize) {
 		dbig_init(L,n);
@@ -317,7 +316,7 @@ static int lua_biginfo(lua_State *L) {
 // TODO: fix this to return something usable in modmul
 static int lua_bigmax(lua_State *L) {
 	BEGIN();
-	big *b = big_new(L); SAFE(b);
+	big *b = big_new(L);
 	big_init(L, b);
 	register int c;
 	for(c=0 ; c < b->len ; c++) b->val[c] = 0xffffffff;
@@ -339,9 +338,9 @@ static int newbig(lua_State *L) {
 	ud = luaL_testudata(L, 2, "zenroom.big");
 	if(ud) {
 		warning(L, "use of RNG deprecated");
-		big *res = big_new(L); big_init(L,res); SAFE(res);
+		big *res = big_new(L); big_init(L,res);
 		// random with modulus
-		big *modulus = (big*)ud; SAFE(modulus);
+		big *modulus = (big*)ud;
 		Z(L);
 		BIG_randomnum(res->val,modulus->val,Z->random_generator);
 		return 1;
@@ -353,7 +352,7 @@ static int newbig(lua_State *L) {
 	if(tn) {
 		// if(n > 0xffff)
 		// 	warning(L, "Import of number to BIG limit exceeded (>16bit)");
-		big *c = big_new(L); SAFE(c);
+		big *c = big_new(L);
 		big_init(L,c);
 		BIG_zero(c->val);
 		if((int)n>0)
@@ -436,7 +435,7 @@ static int big_from_decimal_string(lua_State *L) {
 	if(!s) {
 		return 0;
 	}
-	big *num = big_new(L); SAFE(num);
+	big *num = big_new(L);
 
 	big_init(L,num);
 	BIG_zero(num->val);
@@ -970,7 +969,7 @@ static int big_modrand(lua_State *L) {
 
 static int big_random(lua_State *L) {
 	BEGIN();
-	big *res = big_new(L); big_init(L,res); SAFE(res);
+	big *res = big_new(L); big_init(L,res);
 	Z(L);
 	BIG_randomnum(res->val,(chunk*)CURVE_Order,Z->random_generator);
 	END(1);

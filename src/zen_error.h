@@ -29,9 +29,9 @@
 
 // macro to obtain Z context from a lua_State
 #define Z(l) \
-	if(HEDLEY_UNLIKELY(l==NULL) \
+	if(HEDLEY_UNLIKELY(l==NULL)) \
 	    lerror(l,"NULL lua_State in %s",__func__); \
-	zenroom_t *Z; lua_getallocf(l, &Z)
+	zenroom_t *Z; lua_getallocf(l, (void**)&Z)
 
 // tracing wrappers for all C->Lua functions
 #define BEGIN() trace(L, "vv begin %s",__func__)
@@ -87,7 +87,7 @@ int warning(void *L, const char *format, ...); // WARN
 void json_start(void *L);
 void json_end(void *L);
 
-#define SAFE(x) HEDLEY_REQUIRE_MSG(x!=NULL, __func__)
+// #define SAFE(x) HEDLEY_REQUIRE(x != NULL)
 // if(!x) lerror(L, "NULL variable in %s",__func__)
 
 // useful for debugging

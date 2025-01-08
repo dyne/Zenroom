@@ -240,7 +240,7 @@ end_big:
 		failed_msg = "Could not allocate octet";
 		goto end;
 	}
-	ecp *e = ecp_new(L); SAFE(e);
+	ecp *e = ecp_new(L);
 	if(o->len > e->totlen) { // double safety
 		lua_pop(L, 1);
 		zerror(L, "%s: octet length %u instead of %u bytes", __func__, o->len, e->totlen);
@@ -266,7 +266,7 @@ end:
 */
 static int ecp_generator(lua_State *L) {
 	BEGIN();
-	ecp *e = ecp_new(L); SAFE(e);
+	ecp *e = ecp_new(L);
 /*     if(!ECP_set(&e->val,
        (chunk*)CURVE_Gx, (chunk*)CURVE_Gy)) {
               lerror(L, "ECP generator value out of curve (stack corruption)");
@@ -335,7 +335,7 @@ static int ecp_mapit(lua_State *L) {
 		lerror(L, "Invalid argument to ECP.mapit(), not an hash");
 		lua_pushnil(L);
 	} else {
-		ecp *e = ecp_new(L); SAFE(e);
+		ecp *e = ecp_new(L);
 		func(L, "mapit on o->len %u", o->len);
 		ECP_mapit(&e->val, o);
 		o_free(L, o);
@@ -716,7 +716,7 @@ end:
 
 static int ecp_prime(lua_State *L) {
 	BEGIN();
-	big *p = big_new(L); big_init(L,p); SAFE(p);
+	big *p = big_new(L); big_init(L,p);
 	BIG_rcopy(p->val, CURVE_Prime);
 	END(1);
 }

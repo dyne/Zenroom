@@ -337,7 +337,7 @@ octet *o_dup(lua_State *L, octet *o) {
 }
 
 void push_buffer_to_octet(lua_State *L, char *p, size_t len) {
-	octet* o = o_new(L, len); SAFE(o);
+	octet* o = o_new(L, len);
 	// newuserdata already pushes the object in lua's stack
 	// memcpy(o->val, p, len);
 	register uint32_t i;
@@ -430,9 +430,9 @@ static int filloctet(lua_State *L) {
 	BEGIN();
 	int i;
 	octet *o = (octet*) luaL_testudata(L, 1, "zenroom.octet");
-	SAFE(o);
+	
 	octet *fill = (octet*) luaL_testudata(L, 2, "zenroom.octet");
-	SAFE(fill);
+	
 	for(i=0; i<o->max; i++)
 		o->val[i] = fill->val[i % fill->len];
 	o->len = o->max;
@@ -601,7 +601,7 @@ static int from_number(lua_State *L) {
 		lerror(L, "O.from_number input is not a number");
 		return 0; }
 	const uint64_t v = n;
-	octet *o = o_new(L, 16); SAFE(o);
+	octet *o = o_new(L, 16);
 	// conversion from int64 to binary
 	// TODO: check endian portability issues
 	register uint8_t i = 0;
@@ -631,7 +631,7 @@ static int from_rawlen (lua_State *L) {
 	if(!tn) {
 		lerror(L, "O.new 2nd arg is not a number");
 		return 0; }
-	octet *o = o_new(L, (int)n); SAFE(o);
+	octet *o = o_new(L, (int)n);
 	register int c;
 	for(c=0;c<n;c++) o->val[c] = s[c];
 	o->len = (int)n;
@@ -648,7 +648,7 @@ static int from_base64(lua_State *L) {
 		return 0; }
 	int nlen = B64decoded_len(len);
 	octet *o = o_new(L, nlen); // 4 byte header
-	SAFE(o);
+	
 	OCT_frombase64(o, (char*)s);
 	END(1);
 }
@@ -663,7 +663,7 @@ static int from_url64(lua_State *L) {
 		return 0; }
 	int nlen = B64decoded_len(len);
 	// func(L,"U64 decode len: %u -> %u",len,nlen);
-	octet *o = o_new(L, nlen); SAFE(o);
+	octet *o = o_new(L, nlen);
 	o->len = U64decode(o->val, (char*)s);
 	// func(L,"u64 return len: %u",o->len);
 	END(1);
@@ -714,7 +714,7 @@ static int from_string(lua_State *L) {
 		zerror(L, "%s: invalid string size: %u", __func__, len);
 		lerror(L, "operation aborted");
 		return 0; }
-	octet *o = o_new(L, len); SAFE(o);
+	octet *o = o_new(L, len);
 	register int i = 0;
 	for(i=0;s[i];i++) o->val[i]=s[i];
 	o->len = i;
@@ -741,7 +741,7 @@ static int from_hex(lua_State *L) {
 		zerror(L, "hex sequence too long: %u bytes", len<<1); // fatal
 		lua_pushboolean(L, 0);
 		END(1); }
-	octet *o = o_new(L, len>>1); SAFE(o);
+	octet *o = o_new(L, len>>1);
 	if ( (s[0] == '0') && (s[1] == 'x') ) {
 		// ethereum elides the leftmost 0 char when value <= 0F
 		if((len&1)==1) { // odd length means elision
@@ -772,7 +772,7 @@ static int from_bin(lua_State *L) {
 		zerror(L, "invalid binary sequence size: %u", len);
 		lerror(L, "operation aborted");
 		return 0; }
-	octet *o = o_new(L, len+4); SAFE(o);
+	octet *o = o_new(L, len+4);
 	register char *S = (char*)s;
 	register int p; // position in whole string
 	register int i; // increased only when 1 or 0 is found
@@ -829,7 +829,7 @@ static int from_segwit_address(lua_State *L) {
 		lua_pushboolean(L, 0);
 		END(1);
 	}
-	octet *o = o_new(L, witprog_len); SAFE(o);
+	octet *o = o_new(L, witprog_len);
 	register size_t i;
 	for(i=0; i<witprog_len; i++) {
 		o->val[i] = (char)witprog[i];
@@ -920,7 +920,7 @@ end:
 
 static int to_mnemonic(lua_State *L) {
 	BEGIN();
-	octet *o = o_arg(L,1); SAFE(o);
+	octet *o = o_arg(L,1);
 	if(!o->len) { lua_pushnil(L); o_free(L,o); return 1; }
 	if(o->len > 32) {
 		zerror(L, "%s :: octet bigger than 32 bytes cannot be encoded to mnemonic");
@@ -948,7 +948,7 @@ static int from_mnemonic(lua_State *L) {
 		lua_pushboolean(L, 0);
 		END(1); }
 	// From bip39 it can be at most 32bytes
-	octet *o = o_alloc(L, 32); SAFE(o);
+	octet *o = o_alloc(L, 32);
 	if(!mnemonic_check_and_bits(s, &(o->len), o->val)) {
 		zerror(L, "%s :: words cannot be encoded with bip39 format", __func__);
 		lua_pushboolean(L, 0);
@@ -1183,7 +1183,7 @@ end:
 
 static int to_base45 (lua_State *L) {
 	BEGIN();
-	octet *o = o_arg(L, 1); SAFE(o);
+	octet *o = o_arg(L, 1);
 	int newlen = b45encode(NULL, o->val, o->len);
 	char *b = malloc(newlen);
 	b45encode(b, o->val, o->len);
@@ -1203,7 +1203,7 @@ static int from_base45(lua_State *L) {
 		lerror(L, "base45 string contains invalid characters");
 		return 0;
 	}
-	octet *o = o_new(L, len); SAFE(o);
+	octet *o = o_new(L, len);
 	len = b45decode(o->val, s);
 	if(len < 0) {
 		lerror(L, "base45 invalid string");
@@ -1315,7 +1315,7 @@ This is the default format when `print()` is used on an octet.
 */
 int to_hex(lua_State *L) {
 	BEGIN();
-	octet *o = o_arg(L, 1);	SAFE(o);
+	octet *o = o_arg(L,1);
 	if(!o->len) { lua_pushnil(L); goto end; }
 	push_octet_to_hex_string(L, o);
 end:
@@ -1325,7 +1325,7 @@ end:
 
 static int to_bin(lua_State *L) {
 	BEGIN();
-	octet *o = o_arg(L,1);	SAFE(o);
+	octet *o = o_arg(L,1);
 	if(!o->len) { lua_pushnil(L); goto end; }
 	char *s = malloc(o->len*8+2);
 	int i;
@@ -1396,7 +1396,7 @@ static int zero(lua_State *L) {
 		return 0;
 	}
 	func(L, "Creating a zero filled octet of %u bytes", len);
-	octet *n = o_new(L,len); SAFE(n);
+	octet *n = o_new(L,len);
 	register int i;
 	for(i=0; i<len; i++) n->val[i]=0x0;
 	n->len = len;
@@ -1606,7 +1606,7 @@ end:
 
 static int size(lua_State *L) {
 	BEGIN();
-	octet *o = o_arg(L, 1); SAFE(o);
+	octet *o = o_arg(L, 1);
 	lua_pushinteger(L, o->len);
 	o_free(L, o);
 	END(1);
@@ -1614,7 +1614,7 @@ static int size(lua_State *L) {
 
 static int max(lua_State *L) {
 	BEGIN();
-	octet *o = o_arg(L, 1); SAFE(o);
+	octet *o = o_arg(L, 1);
 	lua_pushinteger(L, o->max);
 	o_free(L, o);
 	END(1);
@@ -1623,8 +1623,8 @@ static int max(lua_State *L) {
 static int new_random(lua_State *L) {
 	BEGIN();
 	int tn;
-	lua_Number n = lua_tonumberx(L, 1, &tn); SAFE(n);
-	octet *o = o_new(L,(int)n); SAFE(o);
+	lua_Number n = lua_tonumberx(L, 1, &tn);
+	octet *o = o_new(L,(int)n);
 	Z(L);
 	OCT_rand(o, Z->random_generator, (int)n);
 	END(1);
@@ -1707,7 +1707,7 @@ end:
 
 static int entropy_bytefreq(lua_State *L) {
 	BEGIN();
-	octet *o = o_arg(L, 1); SAFE(o);
+	octet *o = o_arg(L, 1);
 	register int i; // register
 	// byte frequency table
 	char *bfreq = malloc(0xff);
@@ -1730,7 +1730,7 @@ static int entropy_bytefreq(lua_State *L) {
 
 static int entropy(lua_State *L) {
 	BEGIN();
-	octet *o = o_arg(L,1); SAFE(o);
+	octet *o = o_arg(L,1);
 	register int i; // register
 	// byte frequency table
 	char *bfreq = malloc(0xff+0x0f);
@@ -1859,7 +1859,7 @@ static int charcount(lua_State *L) {
 	register int c;
 	const char *s = lua_tostring(L, 2);
 	luaL_argcheck(L, s != NULL, 1, "string expected");
-	octet *o = o_arg(L,1); SAFE(o);
+	octet *o = o_arg(L,1);
 	needle = *s; // single char
 	const char *hay = (const char*)o->val;
 	for(p=hay, c=0; c < o->len; p++, c++) if(needle==*p) count++;
@@ -1932,7 +1932,7 @@ static int elide_at_start(lua_State *L) {
 	if (i != prefix->len) {
 		lua_pushnil(L);
 	} else {
-		octet* res = o_new(L, o->len - prefix->len); SAFE(res);
+		octet* res = o_new(L, o->len - prefix->len);
 		if (i < o->len) {
 			memmove(res->val, o->val + i, o->len - i);
 			res->len = o->len - prefix->len;
@@ -1970,7 +1970,7 @@ static int fillrepeat(lua_State *L) {
 		failed_msg = "size is not a positive number";
 		goto end;
 	}
-	octet* res = o_new(L, size); SAFE(res);
+	octet* res = o_new(L, size);
 	res->len = size;
 	int i;
 	for(i=0; i<res->len; i++) {
@@ -1987,8 +1987,8 @@ end:
 
 static int lesser_than(lua_State *L) {
 	BEGIN();
-	octet *l = o_arg(L,1); SAFE(l);
-	octet *r = o_arg(L,2); SAFE(r);
+	octet *l = o_arg(L,1);
+	octet *r = o_arg(L,2);
 	size_t minlen = (l->len < r->len) ? l->len : r->len;
 	if( memcmp(l->val,r->val,minlen) < 0 ) lua_pushboolean(L, 1);
 	else lua_pushboolean(L, 0);
