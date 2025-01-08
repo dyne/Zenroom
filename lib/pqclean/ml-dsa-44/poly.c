@@ -498,7 +498,7 @@ void poly_challenge(poly *c, const uint8_t seed[CTILDEBYTES]) {
   shake256_inc_init(&state);
   shake256_inc_absorb(&state, seed, CTILDEBYTES);
   shake256_inc_finalize(&state);
-  shake256_squeezeblocks(buf, 1, &state);
+  shake256_inc_squeeze(buf, sizeof buf, &state);
 
   signs = 0;
   for(i = 0; i < 8; ++i)
@@ -510,7 +510,7 @@ void poly_challenge(poly *c, const uint8_t seed[CTILDEBYTES]) {
   for(i = N-TAU; i < N; ++i) {
     do {
       if(pos >= SHAKE256_RATE) {
-        shake256_squeezeblocks(buf, 1, &state);
+        shake256_inc_squeeze(buf, sizeof buf, &state);
         pos = 0;
       }
 

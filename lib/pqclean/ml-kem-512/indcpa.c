@@ -168,7 +168,6 @@ void gen_matrix(polyvec *a, const uint8_t seed[KYBER_SYMBYTES], int transposed)
   unsigned int buflen;
   uint8_t buf[GEN_MATRIX_NBLOCKS*XOF_BLOCKBYTES];
   xof_state state;
-  xof_init(&state, seed);
 
   for(i=0;i<KYBER_K;i++) {
     for(j=0;j<KYBER_K;j++) {
@@ -186,9 +185,9 @@ void gen_matrix(polyvec *a, const uint8_t seed[KYBER_SYMBYTES], int transposed)
         buflen = XOF_BLOCKBYTES;
         ctr += rej_uniform(a[i].vec[j].coeffs + ctr, KYBER_N - ctr, buf, buflen);
       }
+      xof_release(&state);
     }
   }
-  xof_release(&state);
 }
 
 /*************************************************

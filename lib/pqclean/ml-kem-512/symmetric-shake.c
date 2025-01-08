@@ -15,7 +15,7 @@
 *              - uint8_t i: additional byte of input
 *              - uint8_t j: additional byte of input
 **************************************************/
-void kyber_shake128_absorb(shake128incctx *state,
+void kyber_shake128_absorb(xof_state *state,
                            const uint8_t seed[KYBER_SYMBYTES],
                            uint8_t x,
                            uint8_t y)
@@ -26,7 +26,7 @@ void kyber_shake128_absorb(shake128incctx *state,
   extseed[KYBER_SYMBYTES+0] = x;
   extseed[KYBER_SYMBYTES+1] = y;
 
-  shake128_absorb_once(state, extseed, sizeof(extseed));
+  shake128_absorb(state, extseed, sizeof(extseed));
 }
 
 /*************************************************
