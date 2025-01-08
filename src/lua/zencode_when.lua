@@ -237,7 +237,7 @@ end)
 local function move_or_copy_to(src, dest, enc)
     empty(dest)
     if not enc then
-        ACK[dest] = deepcopy(ACK[src])
+        ACK[dest] = deepcopy(have(src))
         new_codec(dest, { }, src)
     else
         ACK[dest] = apply_encoding(src, enc, "string")
