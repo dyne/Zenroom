@@ -116,15 +116,12 @@ clean:
 	rm -rf ${pwd}/build/demo
 	rm -f ${pwd}/build/swig_wrap.c
 	rm -f ${pwd}/.python-version
-	rm -f ${pwd}/src/zenroom
 	rm -f ${pwd}/lib/ed25519-donna/libed25519.a
 	rm -f ${pwd}/lib/ed25519-donna/*.o
-	rm -f ${pwd}/test/zencode-exec
-	rm -f ${pwd}/test/zenroom
-
-clean-src:
-	rm -f src/zen_ecdh_factory.c src/zen_ecp_factory.c src/zen_big_factory.c
-	$(MAKE) clean -C src
+	rm -f ${pwd}/zenroom
+	rm -f ${pwd}/zencode-exec
+	rm -f ${pwd}/luac54
+	rm -f ${pwd}/libzenroom.so
 
 # -------------------
 # Parsing the documentation
@@ -139,5 +136,3 @@ linux-benchmark:
 clean-test:
 	git clean -f docs
 	git restore docs
-	rm -f test/zenroom
-	rm -f test/zencode-exec
