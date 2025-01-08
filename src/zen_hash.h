@@ -56,8 +56,14 @@ typedef struct {
   // ...
 } hash;
 
-
+HEDLEY_MALLOC
+HEDLEY_RETURNS_NON_NULL
+HEDLEY_WARN_UNUSED_RESULT
 hash* hash_new(lua_State *L, const char *hashtype);
+
+HEDLEY_MALLOC
+HEDLEY_RETURNS_NON_NULL
+HEDLEY_WARN_UNUSED_RESULT
 hash* hash_arg(lua_State *L, int n);
 
 #endif
