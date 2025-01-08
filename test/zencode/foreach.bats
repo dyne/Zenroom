@@ -569,3 +569,66 @@ EOF
     run $ZENROOM_EXECUTABLE -c "maxiter=dec:10" -a maxiter.data.json -z maxiter_error_3.zen
     assert_line --partial 'Limit of iterations exceeded: 10'
 }
+
+@test "negative steps" {
+    cat << EOF | save_asset negative_steps.data.json
+{
+    "int_start": "1",
+    "int_end": "-10",
+    "int_step": "-1",
+    "num_start": 1,
+    "num_end": -10,
+    "num_step": -1
+}
+EOF
+    cat << EOF | zexe negative_steps.zen negative_steps.data.json
+Given I have a 'integer' named 'int_start'
+Given I have a 'integer' named 'int_end'
+Given I have a 'integer' named 'int_step'
+Given I have a 'number' named 'num_start'
+Given I have a 'number' named 'num_end'
+Given I have a 'number' named 'num_step'
+
+# integer loop with negative step
+When I create the 'integer array' named 'int_res'
+Foreach 'i' in sequence from 'int_start' to 'int_end' with step 'int_step'
+   When I move 'i' in 'int_res'
+EndForeach
+
+# integer loop with negative step that:
+# * start and end in the same negative number
+# * start and end in the same positive number
+When I create the 'integer array' named 'int_res_corner_case'
+Foreach 'i' in sequence from 'int_end' to 'int_end' with step 'int_step'
+   When I move 'i' in 'int_res_corner_case'
+EndForeach
+Foreach 'i' in sequence from 'int_start' to 'int_start' with step 'int_step'
+   When I move 'i' in 'int_res_corner_case'
+EndForeach
+
+# number loop with negative step
+When I create the 'integer array' named 'num_res'
+Foreach 'i' in sequence from 'num_start' to 'num_end' with step 'num_step'
+   When I move 'i' in 'num_res'
+EndForeach
+
+# number loop with negative step that:
+# * start and end in the same negative number
+# * start and end in the same positive number
+When I create the 'integer array' named 'num_res_corner_case'
+Foreach 'i' in sequence from 'num_end' to 'num_end' with step 'num_step'
+   When I move 'i' in 'num_res_corner_case'
+EndForeach
+Foreach 'i' in sequence from 'num_start' to 'num_start' with step 'num_step'
+   When I move 'i' in 'num_res_corner_case'
+EndForeach
+
+
+Then print the 'int_res'
+Then print the 'num_res'
+Then print the 'int_res_corner_case'
+Then print the 'num_res_corner_case'
+EOF
+    save_output negative_steps.out
+    assert_output '{"int_res":["1","0","-1","-2","-3","-4","-5","-6","-7","-8","-9","-10"],"int_res_corner_case":["-10","1"],"num_res":[1,0,-1,-2,-3,-4,-5,-6,-7,-8,-9,-10],"num_res_corner_case":[-10,1]}'
+}
