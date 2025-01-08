@@ -22,6 +22,7 @@
 #define __ZEN_ECP_H__
 
 #include <zen_ecp_factory.h>
+#include <hedley.h>
 
 typedef struct {
 	size_t halflen; // length in bytes of a reduced coordinate

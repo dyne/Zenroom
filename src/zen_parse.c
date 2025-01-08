@@ -39,7 +39,7 @@ static char low[MAX_LINE]; // 1KB max for a single zencode line
 static int lua_parse_prefix(lua_State* L) { 
 	const char *line;
 	size_t size;
-	line = luaL_checklstring(L,1,&size); SAFE(line);
+	line = luaL_checklstring(L,1,&size);
 	register unsigned short int c;
 	unsigned short fspace = 0;
 	// skip space in front
@@ -71,8 +71,8 @@ static int lua_strcasecmp(lua_State *L) {
 	const char *a, *b;
 	size_t la, lb;
 	char *ta, *tb;
-	a = luaL_checklstring(L,1,&la); SAFE(a);
-	b = luaL_checklstring(L,2,&lb); SAFE(b);
+	a = luaL_checklstring(L,1,&la);
+	b = luaL_checklstring(L,2,&lb);
 	if(la>MAX_LINE) lerror(L, "strcasecmp: arg #1 MAX_LINE limit hit");
 	if(lb>MAX_LINE) lerror(L, "strcasecmp: arg #2 MAX_LINE limit hit");
 	ta = malloc(la+1);
