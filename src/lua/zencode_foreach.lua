@@ -56,28 +56,50 @@ Foreach("'' in sequence from '' to '' with step ''", function(name, from_name, t
     if type(from) == 'zenroom.big' then
         -- only on first iteration: do checks and save usefull values
         if info.pos == 1 then
-            zencode_assert(BIG.zenpositive(step) and step ~= BIG.new(0), "only positive step is supported")
-            zencode_assert(BIG.zenpositive(BIG.zensub(to, from)), "end of foreach must be bigger than the start")
-            info.to_plus_1 = BIG.zenadd(to, BIG.new(1)) -- store to avoid repeating at each step
+            zencode_assert(step ~= BIG.new(0), "zero step is not supported")
+            local range_size = BIG.zensub(to, from)
+            if BIG.zenpositive(step) then
+                zencode_assert(BIG.zenpositive(range_size) or range_size == BIG.new(0), "end of foreach must be bigger than the start for postive step")
+                info.to_plus_1 = BIG.zenadd(to, BIG.new(1))
+                -- current_value >  to
+                -- current_value >= to + 1
+                -- (current_value - (to+1)) >= 0
+                info.check_fn = function ()
+                    local diff = BIG.zensub(info.cv, info.to_plus_1)
+                    return BIG.zenpositive(diff) or diff == BIG.new(0)
+                end
+            else
+                zencode_assert(not BIG.zenpositive(range_size) or range_size == BIG.new(0), "end of foreach must be smaller than the start for negative step")
+                info.to_minus_1 = BIG.zensub(to, BIG.new(1))
+                -- current_value < to
+                -- current_value <= to - 1
+                -- (current_value - (to-1)) <= 0
+                info.check_fn = function()
+                    local diff = BIG.zensub(info.cv, info.to_minus_1)
+                    return not BIG.zenpositive(diff) or diff == BIG.new(0)
+                end
+            end
             info.cv = from
         else
             info.cv = BIG.zenadd(info.cv, step)
         end
-        -- current_value >  to
-        -- current_value >= to + 1
-        -- (current_value - (to+1)) >= 0
-        local diff = BIG.zensub(info.cv, info.to_plus_1)
-        finished = BIG.zenpositive(diff) or diff == BIG.new(0)
+        finished = info.check_fn()
     else
         -- only on first iteration: do checks and save usefull values
         if info.pos == 1 then
-            zencode_assert(step > F.new(0) and from < to,
-                "only positive step is supported")
+            zencode_assert(step ~= F.new(0), "zero step is not supported")
+            if step > F.new(0) then
+                zencode_assert(from <= to, "end of foreach must be bigger than the start for postive step")
+                info.check_fn = function() return info.cv > to end
+            else
+                zencode_assert(from >= to, "end of foreach must be smaller than the start for negative step")
+                info.check_fn = function() return info.cv < to end
+            end
             info.cv = from
         else
             info.cv = info.cv + step
         end
-        finished = info.cv > to
+        finished = info.check_fn()
     end
 
     if finished then
