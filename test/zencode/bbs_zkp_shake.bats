@@ -24,8 +24,8 @@ Given I have a 'string array' named 'bbs messages'
 Given I have a 'number array' named 'bbs disclosed indexes'
 When I create the bbs shake key
 and I create the bbs shake public key
-When I create the random object of '256' bits
-When I rename the 'random_object' to 'bbs presentation header'
+When I create the random of '256' bits
+When I rename the 'random' to 'bbs presentation header'
 When I create the bbs shake signature of 'bbs messages'
 and I rename 'bbs shake signature' to 'bbs shake credential'
 When I create the bbs disclosed messages
@@ -73,8 +73,8 @@ Given I have a 'bbs shake public key'
 Given I have a 'bbs shake credential'
 Given I have a 'string array' named 'bbs messages'
 Given I have a 'number array' named 'bbs disclosed indexes'
-When I create the random object of '256' bits 
-When I rename the 'random_object' to 'bbs presentation header'
+When I create the random of '256' bits 
+When I rename the 'random' to 'bbs presentation header'
 When I create the bbs disclosed messages
 When I create the bbs shake proof of the signature 'bbs shake credential' of the messages 'bbs messages' with public key 'bbs shake public key' presentation header 'bbs presentation header' and disclosed indexes 'bbs disclosed indexes'
 Then print the 'bbs shake proof'

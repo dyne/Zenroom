@@ -271,18 +271,18 @@ When I randomize the 'myFourthArray' array
 
 
 # PICK RANDOM
-# The "pick a random object in" picks randomly an object from the target array
-# and puts into a newly created object named "random_object".
+# The "create a random pick from" picks randomly an element from the target array
+# and puts into a newly created variable named "random_pick".
 # The name is hardcoded, the object can be renamed.
-When I pick the random object in 'myFirstArray'
-and I rename the 'random_object' to 'myRandomlyPickedObject'
+When I create random pick from 'myFirstArray'
+and I rename the 'random_pick' to 'myRandomlyPickedObject'
 
-# CREATE RANDOM DICTIONARY 
-# If you need several objects from a dictionary, you can use this statement
-# it will create a new dictionary with the defined amount of objects,
-# picked from the original dictionary 
-When I create the random dictionary with 'mySecondNumber' random objects from 'myOnlyEcpArray'
-and I rename the 'random_dictionary' to 'myNewlyCreatedRandomDictionary'
+# PICK MULTIPLE RANDOM ELEMENTS
+# If you need several objects from a table, you can use this statement
+# it will create a new table (array if source was an array, or dictionary otherwise)
+# with the defined amount of objects picked from the original table
+When I create random table with 'mySecondNumber' random pick from 'myOnlyEcpArray'
+and I rename the 'random_table' to 'myNewlyCreatedRandomArray'
 
 # CREATE FLAT ARRAY
 # The "flat array" statement, take as input the name of an array or a dictionary,
@@ -311,25 +311,25 @@ EOF
 # The parameters can be modified by passing them to Zenroom as configuration file
 When I create the random 'newRandomObject'
 
-# Below is a variation that lets you create a random number of configurable length.
-# This statement doesn't let you choose the name of the name of the newly created object,
-# which is hardcoded to "random_object". We are immediately renaming it.
-When I create the random object of '128' bits
-and I rename the 'random_object' to 'my128BitsRandom'
-When I create the random object of '16' bytes
-and I rename the 'random_object' to 'my16BytesRandom'
+# Below is a variation that lets you create a random elements of configurable length.
+# This statement doesn't let you choose the name of the name of the newly created element,
+# which is hardcoded to "random". We are immediately renaming it.
+When I create the random of '128' bits
+and I rename the 'random' to 'my128BitsRandom'
+When I create the random of '16' bytes
+and I rename the 'random' to 'my16BytesRandom'
 
-# The "create array of random" statement, lets you create an array of random objects, 
-# and you can select the length in bits. The first statement uses the default lenght of 512 bits.
+# The "create array of random" statement, lets you create an array of random elements, 
+# and you can select the length in bits or bytes. The first statement uses the default lenght of 512 bits.
 # Like the previous one, this statement outputs an object whose name is hardcoded into "array".
-# Since we're creating three arrays called "array" below, Zenroom would simply overwrite 
-# the first two, so we are renaming the output immediately. 
-When I create the array of '4' random objects
-and I rename the 'array' to 'my4RandomObjectsArray'
-When I create the array of '5' random objects of '256' bits
-and I rename the 'array' to 'my256BitsRandomObjectsArray'
-When I create the array of '6' random objects of '16' bytes
-and I rename the 'array' to 'my16BytesRandomObjectsArray'
+# Since we're creating three arrays called "array" below, Zenroom would throw an error because by
+# design Zenroom does not allow you to implicity overwrite, so we are renaming the output immediately. 
+When I create the array of '4' random
+and I rename the 'array' to 'my4RandomArray'
+When I create the array of '5' random of '256' bits
+and I rename the 'array' to 'my256BitsRandomArray'
+When I create the array of '6' random of '16' bytes
+and I rename the 'array' to 'my16BytesRandomArray'
 
 # You can generate an array of random numbers, from 0 o 65355, with this statement.
 When I create the array of '10' random numbers 
