@@ -24,8 +24,8 @@ Given I have a 'string array' named 'bbs messages'
 Given I have a 'number array' named 'bbs disclosed indexes'
 When I create the bbs key
 and I create the bbs public key
-When I create the random object of '256' bits 
-When I rename the 'random_object' to 'bbs presentation header'
+When I create the random of '256' bits 
+When I rename the 'random' to 'bbs presentation header'
 When I create the bbs signature of 'bbs messages'
 and I rename 'bbs signature' to 'bbs credential'
 When I create the bbs disclosed messages
@@ -79,8 +79,8 @@ When I create the bbs key
 and I create the bbs public key
 When I create the bbs signature of 'bbs messages'
 and I rename 'bbs signature' to 'bbs credential'
-When I create the random object of '256' bits 
-When I rename the 'random_object' to 'bbs presentation header'
+When I create the random of '256' bits 
+When I rename the 'random' to 'bbs presentation header'
 When I create the bbs disclosed messages
 When I create the bbs proof of the signature 'bbs credential' of the messages 'bbs messages' with public key 'bbs public key' presentation header 'bbs presentation header' and disclosed indexes 'bbs disclosed indexes'
 Then print the 'bbs proof'
@@ -187,8 +187,8 @@ Given I have a 'string array' named 'bbs messages'
 
 Given I have a 'number array' named 'bbs disclosed indexes'
 
-When I create the random object of '256' bits 
-When I rename the 'random_object' to 'bbs presentation header'
+When I create the random of '256' bits 
+When I rename the 'random' to 'bbs presentation header'
 
 When I create the bbs disclosed messages
 
