@@ -117,7 +117,7 @@ static int rng_int32(lua_State *L) {
 static int rng_seed(lua_State *L) {
 	BEGIN();
 	Z(L);
-	octet *in = o_arg(L, 1); SAFE(in);
+	octet *in = o_arg(L, 1);
 	if(in->len < 4) {
 		zerror(L, "Random seed error: too small (%u bytes)", in->len);
 		lua_pushnil(L);
@@ -126,7 +126,7 @@ static int rng_seed(lua_State *L) {
 	AMCL_(RAND_seed)(Z->random_generator, in->len, in->val);
 	o_dup(L,in); // push seed to Lua stack for setglobal
 	lua_setglobal(L, "RNGSEED");
-	octet *rr = o_new(L, PRNG_PREROLL); SAFE(rr);
+	octet *rr = o_new(L, PRNG_PREROLL);
 	for(register int i=0;i<PRNG_PREROLL;i++)
 		rr->val[i] = RAND_byte(Z->random_generator);
 	rr->len = PRNG_PREROLL;

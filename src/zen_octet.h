@@ -22,19 +22,29 @@
 #define __ZEN_OCTET_H__
 
 #include <amcl.h>
+#include <hedley.h>
 
 // REMEMBER: o_new and o_dup push a new object in lua's stack
+HEDLEY_MALLOC
+HEDLEY_RETURNS_NON_NULL
 octet* o_new(lua_State *L, const int size);
 
+HEDLEY_MALLOC
+HEDLEY_RETURNS_NON_NULL
 octet *o_dup(lua_State *L, octet *o);
 
 // REMEMBER: o_arg returns a new allocated octet to be freed with o_free
+HEDLEY_MALLOC
+HEDLEY_RETURNS_NON_NULL
 octet* o_arg(lua_State *L, int n);
 
 // These functions are internal and not exposed to lua's stack
 // to make an octet visible to lua can be done using o_dup
+HEDLEY_MALLOC
+HEDLEY_RETURNS_NON_NULL
 octet *o_alloc(lua_State *L, int size);
-void o_free(lua_State *L,octet *o);
+
+void o_free(lua_State *L, HEDLEY_NO_ESCAPE octet *o);
 
 void push_octet_to_hex_string(lua_State *L, octet *o);
 void push_buffer_to_octet(lua_State *L, char *p, size_t len);

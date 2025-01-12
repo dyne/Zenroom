@@ -146,7 +146,7 @@ static int lua_new_ecp2(lua_State *L) {
 	void *tyi = luaL_testudata(L, 4, "zenroom.big");
 
 	if(tx && txi && ty && tyi) {
-		ecp2 *e = ecp2_new(L); SAFE(e);
+		ecp2 *e = ecp2_new(L);
 		big *x, *xi, *y, *yi;
 		x  = big_arg(L, 1);
 		xi = big_arg(L, 2);
@@ -172,10 +172,10 @@ end_big_big_big_big:
 	}
 	// If x is on the curve then y is calculated from the curve equation.
 	if(tx && txi) {
-		ecp2 *e = ecp2_new(L); SAFE(e);
+		ecp2 *e = ecp2_new(L);
 		big *x, *xi;
-		x  = big_arg(L, 1); SAFE(x);
-		xi = big_arg(L, 2); SAFE(xi);
+		x  = big_arg(L, 1);
+		xi = big_arg(L, 2);
 		if(!x || !xi) {
 			failed_msg = "Could not create BIG";
 			goto end_big_big;

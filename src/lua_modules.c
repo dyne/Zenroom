@@ -101,8 +101,8 @@ int zen_load_string(lua_State *L, const char *code,
 	return(res);
 }
 
+HEDLEY_NON_NULL(1,2);
 int zen_exec_extension(lua_State *L, zen_extension_t *p) {
-	SAFE(p); // HEREs(p->name);
 #ifdef __EMSCRIPTEN__
 	if(p->code) {
 		// HEREs(p->code);
@@ -137,8 +137,8 @@ int nop(lua_State *L) {
 #ifndef S_SPLINT_S
 // src/lua_modules.c:139:15: Parse Error. Attempting to continue.
 
+HEDLEY_NON_NULL(1);
 int zen_require(lua_State *L) {
-	SAFE(L);
 	size_t len;
 	const char *s = lua_tolstring(L, 1, &len);
 	// HEREs(s);

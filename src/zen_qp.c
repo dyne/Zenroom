@@ -386,9 +386,9 @@ end:
 static int qp_kem_keygen(lua_State *L) {
 	BEGIN();
 	lua_createtable(L, 0, 2);
-	octet *private = o_new(L, PQCLEAN_KYBER512_CLEAN_CRYPTO_SECRETKEYBYTES); SAFE(private);
+	octet *private = o_new(L, PQCLEAN_KYBER512_CLEAN_CRYPTO_SECRETKEYBYTES);
 	lua_setfield(L, -2, "private");
-	octet *public = o_new(L, PQCLEAN_KYBER512_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE(public);
+	octet *public = o_new(L, PQCLEAN_KYBER512_CLEAN_CRYPTO_PUBLICKEYBYTES);
 	lua_setfield(L, -2, "public");
 
 	PQCLEAN_KYBER512_CLEAN_crypto_kem_keypair((unsigned char*)public->val, (unsigned char*)private->val);
@@ -565,7 +565,7 @@ static int qp_ml_kem_512_keygen(lua_State *L) {
 	for(int j=1; j<3; j++){
 	void *ud =luaL_testudata(L,j,"zenroom.octet");
 	if (ud){
-		octet * rnd = (octet*) ud; SAFE(rnd);
+		octet * rnd = (octet*) ud;
 		if (rnd->len != 32) {
 			failed_msg = "Wrong seed size";
 			goto end;	
@@ -578,9 +578,9 @@ static int qp_ml_kem_512_keygen(lua_State *L) {
 	}
 	}
 	lua_createtable(L, 0, 2);
-	octet *private = o_new(L, pqcrystals_ml_kem_512_ref_SECRETKEYBYTES); SAFE(private);
+	octet *private = o_new(L, pqcrystals_ml_kem_512_ref_SECRETKEYBYTES);
 	lua_setfield(L, -2, "private");
-	octet *public = o_new(L, pqcrystals_ml_kem_512_ref_PUBLICKEYBYTES); SAFE(public);
+	octet *public = o_new(L, pqcrystals_ml_kem_512_ref_PUBLICKEYBYTES);
 	lua_setfield(L, -2, "public");
 
 	pqcrystals_ml_kem_512_ref_keypair_derand((unsigned char*)public->val, (unsigned char*)private->val, randbytes);
@@ -677,7 +677,7 @@ static int qp_ml_kem_512_enc(lua_State *L) {
 	pk = o_arg(L, 1);
 	void *ud = luaL_testudata(L, 2, "zenroom.octet");
 	if (ud){
-		octet *rnd = (octet *) ud; SAFE(rnd);
+		octet *rnd = (octet *) ud;
 		if (rnd->len != 32) {
 			failed_msg = "Wrong seed size";
 			goto end;	
@@ -979,7 +979,7 @@ static int ml_dsa_44_keypair(lua_State *L)   {
 	lua_setfield(L, -2, "public");
 	void *ud =luaL_testudata(L,1,"zenroom.octet");
 	if (ud){
-		octet * rnd = (octet*) ud; SAFE(rnd);
+		octet * rnd = (octet*) ud;
 		if (rnd->len != 32) {
 			failed_msg = "Wrong seed size";
 			goto end;	
@@ -1083,7 +1083,7 @@ static int ml_dsa_44_signature(lua_State *L) {
 	
 	void *ud =luaL_testudata(L,3,"zenroom.octet");
 	if (ud){
-		octet * ctx = (octet*) ud; SAFE(ctx);
+		octet * ctx = (octet*) ud;
 		if (ctx->len > 255) {
 			failed_msg = "Wrong ctx size";
 			goto end;	
@@ -1157,7 +1157,7 @@ static int ml_dsa_44_verify(lua_State *L)    {/*********************************
 	}
 	void *ud =luaL_testudata(L,4,"zenroom.octet");
 	if (ud){
-		octet * ctx = (octet*) ud; SAFE(ctx);
+		octet * ctx = (octet*) ud;
 		int result = pqcrystals_ml_dsa_44_ref_verify((unsigned char*)sig->val,
 								(size_t)sig->len,
 								(unsigned char*)m->val, m->len,
