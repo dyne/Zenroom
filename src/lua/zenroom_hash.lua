@@ -27,37 +27,27 @@ local SHA256 = nil
 local SHA512 = nil
 local SHAKE256 = nil
 local KECCAK256 = nil
-local function init(bits)
-   local h
-   if bits == 256 or bits == 32 then
-	  if SHA256==nil then SHA256 = hash.new('sha256') end
-	  h = SHA256
-   elseif bits == 512 or bits == 64 then
-	  if SHA512==nil then SHA512 = hash.new('sha512') end
-	  h = SHA512
-	else
-	  error("HASH bits not supported: "..bits)
-   end
-   return h
+local hash_init_table = {
+    sha32 = function() SHA256 = SHA256 or hash.new('sha256'); return SHA256 end,
+    sha256 = function() SHA256 = SHA256 or hash.new('sha256'); return SHA256 end,
+    sha64 = function() SHA512 = SHA512 or hash.new('sha512'); return SHA512 end,
+    sha512 = function() SHA512 = SHA512 or hash.new('sha512'); return SHA512 end,
+    shake256 = function() SHAKE256 = SHAKE256 or hash.new('shake256'); return SHAKE256 end,
+    keccak256 = function() KECCAK256 = KECCAK256 or hash.new('keccak256'); return KECCAK256 end
+}
+local function init(name)
+    local h = hash_init_table[name]
+    if not h then error("HASH type not supported: "..name, 2) end
+    return h();
 end
 
-function sha256(data) return init(256):process(data) end
-function sha512(data) return init(512):process(data) end
-hash.shake256 = function(data, len)
-	if SHAKE256==nil then SHAKE256 = hash.new('shake256') end
-	if not len then len = 32 end
-	return SHAKE256:process(data, len)
-end
+function sha256(data) return init("sha256"):process(data) end
+function sha512(data) return init("sha512"):process(data) end
 
-hash.keccak256 = function(data)
-    if KECCAK256==nil then KECCAK256 = hash.new('keccak256') end
-    return KECCAK256:process(data)
-end
+hash.shake256 = function(data, len) return init("shake256"):process(data, len or 32) end
+hash.keccak256 = function(data) return init("keccak256"):process(data) end
 
-function KDF(data, bits)
-   local b = bits or 256
-   return init(b):kdf2(data)
-end
+function KDF(data, bits) return init("sha"..tostring(bits or 256)):kdf2(data) end
 
 function hash.dsha256(msg)
    local _SHA256 = HASH.new('sha256')
