@@ -1,0 +1,15 @@
+Given I have a 'string array' named 'x'
+Given I have a 'string array' named 'y'
+
+# create the array that will contains the result of the foreach
+When I create the 'string array' named 'res'
+
+# loop in parallel over x and y
+Foreach values prefix 'loop variable ' at the same position in arrays 'x' and 'y'
+    # append the array values
+    When I append 'loop variable y' to 'loop variable x'
+    # insert result in res
+    When I move 'loop variable x' in 'res'
+EndForeach
+
+Then print 'res'

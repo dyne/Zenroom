@@ -6,23 +6,28 @@ local function clear_iterators()
         CODEC[v] = nil
     end
     info.names = nil
+    info.pos = 0
+end
+
+local function init_iterator(name)
+    local info = ZEN.ITER_head
+    if info.pos == 1 or not ACK[name] then
+        empty(name)
+        if info.names then table.insert(info.names, name)
+        else info.names = {name} end
+    end
 end
 
 Foreach("'' in ''", function(name, collection)
     local info = ZEN.ITER_head
     local col = have(collection)
     local collection_codec = CODEC[collection]
+
     zencode_assert(collection_codec.zentype == "a", "Can only iterate over arrays")
-    -- in the first itaration decale the index variable
-    if info.pos == 1 or not ACK[name] then
-        empty(name)
-        if info.names then table.insert(info.names, name)
-        else info.names = {name} end
-    end
+    init_iterator(name)
 
     -- skip execution in the last iteration
     if info.pos == #col+1 then
-        info.pos = 0
         clear_iterators()
     else
         -- for each iteration read the value in the collection
@@ -44,14 +49,10 @@ Foreach("'' in sequence from '' to '' with step ''", function(name, from_name, t
     local to   = have(to_name)
     local step = have(step_name)
 
-    if info.pos == 1 or not ACK[name] then
-        empty(name)
-        if info.names then table.insert(info.names, name)
-        else info.names = {name} end
-    end
-
     zencode_assert(type(from) == type(to) and type(to) == type(step), "Types must be equal in foreach declaration")
     zencode_assert(type(from) == 'zenroom.big' or type(from) == 'zenroom.float', "Unknown number type")
+    init_iterator(name)
+
     local finished
     if type(from) == 'zenroom.big' then
         -- only on first iteration: do checks and save usefull values
@@ -103,7 +104,6 @@ Foreach("'' in sequence from '' to '' with step ''", function(name, from_name, t
     end
 
     if finished then
-        info.pos = 0
         clear_iterators()
     else
         ACK[name] = info.cv
@@ -114,11 +114,55 @@ Foreach("'' in sequence from '' to '' with step ''", function(name, from_name, t
     end
 end)
 
+local function _zip_with_prefix(name, ...)
+    local info = ZEN.ITER_head
+    local arrays_names = {...}
+    local encoding_fn = {}
+
+    for _, n in pairs(arrays_names) do
+        local v, c = have(n)
+        local prefixed_name = uscore(name..n)
+        -- on first iterations checks that are all arrays
+        if info.pos == 1 then
+            if (c.zentype ~= "a") then
+                error("Can only iterate over arrays: "..n.." is "..c.zentype, 2)
+            end
+            init_iterator(prefixed_name)
+        end
+        -- terminate loop as soon as one array ends
+        if not v[info.pos] then
+            clear_iterators()
+            return
+        else
+            ACK[prefixed_name] = v[info.pos]
+            if not CODEC[prefixed_name] then
+                local n_codec = { encoding = c.encoding }
+                -- table of schemas can only contain elements
+                if c.schema then
+                    n_codec.schema = c.schema
+                    n_codec.zentype = "e"
+                end
+                new_codec(prefixed_name, n_codec)
+            end
+        end
+    end
+end
+
+Foreach("values prefix '' at same position in arrays '' and ''", _zip_with_prefix)
+Foreach("values prefix '' at same position in arrays ''", function(name, arrays_names)
+    local v, c = have(arrays_names)
+    zencode_assert(c.zentype == "a" and c.encoding == "string",
+        "Array of names must be specified in a string array")
+    zencode_assert(next(v,_) ~= nil, "Array of names must not be empty")
+    _zip_with_prefix(name, table.unpack(deepmap(O.to_string, v)))
+end)
+
+-- break foreach
+
 local function break_foreach()
     if not ZEN.ITER_head then
        error("Can only exit from foreach loop", 2)
     end
-    ZEN.ITER_head.pos = 0
     clear_iterators()
 end
 

@@ -2,14 +2,23 @@
 # Looping: Foreach/EndForeach statements
 
 Zenroom allows looping, done using the **Foreach** and **EndForeach** statements.
-There are two possible way of looping that are, over an array
+There are few possible way of looping that are:
+* over an array
 ```gherkin
 Foreach 'element' in 'array'
 ```
-or from a number to another with certain step
+* over two or multiple arrays in parallel
+```gherkin
+# two arrays
+Foreach values prefix 'loop variable ' at same position in arrays 'first array' and 'second array'
+# multiple arrays
+Foreach values prefix 'loop variable ' at same position in arrays 'list of array names'
+```
+* or from a number to another with certain step
 ```gherkin
 Foreach 'i' in sequence from 'zero' to 'ten' with step 'one'
 ```
+
 As can be seen the keyword **Foreach** is the one that indicates the start of a loop, while
 the statement **EndForeach** indicates the ends of loop.
 When reaching it if the condition of the foreach is still valid the loop is performed again.
@@ -34,6 +43,44 @@ the result will be
 
 [](../_media/examples/zencode_cookbook/foreach/verysimple.out ':include :type=code json')
 
+## Parallel Foreach over multiple arrays
+
+Parallel loops allow you to iterate over multiple arrays simultaneously, processing corresponding
+elements from each array in parallel. The loop ends as soon as the shortest array is exhausted,
+ensuring that you only process elements up to the point where all arrays have corresponding values.
+This feature is useful when you need to combine or process elements from multiple arrays that are structured similarly.
+
+### Parallel Foreach over two arrays
+
+If you want to loop over two arrays, let's say
+
+[](../_media/examples/zencode_cookbook/foreach/docs_parallel.data.json ':include :type=code json')
+
+at the same time you can use the following syntax:
+
+[](../_media/examples/zencode_cookbook/foreach/docs_parallel.zen ':include :type=code gherkin')
+
+In this simple code we just concatenated the values in `x` and `y` arrays that occupies the same position, indeed the result is
+
+[](../_media/examples/zencode_cookbook/foreach/docs_parallel.out ':include :type=code json')
+
+### Parallel Foreach over multiple arrays
+
+When iterating over three or more arrays, you can extend the same logic by referencing an additional array
+that holds the names of the arrays you want to loop over.
+
+Let's change a bit the above example to concatenate the values that occupies the same position in three 
+different arrays. The data in input will be
+
+[](../_media/examples/zencode_cookbook/foreach/docs_parallel_multiple.data.json ':include :type=code json')
+
+where `arrays` is the string array containing the names of the array on which we want to iterate. The zencode will be
+
+[](../_media/examples/zencode_cookbook/foreach/docs_parallel_multiple.zen ':include :type=code gherkin')
+
+that would result in
+
+[](../_media/examples/zencode_cookbook/foreach/docs_parallel_multiple.out ':include :type=code json')
 
 ## Break from a Foreach loop
 
