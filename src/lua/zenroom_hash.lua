@@ -50,12 +50,12 @@ hash.keccak256 = function(data) return init("keccak256"):process(data) end
 function KDF(data, bits) return init("sha"..tostring(bits or 256)):kdf2(data) end
 
 function hash.dsha256(msg)
-   local _SHA256 = HASH.new('sha256')
+   local _SHA256 = init('sha256')
    return _SHA256:process(_SHA256:process(msg))
 end
 
 function hash.hash160(msg)
-   local _SHA256 = HASH.new('sha256')
+   local _SHA256 = init('sha256')
    local _RMD160 = HASH.new('ripemd160')
    return _RMD160:process(_SHA256:process(msg))
 
@@ -63,12 +63,12 @@ end
 
 --used in BBS+ signature
 hash.hkdf_extract = function(salt, ikm)
-	return HASH.hmac(hash.new('sha256'), salt, ikm)
+	return HASH.hmac(init('sha256'), salt, ikm)
 end
 
 --used in BBS+ signature
 hash.hkdf_expand = function(prk, info, l)
-	local h = hash.new('sha256')
+	local h = init('sha256')
 	local hash_len = 32
 	assert(#prk >= hash_len)
 	assert(l <= 255 * hash_len)
