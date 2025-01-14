@@ -243,7 +243,7 @@ and I create the hash of 'source'
 Then print 'hash'
 EOF
     run $ZENROOM_EXECUTABLE -z set_fail.zen
-    assert_line '[!]  Hash algorithm not known: sha123'
+    assert_line --partial 'Hash algorithm not known: sha123'
 }
 
 # --- Rule invalid --- #
