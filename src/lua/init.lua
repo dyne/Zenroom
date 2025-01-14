@@ -126,6 +126,7 @@ if _G['ZENCODE_SCOPE'] ~= 'GIVEN' then
    load_scenario('zencode_foreach')
    load_scenario('zencode_table')
    load_scenario('zencode_time')
+   load_scenario('zencode_math')
 end
 
 -- this is to evaluate expressions or derivate a column
