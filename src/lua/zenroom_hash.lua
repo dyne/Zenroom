@@ -16,8 +16,8 @@
 --GNU Affero General Public License v3.0
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
---Last modified by Denis Roio
---on Tuesday, 20th July 2021
+--Last modified by Matteo Cristino
+--on Monday, 13th January 2025
 --]]
 
 local hash = require'hash'
@@ -27,7 +27,7 @@ local SHA256 = nil
 local SHA512 = nil
 local SHAKE256 = nil
 local KECCAK256 = nil
-local hash_init_table = {
+local hash_init_table <const> = {
     sha32 = function() SHA256 = SHA256 or hash.new('sha256'); return SHA256 end,
     sha256 = function() SHA256 = SHA256 or hash.new('sha256'); return SHA256 end,
     sha64 = function() SHA512 = SHA512 or hash.new('sha512'); return SHA512 end,
@@ -44,6 +44,8 @@ end
 function sha256(data) return init("sha256"):process(data) end
 function sha512(data) return init("sha512"):process(data) end
 
+hash.sha256 = sha256
+hash.sha512 = sha512
 hash.shake256 = function(data, len) return init("shake256"):process(data, len or 32) end
 hash.keccak256 = function(data) return init("keccak256"):process(data) end
 

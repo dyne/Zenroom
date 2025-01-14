@@ -17,37 +17,29 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Friday, 26th November 2021
+--on Monday, 13th January 2025
 --]]
 
 
--- hashing single strings
-When("create hash of ''",function(s)
-        local src = have(s)
-        if luatype(src) == 'table' then
-            src = zencode_serialize(src) -- serialize tables using zenroom's algo
-        end
-        ACK.hash = HASH.new(CONF.hash):process(src)
-	new_codec('hash', { zentype = 'e' })
-    end
-)
+-- hashing
+local valid_hashes <const> = {
+    sha256 = true,
+    sha512 = true,
+    shake256 = true,
+    keccak256 = true
+}
+local function _hash(s, n)
+    local src = have(s)
+    n = n or CONF.hash
+    -- serialize tables using zenroom's algo
+    src = zencode_serialize(src)
+    if not valid_hashes[n] then error("Hash algorithm not known: ".. n) end
+    ACK.hash = HASH[n](src)
+    new_codec('hash', { zentype = 'e' })
+end
 
-When("create hash of '' using ''",function(s, h)
-        local src = have(s)
-        if luatype(src) == 'table' then
-            src = zencode_serialize(src)
-        end
-        if strcasecmp(h, 'sha256') then
-            ACK.hash = sha256(src)
-        elseif strcasecmp(h, 'sha512') then
-            ACK.hash = sha512(src)
-        elseif strcasecmp(h, 'keccak256') then
-            ACK.hash = HASH.keccak256(src)
-        end
-        zencode_assert(ACK.hash, 'Invalid hash: ' .. h)
-	new_codec('hash', { zentype = 'e' })
-    end
-)
+When("create hash of ''", _hash)
+When("create hash of '' using ''", _hash)
 
 When("create hash to point '' of ''",function(curve, object)
     local F = _G[curve]
