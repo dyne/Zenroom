@@ -1,0 +1,19 @@
+Given I have a 'string array' named 'x'
+Given I have a 'string array' named 'y'
+Given I have a 'string array' named 'z'
+
+Given I have a 'string array' named 'arrays'
+
+# create the array that will contains the result of the foreach
+When I create the 'string array' named 'res'
+
+# loop in parallel over x, y and z (specified in arrays)
+Foreach values prefix 'loop variable ' at the same position in arrays 'arrays'
+    # append the array values
+    When I append 'loop variable z' to 'loop variable y'
+    When I append 'loop variable y' to 'loop variable x'
+    # insert result in res
+    When I move 'loop variable x' in 'res'
+EndForeach
+
+Then print 'res'

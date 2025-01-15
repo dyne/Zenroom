@@ -632,3 +632,158 @@ EOF
     save_output negative_steps.out
     assert_output '{"int_res":["1","0","-1","-2","-3","-4","-5","-6","-7","-8","-9","-10"],"int_res_corner_case":["-10","1"],"num_res":[1,0,-1,-2,-3,-4,-5,-6,-7,-8,-9,-10],"num_res_corner_case":[-10,1]}'
 }
+
+@test "simple parallel foreach with 2 arrays" {
+    cat << EOF | save_asset docs_parallel.data.json
+{
+    "x": [
+        "a",
+        "b"
+    ],
+    "y": [
+        "c",
+        "d"
+    ]
+}
+EOF
+    cat << EOF | zexe docs_parallel.zen docs_parallel.data.json
+Given I have a 'string array' named 'x'
+Given I have a 'string array' named 'y'
+
+# create the array that will contains the result of the foreach
+When I create the 'string array' named 'res'
+
+# loop in parallel over x and y
+Foreach values prefix 'loop variable ' at the same position in arrays 'x' and 'y'
+    # append the array values
+    When I append 'loop variable y' to 'loop variable x'
+    # insert result in res
+    When I move 'loop variable x' in 'res'
+EndForeach
+
+Then print 'res'
+EOF
+    save_output docs_parallel.out
+    assert_output '{"res":["ac","bd"]}'
+}
+
+@test "simple parallel foreach with multiple arrays" {
+    cat << EOF | save_asset docs_parallel_multiple.data.json
+{
+    "x": [
+        "a",
+        "b"
+    ],
+    "y": [
+        "c",
+        "d"
+    ],
+    "z": [
+        "e",
+        "f"
+    ],
+    "arrays": [
+        "x",
+        "y",
+        "z"
+    ]
+}
+EOF
+    cat << EOF | zexe docs_parallel_multiple.zen docs_parallel_multiple.data.json
+Given I have a 'string array' named 'x'
+Given I have a 'string array' named 'y'
+Given I have a 'string array' named 'z'
+
+Given I have a 'string array' named 'arrays'
+
+# create the array that will contains the result of the foreach
+When I create the 'string array' named 'res'
+
+# loop in parallel over x, y and z (specified in arrays)
+Foreach values prefix 'loop variable ' at the same position in arrays 'arrays'
+    # append the array values
+    When I append 'loop variable z' to 'loop variable y'
+    When I append 'loop variable y' to 'loop variable x'
+    # insert result in res
+    When I move 'loop variable x' in 'res'
+EndForeach
+
+Then print 'res'
+EOF
+    save_output docs_parallel_multiple.out
+    assert_output '{"res":["ace","bdf"]}'
+}
+
+@test "zip foreach to sign" {
+    cat << EOF | save_asset zip_sign.data.json
+{
+    "eddsa_secret_keys": [
+        "Arvs7PhbiKBJLF1nVBimTVMoc9Vwo9FkV6a5EnLZQ2Xn",
+        "9myJK8rFrcwxnp4kLuDKoBottuNWyofUJHXaFVVreL71",
+        "5TumuoGuJNCxmdTWxtxMC4n2A6oNPUWWftgbpymhTY94"
+    ],
+    "messages": [
+        "message from Alice",
+        "message from Bob",
+        "message from Charlie"
+    ]
+}
+EOF
+    cat << EOF | zexe zip_sign.zen zip_sign.data.json
+Scenario 'eddsa': sign
+
+Given I have a 'string array' named 'messages'
+Given I have a 'base58 array' named 'eddsa_secret_keys'
+
+When I create the 'eddsa signature array' named 'signatures'
+When I create the 'eddsa public key array' named 'public_keys'
+
+Foreach values prefix 'first_loop_' at the same position in arrays 'eddsa_secret_keys' and 'messages'
+    When I create the eddsa key with secret key 'first_loop_eddsa_secret_keys'
+    When I create the eddsa signature of 'first_loop_messages'
+    And I move 'eddsa signature' in 'signatures'
+    When I create the eddsa public key
+    And I move 'eddsa public key' in 'public_keys'
+    When I remove the 'keyring'
+EndForeach
+
+Then print the 'signatures'
+Then print the 'public keys'
+Then print the 'messages'
+EOF
+    save_output zip_sign.out
+    assert_output '{"messages":["message from Alice","message from Bob","message from Charlie"],"public_keys":["CJW63mH2pjKnY4yxfSS2WkzHiMRuhMSX657qxJknRXgE","HDyizSZmNdbdX99gwdUsHHmYhTkqKtFfhpRFrbRcdygz","89VmYsizpFT7fwJTBNdPVTDcnFtFtT64mNdkFyQMeUPJ"],"signatures":["3FhfAAAiDuxTdBbc2ARxGLMc6b2xmYWPU6XGmDhCMkNpFAxjpNGrKAGNLQdh6UhhuSukw7bntyipPqw5fvj5yvcY","5Qt6xKmszrSj3dHNAMu9MwZAY4L6agEVypn8pZpfWc5u1mMoFbmFmKFf5HvWvjU9gtsPQwnGs3s6hK3FLJhwP7jZ","4cWxw8MzkTZFfU3ZFHHav8riXtbHKEuYtWYu1dS8Xu6wSiRnjxqaQmTi3GDPSSMR4Gkx4KtTNrs7kPn2Kp5sGDH4"]}'
+}
+
+@test "zip foreach for signature verification" {
+    cat << EOF | save_asset zip_verify_sign.data.json
+{
+    "zip_arrays": [
+        "messages",
+        "signatures",
+        "public keys"
+    ]
+}
+EOF
+    cat << EOF | zexe zip_verify_sign.zen zip_verify_sign.data.json zip_sign.out
+Scenario 'eddsa': verify
+
+Given I have a 'string array' named 'zip arrays'
+
+Given I have a 'string array' named 'messages'
+Given I have a 'eddsa signature array' named 'signatures'
+Given I have a 'eddsa public key array' named 'public keys'
+
+When I create the 'string array' named 'res'
+
+Foreach values prefix 'loop variable ' at the same position in arrays 'zip arrays'
+    If I verify 'loop variable messages' has a eddsa signature in 'loop variable signatures' by 'loop variable public keys'
+        When I move 'loop variable messages' in 'res'
+    EndIf
+EndForeach
+
+Then print the 'res'
+EOF
+    save_output zip_verify_sign.out
+    assert_output '{"res":["message from Alice","message from Bob","message from Charlie"]}'
+}
