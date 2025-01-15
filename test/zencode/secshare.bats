@@ -39,27 +39,16 @@ EOF
 # Here we load the "secret shares", which is a an array of base64 numbers
 Given I have a 'base64 array' named 'mySharedSecret'
 
-# Here we are simply removing 4 randomly chosen shares from the array,
-# so that only 4 are left.
+# Here we are simply selecting 5 random shares from the array
 
-When I pick the random object in 'mySharedSecret'
-and I remove the 'random object' from 'mySharedSecret'
-and I delete 'random object'
-and I pick the random object in 'mySharedSecret'
-and I remove the 'random object' from 'mySharedSecret'
-and I delete 'random object'
-and I pick the random object in 'mySharedSecret'
-and I remove the 'random object' from 'mySharedSecret'
-and I delete 'random object'
-and I pick the random object in 'mySharedSecret'
-and I remove the 'random object' from 'mySharedSecret'
+When I create the random table with '5' random pick from 'mySharedSecret'
 
 # Now we have an array with 5 shares that print out
-When I rename the 'mySharedSecret' to 'my5partsOfTheSharedSecret'
+When I rename the 'random table' to 'my5partsOfTheSharedSecret'
 Then print the 'my5partsOfTheSharedSecret'
 EOF
     save_output 'sharedSecret5parts.json'
-    assert_output '{"my5partsOfTheSharedSecret":[{"x":"+cVAswi5yt+o7Dp9D57bSkM99aQiLPjzCMWvMENOf7o=","y":"UpOETaeBIC2d6g9Otx902usUCqCxlVN9rLzKFKIWTZ8="},{"x":"bODkB2YcY9egXPXU3AzbEbb90Mr1+ir6EEbN3PeXaJw=","y":"ZmycrsVl4z8xOOflILZ0vX8h0aDjRi+4WDwGPQNW1H0="},{"x":"Fufxl9MdlotSfCiQ24zdPSl/FfPE1652+WfJOGGm8oA=","y":"xLQeXS74qYYllfALMuzq0WeBexJFRrsFIsfJ6jPKLG0="},{"x":"9m8rP9iXb/gsGDfwfDJcaNc8bF5uwzvxkHhD5zjAZzQ=","y":"WuAE6LvIizFFlzZDoB0J+ZGKSfF4YDcK7L4IyMgYv5g="},{"x":"pZGQLePO8pDYUSOhn4mCq8/wDiHm9NdxHgeaiQu1Tr8=","y":"uVWPG7walRnYPbQBx0l86hZ05EXnaaK66SDmJXhfdJ0="}]}'
+    assert_output '{"my5partsOfTheSharedSecret":[{"x":"9m8rP9iXb/gsGDfwfDJcaNc8bF5uwzvxkHhD5zjAZzQ=","y":"WuAE6LvIizFFlzZDoB0J+ZGKSfF4YDcK7L4IyMgYv5g="},{"x":"+cVAswi5yt+o7Dp9D57bSkM99aQiLPjzCMWvMENOf7o=","y":"UpOETaeBIC2d6g9Otx902usUCqCxlVN9rLzKFKIWTZ8="},{"x":"bODkB2YcY9egXPXU3AzbEbb90Mr1+ir6EEbN3PeXaJw=","y":"ZmycrsVl4z8xOOflILZ0vX8h0aDjRi+4WDwGPQNW1H0="},{"x":"imCvoxefw04xZ2ZSGaZmNCgUEIy5hphyYB9p7Cht9Ko=","y":"aY9QrYTZVGIP3lGCnWXsLfzqxVEUEE2Qq4zA26R2cdg="},{"x":"Tblj4YSvs+cBW+DUVJXO4Yjv3TS5ENQmlqQUsfXIsak=","y":"UIbBDT84YaFX7BAAgU5rlc0YUCndAHMt4y7A4Ftv6Ag="}]}'
 
 }
 

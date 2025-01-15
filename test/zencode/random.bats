@@ -19,11 +19,11 @@ EOF
 @test "Avoid regression bugs in random" {
     cat <<EOF | zexe prng_regression.zen
 Given nothing
-When I create the random object of '32' bytes
-Then print the 'random object' as 'hex'
+When I create the random of '32' bytes
+Then print the 'random' as 'hex'
 EOF
     save_output "prng_regression.out"
-    assert_output '{"random_object":"5dd8c0623f9163de7ebb260c23c7d1dfe7e63f92f241a379e2fc934d52b16720"}'
+    assert_output '{"random":"5dd8c0623f9163de7ebb260c23c7d1dfe7e63f92f241a379e2fc934d52b16720"}'
 }
 
 @test "Read seed for random" {
@@ -33,39 +33,39 @@ EOF
     cat <<EOF | zexe seed.zen zeroseed.json
 Given I have a 'hex' named 'zeroseed'
 
-When I create the random object of '32' bytes
-and I rename 'random object' to 'first'
+When I create the random of '32' bytes
+and I rename 'random' to 'first'
 
 When I seed the random with 'zeroseed'
-and I create the random object of '32' bytes
+and I create the random of '32' bytes
 
-When I verify 'random object' is equal to 'first'
+When I verify 'random' is equal to 'first'
 
-Then print the 'random object' as 'hex'
+Then print the 'random' as 'hex'
 EOF
     save_output "seed.out"
-    assert_output '{"random_object":"5dd8c0623f9163de7ebb260c23c7d1dfe7e63f92f241a379e2fc934d52b16720"}'
+    assert_output '{"random":"5dd8c0623f9163de7ebb260c23c7d1dfe7e63f92f241a379e2fc934d52b16720"}'
 }
 
 @test "Random from array" {
     cat <<EOF | zexe random_from_array.zen
 rule check version 1.0.0
 Given nothing
-When I create the array of '32' random objects of '256' bits
-and I pick the random object in 'array'
-and I remove the 'random object' from 'array'
-and I verify the 'random object' is not found in 'array'
-Then print the 'random object'
+When I create the array of '32' random of '256' bits
+and I create random pick from 'array'
+and I remove the 'random pick' from 'array'
+and I verify the 'random pick' is not found in 'array'
+Then print the 'random pick'
 EOF
     save_output "random_from_array.out"
-    assert_output '{"random_object":"5SBll5N9mm8c0eNabWgJeQAv5yKsHeuUna5+BSeY9co="}'
+    assert_output '{"random_pick":"5OZ3pH08vOIdcGfhzUUmQS0hxVuOU5edfnJt1ReFFJg="}'
 }
 
-@test "When I create the array of '' random objects of '' bits" {
+@test "When I create the array of '' random of '' bits" {
     cat <<EOF | zexe array_32_256.zen
 rule output encoding url64
 Given nothing
-When I create the array of '32' random objects of '256' bits
+When I create the array of '32' random of '256' bits
 and I rename the 'array' to 'bonnetjes'
 Then print the 'bonnetjes'
 EOF
@@ -80,15 +80,15 @@ EOF
 rule input encoding url64
 # rule output encoding hex
 Given I have a 'url64 array' named 'bonnetjes'
-When I pick the random object in 'bonnetjes'
-and I rename the 'random object' to 'lucky one'
+When I create random pick from 'bonnetjes'
+and I rename the 'random pick' to 'lucky one'
 and I remove the 'lucky one' from 'bonnetjes'
 # redundant check
 and I verify the 'lucky one' is not found in 'bonnetjes'
 Then print the 'lucky one' as 'hex'
 EOF
     save_output 'array_rename_remove.out'
-    assert_output '{"lucky_one":"91316b1214ba84cf23ec26f6b7981bc84cf79e3d1c7355ef419a1232d28e2882"}'
+    assert_output '{"lucky_one":"2d1ca15b0933689eb620e8c77d3bd9d757681485c969b750afb071df33a4b2ff"}'
 }
 
 @test "Array random nums" {
@@ -131,7 +131,7 @@ and print the 'modulo_as_float'
 and print the 'aggregation'
 EOF
     save_output "array_random_nums_modulo.json"
-    assert_output '{"aggregation":"3174","modulo_as_float":[5,54,34,51,29,15,45,83,85,34],"modulo_as_int":["956626096","1153915691","295091336","359211920","623653102","781512004","89024066","243000631","1160399432","779959027"],"modulo_in_statement":["37","87","51","22","91","18","70","7","58","38","0","11","92","29","86","46","72","69","10","79","98","83","77","98","27","12","84","6","66","47","75","59","12","38","17","45","79","44","55","93","9","14","19","20","53","86","74","17","39","20","52","50","1","37","53","28","78","53","87","49","32","86","54","75"]}'
+    assert_output '{"aggregation":"6310","modulo_as_float":[6,55,35,52,30,16,46,84,86,35],"modulo_as_int":["956626145","1153915740","295091385","359211969","623653151","781512053","89024115","243000680","1160399481","779959076"],"modulo_in_statement":["86","136","100","71","140","67","119","56","107","87","49","60","141","78","135","95","121","118","59","128","147","132","126","147","76","61","133","55","115","96","124","108","61","87","66","94","128","93","104","142","58","63","68","69","102","135","123","66","88","69","101","99","50","86","102","77","127","102","136","98","81","135","103","124"]}'
 }
 
 @test "Pick random in array with one element" {
@@ -140,9 +140,9 @@ EOF
 EOF
     cat <<EOF | zexe single_element_array_random.zen single_element_array.json
 Given I have a 'float array' named 'array'
-When I pick the random object in 'array'
-Then print the 'random object' as 'float'
+When I create random pick from 'array'
+Then print the 'random pick' as 'float'
 EOF
     save_output "single_element_array_random.out"
-    assert_output '{"random_object":42}'
+    assert_output '{"random_pick":42}'
 }

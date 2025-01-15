@@ -8,8 +8,8 @@ rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
 Given nothing
-When I create the random object of '256' bits
-and I rename the 'random object' to 'secret day key'
+When I create the random of '256' bits
+and I rename the 'random' to 'secret day key'
 Then print the 'secret day key'
 EOF
     save_output 'SK1.json'
@@ -45,7 +45,7 @@ and I randomize the 'ephemeral ids' array
 Then print the 'ephemeral ids'
 EOF
     save_output 'EphID_2.json'
-    assert_output '{"ephemeral_ids":["0d9ca53ae60035f2c6b8539cfee10b70","b171d5d32f3b5768d36858a8952e78b3","612242e04c41bca63a1fee4bd76167c3","c972ead48aa4e455cbc886c7265c04fc","7b168159ddb95950ba47246fc048af69","90a67bd49f6d9a078392ecfca6bdd474","af9f9bc5c8ca29c4ee4424a5d1d2cd9d","c74b1899a2cc2c9d569a1bb2c5bf7c2b","4e0b8aa0fb1c9648698955efa255c5aa"]}'
+    assert_output '{"ephemeral_ids":["4e0b8aa0fb1c9648698955efa255c5aa","7b168159ddb95950ba47246fc048af69","c74b1899a2cc2c9d569a1bb2c5bf7c2b","0d9ca53ae60035f2c6b8539cfee10b70","c972ead48aa4e455cbc886c7265c04fc","612242e04c41bca63a1fee4bd76167c3","b171d5d32f3b5768d36858a8952e78b3","af9f9bc5c8ca29c4ee4424a5d1d2cd9d","90a67bd49f6d9a078392ecfca6bdd474"]}'
 }
 
 @test "now generate a test with 20.000 infected SK" {
@@ -54,9 +54,8 @@ rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
 Given nothing
-When I create the array of '200' random objects of '256' bits
+When I create the array of '200' random of '256' bits
 and I rename the 'array' to 'list of infected'
-and debug
 Then print the 'list of infected'
 EOF
 
@@ -71,8 +70,8 @@ rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
 Given I have an 'hex array' named 'list of infected'
-When I pick the random object in 'list of infected'
-and I rename the 'random object' to 'secret day key'
+When I create the random pick from 'list of infected'
+and I rename the 'random pick' to 'secret day key'
 and I write number '180' in 'epoch'
 and I write string 'Broadcast key' in 'broadcast key'
 and I create the ephemeral ids for today
@@ -98,8 +97,7 @@ and debug
 Then print the 'proximity tracing'
 EOF
     save_output 'SK_proximity.json'
-    assert_output '{"proximity_tracing":["9f5d8859f81256a7605847a4610ed49eb9b2303995cd4ba5df59edf2c8276b8f","9f5d8859f81256a7605847a4610ed49eb9b2303995cd4ba5df59edf2c8276b8f","9f5d8859f81256a7605847a4610ed49eb9b2303995cd4ba5df59edf2c8276b8f","9f5d8859f81256a7605847a4610ed49eb9b2303995cd4ba5df59edf2c8276b8f","9f5d8859f81256a7605847a4610ed49eb9b2303995cd4ba5df59edf2c8276b8f","9f5d8859f81256a7605847a4610ed49eb9b2303995cd4ba5df59edf2c8276b8f","9f5d8859f81256a7605847a4610ed49eb9b2303995cd4ba5df59edf2c8276b8f","9f5d8859f81256a7605847a4610ed49eb9b2303995cd4ba5df59edf2c8276b8f","9f5d8859f81256a7605847a4610ed49eb9b2303995cd4ba5df59edf2c8276b8f"]}'
-
+    assert_output '{"proximity_tracing":["da1c041c19877f5150ddb5fae736bc050b23cf8fc171206f58c4287c067070c1","da1c041c19877f5150ddb5fae736bc050b23cf8fc171206f58c4287c067070c1","da1c041c19877f5150ddb5fae736bc050b23cf8fc171206f58c4287c067070c1","da1c041c19877f5150ddb5fae736bc050b23cf8fc171206f58c4287c067070c1","da1c041c19877f5150ddb5fae736bc050b23cf8fc171206f58c4287c067070c1","da1c041c19877f5150ddb5fae736bc050b23cf8fc171206f58c4287c067070c1","da1c041c19877f5150ddb5fae736bc050b23cf8fc171206f58c4287c067070c1","da1c041c19877f5150ddb5fae736bc050b23cf8fc171206f58c4287c067070c1","da1c041c19877f5150ddb5fae736bc050b23cf8fc171206f58c4287c067070c1"]}'
 }
 
 

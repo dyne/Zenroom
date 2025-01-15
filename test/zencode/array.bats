@@ -6,7 +6,7 @@ SUBDOC=array
     cat <<EOF | zexe array_32_256.zen
 rule output encoding url64
 Given nothing
-When I create the array of '32' random objects of '256' bits
+When I create the array of '32' random of '256' bits
 and I rename the 'array' to 'bonnetjes'
 Then print the 'bonnetjes'
 EOF
@@ -28,8 +28,8 @@ EOF
 rule input encoding url64
 rule output encoding hex
 Given I have a 'url64 array' named 'bonnetjes'
-When I pick the random object in 'bonnetjes'
-and I rename the 'random object' to 'lucky one'
+When I create the random pick from 'bonnetjes'
+and I rename the 'random pick' to 'lucky one'
 and I remove the 'lucky one' from 'bonnetjes'
 # redundant check
 and I verify the 'lucky one' is not found in 'bonnetjes'
@@ -238,8 +238,8 @@ EOF
 rule input encoding url64
 rule output encoding url64
 Given I have a 'url64 array' named 'bonnetjes'
-When I pick the random object in 'bonnetjes'
-and I remove the 'random object' from 'bonnetjes'
+When I create the random pick from 'bonnetjes'
+and I remove the 'random pick' from 'bonnetjes'
 and I create the hashes of each object in 'bonnetjes'
 and rename the 'hashes' to 'right array'
 Then print the 'right array'

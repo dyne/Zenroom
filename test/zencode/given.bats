@@ -6,11 +6,11 @@ SUBDOC=given
     cat <<EOF | zexe nothing.zen
 rule check version 1.0.0
 Given nothing
-When I create the random object of '256' bits
-Then print the 'random object'
+When I create the random of '256' bits
+Then print the 'random'
 EOF
     save_output "nothing.json"
-    assert_output '{"random_object":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="}'
+    assert_output '{"random":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="}'
 }
 
 @test "Given nothing with something in input" {
@@ -20,8 +20,8 @@ EOF
 cat <<EOF | save_asset fail_nothing.zen 
 rule check version 1.0.0
 	 Given nothing
-	 When I create the random object of '256' bits
-	 Then print the 'random object'
+	 When I create the random of '256' bits
+	 Then print the 'random'
 EOF
     run $ZENROOM_EXECUTABLE -z -a fail_nothing.data fail_nothing.zen
     assert_line --partial 'Undesired data passed as input'
@@ -86,7 +86,7 @@ When I randomize the 'myArray' array
 Then print all data
 EOF
     save_output have_valid_arrays.json
-    assert_output '{"myArray":["String1","String2","String3"],"myNumber":1000,"myString":"Hello World!"}'
+    assert_output '{"myArray":["String1","String3","String2"],"myNumber":1000,"myString":"Hello World!"}'
 }
 
 @test "Given I have my 'keyring'" {
