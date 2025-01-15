@@ -150,8 +150,7 @@ local function _rpn_eval(rpn)
                 res = v
             else
                 -- handle path divided by conf separator in value name
-                local parsed_path = strtok(uscore(v), CONF.path.separator)
-                res = have(parsed_path)
+                res = pick_from_path(v, true)
             end
         end
         insert(values, res)
