@@ -42,7 +42,7 @@ local function date_ops(op)
 end
 
 -- biynary operations
-local ops2 = {
+local ops2 <const> = {
     ['zenroom.big'] = {
         ['+'] = BIG.zenadd,
         ['-'] = BIG.zensub,
@@ -87,7 +87,7 @@ local function apply_op2(op, a, b)
 end
 
 -- unitary operations
-local ops1 = {
+local ops1 <const> = {
     ['zenroom.big'] = {
         ['~'] = BIG.zenopposite
     },
@@ -124,17 +124,20 @@ local function _rpn_eval(rpn)
     local insert <const> = table.insert
     -- evaluate the rpn expression
     local values = {}
-    for k, v in pairs(rpn) do
+    for _, v in pairs(rpn) do
         local res
         if v == '~' then
             local op = remove(values)
-            res = apply_op1(v, op)
-        elseif priorities[v] then
-            if #values < 2 then
+            if not op then
                 error("Invalid arithmetical expression", 2)
             end
+            res = apply_op1(v, op)
+        elseif priorities[v] then
             local op1 = remove(values)
             local op2 = remove(values)
+            if not op1 or not op2 then
+                error("Invalid arithmetical expression", 2)
+            end
             res = apply_op2(v, op2, op1)
         else
             local t <const> = type(v)
@@ -173,11 +176,6 @@ local function _rpn_eval(rpn)
         n_codec.schema = 'date_table'
     end
     new_codec('result', n_codec)
-end
-
--- helper function to create codec of expression result
-local function _new_result_codec()
-    
 end
 
 -- back compatibility (really nedded?)
@@ -304,27 +302,31 @@ end)
 
 -- generic polynomial evaluation
 When("create result of ''", function(expr)
+    -- cache
+    local insert <const> = table.insert
+    local remove <const> = table.remove
+
     empty 'result'
     -- tokenizations
     local re <const> = '[()*%-%/+]'
     local tokens = {}
-    local function add_token_in_range(_start, _end)
-        local val = utrim(expr:sub(_start, _end))
-        if val ~= "" then table.insert(tokens, val) end
+    local function extract_and_add_token(range_start, range_end)
+        local val <const> = utrim(expr:sub(range_start, range_end))
+        if val ~= "" then insert(tokens, val) end
     end
     local start_pos = 1
     while true do
-        local match_pos = expr:find(re, start_pos)
+        local match_pos <const> = expr:find(re, start_pos)
         if not match_pos then
             -- if no match found add remaining token to tokens
-            add_token_in_range(start_pos, #expr)
+            extract_and_add_token(start_pos, #expr)
             break
         elseif start_pos < match_pos then
             -- add tokens find between one special symbol and the other
-            add_token_in_range(start_pos, match_pos - 1)
+            extract_and_add_token(start_pos, match_pos - 1)
         end
         -- add matched special symbol char to tokens
-        add_token_in_range(match_pos, match_pos)
+        extract_and_add_token(match_pos, match_pos)
         start_pos = match_pos + 1
     end
 
@@ -332,36 +334,34 @@ When("create result of ''", function(expr)
     local rpn = {}
     local operators = {}
     local expected_unary = true
-    for k, v in pairs(tokens) do
+    for _, v in pairs(tokens) do
         if v == '-' and expected_unary then
-            table.insert(operators, '~') -- unary minus (change sign)
+            insert(operators, '~') -- unary minus (change sign)
         elseif priorities[v] then
-            while #operators > 0 and operators[#operators] ~= '(' and priorities[operators[#operators]] >= priorities[v] do
-                table.insert(rpn, table.remove(operators))
+            while next(operators) and operators[#operators] ~= '(' and priorities[operators[#operators]] >= priorities[v] do
+                insert(rpn, remove(operators))
             end
-            table.insert(operators, v)
+            insert(operators, v)
         elseif v == '(' then
-            table.insert(operators, v)
+            insert(operators, v)
         elseif v == ')' then
             -- put every operator in rpn until I don't see the open parens
-            while #operators > 0 and operators[#operators] ~= '(' do
-                table.insert(rpn, operators[#operators])
-                operators[#operators] = nil
+            while next(operators) and operators[#operators] ~= '(' do
+                insert(rpn, remove(operators))
             end
-            zencode_assert(#operators > 0, "Paranthesis not balanced", 2)
-            operators[#operators] = nil -- remove open parens
+            zencode_assert(next(operators), "Paranthesis not balanced", 2)
+            remove(operators) -- remove open parens
         else
-            table.insert(rpn, v)
+            insert(rpn, v)
         end
         expected_unary = v == '('
     end
 
     -- all remaining operators have to be applied
-    for i = #operators, 1, -1 do
-        if operators[i] == '(' then
-            zencode_assert(false, "Paranthesis not balanced", 2)
-        end
-        table.insert(rpn, operators[i])
+    while(next(operators)) do
+        local op <const> = remove(operators)
+        zencode_assert(op ~= ')', "Paranthesis not balanced", 2)
+        insert(rpn, op)
     end
 
     -- evaluate rpn expression
