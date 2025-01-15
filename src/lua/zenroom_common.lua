@@ -396,13 +396,12 @@ end
 -- @param path path to variable separated by points
 -- @return element found following the path
 -- @return name of the destination
-function pick_from_path(path)
+function pick_from_path(path, no_dest)
     local path_array = strtok(uscore(path), CONF.path.separator)
     local root = path_array[1]
     table.remove(path_array, 1)
     local dest = path_array[#path_array]
-    local res = IN[root]
-    empty(dest)
+    if not no_dest then empty(dest) end
     -- should works both in given and when phase
     -- IN is checked firstly since in the When phase IN will be empty
     local res = IN[root] or ACK[root]

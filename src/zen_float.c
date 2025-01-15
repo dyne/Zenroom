@@ -442,6 +442,7 @@ int luaopen_float(lua_State *L) {
 		{"sub", float_sub},
 		{"mul", float_mul},
 		{"div", float_div},
+		{"mod", float_mod},
 		{"opposite", float_opposite},
 		{"is_float", is_float},
 		{NULL, NULL}
