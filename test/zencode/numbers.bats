@@ -480,3 +480,38 @@ EOF
     save_output 'compare_zero_float.out'
     assert_output '{"a":3000,"b":2000,"c":1000,"output":["OK"],"zero1":0,"zero2":0}'
 }
+
+@test "When I create the result of '', with path" {
+    cat <<EOF | save_asset expressions_path.data.json
+{
+    "dict": {
+        "arr": [
+            {
+                "a": 1
+            },
+            {
+                "dict_in_arr": {
+                    "b": 2
+                }
+            }
+        ],
+        "dict_in_dict": {
+            "c": 3
+        }
+    },
+    "arr": [
+        4
+    ]
+}
+EOF
+
+cat <<EOF | zexe expressions_path.zen expressions_path.data.json
+Given I have a 'number dictionary' named 'dict'
+Given I have a 'number array' named 'arr'
+
+When I create the result of 'dict.arr.1.a + dict.arr.2.dict_in_arr.b + dict.dict_in_dict.c + arr.1'
+Then print the 'result'
+EOF
+    save_output 'expressions_path.out'
+    assert_output '{"result":10}'
+}
