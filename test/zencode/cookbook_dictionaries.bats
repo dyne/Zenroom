@@ -299,10 +299,12 @@ and I rename the 'sum value' to 'TotalTransferredProductAmountFirstBatchAfterThe
 # In the statements below we are looking for the transaction(s) happened at time "Theta", 
 # in both the dictionaries, and saving their "TransactionValue" into a new object (and renaming the object)
 When I find the 'TransactionValue' for dictionaries in 'TransactionsBatchA' where 'timestamp' = 'Theta'
-and I rename the 'TransactionValue' to 'TransactionValueSecondBatchAtTheta'
+When I create the sum value of elements in array 'TransactionValue'
+and I rename the 'sum value' to 'TransactionValueSecondBatchAtTheta'
 
 When I find the 'TransferredProductAmount' for dictionaries in 'TransactionsBatchA' where 'timestamp' = 'Theta'
-and I rename the 'TransferredProductAmount' to 'TransferredProductAmountSecondBatchAtTheta'
+When I create the sum value of elements in array 'TransferredProductAmount'
+and I rename the 'sum value' to 'TransferredProductAmountSecondBatchAtTheta'
 
 # Here we create a simple sum of the new aggregated values from recent transactions
 When I create the result of 'sumOfTransactionsValueFirstBatchAfterTheta' + 'TransactionValueSecondBatchAtTheta'
