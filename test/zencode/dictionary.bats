@@ -223,12 +223,16 @@ and rename the 'sum value' to 'TotalTransferredProductAmount'
 
 # retrieve the values in last sum
 When I find the 'TransactionValue' for dictionaries in 'ABC-TransactionListSecondBatch' where 'timestamp' = 'last sum'
-and I find the 'TransferredProductAmount' for dictionaries in 'ABC-TransactionListSecondBatch' where 'timestamp' = 'last sum'
+And I create the sum value of elements in array 'TransactionValue'
+And I rename the 'sum value' to 'TransactionValueSum'
+When I find the 'TransferredProductAmount' for dictionaries in 'ABC-TransactionListSecondBatch' where 'timestamp' = 'last sum'
+And I create the sum value of elements in array 'TransferredProductAmount'
+And I rename the 'sum value' to 'TransferredProductAmountSum'
 
 # sum the last with the new aggregated values from recent transactions
-and I create the result of 'TotalTransactionsValue' + 'TransactionValue'
+and I create the result of 'TotalTransactionsValue' + 'TransactionValueSum'
 and I rename the 'result' to 'TransactionValueSums'
-and I create the result of 'TotalTransferredProductAmount' + 'TransferredProductAmount'
+and I create the result of 'TotalTransferredProductAmount' + 'TransferredProductAmountSum'
 and I rename the 'result' to 'TransactionProductAmountSums'
 
 # create the entry for the new sum
