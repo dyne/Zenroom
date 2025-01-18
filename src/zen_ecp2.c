@@ -132,7 +132,6 @@ If only the first two arguments are provided (X and Xi), then Y and Yi are calcu
 static int lua_new_ecp2(lua_State *L) {
 	// WARNING: each if implement his own try-catch with gotos
 	BEGIN();
-	octet *o = NULL;
 	char *failed_msg = NULL;
 // TODO: unsafe and only needed when running tests
 #ifdef DEBUG
@@ -188,7 +187,7 @@ end_big_big:
 		goto end;
 	}
 #endif
-	o = o_arg(L, 1);
+	const octet *o = o_arg(L, 1);
 	if(o == NULL) {
 		failed_msg = "Could not allocate OCTET";
 		goto end;
@@ -534,7 +533,7 @@ end:
 static int ecp2_mapit(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *o = o_arg(L, 1);
+	const octet *o = o_arg(L, 1);
 	if(o == NULL) {
 		failed_msg = "Could not allocate OCTET";
 		goto end;
@@ -826,18 +825,17 @@ end:
 static int ecp2_zcash_import(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *o = o_arg(L, 1);
-
+	const octet *o = o_arg(L, 1);
+	if(o == NULL) {
+		failed_msg = "Missing first octet argument";
+		goto end;
+	}
 	ecp2 *e = ecp2_new(L);
 	if(e == NULL) {
 		THROW("Could not create ECP2 point");
 		return 0;
 	}
-	if(o == NULL) {
-		failed_msg = "Could not allocate ECP2 point";
-		goto end;
-	}
-	unsigned char m_byte = o->val[0] & 0xE0;
+	register unsigned char m_byte = o->val[0] & 0xE0;
 	char c_bit;
 	char i_bit;
 	char s_bit;
@@ -862,9 +860,6 @@ static int ecp2_zcash_import(lua_State *L) {
 		}
 	}
 
-	o->val[0] = o->val[0] & 0x1F;
-
-
 	if(i_bit) {
 		// TODO: check o->val is all 0
 		ECP2_inf(&e->val);
@@ -873,21 +868,20 @@ static int ecp2_zcash_import(lua_State *L) {
 
 	if(c_bit) {
 		FP2 fx, fy;
-		octet x0 = {
-			.max = 48,
-			.len = 48,
-			.val = o->val
-		};
-		octet x1 = {
-			.max = 48,
-			.len = 48,
-			.val = o->val+48
-		};
-
+		octet *x0 = o_alloc(L,48);
+		memcpy(x0->val,o->val,48);
+		x0->val[0] = x0->val[0] & 0x1F;
+		x0->len = 48;
+		octet *x1 = o_alloc(L,48);
+		memcpy(x1->val,o->val+48,48);
+		x1->val[0] = x1->val[0] & 0x1F;
+		x1->len = 48;
 		big* bigx0 = big_new(L);
 		big* bigx1 = big_new(L);
-		_octet_to_big(L, bigx0, &x0);
-		_octet_to_big(L, bigx1, &x1);
+		_octet_to_big(L, bigx0, x0);
+		_octet_to_big(L, bigx1, x1);
+		o_free(L,x0);
+		o_free(L,x1);
 		FP2_from_BIGs(&fx, bigx1->val, bigx0->val);
 		if(!ECP2_setx(&e->val, &fx)) {
 			failed_msg = "Invalid input octet: not a point on the curve";
@@ -904,8 +898,8 @@ static int ecp2_zcash_import(lua_State *L) {
 			ECP2_neg(&e->val);
 		}
 
-		lua_pop(L,1);
-		lua_pop(L,1);
+		lua_pop(L,1); // bigx0
+		lua_pop(L,1); // bigx1
 
 	} else {
 		failed_msg = "Not yet implemented";
