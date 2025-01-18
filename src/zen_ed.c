@@ -17,10 +17,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
 #include <zenroom.h>
 #include <zen_error.h>
 #include <zen_memory.h>

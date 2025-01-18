@@ -18,10 +18,6 @@
  *
  */
 
-
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
 #include <ecdh_support.h>
 
 #include <zen_error.h>

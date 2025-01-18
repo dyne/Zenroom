@@ -35,10 +35,6 @@
 #include <intrin.h>
 #endif
 
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-
 #include <zenroom.h>
 #include <zen_octet.h>
 #include <zen_error.h>
