@@ -219,7 +219,7 @@ end:
 
 static int rsa_signature_pubcheck(lua_State *L) {
 	BEGIN();
-	octet *pk = o_arg(L, 1);
+	const octet *pk = o_arg(L, 1);
 	if(pk == NULL) {
 		THROW("failed to allocate space for public key");
 	} else {
@@ -235,7 +235,7 @@ static int rsa_signature_pubcheck(lua_State *L) {
 static int rsa_signature_check(lua_State *L){
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *sign = o_arg(L, 1);
+	const octet *sign = o_arg(L, 1);
 	if(sign == NULL) {
 		failed_msg = "Cuold not allocate signature";
 		goto end;

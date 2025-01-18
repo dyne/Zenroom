@@ -158,7 +158,7 @@ end:
 static int ecdh_pubgen(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *sk = o_arg(L, 1);
+	const octet *sk = o_arg(L, 1);
 	if(sk == NULL || sk->len > ECDH.fieldsize) {
 		failed_msg = "Could not allocate secret key";
 		goto end;
@@ -200,7 +200,7 @@ end:
 
 static int ecdh_pubcheck(lua_State *L) {
 	BEGIN();
-	octet *pk = o_arg(L, 1);
+	const octet *pk = o_arg(L, 1);
 	if(pk == NULL) {
 		lerror(L, "Could not allocate public key");
 		lua_pushboolean(L, 0);
@@ -285,7 +285,7 @@ static int ecdh_pub_xy(lua_State *L) {
 	BEGIN();
 	int res = 1;
 	char *failed_msg = NULL;
-	octet *pk = o_arg(L, 1);
+	const octet *pk = o_arg(L, 1);
 	if(pk == NULL) {
 		failed_msg = "Could not allocate public key";
 		goto end;
@@ -385,7 +385,7 @@ static int ecdh_dsa_sign(lua_State *L) {
 		Z(L);
 		(*ECDH.ECP__SP_DSA)( max_size, Z->random_generator, NULL, sk, m, r, s);
 	} else {
-		octet *k = o_arg(L, 3);
+		const octet *k = o_arg(L, 3);
 		if(k == NULL) {
 			failed_msg = "Could not allocate ephemeral key";
 			goto end;

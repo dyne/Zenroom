@@ -113,7 +113,7 @@ static int rng_int32(lua_State *L) {
 static int rng_seed(lua_State *L) {
 	BEGIN();
 	Z(L);
-	octet *in = o_arg(L, 1);
+	const octet *in = o_arg(L, 1);
 	if(in->len < 4) {
 		zerror(L, "Random seed error: too small (%u bytes)", in->len);
 		lua_pushnil(L);

@@ -168,7 +168,7 @@ end:
 // checks the singature length
 static int qp_signature_pubcheck(lua_State *L) {
 	BEGIN();
-	octet *pk = o_arg(L, 1);
+	const octet *pk = o_arg(L, 1);
 	if(pk == NULL) {
 		THROW("failed to allocate space for public key");
 	} else {
@@ -359,7 +359,7 @@ static int qp_signature_len(lua_State *L){
 static int qp_signature_check(lua_State *L){
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *sign = o_arg(L, 1);
+	const octet *sign = o_arg(L, 1);
 	if(sign == NULL) {
 		failed_msg = "Cuold not allocate signature";
 		goto end;
@@ -424,7 +424,7 @@ end:
 // checks the public key length
 static int qp_kem_pubcheck(lua_State *L) {
 	BEGIN();
-	octet *pk = o_arg(L, 1);
+	const octet *pk = o_arg(L, 1);
 	if(pk == NULL) {
 		THROW("Could not allocate public key");
 	} else {
@@ -440,7 +440,7 @@ static int qp_kem_pubcheck(lua_State *L) {
 // checks the shared secret length
 static int qp_kem_sscheck(lua_State *L) {
 	BEGIN();
-	octet *ss = o_arg(L, 1);
+	const octet *ss = o_arg(L, 1);
 	if(ss == NULL) {
 		THROW("Could not allocate kem secret");
 	} else {
@@ -456,7 +456,7 @@ static int qp_kem_sscheck(lua_State *L) {
 // check the ciphertext length
 static int qp_kem_ctcheck(lua_State *L) {
 	BEGIN();
-	octet *ct = o_arg(L, 1);
+	const octet *ct = o_arg(L, 1);
 	if(ct == NULL) {
 		THROW("Could not allocate kem ciphertext");
 	} else {
@@ -620,7 +620,7 @@ end:
 // checks the public key length
 static int qp_ml_kem_512_pubcheck(lua_State *L) {
 	BEGIN();
-	octet *pk = o_arg(L, 1);
+	const octet *pk = o_arg(L, 1);
 	if(pk == NULL) {
 		THROW("Could not allocate public key");
 	} else {
@@ -636,7 +636,7 @@ static int qp_ml_kem_512_pubcheck(lua_State *L) {
 // checks the shared secret length
 static int qp_ml_kem_512_sscheck(lua_State *L) {
 	BEGIN();
-	octet *ss = o_arg(L, 1);
+	const octet *ss = o_arg(L, 1);
 	if(ss == NULL) {
 		THROW("Could not allocate kem secret");
 	} else {
@@ -652,7 +652,7 @@ static int qp_ml_kem_512_sscheck(lua_State *L) {
 // check the ciphertext length
 static int qp_ml_kem_512_ctcheck(lua_State *L) {
 	BEGIN();
-	octet *ct = o_arg(L, 1);
+	const octet *ct = o_arg(L, 1);
 	if(ct == NULL) {
 		THROW("Could not allocate kem ciphertext");
 	} else {
@@ -792,7 +792,7 @@ static int qp_sntrup_kem_keygen(lua_State *L) {
 static int qp_sntrup_kem_pubgen(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *sk = o_arg(L, 1);
+	const octet *sk = o_arg(L, 1);
 	if(sk == NULL) {
 		failed_msg = "Could not allocate secret key";
 		goto end;
@@ -817,7 +817,7 @@ end:
 
 static int qp_sntrup_kem_pubcheck(lua_State *L) {
 	BEGIN();
-	octet *pk = o_arg(L, 1);
+	const octet *pk = o_arg(L, 1);
 	if(pk == NULL) {
 		THROW("Could not allocate public key");
 	} else {
@@ -832,7 +832,7 @@ static int qp_sntrup_kem_pubcheck(lua_State *L) {
 
 static int qp_sntrup_kem_sscheck(lua_State *L) {
 	BEGIN();
-	octet *ss = o_arg(L, 1);
+	const octet *ss = o_arg(L, 1);
 	if(ss == NULL) {
 		THROW("Could not allocate kem secret");
 	} else {
@@ -847,7 +847,7 @@ static int qp_sntrup_kem_sscheck(lua_State *L) {
 
 static int qp_sntrup_kem_ctcheck(lua_State *L) {
 	BEGIN();
-	octet *ct = o_arg(L, 1);
+	const octet *ct = o_arg(L, 1);
 	if(ct == NULL) {
 		THROW("Could not allocate kem ciphertext");
 	} else {
@@ -905,8 +905,8 @@ end:
 static int qp_sntrup_kem_dec(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *sk = o_arg(L, 1);
-	octet *ct = o_arg(L, 2);
+	const octet *sk = o_arg(L, 1);
+	const octet *ct = o_arg(L, 2);
 	if(sk == NULL || ct == NULL) {
 		failed_msg = "Could not allocate secret key or ciphertext";
 		goto end;
@@ -1180,7 +1180,7 @@ end:
 
 static int mldsa44_signature_pubcheck(lua_State *L) {
 	BEGIN();
-	octet *pk = o_arg(L, 1);
+	const octet *pk = o_arg(L, 1);
 	if(pk == NULL) {
 		THROW("failed to allocate space for public key");
 	} else {
@@ -1196,7 +1196,7 @@ static int mldsa44_signature_pubcheck(lua_State *L) {
 static int mldsa44_signature_check(lua_State *L){
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *sign = o_arg(L, 1);
+	const octet *sign = o_arg(L, 1);
 	if(sign == NULL) {
 		failed_msg = "Cuold not allocate signature";
 		goto end;

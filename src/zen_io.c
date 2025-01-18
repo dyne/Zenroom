@@ -59,7 +59,7 @@ static int zen_print (lua_State *L) {
   BEGIN();
   Z(L);
   char *failed_msg = NULL;
-  octet *o = o_arg(L, 1);
+  const octet *o = o_arg(L, 1);
   if(o == NULL) {
 	  failed_msg = "Could not allocate message to show";
 	  goto end;
@@ -128,7 +128,7 @@ static int zen_write (lua_State *L) {
   BEGIN();
   Z(L);
   char *failed_msg = NULL;
-  octet *o = o_arg(L, 1);
+  const octet *o = o_arg(L, 1);
   if(o == NULL) {
 	  failed_msg = "Could not allocate message to show";
 	  goto end;
@@ -202,7 +202,7 @@ int zen_log(lua_State *L, log_priority prio, octet *o) {
 #define ZEN_PRINT(FUN_NAME, PRINT_FUN) \
 	static int (FUN_NAME)(lua_State *L) { \
 		BEGIN(); \
-		octet *o = o_arg(L, 1); \
+		const octet *o = o_arg(L, 1); \
 		if(o != NULL) { \
 			PRINT_FUN; \
 			o_free(L,o); \

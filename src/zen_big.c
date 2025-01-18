@@ -165,7 +165,7 @@ big* big_arg(lua_State *L,int n) {
 		return(result);
 	}
 
-	octet *o = o_arg(L,n);
+	const octet *o = o_arg(L,n);
 	if(o) {
 		if(!_octet_to_big(L,result,o)) {
 			big_free(L,result);
@@ -354,7 +354,7 @@ static int newbig(lua_State *L) {
 		return 1; }
 
 	// octet argument, import
-	octet *o = o_arg(L, 1);
+	const octet *o = o_arg(L, 1);
 	if(!o) {
 		failed_msg = "Could not allocate octet";
 		goto end;

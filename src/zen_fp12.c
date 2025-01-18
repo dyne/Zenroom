@@ -92,7 +92,7 @@ int fp12_destroy(lua_State *L) {
 static int fp12_from_octet(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *o = o_arg(L, 1);
+	const octet *o = o_arg(L, 1);
 	if(o == NULL) {
 		failed_msg = "Could not allocate input";
 		goto end;
