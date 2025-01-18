@@ -104,7 +104,7 @@ ztime_t* time_arg(lua_State *L, int n) {
 		*result = (int)number;
 		goto end;
 	}
-	octet *o = o_arg(L, n);
+	const octet *o = o_arg(L, n);
 	if(o) {
 		if(o->len != sizeof(ztime_t)) {
 			free(result);

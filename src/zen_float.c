@@ -125,7 +125,7 @@ float* float_arg(lua_State *L, int n) {
 		Z->memcount_floats++;
 		return result;
 	}
-	octet *o = o_arg(L, n);
+	const octet *o = o_arg(L, n);
 	if(o) {
 		char *pEnd = NULL;
 		*result = strtof(o->val, &pEnd);
@@ -178,7 +178,7 @@ static int newfloat(lua_State *L) {
 	}
 	// octet argument, import
 	char *failed_msg = NULL;
-	octet *o = o_arg(L, 1);
+	const octet *o = o_arg(L, 1);
 	if(!o) {
 		failed_msg = "Could not allocate octet";
 		goto end;

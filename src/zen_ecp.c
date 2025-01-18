@@ -109,7 +109,7 @@ ecp* ecp_arg(lua_State *L, int n) {
 		return result;
 	}
 	// octet first class citizen
-	octet *o = o_arg(L,n);
+	const octet *o = o_arg(L,n);
 	if(o) {
 		const char *failed_msg = NULL;
 		result->totlen = (MODBYTES*2)+1;
@@ -319,7 +319,7 @@ static int ecp_order(lua_State *L) {
 */
 static int ecp_mapit(lua_State *L) {
 	BEGIN();
-	octet *o = o_arg(L, 1);
+	const octet *o = o_arg(L, 1);
 	if(!o) {
 		lerror(L, "Could not allocate ecp point");
 		lua_pushnil(L);
@@ -346,7 +346,7 @@ static int ecp_mapit(lua_State *L) {
 */
 static int ecp_validate(lua_State *L) {
 	BEGIN();
-	octet *o = o_arg(L, 1);
+	const octet *o = o_arg(L, 1);
 	if(o) {
 		int res = ECP_validate(o);
 		lua_pushboolean(L, res>=0);
@@ -808,7 +808,7 @@ end:
 static int ecp_zcash_import(lua_State *L){
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *o = o_arg(L, 1);
+	const octet *o = o_arg(L, 1);
 	if(o == NULL) {
 		failed_msg = "Could not allocate octet";
 		goto end;
