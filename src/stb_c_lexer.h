@@ -357,6 +357,7 @@ static const char *stb__strchr(const char *str, int ch)
 // parse suffixes at the end of a number
 static int stb__clex_parse_suffixes(stb_lexer *lexer, long tokenid, char *start, char *cur, const char *suffixes)
 {
+	(void)suffixes;
    #ifdef STB__clex_parse_suffixes
    lexer->string = lexer->string_storage;
    lexer->string_len = 0;
@@ -368,8 +369,6 @@ static int stb__clex_parse_suffixes(stb_lexer *lexer, long tokenid, char *start,
          return stb__clex_token(lexer, CLEX_parse_error, start, cur);
       lexer->string[lexer->string_len++] = *cur++;
    }
-   #else
-   suffixes = suffixes; // attempt to suppress warnings
    #endif
    return stb__clex_token(lexer, tokenid, start, cur-1);
 }

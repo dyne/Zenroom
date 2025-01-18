@@ -171,7 +171,7 @@ static int lua_unserialize_json(lua_State* L) {
 				if(*p=='}' || *p==']') {
 					level--;
 					if(level < MAX_DEPTH && brakets[level] != *p){
-						lerror(L, "JSON format error, expected: %c, found %c at position %d", brakets[level], *p, (size_t)(p - in)+1);
+						lerror(L, "JSON format error, expected: %c, found %c at position %lu", brakets[level], *p, (p - in)+1);
 						lua_pushnil(L);
 						return 1;
 					}
@@ -189,7 +189,7 @@ static int lua_unserialize_json(lua_State* L) {
 	}
 	// should never be here
 	zerror(L, "JSON unknown parser error");
-	zerror(L, "JSON input string size: %u",orig_size);
+	zerror(L, "JSON input string size: %lu",orig_size);
 	zerror(L, "JSON parser level: %u", level);
 	for(int i=level; i>0; i--)
 		zerror(L,"JSON parser bracket[%u] = '%c'",i,brakets[i]);

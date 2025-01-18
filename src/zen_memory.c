@@ -53,7 +53,7 @@ void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
 		if(nsize!=0) {
 			void *ret = malloc(nsize);
 			if(ret) return ret;
-			zerror(NULL, "Malloc out of memory, requested %u B", nsize);
+			zerror(NULL, "Malloc out of memory, requested %lu B", nsize);
 			return NULL;
 		} else return NULL;
 

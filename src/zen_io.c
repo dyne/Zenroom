@@ -19,6 +19,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <ctype.h>
 #include <errno.h>
@@ -89,12 +90,12 @@ static int zen_print (lua_State *L) {
 end:
   o_free(L,o);
   if(failed_msg != NULL) {
-	  lerror(L, failed_msg);
+	  lerror(L, "%s", failed_msg);
   }
   END(0);
 }
 
-int printerr(lua_State *L, octet *o) {
+int printerr(lua_State *L, const octet *o) {
   BEGIN();
   Z(L);
   if (Z->stderr_buf) {
@@ -106,18 +107,21 @@ int printerr(lua_State *L, octet *o) {
 	*(p + o->len) = '\n';
 	Z->stderr_pos += o->len + 1;
   } else if(o) {
-	o->val[o->len] = '\n';
-	o->val[o->len+1] = 0x0; // add string termination
+	  char *t = calloc(o->len +8, sizeof(char));
+	  memcpy(t, o->val, o->len);
+	  t[o->len] = '\n';
+	  t[o->len+1] = 0x0;
 #if defined(__EMSCRIPTEN__)
 	// octet safety buffer allows this: o->val = malloc(size +0x0f);
-	EM_ASM_({Module.printErr(UTF8ToString($0))}, o->val);
+	EM_ASM_({Module.printErr(UTF8ToString($0))}, t);
 #elif defined(__ANDROID__)
-	__android_log_print(ANDROID_LOG_DEFAULT, "ZEN", "%s", o->val);
+	__android_log_print(ANDROID_LOG_DEFAULT, "ZEN", "%s", t);
 #elif defined(ARCH_CORTEX)
-	write_to_console(o->val);
+	write_to_console(t);
 #else
-	_zen_io_write(STDERR_FILENO, o->val, o->len+1);
+	_zen_io_write(STDERR_FILENO, t, o->len+1);
 #endif
+	free(t);
   } else
 	func(L, "printerr of an empty string");	
   END(0);
@@ -152,17 +156,20 @@ static int zen_write (lua_State *L) {
 end:
   o_free(L,o);
   if(failed_msg != NULL) {
-	  lerror(L, failed_msg);
+	  lerror(L, "%s", failed_msg);
   }
   END(0);
 }
 
-int zen_log(lua_State *L, log_priority prio, octet *o) {
+int zen_log(lua_State *L, log_priority prio, const octet *o) {
   Z(L);
   if(!o) return 0;
 #ifdef __ANDROID__
-  o->val[o->len] = 0x0;
-  __android_log_print(prio, "ZEN", "%s", o->val);
+  char *t = calloc(o->len+1,sizeof(char));
+  memcpy(t,o->val,o->len);
+  t[o->len] = 0x0;
+  __android_log_print(prio, "ZEN", "%s", t);
+  free(t);
   return 0;
 #endif
   if (Z->stderr_buf

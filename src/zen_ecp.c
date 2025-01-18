@@ -51,9 +51,9 @@
 #include <zen_memory.h>
 #include <lua_functions.h>
 
-extern int _octet_to_big(lua_State *L, big *dst, octet *src);
+extern int _octet_to_big(lua_State *L, big *dst, const octet *src);
 
-static const char* _ecp_from_octet(ecp *e, octet *o) {
+static const char* _ecp_from_octet(ecp *e, const octet *o) {
 	// protect well this entrypoint since parsing any input is at
 	// risk: Milagro's _fromOctet() uses ECP_BLS_set(ECP_BLS *P,
 	// BIG x) then converts the BIG to an FP modulo using
@@ -70,10 +70,10 @@ static const char* _ecp_from_octet(ecp *e, octet *o) {
 	   && o->val[1] == SCHAR_MAX) {
 		ECP_inf(&e->val);
 		return NULL; } // tolerated as ECP Infinity
-	if(ECP_validate(o) < 0)
+	if(ECP_validate((octet*)o) < 0)
 		// test in Milagro's ecdh_*.h ECP_*_PUBLIC_KEY_VALIDATE
 		return err_invalid;
-	if(! ECP_fromOctet(&e->val, o) )
+	if(! ECP_fromOctet(&e->val, (octet*)o) )
 		return err_notfound;
 	// success
 	return NULL;
@@ -81,7 +81,7 @@ static const char* _ecp_from_octet(ecp *e, octet *o) {
 
 ecp* ecp_new(lua_State *L) {
 	ecp *e = (ecp *)lua_newuserdata(L, sizeof(ecp));
-	if(!e) {
+	if(HEDLEY_UNLIKELY(e==NULL)) {
 		zerror(L, "Error allocating new ecp in %s", __func__);
 		return NULL; }
 	e->halflen = sizeof(BIG);
@@ -116,7 +116,7 @@ ecp* ecp_arg(lua_State *L, int n) {
 		failed_msg = _ecp_from_octet(result, o);
 		o_free(L,o);
 		if(failed_msg) {
-			zerror(L, failed_msg);
+			zerror(L, "%s", failed_msg);
 			free(result);
 			result = NULL;
 		}
@@ -161,7 +161,7 @@ static int lua_new_ecp(lua_State *L) {
 	// deactivate when not running tests
 	void *tx;
 	const char *failed_msg = NULL;
-	octet *o = NULL;
+	const octet *o = NULL;
 	tx = luaL_testudata(L, 1, "zenroom.big");
 	void *ty = luaL_testudata(L, 2, "zenroom.big");
 	if(tx && ty) {
@@ -331,7 +331,7 @@ static int ecp_mapit(lua_State *L) {
 	} else {
 		ecp *e = ecp_new(L);
 		func(L, "mapit on o->len %u", o->len);
-		ECP_mapit(&e->val, o);
+		ECP_mapit(&e->val, (octet*)o);
 		o_free(L, o);
 	}
 	END(1);
@@ -348,7 +348,7 @@ static int ecp_validate(lua_State *L) {
 	BEGIN();
 	const octet *o = o_arg(L, 1);
 	if(o) {
-		int res = ECP_validate(o);
+		int res = ECP_validate((octet*)o);
 		lua_pushboolean(L, res>=0);
 		o_free(L, o);
 	} else {

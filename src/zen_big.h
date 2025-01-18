@@ -48,7 +48,7 @@ HEDLEY_WARN_UNUSED_RESULT
 HEDLEY_NON_NULL(1,2)
 big* big_dup(lua_State *L, big *c);
 
-HEDLEY_NON_NULL(1,2)
+HEDLEY_NON_NULL(1)
 void big_free(lua_State *L, HEDLEY_NO_ESCAPE big *c);
 
 HEDLEY_WARN_UNUSED_RESULT

@@ -36,13 +36,14 @@ typedef struct {
 	// curves ECP.
 } ecp;
 
+HEDLEY_NON_NULL(1)
 void ecp_free(lua_State *L, HEDLEY_NO_ESCAPE ecp* e);
 
-HEDLEY_RETURNS_NON_NULL
+HEDLEY_NON_NULL(1)
 HEDLEY_WARN_UNUSED_RESULT
 ecp* ecp_new(lua_State *L);
 
-HEDLEY_RETURNS_NON_NULL
+HEDLEY_NON_NULL(1)
 HEDLEY_WARN_UNUSED_RESULT
 ecp* ecp_arg(lua_State *L,int n);
 
@@ -59,11 +60,11 @@ typedef struct {
 
 void ecp2_free(lua_State *L, HEDLEY_NO_ESCAPE ecp2* e);
 
-HEDLEY_RETURNS_NON_NULL
+HEDLEY_NON_NULL(1)
 HEDLEY_WARN_UNUSED_RESULT
 ecp2* ecp2_new(lua_State *L);
 
-HEDLEY_RETURNS_NON_NULL
+HEDLEY_NON_NULL(1)
 HEDLEY_WARN_UNUSED_RESULT
 ecp2* ecp2_arg(lua_State *L,int n);
 

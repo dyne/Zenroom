@@ -63,13 +63,13 @@ void _out(const char *fmt, ...);
 HEDLEY_PRINTF_FORMAT(1,2)
 void _err(const char *fmt, ...);
 // context free results
-int OK();
-int FAIL();
+int OK(void);
+int FAIL(void);
 
 // lua context error message
 HEDLEY_PRINTF_FORMAT(2,3)
 HEDLEY_NO_RETURN
-int lerror(void *L, const char *fmt, ...);
+void lerror(void *L, const char *fmt, ...);
 
 HEDLEY_PRINTF_FORMAT(2,3)
 int notice(void *L, const char *format, ...); // INFO

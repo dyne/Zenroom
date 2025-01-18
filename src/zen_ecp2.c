@@ -55,7 +55,7 @@
 #include <zen_memory.h>
 #include <lua_functions.h>
 
-extern int _octet_to_big(lua_State *L, big *dst, octet *src);
+extern int _octet_to_big(lua_State *L, big *dst, const octet *src);
 
 // use shared internally with octet o_arg()
 int _ecp2_to_octet(octet *o, ecp2 *e) {
@@ -549,7 +549,7 @@ static int ecp2_mapit(lua_State *L) {
 		failed_msg = "Could not create ECP2 point";
 		goto end;
 	}
-	ECP2_mapit(&e->val, o);
+	ECP2_mapit(&e->val, (octet*)o);
 end:
 	o_free(L, o);
 	if(failed_msg) {
