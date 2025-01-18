@@ -1,6 +1,6 @@
 /* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Copyright (C) 2017-2023 Dyne.org foundation
+ * Copyright (C) 2017-2025 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -73,7 +73,7 @@ extern void RMD160_hash(dword *MDbuf, byte *hashcode);
 
 hash* hash_new(lua_State *L, const char *hashtype) {
 	hash *h = lua_newuserdata(L, sizeof(hash));
-	if(!h) {
+	if(HEDLEY_UNLIKELY(h==NULL)) {
 		zerror(L, "Error allocating new hash generator in %s",__func__);
 		return NULL; }
 	luaL_getmetatable(L, "zenroom.hash");
@@ -136,47 +136,56 @@ hash* hash_new(lua_State *L, const char *hashtype) {
 	else {
 		zerror(L, "Hash algorithm not known: %s", hashtype);
 		return NULL; }
+	h->ref = 1;
 	return(h);
 }
 
-void hash_free(lua_State *L, hash *h) {
-	Z(L);
-	if(h) {
-		free(h);
-		Z->memcount_hashes--;
+void hash_free(lua_State *L, const hash *ch) {
+	if(!ch) return;
+	hash *h = (hash*)ch;
+	h->ref--;
+	if(h->ref>0) return;
+	if(h->rng) free(h->rng);
+	switch(h->algo) {
+	case _SHA256: free(h->sha256); break;
+	case _SHA384: free(h->sha384); break;
+	case _SHA512: free(h->sha512); break;
+	case _SHA3_256: free(h->sha3_256); break;
+	case _SHA3_512: free(h->sha3_512); break;
+	case _SHAKE256: free(h->shake256); break;
+	case _KECCAK256: free(h->keccak256); break;
+	case _RMD160: free(h->rmd160); break;
 	}
+	free(h);
 }
 
-hash* hash_arg(lua_State *L, int n) {
-	Z(L);
-	hash* result = NULL;
+const hash* hash_arg(lua_State *L, int n) {
 	void *ud = luaL_testudata(L, n, "zenroom.hash");
-	if(ud) {
-		result = (hash*)malloc(sizeof(hash));
-		Z->memcount_hashes++;
-		*result = *(hash*)ud;
-	}
-	else {
+	if(HEDLEY_UNLIKELY(ud==NULL)) {
 		zerror(L, "invalid hash in argument");
+		return NULL;
 	}
-	return result;
+	hash* res = (hash*)ud;
+	res->ref++;
+	return(res);
 }
 
 int hash_destroy(lua_State *L) {
 	BEGIN();
 	hash *h = (hash*)luaL_testudata(L, 1, "zenroom.hash");
-	if(h){
-		if(h->rng) free(h->rng);
-		switch(h->algo) {
-		case _SHA256: free(h->sha256); break;
-		case _SHA384: free(h->sha384); break;
-		case _SHA512: free(h->sha512); break;
-		case _SHA3_256: free(h->sha3_256); break;
-		case _SHA3_512: free(h->sha3_512); break;
-		case _SHAKE256: free(h->shake256); break;
-		case _KECCAK256: free(h->keccak256); break;
-		case _RMD160: free(h->rmd160); break;
-		}
+	if(HEDLEY_UNLIKELY(h==NULL)) return(0);
+	h->ref--;
+	if(h->ref>0) return(0);
+	if(h->rng) free(h->rng);
+	switch(h->algo) {
+	case _SHA256: free(h->sha256); break;
+	case _SHA384: free(h->sha384); break;
+	case _SHA512: free(h->sha512); break;
+	case _SHA3_256: free(h->sha3_256); break;
+	case _SHA3_512: free(h->sha3_512); break;
+	case _SHAKE256: free(h->shake256); break;
+	case _KECCAK256: free(h->keccak256); break;
+	case _RMD160: free(h->rmd160); break;
 	}
 	END(0);
 }
@@ -233,7 +242,7 @@ static int hash_to_octet(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	octet *res = NULL;
-	hash *h = hash_arg(L,1);
+	const hash *h = hash_arg(L,1);
 	if(!h) {
 		failed_msg = "Could not create HASH";
 		goto end;
@@ -266,7 +275,7 @@ static int hash_process(lua_State *L) {
 	char *failed_msg = NULL;
 	octet *o = NULL, *res = NULL;
 	int len;
-	hash *h = hash_arg(L,1);
+	const hash *h = hash_arg(L,1);
 	if(!h) {
 		failed_msg = "Could not create HASH";
 		goto end;
@@ -317,7 +326,7 @@ static int hash_feed(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	octet *o = NULL;
-	hash *h = hash_arg(L,1);
+	const hash *h = hash_arg(L,1);
 	if(!h) {
 		failed_msg = "Could not create HASH";
 		goto end;
@@ -348,7 +357,7 @@ end:
 static int hash_yeld(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	hash *h = hash_arg(L,1);
+	const hash *h = hash_arg(L,1);
 	octet *res = NULL;
 	if(!h) {
 		failed_msg = "Could not create HASH";
@@ -384,7 +393,7 @@ static int hash_hmac(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	octet *k = NULL, *in = NULL;
-	hash *h   = hash_arg(L,1);
+	const hash *h   = hash_arg(L,1);
 	if(!h) {
 		failed_msg = "Could not create HASH";
 		goto end;
@@ -405,7 +414,7 @@ static int hash_hmac(lua_State *L) {
 		}
 		//              hash    m   k  outlen  out
 		if(!AMCL_(HMAC)(SHA256, in, k, SHA256, out)) {
-			zerror(L, "%s: hmac (%u bytes) failed.", SHA256);
+			zerror(L, "%s: hmac (%u bytes) failed.", __func__,SHA256);
 			lua_pop(L, 1);
 			lua_pushboolean(L,0);
 		}
@@ -417,7 +426,7 @@ static int hash_hmac(lua_State *L) {
 		}
 		//              hash    m   k  outlen  out
 		if(!AMCL_(HMAC)(SHA512, in, k, SHA512, out)) {
-			zerror(L, "%s: hmac (%u bytes) failed.", SHA512);
+			zerror(L, "%s: hmac (%u bytes) failed.", __func__,SHA512);
 			lua_pop(L, 1);
 			lua_pushboolean(L,0);
 		}
@@ -452,7 +461,7 @@ static int hash_kdf2(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	octet *in = NULL;
-	hash *h = hash_arg(L, 1);
+	const hash *h = hash_arg(L, 1);
 	if(!h) {
 		failed_msg = "Could not create HASH";
 		goto end;
@@ -499,7 +508,7 @@ static int hash_pbkdf2(lua_State *L) {
 	char *failed_msg = NULL;
 	int iter, keylen;
 	octet *s = NULL, *ss = NULL, *k = NULL;
-	hash *h = hash_arg(L,1);
+	const hash *h = hash_arg(L,1);
 	if(!h) {
 		failed_msg = "Could not create HASH";
 		goto end;
@@ -609,7 +618,7 @@ static int hash_srand(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	octet *seed = NULL;
-	hash *h = hash_arg(L,1);
+	const hash *h = hash_arg(L,1);
 	if(!h) {
 		failed_msg = "Could not create HASH";
 		goto end;
@@ -619,8 +628,9 @@ static int hash_srand(lua_State *L) {
 		failed_msg = "Could not create octet";
 		goto end;
 	}
-	if(!h->rng) // TODO: reuse if same seed is already sown
-		h->rng = (csprng*)malloc(sizeof(csprng));
+	if(!h->rng) { // TODO: reuse if same seed is already sown
+		((hash*)h)->rng = (csprng*)malloc(sizeof(csprng));
+	}
 	if(!h->rng) {
 		failed_msg = "Error allocating new random number generator";
 		goto end;
@@ -640,7 +650,7 @@ static int hash_srand(lua_State *L) {
 static int rand_uint8(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	hash *h = hash_arg(L,1);
+	const hash *h = hash_arg(L,1);
 	if(!h) {
 		failed_msg = "Could not create HASH";
 		goto end;
@@ -661,7 +671,7 @@ static int rand_uint8(lua_State *L) {
 static int rand_uint16(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	hash *h = hash_arg(L,1);
+	const hash *h = hash_arg(L,1);
 	if(!h) {
 		failed_msg = "Could not create HASH";
 		goto end;
@@ -684,7 +694,7 @@ static int rand_uint16(lua_State *L) {
 static int rand_uint32(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	hash *h = hash_arg(L,1);
+	const hash *h = hash_arg(L,1);
 	if(!h) {
 		failed_msg = "Could not create HASH";
 		goto end;

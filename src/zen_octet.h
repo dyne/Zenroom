@@ -1,6 +1,6 @@
 /* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Copyright (C) 2017-2020 Dyne.org foundation
+ * Copyright (C) 2017-2025 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -33,7 +33,7 @@ HEDLEY_NON_NULL(1)
 octet* o_new(lua_State *L, const int size);
 
 HEDLEY_NON_NULL(1,2)
-octet *o_dup(lua_State *L, octet *o);
+octet *o_dup(lua_State *L, const octet *o);
 
 // REMEMBER: o_arg returns a new allocated octet to be freed with o_free
 HEDLEY_NON_NULL(1)
