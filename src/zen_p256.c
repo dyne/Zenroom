@@ -18,10 +18,6 @@
  *
  */
 
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-
 #include <p256-m.h>
 
 #include <zen_error.h>

@@ -5,10 +5,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-
 #include <zen_error.h>
 #include <zen_octet.h>
 

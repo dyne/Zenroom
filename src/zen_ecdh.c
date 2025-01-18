@@ -44,10 +44,6 @@
 //  @license AGPLv3
 //  @copyright Dyne.org foundation 2017-2020
 
-
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
 #include <ecdh_support.h>
 
 #include <zen_error.h>

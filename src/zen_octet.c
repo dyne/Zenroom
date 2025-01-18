@@ -57,10 +57,6 @@
 //
 #include <errno.h>
 
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-
 #include <zen_error.h>
 #include <lua_functions.h>
 
