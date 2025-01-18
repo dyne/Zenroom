@@ -212,6 +212,7 @@ typedef struct
     int len;   /**< length in bytes  */
     int max;   /**< max length allowed - enforce truncation  */
     char *val; /**< byte array  */
+    int ref;
 } octet;
 
 

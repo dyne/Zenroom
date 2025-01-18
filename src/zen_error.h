@@ -98,7 +98,7 @@ void json_end(void *L);
 #define HEREn(n) _err( "-> %s(%i)\n",__func__,n)
 #define HEREc(c) _err( "-> %s(%c)\n",__func__,c)
 #define HEREoct(o) \
-	_err( "-> %s - octet %p (%i/%i)\n",__func__,o->val,o->len,o->max)
+	_err( "-> %s - octet %p (%i/%i) ref:%i\n",__func__,o->val,o->len,o->max,o->ref)
 #define HEREecdh(e) \
 	_err( "--> %s - ecdh %p\n\tcurve[%s] type[%s]\n\t fieldsize[%i] hash[%i]\n\tpubkey[%p(%i/%i)] publen[%i]\n\tseckey[%p(%i/%i)] seclen[%i]\m",__func__, e, e->curve, e->type, e->fieldsize, e->hash, e->pubkey, e->pubkey?e->pubkey->len:0x0, e->pubkey?e->pubkey->max:0x0, e->publen, e->seckey, e->seckey?e->seckey->len:0x0, e->seckey?e->seckey->max:0x0, e->seclen)
 #define HEREhex(b, len) \
