@@ -88,53 +88,49 @@ ecp* ecp_new(lua_State *L) {
 	e->totlen = (MODBYTES*2)+1; // length of ECP.new(rng:modbig(o), 0):octet()
 	luaL_getmetatable(L, "zenroom.ecp");
 	lua_setmetatable(L, -2);
+	e->ref = 1;
 	return(e);
 }
 
-void ecp_free(lua_State *L, ecp* e) {
-	Z(L);
-	if(e) {
-		free(e);
-		Z->memcount_ecp--;
-	}
+void ecp_free(lua_State *L, const ecp* e) {
+	(void)L;
+	if(HEDLEY_UNLIKELY(e==NULL)) return;
+	ecp *t = (ecp*)e;
+	t->ref--;
+	if(t->ref>0) return;
+	free((void*)t);
 }
 
-ecp* ecp_arg(lua_State *L, int n) {
+const ecp* ecp_arg(lua_State *L, int n) {
 	Z(L);
-	ecp* result = (ecp*)malloc(sizeof(ecp));
+	ecp *res;
 	void *ud = luaL_testudata(L, n, "zenroom.ecp");
 	if(ud) {
-		*result = *(ecp*)ud;
-		Z->memcount_ecp++;
-		return result;
+		res = (ecp*)ud;
+		res->ref++;
+		return(res);
 	}
 	// octet first class citizen
 	const octet *o = o_arg(L,n);
 	if(o) {
-		const char *failed_msg = NULL;
-		result->totlen = (MODBYTES*2)+1;
-		failed_msg = _ecp_from_octet(result, o);
+		res = malloc(sizeof(ecp));
+		res->totlen = (MODBYTES*2)+1;
+		_ecp_from_octet(res, o);
+		res->ref = 1;
 		o_free(L,o);
-		if(failed_msg) {
-			zerror(L, "%s", failed_msg);
-			free(result);
-			result = NULL;
-		}
-		if(result) Z->memcount_ecp++;
-		return result;
+		return(res);
 	}
 	zerror(L, "invalid ECP in argument");
-	free(result);
 	return NULL;
 }
 
-ecp* ecp_dup(lua_State *L, ecp* in) {
+ecp* ecp_dup(lua_State *L, const ecp* in) {
 	ecp *e = ecp_new(L);
 	if(e == NULL) {
 		zerror(L, "Error duplicating ECP in %s", __func__);
 		return NULL;
 	}
-	ECP_copy(&e->val, &in->val);
+	ECP_copy(&e->val, (ECP*)&in->val);
 	return(e);
 }
 
@@ -370,7 +366,7 @@ static int ecp_affine(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	ecp *out = NULL;
-	ecp *in = ecp_arg(L, 1);
+	const ecp *in = ecp_arg(L, 1);
 	if(!in) {
 		failed_msg = "Could not create ECP";
 		goto end;
@@ -396,9 +392,9 @@ end:
 */
 static int ecp_isinf(lua_State *L) {
 	BEGIN();
-	ecp *e = ecp_arg(L, 1);
+	const ecp *e = ecp_arg(L, 1);
 	if(e) {
-		lua_pushboolean(L, ECP_isinf(&e->val));
+		lua_pushboolean(L, ECP_isinf((ECP*)&e->val));
 		ecp_free(L,e);
 	} else {
 		THROW("Could not create ECP");
@@ -417,8 +413,8 @@ static int ecp_isinf(lua_State *L) {
 static int ecp_add(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	ecp *e = ecp_arg(L, 1);
-	ecp *q = ecp_arg(L, 2);
+	const ecp *e = ecp_arg(L, 1);
+	const ecp *q = ecp_arg(L, 2);
 	if(!e || !q) {
 		failed_msg = "Could not create ECP";
 		goto end;
@@ -428,7 +424,7 @@ static int ecp_add(lua_State *L) {
 		failed_msg = "Could not create ECP";
 		goto end;
 	}
-	ECP_add(&p->val, &q->val);
+	ECP_add(&p->val, (ECP*)&q->val);
 end:
 	ecp_free(L,q);
 	ecp_free(L,e);
@@ -449,8 +445,8 @@ end:
 static int ecp_sub(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	ecp *e = ecp_arg(L, 1);
-	ecp *q = ecp_arg(L, 2);
+	const ecp *e = ecp_arg(L, 1);
+	const ecp *q = ecp_arg(L, 2);
 	if(!e || !q) {
 		failed_msg = "Could not create ECP";
 		goto end;
@@ -460,7 +456,7 @@ static int ecp_sub(lua_State *L) {
 		failed_msg = "Could not create ECP";
 		goto end;
 	}
-	ECP_sub(&p->val, &q->val);
+	ECP_sub(&p->val, (ECP*)&q->val);
 end:
 	ecp_free(L,q);
 	ecp_free(L,e);
@@ -479,7 +475,7 @@ static int ecp_negative(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	ecp *out = NULL;
-	ecp *in = ecp_arg(L, 1);
+	const ecp *in = ecp_arg(L, 1);
 	if(!in) {
 		failed_msg = "Could not create ECP";
 		goto end;
@@ -507,7 +503,7 @@ static int ecp_double(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	ecp *out = NULL;
-	ecp *in = ecp_arg(L, 1);
+	const ecp *in = ecp_arg(L, 1);
 	if(!in) {
 		failed_msg = "Could not create ECP";
 		goto end;
@@ -537,8 +533,8 @@ end:
 static int ecp_mul(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	ecp *e = NULL;
-	big *b = NULL;
+	const ecp *e = NULL;
+	const big *b = NULL;
 	ecp *out = NULL;
 	uint8_t ecpos, bigpos = 0;
 	ecpos = luaL_testudata(L, 1, "zenroom.ecp") ? 1 : 0;
@@ -589,16 +585,16 @@ end:
 static int ecp_eq(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	ecp *p = ecp_arg(L, 1);
-	ecp *q = ecp_arg(L, 2);
+	const ecp *p = ecp_arg(L, 1);
+	const ecp *q = ecp_arg(L, 2);
 	if(!p || !q) {
 		failed_msg = "Could not allocate ECP point";
 		goto end;
 	}
 	// TODO: is affine rly needed?
-	ECP_affine(&p->val);
-	ECP_affine(&q->val);
-	lua_pushboolean(L, ECP_equals(&p->val, &q->val));
+	ECP_affine((ECP*)&p->val);
+	ECP_affine((ECP*)&q->val);
+	lua_pushboolean(L, ECP_equals((ECP*)&p->val, (ECP*)&q->val));
 end:
 	ecp_free(L,p);
 	ecp_free(L,q);
@@ -610,12 +606,12 @@ end:
 
 
 // use shared internally with octet o_arg()
-int _ecp_to_octet(octet *o, ecp *e) {
-	if (ECP_isinf(&e->val)) { // Infinity
+int _ecp_to_octet(octet *o, const ecp *e) {
+	if (ECP_isinf((ECP*)&e->val)) { // Infinity
 		o->val[0] = SCHAR_MAX; o->val[1] = SCHAR_MAX;
 		o->val[3] = 0x0; o->len = 2;
 	} else
-		ECP_toOctet(o, &e->val, 1);
+		ECP_toOctet(o, (ECP*)&e->val, 1);
 	return(1);
 }
 /***
@@ -628,7 +624,7 @@ static int ecp_octet(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	octet *o = NULL;
-	ecp *e = ecp_arg(L, 1);
+	const ecp *e = ecp_arg(L, 1);
 	if(!e) {
 		failed_msg = "Could not instantiate ECP";
 		goto end;
@@ -656,19 +652,19 @@ end:
 static int ecp_get_x(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	ecp *e = ecp_arg(L, 1);
+	const ecp *e = ecp_arg(L, 1);
 	if(!e) {
 		failed_msg = "Could not read ECP";
 		goto end;
 	}
-	ECP_affine(&e->val);
+	ECP_affine((ECP*)&e->val);
 	big *x = big_new(L);
 	if(!x) {
 		failed_msg = "Could not read BIG";
 		goto end;
 	}
 	big_init(L,x);
-	_fp_to_big(x, &e->val.x);
+	_fp_to_big(x, (FP*)&e->val.x);
 end:
 	ecp_free(L,e);
 	if(failed_msg) {
@@ -687,19 +683,19 @@ static int ecp_get_y(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	big *y = NULL;
-	ecp *e = ecp_arg(L, 1);
+	const ecp *e = ecp_arg(L, 1);
 	if(!e) {
 		failed_msg = "Could not read ECP";
 		goto end;
 	}
-	ECP_affine(&e->val);
+	ECP_affine((ECP*)&e->val);
 	y = big_new(L);
 	if(!y) {
 		failed_msg = "Could not read BIG";
 		goto end;
 	}
 	big_init(L,y);
-	_fp_to_big(y, &e->val.y);
+	_fp_to_big(y, (FP*)&e->val.y);
 end:
 	ecp_free(L,e);
 	if(failed_msg) {
@@ -718,12 +714,12 @@ static int ecp_prime(lua_State *L) {
 static int ecp_output(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	ecp *e = ecp_arg(L, 1);
+	const ecp *e = ecp_arg(L, 1);
 	if(!e) {
 		failed_msg = "Could not read ECP";
 		goto end;
 	}
-	if (ECP_isinf(&e->val)) { // Infinity
+	if (ECP_isinf((ECP*)&e->val)) { // Infinity
 		octet *o = o_new(L, 3);
 		if(!o) {
 			failed_msg = "Could not read OCTET";
@@ -763,7 +759,7 @@ char gf_sign(BIG y) {
 static int ecp_zcash_export(lua_State *L) {
 	BEGIN();
 	const char *failed_msg = NULL;
-	ecp *e = ecp_arg(L, 1);
+	const ecp *e = ecp_arg(L, 1);
 	if(e == NULL) {
 		THROW("Could not create ECP point");
 		return 0;
@@ -776,7 +772,7 @@ static int ecp_zcash_export(lua_State *L) {
 		goto end;
 	}
 
-	if(ECP_isinf(&e->val)) {
+	if(ECP_isinf((ECP*)&e->val)) {
 		o->len = 48; // TODO
 		o->val[0] = (char)0xc0;
 		memset(o->val+1, 0, 47); // TODO
@@ -785,7 +781,7 @@ static int ecp_zcash_export(lua_State *L) {
 		const char c_bit = 1;
 		const char i_bit = 0;
 
-		ECP_get(x, y, &e->val);
+		ECP_get(x, y, (ECP*)&e->val);
 
 		const char s_bit = gf_sign(y);
 		char m_byte = (char)((c_bit << 7)+(i_bit << 6)+(s_bit << 5));

@@ -197,13 +197,11 @@ octet* o_alloc(lua_State *L, int size) {
 }
 
 void o_free(lua_State *L, const octet *o) {
-	if(!o) return; // accepts NULL args with no errors
+	if(HEDLEY_UNLIKELY(o==NULL)) return; // accepts NULL args with no errors
 	octet *t = (octet*)o; // remove const static check
 	t->ref--;
 	if(t->ref>0) return;
-	if(t->val) free(t->val);
-	Z(L);
-	Z->memcount_octets -= o->max + 0x0f + sizeof(octet);
+	if(HEDLEY_LIKELY(t->val!=NULL)) free(t->val);
 	free(t);
 	return;
 }

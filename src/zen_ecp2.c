@@ -58,51 +58,52 @@
 extern int _octet_to_big(lua_State *L, big *dst, const octet *src);
 
 // use shared internally with octet o_arg()
-int _ecp2_to_octet(octet *o, ecp2 *e) {
-	ECP2_toOctet(o, &e->val);
+int _ecp2_to_octet(octet *o, const ecp2 *e) {
+	ECP2_toOctet(o, (ECP2*)&e->val);
 	return(1);
 }
 
-void ecp2_free(lua_State *L, ecp2 *e) {
-	Z(L);
-	if(e) {
-		free(e);
-		Z->memcount_ecp2--;
-	}
+void ecp2_free(lua_State *L, const ecp2 *e) {
+	(void)L;
+	if(HEDLEY_UNLIKELY(e==NULL)) return;
+	ecp2 *t = (ecp2*)e;
+	t->ref--;
+	if(t->ref>0) return;
+	free((void*)t);
 }
 
 ecp2* ecp2_new(lua_State *L) {
 	ecp2 *e = (ecp2 *)lua_newuserdata(L, sizeof(ecp2));
-	if(!e) {
-		zerror(L, "Error allocating new ecp2 in %s", __func__);
+	if(HEDLEY_UNLIKELY(e==NULL)) {
+		zerror(L, "Cannot create ECP2, lua_newuserdata failure");
 		return NULL; }
 	e->halflen = sizeof(BIG)*2;
 	e->totlen = (MODBYTES*4)+1;
 	luaL_getmetatable(L, "zenroom.ecp2");
 	lua_setmetatable(L, -2);
+	e->ref = 1;
 	return(e);
 }
 
-ecp2* ecp2_arg(lua_State *L, int n) {
+const ecp2* ecp2_arg(lua_State *L, int n) {
 	Z(L);
 	void *ud = luaL_testudata(L, n, "zenroom.ecp2");
-	if(ud) {
-		ecp2 *result = (ecp2*)malloc(sizeof(ecp2));
-		*result = *(ecp2*)ud;
-		Z->memcount_ecp2++;
-		return result;
+	if(HEDLEY_UNLIKELY(ud==NULL)) {
+		zerror(L, "invalid ECP2 point in argument");
+		return NULL;
 	}
-	zerror(L, "invalid ecp2 point in argument");
-	return NULL;
+	ecp2 *res = (ecp2*)ud;
+	res->ref++;
+	return(res);
 }
 
-ecp2* ecp2_dup(lua_State *L, ecp2* in) {
+ecp2* ecp2_dup(lua_State *L, const ecp2* in) {
 	ecp2 *e = ecp2_new(L);
 	if(e == NULL) {
 		zerror(L, "Error duplicating ecp2 in %s", __func__);
 		return NULL;
 	}
-	ECP2_copy(&e->val, &in->val);
+	ECP2_copy(&e->val, (ECP2*)&in->val);
 	return(e);
 }
 
@@ -197,7 +198,7 @@ end_big_big:
 		failed_msg = "Could not create ECP2 point";
 		goto end;
 	}
-	if(! ECP2_fromOctet(&e->val, o) ) {
+	if(! ECP2_fromOctet(&e->val, (octet*)o) ) {
 		failed_msg = "Octet doesn't contains a valid ECP2";
 		goto end;
 	}
@@ -238,13 +239,12 @@ static int ecp2_generator(lua_State *L) {
 static int ecp2_millerloop(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	ecp *y = NULL;
-	ecp2 *x = ecp2_arg(L, 1);
+	const ecp2 *x = ecp2_arg(L, 1);
 	if(x == NULL) {
 		failed_msg = "Could not allocate ECP2 point";
 		goto end;
 	}
-	y = ecp_arg(L, 2);
+	const ecp *y = ecp_arg(L, 2);
 	if(y == NULL) {
 		failed_msg = "Could not allocate ECP point";
 		goto end;
@@ -254,9 +254,9 @@ static int ecp2_millerloop(lua_State *L) {
 		failed_msg = "Could not create FP12";
 		goto end;
 	}
-	ECP2_affine(&x->val);
-	ECP_affine(&y->val);
-	PAIR_ate(&f->val, &x->val, &y->val);
+	ECP2_affine((ECP2*)&x->val);
+	ECP_affine((ECP*)&y->val);
+	PAIR_ate(&f->val, (ECP2*)&x->val, (ECP*)&y->val);
 	PAIR_fexp(&f->val);
 end:
 	ecp_free(L, y);
@@ -278,7 +278,7 @@ end:
 static int ecp2_affine(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	ecp2 *in = ecp2_arg(L, 1);
+	const ecp2 *in = ecp2_arg(L, 1);
 	if(in == NULL) {
 		failed_msg = "Could not allocate ECP2 point";
 		goto end;
@@ -322,12 +322,12 @@ static int ecp2_get_infinity(lua_State *L) {
 */
 static int ecp2_isinf(lua_State *L) {
 	BEGIN();
-	ecp2 *e = ecp2_arg(L, 1);
+	const ecp2 *e = ecp2_arg(L, 1);
 	if(e == NULL) {
 		THROW("Could not allocate ECP2 point");
 		return 0;
 	}
-	lua_pushboolean(L, ECP2_isinf(&e->val));
+	lua_pushboolean(L, ECP2_isinf((ECP2*)&e->val));
 	ecp2_free(L, e);
 	END(1);
 }
@@ -345,8 +345,8 @@ static int ecp2_isinf(lua_State *L) {
 static int ecp2_add(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	ecp2 *e = ecp2_arg(L, 1);
-	ecp2 *q = ecp2_arg(L, 2);
+	const ecp2 *e = ecp2_arg(L, 1);
+	const ecp2 *q = ecp2_arg(L, 2);
 	if(e == NULL || q == NULL) {
 		failed_msg = "Could not allocate ECP2 point";
 		goto end;
@@ -356,7 +356,7 @@ static int ecp2_add(lua_State *L) {
 		failed_msg = "Could not duplicate ECP2 point";
 		goto end;
 	}
-	ECP2_add(&p->val, &q->val);
+	ECP2_add(&p->val, (ECP2*)&q->val);
 end:
 	ecp2_free(L, e);
 	ecp2_free(L, q);
@@ -380,8 +380,8 @@ end:
 static int ecp2_sub(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	ecp2 *e = ecp2_arg(L, 1);
-	ecp2 *q = ecp2_arg(L, 2);
+	const ecp2 *e = ecp2_arg(L, 1);
+	const ecp2 *q = ecp2_arg(L, 2);
 	if(e == NULL || q == NULL) {
 		failed_msg = "Could not allocate ECP2 point";
 		goto end;
@@ -391,7 +391,7 @@ static int ecp2_sub(lua_State *L) {
 		failed_msg = "Could not duplicate ECP2 point";
 		goto end;
 	}
-	ECP2_sub(&p->val, &q->val);
+	ECP2_sub(&p->val, (ECP2*)&q->val);
 end:
 	ecp2_free(L, e);
 	ecp2_free(L, q);
@@ -409,7 +409,7 @@ end:
 static int ecp2_negative(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	ecp2 *in = ecp2_arg(L, 1);
+	const ecp2 *in = ecp2_arg(L, 1);
 	if(in == NULL) {
 		failed_msg = "Could not allocate ECP2 point";
 		goto end;
@@ -442,16 +442,16 @@ end:
 static int ecp2_eq(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	ecp2 *p = ecp2_arg(L, 1);
-	ecp2 *q = ecp2_arg(L, 2);
+	const ecp2 *p = ecp2_arg(L, 1);
+	const ecp2 *q = ecp2_arg(L, 2);
 	if(p == NULL || q == NULL) {
 		failed_msg = "Could not allocate ECP2 point";
 		goto end;
 	}
 // TODO: is affine rly needed?
-	ECP2_affine(&p->val);
-	ECP2_affine(&q->val);
-	lua_pushboolean(L, ECP2_equals(&p->val, &q->val));
+	ECP2_affine((ECP2*)&p->val);
+	ECP2_affine((ECP2*)&q->val);
+	lua_pushboolean(L, ECP2_equals((ECP2*)&p->val, (ECP2*)&q->val));
 end:
 	ecp2_free(L, p);
 	ecp2_free(L, q);
@@ -474,7 +474,7 @@ end:
 static int ecp2_octet(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	ecp2 *e = ecp2_arg(L, 1);
+	const ecp2 *e = ecp2_arg(L, 1);
 	if(e == NULL) {
 		failed_msg = "Could not allocate ECP2 point";
 		goto end;
@@ -484,7 +484,7 @@ static int ecp2_octet(lua_State *L) {
 		failed_msg = "Could not create OCTET";
 		goto end;
 	}
-	ECP2_toOctet(o, &e->val);
+	ECP2_toOctet(o, (ECP2*)&e->val);
 end:
 	ecp2_free(L, e);
 	if(failed_msg) {
@@ -497,7 +497,7 @@ static int ecp2_mul(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	big *b = NULL;
-	ecp2 *p = ecp2_arg(L, 1);
+	const ecp2 *p = ecp2_arg(L, 1);
 	if(p == NULL) {
 		failed_msg = "Could not allocate ECP2 point";
 		goto end;
@@ -562,7 +562,7 @@ end:
 static int ecp2_get_xr(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	ecp2 *e = ecp2_arg(L, 1);
+	const ecp2 *e = ecp2_arg(L, 1);
 	if(e == NULL) {
 		failed_msg = "Could not allocate ECP2 point";
 		goto end;
@@ -574,7 +574,7 @@ static int ecp2_get_xr(lua_State *L) {
 		goto end;
 	}
 	big_init(L,xa);
-	FP_copy(&fx, &e->val.x.a);
+	FP_copy(&fx, (FP*)&e->val.x.a);
 	FP_reduce(&fx); FP_redc(xa->val, &fx);
 end:
 	ecp2_free(L, e);
@@ -587,7 +587,7 @@ end:
 static int ecp2_get_xi(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	ecp2 *e = ecp2_arg(L, 1);
+	const ecp2 *e = ecp2_arg(L, 1);
 	if(e == NULL) {
 		failed_msg = "Could not allocate ECP2 point";
 		goto end;
@@ -599,7 +599,7 @@ static int ecp2_get_xi(lua_State *L) {
 		goto end;
 	}
 	big_init(L,xb);
-	FP_copy(&fx, &e->val.x.b);
+	FP_copy(&fx, (FP*)&e->val.x.b);
 	FP_reduce(&fx); FP_redc(xb->val, &fx);
 end:
 	ecp2_free(L, e);
@@ -613,7 +613,7 @@ end:
 static int ecp2_get_yr(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	ecp2 *e = ecp2_arg(L, 1);
+	const ecp2 *e = ecp2_arg(L, 1);
 	if(e == NULL) {
 		failed_msg = "Could not allocate ECP2 point";
 		goto end;
@@ -625,7 +625,7 @@ static int ecp2_get_yr(lua_State *L) {
 		goto end;
 	}
 	big_init(L,ya);
-	FP_copy(&fy, &e->val.y.a);
+	FP_copy(&fy, (FP*)&e->val.y.a);
 	FP_reduce(&fy); FP_redc(ya->val, &fy);
 end:
 	ecp2_free(L, e);
@@ -637,7 +637,7 @@ end:
 static int ecp2_get_yi(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	ecp2 *e = ecp2_arg(L, 1);
+	const ecp2 *e = ecp2_arg(L, 1);
 	if(e == NULL) {
 		failed_msg = "Could not allocate ECP2 point";
 		goto end;
@@ -649,7 +649,7 @@ static int ecp2_get_yi(lua_State *L) {
 		goto end;
 	}
 	big_init(L,yb);
-	FP_copy(&fy, &e->val.y.b);
+	FP_copy(&fy, (FP*)&e->val.y.b);
 	FP_reduce(&fy); FP_redc(yb->val, &fy);
 end:
 	ecp2_free(L, e);
@@ -661,7 +661,7 @@ end:
 static int ecp2_get_zr(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	ecp2 *e = ecp2_arg(L, 1);
+	const ecp2 *e = ecp2_arg(L, 1);
 	if(e == NULL) {
 		failed_msg = "Could not allocate ECP2 point";
 		goto end;
@@ -673,7 +673,7 @@ static int ecp2_get_zr(lua_State *L) {
 		goto end;
 	}
 	big_init(L,za);
-	FP_copy(&fz, &e->val.z.a);
+	FP_copy(&fz, (FP*)&e->val.z.a);
 	FP_reduce(&fz); FP_redc(za->val, &fz);
 end:
 	ecp2_free(L, e);
@@ -685,7 +685,7 @@ end:
 static int ecp2_get_zi(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	ecp2 *e = ecp2_arg(L, 1);
+	const ecp2 *e = ecp2_arg(L, 1);
 	if(e == NULL) {
 		failed_msg = "Could not allocate ECP2 point";
 		goto end;
@@ -697,7 +697,7 @@ static int ecp2_get_zi(lua_State *L) {
 		goto end;
 	}
 	big_init(L,zb);
-	FP_copy(&fz, &e->val.z.b);
+	FP_copy(&fz, (FP*)&e->val.z.b);
 	FP_reduce(&fz); FP_redc(zb->val, &fz);
 end:
 	ecp2_free(L, e);
@@ -710,12 +710,12 @@ end:
 static int ecp2_output(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	ecp2 *e = ecp2_arg(L, 1);
+	const ecp2 *e = ecp2_arg(L, 1);
 	if(e == NULL) {
 		failed_msg = "Could not allocate ECP2 point";
 		goto end;
 	}
-	if (ECP2_isinf(&e->val)) { // Infinity
+	if (ECP2_isinf((ECP2*)&e->val)) { // Infinity
 		octet *o = o_new(L, 3);
 		if(o == NULL) {
 			failed_msg = "Could not create OCTET";
@@ -761,7 +761,7 @@ char gf2_sign(BIG y0, BIG y1){
 static int ecp2_zcash_export(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	ecp2 *e = ecp2_arg(L, 1);
+	const ecp2 *e = ecp2_arg(L, 1);
 	if(e == NULL) {
 		THROW("Could not create ECP2 point");
 		return 0;
@@ -773,7 +773,7 @@ static int ecp2_zcash_export(lua_State *L) {
 		goto end;
 	}
 
-	if(ECP2_isinf(&e->val)) {
+	if(ECP2_isinf((ECP2*)&e->val)) {
 		o->len = 96;
 		o->val[0] = (char)0xc0;
 		memset(o->val+1, 0, 95);
@@ -782,7 +782,7 @@ static int ecp2_zcash_export(lua_State *L) {
 		const char c_bit = 1;
 		const char i_bit = 0;
 
-		ECP2_get(&x, &y, &e->val);
+		ECP2_get(&x, &y, (ECP2*)&e->val);
 
 		BIG bx0,bx1,by0,by1;
 		FP2_reduce(&x);
