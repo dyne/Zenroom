@@ -58,7 +58,7 @@ ld := ld
 ar := $(shell which ar) # cmake requires full path
 ranlib := ranlib
 cflags_protection := -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
-cflags_asan := -fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow
+cflags_asan := -fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fsanitize=leak
 cflags_debug := -Og -ggdb -DDEBUG=1 -Wall -Wextra -pedantic
 cflags := ${ZEN_INCLUDES}
 musl := build/musl
