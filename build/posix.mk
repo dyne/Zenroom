@@ -12,7 +12,7 @@ endif
 ifdef ASAN
 	system := Linux
 	cflags := -fPIC -D'ARCH="LINUX"' -DARCH_LINUX
-	cflags += -g -Wall -fno-omit-frame-pointer
+	cflags += -g -DDEBUG=1 -Wall -fno-omit-frame-pointer
 #	cflags += -Wno-error=shift-count-overflow
 #   big_256_28.c:911:32: runtime error: left shift of 220588237 by 20 places cannot be represented in type 'int'
 	cflags += ${cflags_asan} ${ZEN_INCLUDES}
