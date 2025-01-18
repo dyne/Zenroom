@@ -55,6 +55,7 @@
 //  @license AGPLv3
 //  @copyright Dyne.org foundation 2017-2019
 //
+#include <errno.h>
 
 #include <lua.h>
 #include <lualib.h>
@@ -217,11 +218,14 @@ octet* o_new(lua_State *L, const int size) {
 		return NULL; }
 	octet *o = (octet *)lua_newuserdata(L, sizeof(octet));
 	if(!o) {
+		zerror(L, "Cannot create octet, lua_newuserdata failure");
 		return NULL; }
 	luaL_getmetatable(L, "zenroom.octet");
 	lua_setmetatable(L, -2);
 	o->val = malloc(size +0x0f);
 	if(!o->val) {
+		zerror(L, "Cannot create octet, malloc failure");
+		zerror("%s: %s",__func__,strerror(errno));
 		return NULL; }
 	o->len = 0;
 	o->max = size;
@@ -250,7 +254,7 @@ octet* o_arg(lua_State *L, int n) {
 		size_t len; const char *str;
 		str = luaL_optlstring(L, n, "", &len);
 		if(len>MAX_OCTET) {
-			zerror(L, "invalid string size: %u", len);
+			zerror(L, "invalid string size: %i", len);
 			return NULL;
 		}
 		// fallback to a string
@@ -716,7 +720,7 @@ static int from_string(lua_State *L) {
 		return 0; }
 	octet *o = o_new(L, len);
 	register int i = 0;
-	for(i=0;s[i];i++) o->val[i]=s[i];
+	for(i=0;s[i] != 0x0;i++) o->val[i]=s[i];
 	o->len = i;
 	END(1);
 }
@@ -923,7 +927,7 @@ static int to_mnemonic(lua_State *L) {
 	octet *o = o_arg(L,1);
 	if(!o->len) { lua_pushnil(L); o_free(L,o); return 1; }
 	if(o->len > 32) {
-		zerror(L, "%s :: octet bigger than 32 bytes cannot be encoded to mnemonic");
+		zerror(L, "%s :: octet bigger than 32 bytes cannot be encoded to mnemonic",__func__);
 		o_free(L,o);
 		lua_pushboolean(L, 0);
 		END(0);
@@ -1604,11 +1608,10 @@ end:
 	END(1);
 }
 
-static int size(lua_State *L) {
+static int octet_size(lua_State *L) {
 	BEGIN();
-	octet *o = o_arg(L, 1);
+	octet *o = (octet*) luaL_testudata(L, 1, "zenroom.octet");
 	lua_pushinteger(L, o->len);
-	o_free(L, o);
 	END(1);
 }
 
@@ -2093,7 +2096,7 @@ int luaopen_octet(lua_State *L) {
 		{"fillrepeat", fillrepeat},
 		// {"zcash_topoint", zcash_topoint},
 		// idiomatic operators
-		{"__len",size},
+		{"__len",octet_size},
 		{"__concat",concat_n},
 		{"__bxor",xor_shrink},
 		{"__eq",eq},
