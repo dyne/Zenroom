@@ -72,7 +72,7 @@ When("trace", function() ZEN:debug_traceback() end)
 Then("trace", function() ZEN:debug_traceback() end)
 
 local function debug_heap_dump()
-   local ack = ACK
+   local ack <const> = ACK
    local keyring = ack.keyring
    if CONF.debug.format == 'compact' then
 	  if keyring then

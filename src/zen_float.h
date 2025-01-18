@@ -22,17 +22,13 @@
 #define __ZEN_FLOAT_H__
 
 // new or dup already push the object in LUA's stack
-HEDLEY_MALLOC
 float* float_new(lua_State *L);
 
-HEDLEY_MALLOC
 float* float_dup(lua_State *L, float *c);
 
-HEDLEY_MALLOC
 float* float_arg(lua_State *L, int n);
 
 // internal conversion from float to octet
-HEDLEY_MALLOC
 octet *new_octet_from_float(lua_State *L, float *c);
 
 #endif
