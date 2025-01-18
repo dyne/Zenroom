@@ -30,7 +30,6 @@
 
 typedef struct {
         char zencode_positive;
-	char name[16];
 	int  len; // modbytes
 	int  chunksize;
 	chunk *val;
