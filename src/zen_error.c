@@ -81,7 +81,7 @@ void get_log_prefix(void *Z, log_priority prio, char dest[5]) {
 }
 
 // error reported with lua context
-int lerror(void *LL, const char *fmt, ...) {
+void lerror(void *LL, const char *fmt, ...) {
   char msg[MAX_ERRMSG+4];
   int len;
   lua_State *L = (lua_State*)LL;
@@ -90,13 +90,15 @@ int lerror(void *LL, const char *fmt, ...) {
   va_copy(argp_copy, argp);
   len = mutt_vsnprintf(msg, MAX_ERRMSG, fmt, argp);
   msg[len] = 0x0;
-  zerror(L, msg); // logs on all platforms
+  zerror(L, "%s", msg); // logs on all platforms
   luaL_where(L, 1); // 1 is the function which called the running function
   lua_pushvfstring(L, fmt, argp_copy);
   va_end(argp);
   va_end(argp_copy);
   lua_concat(L, 2);
-  return lua_error(L); // fatal
+  lua_error(L); // fatal
+  HEDLEY_UNREACHABLE();
+  exit(1);
 }
 
 // stdout message free from context
@@ -151,8 +153,8 @@ int FAIL() {
   return 1;
 }
 #else
-int OK() { return 0; }
-int FAIL() { return 1; }
+int OK(void) { return 0; }
+int FAIL(void) { return 1; }
 #endif
 
 void json_start(void *L) {

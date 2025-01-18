@@ -141,6 +141,7 @@ hash* hash_new(lua_State *L, const char *hashtype) {
 }
 
 void hash_free(lua_State *L, const hash *ch) {
+	(void)L;
 	if(!ch) return;
 	hash *h = (hash*)ch;
 	h->ref--;
@@ -202,7 +203,7 @@ static int lua_new_hash(lua_State *L) {
 }
 
 // internal use to feed bytes into the hash structure
-static void _feed(hash *h, octet *o) {
+static void _feed(const hash *h, const octet *o) {
 	register int i;
 	switch(h->algo) {
 	case _SHA256: for(i=0;i<o->len;i++) HASH256_process(h->sha256,o->val[i]); break;
@@ -217,7 +218,7 @@ static void _feed(hash *h, octet *o) {
 }
 
 // internal use to yeld a result from the hash structure
-static void _yeld(hash *h, octet *o) {
+static void _yeld(const hash *h, octet *o) {
 	switch(h->algo) {
 	case _SHA256: HASH256_hash(h->sha256,o->val); break;
 	case _SHA384: HASH384_hash(h->sha384,o->val); break;
@@ -229,7 +230,7 @@ static void _yeld(hash *h, octet *o) {
 	}
 }
 
-static void _yeld_len(hash *h, octet *o, int len) {
+static void _yeld_len(const hash *h, octet *o, int len) {
 	switch(h->algo) {
 	case _SHAKE256:
 	  SHA3_shake(h->shake256,o->val, len);
@@ -273,7 +274,8 @@ end:
 static int hash_process(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *o = NULL, *res = NULL;
+	const octet *o = NULL;
+	octet *res = NULL;
 	int len;
 	const hash *h = hash_arg(L,1);
 	if(!h) {
@@ -325,7 +327,7 @@ end:
 static int hash_feed(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *o = NULL;
+	const octet *o = NULL;
 	const hash *h = hash_arg(L,1);
 	if(!h) {
 		failed_msg = "Could not create HASH";
@@ -392,7 +394,7 @@ end:
 static int hash_hmac(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *k = NULL, *in = NULL;
+	const octet *k = NULL, *in = NULL;
 	const hash *h   = hash_arg(L,1);
 	if(!h) {
 		failed_msg = "Could not create HASH";
@@ -413,7 +415,7 @@ static int hash_hmac(lua_State *L) {
 			goto end;
 		}
 		//              hash    m   k  outlen  out
-		if(!AMCL_(HMAC)(SHA256, in, k, SHA256, out)) {
+		if(!AMCL_(HMAC)(SHA256, (octet*)in, (octet*)k, SHA256, out)) {
 			zerror(L, "%s: hmac (%u bytes) failed.", __func__,SHA256);
 			lua_pop(L, 1);
 			lua_pushboolean(L,0);
@@ -425,7 +427,7 @@ static int hash_hmac(lua_State *L) {
 			goto end;
 		}
 		//              hash    m   k  outlen  out
-		if(!AMCL_(HMAC)(SHA512, in, k, SHA512, out)) {
+		if(!AMCL_(HMAC)(SHA512, (octet*)in, (octet*)k, SHA512, out)) {
 			zerror(L, "%s: hmac (%u bytes) failed.", __func__,SHA512);
 			lua_pop(L, 1);
 			lua_pushboolean(L,0);
@@ -460,13 +462,12 @@ end:
 static int hash_kdf2(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *in = NULL;
 	const hash *h = hash_arg(L, 1);
 	if(!h) {
 		failed_msg = "Could not create HASH";
 		goto end;
 	}
-	in = o_arg(L, 2);
+	const octet *in = o_arg(L, 2);
 	if(!in) {
 		failed_msg = "Could not allocate input message";
 		goto end;
@@ -477,7 +478,7 @@ static int hash_kdf2(lua_State *L) {
 		failed_msg = "Could not allocate derived key";
 		goto end;
 	}
-	KDF2(h->len, in, NULL , h->len, out);
+	KDF2(h->len, (octet*)in, NULL , h->len, out);
 end:
 	o_free(L, in);
 	hash_free(L,h);
@@ -507,7 +508,8 @@ static int hash_pbkdf2(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	int iter, keylen;
-	octet *s = NULL, *ss = NULL, *k = NULL;
+	octet *ss = NULL;
+	const octet *k, *s;
 	const hash *h = hash_arg(L,1);
 	if(!h) {
 		failed_msg = "Could not create HASH";
@@ -553,7 +555,7 @@ static int hash_pbkdf2(lua_State *L) {
 	}
 	// TODO: according to RFC2898, s should have a size of 8
 	// c should be a positive integer
-	PBKDF2(h->len, k, ss, iter, keylen, out);
+	PBKDF2(h->len, (octet*)k, ss, iter, keylen, out);
 end:
 	o_free(L,s);
 	o_free(L,k);
@@ -617,7 +619,7 @@ static int mnemonic_to_seed(lua_State *L) {
 static int hash_srand(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *seed = NULL;
+	const octet *seed;
 	const hash *h = hash_arg(L,1);
 	if(!h) {
 		failed_msg = "Could not create HASH";

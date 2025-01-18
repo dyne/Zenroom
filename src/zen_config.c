@@ -238,7 +238,7 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 				_err( "Undefined config variable\n");
 				break; }
 			if(lex.token == '=' && curconf != NIL) break; // OK
-			_err( "%s: Invalid string in configuration: %c\n", __func__, lex.token);
+			_err( "%s: Invalid string in configuration: %lu\n", __func__, lex.token);
 			// free(lexbuf);
 			return 0;
 		}

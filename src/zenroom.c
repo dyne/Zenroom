@@ -75,7 +75,7 @@ extern void zen_add_function(lua_State *L, lua_CFunction func,
 		const char *func_name);
 
 // prototype from zen_random.c
-extern void* rng_alloc();
+extern void* rng_alloc(zenroom_t *ZZ);
 extern void zen_add_random(lua_State *L);
 
 //////////////////////////////////////////////////////////////
@@ -217,7 +217,7 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	if(ZZ->zconf_rngseed[0] != 0x0) {
 		ZZ->random_external = 1;
 		memset(ZZ->random_seed, 0x0, RANDOM_SEED_LEN);
-		int len = hex2buf(ZZ->random_seed, ZZ->zconf_rngseed);
+		hex2buf(ZZ->random_seed, ZZ->zconf_rngseed);
 	}
 
 	// initialize the random generator
@@ -358,7 +358,6 @@ HEDLEY_NON_NULL(1,2)
 int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
 	HEDLEY_ASSUME(ZZ!=NULL);
 	HEDLEY_ASSUME(ZZ->lua!=NULL);
-  int ret;
   lua_State* L = (lua_State*)ZZ->lua;
   // introspection on code being executed
   zen_setenv(L,"CODE",(char*)script);
@@ -558,7 +557,8 @@ int zenroom_exec_tobuf(const char *script, const char *conf, const char *keys, c
 }
 
 int zencode_valid_input(const char *script, const char *conf, const char *keys, const char *data, const char *extra) {
-
+	(void)conf;
+	(void)extra;
 	const char *c = "scope=given";
 	const char *k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	const char *d = data ? (data[0] == '\0') ? NULL : data : NULL;

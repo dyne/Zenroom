@@ -94,7 +94,7 @@ static int _min(int x, int y) { if(x < y) return x;	else return y; }
 
 #include <ctype.h>
 
-extern int _octet_to_big(lua_State *L, big *dst, octet *src);
+extern int _octet_to_big(lua_State *L, big *dst, const octet *src);
 
 // assumes null terminated string
 // returns 0 if not base else length of base encoded string
@@ -169,15 +169,11 @@ int is_bin(lua_State *L, const char *in) {
 
 // allocate octet without internally, no lua involved
 octet* o_alloc(lua_State *L, int size) {
-	if(size<0) {
-		if(L) {
-			zerror(L, "Cannot create octet, size less than zero");
-		}
+	if(HEDLEY_UNLIKELY(size<0)) {
+		zerror(L, "Cannot create octet, size less than zero");
 		return NULL; }
-	if(size>MAX_OCTET) {
-		if(L) {
-			zerror(L, "Cannot create octet, size too big: %u", size);
-		}
+	if(HEDLEY_UNLIKELY(size>MAX_OCTET)) {
+		zerror(L, "Cannot create octet, size too big: %u", size);
 		return NULL; }
 	register int os = sizeof(octet);
 	octet *o = malloc(os);
@@ -214,20 +210,20 @@ void o_free(lua_State *L, const octet *o) {
 
 // REMEMBER: newuserdata already pushes the object in lua's stack
 octet* o_new(lua_State *L, const int size) {
-	if(size<0) {
+	if(HEDLEY_UNLIKELY(size<0)) {
 		zerror(L, "Cannot create octet, size less than zero");
 		return NULL; }
-	if(size>MAX_OCTET) {
+	if(HEDLEY_UNLIKELY(size>MAX_OCTET)) {
 		zerror(L, "Cannot create octet, size too big: %u", size);
 		return NULL; }
 	octet *o = (octet *)lua_newuserdata(L, sizeof(octet));
-	if(!o) {
+	if(HEDLEY_UNLIKELY(o==NULL)) {
 		zerror(L, "Cannot create octet, lua_newuserdata failure");
 		return NULL; }
 	luaL_getmetatable(L, "zenroom.octet");
 	lua_setmetatable(L, -2);
 	o->val = malloc(size +0x0f);
-	if(!o->val) {
+	if(HEDLEY_UNLIKELY(o->val==NULL)) {
 		zerror(L, "Cannot create octet, malloc failure");
 		zerror("%s: %s",__func__,strerror(errno));
 		return NULL; }
@@ -257,7 +253,7 @@ const octet* o_arg(lua_State *L, int n) {
 		size_t len; const char *str;
 		str = luaL_optlstring(L, n, "", &len);
 		if(len>MAX_OCTET) {
-			zerror(L, "invalid string size: %i", len);
+			zerror(L, "invalid string size: %lu", len);
 			return NULL;
 		}
 		// fallback to a string
@@ -339,7 +335,7 @@ octet *o_dup(lua_State *L, const octet *o) {
 		zerror(L, "Could not create OCTET");
 		return NULL;
 	}
-	OCT_copy(n,o);
+	OCT_copy(n,(octet*)o);
 	return(n);
 }
 
@@ -513,18 +509,18 @@ static int xor_shrink(lua_State *L) {
 	char *failed_msg = NULL;
 	const octet *x = o_arg(L, 1);
 	const octet *y = o_arg(L, 2);
-	if(!x || !y) {
+	if(HEDLEY_UNLIKELY(!x || !y)) {
 		failed_msg = "Could not allocate OCTET";
 		goto end;
 	}
 	int min = _min(x->len, y->len);
 	octet *n = o_new(L,min);
-	if(!n) {
+	if(HEDLEY_UNLIKELY(!n)) {
 		failed_msg = "Could not create OCTET";
 		goto end;
 	}
-	OCT_copy(n, x);
-	OCT_xor(n, y);
+	OCT_copy(n, (octet*)x);
+	OCT_xor(n, (octet*)y);
 end:
 	o_free(L, x);
 	o_free(L, y);
@@ -982,7 +978,7 @@ newly allocated octet, does not change the contents of other octets.
 static int concat_n(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *x = NULL, *y = NULL;
+	const octet *x = NULL, *y = NULL;
 	char *sx = NULL, *sy = NULL;
 	octet xs, ys;
 	void *ud;
@@ -1025,8 +1021,8 @@ static int concat_n(lua_State *L) {
 		failed_msg = "Could not create OCTET";
 		goto end;
 	}
-	OCT_copy(n, x);
-	OCT_joctet(n, y);
+	OCT_copy(n, (octet*)x);
+	OCT_joctet(n, (octet*)y);
 end:
 	if(y!=&ys) o_free(L, y);
 	if(x!=&xs) o_free(L, x);
@@ -1094,7 +1090,7 @@ static int to_base64 (lua_State *L) {
 	int newlen;
 	newlen = ((3+(4*(o->len/3))) & ~0x03)+0x0f;
 	b = malloc(newlen);
-	OCT_tobase64(b,o);
+	OCT_tobase64(b,(octet*)o);
 	lua_pushstring(L,b);
 end:
 	free(b);
@@ -1299,7 +1295,7 @@ static int to_string(lua_State *L) {
 	}
 	if(!o->len) { lua_pushnil(L); goto end; }
 	char *s = malloc(o->len+2);
-	OCT_toStr(o, s); // TODO: inverted function signature, see
+	OCT_toStr((octet*)o, s); // TODO: inverted function signature, see
 					 // https://github.com/milagro-crypto/milagro-crypto-c/issues/291
 	s[o->len] = '\0'; // make sure string is NULL terminated
 	lua_pushlstring(L, s, o->len);
@@ -1325,7 +1321,7 @@ int to_hex(lua_State *L) {
 	BEGIN();
 	const octet *o = o_arg(L,1);
 	if(!o->len) { lua_pushnil(L); goto end; }
-	push_octet_to_hex_string(L, o);
+	push_octet_to_hex_string(L, (octet*)o);
 end:
 	o_free(L,o);
 	END(1);
@@ -1380,7 +1376,7 @@ static int pad(lua_State *L) {
 		failed_msg = "Could not create OCTET";
 		goto end;
 	}
-	OCT_copy(n, o);
+	OCT_copy(n, (octet*)o);
 	OCT_pad(n, len);
 end:
 	o_free(L, o);
@@ -1538,7 +1534,8 @@ static int sub(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	register int i, c;
-	octet *src = NULL, *dst = NULL;
+	const octet *src = NULL;
+	octet *dst = NULL;
 	int start, end;
 	src = o_arg(L, 1);
 	if(!src) {
@@ -1921,7 +1918,7 @@ static int elide_at_start(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	const octet *o = o_arg(L,1);
-	octet *prefix = NULL;
+	const octet *prefix = NULL;
 	if(!o) {
 		failed_msg = "Could not allocate OCTET";
 		goto end;
