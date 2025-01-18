@@ -45,10 +45,6 @@
 //  @copyright Dyne.org foundation 2017-2019
 
 
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-
 #include <zen_ecp_factory.h>
 
 #include <zen_error.h>

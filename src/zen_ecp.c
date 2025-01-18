@@ -42,16 +42,10 @@
 //  @license AGPLv3
 //  @copyright Dyne.org foundation 2017-2019
 
-
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-
 #include <zen_ecp.h>
 #include <zen_ecp_factory.h>
 
 #include <zen_error.h>
-#include <zen_octet.h>
 #include <zen_big.h>
 #include <zen_fp12.h>
 #include <zen_memory.h>

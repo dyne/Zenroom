@@ -41,14 +41,10 @@ typedef struct {
 } big;
 
 // new or dup already push the object in LUA's stack
-HEDLEY_MALLOC
-HEDLEY_RETURNS_NON_NULL
 HEDLEY_WARN_UNUSED_RESULT
 HEDLEY_NON_NULL(1)
 big* big_new(lua_State *L);
 
-HEDLEY_MALLOC
-HEDLEY_RETURNS_NON_NULL
 HEDLEY_WARN_UNUSED_RESULT
 HEDLEY_NON_NULL(1,2)
 big* big_dup(lua_State *L, big *c);
@@ -56,8 +52,6 @@ big* big_dup(lua_State *L, big *c);
 HEDLEY_NON_NULL(1,2)
 void big_free(lua_State *L, HEDLEY_NO_ESCAPE big *c);
 
-HEDLEY_MALLOC
-HEDLEY_RETURNS_NON_NULL
 HEDLEY_WARN_UNUSED_RESULT
 HEDLEY_NON_NULL(1)
 big* big_arg(lua_State *L, int n);
@@ -69,8 +63,6 @@ HEDLEY_NON_NULL(1,2)
 int dbig_init(lua_State *L,big *n);
 
 // internal conversion from d/big to octet
-HEDLEY_MALLOC
-HEDLEY_RETURNS_NON_NULL
 HEDLEY_WARN_UNUSED_RESULT
 octet *new_octet_from_big(lua_State *L, big *c);
 

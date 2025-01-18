@@ -21,6 +21,7 @@
 #ifndef __ZEN_ECP_H__
 #define __ZEN_ECP_H__
 
+#include <zen_octet.h>
 #include <zen_ecp_factory.h>
 #include <hedley.h>
 
@@ -37,12 +38,10 @@ typedef struct {
 
 void ecp_free(lua_State *L, HEDLEY_NO_ESCAPE ecp* e);
 
-HEDLEY_MALLOC
 HEDLEY_RETURNS_NON_NULL
 HEDLEY_WARN_UNUSED_RESULT
 ecp* ecp_new(lua_State *L);
 
-HEDLEY_MALLOC
 HEDLEY_RETURNS_NON_NULL
 HEDLEY_WARN_UNUSED_RESULT
 ecp* ecp_arg(lua_State *L,int n);
@@ -60,12 +59,10 @@ typedef struct {
 
 void ecp2_free(lua_State *L, HEDLEY_NO_ESCAPE ecp2* e);
 
-HEDLEY_MALLOC
 HEDLEY_RETURNS_NON_NULL
 HEDLEY_WARN_UNUSED_RESULT
 ecp2* ecp2_new(lua_State *L);
 
-HEDLEY_MALLOC
 HEDLEY_RETURNS_NON_NULL
 HEDLEY_WARN_UNUSED_RESULT
 ecp2* ecp2_arg(lua_State *L,int n);
