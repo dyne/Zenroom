@@ -1,6 +1,6 @@
 /* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Copyright (C) 2017-2021 Dyne.org foundation
+ * Copyright (C) 2017-2025 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -333,7 +333,7 @@ const octet* o_arg(lua_State *L, int n) {
 }
 
 // allocates a new octet in LUA, duplicating the one in arg
-octet *o_dup(lua_State *L, octet *o) {
+octet *o_dup(lua_State *L, const octet *o) {
 	octet *n = o_new(L, o->len);
 	if(!n) {
 		zerror(L, "Could not create OCTET");
