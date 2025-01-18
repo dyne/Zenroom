@@ -29,6 +29,7 @@ typedef struct {
 	size_t halflen; // length in bytes of a reduced coordinate
 	int totlen; // length of a serialized octet
 	ECP  val;
+	int ref;
 	// TODO: the values above make it necessary to propagate the
 	// visibility on the specific curve point types to the rest of the
 	// code. To abstract these and have get/set functions may save a
@@ -37,7 +38,7 @@ typedef struct {
 } ecp;
 
 HEDLEY_NON_NULL(1)
-void ecp_free(lua_State *L, HEDLEY_NO_ESCAPE ecp* e);
+void ecp_free(lua_State *L, HEDLEY_NO_ESCAPE const ecp* e);
 
 HEDLEY_NON_NULL(1)
 HEDLEY_WARN_UNUSED_RESULT
@@ -45,12 +46,13 @@ ecp* ecp_new(lua_State *L);
 
 HEDLEY_NON_NULL(1)
 HEDLEY_WARN_UNUSED_RESULT
-ecp* ecp_arg(lua_State *L,int n);
+const ecp* ecp_arg(lua_State *L,int n);
 
 typedef struct {
 	size_t halflen;
 	size_t totlen;
 	ECP2  val;
+	int ref;
 	// TODO: the values above make it necessary to propagate the
 	// visibility on the specific curve point types to the rest of the
 	// code. To abstract these and have get/set functions may save a
@@ -58,7 +60,7 @@ typedef struct {
 	// curves ECP.
 } ecp2;
 
-void ecp2_free(lua_State *L, HEDLEY_NO_ESCAPE ecp2* e);
+void ecp2_free(lua_State *L, HEDLEY_NO_ESCAPE const ecp2* e);
 
 HEDLEY_NON_NULL(1)
 HEDLEY_WARN_UNUSED_RESULT
@@ -66,7 +68,7 @@ ecp2* ecp2_new(lua_State *L);
 
 HEDLEY_NON_NULL(1)
 HEDLEY_WARN_UNUSED_RESULT
-ecp2* ecp2_arg(lua_State *L,int n);
+const ecp2* ecp2_arg(lua_State *L,int n);
 
 char gf_sign(BIG y);
 char gf2_sign(BIG y0, BIG y1);

@@ -70,6 +70,7 @@ cat <<EOF > "${DIR}"/zen_ecp_factory.h
 #define ECP_get(x,y,q) ECP_${CN}_get(x,y,q)
 #define ECP_rhs(v,x) ECP_${CN}_rhs(v,x)
 
+#define FP FP_${CN}
 #define FP2 FP2_${CN}
 #define FP2_from_BIGs(x,a,b) FP2_${CN}_from_BIGs(x,a,b)
 #define FP2_reduce(q) FP2_${CN}_reduce(q)
