@@ -126,7 +126,6 @@ big* big_new(lua_State *L) {
 		return NULL; }
 	luaL_getmetatable(L, "zenroom.big");
 	lua_setmetatable(L, -2);
-	strcpy(c->name,"big384");
 	// c->len = modbytes;
 	c->chunksize = CHUNK;
 	c->doublesize = 0;
@@ -139,7 +138,6 @@ big* big_new(lua_State *L) {
 big* big_arg(lua_State *L,int n) {
 	Z(L);
 	big* result = (big*)malloc(sizeof(big));
-	strcpy(result->name,"big384");
 	result->chunksize = CHUNK;
 	result->doublesize = 0;
 	result->val = NULL;
