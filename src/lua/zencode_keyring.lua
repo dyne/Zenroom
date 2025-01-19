@@ -171,7 +171,7 @@ function export_keyring(obj)
     local res = {}
     for k,_ in pairs(obj) do
         local t = keytypes[k]
-        if not keytypes[k] then
+        if not t then
             error("Unsupported key type found in keyring: "..k, 2)
         end
         res[k] = t.export(obj)
