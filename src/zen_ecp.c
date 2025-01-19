@@ -804,21 +804,20 @@ end:
 static int ecp_zcash_import(lua_State *L){
 	BEGIN();
 	char *failed_msg = NULL;
+	ecp *e = NULL;
 	const octet *o = o_arg(L, 1);
 	if(o == NULL) {
-		failed_msg = "Could not allocate octet";
-		goto end;
+		THROW("Could not allocate octet");
+		END(0);
 	}
-
-	ecp  *e = NULL;
-
 	unsigned char m_byte = o->val[0] & 0xE0;
-	char c_bit;
-	char i_bit;
-	char s_bit;
+	bool c_bit;
+	bool i_bit;
+	bool s_bit;
 	if(m_byte == 0x20 || m_byte == 0x60 || m_byte == 0xE0) {
-		failed_msg = "Invalid octet header";
-		goto end;
+		o_free(L,o);
+		THROW("Invalid octet header");
+		END(0);
 	}
 	c_bit = ((m_byte & 0x80) == 0x80);
 	i_bit = ((m_byte & 0x40) == 0x40);
@@ -826,42 +825,47 @@ static int ecp_zcash_import(lua_State *L){
 
 	if(c_bit) {
 		if(o->len != 48) {
-			failed_msg = "Invalid octet header";
-			goto end;
+			o_free(L,o);
+			THROW("Invalid octet header");
+			END(0);
 		}
 	} else {
 		if(o->len != 96) {
-			failed_msg = "Invalid octet header";
-			goto end;
+			o_free(L,o);
+			THROW("Invalid octet header");
+			END(0);
 		}
 	}
-
 	e = ecp_new(L);
-
-	o->val[0] = o->val[0] & 0x1F;
+	if(!e) {
+		o_free(L,o);
+		THROW("Could not create ECP2 point");
+		END(0);
+	}
 
 	if(i_bit) {
 		// TODO: check o->val is all 0
 		ECP_inf(&e->val);
 		goto end;
-	}
-	if(c_bit) {	
+	} else if(c_bit) {
 		BIG xpoint, ypoint;
 		big* bigx = big_new(L);
-		_octet_to_big(L, bigx, o);
-
+		// temp octet to write first byte
+		octet *ot = o_alloc(L,48);
+		memcpy(ot->val, o->val, 48);
+		ot->val[0] = ot->val[0] & 0x1F;
+		ot->len = 48;
+		_octet_to_big(L, bigx, ot);
+		o_free(L,ot);
 		if(!ECP_setx(&e->val, bigx->val, 0)) {
 			failed_msg = "Invalid input octet: not a point on the curve";
 			goto end;
 		}
 
 		ECP_get(xpoint, ypoint, &e->val);
-		if(gf_sign(ypoint) != s_bit) {
+		if(gf_sign(ypoint) != s_bit)
 			ECP_neg(&e->val);
-		}
-
-		lua_pop(L,1);
-
+		lua_pop(L,1); // big_new bigx
 	} else {
 		failed_msg = "Not yet implemented";
 		goto end;
