@@ -10,6 +10,7 @@ import {
   introspect,
   zencode_valid_code,
   safe_zencode_valid_code,
+  decode_error
 } from "./index";
 import { TextEncoder } from "util";
 var enc = new TextEncoder();
@@ -509,4 +510,24 @@ test("correctly fails on huge input", async (t) => {
     const lines = JSON.parse(error.logs);
     t.is(lines.includes('[!] Cannot create octet, size too big: 4718592'), true, error.logs);
   } 
+})
+
+test("decode zencode error", async (t) => {
+  try {
+    await zencode_exec(`Scenario ecdh
+      Given nothing
+      When I create the ecdh key
+      Then print the 'not existing object'`,
+      { data: null, keys: null }
+    );
+    t.fail("print of non existing object should fail");
+  } catch(error) {
+    const errorLines = decode_error(error);
+    const jsonError = JSON.parse(errorLines);
+    t.is(jsonError[0], '[!] Error at Zencode line 4');
+    t.is(jsonError[1].includes('Cannot find object: not_existing_object'), true, error.logs);
+    t.is(jsonError[2], '[!] Zencode runtime error');
+    t.is(jsonError[3].includes("Zencode line 4: Then print the 'not existing object'"), true, error.logs);
+    t.is(jsonError[4], '[!] Execution aborted with errors.');
+  }
 })

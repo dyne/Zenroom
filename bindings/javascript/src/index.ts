@@ -250,3 +250,33 @@ export const safe_zencode_valid_code = async (
 ): Promise<ZenroomResult> => {
   return zencode_valid_code(zencode, conf, 0);
 }
+
+export const decode_error = (err: {result: string, logs: string}): string => {
+  const errorPrefix = '[!]';
+  const tracePrefix = 'J64 TRACE: ';
+  try {
+    const jsonError = JSON.parse(err.logs);
+    const res = jsonError
+      .reduce((acc: string[], l: string) => {
+        if (l.startsWith(errorPrefix)) acc.push(l);
+        if (l.startsWith(tracePrefix)) {
+          const base64Trace = l.substring(tracePrefix.length);
+          const jsonTrace = JSON.parse(atob(base64Trace));
+          acc.push(
+            ...jsonTrace.
+              reduce((inAcc: string[], l: string) => {
+                if (l.startsWith(errorPrefix)) inAcc.push(l);
+                return inAcc;
+              },
+              [] as string[]
+            )
+          )
+        }
+        return acc;
+      }, [] as string[]
+    );
+    return JSON.stringify(res);
+  } catch (e) {
+    return err.logs;
+  }
+}
