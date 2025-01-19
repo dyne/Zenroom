@@ -182,13 +182,11 @@ octet* o_alloc(lua_State *L, int size) {
 			   strerror(errno));
 		return NULL; }
 	Z(L);
-	Z->memcount_octets += os;
 	o->val = malloc(size +0x0f);
 	if(!o->val) {
 		zerror(L, "Cannot create octet value, malloc: %s",
 			   strerror(errno));
 		return NULL; }
-	Z->memcount_octets += size+0x0f;
 	o->max = size;
 	o->len = 0;
 	o->val[0] = 0x0;
@@ -197,6 +195,7 @@ octet* o_alloc(lua_State *L, int size) {
 }
 
 void o_free(lua_State *L, const octet *o) {
+	(void)L;
 	if(HEDLEY_UNLIKELY(o==NULL)) return; // accepts NULL args with no errors
 	octet *t = (octet*)o; // remove const static check
 	t->ref--;

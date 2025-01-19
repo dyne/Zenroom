@@ -105,12 +105,8 @@ float *float_new(lua_State *L) {
 }
 
 static void float_free(lua_State *L, float *f) {
-	Z(L);
-	if(f) {
-		free(f);
-		Z->memcount_floats--;
-
-	}
+	(void)L;
+	if(f) free(f);
 }
 
 float* float_arg(lua_State *L, int n) {
@@ -122,7 +118,6 @@ float* float_arg(lua_State *L, int n) {
 	void *ud = luaL_testudata(L, n, "zenroom.float");
 	if(ud) {
 		*result = *(float*)ud;
-		Z->memcount_floats++;
 		return result;
 	}
 	const octet *o = o_arg(L, n);
@@ -135,8 +130,6 @@ float* float_arg(lua_State *L, int n) {
 		}
 		o_free(L, o);
 	}
-
-	if(result) Z->memcount_floats++;
 	return result;
 }
 

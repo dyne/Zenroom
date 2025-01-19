@@ -399,20 +399,21 @@ int main(int argc, char **argv) {
 	if(scriptfile[0]!='\0') {
 		////////////////////////////////////
 		// load a file as script and execute
-		if(verbosity) fprintf(stderr, "reading Zencode from file: %s\n", scriptfile);
+		if(verbosity) fprintf(stderr, "reading code from file: %s\n", scriptfile);
 		load_file(script, fopen(scriptfile, "rb"));
 	} else {
 		////////////////////////
 		// get another argument from stdin
-		if(verbosity) fprintf(stderr, "reading Zencode from stdin\n");
+		if(verbosity) fprintf(stderr, "reading code from stdin\n");
 		load_file(script, stdin);
 		// func(NULL, "%s\n--",script);
 	}
 
 	// configure to parse Lua or Zencode
 	if(zencode) {
-		if(verbosity) fprintf(stderr, "Direct Zencode execution\n");
-		// func(NULL, script);
+		fprintf(stderr, "Zencode execution\n");
+	} else {
+		fprintf(stderr, "Lua execution\n");
 	}
 
 #if (defined(ARCH_WIN) || defined(DISABLE_FORK)) || defined(ARCH_CORTEX) || defined(ARCH_BSD)

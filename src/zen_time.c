@@ -59,12 +59,8 @@ ztime_t *time_new(lua_State *L) {
 }
 
 static void time_free(lua_State *L, ztime_t *f) {
-	Z(L);
-	if(f) {
-		free(f);
-		Z->memcount_times--;
-
-	}
+	(void)L;
+	if(f) free(f);
 }
 
 ztime_t* time_arg(lua_State *L, int n) {
@@ -116,7 +112,6 @@ ztime_t* time_arg(lua_State *L, int n) {
 		goto end;
 	}
 end:
-	if(result) Z->memcount_times++;
 	return result;
 }
 
