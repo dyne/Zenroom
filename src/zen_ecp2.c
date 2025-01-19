@@ -836,10 +836,9 @@ static int ecp2_zcash_import(lua_State *L) {
 		return 0;
 	}
 	register unsigned char m_byte = o->val[0] & 0xE0;
-	char c_bit;
-	char i_bit;
-	char s_bit;
-	// register int i = 0;
+	bool c_bit;
+	bool i_bit;
+	bool s_bit;
 	if(m_byte == 0x20 || m_byte == 0x60 || m_byte == 0xE0) {
 		failed_msg = "Invalid octet header";
 		goto end;
