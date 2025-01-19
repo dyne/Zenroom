@@ -115,7 +115,6 @@ void big_free(lua_State *L, big *b) {
 		if(b->dval) free(b->dval);
 		if(b->val) free(b->val);
 		free(b);
-		Z->memcount_bigs--;
 	}
 }
 
@@ -161,7 +160,6 @@ big* big_arg(lua_State *L,int n) {
 			zerror(L, "invalid big number in argument: not initalized");
 			big_free(L,result);
 			return NULL; }
-		if(result) Z->memcount_bigs++;
 		return(result);
 	}
 
@@ -172,7 +170,6 @@ big* big_arg(lua_State *L,int n) {
 			result = NULL;
 		}
 		o_free(L,o);
-		if(result) Z->memcount_bigs++;
 		return(result);
 	}
 	zerror(L, "invalib big number in argument");

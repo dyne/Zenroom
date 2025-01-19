@@ -108,14 +108,6 @@ typedef struct {
         char str_maxiter[STR_MAXITER_LEN + 1];
         char str_maxmem[STR_MAXITER_LEN + 1];
 
-        int memcount_octets;
-        int memcount_bigs;
-        int memcount_hashes;
-        int memcount_ecp;
-        int memcount_ecp2;
-        int memcount_ecdhs;
-        int memcount_floats;
-        int memcount_times;
 	int exitcode;
 } zenroom_t;
 
