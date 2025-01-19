@@ -25,64 +25,7 @@
 -- the same key types (one or more) as others do, for instance reflow
 -- uses bls and credential, petition uses credential and ecdh.
 
-function initkeyring(ktype)
-
-   if luatype(ACK.keyring) == 'table' then
-      -- TODO: check that curve types match
-   elseif ACK.keyring == nil then
-      -- initialise empty ACK.keyring
-      ACK.keyring = {} -- TODO: save curve types
-      new_codec('keyring')
-   else
-      error('Keyring table is corrupted', 2)
-   end
-   -- if ktype is specified then check overwriting
-   if ktype then
-      zencode_assert(
-	 not ACK.keyring[uscore(ktype)],
-	 'Cannot overwrite existing key: ' .. ktype
-      )
-   end
-end
-When("create keyring", function()
-    empty'keyring'
-    initkeyring()
-end)
-
--- KNOWN KEY TYPES FOUND IN ACK.keyring
-local keytypes = {
-    ecdh = true,
-    es256 = true,
-    credential = true,
-    issuer = true,
-    bbs = true,
-    bbs_shake = true,
-    pvss = true,
-    reflow = true,
-    bitcoin = true,
-    testnet = true,
-    ethereum = true,
-    dilithium = true,
-    mldsa44 = true,
-    schnorr = true,
-    kyber = true,
-    mlkem512 = true,
-    rsa = true,
-    ntrup = true,
-    eddsa = true,
-	fsp = true,
-}
-
-function havekey(ktype)
-   local kname = uscore(ktype)
-   zencode_assert(keytypes[kname], 'Unknown key type: ' .. ktype)
-   -- check that keys exist and are a table
-   initkeyring()
-   local res = ACK.keyring[kname]
-   zencode_assert(res, 'Key not found: ' .. ktype)
-   return res
-end
-
+-- utils local functions
 local function nop(x) return(x) end
 -- the length of the kyber, dilithium and ntrup keys can be found in Zenroom/src/zen_qp.c
 local function dilithium_f(o)
@@ -122,144 +65,179 @@ local function rsa_f(o)
    return o
 end
 
+-- KNOWN KEY TYPES FOUND IN ACK.keyring and their import/export
+local keytypes <const> = {
+    ecdh = {
+        import = function(obj) return schema_get(obj, 'ecdh', nop, O.from_base64) end,
+        export = function(obj) return CONF.output.encoding.fun(obj.ecdh) end
+    },
+    es256 = {
+        import = function(obj) return schema_get(obj, 'es256', nop, O.from_base64) end,
+        export = function(obj) return obj.es256:base64() end
+    },
+    credential = {
+        import = function(obj) return schema_get(obj, 'credential', INT.new, O.from_base64) end,
+        export = function(obj) return obj.credential:octet():base64() end
+    },
+    issuer = {
+        import = function(obj)
+            return {
+                x = schema_get(obj.issuer, 'x', INT.new, O.from_base64),
+                y = schema_get(obj.issuer, 'y', INT.new, O.from_base64)
+            }
+        end,
+        export = function(obj) return {x = obj.issuer.x:octet():base64(), y = obj.issuer.y:octet():base64()} end
+    },
+    bbs = {
+        import = function(obj) return schema_get(obj, 'bbs', INT.new, O.from_base64) end,
+        export = function(obj) return obj.bbs:octet():base64() end
+    },
+    bbs_shake = {
+        import = function(obj) return schema_get(obj, 'bbs_shake', INT.new, O.from_base64) end,
+        export = function(obj) return obj.bbs_shake:octet():base64() end
+    },
+    pvss = {
+        import = function(obj) return schema_get(obj, 'pvss', INT.new, O.from_base64) end,
+        export = function(obj) return obj.pvss:octet():base64() end
+    },
+    reflow = {
+        import = function(obj) return schema_get(obj, 'reflow', INT.new, O.from_base64) end,
+        export = function(obj) return obj.reflow:octet():base64() end
+    },
+    bitcoin = {
+        import = function(obj) return schema_get(obj, 'bitcoin', BTC.wif_to_sk, O.from_base58) end,
+        export = function(obj) return O.to_base58(BTC.sk_to_wif(obj.bitcoin, 'bitcoin')) end
+    },
+    testnet = {
+        import = function(obj) return schema_get(obj, 'testnet', BTC.wif_to_sk, O.from_base58) end,
+        export = function(obj) return O.to_base58(BTC.sk_to_wif(obj.bitcoin, 'testnet')) end
+    },
+    ethereum = {
+        import = function(obj) return schema_get(obj, 'ethereum', nop, O.from_hex) end,
+        export = function(obj) return obj.ethereum:octet():hex() end
+    },
+    dilithium = {
+        import = function(obj) return schema_get(obj, 'dilithium', dilithium_f, O.from_base64) end,
+        export = function(obj) return CONF.output.encoding.fun(obj.dilithium) end
+    },
+    mldsa44 = {
+        import = function(obj) return schema_get(obj, 'mldsa44', mldsa44_f, O.from_base64) end,
+        export = function(obj) return CONF.output.encoding.fun(obj.mldsa44) end
+    },
+    schnorr = {
+        import = function(obj) return schema_get(obj, 'schnorr', nop, O.from_base64) end,
+        export = function(obj) return CONF.output.encoding.fun(obj.schnorr) end
+    },
+    kyber = {
+        import = function(obj) return schema_get(obj, 'kyber', kyber_f, O.from_base64) end,
+        export = function(obj) return CONF.output.encoding.fun(obj.kyber) end
+    },
+    mlkem512 = {
+        import = function(obj) return schema_get(obj, 'mlkem512', mlkem512_f, O.from_base64) end,
+        export = function(obj) return CONF.output.encoding.fun(obj.mlkem512) end
+    },
+    rsa = {
+        import = function(obj) return schema_get(obj, 'rsa', rsa_f, O.from_base64) end,
+        export = function(obj) return CONF.output.encoding.fun(obj.rsa) end
+    },
+    ntrup = {
+        import = function(obj) return schema_get(obj, 'ntrup', ntrup_f, O.from_base64) end,
+        export = function(obj) return CONF.output.encoding.fun(obj.ntrup) end
+    },
+    eddsa = {
+        import = function(obj) return schema_get(obj, 'eddsa', nop, O.from_base58) end,
+        export = function(obj) return obj.eddsa:octet():base58() end
+    },
+	fsp = {
+        import = function(obj) return schema_get(obj, 'fsp', nop, O.from_base64) end,
+        export = function(obj) return obj.fsp:octet():base64() end
+    }
+}
+
 local function import_keyring(obj)
-   for k,_ in pairs(obj) do
-      if not keytypes[k] then
-          error("Unsupported key type found in keyring: "..k, 2)
-      end
-   end
-   -- ecdh_curve
-   -- bls_curve
-   local res = {}
-   if obj.ecdh then
-      res.ecdh = schema_get(obj, 'ecdh', nop, O.from_base64)
-   end
-   if obj.es256 then
-    res.es256 = schema_get(obj, 'es256', nop, O.from_base64)
-   end
-   if obj.credential then
-      res.credential = schema_get(obj, 'credential', INT.new, O.from_base64)
-   end
-   if obj.issuer then
-      res.issuer = {
-	 x = schema_get(obj.issuer, 'x', INT.new, O.from_base64),
-	 y = schema_get(obj.issuer, 'y', INT.new, O.from_base64)
-      }
-   end
-   if obj.bbs then
-      res.bbs = schema_get(obj, 'bbs', INT.new, O.from_base64)
-   end
-   if obj.bbs_shake then
-      res.bbs_shake = schema_get(obj, 'bbs_shake', INT.new, O.from_base64)
-   end
-   if obj.pvss then
-      res.pvss = schema_get(obj, 'pvss', INT.new, O.from_base64)
-   end
-   if obj.reflow then
-      res.reflow = schema_get(obj, 'reflow', INT.new, O.from_base64)
-   end
-   if obj.bitcoin then
-      res.bitcoin = schema_get(obj, 'bitcoin', BTC.wif_to_sk, O.from_base58)
-   end
-   if obj.testnet then
-      res.testnet = schema_get(obj, 'testnet', BTC.wif_to_sk, O.from_base58)
-   end
-   if obj.ethereum then
-      res.ethereum = schema_get(obj, 'ethereum', nop, O.from_hex)
-   end
-   if obj.dilithium then
-      res.dilithium = schema_get(obj, 'dilithium', dilithium_f, O.from_base64)
-   end
-   if obj.mldsa44 then
-      res.mldsa44 = schema_get(obj, 'mldsa44', mldsa44_f, O.from_base64)
-   end
-   if obj.kyber then
-      res.kyber = schema_get(obj, 'kyber', kyber_f, O.from_base64)
-   end
-   if obj.mlkem512 then
-      res.mlkem512 = schema_get(obj, 'mlkem512', mlkem512_f, O.from_base64)
-   end
-   if obj.schnorr then
-      res.schnorr = schema_get(obj, 'schnorr', nop, O.from_base64)
-   end
-   if obj.ntrup then
-      res.ntrup = schema_get(obj, 'ntrup', ntrup_f, O.from_base64)
-   end
-   if obj.eddsa then
-      res.eddsa = schema_get(obj, 'eddsa', nop, O.from_base58)
-   end
-   if obj.fsp then
-      res.fsp = schema_get(obj, 'fsp', nop, O.from_base64)
-   end
-   if obj.rsa then
-      res.rsa = schema_get(obj, 'rsa', rsa_f, O.from_base64)
-   end
-   return (res)
+    local res = {}
+    for k,_ in pairs(obj) do
+        local t = keytypes[k]
+        if not t then
+            error("Unsupported key type found in keyring: "..k, 2)
+        end
+        res[k] = t.import(obj)
+    end
+    return res
 end
 
 -- used in zencode_then directly
 function export_keyring(obj)
-   -- ecdh_curve
-   -- bls_curve
-   local res = {}
-   if obj.ecdh then res.ecdh = CONF.output.encoding.fun(obj.ecdh) end
-   if obj.credential then res.credential = obj.credential:octet():base64() end
-   if obj.issuer then
-      local fun = get_encoding_function("base64")
-      res.issuer = {x = obj.issuer.x:octet(), y = obj.issuer.y:octet()}
-      res.issuer = deepmap(fun, res.issuer)
-   end
-   if obj.es256 then res.es256 = O.to_base64(obj.es256) end
-   if obj.bbs then res.bbs = obj.bbs:octet():base64() end
-   if obj.bbs_shake then res.bbs_shake = obj.bbs_shake:octet():base64() end
-   if obj.pvss then res.pvss = obj.pvss:octet():base64() end
-   if obj.reflow then res.reflow = obj.reflow:octet():base64() end
-   if obj.bitcoin then
-      res.bitcoin = O.to_base58( BTC.sk_to_wif(obj.bitcoin, 'bitcoin') )
-   end
-   if obj.testnet then
-      res.testnet = O.to_base58( BTC.sk_to_wif(obj.testnet, 'testnet') )
-   end
-   if obj.ethereum then
-      res.ethereum = O.to_hex(obj.ethereum)
-   end
-   if obj.dilithium then res.dilithium = CONF.output.encoding.fun(obj.dilithium) end
-   if obj.mldsa44 then res.mldsa44 = CONF.output.encoding.fun(obj.mldsa44) end
-   if obj.kyber then     res.kyber     = CONF.output.encoding.fun(obj.kyber) end
-   if obj.mlkem512 then     res.mlkem512     = CONF.output.encoding.fun(obj.mlkem512) end
-   if obj.schnorr then   res.schnorr   = CONF.output.encoding.fun(obj.schnorr) end
-   if obj.ntrup then     res.ntrup     = CONF.output.encoding.fun(obj.ntrup) end
-   if obj.eddsa then     res.eddsa     = O.to_base58(obj.eddsa) end
-   if obj.fsp then res.fsp = obj.fsp:octet():base64() end
-   if obj.rsa then res.rsa = CONF.output.encoding.fun(obj.rsa) end
-   return (res)
+    local res = {}
+    for k,_ in pairs(obj) do
+        local t = keytypes[k]
+        if not keytypes[k] then
+            error("Unsupported key type found in keyring: "..k, 2)
+        end
+        res[k] = t.export(obj)
+    end
+    return res
 end
 
 ZEN:add_schema(
-   { keyring = { import = import_keyring,
-				 export = export_keyring }
-   }
+    {
+        keyring = {
+            import = import_keyring,
+            export = export_keyring
+        }
+    }
 )
 
--- UTILS
+When("create keyring", function()
+    empty'keyring'
+    initkeyring()
+end)
+
+-- UTILS global functions
+
 -- check various locations to find the public key
 -- algo can be one of dilithium, keyber, eddsa
 --  Given I have a 's' from 't'            --> ACK.s[t]
 function load_pubkey_compat(_key, algo)
     local pubkey = ACK[_key]
+    if pubkey then return pubkey end
+    pubkey = ACK[algo..'_public_key']
     if not pubkey then
-        local pubkey_arr = ACK[algo..'_public_key']
-        if luatype(pubkey_arr) == 'table' then
-            pubkey = pubkey_arr[_key]
-        else
-            pubkey = pubkey_arr
-        end
-        zencode_assert(
-        pubkey,
-        'Public key not found for: ' .. _key
-        )
+        error('Public key not found for: ' .. _key, 2)
     end
-    return pubkey
+    if luatype(pubkey) == 'table' then
+        return pubkey[_key]
+    else
+        return pubkey
+    end
 end
 
+function havekey(ktype)
+    local kname = uscore(ktype)
+    if not keytypes[kname] then
+        error('Unknown key type: ' .. ktype, 2)
+    end
+    -- check that keys exist and are a table
+    initkeyring()
+    local res = ACK.keyring[kname]
+    if not res then
+        error('Key not found: ' .. ktype, 2)
+    end
+    return res
+ end
 
+ -- keyring initialization
+function initkeyring(ktype)
+    if not ACK.keyring then
+        ACK.keyring = {}
+        new_codec('keyring')
+    end
+    if luatype(ACK.keyring) ~= 'table' then
+        error('Keyring table is corrupted', 2)
+    end
+    -- TODO: check that curve types match
+    -- if ktype is specified then check overwriting
+    if ktype and ACK.keyring[uscore(ktype)] then
+        error('Cannot overwrite existing key: ' .. ktype, 2)
+    end
+end
