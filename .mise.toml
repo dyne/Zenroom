@@ -5,6 +5,7 @@
 [tools]
 emsdk = "4"
 meson = "1"
+ninja = "latest"
 node = "22"
 rust = "stable"
 yarn = "1"
