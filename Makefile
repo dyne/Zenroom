@@ -31,8 +31,9 @@ linux-lib: ## Dynamic library for GNU/Linux
 	$(MAKE) -f build/posix.mk libzenroom.so LINUX=1 LIBRARY=1
 
 debug-asan: ## Address sanitizer debug build
-	$(MAKE) -f build/posix.mk deps BUILD_DEPS="apply-patches milagro"
+	$(MAKE) -f build/posix.mk LINUX=1 deps BUILD_DEPS="apply-patches milagro"
 	$(MAKE) -f build/posix.mk ASAN=1
+	$(MAKE) -f build/posix.mk libzenroom.so ASAN=1
 
 musl: ## Static executable for Musl
 	$(MAKE) -f build/musl.mk
