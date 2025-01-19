@@ -113,6 +113,13 @@ const ecp* ecp_arg(lua_State *L, int n) {
 	// octet first class citizen
 	const octet *o = o_arg(L,n);
 	if(o) {
+		// check if input is zcash compressed
+		unsigned char m_byte = o->val[0] & 0xE0;
+		if(m_byte == 0x20 || m_byte == 0x60 || m_byte == 0xE0) {
+			zerror(L, "ECP arg %u is zcash compressed",n);
+			o_free(L,o);
+			return NULL;
+		}
 		res = malloc(sizeof(ecp));
 		res->totlen = (MODBYTES*2)+1;
 		_ecp_from_octet(res, o);

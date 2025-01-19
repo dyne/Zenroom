@@ -87,14 +87,22 @@ ecp2* ecp2_new(lua_State *L) {
 
 const ecp2* ecp2_arg(lua_State *L, int n) {
 	Z(L);
+	ecp2 *res;
 	void *ud = luaL_testudata(L, n, "zenroom.ecp2");
-	if(HEDLEY_UNLIKELY(ud==NULL)) {
-		zerror(L, "invalid ECP2 point in argument");
-		return NULL;
+	if(ud) {
+		res = (ecp2*)ud;
+		res->ref++;
+		return(res);
 	}
-	ecp2 *res = (ecp2*)ud;
-	res->ref++;
-	return(res);
+	const octet *o = o_arg(L,n);
+	if(!o) return NULL;
+	// check if input is zcash compressed
+	// TODO: use zcash compression by default
+	unsigned char m_byte = o->val[0] & 0xE0;
+	if(m_byte == 0x20 || m_byte == 0x60 || m_byte == 0xE0)
+		zerror(L, "ECP2 arg %u is zcash compressed",n);
+	o_free(L,o);
+	return NULL;
 }
 
 ecp2* ecp2_dup(lua_State *L, const ecp2* in) {
