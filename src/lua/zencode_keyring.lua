@@ -202,14 +202,13 @@ function load_pubkey_compat(_key, algo)
     local pubkey = ACK[_key]
     if pubkey then return pubkey end
     pubkey = ACK[algo..'_public_key']
+    if luatype(pubkey) == 'table' then
+        pubkey = pubkey[_key]
+    end
     if not pubkey then
         error('Public key not found for: ' .. _key, 2)
     end
-    if luatype(pubkey) == 'table' then
-        return pubkey[_key]
-    else
-        return pubkey
-    end
+    return pubkey
 end
 
 function havekey(ktype)
