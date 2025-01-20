@@ -3,6 +3,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 [tools]
-emsdk = "3"
+emsdk = "4"
 meson = "1"
 rust = "stable"
