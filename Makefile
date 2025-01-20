@@ -123,6 +123,7 @@ clean:
 	rm -f ${pwd}/zencode-exec
 	rm -f ${pwd}/luac54
 	rm -f ${pwd}/libzenroom.so
+	rm -f ${pwd}/zenroom.js
 
 # -------------------
 # Parsing the documentation
