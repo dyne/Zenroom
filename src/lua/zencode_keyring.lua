@@ -69,11 +69,11 @@ end
 local keytypes <const> = {
     ecdh = {
         import = function(obj) return schema_get(obj, 'ecdh', nop, O.from_base64) end,
-        export = function(obj) return CONF.output.encoding.fun(obj.ecdh) end
+        export = function(obj) return obj.ecdh:octet():base64() end
     },
     es256 = {
         import = function(obj) return schema_get(obj, 'es256', nop, O.from_base64) end,
-        export = function(obj) return obj.es256:base64() end
+        export = function(obj) return obj.es256:octet():base64() end
     },
     credential = {
         import = function(obj) return schema_get(obj, 'credential', INT.new, O.from_base64) end,
@@ -118,37 +118,37 @@ local keytypes <const> = {
     },
     dilithium = {
         import = function(obj) return schema_get(obj, 'dilithium', dilithium_f, O.from_base64) end,
-        export = function(obj) return CONF.output.encoding.fun(obj.dilithium) end
+        export = function(obj) return obj.dilithium:octet():base64() end
     },
     mldsa44 = {
         import = function(obj) return schema_get(obj, 'mldsa44', mldsa44_f, O.from_base64) end,
-        export = function(obj) return CONF.output.encoding.fun(obj.mldsa44) end
+        export = function(obj) return obj.mldsa44:octet():base64() end
     },
     schnorr = {
         import = function(obj) return schema_get(obj, 'schnorr', nop, O.from_base64) end,
-        export = function(obj) return CONF.output.encoding.fun(obj.schnorr) end
+        export = function(obj) return obj.schnorr:octet():base64() end
     },
     kyber = {
         import = function(obj) return schema_get(obj, 'kyber', kyber_f, O.from_base64) end,
-        export = function(obj) return CONF.output.encoding.fun(obj.kyber) end
+        export = function(obj) return obj.kyber:octet():base64() end
     },
     mlkem512 = {
         import = function(obj) return schema_get(obj, 'mlkem512', mlkem512_f, O.from_base64) end,
-        export = function(obj) return CONF.output.encoding.fun(obj.mlkem512) end
+        export = function(obj) return obj.mlkem512:octet():base64() end
     },
     rsa = {
         import = function(obj) return schema_get(obj, 'rsa', rsa_f, O.from_base64) end,
-        export = function(obj) return CONF.output.encoding.fun(obj.rsa) end
+        export = function(obj) return obj.rsa:octet():base64() end
     },
     ntrup = {
         import = function(obj) return schema_get(obj, 'ntrup', ntrup_f, O.from_base64) end,
-        export = function(obj) return CONF.output.encoding.fun(obj.ntrup) end
+        export = function(obj) return obj.ntrup:octet():base64() end
     },
     eddsa = {
         import = function(obj) return schema_get(obj, 'eddsa', nop, O.from_base58) end,
         export = function(obj) return obj.eddsa:octet():base58() end
     },
-	fsp = {
+    fsp = {
         import = function(obj) return schema_get(obj, 'fsp', nop, O.from_base64) end,
         export = function(obj) return obj.fsp:octet():base64() end
     }
