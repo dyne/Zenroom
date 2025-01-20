@@ -70,10 +70,14 @@ check: ## Run tests using the current binary executable build
 	"tests=['determinism','vectors','lua','zencode','blockchain','bindings','api']"
 	ninja -C meson test
 
-check-js: ## Run tests using the WASM build for Node
-	yarn --cwd bindings/javascript test
+wrap-js: # Generate the ./zenroom exec wrapper on node-wasm builds
+	$(info Generate JS wrapper in ./zenroom)
 	@sed 's@=ROOT=@'"${pwd}"'@' test/zexe_js_wrapper.sh > zenroom
 	@chmod +x zenroom
+
+check-js: ## Run tests using the WASM build for Node
+	yarn --cwd bindings/javascript test
+	$(MAKE) wrap-js
 	meson setup meson/ build/ -D "tests=['lua','zencode']"
 	ninja -C meson test
 
@@ -93,8 +97,8 @@ check-osx: ## Run tests using the OSX binary executable build
 install: destbin=${DESTDIR}${PREFIX}/bin
 install: destdocs=${DESTDIR}${PREFIX}/share/zenroom
 install:
-	install -p -s src/zenroom ${destbin}/zenroom
-	install -p -s src/zencode-exec ${destbin}/zencode-exec
+	install -p -s zenroom ${destbin}/zenroom
+	install -p -s zencode-exec ${destbin}/zencode-exec
 	install -d ${destdocs}/docs
 	if [ -d docs/website/site ]; then cd docs/website/site && cp -ra * ${destdocs}/docs/; cd -; fi
 	if [ -d docs/Zencode_Whitepaper.pdf ]; then cp -ra docs/Zencode_Whitepaper.pdf ${destdocs}/; fi
