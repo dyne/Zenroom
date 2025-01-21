@@ -605,14 +605,14 @@ int zencode_get_statements() {
 		"  Foreach = ZEN.foreach_steps })";
 	int ret = luaL_dostring(Z->lua, zscript);
 	if(ret) {
-		fprintf(stderr, "Zencode execution error\n");
-		fprintf(stderr, "Script:\n%s\n", zscript);
-		fprintf(stderr, "%s\n", lua_tostring(Z->lua, -1));
-		fflush(stderr);
+		zerror(Z->lua, "Zencode execution error\n");
+		zerror(Z->lua, "%s", lua_tostring(Z->lua, -1));
+		Z->exitcode = ERR_GENERIC;
+	} else {
+		lua_getglobal(Z->lua, "STATEMENTS");
+		const char * res = lua_tostring(Z->lua, -1);
+		_out("%s", res);
+		Z->exitcode = SUCCESS;
 	}
-	lua_getglobal(Z->lua, "STATEMENTS");
-	const char * res = lua_tostring(Z->lua, -1);
-	_out("%s", res);
-	Z->exitcode = SUCCESS;
 	return( _check_zenroom_result(Z));
 }
