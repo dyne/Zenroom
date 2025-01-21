@@ -10,7 +10,8 @@ import {
   introspect,
   zencode_valid_code,
   safe_zencode_valid_code,
-  decode_error
+  decode_error,
+  zencode_get_statements,
 } from "./index";
 import { TextEncoder } from "util";
 var enc = new TextEncoder();
@@ -530,4 +531,14 @@ test("decode zencode error", async (t) => {
     t.is(jsonError[3].includes("Zencode line 4: Then print the 'not existing object 👺'"), true, errorLines);
     t.is(jsonError[4], '[!] Execution aborted with errors.', errorLines);
   }
+})
+
+test("get all the statements", async (t) => {
+  const res = await zencode_get_statements();
+  const jsonResult = JSON.parse(res.result)
+  t.truthy(jsonResult.Foreach);
+  t.truthy(jsonResult.If);
+  t.truthy(jsonResult.Given);
+  t.truthy(jsonResult.When);
+  t.truthy(jsonResult.Then);
 })

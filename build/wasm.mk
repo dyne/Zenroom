@@ -2,7 +2,7 @@
 include build/init.mk
 
 # Add here any function used from JS
-WASM_EXPORTS := '["_malloc","_zenroom_exec","_zencode_exec","_zenroom_hash_init","_zenroom_hash_update","_zenroom_hash_final","_zencode_valid_input","_zencode_valid_code"]'
+WASM_EXPORTS := '["_malloc","_zenroom_exec","_zencode_exec","_zenroom_hash_init","_zenroom_hash_update","_zenroom_hash_final","_zencode_valid_input","_zencode_valid_code","_zencode_get_statements"]'
 
 # EMSDK should point to installation of EMSDK i.e.: /opt/emsdk
 EMSCRIPTEN ?= ${EMSDK}/upstream/emscripten

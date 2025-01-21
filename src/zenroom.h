@@ -65,6 +65,7 @@ int zenroom_sign_pubgen(const char *algo, const char *key);
 int zenroom_sign_create(const char *algo, const char *key, const char *msg);
 int zenroom_sign_verify(const char *algo, const char *pk, const char *msg, const char *sig);
 
+int zencode_get_statements();
 ////////////////////////////////////////
 
 
