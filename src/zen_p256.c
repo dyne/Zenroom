@@ -93,12 +93,14 @@ end:
 static int p256_session(lua_State *L)
 {
 	BEGIN();
+	// TODO: is there a KEM session function in our p256 lib?
 	END(1);
 }
 
 static int p256_pubcheck(lua_State *L)
 {
 	BEGIN();
+	// TODO: here make a check if public key is valid and return bool
 	END(1);
 }
 

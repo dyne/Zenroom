@@ -7,6 +7,7 @@ load ../bats_setup
     Z hash.lua
     Z ecdh.lua
     Z ecdsa_p256.lua
+    Z x509.lua
     Z dh_session.lua
     Z ecp_generic.lua
     Z elgamal.lua
