@@ -11,7 +11,7 @@ ZEN_SOURCES := \
     src/zen_io.o src/zen_parse.o src/zen_config.o \
     src/zen_octet.o src/zen_ecp.o src/zen_ecp2.o src/zen_big.o \
     src/zen_fp12.o src/zen_random.o src/zen_hash.o \
-    src/zen_ecdh_factory.o src/zen_ecdh.o \
+    src/zen_ecdh_factory.o src/zen_ecdh.o src/zen_x509.o \
     src/zen_aes.o src/zen_qp.o src/zen_ed.o src/zen_float.o src/zen_time.o \
     src/api_hash.o src/api_sign.o src/randombytes.o \
     src/cortex_m.o src/p256-m.o src/zen_p256.o src/zen_rsa.o src/zen_bbs.o
