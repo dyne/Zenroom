@@ -578,3 +578,41 @@ int zencode_valid_code(const char *script, const char *conf, const int strict) {
 	}
 	return( _check_zenroom_result(Z));
 }
+
+int zencode_get_statements() {
+	zenroom_t *Z = zen_init(NULL, NULL, NULL);
+	if (_check_zenroom_init(Z) != SUCCESS) return ERR_INIT;
+	static char zscript[MAX_ZENCODE] =
+		"function Given(text, fn) table.insert(ZEN.given_steps, text) end\n"
+		"function When(text, fn) table.insert(ZEN.when_steps, text) end\n"
+		"function Then(text, fn) table.insert(ZEN.then_steps, text) end\n"
+		"function IfWhen(text, fn) table.insert(ZEN.if_steps, text) end\n"
+		"function Foreach(text, fn) table.insert(ZEN.foreach_steps, text) end\n"
+		"ZEN.add_schema = function(arr) return nil end\n"
+		"ZEN.given_steps = {}\n"
+		"ZEN.when_steps = {}\n"
+		"ZEN.then_steps = {}\n"
+		"ZEN.if_steps = {}\n"
+		"ZEN.foreach_steps = {}\n"
+		"for _, v in ipairs(zencode_scenarios()) do\n"
+		"  require_once('zencode_'..v)\n"
+		"end\n"
+		"STATEMENTS = JSON.encode(\n"
+		"{ Given = ZEN.given_steps,\n"
+		"  When = ZEN.when_steps,\n"
+		"  Then = ZEN.then_steps,\n"
+		"  If = ZEN.if_steps,\n"
+		"  Foreach = ZEN.foreach_steps })";
+	int ret = luaL_dostring(Z->lua, zscript);
+	if(ret) {
+		fprintf(stderr, "Zencode execution error\n");
+		fprintf(stderr, "Script:\n%s\n", zscript);
+		fprintf(stderr, "%s\n", lua_tostring(Z->lua, -1));
+		fflush(stderr);
+	}
+	lua_getglobal(Z->lua, "STATEMENTS");
+	const char * res = lua_tostring(Z->lua, -1);
+	_out("%s", res);
+	Z->exitcode = SUCCESS;
+	return( _check_zenroom_result(Z));
+}
