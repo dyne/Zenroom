@@ -27,6 +27,8 @@ save() {
     CFLAGS="$CFLAGS -fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fsanitize=leak"
     gcc ${CFLAGS} -ggdb -o x509 $T/testx509.c ${LDADD}
     gcc ${CFLAGS} -ggdb -o x509_didroom $T/x509_didroom.c ${LDADD}
+    gcc ${CFLAGS} -ggdb -o x509_postquantum $T/x509_postquantum.c ${LDADD}
+
 }
 
 @test "X509 AMCL LIB :: Run test for RSA" {
@@ -39,4 +41,10 @@ save() {
       LD_LIBRARY_PATH=$R ./x509_didroom > test_x509_didroom
       save test_x509_didroom
       >&3 cat test_x509_didroom
+}
+
+@test "X509 Zenroom LIB :: Run test for Post-Quantum X509" {
+      LD_LIBRARY_PATH=$R ./x509_postquantum > test_x509_postquantum
+      save test_x509_postquantum
+      >&3 cat test_x509_postquantum
 }
