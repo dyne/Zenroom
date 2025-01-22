@@ -47,6 +47,10 @@ int zencode_valid_input(const char *script, const char *conf, const char *keys, 
 // otherwise return an array of ignored and invalid statements when strict is set to 0
 int zencode_valid_code(const char *script, const char *conf, const int strict);
 
+// get all zencode statements when input is NULL otherwise
+// the ones in the scenario specified in input
+int zencode_get_statements(const char *scenario);
+
 // direct access hash calls
 // hash_type may be a string of: 'sha256' or 'sha512'
 // all functions return 0 on success, anything else signals an error
@@ -65,7 +69,6 @@ int zenroom_sign_pubgen(const char *algo, const char *key);
 int zenroom_sign_create(const char *algo, const char *key, const char *msg);
 int zenroom_sign_verify(const char *algo, const char *pk, const char *msg, const char *sig);
 
-int zencode_get_statements();
 ////////////////////////////////////////
 
 

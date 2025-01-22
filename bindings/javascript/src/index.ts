@@ -289,12 +289,16 @@ export const decode_error = (err: {result: string, logs: string}): string => {
   }
 }
 
-export const zencode_get_statements = async (): Promise<ZenroomResult> => {
+export const zencode_get_statements = async (
+  scenario: string | null = null
+): Promise<ZenroomResult> => {
   const Module = await getModule();
   return new Promise((resolve, reject) => {
     let result = "";
     let logs = "";
-    const _exec = Module.cwrap("zencode_get_statements", "number");
+    const _exec = Module.cwrap("zencode_get_statements", "number", [
+      "string"
+    ]);
     Module.print = (t: string) => (result += t);
     Module.printErr = (t: string) => (logs += t);
     Module.exec_ok = () => {
@@ -306,6 +310,6 @@ export const zencode_get_statements = async (): Promise<ZenroomResult> => {
     Module.onAbort = () => {
       reject({ result, logs });
     };
-    _exec();
+    _exec(scenario);
   });
 }

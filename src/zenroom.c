@@ -579,8 +579,14 @@ int zencode_valid_code(const char *script, const char *conf, const int strict) {
 	return( _check_zenroom_result(Z));
 }
 
-int zencode_get_statements() {
+int zencode_get_statements(const char *scenario) {
 	zenroom_t *Z = zen_init(NULL, NULL, NULL);
+	const char *s;
+	s = scenario ? (scenario[0] == '\0') ? NULL : scenario : NULL;
+	if(s) {
+		func(Z->lua, "declaring global: SCENARIO");
+		zen_setenv(Z->lua, "SCENARIO", scenario);
+	}
 	if (_check_zenroom_init(Z) != SUCCESS) return ERR_INIT;
 	static char zscript[MAX_ZENCODE] =
 		"function Given(text, fn) table.insert(ZEN.given_steps, text) end\n"
@@ -595,7 +601,11 @@ int zencode_get_statements() {
 		"ZEN.if_steps = {}\n"
 		"ZEN.foreach_steps = {}\n"
 		"for _, v in ipairs(zencode_scenarios()) do\n"
-		"  require_once('zencode_'..v)\n"
+		"  if not SCENARIO then\n"
+		"    require_once('zencode_'..v)\n"
+		"  elseif SCENARIO == v then\n"
+		"    require_once('zencode_'..v)\n"
+		"  end\n"
 		"end\n"
 		"STATEMENTS = JSON.encode(\n"
 		"{ Given = ZEN.given_steps,\n"
