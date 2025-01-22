@@ -10,9 +10,13 @@ Foreach 'element' in 'array'
 * over two or multiple arrays in parallel
 ```gherkin
 # two arrays
-Foreach values prefix 'loop variable ' at same position in arrays 'first array' and 'second array'
+Foreach value prefix 'loop variable ' at same position in arrays 'first array' and 'second array'
+# equal to
+Foreach value prefix 'loop variable ' across arrays 'first array' and 'second array'
 # multiple arrays
-Foreach values prefix 'loop variable ' at same position in arrays 'list of array names'
+Foreach value prefix 'loop variable ' at same position in arrays 'list of array names'
+# equal to
+Foreach value prefix 'loop variable ' across arrays 'list of array names'
 ```
 * or from a number to another with certain step
 ```gherkin

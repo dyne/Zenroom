@@ -148,14 +148,21 @@ local function _zip_with_prefix(name, ...)
     end
 end
 
-Foreach("values prefix '' at same position in arrays '' and ''", _zip_with_prefix)
-Foreach("values prefix '' at same position in arrays ''", function(name, arrays_names)
+Foreach("value prefix '' at same position in arrays '' and ''", _zip_with_prefix)
+Foreach("value prefix '' across arrays '' and ''", _zip_with_prefix)
+
+local function _zip_over_multiple_arrays(name, arrays_names)
     local v, c = have(arrays_names)
-    zencode_assert(c.zentype == "a" and c.encoding == "string",
-        "Array of names must be specified in a string array")
-    zencode_assert(next(v,_) ~= nil, "Array of names must not be empty")
+    if(not c or c.zentype ~= "a" or c.encoding ~= "string") then
+        error("Array of names must be specified in a string array", 2)
+    end
+    if(next(v,_) == nil) then
+        error("Array of names must not be empty", 2)
+    end
     _zip_with_prefix(name, table.unpack(deepmap(O.to_string, v)))
-end)
+end
+Foreach("value prefix '' at same position in arrays ''", _zip_over_multiple_arrays)
+Foreach("value prefix '' across arrays ''", _zip_over_multiple_arrays)
 
 -- break foreach
 
