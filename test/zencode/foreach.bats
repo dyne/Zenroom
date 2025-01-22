@@ -654,7 +654,8 @@ Given I have a 'string array' named 'y'
 When I create the 'string array' named 'res'
 
 # loop in parallel over x and y
-Foreach values prefix 'loop variable ' at the same position in arrays 'x' and 'y'
+# equal to: Foreach value prefix 'loop variable ' across arrays 'x' and 'y'
+Foreach value prefix 'loop variable ' at the same position in arrays 'x' and 'y'
     # append the array values
     When I append 'loop variable y' to 'loop variable x'
     # insert result in res
@@ -700,7 +701,7 @@ Given I have a 'string array' named 'arrays'
 When I create the 'string array' named 'res'
 
 # loop in parallel over x, y and z (specified in arrays)
-Foreach values prefix 'loop variable ' at the same position in arrays 'arrays'
+Foreach value prefix 'loop variable ' across arrays 'arrays'
     # append the array values
     When I append 'loop variable z' to 'loop variable y'
     When I append 'loop variable y' to 'loop variable x'
@@ -738,7 +739,7 @@ Given I have a 'base58 array' named 'eddsa_secret_keys'
 When I create the 'eddsa signature array' named 'signatures'
 When I create the 'eddsa public key array' named 'public_keys'
 
-Foreach values prefix 'first_loop_' at the same position in arrays 'eddsa_secret_keys' and 'messages'
+Foreach value prefix 'first_loop_' at the same position in arrays 'eddsa_secret_keys' and 'messages'
     When I create the eddsa key with secret key 'first_loop_eddsa_secret_keys'
     When I create the eddsa signature of 'first_loop_messages'
     And I move 'eddsa signature' in 'signatures'
@@ -776,7 +777,7 @@ Given I have a 'eddsa public key array' named 'public keys'
 
 When I create the 'string array' named 'res'
 
-Foreach values prefix 'loop variable ' at the same position in arrays 'zip arrays'
+Foreach value prefix 'loop variable ' at the same position in arrays 'zip arrays'
     If I verify 'loop variable messages' has a eddsa signature in 'loop variable signatures' by 'loop variable public keys'
         When I move 'loop variable messages' in 'res'
     EndIf
