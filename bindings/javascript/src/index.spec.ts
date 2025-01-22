@@ -535,10 +535,20 @@ test("decode zencode error", async (t) => {
 
 test("get all the statements", async (t) => {
   const res = await zencode_get_statements();
-  const jsonResult = JSON.parse(res.result)
+  const jsonResult = JSON.parse(res.result);
   t.truthy(jsonResult.Foreach);
   t.truthy(jsonResult.If);
   t.truthy(jsonResult.Given);
   t.truthy(jsonResult.When);
   t.truthy(jsonResult.Then);
+})
+
+test("get all the statements from the then scenario", async (t) => {
+  const res = await zencode_get_statements("then");
+  const jsonResult = JSON.parse(res.result);
+  t.deepEqual(jsonResult.Foreach, []);
+  t.deepEqual(jsonResult.If, []);
+  t.deepEqual(jsonResult.Given, []);
+  t.deepEqual(jsonResult.When, []);
+  t.is(jsonResult.Then && jsonResult.Then.length !== 0, true);
 })
