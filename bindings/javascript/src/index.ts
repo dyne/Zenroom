@@ -261,7 +261,14 @@ export const decode_error = (err: {result: string, logs: string}): string => {
         if (l.startsWith(errorPrefix)) acc.push(l);
         if (l.startsWith(tracePrefix)) {
           const base64Trace = l.substring(tracePrefix.length);
-          const jsonTrace = JSON.parse(atob(base64Trace));
+          const binaryTrace = atob(base64Trace);
+          const bytesTrace = new Uint8Array(binaryTrace.length);
+          for (let i=0; i<binaryTrace.length; i++) {
+            bytesTrace[i] = binaryTrace.charCodeAt(i);
+          }
+          const decoder = new TextDecoder("utf-8");
+          const stringTrace = decoder.decode(bytesTrace.buffer);
+          const jsonTrace = JSON.parse(stringTrace);
           acc.push(
             ...jsonTrace.
               reduce((inAcc: string[], l: string) => {
@@ -273,10 +280,11 @@ export const decode_error = (err: {result: string, logs: string}): string => {
           )
         }
         return acc;
-      }, [] as string[]
+      },
+      [] as string[]
     );
     return JSON.stringify(res);
-  } catch (e) {
+  } catch {
     return err.logs;
   }
 }
