@@ -15,7 +15,7 @@ EOF
 @test "random array generation" {
     cat <<EOF | zexe randomArrayGeneration.zen
 Given nothing
-When I create the array of '16' random of '32' bits
+When I create the random array with '16' elements each of '32' bits
 Then print all data
 EOF
     save_output myFirstRandomArray.json
@@ -24,8 +24,8 @@ EOF
 @test "random array rename" {
     cat <<EOF | zexe randomArrayRename.zen
 Given nothing
-When I create the array of '16' random of '32' bits
-And I rename the 'array' to 'myArray'
+When I create the random array with '16' elements each of '32' bits
+And I rename the 'random array' to 'myArray'
 Then print all data
 EOF
 }
@@ -33,12 +33,12 @@ EOF
 @test "multiple random array" {
     cat <<EOF | zexe randomArrayMultiple.zen
 Given nothing
-When I create the array of '2' random of '8' bits
-And I rename the 'array' to 'myTinyArray'
-And I create the array of '4' random of '32' bits
-And I rename the 'array' to 'myAverageArray'
-And I create the array of '8' random of '128' bits
-And I rename the 'array' to 'myBigFatArray'
+When I create the random array with '2' elements each of '8' bits
+And I rename the 'random array' to 'myTinyArray'
+And I create the random array with '4' elements each of '32' bits
+And I rename the 'random array' to 'myAverageArray'
+And I create the random array with '8' elements each of '128' bits
+And I rename the 'random array' to 'myBigFatArray'
 Then print all data 
 EOF
     save_output myArrays.json

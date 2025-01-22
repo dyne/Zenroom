@@ -257,11 +257,11 @@ EOF
 @test "Random dictionary" {
     cat <<EOF | zexe random_dictionary.zen dictionariesBlockchain.json
 Given I have a 'string dictionary' named 'ABC-TransactionListFirstBatch'
-When I create the random table with '3' random pick from 'ABC-TransactionListFirstBatch'
-Then print the 'random table'
+When I create the random dictionary with '3' elements from 'ABC-TransactionListFirstBatch'
+Then print the 'random dictionary'
 EOF
     save_output 'random_dictionary.json'
-    assert_output '{"random_table":{"ABC-Transactions2Data":{"PricePerKG":2,"TransactionValue":1000,"TransferredProductAmount":500,"timestamp":1597573239},"ABC-Transactions4Data":{"PricePerKG":4,"TransactionValue":2000,"TransferredProductAmount":500,"timestamp":1597573439},"ABC-Transactions6Data":{"PricePerKG":4,"TransactionValue":2000,"TransferredProductAmount":500,"timestamp":1597573639}}}'
+    assert_output '{"random_dictionary":{"ABC-Transactions2Data":{"PricePerKG":2,"TransactionValue":1000,"TransferredProductAmount":500,"timestamp":1597573239},"ABC-Transactions4Data":{"PricePerKG":4,"TransactionValue":2000,"TransferredProductAmount":500,"timestamp":1597573439},"ABC-Transactions6Data":{"PricePerKG":4,"TransactionValue":2000,"TransferredProductAmount":500,"timestamp":1597573639}}}'
 }
 
 @test "Another random dictionary" {
@@ -272,11 +272,11 @@ EOF
     cat <<EOF | zexe another_random_dictionary.zen num.json dictionariesBlockchain.json
 Given I have a 'string dictionary' named 'ABC-TransactionListFirstBatch'
 and I have a 'number' named 'few'
-When I create the random table with 'few' random pick from 'ABC-TransactionListFirstBatch'
-Then print the 'random table'
+When I create the random dictionary with 'few' elements from 'ABC-TransactionListFirstBatch'
+Then print the 'random dictionary'
 EOF
     save_output 'another_random_dictionary.json'
-    assert_output '{"random_table":{"ABC-Transactions2Data":{"PricePerKG":2,"TransactionValue":1000,"TransferredProductAmount":500,"timestamp":1597573239},"ABC-Transactions5Data":{"PricePerKG":4,"TransactionValue":2000,"TransferredProductAmount":500,"timestamp":1597573539}}}'
+    assert_output '{"random_dictionary":{"ABC-Transactions2Data":{"PricePerKG":2,"TransactionValue":1000,"TransferredProductAmount":500,"timestamp":1597573239},"ABC-Transactions5Data":{"PricePerKG":4,"TransactionValue":2000,"TransferredProductAmount":500,"timestamp":1597573539}}}'
 }
 
 @test "Nested dictionaries" {
