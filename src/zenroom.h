@@ -23,6 +23,11 @@
 
 #include <stddef.h>
 
+///// IMPORTANT for JS APIs /////
+// If you want to use a C api in JS you have to add
+// the api name prefixed with an underscore in the
+// WASM_EXPORT array in build/wasm.mk
+
 /////////////////////////////////////////
 // high level api: one simple call
 
