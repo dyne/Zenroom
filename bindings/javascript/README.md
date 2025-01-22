@@ -63,7 +63,7 @@ import { zenroom_exec, zencode_exec, introspection } from "zenroom";
 
 const zencodeRandom = `
   Given nothing
-  When I create the array of '16' random objects of '32' bits
+  When I create the random array with '16' elements each of '32' bits
   Then print all data
 `;
 

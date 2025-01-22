@@ -41,10 +41,10 @@ Given I have a 'base64 array' named 'mySharedSecret'
 
 # Here we are simply selecting 5 random shares from the array
 
-When I create the random table with '5' random pick from 'mySharedSecret'
+When I create the random array with '5' elements from 'mySharedSecret'
 
 # Now we have an array with 5 shares that print out
-When I rename the 'random table' to 'my5partsOfTheSharedSecret'
+When I rename the 'random array' to 'my5partsOfTheSharedSecret'
 Then print the 'my5partsOfTheSharedSecret'
 EOF
     save_output 'sharedSecret5parts.json'

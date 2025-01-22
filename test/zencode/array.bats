@@ -6,8 +6,8 @@ SUBDOC=array
     cat <<EOF | zexe array_32_256.zen
 rule output encoding url64
 Given nothing
-When I create the array of '32' random of '256' bits
-and I rename the 'array' to 'bonnetjes'
+When I create the random array with '32' elements each of '256' bits
+and I rename the 'random array' to 'bonnetjes'
 Then print the 'bonnetjes'
 EOF
     save_output arr.json

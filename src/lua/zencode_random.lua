@@ -124,13 +124,13 @@ When("randomize '' array", shuffle_array_f)
 
 -- random array
 
-local function _create_random_array(array_length, fun_input, fun, codec)
-    empty 'array'
+local function _create_random_array(dest_name, array_length, fun_input, fun, codec)
+    empty(dest_name)
     local length = tonumber(mayhave(array_length) or array_length)
     zencode_assert(length, "Argument is not a number: "..array_length)
-    ACK.array = {}
+    local dst = {}
     for i = length,1,-1 do
-        table.insert(ACK.array, fun(fun_input))
+        table.insert(dst, fun(fun_input))
     end
     local n_codec = {zentype = 'a'}
     if codec then
@@ -138,52 +138,65 @@ local function _create_random_array(array_length, fun_input, fun, codec)
             n_codec[k] = v
         end
     end
-    new_codec('array', n_codec)
+    ACK[dest_name] = dst
+    new_codec(dest_name, n_codec)
 end
 
-When("create array of '' random", function(s)
-    _create_random_array(s, 64, OCTET.random)
+When("create random array with '' elements", function(s)
+    _create_random_array('random_array', s, 64, OCTET.random)
 end)
-When("create array of '' random of '' bits", function(s, b)
-    _create_random_array(s, _get_bytes_from_bits(b), OCTET.random)
+When("create random array with '' elements each of '' bits", function(s, b)
+    _create_random_array('random_array', s, _get_bytes_from_bits(b), OCTET.random)
 end)
-When("create array of '' random of '' bytes", function(s, b)
-    _create_random_array(s, _get_bytes(b), OCTET.random)
+When("create random array with '' elements each of '' bytes", function(s, b)
+    _create_random_array('random_array', s, _get_bytes(b), OCTET.random)
 end)
 
 When(
     deprecated(
         "create array of '' random objects",
-        "create array of '' random",
+        "create random array with '' elements",
         function(s)
-            _create_random_array(s, 64, OCTET.random)
+            _create_random_array('array', s, 64, OCTET.random)
         end
     )
 )
 When(
     deprecated(
         "create array of '' random objects of '' bits",
-        "create array of '' random of '' bits",
+        "create random array with '' elements each of '' bits",
         function(s, b)
-            _create_random_array(s, _get_bytes_from_bits(b), OCTET.random)
+            _create_random_array('array', s, _get_bytes_from_bits(b), OCTET.random)
         end
     )
 )
 When(
     deprecated(
         "create array of '' random objects of '' bytes",
-        "create array of '' random of '' bytes",
+        "create random array with '' elements each of '' bytes",
         function(s, b)
-            _create_random_array(s, _get_bytes(b), OCTET.random)
+            _create_random_array('array', s, _get_bytes(b), OCTET.random)
         end
     )
 )
 
-When("create array of '' random numbers", function(s)
-    _create_random_array(s, null, BIG.random, {encoding = 'integer'})
+When("create random array with '' numbers", function(s)
+    _create_random_array('random_array', s, 65536, _random_modulo_uniform_distribution, {encoding = 'float'})
 end)
+When("create random array with '' integers", function(s)
+    _create_random_array('random_array', s, nil, BIG.random, {encoding = 'integer'})
+end)
+When(
+    deprecated(
+        "create array of '' random numbers",
+        "create random array with '' [numbers|integers]",
+        function(s)
+            _create_random_array('array', s, nil, BIG.random, {encoding = 'integer'})
+        end
+    )
+)
 
-local random_generator = {
+local random_generator <const> = {
     ['zenroom.big'] = {
         fun = function(input_modulo) return _random_modulo_uniform_distribution(input_modulo, ECP.order(), BIG.random) end,
         enc = {encoding = 'integer'}
@@ -193,31 +206,61 @@ local random_generator = {
         enc = {encoding = 'float'}
     }
 }
-When("create array of '' random numbers modulo ''", function(s,m)
-    local modulo = mayhave(m)
-    if not modulo then
-        local mod = tonumber(m)
-        zencode_assert(mod, "Argument is not a number: "..m)
-        modulo = BIG.new(mod)
+When("create random array with '' numbers modulo ''", function (s,m)
+    local modulo, c = mayhave(m) or m, nil
+    local n = tonumber(modulo)
+    if not n then error("Argument is not a number: "..m) end
+    if c and c.encoding ~= "float" then
+        error("Argument is not a number: ".. c.encoding)
     end
-    local modulo_type = type(modulo)
-    local random_gen = random_generator[modulo_type]
-    if not random_gen then
-        error("Modulo is not a number nor an integer: "..modulo_type)
-    end
-    _create_random_array(s, modulo, random_gen.fun, random_gen.enc)
+    local random_gen = random_generator['zenroom.float']
+    _create_random_array('random_array', s, n, random_gen.fun, random_gen.enc)
 end)
+When("create random array with '' integers modulo ''", function (s,m)
+    local modulo, c = mayhave(m) or m, nil
+    local n = BIG.new(modulo)
+    if not n then error("Argument is not a integer: "..m) end
+    if c and c.encoding ~= "integer" then
+        error("Argument is not a integer: ".. c.encoding)
+    end
+    local random_gen = random_generator['zenroom.big']
+    _create_random_array('random_array', s, n, random_gen.fun, random_gen.enc)
+end)
+When(
+    deprecated(
+        "create array of '' random numbers modulo ''",
+        "create random array with '' [numbers|integers] modulo ''",
+        function(s,m)
+            local modulo = mayhave(m)
+            if not modulo then
+                local mod = tonumber(m)
+                zencode_assert(mod, "Argument is not a number: "..m)
+                modulo = BIG.new(mod)
+            end
+            local modulo_type = type(modulo)
+            local random_gen = random_generator[modulo_type]
+            if not random_gen then
+                error("Modulo is not a number nor an integer: "..modulo_type)
+            end
+            _create_random_array('array', s, modulo, random_gen.fun, random_gen.enc)
+        end
+    )
+)
 
 -- pick random element
 
 -- reservoir sampling algorithm
-local function _extract_random_elements(dest, num, from)
+local function _extract_random_elements(dest, num, from, dest_type)
     empty(dest)
     local n = tonumber(num) or tonumber(tostring(have(num)))
     zencode_assert(n and n>0, "Not a number or not a positive number: "..num)
     local src, src_codec = have(from)
     zencode_assert(luatype(src) == 'table', "Object is not a table: "..from)
     local is_array = isarray(src)
+    local src_type = fif(is_array, "a", "d")
+    if dest_type and src_type ~= dest_type then
+        error("Object has type "..src_type.." while destination "..dest_type, 2)
+    end
 
     local keys = {}
     local values = {}
@@ -265,8 +308,11 @@ end
 When("create random pick from ''", function(from)
     _extract_random_elements('random_pick', 1, from)
 end)
-When("create random table with '' random pick from ''", function(num, from)
-    _extract_random_elements('random_table', num, from)
+When("create random array with '' elements from ''", function(num, from)
+    _extract_random_elements('random_array', num, from, "a")
+end)
+When("create random dictionary with '' elements from ''", function(num, from)
+    _extract_random_elements('random_dictionary', num, from, "d")
 end)
 
 When(
@@ -281,7 +327,7 @@ When(
 When(
     deprecated(
         "create random dictionary with '' random objects from ''",
-        "create random table with '' random pick from ''",
+        "create random [array|dictionary] with '' elements from ''",
         function(num, from)
             _extract_random_elements('random_dictionary', num, from)
         end

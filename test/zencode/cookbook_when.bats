@@ -281,8 +281,8 @@ and I rename the 'random_pick' to 'myRandomlyPickedObject'
 # If you need several objects from a table, you can use this statement
 # it will create a new table (array if source was an array, or dictionary otherwise)
 # with the defined amount of objects picked from the original table
-When I create random table with 'mySecondNumber' random pick from 'myOnlyEcpArray'
-and I rename the 'random_table' to 'myNewlyCreatedRandomArray'
+When I create random array with 'mySecondNumber' elements from 'myOnlyEcpArray'
+and I rename the 'random_array' to 'myNewlyCreatedRandomArray'
 
 # CREATE FLAT ARRAY
 # The "flat array" statement, take as input the name of an array or a dictionary,
@@ -319,25 +319,25 @@ and I rename the 'random' to 'my128BitsRandom'
 When I create the random of '16' bytes
 and I rename the 'random' to 'my16BytesRandom'
 
-# The "create array of random" statement, lets you create an array of random elements, 
+# The "create random array with" statement, lets you create an array of random elements, 
 # and you can select the length in bits or bytes. The first statement uses the default lenght of 512 bits.
 # Like the previous one, this statement outputs an object whose name is hardcoded into "array".
 # Since we're creating three arrays called "array" below, Zenroom would throw an error because by
 # design Zenroom does not allow you to implicity overwrite, so we are renaming the output immediately. 
-When I create the array of '4' random
-and I rename the 'array' to 'my4RandomArray'
-When I create the array of '5' random of '256' bits
-and I rename the 'array' to 'my256BitsRandomArray'
-When I create the array of '6' random of '16' bytes
-and I rename the 'array' to 'my16BytesRandomArray'
+When I create the random array with '4' elements
+and I rename the 'random array' to 'my4RandomArray'
+When I create the random array with '5' elements each of '256' bits
+and I rename the 'random array' to 'my256BitsRandomArray'
+When I create the random array with '6' elements each of '16' bytes
+and I rename the 'random array' to 'my16BytesRandomArray'
 
 # You can generate an array of random numbers, from 0 o 65355, with this statement.
-When I create the array of '10' random numbers 
-and I rename the 'array' to 'my10RandomNumbersArray'
+When I create the random array with '10' numbers 
+and I rename the 'random array' to 'my10RandomNumbersArray'
 # A variation of the statement above, allows you to use the "modulo" function to cap the max value
 # of the random numbers. In the example below, the max value will be "999".
-When I create the array of '16' random numbers modulo '1000'
-and I rename the 'array' to 'my16RandomNumbersModulo1000Array'
+When I create the random array with '16' numbers modulo '1000'
+and I rename the 'random array' to 'my16RandomNumbersModulo1000Array'
 
 # SET
 # The 'set' statement creates a new variable and assign it a value.

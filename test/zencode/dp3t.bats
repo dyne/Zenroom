@@ -54,8 +54,8 @@ rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
 Given nothing
-When I create the array of '200' random of '256' bits
-and I rename the 'array' to 'list of infected'
+When I create the random array with '200' elements each of '256' bits
+and I rename the 'random array' to 'list of infected'
 Then print the 'list of infected'
 EOF
 
