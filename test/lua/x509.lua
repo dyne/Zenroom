@@ -32,10 +32,15 @@ sig = x509.extract_cert_sig(pem)
 pk = x509.extract_pubkey(cert)
 I.print({cert=cert, sig=sig, pubkey=pk})
 
+issuer = x509.extract_issuer(cert)
+I.print({issuer=issuer})
+
+dates = x509.extract_dates(cert)
+I.print({dates=dates})
+
 assert( P256.verify(pk,cert,sig) )
 
-key = I.spy( x509.extract_seckey(
+key = x509.extract_seckey(
     OCTET.from_base64(x509.pem_to_base64(KEY))
-))
-
+)
 assert( P256.pubgen(key) == pk)
