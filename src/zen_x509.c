@@ -22,7 +22,6 @@
 #include <zen_memory.h>
 #include <lua_functions.h>
 #include <zen_octet.h>
-#include <zen_error.h>
 #include <encoding.h>
 
 #include <x509.h>
@@ -141,6 +140,89 @@ end:
 	END(1);
 }
 
+static void push_entity_property(lua_State *L, const octet *H, int c, int len) {
+	char tmp[2048];
+	snprintf(tmp,len,"%s",&H->val[c]);
+	lua_pushstring(L,tmp);
+}
+
+static void push_date(lua_State *L, const octet *c, int i) {
+	char tmp[24];
+	snprintf(tmp,20,"20%c%c-%c%c-%c%c %c%c:%c%c:%c%c",
+			 c->val[i], c->val[i + 1], c->val[i + 2],
+			 c->val[i + 3], c->val[i + 4], c->val[i + 5],
+			 c->val[i + 6], c->val[i + 7], c->val[i + 8],
+			 c->val[i + 9], c->val[i + 10], c->val[i + 11]);
+	lua_pushstring(L,tmp);
+}
+
+#define _extract_property(_key_, _name_) \
+    c = X509_find_entity_property((octet*)H, &_key_, ic, &len); \
+	if(c) { \
+		lua_pushstring(L,_name_); \
+		push_entity_property(L,H,c,len); \
+		lua_settable(L,-3); }
+
+static int extract_issuer(lua_State *L) {
+	BEGIN();
+	int c, ic, len;
+	char *failed_msg = NULL;
+	const octet *H = o_arg(L, 1); SAFE(H);
+    ic = X509_find_issuer((octet*)H,&len);
+	if(!ic) {
+		failed_msg = "Issuer not found in x509 credential";
+		goto end;
+	}
+	lua_newtable(L);
+	_extract_property(X509_CN,"country");
+	_extract_property(X509_ON,"org");
+	_extract_property(X509_EN,"email");
+	_extract_property(X509_LN,"local");
+	_extract_property(X509_UN,"unit");
+	_extract_property(X509_MN,"name");
+	_extract_property(X509_SN,"state");
+	_extract_property(X509_AN,"alternate");
+	_extract_property(X509_KU,"key");
+	_extract_property(X509_BC,"constraints");
+end:
+	o_free(L,H);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+static int extract_dates(lua_State *L) {
+	BEGIN();
+	int c, ic;
+	char *failed_msg = NULL;
+	const octet *H = o_arg(L, 1); SAFE(H);
+    ic = X509_find_validity((octet*)H);
+	if(!ic) {
+		failed_msg = "Validity not found in x509 credential";
+		goto end;
+	}
+	lua_newtable(L);
+    c = X509_find_start_date((octet*)H, ic);
+	if(c) {
+		lua_pushstring(L,"created"); \
+		push_date(L,H,c);
+		lua_settable(L,-3);
+	}
+    c = X509_find_expiry_date((octet*)H, ic);
+	if(c) {
+		lua_pushstring(L,"expires"); \
+		push_date(L,H,c);
+		lua_settable(L,-3);
+	}
+end:
+	o_free(L,H);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
 int luaopen_x509(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg x509_class[] = {
@@ -149,6 +231,8 @@ int luaopen_x509(lua_State *L) {
 		{"extract_cert_sig", extract_cert_sig},
 		{"extract_pubkey", extract_pubkey},
 		{"extract_seckey", extract_seckey},
+		{"extract_issuer", extract_issuer},
+		{"extract_dates", extract_dates},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg x509_methods[] = {
