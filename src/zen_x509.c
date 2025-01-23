@@ -158,10 +158,12 @@ static void push_date(lua_State *L, const octet *c, int i) {
 
 #define _extract_property(_key_, _name_) \
     c = X509_find_entity_property((octet*)H, &_key_, ic, &len); \
-	if(c) { \
+	if(c!=0) { \
+	    if(!len)zerror(L,"X509 issuer property %s has zero length",_name_);\
+		else { \
 		lua_pushstring(L,_name_); \
 		push_entity_property(L,H,c,len); \
-		lua_settable(L,-3); }
+		lua_settable(L,-3); } }
 
 static int extract_issuer(lua_State *L) {
 	BEGIN();
