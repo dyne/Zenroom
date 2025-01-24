@@ -35,6 +35,16 @@ I.print({cert=cert, sig=sig, pubkey=pk})
 issuer = x509.extract_issuer(cert)
 I.print({issuer=issuer})
 
+subj = x509.extract_subject(cert)
+I.print({subject=subj})
+
+-- ext = x509.extract_extensions(cert)
+-- I.print({extensions=ext,
+--          san_hex=OCTET.from_string(ext.SAN):hex()})
+
+san = x509.extract_san(cert)
+I.print({SAN=san})
+
 dates = x509.extract_dates(cert)
 I.print({dates=dates})
 

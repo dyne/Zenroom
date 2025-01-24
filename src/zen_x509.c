@@ -140,7 +140,7 @@ end:
 	END(1);
 }
 
-static void push_entity_property(lua_State *L, const octet *H, int c, int len) {
+static void push_entity(lua_State *L, const octet *H, int c, int len) {
 	char tmp[2048];
 	snprintf(tmp,len,"%s",&H->val[c]);
 	lua_pushstring(L,tmp);
@@ -162,7 +162,16 @@ static void push_date(lua_State *L, const octet *c, int i) {
 	    if(!len)zerror(L,"X509 issuer property %s has zero length",_name_);\
 		else { \
 		lua_pushstring(L,_name_); \
-		push_entity_property(L,H,c,len); \
+		push_entity(L,H,c,len); \
+		lua_settable(L,-3); } }
+
+#define _extract_extension(_key_, _name_) \
+    c = X509_find_extension((octet*)H, &_key_, ic, &len); \
+	if(c!=0) { \
+	    if(!len)zerror(L,"X509 issuer property %s has zero length",_name_);\
+		else { \
+		lua_pushstring(L,_name_); \
+		push_entity(L,H,c,len); \
 		lua_settable(L,-3); } }
 
 static int extract_issuer(lua_State *L) {
@@ -176,16 +185,13 @@ static int extract_issuer(lua_State *L) {
 		goto end;
 	}
 	lua_newtable(L);
+	_extract_property(X509_ON,"owner");
 	_extract_property(X509_CN,"country");
-	_extract_property(X509_ON,"org");
 	_extract_property(X509_EN,"email");
 	_extract_property(X509_LN,"local");
 	_extract_property(X509_UN,"unit");
 	_extract_property(X509_MN,"name");
 	_extract_property(X509_SN,"state");
-	_extract_property(X509_AN,"alternate");
-	_extract_property(X509_KU,"key");
-	_extract_property(X509_BC,"constraints");
 end:
 	o_free(L,H);
 	if(failed_msg) {
@@ -193,6 +199,139 @@ end:
 	}
 	END(1);
 }
+
+static int extract_subject(lua_State *L) {
+	BEGIN();
+	int c, ic, len;
+	char *failed_msg = NULL;
+	const octet *H = o_arg(L, 1); SAFE(H);
+    ic = X509_find_subject((octet*)H,&len);
+	if(!ic) {
+		failed_msg = "Issuer not found in x509 credential";
+		goto end;
+	}
+	lua_newtable(L);
+	_extract_property(X509_ON,"owner");
+	_extract_property(X509_CN,"country");
+	_extract_property(X509_EN,"email");
+	_extract_property(X509_LN,"local");
+	_extract_property(X509_UN,"unit");
+	_extract_property(X509_MN,"name");
+	_extract_property(X509_SN,"state");
+end:
+	o_free(L,H);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+
+static int extract_extensions(lua_State *L) {
+	BEGIN();
+	int c, ic, len;
+	char *failed_msg = NULL;
+	const octet *H = o_arg(L, 1); SAFE(H);
+    ic = X509_find_extensions((octet*)H);
+	if(!ic) {
+		failed_msg = "Issuer not found in x509 credential";
+		goto end;
+	}
+	lua_newtable(L);
+	_extract_extension(X509_AN,"SAN");
+	_extract_extension(X509_KU,"key");
+	_extract_extension(X509_BC,"constraints");
+end:
+	o_free(L,H);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+// In an X.509 certificate's SAN (Subject Alternative Name) field, the
+// GeneralName component can represent various types, each identified
+// by unique ASN.1 tags. Apart from URIs, here are other types you may
+// encounter, with their corresponding hex tags:
+// - Email Address: 81 (IA5String, email)
+// - DNS Name: 82 (IA5String, dnsName)
+// - X.400 Address: 83
+// - Directory Name: 85
+// - RFC822 Name: A0 (otherName)
+// - IP Address: 87 (OCTET STRING, iPAddress)
+// - OID (Registered ID): 88 (OBJECT IDENTIFIER, registeredID)
+// Each type has its specific encoding. Examples in Hex:
+// - Email Address: 81 0c 6578616d706c65406578616d706c652e636f6d
+//   (IA5String with email example@example.com)
+// - DNS Name: 82 0c 6578616d706c652e636f6d
+//   (IA5String with DNS example.com)
+// - IP Address: 87 04 c0a80001 (OCTET STRING with IP 192.168.0.1)
+// Within a SAN field, multiple GeneralNames can appear sequenced,
+// each prefixed by its identifier hex value, to provide varied
+// alternative names.
+
+// extract subject alternative names
+static int extract_san(lua_State *L) {
+	BEGIN();
+	int c, ic, len;
+	char *failed_msg = NULL;
+	char *tmp;
+	const octet *H = o_arg(L, 1); SAFE(H);
+    ic = X509_find_extensions((octet*)H);
+	if(!ic) {
+		failed_msg = "Issuer not found in x509 credential";
+		goto end;
+	}
+    c = X509_find_extension((octet*)H, &X509_AN, ic, &len);
+	if(c!=0 &&
+	   H->val[c]==0x04 && // ASN.1 octet string
+	   // H->val[ic+1] // octet length is unused
+	   H->val[c+2]==0x30) // ASN.1 sequence
+		{
+			int seqlen = H->val[c+3];
+			char *p = &H->val[c+4];
+			char *end = p + seqlen;
+			tmp = calloc(seqlen, 1);
+			lua_newtable(L);
+			for(int cc=1; p < end; cc++) {
+				uint8_t type = *p++;
+				int len = *p++;
+				lua_pushnumber(L,cc);
+				lua_newtable(L);
+				lua_pushstring(L,"data");
+				snprintf(tmp,len,"%s",p);
+				lua_pushstring(L,tmp);
+				lua_settable(L,-3);
+				lua_pushstring(L,"type");
+				sprintf(tmp,"%s",
+						 type==0x81?"email":
+						 type==0x82?"dns":
+						 type==0x83?"X400":
+						 type==0x85?"dir":
+						 type==0x86?"url":
+						 type==0xA0?"RFC822":
+						 type==0x87?"ip":
+						 type==0x88?"OID":
+						 "unknown");
+				lua_pushstring(L,tmp);
+				lua_settable(L,-3);
+				// Set the inner table to the outer table
+				lua_settable(L, -3);
+				p += len;
+			}
+			free(tmp);
+		}
+ end:
+	o_free(L,H);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+	// _extract_property(X509_AN,"alternate");
+	// _extract_property(X509_KU,"key");
+	// _extract_property(X509_BC,"constraints");
 
 static int extract_dates(lua_State *L) {
 	BEGIN();
@@ -234,6 +373,9 @@ int luaopen_x509(lua_State *L) {
 		{"extract_pubkey", extract_pubkey},
 		{"extract_seckey", extract_seckey},
 		{"extract_issuer", extract_issuer},
+		{"extract_subject", extract_subject},
+		{"extract_extensions", extract_extensions},
+		{"extract_san", extract_san},
 		{"extract_dates", extract_dates},
 		{NULL,NULL}
 	};
