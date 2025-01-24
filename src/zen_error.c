@@ -40,6 +40,7 @@
 #include <zen_error.h>
 #include <zen_memory.h>
 #include <mutt_sprintf.h>
+#include <encoding.h>
 
 // simple inline duplicate function wrapper also in zen_io.c
 static inline void _zen_error_write(int fd, const void *buf, size_t count) {
@@ -251,6 +252,15 @@ int warning(void *L, const char *format, ...) {
   mutt_vsnprintf(o->val, o->max-5, format, arg);
   o->len = strlen(o->val);
   zen_log(L, LOG_WARN, o);
+  o_free((lua_State*)L,o);
+  return 0;
+}
+
+int hexdump(void *L, const char *src, size_t len) {
+  octet *o = o_alloc(L, (len*2)+2);
+  buf2hex(o->val,src,len);
+  o->len = strlen(o->val);
+  zen_log(L, LOG_VERBOSE, o);
   o_free((lua_State*)L,o);
   return 0;
 }
