@@ -222,7 +222,7 @@ octet* o_new(lua_State *L, const int size) {
 	o->val = malloc(size +0x0f);
 	if(HEDLEY_UNLIKELY(o->val==NULL)) {
 		zerror(L, "Cannot create octet, malloc failure");
-		zerror("%s: %s",__func__,strerror(errno));
+		zerror(L, "%s: %s",__func__,strerror(errno));
 		return NULL; }
 	o->len = 0;
 	o->max = size;
