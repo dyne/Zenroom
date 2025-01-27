@@ -1,4 +1,6 @@
 // test x509 for post-quantum safe zenroom
+// incomplete. for the generation of the certificate see:
+// https://gist.github.com/jaromil/5cdd0580c643d040d8cad0c026a98931
 
 #include <stdio.h>
 #include <amcl.h>  // for octet support only
