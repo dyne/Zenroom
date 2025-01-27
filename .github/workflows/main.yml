@@ -159,7 +159,7 @@ jobs:
   arm32-test:
     name: 🦾 ARM32 build test
     needs: [reuse, c-lint, lua-lint]
-    if: "github.event_name == 'pull_request'"
+    if: "contains(github.event.pull_request.labels.*.name, 'TEST_ARM32') && github.event_name == 'pull_request'"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
