@@ -1998,6 +1998,152 @@ static int lesser_than(lua_State *L) {
 	END(1);
 }
 
+
+/***
+Finds a needle sequence of bytes in a haystack octet and returns the
+position where it has been found (counting from 0) or nil when not
+found.
+
+	@function OCTET.find(haystack,needle,pos)
+	@param haystack the octet in which to find the needle
+	@param needle the octet needle to search for
+	@int pos (optional) the positio to start searching in haystack
+	@return a number indicating the position found in haystack or nil
+*/
+static int memfind(lua_State *L) {
+	BEGIN();
+	const octet *haystack = o_arg(L,1);
+	const octet *needle = o_arg(L,2);
+	if(needle->len>=haystack->len) {
+		lua_pushnil(L);
+		zerror(L,"Octet:substr called on a needle bigger than haystack");
+		goto end;
+	}
+	const int pos = luaL_optnumber(L, 3, 0);
+	char *start = haystack->val;
+	if(pos>0) {
+		if(pos>=haystack->len) {
+			lua_pushnil(L);
+			zerror(L,"Octet:find position (3rd arg) out of haystack");
+			goto end;
+		}
+		if(haystack->len-pos<needle->len) {
+			lua_pushnil(L);
+			zerror(L,"Octet:find position (3rd arg) squeezes out needle");
+			goto end;
+		}
+		start += pos;
+	}
+	char *res = (char*)
+		memmem(start, haystack->len-pos,
+			   needle->val,   needle->len);
+	if(!res) { // not found
+		lua_pushnil(L);
+	} else {
+		lua_pushnumber(L, (uint32_t)(res - haystack->val));
+	}
+ end:
+	o_free(L,needle);
+	o_free(L,haystack);
+	END(1);
+}
+
+/***
+	Copies out a needle octet from an haystack octet starting at
+	position and long as indicated.
+
+	@function OCTET.copy(haystack, start, length)
+	@param haystack octet from which we copy bytes out into needle
+	@int start position, begins from 0
+	@int length of byte sequence to copy
+	@return new octet copied out
+*/
+static int memcopy(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const octet *src = NULL;
+	octet *dst = NULL;
+	int start, length;
+	src = o_arg(L, 1);
+	if(!src) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	start = luaL_optnumber(L, 2, 0);
+	if(start < 0 || start > src->len) {
+		zerror(L, "Octet:copy starting position out of bounds: %i", start);
+		failed_msg = "Cannot copy octet";
+		goto end;
+	}
+	length = luaL_optnumber(L, 3, 0);
+	if(start+length > src->len) {
+		zerror(L, "invalid octet:copy() length too big: %i", length);
+		failed_msg = "Cannot copy octet";
+		goto end;
+	}
+	dst = o_new(L, length+1);
+	if(!dst) {
+		failed_msg = "Cannot allocate octet memory";
+		goto end;
+	}
+	memcpy(dst->val, src->val+start, length);
+	dst->len = length;
+end:
+	o_free(L, src);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+
+/***
+	Paste a needle octet into an haystack octet starting at position
+	and overwriting all its byte values in place.
+
+	@function OCTET.paste(haystack, needle, start)
+	@param haystack octet destination in which to copy needle
+	@param needle octet source of needle bytes
+	@int length of byte sequence to copy from needle
+	@return bool true on success, false on failure
+*/
+static int mempaste(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	int start;
+	const octet *hay = o_arg(L, 1);
+	if(!hay) {
+		failed_msg = "Cannot allocate octet memory";
+		goto end;
+	}
+	const octet *src = o_arg(L,2);
+	if(!src) {
+		failed_msg = "Cannot allocate octet memory";
+		goto end;
+	}
+	if(src->len > hay->len) {
+		zerror(L, "Octet:paste needle size (%i) exceeds haystack (%i)",
+			   src->len, hay->len);
+		failed_msg = "Cannot paste octet";
+		goto end;
+	}
+	start = luaL_optnumber(L, 3, 0);
+	if(start < 1 || start >= hay->len || start+src->len > hay->len) {
+		zerror(L, "Octet:paste starting position out of bounds: %i", start);
+		failed_msg = "Cannot paste octet";
+		goto end;
+	}
+	octet *res = o_dup(L,hay);
+	memcpy(res->val+start, src->val, src->len);
+end:
+	o_free(L, src);
+	o_free(L, hay);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
 int luaopen_octet(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg octet_class[] = {
@@ -2056,6 +2202,10 @@ int luaopen_octet(lua_State *L) {
 		{"popcount_hamming", popcount_hamming_distance},
 		{"to_segwit", to_segwit_address},
 		{"from_segwit", from_segwit_address},
+		{"find", memfind},
+		{"copy", memcopy},
+		{"paste", mempaste},
+
 		{NULL,NULL}
 	};
 	const struct luaL_Reg octet_methods[] = {
@@ -2092,6 +2242,10 @@ int luaopen_octet(lua_State *L) {
 		{"compact_ascii", compact_ascii},
 		{"elide_at_start", elide_at_start},
 		{"fillrepeat", fillrepeat},
+		{"find", memfind},
+		{"copy", memcopy},
+		{"paste", mempaste},
+
 		// {"zcash_topoint", zcash_topoint},
 		// idiomatic operators
 		{"__len",octet_size},
