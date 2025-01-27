@@ -26,6 +26,7 @@
 #include <lua_functions.h>
 
 #define PK_SIZE 64
+#define PK_COORD_SIZE 32
 #define SK_SIZE 32
 #define HASH_SIZE 32
 #define SIG_SIZE 64
@@ -220,10 +221,41 @@ end:
 	END(1);
 }
 
-static int p256_pub_xy(lua_State *L)
-{
+static int p256_pub_xy(lua_State *L) {
 	BEGIN();
-	END(1);
+	char *failed_msg = NULL;
+	const octet *pk = o_arg(L, 1);
+	if(pk == NULL) {
+		failed_msg = "Could not allocate public key";
+		goto end;
+	}
+	ASSERT_OCT_LEN(pk, PK_SIZE, "Invalid size for P256 public key");
+	register int i;
+	octet *x = o_new(L, PK_COORD_SIZE+1);
+	if(x == NULL) {
+		failed_msg = "Could not create x coordinate";
+		goto end;
+	}
+	for(i=0; i < PK_COORD_SIZE; i++)
+		x->val[i] = pk->val[i];
+	x->val[PK_COORD_SIZE+1] = 0x0;
+	x->len = PK_COORD_SIZE;
+	octet *y = o_new(L, PK_COORD_SIZE+1);
+	if(y == NULL) {
+		failed_msg = "Could not create y coordinate";
+		goto end;
+	}
+	for(i=0; i < PK_COORD_SIZE; i++)
+		y->val[i] = pk->val[PK_COORD_SIZE+i];
+	y->val[PK_COORD_SIZE+1] = 0x0;
+	y->len = PK_COORD_SIZE;
+end:
+	o_free(L, pk);
+	if(failed_msg) {
+		THROW(failed_msg);
+		lua_pushnil(L);
+	}
+	END(2);
 }
 
 static int p256_destroy(lua_State *L)
