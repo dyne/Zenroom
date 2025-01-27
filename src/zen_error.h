@@ -81,6 +81,7 @@ HEDLEY_PRINTF_FORMAT(2,3)
 int act(void *L, const char *format, ...); // DEBUG
 HEDLEY_PRINTF_FORMAT(2,3)
 int warning(void *L, const char *format, ...); // WARN
+int hexdump(void *L, const char *src, size_t len); // DEBUG hex sequence
 
 void json_start(void *L);
 void json_end(void *L);

@@ -11,7 +11,7 @@ ZEN_SOURCES := \
     src/zen_io.o src/zen_parse.o src/zen_config.o \
     src/zen_octet.o src/zen_ecp.o src/zen_ecp2.o src/zen_big.o \
     src/zen_fp12.o src/zen_random.o src/zen_hash.o \
-    src/zen_ecdh_factory.o src/zen_ecdh.o \
+    src/zen_ecdh_factory.o src/zen_ecdh.o src/zen_x509.o \
     src/zen_aes.o src/zen_qp.o src/zen_ed.o src/zen_float.o src/zen_time.o \
     src/api_hash.o src/api_sign.o src/randombytes.o \
     src/cortex_m.o src/p256-m.o src/zen_p256.o src/zen_rsa.o src/zen_bbs.o
@@ -42,6 +42,7 @@ ldadd += ${milib}/libamcl_curve_${ecp_curve}.a
 ldadd += ${milib}/libamcl_pairing_${ecp_curve}.a
 ldadd += ${milib}/libamcl_curve_${ecdh_curve}.a
 ldadd += ${milib}/libamcl_rsa_2048.a ${milib}/libamcl_rsa_4096.a
+ldadd += ${milib}/libamcl_x509.a
 ldadd += ${milib}/libamcl_core.a
 ldadd += ${pwd}/lib/pqclean/libqpz.a
 ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
@@ -80,7 +81,7 @@ rsa_bits := "2048,4096"
 # NUMS384E NUMS512W NUMS512E SECP256K1 BN254 BN254CX BLS381 BLS383
 # BLS24 BLS48 FP256BN FP512BN BLS461
 # see lib/milagro-crypto-c/cmake/AMCLParameters.cmake
-milagro_cmake_flags += -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DBUILD_DOCS=OFF -DBUILD_BENCHMARKS=OFF -DBUILD_EXAMPLES=OFF -DWORD_SIZE=32 -DBUILD_PAILLIER=OFF -DBUILD_X509=OFF -DBUILD_WCC=OFF -DBUILD_MPIN=OFF -DAMCL_CURVE=${ecdh_curve},${ecp_curve} -DAMCL_RSA=${rsa_bits} -DAMCL_PREFIX=AMCL_ -DCMAKE_SHARED_LIBRARY_LINK_FLAGS="" -DC99=1 -DPAIRING_FRIENDLY_BLS381='BLS' -DCOMBA=1 -DBUILD_TESTING=OFF
+milagro_cmake_flags += -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DBUILD_DOCS=OFF -DBUILD_BENCHMARKS=OFF -DBUILD_EXAMPLES=OFF -DWORD_SIZE=32 -DBUILD_PAILLIER=OFF -DBUILD_X509=ON -DBUILD_WCC=OFF -DBUILD_MPIN=OFF -DAMCL_CURVE=${ecdh_curve},${ecp_curve} -DAMCL_RSA=${rsa_bits} -DAMCL_PREFIX=AMCL_ -DCMAKE_SHARED_LIBRARY_LINK_FLAGS="" -DC99=1 -DPAIRING_FRIENDLY_BLS381='BLS' -DCOMBA=1 -DBUILD_TESTING=OFF
 
 #-----------------
 # quantum-proof

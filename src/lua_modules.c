@@ -59,6 +59,7 @@ extern int luaopen_time(lua_State *L);
 extern int luaopen_qp(lua_State *L);
 extern int luaopen_ed(lua_State *L);
 extern int luaopen_p256(lua_State *L);
+extern int luaopen_x509(lua_State *L);
 
 // really loaded in lib/lua54/linit.c
 // always align here for correct reference
@@ -193,6 +194,8 @@ int zen_require(lua_State *L) {
 		luaL_requiref(L, s, luaopen_p256, 1); }
 	else if(strcasecmp(s, "bbs")  ==0) {
 		luaL_requiref(L, s, luaopen_bbs, 1); }
+	else if(strcasecmp(s, "x509")  ==0) {
+		luaL_requiref(L, s, luaopen_x509, 1); }
 	else {
 		// shall we bail out and abort execution here?
 		warning(L, "required extension not found: %s", s);
