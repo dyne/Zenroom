@@ -1999,6 +1999,32 @@ static int lesser_than(lua_State *L) {
 }
 
 
+// windows has no memmem, we provide our own
+#if defined(_WIN32)
+HEDLEY_NON_NULL(1,3)
+static void *memmem(const void *src,int srclen,const void *dst,int dstlen) {
+	unsigned char *csrc = (unsigned char *)src;
+	unsigned char *cdst = (unsigned char *)dst;
+	unsigned char *tptr,*cptr;
+	int searchlen;
+	int ndx = 0;
+    while (ndx<=srclen) {
+        cptr = &csrc[ndx];
+        if ((searchlen = srclen-ndx-dstlen+1) <= 0) {
+            return NULL;
+        }
+        if ((tptr = memchr(cptr,*cdst,searchlen)) == NULL) {
+            return NULL;
+        }
+        if (memcmp(tptr,cdst,dstlen) == 0) {
+            return tptr;
+        }
+        ndx += tptr-cptr+1;
+    }
+    return NULL;
+}
+#endif
+
 /***
 Finds a needle sequence of bytes in a haystack octet and returns the
 position where it has been found (counting from 0) or nil when not
