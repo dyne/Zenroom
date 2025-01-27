@@ -66,7 +66,7 @@ static int p256_pubgen(lua_State *L)
 		goto end;
 	}
 
-	ASSERT_OCT_LEN(sk, SK_SIZE, "Invalid size for ECDSA secret key")
+	ASSERT_OCT_LEN(sk, SK_SIZE, "Invalid size for P256 secret key")
 
 	pk = o_new(L, PK_SIZE);
 	if (!pk)
@@ -197,8 +197,8 @@ static int p256_verify(lua_State *L)
 		goto end;
 	}
 
-	ASSERT_OCT_LEN(pk, PK_SIZE, "Invalid size for EdDSA public key")
-	ASSERT_OCT_LEN(sig, SIG_SIZE, "Invalid size for EdDSA signature")
+	ASSERT_OCT_LEN(pk, PK_SIZE, "Invalid size for P256 public key")
+	ASSERT_OCT_LEN(sig, SIG_SIZE, "Invalid size for P256 signature")
 
 	HASH256_init(&sha256);
 	for (int i = 0; i < m->len; i++)
