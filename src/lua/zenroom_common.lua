@@ -36,6 +36,8 @@ _G['type'] = _type
 
 -- TODO: optimise in C
 local _iszen <const> = function(n)
+    if not n then
+        error("Cannot parse null zenroom type",2) end
    for _ in n:gmatch("zenroom") do
 	  return true
    end
