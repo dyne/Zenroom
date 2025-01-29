@@ -201,6 +201,9 @@ function operate_conversion(guessed)
 			error("Could not read " .. guessed.name)
 		 end
 	  end
+      -- fun may return two values: val and optional param
+      -- which is used in ack() to set additional CODEC params
+      -- param is defined directly into the schema function!
 	  return fun(guessed.raw)
    end
 end
@@ -248,13 +251,19 @@ local function ack(what)
    local name <const> = _index_to_string(what)
    zencode_assert(t, 'No valid object found: ' .. name)
    empty(name)
-   local v <const> = operate_conversion(t)
-   ACK[name] = v
+   -- get value and optional additional parameters for codec
+   local val <const>, param <const> = operate_conversion(t)
+   ACK[name] = val
    if not CODEC[name].missing then
-	  local vt <const> = type(v)
-	  if iszen(vt) then
-		 CODEC[name].bintype = vt
+	  local valtype <const> = type(val)
+	  if iszen(valtype) then
+		 CODEC[name].bintype = valtype
 	  end
+   end
+   if param then
+       for k,v in pairs(param) do
+           CODEC[name][k] = v
+       end
    end
    -- name of schema may differ from name of object
    -- new_codec(name, { schema = ZEN.TMP.schema })

@@ -48,16 +48,18 @@ end
 When("create hash of ''", _hash)
 When("create hash of '' using ''", _hash)
 
+-- global used by _mhout and _mhin
+local multihash_prefixes <const> = {
+    sha256 = OCTET.from_hex'12',
+    sha512 = OCTET.from_hex'13',
+    sha3_512 = OCTET.from_hex'14',
+    sha3_256 = OCTET.from_hex'16',
+    shake_256 = OCTET.from_hex'19',
+    keccak_256 = OCTET.from_hex'1b'
+}
+
 --https://github.com/multiformats/multicodec/blob/master/table.cs
-local function _multihash(n, obj)
-    local prefix <const> = {
-        sha256 = OCTET.from_hex'12',
-        sha512 = OCTET.from_hex'13',
-        sha3_512 = OCTET.from_hex'14',
-        sha3_256 = OCTET.from_hex'16',
-        shake_256 = OCTET.from_hex'19',
-        keccak_256 = OCTET.from_hex'1b'
-    }
+local function _mhout(n, obj)
     local _size <const> = {
         sha256 = OCTET.from_number(32):copy(15,1),
         sha512 = OCTET.from_number(64):copy(15,1),
@@ -66,20 +68,78 @@ local function _multihash(n, obj)
         shake_256 = OCTET.from_number(32):copy(15,1),
         keccak_256 = OCTET.from_number(32):copy(15,1)
     }
-    local pfx <const> = prefix[n]
+    local pfx <const> = multihash_prefixes[n]
     local sz <const> = _size[n]
     if not pfx then error("Multihash not supported: "..n,2) end
     if not sz  then error("Multihash not supported: "..n,2) end
     return pfx..sz..obj
 end
 
+local function _mhin(string_obj,hashtype)
+    if not type(string_obj) == 'string' then
+        error("Multihash invalid input: "..type(string_obj),3)
+    end
+    local obj <const> = CONF.input.encoding.fun(string_obj)
+    local prefixes <const> = {
+        ['12'] = 'sha256',
+        ['13'] = 'sha512',
+        ['14'] = 'sha3_512',
+        ['16'] = 'sha3_256',
+        ['19'] = 'shake_256',
+        ['1b'] = 'keccak_256'
+    }
+    local _pfx
+    local firstbyte <const> = obj:copy(0,1)
+    if hashtype then
+        _pfx = multihash_prefixes[hashtype]
+        if not _pfx then
+            error("Multihash not supported: "..hashtype,2) end
+        if firstbyte ~= _pfx then
+            error("Incorrect multihash found: "
+                  ..firstbyte:hex(),2) end
+        _pfx = hashtype
+    else
+        _pfx = prefixes[firstbyte:hex()]
+    end
+    if not _pfx then
+        error("Multihash not supported: ".._pfx,2) end
+    local sz <const> = tonumber(obj:copy(1,1):hex(),16)
+    if #obj ~= sz+2 then
+        error("Multihash invalid size: "..#obj,2) end
+    -- return additional params for the codec
+    return obj:copy(2,sz), {schema='multihash_'.._pfx}
+end
+
 ZEN:add_schema({
-        multihash_sha256   ={export=function(obj) return _multihash('sha256',obj) end},
-        multihash_sha512   ={export=function(obj) return _multihash('sha512',obj) end},
-        multihash_sha3_256 ={export=function(obj) return _multihash('sha3_256',obj) end},
-        multihash_sha3_512 ={export=function(obj) return _multihash('sha3_512',obj) end},
-        multihash_shake256 ={export=function(obj) return _multihash('shake_256',obj) end},
-        multihash_keccak256={export=function(obj) return _multihash('keccak_256',obj) end}
+        multihash = {
+            import=function(obj) return _mhin(obj) end,
+            export=function(obj)
+                error("Invalid multihash value",2) end
+        },
+        multihash_sha256   ={
+            import=function(obj) return _mhin(obj,'sha256') end,
+            export=function(obj) return _mhout('sha256',obj) end
+        },
+        multihash_sha512   ={
+            import=function(obj) return _mhin(obj,'sha512') end,
+            export=function(obj) return _mhout('sha512',obj) end
+        },
+        multihash_sha3_256 ={
+            import=function(obj) return _mhin(obj,'sha3_256') end,
+            export=function(obj) return _mhout('sha3_256',obj) end
+        },
+        multihash_sha3_512 ={
+            import=function(obj) return  _mhin(obj,'sha3_512') end,
+            export=function(obj) return _mhout('sha3_512',obj) end
+        },
+        multihash_shake256 ={
+            import=function(obj) return _mhin(obj,'shake_256') end,
+            export=function(obj) return _mhout('shake_256',obj) end
+        },
+        multihash_keccak256={
+            import=function(obj) return _mhin(obj,'keccak_256') end,
+            export=function(obj) return _mhout('keccak_256',obj) end
+        }
 })
 When("create multihash of ''",
      function(s)
