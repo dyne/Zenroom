@@ -25,6 +25,8 @@
 local valid_hashes <const> = {
     sha256 = true,
     sha512 = true,
+    sha3_256 = true,
+    sha3_512 = true,
     shake256 = true,
     keccak256 = true
 }
@@ -35,7 +37,8 @@ local function _hash(s, n)
     src = zencode_serialize(src)
     if not valid_hashes[n] then error("Hash algorithm not known: ".. n) end
     -- from init: HASH = require('zenroom_hash')
-    ACK.hash = HASH[n](src)
+    local _hf <const> = HASH:init(n)
+    ACK.hash = _hf:process(src)
     new_codec('hash', { zentype = 'e' })
 end
 

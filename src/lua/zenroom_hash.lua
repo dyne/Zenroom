@@ -25,52 +25,52 @@ local hash = require'hash'
 -- cache storing initialized tables for reuse
 hash.cache = { }
 
-local function init(name)
+function hash:init(name)
     local res
-    if hash.cache[name] then
-        res = hash.cache[name]
+    if self.cache[name] then
+        res = self.cache[name]
     else
-        res = hash.new(name)
-        hash.cache[name] = res
+        res = self.new(name)
+        self.cache[name] = res
     end
     return res
 end
 
 -- easy to use calls
-function sha256(data)   return init("sha256"):process(data) end
-function sha512(data)   return init("sha512"):process(data) end
-function sha3_256(data) return init("sha256"):process(data) end
-function sha3_512(data) return init("sha512"):process(data) end
+function sha256(data)   return hash:init("sha256"):process(data) end
+function sha512(data)   return hash:init("sha512"):process(data) end
+function sha3_256(data) return hash:init("sha256"):process(data) end
+function sha3_512(data) return hash:init("sha512"):process(data) end
 hash.sha256 = sha256
 hash.sha512 = sha512
 hash.sha3_256 = sha3_256
 hash.sha3_512 = sha3_512
 
-hash.shake256 = function(data, len) return init("shake256"):process(data, len or 32) end
-hash.keccak256 = function(data) return init("keccak256"):process(data) end
+hash.shake256 = function(data, len) return hash:init("shake256"):process(data, len or 32) end
+hash.keccak256 = function(data) return hash:init("keccak256"):process(data) end
 
-function KDF(data, bits) return init("sha"..tostring(bits or 256)):kdf2(data) end
+function KDF(data, bits) return hash:init("sha"..tostring(bits or 256)):kdf2(data) end
 
 function hash.dsha256(msg)
-   local _SHA256 <const> = init'sha256'
+   local _SHA256 <const> = hash:init'sha256'
    return _SHA256:process(_SHA256:process(msg))
 end
 
 function hash.hash160(msg)
-   local _SHA256 <const> = init'sha256'
-   local _RMD160 <const> = init'ripemd160'
+   local _SHA256 <const> = hash:init'sha256'
+   local _RMD160 <const> = hash:init'ripemd160'
    return _RMD160:process(_SHA256:process(msg))
 
 end
 
 --used in BBS+ signature
 hash.hkdf_extract = function(salt, ikm)
-	return HASH.hmac(init'sha256', salt, ikm)
+	return HASH.hmac(hash:init'sha256', salt, ikm)
 end
 
 --used in BBS+ signature
 hash.hkdf_expand = function(prk, info, l)
-	local h = init'sha256'
+	local h = hash:init'sha256'
 	local hash_len = 32
 	assert(#prk >= hash_len)
 	assert(l <= 255 * hash_len)
