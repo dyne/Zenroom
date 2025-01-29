@@ -34,6 +34,7 @@ local function _hash(s, n)
     -- serialize tables using zenroom's algo
     src = zencode_serialize(src)
     if not valid_hashes[n] then error("Hash algorithm not known: ".. n) end
+    -- from init: HASH = require('zenroom_hash')
     ACK.hash = HASH[n](src)
     new_codec('hash', { zentype = 'e' })
 end

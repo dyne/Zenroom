@@ -22,55 +22,55 @@
 
 local hash = require'hash'
 
--- when using facility functions, global hashers are created only once
-local SHA256 = nil
-local SHA512 = nil
-local SHAKE256 = nil
-local KECCAK256 = nil
-local hash_init_table <const> = {
-    sha32 = function() SHA256 = SHA256 or hash.new('sha256'); return SHA256 end,
-    sha256 = function() SHA256 = SHA256 or hash.new('sha256'); return SHA256 end,
-    sha64 = function() SHA512 = SHA512 or hash.new('sha512'); return SHA512 end,
-    sha512 = function() SHA512 = SHA512 or hash.new('sha512'); return SHA512 end,
-    shake256 = function() SHAKE256 = SHAKE256 or hash.new('shake256'); return SHAKE256 end,
-    keccak256 = function() KECCAK256 = KECCAK256 or hash.new('keccak256'); return KECCAK256 end
-}
+-- cache storing initialized tables for reuse
+hash.cache = { }
+
 local function init(name)
-    local h = hash_init_table[name]
-    if not h then error("HASH type not supported: "..name, 2) end
-    return h();
+    local res
+    if hash.cache[name] then
+        res = hash.cache[name]
+    else
+        res = hash.new(name)
+        hash.cache[name] = res
+    end
+    return res
 end
 
-function sha256(data) return init("sha256"):process(data) end
-function sha512(data) return init("sha512"):process(data) end
-
+-- easy to use calls
+function sha256(data)   return init("sha256"):process(data) end
+function sha512(data)   return init("sha512"):process(data) end
+function sha3_256(data) return init("sha256"):process(data) end
+function sha3_512(data) return init("sha512"):process(data) end
 hash.sha256 = sha256
 hash.sha512 = sha512
+hash.sha3_256 = sha3_256
+hash.sha3_512 = sha3_512
+
 hash.shake256 = function(data, len) return init("shake256"):process(data, len or 32) end
 hash.keccak256 = function(data) return init("keccak256"):process(data) end
 
 function KDF(data, bits) return init("sha"..tostring(bits or 256)):kdf2(data) end
 
 function hash.dsha256(msg)
-   local _SHA256 = init('sha256')
+   local _SHA256 <const> = init'sha256'
    return _SHA256:process(_SHA256:process(msg))
 end
 
 function hash.hash160(msg)
-   local _SHA256 = init('sha256')
-   local _RMD160 = HASH.new('ripemd160')
+   local _SHA256 <const> = init'sha256'
+   local _RMD160 <const> = init'ripemd160'
    return _RMD160:process(_SHA256:process(msg))
 
 end
 
 --used in BBS+ signature
 hash.hkdf_extract = function(salt, ikm)
-	return HASH.hmac(init('sha256'), salt, ikm)
+	return HASH.hmac(init'sha256', salt, ikm)
 end
 
 --used in BBS+ signature
 hash.hkdf_expand = function(prk, info, l)
-	local h = init('sha256')
+	local h = init'sha256'
 	local hash_len = 32
 	assert(#prk >= hash_len)
 	assert(l <= 255 * hash_len)
