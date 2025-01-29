@@ -11,3 +11,7 @@ load ../bats_setup
 @test "NIST ECDSA SigGen" {
     ${ZENROOM_EXECUTABLE} -a $T/ecdsa_p256_SigGen.txt $T/check_ecdsa_p256_sign.lua
 }
+
+@test "W3C Data Integrity ECDSA" {
+    ${ZENROOM_EXECUTABLE} $T/check_w3c-vc-di-ecdsa.lua
+}
