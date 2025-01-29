@@ -216,5 +216,54 @@ and debug
 Then print 'multihash'
 EOF
     save_output 'multihash_default.json'
-    assert_output '{"multihash":"1278d41911d3f217ec19045930c452734e0fa5e29388f0bc6789ac46f5be907c09"}'
+    assert_output '{"multihash":"122078d41911d3f217ec19045930c452734e0fa5e29388f0bc6789ac46f5be907c09"}'
 }
+
+@test "When I create the multihash of '' using 'sha256'" {
+    cat <<EOF | zexe multihash_string256.zen
+rule output encoding hex
+Given nothing
+When I write string 'a string to be hashed' in 'source'
+and I create the multihash of 'source' using 'sha256'
+Then print the 'multihash'
+EOF
+    save_output 'multihash_string256.json'
+    assert_output '{"multihash":"1220c24463f5e352da20cb79a43f97436cce57344911e1d0ec0008cbedb5fabcca33"}'
+}
+
+@test "When I create the multihash of '' using 'sha512'" {
+    cat <<EOF | zexe multihash_string512.zen
+rule output encoding hex
+Given nothing
+When I write string 'a string to be hashed' in 'source'
+and I create the multihash of 'source' using 'sha512'
+Then print the 'multihash'
+EOF
+    save_output 'multihash_string512.json'
+    assert_output '{"multihash":"1340bbe0ff105448bd2238f5b97856980dfe0f0c64507e95d669decd4b2dbd01862870d3208df58957f0a4e43e8acd3fea5d69bebfe662575c46bf70088e7b6a282c"}'
+}
+
+@test "When I create the multihash of '' using 'sha3_256'" {
+    cat <<EOF | zexe multihash_string_3_256.zen
+rule output encoding hex
+Given nothing
+When I write string 'a string to be hashed' in 'source'
+and I create the multihash of 'source' using 'sha3_256'
+Then print the 'multihash'
+EOF
+    save_output 'multihash_string_3_256.json'
+    assert_output '{"multihash":"16202356e27f557226fba0205747f5d15ed9fd74ea847f5b7dd9409f79c46321718b"}'
+}
+
+@test "When I create the multihash of '' using 'sha3_512'" {
+    cat <<EOF | zexe multihash_string_3_512.zen
+rule output encoding hex
+Given nothing
+When I write string 'a string to be hashed' in 'source'
+and I create the multihash of 'source' using 'sha3_512'
+Then print the 'multihash'
+EOF
+    save_output 'multihash_string_3_512.json'
+    assert_output '{"multihash":"144098a2d34ebb5ab5452cc6211efd99715942c75210d0ee91f7e8897f777d2aed668c8dd9f7b52042b44514dc282e7c6b4da9c5e21ea14ef259ac29579918d4869d"}'
+}
+
