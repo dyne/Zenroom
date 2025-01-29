@@ -267,3 +267,32 @@ EOF
     assert_output '{"multihash":"144098a2d34ebb5ab5452cc6211efd99715942c75210d0ee91f7e8897f777d2aed668c8dd9f7b52042b44514dc282e7c6b4da9c5e21ea14ef259ac29579918d4869d"}'
 }
 
+@test "Given I have a 'multihash'" {
+    cat << EOF > multihash_input.json
+{"multihash":"144098a2d34ebb5ab5452cc6211efd99715942c75210d0ee91f7e8897f777d2aed668c8dd9f7b52042b44514dc282e7c6b4da9c5e21ea14ef259ac29579918d4869d"}
+EOF
+    cat <<EOF | zexe multihash_input.zen multihash_input.json
+rule output encoding hex
+rule input encoding hex
+Given I have a 'multihash'
+and debug
+Then print the 'multihash'
+EOF
+    save_output 'multihash_input_3_512.json'
+    assert_output '{"multihash":"144098a2d34ebb5ab5452cc6211efd99715942c75210d0ee91f7e8897f777d2aed668c8dd9f7b52042b44514dc282e7c6b4da9c5e21ea14ef259ac29579918d4869d"}'
+}
+
+@test "Given I have a 'multihash_sha3_512'" {
+    cat << EOF > multihash_3_512_input.json
+{"multihash_sha3_512":"144098a2d34ebb5ab5452cc6211efd99715942c75210d0ee91f7e8897f777d2aed668c8dd9f7b52042b44514dc282e7c6b4da9c5e21ea14ef259ac29579918d4869d"}
+EOF
+    cat <<EOF | zexe multihash_3_512_input.zen multihash_3_512_input.json
+rule output encoding hex
+rule input encoding hex
+Given I have a 'multihash sha3 512'
+and debug
+Then print the 'multihash sha3 512'
+EOF
+    save_output 'multihash_defined_input_3_512.json'
+    assert_output '{"multihash_sha3_512":"144098a2d34ebb5ab5452cc6211efd99715942c75210d0ee91f7e8897f777d2aed668c8dd9f7b52042b44514dc282e7c6b4da9c5e21ea14ef259ac29579918d4869d"}'
+}
