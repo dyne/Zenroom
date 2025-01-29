@@ -58,19 +58,28 @@ local function _multihash(n, obj)
         shake_256 = OCTET.from_hex'19',
         keccak_256 = OCTET.from_hex'1b'
     }
+    local _size <const> = {
+        sha256 = OCTET.from_number(32):copy(15,1),
+        sha512 = OCTET.from_number(64):copy(15,1),
+        sha3_512 = OCTET.from_number(64):copy(15,1),
+        sha3_256 = OCTET.from_number(32):copy(15,1),
+        shake_256 = OCTET.from_number(32):copy(15,1),
+        keccak_256 = OCTET.from_number(32):copy(15,1)
+    }
     local pfx <const> = prefix[n]
+    local sz <const> = _size[n]
     if not pfx then error("Multihash not supported: "..n,2) end
-    return pfx..obj
+    if not sz  then error("Multihash not supported: "..n,2) end
+    return pfx..sz..obj
 end
 
-ZEN:add_schema(
-    {
-        multihash_sha256 = {
-            import = nil,
-            export = function(obj)
-                return _multihash('sha256',obj)
-            end
-        }
+ZEN:add_schema({
+        multihash_sha256   ={export=function(obj) return _multihash('sha256',obj) end},
+        multihash_sha512   ={export=function(obj) return _multihash('sha512',obj) end},
+        multihash_sha3_256 ={export=function(obj) return _multihash('sha3_256',obj) end},
+        multihash_sha3_512 ={export=function(obj) return _multihash('sha3_512',obj) end},
+        multihash_shake256 ={export=function(obj) return _multihash('shake_256',obj) end},
+        multihash_keccak256={export=function(obj) return _multihash('keccak_256',obj) end}
 })
 When("create multihash of ''",
      function(s)
