@@ -30,20 +30,58 @@ local valid_hashes <const> = {
     shake256 = true,
     keccak256 = true
 }
-local function _hash(s, n)
+local function _hash(s, n, d)
     local src = have(s)
     n = n or CONF.hash
+    d = d or 'hash'
     -- serialize tables using zenroom's algo
+    if not valid_hashes[n] then
+        error("Hash algorithm not known: ".. n)
+    end
     src = zencode_serialize(src)
-    if not valid_hashes[n] then error("Hash algorithm not known: ".. n) end
     -- from init: HASH = require('zenroom_hash')
     local _hf <const> = HASH:init(n)
-    ACK.hash = _hf:process(src)
-    new_codec('hash', { zentype = 'e' })
+    ACK[d] = _hf:process(src)
+    new_codec(d, { zentype = 'e' })
 end
 
 When("create hash of ''", _hash)
 When("create hash of '' using ''", _hash)
+
+--https://github.com/multiformats/multicodec/blob/master/table.cs
+local function _multihash(n, obj)
+    local prefix <const> = {
+        sha256 = OCTET.from_hex'12',
+        sha512 = OCTET.from_hex'13',
+        sha3_512 = OCTET.from_hex'14',
+        sha3_256 = OCTET.from_hex'16',
+        shake_256 = OCTET.from_hex'19',
+        keccak_256 = OCTET.from_hex'1b'
+    }
+    local pfx <const> = prefix[n]
+    if not pfx then error("Multihash not supported: "..n,2) end
+    return pfx..obj
+end
+
+ZEN:add_schema(
+    {
+        multihash_sha256 = {
+            import = nil,
+            export = function(obj)
+                return _multihash('sha256',obj)
+            end
+        }
+})
+When("create multihash of ''",
+     function(s)
+         _hash(s,nil,'multihash')
+         CODEC['multihash'].schema = 'multihash_'..CONF.hash
+end)
+When("create multihash of '' using ''",
+     function(s, n)
+         _hash(s, n,'multihash')
+         CODEC['multihash'].schema = 'multihash_'..n
+end)
 
 When("create hash to point '' of ''",function(curve, object)
     local F = _G[curve]

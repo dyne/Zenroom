@@ -204,3 +204,17 @@ EOF
     save_output 'hash_to_point.json'
     assert_output '{"hash_to_point_ecp":"Awd+icZ7dJ55g2iQFzcwtdM/gLTU7HQ663RoAxj8d82YTtLuHIQAbPMDxMfP7/RFAg==","hash_to_point_ecp2":"AhTWpLtcBe+YX4hIBogbdhkQwj36Y+uhaqF0+BR3NeLs1bez+LIRclu9kxgAfeiVCLK3u/eYavyFEtQ2zyf8Mc+tbwRy18oGghnano/eGpkEbPqapfH3otxVeUcLdCb9AduV4iMLeGKydqkBilCrTWghg5JRDJxScA6uE1010azDNY9YnBJWi+Saxlxo7aIXDNv4skA1+VgT9GBzMb1EsfPhOsksJh+alnIF7ERyhF/blHf67toTzfjZlkhTJkeK"}'
 }
+
+
+@test "Multihash using default" {
+    cat << EOF | zexe multihash_default.zen
+rule output encoding hex
+Given nothing
+When I create the random 'source'
+and I create the multihash of 'source'
+and debug
+Then print 'multihash'
+EOF
+    save_output 'multihash_default.json'
+    assert_output '{"multihash":"1278d41911d3f217ec19045930c452734e0fa5e29388f0bc6789ac46f5be907c09"}'
+}
