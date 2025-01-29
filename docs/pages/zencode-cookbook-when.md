@@ -164,7 +164,28 @@ Here we have grouped together the statements that perform:
 
 
  ***Basic hashing***
+
+```
+When I create the hash of 'source' using 'sha512'
+```
+
+Works with any source data named as first argument and one of the hashing algorithms supported. At the time of writing they are:
+- the default SHA2 `sha256` (32 bytes long)
+- and the SHA2 `sha512` (64 bytes long)
+- the new SHA3 class `sha3_256` (32 bytes)
+- the new SHA3 class `sha3_512` (64 bytes)
+- the SHA3 class `shake256` (also 32 bytes)
+- the SHA3 class `keccak256` used in Ethereum
+
+ ***Multihash encoded hash***
  
+If needed it can be easy to encode hashed results in Zencode using [Multihash](https://multiformats.io/multihash/). Just use a similar statement:
+```
+When I create the multihash of 'source' using 'sha512'
+```
+
+This way the multihash content will be usable in its pure binary form while being in the `When` phase, but will be printed out in multihash format by the `Then` phase.
+
  ***Key derivation function (KDF)***
  
  ***Password-Based Key Derivation Function (pbKDF)***
@@ -175,7 +196,7 @@ Here we have grouped together the statements that perform:
 
 Hashing works for any data type, so you can hash simple objects (strings, numbers etc.) as well as hashes and dictionaries.
 
-Keep in mind that in order to use more advanced cryptography like encryption, zero knowledge proof, zk-SNARKS, attributed based credential or the [Coconut](https://arxiv.org/pdf/1802.07344.pdf)  flow you will need to select a *scenario* in the beginning of the scripts. We'll write more about scenarios later, for now we're using the "ecdh" scenario as we're loading an ecdh key from the JSON. See our example below:
+Keep in mind that in order to use more advanced cryptography like encryption, zero knowledge proof, zk-SNARKS, attributed based credential or the [Credential](https://dev.zenroom.org/#/pages/zencode-scenario-credentials) flow you will need to select a *scenario* in the beginning of the scripts. We'll write more about scenarios later, for now we're using the "ecdh" scenario as we're loading an ecdh key from the JSON. See our example below:
 
 
 
