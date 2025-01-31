@@ -32,8 +32,7 @@
 
 int fuzz_byte_random(lua_State *L) {
 	BEGIN();
-	octet *o = o_arg(L, 1);
-	SAFE(o);
+	const octet *o = o_arg(L, 1);
 	if(o->len >= INT_MAX) {
 		o_free(L,o);
 		THROW("fuzz_byte: octet too big");
@@ -74,7 +73,7 @@ int fuzz_byte_random(lua_State *L) {
 
 int fuzz_byte_xor(lua_State *L) {
 	BEGIN();
-	octet *o = o_arg(L,1); SAFE(o);
+	const octet *o = o_arg(L,1);
 	if(o->len >= INT_MAX) {
 		o_free(L,o);
 		THROW("fuzz_byte: octet too big");
@@ -107,7 +106,7 @@ int fuzz_byte_xor(lua_State *L) {
 
 int fuzz_bit_random(lua_State *L) {
 	BEGIN();
-	octet *o = o_arg(L,1); SAFE(o);
+	const octet *o = o_arg(L,1);
 	if(o->len >= INT_MAX) {
 		o_free(L,o);
 		THROW("fuzz_byte: octet too big");
@@ -188,7 +187,7 @@ void OCT_circular_shl_bits(octet *x, int n) {
 
 int fuzz_byte_circular_shift_random(lua_State *L) {
 	BEGIN();
-	octet *o = o_arg(L,1); SAFE(o);
+	const octet *o = o_arg(L,1);
 	if(o->len >= INT_MAX) {
 		o_free(L,o);
 		THROW("fuzz_byte: octet too big");
@@ -233,9 +232,7 @@ int fuzz_byte_circular_shift_random(lua_State *L) {
 
 int fuzz_bit_circular_shift_random(lua_State *L) {
 	BEGIN();
-	octet *o = o_arg(L, 1);
-	SAFE(o);
-
+	const octet *o = o_arg(L, 1);
 	if (o->len >= INT_MAX) {
 		o_free(L, o);
 		THROW("fuzz_byte: octet too big");

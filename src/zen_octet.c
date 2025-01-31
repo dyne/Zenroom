@@ -2026,7 +2026,7 @@ This is also executed when using the 'o << n' with o an octet and n an integer *
 static int shift_left(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *o = o_arg(L,1); SAFE(o);
+	const octet *o = o_arg(L,1);
 	int isnum;
 	lua_Integer n = lua_tointegerx(L,2,&isnum);
 	if(!isnum) {
@@ -2080,7 +2080,7 @@ void OCT_shr_bits(octet *x, int n) {
 static int shift_right(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *o = o_arg(L,1); SAFE(o);
+	const octet *o = o_arg(L,1);
 	int isnum;
 	lua_Integer n = lua_tointegerx(L,2,&isnum);
 	if(!isnum) {
@@ -2110,7 +2110,7 @@ static int shift_right(lua_State *L) {
 static int shift_left_circular(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *o = o_arg(L,1); SAFE(o);
+	const octet *o = o_arg(L,1);
 	int isnum;
 	lua_Integer n = lua_tointegerx(L,2,&isnum);
 	if(!isnum) {
@@ -2171,7 +2171,7 @@ void OCT_circular_shr_bits(octet *x, int n) {
 static int shift_right_circular(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *o = o_arg(L,1); SAFE(o);
+	const octet *o = o_arg(L,1);
 	int isnum;
 	lua_Integer n = lua_tointegerx(L,2,&isnum);
 	if(!isnum) {
