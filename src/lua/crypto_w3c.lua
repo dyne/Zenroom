@@ -22,6 +22,13 @@
 
 local W3C = {}
 
+local function require_once_fun(scenario, fun_name)
+    local S = require_once(scenario)
+    local f = S[fun_name]
+    if not f then error("Method "..fun_name.." not found in "..scenario, 2) end
+    return f
+end
+
 -- utlity to encode a JSON as octet string based on its original encoding
 -- if octet are passed as input it will check that the original string was
 -- a json or a json encoded in url64
@@ -94,12 +101,11 @@ function W3C.jws_octet_to_signature(o_jws, o_payload)
     if alg == 'ES256K' then
         signature = {}
         signature.r, signature.s = OCTET.chop(OCTET.from_url64(toks[3]), 32)
-        verify_f = ECDH.verify
+        verify_f = require_once_fun('ecdh', 'verify')
         pk = pk or ACK.ecdh_public_key
     elseif alg == 'ES256' then
-        local ES256 = require_once 'es256'
         signature = OCTET.from_url64(toks[3])
-        verify_f = ES256.verify
+        verify_f = require_once_fun('es256', 'verify')
         pk = pk or ACK.es256_public_key
     else
         error(alg .. ' algorithm not yet supported by zenroom jws verification', 2)
@@ -135,12 +141,11 @@ function W3C.jws_signature_to_octet(s, h, p, d)
         local to_be_signed = O.from_string(O.to_url64(header)..'.'..payload)
         if header_json.alg == 'ES256K' then
             local sk = havekey'ecdh'
-            local signature_table = ECDH.sign(sk, to_be_signed)
+            local signature_table = require_once_fun('ecdh', 'sign')(sk, to_be_signed)
             signature = signature_table.r .. signature_table.s
         elseif header_json.alg == 'ES256' then
-            local ES256 = require_once 'es256'
             local sk = havekey'es256'
-            signature = ES256.sign(sk, to_be_signed)
+            signature = require_once_fun('es256', 'sign')(sk, to_be_signed)
         else
             error(header_json.alg .. ' algorithm not yet supported by zenroom jws signature', 2)
         end
@@ -195,6 +200,12 @@ function W3C.create_string_jwk(alg, sk_flag, pk)
     local jwk = {}
     jwk.kty = 'EC'
     jwk.crv = fif(alg == 'ES256K', 'secp256k1', 'P-256')
+    local pub_xy_f
+    if alg == 'ES256K' then
+        pub_xy_f = require_once_fun('ecdh', 'public_xy')
+    else
+        pub_xy_f = require_once_fun('es256', 'public_xy')
+    end
     local pub
     -- explicit pk
     if pk then
@@ -207,11 +218,10 @@ function W3C.create_string_jwk(alg, sk_flag, pk)
         local sk, pub_f
         if alg == 'ES256K' then
             sk = ACK.keyring and ACK.keyring.ecdh
-            pub_f = ECDH.pubgen
+            pub_f = require_once_fun('ecdh', 'pubgen')
         else
-            local ES256 = require_once 'es256'
             sk = ACK.keyring and ACK.keyring.es256
-            pub_f = ES256.pubgen
+            pub_f = require_once_fun('es256', 'pubgen')
         end
         -- sk found
         if sk then
@@ -227,7 +237,7 @@ function W3C.create_string_jwk(alg, sk_flag, pk)
             end
         end
     end
-    local x, y = O.chop(pub, 32)
+    local x, y = pub_xy_f(pub)
     jwk.x = O.to_url64(x)
     jwk.y = O.to_url64(y)
     return jwk
