@@ -26,6 +26,8 @@
 #include <lua_functions.h>
 
 #define PK_SIZE 64
+#define PREFIX_LONG_PK_SIZE 65
+#define PREFIX_COMP_PK_SIZE 33
 #define PK_COORD_SIZE 32
 #define SK_SIZE 32
 #define HASH_SIZE 32
@@ -38,6 +40,26 @@
 		lua_pushnil(L);        \
 		goto end;              \
 	}
+
+
+static int extract_raw_public_key(const octet *pk, octet *res_pk) {
+	if (pk->len == PK_SIZE) {
+		for(uint8_t i=0;i<PK_SIZE;i++) res_pk->val[i] = pk->val[i];
+		return 0;
+	}
+	if (pk->len == PREFIX_LONG_PK_SIZE) {
+		// Check for correct prefix in long public key
+		if (pk->val[0] != 0x04) return 1;
+		for(uint8_t i=0;i<PK_SIZE;i++) res_pk->val[i] = pk->val[i+1];
+		return 0;
+	}
+	if (pk->len == PREFIX_COMP_PK_SIZE) {
+		// Handle compressed public key
+		if (pk->val[0] != 0x02 && pk->val[0] != 0x03) return 1;
+		return p256_uncompress_publickey((uint8_t*)res_pk->val, (uint8_t*)pk->val);
+	}
+	return 1;
+}
 
 static int p256_keygen(lua_State *L)
 {
@@ -58,7 +80,8 @@ static int p256_pubgen(lua_State *L)
 {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *pk = NULL, *sk = NULL;
+	const octet *sk = NULL;
+	octet *pk = NULL;
 	sk = o_arg(L, 1);
 	if (!sk)
 	{
@@ -114,7 +137,8 @@ static int p256_sign(lua_State *L)
 	hash256 sha256;
 	char hash[HASH_SIZE];
 	char *failed_msg = NULL;
-	octet *sk = NULL, *m = NULL, *sig = NULL, *k = NULL;
+	const octet *sk = NULL, *m = NULL, *k = NULL;
+	octet *sig = NULL;
 	sk = o_arg(L, 1);
 	if (!sk)
 	{
@@ -177,7 +201,7 @@ static int p256_verify(lua_State *L)
 	hash256 sha256;
 	char hash[HASH_SIZE];
 	char *failed_msg = NULL;
-	octet *pk = NULL, *sig = NULL, *m = NULL;
+	const octet *pk = NULL, *sig = NULL, *m = NULL;
 	pk = o_arg(L, 1);
 	if (!pk)
 	{
@@ -224,20 +248,30 @@ end:
 static int p256_pub_xy(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
+	octet *raw_pk = NULL;
+	int i;
 	const octet *pk = o_arg(L, 1);
 	if(pk == NULL) {
 		failed_msg = "Could not allocate public key";
 		goto end;
 	}
-	ASSERT_OCT_LEN(pk, PK_SIZE, "Invalid size for P256 public key");
-	register int i;
+	raw_pk = o_alloc(L, PK_SIZE);
+	if(raw_pk == NULL) {
+		failed_msg = "Could not allocate raw public key";
+		goto end;
+	}
+	int ret = extract_raw_public_key(pk, raw_pk);
+	if (ret != 0) {
+		failed_msg = "Could not extract raw public key";
+		goto end;
+	}
 	octet *x = o_new(L, PK_COORD_SIZE+1);
 	if(x == NULL) {
 		failed_msg = "Could not create x coordinate";
 		goto end;
 	}
 	for(i=0; i < PK_COORD_SIZE; i++)
-		x->val[i] = pk->val[i];
+		x->val[i] = raw_pk->val[i];
 	x->val[PK_COORD_SIZE+1] = 0x0;
 	x->len = PK_COORD_SIZE;
 	octet *y = o_new(L, PK_COORD_SIZE+1);
@@ -246,11 +280,12 @@ static int p256_pub_xy(lua_State *L) {
 		goto end;
 	}
 	for(i=0; i < PK_COORD_SIZE; i++)
-		y->val[i] = pk->val[PK_COORD_SIZE+i];
+		y->val[i] = raw_pk->val[PK_COORD_SIZE+i];
 	y->val[PK_COORD_SIZE+1] = 0x0;
 	y->len = PK_COORD_SIZE;
 end:
 	o_free(L, pk);
+	o_free(L, raw_pk);
 	if(failed_msg) {
 		THROW(failed_msg);
 		lua_pushnil(L);
