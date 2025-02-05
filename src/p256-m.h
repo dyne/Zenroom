@@ -34,7 +34,7 @@ extern "C" {
  * return:  P256_SUCCESS on success
  *          P256_RANDOM_FAILED on failure
  */
-int p256_gen_keypair(zenroom_t *Z, octet *k, uint8_t priv[32], uint8_t pub[64]);
+int p256_gen_keypair(zenroom_t *Z, const octet *k, uint8_t priv[32], uint8_t pub[64]);
 
 /*
  * ECDH/ECDSA generate public key
@@ -74,7 +74,7 @@ int p256_ecdh_shared_secret(uint8_t secret[32],
  *          P256_RANDOM_FAILED on failure
  *          P256_INVALID_PRIVKEY if priv is invalid
  */
-int p256_ecdsa_sign(zenroom_t *Z, octet *k, uint8_t sig[64], const uint8_t priv[32],
+int p256_ecdsa_sign(zenroom_t *Z, const octet *k, uint8_t sig[64], const uint8_t priv[32],
                     const uint8_t *hash, size_t hlen);
 
 /*
@@ -91,6 +91,17 @@ int p256_ecdsa_sign(zenroom_t *Z, octet *k, uint8_t sig[64], const uint8_t priv[
  */
 int p256_ecdsa_verify(const uint8_t sig[64], const uint8_t pub[64],
                       const uint8_t *hash, size_t hlen);
+
+/*
+ * Uncompress public key
+ *
+ * [out] unc_pub: on success, holds the uncompressed public key, as two big-endian integers
+ * [in] pub: the compressed public key, as two big-endian integers
+ *
+ * return:  P256_SUCCESS on success
+ *          P256_INVALID_PUBKEY if pub is invalid
+ */
+int p256_uncompress_publickey(uint8_t unc_pub[64], const uint8_t pub[33]);
 
 #ifdef __cplusplus
 }
