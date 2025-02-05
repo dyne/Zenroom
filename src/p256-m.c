@@ -408,6 +408,39 @@ static void u256_to_bytes(uint8_t p[32], const uint32_t z[8])
 	}
 }
 
+static void u256_rshift(uint32_t x[8], unsigned int shift)
+{
+	/* If shift is 256 or more, all bits are shifted out */
+	if (shift >= 256) {
+		for (int i = 0; i < 8; i++) {
+			x[i] = 0;
+		}
+		return;
+	}
+
+	/* Shift full words first (little-endian order) */
+	unsigned int word_shift = shift / 32;
+	if (word_shift > 0) {
+		for (unsigned i = 0; i < 8 - word_shift; i++) {
+			x[i] = x[i + word_shift];
+		}
+		for (unsigned i = 8 - word_shift; i < 8; i++) {
+			x[i] = 0;
+		}
+	}
+
+	/* Remaining bit shift */
+	unsigned int bit_shift = shift % 32;
+	if (bit_shift > 0) {
+		uint32_t carry = 0;
+		for (int i = 7; i >= 0; i--) {
+			uint32_t new_carry = x[i] << (32 - bit_shift);
+			x[i] = (x[i] >> bit_shift) | carry;
+			carry = new_carry;
+		}
+	}
+}
+
 /**********************************************************************
  *
  * Operations modulo a 256-bit prime m
@@ -630,6 +663,58 @@ static void m256_mul_p(uint32_t z[8],
 		       const uint32_t x[8], const uint32_t y[8])
 {
 	m256_mul(z, x, y, &p256_p);
+}
+
+/*
+ * Power modulo m.
+ *
+ * in: x in [0, m)
+ *     y in [0, 2^256)
+ *     mod must point to a valid m256_mod structure
+ * out: z = x ^ y mod m, in [0, m)
+ *
+ * Note: as a memory area, z may overlap with x or y.
+ */
+static void m256_pow(uint32_t z[8],
+			   const uint32_t x[8], const uint32_t y[8],
+			   const m256_mod *mod)
+{
+	uint32_t base[8], exp[8];
+	uint8_t i;
+	/* copy y to exp */
+	for (i = 0; i < 8; i++)
+		exp[i] = y[i];
+
+	/* copy x to base */
+	for (i = 0; i < 8; i++)
+		base[i] = x[i];
+
+	/* set z to 1 */
+	u256_set32(z, 1);
+	m256_mul(z, z, mod->R2, mod);
+
+	while (u256_diff0(exp) != 0) {
+		if (exp[0] & 1) { /* If LSB of exp is 1 */
+			m256_mul(z, z, base, mod); /* res = res * x mod m */
+		}
+		m256_mul(base, base, base, mod); /* x = x^2 mod m */
+		u256_rshift(exp, 1); /* e = e / 2 */
+	}
+}
+
+/*
+ * Power modulo p.
+ *
+ * in: x in [0, p)
+ *     y in [0, 2^256)
+ * out: z = x ^ y mod p, in [0, p)
+ *
+ * Note: as a memory area, z may overlap with x or y.
+ */
+static void m256_pow_p(uint32_t z[8],
+		       const uint32_t x[8], const uint32_t y[8])
+{
+	m256_pow(z, x, y, &p256_p);
 }
 
 /*
@@ -1196,7 +1281,7 @@ static int scalar_from_bytes(uint32_t s[8], const uint8_t p[32])
  *      return 0 if OK, -1 on failure
  *      sbytes, s, x, y must be discarded when returning non-zero.
  */
-static int scalar_gen_with_pub(zenroom_t *Z, octet *k, uint8_t sbytes[32], uint32_t s[8],
+static int scalar_gen_with_pub(zenroom_t *Z, const octet *k, uint8_t sbytes[32], uint32_t s[8],
 			       uint32_t x[8], uint32_t y[8])
 {
 	/* generate a random valid scalar */
@@ -1233,7 +1318,7 @@ static int scalar_gen_with_pub(zenroom_t *Z, octet *k, uint8_t sbytes[32], uint3
 /*
  * ECDH/ECDSA generate pair
  */
-int p256_gen_keypair(zenroom_t *Z, octet *k, uint8_t priv[32], uint8_t pub[64])
+int p256_gen_keypair(zenroom_t *Z, const octet *k, uint8_t priv[32], uint8_t pub[64])
 {
 	uint32_t s[8], x[8], y[8];
 	int ret = scalar_gen_with_pub(Z, k, priv, s, x, y);
@@ -1362,7 +1447,7 @@ static void ecdsa_m256_from_hash(uint32_t z[8],
 /*
  * ECDSA sign
  */
-int p256_ecdsa_sign(zenroom_t *Z, octet *kk, uint8_t sig[64], const uint8_t priv[32],
+int p256_ecdsa_sign(zenroom_t *Z, const octet *kk, uint8_t sig[64], const uint8_t priv[32],
 		    const uint8_t *hash, size_t hlen)
 {
 	/*
@@ -1506,4 +1591,42 @@ int p256_ecdsa_verify(const uint8_t sig[64], const uint8_t pub[64],
 		return P256_SUCCESS;
 
 	return P256_INVALID_SIGNATURE;
+}
+
+int p256_uncompress_publickey(uint8_t unc_pub[64], const uint8_t pub[33]) {
+	int ret;
+	uint8_t i;
+	uint32_t x[8], y[8];
+
+	ret = m256_from_bytes(x, pub+1, &p256_p);
+	if (ret != 0)
+		return ret;
+
+	/* rhs = x^3 - 3x + b */
+	uint32_t rhs[8];
+	m256_mul_p(rhs, x, x); /* x^2 */
+	m256_mul_p(rhs, rhs, x); /* x^3 */
+	for (i = 0; i < 3; i++)
+		m256_sub_p(rhs, rhs, x); /* x^3 - 3x */
+	m256_add_p(rhs, rhs, p256_b); /* x^3 - 3x + b */
+
+	/* e = p/4 + 1 */
+	uint32_t e[8];
+	uint32_t one[8];
+	for (i = 0; i < 8; i++)
+		e[i] = p256_p.m[i];
+	u256_rshift(e, 2);
+	u256_set32(one, 1);
+	u256_add(e, e, one);
+
+	/* y = (y^2)^e mod p = rhs^e mod p */
+	m256_pow_p(y, rhs, e);
+
+	/* y parity from first byte */
+	if ((y[0] & 1) != (pub[0] == 0x02)) {
+		m256_sub_p(y, p256_p.m, y); /* y = p - y (invert) */
+	}
+
+	point_to_bytes(unc_pub, x, y);
+	return P256_SUCCESS;
 }
