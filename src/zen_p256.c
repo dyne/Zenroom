@@ -121,10 +121,32 @@ static int p256_session(lua_State *L)
 	END(1);
 }
 
-static int p256_pubcheck(lua_State *L)
-{
+static int p256_pubcheck(lua_State *L) {
 	BEGIN();
-	// TODO: here make a check if public key is valid and return bool
+	octet * raw_pk = NULL;
+	char *failed_msg = NULL;
+	const octet* pk = o_arg(L, 1);
+	if (!pk) {
+		failed_msg = "Could not allocate public key";
+		goto end;
+	}
+	raw_pk = o_alloc(L, PK_SIZE);
+	if(raw_pk == NULL) {
+		failed_msg = "Could not allocate raw public key";
+		goto end;
+	}
+	int ret = extract_raw_public_key(pk, raw_pk);
+	if (ret != 0) {
+		failed_msg = "Could not extract raw public key";
+		goto end;
+	}
+	lua_pushboolean(L, p256_validate_pubkey((uint8_t*)raw_pk->val)==0);
+end:
+	o_free(L, pk);
+	o_free(L, raw_pk);
+	if (failed_msg != NULL) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 

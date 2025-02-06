@@ -22,11 +22,20 @@
 
 local ES256 = require('es256')
 
+local function public_key_f(obj)
+	local res = schema_get(obj, '.')
+	zencode_assert(
+		ES256.pubcheck(res),
+		'Public key is not a valid point on curve'
+	)
+	return res
+end
+
 ZEN:add_schema(
-   {
-       es256_public_key = { import = function(obj) return schema_get(obj, '.') end },
-      es256_signature = { import = function(obj) return schema_get(obj, '.') end }
-   }
+    {
+        es256_public_key = { import = public_key_f },
+        es256_signature = { import = function(obj) return schema_get(obj, '.') end }
+    }
 )
 
 -- generate the private key

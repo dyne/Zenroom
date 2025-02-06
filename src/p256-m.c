@@ -1594,6 +1594,13 @@ int p256_ecdsa_verify(const uint8_t sig[64], const uint8_t pub[64],
 	return P256_INVALID_SIGNATURE;
 }
 
+
+/**********************************************************************
+ *
+ * Key management utilities
+ *
+ **********************************************************************/
+
 int p256_uncompress_publickey(uint8_t unc_pub[64], const uint8_t pub[33]) {
 	int ret;
 	uint8_t i;
@@ -1630,4 +1637,21 @@ int p256_uncompress_publickey(uint8_t unc_pub[64], const uint8_t pub[33]) {
 
 	point_to_bytes(unc_pub, x, y);
 	return P256_SUCCESS;
+}
+
+int p256_validate_pubkey(const uint8_t pub[64])
+{
+    uint32_t x[8], y[8];
+    int ret = point_from_bytes(x, y, pub);
+
+    return ret == 0 ? P256_SUCCESS : P256_INVALID_PUBKEY;
+}
+
+int p256_validate_privkey(const uint8_t priv[32])
+{
+    uint32_t s[8];
+    int ret = scalar_from_bytes(s, priv);
+    zeroize(s, sizeof(s));
+
+    return ret == 0 ? P256_SUCCESS : P256_INVALID_PRIVKEY;
 }
