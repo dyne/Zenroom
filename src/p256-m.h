@@ -103,6 +103,26 @@ int p256_ecdsa_verify(const uint8_t sig[64], const uint8_t pub[64],
  */
 int p256_uncompress_publickey(uint8_t unc_pub[64], const uint8_t pub[33]);
 
+/*
+ * Validate public key
+ *
+ * [in] pub: the public key, as two big-endian integers
+ *
+ * return:  P256_SUCCESS on success
+ *          P256_INVALID_PUBKEY if pub is invalid
+ */
+int p256_validate_pubkey(const uint8_t pub[64]);
+
+/*
+ * Validate private key
+ *
+ * [in] priv: the private key, as a big-endian integer
+ *
+ * return:  P256_SUCCESS on success
+ *          P256_INVALID_PRIVKEY if priv is invalid
+ */
+int p256_validate_privkey(const uint8_t priv[32]);
+
 #ifdef __cplusplus
 }
 #endif
