@@ -1338,15 +1338,16 @@ int p256_publickey(uint8_t priv[32], uint8_t pub[64])
 
 	ret = scalar_from_bytes(s, priv);
 	if (ret != 0)
-	{
-		return -1;
-	}
+		return P256_INVALID_PRIVKEY;
+
 	/* compute and ouput the associated public key */
 	scalar_mult(x, y, p256_gx, p256_gy, s);
+	zeroize(s, sizeof(s));
 
 	point_to_bytes(pub, x, y);
-	return 0;
+	return P256_SUCCESS;
 }
+
 /**********************************************************************
  *
  * ECDH
