@@ -56,7 +56,7 @@ static int allocate_raw_public_key(lua_State *L, int pk_pos, octet **res_pk, cha
 	}
 	(*res_pk)->len = PK_SIZE;
 	if (pk->len == PK_SIZE) {
-		for(uint8_t i=0;i<PK_SIZE;i++) (*res_pk)->val[i] = pk->val[i];
+		for(uint8_t i=0; i<PK_SIZE; i++) (*res_pk)->val[i] = pk->val[i];
 		o_free(L, pk);
 		return 0;
 	}
@@ -67,7 +67,7 @@ static int allocate_raw_public_key(lua_State *L, int pk_pos, octet **res_pk, cha
 			o_free(L, pk);
 			return 1;
 		}
-		for(uint8_t i=0;i<PK_SIZE;i++) (*res_pk)->val[i] = pk->val[i+1];
+		for(uint8_t i=0; i<PK_SIZE; i++) (*res_pk)->val[i] = pk->val[i+1];
 		o_free(L, pk);
 		return 0;
 	}
