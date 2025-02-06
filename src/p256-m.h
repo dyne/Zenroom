@@ -96,12 +96,23 @@ int p256_ecdsa_verify(const uint8_t sig[64], const uint8_t pub[64],
  * Uncompress public key
  *
  * [out] unc_pub: on success, holds the uncompressed public key, as two big-endian integers
- * [in] pub: the compressed public key, as two big-endian integers
+ * [in] pub: the compressed public key
  *
  * return:  P256_SUCCESS on success
  *          P256_INVALID_PUBKEY if pub is invalid
  */
 int p256_uncompress_publickey(uint8_t unc_pub[64], const uint8_t pub[33]);
+
+/*
+ * Compress public key
+ *
+ * [out] comp_pub: on success, holds the compressed public key
+ * [in] unc_pub: the uncompressed public key, as two big-endian integers
+ *
+ * return:  P256_SUCCESS on success
+ *          P256_INVALID_PUBKEY if unc_pub is invalid
+ */
+int p256_compress_publickey(uint8_t comp_pub[33], const uint8_t unc_pub[64]);
 
 /*
  * Validate public key

@@ -26,8 +26,8 @@
 #include <lua_functions.h>
 
 #define PK_SIZE 64
-#define PREFIX_LONG_PK_SIZE 65
-#define PREFIX_COMP_PK_SIZE 33
+#define UNCOMPRESSED_PK_SIZE 65
+#define COMPRESSED_PK_SIZE 33
 #define PK_COORD_SIZE 32
 #define SK_SIZE 32
 #define HASH_SIZE 32
@@ -60,7 +60,7 @@ static int allocate_raw_public_key(lua_State *L, int pk_pos, octet **res_pk, cha
 		o_free(L, pk);
 		return 0;
 	}
-	if (pk->len == PREFIX_LONG_PK_SIZE) {
+	if (pk->len == UNCOMPRESSED_PK_SIZE) {
 		// Check for correct prefix in long public key
 		if (pk->val[0] != 0x04) {
 			*failed_msg = "Invalid long public key prefix: 0x04 expected";
@@ -71,7 +71,7 @@ static int allocate_raw_public_key(lua_State *L, int pk_pos, octet **res_pk, cha
 		o_free(L, pk);
 		return 0;
 	}
-	if (pk->len == PREFIX_COMP_PK_SIZE) {
+	if (pk->len == COMPRESSED_PK_SIZE) {
 		// Handle compressed public key
 		if (pk->val[0] != 0x02 && pk->val[0] != 0x03) {
 			*failed_msg = "Invalid compressed public key prefix: 0x02 or 0x03 expected";
@@ -315,6 +315,31 @@ static int p256_destroy(lua_State *L)
 	END(0);
 }
 
+static int p256_compress_pub(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *raw_pk = NULL;
+	int ret = allocate_raw_public_key(L, 1, &raw_pk, &failed_msg);
+	if (ret != 0) goto end;
+	octet *compressed_pk = o_new(L, COMPRESSED_PK_SIZE);
+	if(compressed_pk == NULL) {
+		failed_msg = "Could not create compressed public key";
+		goto end;
+	}
+	compressed_pk->len = COMPRESSED_PK_SIZE;
+	ret = p256_compress_publickey((uint8_t*)compressed_pk->val, (uint8_t*)raw_pk->val);
+	if (ret != 0) {
+		failed_msg = "Could not compress public key";
+		goto end;
+	}
+end:
+	o_free(L, raw_pk);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
 int luaopen_p256(lua_State *L)
 {
 	(void)L;
@@ -329,6 +354,7 @@ int luaopen_p256(lua_State *L)
 	    {"verify", p256_verify},
 	    {"public_xy", p256_pub_xy},
 	    {"pubxy", p256_pub_xy},
+		{"compress_public_key", p256_compress_pub},
 	    {NULL, NULL}};
 	const struct luaL_Reg p256_methods[] = {
 	    {"__gc", p256_destroy},

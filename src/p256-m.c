@@ -1601,7 +1601,8 @@ int p256_ecdsa_verify(const uint8_t sig[64], const uint8_t pub[64],
  *
  **********************************************************************/
 
-int p256_uncompress_publickey(uint8_t unc_pub[64], const uint8_t pub[33]) {
+int p256_uncompress_publickey(uint8_t unc_pub[64], const uint8_t pub[33])
+{
 	int ret;
 	uint8_t i;
 	uint32_t x[8], y[8];
@@ -1636,6 +1637,22 @@ int p256_uncompress_publickey(uint8_t unc_pub[64], const uint8_t pub[33]) {
 	}
 
 	point_to_bytes(unc_pub, x, y);
+	return P256_SUCCESS;
+}
+
+int p256_compress_publickey(uint8_t comp_pub[33], const uint8_t unc_pub[64])
+{
+	uint32_t x[8], y[8];
+	int ret = point_from_bytes(x, y, unc_pub);
+	if (ret != 0)
+		return P256_INVALID_PUBKEY;
+
+	m256_done(y, &p256_p);
+
+	comp_pub[0] = (y[0] & 1) ? 0x03 : 0x02;
+	for (int i = 0; i < 32; i++)
+		comp_pub[i+1] = unc_pub[i];
+
 	return P256_SUCCESS;
 }
 
