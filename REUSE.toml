@@ -46,10 +46,14 @@ precedence = "aggregate"
 SPDX-FileCopyrightText = "Andrew M. <liquidsun@gmail.com>"
 SPDX-License-Identifier = "CC0-1.0"
 
-
 [[annotations]]
 path = ["lib/mlkem/**"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2024-2025 The mlkem-native project authors"
 SPDX-License-Identifier = "Apache-2.0"
 
+[[annotations]]
+path = ["src/varint.*"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright (c) 2024 Joshua J Baker"
+SPDX-License-Identifier = "MIT"
