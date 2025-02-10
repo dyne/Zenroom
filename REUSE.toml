@@ -43,5 +43,12 @@ SPDX-License-Identifier = "CC0-1.0"
 [[annotations]]
 path = ["lib/ed25519-donna/**"]
 precedence = "aggregate"
-SPDX-FileCopyrightText = "Andrew M. <liquidsun@gmail.com>"
-SPDX-License-Identifier = "CC0-1.0"
+spdx-filecopyrighttext = "andrew m. <liquidsun@gmail.com>"
+spdx-license-identifier = "cc0-1.0"
+
+[[annotations]]
+path = ["src/varint.*"]
+precedence = "aggregate"
+spdx-filecopyrighttext = "Copyright (c) 2024 Joshua J Baker"
+spdx-license-identifier = "MIT"
+
