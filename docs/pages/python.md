@@ -1,4 +1,3 @@
-# Use Zenroom in Python3
 <p align="center">
   <br/>
   <a href="https://dev.zenroom.org/">
@@ -6,28 +5,18 @@
   </a>
   <h2 align="center">
     zenroom.py 🐍
+    <a href="https://pypi.org/project/zenroom/">
+      <img alt="PyPI" src="https://img.shields.io/pypi/v/zenroom.svg" alt="Latest release">
+    </a>
     <br>
     <sub>A Python3 wrapper of <a href="https://zenroom.org">Zenroom</a>, a secure and small virtual machine for crypto language processing</sub> </h2>
-  
-<br><br>
-
-  <a href="https://travis-ci.com/dyne/zenroom-py">
-    <img src="https://travis-ci.com/dyne/zenroom-py.svg?branch=master" alt="Build status"/>
-  </a>
-  <a href="https://codecov.io/gh/dyne/zenroom-py">
-    <img src="https://codecov.io/gh/dyne/zenroom-py/branch/master/graph/badge.svg" alt="Code coverage"/>
-  </a>
-  <a href="https://pypi.org/project/zenroom/">
-    <img alt="PyPI" src="https://img.shields.io/pypi/v/zenroom.svg" alt="Latest release">
-  </a>
+    <br>
 </p>
 
-<hr/>
 
-
-This library attempts to provide a very simple wrapper around the Zenroom
-(https://zenroom.dyne.org/) crypto virtual machine developed as part of the
-DECODE project (https://decodeproject.eu/), that aims to make the Zenroom
+This library attempts to provide a very simple wrapper around the 
+[Zenroom](https://zenroom.dyne.org/) crypto virtual machine developed as part of the
+[DECODE project](https://decodeproject.eu/), that aims to make the Zenroom
 virtual machine easier to call from normal Python code.
 
 Zenroom itself does have good cross platform functionality, so if you are
@@ -42,63 +31,43 @@ then please visit the website linked to above to find out more.
 pip install zenroom
 ```
 
-**NOTE** - the above command attempts to install the zenroom package, pulling in
-the Zenroom VM as a precompiled binary, so will only work on Linux and macOS
-machines.
+> [!NOTE]
+> The `zenroom` package is just a wrapper around the `zencode-exec` utility.
+> You also need to install `zencode-exec`, you can download if from the official [releases on github](https://github.com/dyne/Zenroom/releases/).
+> After downloading it, you have to move it somewhere in your path, like:
+> ```
+> sudo cp zencode-exec /usr/local/bin/
+> ```
 
-for the edge (syn to the latest commit on master) version please run:
-```bash
-pip install zenroom --pre
-```
-
-The `zenroom` package is just a wrapper around the `zencode-exec` utility.
-You also need to install `zencode-exec`, you can download if from the official [releases on github](https://github.com/dyne/Zenroom/releases/)
-
-When after downloading you have to move it somewhere in your path:
-```
-sudo cp zencode-exec /usr/local/bin/
-```
-
-Warning: on Mac OS, the executable is `zencode-exec.command` and you have to symlink it to `zencode-exec`
-```
-sudo cp zencode-exec.command /usr/local/bin/
-cd /usr/local/bin
-sudo ln -s zencode-exec.command zencode-exec
-```
+> [!WARNING]
+> On Mac OS, the executable is `zencode-exec.command` and you have to symlink it to `zencode-exec`
+> ```
+> sudo cp zencode-exec.command /usr/local/bin/
+> cd /usr/local/bin
+> sudo ln -s zencode-exec.command zencode-exec
+> ```
 
 ***
 ## 🎮 Usage
 
-The main call is to run `zencode`: `zencode_exec`
-
-If you don't know what `zencode` is, you can start with this blogpost
-https://decodeproject.eu/blog/smart-contracts-english-speaker
-The official documentation is available on [https://dev.zenroom.org/zencode/](https://dev.zenroom.org/zencode/)
-
-A good set of examples of `zencode` contracts could be found on
-* [zencode simple tests](https://github.com/dyne/Zenroom/tree/master/test/zencode_simple)
-* [zencode coconut tests](https://github.com/dyne/Zenroom/tree/master/test/zencode_coconut)
-
-
-### 🐍 Python wrapper
+If you don't know what `zencode` is, you can start with the [official documentation](https://dev.zenroom.org).
 
 The wrapper exposes one simple calls: `zencode_exec`
 
 #### args
 - `script` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)**
  the zencode script to be executed
+- `conf` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** the optional conf
+ string to pass according to [zenroom config](https://dev.zenroom.org/#/pages/zenroom-config)
 - `keys` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** the optional keys
  string to pass in execution as documented in zenroom docs
 - `data` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** the optional data
  string to pass in execution as documented in zenroom docs
-- `conf` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** the optional conf
- string to pass according to zen_config [here](https://github.com/dyne/Zenroom/blob/master/src/zen_config.c#L99-L104)
 
 #### return
-Both functions return the same object result `ZenResult` that have two attributes:
-
-- `stdout` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** holds the stdout of the script execution
-- `stderr` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** holds the stderr of the script execution
+- `output` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** holds the stdout of the script execution
+- `logs` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** holds the stderr of the script execution
+- `result` (dictionary or None) holds the JSON parsed output if output contains valid JSON, otherwise it is None.
 
 ##### Examples
 
@@ -108,8 +77,8 @@ Example usage of `zencode_exec(script, keys=None, data=None, conf=None)`
 ```python
 from zenroom import zenroom
 
-contract = """Scenario ecdh: Create a keypair"
-Given that I am known as 'identifier'
+contract = """Scenario ecdh: Create a ecdh key
+Given that I am known as 'Alice'
 When I create the ecdh key
 Then print the 'keyring'
 """
@@ -118,8 +87,8 @@ result = zenroom.zencode_exec(contract)
 print(result.output)
 ```
 
-Next, we show a more complex example
-```
+Next, we show a more complex example involving an ethereum signature
+```python
 from zenroom import zenroom
 import json
 
@@ -196,7 +165,7 @@ https://dev.zenroom.org/
 
 ## 😍 Acknowledgements
 
-Copyright (C) 2018-2022 by [Dyne.org](https://www.dyne.org) foundation, Amsterdam
+Copyright (C) 2018-2025 by [Dyne.org](https://www.dyne.org) foundation, Amsterdam
 
 Originally designed and written by Sam Mulube.
 
@@ -204,13 +173,14 @@ Designed, written and maintained by Puria Nafisi Azizi
 
 Rewritten by Danilo Spinella and David Dashyan
 
-<img src="https://ec.europa.eu/cefdigital/wiki/download/attachments/289112547/logo-cef-digital-2021.png" width="310" alt="Project funded by the European Commission">
+<img src="https://upload.wikimedia.org/wikipedia/commons/8/84/European_Commission.svg" width="310" alt="Project funded by the European Commission">
+
 This project is receiving funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement nr. 732546 (DECODE).
 
 ***
 
 ## 👥 Contributing
-Please first take a look at the [Dyne.org - Contributor License Agreement](CONTRIBUTING.md) then
+Please first take a look at the [Dyne.org - Contributor License Agreement](https://github.com/dyne/Zenroom/blob/master/Agreement.md) then
 
 1.  🔀 [FORK IT](https://github.com/dyne/Zenroom//fork)
 2.  Create your feature branch `git checkout -b feature/branch`
@@ -224,7 +194,7 @@ Please first take a look at the [Dyne.org - Contributor License Agreement](CONTR
 ## 💼 License
 
       Zenroom.py - a python wrapper of zenroom
-      Copyright (c) 2018-2022 Dyne.org foundation, Amsterdam
+      Copyright (c) 2018-2025 Dyne.org foundation, Amsterdam
 
       This program is free software: you can redistribute it and/or modify
       it under the terms of the GNU Affero General Public License as
