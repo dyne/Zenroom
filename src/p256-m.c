@@ -1631,8 +1631,8 @@ int p256_uncompress_publickey(uint8_t unc_pub[64], const uint8_t pub[33])
 	/* y = (y^2)^e mod p = rhs^e mod p */
 	m256_pow_p(y, rhs, e);
 
-	/* y parity from first byte */
-	if ((y[0] & 1) != (pub[0] == 0x02)) {
+	/* y parity from first byte	*/
+	if ((y[0] & 1) != (pub[0] & 1)) {
 		m256_sub_p(y, p256_p.m, y); /* y = p - y (invert) */
 	}
 
