@@ -2,7 +2,7 @@ import pytest
 import base64
 import json
 from schema import Schema, Regex
-from zenroom import zencode_exec #, zenroom_exec
+from zenroom import zencode_exec
 
 
 def test_zencode_call_random_array():
