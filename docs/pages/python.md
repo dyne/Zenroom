@@ -63,6 +63,13 @@ sudo ln -s /usr/local/bin/zencode-exec.command /usr/local/bin/zencode-exec
 ```
 
 <!-- tabs:end -->
+### ** Windows **
+
+> [!WARNING]
+> On Windows, the executable is `zencode-exec.command` and you have to symlink it to `zencode-exec.exe`
+
+To install on Windows, please do the same as in the previous guides, but download instead [zencode-exec.exe](https://github.com/dyne/zenroom/releases/latest/download/zencode-exec.exe) and place where python can execute it.
+
 
 
 ***
