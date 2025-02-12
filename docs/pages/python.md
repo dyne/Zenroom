@@ -27,25 +27,43 @@ then please visit the website linked to above to find out more.
 ***
 ## 💾 Installation
 
-```bash
-pip install zenroom
-```
-
 > [!NOTE]
 > The `zenroom` package is just a wrapper around the `zencode-exec` utility.
 > You also need to install `zencode-exec`, you can download if from the official [releases on github](https://github.com/dyne/Zenroom/releases/).
-> After downloading it, you have to move it somewhere in your path, like:
-> ```
-> sudo cp zencode-exec /usr/local/bin/
-> ```
+> After downloading it, you have to move it somewhere in your path, like `/usr/local/bin/`
+
+<!-- tabs:start -->
+
+### ** Linux **
+
+```bash
+# install zenroom wrapper
+pip install zenroom
+
+# install zencode-exec and copy it into PATH
+wget https://github.com/dyne/zenroom/releases/latest/download/zencode-exec
+chmod +x zencode-exec
+sudo cp zencode-exec /usr/local/bin/
+```
+
+### ** MacOS **
 
 > [!WARNING]
 > On Mac OS, the executable is `zencode-exec.command` and you have to symlink it to `zencode-exec`
-> ```
-> sudo cp zencode-exec.command /usr/local/bin/
-> cd /usr/local/bin
-> sudo ln -s zencode-exec.command zencode-exec
-> ```
+
+```bash
+# install zenroom wrapper
+pip install zenroom
+
+# install zencode-exec and copy it into PATH
+wget https://github.com/dyne/zenroom/releases/latest/download/zencode-exec.command
+chmod +x zencode-exec.command
+sudo cp zencode-exec.command /usr/local/bin/
+sudo ln -s /usr/local/bin/zencode-exec.command /usr/local/bin/zencode-exec
+```
+
+<!-- tabs:end -->
+
 
 ***
 ## 🎮 Usage
