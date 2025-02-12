@@ -66,6 +66,8 @@ sudo ln -s /usr/local/bin/zencode-exec.command /usr/local/bin/zencode-exec
 > [!WARNING]
 > On Windows, the executable is `zencode-exec.exe`, and you need to place it in a directory listed in your `PATH` environment variable.
 
+Open PowerShell (press **🪟 + r**, type **powershell** and press enter), then: 
+
 ```bash
 # Install zenroom wrapper
 pip install zenroom
