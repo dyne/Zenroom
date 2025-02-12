@@ -61,14 +61,23 @@ chmod +x zencode-exec.command
 sudo cp zencode-exec.command /usr/local/bin/
 sudo ln -s /usr/local/bin/zencode-exec.command /usr/local/bin/zencode-exec
 ```
-
-<!-- tabs:end -->
 ### ** Windows **
 
 > [!WARNING]
-> On Windows, the executable is `zencode-exec.command` and you have to symlink it to `zencode-exec.exe`
+> On Windows, the executable is `zencode-exec.exe`, and you need to place it in a directory listed in your `PATH` environment variable.
 
-To install on Windows, please do the same as in the previous guides, but download instead [zencode-exec.exe](https://github.com/dyne/zenroom/releases/latest/download/zencode-exec.exe) and place where python can execute it.
+```bash
+# Install zenroom wrapper
+pip install zenroom
+
+# Download zencode-exec and move it to a directory in PATH
+Invoke-WebRequest -Uri "https://github.com/dyne/zenroom/releases/latest/download/zencode-exec.exe" -OutFile "zencode-exec.exe"
+
+# Move the executable to a directory in PATH (e.g., C:\Windows or another suitable directory)
+Move-Item -Path "zencode-exec.exe" -Destination "C:\Windows\" -Force
+```
+
+<!-- tabs:end -->
 
 
 
