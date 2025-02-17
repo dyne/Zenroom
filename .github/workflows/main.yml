@@ -377,7 +377,7 @@ jobs:
             ./bindings/javascript/README.md
             ./bindings/javascript/dist/
 
-  build-release-on-ubuntu:
+  linux-release:
     name: 🐧 Binary builds on Ubuntu
     runs-on: ubuntu-latest
     needs: [semantic-release]
@@ -421,7 +421,6 @@ jobs:
         run: |
           mkdir -p zenroom-linux
           cp libzenroom.so zenroom-linux/
-          tree zenroom-linux
           zip -r zenroom-linux.zip zenroom-linux
       - name: Upload artifact linux-amd64
         uses: actions/upload-artifact@v4
@@ -443,7 +442,6 @@ jobs:
           cp zencode-exec.exe   zenroom-win64/
           mv libzenroom_dll.lib zenroom-win64/
           mv zenroom.dll        zenroom-win64/
-          tree zenroom-win64
           zip -r zenroom-win64.zip zenroom-win64
       - name: Upload artifact win x86_64
         uses: actions/upload-artifact@v4
@@ -552,8 +550,6 @@ jobs:
         with:
           fetch-depth: 0
       - uses: hendrikmuhs/ccache-action@v1.2
-      - name: Clean for next build
-        run: make clean
       - name: Install specific NDK version
         run: |
           export ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
@@ -583,19 +579,18 @@ jobs:
           mv libzenroom.so zenroom-android/armv7a
       - name: Pack build results
         run: |
-          tree zenroom-android
           zip -r zenroom-android.zip zenroom-android
       - name: Upload artifacts for Android
         uses: actions/upload-artifact@v4
         with:
-          name: release-android-libs
+          name: release-android
           path: |
             zenroom-android.zip
 
   npm-release:
     name: 📦 npm release
     runs-on: ubuntu-latest
-    needs: [js-build-release, apple-release, build-release-on-ubuntu]
+    needs: [js-build-release, apple-release, linux-release]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -618,7 +613,7 @@ jobs:
 
   pypi-release:
     name: 📦 PyPI release
-    needs: [js-build-release, python-sdist, apple-release, build-release-on-ubuntu]
+    needs: [js-build-release, python-sdist, apple-release, linux-release]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -632,7 +627,7 @@ jobs:
 
   draft-binary-release:
     name: 📦 Pack release
-    needs: [semantic-release, js-build-release, apple-release, build-release-on-ubuntu]
+    needs: [semantic-release, js-build-release, apple-release, linux-release]
     runs-on: ubuntu-latest
     steps:
       - name: download binary artifacts
@@ -657,13 +652,13 @@ jobs:
 
   publish_docker_image:
     name: 🐳 Publish Docker image
-    needs: [semantic-release, js-build-release, apple-release, build-release-on-ubuntu]
+    needs: [semantic-release, js-build-release, apple-release, linux-release]
     uses: ForkbombEu/workflows/.github/workflows/publish-ghcr.yml@main
     secrets: inherit
 
   remove-tag-on-fail:
     name: 🧻 Remove tag on fail
-    needs: [semantic-release, js-build-release, apple-release, build-release-on-ubuntu]
+    needs: [semantic-release, js-build-release, apple-release, linux-release]
     runs-on: ubuntu-latest
     if: ${{ (failure() || cancelled()) && needs.semantic-release.outputs.release == 'True' }}
     steps:
