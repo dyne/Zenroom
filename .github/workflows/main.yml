@@ -82,30 +82,6 @@ jobs:
       working-directory: src/lua
       run: |
         luacheck --config .luacheckrc --std lua54 .
-
-  build-on-ios:
-    name: 🍎 ios release build
-    needs: [semantic-release]
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: hendrikmuhs/ccache-action@v1.2
-      - run: |
-          make ios-armv7 RELEASE=1 CCACHE=1
-          make clean
-          make ios-arm64 RELEASE=1 CCACHE=1
-          make clean
-          make ios-sim   RELEASE=1 CCACHE=1
-      - name: Pack build results
-        run: |
-          mkdir -p zenroom-ios
-          mv zenroom-ios-armv7.a  zenroom-ios/
-          mv zenroom-ios-arm64.a  zenroom-ios/
-          mv zenroom-ios-sim.a    zenroom-ios/
-          tree zenroom-ios
-          zip -r zenroom-ios.zip zenroom-ios
           
   linux-test:
     name: 🐧 Linux check tests (gcc and clang)
@@ -516,8 +492,8 @@ jobs:
       with:
         path: ./bindings/python3/dist/*.tar.gz
 
-  build-release-on-osx:
-    name: 🍎 mac osx release build
+  apple-release:
+    name: 🍎 apple osx and ios release build
     needs: [semantic-release]
     runs-on: macos-latest
     if: ${{ needs.semantic-release.outputs.release == 'True' }}
@@ -526,6 +502,9 @@ jobs:
         with:
           fetch-depth: 0
       - uses: hendrikmuhs/ccache-action@v1.2
+      - name: Install ccache
+        run: |
+          brew install ccache
       - run: |
           make osx-exe RELEASE=1 CCACHE=1
           make -C src clean
@@ -545,10 +524,28 @@ jobs:
             zenroom-osx.zip
             zenroom.command
             zencode-exec.command
+      - name: Build ios libs
+        run: |
+          make ios-arm64 RELEASE=1 CCACHE=1
+          make clean
+          make ios-sim   RELEASE=1 CCACHE=1
+      - name: Pack build results
+        run: |
+          mkdir -p zenroom-ios
+          mv zenroom-ios-arm64.a zenroom-ios/
+          mv zenroom-ios-sim.a   zenroom-ios/
+          zip -r zenroom-ios.zip zenroom-ios
+      - name: Upload artifacts for Apple iOS
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apple-ios
+          path: |
+            zenroom-ios.zip
 
   android-release:
     name: 🤖 Android release build (r21e api)
-    needs: [reuse, c-lint, lua-lint]
+    needs: [semantic-release]
+    if: ${{ needs.semantic-release.outputs.release == 'True' }}
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v4
@@ -598,7 +595,7 @@ jobs:
   npm-release:
     name: 📦 npm release
     runs-on: ubuntu-latest
-    needs: [js-build-release, build-release-on-osx, build-release-on-ubuntu]
+    needs: [js-build-release, apple-release, build-release-on-ubuntu]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -621,7 +618,7 @@ jobs:
 
   pypi-release:
     name: 📦 PyPI release
-    needs: [js-build-release, python-sdist, build-release-on-osx, build-release-on-ubuntu]
+    needs: [js-build-release, python-sdist, apple-release, build-release-on-ubuntu]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -635,7 +632,7 @@ jobs:
 
   draft-binary-release:
     name: 📦 Pack release
-    needs: [semantic-release, js-build-release, build-release-on-osx, build-release-on-ubuntu]
+    needs: [semantic-release, js-build-release, apple-release, build-release-on-ubuntu]
     runs-on: ubuntu-latest
     steps:
       - name: download binary artifacts
@@ -660,13 +657,13 @@ jobs:
 
   publish_docker_image:
     name: 🐳 Publish Docker image
-    needs: [semantic-release, js-build-release, build-release-on-osx, build-release-on-ubuntu]
+    needs: [semantic-release, js-build-release, apple-release, build-release-on-ubuntu]
     uses: ForkbombEu/workflows/.github/workflows/publish-ghcr.yml@main
     secrets: inherit
 
   remove-tag-on-fail:
     name: 🧻 Remove tag on fail
-    needs: [semantic-release, js-build-release, build-release-on-osx, build-release-on-ubuntu]
+    needs: [semantic-release, js-build-release, apple-release, build-release-on-ubuntu]
     runs-on: ubuntu-latest
     if: ${{ (failure() || cancelled()) && needs.semantic-release.outputs.release == 'True' }}
     steps:
