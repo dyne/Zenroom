@@ -16,6 +16,10 @@ platform := ios
 # activate CCACHE etc.
 include build/plugins.mk
 
+# TODO: from some error output in recent XCode we get a list of archs:
+# i386,x86_64,x86_64h,arm64,arm64e
+# we haven't met yet the need to activate all, contact us if you do.
+
 ios-armv7: cflags += -arch armv7 -isysroot $(shell xcrun --sdk iphoneos --show-sdk-path 2>/dev/null)
 ios-armv7: ${BUILD_DEPS} ${ZEN_SOURCES}
 	TARGET=armv7 libtool -static -o zenroom-ios-armv7.a \
@@ -30,14 +34,14 @@ ios-sim: cc := $(shell xcrun --sdk iphonesimulator -f gcc 2>/dev/null)
 ios-sim: ar := $(shell xcrun --sdk iphonesimulator -f ar 2>/dev/null)
 ios-sim: ld := $(shell xcrun --sdk iphonesimulator -f ld 2>/dev/null)
 ios-sim: ranlib := $(shell xcrun --sdk iphonesimulator -f ranlib 2>/dev/null)
-ios-sim: cflags += -arch x86_64 -isysroot $(shell xcrun --sdk iphonesimulator --show-sdk-path 2>/dev/null)
+ios-sim: cflags += -arch x86_64 -arch arm64 -isysroot $(shell xcrun --sdk iphonesimulator --show-sdk-path 2>/dev/null)
 ios-sim: quantum_proof_cc := ${cc}
 ios-sim: ed25519_cc := ${cc}
 ios-sim: libcc_cc := ${cc}
 ios-sim: luacc_cc := ${cc}
 ios-sim: zenroom_cc := ${cc}
 ios-sim: ${BUILD_DEPS} ${ZEN_SOURCES}
-	TARGET=x86_64 libtool -static -o zenroom-ios-x86_64.a \
+	TARGET=sim libtool -static -o zenroom-ios-sim.a \
 		${ZEN_SOURCES} ${ldadd}
 
 include build/deps.mk
