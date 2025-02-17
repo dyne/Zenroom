@@ -526,6 +526,14 @@ jobs:
           mkdir -p android/x86_64
           make posix-lib COMPILER=x86_64-linux-android21-clang RELEASE=1 CCACHE=1
           mv libzenroom.so android/x86_64
+          make clean
+          mkdir -p android/i686
+          make posix-lib COMPILER=i686-linux-android21-clang RELEASE=1 CCACHE=1
+          mv libzenroom.so android/i686
+          make clean
+          mkdir -p android/armv7a
+          make posix-lib COMPILER=armv7a-linux-androideabi21-clang RELEASE=1 CCACHE=1
+          mv libzenroom.so android/armv7a
       - name: Pack build results
         run: |
           tree android
