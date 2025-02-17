@@ -378,7 +378,7 @@ jobs:
             ./bindings/javascript/dist/
 
   linux-release:
-    name: 🐧 Binary builds on Ubuntu
+    name: 🐧 Binary builds on Ubuntu (Linux, Windows, Android)
     runs-on: ubuntu-latest
     needs: [semantic-release]
     if: ${{ needs.semantic-release.outputs.release == 'True' }}
@@ -451,6 +451,43 @@ jobs:
             zenroom-win64.zip
             zenroom.exe
             zencode-exec.exe
+      - name: Install specific NDK version
+        run: |
+          export ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "ndk;21.4.7075529"
+      - name: Set up Android NDK environment
+        run: |
+          export ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/21.4.7075529
+          export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
+          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME" >> $GITHUB_ENV
+          echo "PATH=$PATH" >> $GITHUB_ENV
+      - name: Build C source code with Makefile
+        run: |
+          make clean
+          mkdir -p zenroom-android/aarch64
+          make posix-lib COMPILER=aarch64-linux-android21-clang RELEASE=1 CCACHE=1
+          mv libzenroom.so zenroom-android/aarch64/
+          make clean
+          mkdir -p zenroom-android/x86_64
+          make posix-lib COMPILER=x86_64-linux-android21-clang RELEASE=1 CCACHE=1
+          mv libzenroom.so zenroom-android/x86_64
+          make clean
+          mkdir -p zenroom-android/i686
+          make posix-lib COMPILER=i686-linux-android21-clang RELEASE=1 CCACHE=1
+          mv libzenroom.so zenroom-android/i686
+          make clean
+          mkdir -p zenroom-android/armv7a
+          make posix-lib COMPILER=armv7a-linux-androideabi21-clang RELEASE=1 CCACHE=1
+          mv libzenroom.so zenroom-android/armv7a
+      - name: Pack build results
+        run: |
+          zip -r zenroom-android.zip zenroom-android
+      - name: Upload artifacts for Android
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-android
+          path: |
+            zenroom-android.zip
 
   file-changes:
     name: "🗃️  Check file changes"
@@ -539,53 +576,6 @@ jobs:
           name: release-apple-ios
           path: |
             zenroom-ios.zip
-
-  android-release:
-    name: 🤖 Android release build (r21e api)
-    needs: [semantic-release]
-    if: ${{ needs.semantic-release.outputs.release == 'True' }}
-    runs-on: "ubuntu-latest"
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: hendrikmuhs/ccache-action@v1.2
-      - name: Install specific NDK version
-        run: |
-          export ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
-          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "ndk;21.4.7075529"
-      - name: Set up Android NDK environment
-        run: |
-          export ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/21.4.7075529
-          export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
-          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME" >> $GITHUB_ENV
-          echo "PATH=$PATH" >> $GITHUB_ENV
-      - name: Build C source code with Makefile
-        run: |
-          mkdir -p zenroom-android/aarch64
-          make posix-lib COMPILER=aarch64-linux-android21-clang RELEASE=1 CCACHE=1
-          mv libzenroom.so zenroom-android/aarch64/
-          make clean
-          mkdir -p zenroom-android/x86_64
-          make posix-lib COMPILER=x86_64-linux-android21-clang RELEASE=1 CCACHE=1
-          mv libzenroom.so zenroom-android/x86_64
-          make clean
-          mkdir -p zenroom-android/i686
-          make posix-lib COMPILER=i686-linux-android21-clang RELEASE=1 CCACHE=1
-          mv libzenroom.so zenroom-android/i686
-          make clean
-          mkdir -p zenroom-android/armv7a
-          make posix-lib COMPILER=armv7a-linux-androideabi21-clang RELEASE=1 CCACHE=1
-          mv libzenroom.so zenroom-android/armv7a
-      - name: Pack build results
-        run: |
-          zip -r zenroom-android.zip zenroom-android
-      - name: Upload artifacts for Android
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-android
-          path: |
-            zenroom-android.zip
 
   npm-release:
     name: 📦 npm release
