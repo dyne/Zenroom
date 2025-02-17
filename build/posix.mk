@@ -33,7 +33,7 @@ ifdef OSX
 endif
 
 ifdef LIBRARY
-	cflags += -DLIBRARY
+	cflags += -fPIC -DLIBRARY
 endif
 
 # activate CCACHE etc.
