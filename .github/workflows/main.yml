@@ -406,18 +406,29 @@ jobs:
           path: |
             zenroom
             zencode-exec
+      - name: Pack build results
+        run: |
+          mkdir -p zenroom-linux
+          cp zenroom      zenroom-linux/
+          cp zencode-exec zenroom-linux/
       - name: Clean for next build
         run: |
           make clean
       - name: Build x86_64 shlib
         run: |
           make linux-lib RELEASE=1 CCACHE=1
-      - name: Upload artifact linux-lib-amd64
+      - name: Pack build results
+        run: |
+          mkdir -p zenroom-linux
+          cp libzenroom.so zenroom-linux/
+          tree zenroom-linux
+          zip -r zenroom-linux.zip zenroom-linux
+      - name: Upload artifact linux-amd64
         uses: actions/upload-artifact@v4
         with:
-          name: release-lib-linux-amd64
+          name: release-linux-amd64
           path: |
-            libzenroom.so
+            zenroom-linux.zip
       - name: Clean for next build
         run: make clean
       - name: Build x86_64 windows .exe
@@ -425,15 +436,23 @@ jobs:
           make win-exe RELEASE=1 CCACHE=1
           make clean -C src
           make win-dll RELEASE=1 CCACHE=1
+      - name: Pack build results
+        run: |
+          mkdir -p zenroom-win64
+          cp zenroom.exe        zenroom-win64/
+          cp zencode-exec.exe   zenroom-win64/
+          mv libzenroom_dll.lib zenroom-win64/
+          mv zenroom.dll        zenroom-win64/
+          tree zenroom-win64
+          zip -r zenroom-win64.zip zenroom-win64
       - name: Upload artifact win x86_64
         uses: actions/upload-artifact@v4
         with:
-          name: release-exe-win-w64
+          name: release-win64
           path: |
+            zenroom-win64.zip
             zenroom.exe
             zencode-exec.exe
-            libzenroom_dll.lib
-            zenroom.dll
 
   file-changes:
     name: "🗃️  Check file changes"
@@ -487,14 +506,22 @@ jobs:
           make osx-exe RELEASE=1 CCACHE=1
           make -C src clean
           make osx-lib RELEASE=1 CCACHE=1
+      - name: Pack build results
+        run: |
+          mkdir -p zenroom-osx
+          cp zenroom.command      zenroom-osx/
+          cp zencode-exec.command zenroom-osx/
+          mv libzenroom.dylib     zenroom-osx/
+          tree zenroom-osx
+          zip -r zenroom-osx.zip zenroom-osx
       - name: Upload artifacts for Apple OSX
         uses: actions/upload-artifact@v4
         with:
           name: release-apple-osx
           path: |
+            zenroom-osx.zip
             zenroom.command
             zencode-exec.command
-            libzenroom.dylib
 
   android-release:
     name: 🤖 Android release build (r21e api)
@@ -519,31 +546,31 @@ jobs:
           echo "PATH=$PATH" >> $GITHUB_ENV
       - name: Build C source code with Makefile
         run: |
-          mkdir -p android/aarch64
+          mkdir -p zenroom-android/aarch64
           make posix-lib COMPILER=aarch64-linux-android21-clang RELEASE=1 CCACHE=1
-          mv libzenroom.so android/aarch64/
+          mv libzenroom.so zenroom-android/aarch64/
           make clean
-          mkdir -p android/x86_64
+          mkdir -p zenroom-android/x86_64
           make posix-lib COMPILER=x86_64-linux-android21-clang RELEASE=1 CCACHE=1
-          mv libzenroom.so android/x86_64
+          mv libzenroom.so zenroom-android/x86_64
           make clean
-          mkdir -p android/i686
+          mkdir -p zenroom-android/i686
           make posix-lib COMPILER=i686-linux-android21-clang RELEASE=1 CCACHE=1
-          mv libzenroom.so android/i686
+          mv libzenroom.so zenroom-android/i686
           make clean
-          mkdir -p android/armv7a
+          mkdir -p zenroom-android/armv7a
           make posix-lib COMPILER=armv7a-linux-androideabi21-clang RELEASE=1 CCACHE=1
-          mv libzenroom.so android/armv7a
+          mv libzenroom.so zenroom-android/armv7a
       - name: Pack build results
         run: |
           tree android
-          zip -r android-libs.zip android
+          zip -r zenroom-android.zip zenroom-android
       - name: Upload artifacts for Android
         uses: actions/upload-artifact@v4
         with:
           name: release-android-libs
           path: |
-            android-libs.zip
+            zenroom-android.zip
 
   npm-release:
     name: 📦 npm release
