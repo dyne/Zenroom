@@ -224,4 +224,8 @@
     <loc>https://dev.zenroom.org/#/pages/zenroom_whitepaper.pdf</loc>
     <changefreq>weekly</changefreq>
   </url>
+  <url>
+    <loc>https://dev.zenroom.org/onepage.md</loc>
+    <changefreq>weekly</changefreq>
+  </url>
 </urlset>
