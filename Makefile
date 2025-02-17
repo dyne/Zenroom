@@ -59,6 +59,13 @@ osx-exe: ## Executable for Apple MacOS
 osx-lib: ## Library for Apple MacOS native
 	$(MAKE) -f build/posix.mk libzenroom.dylib OSX=1 LIBRARY=1
 
+ios-armv7: ## Libraries for Apple iOS native armv7
+	$(MAKE) -f build/apple-ios.mk ios-armv7
+ios-arm64: ## Libraries for Apple iOS native arm64
+	$(MAKE) -f build/apple-ios.mk ios-arm64
+ios-sim: ## Libraries for Apple iOS simulator on XCode
+	$(MAKE) -f build/apple-ios.mk ios-sim
+
 # ios-arm64: # TODO: build/old/osx.mk Dynamic lib (dylib) for Apple iOS ARM64
 # 	$(MAKE) -f build/apple-osx.mk ios-arm64
 
