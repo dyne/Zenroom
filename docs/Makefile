@@ -7,3 +7,6 @@ api:
 
 sitemap:
 	@bash ./build_sitemap.sh _sidebar.md
+
+onepage:
+	@bash ./build_onepage.sh _sidebar.md
