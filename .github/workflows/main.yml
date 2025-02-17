@@ -83,6 +83,30 @@ jobs:
       run: |
         luacheck --config .luacheckrc --std lua54 .
 
+  build-on-ios:
+    name: 🍎 ios release build
+    needs: [semantic-release]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: hendrikmuhs/ccache-action@v1.2
+      - run: |
+          make ios-armv7 RELEASE=1 CCACHE=1
+          make clean
+          make ios-arm64 RELEASE=1 CCACHE=1
+          make clean
+          make ios-sim   RELEASE=1 CCACHE=1
+      - name: Pack build results
+        run: |
+          mkdir -p zenroom-ios
+          mv zenroom-ios-armv7.a  zenroom-ios/
+          mv zenroom-ios-arm64.a  zenroom-ios/
+          mv zenroom-ios-sim.a    zenroom-ios/
+          tree zenroom-ios
+          zip -r zenroom-ios.zip zenroom-ios
+          
   linux-test:
     name: 🐧 Linux check tests (gcc and clang)
     needs: [reuse, c-lint, lua-lint]
