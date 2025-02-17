@@ -1,4 +1,4 @@
-all: sitemap
+all: sitemap onepage
 
 # api output is _media/lua
 api:
