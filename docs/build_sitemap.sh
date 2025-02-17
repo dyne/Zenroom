@@ -37,6 +37,13 @@ awk '
 }
 ' "$input_file" >> "$output_file"
 
+cat <<EOF >> "$output_file"
+  <url>
+    <loc>https://dev.zenroom.org/onepage.md</loc>
+    <changefreq>weekly</changefreq>
+  </url>
+EOF
+
 # Close the sitemap XML
 echo '</urlset>' >> "$output_file"
 
