@@ -536,7 +536,6 @@ jobs:
           cp zenroom.command      zenroom-osx/
           cp zencode-exec.command zenroom-osx/
           mv libzenroom.dylib     zenroom-osx/
-          tree zenroom-osx
           zip -r zenroom-osx.zip zenroom-osx
       - name: Upload artifacts for Apple OSX
         uses: actions/upload-artifact@v4
@@ -587,7 +586,7 @@ jobs:
           mv libzenroom.so zenroom-android/armv7a
       - name: Pack build results
         run: |
-          tree android
+          tree zenroom-android
           zip -r zenroom-android.zip zenroom-android
       - name: Upload artifacts for Android
         uses: actions/upload-artifact@v4
