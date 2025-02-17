@@ -19,4 +19,4 @@ Mostly for fun, we put together a tiny bot for [Telegram](https://web.telegram.o
 
 The source code here: 
   
-[](../../examples/zenroom-bot.py ':include :type=code python')
+[](../examples/zenroom-bot.py ':include :type=code python')
