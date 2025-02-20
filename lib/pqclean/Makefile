@@ -14,10 +14,14 @@ DILITHIUM2=dilithium2/ntt.o dilithium2/packing.o dilithium2/poly.o dilithium2/po
 
 ML_DSA_44=ml-dsa-44/ntt.o ml-dsa-44/poly.o ml-dsa-44/reduce.o ml-dsa-44/sign.o ml-dsa-44/packing.o ml-dsa-44/polyvec.o ml-dsa-44/rounding.o ml-dsa-44/symmetric-shake.o ml-dsa-44/zen_sign.o
 
-ML_KEM_512=ml-kem-512/ntt.o ml-kem-512/reduce.o ml-kem-512/symmetric-shake.o ml-kem-512/verify.o ml-kem-512/poly.o ml-kem-512/cbd.o ml-kem-512/kem.o ml-kem-512/polyvec.o ml-kem-512/indcpa.o
+ML_KEM_512=ml-kem-512/compress.o ml-kem-512/debug.o ml-kem-512/indcpa.o ml-kem-512/kem.o ml-kem-512/poly_k.o ml-kem-512/poly.o ml-kem-512/sampling.o ml-kem-512/verify.o 
+ML_KEM_512_CFLAGS := $(CFLAGS) -DMLK_FIPS202_CUSTOM_HEADER="\"ml-kem-512/zen_fips202.h\"" -DMLK_FIPS202X4_CUSTOM_HEADER="\"ml-kem-512/fips202x4.h\""
 
 # LIB=libsntrup761_clean.a
 SNTRUP761=sntrup761/crypto_core_inv3sntrup761.o sntrup761/crypto_core_invsntrup761.o sntrup761/crypto_core_mult3sntrup761.o sntrup761/crypto_core_multsntrup761.o sntrup761/crypto_core_scale3sntrup761.o sntrup761/crypto_core_weightsntrup761.o sntrup761/crypto_core_wforcesntrup761.o sntrup761/crypto_decode_761x1531.o sntrup761/crypto_decode_761x3.o sntrup761/crypto_decode_761x4591.o sntrup761/crypto_decode_761xint16.o sntrup761/crypto_decode_761xint32.o sntrup761/crypto_encode_761x1531.o sntrup761/crypto_encode_761x1531round.o sntrup761/crypto_encode_761x3.o sntrup761/crypto_encode_761x4591.o sntrup761/crypto_encode_761xfreeze3.o sntrup761/crypto_encode_761xint16.o sntrup761/crypto_encode_int16.o sntrup761/crypto_sort_int32.o sntrup761/crypto_sort_uint32.o sntrup761/crypto_verify_1039.o sntrup761/kem.o
+
+ml-kem-512/%.o: ml-kem-512/%.c
+	$(CC) $(ML_KEM_512_CFLAGS) -c $< -o $@
 
 all: build/libqpz.a
 

@@ -1,34 +1,55 @@
-#ifndef SYMMETRIC_H
-#define SYMMETRIC_H
+/*
+ * Copyright (c) 2024-2025 The mlkem-native project authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+#ifndef MLK_SYMMETRIC_H
+#define MLK_SYMMETRIC_H
 
 #include <stddef.h>
 #include <stdint.h>
-#include "params.h"
+#include "cbmc.h"
+#include "common.h"
+#include MLK_FIPS202_HEADER_FILE
+#include MLK_FIPS202X4_HEADER_FILE
 
-#include "fips202.h"
+/* Macros denoting FIPS 203 specific Hash functions */
 
-typedef shake128ctx xof_state;
-
-#define kyber_shake128_absorb KYBER_NAMESPACE(kyber_shake128_absorb)
-void kyber_shake128_absorb(xof_state *s,
-                           const uint8_t seed[KYBER_SYMBYTES],
-                           uint8_t x,
-                           uint8_t y);
-
-#define kyber_shake256_prf KYBER_NAMESPACE(kyber_shake256_prf)
-void kyber_shake256_prf(uint8_t *out, size_t outlen, const uint8_t key[KYBER_SYMBYTES], uint8_t nonce);
-
-#define kyber_shake256_rkprf KYBER_NAMESPACE(kyber_shake256_rkprf)
-void kyber_shake256_rkprf(uint8_t out[KYBER_SSBYTES], const uint8_t key[KYBER_SYMBYTES], const uint8_t input[KYBER_CIPHERTEXTBYTES]);
-
-#define XOF_BLOCKBYTES SHAKE128_RATE
-
+/* Hash function H, [FIPS 203, Section 4.1, Eq (4.4)] */
 #define hash_h(OUT, IN, INBYTES) sha3_256(OUT, IN, INBYTES)
-#define hash_g(OUT, IN, INBYTES) sha3_512(OUT, IN, INBYTES)
-#define xof_absorb(STATE, SEED, X, Y) kyber_shake128_absorb(STATE, SEED, X, Y)
-#define xof_squeezeblocks(OUT, OUTBLOCKS, STATE) shake128_squeezeblocks(OUT, OUTBLOCKS, STATE)
-#define xof_ctx_release(STATE) shake128_ctx_release(STATE)
-#define prf(OUT, OUTBYTES, KEY, NONCE) kyber_shake256_prf(OUT, OUTBYTES, KEY, NONCE)
-#define rkprf(OUT, KEY, INPUT) kyber_shake256_rkprf(OUT, KEY, INPUT)
 
-#endif /* SYMMETRIC_H */
+/* Hash function G, [FIPS 203, Section 4.1, Eq (4.5)] */
+#define hash_g(OUT, IN, INBYTES) sha3_512(OUT, IN, INBYTES)
+
+/* Hash function J, [FIPS 203, Section 4.1, Eq (4.4)] */
+#define hash_j(OUT, IN, INBYTES) shake256(OUT, MLKEM_SYMBYTES, IN, INBYTES)
+
+/* PRF function, [FIPS 203, Section 4.1, Eq (4.3)]
+ * Referring to (eq 4.3), `OUT` is assumed to contain `s || b`. */
+#define prf_eta(ETA, OUT, IN) \
+  shake256(OUT, (ETA) * MLKEM_N / 4, IN, MLKEM_SYMBYTES + 1)
+#define prf_eta1(OUT, IN) prf_eta(MLKEM_ETA1, OUT, IN)
+#define prf_eta2(OUT, IN) prf_eta(MLKEM_ETA2, OUT, IN)
+#define prf_eta1_x4(OUT0, OUT1, OUT2, OUT3, IN0, IN1, IN2, IN3)            \
+  shake256x4(OUT0, OUT1, OUT2, OUT3, (MLKEM_ETA1 * MLKEM_N / 4), IN0, IN1, \
+             IN2, IN3, MLKEM_SYMBYTES + 1)
+
+/* XOF function, FIPS 203 4.1 */
+#define xof_ctx shake128ctx
+#define xof_x4_ctx shake128x4ctx
+#define xof_init(CTX) shake128_init((CTX))
+#define xof_absorb(CTX, IN, INBYTES) \
+  shake128_absorb_once((CTX), (IN), (INBYTES))
+#define xof_squeezeblocks(BUF, NBLOCKS, CTX) \
+  shake128_squeezeblocks((BUF), (NBLOCKS), (CTX))
+#define xof_release(CTX) shake128_release((CTX))
+
+#define xof_x4_init(CTX) shake128x4_init((CTX))
+#define xof_x4_absorb(CTX, IN0, IN1, IN2, IN3, INBYTES) \
+  shake128x4_absorb_once((CTX), (IN0), (IN1), (IN2), (IN3), (INBYTES))
+#define xof_x4_squeezeblocks(BUF0, BUF1, BUF2, BUF3, NBLOCKS, CTX) \
+  shake128x4_squeezeblocks((BUF0), (BUF1), (BUF2), (BUF3), (NBLOCKS), (CTX))
+#define xof_x4_release(CTX) shake128x4_release((CTX))
+
+#define XOF_RATE SHAKE128_RATE
+
+#endif /* MLK_SYMMETRIC_H */
