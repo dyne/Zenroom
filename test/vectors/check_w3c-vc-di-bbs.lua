@@ -34,6 +34,9 @@ local vector_bbsMessages = {
 }
 local vector_bbsSignature = "86168dd2b5d0c7c6a56a30f4212ed116a53def05d0d6708207d483c7ff2053aefa22d24ba7659d60852694f8d85be0fa2adc3974c7dc4cc68b3db17b2423975047104162c24502b41591879ac24f1bb1"
 
+-- test if zenroom does verify the bbs signature vector
+assert(bbs.verify(ciphersuite, O.from_hex(vector_publicKey), O.from_hex(vector_bbsSignature), O.from_hex(vector_header), vector_bbsMessages) == true, "unable to verify a valid signature")
+
 -- test the possibility to produce via zenroom a valid bbs-vc signature following the documentation procedure
 bbsSignature = bbs.sign(ciphersuite, BIG.new(O.from_hex(vector_privateKey)), O.from_hex(vector_publicKey), O.from_hex(vector_header), vector_bbsMessages)
-assert(O.to_hex(bbsSignature) == vector_bbsSignature, "bbs signature verification failed, incorrect signature")
+assert(O.to_hex(bbsSignature) == vector_bbsSignature, "the bbs signature produced is incorrect")
