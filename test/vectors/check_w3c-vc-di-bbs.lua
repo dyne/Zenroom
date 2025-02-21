@@ -5,40 +5,35 @@ local bbs = require'crypto_bbs'
 
 local ciphersuite = bbs.ciphersuite('sha256')
 
-local publicKey = "a4ef1afa3da575496f122b9b78b8c24761531a8a093206ae7c45b80759c168ba4f7a260f9c3367b6c019b4677841104b10665edbe70ba3ebe7d9cfbffbf71eb016f70abfbb163317f372697dc63efd21fc55764f63926a8f02eaea325a2a888f"
-local privateKey = "66d36e118832af4c5e28b2dfe1b9577857e57b042a33e06bdea37b811ed09ee0"
-
-local vector_sg= "86168dd2b5d0c7c6a56a30f4212ed116a53def05d0d6708207d483c7ff2053aefa22d24ba7659d60852694f8d85be0fa2adc3974c7dc4cc68b3db17b2423975047104162c24502b41591879ac24f1bb1"
-
-local proofHash = "3a5bbf25d34d90b18c35cd2357be6a6f42301e94fc9e52f77e93b773c5614bdf"
-local mandatoryHash = "8e7cc22c318dd2094e02d0bf06c5d73a5dba717611a40f6d1bedc5ea7c300fd6"
-local header= proofHash .. mandatoryHash
-
-local MULTI_MSG_ARRAY = {
-    O.from_hex('5f3a6230203c687474703a2f2f7777772e77332e6f72672f313939392f30322f32322d7264662d73796e7461782d6e7323747970653e203c68747470733a2f2f736368656d612e6f72672f506572736f6e3e202e0a'),
-    O.from_hex('5f3a6230203c687474703a2f2f7777772e77332e6f72672f313939392f30322f32322d7264662d73796e7461782d6e7323747970653e203c68747470733a2f2f773369642e6f72672f636974697a656e73686970235065726d616e656e745265736964656e743e202e0a'),
-    O.from_hex('5f3a6230203c68747470733a2f2f736368656d612e6f72672f6269727468446174653e2022313937382d30372d3137225e5e3c687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d61236461746554696d653e202e0a'),
-    O.from_hex('5f3a6230203c68747470733a2f2f736368656d612e6f72672f66616d696c794e616d653e2022534d49544822202e0a'),
-    O.from_hex('5f3a6230203c68747470733a2f2f736368656d612e6f72672f67656e6465723e202246656d616c6522202e0a'),
-    O.from_hex('5f3a6230203c68747470733a2f2f736368656d612e6f72672f676976656e4e616d653e20224a414e4522202e0a'),
-    O.from_hex('5f3a6230203c68747470733a2f2f736368656d612e6f72672f696d6167653e203c646174613a696d6167652f706e673b6261736536342c6956424f5277304b47676f414141414e5355684555674141414145414141414243415941414141664663534a4141414144556c455156514957325034763433685077414849674b3176347458367741414141424a52553545726b4a6767673d3d3e202e0a'),
-    O.from_hex('5f3a6230203c68747470733a2f2f773369642e6f72672f636974697a656e73686970236269727468436f756e7472793e20224172636164696122202e0a'),
-    O.from_hex('5f3a6230203c68747470733a2f2f773369642e6f72672f636974697a656e7368697023636f6d6d75746572436c617373696669636174696f6e3e2022433122202e0a'),
-    O.from_hex('5f3a6230203c68747470733a2f2f773369642e6f72672f636974697a656e73686970237065726d616e656e745265736964656e74436172643e205f3a6231202e0a'),
-    O.from_hex('5f3a6230203c68747470733a2f2f773369642e6f72672f636974697a656e73686970237265736964656e7453696e63653e2022323031352d30312d3031225e5e3c687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d61236461746554696d653e202e0a'),
-    O.from_hex('5f3a6231203c687474703a2f2f7777772e77332e6f72672f313939392f30322f32322d7264662d73796e7461782d6e7323747970653e203c68747470733a2f2f773369642e6f72672f636974697a656e73686970235065726d616e656e745265736964656e74436172643e202e0a'),
-    O.from_hex('5f3a6231203c68747470733a2f2f736368656d612e6f72672f6964656e7469666965723e2022383336323734363522202e0a'),
-    O.from_hex('5f3a6231203c68747470733a2f2f773369642e6f72672f636974697a656e73686970236c707243617465676f72793e202243303922202e0a'),
-    O.from_hex('5f3a6231203c68747470733a2f2f773369642e6f72672f636974697a656e73686970236c70724e756d6265723e20223939392d3939392d39393922202e0a'),
-    O.from_hex('5f3a6232203c68747470733a2f2f736368656d612e6f72672f6465736372697074696f6e3e20225065726d616e656e74205265736964656e7420436172642066726f6d20476f7665726e6d656e74206f662055746f7069612e22202e0a'),
-    O.from_hex('5f3a6232203c68747470733a2f2f736368656d612e6f72672f6e616d653e20225065726d616e656e74205265736964656e74204361726422202e0a'),
-    O.from_hex('5f3a6232203c68747470733a2f2f7777772e77332e6f72672f323031382f63726564656e7469616c732363726564656e7469616c5375626a6563743e205f3a6230202e0a'),
-    O.from_hex('5f3a6232203c68747470733a2f2f7777772e77332e6f72672f323031382f63726564656e7469616c732376616c696446726f6d3e2022323032342d31322d31365430303a30303a30305a225e5e3c687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d61236461746554696d653e202e0a'),
-    O.from_hex('5f3a6232203c68747470733a2f2f7777772e77332e6f72672f323031382f63726564656e7469616c732376616c6964556e74696c3e2022323032352d31322d31365432333a35393a35395a225e5e3c687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d61236461746554696d653e202e0a')
+local vector_publicKey = "a4ef1afa3da575496f122b9b78b8c24761531a8a093206ae7c45b80759c168ba4f7a260f9c3367b6c019b4677841104b10665edbe70ba3ebe7d9cfbffbf71eb016f70abfbb163317f372697dc63efd21fc55764f63926a8f02eaea325a2a888f"
+local vector_privateKey = "66d36e118832af4c5e28b2dfe1b9577857e57b042a33e06bdea37b811ed09ee0"
+local vector_proofHash = "3a5bbf25d34d90b18c35cd2357be6a6f42301e94fc9e52f77e93b773c5614bdf"
+local vector_mandatoryHash = "8e7cc22c318dd2094e02d0bf06c5d73a5dba717611a40f6d1bedc5ea7c300fd6"
+local vector_header = vector_proofHash .. vector_mandatoryHash
+local vector_bbsMessages = {
+    O.from_str('_:b0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Person> .\n'),
+    O.from_str('_:b0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://w3id.org/citizenship#PermanentResident> .\n'),
+    O.from_str('_:b0 <https://schema.org/birthDate> "1978-07-17"^^<http://www.w3.org/2001/XMLSchema#dateTime> .\n'),
+    O.from_str('_:b0 <https://schema.org/familyName> "SMITH" .\n'),
+    O.from_str('_:b0 <https://schema.org/gender> "Female" .\n'),
+    O.from_str('_:b0 <https://schema.org/givenName> "JANE" .\n'),
+    O.from_str('_:b0 <https://schema.org/image> <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2P4v43hPwAHIgK1v4tX6wAAAABJRU5ErkJggg==> .\n'),
+    O.from_str('_:b0 <https://w3id.org/citizenship#birthCountry> "Arcadia" .\n'),
+    O.from_str('_:b0 <https://w3id.org/citizenship#commuterClassification> "C1" .\n'),
+    O.from_str('_:b0 <https://w3id.org/citizenship#permanentResidentCard> _:b1 .\n'),
+    O.from_str('_:b0 <https://w3id.org/citizenship#residentSince> "2015-01-01"^^<http://www.w3.org/2001/XMLSchema#dateTime> .\n'),
+    O.from_str('_:b1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://w3id.org/citizenship#PermanentResidentCard> .\n'),
+    O.from_str('_:b1 <https://schema.org/identifier> "83627465" .\n'),
+    O.from_str('_:b1 <https://w3id.org/citizenship#lprCategory> "C09" .\n'),
+    O.from_str('_:b1 <https://w3id.org/citizenship#lprNumber> "999-999-999" .\n'),
+    O.from_str('_:b2 <https://schema.org/description> "Permanent Resident Card from Government of Utopia." .\n'),
+    O.from_str('_:b2 <https://schema.org/name> "Permanent Resident Card" .\n'),
+    O.from_str('_:b2 <https://www.w3.org/2018/credentials#credentialSubject> _:b0 .\n'),
+    O.from_str('_:b2 <https://www.w3.org/2018/credentials#validFrom> "2024-12-16T00:00:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .\n'),
+    O.from_str('_:b2 <https://www.w3.org/2018/credentials#validUntil> "2025-12-16T23:59:59Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .\n')
 }
+local vector_bbsSignature = "86168dd2b5d0c7c6a56a30f4212ed116a53def05d0d6708207d483c7ff2053aefa22d24ba7659d60852694f8d85be0fa2adc3974c7dc4cc68b3db17b2423975047104162c24502b41591879ac24f1bb1"
 
-bbsSignature = bbs.sign(ciphersuite, BIG.new(O.from_hex(privateKey)), O.from_hex(publicKey), O.from_hex(header), MULTI_MSG_ARRAY)
-
-print("Signature I obtained: " .. O.to_hex(bbsSignature))
-print("W3C vector signature: " .. vector_sg)
-assert(O.to_hex(bbsSignature) == vector_sg)
+-- test the possibility to produce via zenroom a valid bbs-vc signature following the documentation procedure
+bbsSignature = bbs.sign(ciphersuite, BIG.new(O.from_hex(vector_privateKey)), O.from_hex(vector_publicKey), O.from_hex(vector_header), vector_bbsMessages)
+assert(O.to_hex(bbsSignature) == vector_bbsSignature, "bbs signature verification failed, incorrect signature")
