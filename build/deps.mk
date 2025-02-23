@@ -52,7 +52,6 @@ quantum-proof:
 	LD=${ld} \
 	AR=${ar} \
 	RANLIB=${ranlib} \
-	LD=${ld} \
 	CFLAGS="${quantum_proof_cflags} ${cflags}" \
 	LDFLAGS="${ldflags}" \
 	${MAKE} -C ${pwd}/lib/pqclean
@@ -67,3 +66,15 @@ ed25519-donna:
 	CFLAGS="${cflags}" \
 	LDFLAGS="${ldflags}" \
 	$(MAKE) -C ${pwd}/lib/ed25519-donna
+
+mlkem:
+	$(info -- Building MLKEM Native PQ lib)
+	CC="${mlkem_cc}" \
+	AR=${ar} \
+	LD=${ld} \
+	RANLIB=${ranlib} \
+	CFLAGS="${mlkem_cflags} ${cflags}" \
+	LDFLAGS="${mkkem_ldflags} ${ldflags}" \
+	${MAKE} -C ${pwd}/lib/mlkem \
+			test/build/libmlkem.a \
+			OPT=0 Q=""

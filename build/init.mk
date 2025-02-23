@@ -20,8 +20,8 @@ ZEN_INCLUDES += -Isrc -Ilib/lua54/src									\
 -Ilib/milagro-crypto-c/build/include -Ilib/milagro-crypto-c/include		\
 -Ilib/ed25519-donna -Wall -Wextra
 
-BUILD_DEPS ?= apply-patches milagro lua54 embed-lua quantum-proof	\
-ed25519-donna
+BUILD_DEPS ?= apply-patches milagro lua54 embed-lua mlkem	\
+				quantum-proof ed25519-donna
 
 JS_INIT_MEM := 8MB
 JS_MAX_MEM := 256MB
@@ -46,6 +46,7 @@ ldadd += ${milib}/libamcl_x509.a
 ldadd += ${milib}/libamcl_core.a
 ldadd += ${pwd}/lib/pqclean/libqpz.a
 ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
+ldadd += ${pwd}/lib/mlkem/test/build/libmlkem.a
 
 # ----------------
 # zenroom defaults
@@ -91,6 +92,10 @@ quantum_proof_cflags ?= -I ${pwd}/src -I.
 #-----------------
 # ed25519 settings
 ed25519_cc ?= ${cc}
+
+#-----------------
+# mlkem settings
+mlkem_cc ?= ${cc}
 
 
 # }}}
