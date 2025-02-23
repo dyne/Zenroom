@@ -77,4 +77,4 @@ mlkem:
 	LDFLAGS="${mkkem_ldflags} ${ldflags}" \
 	${MAKE} -C ${pwd}/lib/mlkem \
 			test/build/libmlkem.a \
-			OPT=0 Q=""
+			OPT=0 Q="" AUTO=0
