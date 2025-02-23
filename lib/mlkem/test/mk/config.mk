@@ -54,23 +54,23 @@ CFLAGS ?= \
 ##################
 Q ?= @
 
-HOST_PLATFORM := $(shell uname -s)-$(shell uname -m)
-# linux x86_64
-ifeq ($(HOST_PLATFORM),Linux-x86_64)
-	CFLAGS += -z noexecstack
-endif
+# HOST_PLATFORM := $(shell uname -s)-$(shell uname -m)
+# # linux x86_64
+# ifeq ($(HOST_PLATFORM),Linux-x86_64)
+# 	CFLAGS += -z noexecstack
+# endif
 
-ifeq ($(CYCLES),PMU)
-	CFLAGS += -DPMU_CYCLES
-endif
+# ifeq ($(CYCLES),PMU)
+# 	CFLAGS += -DPMU_CYCLES
+# endif
 
-ifeq ($(CYCLES),PERF)
-	CFLAGS += -DPERF_CYCLES
-endif
+# ifeq ($(CYCLES),PERF)
+# 	CFLAGS += -DPERF_CYCLES
+# endif
 
-ifeq ($(CYCLES),M1)
-	CFLAGS += -DM1_CYCLES
-endif
+# ifeq ($(CYCLES),M1)
+# 	CFLAGS += -DM1_CYCLES
+# endif
 
 ##############################
 # Include retained variables #
