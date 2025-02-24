@@ -150,7 +150,8 @@ end:
 static int qp_signature_pubgen(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *sk = NULL, *pk = NULL;
+	const octet *sk = NULL;
+	octet *pk = NULL;
 	sk = o_arg(L, 1);
 	if(sk == NULL) {
 		failed_msg = "failed to allocate space for secret key";
@@ -194,7 +195,7 @@ static int qp_signature_pubcheck(lua_State *L) {
 static int qp_sign(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *sk = NULL, *m = NULL;
+	const octet *sk = NULL, *m = NULL;
 	sk = o_arg(L, 1);
 	if(sk == NULL) {
 		failed_msg = "failed to allocate space for secret key";
@@ -237,7 +238,7 @@ end:
 static int qp_signed_message(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *sk = NULL, *m = NULL;
+	const octet *sk = NULL, *m = NULL;
 	sk = o_arg(L, 1);
 	if(sk == NULL) {
 		failed_msg = "failed to allocate space for secret key";
@@ -280,7 +281,7 @@ end:
 static int qp_verified_message(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *pk = NULL, *sm = NULL;
+	const octet *pk = NULL, *sm = NULL;
 	pk = o_arg(L, 1);
 	if(pk == NULL) {
 		failed_msg = "Could not allocate space for public key";
@@ -323,7 +324,7 @@ end:
 static int qp_verify(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *pk = NULL, *sig = NULL, *m = NULL;
+	const octet *pk = NULL, *sig = NULL, *m = NULL;
 	pk = o_arg(L, 1);
 	if(pk == NULL) {
 		failed_msg = "Could not allocate space for public key";
@@ -407,7 +408,8 @@ static int qp_kem_keygen(lua_State *L) {
 static int qp_kem_pubgen(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *sk = NULL, *pk = NULL;
+	const octet *sk = NULL;
+	octet *pk = NULL;
 	sk = o_arg(L, 1);
 	if(sk == NULL) {
 		failed_msg = "Could not allocate secret key";
@@ -482,7 +484,8 @@ static int qp_kem_ctcheck(lua_State *L) {
 static int qp_enc(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *pk = NULL, *ss = NULL, *ct = NULL;
+	const octet *pk = NULL;
+	octet *ss = NULL, *ct = NULL;
 	pk = o_arg(L, 1);
 	if(pk == NULL) {
 		failed_msg = "Cuold not allocate public key";
@@ -525,7 +528,7 @@ end:
 static int qp_dec(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *sk = NULL, *ct = NULL;
+	const octet *sk = NULL, *ct = NULL;
 	sk = o_arg(L, 1);
 	ct = o_arg(L, 2);
 	if(sk == NULL || ct == NULL) {
@@ -617,7 +620,8 @@ static int mlkem512_keygen(lua_State *L) {
 static int qp_ml_kem_512_pubgen(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *sk = NULL, *pk = NULL;
+	const octet *sk = NULL;
+	octet *pk = NULL;
 	sk = o_arg(L, 1);
 	if(sk == NULL) {
 		failed_msg = "Could not allocate secret key";
@@ -696,7 +700,8 @@ static int qp_ml_kem_512_enc(lua_State *L) {
 	BEGIN();
 	uint8_t randbytes[32];
 	char *failed_msg = NULL;
-	octet *pk = NULL, *ss = NULL, *ct = NULL;
+	const octet *pk = NULL;
+	octet *ss = NULL, *ct = NULL;
 	pk = o_arg(L, 1);
 	if(pk == NULL) {
 		failed_msg = "Cuold not allocate public key";
@@ -755,7 +760,7 @@ end:
 static int qp_ml_kem_512_dec(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *sk = NULL, *ct = NULL;
+	const octet *sk = NULL, *ct = NULL;
 	sk = o_arg(L, 1);
 	ct = o_arg(L, 2);
 	if(sk == NULL || ct == NULL) {
@@ -892,7 +897,8 @@ static int qp_sntrup_kem_ctcheck(lua_State *L) {
 static int qp_sntrup_kem_enc(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *pk = NULL, *ss = NULL, *ct = NULL;
+	const octet *pk = NULL;
+	octet *ss = NULL, *ct = NULL;
 	pk = o_arg(L, 1);
 	if(pk == NULL) {
 		failed_msg = "Could not allocate public key";
@@ -1030,7 +1036,8 @@ end:
 static int ml_dsa_44_signature_pubgen(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *sk = NULL, *pk = NULL;
+	const octet *sk = NULL;
+	octet *pk = NULL;
 	sk = o_arg(L, 1);
 	if(sk == NULL) {
 		failed_msg = "failed to allocate space for secret key";
@@ -1072,7 +1079,7 @@ static int ml_dsa_44_signature(lua_State *L) {
 	BEGIN();
 	uint8_t randbytes[32];
 	char *failed_msg = NULL;
-	octet *sk = NULL, *m = NULL;
+	const octet *sk = NULL, *m = NULL;
 	sk = o_arg(L, 1);
 	if(sk == NULL) {
 		failed_msg = "failed to allocate space for secret key";
@@ -1159,7 +1166,7 @@ static int ml_dsa_44_verify(lua_State *L)    {/*********************************
 **************************************************/
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *pk = NULL, *sig = NULL, *m = NULL;
+	const octet *pk = NULL, *sig = NULL, *m = NULL;
 	pk = o_arg(L, 1);
 	if(pk == NULL) {
 		failed_msg = "Could not allocate space for public key";
