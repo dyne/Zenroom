@@ -67,14 +67,41 @@ ed25519-donna:
 	LDFLAGS="${ldflags}" \
 	$(MAKE) -C ${pwd}/lib/ed25519-donna
 
+# multilevel build flags:
+# MLKEM_K=2 corresponds to ML-KEM-512
+# MLKEM_K=3 corresponds to ML-KEM-768
+# MLKEM_K=4 corresponds to ML-KEM-1024
+# MLK_MULTILEVEL_BUILD_NO_SHARED
+# MLK_MULTILEVEL_BUILD_WITH_SHARED <- last build
 mlkem:
 	$(info -- Building MLKEM Native PQ lib)
 	CC="${mlkem_cc}" \
 	AR=${ar} \
 	LD=${ld} \
 	RANLIB=${ranlib} \
-	CFLAGS="${mlkem_cflags} ${cflags}" \
+	CFLAGS="${cflags} -DMLK_NAMESPACE_PREFIX=mlkem512" \
+	LDFLAGS="${mkkem_ldflags} ${ldflags}" \
+	${MAKE} -C ${pwd}/lib/mlkem \
+			test/build/libmlkem512.a \
+			OPT=0 Q="" AUTO=0  MLKEM_K=2 \
+			MLK_MULTILEVEL_BUILD_NO_SHARED=1
+	CC="${mlkem_cc}" \
+	AR=${ar} \
+	LD=${ld} \
+	RANLIB=${ranlib} \
+	CFLAGS="${cflags} -DMLK_NAMESPACE_PREFIX=mlkem768" \
+	LDFLAGS="${mkkem_ldflags} ${ldflags}" \
+	${MAKE} -C ${pwd}/lib/mlkem \
+			test/build/libmlkem768.a \
+			OPT=0 Q="" AUTO=0 MLKEM_K=3 \
+			MLK_MULTILEVEL_BUILD_NO_SHARED=1
+	CC="${mlkem_cc}" \
+	AR=${ar} \
+	LD=${ld} \
+	RANLIB=${ranlib} \
+	CFLAGS="${cflags} -DMLK_NAMESPACE_PREFIX=mlkem1024" \
 	LDFLAGS="${mkkem_ldflags} ${ldflags}" \
 	${MAKE} -C ${pwd}/lib/mlkem \
 			test/build/libmlkem.a \
-			OPT=0 Q="" AUTO=0
+			OPT=0 Q="" AUTO=0 MLKEM_K=4 \
+			MLK_MULTILEVEL_BUILD_WITH_SHARED=1
