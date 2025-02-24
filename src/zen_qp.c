@@ -87,6 +87,20 @@ extern int mlkem512_enc_derand(uint8_t *ct, uint8_t *ss, const uint8_t *pk,
 							   const uint8_t *coins);
 extern int mlkem512_enc(uint8_t *ct, uint8_t *ss, const uint8_t *pk);
 extern int mlkem512_dec(uint8_t *ss, const uint8_t *ct, const uint8_t *sk);
+extern int mlkem768_keypair_derand(uint8_t *pk, uint8_t *sk,
+								   const uint8_t *coins);
+extern int mlkem768_keypair(uint8_t *pk, uint8_t *sk);
+extern int mlkem768_enc_derand(uint8_t *ct, uint8_t *ss, const uint8_t *pk,
+							   const uint8_t *coins);
+extern int mlkem768_enc(uint8_t *ct, uint8_t *ss, const uint8_t *pk);
+extern int mlkem768_dec(uint8_t *ss, const uint8_t *ct, const uint8_t *sk);
+extern int mlkem1024_keypair_derand(uint8_t *pk, uint8_t *sk,
+								   const uint8_t *coins);
+extern int mlkem1024_keypair(uint8_t *pk, uint8_t *sk);
+extern int mlkem1024_enc_derand(uint8_t *ct, uint8_t *ss, const uint8_t *pk,
+							   const uint8_t *coins);
+extern int mlkem1024_enc(uint8_t *ct, uint8_t *ss, const uint8_t *pk);
+extern int mlkem1024_dec(uint8_t *ss, const uint8_t *ct, const uint8_t *sk);
 
 
 /*
@@ -565,9 +579,21 @@ end:
 }
 
 /*#######################################*/
-/*               ML-KEM 512               */
+/*               ML-KEM (FIPS203)        */
 /*#######################################*/
-static int mlkem512_keygen(lua_State *L) {
+typedef enum {
+    MLKEM512,
+    MLKEM768,
+    MLKEM1024,
+    UNKNOWN
+} mlkem_type;
+static mlkem_type _get_mlkem_type(const char *str) {
+	if(strcmp(str,"mlkem512")==0) return MLKEM512;
+	if(strcmp(str,"mlkem768")==0) return MLKEM768;
+	if(strcmp(str,"mlkem1024")==0) return MLKEM1024;
+	return UNKNOWN;
+}
+static int mlkem_keygen(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	uint8_t randbytes[64];
@@ -599,17 +625,51 @@ static int mlkem512_keygen(lua_State *L) {
 			randbytes[i] = RAND_byte(Z->random_generator);
 		}
 	}
-	lua_createtable(L, 0, 2);
-	octet *private = o_new(L, MLKEM512_SECRETKEYBYTES);
-	lua_setfield(L, -2, "private");
-	octet *public = o_new(L, MLKEM512_PUBLICKEYBYTES);
-	lua_setfield(L, -2, "public");
-
-	mlkem512_keypair_derand((unsigned char*)public->val,
-							(unsigned char*)private->val,
-							randbytes);
-	public->len = MLKEM512_PUBLICKEYBYTES;
-	private->len = MLKEM512_SECRETKEYBYTES;
+	octet *private, *public;
+	const char *s = lua_tostring(L, 3);
+	if(!s) s = "mlkem512";
+	switch(_get_mlkem_type(s)) {
+	case MLKEM512:
+		lua_createtable(L, 0, 2);
+		private = o_new(L, MLKEM512_SECRETKEYBYTES);
+		lua_setfield(L, -2, "private");
+		public = o_new(L, MLKEM512_PUBLICKEYBYTES);
+		lua_setfield(L, -2, "public");
+		mlkem512_keypair_derand((unsigned char*)public->val,
+								(unsigned char*)private->val,
+								randbytes);
+		public->len = MLKEM512_PUBLICKEYBYTES;
+		private->len = MLKEM512_SECRETKEYBYTES;
+		break;
+	case MLKEM768:
+		lua_createtable(L, 0, 2);
+		private = o_new(L, MLKEM768_SECRETKEYBYTES);
+		lua_setfield(L, -2, "private");
+		public = o_new(L, MLKEM768_PUBLICKEYBYTES);
+		lua_setfield(L, -2, "public");
+		mlkem768_keypair_derand((unsigned char*)public->val,
+								(unsigned char*)private->val,
+								randbytes);
+		public->len = MLKEM768_PUBLICKEYBYTES;
+		private->len = MLKEM768_SECRETKEYBYTES;
+		break;
+	case MLKEM1024:
+		lua_createtable(L, 0, 2);
+		private = o_new(L, MLKEM1024_SECRETKEYBYTES);
+		lua_setfield(L, -2, "private");
+		public = o_new(L, MLKEM1024_PUBLICKEYBYTES);
+		lua_setfield(L, -2, "public");
+		mlkem1024_keypair_derand((unsigned char*)public->val,
+								(unsigned char*)private->val,
+								randbytes);
+		public->len = MLKEM1024_PUBLICKEYBYTES;
+		private->len = MLKEM1024_SECRETKEYBYTES;
+		break;
+	case UNKNOWN:
+		zerror("Unknown MLKEM type: %s (%s)",s,__func__);
+		failed_msg = "MLKEM error";
+		break;
+	}
  end:
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -617,7 +677,7 @@ static int mlkem512_keygen(lua_State *L) {
 	END(1);
 }
 
-static int qp_ml_kem_512_pubgen(lua_State *L) {
+static int mlkem_pubgen(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	const octet *sk = NULL;
@@ -627,19 +687,47 @@ static int qp_ml_kem_512_pubgen(lua_State *L) {
 		failed_msg = "Could not allocate secret key";
 		goto end;
 	}
-	pk = o_new(L, MLKEM512_PUBLICKEYBYTES);
-	if(pk == NULL) {
-		failed_msg = "Could not allocate private key";
-		goto end;
+	const char *s = lua_tostring(L, 2);
+	if(!s) s = "mlkem512";
+	switch(_get_mlkem_type(s)) {
+	case MLKEM512:
+		pk = o_new(L, MLKEM512_PUBLICKEYBYTES);
+		if(pk == NULL) {
+			failed_msg = "Could not allocate private key";
+			goto end; }
+		memcpy((unsigned char*)pk->val,
+			   (unsigned char*)sk->val
+			   + MLKEM512_INDCPA_SECRETKEYBYTES,
+			   MLKEM512_PUBLICKEYBYTES);
+		pk->len = MLKEM512_PUBLICKEYBYTES;
+		break;
+	case MLKEM768:
+		pk = o_new(L, MLKEM768_PUBLICKEYBYTES);
+		if(pk == NULL) {
+			failed_msg = "Could not allocate private key";
+			goto end; }
+		memcpy((unsigned char*)pk->val,
+			   (unsigned char*)sk->val
+			   + MLKEM768_INDCPA_SECRETKEYBYTES,
+			   MLKEM768_PUBLICKEYBYTES);
+		pk->len = MLKEM768_PUBLICKEYBYTES;
+		break;
+	case MLKEM1024:
+		pk = o_new(L, MLKEM1024_PUBLICKEYBYTES);
+		if(pk == NULL) {
+			failed_msg = "Could not allocate private key";
+			goto end; }
+		memcpy((unsigned char*)pk->val,
+			   (unsigned char*)sk->val
+			   + MLKEM1024_INDCPA_SECRETKEYBYTES,
+			   MLKEM1024_PUBLICKEYBYTES);
+		pk->len = MLKEM1024_PUBLICKEYBYTES;
+		break;
+	case UNKNOWN:
+		zerror("Unknown MLKEM type: %s (%s)",s,__func__);
+		failed_msg = "MLKEM error";
+		break;
 	}
-
-	memcpy((unsigned char*)pk->val,
-		   (unsigned char*)sk->val
-		   + MLKEM512_INDCPA_SECRETKEYBYTES,
-		   MLKEM512_PUBLICKEYBYTES);
-	pk->len = PQCLEAN_KYBER512_CLEAN_CRYPTO_PUBLICKEYBYTES;
-
-
 end:
 	o_free(L, sk);
 	if(failed_msg) {
@@ -649,54 +737,139 @@ end:
 }
 
 // checks the public key length
-static int qp_ml_kem_512_pubcheck(lua_State *L) {
+static int mlkem_pubcheck(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	const octet *pk = o_arg(L, 1);
 	if(pk == NULL) {
-		THROW("Could not allocate public key");
+		failed_msg = "Could not allocate public key";
+		goto end;
 	} else {
-		if(pk->len == PQCLEAN_KYBER512_CLEAN_CRYPTO_PUBLICKEYBYTES)
-			lua_pushboolean(L, 1);
-		else
-			lua_pushboolean(L, 0);
-		o_free(L,pk);
+		const char *s = lua_tostring(L, 2);
+		if(!s) s = "mlkem512";
+		switch(_get_mlkem_type(s)) {
+		case MLKEM512:
+			if(pk->len == MLKEM512_PUBLICKEYBYTES)
+				lua_pushboolean(L, 1);
+			else
+				lua_pushboolean(L, 0);
+			break;
+		case MLKEM768:
+			if(pk->len == MLKEM768_PUBLICKEYBYTES)
+				lua_pushboolean(L, 1);
+			else
+				lua_pushboolean(L, 0);
+			break;
+		case MLKEM1024:
+			if(pk->len == MLKEM1024_PUBLICKEYBYTES)
+				lua_pushboolean(L, 1);
+			else
+				lua_pushboolean(L, 0);
+			break;
+		case UNKNOWN:
+			zerror("Unknown MLKEM type: %s (%s)",s,__func__);
+			failed_msg = "MLKEM error";
+			break;
+		}
+	}
+ end:
+	o_free(L,pk);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
 
 // checks the shared secret length
-static int qp_ml_kem_512_sscheck(lua_State *L) {
+static int mlkem_sscheck(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	const octet *ss = o_arg(L, 1);
 	if(ss == NULL) {
-		THROW("Could not allocate kem secret");
+		failed_msg = "Could not allocate kem secret";
+		goto end;
 	} else {
-		if(ss->len == MLKEM512_BYTES)
-			lua_pushboolean(L, 1);
-		else
-			lua_pushboolean(L, 0);
-		o_free(L, ss);
+
+		const char *s = lua_tostring(L, 2);
+		if(!s) s = "mlkem512";
+		switch(_get_mlkem_type(s)) {
+		case MLKEM512:
+			if(ss->len == MLKEM512_BYTES)
+				lua_pushboolean(L, 1);
+			else
+				lua_pushboolean(L, 0);
+			break;
+		case MLKEM768:
+			if(ss->len == MLKEM768_BYTES)
+				lua_pushboolean(L, 1);
+			else
+				lua_pushboolean(L, 0);
+			break;
+		case MLKEM1024:
+			if(ss->len == MLKEM1024_BYTES)
+				lua_pushboolean(L, 1);
+			else
+				lua_pushboolean(L, 0);
+			break;
+		case UNKNOWN:
+			zerror("Unknown MLKEM type: %s (%s)",s,__func__);
+			failed_msg = "MLKEM error";
+			break;
+		}
+	}
+ end:
+	o_free(L,ss);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
 
 // check the ciphertext length
-static int qp_ml_kem_512_ctcheck(lua_State *L) {
+static int mlkem_ctcheck(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	const octet *ct = o_arg(L, 1);
 	if(ct == NULL) {
-		THROW("Could not allocate kem ciphertext");
+		failed_msg = "Could not allocate kem ciphertext";
+		goto end;
 	} else {
-		if(ct->len == MLKEM512_CIPHERTEXTBYTES)
-			lua_pushboolean(L, 1);
-		else
-			lua_pushboolean(L, 0);
-		o_free(L, ct);
+		const char *s = lua_tostring(L, 2);
+		if(!s) s = "mlkem512";
+		switch(_get_mlkem_type(s)) {
+		case MLKEM512:
+			if(ct->len == MLKEM512_CIPHERTEXTBYTES)
+				lua_pushboolean(L, 1);
+			else
+				lua_pushboolean(L, 0);
+			break;
+		case MLKEM768:
+			if(ct->len == MLKEM768_CIPHERTEXTBYTES)
+				lua_pushboolean(L, 1);
+			else
+				lua_pushboolean(L, 0);
+			break;
+		case MLKEM1024:
+			if(ct->len == MLKEM1024_CIPHERTEXTBYTES)
+				lua_pushboolean(L, 1);
+			else
+				lua_pushboolean(L, 0);
+			break;
+		case UNKNOWN:
+			zerror("Unknown MLKEM type: %s (%s)",s,__func__);
+			failed_msg = "MLKEM error";
+			break;
+		}
+	}
+ end:
+	o_free(L, ct);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
 
-static int qp_ml_kem_512_enc(lua_State *L) {
+static int mlkem_enc(lua_State *L) {
 	BEGIN();
 	uint8_t randbytes[32];
 	char *failed_msg = NULL;
@@ -707,48 +880,113 @@ static int qp_ml_kem_512_enc(lua_State *L) {
 		failed_msg = "Cuold not allocate public key";
 		goto end;
 	}
-	if(pk->len != MLKEM512_PUBLICKEYBYTES) {
-		failed_msg = "invalid size for public key";
-		goto end;
-	}
 	void *ud = luaL_testudata(L, 2, "zenroom.octet");
 	if (ud){
 		octet *rnd = (octet *) ud;
 		if (rnd->len != 32) {
 			failed_msg = "Wrong seed size";
-			goto end;	
+			goto end;
 		}
 		memcpy(randbytes,rnd->val,32);
-	}
-	else {
+	} else {
 		Z(L);
 		for(uint8_t i = 0; i < 32; i++) {
 			randbytes[i] = RAND_byte(Z -> random_generator);
 		}
 	}
-	lua_createtable(L, 0, 2);
-	ss = o_new(L, MLKEM512_BYTES);
-	if(ss == NULL) {
-		failed_msg = "Could not allocate kem secret";
-		goto end;
-	}
-	lua_setfield(L, -2, "secret"); // shared secret
-	ct = o_new(L, MLKEM512_CIPHERTEXTBYTES);
-	if(ct == NULL) {
-		failed_msg = "Could not allocate kem ciphertext";
-		goto end;
-	}
-	lua_setfield(L, -2, "cipher");
+	const char *s = lua_tostring(L, 2);
+	if(!s) s = "mlkem512";
+	switch(_get_mlkem_type(s)) {
+	case MLKEM512:
+		if(pk->len != MLKEM512_PUBLICKEYBYTES) {
+			failed_msg = "invalid size for public key";
+			goto end;
+		}
+		lua_createtable(L, 0, 2);
+		ss = o_new(L, MLKEM512_BYTES);
+		if(ss == NULL) {
+			failed_msg = "Could not allocate kem secret";
+			goto end;
+		}
+		lua_setfield(L, -2, "secret"); // shared secret
+		ct = o_new(L, MLKEM512_CIPHERTEXTBYTES);
+		if(ct == NULL) {
+			failed_msg = "Could not allocate kem ciphertext";
+			goto end;
+		}
+		lua_setfield(L, -2, "cipher");
+		if(mlkem512_enc_derand((unsigned char*)ct->val,
+							   (unsigned char*)ss->val,
+							   (unsigned char*)pk->val,
+							   randbytes)) {
+			failed_msg = "error in the creation of the shared secret";
+			goto end;
+		}
+		ss->len = MLKEM512_BYTES;
+		ct->len = MLKEM512_CIPHERTEXTBYTES;
+		break;
+	case MLKEM768:
+		if(pk->len != MLKEM768_PUBLICKEYBYTES) {
+			failed_msg = "invalid size for public key";
+			goto end;
+		}
+		lua_createtable(L, 0, 2);
+		ss = o_new(L, MLKEM768_BYTES);
+		if(ss == NULL) {
+			failed_msg = "Could not allocate kem secret";
+			goto end;
+		}
+		lua_setfield(L, -2, "secret"); // shared secret
+		ct = o_new(L, MLKEM768_CIPHERTEXTBYTES);
+		if(ct == NULL) {
+			failed_msg = "Could not allocate kem ciphertext";
+			goto end;
+		}
+		lua_setfield(L, -2, "cipher");
+		if(mlkem768_enc_derand((unsigned char*)ct->val,
+							   (unsigned char*)ss->val,
+							   (unsigned char*)pk->val,
+							   randbytes)) {
+			failed_msg = "error in the creation of the shared secret";
+			goto end;
+		}
+		ss->len = MLKEM768_BYTES;
+		ct->len = MLKEM768_CIPHERTEXTBYTES;
+		break;
+	case MLKEM1024:
+		if(pk->len != MLKEM1024_PUBLICKEYBYTES) {
+			failed_msg = "invalid size for public key";
+			goto end;
+		}
+		lua_createtable(L, 0, 2);
+		ss = o_new(L, MLKEM1024_BYTES);
+		if(ss == NULL) {
+			failed_msg = "Could not allocate kem secret";
+			goto end;
+		}
+		lua_setfield(L, -2, "secret"); // shared secret
+		ct = o_new(L, MLKEM1024_CIPHERTEXTBYTES);
+		if(ct == NULL) {
+			failed_msg = "Could not allocate kem ciphertext";
+			goto end;
+		}
+		lua_setfield(L, -2, "cipher");
+		if(mlkem1024_enc_derand((unsigned char*)ct->val,
+							   (unsigned char*)ss->val,
+							   (unsigned char*)pk->val,
+							   randbytes)) {
+			failed_msg = "error in the creation of the shared secret";
+			goto end;
+		}
+		ss->len = MLKEM1024_BYTES;
+		ct->len = MLKEM1024_CIPHERTEXTBYTES;
+		break;
 
-	if(mlkem512_enc_derand((unsigned char*)ct->val,
-						 (unsigned char*)ss->val,
-						 (unsigned char*)pk->val,
-						 randbytes)) {
-		failed_msg = "error in the creation of the shared secret";
-		goto end;
+	case UNKNOWN:
+		zerror("Unknown MLKEM type: %s (%s)",s,__func__);
+		failed_msg = "MLKEM error";
+		break;
 	}
-	ss->len = MLKEM512_BYTES;
-	ct->len = MLKEM512_CIPHERTEXTBYTES;
 end:
 	o_free(L,pk);
 	if(failed_msg) {
@@ -757,36 +995,92 @@ end:
 	END(1);
 }
 
-static int qp_ml_kem_512_dec(lua_State *L) {
+static int mlkem_dec(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	const octet *sk = NULL, *ct = NULL;
+	octet *ss;
 	sk = o_arg(L, 1);
 	ct = o_arg(L, 2);
 	if(sk == NULL || ct == NULL) {
 		failed_msg = "Could not allocate memory during decription";
 		goto end;
 	}
-	if(sk->len != MLKEM512_SECRETKEYBYTES) {
-		failed_msg = "invalid size for secret key";
-		goto end;
+	const char *s = lua_tostring(L, 2);
+	if(!s) s = "mlkem512";
+	switch(_get_mlkem_type(s)) {
+	case MLKEM512:
+		if(sk->len != MLKEM512_SECRETKEYBYTES) {
+			failed_msg = "invalid size for secret key";
+			goto end;
+		}
+		if(ct->len != MLKEM512_CIPHERTEXTBYTES) {
+			failed_msg = "invalid size for ciphertext key";
+			goto end;
+		}
+		ss = o_new(L, MLKEM512_BYTES);
+		if(ss == NULL) {
+			failed_msg = "Could not allocate kem secret";
+			goto end;
+		}
+		if(mlkem512_dec((unsigned char*)ss->val,
+						(unsigned char*)ct->val,
+						(unsigned char*)sk->val)) {
+			failed_msg = "error in while deciphering the shared secret";
+			goto end;
+		}
+		ss->len = MLKEM512_BYTES;
+		break;
+	case MLKEM768:
+		if(sk->len != MLKEM768_SECRETKEYBYTES) {
+			failed_msg = "invalid size for secret key";
+			goto end;
+		}
+		if(ct->len != MLKEM768_CIPHERTEXTBYTES) {
+			failed_msg = "invalid size for ciphertext key";
+			goto end;
+		}
+		ss = o_new(L, MLKEM768_BYTES);
+		if(ss == NULL) {
+			failed_msg = "Could not allocate kem secret";
+			goto end;
+		}
+		if(mlkem768_dec((unsigned char*)ss->val,
+						(unsigned char*)ct->val,
+						(unsigned char*)sk->val)) {
+			failed_msg = "error in while deciphering the shared secret";
+			goto end;
+		}
+		ss->len = MLKEM768_BYTES;
+		break;
+	case MLKEM1024:
+		if(sk->len != MLKEM1024_SECRETKEYBYTES) {
+			failed_msg = "invalid size for secret key";
+			goto end;
+		}
+		if(ct->len != MLKEM1024_CIPHERTEXTBYTES) {
+			failed_msg = "invalid size for ciphertext key";
+			goto end;
+		}
+		ss = o_new(L, MLKEM1024_BYTES);
+		if(ss == NULL) {
+			failed_msg = "Could not allocate kem secret";
+			goto end;
+		}
+		if(mlkem1024_dec((unsigned char*)ss->val,
+						(unsigned char*)ct->val,
+						(unsigned char*)sk->val)) {
+			failed_msg = "error in while deciphering the shared secret";
+			goto end;
+		}
+		ss->len = MLKEM1024_BYTES;
+		break;
+
+	case UNKNOWN:
+		zerror("Unknown MLKEM type: %s (%s)",s,__func__);
+		failed_msg = "MLKEM error";
+		break;
 	}
-	if(ct->len != MLKEM512_CIPHERTEXTBYTES) {
-		failed_msg = "invalid size for ciphertext key";
-		goto end;
-	}
-	octet *ss = o_new(L, MLKEM512_BYTES);
-	if(ss == NULL) {
-		failed_msg = "Could not allocate kem secret";
-		goto end;
-	}
-	if(mlkem512_dec((unsigned char*)ss->val,
-						 (unsigned char*)ct->val,
-						 (unsigned char*)sk->val)) {
-		failed_msg = "error in while deciphering the shared secret";
-		goto end;
-	}
-	ss->len = MLKEM512_BYTES;
 end:
 	o_free(L,sk);
 	o_free(L,ct);
@@ -1271,14 +1565,14 @@ int luaopen_qp(lua_State *L) {
 		{"kemctcheck", qp_kem_ctcheck},
 		{"enc", qp_enc},
 		{"dec", qp_dec},
-		// ML-KEM-512
-		{"mlkem512_keygen", mlkem512_keygen},
-		{"mlkem512_pubgen",qp_ml_kem_512_pubgen},
-		{"mlkem512_pubcheck",qp_ml_kem_512_pubcheck},
-		{"mlkem512_sscheck",qp_ml_kem_512_sscheck},
-		{"mlkem512_ctcheck",qp_ml_kem_512_ctcheck},
-		{"mlkem512_enc",qp_ml_kem_512_enc},
-		{"mlkem512_dec",qp_ml_kem_512_dec},
+		// ML-KEM
+		{"mlkem_keygen",   mlkem_keygen},
+		{"mlkem_pubgen",   mlkem_pubgen},
+		{"mlkem_pubcheck", mlkem_pubcheck},
+		{"mlkem_sscheck",  mlkem_sscheck},
+		{"mlkem_ctcheck",  mlkem_ctcheck},
+		{"mlkem_enc",      mlkem_enc},
+		{"mlkem_dec",      mlkem_dec},
 		// SNTRUP761
 		{"ntrup_keygen", qp_sntrup_kem_keygen},
 		{"ntrup_pubgen", qp_sntrup_kem_pubgen},

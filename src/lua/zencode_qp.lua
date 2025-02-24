@@ -77,7 +77,7 @@ end
 local function mlkem512_public_key_f(obj)
 	local res = schema_get(obj, '.')
 	zencode_assert(
-	   QP.mlkem512_pubcheck(res),
+	   QP.mlkem_pubcheck(res),
 	   'ML-KEM-512 public key length is not correct'
 	)
 	return res
@@ -86,7 +86,7 @@ local function mlkem512_public_key_f(obj)
  local function mlkem512_secret_f(obj)
 	local res = schema_get(obj, '.')
 	zencode_assert(
-	   QP.mlkem512_sscheck(res),
+	   QP.mlkem_sscheck(res),
 	   'ML-KEM-512 secret lentgth is not correct'
 	)
 	return res
@@ -95,7 +95,7 @@ local function mlkem512_public_key_f(obj)
  local function mlkem512_ciphertext_f(obj)
 	local res = schema_get(obj, '.')
 	zencode_assert(
-	   QP.mlkem512_ctcheck(res),
+	   QP.mlkem_ctcheck(res),
 	   'ML-KEM-512 ciphertext length is not correct'
 	)
 	return res
@@ -270,21 +270,21 @@ end)
 -- generate the private key
 When("create mlkem512 key",function()
 	initkeyring'mlkem512'
-	ACK.keyring.mlkem512 = QP.mlkem512_keygen().private
+	ACK.keyring.mlkem512 = QP.mlkem_keygen().private
 end)
 
 -- generate public key
 When("create mlkem512 public key",function()
 	empty'mlkem512 public key'
 	local sk = havekey'mlkem512'
-	ACK.mlkem512_public_key = QP.mlkem512_pubgen(sk)
+	ACK.mlkem512_public_key = QP.mlkem_pubgen(sk)
 	new_codec('mlkem512 public key')
 end)
 
 When("create mlkem512 public key with secret key ''",function(sec)
 	local sk = have(sec)
 	empty'mlkem512 public key'
-	ACK.mlkem512_public_key = QP.mlkem512_pubgen(sk)
+	ACK.mlkem512_public_key = QP.mlkem_pubgen(sk)
 	new_codec('mlkem512 public key')
 end)
 
@@ -293,7 +293,7 @@ When("create mlkem512 kem for ''",function(pub)
 	local pk = load_pubkey_compat(pub, 'mlkem512')
 	empty'mlkem512 kem'
 	ACK.mlkem512_kem = {}
-	local enc = QP.mlkem512_enc(pk)
+	local enc = QP.mlkem_enc(pk)
 	ACK.mlkem512_kem.mlkem512_ciphertext = enc.cipher
 	ACK.mlkem512_kem.mlkem512_secret = enc.secret
 	new_codec('mlkem512 kem')
@@ -303,7 +303,7 @@ When("create mlkem512 secret from ''",function(secret)
 	local sk = havekey'mlkem512'
 	local sec = have(secret)
 	empty 'mlkem512 secret'
-	ACK.mlkem512_secret = QP.mlkem512_dec(sk, sec)
+	ACK.mlkem512_secret = QP.mlkem_dec(sk, sec)
 	new_codec('mlkem512 secret')
 end)
 

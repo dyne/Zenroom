@@ -41,21 +41,21 @@ for line in newline_iter(DATA) do
 
 	 -- Here starts the test
         if (test.d) then
-            assert(test.ek == QP.mlkem512_keygen(test.d,test.z).public)
+            assert(test.ek == QP.mlkem_keygen(test.d,test.z).public, "mlkem512")
             print("pk ok")
-            assert(test.dk == QP.mlkem512_keygen(test.d, test.z).private)
+            assert(test.dk == QP.mlkem_keygen(test.d, test.z).private, "mlkem512")
             print("sk ok")
-            assert(test.ek == QP.mlkem512_pubgen(test.dk))
+            assert(test.ek == QP.mlkem_pubgen(test.dk), "mlkem512")
             print("pubgen ok")
             end
         if (test.m) then
-            assert(test.k == QP.mlkem512_enc(test.ek, test.m).secret)
+            assert(test.k == QP.mlkem_enc(test.ek, test.m).secret, "mlkem512")
             print( "secret ok")
-            assert(test.c == QP.mlkem512_enc(test.ek, test.m).cipher)
+            assert(test.c == QP.mlkem_enc(test.ek, test.m).cipher, "mlkem512")
             print("cipher ok")
         end
         if (test.dk and test.k) then
-            assert(test.k == QP.mlkem512_dec(test.dk,test.c))
+            assert(test.k == QP.mlkem_dec(test.dk,test.c), "mlkem512")
             print("dec ok")
         end
         curr_fields = 0
