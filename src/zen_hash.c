@@ -46,11 +46,12 @@
 #include <zen_error.h>
 #include <lua_functions.h>
 
-#include <zenroom.h>
 #include <zen_octet.h>
 #include <zen_memory.h>
 #include <zen_big.h>
 #include <zen_hash.h>
+
+#include <zenroom.h>
 
 // somehow not found in headers
 extern size_t strnlen(const char *s, size_t maxlen);

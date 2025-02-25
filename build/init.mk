@@ -3,18 +3,17 @@ COMMIT := $(shell git rev-parse --short HEAD)
 VERSION := $(shell git describe --tags | cut -d- -f1)
 CURRENT_YEAR := $(shell date +%Y)
 
-ZEN_SOURCES := \
-    src/zenroom.o src/zen_error.o \
-    src/lua_functions.o src/lua_modules.o src/lualibs_detected.o src/lua_shims.o \
-    src/encoding.o src/base58.o src/rmd160.o src/segwit_addr.o \
-    src/zen_memory.o src/mutt_sprintf.o \
-    src/zen_io.o src/zen_parse.o src/zen_config.o \
-    src/zen_octet.o src/zen_ecp.o src/zen_ecp2.o src/zen_big.o \
-    src/zen_fp12.o src/zen_random.o src/zen_hash.o \
-    src/zen_ecdh_factory.o src/zen_ecdh.o src/zen_x509.o \
-    src/zen_aes.o src/zen_qp.o src/zen_ed.o src/zen_float.o src/zen_time.o \
-    src/api_hash.o src/api_sign.o src/randombytes.o src/zen_fuzzer.o \
-    src/cortex_m.o src/p256-m.o src/zen_p256.o src/zen_rsa.o src/zen_bbs.o
+ZEN_SOURCES := src/zenroom.o src/zen_error.o src/lua_functions.o	 \
+    src/lua_modules.o src/lualibs_detected.o src/lua_shims.o		 \
+    src/encoding.o src/base58.o src/rmd160.o src/segwit_addr.o		 \
+    src/zen_memory.o src/mutt_sprintf.o src/zen_io.o src/zen_parse.o \
+    src/zen_config.o src/zen_octet.o src/zen_ecp.o src/zen_ecp2.o	 \
+    src/zen_big.o src/zen_fp12.o src/zen_random.o src/zen_hash.o	 \
+    src/zen_ecdh_factory.o src/zen_ecdh.o src/zen_x509.o			 \
+    src/zen_aes.o src/zen_qp.o src/zen_ed.o src/zen_float.o			 \
+    src/zen_time.o src/api_hash.o src/api_sign.o src/randombytes.o	 \
+    src/zen_fuzzer.o src/cortex_m.o src/p256-m.o src/zen_p256.o		 \
+    src/zen_rsa.o src/zen_bbs.o src/fastalloc32.o
 
 ZEN_INCLUDES += -Isrc -Ilib/lua54/src									\
 -Ilib/milagro-crypto-c/build/include -Ilib/milagro-crypto-c/include		\

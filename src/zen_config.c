@@ -67,10 +67,11 @@
 #define STB_C_LEXER_DEFINITIONS
 #define STB_C_LEXER_IMPLEMENTATION
 
-#include <zenroom.h>
 #include <zen_error.h>
 
 #include <stb_c_lexer.h>
+
+#include <zenroom.h>
 
 int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 	(void)stb__strchr;            // avoid compiler warnings
@@ -93,7 +94,6 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 	zconf curconf = NIL;
 	// ZZ->zconf_rngseed[0] = '\0';
 
-	// char *lexbuf = (char*)malloc(MAX_CONFIG);
 	stb_c_lexer_init(&lex, configuration, configuration+len, lexbuf, MAX_CONFIG);
 	while (stb_c_lexer_get_token(&lex)) {
 		if (lex.token == CLEX_parse_error) {

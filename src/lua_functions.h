@@ -18,7 +18,6 @@
  * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <zenroom.h>
 #include <lauxlib.h>
 
 typedef struct zen_extension_t {

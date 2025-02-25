@@ -21,6 +21,7 @@
 #ifndef __ZEN_BIG_H__
 #define __ZEN_BIG_H__
 
+#include <zen_octet.h>
 #include <zen_big_factory.h>
 
 #define BIG_NEGATIVE -1
@@ -29,7 +30,7 @@
 #define BIG_MULSIGN(A, B) ((A) * (B))
 
 typedef struct {
-        char zencode_positive;
+	char zencode_positive;
 	int  len; // modbytes
 	int  chunksize;
 	chunk *val;
