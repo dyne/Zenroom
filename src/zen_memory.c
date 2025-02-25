@@ -19,10 +19,12 @@
  */
 
 #include <errno.h>
-// #include <stdlib.h>
+
 #include <zen_error.h>
 
 #include <zen_memory.h>
+
+#include <zenroom.h>
 
 /**
  * Implementation of the memory allocator for the Lua state.

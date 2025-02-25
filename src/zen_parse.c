@@ -25,12 +25,13 @@
 #include <ctype.h>
 #include <strings.h>
 
-#include <zenroom.h>
 #include <zen_memory.h>
 #include <zen_error.h>
 
 #include <lualib.h>
 #include <lauxlib.h>
+
+#include <zenroom.h>
 
 #define MAX_DEPTH 4096
 
