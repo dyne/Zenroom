@@ -45,9 +45,11 @@
 //  @copyright Dyne.org foundation 2017-2019
 
 
-#include <zen_ecp_factory.h>
+#include <zenroom.h>
 
 #include <zen_error.h>
+#include <zen_ecp_factory.h>
+
 #include <zen_octet.h>
 #include <zen_ecp.h>
 #include <zen_big.h>

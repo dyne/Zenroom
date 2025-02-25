@@ -27,4 +27,15 @@
 #include <stdlib.h>
 #endif
 
+extern void *restrict ZMM;
+
+// internal functions use this define to switch memory manager
+extern void *fastalloc32_malloc  (void *restrict manager, size_t size);
+extern void *fastalloc32_realloc (void *restrict manager, void *ptr, size_t size);
+extern void  fastalloc32_free    (void *restrict manager, void *ptr);
+
+#define malloc(size)       fastalloc32_malloc  (ZMM, size)
+#define free(ptr)          fastalloc32_free    (ZMM, ptr)
+#define realloc(ptr, size) fastalloc32_realloc (ZMM, ptr, size)
+
 #endif

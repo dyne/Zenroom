@@ -17,10 +17,14 @@
  * If not, see http://www.gnu.org/licenses/agpl.txt
  */
 
-#include <lua_functions.h>
 #include <zen_error.h>
+#include <lua_functions.h>
+
 #include <zen_big.h>
 #include <zen_ecp.h>
+
+#include <zenroom.h>
+#include <zen_memory.h>
 
 // ROM values for BBS mapped on BLS381
 // TODO: deactivate when Zenroom is built with other curves
