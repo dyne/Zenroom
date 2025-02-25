@@ -22,13 +22,17 @@
 #include <stdio.h>
 #include <strings.h>
 
+#if defined(_WIN32)
+#include <malloc.h>
+#else
+#include <stdlib.h>
+#endif
+
 #include <amcl.h>
 #include <ecdh_support.h> // AMCL
 
 #include <zen_error.h>
 #include <encoding.h> // zenroom
-
-#include <zen_memory.h>
 
  // first byte is type
 #define ZEN_SHA512 '4'
