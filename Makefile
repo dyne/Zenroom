@@ -35,6 +35,10 @@ debug-asan: ## Address sanitizer debug build
 	$(MAKE) -f build/posix.mk ASAN=1
 	$(MAKE) -f build/posix.mk libzenroom.so ASAN=1
 
+debug-gprof: ## Address sanitizer debug build
+	$(MAKE) -f build/posix.mk LINUX=1 GPROF=1
+	$(MAKE) -f build/posix.mk libzenroom.so LINUX=1 GPROF=1
+
 quick-asan: # quick debug rebuild skipping deps and embed-lua
 	$(MAKE) -f build/posix.mk ASAN=1 BUILD_DEPS=""
 	$(MAKE) -f build/posix.mk libzenroom.so ASAN=1 BUILD_DEPS=""

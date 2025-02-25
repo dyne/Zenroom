@@ -26,7 +26,9 @@ else
 	cflags += ${cflags_debug}
 endif
 endif
-
+ifdef GPROF
+	cflags += -pg
+endif
 ifdef OSX
 	COMPILER := clang
 	cflags += -fPIC -D'ARCH="OSX"' -DARCH_OSX
