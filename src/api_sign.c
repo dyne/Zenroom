@@ -23,11 +23,17 @@
 #include <unistd.h>
 #include <strings.h>
 #include <inttypes.h>
+
+#if defined(_WIN32)
+#include <malloc.h>
+#else
+#include <stdlib.h>
+#endif
+
 #include <zen_error.h>
 #include <encoding.h> // zenroom
 #include <mutt_sprintf.h>
 
-// #include <zen_memory.h>
 #include <ed25519.h>
 #include <randombytes.h>
 
