@@ -35,6 +35,8 @@
 // @license GPLv3
 // @copyright Dyne.org foundation 2017-2019
 
+#include <zenroom.h>
+
 #include <zen_error.h>
 #include <lua_functions.h>
 
@@ -45,10 +47,16 @@
 // easier name (csprng comes from amcl.h in milagro)
 #define RNG csprng
 
-#include <zenroom.h>
-#include <zen_memory.h>
+// compat
+#if defined(_WIN32)
+#include <malloc.h>
+#else
+#include <stdlib.h>
+#endif
+
 #include <zen_octet.h>
 #include <randombytes.h>
+
 
 void* rng_alloc(zenroom_t *ZZ) {
 	RNG *rng = (RNG*)malloc(sizeof(csprng));

@@ -24,13 +24,15 @@
 #include <ctype.h>
 #include <errno.h>
 
+
+#include <zenroom.h>
 #include <mutt_sprintf.h>
 
 #include <lauxlib.h>
 
-#include <zenroom.h>
 #include <zen_error.h>
 #include <zen_octet.h>
+#include <zen_memory.h>
 
 #ifdef __ANDROID__
 #include <android/log.h>
@@ -39,6 +41,7 @@
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
+
 
 #if defined(ARCH_CORTEX)
 extern int SEMIHOSTING_STDOUT_FILENO;

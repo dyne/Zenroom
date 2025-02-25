@@ -4,7 +4,7 @@
 int repl_read(lua_State *lua);
 int repl_flush(lua_State *lua);
 int repl_write(lua_State *lua);
-int repl_loop(zenroom_t *Z);
+int repl_loop(void *Z);
 
 
 #endif

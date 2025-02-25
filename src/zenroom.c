@@ -27,6 +27,11 @@
 #include <sys/wait.h>
 #endif
 
+#if defined(_WIN32)
+#include <malloc.h>
+#else
+#include <stdlib.h>
+#endif
 
 #include <errno.h>
 
@@ -44,13 +49,15 @@
 #endif
 
 #include <zenroom.h>
-#include <zen_memory.h>
 
 // hex2oct used to import hex sequence into rng seed
 #include <encoding.h>
 
 // print functions
 #include <mutt_sprintf.h>
+
+// GLOBAL POINTER TO ZENROOM MEMORY MANAGER
+void *restrict ZMM; // fastalloc32.c
 
 // prototypes from zen_octet.c
 extern void push_buffer_to_octet(lua_State *L, char *p, size_t len);
@@ -77,6 +84,10 @@ extern void zen_add_function(lua_State *L, lua_CFunction func,
 // prototype from zen_random.c
 extern void* rng_alloc(zenroom_t *ZZ);
 extern void zen_add_random(lua_State *L);
+
+// prototype from fastalloc32.c
+extern void *fastalloc32_create  ();
+extern void  fastalloc32_destroy (void *manager);
 
 //////////////////////////////////////////////////////////////
 
@@ -216,6 +227,13 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	ZZ->random_generator = rng_alloc(ZZ);
 
 	// initialize Lua's context
+	ZMM = fastalloc32_create();
+	if(!ZMM) {
+	  _err( "%s: Fastalloc32 memory manager creation failed\n", __func__);
+	  zen_teardown(ZZ);
+	  return NULL;
+	}
+	ZZ->memory_manager = ZMM;
 	ZZ->lua = lua_newstate(zen_memory_manager, ZZ);
 	if(!ZZ->lua) {
 	  _err( "%s: Lua newstate creation failed\n", __func__);
@@ -321,7 +339,7 @@ void zen_teardown(zenroom_t *ZZ) {
 	// this call here frees also Z (lightuserdata)
 	lua_close((lua_State*)ZZ->lua);
 	ZZ->lua = NULL;
-
+	fastalloc32_destroy(ZZ->memory_manager);
 	free(ZZ);
 }
 
