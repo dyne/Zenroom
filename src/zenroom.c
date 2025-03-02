@@ -57,7 +57,9 @@
 #include <mutt_sprintf.h>
 
 // GLOBAL POINTER TO ZENROOM MEMORY MANAGER
-void *restrict ZMM; // fastalloc32.c
+void *restrict ZMM = NULL; // fastalloc32.c
+// GLOBAL POINTER TO ZENROOM CONTEXT
+void *restrict ZEN = NULL;
 
 // prototypes from zen_octet.c
 extern void push_buffer_to_octet(lua_State *L, char *p, size_t len);
@@ -226,14 +228,16 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	// initialize the random generator
 	ZZ->random_generator = rng_alloc(ZZ);
 
-	// initialize Lua's context
-	ZMM = fastalloc32_create();
-	if(!ZMM) {
-	  _err( "%s: Fastalloc32 memory manager creation failed\n", __func__);
-	  zen_teardown(ZZ);
-	  return NULL;
+	if(!ZMM) { // instantiate memory manager only once
+		ZMM = fastalloc32_create();
+		if(!ZMM) {
+			_err( "%s: Fastalloc32 memory manager creation failed\n", __func__);
+			zen_teardown(ZZ);
+			return NULL;
+		}
 	}
-	ZZ->memory_manager = ZMM;
+	// ZZ->memory_manager = ZMM;
+	// initialize Lua's context
 	ZZ->lua = lua_newstate(zen_memory_manager, ZZ);
 	if(!ZZ->lua) {
 	  _err( "%s: Lua newstate creation failed\n", __func__);
@@ -264,7 +268,8 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	}
 
 	lua_atpanic(ZZ->lua, &zen_lua_panic); // as done in lauxlib luaL_newstate
-	lua_pushcfunction(ZZ->lua, &zen_init_pmain);  /* to call in protected mode */
+	lua_pushcfunction(ZZ->lua, &zen_init_pmain); // call protected mode init
+	ZEN = ZZ;
 	int status = lua_pcall(ZZ->lua, 0,   1,  0);
 
 	if(status != LUA_OK) {
@@ -289,7 +294,6 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	lua_setglobal(ZZ->lua, "RNGSEED");
 	if(ZZ->zconf_rngseed[0] != 0x0)
 	  act(ZZ->lua, "RNG seed fed by external configuration");
-
 
 	// load arguments if present
 	if(data) {
@@ -339,7 +343,10 @@ void zen_teardown(zenroom_t *ZZ) {
 	// this call here frees also Z (lightuserdata)
 	lua_close((lua_State*)ZZ->lua);
 	ZZ->lua = NULL;
-	fastalloc32_destroy(ZZ->memory_manager);
+	if(ZMM) {
+		fastalloc32_destroy(ZMM);
+		ZMM = NULL;
+	}
 	free(ZZ);
 }
 
