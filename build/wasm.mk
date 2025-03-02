@@ -1,8 +1,12 @@
 ## Initialize build defaults
 include build/init.mk
 
+JS_INIT_MEM :=8MB
+JS_MAX_MEM := 256MB
+JS_STACK_SIZE := 7MB
+
 # Add here any function used from JS
-WASM_EXPORTS := '["_malloc","_zenroom_exec","_zencode_exec","_zenroom_hash_init","_zenroom_hash_update","_zenroom_hash_final","_zencode_valid_input","_zencode_valid_code","_zencode_get_statements"]'
+WASM_EXPORTS := '["_malloc","_free","_calloc","_realloc","_zenroom_exec","_zencode_exec","_zenroom_hash_init","_zenroom_hash_update","_zenroom_hash_final","_zencode_valid_input","_zencode_valid_code","_zencode_get_statements"]'
 
 # EMSDK should point to installation of EMSDK i.e.: /opt/emsdk
 EMSCRIPTEN ?= ${EMSDK}/upstream/emscripten

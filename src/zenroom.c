@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdbool.h>
 
 #if (defined ARCH_LINUX) || (defined ARCH_OSX) || (defined ARCH_BSD)
 #include <sys/types.h>
@@ -56,8 +57,10 @@
 // print functions
 #include <mutt_sprintf.h>
 
-// GLOBAL POINTER TO ZENROOM MEMORY MANAGER
-void *restrict ZMM = NULL; // fastalloc32.c
+// GLOBAL INSTANCE TO MEM POOL
+#include <sfpool.h>
+void *restrict ZMM = NULL;
+
 // GLOBAL POINTER TO ZENROOM CONTEXT
 void *restrict ZEN = NULL;
 
@@ -86,10 +89,6 @@ extern void zen_add_function(lua_State *L, lua_CFunction func,
 // prototype from zen_random.c
 extern void* rng_alloc(zenroom_t *ZZ);
 extern void zen_add_random(lua_State *L);
-
-// prototype from fastalloc32.c
-extern void *fastalloc32_create  ();
-extern void  fastalloc32_destroy (void *manager);
 
 //////////////////////////////////////////////////////////////
 
@@ -227,16 +226,13 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 
 	// initialize the random generator
 	ZZ->random_generator = rng_alloc(ZZ);
-
-	if(!ZMM) { // instantiate memory manager only once
-		ZMM = fastalloc32_create();
-		if(!ZMM) {
-			_err( "%s: Fastalloc32 memory manager creation failed\n", __func__);
-			zen_teardown(ZZ);
-			return NULL;
-		}
+	ZMM = malloc(sizeof(sfpool_t));
+	if(!sfpool_init((sfpool_t*)ZMM,8192,256)) { // todo settings from CONF
+		_err( "%s: Sailfish pool memory initialization failed\n", __func__);
+		zen_teardown(ZZ);
+		return NULL;
 	}
-	// ZZ->memory_manager = ZMM;
+
 	// initialize Lua's context
 	ZZ->lua = lua_newstate(zen_memory_manager, ZZ);
 	if(!ZZ->lua) {
@@ -344,8 +340,8 @@ void zen_teardown(zenroom_t *ZZ) {
 	lua_close((lua_State*)ZZ->lua);
 	ZZ->lua = NULL;
 	if(ZMM) {
-		fastalloc32_destroy(ZMM);
-		ZMM = NULL;
+		sfpool_teardown((sfpool_t*)ZMM);
+		free(ZMM);
 	}
 	free(ZZ);
 }
@@ -365,6 +361,7 @@ int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
 	zerror(L, "%s", lua_tostring(L, -1));
 	return ZZ->exitcode;
   }
+  // fastalloc32_status(ZMM);
   ZZ->exitcode = luaL_dostring
 	(L,"local _res, _err <const> = pcall( function() ZEN:parse(CONF.code.encoding.fun(CODE)) end)\n"
 	 "if not _res then exitcode(3) ZEN.OK = false error(_err,2) end\n");
@@ -373,6 +370,7 @@ int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
 	zerror(L, "%s", lua_tostring(L, -1));
 	return ZZ->exitcode;
   }
+  // fastalloc32_status(ZMM);
   ZZ->exitcode = luaL_dostring
 	(L,"local _res, _err <const> = pcall( function() ZEN:run() end)\n"
 	 "if not _res then exitcode(2) ZEN.OK = false error(_err,2) end\n");
@@ -381,6 +379,7 @@ int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
 	zerror(L, "%s", lua_tostring(L, -1));
 	return ZZ->exitcode;
   }
+  // fastalloc32_status(ZMM);
   if(ZZ->exitcode == SUCCESS) func(L, "Zencode successfully executed");
   return ZZ->exitcode;
 }

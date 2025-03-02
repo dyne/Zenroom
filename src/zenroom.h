@@ -107,8 +107,6 @@ typedef struct {
     char runtime_random256[256+4];
 	int random_external; // signal when rngseed is external
 
-	void *memory_manager; // fastalloc32_mm
-
     int scope;
 	int debuglevel;
 	int errorlevel;
@@ -122,9 +120,6 @@ typedef struct {
 
 	int exitcode;
 } zenroom_t;
-
-// GLOBAL POINTER TO ZENROOM MEMORY MANAGER
-extern void *restrict ZMM; // fastalloc32.c
 
 // ZENCODE EXEC SCOPE
 #define SCOPE_FULL 0

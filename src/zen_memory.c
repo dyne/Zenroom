@@ -53,7 +53,7 @@ void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
 		// is some other value, Lua is allocating memory for something
 		// else.
 		if(nsize!=0) {
-			void *ret = malloc(nsize);
+			void *ret = sfpool_malloc(ZMM, nsize);
 			if(ret) return ret;
 			zerror(NULL, "Malloc out of memory, requested %lu B", nsize);
 			return NULL;
@@ -66,17 +66,13 @@ void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
 		if(nsize==0) {
 			// When nsize is zero, the allocator must behave like free
 			// and return NULL.
-			free(ptr);
+			sfpool_free(ZMM, ptr);
 			return NULL; }
 
 		// When nsize is not zero, the allocator must behave like
 		// realloc. The allocator returns NULL if and only if it
 		// cannot fulfill the request. Lua assumes that the allocator
 		// never fails when osize >= nsize.
-		if(osize >= nsize) { // shrink
-			return realloc(ptr, nsize);
-		} else { // extend
-			return realloc(ptr, nsize);
-		}
+		return sfpool_realloc(ZMM, ptr, nsize);
 	}
 }
