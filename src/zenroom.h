@@ -64,7 +64,7 @@ int zencode_get_statements(const char *scenario);
 int zenroom_hash_init(const char *hash_type);
 // zenroom_hash_update(hash_ctx, bytes, size) will print the updated hash_ctx in hex
 int zenroom_hash_update(const char *hash_ctx, const char *buffer, const int buffer_size);
-// zenroom_hash_final(hash_ctx) will print the base64 encoded hash of the data so far
+// zenroom_hash_final(hash_ctx) will print the base64 encoded hash of the dazta so far
 int zenroom_hash_final(const char *hash_ctx);
 
 
@@ -78,6 +78,7 @@ int zenroom_sign_verify(const char *algo, const char *pk, const char *msg, const
 
 
 // lower level api: init (exec_line*) teardown
+extern void *restrict ZEN;
 
 #define RANDOM_SEED_LEN 64
 #define STR_MAXITER_LEN 10

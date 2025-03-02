@@ -101,7 +101,7 @@ end:
 int printerr(lua_State *L, const octet *o) {
   BEGIN();
   Z(L);
-  if (Z->stderr_buf) {
+  if (Z && Z->stderr_buf) {
 	char *p = Z->stderr_buf+Z->stderr_pos;
 	if(!o) { *p='\n'; Z->stderr_pos++; return 0; }
 	if (Z->stderr_pos+o->len+1 > Z->stderr_len)
