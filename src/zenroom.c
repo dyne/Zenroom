@@ -227,9 +227,13 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	// initialize the random generator
 	ZZ->random_generator = rng_alloc(ZZ);
 	ZMM = malloc(sizeof(sfpool_t));
-	if(!sfpool_init((sfpool_t*)ZMM,8192,256)) { // todo settings from CONF
+	if(sfpool_init((sfpool_t*)ZMM,
+					ZZ->sfpool_blocknum,
+					ZZ->sfpool_blocksize)==0) {
 		_err( "%s: Sailfish pool memory initialization failed\n", __func__);
-		zen_teardown(ZZ);
+		free(ZZ->random_generator);
+		free(ZZ);
+		free(ZMM);
 		return NULL;
 	}
 
@@ -237,7 +241,10 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	ZZ->lua = lua_newstate(zen_memory_manager, ZZ);
 	if(!ZZ->lua) {
 	  _err( "%s: Lua newstate creation failed\n", __func__);
-	  zen_teardown(ZZ);
+	  free(ZZ->random_generator);
+	  free(ZZ);
+	  sfpool_teardown(ZMM);
+	  free(ZMM);
 	  return NULL;
 	}
 
@@ -326,6 +333,16 @@ void zen_teardown(zenroom_t *ZZ) {
 	notice(ZZ->lua,"Zenroom teardown.");
 	act(ZZ->lua,"Memory used: %u KB",
 	    lua_gc(ZZ->lua,LUA_GCCOUNT,0));
+#ifdef PROFILING
+	if(ZMM) {
+		sfpool_t *p = (sfpool_t*)ZMM;
+		act(ZZ->lua,"🌊 sfpool init: %u blocks %u B each",
+			p->total_blocks, p->block_size);
+		act(ZZ->lua,"🌊 total alloc: %lu K",p->alloc_total/1024);
+		act(ZZ->lua,"🌊 sfpool miss: %u - %lu K",p->miss_total,p->miss_bytes/1024);
+		act(ZZ->lua,"🌊 sfpool hits: %u - %lu K",p->hits_total,p->hits_bytes/1024);
+	}
+#endif
 
 	// stateful RNG instance for deterministic mode
 	if(ZZ->random_generator) {
