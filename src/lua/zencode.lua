@@ -73,6 +73,13 @@ ZEN = {
 	phase = "g"
 }
 
+local __maxmem <const> = _G['MAXMEM']
+local function gc()
+	if collectgarbage'count' > __maxmem then
+		collectgarbage'collect'
+	end
+end
+
 
 function ZEN:add_schema(arr)
 	local _illegal_schemas = {
@@ -434,7 +441,7 @@ function ZEN:begin(new_heap)
 		events = events,
 		callbacks = callbacks
 	})
-	collectgarbage 'collect'
+	gc()
 	-- Zencode init traceback
 	return true
 end
@@ -596,7 +603,7 @@ function ZEN:parse(text)
    end
 	check_open_branching_or_looping('branching', branching)
 	check_open_branching_or_looping('looping', looping)
-   collectgarbage'collect'
+	gc()
    if res == true then
 	  return true
    else
@@ -761,7 +768,7 @@ function ZEN:run()
 	  KEYS = nil
    end
    tmp = nil
-   collectgarbage 'collect'
+   gc()
 
    -- convert all spaces in keys to underscore
    IN = IN_uscore(IN)
@@ -772,7 +779,7 @@ function ZEN:run()
 		if x.from == 'given' and x.to ~= 'given' then
 			-- delete IN memory
 			IN = {}
-			collectgarbage 'collect'
+			gc()
 		end
 		-- HEAP integrity guard
 		if CONF.heapguard then -- watchdog
@@ -793,9 +800,7 @@ function ZEN:run()
 		-- give a notice about the CACHE being used
 		-- TODO: print it in debug
 		if #CACHE > 0 then xxx('Contract CACHE is in use') end
-		if collectgarbage('count') > MAXMEM then
-			collectgarbage('collect')
-		end
+		gc()
 	end
    -- PRINT output
    self:ftrace('--- Zencode execution completed')
@@ -816,7 +821,7 @@ function ZEN:run()
 	  print(JSON.encode({CODEC = CODEC}))
 	  ZEN:debug() -- J64 HEAP and TRACE
    end
-end
+   end
 
 -------------------
 -- ZENCODE WATCHDOG
