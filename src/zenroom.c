@@ -209,6 +209,9 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	ZZ->str_maxmem[2] = '2';
 	ZZ->str_maxmem[3] = '4';
 	ZZ->str_maxmem[4] = '\0';
+	// default memory pool blocks
+	ZZ->sfpool_blocknum = 100;
+	ZZ->sfpool_blocksize = 32768;
 
 	if(conf) {
 		if( ! zen_conf_parse(ZZ, conf) ) { // stb parsing
