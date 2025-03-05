@@ -55,19 +55,13 @@ typedef struct sfpool_t {
   size_t   hits_bytes;
   uint32_t miss_total;
   size_t   miss_bytes;
+  size_t   alloc_total;
 #endif
 } sfpool_t;
 
-#ifdef PROFILING
-#define profile(pool,s) \
-if(s<pool->block_size) { pool->hits[s]++; \
-	pool->hits_total++; pool->hits_bytes+=s; }	\
-else { pool->miss_total++; pool->miss_bytes+=s; }
-#endif
-
 static inline void _secure_zero(void *ptr, uint32_t size) {
-  volatile uint32_t *p = (uint32_t*)ptr; // use 32bit pointer
-  volatile uint32_t s = (size>>2); // divide counter by 4
+  register uint32_t *p = (uint32_t*)ptr; // use 32bit pointer
+  register uint32_t s = (size>>2); // divide counter by 4
   while (s--) *p++ = 0x0; // hit the road jack
 }
 
@@ -88,7 +82,7 @@ static inline bool _is_in_pool(sfpool_t *pool, const void *ptr) {
 size_t sfpool_init(sfpool_t *pool, size_t nmemb, size_t blocksize) {
   if((blocksize & (blocksize - 1)) != 0) {
     fprintf(stderr,"SFPool blocksize must be a power of two\n");
-    return -1;
+    return 0;
   }
   size_t totalsize = nmemb * blocksize;
 #if defined(__EMSCRIPTEN__)
@@ -103,7 +97,7 @@ size_t sfpool_init(sfpool_t *pool, size_t nmemb, size_t blocksize) {
 #endif
   if (pool->data == NULL) {
     fprintf(stderr, "Failed to allocate pool memory\n");
-    exit(EXIT_FAILURE);
+    return 0;
   }
   // Zero out the entire pool
   _secure_zero(pool->data, totalsize);
@@ -112,9 +106,11 @@ size_t sfpool_init(sfpool_t *pool, size_t nmemb, size_t blocksize) {
   pool->block_size   = blocksize;
   // Initialize the embedded free list
   pool->free_list = pool->data;
-  for (volatile uint32_t i = 0; i < pool->total_blocks - 1; ++i) {
-    *(uint8_t **)(pool->data + i * blocksize) =
-      pool->data + (i + 1) * blocksize;
+  register int i, bi;
+  for (i = 0; i < pool->total_blocks - 1; ++i) {
+    bi = i*blocksize;
+    *(uint8_t **)(pool->data + bi) =
+      pool->data + bi + blocksize;
   }
   pool->free_count = pool->total_blocks;
   *(uint8_t **)
@@ -123,6 +119,7 @@ size_t sfpool_init(sfpool_t *pool, size_t nmemb, size_t blocksize) {
   pool->hits = calloc(blocksize+4,sizeof(uint32_t));
   pool->miss_total = pool->miss_bytes = 0;
   pool->hits_total = pool->hits_bytes = 0;
+  pool->alloc_total = 0;
 #endif
   return totalsize;
 }
@@ -141,6 +138,7 @@ void sfpool_teardown(sfpool_t *restrict pool) {
   free(pool->hits);
   pool->miss_total = pool->miss_bytes = 0;
   pool->hits_total = pool->hits_bytes = 0;
+  pool->alloc_total = 0;
 #endif
 }
 
@@ -150,20 +148,25 @@ void *sfpool_malloc(void *restrict opaque, const size_t size) {
   void *ptr;
   if (size <= pool->block_size
       && pool->free_list != NULL) {
+#ifdef PROFILING
+    pool->hits[size]++;
+    pool->hits_total++;
+    pool->hits_bytes+=size;
+    pool->alloc_total+=size;
+#endif
     // Remove the first block from the free list
     uint8_t *block = pool->free_list;
     pool->free_list = *(uint8_t **)block;
     pool->free_count-- ;
-#ifdef PROFILING
-    profile(pool,size);
-#endif
     return block;
   }
   // Fallback to system malloc for large allocations
   ptr = malloc(size);
   if(ptr == NULL) perror("system malloc error");
 #ifdef PROFILING
-  profile(pool,size);
+  pool->miss_total++;
+  pool->miss_bytes+=size;
+  pool->alloc_total+=size;
 #endif
   return ptr;
 }
@@ -202,7 +205,10 @@ void *sfpool_realloc(void *restrict opaque, void *ptr, const size_t size) {
   if (_is_in_pool((sfpool_t*)pool,ptr)) {
     if (size <= pool->block_size) {
 #ifdef PROFILING
-      profile(pool,size);
+      pool->hits[size]++;
+      pool->hits_total++;
+      pool->hits_bytes+=size;
+      pool->alloc_total+=size;
 #endif
       return ptr; // No need to reallocate
     } else {
@@ -220,7 +226,9 @@ void *sfpool_realloc(void *restrict opaque, void *ptr, const size_t size) {
       _secure_zero(ptr, pool->block_size);
 #endif
 #ifdef PROFILING
-      profile(pool,size);
+  pool->miss_total++;
+  pool->miss_bytes+=size;
+  pool->alloc_total+=size;
 #endif
       return new_ptr;
     }
@@ -229,7 +237,9 @@ void *sfpool_realloc(void *restrict opaque, void *ptr, const size_t size) {
     // Handle large allocations
     return realloc(ptr, size);
 #ifdef PROFILING
-    profile(pool,size);
+    pool->miss_total++;
+    pool->miss_bytes+=size;
+    pool->alloc_total+=size;
 #endif
 #else
     return NULL;
@@ -242,8 +252,10 @@ void sfpool_status(sfpool_t *restrict p) {
   fprintf(stderr,"\n🌊 sfpool: %u blocks %u B each\n",
           p->total_blocks, p->block_size);
 #ifdef PROFILING
-  fprintf(stderr,"🌊 Misses: %u - %lu K\n",p->miss_total,p->miss_bytes/1024);
-  fprintf(stderr,"🌊 Hits:   %u - %lu K\n",p->hits_total,p->hits_bytes/1024);
+  fprintf(stderr,"🌊 Total:  %lu K\n",
+          p->alloc_total/1024);
+  fprintf(stderr,"🌊 Misses: %lu K (%u calls)\n",p->miss_bytes/1024,p->miss_total);
+  fprintf(stderr,"🌊 Hits:   %lu K (%u calls)\n",p->hits_bytes/1024,p->hits_total);
   // for (uint32_t i = 1; i <= p->block_size; i++) {
   //   fprintf(stdout,"%u %u\n",i,hits[i]);
   // }
