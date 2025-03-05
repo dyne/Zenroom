@@ -85,7 +85,8 @@ extern void *restrict ZEN;
 
 // conf switches
 typedef enum { STB, MUTT, LIBC } printftype;
-typedef enum { NIL, VERBOSE, SCOPE, RNGSEED, LOGFMT, MAXITER, MAXMEM } zconf;
+typedef enum { NIL, VERBOSE, SCOPE, RNGSEED, LOGFMT, MAXITER, MAXMEM,
+			   MEMBLOCKNUM, MEMBLOCKSIZE } zconf;
 
 // zenroom context, also available as "_Z" global in lua space
 // contents are opaque in lua and available only as lightuserdata
@@ -117,6 +118,9 @@ typedef struct {
 
 	char str_maxiter[STR_MAXITER_LEN + 1];
 	char str_maxmem[STR_MAXITER_LEN + 1];
+
+	int sfpool_blocknum;
+	int sfpool_blocksize;
 
 	int exitcode;
 } zenroom_t;
