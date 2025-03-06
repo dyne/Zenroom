@@ -90,16 +90,17 @@ size_t sfpool_init(sfpool_t *pool, size_t nmemb, size_t blocksize) {
   }
 	pool->secure_lock = false;
   size_t totalsize = nmemb * blocksize;
-	int flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE;
 #if defined(__EMSCRIPTEN__)
   pool->data = (uint8_t *)malloc(totalsize);
 #elif defined(_WIN32)
   pool->data = VirtualAlloc(NULL, totalsize,
                             MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 #elif defined(__APPLE__)
+	int flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE;
   pool->data = mmap(NULL, totalsize, PROT_READ | PROT_WRITE, flags, -1, 0);
   if( mlock(pool->data, totalsize) !=0) pool->secure_lock = true;
 #else // assume POSIX
+	int flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE;
 	struct rlimit rl;
 	if (getrlimit(RLIMIT_MEMLOCK, &rl) == 0)
 		if(totalsize<=rl.rlim_cur) flags |= MAP_LOCKED;
