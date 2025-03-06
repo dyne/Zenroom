@@ -32,7 +32,6 @@
 
 #include <zen_error.h>
 #include <zen_octet.h>
-#include <zen_memory.h>
 
 #ifdef __ANDROID__
 #include <android/log.h>

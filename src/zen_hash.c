@@ -47,7 +47,6 @@
 #include <lua_functions.h>
 
 #include <zen_octet.h>
-#include <zen_memory.h>
 #include <zen_big.h>
 #include <zen_hash.h>
 

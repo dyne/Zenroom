@@ -28,7 +28,6 @@
 #include <amcl.h>
 
 #include <zen_octet.h>
-#include <zen_memory.h>
 #include <zen_big.h>
 #include <zen_ecp_factory.h> // for CURVE_Order
 

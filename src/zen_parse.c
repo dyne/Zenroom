@@ -25,7 +25,6 @@
 #include <ctype.h>
 #include <strings.h>
 
-#include <zen_memory.h>
 #include <zen_error.h>
 
 #include <lualib.h>

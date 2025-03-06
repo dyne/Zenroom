@@ -24,7 +24,6 @@
 #include <zen_ecp.h>
 
 #include <zenroom.h>
-#include <zen_memory.h>
 
 // ROM values for BBS mapped on BLS381
 // TODO: deactivate when Zenroom is built with other curves
