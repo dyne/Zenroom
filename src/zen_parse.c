@@ -31,6 +31,7 @@
 #include <lauxlib.h>
 
 #include <zenroom.h>
+#include <zen_octet.h>
 
 #define MAX_DEPTH 4096
 
@@ -65,28 +66,6 @@ static size_t trimto(char *dest, const char *src, const size_t len) {
 	for(d=0; c<len; c++, d++) dest[d] = src[c];
 	dest[d] = '\0'; // null termination
 	return(d);
-}
-
-static int lua_strcasecmp(lua_State *L) {
-	const char *a, *b;
-	size_t la, lb;
-	char *ta, *tb;
-	a = luaL_checklstring(L,1,&la);
-	b = luaL_checklstring(L,2,&lb);
-	if(la>MAX_LINE) lerror(L, "strcasecmp: arg #1 MAX_LINE limit hit");
-	if(lb>MAX_LINE) lerror(L, "strcasecmp: arg #2 MAX_LINE limit hit");
-	ta = malloc(la+1);
-	tb = malloc(lb+1);
-	la = trimto(ta, a, la);
-	lb = trimto(tb, b, lb);
-	if(la != lb) { lua_pushboolean(L,0); goto end; }
-	if( strcasecmp(ta,tb) == 0 ) { lua_pushboolean(L,1); goto end; }
-// else
-	lua_pushboolean(L,0);
-end:
-	free(ta);
-	free(tb);
-	return 1;
 }
 
 // trim whitespace in front and at end of string
@@ -279,7 +258,6 @@ void zen_add_parse(lua_State *L) {
 	// override print() and io.write()
 	static const struct luaL_Reg custom_parser [] =
 		{ {"parse_prefix", lua_parse_prefix},
-		  {"strcasecmp", lua_strcasecmp},
 		  {"trim", lua_trim_spaces},
 		  {"trimq", lua_trim_quotes},
 		  {"jsontok", lua_unserialize_json},
