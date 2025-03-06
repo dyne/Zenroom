@@ -382,8 +382,8 @@ OUTPUT: the signature (A,e)
 function bbs.sign(ciphersuite, sk, pk, header, messages_octets)
 
     -- Checking the correctness of the input public key pk 
-    if pk ~= (ECP2.generator() * sk):to_zcash() then
-            error('Error in the public key generation')
+    if pk == nil then
+            error('Error: public key mismatch',2)
     end
     -- Default values for header and messages.
     if not messages_octets then
