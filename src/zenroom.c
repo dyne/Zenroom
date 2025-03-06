@@ -237,8 +237,6 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	  _err( "%s: Lua newstate creation failed\n", __func__);
 	  free(ZZ->random_generator);
 	  free(ZZ);
-	  sfpool_teardown(ZMM);
-	  free(ZMM);
 	  return NULL;
 	}
 
