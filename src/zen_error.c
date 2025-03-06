@@ -35,8 +35,6 @@
 #include <intrin.h>
 #endif
 
-#include <zen_memory.h>
-
 #include <zenroom.h>
 
 #include <zen_octet.h>

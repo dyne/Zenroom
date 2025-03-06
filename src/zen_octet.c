@@ -63,7 +63,6 @@
 #include <amcl.h>
 
 #include <encoding.h>
-#include <zen_memory.h>
 #include <zen_error.h>
 #include <zen_octet.h>
 #include <zen_big.h>

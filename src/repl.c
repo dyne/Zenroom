@@ -31,8 +31,6 @@
 
 #include <lua_functions.h>
 
-#include <zen_memory.h>
-
 #ifdef ARCH_LINUX
 #include <readline/readline.h>
 #include <readline/history.h>

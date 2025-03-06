@@ -66,8 +66,6 @@
 # endif
 #endif
 
-#include <zen_memory.h>
-
 #ifdef __EMSCRIPTEN__
 #include <stdlib.h>
 #include <emscripten.h>

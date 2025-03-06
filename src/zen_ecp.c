@@ -53,8 +53,6 @@
 #include <zen_fp12.h>
 #include <lua_functions.h>
 
-#include <zen_memory.h>
-
 extern int _octet_to_big(lua_State *L, big *dst, const octet *src);
 
 static const char* _ecp_from_octet(ecp *e, const octet *o) {
