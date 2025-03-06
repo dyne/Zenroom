@@ -64,7 +64,7 @@ zexe() {
     if [ "$dep" != "" ] && [ $status == 0 ]; then status=255; fi
     mem=`cat $tmperr | grep 'Zenroom memory left allocated' || true`
     if [ "$mem" != "" ] && [ $status == 0 ]; then status=255; fi
-	>&3 grep 'sfpool' $TMP/err
+#	>&3 grep 'sfpool' $TMP/err
     return $status
 }
 
