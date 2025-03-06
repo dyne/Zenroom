@@ -31,8 +31,8 @@ extern void *ZMM;
 extern void *sfpool_malloc (void *restrict opaque, const size_t size);
 extern void  sfpool_free   (void *restrict opaque, void *ptr);
 extern void *sfpool_realloc(void *restrict opaque, void *ptr, const size_t size);
-#define malloc(size)       sfpool_malloc  (ZMM, size)
-#define free(ptr)          sfpool_free    (ZMM, ptr)
-#define realloc(ptr, size) sfpool_realloc (ZMM, ptr, size)
+#define malloc(size)       (ZMM?sfpool_malloc(ZMM, size):malloc(size))
+#define free(ptr)          (ZMM?sfpool_free(ZMM, ptr):free(ptr))
+#define realloc(ptr, size) (ZMM?sfpool_realloc(ZMM, ptr, size):realloc(ptr,size))
 
 #endif
