@@ -79,7 +79,8 @@ extern void zen_add_parse(lua_State *L);
 extern int zen_conf_parse(zenroom_t *ZZ, const char *configuration);
 
 // prototype from zen_memory.c
-extern void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
+extern void *sys_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
+extern void *sfpool_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
 
 // prototypes from lua_functions.c
 extern int zen_setenv(lua_State *L, const char *key, const char *val);
@@ -210,8 +211,8 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	ZZ->str_maxmem[3] = '4';
 	ZZ->str_maxmem[4] = '\0';
 	// default memory pool blocks
-	ZZ->sfpool_blocknum = 100;
-	ZZ->sfpool_blocksize = 32768;
+	ZZ->sfpool_blocknum = 64;
+	ZZ->sfpool_blocksize = 256;
 
 	if(conf) {
 		if( ! zen_conf_parse(ZZ, conf) ) { // stb parsing
@@ -229,19 +230,9 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 
 	// initialize the random generator
 	ZZ->random_generator = rng_alloc(ZZ);
-	ZMM = malloc(sizeof(sfpool_t));
-	if(sfpool_init((sfpool_t*)ZMM,
-					ZZ->sfpool_blocknum,
-					ZZ->sfpool_blocksize)==0) {
-		_err( "%s: Sailfish pool memory initialization failed\n", __func__);
-		free(ZZ->random_generator);
-		free(ZZ);
-		free(ZMM);
-		return NULL;
-	}
 
 	// initialize Lua's context
-	ZZ->lua = lua_newstate(zen_memory_manager, ZZ);
+	ZZ->lua = lua_newstate(sys_memory_manager, ZZ);
 	if(!ZZ->lua) {
 	  _err( "%s: Lua newstate creation failed\n", __func__);
 	  free(ZZ->random_generator);
@@ -294,6 +285,19 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	    lua_gc(ZZ->lua,LUA_GCCOUNT,0));
 	// uncomment to restrict further requires
 	// zen_require_override(L,1);
+
+	// switch to internal memory manager
+	ZMM = malloc(sizeof(sfpool_t));
+	if(sfpool_init((sfpool_t*)ZMM,
+					ZZ->sfpool_blocknum,
+					ZZ->sfpool_blocksize)==0) {
+		_err( "%s: Sailfish pool memory initialization failed\n", __func__);
+		free(ZZ->random_generator);
+		free(ZZ);
+		free(ZMM);
+		return NULL;
+	}
+	lua_setallocf(ZZ->lua, sfpool_memory_manager, ZZ);
 
 	// expose the random seed for optional determinism
 	push_buffer_to_octet(ZZ->lua, ZZ->random_seed, RANDOM_SEED_LEN);
