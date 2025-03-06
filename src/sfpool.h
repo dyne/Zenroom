@@ -32,7 +32,10 @@
 #include <emscripten.h>
 #elif defined(_WIN32)
 #include <windows.h>
-#else
+#else // lucky shot on POSIX
+// defined(__unix__) || defined(__linux__) || defined(__APPLE__) ||  defined(__DragonFly__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+#include <unistd.h> // for geteuid to switch protected memory map
+#include <sys/resource.h>
 #include <sys/mman.h>
 #endif
 
@@ -56,6 +59,7 @@ typedef struct sfpool_t {
   uint32_t miss_total;
   size_t   miss_bytes;
   size_t   alloc_total;
+  bool     secure_lock;
 #endif
 } sfpool_t;
 
@@ -84,16 +88,20 @@ size_t sfpool_init(sfpool_t *pool, size_t nmemb, size_t blocksize) {
     fprintf(stderr,"SFPool blocksize must be a power of two\n");
     return 0;
   }
+	pool->secure_lock = false;
   size_t totalsize = nmemb * blocksize;
 #if defined(__EMSCRIPTEN__)
   pool->data = (uint8_t *)malloc(totalsize);
 #elif defined(_WIN32)
   pool->data = VirtualAlloc(NULL, totalsize,
                             MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-#else // Posix
-  pool->data = mmap(NULL, totalsize, PROT_READ | PROT_WRITE,
-                    MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE
-                    , -1, 0);
+#else // assume POSIX
+	int flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE;
+	struct rlimit rl;
+	if (getrlimit(RLIMIT_MEMLOCK, &rl) == 0)
+		if(totalsize<=rl.rlim_cur) flags |= MAP_LOCKED;
+	pool->data = mmap(NULL, totalsize, PROT_READ | PROT_WRITE, flags, -1, 0);
+	pool->secure_lock = true;
 #endif
   if (pool->data == NULL) {
     fprintf(stderr, "Failed to allocate pool memory\n");
@@ -106,7 +114,7 @@ size_t sfpool_init(sfpool_t *pool, size_t nmemb, size_t blocksize) {
   pool->block_size   = blocksize;
   // Initialize the embedded free list
   pool->free_list = pool->data;
-  register int i, bi;
+  register uint32_t i, bi;
   for (i = 0; i < pool->total_blocks - 1; ++i) {
     bi = i*blocksize;
     *(uint8_t **)(pool->data + bi) =
@@ -251,6 +259,7 @@ void *sfpool_realloc(void *restrict opaque, void *ptr, const size_t size) {
 void sfpool_status(sfpool_t *restrict p) {
   fprintf(stderr,"\n🌊 sfpool: %u blocks %u B each\n",
           p->total_blocks, p->block_size);
+	if(p->secure_lock) fprintf(stderr,"🌊 sfpool: secure memory lock activated\n");
 #ifdef PROFILING
   fprintf(stderr,"🌊 Total:  %lu K\n",
           p->alloc_total/1024);
