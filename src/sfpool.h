@@ -95,6 +95,9 @@ size_t sfpool_init(sfpool_t *pool, size_t nmemb, size_t blocksize) {
 #elif defined(_WIN32)
   pool->data = VirtualAlloc(NULL, totalsize,
                             MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+#elif defined(__APPLE__)
+  pool->data = mmap(NULL, totalsize, PROT_READ | PROT_WRITE, flags, -1, 0);
+  if( mlock(pool->data, totalsize) !=0) pool->secure_lock = true;
 #else // assume POSIX
 	int flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE;
 	struct rlimit rl;
