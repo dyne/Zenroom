@@ -22,7 +22,7 @@
 #include <errno.h>
 
 #include <zen_error.h>
-
+#include <lua.h>
 #include <zenroom.h>
 
 extern void *ZMM;
@@ -43,11 +43,6 @@ extern void *sfpool_realloc(void *restrict opaque, void *ptr, const size_t size)
  * @return void* A pointer to the memory block.
  */
 void *sfpool_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
-	// zenroom_t *ZZ = (zenroom_t*)ud;
-	// if(!ZZ) {
-	// 	zerror(NULL, "Memory manager missing ZEN context");
-	// 	return NULL;
-	// }
   (void)ud;
 	if(ptr == NULL) {
 		// When ptr is NULL, osize encodes the kind of object that Lua
@@ -57,7 +52,11 @@ void *sfpool_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
 		// is some other value, Lua is allocating memory for something
 		// else.
 		if(nsize!=0) {
-			void *ret = sfpool_malloc(ZMM, nsize);
+			void *ret;
+			if(osize==LUA_TUSERDATA)
+				ret = sfpool_malloc(ZMM, nsize);
+			else
+				ret = malloc(nsize);
 			if(ret) return ret;
 			zerror(NULL, "Malloc out of memory, requested %lu B", nsize);
 			return NULL;
@@ -82,19 +81,8 @@ void *sfpool_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
 }
 
 void *sys_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
-	// zenroom_t *ZZ = (zenroom_t*)ud;
-	// if(!ZZ) {
-	// 	zerror(NULL, "Memory manager missing ZEN context");
-	// 	return NULL;
-	// }
-  (void)ud;
+	(void)ud;
 	if(ptr == NULL) {
-		// When ptr is NULL, osize encodes the kind of object that Lua
-		// is allocating. osize is any of LUA_TSTRING, LUA_TTABLE,
-		// LUA_TFUNCTION, LUA_TUSERDATA, or LUA_TTHREAD when (and only
-		// when) Lua is creating a new object of that type. When osize
-		// is some other value, Lua is allocating memory for something
-		// else.
 		if(nsize!=0) {
 			void *ret = malloc(nsize);
 			if(ret) return ret;
@@ -103,19 +91,9 @@ void *sys_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
 		} else return NULL;
 
 	} else {
-		// When ptr is not NULL, osize is the size of the block
-		// pointed by ptr, that is, the size given when it was
-		// allocated or reallocated.
 		if(nsize==0) {
-			// When nsize is zero, the allocator must behave like free
-			// and return NULL.
 			free(ptr);
 			return NULL; }
-
-		// When nsize is not zero, the allocator must behave like
-		// realloc. The allocator returns NULL if and only if it
-		// cannot fulfill the request. Lua assumes that the allocator
-		// never fails when osize >= nsize.
 		return realloc(ptr, nsize);
 	}
 }
