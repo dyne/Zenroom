@@ -16,6 +16,19 @@ import {
 import { TextEncoder } from "util";
 var enc = new TextEncoder();
 
+const sanitizeZencodeParse = (result: string) => {
+  const parsedResult = JSON.parse(result);
+  parsedResult.invalid = parsedResult.invalid.map(([line, number, message]) => {
+    if (typeof message === 'string') {
+      message = message.replace(/\/zencode\.lua:\d+:/, '/zencode.lua:NNN:');
+    }
+    return [line, number, message];
+  });
+  return parsedResult;
+}
+
+//
+
 test("does exists", (t) => {
   t.is(typeof zenroom_exec, "function");
   const p = zenroom_exec("print()").catch(() => {});
@@ -366,17 +379,7 @@ test("parse contract with an invalid statement", async (t) => {
     ],
     ignored: [],
   };
-  // Parse the result and replace the line number in the error messages
-  const parsedResult = JSON.parse(result);
-  parsedResult.invalid = parsedResult.invalid.map(([line, number, message]) => {
-    if (typeof message === 'string') {
-      // Replace the line number in the message with a placeholder
-      message = message.replace(/\/zencode\.lua:\d+:/, '/zencode.lua:NNN:');
-    }
-    return [line, number, message];
-  });
-
-  // Perform the comparison
+  const parsedResult = sanitizeZencodeParse(result);
   t.deepEqual(parsedResult, expected);
 })
 
@@ -410,17 +413,7 @@ test("parse contract with more than one invalid statement", async (t) => {
       ]
     ]
   }
-  // Parse the result and replace the line number in the error messages
-  const parsedResult = JSON.parse(result);
-  parsedResult.invalid = parsedResult.invalid.map(([line, number, message]) => {
-    if (typeof message === 'string') {
-      // Replace the line number in the message with a placeholder
-      message = message.replace(/\/zencode\.lua:\d+:/, '/zencode.lua:NNN:');
-    }
-    return [line, number, message];
-  });
-
-  // Perform the comparison
+  const parsedResult = sanitizeZencodeParse(result);
   t.deepEqual(parsedResult, expected);
 });
 
@@ -497,17 +490,7 @@ test("parse contract with multiple ignore and invalid statements", async (t) => 
       ]
     ]
   }
-  // Parse the result and replace the line number in the error messages
-  const parsedResult = JSON.parse(result);
-  parsedResult.invalid = parsedResult.invalid.map(([line, number, message]) => {
-    if (typeof message === 'string') {
-      // Replace the line number in the message with a placeholder
-      message = message.replace(/\/zencode\.lua:\d+:/, '/zencode.lua:NNN:');
-    }
-    return [line, number, message];
-  });
-
-  // Perform the comparison
+  const parsedResult = sanitizeZencodeParse(result);
   t.deepEqual(parsedResult, expected);
 })
 
