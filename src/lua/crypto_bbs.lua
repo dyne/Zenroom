@@ -385,6 +385,10 @@ function bbs.sign(ciphersuite, sk, pk, header, messages_octets)
     if not messages_octets then
             error('Empty message argument in BBS.sign',2)
     end
+    -- Checking the correctness of the input public key pk
+    if pk ~= (ECP2.generator() * sk):to_zcash() then
+        error('Public key does not match secret key in BBS.sign')
+    end
     header = header or O.empty()
     local messages = bbs.messages_to_scalars(ciphersuite,messages_octets)
 
