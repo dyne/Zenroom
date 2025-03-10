@@ -74,8 +74,9 @@ static inline void _secure_zero(void *ptr, uint32_t size) {
 #else
 #define ptr_t uint32_t
 #endif
+#if !defined(__MUSL__)
 static_assert(sizeof(ptr_t) == sizeof(void*), "Unknown memory pointer size detected");
-
+#endif
 static inline bool _is_in_pool(sfpool_t *pool, const void *ptr) {
   volatile ptr_t p = (ptr_t)ptr;
   return(p >= (ptr_t)pool->data
