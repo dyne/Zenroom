@@ -300,7 +300,7 @@ local VALID_SIGNATURE = "84773160b824e194073a57493dac1a20b667af70cd2352d8af241c7
 -- FROM trinsic-id / bbs BRANCH update result.
 -- 0x8fb17415378ec4462bc167be75583989e0528913da142239848ae88309805bfb3656bcff322e5d8fd1a7e40a660a62266099f27fa81ff5010443f36285f6f0758e4d701c444b20447cded906a3f2001714087f165f760369b901ccbe5173438b32ad195b005e2747492cf002cf51e498
 
-local output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(HEADER), SINGLE_MSG_ARRAY)
+local output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(HEADER), SINGLE_MSG_ARRAY)
 assert(output_signature == O.from_hex(VALID_SIGNATURE))
 assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), SINGLE_MSG_ARRAY) == true)
 
@@ -361,7 +361,7 @@ for i = 1, 10 do
 end
 
 local VALID_MULTI_SIGNATURE = O.from_hex("8339b285a4acd89dec7777c09543a43e3cc60684b0a6f8ab335da4825c96e1463e28f8c5f4fd0641d19cec5920d3a8ff4bedb6c9691454597bbd298288abed3632078557b2ace7d44caed846e1a0a1e8")
-local output_multi_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(HEADER),MULTI_MSG_ARRAY)
+local output_multi_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(HEADER),MULTI_MSG_ARRAY)
 assert( output_multi_signature == VALID_MULTI_SIGNATURE)
 assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_multi_signature, O.from_hex(HEADER), MULTI_MSG_ARRAY) == true)
 
@@ -370,7 +370,7 @@ print("Test case 2")
 -- draft-irtf-cfrg-bbs-signatures-latest Appendix D.2.1.1
 local VALID_MULTI_SIGNATURE_NO_HEADER= O.from_hex("8c87e2080859a97299c148427cd2fcf390d24bea850103a9748879039262ecf4f42206f6ef767f298b6a96b424c1e86c26f8fba62212d0e05b95261c2cc0e5fdc63a32731347e810fd12e9c58355aa0d") 
 
-local output_multi_signature_no_header = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY),nil, MULTI_MSG_ARRAY)
+local output_multi_signature_no_header = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), nil, MULTI_MSG_ARRAY)
 --assert( output_multi_signature_no_header == VALID_MULTI_SIGNATURE_NO_HEADER)
 assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_multi_signature_no_header, nil , MULTI_MSG_ARRAY) == true)
 
@@ -564,7 +564,7 @@ local HEADER = "11223344556677889900aabbccddeeff"
 local SINGLE_MSG_ARRAY = { O.from_hex("9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02") }
 local VALID_SIGNATURE = "b9a622a4b404e6ca4c85c15739d2124a1deb16df750be202e2430e169bc27fb71c44d98e6d40792033e1c452145ada95030832c5dc778334f2f1b528eced21b0b97a12025a283d78b7136bb9825d04ef"
 
-local output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(HEADER), SINGLE_MSG_ARRAY)
+local output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(HEADER), SINGLE_MSG_ARRAY)
 assert(output_signature == O.from_hex(VALID_SIGNATURE))
 assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), SINGLE_MSG_ARRAY) == true)
 
@@ -670,7 +670,7 @@ end
 
 local VALID_MULTI_SIGNATURE = O.from_hex("956a3427b1b8e3642e60e6a7990b67626811adeec7a0a6cb4f770cdd7c20cf08faabb913ac94d18e1e92832e924cb6e202912b624261fc6c59b0fea801547f67fb7d3253e1e2acbcf90ef59a6911931e")
 
-local output_multi_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(HEADER),MULTI_MSG_ARRAY)
+local output_multi_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(HEADER),MULTI_MSG_ARRAY)
 assert( output_multi_signature == VALID_MULTI_SIGNATURE)
 assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_multi_signature, O.from_hex(HEADER), MULTI_MSG_ARRAY) == true)
 
@@ -678,7 +678,7 @@ print("Test case 2")
 -- Section D.1.1.1
 local VALID_MULTI_SIGNATURE_NO_HEADER= O.from_hex("88beeb970f803160d3058eacde505207c576a8c9e4e5dc7c5249cbcf2a046c15f8df047031eef3436e04b779d92a9cdb1fe4c6cc035ba1634f1740f9dd49816d3ca745ecbe39f655ea61fb700137fded") 
 
-local output_multi_signature_no_header = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY),nil, MULTI_MSG_ARRAY)
+local output_multi_signature_no_header = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), nil, MULTI_MSG_ARRAY)
 assert( output_multi_signature_no_header == VALID_MULTI_SIGNATURE_NO_HEADER)
 assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_multi_signature_no_header, nil , MULTI_MSG_ARRAY) == true)
 

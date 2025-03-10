@@ -379,16 +379,13 @@ INPUT: ciphersuite , sk (as zenroom.octet), pk (as zenroom.octet), header (as ze
 header (as zenroom.octet).
 OUTPUT: the signature (A,e)
 ]]
-function bbs.sign(ciphersuite, sk, pk, header, messages_octets)
+function bbs.sign(ciphersuite, sk, header, messages_octets)
 
     -- Default values for header and messages.
     if not messages_octets then
             error('Empty message argument in BBS.sign',2)
     end
-    -- Checking the correctness of the input public key pk
-    if pk ~= (ECP2.generator() * sk):to_zcash() then
-        error('Public key does not match secret key in BBS.sign')
-    end
+    local pk = bbs.sk2pk(sk)
     header = header or O.empty()
     local messages = bbs.messages_to_scalars(ciphersuite,messages_octets)
 

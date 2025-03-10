@@ -48,7 +48,7 @@ function keygen(ctx)
 end
 
 function sign(ctx, keys, obj)
-    return BBS.sign(ctx, keys.sk, keys.pk, nil, obj)
+    return BBS.sign(ctx, keys.sk, nil, obj)
 end
 
 function verify(ctx, pk, sig, obj)
