@@ -1,0 +1,9 @@
+Rule check version 4.37.0
+Scenario ecdh : Create the public key
+Scenario qp : Create the public key
+Given I am known as 'Carl'
+and I have my 'keyring'
+When I create the ecdh public key
+and I create the mlkem512 public key
+Then print my 'mlkem512 public key'
+and print my 'ecdh public key'

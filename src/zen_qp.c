@@ -894,7 +894,7 @@ static int mlkem_enc(lua_State *L) {
 			randbytes[i] = RAND_byte(Z -> random_generator);
 		}
 	}
-	const char *s = lua_tostring(L, 2);
+	const char *s = lua_tostring(L, 3);
 	if(!s) s = "mlkem512";
 	switch(_get_mlkem_type(s)) {
 	case MLKEM512:
@@ -1006,7 +1006,7 @@ static int mlkem_dec(lua_State *L) {
 		failed_msg = "Could not allocate memory during decription";
 		goto end;
 	}
-	const char *s = lua_tostring(L, 2);
+	const char *s = lua_tostring(L, 3);
 	if(!s) s = "mlkem512";
 	switch(_get_mlkem_type(s)) {
 	case MLKEM512:
