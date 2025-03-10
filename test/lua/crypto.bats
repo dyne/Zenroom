@@ -3,6 +3,8 @@ load ../bats_setup
 @test "Lua crypto primitives tests" {
     Z octet.lua
     Z octet_conversion.lua
+    Z multiformat.lua
+    Z varint.lua
     Z big_arithmetics.lua
     Z hash.lua
     Z ecdh.lua
