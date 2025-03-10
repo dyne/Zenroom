@@ -92,14 +92,14 @@ When(
     deprecated(
         "create random object of '' bits",
         "create random of '' bits",
-        function(n) _create_random('random_object', n, 8) end
+        function(n) _create_random('random_object', _get_bytes_from_bits(n)) end
     )
 )
 When(
     deprecated(
         "create random object of '' bytes",
         "create random of '' bytes",
-        function(n) _create_random('random_object', n) end
+        function(n) _create_random('random_object', _get_bytes(n)) end
     )
 )
 
