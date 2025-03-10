@@ -215,8 +215,8 @@ local function generic_bbs_signature(doc, h)
     zencode_assert(obj_codec.zentype == 'e' or obj_codec.zentype == 'a',
         'BBS signature can be done only on strings or an array of strings')
     if (luatype(obj) ~= 'table') then obj = {obj} end
-    local pk = ACK[name..'_public_key'] or BBS.sk2pk(sk)
-    ACK[name..'_signature'] = BBS.sign(ciphersuite, sk, pk, nil, obj)
+    local pk = BBS.sk2pk(sk)
+    ACK[name..'_signature'] = BBS.sign(ciphersuite, sk, nil, obj)
     new_codec(name..' signature', { zentype = 'e'})
 end
 
