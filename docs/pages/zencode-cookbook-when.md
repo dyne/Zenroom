@@ -114,8 +114,7 @@ conflicts. These two keywords can be used interchangeably.
 
 [](../_media/examples/zencode_cookbook/cookbook_when/when_remove_examples.zen ':include :type=code gherkin')
 
-<!---TODO: link loop page as soon as it present-->
-they become particularly useful when working with loops.
+they become particularly useful when working with [loops](zencode-foreach-endforeach).
 If you want you can also remove an element from an object in the memory with
 
 [](../_media/examples/zencode_cookbook/cookbook_when/when_remove_from_examples.zen ':include :type=code gherkin')
