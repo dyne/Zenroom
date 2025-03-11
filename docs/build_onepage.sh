@@ -27,6 +27,11 @@ replace_markdown_includes() {
     if (match($0, /\[\]\(([^)]+)/, matches)) {
       file_path = matches[1]
 
+      fragment = ""
+      if (match($0, /:fragment=([^[:space:]]+)/, frag_matches)) {
+        fragment = frag_matches[1]
+      }
+
       # Remove any additional arguments (e.g., ":include :type=code json")
       sub(/ .*/, "", file_path)
 
@@ -44,14 +49,29 @@ replace_markdown_includes() {
           prefix = "```"
         }
         # Start the code block
-        $0 = prefix "\n" first_line
+        inside_fragment = (fragment == "")
+        output = prefix
+        if (inside_fragment) {
+          output = output "\n" first_line
+        }
         # Read the rest of the file content
         while ((getline line < file_path) > 0) {
-          $0 = $0 "\n" line
+          if (fragment != "" && match(line, /^### \[[^]]+\]/)) {
+            if (line ~ "^### \\[" fragment "\\]") {
+              inside_fragment = 1  # Start capturing when fragment header is found
+              continue
+            } else if (inside_fragment) {
+              inside_fragment = 0  # Stop capturing at the next fragment header
+              break  # Stop at the next fragment header
+            }
+          }
+          if (inside_fragment) {
+            output = output "\n" line
+          }
         }
         close(file_path)
         # End the code block
-        $0 = $0 "\n```"
+        $0 = output "\n```"
 
       } else {
         print(markdown_file " error: file " file_path " not found.") > "/dev/stderr"
