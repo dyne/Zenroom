@@ -533,6 +533,11 @@ It works with any source data named as first argument and one of the hashing alg
 - the SHA3 class `shake256` (also 32 bytes)
 - the SHA3 class `keccak256` used in Ethereum
 
+<!-- should we document also?
+When I create hash of ''                  -> better the explicit one
+When I create hashes of each object in '' -> can be done using foreach and explicit one
+-->
+
 #### Multihash encoded hash
  
 If needed it can be easy to encode hashed results in Zencode using [Multihash](https://multiformats.io/multihash/). Just use a similar statement:
@@ -541,12 +546,6 @@ When I create the multihash of 'source' using 'sha512'
 ```
 
 This way the multihash content will be usable in its pure binary form while being in the `When` phase, but will be printed out in multihash format by the `Then` phase.
-
-```gherkin
-When I create hash of ''
-When I create hash of '' using ''
-When I create hashes of each object in '' # maybe deprecable using foreach?
-```
 
 ### hash to point
 
