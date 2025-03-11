@@ -107,6 +107,9 @@ Without extensions, all the following statementes are valid:
 - hash functions
 
 [](../_media/zencode_utterances_reworked.yaml ':include :fragment=hash :type=code gherkin')
+- math functions
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=math :type=code gherkin')
 - keyring functions
 
 [](../_media/zencode_utterances_reworked.yaml ':include :fragment=keyring :type=code gherkin')

@@ -7854,25 +7854,25 @@ All the valid `given` statements are:
 
 ```
 ''
-am ''
 '' from ''
 '' in ''
 '' in path ''
 '' is valid
+'' named ''
+'' named '' in ''
+'' named by ''
+'' named by '' in ''
+'' part of '' after string prefix ''
+'' part of '' before string suffix ''
+'' public key from ''
+am ''
 my ''
 my '' is valid
 my '' named ''
 my '' named by ''
 my name is in '' named ''
 my name is in '' named '' in ''
-'' named ''
-'' named by ''
-'' named by '' in ''
-'' named '' in ''
 nothing
-'' part of '' after string prefix ''
-'' part of '' before string suffix ''
-'' public key from ''
 rename '' to ''
 ```
 
@@ -7893,42 +7893,23 @@ Without extensions, all the following statementes are valid:
 
 ```
 append '' of '' to ''
-append string '' to ''
 append '' to ''
+append string '' to ''
 compact ascii strings in ''
 copy '' as '' to ''
-copy contents of '' in ''
-copy contents of '' named '' in ''
 copy '' from '' to ''
 copy '' to ''
+copy contents of '' in ''
+copy contents of '' named '' in ''
 create ''
 create '' cast of strings in ''
+create '' named ''
+create '' string of ''
 create count of char '' found in ''
 create float '' cast of integer in ''
 create json escaped string of ''
 create json unescaped object of ''
-create '' named ''
 create number from ''
-create result of ''
-create result of '' % ''
-create result of '' * ''
-create result of '' + ''
-create result of '' - ''
-create result of '' / ''
-create result of '' * '' in ''
-create result of '' / '' in ''
-create result of '' in '' % ''
-create result of '' in '' * ''
-create result of '' in '' + ''
-create result of '' in '' - ''
-create result of '' in '' / ''
-create result of '' in '' % '' in ''
-create result of '' in '' * '' in ''
-create result of '' in '' + '' in ''
-create result of '' in '' - '' in ''
-create result of '' in '' / '' in ''
-create result of '' inverted sign
-create '' string of ''
 delete ''
 done
 exit with error message ''
@@ -7940,10 +7921,10 @@ remove all occurrences of character '' in ''
 remove newlines in ''
 remove spaces in ''
 remove zero values in ''
-rename object named by '' to ''
-rename object named by '' to named by ''
 rename '' to ''
 rename '' to named by ''
+rename object named by '' to ''
+rename object named by '' to named by ''
 set '' to '' as ''
 set '' to '' base ''
 split leftmost '' bytes of ''
@@ -8012,16 +7993,41 @@ for each dictionary in '' append '' to ''
 - hash functions
 
 ```
-create hashes of each object in ''
+create HMAC of '' with key ''
 create hash of ''
 create hash of '' using ''
 create hash to point '' of ''
-create HMAC of '' with key ''
+create hashes of each object in ''
 create key derivation of ''
-create key derivation of '' with password ''
 create key derivation of '' with '' rounds
 create key derivation of '' with '' rounds with password ''
+create key derivation of '' with password ''
 create key derivations of each object in ''
+create multihash of ''
+create multihash of '' using ''
+```
+- math functions
+
+```
+create result of ''
+create result of '' % ''
+create result of '' * ''
+create result of '' * '' in ''
+create result of '' + ''
+create result of '' - ''
+create result of '' / ''
+create result of '' / '' in ''
+create result of '' in '' % ''
+create result of '' in '' % '' in ''
+create result of '' in '' * ''
+create result of '' in '' * '' in ''
+create result of '' in '' + ''
+create result of '' in '' + '' in ''
+create result of '' in '' - ''
+create result of '' in '' - '' in ''
+create result of '' in '' / ''
+create result of '' in '' / '' in ''
+create result of '' inverted sign
 ```
 - keyring functions
 
@@ -8037,9 +8043,21 @@ create array of '' random objects
 create array of '' random objects of '' bits
 create array of '' random objects of '' bytes
 create random ''
+create random array with '' elements
+create random array with '' elements each of '' bits
+create random array with '' elements each of '' bytes
+create random array with '' elements from ''
+create random array with '' integers
+create random array with '' integers modulo ''
+create random array with '' numbers
+create random array with '' numbers modulo ''
+create random dictionary with '' elements from ''
 create random dictionary with '' random objects from ''
 create random object of '' bits
 create random object of '' bytes
+create random of '' bits
+create random of '' bytes
+create random pick from ''
 pick random object in ''
 randomize '' array
 seed random with ''
@@ -8050,18 +8068,20 @@ seed random with ''
 copy '' as '' in ''
 copy '' from '' in ''
 copy '' in ''
-copy named by '' in ''
 copy '' to '' in ''
+copy named by '' in ''
 create copy of last element from ''
 create size of ''
+enter '' with pointer
 move '' as '' in ''
 move '' from '' in ''
 move '' in ''
-move named by '' in ''
 move '' to '' in ''
+move named by '' in ''
 pickup a '' from path ''
 pickup from path ''
 remove '' from ''
+set pointer to ''
 take '' from path ''
 verify '' is found in ''
 verify '' is found in '' at least '' times
@@ -8079,8 +8099,6 @@ create timestamp of date table ''
 
 ```
 verify '' contains a list of emails
-verify elements in '' are equal
-verify elements in '' are not equal
 verify '' ends with ''
 verify '' has prefix ''
 verify '' has suffix ''
@@ -8089,6 +8107,9 @@ verify '' is equal to ''
 verify '' is equal to '' in ''
 verify '' is not equal to ''
 verify '' is not equal to '' in ''
+verify '' starts with ''
+verify elements in '' are equal
+verify elements in '' are not equal
 verify number '' is less or equal than ''
 verify number '' is less than ''
 verify number '' is more or equal than ''
@@ -8097,7 +8118,6 @@ verify size of '' is less or equal than ''
 verify size of '' is less than ''
 verify size of '' is more or equal than ''
 verify size of '' is more than ''
-verify '' starts with ''
 ```
 
 ## Extensions
@@ -8123,12 +8143,12 @@ create bbs shake public key
 create bbs shake public key with secret key ''
 create bbs shake signature of ''
 create bbs signature of ''
+verify '' has a bbs shake signature in '' by ''
+verify '' has a bbs signature in '' by ''
 verify bbs proof
 verify bbs proof with public key '' presentation header '' disclosed messages '' and disclosed indexes ''
 verify bbs shake proof
 verify bbs shake proof with public key '' presentation header '' disclosed messages '' and disclosed indexes ''
-verify '' has a bbs shake signature in '' by ''
-verify '' has a bbs signature in '' by ''
 ```
 - `credential`
 
@@ -8141,8 +8161,8 @@ create credential key with secret ''
 create credential key with secret key ''
 create credential proof
 create credential request
-create credentials
 create credential signature
+create credentials
 create issuer key
 create issuer public key
 verify credential proof
@@ -8167,8 +8187,8 @@ create ecdsa deterministic signature of ''
 create signature of ''
 decrypt text of '' from ''
 decrypt text of '' with ''
-encrypt secret message of '' for ''
 encrypt secret message '' with ''
+encrypt secret message of '' for ''
 verify '' has a ecdh deterministic signature in '' by ''
 verify '' has a ecdh signature in '' by ''
 verify '' has a ecdsa deterministic signature in '' by ''
@@ -8223,9 +8243,9 @@ use ethereum transaction to transfer '' erc20 tokens to ''
 use ethereum transaction to transfer '' erc20 tokens to '' with details ''
 use ethereum transaction to transfer erc721 '' from '' to ''
 use ethereum transaction to transfer erc721 '' in contract '' to '' in planetmint
+verify '' has a ethereum signature in '' by ''
 verify ethereum address signature pair array '' of ''
 verify ethereum address string '' is valid
-verify '' has a ethereum signature in '' by ''
 verify signed ethereum transaction from ''
 ```
 - `fsp`
@@ -8323,8 +8343,8 @@ create credential key with secret ''
 create credential key with secret key ''
 create credential proof
 create credential request
-create credentials
 create credential signature
+create credentials
 create issuer key
 create issuer public key
 create material passport of ''
@@ -8386,16 +8406,17 @@ create secret shares of '' with '' quorum ''
 - `w3c`
 
 ```
+create '' public key from did document ''
 create json web token of '' using ''
 create jwk of ecdh public key
 create jwk of ecdh public key ''
 create jwk of ecdh public key with private key
-create jwk of es256k public key
-create jwk of es256k public key ''
-create jwk of es256k public key with private key
 create jwk of es256 public key
 create jwk of es256 public key ''
 create jwk of es256 public key with private key
+create jwk of es256k public key
+create jwk of es256k public key ''
+create jwk of es256k public key with private key
 create jwk of p256 public key
 create jwk of p256 public key ''
 create jwk of p256 public key with private key
@@ -8408,10 +8429,10 @@ create jwk of secp256r1 public key with private key
 create jws detached signature of header '' and payload ''
 create jws header for ecdh signature
 create jws header for ecdh signature with public key
-create jws header for es256k signature
-create jws header for es256k signature with public key
 create jws header for es256 signature
 create jws header for es256 signature with public key
+create jws header for es256k signature
+create jws header for es256k signature with public key
 create jws header for p256 signature
 create jws header for p256 signature with public key
 create jws header for secp256k1 signature
@@ -8421,15 +8442,14 @@ create jws header for secp256r1 signature with public key
 create jws signature of ''
 create jws signature of header '' and payload ''
 create jws signature using ecdh signature in ''
-create '' public key from did document ''
 create serviceEndpoint of ''
 create verificationMethod of ''
 get verification method in ''
 set verification method in '' to ''
 sign verifiable credential named ''
+verify '' has a jws signature in ''
 verify did document named ''
 verify did document named '' is signed by ''
-verify '' has a jws signature in ''
 verify json web token in '' using ''
 verify jws signature in ''
 verify jws signature of ''
@@ -8441,10 +8461,14 @@ verify verifiable credential named ''
 The foreach statements can be used directly without adding any scenario.
 
 ```
-break foreach
-exit foreach
 '' in ''
 '' in sequence from '' to '' with step ''
+break foreach
+exit foreach
+value prefix '' across arrays ''
+value prefix '' across arrays '' and ''
+value prefix '' at same position in arrays ''
+value prefix '' at same position in arrays '' and ''
 ```
 
 # *If*
@@ -8452,22 +8476,8 @@ exit foreach
 The subset of the *When* statements that can be used with the *If* to create a conditional branch are:
 
 ```
-verify bbs proof
-verify bbs proof with public key '' presentation header '' disclosed messages '' and disclosed indexes ''
-verify bbs shake proof
-verify bbs shake proof with public key '' presentation header '' disclosed messages '' and disclosed indexes ''
 verify '' contains a list of emails
-verify credential proof
-verify credential proof
-verify did document named ''
-verify did document named ''
-verify did document named '' is signed by ''
-verify did document named '' is signed by ''
-verify disclosures '' are found in signed selective disclosure ''
-verify elements in '' are equal
-verify elements in '' are not equal
 verify '' ends with ''
-verify ethereum address signature pair array '' of ''
 verify '' has a bbs shake signature in '' by ''
 verify '' has a bbs signature in '' by ''
 verify '' has a dilithium signature in '' by ''
@@ -8496,6 +8506,21 @@ verify '' is not equal to ''
 verify '' is not equal to '' in ''
 verify '' is not found
 verify '' is not found in ''
+verify '' starts with ''
+verify bbs proof
+verify bbs proof with public key '' presentation header '' disclosed messages '' and disclosed indexes ''
+verify bbs shake proof
+verify bbs shake proof with public key '' presentation header '' disclosed messages '' and disclosed indexes ''
+verify credential proof
+verify credential proof
+verify did document named ''
+verify did document named ''
+verify did document named '' is signed by ''
+verify did document named '' is signed by ''
+verify disclosures '' are found in signed selective disclosure ''
+verify elements in '' are equal
+verify elements in '' are not equal
+verify ethereum address signature pair array '' of ''
 verify json web token in '' using ''
 verify json web token in '' using ''
 verify jws signature in ''
@@ -8519,7 +8544,6 @@ verify size of '' is less or equal than ''
 verify size of '' is less than ''
 verify size of '' is more or equal than ''
 verify size of '' is more than ''
-verify '' starts with ''
 verify verifiable credential named ''
 verify verifiable credential named ''
 ```
@@ -8533,22 +8557,22 @@ nothing
 print ''
 print '' as ''
 print '' as '' in ''
+print '' from ''
+print '' from '' as ''
+print '' from '' as '' in ''
 print data
 print data as ''
 print data from ''
 print data from '' as ''
-print '' from ''
-print '' from '' as ''
-print '' from '' as '' in ''
 print keyring
 print my ''
 print my '' as ''
+print my '' from ''
+print my '' from '' as ''
 print my data
 print my data as ''
 print my data from ''
 print my data from '' as ''
-print my '' from ''
-print my '' from '' as ''
 print my keyring
 print my name in ''
 print object named by ''
