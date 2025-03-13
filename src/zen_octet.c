@@ -1290,6 +1290,15 @@ static int to_mnemonic(lua_State *L) {
 	END(1);
 }
 
+/***
+Decode a base45-encoded string into an octet object, 
+after checking if the input string is valid base45.
+
+	@function OCTET.from_base45
+	@param str base45-encoded string 
+	@return decoded octet object
+ */
+
 static int from_base45(lua_State *L) {
 	BEGIN();
 	const char *s = lua_tostring(L, 1);
@@ -1313,7 +1322,7 @@ static int from_base45(lua_State *L) {
 /***
 	Converts an octet into an array of bytes, compatible with Lua's transformations on <a href="https://www.lua.org/pil/11.1.html">arrays</a>.
 
-	@function octet:array()
+	@function OCTET:array
 	@return an array as Lua's internal representation
 */
 
@@ -1349,8 +1358,12 @@ end:
 }
 
 /***
-	Return self (octet), implemented for compatibility with all
-	zenroom types so that anything can be casted to octet */
+	Return self (octet), implemented for compatibility with all zenroom types so that anything can be casted to octet. 
+
+	@function OCTET:octet
+	@return the self octet
+
+*/
 static int to_octet(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1374,7 +1387,7 @@ end:
 /***
 	Print an octet as string.
 
-	@function octet:str()
+	@function octet:str
 	@return a string representing the octet's contents
 */
 static int to_string(lua_State *L) {
@@ -1406,7 +1419,7 @@ end:
 
 This is the default format when `print()` is used on an octet.
 
-	@function octet:hex()
+	@function octet:hex
 	@return a string of hexadecimal numbers
 */
 int to_hex(lua_State *L) {
@@ -1422,7 +1435,8 @@ end:
 /***
 	Encode an octet to a string of zeroes and ones (0/1) as binary sequence.
 
-	@function OCTET.bin()
+	@function OCTET.bin
+	@return a string of bits
 */
 static int to_bin(lua_State *L) {
 	BEGIN();
@@ -1457,7 +1471,7 @@ end:
 
 	@int[opt=octet:max] length pad to this size, will use maximum octet size if omitted
 	@return new octet padded at length
-	@function octet:pad(length)
+	@function octet:pad
 */
 static int pad(lua_State *L) {
 	BEGIN();
@@ -1487,7 +1501,8 @@ end:
 	Create an octet filled with zero values up to indicated size or its maximum size.
 
 	@int[opt=octet:max] length fill with zero up to this size, use maxumum octet size if omitted
-	@function octet:zero(length)
+	@function octet:zero
+	@return octet filled with zeros
 */
 static int zero(lua_State *L) {
 	BEGIN();
