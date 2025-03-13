@@ -402,7 +402,7 @@ end:
 }
 
 /***
-Create a new octet of size 0
+Create a new octet of size 0.
 
 @function OCTET.empty()
 @return octet newly instantiated octet
@@ -427,6 +427,14 @@ end:
 	END(1);
 }
 
+/***
+Fill an octet object with the contents of another octet object. 
+
+	@function OCTET.fill(o, fill)
+	@param o the target octet to be filled
+	@param fill the source octet providing the data
+	@return the target octet (o) is fully filled, and its len is set to its max capacity. 	
+ */
 static int filloctet(lua_State *L) {
 	BEGIN();
 	int i;
@@ -593,6 +601,15 @@ static int lua_is_bin(lua_State *L) {
 
 // to emulate 128bit counters, de facto truncate integers to 64bit
 typedef struct { uint64_t high, low; } uint128_t;
+
+/***
+Convert a Lua integer into a 16-byte octet object, 
+padding the upper 8 bytes with zeros and handling endianness.
+
+	@function OCTET.from_number
+	@param num Lua integer
+	@return 16-byte octet object 
+ */
 static int from_number(lua_State *L) {
 	BEGIN();
 	// number argument, import
@@ -639,6 +656,14 @@ static int from_rawlen (lua_State *L) {
 	END(1);
 }
 
+/***
+Decode a base64-encoded string into an octet object, 
+after checking if the input string is valid base64.
+
+	@function OCTET.from_base64
+	@param str base64-encoded string 
+	@return decoded octet object
+ */
 static int from_base64(lua_State *L) {
 	BEGIN();
 	const char *s = lua_tostring(L, 1);
@@ -654,6 +679,14 @@ static int from_base64(lua_State *L) {
 	END(1);
 }
 
+/***
+Decode a url64-encoded string into an octet object, 
+after checking if the input string is valid url64.
+
+	@function OCTET.from_url64
+	@param str url64-encoded string 
+	@return decoded octet object
+ */
 static int from_url64(lua_State *L) {
 	BEGIN();
 	const char *s = lua_tostring(L, 1);
@@ -670,6 +703,14 @@ static int from_url64(lua_State *L) {
 	END(1);
 }
 
+/***
+Decode a base58-encoded string into an octet object, 
+after checking if the input string is valid base58.
+
+	@function OCTET.from_base58
+	@param str base58-encoded string 
+	@return decoded octet object
+ */
 static int from_base58(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -705,6 +746,15 @@ end:
 	END(1);
 }
 
+/***
+Convert a string into an octet object, 
+after checking if the input string.
+
+	@function OCTET.from_string
+	@param str string 
+	@return convert octet object
+ */
+
 static int from_string(lua_State *L) {
 	BEGIN();
 	const char *s = lua_tostring(L, 1);
@@ -721,6 +771,15 @@ static int from_string(lua_State *L) {
 	o->len = i;
 	END(1);
 }
+
+/***
+Decode an hexadecimal-encoded string into an octet object, 
+after checking if the input string is valid hexadecimal.
+
+	@function OCTET.from_hex
+	@param str hexadecimal-encoded string 
+	@return decoded octet object
+ */
 
 static int from_hex(lua_State *L) {
 	BEGIN();
@@ -762,6 +821,13 @@ static int from_hex(lua_State *L) {
 	END(1);
 }
 
+/***
+Convert a binary string (composed of '0' and '1' characters) into an octet object.
+
+	@function OCTET.from_bin
+	@param bin binary string 
+	@return convert octet object
+ */
 // I'm quite happy about this: its fast and secure. It can just be
 // made more elegant.
 static int from_bin(lua_State *L) {
@@ -800,14 +866,16 @@ static int from_bin(lua_State *L) {
 	END(1);
 }
 
-/*
+/*** 
   In the bitcoin world, addresses are the hash of the public key (binary data).
   However, the user usually knows them in some encoded form (which also include
   some error check mechanism, to improve security against typos). Bech32 is the
   format used with segwit transactions.
-  @param s Address encoded as Bech32(m)
-  @treturn[1] Address as binary data
-  @treturn[2] Segwit version (version 0 is Bech32, version >0 is Bechm)
+
+	@function OCTET.from_segwit
+  	@param s Address encoded as Bech32(m)
+  	@treturn[1] Address as binary data
+  	@treturn[2] Segwit version (version 0 is Bech32, version >0 is Bechm)
 */
 static int from_segwit_address(lua_State *L) {
 	BEGIN();
@@ -839,14 +907,16 @@ static int from_segwit_address(lua_State *L) {
 	lua_pushinteger(L,witver);
 	END(2);
 }
-/*
-  For an introduction see `from_segwit_address`
+/*** 
+  For an introduction see `from_segwit`.
   HRP (human readble part) are the first characters of the address, they can
   be bc (bitcoin network) or tb (testnet network)
-  @param o Address in binary format (octet with the result of the hash160)
-  @param witver Segwit version
-  @param s HRP
-  @return Bech32(m) encoded string
+	
+	@function OCTET.to_segwit
+  	@param o Address in binary format (octet with the result of the hash160)
+  	@param witver Segwit version
+  	@param s HRP
+  	@return Bech32(m) encoded string
 */
 static int to_segwit_address(lua_State *L) {
 	BEGIN();
@@ -919,27 +989,16 @@ end:
 	END(1);
 }
 
-static int to_mnemonic(lua_State *L) {
-	BEGIN();
-	const octet *o = o_arg(L,1);
-	if(!o->len) { lua_pushnil(L); o_free(L,o); return 1; }
-	if(o->len > 32) {
-		zerror(L, "%s :: octet bigger than 32 bytes cannot be encoded to mnemonic",__func__);
-		o_free(L,o);
-		lua_pushboolean(L, 0);
-		END(0);
-	}
-	char *result = malloc(24 * 10);
-	if(mnemonic_from_data(result, o->val, o->len)) {
-		lua_pushstring(L, result);
-	} else {
-		zerror(L, "%s :: cannot be encoded to mnemonic", __func__);
-		lua_pushboolean(L, 0);
-	}
-	o_free(L,o);
-	free(result);
-	END(1);
-}
+
+
+/***
+Decode a mnemonic-encoded string into an octet object, 
+after checking if the input string is valid mnemonic.
+
+	@function OCTET.from_mnemonic
+	@param str mnemonic-encoded string 
+	@return decoded octet object
+ */
 
 static int from_mnemonic(lua_State *L) {
 	BEGIN();
@@ -969,7 +1028,7 @@ newly allocated octet, does not change the contents of other octets.
 
 	@param dest leftmost octet will be overwritten by result
 	@param source rightmost octet used in XOR operation
-	@function OCTET.concat(dest, source)
+	@function OCTET.concat
 	@return a new octet resulting from the operation
 */
 static int concat_n(lua_State *L) {
@@ -1051,22 +1110,10 @@ end:
 //
 
 /***
-Print an octet in base64 notation.
+Encode an octet in base64 notation.
 
-@function octet:base64()
+@function OCTET:base64
 @return a string representing the octet's contents in base64
-
-@see octet:hex
-@usage
-
--- This method as well :string() and :hex() can be used both to set
--- from and print out in particular formats.
-
--- create an octet from a string:
-msg = OCTET.string("my message to be encoded in base64")
--- print the message in base64 notation:
-print(msg:base64())
-
 
 */
 
@@ -1099,9 +1146,10 @@ end:
 }
 
 /***
-	Encode an OCTET in URL64 format
+	Encode an octet in URL64 notation.
 
-	@function OCTET.url64()
+	@function OCTET:url64
+	@return a string representing the octet's contents in url64
 */
 static int to_url64 (lua_State *L) {
 	BEGIN();
@@ -1146,6 +1194,13 @@ This encoding uses the same alphabet as Bitcoin addresses. Why base58 instead of
 	@function octet:base58()
 	@return a string representing the octet's contents in base58
 */
+
+/***
+	Encode an octet in base58 notation.
+
+	@function OCTET:url64
+	@return a string representing the octet's contents in base58
+*/
 static int to_base58(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1187,6 +1242,13 @@ end:
 	END(1);
 }
 
+/***
+	Encode an octet in base45 notation.
+
+	@function OCTET:base45
+	@return a string representing the octet's contents in base45
+*/
+
 static int to_base45 (lua_State *L) {
 	BEGIN();
 	const octet *o = o_arg(L, 1);
@@ -1199,6 +1261,34 @@ static int to_base45 (lua_State *L) {
 	END(1);
 }
 
+/***
+	Encode an octet in mnemonic notation.
+
+	@function OCTET:mnemonic
+	@return a string representing the octet's contents in mnemonic
+*/
+
+static int to_mnemonic(lua_State *L) {
+	BEGIN();
+	const octet *o = o_arg(L,1);
+	if(!o->len) { lua_pushnil(L); o_free(L,o); return 1; }
+	if(o->len > 32) {
+		zerror(L, "%s :: octet bigger than 32 bytes cannot be encoded to mnemonic",__func__);
+		o_free(L,o);
+		lua_pushboolean(L, 0);
+		END(0);
+	}
+	char *result = malloc(24 * 10);
+	if(mnemonic_from_data(result, o->val, o->len)) {
+		lua_pushstring(L, result);
+	} else {
+		zerror(L, "%s :: cannot be encoded to mnemonic", __func__);
+		lua_pushboolean(L, 0);
+	}
+	o_free(L,o);
+	free(result);
+	END(1);
+}
 
 static int from_base45(lua_State *L) {
 	BEGIN();
