@@ -18,7 +18,7 @@
  *
  */
 
-/// <h1>Base data type for cryptographic opearations</h1>
+/// <h1>Array of raw bytes: base data type in Zenroom</h1>
 //
 //  Octets are <a
 //  href="https://en.wikipedia.org/wiki/First-class_citizen">first-class
@@ -1098,6 +1098,11 @@ end:
 	END(1);
 }
 
+/***
+	Encode an OCTET in URL64 format
+
+	@function OCTET.url64()
+*/
 static int to_url64 (lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1307,7 +1312,7 @@ end:
 
 
 /***
-Converts an octet into a string of hexadecimal numbers representing its contents.
+	Encode an octet into a string of hexadecimal numbers representing its contents.
 
 This is the default format when `print()` is used on an octet.
 
@@ -1324,6 +1329,11 @@ end:
 	END(1);
 }
 
+/***
+	Encode an octet to a string of zeroes and ones (0/1) as binary sequence.
+
+	@function OCTET.bin()
+*/
 static int to_bin(lua_State *L) {
 	BEGIN();
 	const octet *o = o_arg(L,1);
@@ -1407,7 +1417,7 @@ static int zero(lua_State *L) {
 /*** Trim all leading and following zeros in an octet and return a new
      one of equal length or smaller.
 */
-static int trim(lua_State *L) {
+static int trim(lua_State *L) { // o =
 	BEGIN();
 	char *failed_msg = NULL;
 	const octet *src = o_arg(L,1);
@@ -1621,6 +1631,11 @@ static int max(lua_State *L) {
 	END(1);
 }
 
+/***
+	Generate an octet of specified length containing random bytes
+
+	@function OCTET.random(length)
+*/
 static int new_random(lua_State *L) {
 	BEGIN();
 	int tn;
@@ -2021,8 +2036,14 @@ void OCT_shl_bits(octet *x, int n) {
 		}
 	}
 }
-/* Shift octet to the left by n bits. Leftmost bits disappear
-This is also executed when using the 'o << n' with o an octet and n an integer */
+
+/***
+	Shift octet to the left by n bits. Leftmost bits disappear
+	This is also executed when using the 'o << n' with o an octet and n an integer
+
+	@function shl(positions)
+	@int positions number of positions to bit shift to the left
+*/
 static int shift_left(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -2564,7 +2585,7 @@ int luaopen_octet(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg octet_class[] = {
 		{"new",   newoctet},
-		{"empty",   new_empty_octet},
+		{"empty",   new_empty_octet}, // OCTET.empty()
 		{"zero",  zero},
 		{"crc",  crc8},
 		{"concat",concat_n},
