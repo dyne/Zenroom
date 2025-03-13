@@ -1,0 +1,13 @@
+Given nothing
+
+# create a new array to be removed
+When I create the new array
+
+# remove the new array
+When I remove the 'new array'
+
+# equivalenty with the delete
+When I create the new array
+When I delete the 'new array'
+
+Then print the data

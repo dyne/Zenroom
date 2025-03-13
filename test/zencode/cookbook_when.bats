@@ -554,3 +554,200 @@ EOF
 	| zexe when5.zen myLargeNestedObjectWhen.json
     save_output whenCompleteOutputPart5.json
 }
+
+@test "create: new array" {
+    cat <<EOF | zexe when_create_new_array.zen
+Given nothing
+
+When I create the 'string array'
+
+Then print the 'string array'
+EOF
+    save_output when_create_new_array.out.json
+    assert_output '{"string_array":[]}'
+}
+
+@test "create: new array with a name" {
+    cat <<EOF | zexe when_create_new_array_with_name.zen
+Given nothing
+
+When I create the 'string array' named 'array 1'
+When I create the 'string array' named 'array 2'
+
+Then print the 'array 1'
+Then print the 'array 2'
+EOF
+    save_output when_create_new_array_with_name.out.json
+    assert_output '{"array_1":[],"array_2":[]}'
+}
+
+@test "create: new key" {
+    cat <<EOF | zexe when_create_new_key.zen
+Scenario 'ecdh': create an ecdh key
+
+Given nothing
+
+When I create the ecdh key
+
+Then print the 'keyring'
+EOF
+    save_output when_create_new_key.out.json
+    assert_output '{"keyring":{"ecdh":"B4rYTWx6UMbc2YPWRNpl4w2M6gY9jqSa637n8Kr2pPc="}}'
+}
+
+@test "rename: all statements" {
+    cat <<EOF | save_asset when_rename_examples.data.json
+{
+    "to_be_renamed_1": "rename to first",
+    "to_be_renamed_2": "rename to named by new_name_1",
+    "to_be_renamed_3": "rename named by old_name to third",
+    "to_be_renamed_4": "rename named by old_name to named by new_name_2",
+    "new_name_1": "second",
+    "old_name_1": "to_be_renamed_3",
+    "new_name_2": "fourth",
+    "old_name_2": "to_be_renamed_4"
+}
+EOF
+    cat <<EOF | zexe when_rename_examples.zen when_rename_examples.data.json
+Given I have a 'string' named 'to_be_renamed_1'
+Given I have a 'string' named 'to_be_renamed_2'
+Given I have a 'string' named 'to_be_renamed_3'
+Given I have a 'string' named 'to_be_renamed_4'
+Given I have a 'string' named 'new_name_1'
+Given I have a 'string' named 'old_name_1'
+Given I have a 'string' named 'new_name_2'
+Given I have a 'string' named 'old_name_2'
+
+# the new name can be passed directly with
+When I rename 'to_be_renamed_1' to 'first'
+
+# or indirectly by using the 'named by' followed
+# by the name of the variable that contains the new name
+When I rename 'to_be_renamed_2' to named by 'new_name_1'
+
+# you can also indicates the variable to be renamed using
+# another variable with
+When I rename object named by 'old_name_1' to 'third'
+
+# even further, you can use the 'named by' keyword on both fields
+When I rename object named by 'old_name_2' to named by 'new_name_2' 
+
+Then print the data
+EOF
+    save_output when_rename_examples.out.json
+    assert_output '{"first":"rename to first","fourth":"rename named by old_name to named by new_name_2","new_name_1":"second","new_name_2":"fourth","old_name_1":"to_be_renamed_3","old_name_2":"to_be_renamed_4","second":"rename to named by new_name_1","third":"rename named by old_name to third"}'
+}
+
+@test "remove or delete: simply remove" {
+    cat <<EOF | zexe when_remove_examples.zen
+Given nothing
+
+# create a new array to be removed
+When I create the new array
+
+# remove the new array
+When I remove the 'new array'
+
+# equivalenty with the delete
+When I create the new array
+When I delete the 'new array'
+
+Then print the data
+EOF
+    save_output when_remove_examples.out.json
+    assert_output '[]'
+}
+
+@test "remove: element from an object" {
+    cat <<EOF | save_asset when_remove_from_examples.data.json
+{
+    "dictionary": {
+        "key 1": "value 1",
+        "key 2": "value 2"
+    },
+    "array": ["value 3", "value 4"],
+    "value to be removed from array": "value 3"
+}
+EOF
+    cat <<EOF | zexe when_remove_from_examples.zen when_remove_from_examples.data.json
+Given I have a 'string dictionary' named 'dictionary'
+Given I have a 'string array' named 'array'
+
+Given I have a 'string' named 'value to be removed from array'
+
+# to remove an element from a dictionary specify the key you want to remove
+When I remove the 'key 1' from 'dictionary'
+
+# to remove an element from an array specify the value you want to remove
+When I remove the 'value to be removed from array' from 'array'
+
+Then print 'dictionary'
+Then print 'array'
+EOF
+    save_output when_remove_from_examples.out.json
+    assert_output '{"array":["value 4"],"dictionary":{"key_2":"value 2"}}'
+}
+
+@test "found: element in memory" {
+    cat <<EOF | zexe when_found_examples.zen
+Given nothing
+
+When I create the 'string dictionary' named 'dictionary'
+
+# check for the existance
+When I verify the 'dictionary' is found
+
+# check for the not existance
+When I verify the 'clearly not existing dictionary' is not found
+
+Then print the string 'success'
+EOF
+    save_output when_found_examples.out.json
+    assert_output '{"output":["success"]}'
+}
+
+@test "found: element in another object" {
+    cat <<EOF | save_asset when_found_in_examples.data.json
+{
+    "dictionary": {
+        "key 1": "value_1",
+        "key 2": "value_2"
+    },
+    "array": [
+        "value_3",
+        "value_4",
+        "value_4"
+    ],
+    "key": "key_1",
+    "value": "value_4",
+    "N": "2"
+}
+EOF
+    cat <<EOF | zexe when_found_in_examples.zen when_found_in_examples.data.json
+Given I have a 'string dictionary' named 'dictionary'
+Given I have a 'string array' named 'array'
+
+Given I have a 'string' named 'key'
+Given I have a 'string' named 'value'
+Given I have a 'integer' named 'N'
+
+# check by key in a dictionary
+When I verify the 'key 1' is found in 'dictionary'
+When I verify the 'key' is found in 'dictionary'
+# value_1 is a value in dictionary, not a key, thus it is not found
+When I verify the 'value 1' is not found in 'dictionary'
+
+# check by value in an array
+When I verify the 'value 4' is found in 'array'
+When I verify the 'value' is found in 'array'
+# 1 is a key in array, not a value, thus it is not found
+When I verify the '1' is not found in 'array'
+
+# check if found in an array at least N times
+When I verify the 'value' is found in 'array' at least 'N' times
+
+Then print the string 'success'
+EOF
+    save_output when_found_in_examples.out.json
+    assert_output '{"output":["success"]}'
+}
