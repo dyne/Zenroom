@@ -1784,7 +1784,22 @@ static int max(lua_State *L) {
 	END(1);
 }
 
+/***
+	Given a string and a characater, this function removes from the string 
+	*all the occurences of che character in the string
+	@param char
+	@function OCTET:rmchar
 
+	@return the initial string without the input character
+
+	@usage
+	-- oct is the octet with the string to modify
+	-- to_remove is the character to remove from oct
+	oct = OCTET.from_string("Hello, world!")
+	to_remove = OCTET.from_string("l")
+	print(oct:rmchar(to_remove))
+	--print: Heo, word!
+*/
 static int remove_char(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1818,6 +1833,23 @@ end:
 }
 
 // optimized for newlines of all kinds
+
+/***
+	Process an octet structure and create a new octet by filtering out certain ASCII characters and handling escape sequences.
+	*If an escape character '\' is encountered, it sets an escape flag.
+	*If the next character is one of 'a', 'b', 't', 'n', 'v', 'f', or 'r', both the escape character '\' and the escaped character are skipped.
+	*All other valid characters are copied to the new octet.
+
+	@function OCTET:compact_ascii
+	@return New octet which contains the filtered and processed data
+	@usage
+	--create a string octet 
+	oct=OCTET.from_string("st\ring fo\r ex\ample")
+	print(oct:compact_ascii())
+	--print: stingfoexmple
+
+ */
+
 static int compact_ascii(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1860,6 +1892,26 @@ end:
 	END(1);
 }
 
+/***
+	Calculate the frequency of each byte value in an octet and returns the results as a Lua table. It is useful for analyzing the distribution of 
+	*byte values in a byte array, which can be used for entropy calculations or other statistical analyses.
+
+	@function OCTET:bytefreq
+	@return Lua table containing bytes distribution
+	@usage 
+	--create an obtect of bin
+	oct=OCTET.from_bin("101010001010100010101000101010000001011000011111")
+	--save the frequency of the bytes in a table (tab)
+	tab=oct:bytefreq()
+	--print the table
+	for byte, freq in pairs(tab) do
+    	print(string.format("Byte %d: Frequency %d", byte, freq))
+	end 
+	--print .. Byte 23: Frequency 1 ..
+		.. Byte 32: Frequency 1 ..
+		.. Byte 169: Frequency 4 ..
+	--all the others frequency values are 0
+ */
 static int entropy_bytefreq(lua_State *L) {
 	BEGIN();
 	const octet *o = o_arg(L, 1);
@@ -1883,6 +1935,31 @@ static int entropy_bytefreq(lua_State *L) {
 	END(1);
 }
 
+/***
+	Calculate the entropy of an octet structure. 
+	*Entropy is a measure of randomness or uncertainty in the data, often used in information theory. 
+	Allocate a frequency table to store the count of each byte value.
+	Allocate a probability table to store the probability of each byte value.
+	Increment the count for each byte value in the frequency table.
+	Calculate the probability of each byte value.
+	Compute the entropy.
+	Compute the maximum possible entropy for the given number of unique bytes.
+	
+	@function OCTET:entropy
+	@return the entropy ratio (relative to the maximum entropy)
+	@return the maximum possible entropy
+	@return he computed entropy in bits
+	@usage
+	--create an obtect of bin
+	oct=OCTET.from_bin("101010001010100010101000101010000001011000011111")
+	--save the three outpus
+	ratio, max_entropy, bits = oct:entropy()
+	print(ratio)
+	print(max_entropy)
+	print(bits)
+	--the three outputs are: 0.7896901, 1.584962, 1.251629
+
+ */
 static int entropy(lua_State *L) {
 	BEGIN();
 	const octet *o = o_arg(L,1);
