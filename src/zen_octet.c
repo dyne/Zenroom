@@ -428,24 +428,20 @@ end:
 }
 
 /***
-Fill an octet object with the contents of another octet object. 
+	Generate an octet of specified length containing random bytes.
 
-	@function OCTET.fill(o, fill)
-	@param o the target octet to be filled
-	@param fill the source octet providing the data
-	@return the target octet (o) is fully filled, and its len is set to its max capacity. 	
- */
-static int filloctet(lua_State *L) {
+	@function OCTET.random
+	@param len a specified length
+	@return random octet of specified length
+*/
+static int new_random(lua_State *L) {
 	BEGIN();
-	int i;
-	octet *o = (octet*) luaL_testudata(L, 1, "zenroom.octet");
-
-	octet *fill = (octet*) luaL_testudata(L, 2, "zenroom.octet");
-
-	for(i=0; i<o->max; i++)
-		o->val[i] = fill->val[i % fill->len];
-	o->len = o->max;
-	END(0);
+	int tn;
+	lua_Number n = lua_tonumberx(L, 1, &tn);
+	octet *o = o_new(L,(int)n);
+	Z(L);
+	OCT_rand(o, Z->random_generator, (int)n);
+	END(1);
 }
 
 /***
@@ -907,12 +903,13 @@ static int from_segwit_address(lua_State *L) {
 	lua_pushinteger(L,witver);
 	END(2);
 }
+
 /*** 
   For an introduction see `from_segwit`.
   HRP (human readble part) are the first characters of the address, they can
   be bc (bitcoin network) or tb (testnet network)
 	
-	@function OCTET.to_segwit
+	@function OCTET:to_segwit
   	@param o Address in binary format (octet with the result of the hash160)
   	@param witver Segwit version
   	@param s HRP
@@ -989,7 +986,33 @@ end:
 	END(1);
 }
 
+/***
+Decode a base45-encoded string into an octet object, 
+after checking if the input string is valid base45.
 
+	@function OCTET.from_base45
+	@param str base45-encoded string 
+	@return decoded octet object
+ */
+
+static int from_base45(lua_State *L) {
+	BEGIN();
+	const char *s = lua_tostring(L, 1);
+	luaL_argcheck(L, s != NULL, 1, "base45 string expected");
+	int len = is_base45(s);
+	if(len < 0) {
+		lerror(L, "base45 string contains invalid characters");
+		return 0;
+	}
+	octet *o = o_new(L, len);
+	len = b45decode(o->val, s);
+	if(len < 0) {
+		lerror(L, "base45 invalid string");
+		return 0;
+	}
+	o->len = len;
+	END(1);
+}
 
 /***
 Decode a mnemonic-encoded string into an octet object, 
@@ -1088,6 +1111,27 @@ end:
 	END(1);
 }
 
+/***
+	Create an octet filled with zero values up to indicated size or its maximum size.
+
+	@int[opt=octet:max] length fill with zero up to this size, use maxumum octet size if omitted
+	@function OCTET.zero
+	@return octet filled with zeros
+*/
+static int zero(lua_State *L) {
+	BEGIN();
+	const int len = luaL_optnumber(L, 1, MAX_OCTET);
+	if(len<1) {
+		lerror(L, "Cannot create a zero length octet");
+		return 0;
+	}
+	func(L, "Creating a zero filled octet of %u bytes", len);
+	octet *n = o_new(L,len);
+	register int i;
+	for(i=0; i<len; i++) n->val[i]=0x0;
+	n->len = len;
+	END(1);
+}
 
 /// Object Methods
 // @type OCTET
@@ -1290,34 +1334,6 @@ static int to_mnemonic(lua_State *L) {
 	END(1);
 }
 
-/***
-Decode a base45-encoded string into an octet object, 
-after checking if the input string is valid base45.
-
-	@function OCTET.from_base45
-	@param str base45-encoded string 
-	@return decoded octet object
- */
-
-static int from_base45(lua_State *L) {
-	BEGIN();
-	const char *s = lua_tostring(L, 1);
-	luaL_argcheck(L, s != NULL, 1, "base45 string expected");
-	int len = is_base45(s);
-	if(len < 0) {
-		lerror(L, "base45 string contains invalid characters");
-		return 0;
-	}
-	octet *o = o_new(L, len);
-	len = b45decode(o->val, s);
-	if(len < 0) {
-		lerror(L, "base45 invalid string");
-		return 0;
-	}
-	o->len = len;
-	END(1);
-}
-
 
 /***
 	Converts an octet into an array of bytes, compatible with Lua's transformations on <a href="https://www.lua.org/pil/11.1.html">arrays</a>.
@@ -1387,7 +1403,7 @@ end:
 /***
 	Print an octet as string.
 
-	@function octet:str
+	@function octet:string
 	@return a string representing the octet's contents
 */
 static int to_string(lua_State *L) {
@@ -1435,7 +1451,7 @@ end:
 /***
 	Encode an octet to a string of zeroes and ones (0/1) as binary sequence.
 
-	@function OCTET.bin
+	@function OCTET:bin
 	@return a string of bits
 */
 static int to_bin(lua_State *L) {
@@ -1464,6 +1480,26 @@ static int to_bin(lua_State *L) {
 end:
 	o_free(L,o);
 	END(1);
+}
+
+/***
+Fill an octet object with the contents of another octet object. 
+
+	@function OCTET:fill
+	@param oct the source octet providing the data
+	@return the target octet is fully filled, and its len is set to its max capacity. 
+ */
+static int filloctet(lua_State *L) {
+	BEGIN();
+	int i;
+	octet *o = (octet*) luaL_testudata(L, 1, "zenroom.octet");
+
+	octet *fill = (octet*) luaL_testudata(L, 2, "zenroom.octet");
+
+	for(i=0; i<o->max; i++)
+		o->val[i] = fill->val[i % fill->len];
+	o->len = o->max;
+	END(0);
 }
 
 /***
@@ -1497,30 +1533,17 @@ end:
 	return 1;
 }
 
-/***
-	Create an octet filled with zero values up to indicated size or its maximum size.
 
-	@int[opt=octet:max] length fill with zero up to this size, use maxumum octet size if omitted
-	@function octet:zero
-	@return octet filled with zeros
-*/
-static int zero(lua_State *L) {
-	BEGIN();
-	const int len = luaL_optnumber(L, 1, MAX_OCTET);
-	if(len<1) {
-		lerror(L, "Cannot create a zero length octet");
-		return 0;
-	}
-	func(L, "Creating a zero filled octet of %u bytes", len);
-	octet *n = o_new(L,len);
-	register int i;
-	for(i=0; i<len; i++) n->val[i]=0x0;
-	n->len = len;
-	END(1);
-}
+/*** Trim all leading and following zero bytes in an octet 
+ * and return a new one of equal length or smaller.
 
-/*** Trim all leading and following zeros in an octet and return a new
-     one of equal length or smaller.
+	 @function OCTET:trim
+	 @return trimmed octet
+	 @usage
+	 --create an octet of bin
+	 oct = OCTET.from_bin("00000000111111000")
+	 --print 11111100
+	 print(oct:trim():bin())
 */
 static int trim(lua_State *L) { // o =
 	BEGIN();
@@ -1561,6 +1584,18 @@ end:
 	END(1);
 }
 
+/***  Split an octet into two parts based on a specified length and return both parts. The first part will have a length in bytes equal to the input parameter. The second part will contain the remaining bytes.
+
+	@function OCTET:chop
+	@param len an optional length parameter (defaulting to 0) 
+	@return Returns the two resulting octets
+	@usage
+	--create an octet of bin 
+	oct = OCTET.from_bin("001000001111110001")
+	--consider the length parameter equal to 1
+	part1, part2 = oct:chop(1)
+	--part1 = 00100000, part2 = 11111100
+ */
 static int chop(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1600,9 +1635,11 @@ end:
 	END(2);
 }
 
-/*
-  Build the byte in reverse order with respect
-  to the one which is given.
+/*** 
+  Build the byte in reverse order with respect to the one which is given.
+
+  @function OCTET:reverse
+  @return reverse order octet
 */
 static int reverse(lua_State *L) {
 	BEGIN();
@@ -1634,13 +1671,12 @@ end:
 
 
 /***
-
-	Extracts a piece of the octet from the start position to the end position inclusive, expressed in numbers.
+ 	Extracts a piece of the octet from the start position to the end position inclusive, expressed in numbers.
 
 	@int start position, begins from 1 not 0 like in lua
 	@int end position, may be same as start for a single byte
 	@return new octet sub-section from start to end inclusive
-	@function octet:sub(start, end)
+	@function octet:sub
 */
 static int sub(lua_State *L) {
 	BEGIN();
@@ -1690,7 +1726,7 @@ end:
 /***
 	Compare two octets to see if contents are equal.
 
-	@function octet:eq(first, second)
+	@function octet:eq
 	@return true if equal, false otherwise
 */
 
@@ -1721,6 +1757,12 @@ end:
 	END(1);
 }
 
+/*** 
+	Retrieve and return the length of an octet.
+
+	@function OCTET:__len
+	@return length of the octet
+ */
 static int octet_size(lua_State *L) {
 	BEGIN();
 	octet *o = (octet*) luaL_testudata(L, 1, "zenroom.octet");
@@ -1728,6 +1770,12 @@ static int octet_size(lua_State *L) {
 	END(1);
 }
 
+/***
+	Retrieve and return the maximum capacity of an octet.
+
+	@function OCTET:max
+	@return maximum capacity of an octet
+ */
 static int max(lua_State *L) {
 	BEGIN();
 	const octet *o = o_arg(L, 1);
@@ -1736,20 +1784,6 @@ static int max(lua_State *L) {
 	END(1);
 }
 
-/***
-	Generate an octet of specified length containing random bytes
-
-	@function OCTET.random(length)
-*/
-static int new_random(lua_State *L) {
-	BEGIN();
-	int tn;
-	lua_Number n = lua_tonumberx(L, 1, &tn);
-	octet *o = o_new(L,(int)n);
-	Z(L);
-	OCT_rand(o, Z->random_generator, (int)n);
-	END(1);
-}
 
 static int remove_char(lua_State *L) {
 	BEGIN();
