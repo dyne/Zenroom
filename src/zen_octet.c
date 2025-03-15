@@ -445,92 +445,13 @@ static int new_random(lua_State *L) {
 }
 
 /***
+	Check if a Lua string is a valid Base64-encoded string.
+	*If the string is valid Base64, it pushes true, otherwise it pushes false onto the Lua stack.
 
-Bitwise XOR operation on two octets padded to reach the same length, returns a new octet.
-Results in a newly allocated octet, does not change the contents of any other octet involved.
-
-	@param dest leftmost octet used in XOR operation
-	@param source rightmost octet used in XOR operation
-	@function OCTET.xor_grow(dest, source)
-	@return a new octet resulting from the operation
-*/
-static int xor_grow(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	const octet *x = o_arg(L, 1);
-	const octet *y = o_arg(L, 2);
-	if(!x || !y) {
-		failed_msg = "Could not allocate OCTET";
-		goto end;
-	}
-	int max = _max(x->len, y->len);
-	octet *n = o_new(L,max);
-	if(!n) {
-		failed_msg = "Could not create OCTET";
-		goto end;
-	}
-	octet *tx = o_alloc(L,max);
-	memcpy(tx->val,x->val,x->len);
-	tx->len = x->len;
-	OCT_pad(tx, max);
-
-	octet *ty = o_alloc(L,max);
-	memcpy(ty->val,y->val,y->len);
-	ty->len = y->len;
-	OCT_pad(ty, max);
-
-	o_free(L, x);
-	o_free(L, y);
-
-	OCT_copy(n, tx);
-	OCT_xor(n, ty);
-end:
-	o_free(L, tx);
-	o_free(L, ty);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-/***
-
-Bitwise XOR operation on two octets truncating at the shortest one length, returns a new octet.
-This is also executed when using the '<b>~</b>' operator between two
-octets. Results in a newly allocated octet, does not change the
-contents of any other octet involved.
-
-	@param dest leftmost octet used in XOR operation
-	@param source rightmost octet used in XOR operation
-	@function OCTET.xor_shrink(dest, source)
-	@return a new octet resulting from the operation
-*/
-static int xor_shrink(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	const octet *x = o_arg(L, 1);
-	const octet *y = o_arg(L, 2);
-	if(HEDLEY_UNLIKELY(!x || !y)) {
-		failed_msg = "Could not allocate OCTET";
-		goto end;
-	}
-	int min = _min(x->len, y->len);
-	octet *n = o_new(L,min);
-	if(HEDLEY_UNLIKELY(!n)) {
-		failed_msg = "Could not create OCTET";
-		goto end;
-	}
-	OCT_copy(n, (octet*)x);
-	OCT_xor(n, (octet*)y);
-end:
-	o_free(L, x);
-	o_free(L, y);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
+	@function OCTET.is_base64
+	@param s a Lua string
+	@return a boolean value
+ */
 static int lua_is_base64(lua_State *L) {
 	BEGIN();
 	const char *s = lua_tostring(L, 1);
@@ -544,6 +465,14 @@ static int lua_is_base64(lua_State *L) {
 	END(1);
 }
 
+/***
+	Check if a Lua string is a valid url64-encoded string.
+	*If the string is valid url64, it pushes true, otherwise it pushes false onto the Lua stack.
+
+	@function OCTET.is_url64
+	@param s a Lua string
+	@return a boolean value
+ */
 static int lua_is_url64(lua_State *L) {
 	BEGIN();
 	const char *s = lua_tostring(L, 1);
@@ -557,6 +486,14 @@ static int lua_is_url64(lua_State *L) {
 	END(1);
 }
 
+/***
+	Check if a Lua string is a valid Base58-encoded string.
+	*If the string is valid Base58, it pushes true, otherwise it pushes false onto the Lua stack.
+
+	@function OCTET.is_base58
+	@param s a Lua string
+	@return a boolean value
+ */
 static int lua_is_base58(lua_State *L) {
 	BEGIN();
 	const char *s = lua_tostring(L, 1);
@@ -570,6 +507,14 @@ static int lua_is_base58(lua_State *L) {
 	END(1);
 }
 
+/***
+	Check if a Lua string is a valid hexadecimal-encoded string.
+	*If the string is valid hex, it pushes true, otherwise it pushes false onto the Lua stack.
+
+	@function OCTET.is_hex
+	@param s a Lua string
+	@return a boolean value
+ */
 static int lua_is_hex(lua_State *L) {
 	BEGIN();
 	const char *s = lua_tostring(L, 1);
@@ -582,6 +527,16 @@ static int lua_is_hex(lua_State *L) {
 	lua_pushboolean(L, 1);
 	END(1);
 }
+
+/***
+	Check if a Lua string is a valid bin-encoded string.
+	*If the string is valid bin, it pushes true, otherwise it pushes false onto the Lua stack.
+
+	@function OCTET.is_bin
+	@param s a Lua string
+	@return a boolean value
+ */
+
 static int lua_is_bin(lua_State *L) {
 	BEGIN();
 	const char *s = lua_tostring(L, 1);
@@ -907,7 +862,7 @@ static int from_segwit_address(lua_State *L) {
 /*** 
   For an introduction see `from_segwit`.
   HRP (human readble part) are the first characters of the address, they can
-  be bc (bitcoin network) or tb (testnet network)
+  be bc (bitcoin network) or tb (testnet network).
 	
 	@function OCTET:to_segwit
   	@param o Address in binary format (octet with the result of the hash160)
@@ -1043,73 +998,6 @@ end:
 	END(1);
 }
 
-
-/***
-Concatenate two octets, returns a new octet. This is also executed
-when using the '<b>..</b>' operator btween two octets. It results in a
-newly allocated octet, does not change the contents of other octets.
-
-	@param dest leftmost octet will be overwritten by result
-	@param source rightmost octet used in XOR operation
-	@function OCTET.concat
-	@return a new octet resulting from the operation
-*/
-static int concat_n(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	const octet *x = NULL, *y = NULL;
-	char *sx = NULL, *sy = NULL;
-	octet xs, ys;
-	void *ud;
-	ud = luaL_testudata(L, 1, "string");
-	if(ud) {
-		x = &xs;
-		sx = (char*) lua_tostring(L, 1);
-		if(!sx) {
-			failed_msg = "octet or string expected in concat";
-			goto end;
-		}
-		xs.len = strlen(sx);
-		xs.val = sx;
-	} else {
-		x = o_arg(L, 1);
-		if(!x) {
-			failed_msg = "octet or string expected in concat";
-			goto end;
-		}
-	}
-	ud = luaL_testudata(L, 2, "string");
-	if(ud) {
-		y = &ys;
-		sy = (char*) lua_tostring(L, 2);
-		if(!sy) {
-			failed_msg = "octet or string expected in concat";
-			goto end;
-		}
-		ys.len = strlen(sy);
-		ys.val = sy;
-	} else {
-		y = o_arg(L, 2);
-		if(!y) {
-			failed_msg = "octet or string expected in concat";
-			goto end;
-		}
-	}
-	octet *n = o_new(L, x->len+y->len);
-	if(!n) {
-		failed_msg = "Could not create OCTET";
-		goto end;
-	}
-	OCT_copy(n, (octet*)x);
-	OCT_joctet(n, (octet*)y);
-end:
-	if(y!=&ys) o_free(L, y);
-	if(x!=&xs) o_free(L, x);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
 
 /***
 	Create an octet filled with zero values up to indicated size or its maximum size.
@@ -1433,7 +1321,7 @@ end:
 /***
 	Encode an octet into a string of hexadecimal numbers representing its contents.
 
-This is the default format when `print()` is used on an octet.
+*This is the default format when `print()` is used on an octet.
 
 	@function octet:hex
 	@return a string of hexadecimal numbers
@@ -1500,6 +1388,73 @@ static int filloctet(lua_State *L) {
 		o->val[i] = fill->val[i % fill->len];
 	o->len = o->max;
 	END(0);
+}
+
+/***
+Concatenate two octets, returns a new octet. This is also executed
+*when using the '<b>..</b>' operator btween two octets. It results in a
+*newly allocated octet, does not change the contents of other octets.
+
+	@param dest leftmost octet will be overwritten by result
+	@param source rightmost octet used in XOR operation
+	@function OCTET.concat
+	@return a new octet resulting from the operation
+*/
+static int concat_n(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const octet *x = NULL, *y = NULL;
+	char *sx = NULL, *sy = NULL;
+	octet xs, ys;
+	void *ud;
+	ud = luaL_testudata(L, 1, "string");
+	if(ud) {
+		x = &xs;
+		sx = (char*) lua_tostring(L, 1);
+		if(!sx) {
+			failed_msg = "octet or string expected in concat";
+			goto end;
+		}
+		xs.len = strlen(sx);
+		xs.val = sx;
+	} else {
+		x = o_arg(L, 1);
+		if(!x) {
+			failed_msg = "octet or string expected in concat";
+			goto end;
+		}
+	}
+	ud = luaL_testudata(L, 2, "string");
+	if(ud) {
+		y = &ys;
+		sy = (char*) lua_tostring(L, 2);
+		if(!sy) {
+			failed_msg = "octet or string expected in concat";
+			goto end;
+		}
+		ys.len = strlen(sy);
+		ys.val = sy;
+	} else {
+		y = o_arg(L, 2);
+		if(!y) {
+			failed_msg = "octet or string expected in concat";
+			goto end;
+		}
+	}
+	octet *n = o_new(L, x->len+y->len);
+	if(!n) {
+		failed_msg = "Could not create OCTET";
+		goto end;
+	}
+	OCT_copy(n, (octet*)x);
+	OCT_joctet(n, (octet*)y);
+end:
+	if(y!=&ys) o_free(L, y);
+	if(x!=&xs) o_free(L, x);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
 }
 
 /***
@@ -1787,7 +1742,7 @@ static int max(lua_State *L) {
 /***
 	Given a string and a characater, this function removes from the string 
 	*all the occurences of che character in the string
-	@param char
+	@param char the charcater to remove
 	@function OCTET:rmchar
 
 	@return the initial string without the input character
@@ -1899,7 +1854,7 @@ end:
 	@function OCTET:bytefreq
 	@return Lua table containing bytes distribution
 	@usage 
-	--create an obtect of bin
+	--create an octet of bin
 	oct=OCTET.from_bin("101010001010100010101000101010000001011000011111")
 	--save the frequency of the bytes in a table (tab)
 	tab=oct:bytefreq()
@@ -1950,7 +1905,7 @@ static int entropy_bytefreq(lua_State *L) {
 	@return the maximum possible entropy
 	@return he computed entropy in bits
 	@usage
-	--create an obtect of bin
+	--create an octet of bin
 	oct=OCTET.from_bin("101010001010100010101000101010000001011000011111")
 	--save the three outpus
 	ratio, max_entropy, bits = oct:entropy()
@@ -2019,6 +1974,27 @@ static int popcount64b(uint64_t x) {
 }
 #define min(a, b)   ((a) < (b) ? (a) : (b))
 // compare bit by bit two arrays and returns the hamming distance
+
+/***
+	Calculate the Hamming distance between two octet structures. 
+	*The Hamming distance is the number of positions at which the corresponding bits differ between the two octets.
+	*This function calculates the Hamming distance between two octets by treating them as arrays of 64-bit integers.
+	*It only works with octets whose lengths are multiples of 8 bytes. It does not handle smaller octets or padding.
+	+Ideal for applications involving large octets where performance is critical.
+
+
+	@function OCTET:popcount_hamming		
+	@param oct an octet to compare with another one
+	@return the Hamming distance between the two octets
+	@usage 
+	--create two octets of bin (number of bits multiple of 64)
+	oct=OCTET.from_bin("1010001010100010101000101010001010100010101000101010001010100010")
+	oct2=OCTET.from_bin("1001000010010000100100001001000010010000100100001001000010010000")
+	--print the Hamming distance between the two octets
+	print(oct:popcount_hamming(oct2))
+	--print: 24
+
+ */
 static int popcount_hamming_distance(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -2047,6 +2023,24 @@ end:
 	END(1);
 }
 
+/***
+	Calculate the Hamming distance between two octets by comparing them byte by byte and counting the number of differing bits. 
+ 	* It is useful for comparing binary data and measuring their similarity. 
+	* This function requires the two octets to have the same length. If they differ, it throws an error.
+	* Suitable for small to medium-sized octets where simplicity is more important than performance.
+
+	@function OCTET:hamming
+	@param oct an octet to compare with another one
+	@return the Hamming distance between the two octets
+	@usage 
+	--create two octets of bin of the same length
+	oct=OCTET.from_bin("101000101010001010100010101000101010001010100010")
+	oct2=OCTET.from_bin("100100001001000010010000100100001001000010010000")
+	--print the Hamming distance between the two octets
+	print(oct:hamming(oct2))
+	--print: 18
+
+ */
 static int bitshift_hamming_distance(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -2083,6 +2077,21 @@ end:
 	END(1);
 }
 
+/***
+	Count the occurrences of a specific character in an octet and return the count as an integer to Lua. 
+	*It is useful for simple character-based analysis of binary data.
+
+	@function OCTET:charcount
+	@param char the charcater to count
+	@return the number of occurrences of a specific character
+	@usage 
+	--create a string octet
+	oct=OCTET.from_string("Hello world!")
+	--print the number of ocuurences of "l"
+	print(oct:charcount("l"))
+	--print: 3
+
+ */
 static int charcount(lua_State *L) {
 	BEGIN();
 	register char needle;
@@ -2100,6 +2109,19 @@ static int charcount(lua_State *L) {
 	END(1);
 }
 
+/***
+	Compute the CRC-8 checksum of an octet and return the result as a new octet of length 1. 
+	*It is useful for error detection in data transmission or storage.
+	*CRC-8 is a cyclic redundancy check algorithm that produces an 8-bit checksum.
+
+	@function OCTET:crc
+	@return the new octet containing the CRC-8 checksum
+	@usage
+	--create an octet of bin
+	oct=OCTET.from_bin("01110100000111010100101000100111010")
+	print(oct:crc():bin())
+	--print: 10011110
+ */
 static int crc8(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -2137,9 +2159,10 @@ end:
 
 /***
 	Create a new octet with the prefix removed.
-	If the prefix doesn't match, it returns nil.
+	*If the prefix doesn't match, it returns nil.
 
-	@function octet:eq(prefix)
+	@function octet:elide_at_start
+	@param prefix to remove
 	@return initial octet without the prefix or nil
 */
 static int elide_at_start(lua_State *L) {
@@ -2182,11 +2205,16 @@ end:
 
 
 /***
-	Creates a new octet of given size repeating the octet as
-	input
+	Creates a new octet of given size repeating the octet as input.
 
-	@function octet:fillrepeat(size)
+	@function octet:fillrepeat
+	@param size 
 	@return octet of given size
+	@usage 
+	--create an octet of hex
+	oct=OCTET.from_hex("0xa1")
+	print(oct:fillrepeat(5):hex())
+	print: a1a1a1a1a1
 */
 static int fillrepeat(lua_State *L) {
 	BEGIN();
@@ -2217,6 +2245,26 @@ end:
 	END(1);
 }
 
+/***
+	Compare two octet structures and determine if the first octet
+	*is lexicographically less than the second octet.
+
+	@function OCTET:__lt
+	@param oct an octet to compare
+	@result a boolean value
+	@usage
+	--create two octets of bin to compare
+	oct=OCTET.from_bin("01001010")
+	oct2=OCTET.from_bin("10111011")
+	--compare them
+	if (oct:__lt(oct2)) then
+    	print("oct lesser than oct2")
+	else
+    	print("oct2 lesser than oct")
+	end
+	--print: oct lesser than oct2
+
+ */
 static int lesser_than(lua_State *L) {
 	BEGIN();
 	const octet *l = o_arg(L,1);
@@ -2254,11 +2302,18 @@ void OCT_shl_bits(octet *x, int n) {
 }
 
 /***
-	Shift octet to the left by n bits. Leftmost bits disappear
-	This is also executed when using the 'o << n' with o an octet and n an integer
+	Shift octet to the left by n bits. Leftmost bits disappear.
+	*This is also executed when using the 'o << n' with o an octet and n an integer.
 
-	@function shl(positions)
-	@int positions number of positions to bit shift to the left
+	@function OCTET:__shl
+	@param positions number of positions to bit shift to the left
+	@return the shifted octet
+	@usage
+	--create an octet of bin
+	oct=OCTET.from_bin("01001010")
+	--shift of three positions
+	print(oct:__shl(3):bin())
+	print: 01010000
 */
 static int shift_left(lua_State *L) {
 	BEGIN();
@@ -2312,8 +2367,20 @@ void OCT_shr_bits(octet *x, int n) {
 	}
 }
 
-/* Shift octet to the right by n bits. Rightmost bits disappear
- This is also executed when using the 'o >> n' with o an octet and n an integer */
+/*** 
+	Shift octet to the right by n bits. Rightmost bits disappear.
+ 	*This is also executed when using the 'o >> n' with o an octet and n an integer. 
+	
+	@function OCTET:__shr
+	@param positions number of positions to bit shift to the right
+	@return the shiftet octet
+	@usage
+	--create an octet of bin
+	oct=OCTET.from_bin("01001010")
+	--shift of three positions
+	print(oct:__shr(3):bin())
+	print: 00001001
+*/
 static int shift_right(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -2343,6 +2410,20 @@ static int shift_right(lua_State *L) {
 
 }
 
+/***
+	Shift octet to the left by n bits. 
+	*Leftmost bits do not disappear but appear on the right.
+
+	@function OCTET:shl_circular
+	@param positions number of positions to bit shift to the left
+	@return the circular shiftet octet
+	@usage
+	--create an octet of bin
+	oct=OCTET.from_bin("01001010")
+	--circular shift of three positions
+	print(oct:shl_circular(3):bin())
+	--print: 01010010
+ */
 // Circular shift octet to the left by n bits.
 static int shift_left_circular(lua_State *L) {
 	BEGIN();
@@ -2404,6 +2485,20 @@ void OCT_circular_shr_bits(octet *x, int n) {
 	}
 }
 
+/***
+	Shift octet to the right by n bits. 
+	*Rightmost bits do not disappear but appear on the left.
+
+	@function OCTET:rhl_circular
+	@param positions number of positions to bit shift to the right
+	@return the circular shiftet octet
+	@usage
+	--create an octet of bin
+	oct=OCTET.from_bin("01001010")
+	--circular shift of three positions
+	print(oct:shr_circular(3):bin())
+	--print: 01001001
+*/
 // Circular shift octet to the right by n bits
 static int shift_right_circular(lua_State *L) {
 	BEGIN();
@@ -2442,9 +2537,22 @@ void OCT_and(octet *y, octet *x)
 	}
 }
 
-/*
-Bitwise AND operation on two octets padded to reach the same length, returns a new octet.
-Results in a newly allocated octet, does not change the contents of any other octet involved.
+/***
+	Bitwise AND operation on two octets padded to reach the same length, returns a new octet.
+	*Results in a newly allocated octet, does not change the contents of any other octet involved.
+	*If the two octets have different lengths, 
+	*the shorter one is padded with zeros to match the length of the longer one before performing the operation.
+
+	@function OCTET:and_grow
+	@param oct an octet for the bitwise AND operation
+	@return the result of the bitwise AND operation between the two octets
+	@usage
+	--create two octets of bin
+	oct=OCTET.from_bin("0100101001001011")
+	oct2=OCTET.from_bin("10111011")
+	print(oct:and_grow(oct2):bin()) 
+	--print: 0000000000001011
+
 */
 static int and_grow(lua_State *L) {
 	BEGIN();
@@ -2485,11 +2593,21 @@ end:
 	END(1);
 }
 
-/*
-Bitwise AND operation on two octets truncating at the shortest one length, returns a new octet.
-This is also executed when using the '<b>&</b>' operator between two
-octets. Results in a newly allocated octet, does not change the
-contents of any other octet involved.
+/*** 
+	Bitwise AND operation on two octets truncating at the shortest one length, returns a new octet.
+	*This is also executed when using the '<b>&</b>' operator between two
+	*octets. Results in a newly allocated octet, does not change the
+	*contents of any other octet involved.
+
+	@function OCTET:__band
+	@param oct an octet for the bitwise AND operation
+	@return the result of the bitwise AND operation between the two octets
+	@usage
+	--create two octets of bin
+	oct=OCTET.from_bin("0100101001001011")
+	oct2=OCTET.from_bin("10111011")
+	print(oct:__band(oct2):bin()) 
+	--print: 00001010
 */
 static int and_shrink(lua_State *L) {
 	BEGIN();
@@ -2525,9 +2643,22 @@ void OCT_or(octet *y, octet *x)
 	}
 }
 
-/*
-Bitwise OR operation on two octets padded to reach the same length, returns a new octet.
-Results in a newly allocated octet, does not change the contents of any other octet involved.
+/*** 
+	Bitwise OR operation on two octets padded to reach the same length, returns a new octet.
+	*Results in a newly allocated octet, does not change the contents of any other octet involved.
+	*If the two octets have different lengths, 
+	*the shorter one is padded with zeros to match the length of the longer one before performing the operation.
+
+	@function OCTET:or_grow
+	@param oct an octet for the bitwise OR operation
+	@return the result of the bitwise OR operation between the two octets
+	@usage
+	--create two octets of bin
+	oct=OCTET.from_bin("0100101001001011")
+	oct2=OCTET.from_bin("10111011")
+	print(oct:or_grow(oct2):bin())
+	--print: 0100101011111011
+
 */
 static int or_grow(lua_State *L) {
 	BEGIN();
@@ -2568,11 +2699,21 @@ end:
 	END(1);
 }
 
-/*
-Bitwise OR operation on two octets truncating at the shortest one length, returns a new octet.
-This is also executed when using the '<b>|</b>' operator between two
-octets. Results in a newly allocated octet, does not change the
-contents of any other octet involved.
+/*** 
+	Bitwise OR operation on two octets truncating at the shortest one length, returns a new octet.
+	*This is also executed when using the '<b>|</b>' operator between two
+	*octets. Results in a newly allocated octet, does not change the
+	*contents of any other octet involved.
+
+	@function OCTET:__bor
+	@param oct an octet for the bitwise OR operation
+	@return the result of the bitwise OR operation between the two octets
+	@usage
+	--create two octets of bin
+	oct=OCTET.from_bin("0100101001001011")
+	oct2=OCTET.from_bin("10111011")
+	print(oct:__bor(oct2):bin()) 
+	--print: 11111011
 */
 static int or_shrink(lua_State *L) {
 	BEGIN();
@@ -2600,9 +2741,118 @@ end:
 	END(1);
 }
 
-/*
-Bitwise NOT operation on an octet returns a new octet.
-This is also executed when using the '~</b>' operator. Results in a newly allocated octet.
+/***
+
+Bitwise XOR operation on two octets padded to reach the same length, returns a new octet.
+*Results in a newly allocated octet, does not change the contents of any other octet involved.
+
+	@param dest leftmost octet used in XOR operation
+	@param source rightmost octet used in XOR operation
+	@function OCTET:xor_grow
+	@return a new octet resulting from the operation
+	@usage
+	--create two octets of bin
+	oct=OCTET.from_bin("0100101001001011")
+	oct2=OCTET.from_bin("10111011")
+	print(oct:xor_grow(oct2):bin()) 
+	--print: 0100101001001011
+*/
+static int xor_grow(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const octet *x = o_arg(L, 1);
+	const octet *y = o_arg(L, 2);
+	if(!x || !y) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	int max = _max(x->len, y->len);
+	octet *n = o_new(L,max);
+	if(!n) {
+		failed_msg = "Could not create OCTET";
+		goto end;
+	}
+	octet *tx = o_alloc(L,max);
+	memcpy(tx->val,x->val,x->len);
+	tx->len = x->len;
+	OCT_pad(tx, max);
+
+	octet *ty = o_alloc(L,max);
+	memcpy(ty->val,y->val,y->len);
+	ty->len = y->len;
+	OCT_pad(ty, max);
+
+	o_free(L, x);
+	o_free(L, y);
+
+	OCT_copy(n, tx);
+	OCT_xor(n, ty);
+end:
+	o_free(L, tx);
+	o_free(L, ty);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/***
+
+Bitwise XOR operation on two octets truncating at the shortest one length, returns a new octet.
+*This is also executed when using the '<b>~</b>' operator between two
+*octets. Results in a newly allocated octet, does not change the
+*contents of any other octet involved.
+
+	@param dest leftmost octet used in XOR operation
+	@param source rightmost octet used in XOR operation
+	@function OCTET:__bxor
+	@return a new octet resulting from the operation
+	@usage
+	--create two octets of bin
+	oct=OCTET.from_bin("0100101001001011")
+	oct2=OCTET.from_bin("10111011")
+	print(oct:__bxor(oct2):bin()) 
+	--print: 11110001
+	
+*/
+static int xor_shrink(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const octet *x = o_arg(L, 1);
+	const octet *y = o_arg(L, 2);
+	if(HEDLEY_UNLIKELY(!x || !y)) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	int min = _min(x->len, y->len);
+	octet *n = o_new(L,min);
+	if(HEDLEY_UNLIKELY(!n)) {
+		failed_msg = "Could not create OCTET";
+		goto end;
+	}
+	OCT_copy(n, (octet*)x);
+	OCT_xor(n, (octet*)y);
+end:
+	o_free(L, x);
+	o_free(L, y);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/*** 
+	Bitwise NOT operation on an octet returns a new octet.
+	*This is also executed when using the '~</b>' operator. 
+	*Results in a newly allocated octet.
+
+	@function OCTET:__bnot
+	@return the new octet containing the result of the bitwise NOT operation
+	@usage
+	--create an octet of bin
+	oct=OCTET.from_bin("0100101001001011")
+	print(oct:__bnot():bin())
+	--print: 1011010110110100
 */
 static int bit_not(lua_State *L) {
 	BEGIN();
@@ -2654,14 +2904,21 @@ static void *memmem(const void *src,int srclen,const void *dst,int dstlen) {
 
 /***
 Finds a needle sequence of bytes in a haystack octet and returns the
-position where it has been found (counting from 0) or nil when not
-found.
+*position where it has been found (counting from 0) or nil when not
+*found.
 
-	@function OCTET.find(haystack,needle,pos)
+	@function OCTET:find
 	@param haystack the octet in which to find the needle
 	@param needle the octet needle to search for
-	@int pos (optional) the positio to start searching in haystack
+	@int pos (optional) the position to start searching in haystack
 	@return a number indicating the position found in haystack or nil
+	@usage
+	--create an octet in hex
+	oct=OCTET.from_hex("0xa1b2c3d4")
+	--create the needle
+	needle=OCTET.from_hex("0xc3")
+	print(oct:find(needle))
+	--print: 2.0
 */
 static int memfind(lua_State *L) {
 	BEGIN();
@@ -2703,13 +2960,20 @@ static int memfind(lua_State *L) {
 
 /***
 	Copies out a needle octet from an haystack octet starting at
-	position and long as indicated.
+	*position and long as indicated.
 
-	@function OCTET.copy(haystack, start, length)
+	@function OCTET:copy
 	@param haystack octet from which we copy bytes out into needle
 	@int start position, begins from 0
 	@int length of byte sequence to copy
 	@return new octet copied out
+	@usage
+	--create an octet in hex
+	oct=OCTET.from_hex("0xa1b2c3d4")
+	--define the start position equal to 1 
+	--define the length of byte sequence to copy equal to 2
+	print(oct:copy(1,2):hex())
+	--print: b2c3
 */
 static int memcopy(lua_State *L) {
 	BEGIN();
@@ -2752,13 +3016,21 @@ end:
 
 /***
 	Paste a needle octet into an haystack octet starting at position
-	and overwriting all its byte values in place.
+	*and overwriting all its byte values in place.
 
-	@function OCTET.paste(haystack, needle, start)
+	@function OCTET:paste
 	@param haystack octet destination in which to copy needle
 	@param needle octet source of needle bytes
-	@int length of byte sequence to copy from needle
-	@return bool true on success, false on failure
+	@int starting position to paste the needle
+	@return the modified octet
+
+	--create an octet of hex
+	oct=OCTET.from_hex("0xa1b2c3d4")
+	--create the needle
+	needle=OCTET.from_hex("0xc3")
+	--paste the needle in the position 1
+	print(oct:paste(needle,1):hex())
+	--print: a1c3c3d4
 */
 static int mempaste(lua_State *L) {
 	BEGIN();
