@@ -191,6 +191,11 @@ big *big_dup(lua_State *L, big *s) {
 	return(n);
 }
 
+/** It is a destructor for a Big number object in Lua. It is for freeing the memory allocated for 
+ * the Big number and ensuring there are no memory leaks.
+
+	@function big:__gc
+ */
 int big_destroy(lua_State *L) {
 	big *c = (big*)luaL_testudata(L, 1, "zenroom.big");
 	if(c) {
@@ -220,6 +225,17 @@ int _bitsize(big *b) {
 	return bits;
 }
 
+/** Calculate the number of bits required to represent a Big number. 
+
+	@function big:bits
+	@return the number of bits
+	@usage 
+	--create a Big number
+	b = big.new(1983783819133422)
+	--calculate the number of bits
+	print(b:bits())
+	--print: 94
+ */
 static int big_bits(lua_State *L) {
 	BEGIN();
 	big *d = big_arg(L,1);
@@ -231,6 +247,17 @@ static int big_bits(lua_State *L) {
 	}
 	END(1);
 }
+/** Calculate the number of bytes required to represent a Big number. 
+
+	@function big:bytes
+	@return the number of bytes
+	@usage 
+	--create a Big number
+	b = big.new(1983783819133422)
+	--calculate the number of bytes
+	print(b:bytes())
+	--print: 11
+ */
 static int big_bytes(lua_State *L) {
 	BEGIN();
 	big *d = big_arg(L,1);
@@ -319,7 +346,7 @@ static int lua_bigmax(lua_State *L) {
 
     @param[opt] octet value
     @return a new Big number
-    @function BIG.new(octet)
+    @function big.new
 */
 static int newbig(lua_State *L) {
 	BEGIN();
@@ -420,6 +447,13 @@ octet *new_octet_from_big(lua_State *L, big *c) {
 }
 
 // Works only for positive numbers
+/** Convert a decimal string into a big integer object. 
+ * It works only for positive numbers.
+
+	@function big.from_decimal
+	@param string representing a decimal number
+	@return the big integer object
+ */
 static int big_from_decimal_string(lua_State *L) {
 	BEGIN();
 	const char *s = lua_tostring(L, 1);
@@ -454,11 +488,20 @@ static int big_from_decimal_string(lua_State *L) {
 	BIG_norm(num->val);
 	END(1);
 }
-/*
-  fixed size encoding for integer with big endian order
-  @param num number that has to be coverted
-  @param len bytes size
-  @param big_endian use big endian order (if omitted by default is true)
+/** Fixed size encoding for integer with big endian order.
+	*If the second parameter is 'false' it usese little endian order.
+
+	@function big:fixed
+	@param len bytes size
+	@param boolean use big endian order (if omitted by default is true)
+	@return a fixed-length octet
+	@usage 
+	--create a Big number
+	b = BIG.from_decimal("1234567891234569213839813381")
+  	--bytes size equal to 10
+  	print(b:fixed(10):hex())
+	--print: 03fd35eb7ce4f16ec9962b05
+
 */
 static int big_to_fixed_octet(lua_State *L) {
 	BEGIN();
@@ -527,11 +570,16 @@ end:
 	END(1);
 }
 
-/*
-  Slow but only for export
-  Works only for positive numbers
-  @param num number to be converted (zenroom.big)
-  @return string which represent a decimal number (only digits 0-9)
+/**	Convert a Big integer into a decimal string representation.
+  	*Slow but only for export.
+  	*It work only for positive numbers.
+  	@function big:decimal
+  	@return string which represent a decimal number (only digits 0-9)
+	@usage 
+	--create a Big number
+	b = BIG.from_decimal("1234567891234569213")
+	--print decimal number
+	print(b:decimal())
 */
 // TODO: always show negative sign or put a flag?
 static int big_to_decimal_string(lua_State *L) {
@@ -611,7 +659,11 @@ static int big_to_decimal_string(lua_State *L) {
 	END(1);
 }
 
+/*** Convert a Big number into an octet.
 
+	@function big:octet
+	@return an octet
+ */
 static int luabig_to_octet(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -636,6 +688,23 @@ end:
 	END(1);
 }
 
+/*** Concatenate two Big integer objects into a single octet.
+
+	@function big:__concat
+	@param data a big integer object to concatenate
+	@return the concatenated octet object
+	@usage 
+	--create two octets
+	b = BIG.from_decimal("1234567891")
+	b2 = BIG.from_decimal("234569213")
+	--concatenate them
+	conc = b:__concat(b2)
+	--print in hexadecimal
+	--print b: 499602d3
+	--print b2: 0dfb3dfd
+	--print conc: 499602d30dfb3dfd
+
+ */
 static int big_concat(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -668,6 +737,11 @@ end:
 	END(1);
 }
 
+/** Convert a Big number in hexadecimal format.
+
+	@function big:hex
+	@return an octet in hex
+ */
 static int big_to_hex(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -692,6 +766,12 @@ end:
 	END(1);
 }
 
+/** Convert a Big number into a Lua integer. 
+	*The function handles big integers that fit within 32 bits and truncates larger integers to 32 bits with a warning. 
+
+	@function big:int
+	@return a Lua integer
+ */
 static int big_to_int(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -743,6 +823,12 @@ static int _compare_bigs(big *l, big *r, char *failed_msg) {
 	return(res);
 }
 
+/** Compare two Big numbers for equality.
+
+	@function big:__eq
+	@param data a Big integer to compare 
+	@return a boolean value
+ */
 static int big_eq(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -766,6 +852,21 @@ end:
 	}
 	END(1);
 }
+/** Provide a simple way to check if one Big integer is less than another.
+
+	@function big:__lt
+	@param data a Big integer to compare 
+	@return a boolean value
+	@usage 
+	--create two Big integers 
+	b = BIG.from_decimal("12345678914124724921472194")
+	b2 = BIG.from_decimal("1234")
+	--compare them
+	if b:__lt(b2) then print("b is less than b2")
+	else print("b isn't less than b2")
+	end	
+	--print: b isn't less than b2
+*/
 static int big_lt(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -789,6 +890,13 @@ end:
 	}
 	END(1);
 }
+
+/** Provide a simple way to check if one Big integer is less than or equal another.
+
+	@function big:__lte
+	@param data a Big integer to compare 
+	@return a boolean value
+ */
 static int big_lte(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -813,6 +921,19 @@ end:
 	END(1);
 }
 
+/** Add two Big numbers and return the result as a new Big number.
+
+	@function big:__add
+	@param 	data a Big integer to add
+	@return the sum of the two Big numbers
+	@usage 
+	--create two Big numbers
+	b = BIG.from_decimal("12345678914124724921472194")
+	b2 = BIG.from_decimal("12343234234242334423432")
+	--make the sum
+	print(b:__add(b2):decimal())
+	--print: 12358022148358967255895626
+ */
 static int big_add(lua_State *L) {
 	BEGIN();
 	big *l = big_arg(L,1);
@@ -839,6 +960,21 @@ static int big_add(lua_State *L) {
 	END(1);
 }
 
+/** Subtract two Big numbers and return the result as a new Big number.
+	*If the second argument is bigger than the first argument, 
+	*the behavior depends on whether the big integers are in regular size or double size mode.
+
+	@function big:__sub
+	@param 	data a Big integer to subtract
+	@return the difference of the two Big numbers
+	@usage 
+	--create two Big numbers
+	b = BIG.from_decimal("12345678914124724921472194")
+	b2 = BIG.from_decimal("12343234234242334423432")
+	--make the difference
+	print(b:__sub(b2):decimal())
+	--print: 12333335679890482587048762
+ */
 static int big_sub(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -882,6 +1018,20 @@ end:
 	END(1);
 }
 
+/**	Perform modular subtraction of two Big numbers modulus a third Big number.
+
+	@function big:modsub
+	@param data a Big number to subtract
+	@param modulo the modulus of the operation
+	@usage
+	--create the two big numbers to subtract
+	b = BIG.from_decimal("12345678914124724921472194")
+	b2 = BIG.from_decimal("12343234234242334423432")	
+	--define the modulo
+	mod = BIG.from_decimal("1234")
+	print(b:modsub(b2, mod):decimal())
+	--print: 576	
+ */
 static int big_modsub(lua_State *L) {
 	BEGIN();
 	big *l = big_arg(L,1);

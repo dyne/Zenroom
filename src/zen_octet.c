@@ -1742,7 +1742,7 @@ static int max(lua_State *L) {
 /***
 	Given a string and a characater, this function removes from the string 
 	*all the occurences of che character in the string
-	@param char the charcater to remove
+	@param char the character to remove
 	@function OCTET:rmchar
 
 	@return the initial string without the input character
@@ -2251,18 +2251,18 @@ end:
 
 	@function OCTET:__lt
 	@param oct an octet to compare
-	@result a boolean value
+	@return a boolean value
 	@usage
 	--create two octets of bin to compare
 	oct=OCTET.from_bin("01001010")
 	oct2=OCTET.from_bin("10111011")
 	--compare them
 	if (oct:__lt(oct2)) then
-    	print("oct lesser than oct2")
+    	print("oct less than oct2")
 	else
-    	print("oct2 lesser than oct")
+    	print("oct2 less than oct")
 	end
-	--print: oct lesser than oct2
+	--print: oct less than oct2
 
  */
 static int lesser_than(lua_State *L) {
