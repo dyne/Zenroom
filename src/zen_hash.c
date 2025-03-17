@@ -60,16 +60,6 @@ extern void RMD160_init(dword *MDbuf);
 extern void RMD160_process(dword *MDbuf, byte *message, dword length);
 extern void RMD160_hash(dword *MDbuf, byte *hashcode);
 
-/**
-   Create a new hash object of a selected algorithm (sha256 or
-   sha512). The resulting object can then process any @{OCTET} into
-   its hashed equivalent.
-
-   @param string indicating the type of hash algorithm
-   @function HASH.new(string)
-   @return a new hash object ready to process data via :process() method
-   @see process
-*/
 
 hash* hash_new(lua_State *L, const char *hashtype) {
 	hash *h = lua_newuserdata(L, sizeof(hash));
@@ -171,6 +161,35 @@ const hash* hash_arg(lua_State *L, int n) {
 	return(res);
 }
 
+/**
+   Create a new hash object of a selected algorithm (e.g. sha256 or
+   sha512). The resulting object can then process any @{OCTET} into
+   its hashed equivalent. It is a C function.
+
+   @param string indicating the type of hash algorithm (default "sha256")
+   @function hash.new
+   @return a new hash object ready to process data via :process() method
+   @see process
+*/
+static int lua_new_hash(lua_State *L) {
+	BEGIN();
+	const char *hashtype = luaL_optstring(L,1,"sha256");
+	hash *h = hash_new(L, hashtype);
+	if(h) func(L,"new hash type %s",hashtype);
+	else {
+		THROW("Could not create hash");
+	}
+	END(1);
+}
+
+/*** Decrement the reference count of an hash object and free its memory when no more references exist.
+ 	*It ensures proper memory management to prevent leaks. 
+
+	@function hash:__gc
+	@param hash an hash object
+	@return no values are returned 
+
+ */
 int hash_destroy(lua_State *L) {
 	BEGIN();
 	hash *h = (hash*)luaL_testudata(L, 1, "zenroom.hash");
@@ -191,16 +210,6 @@ int hash_destroy(lua_State *L) {
 	END(0);
 }
 
-static int lua_new_hash(lua_State *L) {
-	BEGIN();
-	const char *hashtype = luaL_optstring(L,1,"sha256");
-	hash *h = hash_new(L, hashtype);
-	if(h) func(L,"new hash type %s",hashtype);
-	else {
-		THROW("Could not create hash");
-	}
-	END(1);
-}
 
 // internal use to feed bytes into the hash structure
 static void _feed(const hash *h, const octet *o) {
@@ -239,6 +248,18 @@ static void _yeld_len(const hash *h, octet *o, int len) {
 	}
 }
 
+/*** Convert an hash object into an octet object. It retrieves the hash object from the Lua stack, creates a new octet object of the same length, copies the hash data into the octet, and returns the octet object to Lua. 
+ 	*If any step fails, it throws an error.
+
+	@function hash:octet
+	@return the newly created octet object
+	@usage 
+	--define a "sha256" hash object
+	h1 = hash.new()
+	--trasform h1 in hex-octet
+	print(h1:octet():hex())
+	--print: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+ */
 static int hash_to_octet(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -264,12 +285,20 @@ end:
 }
 
 /**
-   Hash an octet into a new octet. Use the configured hash function to
-   hash an octet string and return a new one containing its hash.
+	Hash an octet into a new octet. Use the configured hash function to
+    hash an octet string and return a new one containing its hash.
 
-   @param data octet containing the data to be hashed
-   @function hash:process(data)
-   @return a new octet containing the hash of the data
+    @param data octet containing the data to be hashed
+    @function hash:process(data)
+    @return a new octet containing the hash of the data
+    @usage 
+	--create an octet and an hash object
+	oct = OCTET.from_hex("0xa1b2c3d4")
+	--create an hash object
+	h1 = hash.new()
+	--apply the method to the octet
+	print(h1:process(oct):hex())
+	--print: 97ed8e55519b020c4d9aceb40e0d3bc7eaa22d080d49592bf21206cb697c8a58
 */
 static int hash_process(lua_State *L) {
 	BEGIN();
@@ -322,7 +351,7 @@ end:
    hash multiple chunks until @{yeld} is called.
 
    @param data octet containing the data to be hashed
-   @function hash:feed(data)
+   @function hash:feed
 */
 static int hash_feed(lua_State *L) {
 	BEGIN();
@@ -352,7 +381,7 @@ end:
    Yeld a new octet from the current hashing session. This is used to
    finalize the hashing of multiple chunks after @{feed} is called.
 
-   @function hash:yeld(data)
+   @function hash:yeld
    @return a new octet containing the hash of the data
 
 */
@@ -388,8 +417,18 @@ end:
 
    @param key an octet containing the key to compute the HMAC
    @param data an octet containing the message to compute the HMAC
-   @function keyring:hmac(key, data)
+   @function hash:hmac
    @return a new octet containing the computed HMAC or false on failure
+   @usage 
+   --create the key
+   key = OCTET.from_hex("0xa1b2c3d4")
+   --create the hash
+   h1 = hash.new()
+   --create the message
+   message = OCTET.from_hex("0xc3d2")
+   --compute the HMAC
+   print(h1:hmac(key,message):hex())
+   --print: 844548df11876f644413664403e648fa74ee4a3fb547c2dedb3db0a564c15abb
 */
 static int hash_hmac(lua_State *L) {
 	BEGIN();
@@ -453,9 +492,8 @@ end:
    generates a new key from an existing key applying an octet of key
    derivation parameters.
 
-   @param hash initialized @{HASH} or @{ECDH} object
    @param key octet of the key to be transformed
-   @function keyring:kdf2(key)
+   @function hash:kdf2
    @return a new octet containing the derived key
 */
 
@@ -498,10 +536,10 @@ end:
    @param salt octet containing a salt to be used in transformation
    @param iterations[opt=5000] number of iterations to be applied
    @param length[opt=key length] integer indicating the new length (default same as input key)
-   @function keyring:pbkdf2(key, salt, iterations, length)
+   @function hash:pbkdf2
    @return a new octet containing the derived key
 
-   @see keyring:kdf2
+   @see hash:kdf2
 */
 
 static int hash_pbkdf2(lua_State *L) {
@@ -570,6 +608,17 @@ end:
 
 #define BIP39_PBKDF2_ROUNDS 2048
 // passphrase must be at most 256 characters otherwise it would be truncated
+
+/**
+	Convert a mnemonic phrase (used in cryptocurrency wallets) into a seed using the PBKDF2 (Password-Based Key Derivation Function 2) 
+	*algorithm with HMAC-SHA512. This is commonly used in standards like BIP-39. 
+
+	@function hash.mnemonic_seed
+	@param str1 a mnemonic phrase
+	@param str2 A passphrase
+	@return the derived seed as an octet object
+
+ */
 static int mnemonic_to_seed(lua_State *L) {
 	BEGIN();
 	const char *mnemonic = lua_tostring(L, 1);
@@ -616,6 +665,13 @@ static int mnemonic_to_seed(lua_State *L) {
 	END(1);
 }
 
+/**
+	Seed a cryptographically secure pseudo-random number generator (CSPRNG) associated with a hash object. 
+	*It uses an octet object as the seed and optionally "fast-forwards" the CSPRNG to improve randomness.
+	
+	@function hash:random_seed
+	@param seed an octet object
+ */
 static int hash_srand(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -648,7 +704,12 @@ static int hash_srand(lua_State *L) {
 	}
 	END(0);
 }
+/** Generate a random 8-bit unsigned integer using a cryptographically secure pseudo-random number generator (CSPRNG) associated with a hash object. 
+	*It ensures that the CSPRNG has been seeded before generating the random number.
 
+	@function hash:random_int8
+	@return a random 8-bit unsigned integer 
+ */
 static int rand_uint8(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -670,6 +731,12 @@ static int rand_uint8(lua_State *L) {
 	END(1);
 }
 
+/** Generate a random 16-bit unsigned integer using a cryptographically secure pseudo-random number generator (CSPRNG) associated with a hash object. 
+	*It ensures that the CSPRNG has been seeded before generating the random number.
+
+	@function hash:random_int16
+	@return a random 16-bit unsigned integer 
+ */
 static int rand_uint16(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -693,6 +760,12 @@ static int rand_uint16(lua_State *L) {
 	END(1);
 }
 
+/** Generate a random 32-bit unsigned integer using a cryptographically secure pseudo-random number generator (CSPRNG) associated with a hash object. 
+	*It ensures that the CSPRNG has been seeded before generating the random number.
+
+	@function hash:random_int32
+	@return a random 32-bit unsigned integer 
+ */
 static int rand_uint32(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
