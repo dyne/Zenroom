@@ -155,7 +155,7 @@ int _fp_to_big(big *dst, FP *src) {
 
     @param[@{OCTET}] coordinates of the point on the elliptic curve
     @return a new ECP point on the curve
-    @function new(octet)
+    @function new
     @see ECP:octet
 */
 static int lua_new_ecp(lua_State *L) {
@@ -259,12 +259,12 @@ end:
     Returns the generator of the curve: an ECP point that is multiplied by any @{BIG} number 
 	to obtain a correspondent point on the curve.
 
-    @function generator()
+    @function generator
     @return ECP point of the curve's generator.
 	@usage 
 	-- Print the generator of ECP BLS381 in hexadecimal notation
 	
-	gen = ECP.G():octet():hex()
+	gen = ECP.G():octet():hex()			--one can su .generator() instead of .G()
 	print(gen)
 	
 	-- Output: 0317f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb
@@ -284,7 +284,7 @@ static int ecp_generator(lua_State *L) {
 /***
     Returns a new ECP infinity point that is definitely not on the curve.
 
-    @function infinity()
+    @function infinity
     @return ECP pointing to infinity (out of the curve).
 	@usage
 	--Print the infinity point of ECP BLS381 in hexadecimal notation
@@ -310,7 +310,7 @@ static int ecp_get_infinity(lua_State *L) {
 /***
     Gives the order of the curve, a @{BIG} number contained in an octet.
 
-    @function order()
+    @function order
     @return a @{BIG} number containing the curve's order
 
 	@usage
@@ -343,7 +343,7 @@ static int ecp_order(lua_State *L) {
 	the OCTET should be the output of an hash function.
 
     @param OCTET resulting from an hash function
-    @function mapit(OCTET)
+    @function mapit
     @return an ECP that is univocally linked to the input OCTET
 	@usage
 	oct = OCTET.new(5)          -- generates an octect oct of length 5 bytes
@@ -375,7 +375,7 @@ static int ecp_mapit(lua_State *L) {
     Verify that an @{OCTET} really corresponds to an ECP point on the curve.
 
     @param OCTET point to be validated
-    @function validate(OCTET)
+    @function validate
     @return bool value: true if valid, false if not valid
 	@usage
 	oct = OCTET.new(64)         -- generates an octect oct of length 64 bytes
@@ -406,7 +406,7 @@ static int ecp_validate(lua_State *L) {
 
 /***
     Make an existing ECP point affine with its curve
-    @function affine()
+    @function affine
     @return ECP point made affine
 */
 static int ecp_affine(lua_State *L) {
@@ -434,7 +434,7 @@ end:
 /***
     Returns true if an ECP coordinate points to infinity (out of the curve) and false otherwise.
 
-    @function isinf()
+    @function isinf
     @return false if point is on curve, true if its off curve into infinity.
 */
 static int ecp_isinf(lua_State *L) {
@@ -529,7 +529,7 @@ end:
 /***
     Transforms an ECP point into its equivalent negative point on the elliptic curve.
 
-    @function negative()
+    @function negative
 
 	@usage
 	gen = ECP.generator()
@@ -570,7 +570,7 @@ end:
     This method transforms an ECP pointo into the double of its value, multiplying it by two. 
 	This works faster than multiplying it an arbitrary number of times.
 
-    @function double()
+    @function double
 
 	@usage
 	sum =ECP.add(gen,gen)	--adding a point (the generator in this case) itself
@@ -608,7 +608,7 @@ end:
 /***
     Multiply an ECP point by a @{BIG} number. Can be made using the overloaded operator `*`
 
-    @function mul(ecp, num)
+    @function mul
     @param ecp point on the elliptic curve to be multiplied
     @param number indicating how many times it should be multiplied
     @return new ecp point resulting from the multiplication
@@ -717,7 +717,7 @@ int _ecp_to_octet(octet *o, const ecp *e) {
     Returns an octet containing the coordinate of an ECP point on the curve. 
 	It can be used to export the value of an ECP point into a string, using @{OCTET:hex} or @{OCTET:base64} encapsulation. It can be decoded back to an ECP point using @{ECP:new}.
 
-    @function octet()
+    @function octet
     @return the ECP point as an OCTET sequence
 
 	@usage
@@ -754,7 +754,7 @@ end:
 /***
     Gives the X coordinate of the ECP point as a single @{BIG} number.
 
-    @function x()
+    @function x
     @return a BIG number indicating the X coordinate of the point on curve.
 
 	@usage
@@ -794,7 +794,7 @@ end:
 /***
     Gives the Y coordinate of the ECP point as a single @{BIG} number.
 
-    @function y()
+    @function y
     @return a BIG number indicating the Y coordinate of the point on curve.
 
 	@usage
@@ -842,6 +842,24 @@ static int ecp_prime(lua_State *L) {
 	END(1);
 }
 
+/***
+ This method allows to change the notation of point of an ellipitc curve from octet in a common used hexadecimal notation. 
+ If one tries to convert a point does not belong to the elliptic curve (as the point at infinity), the method returns nothig
+ @function :_tostring
+
+ @usage
+
+ gen = ECP.generator()
+
+ y = gen:__tostring()
+ print(y) 
+
+ --Output: 0317f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb
+ --The hexadecimal notation of gen
+
+ 
+ */
+
 static int ecp_output(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -886,7 +904,20 @@ char gf_sign(BIG y) {
 	else
 		return 0;
 }
+/***
+ It allows to convert a point from an elliptic curve in a serial number used in the context 
+ of the cryptocurrency Zcash
+ @function ecp.to_cash
+ @param x, a point of the elliptic curve 
+ @return an octet associated to the point
+ @usage
+ gen = ECP.generator()
+ y = ECP.to_zcash(gen)
+ print(y:hex())				--printed the serial number in hexadecimal notation
 
+ --Output: 97f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb
+
+ */
 static int ecp_zcash_export(lua_State *L) {
 	BEGIN();
 	const char *failed_msg = NULL;
@@ -930,6 +961,26 @@ end:
 	}
 	END(1);
 }
+
+/***
+ This function transforms a serial number in octet notation in a point of an elliptic curve, if associated to
+ @function ecp.from_zcash
+ @param y, an octet
+ @return a point on an elliptic curve in octet notation
+ @usage
+ 
+ gen = ECP.generator()
+
+ y = ECP.to_zcash(gen) --serial number associated to the point gen
+ point = ECP.from_zcash(y):octet() --point associated to the previous serial number 
+ 
+ print(point:hex()) -- the point printed in hexadecimal notation
+
+ --Output: 0317f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb
+ -- It can be checked the previous one is the hexadecimal notation fo the point gen
+
+ */
+
 
 // See the generalised version commented inside zen_octet.c
 static int ecp_zcash_import(lua_State *L){
@@ -1013,7 +1064,7 @@ end:
  
  It allows to calculate the right side of the equaion Y^2 = X^3 + 4, the elliptic curve BSL381, as a @{BIG} number
  
- @function ecp.rsh()
+ @function ecp.rsh
 	@param x as @{BIG} number
 	@return Y^2 from the previous equation
  @usage
