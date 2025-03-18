@@ -256,10 +256,18 @@ end:
 }
 
 /***
-    Returns the generator of the curve: an ECP point that is multiplied by any @{BIG} number to obtain a correspondent point on the curve.
+    Returns the generator of the curve: an ECP point that is multiplied by any @{BIG} number 
+	to obtain a correspondent point on the curve.
 
     @function generator()
     @return ECP point of the curve's generator.
+	@usage 
+	-- Print the generator of ECP BLS381 in hexadecimal notation
+	
+	gen = ECP.G():octet():hex()
+	print(gen)
+	
+	-- Output: 0317f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb
 */
 static int ecp_generator(lua_State *L) {
 	BEGIN();
@@ -278,6 +286,14 @@ static int ecp_generator(lua_State *L) {
 
     @function infinity()
     @return ECP pointing to infinity (out of the curve).
+	@usage
+	--Print the infinity point of ECP BLS381 in hexadecimal notation
+	
+	inf = ECP.infinity():octet():hex()
+	print(inf)
+	
+	-- Output: 7f7f
+
 */
 static int ecp_get_infinity(lua_State *L) {
 	BEGIN();
@@ -296,6 +312,15 @@ static int ecp_get_infinity(lua_State *L) {
 
     @function order()
     @return a @{BIG} number containing the curve's order
+
+	@usage
+	--Print the order of in hexadecimal notation
+
+	ord = ECP.order():octet():hex()
+	print(ord)
+
+	-- Output: 73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+
 */
 static int ecp_order(lua_State *L) {
 	BEGIN();
@@ -314,11 +339,17 @@ static int ecp_order(lua_State *L) {
 
 
 /***
-    Map an @{OCTET} of exactly 64 bytes length to a point on the curve: the OCTET should be the output of an hash function.
+    Map an @{OCTET} of exactly 64 bytes length to a point on the curve: 
+	the OCTET should be the output of an hash function.
 
     @param OCTET resulting from an hash function
     @function mapit(OCTET)
     @return an ECP that is univocally linked to the input OCTET
+	@usage
+	oct = OCTET.new(5)          -- generates an octect oct of length 5 bytes
+	h = hash.new("sha512")      -- calls the hash function SHA512
+	hash_oct = h:process(oct)   -- applies the hash to the ocatate oct
+	EC = ECP.mapit(hash_oct)    -- defines the ellipitic curve associated to the octate
 */
 static int ecp_mapit(lua_State *L) {
 	BEGIN();
@@ -346,6 +377,15 @@ static int ecp_mapit(lua_State *L) {
     @param OCTET point to be validated
     @function validate(OCTET)
     @return bool value: true if valid, false if not valid
+	@usage
+	oct = OCTET.new(64)         -- generates an octect oct of length 64 bytes
+	bool = ECP.validate(oct)
+
+	if boll then 
+    	print("true")
+	else 
+    	print("false")
+	end
 */
 static int ecp_validate(lua_State *L) {
 	BEGIN();
@@ -410,12 +450,25 @@ static int ecp_isinf(lua_State *L) {
 }
 
 /***
-    Add two ECP points to each other (commutative and associative operation). Can be made using the overloaded operator `+` between two ECP objects just like the would be numbers.
+    Add two ECP points to each other (commutative and associative operation). 
+	Can be made using the overloaded operator `+` between two ECP objects just like the would be numbers.
 
     @param first number to be summed
     @param second number to be summed
     @function add(first, second)
     @return sum resulting from the addition
+
+	@usage
+	gen = ECP.generator()
+	inf = ECP.infinity()
+
+	sum =ECP.add(gen,inf)
+
+	if sum == gen then print("true")
+	else print("false")
+	end
+
+	-- Output: true
 */
 static int ecp_add(lua_State *L) {
 	BEGIN();
@@ -477,6 +530,18 @@ end:
     Transforms an ECP point into its equivalent negative point on the elliptic curve.
 
     @function negative()
+
+	@usage
+	gen = ECP.generator()
+	inf = ECP.infinity()
+	
+	inv = gen:negative()
+
+	if ECP.add(gen,inv) == inf then print("true")	
+	else print("false")
+	end
+
+	--Output: true
 */
 static int ecp_negative(lua_State *L) {
 	BEGIN();
@@ -502,9 +567,20 @@ end:
 }
 
 /***
-    Transforms an ECP pointo into the double of its value, multiplying it by two. This works faster than multiplying it an arbitrary number of times.
+    This method transforms an ECP pointo into the double of its value, multiplying it by two. 
+	This works faster than multiplying it an arbitrary number of times.
 
     @function double()
+
+	@usage
+	sum =ECP.add(gen,gen)	--adding a point (the generator in this case) itself
+	double = gen:double()	--doubling the value of gen
+
+	if sum == double then print("true")
+	else print("false")
+	end
+
+	--Output: true
 */
 static int ecp_double(lua_State *L) {
 	BEGIN();
@@ -536,7 +612,23 @@ end:
     @param ecp point on the elliptic curve to be multiplied
     @param number indicating how many times it should be multiplied
     @return new ecp point resulting from the multiplication
+
+	@usage
+	gen = ECP.generator()
+	num = BIG.from_decimal("5")
+	mult = ECP.mul(gen,num)
+	sum = ECP.add(gen,inf)
+
+	for i = 1,4,1 do
+    	sum = ECP.add(sum,gen)
+	end
+
+	if sum == mult then print("true")
+	else print("false")
+	end
+
 */
+
 static int ecp_mul(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -622,10 +714,19 @@ int _ecp_to_octet(octet *o, const ecp *e) {
 	return(1);
 }
 /***
-    Returns an octet containing the coordinate of an ECP point on the curve. It can be used to export the value of an ECP point into a string, using @{OCTET:hex} or @{OCTET:base64} encapsulation. It can be decoded back to an ECP point using @{ECP:new}.
+    Returns an octet containing the coordinate of an ECP point on the curve. 
+	It can be used to export the value of an ECP point into a string, using @{OCTET:hex} or @{OCTET:base64} encapsulation. It can be decoded back to an ECP point using @{ECP:new}.
 
     @function octet()
     @return the ECP point as an OCTET sequence
+
+	@usage
+	num = BIG.from_decimal("3")
+	mult = ECP.mul(gen,num)
+	sum = ECP.add(gen,inf)
+
+	to_octet = mult:octet():hex()
+	-- returns the hexadecimal notation of mult after having been trasmormed it in an octet
 */
 static int ecp_octet(lua_State *L) {
 	BEGIN();
@@ -655,6 +756,16 @@ end:
 
     @function x()
     @return a BIG number indicating the X coordinate of the point on curve.
+
+	@usage
+
+	--In the following, the method decimal() is used to transfomr in integert the x coordinate of gen
+	
+	gen = ECP.generator()
+	x = gen:x()
+	print(x:decimal())
+
+	--Output: 3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507
 */
 static int ecp_get_x(lua_State *L) {
 	BEGIN();
@@ -685,6 +796,9 @@ end:
 
     @function y()
     @return a BIG number indicating the Y coordinate of the point on curve.
+
+	@usage
+	Equal to the previous one
 */
 static int ecp_get_y(lua_State *L) {
 	BEGIN();
@@ -710,6 +824,16 @@ end:
 	}
 	END(1);
 }
+
+/***
+This function allows to obatain the prime number q used to define an elliptic curve over a finite filed GF(q)
+@usage
+--In this case the curve is BLS381
+q = ECP.prime() 	--returned as @BIG number
+print(q:decimal()) 	--printed as integer
+
+--Output: 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
+ */
 
 static int ecp_prime(lua_State *L) {
 	BEGIN();
@@ -885,6 +1009,24 @@ end:
 	END(1);
 }
 
+/***
+ 
+ It allows to calculate the right side of the equaion Y^2 = X^3 + 4, the elliptic curve BSL381, as a @{BIG} number
+ 
+ @function ecp.rsh()
+	@param x as @{BIG} number
+	@return Y^2 from the previous equation
+ @usage
+x = BIG.from_decimal("2")
+y_square = ECP.rhs(x) -- Y^2 from Y^2 = X^3 + 4
+
+print(y_square:decimal())
+
+--Output: 12
+
+
+ */
+
 static int ecp_rhs(lua_State *L){
 	BEGIN();
 	char *failed_msg = NULL;
@@ -947,7 +1089,7 @@ int luaopen_ecp(lua_State *L) {
 		{"__sub", ecp_sub},
 		{"mul", ecp_mul},
 		{"__mul", ecp_mul},
-                {"eq", ecp_eq},
+        {"eq", ecp_eq},
 		{"__eq", ecp_eq},
 		{"__gc", ecp_destroy},
 		{"__tostring", ecp_output},
