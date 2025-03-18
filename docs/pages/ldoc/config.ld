@@ -28,6 +28,7 @@ file={
 	'../../../src/zen_hash.c',
 	'../../../src/zen_ecp.c',
 	'../../../src/zen_big.c',
+	'../../../src/zen_float.c',
 
 	'../../../src/zen_aes.c',
 	'../../../src/zen_ecdh.c',
