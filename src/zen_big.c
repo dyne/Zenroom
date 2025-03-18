@@ -1082,7 +1082,10 @@ static int big_modsub(lua_State *L) {
 
     @param modulo another BIG number, usually @{ECP.order}
     @return a new Big number
-    @function BIG.modrand(modulo)
+    @function big.modrand
+	@usage
+	--generate a random Big number starting from the EC BLS381
+	BIG.modrand(ECP.order())
 */
 
 static int big_modrand(lua_State *L) {
@@ -1105,7 +1108,7 @@ static int big_modrand(lua_State *L) {
     Generate a random Big number whose ceiling is the order of the curve.
 
     @return a new Big number
-    @function BIG.random()
+    @function big.random
 */
 
 static int big_random(lua_State *L) {
@@ -1116,6 +1119,14 @@ static int big_random(lua_State *L) {
 	END(1);
 }
 
+/*** Provide a flexible way to perform multiplication involving big integers, 
+	*supporting both scalar multiplication with ECP points and modular multiplication of two big integers.
+
+	@function big:__mul
+	@param data a big integer or an ECP point
+	@return the result of the multiplication
+
+ */
 static int big_mul(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1203,6 +1214,21 @@ static void _square_and_multiply(BIG z, BIG x, BIG n, BIG m)
 	}
 }
 
+/*** Perform modular exponentiation between Big numbers.
+
+	@function big:modpower
+	@param n exponent (Big number)
+	@param m modulus (Big number)
+	@return a Big number x^n mod m
+	@usage 
+	--create three Big numbers 
+	x = big.from_decimal("12341212142425354332324242422")
+	n = big.from_decimal("15376863816838361893936136936")
+	m = big.from_decimal("31873379237941484018414806743")
+	--calculate x^n mod m
+	print(x:modpower(n,m):decimal())
+	--print: 26994051819303675513763443877
+ */
 static int big_modpower(lua_State *L) {
 	BEGIN();
 	big *x = big_arg(L,1);
@@ -1222,6 +1248,11 @@ static int big_modpower(lua_State *L) {
 	END(1);
 }
 
+/*** Compute the square of a Big number.
+
+	@function big:sqr
+	@return the square of a Big number
+*/
 static int big_sqr(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1252,6 +1283,14 @@ end:
 	END(1);
 }
 
+/*** Perform Montgomery reduction on a double Big number using a modulus.
+	*Montgomery reduction is an efficient algorithm used in modular arithmetic to avoid expensive division operations, 
+	*often used in cryptographic computations.
+
+	@function big:monty
+	@param mod the modulus
+	@return a big number representing the Montgomery-reduced value
+ */
 static int big_monty(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1290,6 +1329,19 @@ end:
 	END(1);
 }
 
+/*** Compute the modulo operation on a Big number "b" using a modulus "m".
+
+	@function big:__mod
+	@param m the modulus
+	@return b mod m
+	@usage 
+	--create the two Big numbers "b" and "m"
+	b = big.from_decimal("123234442341233983797129732792324343")
+	m = big.from_decimal("165257575713")
+	--compute b mod m
+	print(b:__mod(m):decimal())
+	--print: 39084337405
+ */
 static int big_mod(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1331,6 +1383,20 @@ end:
 	END(1);
 }
 
+/*** Perform integer division of two Big numbers.
+
+	@function big:__div
+	@param data a Big number
+	@return the integer part of the division of two Big numbers
+	@usage 
+	--create two Big numbers 
+	b1 = big.from_decimal("123234442341233983797129732792324343")
+	b2 = big.from_decimal("165257575713")
+	--compute ⌊b1/b2⌋
+	print(b1:__div(b2):decimal())
+	--print: 745711304365574914096826
+
+ */
 static int big_div(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1367,12 +1433,14 @@ end:
 
 
 /***
-    Multiply a BIG number by another BIG while ceiling the operation to a modulo to avoid excessive results. This operation is to be preferred to the simple overladed operator '*' in most cases where such a multiplication takes place. It may replace '*' in the future as a simplification.
+    Multiply a Big number by another Big while ceiling the operation to a modulo to avoid excessive results. 
+	*This operation is to be preferred to the simple overladed operator * in most cases where such a multiplication takes place. 
+	*It may replace * in the future as a simplification.
 
-    @param coefficient another BIG number
+    @param coefficient another Big number
     @param modulo usually @{ECP.order}
     @return a new Big number
-    @function BIG.modmul(coefficient, modulo)
+    @function big:modmul
 */
 static int big_modmul(lua_State *L) {
 	BEGIN();
@@ -1418,6 +1486,22 @@ end:
 	END(1);
 }
 
+/*** Perform modular division using Big numbers arithmetic.
+	*It computes (y/d) mod m.
+
+	@function big:moddiv
+	@param d the divisor (Big number)
+	@param m the modulus (Big number)
+	@return the result of the modular division
+	@usage
+	--define y, d and m
+	y = big.from_decimal("123234442341233983797129732792324343")
+	d = big.from_decimal("165257575713")
+	m = big.from_decimal("165257")
+	--compute (y/d) mod m
+	print(y:moddiv(d,m):decimal())
+	print: 38881
+ */
 static int big_moddiv(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1452,6 +1536,22 @@ end:
 	END(1);
 }
 
+/*** Perform modular squaring on Big numbers.
+	*Compute the modular square of a Big number y modulo another Big number m, i.e., 
+	*y^2 mod m.
+
+	@function big:modsqr
+	@param m the modulus
+	@return the result of the modular squaring operation
+	@usage 
+	--define the two big integers
+	y = big.from_decimal("123234442341233983797129732792324343")
+	m = big.from_decimal("165257575713")
+	--compute y^2 mod m
+	print(y:modsqr(m):decimal())
+	--print: 86198167171
+
+ */
 static int big_modsqr(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1484,6 +1584,20 @@ end:
 	END(1);
 }
 
+/*** Compute the modular negation of a large integer y modulo another large integer m, i.e., 
+	*−y mod m.
+
+	@function big:modneg
+	@param m the modulus
+	@return the result of the modular negation operation
+	@usage 
+	--define the two big integers
+	y = big.from_decimal("123234442341233983797129732792324343")
+	m = big.from_decimal("165257575713")
+	--compute -y mod m
+	print(y:modneg(m):decimal())
+	--print: 126173238308
+ */
 static int big_modneg(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1515,6 +1629,21 @@ end:
 	}
 	END(1);
 }
+/*** Compute the Jacobi symbol of two Big numbers x and y. The Jacobi symbol is a mathematical function used in number theory, 
+	*particularly in primality testing and quadratic residue calculations.
+
+	@function big:jacobi
+	@param y a Big number
+	@return the result of the Jacobi symbol computation as an integer
+	@usage
+	--create two Big numbers x and y
+	x = big.from_decimal("123234442341233983797129732792324343")
+	y = big.from_decimal("165257575713243243323242243423")
+	--compute the jacobi symbol (x/y)
+	print(x:jacobi(y))
+	--print: -1
+
+ */
 static int big_jacobi(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1607,6 +1736,16 @@ static void _modsqrt(BIG r, BIG n, BIG p)
 
 /* Tonelli-Shanks algorithm. Given as input two bigs n and p compute the square root of n modulo p 
 	where p is an odd prime and n is a square modulo p */
+
+/*** Tonelli-Shanks algorithm. Given as input two bigs n and p compute the square root of n modulo p 
+	*where p is an odd prime and n is a square modulo p
+
+	@function big.modsqrt
+	@param n Big number
+	@param p odd Big number
+	@return the result of the modular square root computation
+
+ */
 static int big_modsqrt(lua_State *L){
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1644,6 +1783,21 @@ end:
 	END(1);
 }
 
+/*** Compute the modular inverse of a large integer y modulo another large integer m. 
+	*The modular inverse of y modulo m is a value x such that: x*y = 1 mod m
+
+	@function big:modinv
+	@param m the modulus 
+	@return the result of the modular inverse computation
+	@usage 
+	--create two Big numbers y and m
+	y = big.from_decimal("123234442341233983797129732792324343")
+	m = big.from_decimal("165257575713243243323242243423")
+	--compute x
+	print(y:modinv(m):decimal())
+	--print: 59313399677853266981606933073
+
+ */
 static int big_modinv(lua_State *L) {
 	BEGIN();
 	big *y = big_arg(L, 1);
@@ -1680,6 +1834,15 @@ static void _algebraic_sum(big *c, big *a, big *b, char *failed_msg) {
 	}
 }
 
+/*** Perform algebraic sum of two Big numbers, taking under account their zencode signs. 
+	*The result is stored in a new Big number and pushed onto the Lua stack.
+
+	@function big.zenadd
+	@param a Big number
+	@param b Big number
+	@return the sum a+b
+
+ */
 static int big_zenadd(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1701,6 +1864,15 @@ end:
 	END(1);
 }
 
+/*** Perform algebraic subtraction of two Big numbers, taking under account their zencode signs. 
+	*The result is stored in a new Big number and pushed onto the Lua stack.
+
+	@function big.zensub
+	@param a Big number
+	@param b Big number
+	@return the subtraction a-b
+
+ */
 static int big_zensub(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1725,6 +1897,16 @@ end:
 }
 
 // the result is expected to be inside a BIG
+
+/*** Perform algebraic multiplication of two Big numbers, taking under account their zencode signs. 
+	*The result is stored in a new Big number and pushed onto the Lua stack.
+
+	@function big.zenmul
+	@param a Big number
+	@param b Big number
+	@return the multiplication a*b
+
+ */
 static int big_zenmul(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1765,6 +1947,15 @@ end:
 	END(1);
 }
 
+/*** Perform algebraic division of two Big numbers, taking under account their zencode signs. 
+	*The result is stored in a new Big number and pushed onto the Lua stack.
+
+	@function big.zendiv
+	@param a Big number
+	@param b Big number
+	@return the division a/b
+
+ */
 static int big_zendiv(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1798,6 +1989,13 @@ end:
 	END(1);
 }
 
+/*** Check whether a given Big number is positive.
+	*If it is positive the output is true, otherwise false.
+
+	@function big.zenpositive 
+	@param n a Big number
+	@return a boolean value
+ */
 static int big_zenpositive(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1814,6 +2012,15 @@ end:
 	}
 	END(1);
 }
+
+/*** Compute the modulo operation of two Big numbers (a and b), 
+ 	*ensuring that both numbers are positive.
+
+	@function big.zenmod
+	@param a Big number
+	@param b Big number
+	@return a mod b
+ */
 static int big_zenmod(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1849,6 +2056,18 @@ end:
 	END(1);
 }
 
+/*** Compute the opposite (additive inverse) of a Big number.
+
+	@function big.zenopposite
+	@param a Big number
+	@return the result of the opposite operation
+	@usage 
+	--create a Big number
+	y = big.from_decimal("123234442341233983797129732792324343")
+	--estimate the opposite
+	print(big.zenopposite(y):decimal())
+	--print: -123234442341233983797129732792324343
+ */
 static int big_zenopposite(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1871,6 +2090,12 @@ end:
 	END(1);
 }
 
+/*** Check whether a given Lua value is an integer or a string representation of an integer.
+
+	@function big.is_integer
+	@param data a Lua value
+	@return a boolean value
+ */
 static int big_isinteger(lua_State *L) {
 	BEGIN();
 	int result = 0;
@@ -1894,6 +2119,11 @@ static int big_isinteger(lua_State *L) {
 	END(1);
 }
 
+/*** Check the parity (whether a number is even or odd) of a Big number.
+
+	@function big:parity
+	@return boolean value (true if odd, false if even)
+ */
 static int big_parity(lua_State *L) {
 	BEGIN();
 	big *c = big_arg(L, 1);
@@ -1906,6 +2136,12 @@ static int big_parity(lua_State *L) {
 	END(1);
 }
 
+/*** Perform a right shift operation on a Big number (c) by a specified number of bits (n).
+
+	@function big:__shr
+	@param n the number of bits to shift
+	@return the result of the right shift operation
+ */
 static int big_shiftr(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
