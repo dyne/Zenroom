@@ -161,13 +161,16 @@ const hash* hash_arg(lua_State *L, int n) {
 	return(res);
 }
 
+/// Global Hash Functions
+// @section Hash
+
 /**
    Create a new hash object of a selected algorithm (e.g. sha256 or
    sha512). The resulting object can then process any @{OCTET} into
    its hashed equivalent. It is a C function.
 
    @param string indicating the type of hash algorithm (default "sha256")
-   @function hash.new
+   @function HASH.new
    @return a new hash object ready to process data via :process() method
    @see process
 */
@@ -181,6 +184,70 @@ static int lua_new_hash(lua_State *L) {
 	}
 	END(1);
 }
+
+// Taken from https://github.com/trezor/trezor-firmware/blob/master/crypto/bip39.c
+
+#define BIP39_PBKDF2_ROUNDS 2048
+// passphrase must be at most 256 characters otherwise it would be truncated
+
+/**
+	Convert a mnemonic phrase (used in cryptocurrency wallets) into a seed using the PBKDF2 (Password-Based Key Derivation Function 2) 
+	*algorithm with HMAC-SHA512. This is commonly used in standards like BIP-39. 
+
+	@function HASH.mnemonic_seed
+	@param str1 a mnemonic phrase
+	@param str2 A passphrase
+	@return the derived seed as an octet object
+
+ */
+static int mnemonic_to_seed(lua_State *L) {
+	BEGIN();
+	const char *mnemonic = lua_tostring(L, 1);
+	luaL_argcheck(L, mnemonic != NULL, 1, "string expected");
+
+	const char *passphrase = lua_tostring(L, 2);
+	luaL_argcheck(L, passphrase != NULL, 2, "string expected");
+
+	int mnemoniclen = strlen(mnemonic);
+	int passphraselen = strnlen(passphrase, 256);
+
+	uint8_t salt[8 + 256] = {0};
+	memcpy(salt, "mnemonic", 8);
+	memcpy(salt + 8, passphrase, passphraselen);
+
+	// PBDKF2 inputs have to be octets
+	octet omnemonic;
+	omnemonic.val = (char*)malloc(mnemoniclen);
+	memcpy(omnemonic.val, mnemonic, mnemoniclen);
+	omnemonic.max = mnemoniclen;
+	omnemonic.len = mnemoniclen;
+
+	// There must be the space to concat a 4 byte integer
+	// (look at the source code of PBKDF2)
+	octet osalt;
+	osalt.val = (char*)malloc(passphraselen+8+4);
+	memcpy(osalt.val, salt, passphraselen+8+4);
+	osalt.len = passphraselen+8;
+	osalt.max = passphraselen+8+4;
+
+	/*octet omnemonic = { mnemoniclen, mnemoniclen, (char*)mnemonic };
+	  octet osalt = {passphraselen+8, passphraselen+8+4, (char*)salt};*/
+
+	octet *okey = o_new(L, 512 / 8);
+	if(okey) {
+		PBKDF2(SHA512, &omnemonic, &osalt, BIP39_PBKDF2_ROUNDS, 512 / 8, okey);
+		okey->len = 512 / 8;
+	}
+	free(omnemonic.val);
+	free(osalt.val);
+	if(!okey) {
+		THROW("Could not create octet");
+	}
+	END(1);
+}
+
+/// Object Methods
+// @type Hash
 
 /*** Decrement the reference count of an hash object and free its memory when no more references exist.
  	*It ensures proper memory management to prevent leaks. 
@@ -604,66 +671,6 @@ end:
 	END(1);
 }
 
-// Taken from https://github.com/trezor/trezor-firmware/blob/master/crypto/bip39.c
-
-#define BIP39_PBKDF2_ROUNDS 2048
-// passphrase must be at most 256 characters otherwise it would be truncated
-
-/**
-	Convert a mnemonic phrase (used in cryptocurrency wallets) into a seed using the PBKDF2 (Password-Based Key Derivation Function 2) 
-	*algorithm with HMAC-SHA512. This is commonly used in standards like BIP-39. 
-
-	@function hash.mnemonic_seed
-	@param str1 a mnemonic phrase
-	@param str2 A passphrase
-	@return the derived seed as an octet object
-
- */
-static int mnemonic_to_seed(lua_State *L) {
-	BEGIN();
-	const char *mnemonic = lua_tostring(L, 1);
-	luaL_argcheck(L, mnemonic != NULL, 1, "string expected");
-
-	const char *passphrase = lua_tostring(L, 2);
-	luaL_argcheck(L, passphrase != NULL, 2, "string expected");
-
-	int mnemoniclen = strlen(mnemonic);
-	int passphraselen = strnlen(passphrase, 256);
-
-	uint8_t salt[8 + 256] = {0};
-	memcpy(salt, "mnemonic", 8);
-	memcpy(salt + 8, passphrase, passphraselen);
-
-	// PBDKF2 inputs have to be octets
-	octet omnemonic;
-	omnemonic.val = (char*)malloc(mnemoniclen);
-	memcpy(omnemonic.val, mnemonic, mnemoniclen);
-	omnemonic.max = mnemoniclen;
-	omnemonic.len = mnemoniclen;
-
-	// There must be the space to concat a 4 byte integer
-	// (look at the source code of PBKDF2)
-	octet osalt;
-	osalt.val = (char*)malloc(passphraselen+8+4);
-	memcpy(osalt.val, salt, passphraselen+8+4);
-	osalt.len = passphraselen+8;
-	osalt.max = passphraselen+8+4;
-
-	/*octet omnemonic = { mnemoniclen, mnemoniclen, (char*)mnemonic };
-	  octet osalt = {passphraselen+8, passphraselen+8+4, (char*)salt};*/
-
-	octet *okey = o_new(L, 512 / 8);
-	if(okey) {
-		PBKDF2(SHA512, &omnemonic, &osalt, BIP39_PBKDF2_ROUNDS, 512 / 8, okey);
-		okey->len = 512 / 8;
-	}
-	free(omnemonic.val);
-	free(osalt.val);
-	if(!okey) {
-		THROW("Could not create octet");
-	}
-	END(1);
-}
 
 /**
 	Seed a cryptographically secure pseudo-random number generator (CSPRNG) associated with a hash object. 
