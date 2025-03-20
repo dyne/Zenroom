@@ -34,7 +34,7 @@ file={
 	'../../../src/zen_aes.c',
 	'../../../src/zen_ecdh.c',
 	'../../../src/zen_ed.c',
-	'../../../src/zen_p256.c'
+	'../../../src/zen_p256.c',
 	'string.lua',
 	'table.lua',
 	'../../../src/lua/inspect.lua',
