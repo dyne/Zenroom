@@ -29,9 +29,12 @@ file={
 	'../../../src/zen_ecp.c',
 	'../../../src/zen_big.c',
 	'../../../src/zen_float.c',
+	'../../../src/zen_time.c',
 
 	'../../../src/zen_aes.c',
 	'../../../src/zen_ecdh.c',
+	'../../../src/zen_ed.c',
+	'../../../src/zen_p256.c'
 	'string.lua',
 	'table.lua',
 	'../../../src/lua/inspect.lua',

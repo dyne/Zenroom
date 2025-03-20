@@ -19,9 +19,7 @@
  */
 
 //  @module TIME
-//  @author Denis "Jaromil" Roio
-//  @license AGPLv3
-//  @copyright Dyne.org foundation 2017-2019
+
 
 #include <stdlib.h>
 #include <math.h>
@@ -130,8 +128,8 @@ octet *new_octet_from_time(lua_State *L, ztime_t t) {
 }
 
 /// Global TIME Functions
-// @section TIME
-//
+// @module TIME
+
 
 
 /***
@@ -324,9 +322,7 @@ static int detect_time_value(lua_State *L) {
 /// Object Methods
 // @type TIME
 
-/***
- It allows to convert a time object in an octet
- */
+
 static int time_to_octet(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
