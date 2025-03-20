@@ -87,6 +87,36 @@ static int allocate_raw_public_key(lua_State *L, int pk_pos, octet **res_pk, cha
 	return 1;
 }
 
+/// <h1>P256 </h1>
+//P-256 (also known as secp256r1 or prime256v1) is one of the most widely used elliptic curves in modern cryptography. It is defined by the National Institute of Standards and Technology (NIST) and is part of the Suite B cryptographic standards. P-256 is based on elliptic curve cryptography (ECC), which provides strong security with relatively small key sizes, making it efficient for a wide range of applications. It operates over a finite field of 256 bits, providing a balance between security and performance.
+//
+//ES256 is a cryptographic algorithm used for digital signatures. It is part of the Elliptic Curve Digital Signature Algorithm (ECDSA) and is based on the P-256 elliptic curve (also known as secp256r1 or prime256v1). ES256 is widely used in modern cryptography, particularly in JSON Web Tokens (JWTs) and secure communication protocols.
+//
+//To work with this module, we define P256 by loading the es256 library using the require function:
+//
+//<code> P256 = require('es256'). </code>
+//
+//Once the module is loaded, you can access its functions using the <code>P256.function()</code> syntax.
+//  @module P256
+
+
+/// Global P256 Functions
+// @section P256
+
+/*** Generate a P-256 elliptic curve key pair (a private key and a public key). 
+	*However it only returns the private key.
+	*A key pair consists of:
+	-a private key (secret scalar, a large random number).
+	-a public key (a point on the elliptic curve derived from the private key).
+
+	@function P256.keygen
+	@return the secret key value
+	@usage
+	--generate a random private key and print it in hex
+	P256 = require('es256')
+	print(P256.keygen():hex())
+	--print for example: a43f787303d65596a708cee586cbad7f3e17c0a2d513ccb653f4c1ad6f37600e 	
+ */
 static int p256_keygen(lua_State *L)
 {
 	BEGIN();
@@ -102,6 +132,18 @@ static int p256_keygen(lua_State *L)
 	END(1);
 }
 
+/*** Generate a P-256 public key from a given private key.
+
+	@function P256.pubgen
+	@param sk the secret key
+	@return the public key value
+	@usage 					
+	--generate a private key that will be the input of P256.pubgen()		
+	P256 = require('es256')							
+	print(P256.pubgen(P256.keygen()):hex())
+	--the print in hexadecimal will be a random value of 64 bytes, for example
+	--print: 138380d70b0d492b8edf5c10ef9fa0c7c77287cbe92115270f75057a4dae3e86d264a5d0e13d215c3bc630357592f15e629f84de07c11df6663bb9b03d1e1912
+ */
 static int p256_pubgen(lua_State *L)
 {
 	BEGIN();
@@ -147,6 +189,23 @@ static int p256_session(lua_State *L)
 	END(1);
 }
 
+/*** Validate whether a given P-256 public key is valid. It takes a public key as input, checks its validity using the <code>p256\_validate_pubkey</code> function.
+	*It takes a 64-byte uncompressed public key as input (the public key is represented as a concatenation of the x and y coordinates of the elliptic curve point), decodes it into elliptic curve coordinates, and checks if the coordinates represent a valid point on the P-256 curve.
+
+	@function P256.pubcheck
+	@param pk the public key passed as an octet
+	@return true if pk is valid, false otherwise
+	@usage 
+	P256 = require('es256')
+	--create secret key
+	sk = P256.keygen()           
+	--create public key                              
+	pk = P256.pubgen(sk) 										
+	if (P256.pubcheck(pk)) then print("public key is valid")
+	else print("public key is invalid")
+	end
+	--print: public key is valid
+ */
 static int p256_pubcheck(lua_State *L) {
 	BEGIN();
 	octet *raw_pk = NULL;
@@ -162,6 +221,26 @@ end:
 	END(1);
 }
 
+/*** Sign a message using the P-256 elliptic curve digital signature algorithm (ECDSA). It takes a private key, a message, and an optional ephemeral key as inputs, 
+	*computes the signature, and returns the signature to Lua. It computes the signature using the <code>p256\_ecdsa_sign</code> function.
+
+	@function P256.sign
+	@param sk the private key (32 bytes)
+	@param m the message to be signed
+	@param  k ephemeral key (optional)
+	@return the signature
+	@usage 
+	P256 = require('es256')
+	--generate the secret and the public keys
+	sk = P256.keygen()
+	pk = P256.pubgen(sk)
+	--give a message to sign
+	m = O.from_str([[
+	Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+	eiusmod tempor incididunt ut labore et dolore magna aliqua.]])
+	--sign the message 
+	sig = P256.sign(sk,m)
+ */
 static int p256_sign(lua_State *L)
 {
 	BEGIN();
@@ -229,6 +308,21 @@ end:
 	END(1);
 }
 
+/*** Verify an ECDSA signature using the P-256 elliptic curve. It takes a public key, a message, and a signature as inputs, 
+	*hashes the message, and verifies the signature against the public key and message hash.
+	*It uses the  <code>p256\_ecdsa_verify</code> function.
+	@function P256.verify
+	@param pk the public key (64 bytes)
+	@param m the message that was signed
+	@param sig a 64 bytes ECDSA signature
+	@return a boolean value
+	@usage
+	--from @{sign}, check if the signature is valid
+	if (P256.verify(pk, m, sig)) then print("valid signature")
+	else print("invalid signature")
+	end
+	--print: valid signature
+ */
 static int p256_verify(lua_State *L)
 {
 	BEGIN();
@@ -275,6 +369,21 @@ end:
 	END(1);
 }
 
+/*** Extract the x and y coordinates from a P-256 public key. 
+	*It takes a 64-byte uncompressed public key as input, splits it into its x and y coordinates, and returns them to Lua.
+
+	@function P256.public_xy
+	@param pk the public key as an octet
+	@return the x coordinate of the public key 
+	@return the y coordinate of the public key
+	@usage 
+	P256 = require('es256')
+	--generate private and public keys
+	sk = P256.keygen()
+	pk = P256.pubgen(sk)
+	--find x and y coordinates for the public key
+	x, y = P256.public_xy(pk)
+ */
 static int p256_pub_xy(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -315,6 +424,24 @@ static int p256_destroy(lua_State *L)
 	END(0);
 }
 
+/*** Compress a P-256 public key. 
+	*It takes a 64-byte uncompressed public key as input, compresses it into a 33-byte compressed format, and returns the compressed key to Lua.
+	*It uses the <code>p256\_compress_publickey</code> function.
+
+	@function P256.compress_public_key
+	@param pk the public key passed as an octet
+	@return the compressed public key
+	@usage 
+	P256 = require('es256')
+	--generate public and private keys
+	sk = P256.keygen()
+	pk = P256.pubgen(sk)
+	--create the compressed public key
+	pk_comp = P256.compress_public_key(pk)
+	--print the length of the compress public key
+	print(pk_comp:__len())
+	--print: 33
+ */
 static int p256_compress_pub(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
