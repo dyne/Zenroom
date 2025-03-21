@@ -41,6 +41,7 @@ file={
 	'../../../src/lua/inspect.lua',
 	'../../../src/lua/zencode.lua',
 	'../../../src/lua/crypto_w3c.lua',
+	'../../../src/lua/crypto_bbs.lua',
 }
 -- dir='o'
 -- kind_names={topic='Tutorials',script='Programs'}

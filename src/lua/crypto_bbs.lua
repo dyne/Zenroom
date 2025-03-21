@@ -19,6 +19,18 @@
 --
 --]]
 
+--- <h1>BBS signature scheme</h1>
+--
+-- The BBS signature scheme (also known as the Boneh-Boyen-Shacham signature scheme) 
+-- is a cryptographic signature scheme based on pairing-based cryptography. 
+-- It is designed to provide short signatures with strong security guarantees.
+-- The BBS scheme is particularly notable for its use of bilinear pairings on elliptic curves,
+-- which enable efficient verification and compact signatures.
+-- 
+--
+-- @module BBS
+
+
 -- optimized C extension for map to point
 local fastBBS = require("bbs")
 local bbs = {}
@@ -67,6 +79,20 @@ local CIPHERSUITE_SHA = {
     O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_H2G_HM2S_SIG_GENERATOR_SEED_"), 48)
 }
 -- Take as input the hash as string and return a table with the corresponding parameters
+
+--- Return a specific cipher suite based on the provided hash name. 
+-- There are two possibilities for the output: the configuration for SHAKE-256 or the configuration for SHA-256.
+--
+--@function BBS.ciphersuite
+--@param hash a string with the name of the hash function
+--@return a cipher suite configuration
+--@usage
+--bbs = require'crypto_bbs'
+--**select the hash sha256
+--suite = bbs.ciphersuite('sha256')
+--**print for example the ciphersuite ID
+--print(suite.ciphersuite_ID)
+--**print: BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_
 function bbs.ciphersuite(hash_name)
     -- seed_len = 48
     if hash_name:lower() == 'sha256' then
@@ -120,6 +146,30 @@ INPUT: key_material, key_info, key_dst (all as zenroom.octet), ciphersuite (as a
 table shown at lines 14 and 30)
 OUTPUT: sk (as zenroom.octet), it represents a scalar between 1 and the order of the EC minus 1
 ]]
+
+---Generate a secret key (sk) for use in cryptographic operations. 
+--The function uses a provided ciphersuite, key material, key info, and domain separation tag (DST) to derive the secret key. 
+--The ciphersuite is a table containing the cipher suite configuration.
+--Key material is an optional input used as the seed for key generation. If not provided, a secure random value of 32 bytes is generated.
+--Key info is an optional addition information. If not provided, it defaults to an empty octet. 
+--key DST is an optional domain separation tag. If not provided, it defaults to the cipher suite's ciphersuite\_ID concatenated with the string 'KEYGEN\_DST\_'.
+--
+--@function BBS.keygen
+--@param ciphersuite 
+--@param key_material
+--@param key_info 
+--@param key_dst
+--@return sk, a private key 32 bytes long
+--@usage 
+--bbs = require'crypto_bbs'
+--**generate ciphersuite and  key_m, key_info, key_dst as random octet of 32 bytes
+--ciphersuite = bbs.ciphersuite('sha256') 
+--key_material = O.random(32)
+--key_info = O.random(32)
+--key_dst = O.randopm(32)
+--**calculate the private key
+--sk = bbs.keygen(ciphersuite, key_material, key_info, key_dst)
+
 function bbs.keygen(ciphersuite, key_material, key_info, key_dst)
     key_material = key_material or O.random(32) -- O.random is a secure RNG.
     if not ciphersuite then
@@ -480,7 +530,7 @@ end
 
 
 
-
+--[[
 ---------------------------------
 -- Credentials:ProofGen,ProofVerify -------
 ---------------------------------
@@ -488,6 +538,7 @@ end
 ---------------------------------
 ---------------------------------
 ---------------------------------
+]]
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 4.1
 -- It returns count random scalar.
