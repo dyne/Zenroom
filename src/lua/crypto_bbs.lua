@@ -255,6 +255,27 @@ end
 
 -- draft-irtf-cfrg-hash-to-curve-16 section 5.2
 -- It returns u a table of tables containing big integers representing elements of the field (SPECIFIC CASE m = 1, count = 2)
+
+---Hash a message into two field elements in the prime field of an elliptic curve.
+--This is a common operation in cryptographic protocols,  
+--where messages need to be mapped to field elements.
+--The third input of the function, the domain separation tag, ensures that the same input message can be hashed differently 
+--for different purposes, preventing collisions or unintended reuse of hash outputs.
+--
+--@function BBS.hash_to_field_m1_c2
+--@param ciphersuite
+--@param msg the input message to be hashed
+--@param dst a domain separation tag
+--@return a table containing the two field elements
+--@usage 
+--bbs = require'crypto_bbs'
+--**define a ciphersuite, a DST and a random message
+--ciphersuite = bbs.ciphersuite('sha256') 
+--DST_hash_to_field = 'QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_'
+--msg = O.random(32)
+--**return the table H. H[1] and H[2] will be the two field elements
+--H = bbs.hash_to_field_m1_c2(ciphersuite, msg, DST_hash_to_field)
+
 function bbs.hash_to_field_m1_c2(ciphersuite, msg, dst)
     local p = ECP.prime()
     local L = 64
@@ -277,6 +298,26 @@ end
 --HASH TO CURVE AND CREATE GENERATORS ARE VERY SLOW, MAYBE BETTER TO IMPLEMENT SOMETHING IN C SEE https://github.com/dyne/Zenroom/issues/642  
 -- draft-irtf-cfrg-hash-to-curve-16 Section 3
 -- It returns a point in the correct subgroup.
+
+---Hash a message to a point on an elliptic curve. This is a common operation in cryptographic protocols, where messages 
+--need to be mapped to curve points for operations like signing and verification.
+--It uses @{hash_to_field_m1_c2} function to hash the message into two field elements 
+--that are mapped to a point on the elliptic curve.
+--
+--@function BBS.hash_to_curve
+--@param ciphersuite 
+--@param msg the input message to be hashed
+--@param dst a domain separation tag
+--@return the final curve point after clearing the cofactor
+--@usage 
+--bbs = require'crypto_bbs'
+--**define a ciphersuite, a DST and a random message
+--ciphersuite = bbs.ciphersuite('sha256') 
+--DST_hash_to_field = 'QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_'
+--msg = O.random(32)
+--**return the curve point
+--P = bbs.hash_to_curve(ciphersuite, msg, DST_hash_to_field)
+
 function bbs.hash_to_curve(ciphersuite, msg, dst)
     -- local u = bbs.hash_to_field_m1(msg, 2, DST)
     local p = ECP.prime()
@@ -288,6 +329,24 @@ end
 
 --draft-irtf-cfrg-bbs-signatures Section 4.2
 --It returns an array of generators.
+
+---Create a set of cryptographic generators. 
+--These generators are points on an elliptic curve and are used in operations like signing and verification. 
+--The function ensures that the generators are created deterministically and securely, 
+--based on a seed value and domain separation tags.
+--
+--@function BBS.create_generators
+--@param ciphersuite
+--@param count the number of generators to create
+--@return the first 'count' generators from the ciphersuite.GENERATORS table
+--@usage
+--bbs = require'crypto_bbs'
+--**define a ciphersuite and a count
+--ciphersuite = bbs.ciphersuite('sha256') 
+--count = 5
+--**return a table G of 5 generators
+--G = bbs.create_generators(ciphersuite,count)
+
 function bbs.create_generators(ciphersuite, count)
     if count > 2^64 -1 then error("Message's number too big. At most 2^64-1 message allowed") end
 
@@ -315,6 +374,24 @@ The main difference is that in the new verison we can transform a set of message
 INPUT: messages (a vector of zenroom.octet where index starts from 1), api_id (as zenroom.octet) which FOR NOW is stored in the ciphersuite for simplicity.
 OUTPUT: msg_scalars (a vector of scalars stored as zenroom.octet)
 ]]
+
+---Convert a list of messages, a vector of octets, into a list of scalar values using a cryptographic hash function.
+--
+--@function BBS.messages_to_scalars
+--@param ciphersuite
+--@param messages a set of messages
+--@return a vector of scalars stored as octet
+--@usage 
+--bbs = require'crypto_bbs'
+--**define a ciphersuite and a set of random messages
+--ciphersuite = bbs.ciphersuite('sha256') 
+--map_messages_to_scalar_messages = {
+--    O.random(32),
+--    O.random(64),
+--    O.random(16)  
+--}
+--**return a vector of octets
+--output_scalar = bbs.messages_to_scalars(ciphersuite,map_messages_to_scalar_messages)
 
 function bbs.messages_to_scalars(ciphersuite, messages)
 
