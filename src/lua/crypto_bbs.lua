@@ -80,12 +80,12 @@ local CIPHERSUITE_SHA = {
 }
 -- Take as input the hash as string and return a table with the corresponding parameters
 
---- Return a specific cipher suite based on the provided hash name. 
+--- Return a specific ciphersuite based on the provided hash name. 
 -- There are two possibilities for the output: the configuration for SHAKE-256 or the configuration for SHA-256.
 --
 --@function BBS.ciphersuite
 --@param hash a string with the name of the hash function
---@return a cipher suite configuration
+--@return a ciphersuite configuration
 --@usage
 --bbs = require'crypto_bbs'
 --**select the hash sha256
@@ -506,6 +506,30 @@ INPUT: ciphersuite , sk (as zenroom.octet), pk (as zenroom.octet), header (as ze
 header (as zenroom.octet).
 OUTPUT: the signature (A,e)
 ]]
+
+---The Sign operation returns a BBS signature from a secret key (sk), over a header and a set of messages. 
+--It uses the <code>core_sign</code> function, that computes a deterministic signature from a secret key (sk), a set of generators (points of G1) 
+--and optionally a header and a vector of messages.
+--
+--@function BBS.sign
+--@param ciphersuite 
+--@param sk the secret key as an octet
+--@param pk the public key as an octet
+--@param header
+--@param messages array of octet strings stored as octet
+--@return the signature 
+--@usage 
+--bbs = require'crypto_bbs'
+--**define a ciphersuite, a secret key, a public key, an header and a message 
+--ciphersuite = bbs.ciphersuite('sha256') 
+--SECRET_KEY = "60e55110f76883a13d030b2f6bd11883422d5abde717569fc0731f51237169fc"
+--PUBLIC_KEY = "a820f230f6ae38503b86c70dc50b61c58a77e45c39ab25c0652bbaa8fa136f2851bd4781c9dcde39fc9d1d52c9e60268061e7d7632171d91aa8d460acee0e96f1e7c4cfb12d3ff9ab5d5dc91c277db75c845d649ef3c4f63aebc364cd55ded0c"
+--HEADER = "11223344556677889900aabbccddeeff"
+--SINGLE_MSG_ARRAY = { O.from_hex("9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02") }
+--**calculate the signature for the given message
+--output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(HEADER), SINGLE_MSG_ARRAY)
+
+
 function bbs.sign(ciphersuite, sk, pk, header, messages_octets)
 
     -- Default values for header and messages.
@@ -546,6 +570,21 @@ local function octets_to_signature(signature_octets)
 end
 
 --draft-irtf-cfrg-bbs-signatures Section 4.7.6
+
+---Ensure that the public key is valid, in the right subgroup, and not the identity element.
+--It converts the public key (pk) into a point W on the elliptic curve in G2 and checks if W is in the correct subgroup.
+--
+--@function BBS.octets_to_pub_key
+--@param pk the public key
+--@return the point W 
+--@usage 
+--bbs = require'crypto_bbs'
+--**define a ciphersuite and a public key
+--ciphersuite = bbs.ciphersuite('sha256') 
+--PUBLIC_KEY = "a820f230f6ae38503b86c70dc50b61c58a77e45c39ab25c0652bbaa8fa136f2851bd4781c9dcde39fc9d1d52c9e60268061e7d7632171d91aa8d460acee0e96f1e7c4cfb12d3ff9ab5d5dc91c277db75c845d649ef3c4f63aebc364cd55ded0c"
+--**calculate the point W
+--W = bbs.octets_to_pub_key(O.from_hex(PUBLIC_KEY))
+
 function bbs.octets_to_pub_key(pk)
     local W = ECP2.from_zcash(pk)
 
@@ -598,6 +637,23 @@ DESCRIPTION: The Verify operation validates a BBS signature, given a public key 
 INPUT: ciphersuite (a table), pk (as zenroom.octet), signature (as zenroom.octet), messages (array of octet strings as zenroom.octet), header (as zenroom.octet).
 OUTPUT: a boolean, true or false 
 ]]
+
+---Validate a BBS signature. To do this it uses the <code>core_verify</code> function, which verify if the signature is valid.
+--
+--@function BBS.verify
+--@param ciphersuite
+--@param pk the public key as an octet
+--@param signature as an octet 
+--@param header
+--@param messages an array of octet strings as octet
+--@return a boolean, true if the signature is valid, false otherwise
+--@usage 
+--**from the usage in the sign function, check if the signature is valid
+--if bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), SINGLE_MSG_ARRAY) then print ("valid signature")
+--else print("invalid signature")
+--end
+--**print:valid signature
+
 function bbs.verify(ciphersuite, pk ,signature, header, messages_octets)
     messages_octets = messages_octets or O.empty{}
     local messages = bbs.messages_to_scalars(ciphersuite,messages_octets)
@@ -619,6 +675,16 @@ end
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 4.1
 -- It returns count random scalar.
+
+---Generate a table of random scalars that are uniformly distributed modulo the ECP order.
+--
+--@function BBS.calculate_random_scalars
+--@param count number of random scalars to generate
+--@return a table of uniformly distributed random scalars modulo the ECP order
+--@usage 
+--**generate a table of 5 random scalars
+--T = bbs.calculate_random_scalars(5)
+
 function bbs.calculate_random_scalars(count)
     local scalar_array = {}
     --[[ This does not seem uniformly random:
@@ -806,6 +872,33 @@ zenroom.octet), disclosed_indexes (vector of number)
 OUTPUT: proof (output of CoreProofGen)
 ]]
 
+---Allow a user to prove knowledge of a valid signature while selectively revealing some messages and keeping others hidden.
+--It uses other functions during the process. In particular, the <code>proof\_init()</code> function constructs commitments using the signature, public key, message generators, and random scalars.
+--The <code>proof\_challenge\_calculate</code> function generates a challenge value from the commitments. The <code>proof\_finalize</code> function 
+--computes the final proof values based on the challenge and initial commitments.
+--
+--@function BBS.proof_gen
+--@param ciphersuite
+--@param pk the public key
+--@param signature
+--@param header
+--@param ph the presentation header
+--@param messages an array of messages
+--@param indexes an array of indexes of messages the prover wants to reveal
+--@return a zero-knowledge proof that can be verified without revealing the entire signature.
+--@usage 
+--bbs = require'crypto_bbs'
+--**define ciphersuite, sk, pk, header, single message array, presentation header and calculate a valid signature
+--ciphersuite = bbs.ciphersuite('sha256') 
+--SECRET_KEY = "60e55110f76883a13d030b2f6bd11883422d5abde717569fc0731f51237169fc"
+--PUBLIC_KEY = "a820f230f6ae38503b86c70dc50b61c58a77e45c39ab25c0652bbaa8fa136f2851bd4781c9dcde39fc9d1d52c9e60268061e7d7632171d91aa8d460acee0e96f1e7c4cfb12d3ff9ab5d5dc91c277db75c845d649ef3c4f63aebc364cd55ded0c"
+--HEADER = "11223344556677889900aabbccddeeff"
+--SINGLE_MSG_ARRAY = { O.from_hex("9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02") }
+--PRESENTATION_HEADER = O.from_hex("bed231d880675ed101ead304512e043ade9958dd0241ea70b4b3957fba941501")
+--output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(HEADER), SINGLE_MSG_ARRAY)
+--**return the proof like an octet
+--pg_output = bbs.proof_gen(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1})
+
 function bbs.proof_gen(ciphersuite, pk, signature, header, ph, messages, disclosed_indexes)
     header = header or O.empty()
     ph = ph or O.empty()
@@ -954,6 +1047,28 @@ INPUT: ciphersuite (a table), pk (as zenroom.octet), proof (as zenroom.octet), h
 disclosed_messages (array of octet strings), disclosed_indexes( an array of positive integers) .
 OUTPUT: a boolean true or false   
 ]]
+
+---It is responsible for validating a BBS proof. This proof was generated by @{proof_gen} and allows a verifier to confirm that a signer possesses a valid BBS 
+--signature while selectively revealing only some signed messages.
+--It uses some other functions: the <code>octets\_to\_proof</code> function converts the proof octet string into its mathematical components (group elements and scalars).
+--The <code>proof\_verify\_init</code> function computes the expected commitments for disclosed and undisclosed messages.
+--The <code>proof\_challenge\_calculate</code> ensures that the challenge scalar was computed correctly.
+--
+--@function BBS.proof_verify
+--@param ciphersuite
+--@param pk the public key
+--@param header
+--@param ph the presentation header
+--@param messages an array of messages
+--@param indexes an rray of indexes specifying which messages were disclosed
+--@return true if the proof is valid, false otherwise
+--@usage 
+--**from the usage in the proof_gen function, check if the proof is valid
+--if  bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_output, O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1}) then print("valid proof")
+--else print("invalid proof")
+--end
+--**print: valid proof
+
 function bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages_octets, disclosed_indexes)
 
     local proof_len_floor = 3*OCTET_POINT_LENGTH + 4*OCTET_SCALAR_LENGTH
