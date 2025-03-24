@@ -17,6 +17,20 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
+/// <h1> POST QUANTUM (QP) </h1>
+//
+// Post-quantum cryptography (PQC) refers to cryptographic algorithms that are designed to be secure against attacks by quantum computers. 
+// Traditional cryptographic systems, such as RSA and ECC (Elliptic Curve Cryptography), rely on mathematical problems (e.g., integer factorization and discrete logarithms) 
+// that are hard for classical computers but can be efficiently solved by quantum computers using algorithms like Shor's algorithm. 
+// Post-quantum cryptography aims to address this vulnerability by developing new algorithms based on mathematical problems that are believed to be resistant to quantum attacks.
+//
+// In this section two post-quantum schemes are described: ML-KEM and ML-DSA. The first one deals with key encapsulation and the second one is a signature scheme.
+//
+// All function inputs (secret key, public key, message, ciphertext, signature, seed and context) are octets and some of them have a fixed length. Only the version for ML-KEM is passed to the functions as a string.
+// @module QP
+//
+
 #include <zenroom.h>
 #include <zen_error.h>
 #include <lua_functions.h>
@@ -577,6 +591,28 @@ end:
 	END(1);
 }
 
+
+/// Global ML-KEM Functions
+// @section ML-KEM 
+//
+// ML-KEM (Kyber Key Encapsulation Mechanism) is a post-quantum cryptographic key encapsulation mechanism (KEM) designed for secure key exchange. It is part of the NIST 
+// Post-Quantum Cryptography Standardization process and has been selected as a standard for public-key encryption and KEMs.
+// ML-KEM is based on Module Learning With Errors (MLWE), making it resistant to attacks from quantum computers.
+//
+// It provides different security levels (Kyber-512, Kyber-768, Kyber-1024) that correspond to classical and quantum security estimates.
+// In particular, for each of the below functions, it is possible define in input which version of ML-KEM to use. The three possibilities are:
+//
+//- MLKEM512: size pk = 800 byte, size sk = 1632 byte
+//
+//- MLKEM768: size pk = 1184 byte, size sk = 2400 byte
+//
+//- MLKEM1024: size pk = 1568 byte, size sk = 3168 byte 
+//
+// Unlike traditional encryption schemes, ML-KEM encapsulates a symmetric key, which is then used for further encrypted communication.
+//
+// At the beginning of each function you require <code> QP = require("qp") </code>. In this way you load the QP module and assign it to the variable QP.
+//
+
 /*#######################################*/
 /*               ML-KEM (FIPS203)        */
 /*#######################################*/
@@ -592,6 +628,26 @@ static mlkem_type _get_mlkem_type(const char *str) {
 	if(strcmp(str,"mlkem1024")==0) return MLKEM1024;
 	return UNKNOWN;
 }
+
+/*** Allow to create a couple (public key, secret key) taking in input two octet of 32 byte length.
+	*The length of the public and secret keys generated depends on the version of MLKEM required. The version 
+	*is passed as third argument of the function. If the third argument is NULL, the function applies MLKEM512. 
+	*The function generates 64 bytes of random data: the first 32 bytes can be provided as the first argument (seed 1);
+	*the next 32 bytes can be provided as the second argument (seed 2). If either seed is not provided, the function generates random bytes.
+
+ @function QP.mlkem_keygen
+ @param seed1 (optional)
+ @param seed2 (optional)
+ @param string where string can be: "mlkem512", "mlkem768", "mlkem1024"
+ @return a couple of public key and and secret key
+ @usage
+ QP = require("qp")
+ oct1 = OCTET.random(32)
+ oct2 = OCTET.random(32)
+ pk768 = QP.mlkem_keygen(oct1, oct2, "mlkem768").public
+ sk768 = QP.mlkem_keygen(oct1, oct2, "mlkem768").private
+ */ 
+
 static int mlkem_keygen(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -676,6 +732,21 @@ static int mlkem_keygen(lua_State *L) {
 	END(1);
 }
 
+
+/***
+ Generate a public key starting from an octet (the secret key). The number of bytes
+ should coincide with the number of bytes of the secret key of the asscociated MLKEM version used. 
+
+ @function QP.mlkem_pubgen
+ @param sk a secret key
+ @param string where string can be: "mlkem512", "mlkem768", "mlkem1024"
+ @return pk, the public key associated to an octet
+ @usage
+ QP = require("qp")
+ sk = OCTET.random(2400)   -- is the secret key 
+ pk = QP.mlkem_pubgen(sk, "mlkem768")
+
+ */ 
 static int mlkem_pubgen(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -734,6 +805,29 @@ end:
 	}
 	END(1);
 }
+
+/*** Check if the public key has the correct length (it depends on the version of MLKEM used).
+ 
+@function QP.mlkem_pubcheck
+ @param pk a public key
+ @param string where string can be: "mlkem512", "mlkem768", "mlkem1024"
+ @return a boolean value: true if the length is correct, false otherwise
+
+@usage
+QP = require("qp")
+oct = OCTET.random(230)				-- an octet of the wrong length 230 bytes
+pk = QP.mlkem_pubgen(oct, "mlkem768")		-- an octet generated with the correct algorithm
+bool1 = QP.mlkem_pubcheck(oct, "mlkem768")
+bool2 = QP.mlkem_pubcheck(pk, "mlkem768")
+if bool1 then print("true" )				
+else print("false")
+end
+-- Output: false
+if bool2 then print("true")
+else print("false")
+end
+-- Output: true
+ */ 
 
 // checks the public key length
 static int mlkem_pubcheck(lua_State *L) {
@@ -823,7 +917,24 @@ static int mlkem_sscheck(lua_State *L) {
 	}
 	END(1);
 }
+/*** Check if the length of the shared secret coincides with the expected length of a plaintext encrypted with a version of MLKEM.
 
+@function mlkem_sscheck
+ @param ss shared secret
+ @param string, where string can be: "mlkem512", "mlkem768", "mlkem1024"
+ @return boolean value, it is true if the length is correct and false otherwise
+
+@usage
+ QP = require("qp")
+ oct1 = OCTET.random(32)
+ oct2 = OCTET.random(32)
+ mess = OCTET.random(32) 
+ pk768 = QP.mlkem_keygen(oct1,oct2, "mlkem768").public
+ sk768 = QP.mlkem_keygen(oct1,oct2, "mlkem768").private
+ ss = QP.mlkem_enc(pk768,mess,"mlkem768").secret
+ if QP.mlkem_sscheck(ss, "mlkem768") then print("ok")
+ end
+ */ 
 // check the ciphertext length
 static int mlkem_ctcheck(lua_State *L) {
 	BEGIN();
@@ -868,6 +979,27 @@ static int mlkem_ctcheck(lua_State *L) {
 	END(1);
 }
 
+/***
+ Encrypt a message of 32 bytes length and generate a shared secret using a public key generated from one 
+ of the previous functions.
+ 
+ @function QP.mlkem_enc
+ @param pk a public key whose length depends on the kind of MLKEM used
+ @param m an octet of 32 bytes length 
+ @param string, where string can be: "mlkem512", "mlkem768", "mlkem1024"
+
+ @return shared secret (an octet of 32 bytes length) 
+ @return ciphertext associated to m 
+
+ @usage
+ QP = require("qp")
+ oct1 = OCTET.random(32)
+ oct2 = OCTET.random(32)
+ mess = OCTET.random(32)
+ pk768 = QP.mlkem_keygen(oct1,oct2, "mlkem768").public
+ ss = QP.mlkem_enc(pk768,oct2,"mlkem768").secret
+ ct = QP.mlkem_enc(pk768,oct2,"mlkem768").cipher
+ */ 
 static int mlkem_enc(lua_State *L) {
 	BEGIN();
 	uint8_t randbytes[32];
@@ -994,6 +1126,28 @@ end:
 	END(1);
 }
 
+/*** Decrypt a cyphertext retrieving the shared secret using a secret key generated from one of the previous functions.
+
+ @function QP.mlkem_dec
+ @param sk a secret key whose length depends on the kind of MLKEM used
+ @param ct an ciphertext
+ @param string where string can be: "mlkem512", "mlkem768", "mlkem1024"
+
+ @return shared secret (an octet of 32 bytes length) 
+
+ @usage
+ oct1 = OCTET.random(32)
+ oct2 = OCTET.random(32)
+ mess = OCTET.random(32)
+ sk768 = QP.mlkem_keygen(oct1,oct2, "mlkem768").private
+ pk768 = QP.mlkem_keygen(oct1,oct2, "mlkem768").public
+ ss = QP.mlkem_enc(pk768, mess, "mlkem768").secret
+ ct = QP.mlkem_enc(pk768, mess, "mlkem768").cipher
+ dec = QP.mlkem_dec(sk768, ct, "mlkem768")
+ if ss == dec then print("ok")	-- Check if the shared secret coincides with the decryption of the ct
+ end
+ -- Output: ok 
+ */ 
 static int mlkem_dec(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1269,9 +1423,45 @@ end:
 	END(1);
 }
 
+/// Global ML-DSA Functions
+// @section ML-DSA
+//
+// ML-DSA-44 (Module Lattice-based Digital Signature Algorithm with a security level of 44) 
+// is a post-quantum cryptographic scheme designed to provide secure digital signatures in a world where quantum 
+// computers could potentially break traditional cryptographic algorithms like RSA and ECC (Elliptic Curve Cryptography). 
+// It is part of the NIST Post-Quantum Cryptography Standardization Project, which aims to identify and standardize quantum-resistant cryptographic algorithms.
+//
+// The "44" in ML-DSA-44 refers to its security level, which corresponds to approximately 128 bits of classical security and 44 bits of quantum security.
+// This makes it suitable for applications requiring strong security guarantees.
+//
+// ML-DSA-44 is designed to have relatively small key and signature sizes compared to other post-quantum signature schemes, making it efficient for storage and transmission.
+// The key generation, signing, and verification algorithms are optimized for performance, making ML-DSA-44 practical for use in resource-constrained environments.
+//
+// ML-DSA-44 can be used in a wide range of applications, including: secure communication, digital identity, blockchain and cryptocurrencies, IoT device.
+//
+// At the beginning of each function you require <code> QP = require("qp") </code>. In this way you load the QP module and assign it to the variable QP.
+//
+
 /*#######################################*/
 /*              ML-DSA-44                */
 /*#######################################*/
+
+/*** Generate a key pair for the ML-DSA-44 cryptographic scheme. 
+	*It creates a public and a private key, optionally using a provided seed, and returns them in a Lua table. 
+	*If the seed is not provided, the function generates random bytes using a random number generator.
+
+	@function QP.ml_dsa_44_keypair
+	@param seed an optional seed of 32 bytes
+	@return a table containing the two keys
+	@usage 
+	QP = require("qp")
+	--select a random seed and generate the key pair
+	seed = OCTET.random(32)
+	keys = QP.mldsa44_keypair(seed)
+	--obtain sk and pk
+	sk = keys.private
+	pk = keys.public
+ */
 static int ml_dsa_44_keypair(lua_State *L)   {
 /*************************************************
 * Name:        crypto_sign_keypair
@@ -1326,6 +1516,25 @@ end:
 	END(1);
 }
 
+/*** Generate a public key from a given private key for the 
+	*ML-DSA-44 cryptographic scheme.
+
+	@function QP.mldsa44_pubgen
+	@param sk a private key
+	@return a public key
+	@usage 
+	QP = require("qp")
+	--generate a random seed and the key pair
+	seed = OCTET.random(32)
+	keys = QP.mldsa44_keypair(seed)
+	--check if the public key is correct
+	if (QP.mldsa44_pubgen(keys.private) == keys.public) then
+    	print("ok")
+	else print("different public key")
+	end
+	--print: ok
+
+ */
 static int ml_dsa_44_signature_pubgen(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1355,6 +1564,24 @@ end:
 	END(1);
 }
 
+/*** Generate a signature for a given message using the ML-DSA-44 cryptographic scheme.
+ 	*The function takes in input also an optional parameter for the context. 
+	*It provides additional flexibility and customization for the signature scheme, allowing you to bind the signature to specific contextual information.
+	*The context is passed as an octet and can be up to 255 bytes in length.
+
+	@function QP.mldsa44_signature
+	@param sk a secret key
+	@param m a message to sign
+	@param ctx an optional context for the signature
+	@usage 
+	QP = require("qp")
+	--generate a random seed, a key pair and a random message
+	seed = OCTET.random(32)
+	keys = QP.mldsa44_keypair(seed)
+	m = OCTET.random(32)
+	--sign the message
+	sign = QP.mldsa44_signature(keys.private,m)
+ */
 static int ml_dsa_44_signature(lua_State *L) {
 /*************************************************
 * Name:        crypto_sign_signature
@@ -1444,6 +1671,20 @@ end:
 	END(1);
 }
 
+/*** Verify a signature for a given message using the ML-DSA-44 cryptographic scheme.
+
+	@function QP.mldsa44_verify
+	@param pk a public key
+	@param sig a signature
+	@param m a message 
+	@param ctx an optional context	
+	@usage 
+	--from @{mldsa44_signature}, check if the signature is valid
+	if (QP.mldsa44_verify(keys.public, sign, m)) then print("signature verified")
+	else print("signature not verified")
+	end
+	--print: signature verified
+ */
 static int ml_dsa_44_verify(lua_State *L)    {/*************************************************
 * Name:        crypto_sign_verify
 *
@@ -1507,6 +1748,23 @@ end:
 	END(1);
 }
 
+/*** Check whether a given public key is valid for the ML-DSA-44 cryptographic scheme.
+ 	*The function checks if the public key has the correct length in bytes.
+
+	@function QP.mldsa44_pubcheck
+	@param pk a public key
+	@return a boolean value
+	@usage 
+	QP = require("qp")
+	--generate a random seed, and a key pair
+	seed = OCTET.random(32)
+	keys = QP.mldsa44_keypair(seed)
+	--check if the pk is valid
+	if (QP.mldsa44_pubcheck(keys.public)) then print("valid pk")
+	else print("invalid pk")
+	end
+	--print: valid pk
+ */
 static int mldsa44_signature_pubcheck(lua_State *L) {
 	BEGIN();
 	const octet *pk = o_arg(L, 1);
@@ -1522,6 +1780,26 @@ static int mldsa44_signature_pubcheck(lua_State *L) {
 	END(1);
 }
 
+/*** Check whether a given signature is valid for the ML-DSA-44 cryptographic scheme. 
+ 	*Specifically, it verifies if the signature has the correct length.
+
+	@function QP.mldsa44_signature_check
+	@param sig a signature 
+	@return a boolean value
+	@usage 
+	QP = require("qp")
+	--generate a random seed and a key pair
+	seed = OCTET.random(32)
+	keys = QP.mldsa44_keypair(seed)
+	m = OCTET.random(32)
+	--generate a random message and sign it
+	sign = QP.mldsa44_signature(keys.private,m)
+	--check if the signature is valid
+	if (QP.mldsa44_signature_check(sign)) then print("signature ok")
+	else print("error in the signature")
+	end
+	--print: signature ok
+ */
 static int mldsa44_signature_check(lua_State *L){
 	BEGIN();
 	char *failed_msg = NULL;

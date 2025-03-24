@@ -26,18 +26,26 @@ backtick_references=true
 file={
 	'../../../src/zen_octet.c',
 	'../../../src/zen_hash.c',
+	'../../../src/zen_ecp.c',
+	'../../../src/zen_big.c',
+	'../../../src/zen_float.c',
+	'../../../src/zen_time.c',
+
 	'../../../src/zen_aes.c',
 	'../../../src/zen_ecdh.c',
-	'../../../src/zen_ecp.c',
+	'../../../src/zen_ed.c',
+	'../../../src/zen_p256.c',
+	'../../../src/zen_qp.c',
 	'string.lua',
 	'table.lua',
 	'../../../src/lua/inspect.lua',
 	'../../../src/lua/zencode.lua',
-	'../../../src/zen_big.c',
+	'../../../src/lua/crypto_w3c.lua',
+	'../../../src/lua/crypto_bbs.lua',
 }
-dir='o'
-kind_names={topic='Tutorials',script='Programs'}
-examples = {
-    '../../../examples/keygen.lua',
-	'../../../examples/crypt-to-multi.lua',
-}
+-- dir='o'
+-- kind_names={topic='Tutorials',script='Programs'}
+-- examples = {
+--     '../../../examples/keygen.lua',
+-- 	'../../../examples/crypt-to-multi.lua',
+-- }

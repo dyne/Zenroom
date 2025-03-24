@@ -18,6 +18,16 @@
  *
  */
 
+/// <h1>TIME</h1>
+//This class allows to work with TIME objects. All TIME objects are float number.
+//Since all TIME objects are 32 bit signed, there are two limitations for values allowed:
+//
+//-The MAXIMUM TIME value allowed is the number 2147483647 (<code>t_max = TIME.new(2147483647)</code>)
+//
+//-The MINIMUM TIME value allowed is the number -2147483647 (<code>t_min = TIME.new(-2147483647)</code>) 
+//@module TIME
+
+
 #include <stdlib.h>
 #include <math.h>
 #include <float.h>
@@ -123,13 +133,19 @@ octet *new_octet_from_time(lua_State *L, ztime_t t) {
 	o->len = sizeof(ztime_t);
 	return o;
 }
+
+/// Global TIME Functions
+// @type TIME
+
+
+
 /***
     Create a new time. If an argument is present,
-    import it as @{OCTET} and initialise it with its value.
+    *import it as @{OCTET} and initialise it with its value.
 
-    @param[opt] octet value
+    @param[opt] octet value (32 bit)
     @return a new float number
-    @function T.new(octet)
+    @function TIME.new
 */
 static int newtime(lua_State *L) {
 	BEGIN();
@@ -147,6 +163,8 @@ static int newtime(lua_State *L) {
 	time_free(L, c);
 	END(1);
 }
+
+
 
 /*static int is_time(lua_State *L) {
 	BEGIN();
@@ -167,6 +185,13 @@ static int newtime(lua_State *L) {
 	END(1);
 }*/
 
+
+/***
+ It checks if the given input (either a number or a string) falls within a specific range of time values.
+ @function TIME.detect_time_value
+ @param t a time value
+ @return a boolean value: true if the time value is too much big or too much low. false, otherwise
+ */
 static int detect_time_value(lua_State *L) {
 	BEGIN();
 	int result = 0;
@@ -182,6 +207,10 @@ static int detect_time_value(lua_State *L) {
 	lua_pushboolean(L, result);
 	END(1);
 }
+
+/// Object Methods
+// @type TIME
+
 
 static int time_to_octet(lua_State *L) {
 	BEGIN();
@@ -208,78 +237,21 @@ end:
 	END(1);
 }
 
-static int time_eq(lua_State *L) {
-	BEGIN();
-	ztime_t *a,*b;
-	a = time_arg(L,1);
-	b = time_arg(L,2);
-	if(a && b) {
-		lua_pushboolean(L, *a == *b);
-	}
-	time_free(L,a);
-	time_free(L,b);
-	if(!a || !b) {
-		THROW("Could not allocate float number");
-	}
-	END(1);
-}
+/***
+ Allow to do the sum between two time object.
+ @function time:__add
+ @return return the sum if it allowed. It might be return the error message "Result of addition out of range" if the result of the sum is too much big
+ @param t2 the time to sum		
+ @usage
+ oct1 = OCTET.random(4)
+ oct2 = OCTET.random(4)
+ t1 = time.new(oct1)		
+ t2 = time.new(oct2)		
+ sum = t1:__add(t2)	
 
-static int time_lt(lua_State *L) {
-	BEGIN();
-	ztime_t *a = time_arg(L,1);
-	ztime_t *b = time_arg(L,2);
-	if(a && b) {
-		lua_pushboolean(L, *a < *b);
-	}
-	time_free(L,a);
-	time_free(L,b);
-	if(!a || !b) {
-		THROW("Could not allocate time number");
-	}
-	END(1);
-}
+ */
 
-// TODO: could be wrong due to equality
-static int time_lte(lua_State *L) {
-	BEGIN();
-	ztime_t *a = time_arg(L,1);
-	ztime_t *b = time_arg(L,2);
-	if(a && b) {
-		lua_pushboolean(L, *a <= *b);
-	}
-	time_free(L,a);
-	time_free(L,b);
-	if(!a || !b) {
-		THROW("Could not allocate time number");
-	}
-	END(1);
-}
-
-
-static int time_to_string(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	ztime_t* c = time_arg(L,1);
-	if(c == NULL) {
-		failed_msg = "Could not read float";
-		goto end;
-	}
-	char dest[1024];
-	int bufsz = _string_from_time(dest, *c);
-	if(bufsz < 0) {
-		failed_msg = "Output size too big";
-		goto end;
-	}
-	lua_pushstring(L, dest);
-end:
-	time_free(L,c);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-static int time_add(lua_State *L) {
+ static int time_add(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	ztime_t *a = time_arg(L, 1);
@@ -306,6 +278,14 @@ end:
 	}
 	END(1);
 }
+
+/*** Allow to subtract two time object.
+ @function time:__sub
+ @return return the subtraction if it allowed. It might be return the error message "Result of subtraction out of range" if the result of the subtraction is too much big
+ @param t2 the time to subtract	
+ @usage
+ The same of the method __add()	
+ */
 
 static int time_sub(lua_State *L) {
 	BEGIN();
@@ -334,6 +314,16 @@ end:
 	END(1);
 }
 
+
+/*** Calculate the opposite of a time object.
+ @function time:__unm
+ @return the opposite a time object
+ @usage
+ oct1 = OCTET.random(4)
+ t1 = time.new(oct1)			
+ opp = t1:__unm() 	
+ */
+
 static int time_opposite(lua_State *L) {
 	BEGIN();
 	ztime_t *a = time_arg(L,1);
@@ -347,6 +337,120 @@ static int time_opposite(lua_State *L) {
 	}
 	END(1);
 }
+
+/***
+ Given two time objects, it checks if they are equal.
+ @function time:__eq
+ @param t2
+ @return a boolean value "true" if they are equal, "false" otherwise
+ @usage
+ oct1 = OCTET.random(4)
+ t1 = time.new(oct1)
+ bool = t1:__eq(t1)
+ if bool then print("true")		--Output: true
+ else print("false")
+ end
+
+ */
+static int time_eq(lua_State *L) {
+	BEGIN();
+	ztime_t *a,*b;
+	a = time_arg(L,1);
+	b = time_arg(L,2);
+	if(a && b) {
+		lua_pushboolean(L, *a == *b);
+	}
+	time_free(L,a);
+	time_free(L,b);
+	if(!a || !b) {
+		THROW("Could not allocate float number");
+	}
+	END(1);
+}
+
+/***
+ Given two time object it checks if the first one is less (<) then the second one  
+ @function time:__lt
+ @return a boolean value "true" if the first argument is less than the second one, "false" otherwise
+ @usage
+ The same of :__eq()
+ */
+
+static int time_lt(lua_State *L) {
+	BEGIN();
+	ztime_t *a = time_arg(L,1);
+	ztime_t *b = time_arg(L,2);
+	if(a && b) {
+		lua_pushboolean(L, *a < *b);
+	}
+	time_free(L,a);
+	time_free(L,b);
+	if(!a || !b) {
+		THROW("Could not allocate time number");
+	}
+	END(1);
+}
+
+// TODO: could be wrong due to equality
+
+/***
+ Given two time object it checks if the first one is less (<=) then the second one  
+ @function time:__lte
+ @return a boolean value "true" if the first argument is less or equal than the second one, "false" otherwise
+ @usage
+ The same of :__eq()
+ */
+static int time_lte(lua_State *L) {
+	BEGIN();
+	ztime_t *a = time_arg(L,1);
+	ztime_t *b = time_arg(L,2);
+	if(a && b) {
+		lua_pushboolean(L, *a <= *b);
+	}
+	time_free(L,a);
+	time_free(L,b);
+	if(!a || !b) {
+		THROW("Could not allocate time number");
+	}
+	END(1);
+}
+
+/***
+ This method converts a time object to a string
+ @function time:__tostring
+ @return the string representation of a time object
+ @usage
+ oct1 = OCTET.random(4)
+ t1 = time.new(oct1)
+ t1:__tostring()	
+
+*/
+
+static int time_to_string(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	ztime_t* c = time_arg(L,1);
+	if(c == NULL) {
+		failed_msg = "Could not read float";
+		goto end;
+	}
+	char dest[1024];
+	int bufsz = _string_from_time(dest, *c);
+	if(bufsz < 0) {
+		failed_msg = "Output size too big";
+		goto end;
+	}
+	lua_pushstring(L, dest);
+end:
+	time_free(L,c);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+
+
 
 int luaopen_time(lua_State *L) {
 	(void)L;

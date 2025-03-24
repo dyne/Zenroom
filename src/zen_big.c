@@ -191,135 +191,80 @@ big *big_dup(lua_State *L, big *s) {
 	return(n);
 }
 
-int big_destroy(lua_State *L) {
-	big *c = (big*)luaL_testudata(L, 1, "zenroom.big");
-	if(c) {
-		if(c->doublesize) {
-			if(c->dval) {
-				free(c->dval);
-				c->dval = NULL;
+/* Compute z = x^n mod m using square and multiply */
+// NOT secure against side channel attacks
+/**	@brief  Calculate z = x^n mod m using square and multiply
+ *
+	@param z BIG number, on exit = x^n mod m
+	@param x BIG number
+	@param n The BIG exponent
+	@param m The BIG modulus
+*/
+static void _square_and_multiply(BIG z, BIG x, BIG n, BIG m)
+{
+	BIG_one(z);
+	if( ! BIG_iszilch(n)){
+		BIG safen, powerx, one;
+		BIG_copy(safen, n);
+		BIG_copy(powerx, x);
+		BIG_one(one);
+		while(BIG_comp(safen, one) > 0) {
+			if(safen[0] & 1) {
+				BIG_modmul(z, z, powerx, m);
 			}
-			if(c->val) warning(L,"found leftover buffer while freeing double big");
+			BIG_modmul(powerx, powerx, powerx, m);
+			BIG_shr(safen, 1);
+		}
+		BIG_modmul(z, z, powerx, m);
+	}
+}
+
+static int _compare_bigs(big *l, big *r, char *failed_msg) {
+	int res = 0;
+	checkalldouble(l,r);
+	if(!failed_msg) {
+		if(l->doublesize || r->doublesize) {
+			godbig2(l,r);
+			BIG_dnorm(_l);
+			BIG_dnorm(_r);
+			res = BIG_dcomp(_l,_r);
 		} else {
-			if(c->val) {
-				free(c->val);
-				c->val = NULL;
-			}
-			if(c->dval) warning(L,"found leftover buffer while freeing big");
+			BIG_norm(l->val);
+			BIG_norm(r->val);
+			res = BIG_comp(l->val,r->val);
 		}
 	}
-	return 0;
+	return(res);
 }
 
-int _bitsize(big *b) {
-	double bits;
-	if(b->doublesize)
-		bits = BIG_dnbits(b->dval);
-	else
-		bits = BIG_nbits(b->val);
-	return bits;
-}
-
-static int big_bits(lua_State *L) {
-	BEGIN();
-	big *d = big_arg(L,1);
-	if(d) {
-		lua_pushinteger(L,_bitsize(d));
-		big_free(L, d);
+// algebraic sum (add and sub) taking under account zencode sign
+static void _algebraic_sum(big *c, big *a, big *b, char *failed_msg) {
+	if (a->zencode_positive == b->zencode_positive) {
+		BIG_add(c->val, a->val, b->val);
+		c->zencode_positive = a->zencode_positive;
 	} else {
-		THROW("Could not read big argument");
+		int res = _compare_bigs(a,b,failed_msg);
+		// a and b have opposite sign, so I do the bigger minus the
+		// smaller and take the sign of the bigger
+		if(res > 0) {
+			BIG_sub(c->val, a->val, b->val);
+			c->zencode_positive = a->zencode_positive;
+		} else {
+			BIG_sub(c->val, b->val, a->val);
+			c->zencode_positive = b->zencode_positive;
+		}
 	}
-	END(1);
-}
-static int big_bytes(lua_State *L) {
-	BEGIN();
-	big *d = big_arg(L,1);
-	if(d) {
-		lua_pushinteger(L,ceil(_bitsize(d)/8));
-		big_free(L, d);
-	} else {
-		THROW("Could not read big argument");
-	}
-	// lua_pushinteger(L,d->len);
-	END(1);
 }
 
-int big_init(lua_State *L,big *n) {
-	if(n->val && !n->doublesize) {
-		func(L,"ignoring superflous initialization of big");
-		return(1); }
-	if(n->dval || n->doublesize) {
-		zerror(L, "cannot shrink double big to big in re-initialization");
-		return 0; }
-	if(!n->val && !n->dval) {
-		size_t size = sizeof(BIG);
-		n->val = (int*)malloc(size);
-		n->doublesize = 0;
-		n->len = MODBYTES;
-		return(size);
-	}
-	zerror(L, "anomalous state of big number detected on initialization");
-	return(-1);
-}
-
-int dbig_init(lua_State *L,big *n) {
-	if(n->dval && n->doublesize) {
-		func(L,"ignoring superflous initialization of double big");
-		return(1); }
-	size_t size = sizeof(DBIG); //sizeof(DBIG); // modbytes * 2, aka n->len<<1
-	if(n->val && !n->doublesize) {
-		n->doublesize = 1;
-		n->dval = (int*)malloc(size);
-		// extend from big to double big
-		BIG_dscopy(n->dval,n->val);
-		free(n->val);
-		n->val = NULL;
-		n->len = MODBYTES<<1;
-	}
-	if(!n->val || !n->dval) {
-		n->doublesize = 1;
-		n->dval = (int*)malloc(size);
-		n->len = MODBYTES<<1;
-		return(size);
-	}
-	zerror(L, "anomalous state of double big number detected on initialization");
-	return(-1);
-}
-
-// give information about BIG numbers internal formats
-static int lua_biginfo(lua_State *L) {
-	BEGIN();
-	lua_newtable(L);
-	lua_pushinteger(L,BIGLEN);
-	lua_setfield(L,1,"biglen");
-	lua_pushinteger(L,DBIGLEN);
-	lua_setfield(L,1,"dbiglen");
-	lua_pushinteger(L,MODBYTES);
-	lua_setfield(L,1,"modbytes");
-	lua_pushinteger(L,(unsigned int)sizeof(BIG));
-	lua_setfield(L,1,"sizeof_BIG");
-	lua_pushinteger(L,(unsigned int)sizeof(DBIG));
-	lua_setfield(L,1,"sizeof_DBIG");
-	END(1);
-}
-
-// return the max value expressed by MODBYTES big to 0xff
-// TODO: fix this to return something usable in modmul
-static int lua_bigmax(lua_State *L) {
-	BEGIN();
-	big *b = big_new(L);
-	big_init(L, b);
-	register int c;
-	for(c=0 ; c < b->len ; c++) b->val[c] = 0xffffffff;
-	END(1);
-}
+/// Global Big Functions
+// @section Big
 
 /***
     Create a new Big number. If an argument is present, import it as @{OCTET} and initialise it with its value.
 
     @param[opt] octet value
     @return a new Big number
-    @function BIG.new(octet)
+    @function BIG.new
 */
 static int newbig(lua_State *L) {
 	BEGIN();
@@ -420,6 +365,14 @@ octet *new_octet_from_big(lua_State *L, big *c) {
 }
 
 // Works only for positive numbers
+
+/*** Convert a decimal string into a big integer object. 
+	*It works only for positive numbers.
+
+	@function BIG.from_decimal
+	@param string representing a decimal number
+	@return the big integer object
+ */
 static int big_from_decimal_string(lua_State *L) {
 	BEGIN();
 	const char *s = lua_tostring(L, 1);
@@ -454,11 +407,618 @@ static int big_from_decimal_string(lua_State *L) {
 	BIG_norm(num->val);
 	END(1);
 }
-/*
-  fixed size encoding for integer with big endian order
-  @param num number that has to be coverted
-  @param len bytes size
-  @param big_endian use big endian order (if omitted by default is true)
+
+/***
+    Generate a random Big number whose ceiling is defined by the modulo to another number.
+
+    @param modulo another BIG number, usually @{ECP.order}
+    @return a new Big number
+    @function BIG.modrand
+	@usage
+	--generate a random Big number starting from the EC BLS381
+	BIG.modrand(ECP.order())
+*/
+
+static int big_modrand(lua_State *L) {
+	BEGIN();
+	Z(L);
+	big *modulus = big_arg(L,1);
+	big *res = big_new(L);
+	if(modulus && res) {
+		big_init(L,res);
+		BIG_randomnum(res->val,modulus->val,Z->random_generator);
+	}
+	big_free(L,modulus);
+	if(!modulus || !res) {
+		THROW("Could not create BIGs");
+	}
+	END(1);
+}
+
+/*** Generate a random Big number whose ceiling is the order of the curve.
+
+    @return a new Big number
+    @function BIG.random
+*/
+
+static int big_random(lua_State *L) {
+	BEGIN();
+	big *res = big_new(L); big_init(L,res);
+	Z(L);
+	BIG_randomnum(res->val,(chunk*)CURVE_Order,Z->random_generator);
+	END(1);
+}
+
+/* Tonelli-Shanks algorithm: compute r square root of n mod p where p is an odd prime.
+We assume that n is a square modulo p, so that a solution exist. */
+static void _modsqrt(BIG r, BIG n, BIG p)
+{   
+	BIG modp, four;
+	BIG_zero(four);
+	BIG_inc(four, 4);
+	BIG_copy(modp, p);
+	BIG_mod(modp, four);
+	if (!BIG_isunity(modp)) { //if p = 3 mod 4
+		BIG exponent;
+		BIG_copy(exponent, p);
+		BIG_inc(exponent, 1);
+		BIG_shr(exponent, 2);
+		_square_and_multiply(r, n, exponent, p);
+		return;
+	}
+	else { // if p = 1 mod 4
+		int S = 0;
+		BIG Q;
+		BIG_copy(Q, p);
+		BIG_dec(Q, 1);
+		while (!BIG_parity(Q)) {
+			BIG_shr(Q, 1);
+			S++;
+		}
+		BIG z;
+		BIG_one(z);
+		BIG_inc(z,1);
+		while(BIG_jacobi(z,p) == 1){
+			BIG_inc(z,1);
+		}
+		BIG c, t, R, exp, T, b;
+		int M = S;
+		_square_and_multiply(c, z, Q, p);
+		_square_and_multiply(t, n, Q, p);
+		BIG_copy(exp, Q);
+		BIG_inc(exp, 1);
+		BIG_shr(exp, 1); //exp = (Q+1)/2
+		_square_and_multiply(R, n, exp, p);
+
+		if(BIG_iszilch(t)) {
+			BIG_zero(r);
+			return;
+		}
+		int i;
+		while (!BIG_isunity(t)) {
+			i = 0;
+			BIG_copy(T, t);
+			do {
+				BIG_modsqr(T,T,p);
+				i++;
+			} while(!BIG_isunity(T));
+			BIG_copy(b, c);
+			for(int j = 0; j< M-i-1; j++){
+				BIG_modsqr(b, b, p);
+			}
+			M = i;
+			BIG_modsqr(c, b, p);
+			BIG_modmul(t, t, c, p);
+			BIG_modmul(R, R, b, p);
+		}
+		BIG_copy(r, R);
+		return;
+	}
+}
+
+/* Tonelli-Shanks algorithm. Given as input two bigs n and p compute the square root of n modulo p 
+	where p is an odd prime and n is a square modulo p */
+
+/*** Tonelli-Shanks algorithm. Given as input two bigs n and p compute the square root of n modulo p 
+	*where p is an odd prime and n is a square modulo p.
+
+	@function BIG.modsqrt
+	@param n Big number
+	@param p odd Big number
+	@return the result of the modular square root computation
+
+	*/
+static int big_modsqrt(lua_State *L){
+	BEGIN();
+	char *failed_msg = NULL;
+	big *n = big_arg(L, 1);
+	big *p = big_arg(L, 2);
+	if(!n || !p) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
+	if(n->doublesize || p->doublesize) {
+		failed_msg = "modsqrt not supported on double big numbers";
+		goto end;
+	}
+
+	//check if the input n is a quadratic residue modulo p
+	if (BIG_jacobi(n->val, p->val) != 1) {
+		failed_msg = "n is not a square modulo p";
+		goto end;
+	}
+	
+	big *r = big_new(L);
+	if(!r) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
+	big_init(L,r);
+	_modsqrt(r->val, n->val, p->val);
+	BIG_norm(r->val);
+end:
+	big_free(L, n);
+	big_free(L, p);
+	if(failed_msg){
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/*** Perform algebraic sum of two Big numbers, taking under account their zencode signs. 
+	*The result is stored in a new Big number and pushed onto the Lua stack.
+
+	@function BIG.zenadd
+	@param a Big number
+	@param b Big number
+	@return the sum a+b
+
+ */
+static int big_zenadd(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	big *a = big_arg(L, 1);
+	big *b = big_arg(L, 2);
+	big *c = big_new(L);
+	if(!a || !b || !c) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
+	big_init(L,c);
+	_algebraic_sum(c, a, b, failed_msg);
+end:
+	big_free(L,b);
+	big_free(L,a);
+	if(failed_msg) {
+		THROW("Could not create BIG");
+	}
+	END(1);
+}
+
+/*** Perform algebraic subtraction of two Big numbers, taking under account their zencode signs. 
+	*The result is stored in a new Big number and pushed onto the Lua stack.
+
+	@function BIG.zensub
+	@param a Big number
+	@param b Big number
+	@return the subtraction a-b
+
+ */
+static int big_zensub(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	big *a = big_arg(L, 1);
+	big *b = big_arg(L, 2);
+	big *c = big_new(L);
+	if(!a || !b || !c) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
+	big_init(L,c);
+	b->zencode_positive = BIG_OPPOSITE(b->zencode_positive);
+	_algebraic_sum(c, a, b, failed_msg);
+	b->zencode_positive = BIG_OPPOSITE(b->zencode_positive);
+end:
+	big_free(L,b);
+	big_free(L,a);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+// the result is expected to be inside a BIG
+
+/*** Perform algebraic multiplication of two Big numbers, taking under account their zencode signs. 
+	*The result is stored in a new Big number and pushed onto the Lua stack.
+
+	@function BIG.zenmul
+	@param a Big number
+	@param b Big number
+	@return the multiplication a*b
+
+ */
+static int big_zenmul(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	big *a = big_arg(L, 1);
+	big *b = big_arg(L, 2);
+	if(!a || !b) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
+	if(a->doublesize || b->doublesize) {
+		failed_msg = "cannot multiply double BIG numbers";
+		goto end;
+	}
+	//BIG_norm(a->val); BIG_norm(b->val);
+	DBIG result;
+	BIG top;
+	big *bottom = big_new(L);
+	if(!bottom) {
+		failed_msg = "could not create BIG";
+		goto end;
+	}
+	big_init(L,bottom);
+	BIG_mul(result, a->val, b->val);
+	BIG_sdcopy(bottom->val, result);
+	BIG_sducopy(top, result);
+	// check that the result is a big (not a dbig)
+	if(!iszero(top)) {
+		failed_msg = "the result is too big";
+		goto end;
+	}
+	bottom->zencode_positive = BIG_MULSIGN(a->zencode_positive, b->zencode_positive);
+end:
+	big_free(L,b);
+	big_free(L,a);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/*** Perform algebraic division of two Big numbers, taking under account their zencode signs. 
+	*The result is stored in a new Big number and pushed onto the Lua stack.
+
+	@function BIG.zendiv
+	@param a Big number
+	@param b Big number
+	@return the division a/b
+
+ */
+static int big_zendiv(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	big *a = big_arg(L, 1);
+	big *b = big_arg(L, 2);
+	if(!a || !b) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
+	if(a->doublesize || b->doublesize) {
+		failed_msg = "cannot multiply double BIG numbers";
+		goto end;
+	}
+	DBIG dividend;
+	BIG_dzero(dividend);
+	dcopy(dividend, a->val);
+	big *result = big_new(L);
+	if(!result) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
+	big_init(L,result);
+	BIG_ddiv(result->val, dividend, b->val);
+	result->zencode_positive = BIG_MULSIGN(a->zencode_positive, b->zencode_positive);
+end:
+	big_free(L,b);
+	big_free(L,a);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/*** Check whether a given Big number is positive.
+	*If it is positive the output is true, otherwise false.
+
+	@function BIG.zenpositive 
+	@param n a Big number
+	@return a boolean value
+ */
+static int big_zenpositive(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	big *a = big_arg(L, 1);
+	if(!a) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
+	lua_pushboolean(L, a->zencode_positive == BIG_POSITIVE);
+end:
+	big_free(L,a);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/*** Compute the modulo operation of two Big numbers (a and b), 
+ 	*ensuring that both numbers are positive.
+
+	@function BIG.zenmod
+	@param a Big number
+	@param b Big number
+	@return a mod b
+ */
+static int big_zenmod(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	big *a = big_arg(L, 1);
+	big *b = big_arg(L, 2);
+	if(!a || !b) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
+	if(a->doublesize || b->doublesize) {
+		failed_msg = "cannot multiply double BIG numbers";
+		goto end;
+	}
+	if(a->zencode_positive == BIG_NEGATIVE || b->zencode_positive == BIG_NEGATIVE) {
+		failed_msg = "modulo operation only available with positive numbers";
+		goto end;
+	}
+	big *result = big_new(L);
+	if(!result) {
+		failed_msg = "could not create BIG";
+		goto end;
+	}
+	big_init(L,result);
+	BIG_copy(result->val, a->val);
+	BIG_mod(result->val, b->val);
+	result->zencode_positive = BIG_POSITIVE;
+end:
+	big_free(L,b);
+	big_free(L,a);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/*** Compute the opposite (additive inverse) of a Big number.
+
+	@function BIG.zenopposite
+	@param a Big number
+	@return the result of the opposite operation
+	@usage 
+	--create a Big number
+	y = big.from_decimal("123234442341233983797129732792324343")
+	--estimate the opposite
+	print(big.zenopposite(y):decimal())
+	--print: -123234442341233983797129732792324343
+ */
+static int big_zenopposite(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	big *a = big_arg(L, 1);
+	if(!a) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
+	big *result = big_dup(L, a);
+	if(!result) {
+		failed_msg = "Could not copy BIG";
+		goto end;
+	}
+	result->zencode_positive = BIG_OPPOSITE(result->zencode_positive);
+end:
+	big_free(L,a);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/*** Check whether a given Lua value is an integer or a string representation of an integer.
+
+	@function BIG.is_integer
+	@param data a Lua value
+	@return a boolean value
+ */
+static int big_isinteger(lua_State *L) {
+	BEGIN();
+	int result = 0;
+	if(lua_isinteger(L, 1)) {
+		result = 1;
+	} else if(lua_isstring(L, 1)) {
+		int i = 0;
+		const char *arg = lua_tostring(L, 1);
+		if(arg[i] == '-') {
+			i++;
+		}
+		result = 1;
+		while(result == 1 && arg[i] != '\0') {
+			if(arg[i] < '0' || arg[i] > '9') {
+				result = 0;
+			}
+			i++;
+		}
+	}
+	lua_pushboolean(L, result);
+	END(1);
+}
+
+
+/// Object Methods
+// @type Big
+
+
+/** It is a destructor for a Big number object in Lua. It is for freeing the memory allocated for 
+ * the Big number and ensuring there are no memory leaks.
+
+	@function big:__gc
+ */
+int big_destroy(lua_State *L) {
+	big *c = (big*)luaL_testudata(L, 1, "zenroom.big");
+	if(c) {
+		if(c->doublesize) {
+			if(c->dval) {
+				free(c->dval);
+				c->dval = NULL;
+			}
+			if(c->val) warning(L,"found leftover buffer while freeing double big");
+		} else {
+			if(c->val) {
+				free(c->val);
+				c->val = NULL;
+			}
+			if(c->dval) warning(L,"found leftover buffer while freeing big");
+		}
+	}
+	return 0;
+}
+
+int _bitsize(big *b) {
+	double bits;
+	if(b->doublesize)
+		bits = BIG_dnbits(b->dval);
+	else
+		bits = BIG_nbits(b->val);
+	return bits;
+}
+
+/** Calculate the number of bits required to represent a Big number. 
+
+	@function big:bits
+	@return the number of bits
+	@usage 
+	--create a Big number
+	b = BIG.new(1983783819133422)
+	--calculate the number of bits
+	print(b:bits())
+	--print: 94
+ */
+static int big_bits(lua_State *L) {
+	BEGIN();
+	big *d = big_arg(L,1);
+	if(d) {
+		lua_pushinteger(L,_bitsize(d));
+		big_free(L, d);
+	} else {
+		THROW("Could not read big argument");
+	}
+	END(1);
+}
+/** Calculate the number of bytes required to represent a Big number. 
+
+	@function big:bytes
+	@return the number of bytes
+	@usage 
+	--create a Big number
+	b = BIG.new(1983783819133422)
+	--calculate the number of bytes
+	print(b:bytes())
+	--print: 11
+ */
+static int big_bytes(lua_State *L) {
+	BEGIN();
+	big *d = big_arg(L,1);
+	if(d) {
+		lua_pushinteger(L,ceil(_bitsize(d)/8));
+		big_free(L, d);
+	} else {
+		THROW("Could not read big argument");
+	}
+	// lua_pushinteger(L,d->len);
+	END(1);
+}
+
+int big_init(lua_State *L,big *n) {
+	if(n->val && !n->doublesize) {
+		func(L,"ignoring superflous initialization of big");
+		return(1); }
+	if(n->dval || n->doublesize) {
+		zerror(L, "cannot shrink double big to big in re-initialization");
+		return 0; }
+	if(!n->val && !n->dval) {
+		size_t size = sizeof(BIG);
+		n->val = (int*)malloc(size);
+		n->doublesize = 0;
+		n->len = MODBYTES;
+		return(size);
+	}
+	zerror(L, "anomalous state of big number detected on initialization");
+	return(-1);
+}
+
+int dbig_init(lua_State *L,big *n) {
+	if(n->dval && n->doublesize) {
+		func(L,"ignoring superflous initialization of double big");
+		return(1); }
+	size_t size = sizeof(DBIG); //sizeof(DBIG); // modbytes * 2, aka n->len<<1
+	if(n->val && !n->doublesize) {
+		n->doublesize = 1;
+		n->dval = (int*)malloc(size);
+		// extend from big to double big
+		BIG_dscopy(n->dval,n->val);
+		free(n->val);
+		n->val = NULL;
+		n->len = MODBYTES<<1;
+	}
+	if(!n->val || !n->dval) {
+		n->doublesize = 1;
+		n->dval = (int*)malloc(size);
+		n->len = MODBYTES<<1;
+		return(size);
+	}
+	zerror(L, "anomalous state of double big number detected on initialization");
+	return(-1);
+}
+
+// give information about BIG numbers internal formats
+static int lua_biginfo(lua_State *L) {
+	BEGIN();
+	lua_newtable(L);
+	lua_pushinteger(L,BIGLEN);
+	lua_setfield(L,1,"biglen");
+	lua_pushinteger(L,DBIGLEN);
+	lua_setfield(L,1,"dbiglen");
+	lua_pushinteger(L,MODBYTES);
+	lua_setfield(L,1,"modbytes");
+	lua_pushinteger(L,(unsigned int)sizeof(BIG));
+	lua_setfield(L,1,"sizeof_BIG");
+	lua_pushinteger(L,(unsigned int)sizeof(DBIG));
+	lua_setfield(L,1,"sizeof_DBIG");
+	END(1);
+}
+
+// return the max value expressed by MODBYTES big to 0xff
+// TODO: fix this to return something usable in modmul
+static int lua_bigmax(lua_State *L) {
+	BEGIN();
+	big *b = big_new(L);
+	big_init(L, b);
+	register int c;
+	for(c=0 ; c < b->len ; c++) b->val[c] = 0xffffffff;
+	END(1);
+}
+
+/** Fixed size encoding for integer with big endian order.
+	*If the second parameter is 'false' it uses little endian order.
+
+	@function big:fixed
+	@param len bytes size
+	@param boolean use big endian order (if omitted by default is true)
+	@return a fixed-length octet
+	@usage 
+	--create a Big number
+	b = BIG.from_decimal("1234567891234569213839813381")
+  	--bytes size equal to 10
+  	print(b:fixed(10):hex())
+	--print: 03fd35eb7ce4f16ec9962b05
+
 */
 static int big_to_fixed_octet(lua_State *L) {
 	BEGIN();
@@ -527,11 +1087,16 @@ end:
 	END(1);
 }
 
-/*
-  Slow but only for export
-  Works only for positive numbers
-  @param num number to be converted (zenroom.big)
-  @return string which represent a decimal number (only digits 0-9)
+/**	Convert a Big integer into a decimal string representation.
+  	*Slow but only for export.
+  	*It work only for positive numbers.
+  	@function big:decimal
+  	@return string which represent a decimal number (only digits 0-9)
+	@usage 
+	--create a Big number
+	b = BIG.from_decimal("1234567891234569213")
+	--print decimal number
+	print(b:decimal())
 */
 // TODO: always show negative sign or put a flag?
 static int big_to_decimal_string(lua_State *L) {
@@ -611,7 +1176,11 @@ static int big_to_decimal_string(lua_State *L) {
 	END(1);
 }
 
+/*** Convert a Big number into an octet.
 
+	@function big:octet
+	@return an octet
+ */
 static int luabig_to_octet(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -636,6 +1205,23 @@ end:
 	END(1);
 }
 
+/*** Concatenate two Big integer objects into a single octet.
+
+	@function big:__concat
+	@param data a big integer object to concatenate
+	@return the concatenated octet object
+	@usage 
+	--create two octets
+	b = BIG.from_decimal("1234567891")
+	b2 = BIG.from_decimal("234569213")
+	--concatenate them
+	conc = b:__concat(b2)
+	--print in hexadecimal
+	--print b: 499602d3
+	--print b2: 0dfb3dfd
+	--print conc: 499602d30dfb3dfd
+
+ */
 static int big_concat(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -668,6 +1254,11 @@ end:
 	END(1);
 }
 
+/** Convert a Big number in hexadecimal format.
+
+	@function big:hex
+	@return an octet in hex
+ */
 static int big_to_hex(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -692,6 +1283,12 @@ end:
 	END(1);
 }
 
+/** Convert a Big number into a Lua integer. 
+	*The function handles big integers that fit within 32 bits and truncates larger integers to 32 bits with a warning. 
+
+	@function big:int
+	@return a Lua integer
+ */
 static int big_to_int(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -725,24 +1322,13 @@ end:
 	END(1);
 }
 
-static int _compare_bigs(big *l, big *r, char *failed_msg) {
-	int res = 0;
-	checkalldouble(l,r);
-	if(!failed_msg) {
-		if(l->doublesize || r->doublesize) {
-			godbig2(l,r);
-			BIG_dnorm(_l);
-			BIG_dnorm(_r);
-			res = BIG_dcomp(_l,_r);
-		} else {
-			BIG_norm(l->val);
-			BIG_norm(r->val);
-			res = BIG_comp(l->val,r->val);
-		}
-	}
-	return(res);
-}
 
+/** Compare two Big numbers for equality.
+
+	@function big:__eq
+	@param data a Big integer to compare 
+	@return a boolean value
+ */
 static int big_eq(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -766,6 +1352,21 @@ end:
 	}
 	END(1);
 }
+/** Provide a simple way to check if one Big integer is less than another.
+
+	@function big:__lt
+	@param data a Big integer to compare 
+	@return a boolean value
+	@usage 
+	--create two Big integers 
+	b = BIG.from_decimal("12345678914124724921472194")
+	b2 = BIG.from_decimal("1234")
+	--compare them
+	if b:__lt(b2) then print("b is less than b2")
+	else print("b isn't less than b2")
+	end	
+	--print: b isn't less than b2
+*/
 static int big_lt(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -789,6 +1390,13 @@ end:
 	}
 	END(1);
 }
+
+/** Provide a simple way to check if one Big integer is less than or equal another.
+
+	@function big:__lte
+	@param data a Big integer to compare 
+	@return a boolean value
+ */
 static int big_lte(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -813,6 +1421,19 @@ end:
 	END(1);
 }
 
+/** Add two Big numbers and return the result as a new Big number.
+
+	@function big:__add
+	@param 	data a Big integer to add
+	@return the sum of the two Big numbers
+	@usage 
+	--create two Big numbers
+	b = BIG.from_decimal("12345678914124724921472194")
+	b2 = BIG.from_decimal("12343234234242334423432")
+	--make the sum
+	print(b:__add(b2):decimal())
+	--print: 12358022148358967255895626
+ */
 static int big_add(lua_State *L) {
 	BEGIN();
 	big *l = big_arg(L,1);
@@ -839,6 +1460,21 @@ static int big_add(lua_State *L) {
 	END(1);
 }
 
+/** Subtract two Big numbers and return the result as a new Big number.
+	*If the second argument is bigger than the first argument, 
+	*the behavior depends on whether the big integers are in regular size or double size mode.
+
+	@function big:__sub
+	@param 	data a Big integer to subtract
+	@return the difference of the two Big numbers
+	@usage 
+	--create two Big numbers
+	b = BIG.from_decimal("12345678914124724921472194")
+	b2 = BIG.from_decimal("12343234234242334423432")
+	--make the difference
+	print(b:__sub(b2):decimal())
+	--print: 12333335679890482587048762
+ */
 static int big_sub(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -882,6 +1518,20 @@ end:
 	END(1);
 }
 
+/**	Perform modular subtraction of two Big numbers modulus a third Big number.
+
+	@function big:modsub
+	@param data a Big number to subtract
+	@param modulo the modulus of the operation
+	@usage
+	--create the two big numbers to subtract
+	b = BIG.from_decimal("12345678914124724921472194")
+	b2 = BIG.from_decimal("12343234234242334423432")	
+	--define the modulo
+	mod = BIG.from_decimal("1234")
+	print(b:modsub(b2, mod):decimal())
+	--print: 576	
+ */
 static int big_modsub(lua_State *L) {
 	BEGIN();
 	big *l = big_arg(L,1);
@@ -927,45 +1577,14 @@ static int big_modsub(lua_State *L) {
 
 
 
-/***
-    Generate a random Big number whose ceiling is defined by the modulo to another number.
+/*** Provide a flexible way to perform multiplication involving big integers, 
+	*supporting both scalar multiplication with ECP points and modular multiplication of two big integers.
 
-    @param modulo another BIG number, usually @{ECP.order}
-    @return a new Big number
-    @function BIG.modrand(modulo)
-*/
+	@function big:__mul
+	@param data a big integer or an ECP point
+	@return the result of the multiplication
 
-static int big_modrand(lua_State *L) {
-	BEGIN();
-	Z(L);
-	big *modulus = big_arg(L,1);
-	big *res = big_new(L);
-	if(modulus && res) {
-		big_init(L,res);
-		BIG_randomnum(res->val,modulus->val,Z->random_generator);
-	}
-	big_free(L,modulus);
-	if(!modulus || !res) {
-		THROW("Could not create BIGs");
-	}
-	END(1);
-}
-
-/***
-    Generate a random Big number whose ceiling is the order of the curve.
-
-    @return a new Big number
-    @function BIG.random()
-*/
-
-static int big_random(lua_State *L) {
-	BEGIN();
-	big *res = big_new(L); big_init(L,res);
-	Z(L);
-	BIG_randomnum(res->val,(chunk*)CURVE_Order,Z->random_generator);
-	END(1);
-}
-
+ */
 static int big_mul(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1025,34 +1644,22 @@ end:
 	END(1);
 }
 
-/* Compute z = x^n mod m using square and multiply */
-// NOT secure against side channel attacks
-/**	@brief  Calculate z = x^n mod m using square and multiply
- *
-	@param z BIG number, on exit = x^n mod m
-	@param x BIG number
-	@param n The BIG exponent
-	@param m The BIG modulus
-*/
-static void _square_and_multiply(BIG z, BIG x, BIG n, BIG m)
-{
-	BIG_one(z);
-	if( ! BIG_iszilch(n)){
-		BIG safen, powerx, one;
-		BIG_copy(safen, n);
-		BIG_copy(powerx, x);
-		BIG_one(one);
-		while(BIG_comp(safen, one) > 0) {
-			if(safen[0] & 1) {
-				BIG_modmul(z, z, powerx, m);
-			}
-			BIG_modmul(powerx, powerx, powerx, m);
-			BIG_shr(safen, 1);
-		}
-		BIG_modmul(z, z, powerx, m);
-	}
-}
 
+/*** Perform modular exponentiation between Big numbers.
+
+	@function big:modpower
+	@param n exponent (Big number)
+	@param m modulus (Big number)
+	@return a Big number x^n mod m
+	@usage 
+	--create three Big numbers 
+	x = big.from_decimal("12341212142425354332324242422")
+	n = big.from_decimal("15376863816838361893936136936")
+	m = big.from_decimal("31873379237941484018414806743")
+	--calculate x^n mod m
+	print(x:modpower(n,m):decimal())
+	--print: 26994051819303675513763443877
+ */
 static int big_modpower(lua_State *L) {
 	BEGIN();
 	big *x = big_arg(L,1);
@@ -1072,6 +1679,11 @@ static int big_modpower(lua_State *L) {
 	END(1);
 }
 
+/*** Compute the square of a Big number.
+
+	@function big:sqr
+	@return the square of a Big number
+*/
 static int big_sqr(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1102,6 +1714,14 @@ end:
 	END(1);
 }
 
+/*** Perform Montgomery reduction on a double Big number using a modulus.
+	*Montgomery reduction is an efficient algorithm used in modular arithmetic to avoid expensive division operations, 
+	*often used in cryptographic computations.
+
+	@function big:monty
+	@param mod the modulus
+	@return a big number representing the Montgomery-reduced value
+ */
 static int big_monty(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1140,6 +1760,19 @@ end:
 	END(1);
 }
 
+/*** Compute the modulo operation on a Big number "b" using a modulus "m".
+
+	@function big:__mod
+	@param m the modulus
+	@return b mod m
+	@usage 
+	--create the two Big numbers "b" and "m"
+	b = big.from_decimal("123234442341233983797129732792324343")
+	m = big.from_decimal("165257575713")
+	--compute b mod m
+	print(b:__mod(m):decimal())
+	--print: 39084337405
+ */
 static int big_mod(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1181,6 +1814,20 @@ end:
 	END(1);
 }
 
+/*** Perform integer division of two Big numbers.
+
+	@function big:__div
+	@param data a Big number
+	@return the integer part of the division of two Big numbers
+	@usage 
+	--create two Big numbers 
+	b1 = big.from_decimal("123234442341233983797129732792324343")
+	b2 = big.from_decimal("165257575713")
+	--compute ⌊b1/b2⌋
+	print(b1:__div(b2):decimal())
+	--print: 745711304365574914096826
+
+ */
 static int big_div(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1217,12 +1864,14 @@ end:
 
 
 /***
-    Multiply a BIG number by another BIG while ceiling the operation to a modulo to avoid excessive results. This operation is to be preferred to the simple overladed operator '*' in most cases where such a multiplication takes place. It may replace '*' in the future as a simplification.
+    Multiply a Big number by another Big while ceiling the operation to a modulo to avoid excessive results. 
+	*This operation is to be preferred to the simple overladed operator * in most cases where such a multiplication takes place. 
+	*It may replace * in the future as a simplification.
 
-    @param coefficient another BIG number
+    @param coefficient another Big number
     @param modulo usually @{ECP.order}
     @return a new Big number
-    @function BIG.modmul(coefficient, modulo)
+    @function big:modmul
 */
 static int big_modmul(lua_State *L) {
 	BEGIN();
@@ -1268,6 +1917,22 @@ end:
 	END(1);
 }
 
+/*** Perform modular division using Big numbers arithmetic.
+	*It computes (y/d) mod m.
+
+	@function big:moddiv
+	@param d the divisor (Big number)
+	@param m the modulus (Big number)
+	@return the result of the modular division
+	@usage
+	--define y, d and m
+	y = big.from_decimal("123234442341233983797129732792324343")
+	d = big.from_decimal("165257575713")
+	m = big.from_decimal("165257")
+	--compute (y/d) mod m
+	print(y:moddiv(d,m):decimal())
+	print: 38881
+ */
 static int big_moddiv(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1302,6 +1967,22 @@ end:
 	END(1);
 }
 
+/*** Perform modular squaring on Big numbers.
+	*Compute the modular square of a Big number y modulo another Big number m, i.e., 
+	*y^2 mod m.
+
+	@function big:modsqr
+	@param m the modulus
+	@return the result of the modular squaring operation
+	@usage 
+	--define the two big integers
+	y = big.from_decimal("123234442341233983797129732792324343")
+	m = big.from_decimal("165257575713")
+	--compute y^2 mod m
+	print(y:modsqr(m):decimal())
+	--print: 86198167171
+
+ */
 static int big_modsqr(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1334,6 +2015,20 @@ end:
 	END(1);
 }
 
+/*** Compute the modular negation of a large integer y modulo another large integer m, i.e., 
+	*−y mod m.
+
+	@function big:modneg
+	@param m the modulus
+	@return the result of the modular negation operation
+	@usage 
+	--define the two big integers
+	y = big.from_decimal("123234442341233983797129732792324343")
+	m = big.from_decimal("165257575713")
+	--compute -y mod m
+	print(y:modneg(m):decimal())
+	--print: 126173238308
+ */
 static int big_modneg(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1365,6 +2060,21 @@ end:
 	}
 	END(1);
 }
+/*** Compute the Jacobi symbol of two Big numbers x and y. The Jacobi symbol is a mathematical function used in number theory, 
+	*particularly in primality testing and quadratic residue calculations.
+
+	@function big:jacobi
+	@param y a Big number
+	@return the result of the Jacobi symbol computation as an integer
+	@usage
+	--create two Big numbers x and y
+	x = big.from_decimal("123234442341233983797129732792324343")
+	y = big.from_decimal("165257575713243243323242243423")
+	--compute the jacobi symbol 
+	print(x:jacobi(y))
+	--print: -1
+
+ */
 static int big_jacobi(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1388,112 +2098,22 @@ end:
 	END(1);
 }
 
-/* Tonelli-Shanks algorithm: compute r square root of n mod p where p is an odd prime.
-    We assume that n is a square modulo p, so that a solution exist. */
-static void _modsqrt(BIG r, BIG n, BIG p)
-{   
-    BIG modp, four;
-    BIG_zero(four);
-    BIG_inc(four, 4);
-    BIG_copy(modp, p);
-    BIG_mod(modp, four);
-    if (!BIG_isunity(modp)) { //if p = 3 mod 4
-        BIG exponent;
-        BIG_copy(exponent, p);
-        BIG_inc(exponent, 1);
-        BIG_shr(exponent, 2);
-        _square_and_multiply(r, n, exponent, p);
-        return;
-    }
-    else { // if p = 1 mod 4
-        int S = 0;
-        BIG Q;
-        BIG_copy(Q, p);
-        BIG_dec(Q, 1);
-        while (!BIG_parity(Q)) {
-            BIG_shr(Q, 1);
-            S++;
-        }
-        BIG z;
-        BIG_one(z);
-        BIG_inc(z,1);
-        while(BIG_jacobi(z,p) == 1){
-            BIG_inc(z,1);
-        }
-        BIG c, t, R, exp, T, b;
-        int M = S;
-        _square_and_multiply(c, z, Q, p);
-        _square_and_multiply(t, n, Q, p);
-        BIG_copy(exp, Q);
-        BIG_inc(exp, 1);
-        BIG_shr(exp, 1); //exp = (Q+1)/2
-        _square_and_multiply(R, n, exp, p);
 
-        if(BIG_iszilch(t)) {
-            BIG_zero(r);
-            return;
-        }
-        int i;
-        while (!BIG_isunity(t)) {
-            i = 0;
-            BIG_copy(T, t);
-            do {
-                BIG_modsqr(T,T,p);
-                i++;
-            } while(!BIG_isunity(T));
-            BIG_copy(b, c);
-            for(int j = 0; j< M-i-1; j++){
-                BIG_modsqr(b, b, p);
-            }
-            M = i;
-            BIG_modsqr(c, b, p);
-            BIG_modmul(t, t, c, p);
-            BIG_modmul(R, R, b, p);
-        }
-        BIG_copy(r, R);
-        return;
-    }
-}
+/*** Compute the modular inverse of a large integer y modulo another large integer m. 
+	*The modular inverse of y modulo m is a value x such that: x*y = 1 mod m
 
-/* Tonelli-Shanks algorithm. Given as input two bigs n and p compute the square root of n modulo p 
-	where p is an odd prime and n is a square modulo p */
-static int big_modsqrt(lua_State *L){
-	BEGIN();
-	char *failed_msg = NULL;
-	big *n = big_arg(L, 1);
-	big *p = big_arg(L, 2);
-	if(!n || !p) {
-		failed_msg = "Could not create BIG";
-		goto end;
-	}
-	if(n->doublesize || p->doublesize) {
-		failed_msg = "modsqrt not supported on double big numbers";
-		goto end;
-	}
+	@function big:modinv
+	@param m the modulus 
+	@return the result of the modular inverse computation
+	@usage 
+	--create two Big numbers y and m
+	y = big.from_decimal("123234442341233983797129732792324343")
+	m = big.from_decimal("165257575713243243323242243423")
+	--compute x
+	print(y:modinv(m):decimal())
+	--print: 59313399677853266981606933073
 
-	//check if the input n is a quadratic residue modulo p
-	if (BIG_jacobi(n->val, p->val) != 1) {
-		failed_msg = "n is not a square modulo p";
-		goto end;
-	}
-	
-	big *r = big_new(L);
-	if(!r) {
-		failed_msg = "Could not create BIG";
-		goto end;
-	}
-	big_init(L,r);
-	_modsqrt(r->val, n->val, p->val);
-	BIG_norm(r->val);
-end:
-	big_free(L, n);
-	big_free(L, p);
-	if(failed_msg){
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
+ */
 static int big_modinv(lua_State *L) {
 	BEGIN();
 	big *y = big_arg(L, 1);
@@ -1511,239 +2131,13 @@ static int big_modinv(lua_State *L) {
 	END(1);
 }
 
-// algebraic sum (add and sub) taking under account zencode sign
-static void _algebraic_sum(big *c, big *a, big *b, char *failed_msg) {
-	if (a->zencode_positive == b->zencode_positive) {
-		BIG_add(c->val, a->val, b->val);
-		c->zencode_positive = a->zencode_positive;
-	} else {
-		int res = _compare_bigs(a,b,failed_msg);
-		// a and b have opposite sign, so I do the bigger minus the
-		// smaller and take the sign of the bigger
-		if(res > 0) {
-			BIG_sub(c->val, a->val, b->val);
-			c->zencode_positive = a->zencode_positive;
-		} else {
-			BIG_sub(c->val, b->val, a->val);
-			c->zencode_positive = b->zencode_positive;
-		}
-	}
-}
 
-static int big_zenadd(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	big *a = big_arg(L, 1);
-	big *b = big_arg(L, 2);
-	big *c = big_new(L);
-	if(!a || !b || !c) {
-		failed_msg = "Could not create BIG";
-		goto end;
-	}
-	big_init(L,c);
-	_algebraic_sum(c, a, b, failed_msg);
-end:
-	big_free(L,b);
-	big_free(L,a);
-	if(failed_msg) {
-		THROW("Could not create BIG");
-	}
-	END(1);
-}
 
-static int big_zensub(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	big *a = big_arg(L, 1);
-	big *b = big_arg(L, 2);
-	big *c = big_new(L);
-	if(!a || !b || !c) {
-		failed_msg = "Could not create BIG";
-		goto end;
-	}
-	big_init(L,c);
-	b->zencode_positive = BIG_OPPOSITE(b->zencode_positive);
-	_algebraic_sum(c, a, b, failed_msg);
-	b->zencode_positive = BIG_OPPOSITE(b->zencode_positive);
-end:
-	big_free(L,b);
-	big_free(L,a);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
+/*** Check the parity (whether a number is even or odd) of a Big number.
 
-// the result is expected to be inside a BIG
-static int big_zenmul(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	big *a = big_arg(L, 1);
-	big *b = big_arg(L, 2);
-	if(!a || !b) {
-		failed_msg = "Could not create BIG";
-		goto end;
-	}
-	if(a->doublesize || b->doublesize) {
-		failed_msg = "cannot multiply double BIG numbers";
-		goto end;
-	}
-	//BIG_norm(a->val); BIG_norm(b->val);
-	DBIG result;
-	BIG top;
-	big *bottom = big_new(L);
-	if(!bottom) {
-		failed_msg = "could not create BIG";
-		goto end;
-	}
-	big_init(L,bottom);
-	BIG_mul(result, a->val, b->val);
-	BIG_sdcopy(bottom->val, result);
-	BIG_sducopy(top, result);
-	// check that the result is a big (not a dbig)
-	if(!iszero(top)) {
-		failed_msg = "the result is too big";
-		goto end;
-	}
-	bottom->zencode_positive = BIG_MULSIGN(a->zencode_positive, b->zencode_positive);
-end:
-	big_free(L,b);
-	big_free(L,a);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-static int big_zendiv(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	big *a = big_arg(L, 1);
-	big *b = big_arg(L, 2);
-	if(!a || !b) {
-		failed_msg = "Could not create BIG";
-		goto end;
-	}
-	if(a->doublesize || b->doublesize) {
-		failed_msg = "cannot multiply double BIG numbers";
-		goto end;
-	}
-	DBIG dividend;
-	BIG_dzero(dividend);
-	dcopy(dividend, a->val);
-	big *result = big_new(L);
-	if(!result) {
-		failed_msg = "Could not create BIG";
-		goto end;
-	}
-	big_init(L,result);
-	BIG_ddiv(result->val, dividend, b->val);
-	result->zencode_positive = BIG_MULSIGN(a->zencode_positive, b->zencode_positive);
-end:
-	big_free(L,b);
-	big_free(L,a);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-static int big_zenpositive(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	big *a = big_arg(L, 1);
-	if(!a) {
-		failed_msg = "Could not create BIG";
-		goto end;
-	}
-	lua_pushboolean(L, a->zencode_positive == BIG_POSITIVE);
-end:
-	big_free(L,a);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-static int big_zenmod(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	big *a = big_arg(L, 1);
-	big *b = big_arg(L, 2);
-	if(!a || !b) {
-		failed_msg = "Could not create BIG";
-		goto end;
-	}
-	if(a->doublesize || b->doublesize) {
-		failed_msg = "cannot multiply double BIG numbers";
-		goto end;
-	}
-	if(a->zencode_positive == BIG_NEGATIVE || b->zencode_positive == BIG_NEGATIVE) {
-		failed_msg = "modulo operation only available with positive numbers";
-		goto end;
-	}
-	big *result = big_new(L);
-	if(!result) {
-		failed_msg = "could not create BIG";
-		goto end;
-	}
-	big_init(L,result);
-	BIG_copy(result->val, a->val);
-	BIG_mod(result->val, b->val);
-	result->zencode_positive = BIG_POSITIVE;
-end:
-	big_free(L,b);
-	big_free(L,a);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-static int big_zenopposite(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	big *a = big_arg(L, 1);
-	if(!a) {
-		failed_msg = "Could not create BIG";
-		goto end;
-	}
-	big *result = big_dup(L, a);
-	if(!result) {
-		failed_msg = "Could not copy BIG";
-		goto end;
-	}
-	result->zencode_positive = BIG_OPPOSITE(result->zencode_positive);
-end:
-	big_free(L,a);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-static int big_isinteger(lua_State *L) {
-	BEGIN();
-	int result = 0;
-	if(lua_isinteger(L, 1)) {
-		result = 1;
-	} else if(lua_isstring(L, 1)) {
-		int i = 0;
-		const char *arg = lua_tostring(L, 1);
-		if(arg[i] == '-') {
-			i++;
-		}
-		result = 1;
-		while(result == 1 && arg[i] != '\0') {
-			if(arg[i] < '0' || arg[i] > '9') {
-				result = 0;
-			}
-			i++;
-		}
-	}
-	lua_pushboolean(L, result);
-	END(1);
-}
-
+	@function big:parity
+	@return boolean value (true if odd, false if even)
+ */
 static int big_parity(lua_State *L) {
 	BEGIN();
 	big *c = big_arg(L, 1);
@@ -1756,6 +2150,12 @@ static int big_parity(lua_State *L) {
 	END(1);
 }
 
+/*** Perform a right shift operation on a Big number (c) by a specified number of bits (n).
+
+	@function big:__shr
+	@param n the number of bits to shift
+	@return the result of the right shift operation
+ */
 static int big_shiftr(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;

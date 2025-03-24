@@ -19,6 +19,34 @@
 --
 --]]
 
+--- <h1>BBS signature scheme</h1>
+--
+-- The BBS signature scheme (also known as the Boneh-Boyen-Shacham signature scheme) 
+-- is a cryptographic signature scheme based on pairing-based cryptography: the BBS scheme is particularly 
+-- notable for its use of bilinear pairings on elliptic curves,
+-- which enable efficient verification and compact signatures. 
+-- It is a probabilistic digital signature scheme based on the discrete logarithm problem, i.e.
+-- the difficult of finding the dicrete logarithm in a gruop of prime order.
+-- 
+-- The BBS signature scheme utilizes two elliptic curves in its construction:
+-- E1: y ^ 2 = x ^ 3 + 4 defined over the finite field GF(p). 
+--
+-- E2: y ^ 2 = x ^ 3 + 4 * (I + 1) where I ^ 2 + 1 = 0 defined over the finite field GF(p^2)
+--
+-- where p = (t - 1)^2 * (t^4 - t^2 + 1) / 3 + t and t = -2^63 - 2^62 - 2^60 - 2^57 - 2^48 - 2^16.
+-- 
+-- Let be observed that p is not a prime number and the two subgroups G1 and G2 of E1 and E2 are 
+-- the two groups used for the pairing having the same order 
+-- r = 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001 which is a prime factor of p.
+--
+-- Public keys and key generation are considered as points in G2 and signatures as point in G1.
+-- This choice allows to provide short signatures with strong security guarantees.
+-- 
+-- 
+--
+-- @module BBS
+
+
 -- optimized C extension for map to point
 local fastBBS = require("bbs")
 local bbs = {}
@@ -67,6 +95,20 @@ local CIPHERSUITE_SHA = {
     O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_H2G_HM2S_SIG_GENERATOR_SEED_"), 48)
 }
 -- Take as input the hash as string and return a table with the corresponding parameters
+
+--- Return a specific ciphersuite based on the provided hash name. 
+-- There are two possibilities for the output: the configuration for SHAKE-256 or the configuration for SHA-256.
+--
+--@function BBS.ciphersuite
+--@param hash a string with the name of the hash function, sha256 or shake256
+--@return a ciphersuite configuration
+--@usage
+--bbs = require'crypto_bbs'
+--**select the hash sha256
+--suite = bbs.ciphersuite('sha256')
+--**print for example the ciphersuite ID
+--print(suite.ciphersuite_ID)
+--**print: BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_
 function bbs.ciphersuite(hash_name)
     -- seed_len = 48
     if hash_name:lower() == 'sha256' then
@@ -120,6 +162,30 @@ INPUT: key_material, key_info, key_dst (all as zenroom.octet), ciphersuite (as a
 table shown at lines 14 and 30)
 OUTPUT: sk (as zenroom.octet), it represents a scalar between 1 and the order of the EC minus 1
 ]]
+
+---Generate a secret key (sk) for use in cryptographic operations. 
+--The function uses a provided ciphersuite, key material, key info, and domain separation tag (DST) to derive the secret key. 
+--The ciphersuite is a table containing the cipher suite configuration.
+--Key material is an optional input used as the seed for key generation. If not provided, a secure random value of 32 bytes is generated.
+--Key info is an optional addition information. If not provided, it defaults to an empty octet. 
+--key DST is an optional domain separation tag. If not provided, it defaults to the ciphersuite's ciphersuite\_ID concatenated with the string 'KEYGEN\_DST\_'.
+--
+--@function BBS.keygen
+--@param ciphersuite 
+--@param key_material
+--@param key_info 
+--@param key_dst
+--@return sk, a private key 32 bytes long
+--@usage 
+--bbs = require'crypto_bbs'
+--**generate ciphersuite and  key_m, key_info, key_dst as random octet of 32 bytes
+--ciphersuite = bbs.ciphersuite('sha256') 
+--key_material = O.random(32)
+--key_info = O.random(32)
+--key_dst = O.randopm(32)
+--**calculate the private key
+--sk = bbs.keygen(ciphersuite, key_material, key_info, key_dst)
+
 function bbs.keygen(ciphersuite, key_material, key_info, key_dst)
     key_material = key_material or O.random(32) -- O.random is a secure RNG.
     if not ciphersuite then
@@ -205,6 +271,27 @@ end
 
 -- draft-irtf-cfrg-hash-to-curve-16 section 5.2
 -- It returns u a table of tables containing big integers representing elements of the field (SPECIFIC CASE m = 1, count = 2)
+
+---Hash a message into two field elements in the prime field of an elliptic curve.
+--This is a common operation in cryptographic protocols,  
+--where messages need to be mapped to field elements.
+--The third input of the function, the domain separation tag, ensures that the same input message can be hashed differently 
+--for different purposes, preventing collisions or unintended reuse of hash outputs.
+--
+--@function BBS.hash_to_field_m1_c2
+--@param ciphersuite
+--@param msg the input message to be hashed
+--@param dst a domain separation tag
+--@return a table containing the two field elements
+--@usage 
+--bbs = require'crypto_bbs'
+--**define a ciphersuite, a DST and a random message
+--ciphersuite = bbs.ciphersuite('sha256') 
+--DST_hash_to_field = 'QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_'
+--msg = O.random(32)
+--**return the table H. H[1] and H[2] will be the two field elements
+--H = bbs.hash_to_field_m1_c2(ciphersuite, msg, DST_hash_to_field)
+
 function bbs.hash_to_field_m1_c2(ciphersuite, msg, dst)
     local p = ECP.prime()
     local L = 64
@@ -227,6 +314,26 @@ end
 --HASH TO CURVE AND CREATE GENERATORS ARE VERY SLOW, MAYBE BETTER TO IMPLEMENT SOMETHING IN C SEE https://github.com/dyne/Zenroom/issues/642  
 -- draft-irtf-cfrg-hash-to-curve-16 Section 3
 -- It returns a point in the correct subgroup.
+
+---Hash a message to a point on an elliptic curve. This is a common operation in cryptographic protocols, where messages 
+--need to be mapped to curve points for operations like signing and verification.
+--It uses @{hash_to_field_m1_c2} function to hash the message into two field elements 
+--that are mapped to a point on the elliptic curve.
+--
+--@function BBS.hash_to_curve
+--@param ciphersuite 
+--@param msg the input message to be hashed
+--@param dst a domain separation tag
+--@return the final curve point after clearing the cofactor
+--@usage 
+--bbs = require'crypto_bbs'
+--**define a ciphersuite, a DST and a random message
+--ciphersuite = bbs.ciphersuite('sha256') 
+--DST_hash_to_field = 'QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_'
+--msg = O.random(32)
+--**return the curve point
+--P = bbs.hash_to_curve(ciphersuite, msg, DST_hash_to_field)
+
 function bbs.hash_to_curve(ciphersuite, msg, dst)
     -- local u = bbs.hash_to_field_m1(msg, 2, DST)
     local p = ECP.prime()
@@ -238,6 +345,24 @@ end
 
 --draft-irtf-cfrg-bbs-signatures Section 4.2
 --It returns an array of generators.
+
+---Create a set of cryptographic generators. 
+--These generators are points on an elliptic curve and are used in operations like signing and verification. 
+--The function ensures that the generators are created deterministically and securely, 
+--based on a seed value and domain separation tags.
+--
+--@function BBS.create_generators
+--@param ciphersuite
+--@param count the number of generators to create
+--@return the first 'count' generators from the ciphersuite.GENERATORS table
+--@usage
+--bbs = require'crypto_bbs'
+--**define a ciphersuite and a count
+--ciphersuite = bbs.ciphersuite('sha256') 
+--count = 5
+--**return a table G of 5 generators
+--G = bbs.create_generators(ciphersuite,count)
+
 function bbs.create_generators(ciphersuite, count)
     if count > 2^64 -1 then error("Message's number too big. At most 2^64-1 message allowed") end
 
@@ -265,6 +390,24 @@ The main difference is that in the new verison we can transform a set of message
 INPUT: messages (a vector of zenroom.octet where index starts from 1), api_id (as zenroom.octet) which FOR NOW is stored in the ciphersuite for simplicity.
 OUTPUT: msg_scalars (a vector of scalars stored as zenroom.octet)
 ]]
+
+---Convert a list of messages, a vector of octets, into a list of scalar values using a cryptographic hash function.
+--
+--@function BBS.messages_to_scalars
+--@param ciphersuite
+--@param messages a set of messages
+--@return a vector of scalars stored as octet
+--@usage 
+--bbs = require'crypto_bbs'
+--**define a ciphersuite and a set of random messages
+--ciphersuite = bbs.ciphersuite('sha256') 
+--map_messages_to_scalar_messages = {
+--    O.random(32),
+--    O.random(64),
+--    O.random(16)  
+--}
+--**return a vector of octets
+--output_scalar = bbs.messages_to_scalars(ciphersuite,map_messages_to_scalar_messages)
 
 function bbs.messages_to_scalars(ciphersuite, messages)
 
@@ -379,6 +522,28 @@ INPUT: ciphersuite , sk (as zenroom.octet), pk (as zenroom.octet), header (as ze
 header (as zenroom.octet).
 OUTPUT: the signature (A,e)
 ]]
+
+---The Sign operation returns a BBS signature from a secret key (sk), over a header and a set of messages. 
+--It uses the <code>core_sign</code> function, that computes a deterministic signature from a secret key (sk), a set of generators (points of G1) 
+--and optionally a header and a vector of messages.
+--
+--@function BBS.sign
+--@param ciphersuite 
+--@param sk the secret key as an octet
+--@param header
+--@param messages array of octet strings stored as octet
+--@return the signature 
+--@usage 
+--bbs = require'crypto_bbs'
+--**define a ciphersuite, a secret key, a public key, an header and a message 
+--ciphersuite = bbs.ciphersuite('sha256') 
+--SECRET_KEY = "60e55110f76883a13d030b2f6bd11883422d5abde717569fc0731f51237169fc"
+--HEADER = "11223344556677889900aabbccddeeff"
+--SINGLE_MSG_ARRAY = { O.from_hex("9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02") }
+--**calculate the signature for the given message
+--output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(HEADER), SINGLE_MSG_ARRAY)
+
+
 function bbs.sign(ciphersuite, sk, header, messages_octets)
 
     -- Default values for header and messages.
@@ -420,6 +585,22 @@ local function octets_to_signature(signature_octets)
 end
 
 --draft-irtf-cfrg-bbs-signatures Section 4.7.6
+
+---Ensure that the public key is valid, in the right subgroup, and not the identity element.
+--It converts the public key (pk) into a point W on the elliptic curve in G2 and checks if W is in the correct subgroup.
+--
+--@function BBS.octets_to_pub_key
+--@param pk the public key
+--@return the point W 
+--@usage 
+--bbs = require'crypto_bbs'
+--**define a ciphersuite and a public key
+--ciphersuite = bbs.ciphersuite('sha256') 
+--PUBLIC_KEY = "a820f230f6ae38503b86c70dc50b61c58a77e45c39ab25c0652bbaa8fa136f2851bd4781c9dcde39fc9d1d52c9e60268061e7d7632171d
+--              91aa8d460acee0e96f1e7c4cfb12d3ff9ab5d5dc91c277db75c845d649ef3c4f63aebc364cd55ded0c"
+--**calculate the point W
+--W = bbs.octets_to_pub_key(O.from_hex(PUBLIC_KEY))
+
 function bbs.octets_to_pub_key(pk)
     local W = ECP2.from_zcash(pk)
 
@@ -472,6 +653,23 @@ DESCRIPTION: The Verify operation validates a BBS signature, given a public key 
 INPUT: ciphersuite (a table), pk (as zenroom.octet), signature (as zenroom.octet), messages (array of octet strings as zenroom.octet), header (as zenroom.octet).
 OUTPUT: a boolean, true or false 
 ]]
+
+---Validate a BBS signature. To do this it uses the <code>core_verify</code> function, which verify if the signature is valid.
+--
+--@function BBS.verify
+--@param ciphersuite
+--@param pk the public key as an octet
+--@param signature as an octet 
+--@param header
+--@param messages an array of octet strings as octet
+--@return a boolean, true if the signature is valid, false otherwise
+--@usage 
+--**from the usage in the sign function, check if the signature is valid
+--if bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), SINGLE_MSG_ARRAY) then print ("valid signature")
+--else print("invalid signature")
+--end
+--**print:valid signature
+
 function bbs.verify(ciphersuite, pk ,signature, header, messages_octets)
     messages_octets = messages_octets or O.empty{}
     local messages = bbs.messages_to_scalars(ciphersuite,messages_octets)
@@ -481,7 +679,7 @@ end
 
 
 
-
+--[[
 ---------------------------------
 -- Credentials:ProofGen,ProofVerify -------
 ---------------------------------
@@ -489,9 +687,20 @@ end
 ---------------------------------
 ---------------------------------
 ---------------------------------
+]]
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 4.1
 -- It returns count random scalar.
+
+---Generate a table of random scalars that are uniformly distributed modulo the ECP order.
+--
+--@function BBS.calculate_random_scalars
+--@param count number of random scalars to generate
+--@return a table of uniformly distributed random scalars modulo the ECP order
+--@usage 
+--**generate a table of 5 random scalars
+--T = bbs.calculate_random_scalars(5)
+
 function bbs.calculate_random_scalars(count)
     local scalar_array = {}
     --[[ This does not seem uniformly random:
@@ -679,6 +888,34 @@ zenroom.octet), disclosed_indexes (vector of number)
 OUTPUT: proof (output of CoreProofGen)
 ]]
 
+---Allow a user to prove knowledge of a valid signature while selectively revealing some messages and keeping others hidden.
+--It uses other functions during the process. In particular, the <code>proof\_init()</code> function constructs commitments using the signature, public key, message generators, and random scalars.
+--The <code>proof\_challenge\_calculate</code> function generates a challenge value from the commitments. The <code>proof\_finalize</code> function 
+--computes the final proof values based on the challenge and initial commitments.
+--
+--@function BBS.proof_gen
+--@param ciphersuite
+--@param pk the public key
+--@param signature
+--@param header
+--@param ph the presentation header
+--@param messages an array of messages
+--@param indexes an array of indexes of messages the prover wants to reveal
+--@return a zero-knowledge proof that can be verified without revealing the entire signature.
+--@usage 
+--bbs = require'crypto_bbs'
+--**define ciphersuite, sk, pk, header, single message array, presentation header and calculate a valid signature
+--ciphersuite = bbs.ciphersuite('sha256') 
+--SECRET_KEY = "60e55110f76883a13d030b2f6bd11883422d5abde717569fc0731f51237169fc"
+--PUBLIC_KEY = "a820f230f6ae38503b86c70dc50b61c58a77e45c39ab25c0652bbaa8fa136f2851bd4781c9dcde39fc9d1d52c9e60268061e7d7
+--              632171d91aa8d460acee0e96f1e7c4cfb12d3ff9ab5d5dc91c277db75c845d649ef3c4f63aebc364cd55ded0c"
+--HEADER = "11223344556677889900aabbccddeeff"
+--SINGLE_MSG_ARRAY = { O.from_hex("9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02") }
+--PRESENTATION_HEADER = O.from_hex("bed231d880675ed101ead304512e043ade9958dd0241ea70b4b3957fba941501")
+--output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(HEADER), SINGLE_MSG_ARRAY)
+--**return the proof like an octet
+--pg_output = bbs.proof_gen(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1})
+
 function bbs.proof_gen(ciphersuite, pk, signature, header, ph, messages, disclosed_indexes)
     header = header or O.empty()
     ph = ph or O.empty()
@@ -827,6 +1064,28 @@ INPUT: ciphersuite (a table), pk (as zenroom.octet), proof (as zenroom.octet), h
 disclosed_messages (array of octet strings), disclosed_indexes( an array of positive integers) .
 OUTPUT: a boolean true or false   
 ]]
+
+---It is responsible for validating a BBS proof. This proof was generated by @{proof_gen} and allows a verifier to confirm that a signer possesses a valid BBS 
+--signature while selectively revealing only some signed messages.
+--It uses some other functions: the <code>octets\_to\_proof</code> function converts the proof octet string into its mathematical components (group elements and scalars).
+--The <code>proof\_verify\_init</code> function computes the expected commitments for disclosed and undisclosed messages.
+--The <code>proof\_challenge\_calculate</code> ensures that the challenge scalar was computed correctly.
+--
+--@function BBS.proof_verify
+--@param ciphersuite
+--@param pk the public key
+--@param header
+--@param ph the presentation header
+--@param messages an array of messages
+--@param indexes an rray of indexes specifying which messages were disclosed
+--@return true if the proof is valid, false otherwise
+--@usage 
+--**from the usage in the proof_gen function, check if the proof is valid
+--if  bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_output, O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1}) then print("valid proof")
+--else print("invalid proof")
+--end
+--**print: valid proof
+
 function bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages_octets, disclosed_indexes)
 
     local proof_len_floor = 3*OCTET_POINT_LENGTH + 4*OCTET_SCALAR_LENGTH

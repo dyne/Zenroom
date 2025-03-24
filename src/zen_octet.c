@@ -18,7 +18,7 @@
  *
  */
 
-/// <h1>Base data type for cryptographic opearations</h1>
+/// <h1>Array of raw bytes: base data type in Zenroom</h1>
 //
 //  Octets are <a
 //  href="https://en.wikipedia.org/wiki/First-class_citizen">first-class
@@ -375,7 +375,7 @@ Create a new octet with a specified maximum size, or a default if
 omitted. All operations exceeding the octet's size will truncate
 excessing data. Octets cannot be resized.
 
-@function OCTET.new(length)
+@function OCTET.new
 @int[opt=64] length maximum length in bytes
 @return octet newly instantiated octet
 */
@@ -402,9 +402,9 @@ end:
 }
 
 /***
-Create a new octet of size 0
+Create a new octet of size 0.
 
-@function OCTET.empty()
+@function OCTET.empty
 @return octet newly instantiated octet
 */
 static int new_empty_octet (lua_State *L) {
@@ -427,106 +427,31 @@ end:
 	END(1);
 }
 
-static int filloctet(lua_State *L) {
-	BEGIN();
-	int i;
-	octet *o = (octet*) luaL_testudata(L, 1, "zenroom.octet");
-
-	octet *fill = (octet*) luaL_testudata(L, 2, "zenroom.octet");
-
-	for(i=0; i<o->max; i++)
-		o->val[i] = fill->val[i % fill->len];
-	o->len = o->max;
-	END(0);
-}
-
 /***
+	Generate an octet of specified length containing random bytes.
 
-Bitwise XOR operation on two octets padded to reach the same length, returns a new octet.
-Results in a newly allocated octet, does not change the contents of any other octet involved.
-
-	@param dest leftmost octet used in XOR operation
-	@param source rightmost octet used in XOR operation
-	@function OCTET.xor_grow(dest, source)
-	@return a new octet resulting from the operation
+	@function OCTET.random
+	@param len a specified length
+	@return random octet of specified length
 */
-static int xor_grow(lua_State *L) {
+static int new_random(lua_State *L) {
 	BEGIN();
-	char *failed_msg = NULL;
-	const octet *x = o_arg(L, 1);
-	const octet *y = o_arg(L, 2);
-	if(!x || !y) {
-		failed_msg = "Could not allocate OCTET";
-		goto end;
-	}
-	int max = _max(x->len, y->len);
-	octet *n = o_new(L,max);
-	if(!n) {
-		failed_msg = "Could not create OCTET";
-		goto end;
-	}
-	octet *tx = o_alloc(L,max);
-	memcpy(tx->val,x->val,x->len);
-	tx->len = x->len;
-	OCT_pad(tx, max);
-
-	octet *ty = o_alloc(L,max);
-	memcpy(ty->val,y->val,y->len);
-	ty->len = y->len;
-	OCT_pad(ty, max);
-
-	o_free(L, x);
-	o_free(L, y);
-
-	OCT_copy(n, tx);
-	OCT_xor(n, ty);
-end:
-	o_free(L, tx);
-	o_free(L, ty);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
+	int tn;
+	lua_Number n = lua_tonumberx(L, 1, &tn);
+	octet *o = o_new(L,(int)n);
+	Z(L);
+	OCT_rand(o, Z->random_generator, (int)n);
 	END(1);
 }
 
 /***
+	Check if a Lua string is a valid base64-encoded string.
+	*If the string is valid base64, it pushes true, otherwise it pushes false onto the Lua stack.
 
-Bitwise XOR operation on two octets truncating at the shortest one length, returns a new octet.
-This is also executed when using the '<b>~</b>' operator between two
-octets. Results in a newly allocated octet, does not change the
-contents of any other octet involved.
-
-	@param dest leftmost octet used in XOR operation
-	@param source rightmost octet used in XOR operation
-	@function OCTET.xor_shrink(dest, source)
-	@return a new octet resulting from the operation
-*/
-static int xor_shrink(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	const octet *x = o_arg(L, 1);
-	const octet *y = o_arg(L, 2);
-	if(HEDLEY_UNLIKELY(!x || !y)) {
-		failed_msg = "Could not allocate OCTET";
-		goto end;
-	}
-	int min = _min(x->len, y->len);
-	octet *n = o_new(L,min);
-	if(HEDLEY_UNLIKELY(!n)) {
-		failed_msg = "Could not create OCTET";
-		goto end;
-	}
-	OCT_copy(n, (octet*)x);
-	OCT_xor(n, (octet*)y);
-end:
-	o_free(L, x);
-	o_free(L, y);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
+	@function OCTET.is_base64
+	@param s a Lua string
+	@return a boolean value
+ */
 static int lua_is_base64(lua_State *L) {
 	BEGIN();
 	const char *s = lua_tostring(L, 1);
@@ -540,6 +465,14 @@ static int lua_is_base64(lua_State *L) {
 	END(1);
 }
 
+/***
+	Check if a Lua string is a valid url64-encoded string.
+	*If the string is valid url64, it pushes true, otherwise it pushes false onto the Lua stack.
+
+	@function OCTET.is_url64
+	@param s a Lua string
+	@return a boolean value
+ */
 static int lua_is_url64(lua_State *L) {
 	BEGIN();
 	const char *s = lua_tostring(L, 1);
@@ -553,6 +486,14 @@ static int lua_is_url64(lua_State *L) {
 	END(1);
 }
 
+/***
+	Check if a Lua string is a valid base58-encoded string.
+	*If the string is valid base58, it pushes true, otherwise it pushes false onto the Lua stack.
+
+	@function OCTET.is_base58
+	@param s a Lua string
+	@return a boolean value
+ */
 static int lua_is_base58(lua_State *L) {
 	BEGIN();
 	const char *s = lua_tostring(L, 1);
@@ -566,6 +507,14 @@ static int lua_is_base58(lua_State *L) {
 	END(1);
 }
 
+/***
+	Check if a Lua string is a valid hexadecimal-encoded string.
+	*If the string is valid hex, it pushes true, otherwise it pushes false onto the Lua stack.
+
+	@function OCTET.is_hex
+	@param s a Lua string
+	@return a boolean value
+ */
 static int lua_is_hex(lua_State *L) {
 	BEGIN();
 	const char *s = lua_tostring(L, 1);
@@ -578,6 +527,16 @@ static int lua_is_hex(lua_State *L) {
 	lua_pushboolean(L, 1);
 	END(1);
 }
+
+/***
+	Check if a Lua string is a valid bin-encoded string.
+	*If the string is valid bin, it pushes true, otherwise it pushes false onto the Lua stack.
+
+	@function OCTET.is_bin
+	@param s a Lua string
+	@return a boolean value
+ */
+
 static int lua_is_bin(lua_State *L) {
 	BEGIN();
 	const char *s = lua_tostring(L, 1);
@@ -593,6 +552,15 @@ static int lua_is_bin(lua_State *L) {
 
 // to emulate 128bit counters, de facto truncate integers to 64bit
 typedef struct { uint64_t high, low; } uint128_t;
+
+/***
+Convert a Lua integer into a 16-byte octet object, 
+padding the upper 8 bytes with zeros and handling endianness.
+
+	@function OCTET.from_number
+	@param num Lua integer
+	@return 16-byte octet object 
+ */
 static int from_number(lua_State *L) {
 	BEGIN();
 	// number argument, import
@@ -639,6 +607,14 @@ static int from_rawlen (lua_State *L) {
 	END(1);
 }
 
+/***
+Decode a base64-encoded string into an octet object, 
+after checking if the input string is valid base64.
+
+	@function OCTET.from_base64
+	@param str base64-encoded string 
+	@return decoded octet object
+ */
 static int from_base64(lua_State *L) {
 	BEGIN();
 	const char *s = lua_tostring(L, 1);
@@ -654,6 +630,14 @@ static int from_base64(lua_State *L) {
 	END(1);
 }
 
+/***
+Decode a url64-encoded string into an octet object, 
+after checking if the input string is valid url64.
+
+	@function OCTET.from_url64
+	@param str url64-encoded string 
+	@return decoded octet object
+ */
 static int from_url64(lua_State *L) {
 	BEGIN();
 	const char *s = lua_tostring(L, 1);
@@ -670,6 +654,14 @@ static int from_url64(lua_State *L) {
 	END(1);
 }
 
+/***
+Decode a base58-encoded string into an octet object, 
+after checking if the input string is valid base58.
+
+	@function OCTET.from_base58
+	@param str base58-encoded string 
+	@return decoded octet object
+ */
 static int from_base58(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -705,6 +697,15 @@ end:
 	END(1);
 }
 
+/***
+Convert a string into an octet object, 
+after checking if the input is a valid string.
+
+	@function OCTET.from_string
+	@param str string 
+	@return convert octet object
+ */
+
 static int from_string(lua_State *L) {
 	BEGIN();
 	const char *s = lua_tostring(L, 1);
@@ -721,6 +722,15 @@ static int from_string(lua_State *L) {
 	o->len = i;
 	END(1);
 }
+
+/***
+Decode an hexadecimal-encoded string into an octet object, 
+after checking if the input string is valid hexadecimal.
+
+	@function OCTET.from_hex
+	@param str hexadecimal-encoded string 
+	@return decoded octet object
+ */
 
 static int from_hex(lua_State *L) {
 	BEGIN();
@@ -762,6 +772,13 @@ static int from_hex(lua_State *L) {
 	END(1);
 }
 
+/***
+Convert a binary string (composed of '0' and '1' characters) into an octet object.
+
+	@function OCTET.from_bin
+	@param bin binary string 
+	@return convert octet object
+ */
 // I'm quite happy about this: its fast and secure. It can just be
 // made more elegant.
 static int from_bin(lua_State *L) {
@@ -800,14 +817,16 @@ static int from_bin(lua_State *L) {
 	END(1);
 }
 
-/*
+/*** 
   In the bitcoin world, addresses are the hash of the public key (binary data).
   However, the user usually knows them in some encoded form (which also include
   some error check mechanism, to improve security against typos). Bech32 is the
   format used with segwit transactions.
-  @param s Address encoded as Bech32(m)
-  @treturn[1] Address as binary data
-  @treturn[2] Segwit version (version 0 is Bech32, version >0 is Bechm)
+
+	@function OCTET.from_segwit
+  	@param s Address encoded as Bech32(m)
+  	@treturn[1] Address as binary data
+  	@treturn[2] Segwit version (version 0 is Bech32, version >0 is Bechm)
 */
 static int from_segwit_address(lua_State *L) {
 	BEGIN();
@@ -839,14 +858,17 @@ static int from_segwit_address(lua_State *L) {
 	lua_pushinteger(L,witver);
 	END(2);
 }
-/*
-  For an introduction see `from_segwit_address`
+
+/*** 
+  For an introduction see `from_segwit`.
   HRP (human readble part) are the first characters of the address, they can
-  be bc (bitcoin network) or tb (testnet network)
-  @param o Address in binary format (octet with the result of the hash160)
-  @param witver Segwit version
-  @param s HRP
-  @return Bech32(m) encoded string
+  be bc (bitcoin network) or tb (testnet network).
+	
+	@function OCTET:to_segwit
+  	@param o Address in binary format (octet with the result of the hash160)
+  	@param witver Segwit version
+  	@param s HRP
+  	@return Bech32(m) encoded string
 */
 static int to_segwit_address(lua_State *L) {
 	BEGIN();
@@ -919,27 +941,42 @@ end:
 	END(1);
 }
 
-static int to_mnemonic(lua_State *L) {
+/***
+Decode a base45-encoded string into an octet object, 
+after checking if the input string is valid base45.
+
+	@function OCTET.from_base45
+	@param str base45-encoded string 
+	@return decoded octet object
+ */
+
+static int from_base45(lua_State *L) {
 	BEGIN();
-	const octet *o = o_arg(L,1);
-	if(!o->len) { lua_pushnil(L); o_free(L,o); return 1; }
-	if(o->len > 32) {
-		zerror(L, "%s :: octet bigger than 32 bytes cannot be encoded to mnemonic",__func__);
-		o_free(L,o);
-		lua_pushboolean(L, 0);
-		END(0);
+	const char *s = lua_tostring(L, 1);
+	luaL_argcheck(L, s != NULL, 1, "base45 string expected");
+	int len = is_base45(s);
+	if(len < 0) {
+		lerror(L, "base45 string contains invalid characters");
+		return 0;
 	}
-	char *result = malloc(24 * 10);
-	if(mnemonic_from_data(result, o->val, o->len)) {
-		lua_pushstring(L, result);
-	} else {
-		zerror(L, "%s :: cannot be encoded to mnemonic", __func__);
-		lua_pushboolean(L, 0);
+	octet *o = o_new(L, len);
+	len = b45decode(o->val, s);
+	if(len < 0) {
+		lerror(L, "base45 invalid string");
+		return 0;
 	}
-	o_free(L,o);
-	free(result);
+	o->len = len;
 	END(1);
 }
+
+/***
+Decode a mnemonic-encoded string into an octet object, 
+after checking if the input string is valid mnemonic.
+
+	@function OCTET.from_mnemonic
+	@param str mnemonic-encoded string 
+	@return decoded octet object
+ */
 
 static int from_mnemonic(lua_State *L) {
 	BEGIN();
@@ -963,13 +1000,402 @@ end:
 
 
 /***
+	Create an octet filled with zero values up to indicated size or its maximum size.
+
+	@int[opt=octet:max] length fill with zero up to this size, use maximum octet size if omitted
+	@function OCTET.zero
+	@return octet filled with zeros
+*/
+static int zero(lua_State *L) {
+	BEGIN();
+	const int len = luaL_optnumber(L, 1, MAX_OCTET);
+	if(len<1) {
+		lerror(L, "Cannot create a zero length octet");
+		return 0;
+	}
+	func(L, "Creating a zero filled octet of %u bytes", len);
+	octet *n = o_new(L,len);
+	register int i;
+	for(i=0; i<len; i++) n->val[i]=0x0;
+	n->len = len;
+	END(1);
+}
+
+/// Object Methods
+// @type OCTET
+//
+// This section lists methods that can be called as members of the
+// <b>OCTET:</b> objects, using a ":" semicolon notation instead of a
+// dot. Example synopsis:
+//
+// <pre class="example">
+// random = OCTET.random(32) -- global OCTET constructor using the dot
+// print( random:<span class="global">hex</span>() ) -- method call on the created object using the colon
+// </pre>
+//
+// In the example above we create a new "random" OCTET variable with
+// 32 bytes of randomness, then call the ":hex()" method on it to print
+// it out as an hexadecimal sequence.
+//
+// The contents of an octet object are never changed this way: methods
+// always return a new octet with the requested changes applied.
+//
+
+/***
+Encode an octet in base64 notation.
+
+@function OCTET:base64
+@return a string representing the octet's contents in base64
+
+*/
+
+static int to_base64 (lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	char *b = NULL;
+	const octet *o = o_arg(L, 1);
+	if(!o) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	if(!o->len) { lua_pushnil(L); goto end; }
+	if(!o->len || !o->val) {
+		failed_msg = "base64 cannot encode an empty octet";
+		goto end;
+	}
+	int newlen;
+	newlen = ((3+(4*(o->len/3))) & ~0x03)+0x0f;
+	b = malloc(newlen);
+	OCT_tobase64(b,(octet*)o);
+	lua_pushstring(L,b);
+end:
+	free(b);
+	o_free(L,o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/***
+	Encode an octet in url64 notation.
+
+	@function OCTET:url64
+	@return a string representing the octet's contents in url64
+*/
+static int to_url64 (lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	char *b = NULL;
+	const octet *o = o_arg(L,1);
+	if(!o) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	if(!o->len) { lua_pushnil(L); goto end; }
+	if(!o->len || !o->val) {
+		failed_msg = "url64 cannot encode an empty octet";
+		goto end;
+	}
+	int newlen;
+	newlen = B64encoded_len(o->len);
+	b = malloc(newlen);
+	// b[0]='u';b[1]='6';b[2]='4';b[3]=':';
+	U64encode(b,o->val,o->len);
+	lua_pushstring(L,b);
+end:
+	free(b);
+	o_free(L,o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+
+/*
+Print an octet in base58 notation.
+
+This encoding uses the same alphabet as Bitcoin addresses. Why base58 instead of standard base64 encoding?
+
+- Don't want 0OIl characters that look the same in some fonts and could be used to create visually identical looking data.
+- A string with non-alphanumeric characters is not as easily accepted as input.
+- E-mail usually won't line-break if there's no punctuation to break at.
+- Double-clicking selects the whole string as one word if it's all alphanumeric.
+
+	@function octet:base58()
+	@return a string representing the octet's contents in base58
+*/
+
+/***
+	Encode an octet in base58 notation.
+
+	@function OCTET:url64
+	@return a string representing the octet's contents in base58
+*/
+static int to_base58(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	char *b = NULL;
+	const octet *o = o_arg(L, 1);
+	if(!o) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	if(!o->len) { lua_pushnil(L); goto end; }
+	if(!o->len || !o->val) {
+		failed_msg = "base58 cannot encode an empty octet";
+		goto end;
+	}
+	if(o->len < 3) {
+		// there is a bug in luke-jr's implementation of base58 (fixed
+		// in bitcoin-core) when encoding strings smaller than 3 bytes
+		// the 'j' counter being unsigned and initialised at size-2 in
+		// the carry inner loop flips to 18446744073709551615
+		failed_msg = "base58 cannot encode octets smaller than 3 bytes";
+		goto end;
+	}
+	size_t maxlen = o->len <<1;
+	// TODO: find out why this breaks!
+	// debug builds work, optimized build breaks here
+	// this workaround will break base58 encoding when using memmanager=lw
+	//char *b = malloc(maxlen);
+	b = malloc(maxlen);
+	size_t b58len = maxlen;
+	b58enc(b, &b58len, o->val, o->len);
+	// b[b58len] = '\0'; // already present in libbase58
+	lua_pushstring(L,b);
+end:
+	free(b);
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/***
+	Encode an octet in base45 notation.
+
+	@function OCTET:base45
+	@return a string representing the octet's contents in base45
+*/
+
+static int to_base45 (lua_State *L) {
+	BEGIN();
+	const octet *o = o_arg(L, 1);
+	int newlen = b45encode(NULL, o->val, o->len);
+	char *b = malloc(newlen);
+	b45encode(b, o->val, o->len);
+	lua_pushstring(L, b);
+	free(b);
+	o_free(L, o);
+	END(1);
+}
+
+/***
+	Encode an octet in mnemonic notation.
+
+	@function OCTET:mnemonic
+	@return a string representing the octet's contents in mnemonic
+*/
+
+static int to_mnemonic(lua_State *L) {
+	BEGIN();
+	const octet *o = o_arg(L,1);
+	if(!o->len) { lua_pushnil(L); o_free(L,o); return 1; }
+	if(o->len > 32) {
+		zerror(L, "%s :: octet bigger than 32 bytes cannot be encoded to mnemonic",__func__);
+		o_free(L,o);
+		lua_pushboolean(L, 0);
+		END(0);
+	}
+	char *result = malloc(24 * 10);
+	if(mnemonic_from_data(result, o->val, o->len)) {
+		lua_pushstring(L, result);
+	} else {
+		zerror(L, "%s :: cannot be encoded to mnemonic", __func__);
+		lua_pushboolean(L, 0);
+	}
+	o_free(L,o);
+	free(result);
+	END(1);
+}
+
+
+/***
+	Converts an octet into an array of bytes, compatible with Lua's transformations on <a href="https://www.lua.org/pil/11.1.html">arrays</a>.
+
+	@function OCTET:array
+	@return an array as Lua's internal representation
+*/
+
+static int to_array(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const octet *o = o_arg(L,1);
+	if(!o) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	if(!o->len) { lua_pushnil(L); goto end; }
+	if(!o->len || !o->val) {
+		failed_msg = "array cannot encode an empty octet";
+		goto end;
+	}
+	lua_newtable(L);
+	// luaL_checkstack(L,1, "in octet:to_array()");
+	register int c = o->len;
+	register int idx = 0;
+	while(c--) {
+		lua_pushnumber(L,idx+1);
+		lua_pushnumber(L,o->val[idx]);
+		lua_settable(L,-3);
+		idx++;
+	}
+end:
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/***
+	Return self (octet), implemented for compatibility with all zenroom types so that anything can be casted to octet. 
+
+	@function OCTET:octet
+	@return the self octet
+
+*/
+static int to_octet(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const octet *o = o_arg(L, 1);
+	if(!o) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	if(!o_dup(L, o)) {
+		failed_msg = "Could not duplicate OCTET";
+		goto end;
+	}
+end:
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/***
+	Print an octet as string.
+
+	@function octet:string
+	@return a string representing the octet's contents
+*/
+static int to_string(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const octet *o = o_arg(L, 1);
+	if(!o) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	if(!o->len) { lua_pushnil(L); goto end; }
+	char *s = malloc(o->len+2);
+	OCT_toStr((octet*)o, s); // TODO: inverted function signature, see
+					 // https://github.com/milagro-crypto/milagro-crypto-c/issues/291
+	s[o->len] = '\0'; // make sure string is NULL terminated
+	lua_pushlstring(L, s, o->len);
+	free(s);
+end:
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+
+/***
+	Encode an octet into a string of hexadecimal numbers representing its contents.
+
+	@function octet:hex
+	@return a string of hexadecimal numbers
+*/
+int to_hex(lua_State *L) {
+	BEGIN();
+	const octet *o = o_arg(L,1);
+	if(!o->len) { lua_pushnil(L); goto end; }
+	push_octet_to_hex_string(L, (octet*)o);
+end:
+	o_free(L,o);
+	END(1);
+}
+
+/***
+	Encode an octet to a string of zeroes and ones (0/1) as binary sequence.
+
+	@function OCTET:bin
+	@return a string of bits
+*/
+static int to_bin(lua_State *L) {
+	BEGIN();
+	const octet *o = o_arg(L,1);
+	if(!o->len) { lua_pushnil(L); goto end; }
+	char *s = malloc(o->len*8+2);
+	int i;
+	char oo;
+	char *is = s;
+	for(i=0;i<o->len;i++) {
+		oo = o->val[i];
+		is = &s[i*8];
+		is[7] = oo    & 0x1 ? '1':'0';
+		is[6] = oo>>1 & 0x1 ? '1':'0';
+		is[5] = oo>>2 & 0x1 ? '1':'0';
+		is[4] = oo>>3 & 0x1 ? '1':'0';
+		is[3] = oo>>4 & 0x1 ? '1':'0';
+		is[2] = oo>>5 & 0x1 ? '1':'0';
+		is[1] = oo>>6 & 0x1 ? '1':'0';
+		is[0] = oo>>7 & 0x1 ? '1':'0';
+	}
+	s[o->len*8] = 0x0;
+	lua_pushstring(L,s);
+	free(s);
+end:
+	o_free(L,o);
+	END(1);
+}
+
+/***
+Fill an octet object with the contents of another octet object. 
+
+	@function OCTET:fill
+	@param oct the source octet providing the data
+	@return the target octet is fully filled, and its len is set to its max capacity. 
+ */
+static int filloctet(lua_State *L) {
+	BEGIN();
+	int i;
+	octet *o = (octet*) luaL_testudata(L, 1, "zenroom.octet");
+
+	octet *fill = (octet*) luaL_testudata(L, 2, "zenroom.octet");
+
+	for(i=0; i<o->max; i++)
+		o->val[i] = fill->val[i % fill->len];
+	o->len = o->max;
+	END(0);
+}
+
+/***
 Concatenate two octets, returns a new octet. This is also executed
-when using the '<b>..</b>' operator btween two octets. It results in a
-newly allocated octet, does not change the contents of other octets.
+*when using the '<b>..</b>' operator btween two octets. It results in a
+*newly allocated octet, does not change the contents of other octets.
 
 	@param dest leftmost octet will be overwritten by result
 	@param source rightmost octet used in XOR operation
-	@function OCTET.concat(dest, source)
+	@function OCTET.concat
 	@return a new octet resulting from the operation
 */
 static int concat_n(lua_State *L) {
@@ -1029,335 +1455,12 @@ end:
 	END(1);
 }
 
-
-/// Object Methods
-// @type OCTET
-//
-// This section lists methods that can be called as members of the
-// <b>OCTET:</b> objects, using a ":" semicolon notation instead of a
-// dot. Example synopsis:
-//
-// <pre class="example">
-// random = OCTET.random(32) -- global OCTET constructor using the dot
-// print( random:<span class="global">hex</span>() ) -- method call on the created object using the colon
-// </pre>
-//
-// In the example above we create a new "random" OCTET variable with
-// 32 bytes of randomness, then call the ":hex()" method on it to print
-// it out as an hexadecimal sequence.
-//
-// The contents of an octet object are never changed this way: methods
-// always return a new octet with the requested changes applied.
-//
-
-/***
-Print an octet in base64 notation.
-
-@function octet:base64()
-@return a string representing the octet's contents in base64
-
-@see octet:hex
-@usage
-
--- This method as well :string() and :hex() can be used both to set
--- from and print out in particular formats.
-
--- create an octet from a string:
-msg = OCTET.string("my message to be encoded in base64")
--- print the message in base64 notation:
-print(msg:base64())
-
-
-*/
-
-static int to_base64 (lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	char *b = NULL;
-	const octet *o = o_arg(L, 1);
-	if(!o) {
-		failed_msg = "Could not allocate OCTET";
-		goto end;
-	}
-	if(!o->len) { lua_pushnil(L); goto end; }
-	if(!o->len || !o->val) {
-		failed_msg = "base64 cannot encode an empty octet";
-		goto end;
-	}
-	int newlen;
-	newlen = ((3+(4*(o->len/3))) & ~0x03)+0x0f;
-	b = malloc(newlen);
-	OCT_tobase64(b,(octet*)o);
-	lua_pushstring(L,b);
-end:
-	free(b);
-	o_free(L,o);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-static int to_url64 (lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	char *b = NULL;
-	const octet *o = o_arg(L,1);
-	if(!o) {
-		failed_msg = "Could not allocate OCTET";
-		goto end;
-	}
-	if(!o->len) { lua_pushnil(L); goto end; }
-	if(!o->len || !o->val) {
-		failed_msg = "url64 cannot encode an empty octet";
-		goto end;
-	}
-	int newlen;
-	newlen = B64encoded_len(o->len);
-	b = malloc(newlen);
-	// b[0]='u';b[1]='6';b[2]='4';b[3]=':';
-	U64encode(b,o->val,o->len);
-	lua_pushstring(L,b);
-end:
-	free(b);
-	o_free(L,o);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-
-/*
-Print an octet in base58 notation.
-
-This encoding uses the same alphabet as Bitcoin addresses. Why base58 instead of standard base64 encoding?
-
-- Don't want 0OIl characters that look the same in some fonts and could be used to create visually identical looking data.
-- A string with non-alphanumeric characters is not as easily accepted as input.
-- E-mail usually won't line-break if there's no punctuation to break at.
-- Double-clicking selects the whole string as one word if it's all alphanumeric.
-
-	@function octet:base58()
-	@return a string representing the octet's contents in base58
-*/
-static int to_base58(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	char *b = NULL;
-	const octet *o = o_arg(L, 1);
-	if(!o) {
-		failed_msg = "Could not allocate OCTET";
-		goto end;
-	}
-	if(!o->len) { lua_pushnil(L); goto end; }
-	if(!o->len || !o->val) {
-		failed_msg = "base58 cannot encode an empty octet";
-		goto end;
-	}
-	if(o->len < 3) {
-		// there is a bug in luke-jr's implementation of base58 (fixed
-		// in bitcoin-core) when encoding strings smaller than 3 bytes
-		// the 'j' counter being unsigned and initialised at size-2 in
-		// the carry inner loop flips to 18446744073709551615
-		failed_msg = "base58 cannot encode octets smaller than 3 bytes";
-		goto end;
-	}
-	size_t maxlen = o->len <<1;
-	// TODO: find out why this breaks!
-	// debug builds work, optimized build breaks here
-	// this workaround will break base58 encoding when using memmanager=lw
-	//char *b = malloc(maxlen);
-	b = malloc(maxlen);
-	size_t b58len = maxlen;
-	b58enc(b, &b58len, o->val, o->len);
-	// b[b58len] = '\0'; // already present in libbase58
-	lua_pushstring(L,b);
-end:
-	free(b);
-	o_free(L, o);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-static int to_base45 (lua_State *L) {
-	BEGIN();
-	const octet *o = o_arg(L, 1);
-	int newlen = b45encode(NULL, o->val, o->len);
-	char *b = malloc(newlen);
-	b45encode(b, o->val, o->len);
-	lua_pushstring(L, b);
-	free(b);
-	o_free(L, o);
-	END(1);
-}
-
-
-static int from_base45(lua_State *L) {
-	BEGIN();
-	const char *s = lua_tostring(L, 1);
-	luaL_argcheck(L, s != NULL, 1, "base45 string expected");
-	int len = is_base45(s);
-	if(len < 0) {
-		lerror(L, "base45 string contains invalid characters");
-		return 0;
-	}
-	octet *o = o_new(L, len);
-	len = b45decode(o->val, s);
-	if(len < 0) {
-		lerror(L, "base45 invalid string");
-		return 0;
-	}
-	o->len = len;
-	END(1);
-}
-
-
-/***
-	Converts an octet into an array of bytes, compatible with Lua's transformations on <a href="https://www.lua.org/pil/11.1.html">arrays</a>.
-
-	@function octet:array()
-	@return an array as Lua's internal representation
-*/
-
-static int to_array(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	const octet *o = o_arg(L,1);
-	if(!o) {
-		failed_msg = "Could not allocate OCTET";
-		goto end;
-	}
-	if(!o->len) { lua_pushnil(L); goto end; }
-	if(!o->len || !o->val) {
-		failed_msg = "array cannot encode an empty octet";
-		goto end;
-	}
-	lua_newtable(L);
-	// luaL_checkstack(L,1, "in octet:to_array()");
-	register int c = o->len;
-	register int idx = 0;
-	while(c--) {
-		lua_pushnumber(L,idx+1);
-		lua_pushnumber(L,o->val[idx]);
-		lua_settable(L,-3);
-		idx++;
-	}
-end:
-	o_free(L, o);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-/***
-	Return self (octet), implemented for compatibility with all
-	zenroom types so that anything can be casted to octet */
-static int to_octet(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	const octet *o = o_arg(L, 1);
-	if(!o) {
-		failed_msg = "Could not allocate OCTET";
-		goto end;
-	}
-	if(!o_dup(L, o)) {
-		failed_msg = "Could not duplicate OCTET";
-		goto end;
-	}
-end:
-	o_free(L, o);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-/***
-	Print an octet as string.
-
-	@function octet:str()
-	@return a string representing the octet's contents
-*/
-static int to_string(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	const octet *o = o_arg(L, 1);
-	if(!o) {
-		failed_msg = "Could not allocate OCTET";
-		goto end;
-	}
-	if(!o->len) { lua_pushnil(L); goto end; }
-	char *s = malloc(o->len+2);
-	OCT_toStr((octet*)o, s); // TODO: inverted function signature, see
-					 // https://github.com/milagro-crypto/milagro-crypto-c/issues/291
-	s[o->len] = '\0'; // make sure string is NULL terminated
-	lua_pushlstring(L, s, o->len);
-	free(s);
-end:
-	o_free(L, o);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-
-/***
-Converts an octet into a string of hexadecimal numbers representing its contents.
-
-This is the default format when `print()` is used on an octet.
-
-	@function octet:hex()
-	@return a string of hexadecimal numbers
-*/
-int to_hex(lua_State *L) {
-	BEGIN();
-	const octet *o = o_arg(L,1);
-	if(!o->len) { lua_pushnil(L); goto end; }
-	push_octet_to_hex_string(L, (octet*)o);
-end:
-	o_free(L,o);
-	END(1);
-}
-
-static int to_bin(lua_State *L) {
-	BEGIN();
-	const octet *o = o_arg(L,1);
-	if(!o->len) { lua_pushnil(L); goto end; }
-	char *s = malloc(o->len*8+2);
-	int i;
-	char oo;
-	char *is = s;
-	for(i=0;i<o->len;i++) {
-		oo = o->val[i];
-		is = &s[i*8];
-		is[7] = oo    & 0x1 ? '1':'0';
-		is[6] = oo>>1 & 0x1 ? '1':'0';
-		is[5] = oo>>2 & 0x1 ? '1':'0';
-		is[4] = oo>>3 & 0x1 ? '1':'0';
-		is[3] = oo>>4 & 0x1 ? '1':'0';
-		is[2] = oo>>5 & 0x1 ? '1':'0';
-		is[1] = oo>>6 & 0x1 ? '1':'0';
-		is[0] = oo>>7 & 0x1 ? '1':'0';
-	}
-	s[o->len*8] = 0x0;
-	lua_pushstring(L,s);
-	free(s);
-end:
-	o_free(L,o);
-	END(1);
-}
-
 /***
 	Pad an octet with leading zeroes up to indicated length or its maximum size.
 
 	@int[opt=octet:max] length pad to this size, will use maximum octet size if omitted
 	@return new octet padded at length
-	@function octet:pad(length)
+	@function octet:pad
 */
 static int pad(lua_State *L) {
 	BEGIN();
@@ -1383,31 +1486,19 @@ end:
 	return 1;
 }
 
-/***
-	Create an octet filled with zero values up to indicated size or its maximum size.
 
-	@int[opt=octet:max] length fill with zero up to this size, use maxumum octet size if omitted
-	@function octet:zero(length)
-*/
-static int zero(lua_State *L) {
-	BEGIN();
-	const int len = luaL_optnumber(L, 1, MAX_OCTET);
-	if(len<1) {
-		lerror(L, "Cannot create a zero length octet");
-		return 0;
-	}
-	func(L, "Creating a zero filled octet of %u bytes", len);
-	octet *n = o_new(L,len);
-	register int i;
-	for(i=0; i<len; i++) n->val[i]=0x0;
-	n->len = len;
-	END(1);
-}
+/*** Trim all leading and following zero bytes in an octet 
+ * and return a new one of equal length or smaller.
 
-/*** Trim all leading and following zeros in an octet and return a new
-     one of equal length or smaller.
+	 @function OCTET:trim
+	 @return trimmed octet
+	 @usage
+	 --create an octet of bin
+	 oct = OCTET.from_bin("00000000111111000")
+	 --print 11111100
+	 print(oct:trim():bin())
 */
-static int trim(lua_State *L) {
+static int trim(lua_State *L) { // o =
 	BEGIN();
 	char *failed_msg = NULL;
 	const octet *src = o_arg(L,1);
@@ -1446,6 +1537,18 @@ end:
 	END(1);
 }
 
+/***  Split an octet into two parts based on a specified length and return both parts. The first part will have a length in bytes equal to the input parameter. The second part will contain the remaining bytes.
+
+	@function OCTET:chop
+	@param len an optional length parameter (defaulting to 0) 
+	@return Returns the two resulting octets
+	@usage
+	--create an octet of bin 
+	oct = OCTET.from_bin("001000001111110001")
+	--consider the length parameter equal to 1
+	part1, part2 = oct:chop(1)
+	--part1 = 00100000, part2 = 11111100
+ */
 static int chop(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1485,9 +1588,11 @@ end:
 	END(2);
 }
 
-/*
-  Build the byte in reverse order with respect
-  to the one which is given.
+/*** 
+  Build the byte in reverse order with respect to the one which is given.
+
+  @function OCTET:reverse
+  @return reverse order octet
 */
 static int reverse(lua_State *L) {
 	BEGIN();
@@ -1519,13 +1624,12 @@ end:
 
 
 /***
-
-	Extracts a piece of the octet from the start position to the end position inclusive, expressed in numbers.
+ 	Extracts a piece of the octet from the start position to the end position inclusive, expressed in numbers.
 
 	@int start position, begins from 1 not 0 like in lua
 	@int end position, may be same as start for a single byte
 	@return new octet sub-section from start to end inclusive
-	@function octet:sub(start, end)
+	@function octet:sub
 */
 static int sub(lua_State *L) {
 	BEGIN();
@@ -1575,7 +1679,7 @@ end:
 /***
 	Compare two octets to see if contents are equal.
 
-	@function octet:eq(first, second)
+	@function octet:eq
 	@return true if equal, false otherwise
 */
 
@@ -1606,6 +1710,12 @@ end:
 	END(1);
 }
 
+/*** 
+	Retrieve and return the length of an octet.
+
+	@function OCTET:__len
+	@return length of the octet
+ */
 static int octet_size(lua_State *L) {
 	BEGIN();
 	octet *o = (octet*) luaL_testudata(L, 1, "zenroom.octet");
@@ -1613,6 +1723,12 @@ static int octet_size(lua_State *L) {
 	END(1);
 }
 
+/***
+	Retrieve and return the maximum capacity of an octet.
+
+	@function OCTET:max
+	@return maximum capacity of an octet
+ */
 static int max(lua_State *L) {
 	BEGIN();
 	const octet *o = o_arg(L, 1);
@@ -1621,16 +1737,22 @@ static int max(lua_State *L) {
 	END(1);
 }
 
-static int new_random(lua_State *L) {
-	BEGIN();
-	int tn;
-	lua_Number n = lua_tonumberx(L, 1, &tn);
-	octet *o = o_new(L,(int)n);
-	Z(L);
-	OCT_rand(o, Z->random_generator, (int)n);
-	END(1);
-}
+/***
+	Given a string and a characater, this function removes from the string 
+	*all the occurences of the character in the string
+	@param char the character to remove
+	@function OCTET:rmchar
 
+	@return the initial string without the input character
+
+	@usage
+	-- oct is the octet with the string to modify
+	-- to_remove is the character to remove from oct
+	oct = OCTET.from_string("Hello, world!")
+	to_remove = OCTET.from_string("l")
+	print(oct:rmchar(to_remove))
+	--print: Heo, word!
+*/
 static int remove_char(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1664,6 +1786,23 @@ end:
 }
 
 // optimized for newlines of all kinds
+
+/***
+	Process an octet structure and create a new octet by filtering out certain ASCII characters and handling escape sequences.
+	*If an escape character \ is encountered, it sets an escape flag.
+	*If the next character is one of 'a', 'b', 't', 'n', 'v', 'f', or 'r', both the escape character \ and the escaped character are skipped.
+	*All other valid characters are copied to the new octet.
+
+	@function OCTET:compact_ascii
+	@return New octet which contains the filtered and processed data
+	@usage
+	--create a string octet 
+	oct=OCTET.from_string("st\ring fo\r ex\ample")
+	print(oct:compact_ascii())
+	--print: stingfoexmple
+
+ */
+
 static int compact_ascii(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1706,6 +1845,26 @@ end:
 	END(1);
 }
 
+/***
+	Calculate the frequency of each byte value in an octet and returns the results as a Lua table. It is useful for analyzing the distribution of 
+	*byte values in a byte array, which can be used for entropy calculations or other statistical analyses.
+
+	@function OCTET:bytefreq
+	@return Lua table containing bytes distribution
+	@usage 
+	--create an octet of bin
+	oct=OCTET.from_bin("101010001010100010101000101010000001011000011111")
+	--save the frequency of the bytes in a table (tab)
+	tab=oct:bytefreq()
+	--print the table
+	for byte, freq in pairs(tab) do
+    	print(string.format("Byte %d: Frequency %d", byte, freq))
+	end 
+	--print .. Byte 23: Frequency 1 ..
+		.. Byte 32: Frequency 1 ..
+		.. Byte 169: Frequency 4 ..
+	--all the others frequency values are 0
+ */
 static int entropy_bytefreq(lua_State *L) {
 	BEGIN();
 	const octet *o = o_arg(L, 1);
@@ -1729,6 +1888,31 @@ static int entropy_bytefreq(lua_State *L) {
 	END(1);
 }
 
+/***
+	Calculate the entropy of an octet structure. 
+	*Entropy is a measure of randomness or uncertainty in the data, often used in information theory. 
+	Allocate a frequency table to store the count of each byte value.
+	Allocate a probability table to store the probability of each byte value.
+	Increment the count for each byte value in the frequency table.
+	Calculate the probability of each byte value.
+	Compute the entropy.
+	Compute the maximum possible entropy for the given number of unique bytes.
+	
+	@function OCTET:entropy
+	@return the entropy ratio (relative to the maximum entropy)
+	@return the maximum possible entropy
+	@return he computed entropy in bits
+	@usage
+	--create an octet of bin
+	oct=OCTET.from_bin("101010001010100010101000101010000001011000011111")
+	--save the three outpus
+	ratio, max_entropy, bits = oct:entropy()
+	print(ratio)
+	print(max_entropy)
+	print(bits)
+	--the three outputs are: 0.7896901, 1.584962, 1.251629
+
+ */
 static int entropy(lua_State *L) {
 	BEGIN();
 	const octet *o = o_arg(L,1);
@@ -1788,6 +1972,27 @@ static int popcount64b(uint64_t x) {
 }
 #define min(a, b)   ((a) < (b) ? (a) : (b))
 // compare bit by bit two arrays and returns the hamming distance
+
+/***
+	Calculate the Hamming distance between two octet structures. 
+	*The Hamming distance is the number of positions at which the corresponding bits differ between the two octets.
+	*This function calculates the Hamming distance between two octets by treating them as arrays of 64-bit integers.
+	*It only works with octets whose lengths are multiples of 8 bytes. It does not handle smaller octets or padding.
+	*Ideal for applications involving large octets where performance is critical.
+
+
+	@function OCTET:popcount_hamming		
+	@param oct an octet to compare with another one
+	@return the Hamming distance between the two octets
+	@usage 
+	--create two octets of bin (number of bits multiple of 64)
+	oct=OCTET.from_bin("1010001010100010101000101010001010100010101000101010001010100010")
+	oct2=OCTET.from_bin("1001000010010000100100001001000010010000100100001001000010010000")
+	--print the Hamming distance between the two octets
+	print(oct:popcount_hamming(oct2))
+	--print: 24
+
+ */
 static int popcount_hamming_distance(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1816,6 +2021,24 @@ end:
 	END(1);
 }
 
+/***
+	Calculate the Hamming distance between two octets by comparing them byte by byte and counting the number of differing bits. 
+ 	* It is useful for comparing binary data and measuring their similarity. 
+	* This function requires the two octets to have the same length. If they differ, it throws an error.
+	* Suitable for small to medium-sized octets where simplicity is more important than performance.
+
+	@function OCTET:hamming
+	@param oct an octet to compare with another one
+	@return the Hamming distance between the two octets
+	@usage 
+	--create two octets of bin of the same length
+	oct=OCTET.from_bin("101000101010001010100010101000101010001010100010")
+	oct2=OCTET.from_bin("100100001001000010010000100100001001000010010000")
+	--print the Hamming distance between the two octets
+	print(oct:hamming(oct2))
+	--print: 18
+
+ */
 static int bitshift_hamming_distance(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1852,6 +2075,21 @@ end:
 	END(1);
 }
 
+/***
+	Count the occurrences of a specific character in an octet and return the count as an integer to Lua. 
+	*It is useful for simple character-based analysis of binary data.
+
+	@function OCTET:charcount
+	@param char the charcater to count
+	@return the number of occurrences of a specific character
+	@usage 
+	--create a string octet
+	oct=OCTET.from_string("Hello world!")
+	--print the number of occurrences of "l"
+	print(oct:charcount("l"))
+	--print: 3
+
+ */
 static int charcount(lua_State *L) {
 	BEGIN();
 	register char needle;
@@ -1869,6 +2107,19 @@ static int charcount(lua_State *L) {
 	END(1);
 }
 
+/***
+	Compute the CRC-8 checksum of an octet and return the result as a new octet of length 1. 
+	*It is useful for error detection in data transmission or storage.
+	*CRC-8 is a cyclic redundancy check algorithm that produces an 8-bit checksum.
+
+	@function OCTET:crc
+	@return the new octet containing the CRC-8 checksum
+	@usage
+	--create an octet of bin
+	oct=OCTET.from_bin("01110100000111010100101000100111010")
+	print(oct:crc():bin())
+	--print: 10011110
+ */
 static int crc8(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1906,9 +2157,10 @@ end:
 
 /***
 	Create a new octet with the prefix removed.
-	If the prefix doesn't match, it returns nil.
+	*If the prefix doesn't match, it returns nil.
 
-	@function octet:eq(prefix)
+	@function octet:elide_at_start
+	@param prefix to remove
 	@return initial octet without the prefix or nil
 */
 static int elide_at_start(lua_State *L) {
@@ -1951,11 +2203,16 @@ end:
 
 
 /***
-	Creates a new octet of given size repeating the octet as
-	input
+	Creates a new octet of given size repeating the octet as input.
 
-	@function octet:fillrepeat(size)
+	@function octet:fillrepeat
+	@param size 
 	@return octet of given size
+	@usage 
+	--create an octet of hex
+	oct=OCTET.from_hex("0xa1")
+	print(oct:fillrepeat(5):hex())
+	print: a1a1a1a1a1
 */
 static int fillrepeat(lua_State *L) {
 	BEGIN();
@@ -1986,6 +2243,26 @@ end:
 	END(1);
 }
 
+/***
+	Compare two octet structures and determine if the first octet
+	*is lexicographically less than the second octet.
+
+	@function OCTET:__lt
+	@param oct an octet to compare
+	@return a boolean value
+	@usage
+	--create two octets of bin to compare
+	oct=OCTET.from_bin("01001010")
+	oct2=OCTET.from_bin("10111011")
+	--compare them
+	if (oct:__lt(oct2)) then
+    	print("oct less than oct2")
+	else
+    	print("oct2 less than oct")
+	end
+	--print: oct less than oct2
+
+ */
 static int lesser_than(lua_State *L) {
 	BEGIN();
 	const octet *l = o_arg(L,1);
@@ -2021,8 +2298,21 @@ void OCT_shl_bits(octet *x, int n) {
 		}
 	}
 }
-/* Shift octet to the left by n bits. Leftmost bits disappear
-This is also executed when using the 'o << n' with o an octet and n an integer */
+
+/***
+	Shift octet to the left by n bits. Leftmost bits disappear.
+	*This is also executed when using the 'o << n' with o an octet and n an integer.
+
+	@function OCTET:__shl
+	@param positions number of positions to bit shift to the left
+	@return the shifted octet
+	@usage
+	--create an octet of bin
+	oct=OCTET.from_bin("01001010")
+	--shift of three positions
+	print(oct:__shl(3):bin())
+	print: 01010000
+*/
 static int shift_left(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -2075,8 +2365,20 @@ void OCT_shr_bits(octet *x, int n) {
 	}
 }
 
-/* Shift octet to the right by n bits. Rightmost bits disappear
- This is also executed when using the 'o >> n' with o an octet and n an integer */
+/*** 
+	Shift octet to the right by n bits. Rightmost bits disappear.
+ 	*This is also executed when using the 'o >> n' with o an octet and n an integer. 
+	
+	@function OCTET:__shr
+	@param positions number of positions to bit shift to the right
+	@return the shiftet octet
+	@usage
+	--create an octet of bin
+	oct=OCTET.from_bin("01001010")
+	--shift of three positions
+	print(oct:__shr(3):bin())
+	print: 00001001
+*/
 static int shift_right(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -2106,6 +2408,20 @@ static int shift_right(lua_State *L) {
 
 }
 
+/***
+	Shift octet to the left by n bits. 
+	*Leftmost bits do not disappear but appear on the right.
+
+	@function OCTET:shl_circular
+	@param positions number of positions to bit shift to the left
+	@return the circular shiftet octet
+	@usage
+	--create an octet of bin
+	oct=OCTET.from_bin("01001010")
+	--circular shift of three positions
+	print(oct:shl_circular(3):bin())
+	--print: 01010010
+ */
 // Circular shift octet to the left by n bits.
 static int shift_left_circular(lua_State *L) {
 	BEGIN();
@@ -2167,6 +2483,20 @@ void OCT_circular_shr_bits(octet *x, int n) {
 	}
 }
 
+/***
+	Shift octet to the right by n bits. 
+	*Rightmost bits do not disappear but appear on the left.
+
+	@function OCTET:rhl_circular
+	@param positions number of positions to bit shift to the right
+	@return the circular shiftet octet
+	@usage
+	--create an octet of bin
+	oct=OCTET.from_bin("01001010")
+	--circular shift of three positions
+	print(oct:shr_circular(3):bin())
+	--print: 01001001
+*/
 // Circular shift octet to the right by n bits
 static int shift_right_circular(lua_State *L) {
 	BEGIN();
@@ -2205,9 +2535,22 @@ void OCT_and(octet *y, octet *x)
 	}
 }
 
-/*
-Bitwise AND operation on two octets padded to reach the same length, returns a new octet.
-Results in a newly allocated octet, does not change the contents of any other octet involved.
+/***
+	Bitwise AND operation on two octets padded to reach the same length, returns a new octet.
+	*Results in a newly allocated octet, does not change the contents of any other octet involved.
+	*If the two octets have different lengths, 
+	*the shorter one is padded with zeros to match the length of the longer one before performing the operation.
+
+	@function OCTET:and_grow
+	@param oct an octet for the bitwise AND operation
+	@return the result of the bitwise AND operation between the two octets
+	@usage
+	--create two octets of bin
+	oct=OCTET.from_bin("0100101001001011")
+	oct2=OCTET.from_bin("10111011")
+	print(oct:and_grow(oct2):bin()) 
+	--print: 0000000000001011
+
 */
 static int and_grow(lua_State *L) {
 	BEGIN();
@@ -2248,11 +2591,21 @@ end:
 	END(1);
 }
 
-/*
-Bitwise AND operation on two octets truncating at the shortest one length, returns a new octet.
-This is also executed when using the '<b>&</b>' operator between two
-octets. Results in a newly allocated octet, does not change the
-contents of any other octet involved.
+/*** 
+	Bitwise AND operation on two octets truncating at the shortest one length, returns a new octet.
+	*This is also executed when using the '<b>&</b>' operator between two
+	*octets. Results in a newly allocated octet, does not change the
+	*contents of any other octet involved.
+
+	@function OCTET:__band
+	@param oct an octet for the bitwise AND operation
+	@return the result of the bitwise AND operation between the two octets
+	@usage
+	--create two octets of bin
+	oct=OCTET.from_bin("0100101001001011")
+	oct2=OCTET.from_bin("10111011")
+	print(oct:__band(oct2):bin()) 
+	--print: 00001010
 */
 static int and_shrink(lua_State *L) {
 	BEGIN();
@@ -2288,9 +2641,22 @@ void OCT_or(octet *y, octet *x)
 	}
 }
 
-/*
-Bitwise OR operation on two octets padded to reach the same length, returns a new octet.
-Results in a newly allocated octet, does not change the contents of any other octet involved.
+/*** 
+	Bitwise OR operation on two octets padded to reach the same length, returns a new octet.
+	*Results in a newly allocated octet, does not change the contents of any other octet involved.
+	*If the two octets have different lengths, 
+	*the shorter one is padded with zeros to match the length of the longer one before performing the operation.
+
+	@function OCTET:or_grow
+	@param oct an octet for the bitwise OR operation
+	@return the result of the bitwise OR operation between the two octets
+	@usage
+	--create two octets of bin
+	oct=OCTET.from_bin("0100101001001011")
+	oct2=OCTET.from_bin("10111011")
+	print(oct:or_grow(oct2):bin())
+	--print: 0100101011111011
+
 */
 static int or_grow(lua_State *L) {
 	BEGIN();
@@ -2331,11 +2697,21 @@ end:
 	END(1);
 }
 
-/*
-Bitwise OR operation on two octets truncating at the shortest one length, returns a new octet.
-This is also executed when using the '<b>|</b>' operator between two
-octets. Results in a newly allocated octet, does not change the
-contents of any other octet involved.
+/*** 
+	Bitwise OR operation on two octets truncating at the shortest one length, returns a new octet.
+	*This is also executed when using the '<b>|</b>' operator between two
+	*octets. Results in a newly allocated octet, does not change the
+	*contents of any other octet involved.
+
+	@function OCTET:__bor
+	@param oct an octet for the bitwise OR operation
+	@return the result of the bitwise OR operation between the two octets
+	@usage
+	--create two octets of bin
+	oct=OCTET.from_bin("0100101001001011")
+	oct2=OCTET.from_bin("10111011")
+	print(oct:__bor(oct2):bin()) 
+	--print: 11111011
 */
 static int or_shrink(lua_State *L) {
 	BEGIN();
@@ -2363,9 +2739,118 @@ end:
 	END(1);
 }
 
-/*
-Bitwise NOT operation on an octet returns a new octet.
-This is also executed when using the '~</b>' operator. Results in a newly allocated octet.
+/***
+
+Bitwise XOR operation on two octets padded to reach the same length, returns a new octet.
+*Results in a newly allocated octet, does not change the contents of any other octet involved.
+
+	@param dest leftmost octet used in XOR operation
+	@param source rightmost octet used in XOR operation
+	@function OCTET:xor_grow
+	@return a new octet resulting from the operation
+	@usage
+	--create two octets of bin
+	oct=OCTET.from_bin("0100101001001011")
+	oct2=OCTET.from_bin("10111011")
+	print(oct:xor_grow(oct2):bin()) 
+	--print: 0100101001001011
+*/
+static int xor_grow(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const octet *x = o_arg(L, 1);
+	const octet *y = o_arg(L, 2);
+	if(!x || !y) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	int max = _max(x->len, y->len);
+	octet *n = o_new(L,max);
+	if(!n) {
+		failed_msg = "Could not create OCTET";
+		goto end;
+	}
+	octet *tx = o_alloc(L,max);
+	memcpy(tx->val,x->val,x->len);
+	tx->len = x->len;
+	OCT_pad(tx, max);
+
+	octet *ty = o_alloc(L,max);
+	memcpy(ty->val,y->val,y->len);
+	ty->len = y->len;
+	OCT_pad(ty, max);
+
+	o_free(L, x);
+	o_free(L, y);
+
+	OCT_copy(n, tx);
+	OCT_xor(n, ty);
+end:
+	o_free(L, tx);
+	o_free(L, ty);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/***
+
+Bitwise XOR operation on two octets truncating at the shortest one length, returns a new octet.
+*This is also executed when using the '<b>~</b>' operator between two
+*octets. Results in a newly allocated octet, does not change the
+*contents of any other octet involved.
+
+	@param dest leftmost octet used in XOR operation
+	@param source rightmost octet used in XOR operation
+	@function OCTET:__bxor
+	@return a new octet resulting from the operation
+	@usage
+	--create two octets of bin
+	oct=OCTET.from_bin("0100101001001011")
+	oct2=OCTET.from_bin("10111011")
+	print(oct:__bxor(oct2):bin()) 
+	--print: 11110001
+	
+*/
+static int xor_shrink(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const octet *x = o_arg(L, 1);
+	const octet *y = o_arg(L, 2);
+	if(HEDLEY_UNLIKELY(!x || !y)) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	int min = _min(x->len, y->len);
+	octet *n = o_new(L,min);
+	if(HEDLEY_UNLIKELY(!n)) {
+		failed_msg = "Could not create OCTET";
+		goto end;
+	}
+	OCT_copy(n, (octet*)x);
+	OCT_xor(n, (octet*)y);
+end:
+	o_free(L, x);
+	o_free(L, y);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/*** 
+	Bitwise NOT operation on an octet returns a new octet.
+	*This is also executed when using the '~</b>' operator. 
+	*Results in a newly allocated octet.
+
+	@function OCTET:__bnot
+	@return the new octet containing the result of the bitwise NOT operation
+	@usage
+	--create an octet of bin
+	oct=OCTET.from_bin("0100101001001011")
+	print(oct:__bnot():bin())
+	--print: 1011010110110100
 */
 static int bit_not(lua_State *L) {
 	BEGIN();
@@ -2417,14 +2902,21 @@ static void *memmem(const void *src,int srclen,const void *dst,int dstlen) {
 
 /***
 Finds a needle sequence of bytes in a haystack octet and returns the
-position where it has been found (counting from 0) or nil when not
-found.
+*position where it has been found (counting from 0) or nil when not
+*found.
 
-	@function OCTET.find(haystack,needle,pos)
+	@function OCTET:find
 	@param haystack the octet in which to find the needle
 	@param needle the octet needle to search for
-	@int pos (optional) the positio to start searching in haystack
+	@int pos (optional) the position to start searching in haystack
 	@return a number indicating the position found in haystack or nil
+	@usage
+	--create an octet in hex
+	oct=OCTET.from_hex("0xa1b2c3d4")
+	--create the needle
+	needle=OCTET.from_hex("0xc3")
+	print(oct:find(needle))
+	--print: 2.0
 */
 static int memfind(lua_State *L) {
 	BEGIN();
@@ -2466,13 +2958,20 @@ static int memfind(lua_State *L) {
 
 /***
 	Copies out a needle octet from an haystack octet starting at
-	position and long as indicated.
+	*position and long as indicated.
 
-	@function OCTET.copy(haystack, start, length)
+	@function OCTET:copy
 	@param haystack octet from which we copy bytes out into needle
 	@int start position, begins from 0
 	@int length of byte sequence to copy
 	@return new octet copied out
+	@usage
+	--create an octet in hex
+	oct=OCTET.from_hex("0xa1b2c3d4")
+	--define the start position equal to 1 
+	--define the length of byte sequence to copy equal to 2
+	print(oct:copy(1,2):hex())
+	--print: b2c3
 */
 static int memcopy(lua_State *L) {
 	BEGIN();
@@ -2515,13 +3014,21 @@ end:
 
 /***
 	Paste a needle octet into an haystack octet starting at position
-	and overwriting all its byte values in place.
+	*and overwriting all its byte values in place.
 
-	@function OCTET.paste(haystack, needle, start)
+	@function OCTET:paste
 	@param haystack octet destination in which to copy needle
 	@param needle octet source of needle bytes
-	@int length of byte sequence to copy from needle
-	@return bool true on success, false on failure
+	@int starting position to paste the needle
+	@return the modified octet
+
+	--create an octet of hex
+	oct=OCTET.from_hex("0xa1b2c3d4")
+	--create the needle
+	needle=OCTET.from_hex("0xc3")
+	--paste the needle in the position 1
+	print(oct:paste(needle,1):hex())
+	--print: a1c3c3d4
 */
 static int mempaste(lua_State *L) {
 	BEGIN();
@@ -2564,7 +3071,7 @@ int luaopen_octet(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg octet_class[] = {
 		{"new",   newoctet},
-		{"empty",   new_empty_octet},
+		{"empty",   new_empty_octet}, // OCTET.empty()
 		{"zero",  zero},
 		{"crc",  crc8},
 		{"concat",concat_n},

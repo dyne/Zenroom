@@ -7,7 +7,6 @@
 -- function prints the same as pass-through.
 --
 -- @module INSPECT
--- @version inspect.lua 3.1.0
 -- @author Kikito <a href="http://github.com/kikito/inspect.lua">github.com/kikito/inspect.lua</a>
 -- @license MIT
 

@@ -91,6 +91,16 @@ octet *new_octet_from_float(lua_State *L, float *f) {
 	return o;
 }
 
+
+/// <h1>Float (F)</h1>
+//
+//Floating-point numbers are a fundamental data type in computing used to represent real numbers (numbers with fractional parts). 
+//They are designed to handle a wide range of magnitudes, from very small to very large values, by using a scientific notation-like format in binary.
+//
+// Tollerance EPS=0.000001.
+//  @module FLOAT
+
+
 float *float_new(lua_State *L) {
 	float *number = (float *)lua_newuserdata(L, sizeof(float));
 	if(!number) {
@@ -132,13 +142,21 @@ float* float_arg(lua_State *L, int n) {
 	return result;
 }
 
+/// Global Float Functions
+// @section Float
+
 /***
     Create a new float number. If an argument is present,
-    import it as @{OCTET} and initialise it with its value.
+    *import it as @{OCTET} and initialise it with its value.
 
     @param[opt] octet value
     @return a new float number
-    @function F.new(octet)
+    @function F.new
+	@usage
+	--create a new float number
+	n = F.new(1.2343233)
+	print(n)
+	--print: 1.234323
 */
 static int newfloat(lua_State *L) {
 	BEGIN();
@@ -194,6 +212,16 @@ end:
 	END(1);
 }
 
+/*** Check whether a given Lua value is a floating-point number or a string representation of a floating-point number.
+
+	@function F.is_float
+	@param data a Lua value (number or string)
+	@return a boolean value (true if data is float)
+	@usage
+	if (F.is_float(1.234)) then print("ok")
+	else print("no") end
+	--print: ok
+ */
 static int is_float(lua_State *L) {
 	BEGIN();
 	int result = 0;
@@ -213,6 +241,46 @@ static int is_float(lua_State *L) {
 	END(1);
 }
 
+/*** Find the opposite of a float number.
+
+	@function F.opposite
+	@param data a float number
+	@return the opposite of the float number
+	@usage 
+	--create a float number
+	f = F.new(1.234)
+	print(F.opposite(f))
+	--print: -1.234
+ */
+static int float_opposite(lua_State *L) {
+	BEGIN();
+	float *a = float_arg(L,1);
+	float *b = float_new(L);
+	if(a && b) {
+		*b = -(*a);
+	}
+	float_free(L,a);
+	if(!a || !b) {
+		THROW("Could not allocate float number");
+	}
+	END(1);
+}
+
+
+/// Object Methods
+// @type Float
+
+/*** Convert a float number into an octet.
+
+	@function f:octet
+	@return the octet representation of the float number
+	@usage 
+	--create a float number
+	f = BIG.new(0.245432)
+	--convert into an octet and print in hex
+	print(f:octet():hex())
+	--print: 302e323435343332
+ */
 static int float_to_octet(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -237,7 +305,21 @@ end:
 
 	END(1);
 }
+/*** Check whether two float numbers are approximately equal within a small tolerance (EPS).
 
+	@function f:__eq
+	@param num a float number
+	@return a boolean value 
+	@usage 
+	--create two float numbers
+	f = F.new(0.24543256)
+	num = F.new(0.24543257)
+	--check if they are equal within EPS
+	if(f:__eq(num)) then print("ok")
+	else print("no")
+	end
+	--print: ok
+*/
 static int float_eq(lua_State *L) {
 	BEGIN();
 	float *a,*b;
@@ -270,6 +352,12 @@ static int float_eq(lua_State *L) {
 	END(1);
 }
 
+/*** Check whether one float number is less than another float number.
+
+	@function f:__lt
+	@param num a float number
+	@return a boolean value 
+ */
 static int float_lt(lua_State *L) {
 	BEGIN();
 	float *a = float_arg(L,1);
@@ -286,6 +374,21 @@ static int float_lt(lua_State *L) {
 }
 
 // TODO: could be wrong due to equality
+/*** Check whether one float number is less or equal than another float number.
+
+	@function f:__lt
+	@param num a float number
+	@return a boolean value 
+	--create two float numbers
+	f = F.new(1.234)
+	num = F.new(1.235)
+	--check if they are equal within EPS
+	if(f:__lte(num)) then print("ok")
+	else print("no")
+	end
+	--print: ok
+
+ */
 static int float_lte(lua_State *L) {
 	BEGIN();
 	float *a = float_arg(L,1);
@@ -301,6 +404,19 @@ static int float_lte(lua_State *L) {
 	END(1);
 }
 
+/*** Perform addition on two float numbers.
+
+	@function f:__add
+	@param num a float number
+	@return the result of the addition
+	@usage 
+	--create two float numbers
+	f = F.new(0.2454325)
+	num = F.new(0.2454326)
+	--make the addition
+	print(f:__add(num))
+	--print: 0.490865
+ */
 static int float_add(lua_State *L) {
 	BEGIN();
 	float *a = float_arg(L,1);
@@ -317,20 +433,19 @@ static int float_add(lua_State *L) {
 	END(1);
 }
 
-static int float_opposite(lua_State *L) {
-	BEGIN();
-	float *a = float_arg(L,1);
-	float *b = float_new(L);
-	if(a && b) {
-		*b = -(*a);
-	}
-	float_free(L,a);
-	if(!a || !b) {
-		THROW("Could not allocate float number");
-	}
-	END(1);
-}
+/*** Perform subtraction on two float numbers.
 
+	@function f:__sub
+	@param num a float number
+	@return the result of the subtraction
+	@usage 
+	--create two float numbers
+	f = F.new(1.2342)
+	num = F.new(2.4223)
+	--make the subtraction
+	print(f:__sub(num))
+	--print: -1.1881
+ */
 static int float_sub(lua_State *L) {
 	BEGIN();
 	float *a = float_arg(L,1);
@@ -347,6 +462,19 @@ static int float_sub(lua_State *L) {
 	END(1);
 }
 
+/*** Perform multiplication on two float numbers.
+
+	@function f:__mul
+	@param num a float number
+	@return the result of the multiplication
+	@usage 
+	--create two float numbers
+	f = F.new(1.2342)
+	num = F.new(2.4223)
+	--make the multiplication
+	print(f:__mul(num))
+	--print: 2.989603
+ */
 static int float_mul(lua_State *L) {
 	BEGIN();
 	float *a = float_arg(L,1);
@@ -363,6 +491,19 @@ static int float_mul(lua_State *L) {
 	END(1);
 }
 
+/*** Perform division on two float numbers.
+
+	@function f:__div
+	@param num a float number
+	@return the result of the division
+	@usage 
+	--create two float numbers
+	f = F.new(1.2342)
+	num = F.new(2.4223)
+	--make the division
+	print(f:__div(num))
+	--print: 0.509516
+ */
 static int float_div(lua_State *L) {
 	BEGIN();
 	float *a = float_arg(L,1);
@@ -380,6 +521,20 @@ static int float_div(lua_State *L) {
 	END(1);
 }
 
+/*** Compute the floating-point modulo of two float numbers.
+
+	@function f:__mod
+	@param m the modulus
+	@return the result of the modulo operation
+	@usage 
+	--create two float numbers
+	f = F.new(1.43223)
+	m = F.new(0.3423)
+	--apply the modulo operation
+	print(f:__mod(m))
+	--print: 0.06303
+
+ */
 static int float_mod(lua_State *L) {
 	BEGIN();
 	float *a = float_arg(L,1);
@@ -397,6 +552,11 @@ static int float_mod(lua_State *L) {
 	END(1);
 }
 
+/*** Convert a float number into a string representation.
+
+	@function f:__tostring
+	@return the string representation
+ */
 static int float_to_string(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
