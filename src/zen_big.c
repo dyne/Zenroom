@@ -365,8 +365,9 @@ octet *new_octet_from_big(lua_State *L, big *c) {
 }
 
 // Works only for positive numbers
-/** Convert a decimal string into a big integer object. 
- * It works only for positive numbers.
+
+/*** Convert a decimal string into a big integer object. 
+	*It works only for positive numbers.
 
 	@function BIG.from_decimal
 	@param string representing a decimal number
@@ -434,11 +435,10 @@ static int big_modrand(lua_State *L) {
 	END(1);
 }
 
-/***
-    Generate a random Big number whose ceiling is the order of the curve.
+/*** Generate a random Big number whose ceiling is the order of the curve.
 
     @return a new Big number
-    @function big.random
+    @function BIG.random
 */
 
 static int big_random(lua_State *L) {
@@ -520,7 +520,7 @@ static void _modsqrt(BIG r, BIG n, BIG p)
 	where p is an odd prime and n is a square modulo p */
 
 /*** Tonelli-Shanks algorithm. Given as input two bigs n and p compute the square root of n modulo p 
-	*where p is an odd prime and n is a square modulo p
+	*where p is an odd prime and n is a square modulo p.
 
 	@function BIG.modsqrt
 	@param n Big number
@@ -895,7 +895,7 @@ int _bitsize(big *b) {
 	@return the number of bits
 	@usage 
 	--create a Big number
-	b = big.new(1983783819133422)
+	b = BIG.new(1983783819133422)
 	--calculate the number of bits
 	print(b:bits())
 	--print: 94
@@ -917,7 +917,7 @@ static int big_bits(lua_State *L) {
 	@return the number of bytes
 	@usage 
 	--create a Big number
-	b = big.new(1983783819133422)
+	b = BIG.new(1983783819133422)
 	--calculate the number of bytes
 	print(b:bytes())
 	--print: 11
@@ -1006,7 +1006,7 @@ static int lua_bigmax(lua_State *L) {
 }
 
 /** Fixed size encoding for integer with big endian order.
-	*If the second parameter is 'false' it usese little endian order.
+	*If the second parameter is 'false' it uses little endian order.
 
 	@function big:fixed
 	@param len bytes size
@@ -2070,7 +2070,7 @@ end:
 	--create two Big numbers x and y
 	x = big.from_decimal("123234442341233983797129732792324343")
 	y = big.from_decimal("165257575713243243323242243423")
-	--compute the jacobi symbol (x/y)
+	--compute the jacobi symbol 
 	print(x:jacobi(y))
 	--print: -1
 

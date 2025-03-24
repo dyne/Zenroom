@@ -980,15 +980,15 @@ static int mlkem_ctcheck(lua_State *L) {
 }
 
 /***
- Encrypt a message of 32 byte length and generate a shared secret using a public key generated from one 
+ Encrypt a message of 32 bytes length and generate a shared secret using a public key generated from one 
  of the previous functions.
  
  @function QP.mlkem_enc
  @param pk a public key whose length depends on the kind of MLKEM used
- @param m an octet of 32 byte length 
+ @param m an octet of 32 bytes length 
  @param string, where string can be: "mlkem512", "mlkem768", "mlkem1024"
 
- @return shared secret (an octet of 32 byte length) 
+ @return shared secret (an octet of 32 bytes length) 
  @return ciphertext associated to m 
 
  @usage
@@ -1133,7 +1133,7 @@ end:
  @param ct an ciphertext
  @param string where string can be: "mlkem512", "mlkem768", "mlkem1024"
 
- @return shared secret (an octet of 32 byte length) 
+ @return shared secret (an octet of 32 bytes length) 
 
  @usage
  oct1 = OCTET.random(32)
@@ -1447,7 +1447,7 @@ end:
 /*#######################################*/
 
 /*** Generate a key pair for the ML-DSA-44 cryptographic scheme. 
-	*It creates a public and private key, optionally using a provided seed, and returns them in a Lua table. 
+	*It creates a public and a private key, optionally using a provided seed, and returns them in a Lua table. 
 	*If the seed is not provided, the function generates random bytes using a random number generator.
 
 	@function QP.ml_dsa_44_keypair

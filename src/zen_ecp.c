@@ -33,7 +33,7 @@
 //  method. The values of each coordinate can be imported using @{BIG}
 //  methods `BIG.hex()` or `BIG.base64()`.
 //
-//  Once ECP numbers are created this way, the arithmetic operations
+//  Once ECP numbers are created in this way, the arithmetic operations
 //  of addition, subtraction and multiplication can be executed
 //  normally using overloaded operators (+ - *).
 //
@@ -155,9 +155,9 @@ int _fp_to_big(big *dst, FP *src) {
 /***
     Create a new ECP point from an @{OCTET} argument containing its coordinates.
 
+	@function ECP.new
     @param[@{OCTET}] coordinates of the point on the elliptic curve
     @return a new ECP point on the curve
-    @function new
     @see ECP:octet
 */
 static int lua_new_ecp(lua_State *L) {
@@ -258,17 +258,15 @@ end:
 }
 
 /***
-    Returns the generator of the curve: an ECP point that is multiplied by any @{BIG} number 
-	to obtain a correspondent point on the curve.
+    Return the generator of the curve: an ECP point that is multiplied by any @{BIG} number 
+	*to obtain a correspondent point on the curve.
 
-    @function generator
-    @return ECP point of the curve's generator.
+    @function ECP.generator
+    @return ECP point of the curve's generator
 	@usage 
 	-- Print the generator of ECP BLS381 in hexadecimal notation
-	
-	gen = ECP.G():octet():hex()			--one can su .generator() instead of .G()
+	gen = ECP.G():octet():hex()			--.G() is the same of .generator() 
 	print(gen)
-	
 	-- Output: 0317f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb
 */
 static int ecp_generator(lua_State *L) {
@@ -284,16 +282,14 @@ static int ecp_generator(lua_State *L) {
 }
 
 /***
-    Returns a new ECP infinity point that is definitely not on the curve.
+    Return a new ECP infinity point that is definitely not on the curve.
 
-    @function infinity
-    @return ECP pointing to infinity (out of the curve).
+    @function ECP.infinity
+    @return ECP point to infinity (out of the curve).
 	@usage
 	--Print the infinity point of ECP BLS381 in hexadecimal notation
-	
 	inf = ECP.infinity():octet():hex()
 	print(inf)
-	
 	-- Output: 7f7f
 
 */
@@ -310,17 +306,15 @@ static int ecp_get_infinity(lua_State *L) {
 
 
 /***
-    Gives the order of the curve, a @{BIG} number contained in an octet.
+    Give the order of the curve, a @{BIG} number contained in an octet.
 
-    @function order
+    @function ECP.order
     @return a @{BIG} number containing the curve's order
 
 	@usage
 	--Print the order of in hexadecimal notation
-
 	ord = ECP.order():octet():hex()
 	print(ord)
-
 	-- Output: 73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
 
 */
@@ -342,16 +336,16 @@ static int ecp_order(lua_State *L) {
 
 /***
     Map an @{OCTET} of exactly 64 bytes length to a point on the curve: 
-	the OCTET should be the output of an hash function.
+	*the OCTET should be the output of an hash function.
 
     @param OCTET resulting from an hash function
-    @function mapit
+    @function ECP.mapit
     @return an ECP that is univocally linked to the input OCTET
 	@usage
-	oct = OCTET.new(5)          -- generates an octect oct of length 5 bytes
-	h = hash.new("sha512")      -- calls the hash function SHA512
-	hash_oct = h:process(oct)   -- applies the hash to the ocatate oct
-	EC = ECP.mapit(hash_oct)    -- defines the ellipitic curve associated to the octate
+	oct = OCTET.new(5)          -- generate an octet oct of length 5 bytes
+	h = hash.new("sha512")      -- call the hash function SHA512
+	hash_oct = h:process(oct)   -- applie the hash to the octet oct
+	EC = ECP.mapit(hash_oct)    -- define the ellipitic curve associated to the octet
 */
 static int ecp_mapit(lua_State *L) {
 	BEGIN();
@@ -378,11 +372,10 @@ static int ecp_mapit(lua_State *L) {
 
     @param OCTET point to be validated
     @function validate
-    @return bool value: true if valid, false if not valid
+    @return boolean value: true if valid, false if invalid
 	@usage
-	oct = OCTET.new(64)         -- generates an octect oct of length 64 bytes
+	oct = OCTET.new(64)         -- generate an octet oct of length 64 bytes
 	bool = ECP.validate(oct)
-
 	if boll then 
     	print("true")
 	else 
@@ -402,440 +395,16 @@ static int ecp_validate(lua_State *L) {
 	END(1);
 }
 
+/*** This function allows to obatain the prime number q used to define an elliptic curve over a finite filed GF(q).
 
-/// Instance Methods
-// @type ecp
-
-/***
-    Make an existing ECP point affine with its curve
-    @function affine
-    @return ECP point made affine
-*/
-static int ecp_affine(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	ecp *out = NULL;
-	const ecp *in = ecp_arg(L, 1);
-	if(!in) {
-		failed_msg = "Could not create ECP";
-		goto end;
-	}
-	out = ecp_dup(L, in);
-	if(!out) {
-		failed_msg = "Could not create ECP";
-		goto end;
-	}
-	ECP_affine(&out->val);
-end:
-	ecp_free(L,in);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-/***
-    Returns true if an ECP coordinate points to infinity (out of the curve) and false otherwise.
-
-    @function isinf
-    @return false if point is on curve, true if its off curve into infinity.
-*/
-static int ecp_isinf(lua_State *L) {
-	BEGIN();
-	const ecp *e = ecp_arg(L, 1);
-	if(e) {
-		lua_pushboolean(L, ECP_isinf((ECP*)&e->val));
-		ecp_free(L,e);
-	} else {
-		THROW("Could not create ECP");
-	}
-	END(1);
-}
-
-/***
-    Add two ECP points to each other (commutative and associative operation). 
-	Can be made using the overloaded operator `+` between two ECP objects just like the would be numbers.
-
-    @param first number to be summed
-    @param second number to be summed
-    @function add(first, second)
-    @return sum resulting from the addition
-
+	@function ECP.prime
+	@return the prime number q
 	@usage
-	gen = ECP.generator()
-	inf = ECP.infinity()
-
-	sum =ECP.add(gen,inf)
-
-	if sum == gen then print("true")
-	else print("false")
-	end
-
-	-- Output: true
+	--In this case the curve is BLS381
+	q = ECP.prime() 	--returned as @BIG number
+	print(q:decimal()) 	--printed as integer
+	--Output: 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
 */
-static int ecp_add(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	const ecp *e = ecp_arg(L, 1);
-	const ecp *q = ecp_arg(L, 2);
-	if(!e || !q) {
-		failed_msg = "Could not create ECP";
-		goto end;
-	}
-	ecp *p = ecp_dup(L, e); // push
-	if(!p) {
-		failed_msg = "Could not create ECP";
-		goto end;
-	}
-	ECP_add(&p->val, (ECP*)&q->val);
-end:
-	ecp_free(L,q);
-	ecp_free(L,e);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-/***
-    Subtract an ECP point from another (commutative and associative operation). Can be made using the overloaded operator `-` between two ECP objects just like the would be numbers.
-
-    @param first number from which the second should be subtracted
-    @param second number to use in the subtraction
-    @function sub(first, second)
-    @return new ECP point resulting from the subtraction
-*/
-static int ecp_sub(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	const ecp *e = ecp_arg(L, 1);
-	const ecp *q = ecp_arg(L, 2);
-	if(!e || !q) {
-		failed_msg = "Could not create ECP";
-		goto end;
-	}
-	ecp *p = ecp_dup(L, e); // push
-	if(!p) {
-		failed_msg = "Could not create ECP";
-		goto end;
-	}
-	ECP_sub(&p->val, (ECP*)&q->val);
-end:
-	ecp_free(L,q);
-	ecp_free(L,e);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-/***
-    Transforms an ECP point into its equivalent negative point on the elliptic curve.
-
-    @function negative
-
-	@usage
-	gen = ECP.generator()
-	inf = ECP.infinity()
-	
-	inv = gen:negative()
-
-	if ECP.add(gen,inv) == inf then print("true")	
-	else print("false")
-	end
-
-	--Output: true
-*/
-static int ecp_negative(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	ecp *out = NULL;
-	const ecp *in = ecp_arg(L, 1);
-	if(!in) {
-		failed_msg = "Could not create ECP";
-		goto end;
-	}
-	out = ecp_dup(L, in);
-	if(!out) {
-		failed_msg = "Could not create ECP";
-		goto end;
-	}
-	ECP_neg(&out->val);
-end:
-	ecp_free(L,in);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-/***
-    This method transforms an ECP pointo into the double of its value, multiplying it by two. 
-	This works faster than multiplying it an arbitrary number of times.
-
-    @function double
-
-	@usage
-	sum =ECP.add(gen,gen)	--adding a point (the generator in this case) itself
-	double = gen:double()	--doubling the value of gen
-
-	if sum == double then print("true")
-	else print("false")
-	end
-
-	--Output: true
-*/
-static int ecp_double(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	ecp *out = NULL;
-	const ecp *in = ecp_arg(L, 1);
-	if(!in) {
-		failed_msg = "Could not create ECP";
-		goto end;
-	}
-	out = ecp_dup(L, in);
-	if(!out) {
-		failed_msg = "Could not create ECP";
-		goto end;
-	}
-	ECP_dbl(&out->val);
-end:
-	ecp_free(L,in);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-/***
-    Multiply an ECP point by a @{BIG} number. Can be made using the overloaded operator `*`
-
-    @function mul
-    @param ecp point on the elliptic curve to be multiplied
-    @param number indicating how many times it should be multiplied
-    @return new ecp point resulting from the multiplication
-
-	@usage
-	gen = ECP.generator()
-	num = BIG.from_decimal("5")
-	mult = ECP.mul(gen,num)
-	sum = ECP.add(gen,inf)
-
-	for i = 1,4,1 do
-    	sum = ECP.add(sum,gen)
-	end
-
-	if sum == mult then print("true")
-	else print("false")
-	end
-
-*/
-
-static int ecp_mul(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	const ecp *e = NULL;
-	const big *b = NULL;
-	ecp *out = NULL;
-	uint8_t ecpos, bigpos = 0;
-	ecpos = luaL_testudata(L, 1, "zenroom.ecp") ? 1 : 0;
-	if(!ecpos) ecpos = luaL_testudata(L, 2, "zenroom.ecp") ? 2 : 0;
-	if(!ecpos) {
-		failed_msg = "ECP not found among multiplication arguments";
-		goto end;
-	}
-	bigpos = luaL_testudata(L, 1, "zenroom.big") ? 1 : 0;
-	if(!bigpos) bigpos = luaL_testudata(L, 2, "zenroom.big") ? 2 : 0;
-	if(!bigpos) {
-		failed_msg = "BIG not found among multiplication arguments";
-		goto end;
-	}
-	e = ecp_arg(L, ecpos);
-	b = big_arg(L, bigpos);
-	if(!e || !b) {
-		failed_msg = "Could not instantiate input";
-		goto end;
-	}
-	if(b->doublesize) {
-		failed_msg = "cannot multiply ECP point with double BIG numbers, need modulo";
-		goto end;
-	}
-	out = ecp_dup(L, e);
-	if(!out) {
-		failed_msg = "Could not create ECP";
-		goto end;
-	}
-	PAIR_G1mul(&out->val, b->val);
-end:
-	ecp_free(L,e);
-	big_free(L,b);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-/***
-    Compares two ECP objects and returns true if they indicate the same point on the curve (they are equal) or false otherwise. It can also be executed by using the `==` overloaded operator.
-
-    @param first ecp point to be compared
-    @param second ecp point to be compared
-    @function eq(first, second)
-    @return bool value: true if equal, false if not equal
-*/
-static int ecp_eq(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	const ecp *p = ecp_arg(L, 1);
-	const ecp *q = ecp_arg(L, 2);
-	if(!p || !q) {
-		failed_msg = "Could not allocate ECP point";
-		goto end;
-	}
-	// TODO: is affine rly needed?
-	ECP_affine((ECP*)&p->val);
-	ECP_affine((ECP*)&q->val);
-	lua_pushboolean(L, ECP_equals((ECP*)&p->val, (ECP*)&q->val));
-end:
-	ecp_free(L,p);
-	ecp_free(L,q);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-
-// use shared internally with octet o_arg()
-int _ecp_to_octet(octet *o, const ecp *e) {
-	if (ECP_isinf((ECP*)&e->val)) { // Infinity
-		o->val[0] = SCHAR_MAX; o->val[1] = SCHAR_MAX;
-		o->val[3] = 0x0; o->len = 2;
-	} else
-		ECP_toOctet(o, (ECP*)&e->val, 1);
-	return(1);
-}
-/***
-    Returns an octet containing the coordinate of an ECP point on the curve. 
-	It can be used to export the value of an ECP point into a string, using @{OCTET:hex} or @{OCTET:base64} encapsulation. It can be decoded back to an ECP point using @{ECP:new}.
-
-    @function octet
-    @return the ECP point as an OCTET sequence
-
-	@usage
-	num = BIG.from_decimal("3")
-	mult = ECP.mul(gen,num)
-	sum = ECP.add(gen,inf)
-
-	to_octet = mult:octet():hex()
-	-- returns the hexadecimal notation of mult after having been trasmormed it in an octet
-*/
-static int ecp_octet(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	octet *o = NULL;
-	const ecp *e = ecp_arg(L, 1);
-	if(!e) {
-		failed_msg = "Could not instantiate ECP";
-		goto end;
-	}
-	o = o_new(L, e->totlen + 0x0f);
-	if(!o) {
-		failed_msg = "Could not instantiate ECP";
-		goto end;
-	}
-	_ecp_to_octet(o, e);
-end:
-	ecp_free(L,e);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-/***
-    Gives the X coordinate of the ECP point as a single @{BIG} number.
-
-    @function x
-    @return a BIG number indicating the X coordinate of the point on curve.
-
-	@usage
-
-	--In the following, the method decimal() is used to transfomr in integert the x coordinate of gen
-	
-	gen = ECP.generator()
-	x = gen:x()
-	print(x:decimal())
-
-	--Output: 3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507
-*/
-static int ecp_get_x(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	const ecp *e = ecp_arg(L, 1);
-	if(!e) {
-		failed_msg = "Could not read ECP";
-		goto end;
-	}
-	ECP_affine((ECP*)&e->val);
-	big *x = big_new(L);
-	if(!x) {
-		failed_msg = "Could not read BIG";
-		goto end;
-	}
-	big_init(L,x);
-	_fp_to_big(x, (FP*)&e->val.x);
-end:
-	ecp_free(L,e);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-/***
-    Gives the Y coordinate of the ECP point as a single @{BIG} number.
-
-    @function y
-    @return a BIG number indicating the Y coordinate of the point on curve.
-
-	@usage
-	Equal to the previous one
-*/
-static int ecp_get_y(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	big *y = NULL;
-	const ecp *e = ecp_arg(L, 1);
-	if(!e) {
-		failed_msg = "Could not read ECP";
-		goto end;
-	}
-	ECP_affine((ECP*)&e->val);
-	y = big_new(L);
-	if(!y) {
-		failed_msg = "Could not read BIG";
-		goto end;
-	}
-	big_init(L,y);
-	_fp_to_big(y, (FP*)&e->val.y);
-end:
-	ecp_free(L,e);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-/***
-This function allows to obatain the prime number q used to define an elliptic curve over a finite filed GF(q)
-@usage
---In this case the curve is BLS381
-q = ECP.prime() 	--returned as @BIG number
-print(q:decimal()) 	--printed as integer
-
---Output: 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
- */
 
 static int ecp_prime(lua_State *L) {
 	BEGIN();
@@ -845,144 +414,19 @@ static int ecp_prime(lua_State *L) {
 }
 
 /***
- This method allows to change the notation of point of an ellipitc curve from octet in a common used hexadecimal notation. 
- If one tries to convert a point does not belong to the elliptic curve (as the point at infinity), the method returns nothig
- @function :_tostring
-
- @usage
-
- gen = ECP.generator()
-
- y = gen:__tostring()
- print(y) 
-
- --Output: 0317f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb
- --The hexadecimal notation of gen
-
- 
- */
-
-static int ecp_output(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	const ecp *e = ecp_arg(L, 1);
-	if(!e) {
-		failed_msg = "Could not read ECP";
-		goto end;
-	}
-	if (ECP_isinf((ECP*)&e->val)) { // Infinity
-		octet *o = o_new(L, 3);
-		if(!o) {
-			failed_msg = "Could not read OCTET";
-			goto end;
-		}
-		o->val[0] = SCHAR_MAX; o->val[1] = SCHAR_MAX;
-		o->val[3] = 0x0; o->len = 2;
-		goto end;
-	}
-	octet *o = o_new(L, e->totlen + 0x0f);
-	if(!o) {
-		failed_msg = "Could not read OCTET";
-		goto end;
-	}
-	_ecp_to_octet(o, e);
-	push_octet_to_hex_string(L, o);
-end:
-	ecp_free(L,e);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-char gf_sign(BIG y) {
-	BIG p;
-	BIG_rcopy(p, CURVE_Prime);
-	BIG_dec(p, 1);
-	BIG_norm(p);
-	BIG_shr(p, 1);
-	if(BIG_comp(y, p) == 1)
-		return 1;
-	else
-		return 0;
-}
-/***
- It allows to convert a point from an elliptic curve in a serial number used in the context 
- of the cryptocurrency Zcash
- @function ecp.to_cash
- @param x, a point of the elliptic curve 
- @return an octet associated to the point
- @usage
- gen = ECP.generator()
- y = ECP.to_zcash(gen)
- print(y:hex())				--printed the serial number in hexadecimal notation
-
- --Output: 97f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb
-
- */
-static int ecp_zcash_export(lua_State *L) {
-	BEGIN();
-	const char *failed_msg = NULL;
-	const ecp *e = ecp_arg(L, 1);
-	if(e == NULL) {
-		THROW("Could not create ECP point");
-		return 0;
-	}
-
-	octet *o = o_new(L, 48); // TODO: make this value adapt to ECP
-				 // curve configured at build time
-	if(o == NULL) {
-		failed_msg = "Could not allocate ECP point";
-		goto end;
-	}
-
-	if(ECP_isinf((ECP*)&e->val)) {
-		o->len = 48; // TODO
-		o->val[0] = (char)0xc0;
-		memset(o->val+1, 0, 47); // TODO
-	} else {
-		BIG x, y;
-		const char c_bit = 1;
-		const char i_bit = 0;
-
-		ECP_get(x, y, (ECP*)&e->val);
-
-		const char s_bit = gf_sign(y);
-		char m_byte = (char)((c_bit << 7)+(i_bit << 6)+(s_bit << 5));
-
-		BIG_toBytes(o->val, x);
-		o->len = 48; // TODO
-
-		o->val[0] |= m_byte;
-	}
-
-end:
-	ecp_free(L, e); // TODO: this crashes, still unsure why
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-/***
- This function transforms a serial number in octet notation in a point of an elliptic curve, if associated to
- @function ecp.from_zcash
- @param y, an octet
+ This function transforms a serial number in octet notation in a point of an elliptic curve, if associated to.
+ @function ECP.from_zcash
+ @param y an octet
  @return a point on an elliptic curve in octet notation
  @usage
- 
  gen = ECP.generator()
-
- y = ECP.to_zcash(gen) --serial number associated to the point gen
+ y = gen:to_zcash() --serial number associated to the point gen
  point = ECP.from_zcash(y):octet() --point associated to the previous serial number 
- 
  print(point:hex()) -- the point printed in hexadecimal notation
-
  --Output: 0317f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb
  -- It can be checked the previous one is the hexadecimal notation fo the point gen
 
  */
-
 
 // See the generalised version commented inside zen_octet.c
 static int ecp_zcash_import(lua_State *L){
@@ -1062,21 +506,16 @@ end:
 	END(1);
 }
 
-/***
+/*** Allow to calculate the right side of the equation Y^2 = X^3 + 4, the elliptic curve BSL381, as a @{BIG} number.
  
- It allows to calculate the right side of the equaion Y^2 = X^3 + 4, the elliptic curve BSL381, as a @{BIG} number
- 
- @function ecp.rsh
+ @function ECP.rhs
 	@param x as @{BIG} number
 	@return Y^2 from the previous equation
  @usage
 x = BIG.from_decimal("2")
 y_square = ECP.rhs(x) -- Y^2 from Y^2 = X^3 + 4
-
 print(y_square:decimal())
-
 --Output: 12
-
 
  */
 
@@ -1106,6 +545,532 @@ end:
 	}
 	END(1);
 }
+
+
+/// Object Methods
+// @type ECP
+
+/***
+    Make an existing ECP point affine with its curve
+    @function affine
+    @return ECP point made affine
+*/
+static int ecp_affine(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	ecp *out = NULL;
+	const ecp *in = ecp_arg(L, 1);
+	if(!in) {
+		failed_msg = "Could not create ECP";
+		goto end;
+	}
+	out = ecp_dup(L, in);
+	if(!out) {
+		failed_msg = "Could not create ECP";
+		goto end;
+	}
+	ECP_affine(&out->val);
+end:
+	ecp_free(L,in);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+/***
+    Check if a given elliptic curve point is the point at infinity.
+
+    @function isinf
+    @return true if it is the point at infinity, false otherwise
+*/
+static int ecp_isinf(lua_State *L) {
+	BEGIN();
+	const ecp *e = ecp_arg(L, 1);
+	if(e) {
+		lua_pushboolean(L, ECP_isinf((ECP*)&e->val));
+		ecp_free(L,e);
+	} else {
+		THROW("Could not create ECP");
+	}
+	END(1);
+}
+
+/***
+    Add an ECP point to another (commutative and associative operation). 
+	*Can be made using the overloaded operator + between two ECP objects just like the would be numbers.
+
+    @param num number to be summed
+    @function add
+    @return sum resulting from the addition
+
+	@usage
+	gen = ECP.generator()
+	inf = ECP.infinity()
+	sum =gen:add(inf)
+	if sum == gen then print("true")
+	else print("false")
+	end
+	-- Output: true
+*/
+static int ecp_add(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const ecp *e = ecp_arg(L, 1);
+	const ecp *q = ecp_arg(L, 2);
+	if(!e || !q) {
+		failed_msg = "Could not create ECP";
+		goto end;
+	}
+	ecp *p = ecp_dup(L, e); // push
+	if(!p) {
+		failed_msg = "Could not create ECP";
+		goto end;
+	}
+	ECP_add(&p->val, (ECP*)&q->val);
+end:
+	ecp_free(L,q);
+	ecp_free(L,e);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/***
+    Subtract an ECP point from another (commutative and associative operation). Can be made using the overloaded operator - between two ECP objects just like the would be numbers.
+
+    @param num number to subtract
+    @function sub
+    @return new ECP point resulting from the subtraction
+*/
+static int ecp_sub(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const ecp *e = ecp_arg(L, 1);
+	const ecp *q = ecp_arg(L, 2);
+	if(!e || !q) {
+		failed_msg = "Could not create ECP";
+		goto end;
+	}
+	ecp *p = ecp_dup(L, e); // push
+	if(!p) {
+		failed_msg = "Could not create ECP";
+		goto end;
+	}
+	ECP_sub(&p->val, (ECP*)&q->val);
+end:
+	ecp_free(L,q);
+	ecp_free(L,e);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/***
+    Transforms an ECP point into its equivalent negative point on the elliptic curve.
+
+    @function negative
+	@return the equivalent negative point
+
+	@usage
+	gen = ECP.generator()
+	inf = ECP.infinity()
+	inv = gen:negative()
+	if gen:add(inv) == inf then print("true")	
+	else print("false")
+	end
+	--Output: true
+*/
+static int ecp_negative(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	ecp *out = NULL;
+	const ecp *in = ecp_arg(L, 1);
+	if(!in) {
+		failed_msg = "Could not create ECP";
+		goto end;
+	}
+	out = ecp_dup(L, in);
+	if(!out) {
+		failed_msg = "Could not create ECP";
+		goto end;
+	}
+	ECP_neg(&out->val);
+end:
+	ecp_free(L,in);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/***
+    This method transforms an ECP point into the double of its value, multiplying it by two. 
+
+    @function double
+
+	@usage
+	sum = gen:add(gen)	--adding a point (the generator in this case) itself
+	double = gen:double()	--doubling the value of gen
+	if sum == double then print("true")
+	else print("false")
+	end
+	--Output: true
+*/
+static int ecp_double(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	ecp *out = NULL;
+	const ecp *in = ecp_arg(L, 1);
+	if(!in) {
+		failed_msg = "Could not create ECP";
+		goto end;
+	}
+	out = ecp_dup(L, in);
+	if(!out) {
+		failed_msg = "Could not create ECP";
+		goto end;
+	}
+	ECP_dbl(&out->val);
+end:
+	ecp_free(L,in);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/***
+    Multiply an ECP point by a @{BIG} number. Can be made using the overloaded operator `*`
+
+    @function mul
+    @param number indicating how many times it should be multiplied
+    @return new ecp point resulting from the multiplication
+
+	@usage
+	gen = ECP.generator()
+	num = BIG.from_decimal("5")
+	mult = gen:mul(num)
+	sum = gen:add(inf)
+	for i = 1,4,1 do
+    	sum = sum:add(gen)
+	end
+	if sum == mult then print("true")
+	else print("false")
+	end
+
+*/
+
+static int ecp_mul(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const ecp *e = NULL;
+	const big *b = NULL;
+	ecp *out = NULL;
+	uint8_t ecpos, bigpos = 0;
+	ecpos = luaL_testudata(L, 1, "zenroom.ecp") ? 1 : 0;
+	if(!ecpos) ecpos = luaL_testudata(L, 2, "zenroom.ecp") ? 2 : 0;
+	if(!ecpos) {
+		failed_msg = "ECP not found among multiplication arguments";
+		goto end;
+	}
+	bigpos = luaL_testudata(L, 1, "zenroom.big") ? 1 : 0;
+	if(!bigpos) bigpos = luaL_testudata(L, 2, "zenroom.big") ? 2 : 0;
+	if(!bigpos) {
+		failed_msg = "BIG not found among multiplication arguments";
+		goto end;
+	}
+	e = ecp_arg(L, ecpos);
+	b = big_arg(L, bigpos);
+	if(!e || !b) {
+		failed_msg = "Could not instantiate input";
+		goto end;
+	}
+	if(b->doublesize) {
+		failed_msg = "cannot multiply ECP point with double BIG numbers, need modulo";
+		goto end;
+	}
+	out = ecp_dup(L, e);
+	if(!out) {
+		failed_msg = "Could not create ECP";
+		goto end;
+	}
+	PAIR_G1mul(&out->val, b->val);
+end:
+	ecp_free(L,e);
+	big_free(L,b);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/***
+    Compares two ECP objects and returns true if they indicate the same point on the curve (they are equal) or false otherwise. It can also be executed by using the `==` overloaded operator.
+
+    @param point ecp point to be compared
+    @function eq
+    @return bool value: true if equal, false if not equal
+*/
+static int ecp_eq(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const ecp *p = ecp_arg(L, 1);
+	const ecp *q = ecp_arg(L, 2);
+	if(!p || !q) {
+		failed_msg = "Could not allocate ECP point";
+		goto end;
+	}
+	// TODO: is affine rly needed?
+	ECP_affine((ECP*)&p->val);
+	ECP_affine((ECP*)&q->val);
+	lua_pushboolean(L, ECP_equals((ECP*)&p->val, (ECP*)&q->val));
+end:
+	ecp_free(L,p);
+	ecp_free(L,q);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+
+// use shared internally with octet o_arg()
+int _ecp_to_octet(octet *o, const ecp *e) {
+	if (ECP_isinf((ECP*)&e->val)) { // Infinity
+		o->val[0] = SCHAR_MAX; o->val[1] = SCHAR_MAX;
+		o->val[3] = 0x0; o->len = 2;
+	} else
+		ECP_toOctet(o, (ECP*)&e->val, 1);
+	return(1);
+}
+/***
+    Return an octet containing the coordinate of an ECP point on the curve. 
+	*It can be used to export the value of an ECP point into a string, using @{OCTET:hex} or @{OCTET:base64} encapsulation. 
+	*It can be decoded back to an ECP point using @{ECP:new}.
+
+    @function octet
+    @return the ECP point as an OCTET sequence
+
+	@usage
+	num = BIG.from_decimal("3")
+	mult = gen:mul(num)
+	sum = gen:add(inf)
+	to_octet = mult:octet():hex()
+	-- returns the hexadecimal notation of mult after having been trasmormed it in an octet
+*/
+static int ecp_octet(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *o = NULL;
+	const ecp *e = ecp_arg(L, 1);
+	if(!e) {
+		failed_msg = "Could not instantiate ECP";
+		goto end;
+	}
+	o = o_new(L, e->totlen + 0x0f);
+	if(!o) {
+		failed_msg = "Could not instantiate ECP";
+		goto end;
+	}
+	_ecp_to_octet(o, e);
+end:
+	ecp_free(L,e);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/***
+    Give the X coordinate of the ECP point as a single @{BIG} number.
+
+    @function x
+    @return a BIG number indicating the X coordinate of the point on curve.
+
+	@usage
+
+	--In the following, the method decimal() is used to transfomr in integert the x coordinate of gen
+	gen = ECP.generator()
+	x = gen:x()
+	print(x:decimal())
+	--Output: 3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507
+*/
+static int ecp_get_x(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const ecp *e = ecp_arg(L, 1);
+	if(!e) {
+		failed_msg = "Could not read ECP";
+		goto end;
+	}
+	ECP_affine((ECP*)&e->val);
+	big *x = big_new(L);
+	if(!x) {
+		failed_msg = "Could not read BIG";
+		goto end;
+	}
+	big_init(L,x);
+	_fp_to_big(x, (FP*)&e->val.x);
+end:
+	ecp_free(L,e);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/***
+    Give the Y coordinate of the ECP point as a single @{BIG} number.
+
+    @function y
+    @return a BIG number indicating the Y coordinate of the point on curve.
+
+	@usage
+	Equal to the previous one
+*/
+static int ecp_get_y(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	big *y = NULL;
+	const ecp *e = ecp_arg(L, 1);
+	if(!e) {
+		failed_msg = "Could not read ECP";
+		goto end;
+	}
+	ECP_affine((ECP*)&e->val);
+	y = big_new(L);
+	if(!y) {
+		failed_msg = "Could not read BIG";
+		goto end;
+	}
+	big_init(L,y);
+	_fp_to_big(y, (FP*)&e->val.y);
+end:
+	ecp_free(L,e);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+
+/***
+ Allow to change the notation of point of an ellipitc curve from octet in a common used hexadecimal notation. 
+ If one tries to convert a point does not belong to the elliptic curve (as the point at infinity), the method returns nothing.
+ @function __tostring
+ @return a string or nothing
+
+ @usage
+ gen = ECP.generator()
+ y = gen:__tostring()
+ print(y) 
+ --Output: 0317f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb
+ --The hexadecimal notation of gen
+
+ */
+
+static int ecp_output(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const ecp *e = ecp_arg(L, 1);
+	if(!e) {
+		failed_msg = "Could not read ECP";
+		goto end;
+	}
+	if (ECP_isinf((ECP*)&e->val)) { // Infinity
+		octet *o = o_new(L, 3);
+		if(!o) {
+			failed_msg = "Could not read OCTET";
+			goto end;
+		}
+		o->val[0] = SCHAR_MAX; o->val[1] = SCHAR_MAX;
+		o->val[3] = 0x0; o->len = 2;
+		goto end;
+	}
+	octet *o = o_new(L, e->totlen + 0x0f);
+	if(!o) {
+		failed_msg = "Could not read OCTET";
+		goto end;
+	}
+	_ecp_to_octet(o, e);
+	push_octet_to_hex_string(L, o);
+end:
+	ecp_free(L,e);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+char gf_sign(BIG y) {
+	BIG p;
+	BIG_rcopy(p, CURVE_Prime);
+	BIG_dec(p, 1);
+	BIG_norm(p);
+	BIG_shr(p, 1);
+	if(BIG_comp(y, p) == 1)
+		return 1;
+	else
+		return 0;
+}
+/***
+ It allows to convert a point from an elliptic curve in a serial number used in the context 
+ of the cryptocurrency Zcash.
+ @function to_zcash
+ @return an octet associated to the point
+ @usage
+ gen = ECP.generator()
+ y = gen:to_zcash()
+ print(y:hex())				--printed the serial number in hexadecimal notation
+ --Output: 97f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb
+
+ */
+static int ecp_zcash_export(lua_State *L) {
+	BEGIN();
+	const char *failed_msg = NULL;
+	const ecp *e = ecp_arg(L, 1);
+	if(e == NULL) {
+		THROW("Could not create ECP point");
+		return 0;
+	}
+
+	octet *o = o_new(L, 48); // TODO: make this value adapt to ECP
+				 // curve configured at build time
+	if(o == NULL) {
+		failed_msg = "Could not allocate ECP point";
+		goto end;
+	}
+
+	if(ECP_isinf((ECP*)&e->val)) {
+		o->len = 48; // TODO
+		o->val[0] = (char)0xc0;
+		memset(o->val+1, 0, 47); // TODO
+	} else {
+		BIG x, y;
+		const char c_bit = 1;
+		const char i_bit = 0;
+
+		ECP_get(x, y, (ECP*)&e->val);
+
+		const char s_bit = gf_sign(y);
+		char m_byte = (char)((c_bit << 7)+(i_bit << 6)+(s_bit << 5));
+
+		BIG_toBytes(o->val, x);
+		o->len = 48; // TODO
+
+		o->val[0] |= m_byte;
+	}
+
+end:
+	ecp_free(L, e); // TODO: this crashes, still unsure why
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
 
 int luaopen_ecp(lua_State *L) {
 	(void)L;

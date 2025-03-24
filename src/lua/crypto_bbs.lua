@@ -22,10 +22,26 @@
 --- <h1>BBS signature scheme</h1>
 --
 -- The BBS signature scheme (also known as the Boneh-Boyen-Shacham signature scheme) 
--- is a cryptographic signature scheme based on pairing-based cryptography. 
--- It is designed to provide short signatures with strong security guarantees.
--- The BBS scheme is particularly notable for its use of bilinear pairings on elliptic curves,
--- which enable efficient verification and compact signatures.
+-- is a cryptographic signature scheme based on pairing-based cryptography: the BBS scheme is particularly 
+-- notable for its use of bilinear pairings on elliptic curves,
+-- which enable efficient verification and compact signatures. 
+-- It is a probabilistic digital signature scheme based on the discrete logarithm problem, i.e.
+-- the difficult of finding the dicrete logarithm in a gruop of prime order.
+-- 
+-- The BBS signature scheme utilizes two elliptic curves in its construction:
+-- E1: y ^ 2 = x ^ 3 + 4 defined over the finite field GF(p). 
+--
+-- E2: y ^ 2 = x ^ 3 + 4 * (I + 1) where I ^ 2 + 1 = 0 defined over the finite field GF(p^2)
+--
+-- where p = (t - 1)^2 * (t^4 - t^2 + 1) / 3 + t and t = -2^63 - 2^62 - 2^60 - 2^57 - 2^48 - 2^16.
+-- 
+-- Let be observed that p is not a prime number and the two subgroups G1 and G2 of E1 and E2 are 
+-- the two groups used for the pairing having the same order 
+-- r = 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001 which is a prime factor of p.
+--
+-- Public keys and key generation are considered as points in G2 and signatures as point in G1.
+-- This choice allows to provide short signatures with strong security guarantees.
+-- 
 -- 
 --
 -- @module BBS
@@ -84,7 +100,7 @@ local CIPHERSUITE_SHA = {
 -- There are two possibilities for the output: the configuration for SHAKE-256 or the configuration for SHA-256.
 --
 --@function BBS.ciphersuite
---@param hash a string with the name of the hash function
+--@param hash a string with the name of the hash function, sha256 or shake256
 --@return a ciphersuite configuration
 --@usage
 --bbs = require'crypto_bbs'
@@ -152,7 +168,7 @@ OUTPUT: sk (as zenroom.octet), it represents a scalar between 1 and the order of
 --The ciphersuite is a table containing the cipher suite configuration.
 --Key material is an optional input used as the seed for key generation. If not provided, a secure random value of 32 bytes is generated.
 --Key info is an optional addition information. If not provided, it defaults to an empty octet. 
---key DST is an optional domain separation tag. If not provided, it defaults to the cipher suite's ciphersuite\_ID concatenated with the string 'KEYGEN\_DST\_'.
+--key DST is an optional domain separation tag. If not provided, it defaults to the ciphersuite's ciphersuite\_ID concatenated with the string 'KEYGEN\_DST\_'.
 --
 --@function BBS.keygen
 --@param ciphersuite 
@@ -580,7 +596,8 @@ end
 --bbs = require'crypto_bbs'
 --**define a ciphersuite and a public key
 --ciphersuite = bbs.ciphersuite('sha256') 
---PUBLIC_KEY = "a820f230f6ae38503b86c70dc50b61c58a77e45c39ab25c0652bbaa8fa136f2851bd4781c9dcde39fc9d1d52c9e60268061e7d7632171d91aa8d460acee0e96f1e7c4cfb12d3ff9ab5d5dc91c277db75c845d649ef3c4f63aebc364cd55ded0c"
+--PUBLIC_KEY = "a820f230f6ae38503b86c70dc50b61c58a77e45c39ab25c0652bbaa8fa136f2851bd4781c9dcde39fc9d1d52c9e60268061e7d7632171d
+--              91aa8d460acee0e96f1e7c4cfb12d3ff9ab5d5dc91c277db75c845d649ef3c4f63aebc364cd55ded0c"
 --**calculate the point W
 --W = bbs.octets_to_pub_key(O.from_hex(PUBLIC_KEY))
 
@@ -890,7 +907,8 @@ OUTPUT: proof (output of CoreProofGen)
 --**define ciphersuite, sk, pk, header, single message array, presentation header and calculate a valid signature
 --ciphersuite = bbs.ciphersuite('sha256') 
 --SECRET_KEY = "60e55110f76883a13d030b2f6bd11883422d5abde717569fc0731f51237169fc"
---PUBLIC_KEY = "a820f230f6ae38503b86c70dc50b61c58a77e45c39ab25c0652bbaa8fa136f2851bd4781c9dcde39fc9d1d52c9e60268061e7d7632171d91aa8d460acee0e96f1e7c4cfb12d3ff9ab5d5dc91c277db75c845d649ef3c4f63aebc364cd55ded0c"
+--PUBLIC_KEY = "a820f230f6ae38503b86c70dc50b61c58a77e45c39ab25c0652bbaa8fa136f2851bd4781c9dcde39fc9d1d52c9e60268061e7d7
+--              632171d91aa8d460acee0e96f1e7c4cfb12d3ff9ab5d5dc91c277db75c845d649ef3c4f63aebc364cd55ded0c"
 --HEADER = "11223344556677889900aabbccddeeff"
 --SINGLE_MSG_ARRAY = { O.from_hex("9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02") }
 --PRESENTATION_HEADER = O.from_hex("bed231d880675ed101ead304512e043ade9958dd0241ea70b4b3957fba941501")

@@ -94,8 +94,11 @@ octet *new_octet_from_float(lua_State *L, float *f) {
 
 /// <h1>Float (F)</h1>
 //
-//	Tollerance EPS=0.000001.
-//  @module F
+//Floating-point numbers are a fundamental data type in computing used to represent real numbers (numbers with fractional parts). 
+//They are designed to handle a wide range of magnitudes, from very small to very large values, by using a scientific notation-like format in binary.
+//
+// Tollerance EPS=0.000001.
+//  @module FLOAT
 
 
 float *float_new(lua_State *L) {

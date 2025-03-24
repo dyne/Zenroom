@@ -375,7 +375,7 @@ Create a new octet with a specified maximum size, or a default if
 omitted. All operations exceeding the octet's size will truncate
 excessing data. Octets cannot be resized.
 
-@function OCTET.new(length)
+@function OCTET.new
 @int[opt=64] length maximum length in bytes
 @return octet newly instantiated octet
 */
@@ -404,7 +404,7 @@ end:
 /***
 Create a new octet of size 0.
 
-@function OCTET.empty()
+@function OCTET.empty
 @return octet newly instantiated octet
 */
 static int new_empty_octet (lua_State *L) {
@@ -445,8 +445,8 @@ static int new_random(lua_State *L) {
 }
 
 /***
-	Check if a Lua string is a valid Base64-encoded string.
-	*If the string is valid Base64, it pushes true, otherwise it pushes false onto the Lua stack.
+	Check if a Lua string is a valid base64-encoded string.
+	*If the string is valid base64, it pushes true, otherwise it pushes false onto the Lua stack.
 
 	@function OCTET.is_base64
 	@param s a Lua string
@@ -487,8 +487,8 @@ static int lua_is_url64(lua_State *L) {
 }
 
 /***
-	Check if a Lua string is a valid Base58-encoded string.
-	*If the string is valid Base58, it pushes true, otherwise it pushes false onto the Lua stack.
+	Check if a Lua string is a valid base58-encoded string.
+	*If the string is valid base58, it pushes true, otherwise it pushes false onto the Lua stack.
 
 	@function OCTET.is_base58
 	@param s a Lua string
@@ -699,7 +699,7 @@ end:
 
 /***
 Convert a string into an octet object, 
-after checking if the input string.
+after checking if the input is a valid string.
 
 	@function OCTET.from_string
 	@param str string 
@@ -1002,7 +1002,7 @@ end:
 /***
 	Create an octet filled with zero values up to indicated size or its maximum size.
 
-	@int[opt=octet:max] length fill with zero up to this size, use maxumum octet size if omitted
+	@int[opt=octet:max] length fill with zero up to this size, use maximum octet size if omitted
 	@function OCTET.zero
 	@return octet filled with zeros
 */
@@ -1078,7 +1078,7 @@ end:
 }
 
 /***
-	Encode an octet in URL64 notation.
+	Encode an octet in url64 notation.
 
 	@function OCTET:url64
 	@return a string representing the octet's contents in url64
@@ -1320,8 +1320,6 @@ end:
 
 /***
 	Encode an octet into a string of hexadecimal numbers representing its contents.
-
-*This is the default format when `print()` is used on an octet.
 
 	@function octet:hex
 	@return a string of hexadecimal numbers
@@ -1741,7 +1739,7 @@ static int max(lua_State *L) {
 
 /***
 	Given a string and a characater, this function removes from the string 
-	*all the occurences of che character in the string
+	*all the occurences of the character in the string
 	@param char the character to remove
 	@function OCTET:rmchar
 
@@ -1791,8 +1789,8 @@ end:
 
 /***
 	Process an octet structure and create a new octet by filtering out certain ASCII characters and handling escape sequences.
-	*If an escape character '\' is encountered, it sets an escape flag.
-	*If the next character is one of 'a', 'b', 't', 'n', 'v', 'f', or 'r', both the escape character '\' and the escaped character are skipped.
+	*If an escape character \ is encountered, it sets an escape flag.
+	*If the next character is one of 'a', 'b', 't', 'n', 'v', 'f', or 'r', both the escape character \ and the escaped character are skipped.
 	*All other valid characters are copied to the new octet.
 
 	@function OCTET:compact_ascii
@@ -1980,7 +1978,7 @@ static int popcount64b(uint64_t x) {
 	*The Hamming distance is the number of positions at which the corresponding bits differ between the two octets.
 	*This function calculates the Hamming distance between two octets by treating them as arrays of 64-bit integers.
 	*It only works with octets whose lengths are multiples of 8 bytes. It does not handle smaller octets or padding.
-	+Ideal for applications involving large octets where performance is critical.
+	*Ideal for applications involving large octets where performance is critical.
 
 
 	@function OCTET:popcount_hamming		
@@ -2087,7 +2085,7 @@ end:
 	@usage 
 	--create a string octet
 	oct=OCTET.from_string("Hello world!")
-	--print the number of ocuurences of "l"
+	--print the number of occurrences of "l"
 	print(oct:charcount("l"))
 	--print: 3
 

@@ -18,7 +18,14 @@
  *
  */
 
-//  @module TIME
+/// <h1>TIME</h1>
+//This class allows to work with TIME objects. All TIME objects are float number.
+//Since all TIME objects are 32 bit signed, there are two limitations for values allowed:
+//
+//-The MAXIMUM TIME value allowed is the number 2147483647 (<code>t_max = TIME.new(2147483647)</code>)
+//
+//-The MINIMUM TIME value allowed is the number -2147483647 (<code>t_min = TIME.new(-2147483647)</code>) 
+//@module TIME
 
 
 #include <stdlib.h>
@@ -128,17 +135,17 @@ octet *new_octet_from_time(lua_State *L, ztime_t t) {
 }
 
 /// Global TIME Functions
-// @module TIME
+// @type TIME
 
 
 
 /***
     Create a new time. If an argument is present,
-    import it as @{OCTET} and initialise it with its value.
+    *import it as @{OCTET} and initialise it with its value.
 
     @param[opt] octet value (32 bit)
     @return a new float number
-    @function T.new(octet)
+    @function TIME.new
 */
 static int newtime(lua_State *L) {
 	BEGIN();
@@ -157,124 +164,6 @@ static int newtime(lua_State *L) {
 	END(1);
 }
 
-/***
- This function allows to do the sum between two time object
- @function time.add
- @return return the sum if it allowed. 
- 		It might be return the error message "Result of addition out of range" 
-		if the result of the sum is too much big
- @param(t1,t2)		
- @usage
- oct1 = OCTET.random(4)
-oct2 = OCTET.random(4)
-
-t1 = time.new(oct1)		-- -185857247
-t2 = time.new(oct2)		-- 339324905
-
-sum = TIME.add(t1,t1)
-
-print(sum:__tostring())	--Output: 153467658
-
- */
-
-static int time_add(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	ztime_t *a = time_arg(L, 1);
-	ztime_t *b = time_arg(L, 2);
-	ztime_t *c = time_new(L);
-	if(!a || !b || !c) {
-		failed_msg = "Could not allocate time number";
-		goto end;
-	}
-	// manage possible overflow
-	if(*a > 0 && *b > 0 && *a > INT_MAX - *b) {
-		failed_msg = "Result of addition out of range";
-		goto end;
-	} else if( *a < 0 && *b < 0 && *a < INT_MIN - *b) {
-		failed_msg = "Result of addition out of range";
-		goto end;
-	}
-	*c = *a + *b;
-end:
-	time_free(L, a);
-	time_free(L, b);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-/***
-  This function allows to subtract two time object
- @function time.sub
- @return return the subtraction if it allowed. 
- 		It might be return the error message "Result of subtraction out of range" 
-		if the result of the subtraction is too much big
- @param(t1,t2)	
- @usage
- The same of the function .add()	
- */
-
-
-
-
-static int time_sub(lua_State *L) {
-	BEGIN();
-	char *failed_msg = NULL;
-	ztime_t *a = time_arg(L, 1);
-	ztime_t *b = time_arg(L, 2);
-	ztime_t *c = time_new(L);
-	if(!a || !b || !c) {
-		failed_msg = "Could not allocate time number";
-	}
-	// manage possible overflow
-	if(*a > 0 && *b < 0 && *a > INT_MAX + *b) {
-		failed_msg = "Result of subtraction out of range";
-		goto end;
-	} else if( *a < 0 && *b > 0 && *a < INT_MIN + *b) {
-		failed_msg = "Result of subtraction out of range";
-		goto end;
-	}
-	*c = *a - *b;
-end:
-	time_free(L, a);
-	time_free(L, b);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-	END(1);
-}
-
-
-/***
- It calculates the opposite of a time object
- @function time.opposite
- @param t1
- @return the opposite a time object
- @usage
- oct1 = OCTET.random(4)
-
-t1 = time.new(oct1)			-- -880692989
-
-opp = TIME.opposite(t1)
-
-print(opp:__tostring())		-- Output: 880692989
- */
-
-static int time_opposite(lua_State *L) {
-	BEGIN();
-	ztime_t *a = time_arg(L,1);
-	ztime_t *b = time_new(L);
-	if(a && b) {
-		*b = -(*a);
-	}
-	time_free(L,a);
-	if(!a || !b) {
-		THROW("Could not allocate time number");
-	}
-	END(1);
-}
 
 
 /*static int is_time(lua_State *L) {
@@ -298,9 +187,9 @@ static int time_opposite(lua_State *L) {
 
 
 /***
- It checks if the given input (either a number or a string) falls within a specific range of time values
- @function time.detect_time_value
- @param t, a time value
+ It checks if the given input (either a number or a string) falls within a specific range of time values.
+ @function TIME.detect_time_value
+ @param t a time value
  @return a boolean value: true if the time value is too much big or too much low. false, otherwise
  */
 static int detect_time_value(lua_State *L) {
@@ -347,29 +236,120 @@ end:
 
 	END(1);
 }
+
 /***
- Given two time object, it checks if they are equal
- @function :__eq
+ Allow to do the sum between two time object.
+ @function time:__add
+ @return return the sum if it allowed. It might be return the error message "Result of addition out of range" if the result of the sum is too much big
+ @param t2 the time to sum		
+ @usage
+ oct1 = OCTET.random(4)
+ oct2 = OCTET.random(4)
+ t1 = time.new(oct1)		
+ t2 = time.new(oct2)		
+ sum = t1:__add(t2)	
+
+ */
+
+ static int time_add(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	ztime_t *a = time_arg(L, 1);
+	ztime_t *b = time_arg(L, 2);
+	ztime_t *c = time_new(L);
+	if(!a || !b || !c) {
+		failed_msg = "Could not allocate time number";
+		goto end;
+	}
+	// manage possible overflow
+	if(*a > 0 && *b > 0 && *a > INT_MAX - *b) {
+		failed_msg = "Result of addition out of range";
+		goto end;
+	} else if( *a < 0 && *b < 0 && *a < INT_MIN - *b) {
+		failed_msg = "Result of addition out of range";
+		goto end;
+	}
+	*c = *a + *b;
+end:
+	time_free(L, a);
+	time_free(L, b);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/*** Allow to subtract two time object.
+ @function time:__sub
+ @return return the subtraction if it allowed. It might be return the error message "Result of subtraction out of range" if the result of the subtraction is too much big
+ @param t2 the time to subtract	
+ @usage
+ The same of the method __add()	
+ */
+
+static int time_sub(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	ztime_t *a = time_arg(L, 1);
+	ztime_t *b = time_arg(L, 2);
+	ztime_t *c = time_new(L);
+	if(!a || !b || !c) {
+		failed_msg = "Could not allocate time number";
+	}
+	// manage possible overflow
+	if(*a > 0 && *b < 0 && *a > INT_MAX + *b) {
+		failed_msg = "Result of subtraction out of range";
+		goto end;
+	} else if( *a < 0 && *b > 0 && *a < INT_MIN + *b) {
+		failed_msg = "Result of subtraction out of range";
+		goto end;
+	}
+	*c = *a - *b;
+end:
+	time_free(L, a);
+	time_free(L, b);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+
+/*** Calculate the opposite of a time object.
+ @function time:__unm
+ @return the opposite a time object
+ @usage
+ oct1 = OCTET.random(4)
+ t1 = time.new(oct1)			
+ opp = t1:__unm() 	
+ */
+
+static int time_opposite(lua_State *L) {
+	BEGIN();
+	ztime_t *a = time_arg(L,1);
+	ztime_t *b = time_new(L);
+	if(a && b) {
+		*b = -(*a);
+	}
+	time_free(L,a);
+	if(!a || !b) {
+		THROW("Could not allocate time number");
+	}
+	END(1);
+}
+
+/***
+ Given two time objects, it checks if they are equal.
+ @function time:__eq
  @param t2
  @return a boolean value "true" if they are equal, "false" otherwise
  @usage
  oct1 = OCTET.random(4)
- oct2 = OCTET.random(4)
-
  t1 = time.new(oct1)
- t2 = time.new(oct2)
-
- bool1 = t1:__eq(t2)
-
-if bool1 then print("true")		--Output: false
-else print("false")
-end
-
-bool2 = t1:__eq(t1)
-
-if bool2 then print("true")		--Output: true
-else print("false")
-end
+ bool = t1:__eq(t1)
+ if bool then print("true")		--Output: true
+ else print("false")
+ end
 
  */
 static int time_eq(lua_State *L) {
@@ -390,7 +370,7 @@ static int time_eq(lua_State *L) {
 
 /***
  Given two time object it checks if the first one is less (<) then the second one  
- @function :__lt
+ @function time:__lt
  @return a boolean value "true" if the first argument is less than the second one, "false" otherwise
  @usage
  The same of :__eq()
@@ -415,7 +395,7 @@ static int time_lt(lua_State *L) {
 
 /***
  Given two time object it checks if the first one is less (<=) then the second one  
- @function :__lte
+ @function time:__lte
  @return a boolean value "true" if the first argument is less or equal than the second one, "false" otherwise
  @usage
  The same of :__eq()
@@ -436,18 +416,13 @@ static int time_lte(lua_State *L) {
 }
 
 /***
- This method converts a time object in a string
- @function :__tostring
+ This method converts a time object to a string
+ @function time:__tostring
  @return the string representation of a time object
  @usage
  oct1 = OCTET.random(4)
-oct2 = OCTET.random(4)
-
-t1 = time.new(oct1)
-t2 = time.new(oct2)
-
-print(t1:__tostring())		--Output: 1475891177
-print(t2:__tostring())		--Output: -1564229021 
+ t1 = time.new(oct1)
+ t1:__tostring()	
 
 */
 

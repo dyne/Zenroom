@@ -28,7 +28,7 @@
 // tests. There are also `sha384`, `sha3_256` and `sha3_512` with
 // experimental implementations that aren't passing NIST vector tests.
 //
-// objects are instantiated using @{HASH:new} and then provide the
+// Objects are instantiated using @{HASH.new} and then provide the
 // method @{HASH:process} that takes an input @{OCTET} and then
 // returns another fixed-size octet that is uniquely matched to the
 // original data. The process is not reversible (the original data
@@ -165,7 +165,7 @@ const hash* hash_arg(lua_State *L, int n) {
 // @section Hash
 
 /**
-   Create a new hash object of a selected algorithm (e.g. sha256 or
+   Create a new hash object of a selected algorithm (e.g.sha256 or
    sha512). The resulting object can then process any @{OCTET} into
    its hashed equivalent. It is a C function.
 
@@ -196,7 +196,7 @@ static int lua_new_hash(lua_State *L) {
 
 	@function HASH.mnemonic_seed
 	@param str1 a mnemonic phrase
-	@param str2 A passphrase
+	@param str2 a passphrase
 	@return the derived seed as an octet object
 
  */
@@ -322,7 +322,7 @@ static void _yeld_len(const hash *h, octet *o, int len) {
 	@return the newly created octet object
 	@usage 
 	--define a "sha256" hash object
-	h1 = hash.new()
+	h1 = HASH.new()
 	--trasform h1 in hex-octet
 	print(h1:octet():hex())
 	--print: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
@@ -353,16 +353,16 @@ end:
 
 /**
 	Hash an octet into a new octet. Use the configured hash function to
-    hash an octet string and return a new one containing its hash.
+    *hash an octet string and return a new one containing its hash.
 
     @param data octet containing the data to be hashed
-    @function hash:process(data)
+    @function hash:process
     @return a new octet containing the hash of the data
     @usage 
 	--create an octet and an hash object
 	oct = OCTET.from_hex("0xa1b2c3d4")
 	--create an hash object
-	h1 = hash.new()
+	h1 = HASH.new()
 	--apply the method to the octet
 	print(h1:process(oct):hex())
 	--print: 97ed8e55519b020c4d9aceb40e0d3bc7eaa22d080d49592bf21206cb697c8a58
@@ -478,7 +478,7 @@ end:
 
 /**
    Compute the HMAC of a message using a key. This method takes any
-   data and any key material to comput an HMAC of the same length of
+   data and any key material to compute an HMAC of the same length of
    the hash bytes of the keyring. This function works in accordance with
    RFC2104.
 
@@ -490,7 +490,7 @@ end:
    --create the key
    key = OCTET.from_hex("0xa1b2c3d4")
    --create the hash
-   h1 = hash.new()
+   h1 = HASH.new()
    --create the message
    message = OCTET.from_hex("0xc3d2")
    --compute the HMAC
