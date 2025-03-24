@@ -27,11 +27,11 @@
 
 #include <amcl.h>
 
-#include <zenroom.h>
 #include <zen_octet.h>
-#include <zen_memory.h>
 #include <zen_big.h>
 #include <zen_ecp_factory.h> // for CURVE_Order
+
+#include <zenroom.h>
 
 // defined at compile time in zen_ecp.c for specific BLS
 extern const chunk *ORDER;

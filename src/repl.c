@@ -31,8 +31,6 @@
 
 #include <lua_functions.h>
 
-#include <zen_memory.h>
-
 #ifdef ARCH_LINUX
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -88,12 +86,13 @@ size_t repl_prompt(int ret, char *line) {
 	return(len);
 }
 
-int repl_loop(zenroom_t *Z) {
+int repl_loop(void *Z) {
 	if(!Z) return EXIT_FAILURE;
+	zenroom_t *ZZ = (zenroom_t*)Z;
 	char *line = malloc(MAX_STRING);
 	int ret =0;
 	while(repl_prompt(ret, line)) {
-		ret = zen_exec_lua(Z, line);
+		ret = zen_exec_lua(ZZ, line);
 		if(ret) break;
 	}
 	free(line);

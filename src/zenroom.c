@@ -21,12 +21,18 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdbool.h>
 
 #if (defined ARCH_LINUX) || (defined ARCH_OSX) || (defined ARCH_BSD)
 #include <sys/types.h>
 #include <sys/wait.h>
 #endif
 
+#if defined(_WIN32)
+#include <malloc.h>
+#else
+#include <stdlib.h>
+#endif
 
 #include <errno.h>
 
@@ -44,13 +50,19 @@
 #endif
 
 #include <zenroom.h>
-#include <zen_memory.h>
 
 // hex2oct used to import hex sequence into rng seed
 #include <encoding.h>
 
 // print functions
 #include <mutt_sprintf.h>
+
+// GLOBAL INSTANCE TO MEM POOL
+#include <sfpool.h>
+void *restrict ZMM = NULL;
+
+// GLOBAL POINTER TO ZENROOM CONTEXT
+void *restrict ZEN = NULL;
 
 // prototypes from zen_octet.c
 extern void push_buffer_to_octet(lua_State *L, char *p, size_t len);
@@ -67,7 +79,8 @@ extern void zen_add_parse(lua_State *L);
 extern int zen_conf_parse(zenroom_t *ZZ, const char *configuration);
 
 // prototype from zen_memory.c
-extern void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
+extern void *sys_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
+extern void *sfpool_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
 
 // prototypes from lua_functions.c
 extern int zen_setenv(lua_State *L, const char *key, const char *val);
@@ -197,6 +210,9 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	ZZ->str_maxmem[2] = '2';
 	ZZ->str_maxmem[3] = '4';
 	ZZ->str_maxmem[4] = '\0';
+	// default memory pool blocks
+	ZZ->sfpool_blocknum = 64;
+	ZZ->sfpool_blocksize = 256;
 
 	if(conf) {
 		if( ! zen_conf_parse(ZZ, conf) ) { // stb parsing
@@ -216,10 +232,11 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	ZZ->random_generator = rng_alloc(ZZ);
 
 	// initialize Lua's context
-	ZZ->lua = lua_newstate(zen_memory_manager, ZZ);
+	ZZ->lua = lua_newstate(sys_memory_manager, ZZ);
 	if(!ZZ->lua) {
 	  _err( "%s: Lua newstate creation failed\n", __func__);
-	  zen_teardown(ZZ);
+	  free(ZZ->random_generator);
+	  free(ZZ);
 	  return NULL;
 	}
 
@@ -246,7 +263,8 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	}
 
 	lua_atpanic(ZZ->lua, &zen_lua_panic); // as done in lauxlib luaL_newstate
-	lua_pushcfunction(ZZ->lua, &zen_init_pmain);  /* to call in protected mode */
+	lua_pushcfunction(ZZ->lua, &zen_init_pmain); // call protected mode init
+	ZEN = ZZ;
 	int status = lua_pcall(ZZ->lua, 0,   1,  0);
 
 	if(status != LUA_OK) {
@@ -266,12 +284,24 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	// uncomment to restrict further requires
 	// zen_require_override(L,1);
 
+	// switch to internal memory manager
+	ZMM = malloc(sizeof(sfpool_t));
+	if(sfpool_init((sfpool_t*)ZMM,
+					ZZ->sfpool_blocknum,
+					ZZ->sfpool_blocksize)==0) {
+		_err( "%s: Sailfish pool memory initialization failed\n", __func__);
+		free(ZZ->random_generator);
+		free(ZZ);
+		free(ZMM);
+		return NULL;
+	}
+	lua_setallocf(ZZ->lua, sfpool_memory_manager, ZZ);
+
 	// expose the random seed for optional determinism
 	push_buffer_to_octet(ZZ->lua, ZZ->random_seed, RANDOM_SEED_LEN);
 	lua_setglobal(ZZ->lua, "RNGSEED");
 	if(ZZ->zconf_rngseed[0] != 0x0)
 	  act(ZZ->lua, "RNG seed fed by external configuration");
-
 
 	// load arguments if present
 	if(data) {
@@ -308,6 +338,16 @@ void zen_teardown(zenroom_t *ZZ) {
 	notice(ZZ->lua,"Zenroom teardown.");
 	act(ZZ->lua,"Memory used: %u KB",
 	    lua_gc(ZZ->lua,LUA_GCCOUNT,0));
+#ifdef PROFILING
+	if(ZMM) {
+		sfpool_t *p = (sfpool_t*)ZMM;
+		act(ZZ->lua,"🌊 sfpool init: %u blocks %u B each",
+			p->total_blocks, p->block_size);
+		act(ZZ->lua,"🌊 total alloc: %lu K",p->alloc_total/1024);
+		act(ZZ->lua,"🌊 sfpool miss: %u - %lu K",p->miss_total,p->miss_bytes/1024);
+		act(ZZ->lua,"🌊 sfpool hits: %u - %lu K",p->hits_total,p->hits_bytes/1024);
+	}
+#endif
 
 	// stateful RNG instance for deterministic mode
 	if(ZZ->random_generator) {
@@ -321,8 +361,13 @@ void zen_teardown(zenroom_t *ZZ) {
 	// this call here frees also Z (lightuserdata)
 	lua_close((lua_State*)ZZ->lua);
 	ZZ->lua = NULL;
-
+	if(ZMM) {
+		sfpool_teardown((sfpool_t*)ZMM);
+		free(ZMM);
+	}
+	ZMM = NULL;
 	free(ZZ);
+	ZZ = NULL;
 }
 
 HEDLEY_NON_NULL(1,2)
@@ -340,6 +385,7 @@ int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
 	zerror(L, "%s", lua_tostring(L, -1));
 	return ZZ->exitcode;
   }
+  // fastalloc32_status(ZMM);
   ZZ->exitcode = luaL_dostring
 	(L,"local _res, _err <const> = pcall( function() ZEN:parse(CONF.code.encoding.fun(CODE)) end)\n"
 	 "if not _res then exitcode(3) ZEN.OK = false error(_err,2) end\n");
@@ -348,6 +394,7 @@ int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
 	zerror(L, "%s", lua_tostring(L, -1));
 	return ZZ->exitcode;
   }
+  // fastalloc32_status(ZMM);
   ZZ->exitcode = luaL_dostring
 	(L,"local _res, _err <const> = pcall( function() ZEN:run() end)\n"
 	 "if not _res then exitcode(2) ZEN.OK = false error(_err,2) end\n");
@@ -356,6 +403,7 @@ int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
 	zerror(L, "%s", lua_tostring(L, -1));
 	return ZZ->exitcode;
   }
+  // fastalloc32_status(ZMM);
   if(ZZ->exitcode == SUCCESS) func(L, "Zencode successfully executed");
   return ZZ->exitcode;
 }

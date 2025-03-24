@@ -26,7 +26,6 @@
 #include <lua_functions.h>
 
 #include <zenroom.h>
-#include <zen_memory.h>
 
 /// <h1>Advanced Encryption Standard (AES)</h1>
 //

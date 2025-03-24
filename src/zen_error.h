@@ -28,8 +28,8 @@
 #include <hedley.h>
 
 // macro to obtain Z context from a lua_State
-#define Z(l) \
-	zenroom_t *Z; lua_getallocf(l, (void**)&Z)
+// #define Z(l) zenroom_t *Z; lua_getallocf(l, (void**)&Z)
+#define Z(l) zenroom_t *Z = ZEN
 
 // tracing wrappers for all C->Lua functions
 #define BEGIN() trace(L, "vv begin %s",__func__)

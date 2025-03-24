@@ -24,11 +24,12 @@
 #include <ctype.h>
 #include <errno.h>
 
+
+#include <zenroom.h>
 #include <mutt_sprintf.h>
 
 #include <lauxlib.h>
 
-#include <zenroom.h>
 #include <zen_error.h>
 #include <zen_octet.h>
 
@@ -39,6 +40,7 @@
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
+
 
 #if defined(ARCH_CORTEX)
 extern int SEMIHOSTING_STDOUT_FILENO;
@@ -98,7 +100,7 @@ end:
 int printerr(lua_State *L, const octet *o) {
   BEGIN();
   Z(L);
-  if (Z->stderr_buf) {
+  if (Z && Z->stderr_buf) {
 	char *p = Z->stderr_buf+Z->stderr_pos;
 	if(!o) { *p='\n'; Z->stderr_pos++; return 0; }
 	if (Z->stderr_pos+o->len+1 > Z->stderr_len)

@@ -23,10 +23,10 @@
 
 #include <amcl.h>
 
-#include <zenroom.h>
 #include <zen_octet.h>
-#include <zen_memory.h>
 #include <zen_fp12.h>
+
+#include <zenroom.h>
 
 
 fp12* fp12_new(lua_State *L) {

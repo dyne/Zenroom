@@ -64,7 +64,7 @@ int zencode_get_statements(const char *scenario);
 int zenroom_hash_init(const char *hash_type);
 // zenroom_hash_update(hash_ctx, bytes, size) will print the updated hash_ctx in hex
 int zenroom_hash_update(const char *hash_ctx, const char *buffer, const int buffer_size);
-// zenroom_hash_final(hash_ctx) will print the base64 encoded hash of the data so far
+// zenroom_hash_final(hash_ctx) will print the base64 encoded hash of the dazta so far
 int zenroom_hash_final(const char *hash_ctx);
 
 
@@ -78,13 +78,15 @@ int zenroom_sign_verify(const char *algo, const char *pk, const char *msg, const
 
 
 // lower level api: init (exec_line*) teardown
+extern void *restrict ZEN;
 
 #define RANDOM_SEED_LEN 64
 #define STR_MAXITER_LEN 10
 
 // conf switches
 typedef enum { STB, MUTT, LIBC } printftype;
-typedef enum { NIL, VERBOSE, SCOPE, RNGSEED, LOGFMT, MAXITER, MAXMEM } zconf;
+typedef enum { NIL, VERBOSE, SCOPE, RNGSEED, LOGFMT, MAXITER, MAXMEM,
+			   MEMBLOCKNUM, MEMBLOCKSIZE } zconf;
 
 // zenroom context, also available as "_Z" global in lua space
 // contents are opaque in lua and available only as lightuserdata
@@ -114,8 +116,11 @@ typedef struct {
 
   	char zconf_rngseed[(RANDOM_SEED_LEN*2)+4]; // 0x and terminating \0
 
-        char str_maxiter[STR_MAXITER_LEN + 1];
-        char str_maxmem[STR_MAXITER_LEN + 1];
+	char str_maxiter[STR_MAXITER_LEN + 1];
+	char str_maxmem[STR_MAXITER_LEN + 1];
+
+	int sfpool_blocknum;
+	int sfpool_blocksize;
 
 	int exitcode;
 } zenroom_t;

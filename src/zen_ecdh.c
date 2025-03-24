@@ -52,7 +52,6 @@
 #include <lua_functions.h>
 
 #include <zenroom.h>
-#include <zen_memory.h>
 #include <zen_hash.h>
 #include <zen_ecdh.h>
 #include <zen_big_factory.h>

@@ -62,9 +62,7 @@
 
 #include <amcl.h>
 
-#include <zenroom.h>
 #include <encoding.h>
-#include <zen_memory.h>
 #include <zen_error.h>
 #include <zen_octet.h>
 #include <zen_big.h>
@@ -74,6 +72,8 @@
 #include <zen_ecp.h>
 
 #include <math.h> // for log2 in entropy calculation
+
+#include <zenroom.h>
 
 // from segwit_addr.c
 extern int segwit_addr_encode(char *output, const char *hrp, int witver, const uint8_t *witprog, size_t witprog_len);

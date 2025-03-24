@@ -155,3 +155,10 @@ Define the maximum memory in MB that lua can occupy before calling the garbage c
 during the run phase.
 
 *Default*: 1024 (1GB)
+
+## Secure memory block num and size
+
+Syntax and values: **memblocknum=dec (default 64)**,**memblocksize=dec (default 256)**
+
+Number of blocks and size of each block in size, defining the space of memory allocated for the secure pool used in Zenroom for sensitive values during operation (internal [sailfish-pool](https://github.com/dyne/sailfish-pool/))
+

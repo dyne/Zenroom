@@ -18,11 +18,17 @@
  *
  */
 
+#include <stdlib.h>
 #include <errno.h>
-// #include <stdlib.h>
-#include <zen_error.h>
 
-#include <zen_memory.h>
+#include <zen_error.h>
+#include <lua.h>
+#include <zenroom.h>
+
+extern void *ZMM;
+extern void *sfpool_malloc (void *restrict opaque, const size_t size);
+extern void  sfpool_free   (void *restrict opaque, void *ptr);
+extern void *sfpool_realloc(void *restrict opaque, void *ptr, const size_t size);
 
 /**
  * Implementation of the memory allocator for the Lua state.
@@ -36,12 +42,7 @@
  *
  * @return void* A pointer to the memory block.
  */
-void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
-	// zenroom_t *ZZ = (zenroom_t*)ud;
-	// if(!ZZ) {
-	// 	zerror(NULL, "Memory manager missing ZEN context");
-	// 	return NULL;
-	// }
+void *sfpool_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
   (void)ud;
 	if(ptr == NULL) {
 		// When ptr is NULL, osize encodes the kind of object that Lua
@@ -51,7 +52,11 @@ void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
 		// is some other value, Lua is allocating memory for something
 		// else.
 		if(nsize!=0) {
-			void *ret = malloc(nsize);
+			void *ret;
+			if(osize==LUA_TUSERDATA)
+				ret = sfpool_malloc(ZMM, nsize);
+			else
+				ret = malloc(nsize);
 			if(ret) return ret;
 			zerror(NULL, "Malloc out of memory, requested %lu B", nsize);
 			return NULL;
@@ -64,17 +69,31 @@ void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
 		if(nsize==0) {
 			// When nsize is zero, the allocator must behave like free
 			// and return NULL.
-			free(ptr);
+			sfpool_free(ZMM, ptr);
 			return NULL; }
 
 		// When nsize is not zero, the allocator must behave like
 		// realloc. The allocator returns NULL if and only if it
 		// cannot fulfill the request. Lua assumes that the allocator
 		// never fails when osize >= nsize.
-		if(osize >= nsize) { // shrink
-			return realloc(ptr, nsize);
-		} else { // extend
-			return realloc(ptr, nsize);
-		}
+		return sfpool_realloc(ZMM, ptr, nsize);
+	}
+}
+
+void *sys_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
+	(void)ud;
+	if(ptr == NULL) {
+		if(nsize!=0) {
+			void *ret = malloc(nsize);
+			if(ret) return ret;
+			zerror(NULL, "Malloc out of memory, requested %lu B", nsize);
+			return NULL;
+		} else return NULL;
+
+	} else {
+		if(nsize==0) {
+			free(ptr);
+			return NULL; }
+		return realloc(ptr, nsize);
 	}
 }

@@ -30,11 +30,11 @@
 
 #include <amcl.h>
 
-#include <zenroom.h>
 #include <zen_octet.h>
-#include <zen_memory.h>
 
 #include <zen_time.h>
+
+#include <zenroom.h>
 
 int _string_from_time(char dest[1024], ztime_t src) {
 	char *format = "%d";

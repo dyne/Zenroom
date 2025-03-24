@@ -92,14 +92,14 @@ When(
     deprecated(
         "create random object of '' bits",
         "create random of '' bits",
-        function(n) _create_random('random_object', n, 8) end
+        function(n) _create_random('random_object', _get_bytes_from_bits(n)) end
     )
 )
 When(
     deprecated(
         "create random object of '' bytes",
         "create random of '' bytes",
-        function(n) _create_random('random_object', n) end
+        function(n) _create_random('random_object', _get_bytes(n)) end
     )
 )
 
@@ -181,7 +181,7 @@ When(
 )
 
 When("create random array with '' numbers", function(s)
-    _create_random_array('random_array', s, 65536, _random_modulo_uniform_distribution, {encoding = 'float'})
+    _create_random_array('random_array', s, 65536, function(m) return F.new(_random_modulo_uniform_distribution(m)) end, {encoding = 'float'})
 end)
 When("create random array with '' integers", function(s)
     _create_random_array('random_array', s, nil, BIG.random, {encoding = 'integer'})

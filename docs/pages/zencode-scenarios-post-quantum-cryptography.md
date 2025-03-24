@@ -372,7 +372,8 @@ Regarding the *signature* and *verification* algorithms the test was performed o
 | 10000  | 19812,6163                                   | 20748,2910                                       | 699                                            | 721                                                |
 
 In order to have a better view of the time consumed by the signature, you can have a look at the following graph:
-![](../_media/images/qp_benchmark_signature.png)
+
+![SignatureBenchmark](../_media/images/qp_benchmark_signature.png)
 
 - Verification:
 | Length | ECDSA Time (<span class="unit">&mu;s</span>) | Dilithium Time (<span class="unit">&mu;s</span>) | ECDSA Memory (<span class="unit">KiB</span>) | Dilithium Memory (<span class="unit">KiB</span>) |
@@ -386,7 +387,7 @@ In order to have a better view of the time consumed by the signature, you can ha
 | 10000  | 20633,8036                                   | 20595,4703                                       | 692                                            | 700                                                |
 
 In order to have a better view of the time consumed by the verification, you can have a look at the following graph:
-![](../_media/images/qp_benchmark_verification.png)
+![VerificationBenchmark](../_media/images/qp_benchmark_verification.png)
 
 ## Key Encapsulation Mechanism
 

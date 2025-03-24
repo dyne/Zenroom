@@ -28,12 +28,11 @@
 #include <lua_functions.h>
 
 #include <amcl.h>
-
-#include <zenroom.h>
 #include <zen_octet.h>
-#include <zen_memory.h>
 
 #include <zen_float.h>
+
+#include <zenroom.h>
 
 // TODO: precision in conf
 #define EPS 0.000001

@@ -67,10 +67,11 @@
 #define STB_C_LEXER_DEFINITIONS
 #define STB_C_LEXER_IMPLEMENTATION
 
-#include <zenroom.h>
 #include <zen_error.h>
 
 #include <stb_c_lexer.h>
+
+#include <zenroom.h>
 
 int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 	(void)stb__strchr;            // avoid compiler warnings
@@ -93,7 +94,6 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 	zconf curconf = NIL;
 	// ZZ->zconf_rngseed[0] = '\0';
 
-	// char *lexbuf = (char*)malloc(MAX_CONFIG);
 	stb_c_lexer_init(&lex, configuration, configuration+len, lexbuf, MAX_CONFIG);
 	while (stb_c_lexer_get_token(&lex)) {
 		if (lex.token == CLEX_parse_error) {
@@ -106,13 +106,15 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 		switch (lex.token) {
 			// first token parsed, set enum for value
 		case CLEX_id:
-			if(strcasecmp(lex.string,"debug")==0)   { curconf = VERBOSE; break; } // bool
+			if(strcasecmp(lex.string,"debug")==0)   { curconf = VERBOSE; break; } // int
 			if(strcasecmp(lex.string,"verbose")==0) { curconf = VERBOSE; break; } // int
 			if(strcasecmp(lex.string,"scope")==0)   { curconf = SCOPE;   break; } // str
 			if(strcasecmp(lex.string,"rngseed")==0) { curconf = RNGSEED; break; } // str
 			if(strcasecmp(lex.string,"logfmt") ==0) { curconf = LOGFMT;  break; } // str
 			if(strcasecmp(lex.string,"maxiter")==0) { curconf = MAXITER; break; } // str
 			if(strcasecmp(lex.string,"maxmem")==0)  { curconf = MAXMEM;  break; } // str
+			if(strcasecmp(lex.string,"memblocknum")==0)  { curconf = MEMBLOCKNUM;  break; } // int
+			if(strcasecmp(lex.string,"memblocksize")==0)  { curconf = MEMBLOCKSIZE;  break; } // int
 			if(curconf==RNGSEED) {
 				if(strncasecmp(lex.string, "hex:", 4) != 0) { // hex: prefix needed
 					_err( "Invalid rngseed data prefix (must be hex:)\n");
@@ -227,6 +229,8 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 
 		case CLEX_intlit:
 			if(curconf==VERBOSE) { ZZ->debuglevel = lex.int_number; break; }
+			if(curconf==MEMBLOCKNUM) { ZZ->sfpool_blocknum = lex.int_number; break; }
+			if(curconf==MEMBLOCKSIZE) { ZZ->sfpool_blocksize = lex.int_number; break; }
 			// free(lexbuf);
 			_err( "Invalid integer configuration\n");
 			curconf = NIL;

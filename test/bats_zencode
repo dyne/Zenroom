@@ -12,7 +12,7 @@ getscript() {
 
 zexe() {
     if [ "$conf" = "" ]; then
-	conf="debug=1,rngseed=hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+	conf="debug=2,rngseed=hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,$addconf"
     fi
     script=`getscript ${1}`
     if (( $debug >= 1 )); then
@@ -64,6 +64,7 @@ zexe() {
     if [ "$dep" != "" ] && [ $status == 0 ]; then status=255; fi
     mem=`cat $tmperr | grep 'Zenroom memory left allocated' || true`
     if [ "$mem" != "" ] && [ $status == 0 ]; then status=255; fi
+#	>&3 grep 'sfpool' $TMP/err
     return $status
 }
 

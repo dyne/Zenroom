@@ -42,13 +42,15 @@
 //  @license AGPLv3
 //  @copyright Dyne.org foundation 2017-2019
 
+
+#include <zenroom.h>
+
+#include <zen_error.h>
 #include <zen_ecp.h>
 #include <zen_ecp_factory.h>
 
-#include <zen_error.h>
 #include <zen_big.h>
 #include <zen_fp12.h>
-#include <zen_memory.h>
 #include <lua_functions.h>
 
 extern int _octet_to_big(lua_State *L, big *dst, const octet *src);
