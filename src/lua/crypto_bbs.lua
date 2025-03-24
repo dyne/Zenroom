@@ -514,7 +514,6 @@ OUTPUT: the signature (A,e)
 --@function BBS.sign
 --@param ciphersuite 
 --@param sk the secret key as an octet
---@param pk the public key as an octet
 --@param header
 --@param messages array of octet strings stored as octet
 --@return the signature 
@@ -523,19 +522,19 @@ OUTPUT: the signature (A,e)
 --**define a ciphersuite, a secret key, a public key, an header and a message 
 --ciphersuite = bbs.ciphersuite('sha256') 
 --SECRET_KEY = "60e55110f76883a13d030b2f6bd11883422d5abde717569fc0731f51237169fc"
---PUBLIC_KEY = "a820f230f6ae38503b86c70dc50b61c58a77e45c39ab25c0652bbaa8fa136f2851bd4781c9dcde39fc9d1d52c9e60268061e7d7632171d91aa8d460acee0e96f1e7c4cfb12d3ff9ab5d5dc91c277db75c845d649ef3c4f63aebc364cd55ded0c"
 --HEADER = "11223344556677889900aabbccddeeff"
 --SINGLE_MSG_ARRAY = { O.from_hex("9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02") }
 --**calculate the signature for the given message
---output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(HEADER), SINGLE_MSG_ARRAY)
+--output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(HEADER), SINGLE_MSG_ARRAY)
 
 
-function bbs.sign(ciphersuite, sk, pk, header, messages_octets)
+function bbs.sign(ciphersuite, sk, header, messages_octets)
 
     -- Default values for header and messages.
     if not messages_octets then
             error('Empty message argument in BBS.sign',2)
     end
+    local pk = bbs.sk2pk(sk)
     header = header or O.empty()
     local messages = bbs.messages_to_scalars(ciphersuite,messages_octets)
 
