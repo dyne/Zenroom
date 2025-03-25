@@ -26,6 +26,7 @@
 <br/>
 <h1>Zenroom</h1>
 
+
 <ul>
   <li><a href="../index.html">Index</a></li>
 </ul>
@@ -41,19 +42,20 @@
 <ul class="nowrap">
   <li><strong>OCTET</strong></li>
   <li><a href="../modules/HASH.html">HASH</a></li>
+  <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><a href="../modules/BIG.html">BIG</a></li>
+  <li><a href="../modules/FLOAT.html">FLOAT</a></li>
+  <li><a href="../modules/TIME.html">TIME</a></li>
   <li><a href="../modules/AES.html">AES</a></li>
   <li><a href="../modules/ECDH.html">ECDH</a></li>
-  <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><a href="../modules/ED.html">ED</a></li>
+  <li><a href="../modules/P256.html">P256</a></li>
+  <li><a href="../modules/QP.html">QP</a></li>
   <li><a href="../modules/String.html">String</a></li>
   <li><a href="../modules/Table.html">Table</a></li>
   <li><a href="../modules/INSPECT.html">INSPECT</a></li>
-  <li><a href="../modules/ZEN.html">ZEN</a></li>
-  <li><a href="../modules/BIG.html">BIG</a></li>
-</ul>
-<h2>Examples</h2>
-<ul class="nowrap">
-  <li><a href="../examples/keygen.lua.html">keygen.lua</a></li>
-  <li><a href="../examples/crypt-to-multi.lua.html">crypt-to-multi.lua</a></li>
+  <li><a href="../modules/lua.zencode.html">lua.zencode</a></li>
+  <li><a href="../modules/BBS.html">BBS</a></li>
 </ul>
 
 </div>
@@ -63,7 +65,7 @@
 <h1>Module <code>OCTET</code></h1>
 <p>
 
-<h1>Base data type for cryptographic opearations</h1>
+<h1>Array of raw bytes: base data type in Zenroom</h1>
 
 
 <p>  Octets are <a
@@ -79,13 +81,13 @@
 <p>  <code>message = OCTET.new(64) -- creates a 64 bytes long octet</code></p>
 
 <p>  The code above fills all 64 bytes with zeroes; to initialise with
-  random data is possible to use the ??? function:</p>
+  random data is possible to use the <a href="../modules/OCTET.html#random">OCTET.random</a> function:</p>
 
 <p>  <code>random = OCTET.random(32) -- creates a 32 bytes random octet</code></p>
 
-<p>  Octets can export their contents to a simple <a href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a> or more
-  portable encodings as sequences of ???, <a href="../modules/OCTET.html#octet:base64">base64</a>, <a href="../modules/OCTET.html#octet:hex">hex</a> or
-  even ??? as sequences of binary 0 and 1. They can also be
+<p>  Octets can export their contents to a simple <a href="../modules/OCTET.html#octet:string">string</a> or more
+  portable encodings as sequences of <a href="../modules/OCTET.html#octet:url64">url64</a>, <a href="../modules/OCTET.html#octet:base64">base64</a>, <a href="../modules/OCTET.html#octet:hex">hex</a> or
+  even <a href="../modules/OCTET.html#octet:bin">bin</a> as sequences of binary 0 and 1. They can also be
   exported to Lua's <a href="../modules/OCTET.html#octet:array">array</a> format with one element per byte.</p>
     <h3>Usage:</h3>
     <ul>
@@ -115,43 +117,278 @@ print(hello:bin())    -- print octet as a sequence of 0 and 1
 omitted.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#xor">xor (dest, source)</a></td>
-	<td class="summary">Bitwise XOR operation on two octets, returns a new octet.</td>
+	<td class="name" nowrap><a href="#empty">empty ()</a></td>
+	<td class="summary">Create a new octet of size 0.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#concat">concat (dest, source)</a></td>
-	<td class="summary">Concatenate two octets, returns a new octet.</td>
+	<td class="name" nowrap><a href="#random">random (len)</a></td>
+	<td class="summary">Generate an octet of specified length containing random bytes.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#is_base64">is_base64 (s)</a></td>
+	<td class="summary">Check if a Lua string is a valid base64-encoded string.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#is_url64">is_url64 (s)</a></td>
+	<td class="summary">Check if a Lua string is a valid url64-encoded string.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#is_base58">is_base58 (s)</a></td>
+	<td class="summary">Check if a Lua string is a valid base58-encoded string.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#is_hex">is_hex (s)</a></td>
+	<td class="summary">Check if a Lua string is a valid hexadecimal-encoded string.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#is_bin">is_bin (s)</a></td>
+	<td class="summary">Check if a Lua string is a valid bin-encoded string.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#from_number">from_number (num)</a></td>
+	<td class="summary">Convert a Lua integer into a 16-byte octet object,
+padding the upper 8 bytes with zeros and handling endianness.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#from_base64">from_base64 (str)</a></td>
+	<td class="summary">Decode a base64-encoded string into an octet object,
+after checking if the input string is valid base64.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#from_url64">from_url64 (str)</a></td>
+	<td class="summary">Decode a url64-encoded string into an octet object,
+after checking if the input string is valid url64.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#from_base58">from_base58 (str)</a></td>
+	<td class="summary">Decode a base58-encoded string into an octet object,
+after checking if the input string is valid base58.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#from_string">from_string (str)</a></td>
+	<td class="summary">Convert a string into an octet object,
+after checking if the input is a valid string.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#from_hex">from_hex (str)</a></td>
+	<td class="summary">Decode an hexadecimal-encoded string into an octet object,
+after checking if the input string is valid hexadecimal.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#from_bin">from_bin (bin)</a></td>
+	<td class="summary">Convert a binary string (composed of '0' and '1' characters) into an octet object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#from_segwit">from_segwit (s)</a></td>
+	<td class="summary">In the bitcoin world, addresses are the hash of the public key (binary data).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#to_segwit">to_segwit (o, witver, s)</a></td>
+	<td class="summary">For an introduction see <a href="../modules/OCTET.html#from_segwit">from_segwit</a>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#from_base45">from_base45 (str)</a></td>
+	<td class="summary">Decode a base45-encoded string into an octet object,
+after checking if the input string is valid base45.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#from_mnemonic">from_mnemonic (str)</a></td>
+	<td class="summary">Decode a mnemonic-encoded string into an octet object,
+after checking if the input string is valid mnemonic.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#zero">zero ([length=octet:max])</a></td>
+	<td class="summary">Create an octet filled with zero values up to indicated size or its maximum size.</td>
 	</tr>
 </table>
 <h2><a href="#Class_OCTET">Class OCTET </a></h2>
 <table class="function_list">
 	<tr>
 	<td class="name" nowrap><a href="#octet:base64">octet:base64 ()</a></td>
-	<td class="summary">Print an octet in base64 notation.</td>
+	<td class="summary">Encode an octet in base64 notation.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:url64">octet:url64 ()</a></td>
+	<td class="summary">Encode an octet in url64 notation.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:url64">octet:url64 ()</a></td>
+	<td class="summary">Encode an octet in base58 notation.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:base45">octet:base45 ()</a></td>
+	<td class="summary">Encode an octet in base45 notation.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:mnemonic">octet:mnemonic ()</a></td>
+	<td class="summary">Encode an octet in mnemonic notation.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#octet:array">octet:array ()</a></td>
 	<td class="summary">Converts an octet into an array of bytes, compatible with Lua's transformations on <a href="https://www.lua.org/pil/11.1.html">arrays</a>.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#octet:str">octet:str ()</a></td>
+	<td class="name" nowrap><a href="#octet:octet">octet:octet ()</a></td>
+	<td class="summary">Return self (octet), implemented for compatibility with all zenroom types so that anything can be casted to octet.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:string">octet:string ()</a></td>
 	<td class="summary">Print an octet as string.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#octet:hex">octet:hex ()</a></td>
-	<td class="summary">Converts an octet into a string of hexadecimal numbers representing its contents.</td>
+	<td class="summary">Encode an octet into a string of hexadecimal numbers representing its contents.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:bin">octet:bin ()</a></td>
+	<td class="summary">Encode an octet to a string of zeroes and ones (0/1) as binary sequence.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:fill">octet:fill (oct)</a></td>
+	<td class="summary">Fill an octet object with the contents of another octet object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:concat">octet:concat (dest, source)</a></td>
+	<td class="summary">Concatenate two octets, returns a new octet.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#octet:pad">octet:pad ([length=octet:max])</a></td>
 	<td class="summary">Pad an octet with leading zeroes up to indicated length or its maximum size.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#octet:zero">octet:zero ([length=octet:max])</a></td>
-	<td class="summary">Fill an octet with zero values up to indicated size or its maximum size.</td>
+	<td class="name" nowrap><a href="#octet:trim">octet:trim ()</a></td>
+	<td class="summary">Trim all leading and following zero bytes in an octet
+ and return a new one of equal length or smaller.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:chop">octet:chop (len)</a></td>
+	<td class="summary">Split an octet into two parts based on a specified length and return both parts.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:reverse">octet:reverse ()</a></td>
+	<td class="summary">Build the byte in reverse order with respect to the one which is given.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:sub">octet:sub (start, end)</a></td>
+	<td class="summary">Extracts a piece of the octet from the start position to the end position inclusive, expressed in numbers.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#octet:eq">octet:eq ()</a></td>
 	<td class="summary">Compare two octets to see if contents are equal.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:__len">octet:__len ()</a></td>
+	<td class="summary">Retrieve and return the length of an octet.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:max">octet:max ()</a></td>
+	<td class="summary">Retrieve and return the maximum capacity of an octet.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:rmchar">octet:rmchar (char)</a></td>
+	<td class="summary">Given a string and a characater, this function removes from the string
+all the occurences of the character in the string</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:compact_ascii">octet:compact_ascii ()</a></td>
+	<td class="summary">Process an octet structure and create a new octet by filtering out certain ASCII characters and handling escape sequences.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:bytefreq">octet:bytefreq ()</a></td>
+	<td class="summary">Calculate the frequency of each byte value in an octet and returns the results as a Lua table.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:entropy">octet:entropy ()</a></td>
+	<td class="summary">Calculate the entropy of an octet structure.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:popcount_hamming">octet:popcount_hamming (oct)</a></td>
+	<td class="summary">Calculate the Hamming distance between two octet structures.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:hamming">octet:hamming (oct)</a></td>
+	<td class="summary">Calculate the Hamming distance between two octets by comparing them byte by byte and counting the number of differing bits.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:charcount">octet:charcount (char)</a></td>
+	<td class="summary">Count the occurrences of a specific character in an octet and return the count as an integer to Lua.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:crc">octet:crc ()</a></td>
+	<td class="summary">Compute the CRC-8 checksum of an octet and return the result as a new octet of length 1.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:elide_at_start">octet:elide_at_start (prefix)</a></td>
+	<td class="summary">Create a new octet with the prefix removed.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:fillrepeat">octet:fillrepeat (size)</a></td>
+	<td class="summary">Creates a new octet of given size repeating the octet as input.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:__lt">octet:__lt (oct)</a></td>
+	<td class="summary">Compare two octet structures and determine if the first octet
+is lexicographically less than the second octet.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:__shl">octet:__shl (positions)</a></td>
+	<td class="summary">Shift octet to the left by n bits.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:__shr">octet:__shr (positions)</a></td>
+	<td class="summary">Shift octet to the right by n bits.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:shl_circular">octet:shl_circular (positions)</a></td>
+	<td class="summary">Shift octet to the left by n bits.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:rhl_circular">octet:rhl_circular (positions)</a></td>
+	<td class="summary">Shift octet to the right by n bits.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:and_grow">octet:and_grow (oct)</a></td>
+	<td class="summary">Bitwise AND operation on two octets padded to reach the same length, returns a new octet.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:__band">octet:__band (oct)</a></td>
+	<td class="summary">Bitwise AND operation on two octets truncating at the shortest one length, returns a new octet.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:or_grow">octet:or_grow (oct)</a></td>
+	<td class="summary">Bitwise OR operation on two octets padded to reach the same length, returns a new octet.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:__bor">octet:__bor (oct)</a></td>
+	<td class="summary">Bitwise OR operation on two octets truncating at the shortest one length, returns a new octet.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:xor_grow">octet:xor_grow (dest, source)</a></td>
+	<td class="summary">Bitwise XOR operation on two octets padded to reach the same length, returns a new octet.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:__bxor">octet:__bxor (dest, source)</a></td>
+	<td class="summary">Bitwise XOR operation on two octets truncating at the shortest one length, returns a new octet.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:__bnot">octet:__bnot ()</a></td>
+	<td class="summary">Bitwise NOT operation on an octet returns a new octet.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:find">octet:find (haystack, needle, pos)</a></td>
+	<td class="summary">Finds a needle sequence of bytes in a haystack octet and returns the
+position where it has been found (counting from 0) or nil when not
+found.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:copy">octet:copy (haystack, start, length)</a></td>
+	<td class="summary">Copies out a needle octet from an haystack octet starting at
+position and long as indicated.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet:paste">octet:paste (haystack, needle, starting)</a></td>
+	<td class="summary">Paste a needle octet into an haystack octet starting at position
+and overwriting all its byte values in place.</td>
 	</tr>
 </table>
 
@@ -180,13 +417,12 @@ omitted.</td>
     Create a new octet with a specified maximum size, or a default if
 omitted.  All operations exceeding the octet's size will truncate
 excessing data. Octets cannot be resized.
-(length)
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">length</span>
-            <span class="types"><span class="type">int</span></span>
+            <span class="types"><span class="type">integer</span></span>
          maximum length in bytes
          (<em>default</em> 64)
         </li>
@@ -203,31 +439,18 @@ excessing data. Octets cannot be resized.
 
 </dd>
     <dt>
-    <a name = "xor"></a>
-    <strong>xor (dest, source)</strong>
+    <a name = "empty"></a>
+    <strong>empty ()</strong>
     </dt>
     <dd>
-    Bitwise XOR operation on two octets, returns a new octet.  This is also
-executed when using the '<b>~</b>' operator between two
-octets. Results in a newly allocated octet, does not change the
-contents of any other octet involved.
-(dest, source)
+    Create a new octet of size 0.
 
 
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">dest</span>
-         leftmost octet used in XOR operation
-        </li>
-        <li><span class="parameter">source</span>
-         rightmost octet used in XOR operation
-        </li>
-    </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        a new octet resulting from the operation
+        octet newly instantiated octet
     </ol>
 
 
@@ -235,30 +458,486 @@ contents of any other octet involved.
 
 </dd>
     <dt>
-    <a name = "concat"></a>
-    <strong>concat (dest, source)</strong>
+    <a name = "random"></a>
+    <strong>random (len)</strong>
     </dt>
     <dd>
-    Concatenate two octets, returns a new octet.  This is also executed
-when using the '<b>..</b>' operator btween two octets. It results in a
-newly allocated octet, does not change the contents of other octets.
-(dest, source)
+    Generate an octet of specified length containing random bytes.
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">dest</span>
-         leftmost octet will be overwritten by result
-        </li>
-        <li><span class="parameter">source</span>
-         rightmost octet used in XOR operation
+        <li><span class="parameter">len</span>
+         a specified length
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        a new octet resulting from the operation
+        random octet of specified length
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "is_base64"></a>
+    <strong>is_base64 (s)</strong>
+    </dt>
+    <dd>
+    Check if a Lua string is a valid base64-encoded string.
+If the string is valid base64, it pushes true, otherwise it pushes false onto the Lua stack.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+         a Lua string
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean value
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "is_url64"></a>
+    <strong>is_url64 (s)</strong>
+    </dt>
+    <dd>
+    Check if a Lua string is a valid url64-encoded string.
+If the string is valid url64, it pushes true, otherwise it pushes false onto the Lua stack.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+         a Lua string
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean value
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "is_base58"></a>
+    <strong>is_base58 (s)</strong>
+    </dt>
+    <dd>
+    Check if a Lua string is a valid base58-encoded string.
+If the string is valid base58, it pushes true, otherwise it pushes false onto the Lua stack.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+         a Lua string
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean value
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "is_hex"></a>
+    <strong>is_hex (s)</strong>
+    </dt>
+    <dd>
+    Check if a Lua string is a valid hexadecimal-encoded string.
+If the string is valid hex, it pushes true, otherwise it pushes false onto the Lua stack.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+         a Lua string
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean value
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "is_bin"></a>
+    <strong>is_bin (s)</strong>
+    </dt>
+    <dd>
+    Check if a Lua string is a valid bin-encoded string.
+If the string is valid bin, it pushes true, otherwise it pushes false onto the Lua stack.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+         a Lua string
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean value
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "from_number"></a>
+    <strong>from_number (num)</strong>
+    </dt>
+    <dd>
+    Convert a Lua integer into a 16-byte octet object,
+padding the upper 8 bytes with zeros and handling endianness.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">num</span>
+         Lua integer
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        16-byte octet object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "from_base64"></a>
+    <strong>from_base64 (str)</strong>
+    </dt>
+    <dd>
+    Decode a base64-encoded string into an octet object,
+after checking if the input string is valid base64.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str</span>
+         base64-encoded string
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        decoded octet object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "from_url64"></a>
+    <strong>from_url64 (str)</strong>
+    </dt>
+    <dd>
+    Decode a url64-encoded string into an octet object,
+after checking if the input string is valid url64.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str</span>
+         url64-encoded string
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        decoded octet object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "from_base58"></a>
+    <strong>from_base58 (str)</strong>
+    </dt>
+    <dd>
+    Decode a base58-encoded string into an octet object,
+after checking if the input string is valid base58.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str</span>
+         base58-encoded string
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        decoded octet object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "from_string"></a>
+    <strong>from_string (str)</strong>
+    </dt>
+    <dd>
+    Convert a string into an octet object,
+after checking if the input is a valid string.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str</span>
+         string
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        convert octet object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "from_hex"></a>
+    <strong>from_hex (str)</strong>
+    </dt>
+    <dd>
+    Decode an hexadecimal-encoded string into an octet object,
+after checking if the input string is valid hexadecimal.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str</span>
+         hexadecimal-encoded string
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        decoded octet object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "from_bin"></a>
+    <strong>from_bin (bin)</strong>
+    </dt>
+    <dd>
+    Convert a binary string (composed of '0' and '1' characters) into an octet object.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">bin</span>
+         binary string
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        convert octet object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "from_segwit"></a>
+    <strong>from_segwit (s)</strong>
+    </dt>
+    <dd>
+    In the bitcoin world, addresses are the hash of the public key (binary data).
+  However, the user usually knows them in some encoded form (which also include
+  some error check mechanism, to improve security against typos). Bech32 is the
+  format used with segwit transactions.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+         Address encoded as Bech32(m)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">Address</span></span>
+        as binary data
+    </ol>
+     <h3>Or</h3>
+    <ol>
+
+           <span class="types"><span class="type">Segwit</span></span>
+        version (version 0 is Bech32, version >0 is Bechm)
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "to_segwit"></a>
+    <strong>to_segwit (o, witver, s)</strong>
+    </dt>
+    <dd>
+
+<p>For an introduction see <a href="../modules/OCTET.html#from_segwit">from_segwit</a>.
+  HRP (human readble part) are the first characters of the address, they can
+  be bc (bitcoin network) or tb (testnet network).</p>
+<pre><code>
+</code></pre>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">o</span>
+         Address in binary format (octet with the result of the hash160)
+        </li>
+        <li><span class="parameter">witver</span>
+         Segwit version
+        </li>
+        <li><span class="parameter">s</span>
+         HRP
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        Bech32(m) encoded string
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "from_base45"></a>
+    <strong>from_base45 (str)</strong>
+    </dt>
+    <dd>
+    Decode a base45-encoded string into an octet object,
+after checking if the input string is valid base45.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str</span>
+         base45-encoded string
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        decoded octet object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "from_mnemonic"></a>
+    <strong>from_mnemonic (str)</strong>
+    </dt>
+    <dd>
+    Decode a mnemonic-encoded string into an octet object,
+after checking if the input string is valid mnemonic.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str</span>
+         mnemonic-encoded string
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        decoded octet object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "zero"></a>
+    <strong>zero ([length=octet:max])</strong>
+    </dt>
+    <dd>
+    Create an octet filled with zero values up to indicated size or its maximum size.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">length</span>
+            <span class="types"><span class="type">integer</span></span>
+         fill with zero up to this size, use maximum octet size if omitted
+         (<em>default</em> octet:max)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        octet filled with zeros
     </ol>
 
 
@@ -293,7 +972,7 @@ newly allocated octet, does not change the contents of other octets.
     <strong>octet:base64 ()</strong>
     </dt>
     <dd>
-    Print an octet in base64 notation. ()
+    Encode an octet in base64 notation.
 
 
 
@@ -304,21 +983,83 @@ newly allocated octet, does not change the contents of other octets.
     </ol>
 
 
-    <h3>See also:</h3>
-    <ul>
-         <a href="../modules/OCTET.html#octet:hex">octet:hex</a>
-    </ul>
 
-    <h3>Usage:</h3>
-    <ul>
-        <pre class="example"><span class="comment">-- This method as well :string() and :hex() can be used both to set
-</span><span class="comment">-- from and print out in particular formats.
-</span>
-<span class="comment">-- create an octet from a string:
-</span>msg = OCTET.<span class="global">string</span>(<span class="string">"my message to be encoded in base64"</span>)
-<span class="comment">-- print the message in base64 notation:
-</span><span class="global">print</span>(msg:base64())</pre>
-    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:url64"></a>
+    <strong>octet:url64 ()</strong>
+    </dt>
+    <dd>
+    Encode an octet in url64 notation.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a string representing the octet's contents in url64
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "octet:url64"></a>
+    <strong>octet:url64 ()</strong>
+    </dt>
+    <dd>
+    Encode an octet in base58 notation.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a string representing the octet's contents in base58
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "octet:base45"></a>
+    <strong>octet:base45 ()</strong>
+    </dt>
+    <dd>
+    Encode an octet in base45 notation.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a string representing the octet's contents in base45
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "octet:mnemonic"></a>
+    <strong>octet:mnemonic ()</strong>
+    </dt>
+    <dd>
+    Encode an octet in mnemonic notation.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a string representing the octet's contents in mnemonic
+    </ol>
+
+
+
 
 </dd>
     <dt>
@@ -326,7 +1067,7 @@ newly allocated octet, does not change the contents of other octets.
     <strong>octet:array ()</strong>
     </dt>
     <dd>
-    Converts an octet into an array of bytes, compatible with Lua's transformations on <a href="https://www.lua.org/pil/11.1.html">arrays</a>. ()
+    Converts an octet into an array of bytes, compatible with Lua's transformations on <a href="https://www.lua.org/pil/11.1.html">arrays</a>.
 
 
 
@@ -341,11 +1082,30 @@ newly allocated octet, does not change the contents of other octets.
 
 </dd>
     <dt>
-    <a name = "octet:str"></a>
-    <strong>octet:str ()</strong>
+    <a name = "octet:octet"></a>
+    <strong>octet:octet ()</strong>
     </dt>
     <dd>
-    Print an octet as string. ()
+    Return self (octet), implemented for compatibility with all zenroom types so that anything can be casted to octet.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the self octet
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "octet:string"></a>
+    <strong>octet:string ()</strong>
+    </dt>
+    <dd>
+    Print an octet as string.
 
 
 
@@ -364,10 +1124,7 @@ newly allocated octet, does not change the contents of other octets.
     <strong>octet:hex ()</strong>
     </dt>
     <dd>
-    Converts an octet into a string of hexadecimal numbers representing its contents. </p>
-
-<p>This is the default format when <code>print()</code> is used on an octet.
-()
+    Encode an octet into a string of hexadecimal numbers representing its contents.
 
 
 
@@ -382,17 +1139,91 @@ newly allocated octet, does not change the contents of other octets.
 
 </dd>
     <dt>
+    <a name = "octet:bin"></a>
+    <strong>octet:bin ()</strong>
+    </dt>
+    <dd>
+    Encode an octet to a string of zeroes and ones (0/1) as binary sequence.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a string of bits
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "octet:fill"></a>
+    <strong>octet:fill (oct)</strong>
+    </dt>
+    <dd>
+    Fill an octet object with the contents of another octet object.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">oct</span>
+         the source octet providing the data
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the target octet is fully filled, and its len is set to its max capacity.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "octet:concat"></a>
+    <strong>octet:concat (dest, source)</strong>
+    </dt>
+    <dd>
+    Concatenate two octets, returns a new octet.  This is also executed
+when using the '<b>..</b>' operator btween two octets. It results in a
+newly allocated octet, does not change the contents of other octets.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">dest</span>
+         leftmost octet will be overwritten by result
+        </li>
+        <li><span class="parameter">source</span>
+         rightmost octet used in XOR operation
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new octet resulting from the operation
+    </ol>
+
+
+
+
+</dd>
+    <dt>
     <a name = "octet:pad"></a>
     <strong>octet:pad ([length=octet:max])</strong>
     </dt>
     <dd>
-    Pad an octet with leading zeroes up to indicated length or its maximum size. (length)
+    Pad an octet with leading zeroes up to indicated length or its maximum size.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">length</span>
-            <span class="types"><span class="type">int</span></span>
+            <span class="types"><span class="type">integer</span></span>
          pad to this size, will use maximum octet size if omitted
          (<em>default</em> octet:max)
         </li>
@@ -409,22 +1240,109 @@ newly allocated octet, does not change the contents of other octets.
 
 </dd>
     <dt>
-    <a name = "octet:zero"></a>
-    <strong>octet:zero ([length=octet:max])</strong>
+    <a name = "octet:trim"></a>
+    <strong>octet:trim ()</strong>
     </dt>
     <dd>
-    Fill an octet with zero values up to indicated size or its maximum size. (length)
+    Trim all leading and following zero bytes in an octet
+ and return a new one of equal length or smaller.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        trimmed octet
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create an octet of bin
+</span>oct = OCTET.<span class="function-name">from_bin</span>(<span class="string">"00000000111111000"</span>)
+<span class="comment">--print 11111100
+</span><span class="global">print</span>(oct:<span class="function-name">trim</span>():<span class="function-name">bin</span>())</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:chop"></a>
+    <strong>octet:chop (len)</strong>
+    </dt>
+    <dd>
+    Split an octet into two parts based on a specified length and return both parts.  The first part will have a length in bytes equal to the input parameter. The second part will contain the remaining bytes.
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">length</span>
-            <span class="types"><span class="type">int</span></span>
-         fill with zero up to this size, use maxumum octet size if omitted
-         (<em>default</em> octet:max)
+        <li><span class="parameter">len</span>
+         an optional length parameter (defaulting to 0)
         </li>
     </ul>
 
+    <h3>Returns:</h3>
+    <ol>
+
+        Returns the two resulting octets
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create an octet of bin
+</span>oct = OCTET.<span class="function-name">from_bin</span>(<span class="string">"001000001111110001"</span>)
+<span class="comment">--consider the length parameter equal to 1
+</span>part1, part2 = oct:<span class="function-name">chop</span>(<span class="number">1</span>)
+<span class="comment">--part1 = 00100000, part2 = 11111100</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:reverse"></a>
+    <strong>octet:reverse ()</strong>
+    </dt>
+    <dd>
+    Build the byte in reverse order with respect to the one which is given.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        reverse order octet
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "octet:sub"></a>
+    <strong>octet:sub (start, end)</strong>
+    </dt>
+    <dd>
+    Extracts a piece of the octet from the start position to the end position inclusive, expressed in numbers.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">start</span>
+            <span class="types"><span class="type">integer</span></span>
+         position, begins from 1 not 0 like in lua
+        </li>
+        <li><span class="parameter">end</span>
+            <span class="types"><span class="type">integer</span></span>
+         position, may be same as start for a single byte
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        new octet sub-section from start to end inclusive
+    </ol>
 
 
 
@@ -435,7 +1353,7 @@ newly allocated octet, does not change the contents of other octets.
     <strong>octet:eq ()</strong>
     </dt>
     <dd>
-    Compare two octets to see if contents are equal. (first, second)
+    Compare two octets to see if contents are equal.
 
 
 
@@ -449,14 +1367,950 @@ newly allocated octet, does not change the contents of other octets.
 
 
 </dd>
+    <dt>
+    <a name = "octet:__len"></a>
+    <strong>octet:__len ()</strong>
+    </dt>
+    <dd>
+    Retrieve and return the length of an octet.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        length of the octet
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "octet:max"></a>
+    <strong>octet:max ()</strong>
+    </dt>
+    <dd>
+    Retrieve and return the maximum capacity of an octet.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        maximum capacity of an octet
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "octet:rmchar"></a>
+    <strong>octet:rmchar (char)</strong>
+    </dt>
+    <dd>
+    Given a string and a characater, this function removes from the string
+all the occurences of the character in the string
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">char</span>
+         the character to remove
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the initial string without the input character
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">-- oct is the octet with the string to modify
+</span><span class="comment">-- to_remove is the character to remove from oct
+</span>oct = OCTET.<span class="function-name">from_string</span>(<span class="string">"Hello, world!"</span>)
+to_remove = OCTET.<span class="function-name">from_string</span>(<span class="string">"l"</span>)
+<span class="global">print</span>(oct:<span class="function-name">rmchar</span>(to_remove))
+<span class="comment">--print: Heo, word!</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:compact_ascii"></a>
+    <strong>octet:compact_ascii ()</strong>
+    </dt>
+    <dd>
+    Process an octet structure and create a new octet by filtering out certain ASCII characters and handling escape sequences.
+If an escape character \ is encountered, it sets an escape flag.
+If the next character is one of 'a', 'b', 't', 'n', 'v', 'f', or 'r', both the escape character \ and the escaped character are skipped.
+All other valid characters are copied to the new octet.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        New octet which contains the filtered and processed data
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create a string octet
+</span>oct=OCTET.<span class="function-name">from_string</span>(<span class="string">"st\ring fo\r ex\ample"</span>)
+<span class="global">print</span>(oct:<span class="function-name">compact_ascii</span>())
+<span class="comment">--print: stingfoexmple</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:bytefreq"></a>
+    <strong>octet:bytefreq ()</strong>
+    </dt>
+    <dd>
+    Calculate the frequency of each byte value in an octet and returns the results as a Lua table.  It is useful for analyzing the distribution of
+byte values in a byte array, which can be used for entropy calculations or other statistical analyses.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        Lua table containing bytes distribution
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create an octet of bin
+</span>oct=OCTET.<span class="function-name">from_bin</span>(<span class="string">"101010001010100010101000101010000001011000011111"</span>)
+<span class="comment">--save the frequency of the bytes in a table (tab)
+</span>tab=oct:<span class="function-name">bytefreq</span>()
+<span class="comment">--print the table
+</span><span class="keyword">for</span> byte, freq <span class="keyword">in</span> <span class="global">pairs</span>(tab) <span class="keyword">do</span>
+   	<span class="global">print</span>(<span class="global">string</span>.<span class="function-name">format</span>(<span class="string">"Byte %d: Frequency %d"</span>, byte, freq))
+<span class="keyword">end</span>
+<span class="comment">--print .. Byte 23: Frequency 1 ..
+</span>	.. Byte <span class="number">32</span>: Frequency <span class="number">1</span> ..
+	.. Byte <span class="number">169</span>: Frequency <span class="number">4</span> ..
+<span class="comment">--all the others frequency values are 0</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:entropy"></a>
+    <strong>octet:entropy ()</strong>
+    </dt>
+    <dd>
+
+<p>Calculate the entropy of an octet structure. <br/>
+Entropy is a measure of randomness or uncertainty in the data, often used in information theory. </p>
+<pre><code>Allocate a frequency table to store the count of each byte value.
+Allocate a probability table to store the probability of each byte value.
+Increment the count for each byte value in the frequency table.
+Calculate the probability of each byte value.
+Compute the entropy.
+Compute the maximum possible entropy for the given number of unique bytes.
+
+</code></pre>
+
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        the entropy ratio (relative to the maximum entropy)</li>
+        <li>
+        the maximum possible entropy</li>
+        <li>
+        he computed entropy in bits</li>
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create an octet of bin
+</span>oct=OCTET.<span class="function-name">from_bin</span>(<span class="string">"101010001010100010101000101010000001011000011111"</span>)
+<span class="comment">--save the three outpus
+</span>ratio, max_entropy, bits = oct:<span class="function-name">entropy</span>()
+<span class="global">print</span>(ratio)
+<span class="global">print</span>(max_entropy)
+<span class="global">print</span>(bits)
+<span class="comment">--the three outputs are: 0.7896901, 1.584962, 1.251629</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:popcount_hamming"></a>
+    <strong>octet:popcount_hamming (oct)</strong>
+    </dt>
+    <dd>
+    Calculate the Hamming distance between two octet structures. <br/>
+The Hamming distance is the number of positions at which the corresponding bits differ between the two octets.
+This function calculates the Hamming distance between two octets by treating them as arrays of 64-bit integers.
+It only works with octets whose lengths are multiples of 8 bytes. It does not handle smaller octets or padding.
+Ideal for applications involving large octets where performance is critical.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">oct</span>
+         an octet to compare with another one
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the Hamming distance between the two octets
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create two octets of bin (number of bits multiple of 64)
+</span>oct=OCTET.<span class="function-name">from_bin</span>(<span class="string">"1010001010100010101000101010001010100010101000101010001010100010"</span>)
+oct2=OCTET.<span class="function-name">from_bin</span>(<span class="string">"1001000010010000100100001001000010010000100100001001000010010000"</span>)
+<span class="comment">--print the Hamming distance between the two octets
+</span><span class="global">print</span>(oct:<span class="function-name">popcount_hamming</span>(oct2))
+<span class="comment">--print: 24</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:hamming"></a>
+    <strong>octet:hamming (oct)</strong>
+    </dt>
+    <dd>
+    Calculate the Hamming distance between two octets by comparing them byte by byte and counting the number of differing bits. <br/>
+ It is useful for comparing binary data and measuring their similarity.
+ This function requires the two octets to have the same length. If they differ, it throws an error.
+ Suitable for small to medium-sized octets where simplicity is more important than performance.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">oct</span>
+         an octet to compare with another one
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the Hamming distance between the two octets
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create two octets of bin of the same length
+</span>oct=OCTET.<span class="function-name">from_bin</span>(<span class="string">"101000101010001010100010101000101010001010100010"</span>)
+oct2=OCTET.<span class="function-name">from_bin</span>(<span class="string">"100100001001000010010000100100001001000010010000"</span>)
+<span class="comment">--print the Hamming distance between the two octets
+</span><span class="global">print</span>(oct:<span class="function-name">hamming</span>(oct2))
+<span class="comment">--print: 18</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:charcount"></a>
+    <strong>octet:charcount (char)</strong>
+    </dt>
+    <dd>
+    Count the occurrences of a specific character in an octet and return the count as an integer to Lua. <br/>
+It is useful for simple character-based analysis of binary data.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">char</span>
+         the charcater to count
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the number of occurrences of a specific character
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create a string octet
+</span>oct=OCTET.<span class="function-name">from_string</span>(<span class="string">"Hello world!"</span>)
+<span class="comment">--print the number of occurrences of "l"
+</span><span class="global">print</span>(oct:<span class="function-name">charcount</span>(<span class="string">"l"</span>))
+<span class="comment">--print: 3</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:crc"></a>
+    <strong>octet:crc ()</strong>
+    </dt>
+    <dd>
+    Compute the CRC-8 checksum of an octet and return the result as a new octet of length 1. <br/>
+It is useful for error detection in data transmission or storage.
+CRC-8 is a cyclic redundancy check algorithm that produces an 8-bit checksum.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the new octet containing the CRC-8 checksum
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create an octet of bin
+</span>oct=OCTET.<span class="function-name">from_bin</span>(<span class="string">"01110100000111010100101000100111010"</span>)
+<span class="global">print</span>(oct:<span class="function-name">crc</span>():<span class="function-name">bin</span>())
+<span class="comment">--print: 10011110</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:elide_at_start"></a>
+    <strong>octet:elide_at_start (prefix)</strong>
+    </dt>
+    <dd>
+    Create a new octet with the prefix removed.
+If the prefix doesn't match, it returns nil.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">prefix</span>
+         to remove
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        initial octet without the prefix or nil
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "octet:fillrepeat"></a>
+    <strong>octet:fillrepeat (size)</strong>
+    </dt>
+    <dd>
+    Creates a new octet of given size repeating the octet as input.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">size</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        octet of given size
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create an octet of hex
+</span>oct=OCTET.<span class="function-name">from_hex</span>(<span class="string">"0xa1"</span>)
+<span class="global">print</span>(oct:<span class="function-name">fillrepeat</span>(<span class="number">5</span>):<span class="function-name">hex</span>())
+<span class="global">print</span>: a1a1a1a1a1</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:__lt"></a>
+    <strong>octet:__lt (oct)</strong>
+    </dt>
+    <dd>
+    Compare two octet structures and determine if the first octet
+is lexicographically less than the second octet.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">oct</span>
+         an octet to compare
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean value
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create two octets of bin to compare
+</span>oct=OCTET.<span class="function-name">from_bin</span>(<span class="string">"01001010"</span>)
+oct2=OCTET.<span class="function-name">from_bin</span>(<span class="string">"10111011"</span>)
+<span class="comment">--compare them
+</span><span class="keyword">if</span> (oct:<span class="function-name">__lt</span>(oct2)) <span class="keyword">then</span>
+   	<span class="global">print</span>(<span class="string">"oct less than oct2"</span>)
+<span class="keyword">else</span>
+   	<span class="global">print</span>(<span class="string">"oct2 less than oct"</span>)
+<span class="keyword">end</span>
+<span class="comment">--print: oct less than oct2</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:__shl"></a>
+    <strong>octet:__shl (positions)</strong>
+    </dt>
+    <dd>
+    Shift octet to the left by n bits.  Leftmost bits disappear.
+This is also executed when using the 'o &lt;< n' with o an octet and n an integer.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">positions</span>
+         number of positions to bit shift to the left
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the shifted octet
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create an octet of bin
+</span>oct=OCTET.<span class="function-name">from_bin</span>(<span class="string">"01001010"</span>)
+<span class="comment">--shift of three positions
+</span><span class="global">print</span>(oct:<span class="function-name">__shl</span>(<span class="number">3</span>):<span class="function-name">bin</span>())
+<span class="global">print</span>: <span class="number">01010000</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:__shr"></a>
+    <strong>octet:__shr (positions)</strong>
+    </dt>
+    <dd>
+
+<p>Shift octet to the right by n bits.  Rightmost bits disappear.
+This is also executed when using the 'o >> n' with o an octet and n an integer. </p>
+<pre><code>
+</code></pre>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">positions</span>
+         number of positions to bit shift to the right
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the shiftet octet
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create an octet of bin
+</span>oct=OCTET.<span class="function-name">from_bin</span>(<span class="string">"01001010"</span>)
+<span class="comment">--shift of three positions
+</span><span class="global">print</span>(oct:<span class="function-name">__shr</span>(<span class="number">3</span>):<span class="function-name">bin</span>())
+<span class="global">print</span>: <span class="number">00001001</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:shl_circular"></a>
+    <strong>octet:shl_circular (positions)</strong>
+    </dt>
+    <dd>
+    Shift octet to the left by n bits. <br/>
+Leftmost bits do not disappear but appear on the right.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">positions</span>
+         number of positions to bit shift to the left
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the circular shiftet octet
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create an octet of bin
+</span>oct=OCTET.<span class="function-name">from_bin</span>(<span class="string">"01001010"</span>)
+<span class="comment">--circular shift of three positions
+</span><span class="global">print</span>(oct:<span class="function-name">shl_circular</span>(<span class="number">3</span>):<span class="function-name">bin</span>())
+<span class="comment">--print: 01010010</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:rhl_circular"></a>
+    <strong>octet:rhl_circular (positions)</strong>
+    </dt>
+    <dd>
+    Shift octet to the right by n bits. <br/>
+Rightmost bits do not disappear but appear on the left.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">positions</span>
+         number of positions to bit shift to the right
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the circular shiftet octet
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create an octet of bin
+</span>oct=OCTET.<span class="function-name">from_bin</span>(<span class="string">"01001010"</span>)
+<span class="comment">--circular shift of three positions
+</span><span class="global">print</span>(oct:<span class="function-name">shr_circular</span>(<span class="number">3</span>):<span class="function-name">bin</span>())
+<span class="comment">--print: 01001001</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:and_grow"></a>
+    <strong>octet:and_grow (oct)</strong>
+    </dt>
+    <dd>
+    Bitwise AND operation on two octets padded to reach the same length, returns a new octet.
+Results in a newly allocated octet, does not change the contents of any other octet involved.
+If the two octets have different lengths,
+the shorter one is padded with zeros to match the length of the longer one before performing the operation.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">oct</span>
+         an octet for the bitwise AND operation
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the result of the bitwise AND operation between the two octets
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create two octets of bin
+</span>oct=OCTET.<span class="function-name">from_bin</span>(<span class="string">"0100101001001011"</span>)
+oct2=OCTET.<span class="function-name">from_bin</span>(<span class="string">"10111011"</span>)
+<span class="global">print</span>(oct:<span class="function-name">and_grow</span>(oct2):<span class="function-name">bin</span>())
+<span class="comment">--print: 0000000000001011</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:__band"></a>
+    <strong>octet:__band (oct)</strong>
+    </dt>
+    <dd>
+    Bitwise AND operation on two octets truncating at the shortest one length, returns a new octet.
+This is also executed when using the '<b>&amp;</b>' operator between two
+octets. Results in a newly allocated octet, does not change the
+contents of any other octet involved.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">oct</span>
+         an octet for the bitwise AND operation
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the result of the bitwise AND operation between the two octets
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create two octets of bin
+</span>oct=OCTET.<span class="function-name">from_bin</span>(<span class="string">"0100101001001011"</span>)
+oct2=OCTET.<span class="function-name">from_bin</span>(<span class="string">"10111011"</span>)
+<span class="global">print</span>(oct:<span class="function-name">__band</span>(oct2):<span class="function-name">bin</span>())
+<span class="comment">--print: 00001010</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:or_grow"></a>
+    <strong>octet:or_grow (oct)</strong>
+    </dt>
+    <dd>
+    Bitwise OR operation on two octets padded to reach the same length, returns a new octet.
+Results in a newly allocated octet, does not change the contents of any other octet involved.
+If the two octets have different lengths,
+the shorter one is padded with zeros to match the length of the longer one before performing the operation.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">oct</span>
+         an octet for the bitwise OR operation
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the result of the bitwise OR operation between the two octets
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create two octets of bin
+</span>oct=OCTET.<span class="function-name">from_bin</span>(<span class="string">"0100101001001011"</span>)
+oct2=OCTET.<span class="function-name">from_bin</span>(<span class="string">"10111011"</span>)
+<span class="global">print</span>(oct:<span class="function-name">or_grow</span>(oct2):<span class="function-name">bin</span>())
+<span class="comment">--print: 0100101011111011</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:__bor"></a>
+    <strong>octet:__bor (oct)</strong>
+    </dt>
+    <dd>
+    Bitwise OR operation on two octets truncating at the shortest one length, returns a new octet.
+This is also executed when using the '<b>|</b>' operator between two
+octets. Results in a newly allocated octet, does not change the
+contents of any other octet involved.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">oct</span>
+         an octet for the bitwise OR operation
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the result of the bitwise OR operation between the two octets
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create two octets of bin
+</span>oct=OCTET.<span class="function-name">from_bin</span>(<span class="string">"0100101001001011"</span>)
+oct2=OCTET.<span class="function-name">from_bin</span>(<span class="string">"10111011"</span>)
+<span class="global">print</span>(oct:<span class="function-name">__bor</span>(oct2):<span class="function-name">bin</span>())
+<span class="comment">--print: 11111011</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:xor_grow"></a>
+    <strong>octet:xor_grow (dest, source)</strong>
+    </dt>
+    <dd>
+    Bitwise XOR operation on two octets padded to reach the same length, returns a new octet.
+Results in a newly allocated octet, does not change the contents of any other octet involved.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">dest</span>
+         leftmost octet used in XOR operation
+        </li>
+        <li><span class="parameter">source</span>
+         rightmost octet used in XOR operation
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new octet resulting from the operation
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create two octets of bin
+</span>oct=OCTET.<span class="function-name">from_bin</span>(<span class="string">"0100101001001011"</span>)
+oct2=OCTET.<span class="function-name">from_bin</span>(<span class="string">"10111011"</span>)
+<span class="global">print</span>(oct:<span class="function-name">xor_grow</span>(oct2):<span class="function-name">bin</span>())
+<span class="comment">--print: 0100101001001011</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:__bxor"></a>
+    <strong>octet:__bxor (dest, source)</strong>
+    </dt>
+    <dd>
+    Bitwise XOR operation on two octets truncating at the shortest one length, returns a new octet.
+This is also executed when using the '<b>~</b>' operator between two
+octets. Results in a newly allocated octet, does not change the
+contents of any other octet involved.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">dest</span>
+         leftmost octet used in XOR operation
+        </li>
+        <li><span class="parameter">source</span>
+         rightmost octet used in XOR operation
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new octet resulting from the operation
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create two octets of bin
+</span>oct=OCTET.<span class="function-name">from_bin</span>(<span class="string">"0100101001001011"</span>)
+oct2=OCTET.<span class="function-name">from_bin</span>(<span class="string">"10111011"</span>)
+<span class="global">print</span>(oct:<span class="function-name">__bxor</span>(oct2):<span class="function-name">bin</span>())
+<span class="comment">--print: 11110001</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:__bnot"></a>
+    <strong>octet:__bnot ()</strong>
+    </dt>
+    <dd>
+    Bitwise NOT operation on an octet returns a new octet.
+This is also executed when using the '~</b>' operator.
+Results in a newly allocated octet.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the new octet containing the result of the bitwise NOT operation
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create an octet of bin
+</span>oct=OCTET.<span class="function-name">from_bin</span>(<span class="string">"0100101001001011"</span>)
+<span class="global">print</span>(oct:<span class="function-name">__bnot</span>():<span class="function-name">bin</span>())
+<span class="comment">--print: 1011010110110100</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:find"></a>
+    <strong>octet:find (haystack, needle, pos)</strong>
+    </dt>
+    <dd>
+    Finds a needle sequence of bytes in a haystack octet and returns the
+position where it has been found (counting from 0) or nil when not
+found.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">haystack</span>
+         the octet in which to find the needle
+        </li>
+        <li><span class="parameter">needle</span>
+         the octet needle to search for
+        </li>
+        <li><span class="parameter">pos</span>
+            <span class="types"><span class="type">integer</span></span>
+         (optional) the position to start searching in haystack
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a number indicating the position found in haystack or nil
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create an octet in hex
+</span>oct=OCTET.<span class="function-name">from_hex</span>(<span class="string">"0xa1b2c3d4"</span>)
+<span class="comment">--create the needle
+</span>needle=OCTET.<span class="function-name">from_hex</span>(<span class="string">"0xc3"</span>)
+<span class="global">print</span>(oct:<span class="function-name">find</span>(needle))
+<span class="comment">--print: 2.0</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:copy"></a>
+    <strong>octet:copy (haystack, start, length)</strong>
+    </dt>
+    <dd>
+    Copies out a needle octet from an haystack octet starting at
+position and long as indicated.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">haystack</span>
+         octet from which we copy bytes out into needle
+        </li>
+        <li><span class="parameter">start</span>
+            <span class="types"><span class="type">integer</span></span>
+         position, begins from 0
+        </li>
+        <li><span class="parameter">length</span>
+            <span class="types"><span class="type">integer</span></span>
+         of byte sequence to copy
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        new octet copied out
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create an octet in hex
+</span>oct=OCTET.<span class="function-name">from_hex</span>(<span class="string">"0xa1b2c3d4"</span>)
+<span class="comment">--define the start position equal to 1
+</span><span class="comment">--define the length of byte sequence to copy equal to 2
+</span><span class="global">print</span>(oct:<span class="function-name">copy</span>(<span class="number">1</span>,<span class="number">2</span>):<span class="function-name">hex</span>())
+<span class="comment">--print: b2c3</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octet:paste"></a>
+    <strong>octet:paste (haystack, needle, starting)</strong>
+    </dt>
+    <dd>
+
+<p>Paste a needle octet into an haystack octet starting at position
+and overwriting all its byte values in place. </p>
+
+<pre><code>--create an octet of hex
+oct=OCTET.from_hex("0xa1b2c3d4")
+--create the needle
+needle=OCTET.from_hex("0xc3")
+--paste the needle in the position 1
+print(oct:paste(needle,1):hex())
+--print: a1c3c3d4
+</code></pre>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">haystack</span>
+         octet destination in which to copy needle
+        </li>
+        <li><span class="parameter">needle</span>
+         octet source of needle bytes
+        </li>
+        <li><span class="parameter">starting</span>
+            <span class="types"><span class="type">integer</span></span>
+         position to paste the needle
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+         the modified octet
+    </ol>
+
+
+
+
+</dd>
 </dl>
 
 
 </div> <!-- id="content" -->
 </div> <!-- id="main" -->
 <div id="about">
-<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-04-16 01:32:19 </i>
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2025-03-25 10:43:18 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

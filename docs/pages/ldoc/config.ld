@@ -43,7 +43,7 @@ file={
 	'../../../src/lua/crypto_w3c.lua',
 	'../../../src/lua/crypto_bbs.lua',
 }
--- dir='o'
+dir='o'
 -- kind_names={topic='Tutorials',script='Programs'}
 -- examples = {
 --     '../../../examples/keygen.lua',

@@ -26,6 +26,7 @@
 <br/>
 <h1>Zenroom</h1>
 
+
 <ul>
   <li><a href="../index.html">Index</a></li>
 </ul>
@@ -33,7 +34,7 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
-<li><a href="#Class_ecp">Class ecp </a></li>
+<li><a href="#Class_ECP">Class ECP </a></li>
 </ul>
 
 
@@ -41,19 +42,20 @@
 <ul class="nowrap">
   <li><a href="../modules/OCTET.html">OCTET</a></li>
   <li><a href="../modules/HASH.html">HASH</a></li>
+  <li><strong>ECP</strong></li>
+  <li><a href="../modules/BIG.html">BIG</a></li>
+  <li><a href="../modules/FLOAT.html">FLOAT</a></li>
+  <li><a href="../modules/TIME.html">TIME</a></li>
   <li><a href="../modules/AES.html">AES</a></li>
   <li><a href="../modules/ECDH.html">ECDH</a></li>
-  <li><strong>ECP</strong></li>
+  <li><a href="../modules/ED.html">ED</a></li>
+  <li><a href="../modules/P256.html">P256</a></li>
+  <li><a href="../modules/QP.html">QP</a></li>
   <li><a href="../modules/String.html">String</a></li>
   <li><a href="../modules/Table.html">Table</a></li>
   <li><a href="../modules/INSPECT.html">INSPECT</a></li>
-  <li><a href="../modules/ZEN.html">ZEN</a></li>
-  <li><a href="../modules/BIG.html">BIG</a></li>
-</ul>
-<h2>Examples</h2>
-<ul class="nowrap">
-  <li><a href="../examples/keygen.lua.html">keygen.lua</a></li>
-  <li><a href="../examples/crypt-to-multi.lua.html">crypt-to-multi.lua</a></li>
+  <li><a href="../modules/lua.zencode.html">lua.zencode</a></li>
+  <li><a href="../modules/BBS.html">BBS</a></li>
 </ul>
 
 </div>
@@ -76,7 +78,7 @@
   method. The values of each coordinate can be imported using <a href="../modules/BIG.html#">BIG</a>
   methods <code>BIG.hex()</code> or <code>BIG.base64()</code>.</p>
 
-<p>  Once ECP numbers are created this way, the arithmetic operations
+<p>  Once ECP numbers are created in this way, the arithmetic operations
   of addition, subtraction and multiplication can be executed
   normally using overloaded operators (+ - *).</p>
     <h3>Info:</h3>
@@ -95,26 +97,40 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#generator">generator ()</a></td>
-	<td class="summary">Returns the generator of the curve: an ECP point that is multiplied by any <a href="../modules/BIG.html#">BIG</a> number to obtain a correspondent point on the curve.</td>
+	<td class="summary">Return the generator of the curve: an ECP point that is multiplied by any <a href="../modules/BIG.html#">BIG</a> number
+to obtain a correspondent point on the curve.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#infinity">infinity ()</a></td>
-	<td class="summary">Returns a new ECP infinity point that is definitely not on the curve.</td>
+	<td class="summary">Return a new ECP infinity point that is definitely not on the curve.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#order">order ()</a></td>
-	<td class="summary">Gives the order of the curve, a <a href="../modules/BIG.html#">BIG</a> number contained in an octet.</td>
+	<td class="summary">Give the order of the curve, a <a href="../modules/BIG.html#">BIG</a> number contained in an octet.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#mapit">mapit (OCTET)</a></td>
-	<td class="summary">Map an <a href="../modules/OCTET.html#">OCTET</a> of exactly 64 bytes length to a point on the curve: the OCTET should be the output of an hash function.</td>
+	<td class="summary">Map an <a href="../modules/OCTET.html#">OCTET</a> of exactly 64 bytes length to a point on the curve:
+the OCTET should be the output of an hash function.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#validate">validate (OCTET)</a></td>
 	<td class="summary">Verify that an <a href="../modules/OCTET.html#">OCTET</a> really corresponds to an ECP point on the curve.</td>
 	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#prime">prime ()</a></td>
+	<td class="summary">This function allows to obatain the prime number q used to define an elliptic curve over a finite filed GF(q).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#from_zcash">from_zcash (y)</a></td>
+	<td class="summary">This function transforms a serial number in octet notation in a point of an elliptic curve, if associated to.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#rhs">rhs (x)</a></td>
+	<td class="summary">Allow to calculate the right side of the equation Y^2 = X^3 + 4, the elliptic curve BSL381, as a <a href="../modules/BIG.html#">BIG</a> number.</td>
+	</tr>
 </table>
-<h2><a href="#Class_ecp">Class ecp </a></h2>
+<h2><a href="#Class_ECP">Class ECP </a></h2>
 <table class="function_list">
 	<tr>
 	<td class="name" nowrap><a href="#ecp:affine">ecp:affine ()</a></td>
@@ -122,14 +138,14 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#ecp:isinf">ecp:isinf ()</a></td>
-	<td class="summary">Returns true if an ECP coordinate points to infinity (out of the curve) and false otherwise.</td>
+	<td class="summary">Check if a given elliptic curve point is the point at infinity.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#ecp:add">ecp:add (first, second)</a></td>
-	<td class="summary">Add two ECP points to each other (commutative and associative operation).</td>
+	<td class="name" nowrap><a href="#ecp:add">ecp:add (num)</a></td>
+	<td class="summary">Add an ECP point to another (commutative and associative operation).</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#ecp:sub">ecp:sub (first, second)</a></td>
+	<td class="name" nowrap><a href="#ecp:sub">ecp:sub (num)</a></td>
 	<td class="summary">Subtract an ECP point from another (commutative and associative operation).</td>
 	</tr>
 	<tr>
@@ -138,27 +154,36 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#ecp:double">ecp:double ()</a></td>
-	<td class="summary">Transforms an ECP pointo into the double of its value, multiplying it by two.</td>
+	<td class="summary">This method transforms an ECP point into the double of its value, multiplying it by two.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#ecp:mul">ecp:mul (ecp, number)</a></td>
+	<td class="name" nowrap><a href="#ecp:mul">ecp:mul (number)</a></td>
 	<td class="summary">Multiply an ECP point by a <a href="../modules/BIG.html#">BIG</a> number.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#ecp:eq">ecp:eq (first, second)</a></td>
+	<td class="name" nowrap><a href="#ecp:eq">ecp:eq (point)</a></td>
 	<td class="summary">Compares two ECP objects and returns true if they indicate the same point on the curve (they are equal) or false otherwise.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#ecp:octet">ecp:octet ()</a></td>
-	<td class="summary">Returns an octet containing the coordinate of an ECP point on the curve.</td>
+	<td class="summary">Return an octet containing the coordinate of an ECP point on the curve.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#ecp:x">ecp:x ()</a></td>
-	<td class="summary">Gives the X coordinate of the ECP point as a single <a href="../modules/BIG.html#">BIG</a> number.</td>
+	<td class="summary">Give the X coordinate of the ECP point as a single <a href="../modules/BIG.html#">BIG</a> number.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#ecp:y">ecp:y ()</a></td>
-	<td class="summary">Gives the Y coordinate of the ECP point as a single <a href="../modules/BIG.html#">BIG</a> number.</td>
+	<td class="summary">Give the Y coordinate of the ECP point as a single <a href="../modules/BIG.html#">BIG</a> number.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ecp:__tostring">ecp:__tostring ()</a></td>
+	<td class="summary">Allow to change the notation of point of an ellipitc curve from octet in a common used hexadecimal notation.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ecp:to_zcash">ecp:to_zcash ()</a></td>
+	<td class="summary">It allows to convert a point from an elliptic curve in a serial number used in the context
+ of the cryptocurrency Zcash.</td>
 	</tr>
 </table>
 
@@ -174,7 +199,7 @@
     <strong>new (coordinates)</strong>
     </dt>
     <dd>
-    Create a new ECP point from an <a href="../modules/OCTET.html#">OCTET</a> argument containing its coordinates. (octet)
+    Create a new ECP point from an <a href="../modules/OCTET.html#">OCTET</a> argument containing its coordinates.
 
 
     <h3>Parameters:</h3>
@@ -203,18 +228,26 @@
     <strong>generator ()</strong>
     </dt>
     <dd>
-    Returns the generator of the curve: an ECP point that is multiplied by any <a href="../modules/BIG.html#">BIG</a> number to obtain a correspondent point on the curve. ()
+    Return the generator of the curve: an ECP point that is multiplied by any <a href="../modules/BIG.html#">BIG</a> number
+to obtain a correspondent point on the curve.
 
 
 
     <h3>Returns:</h3>
     <ol>
 
-        ECP point of the curve's generator.
+        ECP point of the curve's generator
     </ol>
 
 
 
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">-- Print the generator of ECP BLS381 in hexadecimal notation
+</span>gen = ECP.<span class="function-name">G</span>():<span class="function-name">octet</span>():<span class="function-name">hex</span>()			<span class="comment">--.G() is the same of .generator()
+</span><span class="global">print</span>(gen)
+<span class="comment">-- Output: 0317f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb</span></pre>
+    </ul>
 
 </dd>
     <dt>
@@ -222,18 +255,25 @@
     <strong>infinity ()</strong>
     </dt>
     <dd>
-    Returns a new ECP infinity point that is definitely not on the curve. ()
+    Return a new ECP infinity point that is definitely not on the curve.
 
 
 
     <h3>Returns:</h3>
     <ol>
 
-        ECP pointing to infinity (out of the curve).
+        ECP point to infinity (out of the curve).
     </ol>
 
 
 
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--Print the infinity point of ECP BLS381 in hexadecimal notation
+</span>inf = ECP.<span class="function-name">infinity</span>():<span class="function-name">octet</span>():<span class="function-name">hex</span>()
+<span class="global">print</span>(inf)
+<span class="comment">-- Output: 7f7f</span></pre>
+    </ul>
 
 </dd>
     <dt>
@@ -241,7 +281,7 @@
     <strong>order ()</strong>
     </dt>
     <dd>
-    Gives the order of the curve, a <a href="../modules/BIG.html#">BIG</a> number contained in an octet. ()
+    Give the order of the curve, a <a href="../modules/BIG.html#">BIG</a> number contained in an octet.
 
 
 
@@ -253,6 +293,13 @@
 
 
 
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--Print the order of in hexadecimal notation
+</span>ord = ECP.<span class="function-name">order</span>():<span class="function-name">octet</span>():<span class="function-name">hex</span>()
+<span class="global">print</span>(ord)
+<span class="comment">-- Output: 73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001</span></pre>
+    </ul>
 
 </dd>
     <dt>
@@ -260,7 +307,8 @@
     <strong>mapit (OCTET)</strong>
     </dt>
     <dd>
-    Map an <a href="../modules/OCTET.html#">OCTET</a> of exactly 64 bytes length to a point on the curve: the OCTET should be the output of an hash function. (OCTET)
+    Map an <a href="../modules/OCTET.html#">OCTET</a> of exactly 64 bytes length to a point on the curve:
+the OCTET should be the output of an hash function.
 
 
     <h3>Parameters:</h3>
@@ -278,6 +326,13 @@
 
 
 
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">oct = OCTET.<span class="function-name">new</span>(<span class="number">5</span>)          <span class="comment">-- generate an octet oct of length 5 bytes
+</span>h = hash.<span class="function-name">new</span>(<span class="string">"sha512"</span>)      <span class="comment">-- call the hash function SHA512
+</span>hash_oct = h:<span class="function-name">process</span>(oct)   <span class="comment">-- applie the hash to the octet oct
+</span>EC = ECP.<span class="function-name">mapit</span>(hash_oct)    <span class="comment">-- define the ellipitic curve associated to the octet</span></pre>
+    </ul>
 
 </dd>
     <dt>
@@ -285,7 +340,7 @@
     <strong>validate (OCTET)</strong>
     </dt>
     <dd>
-    Verify that an <a href="../modules/OCTET.html#">OCTET</a> really corresponds to an ECP point on the curve. (OCTET)
+    Verify that an <a href="../modules/OCTET.html#">OCTET</a> really corresponds to an ECP point on the curve.
 
 
     <h3>Parameters:</h3>
@@ -298,18 +353,121 @@
     <h3>Returns:</h3>
     <ol>
 
-        bool value: true if valid, false if not valid
+        boolean value: true if valid, false if invalid
     </ol>
 
 
 
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">oct = OCTET.<span class="function-name">new</span>(<span class="number">64</span>)         <span class="comment">-- generate an octet oct of length 64 bytes
+</span>bool = ECP.<span class="function-name">validate</span>(oct)
+<span class="keyword">if</span> boll <span class="keyword">then</span>
+   	<span class="global">print</span>(<span class="string">"true"</span>)
+<span class="keyword">else</span>
+   	<span class="global">print</span>(<span class="string">"false"</span>)
+<span class="keyword">end</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "prime"></a>
+    <strong>prime ()</strong>
+    </dt>
+    <dd>
+    This function allows to obatain the prime number q used to define an elliptic curve over a finite filed GF(q).
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the prime number q
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--In this case the curve is BLS381
+</span>q = ECP.<span class="function-name">prime</span>() 	<span class="comment">--returned as @BIG number
+</span><span class="global">print</span>(q:<span class="function-name">decimal</span>()) 	<span class="comment">--printed as integer
+</span><span class="comment">--Output: 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "from_zcash"></a>
+    <strong>from_zcash (y)</strong>
+    </dt>
+    <dd>
+    This function transforms a serial number in octet notation in a point of an elliptic curve, if associated to.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">y</span>
+         an octet
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a point on an elliptic curve in octet notation
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">gen = ECP.<span class="function-name">generator</span>()
+y = gen:<span class="function-name">to_zcash</span>() <span class="comment">--serial number associated to the point gen
+</span>point = ECP.<span class="function-name">from_zcash</span>(y):<span class="function-name">octet</span>() <span class="comment">--point associated to the previous serial number
+</span><span class="global">print</span>(point:<span class="function-name">hex</span>()) <span class="comment">-- the point printed in hexadecimal notation
+</span><span class="comment">--Output: 0317f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb
+</span><span class="comment">-- It can be checked the previous one is the hexadecimal notation fo the point gen</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "rhs"></a>
+    <strong>rhs (x)</strong>
+    </dt>
+    <dd>
+    Allow to calculate the right side of the equation Y^2 = X^3 + 4, the elliptic curve BSL381, as a <a href="../modules/BIG.html#">BIG</a> number.
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         as <a href="../modules/BIG.html#">BIG</a> number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        Y^2 from the previous equation
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">x = BIG.<span class="function-name">from_decimal</span>(<span class="string">"2"</span>)
+y_square = ECP.<span class="function-name">rhs</span>(x) <span class="comment">-- Y^2 from Y^2 = X^3 + 4
+</span><span class="global">print</span>(y_square:<span class="function-name">decimal</span>())
+<span class="comment">--Output: 12</span></pre>
+    </ul>
 
 </dd>
 </dl>
-    <h2 class="section-header has-description"><a name="Class_ecp"></a>Class ecp </h2>
+    <h2 class="section-header has-description"><a name="Class_ECP"></a>Class ECP </h2>
 
           <div class="section-description">
-          Instance Methods
+          Object Methods
           </div>
     <dl class="function">
     <dt>
@@ -317,7 +475,7 @@
     <strong>ecp:affine ()</strong>
     </dt>
     <dd>
-    Make an existing ECP point affine with its curve ()
+    Make an existing ECP point affine with its curve
 
 
 
@@ -336,14 +494,14 @@
     <strong>ecp:isinf ()</strong>
     </dt>
     <dd>
-    Returns true if an ECP coordinate points to infinity (out of the curve) and false otherwise. ()
+    Check if a given elliptic curve point is the point at infinity.
 
 
 
     <h3>Returns:</h3>
     <ol>
 
-        false if point is on curve, true if its off curve into infinity.
+        true if it is the point at infinity, false otherwise
     </ol>
 
 
@@ -352,19 +510,16 @@
 </dd>
     <dt>
     <a name = "ecp:add"></a>
-    <strong>ecp:add (first, second)</strong>
+    <strong>ecp:add (num)</strong>
     </dt>
     <dd>
-    Add two ECP points to each other (commutative and associative operation).  Can be made using the overloaded operator <code>+</code> between two ECP objects just like the would be numbers.
-(first,second)
+    Add an ECP point to another (commutative and associative operation). <br/>
+Can be made using the overloaded operator + between two ECP objects just like the would be numbers.
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">first</span>
-         number to be summed
-        </li>
-        <li><span class="parameter">second</span>
+        <li><span class="parameter">num</span>
          number to be summed
         </li>
     </ul>
@@ -377,24 +532,30 @@
 
 
 
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">gen = ECP.<span class="function-name">generator</span>()
+inf = ECP.<span class="function-name">infinity</span>()
+sum =gen:<span class="function-name">add</span>(inf)
+<span class="keyword">if</span> sum == gen <span class="keyword">then</span> <span class="global">print</span>(<span class="string">"true"</span>)
+<span class="keyword">else</span> <span class="global">print</span>(<span class="string">"false"</span>)
+<span class="keyword">end</span>
+<span class="comment">-- Output: true</span></pre>
+    </ul>
 
 </dd>
     <dt>
     <a name = "ecp:sub"></a>
-    <strong>ecp:sub (first, second)</strong>
+    <strong>ecp:sub (num)</strong>
     </dt>
     <dd>
-    Subtract an ECP point from another (commutative and associative operation).  Can be made using the overloaded operator <code>-</code> between two ECP objects just like the would be numbers.
-(first,second)
+    Subtract an ECP point from another (commutative and associative operation).  Can be made using the overloaded operator - between two ECP objects just like the would be numbers.
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">first</span>
-         number from which the second should be subtracted
-        </li>
-        <li><span class="parameter">second</span>
-         number to use in the subtraction
+        <li><span class="parameter">num</span>
+         number to subtract
         </li>
     </ul>
 
@@ -413,13 +574,28 @@
     <strong>ecp:negative ()</strong>
     </dt>
     <dd>
-    Transforms an ECP point into its equivalent negative point on the elliptic curve. ()
+    Transforms an ECP point into its equivalent negative point on the elliptic curve.
 
 
 
+    <h3>Returns:</h3>
+    <ol>
+
+        the equivalent negative point
+    </ol>
 
 
 
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">gen = ECP.<span class="function-name">generator</span>()
+inf = ECP.<span class="function-name">infinity</span>()
+inv = gen:<span class="function-name">negative</span>()
+<span class="keyword">if</span> gen:<span class="function-name">add</span>(inv) == inf <span class="keyword">then</span> <span class="global">print</span>(<span class="string">"true"</span>)
+<span class="keyword">else</span> <span class="global">print</span>(<span class="string">"false"</span>)
+<span class="keyword">end</span>
+<span class="comment">--Output: true</span></pre>
+    </ul>
 
 </dd>
     <dt>
@@ -427,30 +603,34 @@
     <strong>ecp:double ()</strong>
     </dt>
     <dd>
-    Transforms an ECP pointo into the double of its value, multiplying it by two.  This works faster than multiplying it an arbitrary number of times.
-()
+    This method transforms an ECP point into the double of its value, multiplying it by two.
 
 
 
 
 
 
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">sum = gen:<span class="function-name">add</span>(gen)	<span class="comment">--adding a point (the generator in this case) itself
+</span>double = gen:<span class="function-name">double</span>()	<span class="comment">--doubling the value of gen
+</span><span class="keyword">if</span> sum == double <span class="keyword">then</span> <span class="global">print</span>(<span class="string">"true"</span>)
+<span class="keyword">else</span> <span class="global">print</span>(<span class="string">"false"</span>)
+<span class="keyword">end</span>
+<span class="comment">--Output: true</span></pre>
+    </ul>
 
 </dd>
     <dt>
     <a name = "ecp:mul"></a>
-    <strong>ecp:mul (ecp, number)</strong>
+    <strong>ecp:mul (number)</strong>
     </dt>
     <dd>
     Multiply an ECP point by a <a href="../modules/BIG.html#">BIG</a> number.  Can be made using the overloaded operator <code>*</code>
-(ecp,num)
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">ecp</span>
-         point on the elliptic curve to be multiplied
-        </li>
         <li><span class="parameter">number</span>
          indicating how many times it should be multiplied
         </li>
@@ -464,23 +644,32 @@
 
 
 
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">gen = ECP.<span class="function-name">generator</span>()
+num = BIG.<span class="function-name">from_decimal</span>(<span class="string">"5"</span>)
+mult = gen:<span class="function-name">mul</span>(num)
+sum = gen:<span class="function-name">add</span>(inf)
+<span class="keyword">for</span> i = <span class="number">1</span>,<span class="number">4</span>,<span class="number">1</span> <span class="keyword">do</span>
+   	sum = sum:<span class="function-name">add</span>(gen)
+<span class="keyword">end</span>
+<span class="keyword">if</span> sum == mult <span class="keyword">then</span> <span class="global">print</span>(<span class="string">"true"</span>)
+<span class="keyword">else</span> <span class="global">print</span>(<span class="string">"false"</span>)
+<span class="keyword">end</span></pre>
+    </ul>
 
 </dd>
     <dt>
     <a name = "ecp:eq"></a>
-    <strong>ecp:eq (first, second)</strong>
+    <strong>ecp:eq (point)</strong>
     </dt>
     <dd>
     Compares two ECP objects and returns true if they indicate the same point on the curve (they are equal) or false otherwise.  It can also be executed by using the <code>==</code> overloaded operator.
-(first,second)
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">first</span>
-         ecp point to be compared
-        </li>
-        <li><span class="parameter">second</span>
+        <li><span class="parameter">point</span>
          ecp point to be compared
         </li>
     </ul>
@@ -500,8 +689,9 @@
     <strong>ecp:octet ()</strong>
     </dt>
     <dd>
-    Returns an octet containing the coordinate of an ECP point on the curve.  It can be used to export the value of an ECP point into a string, using <a href="../modules/OCTET.html#octet:hex">OCTET:hex</a> or <a href="../modules/OCTET.html#octet:base64">OCTET:base64</a> encapsulation. It can be decoded back to an ECP point using <a href="../modules/ECP.html#new">ECP:new</a>.
-()
+    Return an octet containing the coordinate of an ECP point on the curve. <br/>
+It can be used to export the value of an ECP point into a string, using <a href="../modules/OCTET.html#octet:hex">OCTET:hex</a> or <a href="../modules/OCTET.html#octet:base64">OCTET:base64</a> encapsulation.
+It can be decoded back to an ECP point using <a href="../modules/ECP.html#new">ECP:new</a>.
 
 
 
@@ -513,6 +703,14 @@
 
 
 
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">num = BIG.<span class="function-name">from_decimal</span>(<span class="string">"3"</span>)
+mult = gen:<span class="function-name">mul</span>(num)
+sum = gen:<span class="function-name">add</span>(inf)
+to_octet = mult:<span class="function-name">octet</span>():<span class="function-name">hex</span>()
+<span class="comment">-- returns the hexadecimal notation of mult after having been trasmormed it in an octet</span></pre>
+    </ul>
 
 </dd>
     <dt>
@@ -520,7 +718,7 @@
     <strong>ecp:x ()</strong>
     </dt>
     <dd>
-    Gives the X coordinate of the ECP point as a single <a href="../modules/BIG.html#">BIG</a> number. ()
+    Give the X coordinate of the ECP point as a single <a href="../modules/BIG.html#">BIG</a> number.
 
 
 
@@ -532,6 +730,14 @@
 
 
 
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--In the following, the method decimal() is used to transfomr in integert the x coordinate of gen
+</span>gen = ECP.<span class="function-name">generator</span>()
+x = gen:<span class="function-name">x</span>()
+<span class="global">print</span>(x:<span class="function-name">decimal</span>())
+<span class="comment">--Output: 3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507</span></pre>
+    </ul>
 
 </dd>
     <dt>
@@ -539,7 +745,7 @@
     <strong>ecp:y ()</strong>
     </dt>
     <dd>
-    Gives the Y coordinate of the ECP point as a single <a href="../modules/BIG.html#">BIG</a> number. ()
+    Give the Y coordinate of the ECP point as a single <a href="../modules/BIG.html#">BIG</a> number.
 
 
 
@@ -551,6 +757,65 @@
 
 
 
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">Equal to the previous one</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "ecp:__tostring"></a>
+    <strong>ecp:__tostring ()</strong>
+    </dt>
+    <dd>
+    Allow to change the notation of point of an ellipitc curve from octet in a common used hexadecimal notation. <br/>
+ If one tries to convert a point does not belong to the elliptic curve (as the point at infinity), the method returns nothing.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a string or nothing
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">gen = ECP.<span class="function-name">generator</span>()
+y = gen:<span class="function-name">__tostring</span>()
+<span class="global">print</span>(y)
+<span class="comment">--Output: 0317f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb
+</span><span class="comment">--The hexadecimal notation of gen</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "ecp:to_zcash"></a>
+    <strong>ecp:to_zcash ()</strong>
+    </dt>
+    <dd>
+    It allows to convert a point from an elliptic curve in a serial number used in the context
+ of the cryptocurrency Zcash.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        an octet associated to the point
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">gen = ECP.<span class="function-name">generator</span>()
+y = gen:<span class="function-name">to_zcash</span>()
+<span class="global">print</span>(y:<span class="function-name">hex</span>())				<span class="comment">--printed the serial number in hexadecimal notation
+</span><span class="comment">--Output: 97f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb</span></pre>
+    </ul>
 
 </dd>
 </dl>
@@ -559,8 +824,8 @@
 </div> <!-- id="content" -->
 </div> <!-- id="main" -->
 <div id="about">
-<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-04-16 01:32:19 </i>
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2025-03-25 10:43:18 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

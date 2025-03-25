@@ -1,0 +1,399 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Zenroom LUA</title>
+    <link rel="stylesheet" href="" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Zenroom</h1>
+
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Global_P256_Functions">Global P256 Functions </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/OCTET.html">OCTET</a></li>
+  <li><a href="../modules/HASH.html">HASH</a></li>
+  <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><a href="../modules/BIG.html">BIG</a></li>
+  <li><a href="../modules/FLOAT.html">FLOAT</a></li>
+  <li><a href="../modules/TIME.html">TIME</a></li>
+  <li><a href="../modules/AES.html">AES</a></li>
+  <li><a href="../modules/ECDH.html">ECDH</a></li>
+  <li><a href="../modules/ED.html">ED</a></li>
+  <li><strong>P256</strong></li>
+  <li><a href="../modules/QP.html">QP</a></li>
+  <li><a href="../modules/String.html">String</a></li>
+  <li><a href="../modules/Table.html">Table</a></li>
+  <li><a href="../modules/INSPECT.html">INSPECT</a></li>
+  <li><a href="../modules/lua.zencode.html">lua.zencode</a></li>
+  <li><a href="../modules/BBS.html">BBS</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>P256</code></h1>
+<p>
+
+<h1>P256 </h1>
+
+<p>P-256 (also known as secp256r1 or prime256v1) is one of the most widely used elliptic curves in modern cryptography.</p>
+</p>
+<p> It is defined by the National Institute of Standards and Technology (NIST) and is part of the Suite B cryptographic standards. P-256 is based on elliptic curve cryptography (ECC), which provides strong security with relatively small key sizes, making it efficient for a wide range of applications. It operates over a finite field of 256 bits, providing a balance between security and performance.</p>
+
+<p>ES256 is a cryptographic algorithm used for digital signatures. It is part of the Elliptic Curve Digital Signature Algorithm (ECDSA) and is based on the P-256 elliptic curve (also known as secp256r1 or prime256v1). ES256 is widely used in modern cryptography, particularly in JSON Web Tokens (JWTs) and secure communication protocols.</p>
+
+<p>To work with this module, we define P256 by loading the es256 library using the require function:</p>
+
+<p><code> P256 = require('es256'). </code></p>
+
+<p>Once the module is loaded, you can access its functions using the <code>P256.function()</code> syntax.</p>
+
+
+<h2><a href="#Global_P256_Functions">Global P256 Functions </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#keygen">keygen ()</a></td>
+	<td class="summary">Generate a P-256 elliptic curve key pair (a private key and a public key).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pubgen">pubgen (sk)</a></td>
+	<td class="summary">Generate a P-256 public key from a given private key.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pubcheck">pubcheck (pk)</a></td>
+	<td class="summary">Validate whether a given P-256 public key is valid.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#sign">sign (sk, m, k)</a></td>
+	<td class="summary">Sign a message using the P-256 elliptic curve digital signature algorithm (ECDSA).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#verify">verify (pk, m, sig)</a></td>
+	<td class="summary">Verify an ECDSA signature using the P-256 elliptic curve.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#public_xy">public_xy (pk)</a></td>
+	<td class="summary">Extract the x and y coordinates from a P-256 public key.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#compress_public_key">compress_public_key (pk)</a></td>
+	<td class="summary">Compress a P-256 public key.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Global_P256_Functions"></a>Global P256 Functions </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "keygen"></a>
+    <strong>keygen ()</strong>
+    </dt>
+    <dd>
+
+<p>Generate a P-256 elliptic curve key pair (a private key and a public key). <br/>
+However it only returns the private key.
+A key pair consists of:</p>
+<pre><code>-a private key (secret scalar, a large random number).
+-a public key (a point on the elliptic curve derived from the private key).
+</code></pre>
+
+
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the secret key value
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--generate a random private key and print it in hex
+</span>P256 = <span class="global">require</span>(<span class="string">'es256'</span>)
+<span class="global">print</span>(P256.<span class="function-name">keygen</span>():<span class="function-name">hex</span>())
+<span class="comment">--print for example: a43f787303d65596a708cee586cbad7f3e17c0a2d513ccb653f4c1ad6f37600e 	</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "pubgen"></a>
+    <strong>pubgen (sk)</strong>
+    </dt>
+    <dd>
+    Generate a P-256 public key from a given private key.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">sk</span>
+         the secret key
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the public key value
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--generate a private key that will be the input of P256.pubgen()
+</span>P256 = <span class="global">require</span>(<span class="string">'es256'</span>)
+<span class="global">print</span>(P256.<span class="function-name">pubgen</span>(P256.<span class="function-name">keygen</span>()):<span class="function-name">hex</span>())
+<span class="comment">--the print in hexadecimal will be a random value of 64 bytes, for example
+</span><span class="comment">--print: 138380d70b0d492b8edf5c10ef9fa0c7c77287cbe92115270f75057a4dae3e86d264a5d0e13d215c3bc630357592f15e629f84de07c11df6663bb9b03d1e1912</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "pubcheck"></a>
+    <strong>pubcheck (pk)</strong>
+    </dt>
+    <dd>
+    Validate whether a given P-256 public key is valid.  It takes a public key as input, checks its validity using the <code>p256_validate_pubkey</code> function.
+It takes a 64-byte uncompressed public key as input (the public key is represented as a concatenation of the x and y coordinates of the elliptic curve point), decodes it into elliptic curve coordinates, and checks if the coordinates represent a valid point on the P-256 curve.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pk</span>
+         the public key passed as an octet
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true if pk is valid, false otherwise
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">P256 = <span class="global">require</span>(<span class="string">'es256'</span>)
+<span class="comment">--create secret key
+</span>sk = P256.<span class="function-name">keygen</span>()
+<span class="comment">--create public key
+</span>pk = P256.<span class="function-name">pubgen</span>(sk)
+<span class="keyword">if</span> (P256.<span class="function-name">pubcheck</span>(pk)) <span class="keyword">then</span> <span class="global">print</span>(<span class="string">"public key is valid"</span>)
+<span class="keyword">else</span> <span class="global">print</span>(<span class="string">"public key is invalid"</span>)
+<span class="keyword">end</span>
+<span class="comment">--print: public key is valid</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "sign"></a>
+    <strong>sign (sk, m, k)</strong>
+    </dt>
+    <dd>
+    Sign a message using the P-256 elliptic curve digital signature algorithm (ECDSA).  It takes a private key, a message, and an optional ephemeral key as inputs,
+computes the signature, and returns the signature to Lua. It computes the signature using the <code>p256_ecdsa_sign</code> function.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">sk</span>
+         the private key (32 bytes)
+        </li>
+        <li><span class="parameter">m</span>
+         the message to be signed
+        </li>
+        <li><span class="parameter">k</span>
+         ephemeral key (optional)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the signature
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">P256 = <span class="global">require</span>(<span class="string">'es256'</span>)
+<span class="comment">--generate the secret and the public keys
+</span>sk = P256.<span class="function-name">keygen</span>()
+pk = P256.<span class="function-name">pubgen</span>(sk)
+<span class="comment">--give a message to sign
+</span>m = O.<span class="function-name">from_str</span>(<span class="string">[[
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+eiusmod tempor incididunt ut labore et dolore magna aliqua.]]</span>)
+<span class="comment">--sign the message
+</span>sig = P256.<span class="function-name">sign</span>(sk,m)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "verify"></a>
+    <strong>verify (pk, m, sig)</strong>
+    </dt>
+    <dd>
+    Verify an ECDSA signature using the P-256 elliptic curve.  It takes a public key, a message, and a signature as inputs,
+hashes the message, and verifies the signature against the public key and message hash.
+It uses the  <code>p256_ecdsa_verify</code> function.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pk</span>
+         the public key (64 bytes)
+        </li>
+        <li><span class="parameter">m</span>
+         the message that was signed
+        </li>
+        <li><span class="parameter">sig</span>
+         a 64 bytes ECDSA signature
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean value
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--from <a href="../modules/P256.html#sign">sign</a>, check if the signature is valid
+</span><span class="keyword">if</span> (P256.<span class="function-name">verify</span>(pk, m, sig)) <span class="keyword">then</span> <span class="global">print</span>(<span class="string">"valid signature"</span>)
+<span class="keyword">else</span> <span class="global">print</span>(<span class="string">"invalid signature"</span>)
+<span class="keyword">end</span>
+<span class="comment">--print: valid signature</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "public_xy"></a>
+    <strong>public_xy (pk)</strong>
+    </dt>
+    <dd>
+    Extract the x and y coordinates from a P-256 public key. <br/>
+It takes a 64-byte uncompressed public key as input, splits it into its x and y coordinates, and returns them to Lua.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pk</span>
+         the public key as an octet
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        the x coordinate of the public key</li>
+        <li>
+        the y coordinate of the public key</li>
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">P256 = <span class="global">require</span>(<span class="string">'es256'</span>)
+<span class="comment">--generate private and public keys
+</span>sk = P256.<span class="function-name">keygen</span>()
+pk = P256.<span class="function-name">pubgen</span>(sk)
+<span class="comment">--find x and y coordinates for the public key
+</span>x, y = P256.<span class="function-name">public_xy</span>(pk)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "compress_public_key"></a>
+    <strong>compress_public_key (pk)</strong>
+    </dt>
+    <dd>
+    Compress a P-256 public key. <br/>
+It takes a 64-byte uncompressed public key as input, compresses it into a 33-byte compressed format, and returns the compressed key to Lua.
+It uses the <code>p256_compress_publickey</code> function.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pk</span>
+         the public key passed as an octet
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the compressed public key
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">P256 = <span class="global">require</span>(<span class="string">'es256'</span>)
+<span class="comment">--generate public and private keys
+</span>sk = P256.<span class="function-name">keygen</span>()
+pk = P256.<span class="function-name">pubgen</span>(sk)
+<span class="comment">--create the compressed public key
+</span>pk_comp = P256.<span class="function-name">compress_public_key</span>(pk)
+<span class="comment">--print the length of the compress public key
+</span><span class="global">print</span>(pk_comp:<span class="function-name">__len</span>())
+<span class="comment">--print: 33</span></pre>
+    </ul>
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2025-03-25 10:43:18 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

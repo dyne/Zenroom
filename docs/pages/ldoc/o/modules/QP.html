@@ -1,0 +1,682 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Zenroom LUA</title>
+    <link rel="stylesheet" href="" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Zenroom</h1>
+
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Global_ML_KEM_Functions">Global ML-KEM Functions </a></li>
+<li><a href="#Global_ML_DSA_Functions">Global ML-DSA Functions </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/OCTET.html">OCTET</a></li>
+  <li><a href="../modules/HASH.html">HASH</a></li>
+  <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><a href="../modules/BIG.html">BIG</a></li>
+  <li><a href="../modules/FLOAT.html">FLOAT</a></li>
+  <li><a href="../modules/TIME.html">TIME</a></li>
+  <li><a href="../modules/AES.html">AES</a></li>
+  <li><a href="../modules/ECDH.html">ECDH</a></li>
+  <li><a href="../modules/ED.html">ED</a></li>
+  <li><a href="../modules/P256.html">P256</a></li>
+  <li><strong>QP</strong></li>
+  <li><a href="../modules/String.html">String</a></li>
+  <li><a href="../modules/Table.html">Table</a></li>
+  <li><a href="../modules/INSPECT.html">INSPECT</a></li>
+  <li><a href="../modules/lua.zencode.html">lua.zencode</a></li>
+  <li><a href="../modules/BBS.html">BBS</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>QP</code></h1>
+<p>
+
+<h1> POST QUANTUM (QP) </h1>
+
+
+<p> Post-quantum cryptography (PQC) refers to cryptographic algorithms that are designed to be secure against attacks by quantum computers.</p>
+</p>
+<p>
+ Traditional cryptographic systems, such as RSA and ECC (Elliptic Curve Cryptography), rely on mathematical problems (e.g., integer factorization and discrete logarithms)
+ that are hard for classical computers but can be efficiently solved by quantum computers using algorithms like Shor's algorithm.
+ Post-quantum cryptography aims to address this vulnerability by developing new algorithms based on mathematical problems that are believed to be resistant to quantum attacks.</p>
+
+<p> In this section two post-quantum schemes are described: ML-KEM and ML-DSA. The first one deals with key encapsulation and the second one is a signature scheme.</p>
+
+<p> All function inputs (secret key, public key, message, ciphertext, signature, seed and context) are octets and some of them have a fixed length. Only the version for ML-KEM is passed to the functions as a string.</p>
+
+
+<h2><a href="#Global_ML_KEM_Functions">Global ML-KEM Functions </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#mlkem_keygen">mlkem_keygen (seed1, seed2, string)</a></td>
+	<td class="summary">Allow to create a couple (public key, secret key) taking in input two octet of 32 byte length.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mlkem_pubgen">mlkem_pubgen (sk, string)</a></td>
+	<td class="summary">Generate a public key starting from an octet (the secret key).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mlkem_pubcheck">mlkem_pubcheck (pk, string)</a></td>
+	<td class="summary">Check if the public key has the correct length (it depends on the version of MLKEM used).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mlkem_sscheck">mlkem_sscheck (ss, string)</a></td>
+	<td class="summary">Check if the length of the shared secret coincides with the expected length of a plaintext encrypted with a version of MLKEM.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mlkem_enc">mlkem_enc (pk, m, string)</a></td>
+	<td class="summary">Encrypt a message of 32 bytes length and generate a shared secret using a public key generated from one
+ of the previous functions.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mlkem_dec">mlkem_dec (sk, ct, string)</a></td>
+	<td class="summary">Decrypt a cyphertext retrieving the shared secret using a secret key generated from one of the previous functions.</td>
+	</tr>
+</table>
+<h2><a href="#Global_ML_DSA_Functions">Global ML-DSA Functions </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#ml_dsa_44_keypair">ml_dsa_44_keypair (seed)</a></td>
+	<td class="summary">Generate a key pair for the ML-DSA-44 cryptographic scheme.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mldsa44_pubgen">mldsa44_pubgen (sk)</a></td>
+	<td class="summary">Generate a public key from a given private key for the
+ML-DSA-44 cryptographic scheme.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mldsa44_signature">mldsa44_signature (sk, m, ctx)</a></td>
+	<td class="summary">Generate a signature for a given message using the ML-DSA-44 cryptographic scheme.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mldsa44_verify">mldsa44_verify (pk, sig, m, ctx)</a></td>
+	<td class="summary">Verify a signature for a given message using the ML-DSA-44 cryptographic scheme.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mldsa44_pubcheck">mldsa44_pubcheck (pk)</a></td>
+	<td class="summary">Check whether a given public key is valid for the ML-DSA-44 cryptographic scheme.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mldsa44_signature_check">mldsa44_signature_check (sig)</a></td>
+	<td class="summary">Check whether a given signature is valid for the ML-DSA-44 cryptographic scheme.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header has-description"><a name="Global_ML_KEM_Functions"></a>Global ML-KEM Functions </h2>
+
+          <div class="section-description">
+           </p>
+
+<p> ML-KEM (Kyber Key Encapsulation Mechanism) is a post-quantum cryptographic key encapsulation mechanism (KEM) designed for secure key exchange. It is part of the NIST
+ Post-Quantum Cryptography Standardization process and has been selected as a standard for public-key encryption and KEMs.
+ ML-KEM is based on Module Learning With Errors (MLWE), making it resistant to attacks from quantum computers.</p>
+
+<p> It provides different security levels (Kyber-512, Kyber-768, Kyber-1024) that correspond to classical and quantum security estimates.
+ In particular, for each of the below functions, it is possible define in input which version of ML-KEM to use. The three possibilities are:</p>
+
+<ul>
+    <li><p>MLKEM512: size pk = 800 byte, size sk = 1632 byte</p></li>
+    <li><p>MLKEM768: size pk = 1184 byte, size sk = 2400 byte</p></li>
+    <li><p>MLKEM1024: size pk = 1568 byte, size sk = 3168 byte </p></li>
+</ul>
+
+<p> Unlike traditional encryption schemes, ML-KEM encapsulates a symmetric key, which is then used for further encrypted communication.</p>
+
+<p> At the beginning of each function you require <code> QP = require("qp") </code>. In this way you load the QP module and assign it to the variable QP.
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "mlkem_keygen"></a>
+    <strong>mlkem_keygen (seed1, seed2, string)</strong>
+    </dt>
+    <dd>
+    Allow to create a couple (public key, secret key) taking in input two octet of 32 byte length.
+The length of the public and secret keys generated depends on the version of MLKEM required. The version
+is passed as third argument of the function. If the third argument is NULL, the function applies MLKEM512.
+The function generates 64 bytes of random data: the first 32 bytes can be provided as the first argument (seed 1);
+the next 32 bytes can be provided as the second argument (seed 2). If either seed is not provided, the function generates random bytes.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">seed1</span>
+         (optional)
+        </li>
+        <li><span class="parameter">seed2</span>
+         (optional)
+        </li>
+        <li><span class="parameter">string</span>
+         where string can be: "mlkem512", "mlkem768", "mlkem1024"
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a couple of public key and and secret key
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">QP = <span class="global">require</span>(<span class="string">"qp"</span>)
+oct1 = OCTET.<span class="function-name">random</span>(<span class="number">32</span>)
+oct2 = OCTET.<span class="function-name">random</span>(<span class="number">32</span>)
+pk768 = QP.<span class="function-name">mlkem_keygen</span>(oct1, oct2, <span class="string">"mlkem768"</span>).public
+sk768 = QP.<span class="function-name">mlkem_keygen</span>(oct1, oct2, <span class="string">"mlkem768"</span>).private</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "mlkem_pubgen"></a>
+    <strong>mlkem_pubgen (sk, string)</strong>
+    </dt>
+    <dd>
+    Generate a public key starting from an octet (the secret key).  The number of bytes
+ should coincide with the number of bytes of the secret key of the asscociated MLKEM version used.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">sk</span>
+         a secret key
+        </li>
+        <li><span class="parameter">string</span>
+         where string can be: "mlkem512", "mlkem768", "mlkem1024"
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        pk, the public key associated to an octet
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">QP = <span class="global">require</span>(<span class="string">"qp"</span>)
+sk = OCTET.<span class="function-name">random</span>(<span class="number">2400</span>)   <span class="comment">-- is the secret key
+</span>pk = QP.<span class="function-name">mlkem_pubgen</span>(sk, <span class="string">"mlkem768"</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "mlkem_pubcheck"></a>
+    <strong>mlkem_pubcheck (pk, string)</strong>
+    </dt>
+    <dd>
+    Check if the public key has the correct length (it depends on the version of MLKEM used).
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pk</span>
+         a public key
+        </li>
+        <li><span class="parameter">string</span>
+         where string can be: "mlkem512", "mlkem768", "mlkem1024"
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean value: true if the length is correct, false otherwise
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">QP = <span class="global">require</span>(<span class="string">"qp"</span>)
+oct = OCTET.<span class="function-name">random</span>(<span class="number">230</span>)				<span class="comment">-- an octet of the wrong length 230 bytes
+</span>pk = QP.<span class="function-name">mlkem_pubgen</span>(oct, <span class="string">"mlkem768"</span>)		<span class="comment">-- an octet generated with the correct algorithm
+</span>bool1 = QP.<span class="function-name">mlkem_pubcheck</span>(oct, <span class="string">"mlkem768"</span>)
+bool2 = QP.<span class="function-name">mlkem_pubcheck</span>(pk, <span class="string">"mlkem768"</span>)
+<span class="keyword">if</span> bool1 <span class="keyword">then</span> <span class="global">print</span>(<span class="string">"true"</span> )
+<span class="keyword">else</span> <span class="global">print</span>(<span class="string">"false"</span>)
+<span class="keyword">end</span>
+<span class="comment">-- Output: false
+</span><span class="keyword">if</span> bool2 <span class="keyword">then</span> <span class="global">print</span>(<span class="string">"true"</span>)
+<span class="keyword">else</span> <span class="global">print</span>(<span class="string">"false"</span>)
+<span class="keyword">end</span>
+<span class="comment">-- Output: true</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "mlkem_sscheck"></a>
+    <strong>mlkem_sscheck (ss, string)</strong>
+    </dt>
+    <dd>
+    Check if the length of the shared secret coincides with the expected length of a plaintext encrypted with a version of MLKEM.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ss</span>
+         shared secret
+        </li>
+        <li><span class="parameter">string</span>
+        , where string can be: "mlkem512", "mlkem768", "mlkem1024"
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean value, it is true if the length is correct and false otherwise
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">QP = <span class="global">require</span>(<span class="string">"qp"</span>)
+oct1 = OCTET.<span class="function-name">random</span>(<span class="number">32</span>)
+oct2 = OCTET.<span class="function-name">random</span>(<span class="number">32</span>)
+mess = OCTET.<span class="function-name">random</span>(<span class="number">32</span>)
+pk768 = QP.<span class="function-name">mlkem_keygen</span>(oct1,oct2, <span class="string">"mlkem768"</span>).public
+sk768 = QP.<span class="function-name">mlkem_keygen</span>(oct1,oct2, <span class="string">"mlkem768"</span>).private
+ss = QP.<span class="function-name">mlkem_enc</span>(pk768,mess,<span class="string">"mlkem768"</span>).secret
+<span class="keyword">if</span> QP.<span class="function-name">mlkem_sscheck</span>(ss, <span class="string">"mlkem768"</span>) <span class="keyword">then</span> <span class="global">print</span>(<span class="string">"ok"</span>)
+<span class="keyword">end</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "mlkem_enc"></a>
+    <strong>mlkem_enc (pk, m, string)</strong>
+    </dt>
+    <dd>
+    Encrypt a message of 32 bytes length and generate a shared secret using a public key generated from one
+ of the previous functions.
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pk</span>
+         a public key whose length depends on the kind of MLKEM used
+        </li>
+        <li><span class="parameter">m</span>
+         an octet of 32 bytes length
+        </li>
+        <li><span class="parameter">string</span>
+        , where string can be: "mlkem512", "mlkem768", "mlkem1024"
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        shared secret (an octet of 32 bytes length)</li>
+        <li>
+        ciphertext associated to m</li>
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">QP = <span class="global">require</span>(<span class="string">"qp"</span>)
+oct1 = OCTET.<span class="function-name">random</span>(<span class="number">32</span>)
+oct2 = OCTET.<span class="function-name">random</span>(<span class="number">32</span>)
+mess = OCTET.<span class="function-name">random</span>(<span class="number">32</span>)
+pk768 = QP.<span class="function-name">mlkem_keygen</span>(oct1,oct2, <span class="string">"mlkem768"</span>).public
+ss = QP.<span class="function-name">mlkem_enc</span>(pk768,oct2,<span class="string">"mlkem768"</span>).secret
+ct = QP.<span class="function-name">mlkem_enc</span>(pk768,oct2,<span class="string">"mlkem768"</span>).cipher</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "mlkem_dec"></a>
+    <strong>mlkem_dec (sk, ct, string)</strong>
+    </dt>
+    <dd>
+    Decrypt a cyphertext retrieving the shared secret using a secret key generated from one of the previous functions.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">sk</span>
+         a secret key whose length depends on the kind of MLKEM used
+        </li>
+        <li><span class="parameter">ct</span>
+         an ciphertext
+        </li>
+        <li><span class="parameter">string</span>
+         where string can be: "mlkem512", "mlkem768", "mlkem1024"
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        shared secret (an octet of 32 bytes length)
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">oct1 = OCTET.<span class="function-name">random</span>(<span class="number">32</span>)
+oct2 = OCTET.<span class="function-name">random</span>(<span class="number">32</span>)
+mess = OCTET.<span class="function-name">random</span>(<span class="number">32</span>)
+sk768 = QP.<span class="function-name">mlkem_keygen</span>(oct1,oct2, <span class="string">"mlkem768"</span>).private
+pk768 = QP.<span class="function-name">mlkem_keygen</span>(oct1,oct2, <span class="string">"mlkem768"</span>).public
+ss = QP.<span class="function-name">mlkem_enc</span>(pk768, mess, <span class="string">"mlkem768"</span>).secret
+ct = QP.<span class="function-name">mlkem_enc</span>(pk768, mess, <span class="string">"mlkem768"</span>).cipher
+dec = QP.<span class="function-name">mlkem_dec</span>(sk768, ct, <span class="string">"mlkem768"</span>)
+<span class="keyword">if</span> ss == dec <span class="keyword">then</span> <span class="global">print</span>(<span class="string">"ok"</span>)	<span class="comment">-- Check if the shared secret coincides with the decryption of the ct
+</span><span class="keyword">end</span>
+<span class="comment">-- Output: ok </span></pre>
+    </ul>
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Global_ML_DSA_Functions"></a>Global ML-DSA Functions </h2>
+
+          <div class="section-description">
+           ML-DSA-44 (Module Lattice-based Digital Signature Algorithm with a security level of 44)
+ is a post-quantum cryptographic scheme designed to provide secure digital signatures in a world where quantum
+ computers could potentially break traditional cryptographic algorithms like RSA and ECC (Elliptic Curve Cryptography).
+ It is part of the NIST Post-Quantum Cryptography Standardization Project, which aims to identify and standardize quantum-resistant cryptographic algorithms.</p>
+
+<p> The "44" in ML-DSA-44 refers to its security level, which corresponds to approximately 128 bits of classical security and 44 bits of quantum security.
+ This makes it suitable for applications requiring strong security guarantees.</p>
+
+<p> ML-DSA-44 is designed to have relatively small key and signature sizes compared to other post-quantum signature schemes, making it efficient for storage and transmission.
+ The key generation, signing, and verification algorithms are optimized for performance, making ML-DSA-44 practical for use in resource-constrained environments.</p>
+
+<p> ML-DSA-44 can be used in a wide range of applications, including: secure communication, digital identity, blockchain and cryptocurrencies, IoT device.</p>
+
+<p> At the beginning of each function you require <code> QP = require("qp") </code>. In this way you load the QP module and assign it to the variable QP.
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "ml_dsa_44_keypair"></a>
+    <strong>ml_dsa_44_keypair (seed)</strong>
+    </dt>
+    <dd>
+    Generate a key pair for the ML-DSA-44 cryptographic scheme. <br/>
+It creates a public and a private key, optionally using a provided seed, and returns them in a Lua table.
+If the seed is not provided, the function generates random bytes using a random number generator.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">seed</span>
+         an optional seed of 32 bytes
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a table containing the two keys
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">QP = <span class="global">require</span>(<span class="string">"qp"</span>)
+<span class="comment">--select a random seed and generate the key pair
+</span>seed = OCTET.<span class="function-name">random</span>(<span class="number">32</span>)
+keys = QP.<span class="function-name">mldsa44_keypair</span>(seed)
+<span class="comment">--obtain sk and pk
+</span>sk = keys.private
+pk = keys.public</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "mldsa44_pubgen"></a>
+    <strong>mldsa44_pubgen (sk)</strong>
+    </dt>
+    <dd>
+    Generate a public key from a given private key for the
+ML-DSA-44 cryptographic scheme.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">sk</span>
+         a private key
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a public key
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">QP = <span class="global">require</span>(<span class="string">"qp"</span>)
+<span class="comment">--generate a random seed and the key pair
+</span>seed = OCTET.<span class="function-name">random</span>(<span class="number">32</span>)
+keys = QP.<span class="function-name">mldsa44_keypair</span>(seed)
+<span class="comment">--check if the public key is correct
+</span><span class="keyword">if</span> (QP.<span class="function-name">mldsa44_pubgen</span>(keys.private) == keys.public) <span class="keyword">then</span>
+   	<span class="global">print</span>(<span class="string">"ok"</span>)
+<span class="keyword">else</span> <span class="global">print</span>(<span class="string">"different public key"</span>)
+<span class="keyword">end</span>
+<span class="comment">--print: ok</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "mldsa44_signature"></a>
+    <strong>mldsa44_signature (sk, m, ctx)</strong>
+    </dt>
+    <dd>
+    Generate a signature for a given message using the ML-DSA-44 cryptographic scheme.
+The function takes in input also an optional parameter for the context.
+It provides additional flexibility and customization for the signature scheme, allowing you to bind the signature to specific contextual information.
+The context is passed as an octet and can be up to 255 bytes in length.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">sk</span>
+         a secret key
+        </li>
+        <li><span class="parameter">m</span>
+         a message to sign
+        </li>
+        <li><span class="parameter">ctx</span>
+         an optional context for the signature
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">QP = <span class="global">require</span>(<span class="string">"qp"</span>)
+<span class="comment">--generate a random seed, a key pair and a random message
+</span>seed = OCTET.<span class="function-name">random</span>(<span class="number">32</span>)
+keys = QP.<span class="function-name">mldsa44_keypair</span>(seed)
+m = OCTET.<span class="function-name">random</span>(<span class="number">32</span>)
+<span class="comment">--sign the message
+</span>sign = QP.<span class="function-name">mldsa44_signature</span>(keys.private,m)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "mldsa44_verify"></a>
+    <strong>mldsa44_verify (pk, sig, m, ctx)</strong>
+    </dt>
+    <dd>
+    Verify a signature for a given message using the ML-DSA-44 cryptographic scheme.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pk</span>
+         a public key
+        </li>
+        <li><span class="parameter">sig</span>
+         a signature
+        </li>
+        <li><span class="parameter">m</span>
+         a message
+        </li>
+        <li><span class="parameter">ctx</span>
+         an optional context
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--from <a href="../modules/QP.html#mldsa44_signature">mldsa44_signature</a>, check if the signature is valid
+</span><span class="keyword">if</span> (QP.<span class="function-name">mldsa44_verify</span>(keys.public, sign, m)) <span class="keyword">then</span> <span class="global">print</span>(<span class="string">"signature verified"</span>)
+<span class="keyword">else</span> <span class="global">print</span>(<span class="string">"signature not verified"</span>)
+<span class="keyword">end</span>
+<span class="comment">--print: signature verified</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "mldsa44_pubcheck"></a>
+    <strong>mldsa44_pubcheck (pk)</strong>
+    </dt>
+    <dd>
+    Check whether a given public key is valid for the ML-DSA-44 cryptographic scheme.
+The function checks if the public key has the correct length in bytes.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pk</span>
+         a public key
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean value
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">QP = <span class="global">require</span>(<span class="string">"qp"</span>)
+<span class="comment">--generate a random seed, and a key pair
+</span>seed = OCTET.<span class="function-name">random</span>(<span class="number">32</span>)
+keys = QP.<span class="function-name">mldsa44_keypair</span>(seed)
+<span class="comment">--check if the pk is valid
+</span><span class="keyword">if</span> (QP.<span class="function-name">mldsa44_pubcheck</span>(keys.public)) <span class="keyword">then</span> <span class="global">print</span>(<span class="string">"valid pk"</span>)
+<span class="keyword">else</span> <span class="global">print</span>(<span class="string">"invalid pk"</span>)
+<span class="keyword">end</span>
+<span class="comment">--print: valid pk</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "mldsa44_signature_check"></a>
+    <strong>mldsa44_signature_check (sig)</strong>
+    </dt>
+    <dd>
+    Check whether a given signature is valid for the ML-DSA-44 cryptographic scheme. <br/>
+Specifically, it verifies if the signature has the correct length.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">sig</span>
+         a signature
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean value
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">QP = <span class="global">require</span>(<span class="string">"qp"</span>)
+<span class="comment">--generate a random seed and a key pair
+</span>seed = OCTET.<span class="function-name">random</span>(<span class="number">32</span>)
+keys = QP.<span class="function-name">mldsa44_keypair</span>(seed)
+m = OCTET.<span class="function-name">random</span>(<span class="number">32</span>)
+<span class="comment">--generate a random message and sign it
+</span>sign = QP.<span class="function-name">mldsa44_signature</span>(keys.private,m)
+<span class="comment">--check if the signature is valid
+</span><span class="keyword">if</span> (QP.<span class="function-name">mldsa44_signature_check</span>(sign)) <span class="keyword">then</span> <span class="global">print</span>(<span class="string">"signature ok"</span>)
+<span class="keyword">else</span> <span class="global">print</span>(<span class="string">"error in the signature"</span>)
+<span class="keyword">end</span>
+<span class="comment">--print: signature ok</span></pre>
+    </ul>
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2025-03-25 10:43:18 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

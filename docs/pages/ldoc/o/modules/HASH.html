@@ -26,13 +26,15 @@
 <br/>
 <h1>Zenroom</h1>
 
+
 <ul>
   <li><a href="../index.html">Index</a></li>
 </ul>
 
 <h2>Contents</h2>
 <ul>
-<li><a href="#Functions">Functions</a></li>
+<li><a href="#Global_Hash_Functions">Global Hash Functions </a></li>
+<li><a href="#Class_Hash">Class Hash </a></li>
 </ul>
 
 
@@ -40,19 +42,20 @@
 <ul class="nowrap">
   <li><a href="../modules/OCTET.html">OCTET</a></li>
   <li><strong>HASH</strong></li>
+  <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><a href="../modules/BIG.html">BIG</a></li>
+  <li><a href="../modules/FLOAT.html">FLOAT</a></li>
+  <li><a href="../modules/TIME.html">TIME</a></li>
   <li><a href="../modules/AES.html">AES</a></li>
   <li><a href="../modules/ECDH.html">ECDH</a></li>
-  <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><a href="../modules/ED.html">ED</a></li>
+  <li><a href="../modules/P256.html">P256</a></li>
+  <li><a href="../modules/QP.html">QP</a></li>
   <li><a href="../modules/String.html">String</a></li>
   <li><a href="../modules/Table.html">Table</a></li>
   <li><a href="../modules/INSPECT.html">INSPECT</a></li>
-  <li><a href="../modules/ZEN.html">ZEN</a></li>
-  <li><a href="../modules/BIG.html">BIG</a></li>
-</ul>
-<h2>Examples</h2>
-<ul class="nowrap">
-  <li><a href="../examples/keygen.lua.html">keygen.lua</a></li>
-  <li><a href="../examples/crypt-to-multi.lua.html">crypt-to-multi.lua</a></li>
+  <li><a href="../modules/lua.zencode.html">lua.zencode</a></li>
+  <li><a href="../modules/BBS.html">BBS</a></li>
 </ul>
 
 </div>
@@ -73,7 +76,7 @@
  tests. There are also <code>sha384</code>, <code>sha3_256</code> and <code>sha3_512</code> with
  experimental implementations that aren't passing NIST vector tests.</p>
 
-<p> objects are instantiated using <a href="../modules/HASH.html#new">HASH:new</a> and then provide the
+<p> Objects are instantiated using <a href="../modules/HASH.html#new">HASH.new</a> and then provide the
  method <a href="../modules/HASH.html#hash:process">HASH:process</a> that takes an input <a href="../modules/OCTET.html#">OCTET</a> and then
  returns another fixed-size octet that is uniquely matched to the
  original data. The process is not reversible (the original data
@@ -86,28 +89,68 @@
     </ul>
 
 
-<h2><a href="#Functions">Functions</a></h2>
+<h2><a href="#Global_Hash_Functions">Global Hash Functions </a></h2>
 <table class="function_list">
 	<tr>
 	<td class="name" nowrap><a href="#new">new (string)</a></td>
-	<td class="summary">Create a new hash object of a selected algorithm (sha256 or
+	<td class="summary">Create a new hash object of a selected algorithm (e.g.sha256 or
    sha512).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mnemonic_seed">mnemonic_seed (str1, str2)</a></td>
+	<td class="summary">Convert a mnemonic phrase (used in cryptocurrency wallets) into a seed using the PBKDF2 (Password-Based Key Derivation Function 2)
+algorithm with HMAC-SHA512.</td>
+	</tr>
+</table>
+<h2><a href="#Class_Hash">Class Hash </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#hash:__gc">hash:__gc (hash)</a></td>
+	<td class="summary">Decrement the reference count of an hash object and free its memory when no more references exist.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#hash:octet">hash:octet ()</a></td>
+	<td class="summary">Convert an hash object into an octet object.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#hash:process">hash:process (data)</a></td>
 	<td class="summary">Hash an octet into a new octet.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#keyring:hmac">keyring:hmac (key, data)</a></td>
+	<td class="name" nowrap><a href="#hash:feed">hash:feed (data)</a></td>
+	<td class="summary">Feed a new octet into a current hashing session.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#hash:yeld">hash:yeld ()</a></td>
+	<td class="summary">Yeld a new octet from the current hashing session.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#hash:hmac">hash:hmac (key, data)</a></td>
 	<td class="summary">Compute the HMAC of a message using a key.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#keyring:kdf2">keyring:kdf2 (hash, key)</a></td>
+	<td class="name" nowrap><a href="#hash:kdf2">hash:kdf2 (key)</a></td>
 	<td class="summary">Key Derivation Function (KDF2).</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#keyring:pbkdf2">keyring:pbkdf2 (key, salt, iterations, length)</a></td>
+	<td class="name" nowrap><a href="#hash:pbkdf2">hash:pbkdf2 (key, salt, iterations, length)</a></td>
 	<td class="summary">Password Based Key Derivation Function (PBKDF2).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#hash:random_seed">hash:random_seed (seed)</a></td>
+	<td class="summary">Seed a cryptographically secure pseudo-random number generator (CSPRNG) associated with a hash object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#hash:random_int8">hash:random_int8 ()</a></td>
+	<td class="summary">Generate a random 8-bit unsigned integer using a cryptographically secure pseudo-random number generator (CSPRNG) associated with a hash object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#hash:random_int16">hash:random_int16 ()</a></td>
+	<td class="summary">Generate a random 16-bit unsigned integer using a cryptographically secure pseudo-random number generator (CSPRNG) associated with a hash object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#hash:random_int32">hash:random_int32 ()</a></td>
+	<td class="summary">Generate a random 32-bit unsigned integer using a cryptographically secure pseudo-random number generator (CSPRNG) associated with a hash object.</td>
 	</tr>
 </table>
 
@@ -115,7 +158,7 @@
 <br/>
 
 
-    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+    <h2 class="section-header "><a name="Global_Hash_Functions"></a>Global Hash Functions </h2>
 
     <dl class="function">
     <dt>
@@ -123,23 +166,22 @@
     <strong>new (string)</strong>
     </dt>
     <dd>
-    Create a new hash object of a selected algorithm (sha256 or
+    Create a new hash object of a selected algorithm (e.g.sha256 or
    sha512).  The resulting object can then process any <a href="../modules/OCTET.html#">OCTET</a> into
-   its hashed equivalent.
-(string)
+   its hashed equivalent. It is a C function.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">string</span>
-         indicating the type of hash algorithm
+         indicating the type of hash algorithm (default "sha256")
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        a new hash object ready to process data.
+        a new hash object ready to process data via :process() method
     </ol>
 
 
@@ -151,13 +193,102 @@
 
 </dd>
     <dt>
+    <a name = "mnemonic_seed"></a>
+    <strong>mnemonic_seed (str1, str2)</strong>
+    </dt>
+    <dd>
+    Convert a mnemonic phrase (used in cryptocurrency wallets) into a seed using the PBKDF2 (Password-Based Key Derivation Function 2)
+algorithm with HMAC-SHA512.  This is commonly used in standards like BIP-39.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str1</span>
+         a mnemonic phrase
+        </li>
+        <li><span class="parameter">str2</span>
+         a passphrase
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the derived seed as an octet object
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Class_Hash"></a>Class Hash </h2>
+
+          <div class="section-description">
+          Object Methods
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "hash:__gc"></a>
+    <strong>hash:__gc (hash)</strong>
+    </dt>
+    <dd>
+    Decrement the reference count of an hash object and free its memory when no more references exist.
+It ensures proper memory management to prevent leaks.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">hash</span>
+         an hash object
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        no values are returned
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "hash:octet"></a>
+    <strong>hash:octet ()</strong>
+    </dt>
+    <dd>
+    Convert an hash object into an octet object.  It retrieves the hash object from the Lua stack, creates a new octet object of the same length, copies the hash data into the octet, and returns the octet object to Lua.
+If any step fails, it throws an error.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the newly created octet object
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--define a "sha256" hash object
+</span>h1 = HASH.<span class="function-name">new</span>()
+<span class="comment">--trasform h1 in hex-octet
+</span><span class="global">print</span>(h1:<span class="function-name">octet</span>():<span class="function-name">hex</span>())
+<span class="comment">--print: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</span></pre>
+    </ul>
+
+</dd>
+    <dt>
     <a name = "hash:process"></a>
     <strong>hash:process (data)</strong>
     </dt>
     <dd>
     Hash an octet into a new octet.  Use the configured hash function to
-   hash an octet string and return a new one containing its hash.
-(data)
+hash an octet string and return a new one containing its hash.
 
 
     <h3>Parameters:</h3>
@@ -175,18 +306,68 @@
 
 
 
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create an octet and an hash object
+</span>oct = OCTET.<span class="function-name">from_hex</span>(<span class="string">"0xa1b2c3d4"</span>)
+<span class="comment">--create an hash object
+</span>h1 = HASH.<span class="function-name">new</span>()
+<span class="comment">--apply the method to the octet
+</span><span class="global">print</span>(h1:<span class="function-name">process</span>(oct):<span class="function-name">hex</span>())
+<span class="comment">--print: 97ed8e55519b020c4d9aceb40e0d3bc7eaa22d080d49592bf21206cb697c8a58</span></pre>
+    </ul>
 
 </dd>
     <dt>
-    <a name = "keyring:hmac"></a>
-    <strong>keyring:hmac (key, data)</strong>
+    <a name = "hash:feed"></a>
+    <strong>hash:feed (data)</strong>
+    </dt>
+    <dd>
+    Feed a new octet into a current hashing session.  This is used to
+   hash multiple chunks until <a href="../modules/HASH.html#hash:yeld">yeld</a> is called.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">data</span>
+         octet containing the data to be hashed
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "hash:yeld"></a>
+    <strong>hash:yeld ()</strong>
+    </dt>
+    <dd>
+    Yeld a new octet from the current hashing session.  This is used to
+   finalize the hashing of multiple chunks after <a href="../modules/HASH.html#hash:feed">feed</a> is called.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new octet containing the hash of the data
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "hash:hmac"></a>
+    <strong>hash:hmac (key, data)</strong>
     </dt>
     <dd>
     Compute the HMAC of a message using a key.  This method takes any
-   data and any key material to comput an HMAC of the same length of
+   data and any key material to compute an HMAC of the same length of
    the hash bytes of the keyring. This function works in accordance with
    RFC2104.
-(key, data)
 
 
     <h3>Parameters:</h3>
@@ -207,11 +388,23 @@
 
 
 
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create the key
+</span>key = OCTET.<span class="function-name">from_hex</span>(<span class="string">"0xa1b2c3d4"</span>)
+<span class="comment">--create the hash
+</span>h1 = HASH.<span class="function-name">new</span>()
+<span class="comment">--create the message
+</span>message = OCTET.<span class="function-name">from_hex</span>(<span class="string">"0xc3d2"</span>)
+<span class="comment">--compute the HMAC
+</span><span class="global">print</span>(h1:<span class="function-name">hmac</span>(key,message):<span class="function-name">hex</span>())
+<span class="comment">--print: 844548df11876f644413664403e648fa74ee4a3fb547c2dedb3db0a564c15abb</span></pre>
+    </ul>
 
 </dd>
     <dt>
-    <a name = "keyring:kdf2"></a>
-    <strong>keyring:kdf2 (hash, key)</strong>
+    <a name = "hash:kdf2"></a>
+    <strong>hash:kdf2 (key)</strong>
     </dt>
     <dd>
     Key Derivation Function (KDF2).  Key derivation is used to
@@ -219,14 +412,10 @@
    costly computations to be iterated on the key. This function
    generates a new key from an existing key applying an octet of key
    derivation parameters.
-(key)
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">hash</span>
-         initialized <a href="../modules/HASH.html#">HASH</a> or <a href="../modules/ECDH.html#">ECDH</a> object
-        </li>
         <li><span class="parameter">key</span>
          octet of the key to be transformed
         </li>
@@ -243,14 +432,13 @@
 
 </dd>
     <dt>
-    <a name = "keyring:pbkdf2"></a>
-    <strong>keyring:pbkdf2 (key, salt, iterations, length)</strong>
+    <a name = "hash:pbkdf2"></a>
+    <strong>hash:pbkdf2 (key, salt, iterations, length)</strong>
     </dt>
     <dd>
     Password Based Key Derivation Function (PBKDF2).  This function
    generates a new key from an existing key applying a salt and number
    of iterations.
-(key, salt, iterations, length)
 
 
     <h3>Parameters:</h3>
@@ -262,7 +450,7 @@
          octet containing a salt to be used in transformation
         </li>
         <li><span class="parameter">iterations</span>
-        [opt=1000] number of iterations to be applied
+        [opt=5000] number of iterations to be applied
         </li>
         <li><span class="parameter">length</span>
         [opt=key length] integer indicating the new length (default same as input key)
@@ -278,8 +466,93 @@
 
     <h3>See also:</h3>
     <ul>
-         <a href="../modules/HASH.html#keyring:kdf2">keyring:kdf2</a>
+         <a href="../modules/HASH.html#hash:kdf2">hash:kdf2</a>
     </ul>
+
+
+</dd>
+    <dt>
+    <a name = "hash:random_seed"></a>
+    <strong>hash:random_seed (seed)</strong>
+    </dt>
+    <dd>
+
+<p>Seed a cryptographically secure pseudo-random number generator (CSPRNG) associated with a hash object. <br/>
+It uses an octet object as the seed and optionally "fast-forwards" the CSPRNG to improve randomness.</p>
+<pre><code>
+</code></pre>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">seed</span>
+         an octet object
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "hash:random_int8"></a>
+    <strong>hash:random_int8 ()</strong>
+    </dt>
+    <dd>
+    Generate a random 8-bit unsigned integer using a cryptographically secure pseudo-random number generator (CSPRNG) associated with a hash object. <br/>
+It ensures that the CSPRNG has been seeded before generating the random number.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a random 8-bit unsigned integer
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "hash:random_int16"></a>
+    <strong>hash:random_int16 ()</strong>
+    </dt>
+    <dd>
+    Generate a random 16-bit unsigned integer using a cryptographically secure pseudo-random number generator (CSPRNG) associated with a hash object. <br/>
+It ensures that the CSPRNG has been seeded before generating the random number.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a random 16-bit unsigned integer
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "hash:random_int32"></a>
+    <strong>hash:random_int32 ()</strong>
+    </dt>
+    <dd>
+    Generate a random 32-bit unsigned integer using a cryptographically secure pseudo-random number generator (CSPRNG) associated with a hash object. <br/>
+It ensures that the CSPRNG has been seeded before generating the random number.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a random 32-bit unsigned integer
+    </ol>
+
+
 
 
 </dd>
@@ -289,8 +562,8 @@
 </div> <!-- id="content" -->
 </div> <!-- id="main" -->
 <div id="about">
-<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-04-16 01:32:19 </i>
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2025-03-25 10:43:18 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
