@@ -1,10 +1,9 @@
-OUTPUT=doc
+OUTPUT=o
 
 all:
 	@mkdir -p ${OUTPUT}
-	ldoc -X .
-
-#	@mv ${OUTPUT}/index.html ${OUTPUT}/README.md
+	@ldoc -X .
+	@mv ${OUTPUT}/index.html ${OUTPUT}/README.md
 
 clean:
 	@rm -fr ${OUTPUT}

@@ -29,23 +29,25 @@
 
 
 
+
 <h2>Modules</h2>
 <ul class="nowrap">
   <li><a href="modules/OCTET.html">OCTET</a></li>
   <li><a href="modules/HASH.html">HASH</a></li>
+  <li><a href="modules/ECP.html">ECP</a></li>
+  <li><a href="modules/BIG.html">BIG</a></li>
+  <li><a href="modules/FLOAT.html">FLOAT</a></li>
+  <li><a href="modules/TIME.html">TIME</a></li>
   <li><a href="modules/AES.html">AES</a></li>
   <li><a href="modules/ECDH.html">ECDH</a></li>
-  <li><a href="modules/ECP.html">ECP</a></li>
+  <li><a href="modules/ED.html">ED</a></li>
+  <li><a href="modules/P256.html">P256</a></li>
+  <li><a href="modules/QP.html">QP</a></li>
   <li><a href="modules/String.html">String</a></li>
   <li><a href="modules/Table.html">Table</a></li>
   <li><a href="modules/INSPECT.html">INSPECT</a></li>
-  <li><a href="modules/ZEN.html">ZEN</a></li>
-  <li><a href="modules/BIG.html">BIG</a></li>
-</ul>
-<h2>Examples</h2>
-<ul class="nowrap">
-  <li><a href="examples/keygen.lua.html">keygen.lua</a></li>
-  <li><a href="examples/crypt-to-multi.lua.html">crypt-to-multi.lua</a></li>
+  <li><a href="modules/lua.zencode.html">lua.zencode</a></li>
+  <li><a href="modules/BBS.html">BBS</a></li>
 </ul>
 
 </div>
@@ -73,7 +75,7 @@ href="https://zenroom.org">Zenroom.org</a>.</p>
 		<td class="name"  nowrap><a href="modules/OCTET.html">OCTET</a></td>
 		<td class="summary">
 
-<h1>Base data type for cryptographic opearations</h1>
+<h1>Array of raw bytes: base data type in Zenroom</h1>
 
 
 <p>  Octets are <a
@@ -90,6 +92,45 @@ href="https://zenroom.org">Zenroom.org</a>.</p>
 
 <p> An hash is also known as 'message digest', 'digital fingerprint',
  'digest' or 'checksum'.</p>
+</td>
+	</tr>
+	<tr>
+		<td class="name"  nowrap><a href="modules/ECP.html">ECP</a></td>
+		<td class="summary">
+
+<h1>Elliptic Curve Point Arithmetic (ECP)</h1>
+
+
+<p>  Base arithmetical operations on elliptic curve point coordinates.</p>
+</td>
+	</tr>
+	<tr>
+		<td class="name"  nowrap><a href="modules/BIG.html">BIG</a></td>
+		<td class="summary">
+
+<h1>Big Number Arithmetic (BIG)</h1>
+
+
+<p> Base arithmetical operations on big numbers.</p>
+</td>
+	</tr>
+	<tr>
+		<td class="name"  nowrap><a href="modules/FLOAT.html">FLOAT</a></td>
+		<td class="summary">
+
+<h1>Float (F)</h1>
+
+
+<p>Floating-point numbers are a fundamental data type in computing used to represent real numbers (numbers with fractional parts).</p>
+</td>
+	</tr>
+	<tr>
+		<td class="name"  nowrap><a href="modules/TIME.html">TIME</a></td>
+		<td class="summary">
+
+<h1>TIME</h1>
+
+<p>This class allows to work with TIME objects.</p>
 </td>
 	</tr>
 	<tr>
@@ -113,13 +154,31 @@ href="https://zenroom.org">Zenroom.org</a>.</p>
 </td>
 	</tr>
 	<tr>
-		<td class="name"  nowrap><a href="modules/ECP.html">ECP</a></td>
+		<td class="name"  nowrap><a href="modules/ED.html">ED</a></td>
 		<td class="summary">
 
-<h1>Elliptic Curve Point Arithmetic (ECP)</h1>
+<h1>Ed25519 signature scheme (ED)</h1>
+
+<p> This module provides algorithms and functions for an elliptic curve signature scheme.</p>
+</td>
+	</tr>
+	<tr>
+		<td class="name"  nowrap><a href="modules/P256.html">P256</a></td>
+		<td class="summary">
+
+<h1>P256 </h1>
+
+<p>P-256 (also known as secp256r1 or prime256v1) is one of the most widely used elliptic curves in modern cryptography.</p>
+</td>
+	</tr>
+	<tr>
+		<td class="name"  nowrap><a href="modules/QP.html">QP</a></td>
+		<td class="summary">
+
+<h1> POST QUANTUM (QP) </h1>
 
 
-<p>  Base arithmetical operations on elliptic curve point coordinates.</p>
+<p> Post-quantum cryptography (PQC) refers to cryptographic algorithms that are designed to be secure against attacks by quantum computers.</p>
 </td>
 	</tr>
 	<tr>
@@ -152,44 +211,31 @@ href="https://zenroom.org">Zenroom.org</a>.</p>
 </td>
 	</tr>
 	<tr>
-		<td class="name"  nowrap><a href="modules/ZEN.html">ZEN</a></td>
+		<td class="name"  nowrap><a href="modules/lua.zencode.html">lua.zencode</a></td>
+		<td class="summary">ZENCODE WATCHDOG
+ assert all values in table are converted to zenroom types
+ used in zencode when transitioning out of given memory</td>
+	</tr>
+	<tr>
+		<td class="name"  nowrap><a href="modules/BBS.html">BBS</a></td>
 		<td class="summary">
 
-<h1>Zencode language parser</h1>
+<h1>BBS signature scheme</h1>
 
 
-<p> <a href="https://dev.zenroom.org/zencode/">Zencode</a> is a Domain
- Specific Language (DSL) made to be understood by humans.</p>
+<p> The BBS signature scheme (also known as the Boneh-Boyen-Shacham signature scheme)
+ is a cryptographic signature scheme based on pairing-based cryptography: the BBS scheme is particularly
+ notable for its use of bilinear pairings on elliptic curves,
+ which enable efficient verification and compact signatures.</p>
 </td>
-	</tr>
-	<tr>
-		<td class="name"  nowrap><a href="modules/BIG.html">BIG</a></td>
-		<td class="summary">
-
-<h1>Big Number Arithmetic (BIG)</h1>
-
-
-<p> Base arithmetical operations on big numbers.</p>
-</td>
-	</tr>
-</table>
-<h2>Examples</h2>
-<table class="module_list">
-	<tr>
-		<td class="name"  nowrap><a href="examples/keygen.lua.html">keygen.lua</a></td>
-		<td class="summary"></td>
-	</tr>
-	<tr>
-		<td class="name"  nowrap><a href="examples/crypt-to-multi.lua.html">crypt-to-multi.lua</a></td>
-		<td class="summary"></td>
 	</tr>
 </table>
 
 </div> <!-- id="content" -->
 </div> <!-- id="main" -->
 <div id="about">
-<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-04-16 01:32:19 </i>
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2025-03-25 12:01:48 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
