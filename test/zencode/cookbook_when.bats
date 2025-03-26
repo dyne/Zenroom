@@ -861,3 +861,136 @@ EOF
     save_output when_copy_object.out.json
     assert_output '{"copy_of_last_element":"string_in_ob_3","dictionary_1":{"string_1":"string_in_ob_1","string_2":"string_in_ob_2","string_3":"string_in_ob_3"},"dictionary_2":{"string_1":"string_in_ob_1","string_2":"string_in_ob_2","string_3":"string_in_ob_3"}}'
 }
+
+@test "move an element/object in another object" {
+    cat <<EOF | save_asset When_move_in_object.data.json
+{
+	"dictionary1": {
+		"key 1": "value 1",
+		"key 2": "value 2"
+	},
+	"dictionary2": {
+		"key 3": "value 3"
+	},
+	"array1": [
+		"str1",
+		"str2"
+	],
+    "array2": [
+		"str3"
+	],
+    "string": "a_string"
+}
+EOF
+    cat <<EOF | zexe When_move_in_object.zen When_move_in_object.data.json
+Given I have a 'string dictionary' named 'dictionary1'
+Given I have a 'string dictionary' named 'dictionary2'
+Given I have a 'string array' named 'array1'
+Given I have a 'string array' named 'array2'
+Given I have a 'string' named 'string'
+
+
+When I move 'array1' in 'dictionary2'
+
+When I move 'key 3' from 'dictionary2' in 'dictionary1'
+
+When I move 'string' to 'array2' in 'array2'
+
+
+Then print 'dictionary2'
+Then print 'dictionary1'
+Then print 'array2'
+EOF
+    save_output When_move_in_object.out.json
+    assert_output '{"array2":["str3","a_string"],"dictionary1":{"key_1":"value 1","key_2":"value 2","key_3":"value 3"},"dictionary2":{"array1":["str1","str2"]}}'
+} 
+
+@test "move an element from an object" {
+    cat <<EOF | save_asset when_move_from.data.json
+{
+	"dictionary1": {
+		"key 1": "value 1",
+		"key 2": "value 2"
+	},
+	"dictionary2": {
+		"key 3": "value 3"
+	}
+	
+}
+EOF
+    cat <<EOF | zexe when_move_from.zen when_move_from.data.json
+Given I have a 'string dictionary' named 'dictionary1'
+Given I have a 'string dictionary' named 'dictionary2'
+
+#move key 3 from dictionary2 and add it in dictionary1
+When I move 'key 3' from 'dictionary2' in 'dictionary1'
+
+#take key 1 from dictionary1 and add a string named 'from key 1' in data.
+When I move 'key 1' from 'dictionary1' to 'from key 1'
+
+Then print the data
+EOF
+    save_output When_move_in_object.out.json
+    assert_output '{"dictionary1":{"key_2":"value 2","key_3":"value 3"},"dictionary2":[],"from_key_1":"value 1"}'
+} 
+
+@test "move an element as chosen basis" {
+    cat <<EOF | save_asset when_move_as.data.json
+{
+	"dictionary1": {
+		"key 1": "value 1",
+		"key 2": "value 2"
+	},
+	"dictionary2": {
+		"key 3": "value 3"
+	},
+    "array": [
+        "str1",
+        "str2"
+    ],
+    "string to convert": "string"
+}
+EOF
+    cat <<EOF | zexe when_move_as.zen when_move_as.data.json
+Given I have a 'string dictionary' named 'dictionary1'
+Given I have a 'string dictionary' named 'dictionary2'
+Given I have a 'string array' named 'array'
+Given I have a 'string' named 'string to convert'
+
+#takes an element (outside of a Complex Object) and moves it into a Complex Object
+When I move 'string to convert' as 'hex' in 'dictionary1'
+
+#take elements from array and create a new array with converted elements in the chosen basis.
+When I move 'array' as 'base64' to 'converted array'
+
+Then print the data
+EOF
+    save_output When_move_as.out.json
+    assert_output '{"converted_array":["c3RyMQ==","c3RyMg=="],"dictionary1":{"key_1":"value 1","key_2":"value 2","string_to_convert":"737472696e67"},"dictionary2":{"key_3":"value 3"}}'
+} 
+
+@test "move an element to another" {
+    cat <<EOF | save_asset when_move_to.data.json
+{
+	"dictionary1": {
+		"key 1": "value 1",
+		"key 2": "value 2"
+	},
+    "array": [
+        "str1",
+        "str2"
+    ]
+}
+EOF
+    cat <<EOF | zexe when_move_to.zen when_move_to.data.json
+Given I have a 'string dictionary' named 'dictionary1'
+Given I have a 'string array' named 'array'
+
+#actually it works as a rename
+When I move 'array' to 'renamed array'
+
+Then print the data
+EOF
+    save_output When_move_to.out.json
+    assert_output '{"dictionary1":{"key_1":"value 1","key_2":"value 2"},"renamed_array":["str1","str2"]}'
+}

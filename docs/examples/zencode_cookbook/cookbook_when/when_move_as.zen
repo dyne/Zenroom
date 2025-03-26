@@ -1,0 +1,12 @@
+Given I have a 'string dictionary' named 'dictionary1'
+Given I have a 'string dictionary' named 'dictionary2'
+Given I have a 'string array' named 'array'
+Given I have a 'string' named 'string to convert'
+
+#takes an element (outside of a Complex Object) and moves it into a Complex Object
+When I move 'string to convert' as 'hex' in 'dictionary1'
+
+#take elements from array and create a new array with converted elements in the chosen basis.
+When I move 'array' as 'base64' to 'converted array'
+
+Then print the data
