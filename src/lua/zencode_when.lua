@@ -302,7 +302,7 @@ When("copy contents of '' named '' in ''", function(src,name,dst)
     if dest_codec.zentype == 'a' then
         table.insert(ACK[dst], obj[name])
     elseif dest_codec.zentype == 'd' then
-        zencode_assert(dest[name], "Cannot overwrite: "..name.." in "..dst)
+        zencode_assert(not dest[name], "Cannot overwrite: "..name.." in "..dst)
         ACK[dst][name] = obj[name]
     elseif dest_codec.zentype == 'e' and dest_codec.schema then
         local dest_schema = ZEN.schemas[dest_codec.schema]
