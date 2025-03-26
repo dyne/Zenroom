@@ -751,3 +751,64 @@ EOF
     save_output when_found_in_examples.out.json
     assert_output '{"output":["success"]}'
 }
+
+@test "copy: element in another object" {
+    cat <<EOF | save_asset when_copy_to_object.data.json
+{
+	"string_1": "string_to_copy",
+	"dictionary_1": {
+		"string_2": "string_in_ob_1",
+		"string_3": "string_in_ob_2"
+	},
+	"string_4": "string_1",
+	"dictionary_2": {}
+}
+EOF
+    cat <<EOF | zexe when_copy_to_object.zen when_copy_to_object.data.json
+Given I have 'string' named 'string_1'
+Given I have a 'string dictionary' named 'dictionary_1'
+Given I have a 'string dictionary' named 'dictionary_2'
+Given I have 'string' named 'string_4'
+
+# simple copy to
+When I copy 'string_1' to 'string_1_copied'
+
+# copy in object
+When I copy 'string_1' in 'dictionary_1'
+
+When I copy named by 'string_4' in 'dictionary_2'
+
+When I copy 'string_4' to 'string_4_copied' in 'dictionary_2'
+
+Then print all data
+EOF
+    save_output when_copy_to_object.out.json
+    assert_output '{"dictionary_1":{"string_1":"string_to_copy","string_2":"string_in_ob_1","string_3":"string_in_ob_2"},"dictionary_2":{"string_1":"string_to_copy","string_4_copied":"string_1"},"string_1":"string_to_copy","string_1_copied":"string_to_copy","string_4":"string_1"}'
+}
+
+@test "copy: element from object" {
+    cat <<EOF | save_asset when_copy_from_object.data.json
+{
+	"dictionary_1": {
+		"string_1": "string_in_ob_1"
+	},
+	"dictionary_2": {
+		"string_2": "string_in_ob_2"
+	}
+}
+EOF
+    cat <<EOF | zexe when_copy_from_object.zen when_copy_from_object.data.json
+Given I have a 'string dictionary' named 'dictionary_1'
+Given I have a 'string dictionary' named 'dictionary_2'
+
+# copy from object
+When I copy 'string_1' from 'dictionary_1' to 'string_copied'
+
+# copy from object into another object
+When I copy 'string_2' from 'dictionary_2' in 'dictionary_1'
+
+Then print all data
+EOF
+    save_output when_copy_from_object.out.json
+    assert_output '{"dictionary_1":{"string_1":"string_in_ob_1","string_2":"string_in_ob_2"},"dictionary_2":{"string_2":"string_in_ob_2"},"string_copied":"string_in_ob_1"}'
+}
