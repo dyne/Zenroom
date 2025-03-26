@@ -812,3 +812,52 @@ EOF
     save_output when_copy_from_object.out.json
     assert_output '{"dictionary_1":{"string_1":"string_in_ob_1","string_2":"string_in_ob_2"},"dictionary_2":{"string_2":"string_in_ob_2"},"string_copied":"string_in_ob_1"}'
 }
+
+@test "copy: encoding elements" {
+    cat <<EOF | save_asset when_copy_enc.data.json
+{
+	"string_1": "string_to_copy",
+	"dictionary_1": {}
+}
+EOF
+    cat <<EOF | zexe when_copy_enc.zen when_copy_enc.data.json
+Given I have a 'string dictionary' named 'dictionary_1'
+Given I have a 'string' named 'string_1'
+
+# copy changing encoding
+When I copy 'string_1' as 'hex' in 'dictionary_1'
+When I copy 'string_1' as 'bin' to 'string_copied'
+
+Then print all data
+EOF
+    save_output when_copy_enc.out.json
+    assert_output '{"dictionary_1":{"string_1":"737472696e675f746f5f636f7079"},"string_1":"string_to_copy","string_copied":"0111001101110100011100100110100101101110011001110101111101110100011011110101111101100011011011110111000001111001"}'
+}
+
+@test "copy: object" {
+    cat <<EOF | save_asset when_copy_object.data.json
+{
+	"dictionary_1": {
+		"string_1": "string_in_ob_1",
+        "string_2": "string_in_ob_2"
+	},
+	"dictionary_2": {
+		"string_3": "string_in_ob_3"
+	}
+}
+EOF
+    cat <<EOF | zexe when_copy_object.zen when_copy_object.data.json
+Given I have a 'string dictionary' named 'dictionary_1'
+Given I have a 'string dictionary' named 'dictionary_2'
+
+#copy of entire object
+When I copy contents of 'dictionary_1' in 'dictionary_2'
+#copy element of an object
+When I copy contents of 'dictionary_2' named 'string_3' in 'dictionary_1'
+When I create copy of last element from 'dictionary_1'
+
+Then print all data
+EOF
+    save_output when_copy_object.out.json
+    assert_output '{"copy_of_last_element":"string_in_ob_3","dictionary_1":{"string_1":"string_in_ob_1","string_2":"string_in_ob_2","string_3":"string_in_ob_3"},"dictionary_2":{"string_1":"string_in_ob_1","string_2":"string_in_ob_2","string_3":"string_in_ob_3"}}'
+}

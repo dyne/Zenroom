@@ -1,0 +1,10 @@
+Given I have a 'string dictionary' named 'dictionary_1'
+Given I have a 'string dictionary' named 'dictionary_2'
+
+#copy of entire object
+When I copy contents of 'dictionary_1' in 'dictionary_2'
+#copy element of an object
+When I copy contents of 'dictionary_2' named 'string_3' in 'dictionary_1'
+When I create copy of last element from 'dictionary_1'
+
+Then print all data

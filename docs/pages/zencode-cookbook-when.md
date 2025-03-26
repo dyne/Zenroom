@@ -151,17 +151,29 @@ the output will be
 
 [](../_media/examples/zencode_cookbook/cookbook_when/when_copy_from_object.out.json ':include :type=code json')
 
+
+It's also possible to encode an object before copying it. Consider the data input:
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_copy_enc.data.json ':include :type=code json')
+
+and the code 
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_copy_enc.zen ':include :type=code zen')
+
+then, in the output, `string_1` will be added to `dictionary_1` in hexadecimal form and will be copied to `string_copied` in binary format.
+
+Other possible operations include: copying the entire content of an object into another object, copying a specific element of an object into another object, or copying the last element of an object into a new element called `copy_of_last_element`. For example consider the input:
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_copy_object.data.json ':include :type=code json')
+
+and the code 
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_copy_object.zen ':include :type=code zen')
+
+then, in the output, `dictionary_1` and `dictionary_2` will have the same elements. Additionally, outside of the two dictionaries, `copy_of_last_element` will also appear.
+
+
 ```gherkin
-
-
-# copy changing encoding
-When I copy '' as '' in ''
-When I copy '' as '' to ''
-
-# explain in table section
-When I copy contents of '' in ''
-When I copy contents of '' named '' in ''
-When I create copy of last element from ''
 
 # deprecate? much simpler and powerful `When I copy '' from '' in ''`
 When I create copy of '' from ''
