@@ -127,20 +127,32 @@ where the data in input look like
 
 ### Copy
 
+The copy statement allows you to copy an object into a new object. Consider the data input:
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_copy_to_object.data.json ':include :type=code json')
+
+copy some objects into other objects
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_copy_to_object.zen ':include :type=code gherkin')
+
+the output will be
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_copy_to_object.out.json ':include :type=code json')
+
+It's also possible to copy from an object. Consider the data input:
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_copy_from_object.data.json ':include :type=code json')
+
+copy from an object
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_copy_from_object.zen ':include :type=code gherkin')
+
+the output will be
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_copy_from_object.out.json ':include :type=code json')
+
 ```gherkin
-# simple copy to
-When I copy '' to ''
 
-# copy in object
-When I copy '' in ''
-When I copy named by '' in ''
-When I copy '' to '' in ''
-
-# copy from object
-When I copy '' from '' to ''
-
-# copy from object into another object
-When I copy '' from '' in ''
 
 # copy changing encoding
 When I copy '' as '' in ''
