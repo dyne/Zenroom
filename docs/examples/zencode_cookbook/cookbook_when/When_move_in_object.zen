@@ -1,0 +1,17 @@
+Given I have a 'string dictionary' named 'dictionary1'
+Given I have a 'string dictionary' named 'dictionary2'
+Given I have a 'string array' named 'array1'
+Given I have a 'string array' named 'array2'
+Given I have a 'string' named 'string'
+
+
+When I move 'array1' in 'dictionary2'
+
+When I move 'key 3' from 'dictionary2' in 'dictionary1'
+
+When I move 'string' to 'array2' in 'array2'
+
+
+Then print 'dictionary2'
+Then print 'dictionary1'
+Then print 'array2'

@@ -1,0 +1,7 @@
+Given I have a 'string dictionary' named 'dictionary1'
+Given I have a 'string array' named 'array'
+
+#actually it works as a rename
+When I move 'array' to 'renamed array'
+
+Then print the data

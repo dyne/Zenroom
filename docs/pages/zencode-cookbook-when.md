@@ -188,26 +188,45 @@ When I create copy of element '' from array ''
 
 ### Move
 
-```gherkin
+The Move statement allows to move an Object into another Object or outside from and to rename it.
+For example, if we take the data input
 
-# as rename
-When I move '' to ''
+[](../_media/examples/zencode_cookbook/cookbook_when/when_move_to.data.json ':include :type=code json')
 
-# move in object
-When I move '' in ''
-When I move named by '' in ''
-When I move '' to '' in ''
+the Complex Object 'array' will be renamed
 
-# move from object
-When I move '' from '' to ''
+[](../_media/examples/zencode_cookbook/cookbook_when/when_move_to.zen ':include :type=code gherkin')
 
-# move from object into another object
-When I move '' from '' in ''
+and the output will be the following.
 
-# move changing encoding
-When I move '' as '' in ''
-When I move '' as '' to ''
-```
+[](../_media/examples/zencode_cookbook/cookbook_when/when_move_to.out.json ':include :type=code json')
+
+It is possible to move an Object or a Complex Object into a specific Complex Object adding the command "in".
+If we take in input the following data
+
+[](../_media/examples/zencode_cookbook/cookbook_when/When_move_in_object.data.json ':include :type=code json')
+
+the following code
+
+[](../_media/examples/zencode_cookbook/cookbook_when/When_move_in_object.zen ':include :type=code gherkin')
+
+allows to print the following output.
+
+[](../_media/examples/zencode_cookbook/cookbook_when/When_move_in_object.out.json ':include :type=code json')
+
+A variation of the previous code allows to choose the element to move from a Complex Object.
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_move_from.zen ':include :type=code gherkin')
+
+It is possible to move an Object changing its representation specifying the desired basis as follow
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_move_as.data.json ':include :type=code json')
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_move_as.zen ':include :type=code gherkin')
+
+obtaining the following output
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_move_as.out.json ':include :type=code json')
 
 ## Random statements
 
