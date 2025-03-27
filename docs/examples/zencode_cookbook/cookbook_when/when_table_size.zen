@@ -1,0 +1,5 @@
+Given I have a 'string array' named 'array'
+
+When I create the size of 'array'
+
+Then print the 'size'

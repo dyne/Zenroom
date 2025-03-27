@@ -486,33 +486,55 @@ When I create count of char '' found in ''
 
 ### Works on both array and dictionary
 
-#### pickup from path
+The following statements work for arrays and dictionaries.
 
-```gherkin
-When I pickup from path ''
-When I pickup a '' from path ''
-When I take '' from path ''
-```
+#### Pickup from path
 
-#### table size
+It is possible to retrieve an element from a dictionary in different ways. Consider the input
 
-```gherkin
-When I create the size of ''
-```
+[](../_media/examples/zencode_cookbook/cookbook_when/when_table_pickup.data.json ':include :type=code json')
+
+by running the script
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_table_pickup.zen ':include :type=code gherkin')
+
+the output will be
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_table_pickup.out.json ':include :type=code json')
+
+#### Table size
+
+The following statement create an object, named "size" containing the size of an array
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_table_size.zen ':include :type=code gherkin')
+         
+where the data in input look like
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_table_size.data.json ':include :type=code json')
+
+and the input will be `{"size":3}`. 
 
 #### json encoding/decoding
 
-```gherkin
-When I verify '' is a json
-When I create json escaped string of ''
-When I create json unescaped object of ''
-```
+It is also possible to encode a string in `json` format, perform the reverse operation (decode), and verify that you are indeed working with `json`. Consider the input
 
-#### remove zero values
+[](../_media/examples/zencode_cookbook/cookbook_when/when_table_json.data.json ':include :type=code json')
 
-```gherkin
-When I remove zero values in ''
-```
+and the code 
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_table_json.zen ':include :type=code gherkin')
+
+Then the output will be 
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_table_json.out.json ':include :type=code json')
+
+#### Remove zero values
+
+Another possible operation is to remove the zeros from an array. Consider the array `{"array": [4,123.45,3,0]}` and the script
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_table_zero.zen ':include :type=code gherkin')
+
+the output will be the initial array without `0`.
 
 ### Only array statements
 

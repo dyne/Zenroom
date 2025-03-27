@@ -1,0 +1,10 @@
+Given I have a 'string dictionary' named 'dictionary'
+
+#encode a string into a json
+When I create json escaped string of 'dictionary'
+#check if it is a json
+When I verify 'json_escaped_string' is a json
+#decode a json into a string
+When I create json unescaped object of 'json_escaped_string'
+
+Then print the data 

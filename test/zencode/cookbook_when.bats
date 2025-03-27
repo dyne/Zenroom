@@ -1228,3 +1228,96 @@ EOF
     save_output when_split_into_array.out.json
     assert_output '{"array":["a","not","too","much","long","string","to","split"]}'
 }
+
+@test "table: size" {
+    cat <<EOF | save_asset when_table_size.data.json
+{
+	"array": [
+		"first_element",
+		"second_element",
+		"third_element"
+	]
+}
+EOF
+    cat <<EOF | zexe when_table_size.zen when_table_size.data.json
+Given I have a 'string array' named 'array'
+
+When I create the size of 'array'
+
+Then print the 'size'
+EOF
+    save_output when_table_size.out.json
+    assert_output '{"size":3}'
+}
+
+@test "table: json" {
+    cat <<EOF | save_asset when_table_json.data.json
+{
+	"dictionary": {
+		"string_in_table": "my_json_string"
+	}
+}
+EOF
+    cat <<EOF | zexe when_table_json.zen when_table_json.data.json
+Given I have a 'string dictionary' named 'dictionary'
+
+#encode a string into a json
+When I create json escaped string of 'dictionary'
+#check if it is a json
+When I verify 'json_escaped_string' is a json
+#decode a json into a string
+When I create json unescaped object of 'json_escaped_string'
+
+Then print the data 
+EOF
+    save_output when_table_json.out.json
+    assert_output '{"dictionary":{"string_in_table":"my_json_string"},"json_escaped_string":"{\"string_in_table\":\"my_json_string\"}","json_unescaped_object":{"string_in_table":"my_json_string"}}'
+}
+
+@test "table: zero" {
+    cat <<EOF | save_asset when_table_zero.data.json
+{
+	"array": [
+		4,
+		123.45,
+		3,
+		0
+	]
+}
+EOF
+    cat <<EOF | zexe when_table_zero.zen when_table_zero.data.json
+Given I have a 'number array' named 'array'
+
+When I remove zero values in 'array'
+
+Then print the data 
+EOF
+    save_output when_table_zero.out.json
+    assert_output '{"array":[4,123.45,3]}'
+}
+
+@test "table: pickup" {
+    cat <<EOF | save_asset when_table_pickup.data.json
+{
+	"dictionary": {
+		"string_1": "string_dic_1",
+    "string_2": "string_dic_2",
+    "string_3": "string_dic_3"
+	}
+}
+EOF
+    cat <<EOF | zexe when_table_pickup.zen when_table_pickup.data.json
+Given I have a 'string dictionary' named 'dictionary'
+
+#pickup an element of a dictionary
+When I pickup from path 'dictionary.string_1'
+#pickup an element of a dictionary and return in base64
+When I pickup a '' from path 'dictionary.string_2'
+#take an element of a dictionary
+When I take 'string_3' from path 'dictionary'
+
+Then print the data 
+EOF
+    save_output when_table_pickup.out.json
+    assert_output '{"dictionary":{"string_1":"string_dic_1","string_2":"string_dic_2","string_3":"string_dic_3"},"string_1":"string_dic_1","string_2":"c3RyaW5nX2RpY18y","string_3":"string_dic_3"}'
+}

@@ -1,0 +1,5 @@
+Given I have a 'number array' named 'array'
+
+When I remove zero values in 'array'
+
+Then print the data 
