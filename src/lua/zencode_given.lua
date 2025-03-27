@@ -128,84 +128,83 @@ end
 -- conversion and returns the resulting raw data to be used inside the
 -- WHEN block in HEAP.
 function operate_conversion(guessed)
-   -- carry guessed detection in CODEC
-   CODEC[guessed.name] = {
-	  name = guessed.name,
-	  encoding = guessed.encoding,
-	  zentype = guessed.zentype,
-	  root = guessed.root,
-	  schema = guessed.schema,
-	  missing = guessed.missing
-   }
-   -- data not found (and CONF.missing.fatal == false)
-   if guessed.missing then return nil end
-   -- check if already a zenroom type
-   -- (i.e. zenroom.big from json decode)
-   if not guessed.fun then
-	  error('No conversion operation guessed', 2)
-	  return nil
-   end
+    -- carry guessed detection in CODEC
+    CODEC[guessed.name] = {
+        name = guessed.name,
+        encoding = guessed.encoding,
+        zentype = guessed.zentype,
+        root = guessed.root,
+        schema = guessed.schema,
+        missing = guessed.missing
+    }
+    -- data not found (and CONF.missing.fatal == false)
+    if guessed.missing then return nil end
+    -- check if already a zenroom type
+    -- (i.e. zenroom.big from json decode)
+    if not guessed.fun then
+        error('No conversion operation guessed', 2)
+        return nil
+    end
 
-   -- xxx('Operating conversion on: '..guessed.name)
-   local fun = guessed.fun
-   if luatype(fun) == 'table' then fun = fun.import end
-   local lt = luatype(guessed.raw)
-   if lt == 'table' then
+    -- xxx('Operating conversion on: '..guessed.name)
+    local fun = guessed.fun
+    if luatype(fun) == 'table' then fun = fun.import end
+    local lt = luatype(guessed.raw)
+    if lt == 'table' then
         -- check correctness of the data type
         if guessed.zentype == "a" then assert(isarray(guessed.raw),
-            "Incorrect data type, expected array for "..guessed.name)
+                                              "Incorrect data type, expected array for "..guessed.name)
         elseif guessed.zentype == "d" then assert(isdictionary(guessed.raw),
-            "Incorrect data type, expected dictionary for "..guessed.name)
+                                                  "Incorrect data type, expected dictionary for "..guessed.name)
         end
-	  if guessed.schema then
-		 -- error('Invalid schema conversion for encoding: '..guessed.encoding, 2)
-		 local res = {}
-		 local zt <const> = guessed.zentype
-		 if zt == 'e' then -- single schema element
-			return fun(guessed.raw)
-			-- array of schemas
-		 elseif zt == 'a' then
-			for _,v in pairs(guessed.raw) do
-			   table.insert(res, fun(v))
-			end
-			-- dictionary of schemas
-		 elseif zt == 'd' then
-			for k, v in pairs(guessed.raw) do
-			   res[k] = fun(v)
-			end
-		 else
-			error('Unknown zentype to operate schema conversion: '..guessed.zentype, 2)
-		 end
-		 return(res) -- a, d
-	  else
-		 -- TODO: better error checking on deepmap?
-		 if luatype(guessed.check) == 'function' then
-			deepmap(guessed.check, guessed.raw)
-		 end
-		 return deepmap(fun, guessed.raw)
-	  end
-   else -- element
+        if guessed.schema then
+            local res = {}
+            local zt <const> = guessed.zentype
+            if zt == 'e' then -- single schema element
+                return fun(guessed.raw)
+                -- array of schemas
+            elseif zt == 'a' then
+                for _,v in pairs(guessed.raw) do
+                    table.insert(res, fun(v))
+                end
+                -- dictionary of schemas
+            elseif zt == 'd' then
+                for k, v in pairs(guessed.raw) do
+                    res[k] = fun(v)
+                end
+            else
+                error('Unknown zentype to operate schema conversion: '..guessed.zentype, 2)
+            end
+            return(res) -- a, d
+        else
+            -- TODO: better error checking on deepmap?
+            if luatype(guessed.check) == 'function' then
+                deepmap(guessed.check, guessed.raw)
+            end
+            return deepmap(fun, guessed.raw)
+        end
+    else -- element
 
-	  -- corner case: input is already a zenroom type
-	  if lt == 'userdata' then
-		 if iszen(type(guessed.raw)) then
-			return(guessed.raw)
-		 else
-			error("Unknown userdata type for element: "..guessed.name, 2)
-		 end
-	  end
-	  ---
+        -- corner case: input is already a zenroom type
+        if lt == 'userdata' then
+            if iszen(type(guessed.raw)) then
+                return(guessed.raw)
+            else
+                error("Unknown userdata type for element: "..guessed.name, 2)
+            end
+        end
+        ---
 
-	  if guessed.check then
-		 if not guessed.check(guessed.raw) then
-			error("Could not read " .. guessed.name)
-		 end
-	  end
-      -- fun may return two values: val and optional param
-      -- which is used in ack() to set additional CODEC params
-      -- param is defined directly into the schema function!
-	  return fun(guessed.raw)
-   end
+        if guessed.check then
+            if not guessed.check(guessed.raw) then
+                error("Could not read " .. guessed.name)
+            end
+        end
+        -- fun may return two values: val and optional param
+        -- which is used in ack() to set additional CODEC params
+        -- param is defined directly into the schema function!
+        return fun(guessed.raw)
+    end
 end
 
 local function ack_table(key, val)
