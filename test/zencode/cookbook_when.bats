@@ -1321,3 +1321,35 @@ EOF
     save_output when_table_pickup.out.json
     assert_output '{"dictionary":{"string_1":"string_dic_1","string_2":"string_dic_2","string_3":"string_dic_3"},"string_1":"string_dic_1","string_2":"c3RyaW5nX2RpY18y","string_3":"string_dic_3"}'
 }
+
+@test "remove characters" {
+    cat <<EOF | save_asset when_remove_char.data.json
+{
+	"new string 1": "string without spaces",
+    "new string 2": "string \nall \nin \na \nline",
+    "new string 3": "a character have to be erase",
+    "new string 4": "a \b c d e \f g h i j k l m \n o p q \r s \t u v w x y z",
+    "to remove": "a"
+}
+EOF
+    cat <<EOF | zexe when_remove_char.zen when_remove_char.data.json
+Given I have a 'string' named 'new string 1'
+Given I have a 'string' named 'new string 2'
+Given I have a 'string' named 'new string 3'
+Given I have a 'string' named 'new string 4'
+Given I have a 'string' named 'to remove'
+
+#removes all spaces in a string
+When I remove spaces in 'new string 1'
+
+#removes all newlines from a string
+When I remove newlines in 'new string 2'
+
+#remove spaces ad letters b, f, n, r, t 
+When I compact ascii strings in 'new string 4'
+
+Then print data
+EOF
+    save_output when_remove_char.out.json
+    assert_output '{"new_string_1":"stringwithoutspaces","new_string_2":"string all in a line","new_string_3":"a character have to be erase","new_string_4":"acdeghijklmopqsuvwxyz","to_remove":"a"}'
+}
