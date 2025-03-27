@@ -176,32 +176,40 @@
     -- value_encoding: base64, hex, etc.
     -- data_type: array, dictionary, structure
     if objtype == 'table' then
-       local def = expect_table(definition)
-       if not def then -- check if the last word is among zentype collections
-		  error("Cannot take object: expected '"..definition
-				.."' but found '"..objtype.."' (not a dictionary or array)",3)
-       end
-       -- schema type in array or dict
-       t = ZEN.schemas[ def.leftwords ]
-       if t then
-		  return ({
-				fun = t,
-				zentype = string.sub(def.rightmost,1,1),
-				schema = def.leftwords,
-				luatype = objtype,
-				raw = obj,
-		  })
-       end
-       -- normal type in input encoding: string, base64 etc.
-       res = input_encoding(def.leftwords)
-       if res then
-		  res.zentype = string.sub(def.rightmost,1,1)
-		  res.raw = obj
-		  res.schema = nil
-		  return (res)
-       end
-       error("Cannot take object: invalid "..def.rightmost.." with encoding "..def.leftwords, 3)
-       return nil
+      local def = expect_table(definition)
+      if not def then -- check if the last word is among zentype collections
+        error("Cannot take object: expected '"..definition
+              .."' but found '"..objtype.."' (not a dictionary or array)",3)
+      end
+      -- mixed dictionary has a custom deepmask CODEC defined in Given
+      if not def.leftwords and def.rightmost == 'dictionary' then
+        res = input_encoding('string')
+        res.zentype = 'd'
+        res.raw = obj
+        res.schema = '__custom_dictionary__' -- special keyword
+        return(res)
+      end
+      -- schema type in array or dict
+      t = ZEN.schemas[ def.leftwords ]
+      if t then
+        return ({
+            fun = t,
+            zentype = string.sub(def.rightmost,1,1),
+            schema = def.leftwords,
+            luatype = objtype,
+            raw = obj,
+        })
+      end
+      -- normal type in input encoding: string, base64 etc.
+      res = input_encoding(def.leftwords)
+      if res then
+        res.zentype = string.sub(def.rightmost,1,1)
+        res.raw = obj
+        res.schema = nil
+        return (res)
+      end
+      error("Cannot take object: invalid "..def.rightmost.." with encoding "..def.leftwords, 3)
+      return nil
     end
 
     if objtype == 'number' then
