@@ -336,21 +336,27 @@ When I create random dictionary with '' random objects from ''
 
 ## Numbers statements
 
-explain integers, float and time
+This section will discuss numbers, specifically integers, floats, and time. Floating-point numbers are a fundamental data type in computing used to represent real numbers (numbers with fractional parts). They are designed to handle a wide range of magnitudes, from very small to very large values, by using a scientific notation-like format in binary.
+All TIME objects are float number. Since all TIME objects are 32 bit signed, there are two limitations for values allowed:
+
+-The MAXIMUM TIME value allowed is the number 2147483647 
+
+-The MINIMUM TIME value allowed is the number -2147483647 
 
 ### Create a number
 
-```gherkin
-When I write number '' in ''
-When I create number from ''
-```
+[](../_media/examples/zencode_cookbook/cookbook_when/when_numbers_create.zen ':include :type=code gherkin')
+
+The ouput will be the number `12345` saved in `nameOfNewNumber` and its base64 version saved in `number`.
+The numbers that can be encoded with the command shown above are integers from 0 to 1000000.
 
 ### Possible casting between number types
 
-```gherkin
-When I create float '' cast of integer in ''
-When I create 'integer/float/time(?)' cast of strings in ''
-```
+It is also possible to perform casting operations between number types. For example, let's consider providing the input `{"number": 1234}` and consider the code:
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_numbers_cast.zen ':include :type=code gherkin')
+
+then the output will be: `f`,`float` and `number` equal to `1234` and `integer` equal to `"1234"`.
 
 ### Mathematical operations
 
@@ -358,58 +364,46 @@ Zenroom provides support a range of basic mathematical operations, including add
 multiplication, division, modulo and sign inversion. These operations allow step-by-step numeric
 manipulations, with results stored for reuse.
 
-```gherkin
-Given I have a number named 'mySecondNumber'
-And I have a number named 'myThirdNumber'
+Consider the two input numbers
 
-When I create the result of 'mySecondNumber' + 'myThirdNumber'
-and I rename the 'result' to 'resultOfMyFirstSum'
+[](../_media/examples/zencode_cookbook/cookbook_when/when_numbers_operations.data.json ':include :type=code json')
 
-When I create the result of 'mySecondNumber' - 'myThirdNumber'
-and I rename the 'result' to 'resultOfMyFirstSubtraction'
+and the code 
 
-When I create the result of 'mySecondNumber' * 'myThirdNumber'
-and I rename the 'result' to 'resultOfMyFirstMultiplication'
+[](../_media/examples/zencode_cookbook/cookbook_when/when_numbers_operations.zen ':include :type=code gherkin')
 
-When I create the result of 'mySecondNumber' / 'myThirdNumber'
-and I rename the 'result' to 'resultOfMyFirstDivision'
+the output will be
 
-When I create the result of 'mySecondNumber' % 'myThirdNumber'
-and I rename the 'result' to 'resultOfMyFirstModulo'
+[](../_media/examples/zencode_cookbook/cookbook_when/when_numbers_operations.out.json ':include :type=code json')
 
-When I create the result of 'myFirstNumber' inverted sign
-and I rename the 'result' to 'myFirstNumberInvertedSign'
-
-Then print the data
-```
 
 For more advanced use cases, you can calculate an entire equation in a single statement.
 This allows for concise and efficient computations without breaking them into smaller steps.
 
-```gherkin
-When I create the result of '-b * a * ( b - a )'
-and I rename 'result' to 'expr10'
-```
+Consider the same numbers used in the previous example and the equation
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_numbers_equations.zen ':include :type=code gherkin')
+
+then the output will be `{"expr": 7647246}`.
+
 
 ### Comparison
 
-```gherkin
-When I verify number '' is less than ''
-When I verify number '' is more than ''
-When I verify number '' is less or equal than ''
-When I verify number '' is more or equal than ''
-```
+For the next two example scripts where we will compare two numbers, we will use the same input file, which will be as follows:
 
-works for everything and thus also with numbers
+[](../_media/examples/zencode_cookbook/cookbook_when/when_numbers_compare.data.json ':include :type=code json')
 
-```gherkin
-When I verify '' is equal to ''
-When I verify '' is not equal to ''
-When I verify '' is equal to '' in ''
-When I verify '' is not equal to '' in ''
-```
+It is now possible to check if a number is greater than, greater than or equal to, less than, or less than or equal to another
 
-mention that all this statement can be used as `When` or `If`.
+[](../_media/examples/zencode_cookbook/cookbook_when/when_numbers_compare.zen ':include :type=code gherkin')
+
+Furthermore, it is also possible to check if a number is equal to or different from another, even within a dictionary
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_numbers_equal.zen ':include :type=code gherkin')
+
+Both scripts will return the same output `{"output":["success"]}`.
+
+All this statement can be used as `When` or `If`.
 
 ## String operations statements
 

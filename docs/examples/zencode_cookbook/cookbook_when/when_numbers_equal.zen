@@ -1,0 +1,11 @@
+Given I have a 'number' named 'a'
+Given I have a 'number' named 'b'
+Given I have a 'number' named 'c'
+Given I have a 'string dictionary' named 'dictionary'
+
+When I verify 'b' is equal to 'b'
+When I verify 'a' is not equal to 'b'
+When I verify 'a' is equal to 'd' in 'dictionary'
+When I verify 'b' is not equal to 'd' in 'dictionary'
+
+Then print the string 'success'

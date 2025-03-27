@@ -1,0 +1,7 @@
+Given nothing
+#save a certain number 
+When I write number '12345' in 'nameOfNewNumber'
+#save in "number" the value of "nameOfNewNumber" in base64
+When I create number from 'nameOfNewNumber'
+
+Then print the data

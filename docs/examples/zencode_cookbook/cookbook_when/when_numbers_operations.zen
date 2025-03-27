@@ -1,0 +1,22 @@
+Given I have a 'number' named 'a'
+And I have a 'number' named 'b'
+#sum
+When I create the result of 'a' + 'b'
+and I rename the 'result' to 'resultOfMyFirstSum'
+#subtraction
+When I create the result of 'a' - 'b'
+and I rename the 'result' to 'resultOfMyFirstSubtraction'
+#multiplication
+When I create the result of 'a' * 'b'
+and I rename the 'result' to 'resultOfMyFirstMultiplication'
+#division
+When I create the result of 'a' / 'b'
+and I rename the 'result' to 'resultOfMyFirstDivision'
+#modulo
+When I create the result of 'a' % 'b'
+and I rename the 'result' to 'resultOfMyFirstModulo'
+#opposite
+When I create the result of 'a' inverted sign
+and I rename the 'result' to 'aInvertedSign'
+
+Then print the data
