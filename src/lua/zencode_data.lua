@@ -103,7 +103,9 @@
  local function expect_table(definition)
    local toks = strtok(definition, '_')
    local res = { rightmost = toks[#toks] }
-   if #toks == 1 then return res end
+   if #toks == 1 and res.rightmost == 'dictionary' then
+     return res -- dictionary alone is accepted as customizable
+   end
    if res.rightmost == 'array'
      or
      res.rightmost == 'dictionary'
