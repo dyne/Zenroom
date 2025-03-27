@@ -101,22 +101,23 @@
  -- return leftmost and rightmost if definition string indicates
  -- a lua table: dictionary, array or schema
  local function expect_table(definition)
-    local toks = strtok(definition, '_')
-    local res = { rightmost = toks[#toks] }
-    if res.rightmost == 'array'
-       or
-       res.rightmost == 'dictionary'
-    then
-       res.leftwords = '' -- concat all left words in toks minus the last
-       for i = 1, #toks - 2 do
-		  res.leftwords = res.leftwords .. toks[i] .. '_'
-       end
-       res.leftwords = uscore( res.leftwords .. toks[#toks - 1] )
-       -- no trailing underscore
-       return res
-    end
-	return nil
-    -- schemas may or may be not tables
+   local toks = strtok(definition, '_')
+   local res = { rightmost = toks[#toks] }
+   if #toks == 1 then return res end
+   if res.rightmost == 'array'
+     or
+     res.rightmost == 'dictionary'
+   then
+     res.leftwords = '' -- concat all left words in toks minus the last
+     for i = 1, #toks - 2 do
+       res.leftwords = res.leftwords .. toks[i] .. '_'
+     end
+     res.leftwords = uscore( res.leftwords .. toks[#toks - 1] )
+     -- no trailing underscore
+     return res
+   end
+   return nil
+   -- schemas may or may be not tables
  end
 
  --- Given block (IN read-only memory)
