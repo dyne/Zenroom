@@ -554,12 +554,12 @@ static int lua_is_bin(lua_State *L) {
 typedef struct { uint64_t high, low; } uint128_t;
 
 /***
-Convert a Lua integer into a 16-byte octet object, 
+Convert a Lua integer into a 16-byte octet object,
 padding the upper 8 bytes with zeros and handling endianness.
 
 	@function OCTET.from_number
 	@param num Lua integer
-	@return 16-byte octet object 
+	@return 16-byte octet object
  */
 static int from_number(lua_State *L) {
 	BEGIN();
@@ -608,11 +608,11 @@ static int from_rawlen (lua_State *L) {
 }
 
 /***
-Decode a base64-encoded string into an octet object, 
+Decode a base64-encoded string into an octet object,
 after checking if the input string is valid base64.
 
 	@function OCTET.from_base64
-	@param str base64-encoded string 
+	@param str base64-encoded string
 	@return decoded octet object
  */
 static int from_base64(lua_State *L) {
@@ -631,11 +631,11 @@ static int from_base64(lua_State *L) {
 }
 
 /***
-Decode a url64-encoded string into an octet object, 
+Decode a url64-encoded string into an octet object,
 after checking if the input string is valid url64.
 
 	@function OCTET.from_url64
-	@param str url64-encoded string 
+	@param str url64-encoded string
 	@return decoded octet object
  */
 static int from_url64(lua_State *L) {
@@ -655,11 +655,11 @@ static int from_url64(lua_State *L) {
 }
 
 /***
-Decode a base58-encoded string into an octet object, 
+Decode a base58-encoded string into an octet object,
 after checking if the input string is valid base58.
 
 	@function OCTET.from_base58
-	@param str base58-encoded string 
+	@param str base58-encoded string
 	@return decoded octet object
  */
 static int from_base58(lua_State *L) {
@@ -698,11 +698,11 @@ end:
 }
 
 /***
-Convert a string into an octet object, 
+Convert a string into an octet object,
 after checking if the input is a valid string.
 
 	@function OCTET.from_string
-	@param str string 
+	@param str string
 	@return convert octet object
  */
 
@@ -724,11 +724,11 @@ static int from_string(lua_State *L) {
 }
 
 /***
-Decode an hexadecimal-encoded string into an octet object, 
+Decode an hexadecimal-encoded string into an octet object,
 after checking if the input string is valid hexadecimal.
 
 	@function OCTET.from_hex
-	@param str hexadecimal-encoded string 
+	@param str hexadecimal-encoded string
 	@return decoded octet object
  */
 
@@ -776,7 +776,7 @@ static int from_hex(lua_State *L) {
 Convert a binary string (composed of '0' and '1' characters) into an octet object.
 
 	@function OCTET.from_bin
-	@param bin binary string 
+	@param bin binary string
 	@return convert octet object
  */
 // I'm quite happy about this: its fast and secure. It can just be
@@ -817,7 +817,7 @@ static int from_bin(lua_State *L) {
 	END(1);
 }
 
-/*** 
+/***
   In the bitcoin world, addresses are the hash of the public key (binary data).
   However, the user usually knows them in some encoded form (which also include
   some error check mechanism, to improve security against typos). Bech32 is the
@@ -859,11 +859,11 @@ static int from_segwit_address(lua_State *L) {
 	END(2);
 }
 
-/*** 
+/***
   For an introduction see `from_segwit`.
   HRP (human readble part) are the first characters of the address, they can
   be bc (bitcoin network) or tb (testnet network).
-	
+
 	@function OCTET:to_segwit
   	@param o Address in binary format (octet with the result of the hash160)
   	@param witver Segwit version
@@ -942,11 +942,11 @@ end:
 }
 
 /***
-Decode a base45-encoded string into an octet object, 
+Decode a base45-encoded string into an octet object,
 after checking if the input string is valid base45.
 
 	@function OCTET.from_base45
-	@param str base45-encoded string 
+	@param str base45-encoded string
 	@return decoded octet object
  */
 
@@ -970,11 +970,11 @@ static int from_base45(lua_State *L) {
 }
 
 /***
-Decode a mnemonic-encoded string into an octet object, 
+Decode a mnemonic-encoded string into an octet object,
 after checking if the input string is valid mnemonic.
 
 	@function OCTET.from_mnemonic
-	@param str mnemonic-encoded string 
+	@param str mnemonic-encoded string
 	@return decoded octet object
  */
 
@@ -1372,7 +1372,7 @@ end:
 }
 
 /***
-	Return self (octet), implemented for compatibility with all zenroom types so that anything can be casted to octet. 
+	Return self (octet), implemented for compatibility with all zenroom types so that anything can be casted to octet.
 
 	@function OCTET:octet
 	@return the self octet
@@ -1479,11 +1479,11 @@ end:
 }
 
 /***
-Fill an octet object with the contents of another octet object. 
+Fill an octet object with the contents of another octet object.
 
 	@function OCTET:fill
 	@param oct the source octet providing the data
-	@return the target octet is fully filled, and its len is set to its max capacity. 
+	@return the target octet is fully filled, and its len is set to its max capacity.
  */
 static int filloctet(lua_State *L) {
 	BEGIN();
@@ -1597,7 +1597,7 @@ end:
 }
 
 
-/*** Trim all leading and following zero bytes in an octet 
+/*** Trim all leading and following zero bytes in an octet
  * and return a new one of equal length or smaller.
 
 	 @function OCTET:trim
@@ -1650,10 +1650,10 @@ end:
 /***  Split an octet into two parts based on a specified length and return both parts. The first part will have a length in bytes equal to the input parameter. The second part will contain the remaining bytes.
 
 	@function OCTET:chop
-	@param len an optional length parameter (defaulting to 0) 
+	@param len an optional length parameter (defaulting to 0)
 	@return Returns the two resulting octets
 	@usage
-	--create an octet of bin 
+	--create an octet of bin
 	oct = OCTET.from_bin("001000001111110001")
 	--consider the length parameter equal to 1
 	part1, part2 = oct:chop(1)
@@ -1698,7 +1698,7 @@ end:
 	END(2);
 }
 
-/*** 
+/***
   Build the byte in reverse order with respect to the one which is given.
 
   @function OCTET:reverse
@@ -1820,7 +1820,7 @@ end:
 	END(1);
 }
 
-/*** 
+/***
 	Retrieve and return the length of an octet.
 
 	@function OCTET:__len
@@ -1848,7 +1848,7 @@ static int max(lua_State *L) {
 }
 
 /***
-	Given a string and a characater, this function removes from the string 
+	Given a string and a characater, this function removes from the string
 	*all the occurences of the character in the string
 	@param char the character to remove
 	@function OCTET:rmchar
@@ -1906,7 +1906,7 @@ end:
 	@function OCTET:compact_ascii
 	@return New octet which contains the filtered and processed data
 	@usage
-	--create a string octet 
+	--create a string octet
 	oct=OCTET.from_string("st\ring fo\r ex\ample")
 	print(oct:compact_ascii())
 	--print: stingfoexmple
@@ -1956,12 +1956,12 @@ end:
 }
 
 /***
-	Calculate the frequency of each byte value in an octet and returns the results as a Lua table. It is useful for analyzing the distribution of 
+	Calculate the frequency of each byte value in an octet and returns the results as a Lua table. It is useful for analyzing the distribution of
 	*byte values in a byte array, which can be used for entropy calculations or other statistical analyses.
 
 	@function OCTET:bytefreq
 	@return Lua table containing bytes distribution
-	@usage 
+	@usage
 	--create an octet of bin
 	oct=OCTET.from_bin("101010001010100010101000101010000001011000011111")
 	--save the frequency of the bytes in a table (tab)
@@ -1969,7 +1969,7 @@ end:
 	--print the table
 	for byte, freq in pairs(tab) do
     	print(string.format("Byte %d: Frequency %d", byte, freq))
-	end 
+	end
 	--print .. Byte 23: Frequency 1 ..
 		.. Byte 32: Frequency 1 ..
 		.. Byte 169: Frequency 4 ..
@@ -1999,15 +1999,15 @@ static int entropy_bytefreq(lua_State *L) {
 }
 
 /***
-	Calculate the entropy of an octet structure. 
-	*Entropy is a measure of randomness or uncertainty in the data, often used in information theory. 
+	Calculate the entropy of an octet structure.
+	*Entropy is a measure of randomness or uncertainty in the data, often used in information theory.
 	Allocate a frequency table to store the count of each byte value.
 	Allocate a probability table to store the probability of each byte value.
 	Increment the count for each byte value in the frequency table.
 	Calculate the probability of each byte value.
 	Compute the entropy.
 	Compute the maximum possible entropy for the given number of unique bytes.
-	
+
 	@function OCTET:entropy
 	@return the entropy ratio (relative to the maximum entropy)
 	@return the maximum possible entropy
@@ -2084,17 +2084,17 @@ static int popcount64b(uint64_t x) {
 // compare bit by bit two arrays and returns the hamming distance
 
 /***
-	Calculate the Hamming distance between two octet structures. 
+	Calculate the Hamming distance between two octet structures.
 	*The Hamming distance is the number of positions at which the corresponding bits differ between the two octets.
 	*This function calculates the Hamming distance between two octets by treating them as arrays of 64-bit integers.
 	*It only works with octets whose lengths are multiples of 8 bytes. It does not handle smaller octets or padding.
 	*Ideal for applications involving large octets where performance is critical.
 
 
-	@function OCTET:popcount_hamming		
+	@function OCTET:popcount_hamming
 	@param oct an octet to compare with another one
 	@return the Hamming distance between the two octets
-	@usage 
+	@usage
 	--create two octets of bin (number of bits multiple of 64)
 	oct=OCTET.from_bin("1010001010100010101000101010001010100010101000101010001010100010")
 	oct2=OCTET.from_bin("1001000010010000100100001001000010010000100100001001000010010000")
@@ -2132,15 +2132,15 @@ end:
 }
 
 /***
-	Calculate the Hamming distance between two octets by comparing them byte by byte and counting the number of differing bits. 
- 	* It is useful for comparing binary data and measuring their similarity. 
+	Calculate the Hamming distance between two octets by comparing them byte by byte and counting the number of differing bits.
+ 	* It is useful for comparing binary data and measuring their similarity.
 	* This function requires the two octets to have the same length. If they differ, it throws an error.
 	* Suitable for small to medium-sized octets where simplicity is more important than performance.
 
 	@function OCTET:hamming
 	@param oct an octet to compare with another one
 	@return the Hamming distance between the two octets
-	@usage 
+	@usage
 	--create two octets of bin of the same length
 	oct=OCTET.from_bin("101000101010001010100010101000101010001010100010")
 	oct2=OCTET.from_bin("100100001001000010010000100100001001000010010000")
@@ -2186,13 +2186,13 @@ end:
 }
 
 /***
-	Count the occurrences of a specific character in an octet and return the count as an integer to Lua. 
+	Count the occurrences of a specific character in an octet and return the count as an integer to Lua.
 	*It is useful for simple character-based analysis of binary data.
 
 	@function OCTET:charcount
 	@param char the charcater to count
 	@return the number of occurrences of a specific character
-	@usage 
+	@usage
 	--create a string octet
 	oct=OCTET.from_string("Hello world!")
 	--print the number of occurrences of "l"
@@ -2218,7 +2218,7 @@ static int charcount(lua_State *L) {
 }
 
 /***
-	Compute the CRC-8 checksum of an octet and return the result as a new octet of length 1. 
+	Compute the CRC-8 checksum of an octet and return the result as a new octet of length 1.
 	*It is useful for error detection in data transmission or storage.
 	*CRC-8 is a cyclic redundancy check algorithm that produces an 8-bit checksum.
 
@@ -2316,9 +2316,9 @@ end:
 	Creates a new octet of given size repeating the octet as input.
 
 	@function octet:fillrepeat
-	@param size 
+	@param size
 	@return octet of given size
-	@usage 
+	@usage
 	--create an octet of hex
 	oct=OCTET.from_hex("0xa1")
 	print(oct:fillrepeat(5):hex())
@@ -2475,10 +2475,10 @@ void OCT_shr_bits(octet *x, int n) {
 	}
 }
 
-/*** 
+/***
 	Shift octet to the right by n bits. Rightmost bits disappear.
- 	*This is also executed when using the 'o >> n' with o an octet and n an integer. 
-	
+ 	*This is also executed when using the 'o >> n' with o an octet and n an integer.
+
 	@function OCTET:__shr
 	@param positions number of positions to bit shift to the right
 	@return the shiftet octet
@@ -2519,7 +2519,7 @@ static int shift_right(lua_State *L) {
 }
 
 /***
-	Shift octet to the left by n bits. 
+	Shift octet to the left by n bits.
 	*Leftmost bits do not disappear but appear on the right.
 
 	@function OCTET:shl_circular
@@ -2541,7 +2541,7 @@ static int shift_left_circular(lua_State *L) {
 	lua_Integer n = lua_tointegerx(L,2,&isnum);
 	if(!isnum) {
 		failed_msg = "shift input is not a number";
-		goto end; 
+		goto end;
 	}
 	octet *out = o_new(L,o->len);
 
@@ -2594,7 +2594,7 @@ void OCT_circular_shr_bits(octet *x, int n) {
 }
 
 /***
-	Shift octet to the right by n bits. 
+	Shift octet to the right by n bits.
 	*Rightmost bits do not disappear but appear on the left.
 
 	@function OCTET:rhl_circular
@@ -2616,7 +2616,7 @@ static int shift_right_circular(lua_State *L) {
 	lua_Integer n = lua_tointegerx(L,2,&isnum);
 	if(!isnum) {
 		failed_msg = "shift input is not a number";
-		goto end; 
+		goto end;
 	}
 	octet *out = o_new(L,o->len);
 
@@ -2648,7 +2648,7 @@ void OCT_and(octet *y, octet *x)
 /***
 	Bitwise AND operation on two octets padded to reach the same length, returns a new octet.
 	*Results in a newly allocated octet, does not change the contents of any other octet involved.
-	*If the two octets have different lengths, 
+	*If the two octets have different lengths,
 	*the shorter one is padded with zeros to match the length of the longer one before performing the operation.
 
 	@function OCTET:and_grow
@@ -2658,7 +2658,7 @@ void OCT_and(octet *y, octet *x)
 	--create two octets of bin
 	oct=OCTET.from_bin("0100101001001011")
 	oct2=OCTET.from_bin("10111011")
-	print(oct:and_grow(oct2):bin()) 
+	print(oct:and_grow(oct2):bin())
 	--print: 0000000000001011
 
 */
@@ -2701,7 +2701,7 @@ end:
 	END(1);
 }
 
-/*** 
+/***
 	Bitwise AND operation on two octets truncating at the shortest one length, returns a new octet.
 	*This is also executed when using the '<b>&</b>' operator between two
 	*octets. Results in a newly allocated octet, does not change the
@@ -2714,7 +2714,7 @@ end:
 	--create two octets of bin
 	oct=OCTET.from_bin("0100101001001011")
 	oct2=OCTET.from_bin("10111011")
-	print(oct:__band(oct2):bin()) 
+	print(oct:__band(oct2):bin())
 	--print: 00001010
 */
 static int and_shrink(lua_State *L) {
@@ -2751,10 +2751,10 @@ void OCT_or(octet *y, octet *x)
 	}
 }
 
-/*** 
+/***
 	Bitwise OR operation on two octets padded to reach the same length, returns a new octet.
 	*Results in a newly allocated octet, does not change the contents of any other octet involved.
-	*If the two octets have different lengths, 
+	*If the two octets have different lengths,
 	*the shorter one is padded with zeros to match the length of the longer one before performing the operation.
 
 	@function OCTET:or_grow
@@ -2807,7 +2807,7 @@ end:
 	END(1);
 }
 
-/*** 
+/***
 	Bitwise OR operation on two octets truncating at the shortest one length, returns a new octet.
 	*This is also executed when using the '<b>|</b>' operator between two
 	*octets. Results in a newly allocated octet, does not change the
@@ -2820,7 +2820,7 @@ end:
 	--create two octets of bin
 	oct=OCTET.from_bin("0100101001001011")
 	oct2=OCTET.from_bin("10111011")
-	print(oct:__bor(oct2):bin()) 
+	print(oct:__bor(oct2):bin())
 	--print: 11111011
 */
 static int or_shrink(lua_State *L) {
@@ -2862,7 +2862,7 @@ Bitwise XOR operation on two octets padded to reach the same length, returns a n
 	--create two octets of bin
 	oct=OCTET.from_bin("0100101001001011")
 	oct2=OCTET.from_bin("10111011")
-	print(oct:xor_grow(oct2):bin()) 
+	print(oct:xor_grow(oct2):bin())
 	--print: 0100101001001011
 */
 static int xor_grow(lua_State *L) {
@@ -2919,9 +2919,9 @@ Bitwise XOR operation on two octets truncating at the shortest one length, retur
 	--create two octets of bin
 	oct=OCTET.from_bin("0100101001001011")
 	oct2=OCTET.from_bin("10111011")
-	print(oct:__bxor(oct2):bin()) 
+	print(oct:__bxor(oct2):bin())
 	--print: 11110001
-	
+
 */
 static int xor_shrink(lua_State *L) {
 	BEGIN();
@@ -2949,9 +2949,9 @@ end:
 	END(1);
 }
 
-/*** 
+/***
 	Bitwise NOT operation on an octet returns a new octet.
-	*This is also executed when using the '~</b>' operator. 
+	*This is also executed when using the '~</b>' operator.
 	*Results in a newly allocated octet.
 
 	@function OCTET:__bnot
@@ -3078,7 +3078,7 @@ static int memfind(lua_State *L) {
 	@usage
 	--create an octet in hex
 	oct=OCTET.from_hex("0xa1b2c3d4")
-	--define the start position equal to 1 
+	--define the start position equal to 1
 	--define the length of byte sequence to copy equal to 2
 	print(oct:copy(1,2):hex())
 	--print: b2c3
@@ -3278,6 +3278,19 @@ int luaopen_octet(lua_State *L) {
 		{"array",  to_array},
 		{"bin",    to_bin},
 		{"uuid",    to_uuid},
+		{"mnemonic", to_mnemonic},
+		{"to_hex"   , to_hex},
+		{"to_base64", to_base64},
+		{"to_url64",  to_url64},
+		{"to_base58", to_base58},
+		{"to_base45", to_base45},
+		{"to_string", to_string},
+		{"to_octet",  to_octet},
+		{"to_str",    to_string},
+		{"to_array",  to_array},
+		{"to_bin",    to_bin},
+		{"to_uuid",   to_uuid},
+		{"to_mnemonic", to_mnemonic},
 		{"eq", eq},
 		{"pad", pad},
 		{"max", max},
@@ -3286,7 +3299,6 @@ int luaopen_octet(lua_State *L) {
 		{"hamming", bitshift_hamming_distance},
 		{"popcount_hamming", popcount_hamming_distance},
 		{"segwit", to_segwit_address},
-		{"mnemonic", to_mnemonic},
 		{"charcount", charcount},
 		{"rmchar", remove_char},
 		{"compact_ascii", compact_ascii},
