@@ -409,26 +409,63 @@ All this statement can be used as `When` or `If`.
 
 ### Create a new string
 
-```gherkin
-When I write string '' in ''
-When I set '' to '' as 'string'
-```
+This method allows to create e new string and name it
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_create_string.zen ':include :type=code gherkin')
+
+and the outoput will be
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_create_string.out.json ':include :type=code json')
 
 ### Append at the end
 
-```gherkin
-When I append '' to ''
-When I append '' of '' to ''
-When I append string '' to ''
-```
+This methods allows to append a string at the end of another one.
+Given the input
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_append.data.json ':include :type=code json')
+
+and the code
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_append.zen ':include :type=code gherkin')
+
+the output will be 
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_append.out.json ':include :type=code json')
+
+Another version of the previous code allows to append at the end of a string the codification of another string in a chosen basis
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_append_mod.zen ':include :type=code gherkin')
+
 
 ### Split at a certain point
 
-```gherkin
-When I split leftmost '' bytes of ''
-When I split rightmost '' bytes of ''
-When I create array by splitting '' at ''
-```
+These command allow to split a string in a desired point. The number of bytes indicates the number of charachters will be removed from the left side or right side of the input string.
+Given the following input
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_split.data.json ':include :type=code json')
+
+and the code
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_split.zen ':include :type=code gherkin')
+
+the output will be
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_split.out.json ':include :type=code json')
+
+
+The following version of the command "split" allows to create a string array splitting a given String all times an input Character is found.
+
+Using the following data
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_split_into_array.data.json ':include :type=code json')
+
+and the code
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_split_into_array.zen ':include :type=code gherkin')
+
+the output will be
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_split_into_array.out.json ':include :type=code json')
 
 ### Remove characters
 

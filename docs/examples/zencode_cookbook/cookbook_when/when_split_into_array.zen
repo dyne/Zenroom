@@ -1,0 +1,7 @@
+Given I have a 'string' named 'string'
+Given I have a 'string' named 'character'
+
+#create an array by dividing a string removing from the string "character" 
+When I create array by splitting 'string' at 'character'
+
+Then print 'array'

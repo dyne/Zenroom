@@ -1141,3 +1141,90 @@ EOF
     save_output when_numbers_equal.out.json
     assert_output '{"output":["success"]}'
 }
+
+@test "creation of a string" {
+ 
+    cat <<EOF | zexe when_create_string.zen 
+Given nothing
+
+#create a string "is new" and label it as "new string"
+When I write string 'is new' in 'new string'
+
+#create a string "is new" and label it as "newer string"
+When I set 'newer string' to 'is newer' as 'string'
+
+Then print data
+
+EOF
+    save_output when_create_string.out.json
+    assert_output '{"new_string":"is_new","newer_string":"is_newer"}'
+}
+
+
+@test "appending string" {
+    cat <<EOF | save_asset when_append.data.json
+{
+	"new string": "str",
+    "to append": "ing"
+}
+EOF
+    cat <<EOF | zexe when_append.zen when_append.data.json
+Given I have a 'string' named 'new string'
+Given I have a 'string' named 'to append'
+
+#append the content of "to append" and the end of the content of "new string"
+When I append 'to append' to 'new string'
+
+#append the content among '' to the content of "new string"
+When I append string '_complete' to 'new string'
+
+Then print 'new string'
+EOF
+    save_output when_append.out.json
+    assert_output '{"new_string":"string_complete"}'
+}
+
+
+
+@test "split a string" {
+    cat <<EOF | save_asset when_split.data.json
+{
+	"string": "a_not_too_much_long_string_to_split"
+    
+}
+EOF
+    cat <<EOF | zexe when_split.zen when_split.data.json
+Given I have a 'string' named 'string'
+
+#split the first 6 characters from the string 
+When I split leftmost '6' bytes of 'string'
+
+#split the final 9 characters from the string
+When I split rightmost '9' bytes of 'string'
+
+Then print 'string'
+EOF
+    save_output when_split.out.json
+    assert_output '{"string":"too_much_long_string"}'
+}
+
+
+@test "split a string to array" {
+    cat <<EOF | save_asset when_split_into_array.data.json
+{
+	"string": "a_not_too_much_long_string_to_split",
+    "character": "_"
+}
+EOF
+    cat <<EOF | zexe when_split_into_array.zen when_split_into_array.data.json
+Given I have a 'string' named 'string'
+Given I have a 'string' named 'character'
+
+#create an array by dividing a string removing from the string "character" 
+When I create array by splitting 'string' at 'character'
+
+Then print 'array'
+EOF
+    save_output when_split_into_array.out.json
+    assert_output '{"array":["a","not","too","much","long","string","to","split"]}'
+}
