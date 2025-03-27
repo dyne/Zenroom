@@ -6,7 +6,7 @@ SUBDOC=cookbook_when
     cat <<EOF | save_asset myLargeNestedObjectWhen.json
 {
   "myFirstObject": {
-    "myFirstNumber": 1.2345,
+    "a": 1.2345,
     "myFirstString": "Hello World!",
     "myFirstHex": "616e7976616c7565",
     "myFirstBase64": "SGVsbG8gV29ybGQh",
@@ -17,7 +17,7 @@ SUBDOC=cookbook_when
       "Hello World! myFirstObject, myFirstArray[1]",
       "Hello World! myFirstObject, myFirstArray[2]"
     ],
-    "myFirstNumberArray": [
+    "aArray": [
       10,
       20,
       30,
@@ -56,7 +56,7 @@ SUBDOC=cookbook_when
     }
   },
   "mySecondObject": {
-    "mySecondNumber": 2,
+    "b": 2,
     "mySecondString": "...and hi everybody!",
     "mySecondArray": [
       "anotherString1",
@@ -125,7 +125,7 @@ SUBDOC=cookbook_when
     "UndeliveredProductAmount": 100,
     "ProductPurchasePrice": 1
   },
-  "mySecondNumberArray": [
+  "bArray": [
     567,
     748,
     907,
@@ -147,15 +147,15 @@ Given I have a 'string array' named 'myNestedArray' inside 'myFirstObject'
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
 Given I have a 'string array' named 'myThirdArray' inside 'myThirdObject' 
 Given I have a 'string array' named 'myFourthArray' inside 'myFourthObject'
-Given I have a 'number array' named 'myFirstNumberArray' inside 'myFirstObject'
+Given I have a 'number array' named 'aArray' inside 'myFirstObject'
 Given I have a 'string array' named 'myCopyOfFirstArray' inside 'myThirdObject'
 Given I have a 'base64 array' named 'myOnlyEcpArray' inside 'myFirstObject'
 Given I have a 'base64 array' named 'myOnlyEcp2Array' inside 'myFirstObject'
-Given I have a 'number array' named 'mySecondNumberArray'
+Given I have a 'number array' named 'bArray'
 
 # Load Numbers
-Given I have a 'number' named 'myFirstNumber' in 'myFirstObject'
-Given I have a 'number' named 'mySecondNumber' in 'mySecondObject'
+Given I have a 'number' named 'a' in 'myFirstObject'
+Given I have a 'number' named 'b' in 'mySecondObject'
 Given I have a 'number' named 'myFourthNumber' inside 'myFourthObject'
 Given I have a 'number' named 'myThirdNumber' inside 'myThirdObject' 
 # Load Strings
@@ -200,37 +200,37 @@ When I write string 'This is my lovely new string!' in 'nameOfSecondNewVariable'
 # sum, subtract, multiply, divide, modulo with values, see the examples below. The output of the 
 # statement will be an object named "result" that we immediately rename.
 # The operators allowed are: +, -, *, /, %.
-When I create the result of 'mySecondNumber' + 'myThirdNumber'
+When I create the result of 'b' + 'myThirdNumber'
 and I rename the 'result' to 'resultOfmyFirstSum'
-When I create the result of 'mySecondNumber' - 'myThirdNumber'
+When I create the result of 'b' - 'myThirdNumber'
 and I rename the 'result' to 'resultOfmyFirstSubtraction'
-When I create the result of 'mySecondNumber' * 'myThirdNumber'
+When I create the result of 'b' * 'myThirdNumber'
 and I rename the 'result' to 'resultOfmyFirstMultiplication'
-When I create the result of 'mySecondNumber' / 'myThirdNumber'
+When I create the result of 'b' / 'myThirdNumber'
 and I rename the 'result' to 'resultOfmyFirstDivision'
-When I create the result of 'mySecondNumber' % 'myThirdNumber'
+When I create the result of 'b' % 'myThirdNumber'
 and I rename the 'result' to 'resultOfmyFirstModulo'
 
 # Now let's do some math with the number that we just created: 
 
-When I create the result of 'mySecondNumber' + 'nameOfFirstNewVariable'
+When I create the result of 'b' + 'nameOfFirstNewVariable'
 and I rename the 'result' to 'resultOfmySecondSum'
-When I create the result of 'mySecondNumber' * 'nameOfFirstNewVariable'
+When I create the result of 'b' * 'nameOfFirstNewVariable'
 and I rename the 'result' to 'resultOfmySecondMultiplication'
 
 # INVERT SIGN
 # you can invert the sign of a number using this statement
-# in this example, we create an inverted version of 'myFirstNumber' 
+# in this example, we create an inverted version of 'a' 
 # that goes from '1.2345' to '-1.2345'
-When I create the result of 'myFirstNumber' inverted sign
-and I rename the 'result' to 'myFirstNumberInvertedSign'
+When I create the result of 'a' inverted sign
+and I rename the 'result' to 'aInvertedSign'
 
 
 # APPEND
 # The "append" statement are pretty self-explaining: 
 # append a simple object of any encoding to another one
 When I append 'mySecondString' to 'myFifteenthString' 
-When I append 'mySecondNumber' to 'myThirdNumber' 
+When I append 'b' to 'myThirdNumber' 
 
 # RENAME
 # The "rename" statement: we've been hinting at this for a while now,
@@ -281,7 +281,7 @@ and I rename the 'random_pick' to 'myRandomlyPickedObject'
 # If you need several objects from a table, you can use this statement
 # it will create a new table (array if source was an array, or dictionary otherwise)
 # with the defined amount of objects picked from the original table
-When I create random array with 'mySecondNumber' elements from 'myOnlyEcpArray'
+When I create random array with 'b' elements from 'myOnlyEcpArray'
 and I rename the 'random_array' to 'myNewlyCreatedRandomArray'
 
 # CREATE FLAT ARRAY
@@ -444,7 +444,7 @@ And I rename the 'HMAC' to 'hmacOfMyFourteenthString'
 # and sums then it into a new object called "aggregation" that we'll rename immediately.
 # It works on both arrays and dictionaries, the data type needs to be 
 # specified as in the example.
-When I create the aggregation of array 'myFirstNumberArray'
+When I create the aggregation of array 'aArray'
 And I rename the 'aggregation' to 'aggregationOfMyFirstNumberArray'
 
 # Now let's print out everything
@@ -468,9 +468,9 @@ When I verify 'myThirdNumber' is equal to 'myFourthNumber'
 # LESS, MORE, EQUAL
 # Number comparisons: those are pretty self explaining.
 When I verify number 'myFourthNumber' is less or equal than 'myThirdNumber'
-When I verify number 'myFirstNumber' is less than  'myThirdNumber'
-When I verify number 'myThirdNumber' is more or equal than 'mySecondNumber'
-When I verify number 'myThirdNumber' is more than 'mySecondNumber'
+When I verify number 'a' is less than  'myThirdNumber'
+When I verify number 'myThirdNumber' is more or equal than 'b'
+When I verify number 'myThirdNumber' is more than 'b'
 
 # FOUND, NOT FOUND, FOUND AT LEAST n TIMES
 # The "is found" statement, takes two objects as input: 
@@ -503,13 +503,13 @@ When I move 'myFirstString' in 'myFirstArray'
 # SIZE
 # These two statements create objects, named "size"
 # containing the size of the array
-When I create the size of 'mySecondNumberArray'
+When I create the size of 'bArray'
 
 # SUM 
 # These two statements create objects, named "aggregation" and "sum value" containing the 
 # arithmetic sum of the array, they work only with "number array"
-When I create the aggregation of array 'mySecondNumberArray'
-When I create the sum value of elements in array 'mySecondNumberArray'
+When I create the aggregation of array 'bArray'
+When I create the sum value of elements in array 'bArray'
 
 # STATISTICAL INFORMATIONS
 # These statements perform some statistical operations on the arrays
@@ -517,14 +517,14 @@ When I create the sum value of elements in array 'mySecondNumberArray'
 # variance of the elements of the array, saving them in three object named
 # respectively "average", "standard deviation" and "variance", and
 # they work only with "number array"
-When I create the average of elements in array 'mySecondNumberArray'
-When I create the standard deviation of elements in array 'mySecondNumberArray'
-When I create the variance of elements in array 'mySecondNumberArray'
+When I create the average of elements in array 'bArray'
+When I create the standard deviation of elements in array 'bArray'
+When I create the variance of elements in array 'bArray'
 
 # COPY ELEMENT
 # This statement creates a an object named "copy" containing
 # the given element of the array
-When I copy '2' from 'mySecondNumberArray' to 'copy'
+When I copy '2' from 'bArray' to 'copy'
 
 # REMOVE
 # The "remove" statement does the opposite of the one above:
@@ -533,7 +533,7 @@ When I copy '2' from 'mySecondNumberArray' to 'copy'
 When I rename the 'myThirdArray' to 'myJustRenamedArray'
 When I remove the 'mySixteenthString' from 'myJustRenamedArray'
 
-Then print the 'mySecondNumberArray'
+Then print the 'bArray'
 Then print the 'myFirstArray'
 Then print the 'myJustRenamedArray'
 
@@ -993,4 +993,151 @@ Then print the data
 EOF
     save_output When_move_to.out.json
     assert_output '{"dictionary1":{"key_1":"value 1","key_2":"value 2"},"renamed_array":["str1","str2"]}'
+}
+
+@test "numbers: create" {
+    cat <<EOF | zexe when_numbers_create.zen 
+Given nothing
+#save a certain number 
+When I write number '12345' in 'nameOfNewNumber'
+#save in "number" the value of "nameOfNewNumber" in base64
+When I create number from 'nameOfNewNumber'
+
+Then print the data
+EOF
+    save_output when_numbers_create.out.json
+    assert_output '{"nameOfNewNumber":12345,"number":"MDk="}'
+}
+
+@test "numbers: casting" {
+cat <<EOF | save_asset when_numbers_cast.data.json
+{
+	"number": 1234
+}
+EOF
+    cat <<EOF | zexe when_numbers_cast.zen when_numbers_cast.data.json
+Given I have a 'string' named 'number'
+
+#casting a string into float
+When I create 'float' cast of strings in 'number'
+#casting a string into integer
+When I create 'integer' cast of strings in 'number'
+#casting an integer into a float
+When I create float 'f' cast of integer in 'integer'
+
+Then print the data
+EOF
+    save_output when_numbers_cast.out.json
+    assert_output '{"f":1234,"float":1234,"integer":"1234","number":1234}'
+}
+
+@test "numbers: operations" {
+cat <<EOF | save_asset when_numbers_operations.data.json
+{
+  "a": 373,
+  "b": 67
+}
+EOF
+    cat <<EOF | zexe when_numbers_operations.zen when_numbers_operations.data.json
+Given I have a 'number' named 'a'
+And I have a 'number' named 'b'
+#sum
+When I create the result of 'a' + 'b'
+and I rename the 'result' to 'resultOfMyFirstSum'
+#subtraction
+When I create the result of 'a' - 'b'
+and I rename the 'result' to 'resultOfMyFirstSubtraction'
+#multiplication
+When I create the result of 'a' * 'b'
+and I rename the 'result' to 'resultOfMyFirstMultiplication'
+#division
+When I create the result of 'a' / 'b'
+and I rename the 'result' to 'resultOfMyFirstDivision'
+#modulo
+When I create the result of 'a' % 'b'
+and I rename the 'result' to 'resultOfMyFirstModulo'
+#opposite
+When I create the result of 'a' inverted sign
+and I rename the 'result' to 'aInvertedSign'
+
+Then print the data
+EOF
+    save_output when_numbers_operations.out.json
+    assert_output '{"a":373,"aInvertedSign":-373,"b":67,"resultOfMyFirstDivision":5.567164,"resultOfMyFirstModulo":38,"resultOfMyFirstMultiplication":24991,"resultOfMyFirstSubtraction":306,"resultOfMyFirstSum":440}'
+}
+
+@test "numbers: equations" {
+cat <<EOF | save_asset when_numbers_operations.data.json
+{
+  "a": 373,
+  "b": 67
+}
+EOF
+    cat <<EOF | zexe when_numbers_equations.zen when_numbers_operations.data.json
+Given I have a 'number' named 'a'
+Given I have a 'number' named 'b'
+
+When I create the result of '-a * b * ( b - a )'
+#save the result in expr
+and I rename 'result' to 'expr'
+
+Then print 'expr'
+EOF
+    save_output when_numbers_equations.out.json
+    assert_output '{"expr":7647246.0}'
+}
+
+@test "numbers: compare" {
+cat <<EOF | save_asset when_numbers_compare.data.json
+{
+	"a": 373,
+	"b": 67,
+	"c": 67,
+	"dictionary": {
+		"d": 373
+	}
+}
+EOF
+    cat <<EOF | zexe when_numbers_compare.zen when_numbers_compare.data.json
+Given I have a 'number' named 'a'
+Given I have a 'number' named 'b'
+Given I have a 'number' named 'c'
+
+When I verify number 'b' is less than 'a'
+When I verify number 'a' is more than 'b'
+When I verify number 'b' is less or equal than 'b'
+When I verify number 'a' is more or equal than 'c'
+
+Then print the string 'success'
+EOF
+    save_output when_numbers_compare.out.json
+    assert_output '{"output":["success"]}'
+}
+
+@test "numbers: equal or not" {
+cat <<EOF | save_asset when_numbers_compare.data.json
+{
+	"a": 373,
+	"b": 67,
+	"c": 67,
+	"dictionary": {
+		"d": 373
+	}
+}
+EOF
+    cat <<EOF | zexe when_numbers_equal.zen when_numbers_compare.data.json
+Given I have a 'number' named 'a'
+Given I have a 'number' named 'b'
+Given I have a 'number' named 'c'
+Given I have a 'string dictionary' named 'dictionary'
+
+When I verify 'b' is equal to 'b'
+When I verify 'a' is not equal to 'b'
+When I verify 'a' is equal to 'd' in 'dictionary'
+When I verify 'b' is not equal to 'd' in 'dictionary'
+
+Then print the string 'success'
+EOF
+    save_output when_numbers_equal.out.json
+    assert_output '{"output":["success"]}'
 }
