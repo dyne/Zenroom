@@ -3165,7 +3165,7 @@ int luaopen_octet(lua_State *L) {
 		{"str",    to_string},
 		{"array",  to_array},
 		{"mnemonic", to_mnemonic},
-		{"to_bin",    to_bin},
+		{"bin",    to_bin},
 		{"to_hex"   , to_hex},
 		{"to_base64", to_base64},
 		{"to_url64",  to_url64},
