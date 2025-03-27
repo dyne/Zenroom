@@ -13,4 +13,5 @@ load ../bats_setup
     Z zenroom_strings.lua
     Z trim.lua
     Z memmem.lua
+    Z deepmask.lua
 }

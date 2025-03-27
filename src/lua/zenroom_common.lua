@@ -235,30 +235,27 @@ _G['deepsortmap'] = _deepsortmap
 
 -- function to be used when converting codecs with complex trees
 -- mask is a dictionary of functions to be applied in place
-local function _deepmask(fun,t,mask)
+local function _deepmask(fun, t, mask)
     local luatype = luatype
     if luatype(fun) ~= 'function' then
         error("Internal error: deepmask 1st argument is not a function", 3)
-        return nil end
+    end
     if luatype(t) ~= 'table' then
         error("Internal error: deepmask 2nd argument is not a table", 3)
-        return nil end
-    if luatype(mask) ~= 'table' then
-        error("Internal error: deepmask 3nd argument is not a table", 3)
-        return nil end
-    local res = { }
-    for k,v in pairs(t) do
+    end
+    if mask and luatype(mask) ~= 'table' then
+        error("Internal error: deepmask 3rd argument is not a table", 3)
+    end
+    local res = {}
+    for k, v in pairs(t) do
         if luatype(v) == 'table' then
-            if not mask or not mask[k] then
-                res[k] = _deepmask(fun,v) -- switch to deepmap?
-            else
-                res[k] = _deepmask(fun,v,mask[k]) -- recursion
-            end
+            local submask = mask and mask[k]
+            res[k] = _deepmask(fun, v, submask)
         else
-            if not mask or not mask[k] then -- check tree of funcs
-                res[k] = fun(v,k)
+            if mask and mask[k] then
+                res[k] = mask[k](v, k)
             else
-                res[k] = mask[k](v,k)
+                res[k] = fun(v, k)
             end
         end
     end
