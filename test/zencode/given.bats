@@ -602,3 +602,18 @@ EOF
     save_output 'prefix_from_varibale.json'
     assert_output '{"bearer":"BEARER","payload":{"aud":"did:dyne:sandbox.signroom:PTDvvQn1iWQiVxkfsDnUid8FbieKbHq46Qs8c9CZx67","exp":1709896027,"iat":1709892427,"iss":"https://authz-server1.zenswarm.forkbomb.eu:3100","sub":"6da2cb24972337faa55406d60bfdbe5038495879"}}'
 }
+
+@test "Given decode custom dictionary path" {
+    test_data='{"custom":{"encoded":"AhVCQPry2svggZcn5H","name":"Alice","nested":{"code":"nested code","crypto":{"iv":"696e697469616c697a6174696f6e20766563746f72","key":"c2VjcmV0IGtleQ=="}},"secret":"onion canoe strategy minor rookie route extend cause lunar cheap drive near illness pill medal save toss athlete pattern avocado east excuse impose insect"}}'
+    echo "$test_data" | save_asset 'custom_dictionary.json'
+    cat <<EOF | zexe custom_dictionary.zen custom_dictionary.json
+    Given I have a 'dictionary' named 'custom'
+    and I decode dictionary path 'custom.encoded' as 'base58'
+    and I decode dictionary path 'custom.secret' as 'mnemonic'
+    and I decode dictionary path 'custom.nested.crypto.iv' as 'hex'
+    and I decode dictionary path 'custom.nested.crypto.key' as 'base64'
+    Then print 'custom'
+EOF
+    save_output 'custom_dictionary_result.json'
+    assert_output "$test_data"
+}

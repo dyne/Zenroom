@@ -81,6 +81,7 @@ local function then_outcast(val, key, enc)
    local codec = CODEC[uscore(key)]
    if not codec then error("CODEC not found for object: "..key, 2) end
    if codec.schema then return apply_schema(val, key, codec.schema) end
+   if codec.mask then return deepmask(OCTET.to_string,val,codec.mask) end
    if codec.encoding then
 	  fun = get_encoding_function(codec.encoding)
 	  if not fun then error("CODEC encoding not found: "..codec.encoding) end
@@ -336,4 +337,19 @@ Then("print object named by ''", function(name)
 	if real_name ~= 'keyring' then
 	   OUT[real_name] = then_outcast( val, real_name )
 	end
+end)
+
+Then("encode dictionary path '' as ''", function(path, enc)
+         local path_array = strtok(uscore(path), CONF.path.separator)
+         local root <const> = path_array[1]
+         table.remove(path_array,1)
+          if not CODEC[root] then
+              error("Dictionary not found: "..root)
+          end
+          if CODEC[root].zentype ~= 'd' then
+              I.warn(CODEC[root])
+              error("Not a dictionary: "..root)
+          end
+          if not CODEC[root].mask then CODEC[root].mask = { } end
+          deepmask_set(CODEC[root].mask, path_array, enc)
 end)
