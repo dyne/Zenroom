@@ -253,7 +253,8 @@ local function _deepmask(fun, t, mask)
             res[k] = _deepmask(fun, v, submask)
         else
             if mask and mask[k] then
-                res[k] = mask[k](v, k)
+                local encoder <const> = get_encoding_function(mask[k])
+                res[k] = encoder(v, k)
             else
                 res[k] = fun(v, k)
             end
