@@ -15,15 +15,15 @@ local test_data = {
 
 -- Mask with transformation functions
 local mask = {
-    secret = function(v) return sha256(OCTET.from_string(v)):to_mnemonic() end,
+    secret = 'url64',
     nested = {
         crypto = {
-            key = function(v) return OCTET.from_string(v):to_base64() end,
-            iv = function(v) return OCTET.from_string(v):to_hex() end
+            key = 'base64',
+            iv = 'hex',
         }
     },
-    binary = function(v) return v:to_array() end,
-    encoded = function(v) return v:to_base58() end
+    binary = 'bin',
+    encoded = 'base58',
 }
 
 -- Default function (applied when no mask is found)
@@ -33,8 +33,7 @@ end
 
 -- Test the function
 local transformed = deepmask(default_func, test_data, mask)
-
-assert(JSON.encode(transformed)=='{"binary":[98.0,105.0,110.0,97.0,114.0,121.0,32.0,100.0,97.0,116.0,97.0],"encoded":"AhVCQPry2svggZcn5H","name":"Alice","nested":{"code":"nested code","crypto":{"iv":"696e697469616c697a6174696f6e20766563746f72","key":"c2VjcmV0IGtleQ=="}},"secret":"onion canoe strategy minor rookie route extend cause lunar cheap drive near illness pill medal save toss athlete pattern avocado east excuse impose insect"}')
+assert(JSON.encode(transformed)=='{"binary":"0110001001101001011011100110000101110010011110010010000001100100011000010111010001100001","encoded":"AhVCQPry2svggZcn5H","name":"Alice","nested":{"code":"nested code","crypto":{"iv":"696e697469616c697a6174696f6e20766563746f72","key":"c2VjcmV0IGtleQ=="}},"secret":"bXkgc2VjcmV0IG1lc3NhZ2U"}')
 
 
 local test_data_2 = {
@@ -98,7 +97,7 @@ local mask_2 = {
                         local part = OCTET.from_string(v):sub(1,6)
                         return part .. "..."
                     end,
-                    refresh = function(v) return OCTET.from_string(v):to_base64() end
+                    refresh = 'base64'
                 }
             }
         }
@@ -115,14 +114,10 @@ local mask_2 = {
         }
     },
     binary_data = {
-        image = function(v) return v:to_base64() end,
-        signature = function(v)
-            local o = { val = v:to_hex(),
-                        t = "secure_hex"}
-            return o
-        end
+        image = 'base64',
+        signature = 'hex'
     }
 }
 
 local transformed_2 = deepmask(default_func, test_data_2, mask_2)
-assert(JSON.encode(transformed_2)=='{"binary_data":{"image":"UE5HLi4uYmluYXJ5Li4uZGF0YQ==","signature":{"t":"secure_hex","val":"5349474e41545552455f44415441"}},"system":{"config":{"keys":{"private":"[CONFIDENTIAL]","public":"MFwwDQYJ..."},"version":"1.2.3"},"stats":{"requests":1024,"uptime":"01:00:00"}},"user":{"id":"user_12345","preferences":{"notifications":true,"theme":"dark"},"profile":{"auth":{"password":"[REDACTED]","tokens":{"access":"ZXlKaGJHLi4u","refresh":"cmVmcmVzaF90b2tlbl94eXo="}},"contacts":{"email":"john@example.com","phone":"***7890","social":{"github":"johndoe","twitter":"@JOHNDOE"}},"name":"John Doe"}}}')
+assert(JSON.encode(transformed_2)=='{"binary_data":{"image":"UE5HLi4uYmluYXJ5Li4uZGF0YQ==","signature":"5349474e41545552455f44415441"},"system":{"config":{"keys":{"private":"[CONFIDENTIAL]","public":"MFwwDQYJ..."},"version":"1.2.3"},"stats":{"requests":1024,"uptime":"01:00:00"}},"user":{"id":"user_12345","preferences":{"notifications":true,"theme":"dark"},"profile":{"auth":{"password":"[REDACTED]","tokens":{"access":"ZXlKaGJHLi4u","refresh":"cmVmcmVzaF90b2tlbl94eXo="}},"contacts":{"email":"john@example.com","phone":"***7890","social":{"github":"johndoe","twitter":"@JOHNDOE"}},"name":"John Doe"}}}')
