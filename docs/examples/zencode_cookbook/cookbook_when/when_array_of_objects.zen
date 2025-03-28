@@ -1,0 +1,7 @@
+Given I have a 'string dictionary' named 'num_dic_1'
+Given I have a 'string' named 'string_1' in 'num_dic_1'
+
+When I create array of objects named by 'string_1' found in 'num_dic_1'
+#the output is correct?????
+
+Then print the data
