@@ -81,6 +81,7 @@ local function then_outcast(val, key, enc)
    local codec = CODEC[uscore(key)]
    if not codec then error("CODEC not found for object: "..key, 2) end
    if codec.schema then return apply_schema(val, key, codec.schema) end
+   if codec.mask then return deepmask(OCTET.to_string,val,codec.mask) end
    if codec.encoding then
 	  fun = get_encoding_function(codec.encoding)
 	  if not fun then error("CODEC encoding not found: "..codec.encoding) end
