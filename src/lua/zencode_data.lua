@@ -188,7 +188,7 @@
         res = input_encoding('string')
         res.zentype = 'd'
         res.raw = obj
-        res.schema = '__custom_dictionary__' -- special keyword
+        res.st = 'c' -- '__custom_dictionary__'
         return(res)
       end
       -- schema type in array or dict
@@ -468,7 +468,7 @@ end
  --   encoding: encoding of object data, both basic and schema
  --   zentype:  zencode type: 'e'lement, 'a'rray or 'd'ictionary
  --   schema: schema name used to import or nil when basic object
- --   st: schema type properties, so far just 'o'pen or none
+ --   st: schema type properties, so far just 'o'pen or 'c'ustom
  -- }
  function new_codec(cname, parameters, clone)
     if not cname then error("Missing name in new codec", 2) end

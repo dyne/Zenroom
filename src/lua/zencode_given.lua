@@ -451,3 +451,55 @@ Given("'' in path ''", function(enc, path)
     ack(dest)
     gc()
 end)
+
+local function _mask_set(t, path, value)
+    local current = t
+    local nump <const> = #path
+    for i = 1, nump - 1 do
+        local key = path[i]
+        current[key] = {}
+        current = current[key]
+    end
+    current[path[nump]] = value
+    return t
+end
+
+local function _deep_transform(t, path, codec)
+    local current = t
+    local nump <const> = #path
+    for i = 1, nump - 1 do
+        local key = path[i]
+        if type(current) ~= "table" or current[key] == nil then
+            error("Path not found in: "..path[1],2)
+        end
+        current = current[key]
+    end
+    local final_key = path[nump]
+    if current[final_key] ~= nil then
+        local val <const> = OCTET.to_string(current[final_key])
+        if codec.check then
+            if not codec.check(val) then
+                error("Incorrect encoding in "..path[1]..": key '"..final_key.."' is not a "..codec.encoding,2)
+            end
+        end
+        current[final_key] = codec.fun(val)
+        return true  -- Success
+    end
+    error("Final key not found: "..final_key,2)
+end
+
+Given("decode dictionary path '' as ''", function(path,enc)
+          local path_array = strtok(uscore(path), CONF.path.separator)
+          local root = path_array[1]
+          table.remove(path_array,1)
+          if not CODEC[root] then
+              error("Dictionary not found: "..root)
+          end
+          if CODEC[root].zentype ~= 'd' then
+              I.warn(CODEC[root])
+              error("Not a dictionary: "..root)
+          end
+          if not CODEC[root].mask then CODEC[root].mask = { } end
+          _mask_set(CODEC[root].mask, path_array, get_encoding_function(enc))
+          _deep_transform(ACK[root], path_array, I.spy(input_encoding(enc)))
+end)
