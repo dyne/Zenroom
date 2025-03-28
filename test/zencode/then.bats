@@ -304,3 +304,21 @@ EOF
     run $ZENROOM_EXECUTABLE -z -a tables_with_empty_strings.json fail_tables_with_empty_strings.zen
     assert_line --partial "Incorrect data type, expected array for dictionary"
 }
+
+
+@test "Then encode custom dictionary path" {
+    test_data='{"custom":{"encoded":"AhVCQPry2svggZcn5H","name":"Alice","nested":{"code":"nested code","crypto":{"iv":"696e697469616c697a6174696f6e20766563746f72","key":"c2VjcmV0IGtleQ=="}},"secret":"onion canoe strategy minor rookie route extend cause lunar cheap drive near illness pill medal save toss athlete pattern avocado east excuse impose insect"}}'
+    echo "$test_data" | save_asset 'custom_dictionary.json'
+    cat <<EOF | zexe custom_dictionary.zen custom_dictionary.json
+    Given I have a 'dictionary' named 'custom'
+    and I decode dictionary path 'custom.encoded' as 'base58'
+    and I decode dictionary path 'custom.secret' as 'mnemonic'
+    and I decode dictionary path 'custom.nested.crypto.iv' as 'hex'
+    and I decode dictionary path 'custom.nested.crypto.key' as 'base64'
+    Then I encode dictionary path 'custom.secret' as 'bin'
+    and I encode dictionary path 'custom.nested.crypto.iv' as 'url64'
+    Then print 'custom'
+EOF
+    save_output 'custom_dictionary_result.json'
+    assert_output '{"custom":{"encoded":"AhVCQPry2svggZcn5H","name":"Alice","nested":{"code":"nested code","crypto":{"iv":"aW5pdGlhbGl6YXRpb24gdmVjdG9y","key":"c2VjcmV0IGtleQ=="}},"secret":"1001101011000100001100110101101101000110100110111011110101111001000101000011100100100100100001010000010011011101000011010100100111000111000100110100100110100010100101011111111011100101101000011100011010000101000001111111010001011010100111100001110001111011"}}'
+}

@@ -452,18 +452,6 @@ Given("'' in path ''", function(enc, path)
     gc()
 end)
 
-local function _mask_set(t, path, value)
-    local current = t
-    local nump <const> = #path
-    for i = 1, nump - 1 do
-        local key = path[i]
-        current[key] = {}
-        current = current[key]
-    end
-    current[path[nump]] = value
-    return t
-end
-
 local function _deep_transform(t, path, enc)
     local current = t
     local nump <const> = #path
@@ -493,7 +481,7 @@ end
 
 Given("decode dictionary path '' as ''", function(path,enc)
           local path_array = strtok(uscore(path), CONF.path.separator)
-          local root = path_array[1]
+          local root <const> = path_array[1]
           table.remove(path_array,1)
           if not CODEC[root] then
               error("Dictionary not found: "..root)
@@ -503,6 +491,6 @@ Given("decode dictionary path '' as ''", function(path,enc)
               error("Not a dictionary: "..root)
           end
           if not CODEC[root].mask then CODEC[root].mask = { } end
-          _mask_set(CODEC[root].mask, path_array, enc)
+          deepmask_set(CODEC[root].mask, path_array, enc)
           _deep_transform(ACK[root], path_array, enc)
 end)
