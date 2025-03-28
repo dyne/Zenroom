@@ -1463,3 +1463,41 @@ EOF
     save_output when_array_of_objects.out.json
     assert_output '{"array":[],"num_dic_1":{"string_1":"s_d_1","string_2":"s_d_2"},"string_1":"s_d_1"}'
 }
+
+@test "count of a character in a string" {
+    cat <<EOF | save_asset when_count_char.data.json
+{
+	"new string": "we expetc three t",
+    "to count": "t"
+}
+EOF
+    cat <<EOF | zexe when_count_char.zen when_count_char.data.json
+Given I have a 'string' named 'new string'
+Given I have a 'string' named 'to count'
+
+#count the number of occurence of "to count" contained in "new string"
+When I create count of char 'to count' found in 'new string'
+
+Then print data
+EOF
+    save_output when_count_char.out.json
+    assert_output '{"count":3,"new_string":"we expetc three t","to_count":"t"}'
+}  
+
+
+@test "create a new dictionary" {
+
+    cat <<EOF | zexe when_create_dict.zen
+Given nothing
+
+#create an empty dictionary named "new dictionary"
+When I create new dictionary
+
+#create e named a new empty dictionary
+When I create new dictionary named 'an empty dictionary'
+
+Then print data
+EOF
+    save_output when_create_dict.out.json
+    assert_output '{"an_empty_dictionary":[],"new_dictionary":[]}'
+}
