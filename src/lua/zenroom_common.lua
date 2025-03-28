@@ -240,6 +240,9 @@ local function _deepmask(fun, t, mask)
     if luatype(fun) ~= 'function' then
         error("Internal error: deepmask 1st argument is not a function", 3)
     end
+    if not mask then
+        error("Internal error: deepmask 3rd argument is nil", 2)
+    end
     if luatype(t) ~= 'table' then
         error("Internal error: deepmask 2nd argument is not a table", 3)
     end
@@ -248,17 +251,31 @@ local function _deepmask(fun, t, mask)
     end
     local res = {}
     for k, v in pairs(t) do
-        if luatype(v) == 'table' then
-            local submask = mask and mask[k]
-            res[k] = _deepmask(fun, v, submask)
-        else
-            if mask and mask[k] then
-                local encoder <const> = get_encoding_function(mask[k])
-                res[k] = encoder(v, k)
-            else
-                res[k] = fun(v, k)
-            end
+        local maskp <const> = mask[k]
+        if not maskp then
+            res[k] = fun(v, k)
+            goto continue
         end
+        if luatype(v) == 'table' then
+            res[k] = _deepmask(fun, v, maskp)
+            goto continue
+        end
+        if not maskp then
+            res[k] = fun(v, k)
+            goto continue
+        end
+        local encoder
+        if luatype(maskp) == 'function' then
+            encoder = maskp
+        else
+            encoder = get_encoding_function(maskp)
+        end
+        if not encoder then
+            error("Invalid encoding found in "..k
+                  ..": "..encoder,2)
+        end
+        res[k] = encoder(v, k)
+        ::continue::
     end
     return setmetatable(res, getmetatable(t))
 end
