@@ -2,6 +2,6 @@
 	"new string 1": "string without spaces",
     "new string 2": "string \nall \nin \na \nline",
     "new string 3": "a character have to be erase",
-    "new string 4": "a \b c d e \f g h i j k l m \n o p q \r s \t u v w x y z",
+    "new string 4": "\\a \b c d e \f g h i j k l m \n o p q \r s \t u \\v w x y z",
     "to remove": "a"
 }
