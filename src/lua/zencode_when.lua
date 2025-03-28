@@ -450,7 +450,7 @@ When("remove newlines in ''", function(target)
     ACK[target] = src:octet():rmchar( O.from_hex('0A') )
 end)
 
-When("remove all occurrences of character '' in ''",
+When("remove occurrences of character '' in ''",
      function(char, target)
     local src = have(target)
     local ch = have(char)
