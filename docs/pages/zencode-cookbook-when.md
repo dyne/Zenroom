@@ -486,9 +486,19 @@ will give the output
 
 ### Count character occurrences
 
-```gherkin
-When I create count of char '' found in ''
-```
+This command allows to count the occurence of a specified character in a given string creting a new data number type named "count".
+Given the following data
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_count_char.data.json ':include :type=code json')
+
+the codes
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_count_char.zen ':include :type=code gherkin')
+
+will give the output
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_count_char.out.json ':include :type=code json')
+
 
 ## Table operations statements
 
@@ -607,10 +617,16 @@ When I create '' from '' in ''
 ### Only dictionary statements
 
 #### create
-```gherkin
-When I create new dictionary
-When I create new dictionary named ''
-```
+
+The following commands allow to create a new empty dictionary.
+
+Runnig the following code
+[](../_media/examples/zencode_cookbook/cookbook_when/when_create_dict.zen ':include :type=code gherkin')
+
+the output will be 
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_create_dict.out.json ':include :type=code json')
+
 
 #### math ops (?)
 ```gherkin
