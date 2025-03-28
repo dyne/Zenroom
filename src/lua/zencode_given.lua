@@ -464,7 +464,7 @@ local function _mask_set(t, path, value)
     return t
 end
 
-local function _deep_transform(t, path, codec)
+local function _deep_transform(t, path, enc)
     local current = t
     local nump <const> = #path
     for i = 1, nump - 1 do
@@ -477,12 +477,15 @@ local function _deep_transform(t, path, codec)
     local final_key = path[nump]
     if current[final_key] ~= nil then
         local val <const> = OCTET.to_string(current[final_key])
-        if codec.check then
-            if not codec.check(val) then
-                error("Incorrect encoding in "..path[1]..": key '"..final_key.."' is not a "..codec.encoding,2)
+        local enc_t <const> = input_encoding(enc)
+        if enc_t.check then
+            if not enc_t.check(val) then
+                error("Incorrect encoding in "..path[1]
+                      ..": key '"..final_key
+                      .."' is not a "..enc_t.encoding,2)
             end
         end
-        current[final_key] = codec.fun(val)
+        current[final_key] = enc_t.fun(val)
         return true  -- Success
     end
     error("Final key not found: "..final_key,2)
@@ -500,6 +503,6 @@ Given("decode dictionary path '' as ''", function(path,enc)
               error("Not a dictionary: "..root)
           end
           if not CODEC[root].mask then CODEC[root].mask = { } end
-          _mask_set(CODEC[root].mask, path_array, get_encoding_function(enc))
-          _deep_transform(ACK[root], path_array, I.spy(input_encoding(enc)))
+          _mask_set(CODEC[root].mask, path_array, enc)
+          _deep_transform(ACK[root], path_array, enc)
 end)
