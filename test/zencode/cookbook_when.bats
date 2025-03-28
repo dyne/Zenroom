@@ -1328,7 +1328,7 @@ EOF
 	"new string 1": "string without spaces",
     "new string 2": "string \nall \nin \na \nline",
     "new string 3": "a character have to be erase",
-    "new string 4": "a \b c d e \f g h i j k l m \n o p q \r s \t u v w x y z",
+    "new string 4": "\\\\a \b c d e \f g h i j k l m \n o p q \r s \t u \\\\v w x y z",
     "to remove": "a"
 }
 EOF
@@ -1345,14 +1345,18 @@ When I remove spaces in 'new string 1'
 #removes all newlines from a string
 When I remove newlines in 'new string 2'
 
-#remove spaces ad letters b, f, n, r, t 
+#remove all the occurence of character "a" in the string "new string 3"
+When I remove all occurrences of character 'to remove' in 'new string 3'
+
+#remove spaces ad letters a, b, f, n, r, t, v 
 When I compact ascii strings in 'new string 4'
 
 Then print data
+
 EOF
     save_output when_remove_char.out.json
-    assert_output '{"new_string_1":"stringwithoutspaces","new_string_2":"string all in a line","new_string_3":"a character have to be erase","new_string_4":"acdeghijklmopqsuvwxyz","to_remove":"a"}'
-}
+    assert_output '{"new_string_1":"stringwithoutspaces","new_string_2":"string all in a line","new_string_3":" chrcter hve to be erse","new_string_4":"cdeghijklmopqsuwxyz","to_remove":"a"}'
+}   
 
 @test "array: creation" {
     cat <<EOF | zexe when_array_create.zen 

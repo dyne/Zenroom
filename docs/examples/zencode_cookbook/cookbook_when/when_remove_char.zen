@@ -10,7 +10,11 @@ When I remove spaces in 'new string 1'
 #removes all newlines from a string
 When I remove newlines in 'new string 2'
 
-#remove space ad letters b, f, n, r, t 
+#remove all the occurence of character "a" in the string "new string 3"
+When I remove all occurrences of character 'to remove' in 'new string 3'
+
+#remove spaces ad letters a, b, f, n, r, t, v 
 When I compact ascii strings in 'new string 4'
 
 Then print data
+

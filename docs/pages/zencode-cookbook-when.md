@@ -470,7 +470,7 @@ the output will be
 ### Remove characters
 
 The following function allow to remove specific charaters from a string.
-The third function allows to remove from a string all spaces and the characters b, f, n, r, t if preceded by "\"
+The fourth function allows to remove from a string all spaces and the characters b, f, n, r, t if preceded by "\". If it wants to remove the charatcer a or v, a double "\" is to put before these characters.
 Given the following strings of data
 
 [](../_media/examples/zencode_cookbook/cookbook_when/when_remove_char.data.json ':include :type=code json')
@@ -483,12 +483,6 @@ will give the output
 
 [](../_media/examples/zencode_cookbook/cookbook_when/when_remove_char.out.json ':include :type=code json')
 
-
-```gherkin
-#could be a bug here?
-When I remove all occurrences of character '' in ''
-
-```
 
 ### Count character occurrences
 
