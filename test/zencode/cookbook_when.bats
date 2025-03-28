@@ -1353,3 +1353,109 @@ EOF
     save_output when_remove_char.out.json
     assert_output '{"new_string_1":"stringwithoutspaces","new_string_2":"string all in a line","new_string_3":"a character have to be erase","new_string_4":"acdeghijklmopqsuvwxyz","to_remove":"a"}'
 }
+
+@test "array: creation" {
+    cat <<EOF | zexe when_array_create.zen 
+Given nothing
+#create a new empty array called "new_array"
+When I create the new array
+
+Then print the data
+EOF
+    save_output when_array_create.out.json
+    assert_output '{"new_array":[]}'
+}
+
+@test "array: insert" {
+    cat <<EOF | save_asset when_array_insert.data.json
+{
+	"new_array": []
+}
+EOF
+    cat <<EOF | zexe when_array_insert.zen when_array_insert.data.json
+Given I have a 'string array' named 'new_array'
+#insert a string into an array
+When I insert string 'string_in_array' in 'new_array'
+#insert 'true' into an array
+When I insert true in 'new_array'
+#insert 'false' into an array
+When I insert false in 'new_array'
+
+Then print the data
+EOF
+    save_output when_array_insert.out.json
+    assert_output '{"new_array":["string_in_array",true,false]}'
+}
+
+@test "array: math ops" {
+    cat <<EOF | save_asset when_array_math.data.json
+{"num_array":[23,134,323,758,13]}
+EOF
+    cat <<EOF | zexe when_array_math.zen when_array_math.data.json
+Given I have a 'number array' named 'num_array'
+
+When I create sum value of elements in array 'num_array'
+# equal to `When I create aggregation of array ''`
+When I create average of elements in array 'num_array'
+When I create variance of elements in array 'num_array'
+When I create standard deviation of elements in array 'num_array'
+
+Then print the 'sum value'
+Then print the 'average'  
+Then print the 'variance'
+Then print the 'standard deviation'
+EOF
+    save_output when_array_math.out.json
+    assert_output '{"average":"250","standard_deviation":"310","sum_value":1251,"variance":"96136"}'
+}
+
+@test "array: flat" {
+    cat <<EOF | save_asset when_array_flat.data.json
+{
+	"num_dic_1": {
+		"num_1": 23,
+		"num_2": 134
+	},
+	"num_dic_2": {
+		"num_3": 34,
+		"num_4": 234
+	}
+}
+EOF
+    cat <<EOF | zexe when_array_flat.zen when_array_flat.data.json
+Given I have a 'number dictionary' named 'num_dic_1'
+Given I have a 'number dictionary' named 'num_dic_2'
+
+When I create flat array of contents in 'num_dic_1'
+#move the 'flat_array' to 'flat_array_1' 
+When I move 'flat_array' to 'flat_array_1'
+#save keys of 'num_array_2' in 'flat_array' 
+When I create flat array of keys in 'num_dic_2'
+
+Then print the data
+EOF
+    save_output when_array_flat.out.json
+    assert_output '{"flat_array":["num_3","num_4"],"flat_array_1":[23,134],"num_dic_1":{"num_1":23,"num_2":134},"num_dic_2":{"num_3":34,"num_4":234}}'
+}
+
+@test "array: of object" {
+    cat <<EOF | save_asset when_array_of_objects.data.json
+{
+	"num_dic_1": {
+		"string_1": "s_d_1",
+		"string_2": "s_d_2"
+	}
+}
+EOF
+    cat <<EOF | zexe when_array_of_objects.zen when_array_of_objects.data.json
+Given I have a 'string dictionary' named 'num_dic_1'
+Given I have a 'string' named 'string_1' in 'num_dic_1'
+
+When I create array of objects named by 'string_1' found in 'num_dic_1'
+#the output is correct?????
+
+Then print the data
+EOF
+    save_output when_array_of_objects.out.json
+    assert_output '{"array":[],"num_dic_1":{"string_1":"s_d_1","string_2":"s_d_2"},"string_1":"s_d_1"}'
+}

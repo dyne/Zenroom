@@ -1,0 +1,5 @@
+Given nothing
+#create a new empty array called "new_array"
+When I create the new array
+
+Then print the data

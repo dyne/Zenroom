@@ -552,36 +552,61 @@ the output will be the initial array without `0`.
 
 ### Only array statements
 
-#### create
-```gherkin
-When I create new array
-```
+The statements listed in this section can only be used with arrays.
 
-#### insert
-```gherkin
-When I insert string '' in ''
-When I insert true in ''
-When I insert false in ''
-```
+#### Create
 
-#### math ops
-```gherkin
-When I create sum value of elements in array ''
-# equal to `When I create aggregation of array ''`
-When I create average of elements in array ''
-When I create variance of elements in array ''
-When I create standard deviation of elements in array ''
-```
+It is possible to create an empty array called `new_array` by running the script below
 
-#### create flat array
-```gherkin
-When I create flat array of contents in ''
-When I create flat array of keys in ''
-```
+[](../_media/examples/zencode_cookbook/cookbook_when/when_array_create.zen ':include :type=code gherkin')
 
-#### particular stuff
+#### Insert
+
+It is possible to insert a string, true, or false into an array. For example, considering the array created in the previous statement, the script below will insert into the array `{"new_array":[]}` a string called `string_in_array`, `true` and `false`.
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_array_insert.zen ':include :type=code gherkin')
+
+
+#### Math operations
+
+By creating a number array, it is possible to perform various operations on its elements, such as summing all elements, calculating the average, standard deviation, and variance. Consider the array `{"num_array":[23,134,323,758,13]}` to be used as input for the following script
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_array_math.zen ':include :type=code gherkin')
+
+then the output will be `{"average": "250","standard_deviation": "310","sum_value": 1251,"variance": "96136"}`.
+
+
+#### Create flat array
+
+It is also possible to create a flat array using either the contents of a dictionary or its keys. For example, consider the following input
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_array_flat.data.json ':include :type=code json')
+
+and the following script
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_array_flat.zen ':include :type=code gherkin')
+
+then the output will be
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_array_flat.data.out.json ':include :type=code json')
+
+
+#### Particular stuff
+
+The input is 
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_array_of_objects.data.json ':include :type=code json')
+
+running the following script
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_array_of_objects.zen ':include :type=code gherkin')
+
+the output will be
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_array_of_objects.out.json ':include :type=code json')
+
+
 ```gherkin
-When I create array of objects named by '' found in ''
 When I create '' from '' in ''
 ```
 

@@ -1,0 +1,9 @@
+Given I have a 'string array' named 'new_array'
+#insert a string into an array
+When I insert string 'string_in_array' in 'new_array'
+#insert 'true' into an array
+When I insert true in 'new_array'
+#insert 'false' into an array
+When I insert false in 'new_array'
+
+Then print the data
