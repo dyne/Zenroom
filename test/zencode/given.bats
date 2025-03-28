@@ -627,7 +627,7 @@ EOF
     and I decode dictionary path 'custom.encoded' as 'base58'
     and I decode dictionary path 'custom.secret' as 'mnemonic'
     and I decode dictionary path 'custom.nested.crypto.iv' as 'hex'
-    and debug
+    and I decode dictionary path 'custom.nested.crypto.key' as 'base64'
     Then print 'custom'
 EOF
     save_output 'custom_dictionary_result.json'

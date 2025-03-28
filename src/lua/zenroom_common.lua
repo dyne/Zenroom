@@ -264,6 +264,19 @@ local function _deepmask(fun, t, mask)
 end
 _G['deepmask'] = _deepmask
 
+local function _mask_set(t, path, value)
+    local current = t
+    local nump <const> = #path
+    for i = 1, nump - 1 do
+        local key = path[i]
+        if not current[key] then current[key] = {} end
+        current = current[key]
+    end
+    current[path[nump]] = value
+    return t
+end
+_G['deepmask_set'] = _mask_set
+
 function isarray(obj)
     if not obj then
         warn("Argument of isarray() is nil")
