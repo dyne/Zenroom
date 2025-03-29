@@ -235,7 +235,7 @@ _G['deepsortmap'] = _deepsortmap
 
 -- function to be used when converting codecs with complex trees
 -- mask is a dictionary of functions to be applied in place
-local function _deepmask(fun, t, mask)
+local function _deepmask(fun, tdata, mask)
     local luatype = luatype
     if luatype(fun) ~= 'function' then
         error("Internal error: deepmask 1st argument is not a function", 3)
@@ -243,14 +243,14 @@ local function _deepmask(fun, t, mask)
     if not mask then
         error("Internal error: deepmask 3rd argument is nil", 2)
     end
-    if luatype(t) ~= 'table' then
+    if luatype(tdata) ~= 'table' then
         error("Internal error: deepmask 2nd argument is not a table", 3)
     end
     if mask and luatype(mask) ~= 'table' then
         error("Internal error: deepmask 3rd argument is not a table", 3)
     end
     local res = {}
-    for k, v in pairs(t) do
+    for k, v in pairs(tdata) do
         local maskp <const> = mask[k]
         if not maskp then
             res[k] = fun(v, k)
@@ -277,7 +277,7 @@ local function _deepmask(fun, t, mask)
         res[k] = encoder(v, k)
         ::continue::
     end
-    return setmetatable(res, getmetatable(t))
+    return setmetatable(res, getmetatable(tdata))
 end
 _G['deepmask'] = _deepmask
 
