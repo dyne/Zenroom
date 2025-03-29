@@ -1454,14 +1454,16 @@ EOF
     cat <<EOF | zexe when_array_of_objects.zen when_array_of_objects.data.json
 Given I have a 'string dictionary' named 'num_dic_1'
 Given I have a 'string' named 'string_1' in 'num_dic_1'
-
+#create an array with an element of the dictionary (CORRECT??)
 When I create array of objects named by 'string_1' found in 'num_dic_1'
-#the output is correct?????
+#create a string with an element of the dictionary
+When I create 'copied_string_2' from 'string_2' in 'num_dic_1'
 
-Then print the data
+Then print the 'array'
+Then print the 'copied_string_2'
 EOF
     save_output when_array_of_objects.out.json
-    assert_output '{"array":[],"num_dic_1":{"string_1":"s_d_1","string_2":"s_d_2"},"string_1":"s_d_1"}'
+    assert_output '{"array":[],"copied_string_2":"s_d_2"}'
 }
 
 @test "count of a character in a string" {
@@ -1485,15 +1487,14 @@ EOF
 }  
 
 
-@test "create a new dictionary" {
-
+@test "dictionary: create" {
     cat <<EOF | zexe when_create_dict.zen
 Given nothing
 
 #create an empty dictionary named "new dictionary"
 When I create new dictionary
 
-#create e named a new empty dictionary
+#create and named a new empty dictionary
 When I create new dictionary named 'an empty dictionary'
 
 Then print data
@@ -1501,3 +1502,140 @@ EOF
     save_output when_create_dict.out.json
     assert_output '{"an_empty_dictionary":[],"new_dictionary":[]}'
 }
+
+@test "dictionary: math operations" {
+    cat <<EOF | save_asset when_dict_ops.data.json
+{
+	"dic": {
+		"dic_1": {
+			"num_1": 12,
+			"num_2": 34
+		},
+		"dic_2": {
+			"num_1": 54,
+			"num_2": 67
+		},
+		"dic_3": {
+			"num_1": 32,
+			"num_2": 22
+		}
+	},
+	"num_3": 12
+}
+EOF
+    cat <<EOF | zexe when_dict_ops.zen when_dict_ops.data.json
+Given I have a 'string dictionary' named 'dic'
+Given I have a 'number' named 'num_3'
+
+#find the max valu of num_1 in all the dictionaries in dic
+When I find max value 'num_1' for dictionaries in 'dic'
+#find the min valu of num_2 in all the dictionaries in dic
+When I find min value 'num_2' for dictionaries in 'dic'
+#sum all the values of num_1 in all the dictionaries
+When I create sum value 'num_1' for dictionaries in 'dic'
+When I move 'sum_value' to 'sum_num_1'
+#sum all the values of num_2 in the dictionaries where num_1 > num_3
+#POSSIBLE BUG: no element of a dictionaries in the second argument of >
+When I create sum value 'num_2' for dictionaries in 'dic' where 'num_1' > 'num_3'
+#find num_2 in the dctionary where num_1 = num_3
+When I find 'num_2' for dictionaries in 'dic' where 'num_1' = 'num_3'
+
+Then print the data
+EOF
+    save_output when_dict_ops.out.json
+    assert_output '{"dic":{"dic_1":{"num_1":12,"num_2":34},"dic_2":{"num_1":54,"num_2":67},"dic_3":{"num_1":32,"num_2":22}},"max_value":54,"min_value":22,"num_2":[34],"num_3":12,"sum_num_1":98,"sum_value":89}'
+}  
+
+@test "dictionary: filter" {
+    cat <<EOF | save_asset when_dict_filter.data.json
+{
+	"dic": {
+		"dic_1": {
+			"num_1": 12,
+			"num_2": 34
+		},
+		"dic_2": {
+			"num_1": 54,
+			"num_2": 67
+		},
+		"dic_3": {
+			"num_1": 32,
+			"num_2": 22
+		}
+	},
+	"num_array": [
+		"num_2"
+	]
+}
+EOF
+    cat <<EOF | zexe when_dict_filter.zen when_dict_filter.data.json
+Given I have a 'string dictionary' named 'dic'
+Given I have a 'string array' named 'num_array'
+
+When I filter 'num_array' fields from 'dic'
+
+Then print the data
+EOF
+    save_output when_dict_filter.out.json
+    assert_output '{"dic":{"dic_1":{"num_2":34},"dic_2":{"num_2":67},"dic_3":{"num_2":22}},"num_array":["num_2"]}'
+}
+
+@test "dictionary: append" {
+    cat <<EOF | save_asset when_dict_append.data.json
+{
+	"dic": {
+		"dic_1": {
+			"string_1": "string_dic1_1",
+			"string_2": "string_dic1_2"
+		},
+		"dic_2": {
+			"string_1": "string_dic2_1",
+			"string_2": "string_dic2_2"
+		},
+		"dic_3": {
+			"string_1": "string_dic3_1",
+			"string_2": "string_dic3_2"
+		}
+	}
+}
+EOF
+    cat <<EOF | zexe when_dict_append.zen when_dict_append.data.json
+Given I have a 'string dictionary' named 'dic'
+#IMPORTANT: Both the first and second objects must be present in all dictionaries.
+When I for each dictionary in 'dic' append 'string_1' to 'string_2'
+
+Then print the data
+EOF
+    save_output when_dict_append.out.json
+    assert_output '{"dic":{"dic_1":{"string_1":"string_dic1_1","string_2":"string_dic1_2string_dic1_1"},"dic_2":{"string_1":"string_dic2_1","string_2":"string_dic2_2string_dic2_1"},"dic_3":{"string_1":"string_dic3_1","string_2":"string_dic3_2string_dic3_1"}}}'
+}
+
+@test "dictionary: array" {
+    cat <<EOF | save_asset when_dict_append.data.json
+{
+	"dic": {
+		"dic_1": {
+			"string_1": "string_dic1_1",
+			"string_2": "string_dic1_2"
+		},
+		"dic_2": {
+			"string_1": "string_dic2_1",
+			"string_2": "string_dic2_2"
+		},
+		"dic_3": {
+			"string_1": "string_dic3_1",
+			"string_2": "string_dic3_2"
+		}
+	}
+}
+EOF
+    cat <<EOF | zexe when_dict_array.zen when_dict_append.data.json
+Given I have a 'string dictionary' named 'dic'
+
+When I create array of elements named 'string_1' for dictionaries in 'dic'
+
+Then print the 'array'
+EOF
+    save_output when_dict_array.out.json
+    assert_output '{"array":["string_dic1_1","string_dic2_1","string_dic3_1"]}'
+}    

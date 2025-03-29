@@ -1,7 +1,9 @@
 Given I have a 'string dictionary' named 'num_dic_1'
 Given I have a 'string' named 'string_1' in 'num_dic_1'
-
+#create an array with an element of the dictionary (CORRECT??)
 When I create array of objects named by 'string_1' found in 'num_dic_1'
-#the output is correct?????
+#create a string with an element of the dictionary
+When I create 'copied_string_2' from 'string_2' in 'num_dic_1'
 
-Then print the data
+Then print the 'array'
+Then print the 'copied_string_2'
