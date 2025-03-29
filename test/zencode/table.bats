@@ -105,3 +105,50 @@ EOF
     run $ZENROOM_EXECUTABLE -z -a pointer_fails.data pointer_fails_dict.zen
     assert_line --partial 'Cannot find not a dict key in pointer'
 }
+
+@test "move and copy statements" {
+    cat <<EOF | save_asset move_and_copy_statements.data.json
+{
+    "my_dict": {
+        "str": "hello"
+    },
+	"keyring": {
+		"eddsa": "Cwj9CcqHNoBnXBo8iDfnhFkQeDun4Y4LStd2m3TEAYAg",
+        "ecdh": "yxL8P0pLHxsl3m8Nt6m9Zm0wSMzrWlD0JTAWlaheQg4="
+	},
+	"to_be_signed": "some data to be signed",
+    "base64_string": "aGVsbG8gbXkgZnJpZW5k"
+}
+EOF
+    cat <<EOF | zexe move_and_copy_statements.zen move_and_copy_statements.data.json
+Scenario 'eddsa': sign
+Scenario 'ecdh': sign
+Given I have a 'keyring'
+and I have a 'base64' named 'base64_string'
+and I have a 'string' named 'to_be_signed'
+and I have a 'string dictionary' named 'my_dict'
+
+# sign
+When I create the eddsa signature of 'to_be_signed'
+and I create the ecdh signature of 'to_be_signed'
+
+# copy
+When I copy 'my_dict' to 'result_copy'
+and I copy 'to_be_signed' to 'signed' in 'result_copy'
+and I copy 'eddsa signature' as 'base58' in 'result_copy'
+and I copy 'ecdh signature' as 'ecdh_signature' in 'result_copy'
+and I copy 'base64_string' as 'string' in 'result_copy'
+
+# move statement
+When I rename 'my_dict' to 'result_move'
+and I move 'to_be_signed' to 'signed' in 'result_move'
+and I move 'eddsa signature' as 'base58' in 'result_move'
+and I move 'ecdh signature' as 'ecdh_signature' in 'result_move'
+and I move 'base64_string' as 'string' in 'result_move'
+
+Then print the 'result_copy'
+Then print the 'result_move'
+EOF
+    save_output move_and_copy_statements.out.json
+    assert_output '{"result_copy":{"base64_string":"hello my friend","ecdh_signature":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"vUljXtnKkBqle/Ik7y3GfMa1o3wEIi4lRC+b/KmVbaI="},"eddsa_signature":"2iSCa9YxtYTQtmcUHHKsYZXVsqnSWSa7E2skWZqN4EdY8wBX9UuBgCYx7Np3hJmDVQ2NiHSebLHmz5BGH3cuZ4um","signed":"some data to be signed","str":"hello"},"result_move":{"base64_string":"hello my friend","ecdh_signature":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"vUljXtnKkBqle/Ik7y3GfMa1o3wEIi4lRC+b/KmVbaI="},"eddsa_signature":"2iSCa9YxtYTQtmcUHHKsYZXVsqnSWSa7E2skWZqN4EdY8wBX9UuBgCYx7Np3hJmDVQ2NiHSebLHmz5BGH3cuZ4um","signed":"some data to be signed","str":"hello"}}'
+}
