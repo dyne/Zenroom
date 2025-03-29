@@ -341,11 +341,11 @@ void zen_teardown(zenroom_t *ZZ) {
 #ifdef PROFILING
 	if(ZMM) {
 		sfpool_t *p = (sfpool_t*)ZMM;
-		act(ZZ->lua,"🌊 sfpool init: %u blocks %u B each",
+		func(ZZ->lua,"🌊 sfpool init: %u blocks %u B each",
 			p->total_blocks, p->block_size);
-		act(ZZ->lua,"🌊 total alloc: %lu K",p->alloc_total/1024);
-		act(ZZ->lua,"🌊 sfpool miss: %u - %lu K",p->miss_total,p->miss_bytes/1024);
-		act(ZZ->lua,"🌊 sfpool hits: %u - %lu K",p->hits_total,p->hits_bytes/1024);
+		func(ZZ->lua,"🌊 total alloc: %lu K",p->alloc_total/1024);
+		func(ZZ->lua,"🌊 sfpool miss: %u - %lu K",p->miss_total,p->miss_bytes/1024);
+		func(ZZ->lua,"🌊 sfpool hits: %u - %lu K",p->hits_total,p->hits_bytes/1024);
 	}
 #endif
 
