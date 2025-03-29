@@ -56,14 +56,16 @@ end
 When("create new dictionary", function()
 		empty'new dictionary'
 		ACK.new_dictionary = { }
-		new_codec('new dictionary', { zentype = 'd' })
+		new_codec('new dictionary', { zentype = 'd',
+                                      encoding = 'string'})
 end)
 
 
 When("create new dictionary named ''", function(name)
 		empty(name)
 		ACK[name] = { }
-		new_codec(name, { zentype = 'd' })
+		new_codec(name, { zentype = 'd',
+                          encoding = 'string'})
 end)
 
 When("create array of elements named '' for dictionaries in ''",
@@ -248,6 +250,7 @@ local function create_copy_f(root, in1, in2)
         n_codec.schema = r_codec.schema
         n_codec.zentype = "e"
     end
+    n_codec.mask = r_codec.mask -- encoding mask if not nil
 	new_codec('copy', n_codec)
 	CODEC['copy'].name = in2 or in1
 end
