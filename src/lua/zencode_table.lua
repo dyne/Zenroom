@@ -21,14 +21,14 @@
 --]]
 
 local function move_or_copy_in(src_value, src_name, dest, new, enc)
-    local d, cdest = have(dest)
+    local d, cdest <const> = have(dest)
     if luatype(d) ~= 'table' then error("Object is not a table: "..dest, 2) end
-    local new_name = new or src_name
+    local new_name <const> = new or src_name
     if enc then
         src_value = apply_encoding(src_name, enc, cdest.encoding)
     end
     if cdest.zentype == 'e' and cdest.schema then
-        local sdest = ZEN.schemas[cdest.schema]
+        local sdest <const> = ZEN.schemas[cdest.schema]
         if luatype(sdest) ~= 'table' then -- old schema types are not open
             error("Schema is not open to accept extra objects: "..dest, 2)
         elseif not sdest.schematype or sdest.schematype ~= 'open' then
@@ -255,12 +255,12 @@ end)
 
 local function take_out_f(path, dest, format)
     if dest then path = path..CONF.path.separator..dest end
-    local ele, dest = pick_from_path(path)
+    local ele <const>, dest <const> = pick_from_path(path)
     ACK[dest] = ele
     if format then
         new_codec(dest, guess_conversion(ACK[dest], format))
     else
-        local root = strtok(uscore(path), CONF.path.separator)[1]
+        local root <const> = strtok(uscore(path), CONF.path.separator)[1]
         new_codec(dest, { encoding = CODEC[root].encoding })
     end
 end
