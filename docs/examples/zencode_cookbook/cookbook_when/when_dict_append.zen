@@ -1,0 +1,5 @@
+Given I have a 'string dictionary' named 'dic'
+#IMPORTANT: Both the first and second objects must be present in all dictionaries.
+When I for each dictionary in 'dic' append 'string_1' to 'string_2'
+
+Then print the data

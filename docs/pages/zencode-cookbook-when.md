@@ -592,12 +592,67 @@ and the following script
 
 then the output will be
 
-[](../_media/examples/zencode_cookbook/cookbook_when/when_array_flat.data.out.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/cookbook_when/when_array_flat.out.json ':include :type=code json')
 
+
+### Only dictionary statements
+
+#### Create
+
+The following commands allow to create a new empty dictionary.
+
+Runnig the following code
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_create_dict.zen ':include :type=code gherkin')
+
+the output will be 
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_create_dict.out.json ':include :type=code json')
+
+
+#### Math operations
+
+It is also possible to perform operations with elements in dictionaries, even considering that these elements meet certain conditions. Take the following input as an example
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_dict_ops.data.json ':include :type=code json')
+
+and the following script
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_dict_ops.zen ':include :type=code gherkin')
+
+the the output will be 
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_dict_ops.out.json ':include :type=code json')
+
+#### Filter fields
+
+It is also possible to filter certain elements in dictionaries, provided they are contained in an array. Let's consider an input very similar to that of the previous statement
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_dict_filter.data.json ':include :type=code json')
+
+and the following script
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_dict_filter.zen ':include :type=code gherkin')
+
+the the output will be 
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_dict_filter.out.json ':include :type=code json')
 
 #### Particular stuff
 
-The input is 
+There is a specific statement that allows appending objects to other objects, provided that both are present in all the considered dictionaries. Consider the following input as an example
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_dict_append.data.json ':include :type=code json')
+
+and the following script
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_dict_append.zen ':include :type=code gherkin')
+
+the the output will be 
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_dict_append.out.json ':include :type=code json')
+
+There is another special statements that allow creating objects containing elements from a dictionary. Consider the following input
 
 [](../_media/examples/zencode_cookbook/cookbook_when/when_array_of_objects.data.json ':include :type=code json')
 
@@ -609,49 +664,16 @@ the output will be
 
 [](../_media/examples/zencode_cookbook/cookbook_when/when_array_of_objects.out.json ':include :type=code json')
 
+#### Array of objects from dictionaries
 
-```gherkin
-When I create '' from '' in ''
-```
+A final statement for a dictionary is the ability to create an array with objects having the same name but present in different dictionaries. Consider the input of the previous example and running the following script
 
-### Only dictionary statements
+[](../_media/examples/zencode_cookbook/cookbook_when/when_dict_array.zen ':include :type=code gherkin')
 
-#### create
+the output will be
 
-The following commands allow to create a new empty dictionary.
+[](../_media/examples/zencode_cookbook/cookbook_when/when_dict_array.out.json ':include :type=code json')
 
-Runnig the following code
-[](../_media/examples/zencode_cookbook/cookbook_when/when_create_dict.zen ':include :type=code gherkin')
-
-the output will be 
-
-[](../_media/examples/zencode_cookbook/cookbook_when/when_create_dict.out.json ':include :type=code json')
-
-
-#### math ops (?)
-```gherkin
-When I find max value '' for dictionaries in ''
-When I find min value '' for dictionaries in ''
-When I create sum value '' for dictionaries in ''
-When I create sum value '' for dictionaries in '' where '' > ''
-When I find '' for dictionaries in '' where '' = ''
-```
-
-#### filter fields
-```gherkin
-When I filter '' fields from ''
-```
-
-#### particular stuff
-```gherkin
-When I for each dictionary in '' append '' to ''
-```
-#### idk
-
-maybe deprecable using nested foreach?
-```gherkin
-When I create array of elements named '' for dictionaries in ''
-```
 
 ## Throw an error
 
