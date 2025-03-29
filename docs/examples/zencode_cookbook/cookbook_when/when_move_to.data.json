@@ -1,0 +1,10 @@
+{
+	"dictionary1": {
+		"key 1": "value 1",
+		"key 2": "value 2"
+	},
+    "array": [
+        "str1",
+        "str2"
+    ]
+}

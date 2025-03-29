@@ -1,0 +1,10 @@
+Given I have a 'string dictionary' named 'dictionary1'
+Given I have a 'string dictionary' named 'dictionary2'
+
+#move key 3 from dictionary2 and add it in dictionary1
+When I move 'key 3' from 'dictionary2' in 'dictionary1'
+
+#take key 1 from dictionary1 and add a string named 'from key 1' in data.
+When I move 'key 1' from 'dictionary1' to 'from key 1'
+
+Then print the data

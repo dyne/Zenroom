@@ -1,0 +1,6 @@
+Given I have a 'string dictionary' named 'dic'
+Given I have a 'string array' named 'num_array'
+
+When I filter 'num_array' fields from 'dic'
+
+Then print the data

@@ -1,0 +1,7 @@
+Given I have a 'string' named 'new string'
+Given I have a 'string' named 'to count'
+
+#count the number of occurence of "to count" contained in "new string"
+When I create count of char 'to count' found in 'new string'
+
+Then print data

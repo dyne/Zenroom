@@ -1,0 +1,16 @@
+{
+	"dic": {
+		"dic_1": {
+			"string_1": "string_dic1_1",
+			"string_2": "string_dic1_2"
+		},
+		"dic_2": {
+			"string_1": "string_dic2_1",
+			"string_2": "string_dic2_2"
+		},
+		"dic_3": {
+			"string_1": "string_dic3_1",
+			"string_2": "string_dic3_2"
+		}
+	}
+}

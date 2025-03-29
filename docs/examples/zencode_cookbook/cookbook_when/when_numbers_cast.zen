@@ -1,0 +1,10 @@
+Given I have a 'string' named 'number'
+
+#casting a string into float
+When I create 'float' cast of strings in 'number'
+#casting a string into integer
+When I create 'integer' cast of strings in 'number'
+#casting an integer into a float
+When I create float 'f' cast of integer in 'integer'
+
+Then print the data

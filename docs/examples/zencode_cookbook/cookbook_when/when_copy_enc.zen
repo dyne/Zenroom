@@ -1,0 +1,8 @@
+Given I have a 'string dictionary' named 'dictionary_1'
+Given I have a 'string' named 'string_1'
+
+# copy changing encoding
+When I copy 'string_1' as 'hex' in 'dictionary_1'
+When I copy 'string_1' as 'bin' to 'string_copied'
+
+Then print all data

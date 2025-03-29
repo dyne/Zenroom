@@ -1,0 +1,10 @@
+Given nothing
+
+#create a string "is new" and label it as "new string"
+When I write string 'is new' in 'new string'
+
+#create a string "is new" and label it as "newer string"
+When I set 'newer string' to 'is newer' as 'string'
+
+Then print data
+

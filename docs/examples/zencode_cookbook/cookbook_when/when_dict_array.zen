@@ -1,0 +1,5 @@
+Given I have a 'string dictionary' named 'dic'
+
+When I create array of elements named 'string_1' for dictionaries in 'dic'
+
+Then print the 'array'

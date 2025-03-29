@@ -1,0 +1,17 @@
+{
+	"dictionary1": {
+		"key 1": "value 1",
+		"key 2": "value 2"
+	},
+	"dictionary2": {
+		"key 3": "value 3"
+	},
+	"array1": [
+		"str1",
+		"str2"
+	],
+    "array2": [
+		"str3"
+	],
+    "string": "a_string"
+}

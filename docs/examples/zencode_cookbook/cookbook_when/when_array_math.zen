@@ -1,0 +1,12 @@
+Given I have a 'number array' named 'num_array'
+
+When I create sum value of elements in array 'num_array'
+# equal to 
+When I create average of elements in array 'num_array'
+When I create variance of elements in array 'num_array'
+When I create standard deviation of elements in array 'num_array'
+
+Then print the 'sum value'
+Then print the 'average'  
+Then print the 'variance'
+Then print the 'standard deviation'

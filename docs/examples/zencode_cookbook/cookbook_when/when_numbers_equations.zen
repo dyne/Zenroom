@@ -1,0 +1,8 @@
+Given I have a 'number' named 'a'
+Given I have a 'number' named 'b'
+
+When I create the result of '-a * b * ( b - a )'
+#save the result in expr
+and I rename 'result' to 'expr'
+
+Then print 'expr'

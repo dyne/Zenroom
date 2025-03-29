@@ -1,0 +1,10 @@
+Given I have a 'number dictionary' named 'num_dic_1'
+Given I have a 'number dictionary' named 'num_dic_2'
+
+When I create flat array of contents in 'num_dic_1'
+#move the 'flat_array' to 'flat_array_1' 
+When I move 'flat_array' to 'flat_array_1'
+#save keys of 'num_array_2' in 'flat_array' 
+When I create flat array of keys in 'num_dic_2'
+
+Then print the data

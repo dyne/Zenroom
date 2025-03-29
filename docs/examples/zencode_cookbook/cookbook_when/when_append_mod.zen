@@ -1,0 +1,7 @@
+Given I have a 'string' named 'new string'
+Given I have a 'string' named 'to append'
+
+#append to the content of "new string" the hexadecimal codification of the the content of "to append"
+When I append 'hex' of 'to append' to 'new string' 
+
+Then print 'new string'

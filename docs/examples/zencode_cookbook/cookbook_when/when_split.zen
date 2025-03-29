@@ -1,0 +1,9 @@
+Given I have a 'string' named 'string'
+
+#split the first 6 characters from the string 
+When I split leftmost '6' bytes of 'string'
+
+#split the final 9 characters from the string
+When I split rightmost '9' bytes of 'string'
+
+Then print 'string'

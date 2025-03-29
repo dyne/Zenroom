@@ -1,0 +1,10 @@
+Given I have a 'number' named 'a'
+Given I have a 'number' named 'b'
+Given I have a 'number' named 'c'
+
+When I verify number 'b' is less than 'a'
+When I verify number 'a' is more than 'b'
+When I verify number 'b' is less or equal than 'b'
+When I verify number 'a' is more or equal than 'c'
+
+Then print the string 'success'

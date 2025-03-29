@@ -1,0 +1,10 @@
+Given I have a 'string' named 'new string'
+Given I have a 'string' named 'to append'
+
+#append the content of "to append" and the end of the content of "new string"
+When I append 'to append' to 'new string'
+
+#append the content among '' to the content of "new string"
+When I append string '_complete' to 'new string'
+
+Then print 'new string'

@@ -1,0 +1,7 @@
+Given nothing
+
+When I create the 'string array' named 'array 1'
+When I create the 'string array' named 'array 2'
+
+Then print the 'array 1'
+Then print the 'array 2'

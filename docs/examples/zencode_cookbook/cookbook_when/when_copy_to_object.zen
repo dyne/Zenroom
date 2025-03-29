@@ -1,0 +1,16 @@
+Given I have 'string' named 'string_1'
+Given I have a 'string dictionary' named 'dictionary_1'
+Given I have a 'string dictionary' named 'dictionary_2'
+Given I have 'string' named 'string_4'
+
+# simple copy to
+When I copy 'string_1' to 'string_1_copied'
+
+# copy in object
+When I copy 'string_1' in 'dictionary_1'
+
+When I copy named by 'string_4' in 'dictionary_2'
+
+When I copy 'string_4' to 'string_4_copied' in 'dictionary_2'
+
+Then print all data
