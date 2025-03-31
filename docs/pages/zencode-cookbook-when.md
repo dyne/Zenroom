@@ -719,27 +719,48 @@ This way the multihash content will be usable in its pure binary form while bein
 When I create hash to point '' of ''
 ```
 
-### hmac
+### HMAC
 
-```gherkin
-When I create hmac of '' with key ''
-```
+HMAC (Hash-based Message Authentication Code) is a cryptographic mechanism that ensures message integrity and authenticity using a shared secret key and a cryptographic hash function (e.g., SHA-256). It combines the message with the key, hashes the result, and produces a fixed-size output. Consider the following input
 
-### kdf
+[](../_media/examples/zencode_cookbook/cookbook_when/when_hash_hmac.data.json ':include :type=code json')
 
-```gherkin
-When I create key derivation of ''
-When I create key derivations of each object in '' # maybe deprecable using foreach?
-```
+and the following script
 
-### pbkdf
+[](../_media/examples/zencode_cookbook/cookbook_when/when_hash_hmac.zen ':include :type=code gherkin')
 
-```gherkin
-When I create key derivation of '' with password ''
-When I create key derivation of '' with '' rounds
-When I create key derivation of '' with '' rounds with password ''
-```
+then the output will be
 
+[](../_media/examples/zencode_cookbook/cookbook_when/when_hash_hmac.out.json ':include :type=code json')
+
+### Key derivation function (KDF)
+
+It is possible to use this statement for both a single string and an object containing multiple strings. Consider the input 
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_hash_kdf.data.json ':include :type=code json')
+
+and the following script
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_hash_kdf.zen ':include :type=code gherkin')
+
+then the output will be
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_hash_kdf.out.json ':include :type=code json')
+
+
+### Password-Based Key Derivation Function (pbKDF) hashing
+
+This statement allows deriving a key by applying a hash function to a string, also using a password, iterating the process for multiple rounds, and combining the two previous points. Consider the following input
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_hash_pbkdf.data.json ':include :type=code json')
+
+and the following script
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_hash_pbkdf.zen ':include :type=code gherkin')
+
+then the output will be
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_hash_pbkdf.out.json ':include :type=code json')
 
 <!---
 ## Manipulation: sum/subtract, rename, remove, append...

@@ -1639,3 +1639,74 @@ EOF
     save_output when_dict_array.out.json
     assert_output '{"array":["string_dic1_1","string_dic2_1","string_dic3_1"]}'
 }    
+
+@test "hash: hmac" {
+    cat <<EOF | save_asset when_hash_hmac.data.json
+{
+	"string_for_hmac": "hash_me_to_HMAC",
+	"secret_key": "my_password"
+}
+EOF
+    cat <<EOF | zexe when_hash_hmac.zen when_hash_hmac.data.json
+Given I have a 'string' named 'string_for_hmac'
+Given I have a 'string' named 'secret_key'
+
+When I create hmac of 'string_for_hmac' with key 'secret_key'
+
+Then print the 'HMAC'
+EOF
+    save_output when_hash_hmac.out.json
+    assert_output '{"HMAC":"NN5eotJvxm5RcOiEXls8a7aD2HMxU0Na+Ah6ANKyOF8="}'
+}    
+
+@test "hash: kdf" {
+    cat <<EOF | save_asset when_hash_kdf.data.json
+{
+	"string": "string_for_kd",
+	"dic": {
+		"s_1": "string_1",
+		"s_2": "string_2",
+		"s_3": "string_3"
+	}
+}
+EOF
+    cat <<EOF | zexe when_hash_kdf.zen when_hash_kdf.data.json
+Given I have a 'string' named 'string'
+Given I have a 'string dictionary' named 'dic'
+
+When I create key derivation of 'string'
+When I move 'key_derivation' to 'key_derivation_string'
+When I create key derivations of each object in 'dic' 
+
+Then print the 'key_derivation_string'
+Then print the 'key_derivations'
+EOF
+    save_output when_hash_kdf.out.json
+    assert_output '{"key_derivation_string":"1aEoQudo5gbfTQ24/3V9UFLaaTpadhC7Ga5g2X1JvZo=","key_derivations":{"s_1":"wS1x9VHuK+aooKTsJ4s39nQEEEEsEDs+beBI6Gea/R4=","s_2":"LTGx1qxmde3N8kV38Mg8+4+nMky9BJYumUkEZrCvLvw=","s_3":"ndkeE/5LsH4R1rVaLGyVnu1ZaENsPduRS5J/EW/NB8U="}}'
+}  
+
+@test "hash: pbkdf" {
+    cat <<EOF | save_asset when_hash_pbkdf.data.json
+{
+	"string": "string_for_kdf",
+	"password": "my_password"
+}
+EOF
+    cat <<EOF | zexe when_hash_pbkdf.zen when_hash_pbkdf.data.json
+Given I have a 'string' named 'string'
+Given I have a 'string' named 'password'
+
+When I create key derivation of 'string' with password 'password'
+When I move 'key_derivation' to 'key_derivation_password'
+When I create key derivation of 'string' with '5' rounds
+When I move 'key_derivation' to 'key_derivation_with_5_rounds'
+When I create key derivation of 'string' with '5' rounds with password 'password'
+When I move 'key_derivation' to 'key_derivation_with_5_rounds_password'
+
+Then print the 'key_derivation_with_5_rounds_password'
+Then print the 'key_derivation_with_5_rounds'
+Then print the 'key_derivation_password'
+EOF
+    save_output when_hash_pbkdf.out.json
+    assert_output '{"key_derivation_password":"WDZs6aGmm/z7vlcMmuK1vtkhD+GvKxV4xpsNxmJN+Do=","key_derivation_with_5_rounds":"WW28N7j3pzryD2cyNzODqRSRybgBn5rARMfG/VWkIa8=","key_derivation_with_5_rounds_password":"POTUmmPWyv5355R0xYL0qbiYq0xI2H2L2nyUcl0Y36Y="}'
+}  
