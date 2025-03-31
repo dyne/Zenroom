@@ -244,12 +244,12 @@ Given nothing
 When I create the random '32 byte long random'
 
 # 1 byte (or 8 bits) long random
-When I create the random object of '8' bits
-When I rename the 'random object' to '1 byte long random'
+When I create the random of '8' bits
+When I rename the 'random' to '1 byte long random'
 
 # 2 bytes long random
-When I create the random object of '2' bytes
-When I rename the 'random object' to '2 bytes long random'
+When I create the random of '2' bytes
+When I rename the 'random' to '2 bytes long random'
 
 Then print the data
 ```
@@ -262,16 +262,16 @@ Why limit yourself to just one object? You can create arrays of random objects:
 Given nothing
 
 # array of 5 random objects, each 64 bytes long
-When I create the array of '5' random objects
-When I rename the 'array' to '5 64 bytes long randoms'
+When I create the random array with '5' elements
+When I rename the 'random array' to '5 64 bytes long randoms'
 
 # array of 6 random objects, each 1 byte (8 bits) long
-When I create the array of '6' random objects of '8' bits
-When I rename the 'array' to '6 1 bytes long randoms'
+When I create the random array of '6' elements each of '8' bits
+When I rename the 'random array' to '6 1 bytes long randoms'
 
 # array of 7 random objects, each 2 bytes long
-When I create the array of '6' random objects of '2' bytes
-When I rename the 'array' to '7 2 bytes long randoms'
+When I create the random array of '6' elements each of '2' bytes
+When I rename the 'random array' to '7 2 bytes long randoms'
 
 Then print the data
 ```
@@ -282,15 +282,17 @@ Need random numbers instead? Here's how:
 Given nothing
 
 # array of 5 random integers
-When I create the array of '5' random numbers
-When I rename the 'array' to '5 random numbers'
+When I create the random array of '5' numbers
+When I rename the 'random array' to '5 random numbers'
 
 # array of 5 random integers with a maximum value of 165165
-When I create the array of '5' random numbers modulo '165165'
-When I rename the 'array' to '5 random numbers modulo 165165'
+When I create the random array with '5' numbers modulo '165165'
+When I rename the 'random array' to '5 random numbers modulo 165165'
 
 Then print the data
 ```
+
+N.B. numbers can be replaced with integers to create big numbers.
 
 ### Randomize an array
 
@@ -330,8 +332,9 @@ The result will look something like this (actual order may vary):
 Zenroom also lets you pick random objects from a table:
 
 ```gherkin
-When I pick random object in ''
-When I create random dictionary with '' random objects from ''
+When I create random pick from ''
+When I create random array with '' elements from ''
+When I create random dictionary with '' elements from ''
 ```
 
 ## Numbers statements
