@@ -266,11 +266,11 @@ When I create the random array with '5' elements
 When I rename the 'random array' to '5 64 bytes long randoms'
 
 # array of 6 random objects, each 1 byte (8 bits) long
-When I create the random array of '6' elements each of '8' bits
+When I create the random array with '6' elements each of '8' bits
 When I rename the 'random array' to '6 1 bytes long randoms'
 
 # array of 7 random objects, each 2 bytes long
-When I create the random array of '6' elements each of '2' bytes
+When I create the random array with '6' elements each of '2' bytes
 When I rename the 'random array' to '7 2 bytes long randoms'
 
 Then print the data
@@ -282,12 +282,12 @@ Need random numbers instead? Here's how:
 Given nothing
 
 # array of 5 random integers
-When I create the random array of '5' numbers
+When I create the random array with '5' numbers
 When I rename the 'random array' to '5 random numbers'
 
-# array of 5 random integers with a maximum value of 165165
-When I create the random array with '5' numbers modulo '165165'
-When I rename the 'random array' to '5 random numbers modulo 165165'
+# array of 5 random integers with a maximum value of 16
+When I create the random array with '5' numbers modulo '16'
+When I rename the 'random array' to '5 random numbers modulo 16'
 
 Then print the data
 ```
@@ -324,7 +324,15 @@ Then I print the 'ordered'
 The result will look something like this (actual order may vary):
 
 ```json
-{}
+{
+   "ordered": [
+      "second",
+      "fourth",
+      "fiveth",
+      "third",
+      "first"
+   ]
+}
 ```
 
 ### Pick one or more random objects from a table
