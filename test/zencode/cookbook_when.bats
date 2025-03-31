@@ -1445,6 +1445,7 @@ EOF
 @test "array: of object" {
     cat <<EOF | save_asset when_array_of_objects.data.json
 {
+    "string": "string_1",
 	"num_dic_1": {
 		"string_1": "s_d_1",
 		"string_2": "s_d_2"
@@ -1453,17 +1454,17 @@ EOF
 EOF
     cat <<EOF | zexe when_array_of_objects.zen when_array_of_objects.data.json
 Given I have a 'string dictionary' named 'num_dic_1'
-Given I have a 'string' named 'string_1' in 'num_dic_1'
-#create an array with an element of the dictionary (CORRECT??)
-When I create array of objects named by 'string_1' found in 'num_dic_1'
-#create a string with an element of the dictionary
+Given I have a 'string' named 'string'
+# create an array with an element of the dictionary
+When I create array of objects named by 'string' found in 'num_dic_1'
+# create a string with an element of the dictionary
 When I create 'copied_string_2' from 'string_2' in 'num_dic_1'
 
 Then print the 'array'
 Then print the 'copied_string_2'
 EOF
     save_output when_array_of_objects.out.json
-    assert_output '{"array":[],"copied_string_2":"s_d_2"}'
+    assert_output '{"array":["s_d_1"],"copied_string_2":"s_d_2"}'
 }
 
 @test "count of a character in a string" {
