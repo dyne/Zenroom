@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 
 file(STRINGS "VERSION" VERSION_STRING)
 project(AMCL VERSION "${VERSION_STRING}" LANGUAGES C)
