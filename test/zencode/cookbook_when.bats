@@ -1727,3 +1727,87 @@ EOF
     assert_failure
     assert_line '[!] there is an error!'
 }  
+
+@test "random: create a random object" {
+    cat <<EOF | zexe when_random_object_create.zen
+Given nothing
+
+# 32 bytes long random
+When I create the random '32 byte long random'
+
+# 1 byte (or 8 bits) long random
+When I create the random of '8' bits
+When I rename the 'random' to '1 byte long random'
+
+# 2 bytes long random
+When I create the random of '2' bytes
+When I rename the 'random' to '2 bytes long random'
+
+Then print the data
+EOF
+    save_output "when_random_object_create.out.json"
+    assert_output '{"1_byte_long_random":"Vw==","2_bytes_long_random":"Ing=","32_byte_long_random":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="}'
+}  
+
+@test "random: create a random object of elements" {
+    cat <<EOF | zexe when_random_object_elements_create.zen
+Given nothing
+
+# array of 5 random objects, each 64 bytes long
+When I create the random array with '5' elements
+When I rename the 'random array' to '5 64 bytes long randoms'
+
+# array of 6 random objects, each 1 byte (8 bits) long
+When I create the random array with '6' elements each of '8' bits
+When I rename the 'random array' to '6 1 bytes long randoms'
+
+# array of 7 random objects, each 2 bytes long
+When I create the random array with '6' elements each of '2' bytes
+When I rename the 'random array' to '7 2 bytes long randoms'
+
+Then print the data
+EOF
+    save_output "when_random_object_elements_create.out.json"
+    assert_output '{"5_64_bytes_long_randoms":["XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyBXInjtofr6HKwW62EBkk/4vIXGZmzovnpG7Q/4mUJsOw==","5XsSIXmaZbf5ikQgMSVGjW6+YJofnEkTQL6HCgpgA9DpRqxzNEqaZ7xI5TB6VerbLl27jjwT4yzd0i+7NGdZAw==","DR92VSF2l3Az1K1+LyWO13Jk1eBPmuhhPT2NbpxGgsm9TJ9UwwwdVho7wTV5AQwLn3UCC8Sb/QLxe9aTB05SOQ==","5OZ3pH08vOIdcGfhzUUmQS0hxVuOU5edfnJt1ReFFJhVhVApkKf8ZB1H2a7qDLWiBLebMDGwjwtNCJZztD/alw==","kUmjtdzdkP7gLZAQ3Am4n1VQwGgLnEDImeDQ0F9OgBltaZkh6P3WfSBIPFd2LkXXGEvo1BlqnEwLrglTAQpWTQ=="],"6_1_bytes_long_randoms":["mw==","uw==","Zw==","ew==","Cw==","Rg=="],"7_2_bytes_long_randoms":["thk=","54c=","ojs=","8QQ=","b0I=","nZU="]}'
+}
+
+@test "random: create a random object of numbers" {
+    cat <<EOF | zexe when_random_object_numbers_create.zen
+Given nothing
+
+# array of 5 random integers
+When I create the random array with '5' numbers
+When I rename the 'random array' to '5 random numbers'
+
+# array of 5 random integers with a maximum value of 16
+When I create the random array with '5' numbers modulo '16'
+When I rename the 'random array' to '5 random numbers modulo 16'
+
+Then print the data
+EOF
+    save_output "when_random_object_numbers_create.out.json"
+    assert_output '{"5_random_numbers":[55390,25281,37184,56932,47999],"5_random_numbers_modulo_16":[7,4,2,8,16]}'
+}
+
+@test "random: randomize an array" {
+     cat <<EOF | save_asset when_random_randomize_array.data.json
+{
+  "ordered": [
+    "first",
+    "second",
+    "third",
+    "fourth",
+    "fiveth"
+  ]
+}
+EOF
+    cat <<EOF | zexe when_random_randomize_array.zen when_random_randomize_array.data.json
+Given I have a 'string array' named 'ordered'
+
+When I randomize the 'ordered' array
+
+Then I print the 'ordered'
+EOF
+    save_output "when_random_randomize_array.out.json"
+    assert_output '{"ordered":["fourth","fiveth","third","second","first"]}'
+}

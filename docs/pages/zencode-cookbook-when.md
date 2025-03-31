@@ -173,19 +173,6 @@ and the code
 then, in the output, `dictionary_1` and `dictionary_2` will have the same elements. Additionally, outside of the two dictionaries, `copy_of_last_element` will also appear.
 
 
-```gherkin
-
-# deprecate? much simpler and powerful `When I copy '' from '' in ''`
-When I create copy of '' from ''
-When I create copy of '' from dictionary ''
-
-# can be deprecated by creating `When I copy named by '' from '' to ''`
-When I create copy of object named by '' from dictionary ''
-
-# can be deprecated by making `When I copy '' from '' to ''` to support numbers as position and array (not much work)
-When I create copy of element '' from array ''
-```
-
 ### Move
 
 The Move statement allows to move an Object into another Object or outside from and to rename it.
