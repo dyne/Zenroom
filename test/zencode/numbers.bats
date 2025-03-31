@@ -153,43 +153,77 @@ EOF
 
 @test "Numbers remove zero values" {
     cat << EOF | save_asset numbers_zero_values.json
-{"packet": {
-"Active_power_imported_kW":4.85835600,
-"Active_energy_imported_kWh":53.72700119,
-"Active_power_exported_kW":0.00000000,
-"Active_energy_exported_kWh":33.39500046,
-"Reactive_power_imported_kVAR":4.79620409,
-"Reactive_energy_imported_kVARh":19.91500092,
-"Reactive_power_exported_kVAR":0.00000000,
-"Reactive_energy_exported_kVARh":51.02199936,
-"Apparent_power_imported_kVA":6.82719707,
-"Apparent_energy_imported_kVAh":0.00000000,
-"Apparent_power_exported_kVA":0.00000000,
-"Apparent_energy_exported_kVAh":0.00000000,
-"Power_factor":0.71163559,
-"Supply_frequency_Hz":50.00131226,
-"FREE_VAL_15":0.00000000,
-"FREE_VAL_16":0.00000000,
-"FREE_VAL_17":0.00000000,
-"FREE_VAL_18":0.00000000,
-"FREE_VAL_19":0.00000000,
-"User_data":"User_data_string",
-"Application_data":"Application_data_string",
-"Application_UID":"Application_UID_string",
-"Application_type":"Application_type_string",
-"Energy_price_for_client":0.00000000,
-"Currency":"EUR",
-"Maximum_power_kWp":0.00000000,
-"Expected_annual_production":0.00000000,
-} }
+{
+    "packet": {
+        "Active_power_imported_kW":4.85835600,
+        "Active_energy_imported_kWh":53.72700119,
+        "Active_power_exported_kW":0.00000000,
+        "Active_energy_exported_kWh":33.39500046,
+        "Reactive_power_imported_kVAR":4.79620409,
+        "Reactive_energy_imported_kVARh":19.91500092,
+        "Reactive_power_exported_kVAR":0.00000000,
+        "Reactive_energy_exported_kVARh":51.02199936,
+        "Apparent_power_imported_kVA":6.82719707,
+        "Apparent_energy_imported_kVAh":0.00000000,
+        "Apparent_power_exported_kVA":0.00000000,
+        "Apparent_energy_exported_kVAh":0.00000000,
+        "Power_factor":0.71163559,
+        "Supply_frequency_Hz":50.00131226,
+        "FREE_VAL_15":0.00000000,
+        "FREE_VAL_16":0.00000000,
+        "FREE_VAL_17":0.00000000,
+        "FREE_VAL_18":0.00000000,
+        "FREE_VAL_19":0.00000000,
+        "User_data":"User_data_string",
+        "Application_data":"Application_data_string",
+        "Application_UID":"Application_UID_string",
+        "Application_type":"Application_type_string",
+        "Energy_price_for_client":0.00000000,
+        "Currency":"EUR",
+        "Maximum_power_kWp":0.00000000,
+        "Expected_annual_production":0.00000000
+    },
+    "arr": [
+        1,
+        "str",
+        0,
+        "0"
+    ],
+    "complex": [
+        {
+            "miao": {
+                "bau": [
+                    0,
+                    "str",
+                    2
+                ]
+            },
+            "micio": [
+                0,
+                {
+                    "a": "b",
+                    "m": 0,
+                    "k": "k"
+                }
+            ]
+        },
+        0,
+        1
+    ]
+}
 EOF
 
     cat << EOF | zexe numbers_remove_zero_values.zen numbers_zero_values.json
 Given I have a 'string dictionary' named 'packet'
+Given I have a 'string array' named 'arr'
+Given I have a 'string array' named 'complex'
+When I remove zero values in 'arr'
 When I remove zero values in 'packet'
+When I remove zero values in 'complex'
 Then print all data
 EOF
     save_output 'numbers_remove_zero_values.out'
+    assert_output '{"arr":[1,"str","0"],"complex":[{"miao":{"bau":["str",2]},"micio":[{"a":"b","k":"k"}]},1],"packet":{"Active_energy_exported_kWh":33.395,"Active_energy_imported_kWh":53.727,"Active_power_imported_kW":4.858356,"Apparent_power_imported_kVA":6.827197,"Application_UID":"Application_UID_string","Application_data":"Application_data_string","Application_type":"Application_type_string","Currency":"EUR","Power_factor":0.711636,"Reactive_energy_exported_kVARh":51.022,"Reactive_energy_imported_kVARh":19.915,"Reactive_power_imported_kVAR":4.796204,"Supply_frequency_Hz":50.00131,"User_data":"User_data_string"}}'
 }
 
 @test "Compare with itself" {

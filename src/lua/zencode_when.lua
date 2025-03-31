@@ -416,24 +416,49 @@ end)
 -- When("write '' as '' in ''", function(content, dest) end)
 -- implicit conversion as string
 
--- https://github.com/dyne/Zenroom/issues/175
-When("remove zero values in ''", function(target)
-    local types = {"number", "zenroom.float", "zenroom.big"}
-    local zeros = {0, F.new(0), BIG.new(0)}
-	have(target)
-	ACK[target] = deepmap(function(v)
-        for i =1,#types do
-            if type(v) == types[i] then
-                if v == zeros[i] then
-                    return nil
-                else
-                    return v
+local function _rm_zeros_in(t)
+    local zeros <const> = {
+        number = 0,
+        ['zenroom.float'] = F.new(0),
+        ['zenroom.big'] = BIG.new(0)
+    }
+    if isarray(t) then
+        local arr = {}
+        for _, v in pairs(t) do
+            if type(v) == 'table' then
+                table.insert(arr, _rm_zeros_in(v))
+            else
+                local z = zeros[type(v)]
+                if not z or ( z and v ~= z) then
+                    table.insert(arr, v)
                 end
             end
-            i = i + 1
         end
-        return v
-	end, ACK[target])
+        return arr
+    else
+        for k,v in pairs(t) do
+            if type(v) == 'table' then
+                t[k] = _rm_zeros_in(v)
+            else
+                local z = zeros[type(v)]
+                if z and v == z then
+                    t[k] = nil
+                end
+            end
+        end
+        return t
+    end
+end
+-- https://github.com/dyne/Zenroom/issues/175
+When("remove zero values in ''", function(target)
+    local zeros <const> = {
+        number = 0,
+        ['zenroom.float'] = F.new(0),
+        ['zenroom.big'] = BIG.new(0)
+    }
+    local t = have(target)
+    zencode_assert(luatype(t) == 'table', "Invalid table object: "..target)
+    ACK[target] = _rm_zeros_in(t)
 end)
 
 When("remove spaces in ''", function(target)
