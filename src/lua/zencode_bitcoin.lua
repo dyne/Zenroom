@@ -111,13 +111,23 @@ local function _wif_import(obj)	return schema_get(obj, '.', BTC.wif_to_sk, O.fro
 local function _wif_bitcoin_export(obj)	return O.to_base58( BTC.sk_to_wif( obj, 'bitcoin') ) end
 local function _wif_testnet_export(obj)	return O.to_base58( BTC.sk_to_wif( obj, 'testnet') ) end
 
+local function _pk_import(o)
+    local res = CONF.input.encoding.fun(o)
+    zencode_assert(#res == 33, 'Invalid public key size: '..#res)
+    zencode_assert(
+        ECDH.pubcheck(ECDH.uncompress_public_key(res)),
+        'Public key is not a valid point on curve'
+    )
+    return res
+end
+
 ZEN:add_schema(
-   {
+    {
+        bitcoin_public_key = { import = _pk_import },
       bitcoin_key = { import = _wif_import,
 					  export = _wif_bitcoin_export },
       testnet_key = { import = _wif_import,
 					  export = _wif_testnet_export },
-
       satoshi_amount            = {
 		 import = function(obj)
 			return schema_get(obj, '.', BIG.from_decimal, tostring) end,

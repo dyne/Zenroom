@@ -258,7 +258,7 @@
 
     -- objtype is not a luatype
     if iszen(type(obj)) then
-       res = CONF.input.encoding
+       res = input_encoding(definition)
        res.zentype = 'e'
        res.schema = nil
        res.raw = obj
