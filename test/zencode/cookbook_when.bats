@@ -1312,14 +1312,14 @@ Given I have a 'string dictionary' named 'dictionary'
 #pickup an element of a dictionary
 When I pickup from path 'dictionary.string_1'
 #pickup an element of a dictionary and return in base64
-When I pickup a '' from path 'dictionary.string_2'
+When I pickup a 'string' from path 'dictionary.string_2'
 #take an element of a dictionary
 When I take 'string_3' from path 'dictionary'
 
 Then print the data 
 EOF
     save_output when_table_pickup.out.json
-    assert_output '{"dictionary":{"string_1":"string_dic_1","string_2":"string_dic_2","string_3":"string_dic_3"},"string_1":"string_dic_1","string_2":"c3RyaW5nX2RpY18y","string_3":"string_dic_3"}'
+    assert_output '{"dictionary":{"string_1":"string_dic_1","string_2":"string_dic_2","string_3":"string_dic_3"},"string_1":"string_dic_1","string_2":"string_dic_2","string_3":"string_dic_3"}'
 }
 
 @test "remove characters" {
