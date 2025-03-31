@@ -467,7 +467,7 @@ where the data in input look like
 
 and the input will be `{"size":3}`. 
 
-#### json encoding/decoding
+#### Json encoding/decoding
 
 It is also possible to encode a string in `json` format, perform the reverse operation (decode), and verify that you are indeed working with `json`. Consider the input
 
@@ -649,10 +649,11 @@ When I create the multihash of 'source' using 'sha512'
 
 This way the multihash content will be usable in its pure binary form while being in the `When` phase, but will be printed out in multihash format by the `Then` phase.
 
-### hash to point
+### Hash to point
 This function allows to hash an object and casting it on an elliptic curve returning the hash of the object.
 The two curves that currently support the casting are ECP and ECP2, two subcurves of the main family of elliptic curves BLS12-381.
 With the following input data
+
 [](../_media/examples/zencode_cookbook/cookbook_when/when_hash_to_point.data.json ':include :type=code json')
 
 running the following script
