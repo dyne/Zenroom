@@ -224,60 +224,17 @@ Zenroom provides direct access to random utilities, which can be used in various
 
 To create a random object, you can use the following syntax:
 
-```gherkin
-Given nothing
-
-# 32 bytes long random
-When I create the random '32 byte long random'
-
-# 1 byte (or 8 bits) long random
-When I create the random of '8' bits
-When I rename the 'random' to '1 byte long random'
-
-# 2 bytes long random
-When I create the random of '2' bytes
-When I rename the 'random' to '2 bytes long random'
-
-Then print the data
-```
+[](../_media/examples/zencode_cookbook/cookbook_when/when_random_object_create.zen ':include :type=code gherkin')
 
 ### Create an array of random objects or numbers
 
 Why limit yourself to just one object? You can create arrays of random objects:
 
-```gherkin
-Given nothing
-
-# array of 5 random objects, each 64 bytes long
-When I create the random array with '5' elements
-When I rename the 'random array' to '5 64 bytes long randoms'
-
-# array of 6 random objects, each 1 byte (8 bits) long
-When I create the random array with '6' elements each of '8' bits
-When I rename the 'random array' to '6 1 bytes long randoms'
-
-# array of 7 random objects, each 2 bytes long
-When I create the random array with '6' elements each of '2' bytes
-When I rename the 'random array' to '7 2 bytes long randoms'
-
-Then print the data
-```
+[](../_media/examples/zencode_cookbook/cookbook_when/when_random_object_elements_create.zen ':include :type=code gherkin')
 
 Need random numbers instead? Here's how:
 
-```gherkin
-Given nothing
-
-# array of 5 random integers
-When I create the random array with '5' numbers
-When I rename the 'random array' to '5 random numbers'
-
-# array of 5 random integers with a maximum value of 16
-When I create the random array with '5' numbers modulo '16'
-When I rename the 'random array' to '5 random numbers modulo 16'
-
-Then print the data
-```
+[](../_media/examples/zencode_cookbook/cookbook_when/when_random_object_numbers_create.zen ':include :type=code gherkin')
 
 N.B. numbers can be replaced with integers to create big numbers.
 
@@ -286,41 +243,15 @@ N.B. numbers can be replaced with integers to create big numbers.
 If you already have an array of elements and want to randomize it, you can do so easily.
 For example, given the following data:
 
-```json
-{
-  "ordered": [
-    "first",
-    "second",
-    "third",
-    "fourth",
-    "fiveth"
-  ]
-}
-```
+[](../_media/examples/zencode_cookbook/cookbook_when/when_random_randomize_array.data.json ':include :type=code json')
 
 You can randomize it using:
 
-```gherkin
-Given I have a 'string array' named 'ordered'
-
-When I randomize the 'ordered' array
-
-Then I print the 'ordered'
-```
+[](../_media/examples/zencode_cookbook/cookbook_when/when_random_randomize_array.zen ':include :type=code gherkin')
 
 The result will look something like this (actual order may vary):
 
-```json
-{
-   "ordered": [
-      "second",
-      "fourth",
-      "fiveth",
-      "third",
-      "first"
-   ]
-}
-```
+[](../_media/examples/zencode_cookbook/cookbook_when/when_random_randomize_array.out.json ':include :type=code json')
 
 ### Pick one or more random objects from a table
 
