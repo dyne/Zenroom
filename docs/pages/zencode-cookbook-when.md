@@ -669,7 +669,7 @@ the output will be
 
 #### Array of objects from dictionaries
 
-A final statement for a dictionary is the ability to create an array with objects having the same name but present in different dictionaries. Consider the input of the previous example and running the following script
+A final statement for a dictionary is the ability to create an array with objects having the same name but present in different dictionaries. Consider the input of the previous example, the first in the section `Particular stuff` and running the following script
 
 [](../_media/examples/zencode_cookbook/cookbook_when/when_dict_array.zen ':include :type=code gherkin')
 
@@ -679,10 +679,11 @@ the output will be
 
 
 ## Throw an error
+You can generate a custom error message. The command accepts either an input string with the error message or directly takes the message to be printed. Consider now the first case, in which the string will be `{"string": "there is an error!"}` and the script
 
-```gherkin
-When I exit with error message ''
-```
+[](../_media/examples/zencode_cookbook/cookbook_when/when_error.zen ':include :type=code gherkin')
+
+in this way, the specific error will be reported.
 
 ## First crypto steps
 
