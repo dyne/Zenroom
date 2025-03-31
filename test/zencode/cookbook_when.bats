@@ -1811,3 +1811,62 @@ EOF
     save_output "when_random_randomize_array.out.json"
     assert_output '{"ordered":["fourth","fiveth","third","second","first"]}'
 }
+
+@test "pick randoms from table" {
+    cat <<EOF | save_asset when_random_from_table.data.json
+{
+    "dictionary": {
+        "str1": "Hello",
+        "str2": ",",
+        "str3": "world",
+        "str4": "!"
+    },
+    "array": [
+        1,
+        -2,
+        3,
+        -4
+    ]
+}
+EOF
+    cat <<EOF | zexe when_random_from_table.zen when_random_from_table.data.json
+Given I have a 'string dictionary' named 'dictionary'
+Given I have a 'number array' named 'array'
+
+#pick a random object from a table (either a dictionary or an array)
+When I create random pick from 'dictionary'
+
+When I create random array with '2' elements from 'array'
+When I create random dictionary with '2' elements from 'dictionary'
+
+
+Then print 'random pick'
+Then print 'random array'
+Then print 'random dictionary'
+
+EOF
+    save_output when_random_from_table.out.json
+    assert_output '{"random_array":[1,3],"random_dictionary":{"str3":"world","str4":"!"},"random_pick":"world"}'
+}  
+
+@test "hash to point on a curve" {
+    cat <<EOF | save_asset when_hash_to_point.data.json
+{
+    "string for test": "Hello, World!"
+}
+EOF
+    cat <<EOF | zexe when_hash_to_point.zen when_hash_to_point.data.json
+Given I have a 'string' named 'string for test'
+
+When I create hash to point 'ECP' of 'string for test'
+When I rename 'hash to point' to 'hash to point ecp'
+When I create the hash to point 'ECP2' of 'string for test'
+When I rename 'hash to point' to 'hash to point ecp2'
+
+Then print 'hash to point ecp2'
+Then print 'hash to point ecp'
+
+EOF
+    save_output when_hash_to_point.out.json
+    assert_output '{"hash_to_point_ecp":"AxAXy/Tldf0HPLWpeby/p9r5N5KWsRtyOOhupzDyD+zgpiyIM9ET0sBhcfXQyxD2Iw==","hash_to_point_ecp2":"EKDkY8NZoPBUrXbCKuGTfACzGhYjDN1ukN4WFeC1KruGArzmM2GjcNl540ccj1NwBmJripsCB8dKAZdHsPExCa2bd1HXbCvOIlaT0+yvl8Zb+MjzPAuvOs2y9rpKK/+GBGkYvsUr8aoHyijjv34XjG+6APolthn9+RA3p+Eluos5RjoIiPsYcgixpF+8rj4OEWDf3to6w2qomLHGf0lwhEzMZbPZ67zGYXUkJHSR2cGT/jdPufs7M9Havmq0iCiY"}'
+}  
