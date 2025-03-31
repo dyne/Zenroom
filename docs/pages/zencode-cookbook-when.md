@@ -255,13 +255,19 @@ The result will look something like this (actual order may vary):
 
 ### Pick one or more random objects from a table
 
-Zenroom also lets you pick random objects from a table:
+Zenroom also lets you pick random objects from a table: you can pick only one just specifying the table the element comes from or you can decide the number of random elements specifying the table according with the type declared by the function.
+With the following input
 
-```gherkin
-When I create random pick from ''
-When I create random array with '' elements from ''
-When I create random dictionary with '' elements from ''
-```
+[](../_media/examples/zencode_cookbook/cookbook_when/when_random_from_table.data.json ':include :type=code json')
+
+the code
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_random_from_table.zen ':include :type=code gherkin')
+
+can produce the following output
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_random_from_table.out.json ':include :type=code json')
+
 
 ## Numbers statements
 
@@ -644,10 +650,19 @@ When I create the multihash of 'source' using 'sha512'
 This way the multihash content will be usable in its pure binary form while being in the `When` phase, but will be printed out in multihash format by the `Then` phase.
 
 ### hash to point
+This function allows to hash an object and casting it on an elliptic curve returning the hash of the object.
+The two curves that currently support the casting are ECP and ECP2, two subcurves of the main family of elliptic curves BLS12-381.
+With the following input data
+[](../_media/examples/zencode_cookbook/cookbook_when/when_hash_to_point.data.json ':include :type=code json')
 
-```gherkin
-When I create hash to point '' of ''
-```
+running the following script
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_hash_to_point.zen ':include :type=code gherkin')
+
+the output will be
+
+[](../_media/examples/zencode_cookbook/cookbook_when/when_hash_to_point.out.json ':include :type=code json')
+
 
 ### HMAC
 

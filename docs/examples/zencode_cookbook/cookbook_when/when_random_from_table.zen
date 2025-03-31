@@ -1,0 +1,14 @@
+Given I have a 'string dictionary' named 'dictionary'
+Given I have a 'number array' named 'array'
+
+#pick a random object from a table (either a dictionary or an array)
+When I create random pick from 'dictionary'
+
+When I create random array with '2' elements from 'array'
+When I create random dictionary with '2' elements from 'dictionary'
+
+
+Then print 'random pick'
+Then print 'random array'
+Then print 'random dictionary'
+

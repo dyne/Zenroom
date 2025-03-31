@@ -1,0 +1,10 @@
+Given I have a 'string' named 'string for test'
+
+When I create hash to point 'ECP' of 'string for test'
+When I rename 'hash to point' to 'hash to point ecp'
+When I create the hash to point 'ECP2' of 'string for test'
+When I rename 'hash to point' to 'hash to point ecp2'
+
+Then print 'hash to point ecp2'
+Then print 'hash to point ecp'
+

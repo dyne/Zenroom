@@ -1,0 +1,14 @@
+{
+    "dictionary": {
+        "str1": "Hello",
+        "str2": ",",
+        "str3": "world",
+        "str4": "!"
+    },
+    "array": [
+        1,
+        -2,
+        3,
+        -4
+    ]
+}
