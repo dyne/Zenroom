@@ -1,0 +1,13 @@
+Given I have a 'string' named 'string'
+Given I have a 'string' named 'password'
+
+When I create key derivation of 'string' with password 'password'
+When I move 'key_derivation' to 'key_derivation_password'
+When I create key derivation of 'string' with '5' rounds
+When I move 'key_derivation' to 'key_derivation_with_5_rounds'
+When I create key derivation of 'string' with '5' rounds with password 'password'
+When I move 'key_derivation' to 'key_derivation_with_5_rounds_password'
+
+Then print the 'key_derivation_with_5_rounds_password'
+Then print the 'key_derivation_with_5_rounds'
+Then print the 'key_derivation_password'

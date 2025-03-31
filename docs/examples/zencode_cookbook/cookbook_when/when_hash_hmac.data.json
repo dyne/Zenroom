@@ -1,0 +1,4 @@
+{
+	"string_for_hmac": "hash_me_to_HMAC",
+	"secret_key": "my_password"
+}

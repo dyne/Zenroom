@@ -1,0 +1,9 @@
+Given I have a 'string' named 'string'
+Given I have a 'string dictionary' named 'dic'
+
+When I create key derivation of 'string'
+When I move 'key_derivation' to 'key_derivation_string'
+When I create key derivations of each object in 'dic' 
+
+Then print the 'key_derivation_string'
+Then print the 'key_derivations'

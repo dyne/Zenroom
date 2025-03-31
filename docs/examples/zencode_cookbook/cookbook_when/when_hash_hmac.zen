@@ -1,0 +1,6 @@
+Given I have a 'string' named 'string_for_hmac'
+Given I have a 'string' named 'secret_key'
+
+When I create hmac of 'string_for_hmac' with key 'secret_key'
+
+Then print the 'HMAC'
