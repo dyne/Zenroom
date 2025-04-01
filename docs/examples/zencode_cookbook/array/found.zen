@@ -1,0 +1,102 @@
+Given I have a 'string array' named 'my_array'
+and I have a 'string dictionary' named 'my_dict'
+and I have a 'string' named 'found_key_string'
+and I have a 'base64' named 'found_key_base64'
+and I have a 'hex' named 'found_key_hex'
+and I have a 'base58' named 'found_key_base58'
+and I have a 'string' named 'not_found_key_string'
+and I have a 'base64' named 'not_found_key_base64'
+and I have a 'hex' named 'not_found_key_hex'
+and I have a 'base58' named 'not_found_key_base58'
+
+When I verify the 'found_key_string' is found in 'my_array'
+and I verify the 'found_key_base64' is found in 'my_array'
+and I verify the 'found_key_hex' is found in 'my_array'
+and I verify the 'found_key_base58' is found in 'my_array'
+
+When I verify the 'found_key_string' is found in 'my_dict'
+and I verify the 'found_key_base64' is found in 'my_dict'
+and I verify the 'found_key_hex' is found in 'my_dict'
+and I verify the 'found_key_base58' is found in 'my_dict'
+
+When I verify the 'not_found_key_string' is not found in 'my_array'
+and I verify the 'not_found_key_base64' is not found in 'my_array'
+and I verify the 'not_found_key_hex' is not found in 'my_array'
+and I verify the 'not_found_key_base58' is not found in 'my_array'
+
+When I verify the 'not_found_key_string' is not found in 'my_dict'
+and I verify the 'not_found_key_base64' is not found in 'my_dict'
+and I verify the 'not_found_key_hex' is not found in 'my_dict'
+and I verify the 'not_found_key_base58' is not found in 'my_dict'
+
+When I set 'result' to 'success' as 'string'
+
+If I verify the 'not_found_key_string' is found in 'my_array'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+If I verify the 'not_found_key_base64' is found in 'my_array'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+If I verify the 'not_found_key_hex' is found in 'my_array'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+If I verify the 'not_found_key_base58' is found in 'my_array'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+
+If I verify the 'not_found_key_string' is found in 'my_dict'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+If I verify the 'not_found_key_base64' is found in 'my_dict'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+If I verify the 'not_found_key_hex' is found in 'my_dict'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+IF I verify the 'not_found_key_base58' is found in 'my_dict'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+
+If I verify the 'found_key_string' is not found in 'my_array'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+If I verify the 'found_key_base64' is not found in 'my_array'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+If I verify the 'found_key_hex' is not found in 'my_array'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+IF I verify the 'found_key_base58' is not found in 'my_array'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+
+If I verify the 'found_key_string' is not found in 'my_dict'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+If I verify the 'found_key_base64' is not found in 'my_dict'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+If I verify the 'found_key_hex' is not found in 'my_dict'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+IF I verify the 'found_key_base58' is not found in 'my_dict'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+
+Then print the 'result'

@@ -1,0 +1,4 @@
+Given I have a 'string dictionary' named 'identities'
+and a 'string' named 'nameOfObject'
+When I create the array of objects named by 'nameOfObject' found in 'identities'
+Then print the 'array'

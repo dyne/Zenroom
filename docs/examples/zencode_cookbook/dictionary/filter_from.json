@@ -1,0 +1,1 @@
+{"myDict":{"age":"42","name":"John"},"myNestedArray":[{"age":"42","name":"John"},{"age":"31","name":"Jane"},{"age":"68","name":"Amber"},[]],"myNestedDict":{"myDict1":{"age":"42","name":"John"},"myDict2":{"age":"31","name":"Jane"},"myDict3":{"name":"Bruce"},"myDict4":[],"myDict5":{"myDict6":{"name":"Alfred"}}},"myNumberDict":{"age":55}}

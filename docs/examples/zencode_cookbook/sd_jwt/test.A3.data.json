@@ -1,0 +1,46 @@
+{   
+    "The Issuer": {
+        "es256_public_key":"b28d4MwZMjw8+00CG4xfnn9SLMVMM19SlqZpVb/uNtRe/nNbC6hpOB1LqFXjfIjqAHBOeO6SYVBCcn+QLHOqTw==",
+        "keyring":{"es256":"Ur2bNKuBPOrAaxsRnbSH6hIhmNTxSGXshDSUD1a1y7g="}
+    },
+      "selective_disclosure": {
+        "disclosures": [
+            ["2GLC42sKQveCfGfryNRN9w", "first_name", "Erika"],
+            ["eluV5Og3gSNII8EYnsxA_A", "family_name", "Mustermann"],
+            ["6Ij7tM-a5iVPGboS5tmvVA", "DE"],
+            ["eI8ZWm9QnKPpNPeNenHdhQ", "nationalities", [{"...": "JuL32QXDzizl-L6CLrfxfjpZsX3O6vsfpCVd1jkwJYg"}]],
+            ["Qg_O64zqAxe412a108iroA", "birth_family_name", "Schmidt"],
+            ["AJx-095VPrpTtN4QMOqROA", "birthdate", "1973-01-01"],
+            ["Pc33JM2LchcU_lHggv_ufQ", "address", {"postal_code":"12345", "locality": "Irgendwo", "street_address": "Sonnenstrasse 23", "country_code": "DE"}],
+            ["G02NSrQfjFXQ7Io09syajA", "is_over_18", true],
+            ["lklxF5jMYlGTPUovMNIvCA", "is_over_21", true],
+            ["nPuoQnkRFq3BIeAm7AnXFA", "is_over_65", false]
+        ],
+        "payload": {
+            "_sd": [
+                "0n9yzFSWvK_BUHiaMhm12ghrCtVahrGJ6_-kZP-ySq4",
+                "Ch-DBcL3kb4VbHIwtknnZdNUHthEq9MZjoFdg6idiho",
+                "DW7gFVZSuyr42YSYx8p8rVKEktJzJ3uFImenmJBImds",
+                "I00fcFUoDXCucp5yy2ujqPssDVGaWNiUliNz_awD0gc",
+                "X9MaPaFWmQYpfHEdytRdaclnYoEru8EztBEUQuWOe44",
+                "d8qkfPdoe2PYE93d5M_gBL1gZlpFRKCc0d1laod__s0",
+                "lI3L0hseCRWmUPg82VCUN_a17sML_64QgA4JFTYDFDE",
+                "puMpGLoAGRbcsAg50UZ0hhQLKCL6qzxSK4304kBn3_I",
+                "zU452lkGbEKh8ZuH_8Kx3CUvn1F4y1gZLqlDTgX_8Pk"
+            ],
+            "iss": "https://pid-provider.memberstate.example.eu",
+            "iat": 1541493724,
+            "exp": 1883000000,
+            "vct": "PersonIdentificationData",
+            "_sd_alg": "sha-256",
+            "cnf": {
+                "jwk": {
+                    "kty": "EC",
+                    "crv": "P-256",
+                    "x": "TCAER19Zvu3OHF4j4W4vfSVoHIP1ILilDls7vCeGemc",
+                    "y": "ZxjiWWbZMQGHVWKVQ4hbSIirsVfuecCE6t4jT9F2HZQ"
+                }
+            }
+        }
+    }
+}

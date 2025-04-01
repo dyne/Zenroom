@@ -8,15 +8,15 @@ Given I have a 'string array' named 'myNestedArray' inside 'myFirstObject'
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
 Given I have a 'string array' named 'myThirdArray' inside 'myThirdObject' 
 Given I have a 'string array' named 'myFourthArray' inside 'myFourthObject'
-Given I have a 'number array' named 'myFirstNumberArray' inside 'myFirstObject'
+Given I have a 'number array' named 'aArray' inside 'myFirstObject'
 Given I have a 'string array' named 'myCopyOfFirstArray' inside 'myThirdObject'
 Given I have a 'base64 array' named 'myOnlyEcpArray' inside 'myFirstObject'
 Given I have a 'base64 array' named 'myOnlyEcp2Array' inside 'myFirstObject'
-Given I have a 'number array' named 'mySecondNumberArray'
+Given I have a 'number array' named 'bArray'
 
 # Load Numbers
-Given I have a 'number' named 'myFirstNumber' in 'myFirstObject'
-Given I have a 'number' named 'mySecondNumber' in 'mySecondObject'
+Given I have a 'number' named 'a' in 'myFirstObject'
+Given I have a 'number' named 'b' in 'mySecondObject'
 Given I have a 'number' named 'myFourthNumber' inside 'myFourthObject'
 Given I have a 'number' named 'myThirdNumber' inside 'myThirdObject' 
 # Load Strings
@@ -55,9 +55,9 @@ When I verify 'myThirdNumber' is equal to 'myFourthNumber'
 # LESS, MORE, EQUAL
 # Number comparisons: those are pretty self explaining.
 When I verify number 'myFourthNumber' is less or equal than 'myThirdNumber'
-When I verify number 'myFirstNumber' is less than  'myThirdNumber'
-When I verify number 'myThirdNumber' is more or equal than 'mySecondNumber'
-When I verify number 'myThirdNumber' is more than 'mySecondNumber'
+When I verify number 'a' is less than  'myThirdNumber'
+When I verify number 'myThirdNumber' is more or equal than 'b'
+When I verify number 'myThirdNumber' is more than 'b'
 
 # FOUND, NOT FOUND, FOUND AT LEAST n TIMES
 # The "is found" statement, takes two objects as input: 

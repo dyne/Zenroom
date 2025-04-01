@@ -1,0 +1,4 @@
+Given I have a 'string dictionary' named 'ABC-TransactionListFirstBatch'
+and I have a 'number' named 'few'
+When I create the random dictionary with 'few' elements from 'ABC-TransactionListFirstBatch'
+Then print the 'random dictionary'

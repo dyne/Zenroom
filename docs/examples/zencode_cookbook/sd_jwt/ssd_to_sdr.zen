@@ -1,0 +1,7 @@
+Scenario 'sd_jwt'
+
+Given I have 'supported_selective_disclosure'
+Given I have a 'string' named 'id'
+Given I have a 'string dictionary' named 'object'
+When I create the selective disclosure request from 'supported_selective_disclosure' with id 'id' for 'object'
+Then print the 'selective_disclosure_request'

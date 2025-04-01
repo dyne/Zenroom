@@ -1,0 +1,41 @@
+    {
+        "signer_did_document": {
+            "@context": [
+                "https://www.w3.org/ns/did/v1",
+                "https://w3id.org/security/suites/ed25519-2018/v1",
+                "https://w3id.org/security/suites/secp256k1-2019/v1",
+                "https://w3id.org/security/suites/secp256k1-2020/v1",
+                "https://dyne.github.io/W3C-DID/specs/ReflowBLS12381.json",
+                {
+                    "description": "https://schema.org/description"
+                }
+            ],
+            "description": "fake zenroom admin",
+            "id": "did:dyne:sandbox.zenroomtest_A:HCA7GceXsWmHaZJQCfHNPF1PdNKpr3o1fpnWjEDUzDsv",
+            "proof": {
+                "created": "1702392905808",
+                "jws": "eyJhbGciOiJFUzI1NksiLCJiNjQiOnRydWUsImNyaXQiOiJiNjQifQ..F-PQHuTvFzhzLqBKIpeErFp9jo1-bVa64S-HivtwuB58d98_XQXcFSF1F3p5pOeTbSYbDINTFjz10oLn7Wb2Dg",
+                "proofPurpose": "assertionMethod",
+                "type": "EcdsaSecp256k1Signature2019",
+                "verificationMethod": "did:dyne:sandbox_A:9nDiX3vDGTzACi2fxbs9rGnhF5KGNv3H5QXEHDt3ov8u#ecdh_public_key"
+            },
+            "verificationMethod": [
+                {
+                    "controller": "did:dyne:sandbox.zenroomtest_A:HCA7GceXsWmHaZJQCfHNPF1PdNKpr3o1fpnWjEDUzDsv",
+                    "id": "did:dyne:sandbox.zenroomtest_A:HCA7GceXsWmHaZJQCfHNPF1PdNKpr3o1fpnWjEDUzDsv#ecdh_public_key",
+                    "publicKeyBase58": "SXrERoKV5jSxD2fGko16WfUXWhZczQDd7waQMn7nBpgfQDhK2Zs55GytEEv1bKbKDLN6uMp9eA2t6MDgiEpzksbT",
+                    "type": "EcdsaSecp256k1VerificationKey2019"
+                },
+                {
+                    "controller": "did:dyne:sandbox.zenroomtest_A:HCA7GceXsWmHaZJQCfHNPF1PdNKpr3o1fpnWjEDUzDsv",
+                    "id": "did:dyne:sandbox.zenroomtest_A:HCA7GceXsWmHaZJQCfHNPF1PdNKpr3o1fpnWjEDUzDsv#eddsa_public_key",
+                    "publicKeyBase58": "HCA7GceXsWmHaZJQCfHNPF1PdNKpr3o1fpnWjEDUzDsv",
+                    "type": "Ed25519VerificationKey2018"
+                }
+            ]
+        },
+        "proof":{
+            "type":"EcdsaSecp256k1Signature2019",
+            "proofPurpose":"assertionMethod"
+        }
+    }

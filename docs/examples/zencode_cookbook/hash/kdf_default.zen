@@ -1,0 +1,5 @@
+rule output encoding hex
+Given nothing
+When I create the random 'source'
+and I create the key derivation of 'source'
+Then print 'key derivation'

@@ -1,0 +1,6 @@
+{
+    "present_disclosure":["given_name", "phone_number"],
+    "single_present_disclosure": "given_name",
+    "missing_disclosure":["given_name", "phone_number", "age"],
+    "single_missing_disclosure": "age"
+}

@@ -1,0 +1,11 @@
+scenario 'dp3t'
+rule check version 1.0.0
+rule input encoding hex
+rule output encoding hex
+Given I have a 'hex array' named 'list of infected'
+and I have a 'hex array' named 'ephemeral ids'
+When I write number '180' in 'epoch'
+and I write string 'Broadcast key' in 'broadcast key'
+and I create the proximity tracing of infected ids
+and debug
+Then print the 'proximity tracing'

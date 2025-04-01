@@ -9,7 +9,7 @@ When I find min value 'num_2' for dictionaries in 'dic'
 When I create sum value 'num_1' for dictionaries in 'dic'
 When I move 'sum_value' to 'sum_num_1'
 #sum all the values of num_2 in the dictionaries where num_1 > num_3
-#POSSIBLE BUG: no element of a dictionaries in the second argument of >
+#num_1 into the dictionaries, num_3 out of the dictionaries 
 When I create sum value 'num_2' for dictionaries in 'dic' where 'num_1' > 'num_3'
 #find num_2 in the dctionary where num_1 = num_3
 When I find 'num_2' for dictionaries in 'dic' where 'num_1' = 'num_3'

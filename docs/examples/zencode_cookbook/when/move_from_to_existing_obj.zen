@@ -1,0 +1,6 @@
+Given I  have a 'string dictionary' named 'dict_from'
+and I have a 'string dictionary' named 'dict_to'
+
+When I move 'str_3' from 'dict_from' to 'dict_to'
+
+Then print the 'dict_to'

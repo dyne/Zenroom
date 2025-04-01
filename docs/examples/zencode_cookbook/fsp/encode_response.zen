@@ -1,0 +1,7 @@
+	Scenario fsp
+	Given I have a 'keyring'
+	and I have a 'fsp ciphertext'
+	When I set 'response' to 'tainted love' as 'string'
+	and I create the fsp response of 'fsp ciphertext' with 'response'
+	Then print the 'fsp response'
+	and print the 'fsp ciphertext'

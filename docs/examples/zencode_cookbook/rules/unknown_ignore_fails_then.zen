@@ -1,0 +1,6 @@
+Rule unknown ignore
+
+Given nothing
+When I write string 'test passed' in 'result'
+Then I use a statement that does not exists
+Then print the data

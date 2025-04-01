@@ -58,7 +58,7 @@ And I rename the 'HMAC' to 'hmacOfMyFourteenthString'
 # and sums then it into a new object called "aggregation" that we'll rename immediately.
 # It works on both arrays and dictionaries, the data type needs to be 
 # specified as in the example.
-When I create the aggregation of array 'myFirstNumberArray'
+When I create the aggregation of array 'aArray'
 And I rename the 'aggregation' to 'aggregationOfMyFirstNumberArray'
 
 # Now let's print out everything

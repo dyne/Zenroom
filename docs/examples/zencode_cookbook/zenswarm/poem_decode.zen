@@ -1,0 +1,5 @@
+Scenario ethereum
+Given I have a 'hex' named 'poem bytes'
+When I create the 'poem' decoded from ethereum bytes 'poem bytes'
+and I create the 'newblock' decoded from mpack 'poem'
+Then print the 'newblock' as 'hex'

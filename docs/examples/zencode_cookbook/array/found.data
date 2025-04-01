@@ -1,0 +1,15 @@
+{
+  "my_array": ["pluto", "paperino", "topolino"],
+  "my_dict": {
+    "pluto": "dog",
+    "topolino": "mouse",
+  },
+  "found_key_string": "topolino",
+  "found_key_base64": "dG9wb2xpbm8=",
+  "found_key_hex": "746f706f6c696e6f",
+  "found_key_base58": "LUZxwdpKZS6",
+  "not_found_key_string": "nosense",
+  "not_found_key_base64": "bm9zZW5zZQ==",
+  "not_found_key_hex": "6e6f73656e7365",
+  "not_found_key_base58": "5BjMhAyi6p"
+}

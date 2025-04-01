@@ -1,8 +1,8 @@
 Given nothing
-When I create the array of '2' random objects of '8' bits
-And I rename the 'array' to 'myTinyArray'
-And I create the array of '4' random objects of '32' bits
-And I rename the 'array' to 'myAverageArray'
-And I create the array of '8' random objects of '128' bits
-And I rename the 'array' to 'myBigFatArray'
+When I create the random array with '2' elements each of '8' bits
+And I rename the 'random array' to 'myTinyArray'
+And I create the random array with '4' elements each of '32' bits
+And I rename the 'random array' to 'myAverageArray'
+And I create the random array with '8' elements each of '128' bits
+And I rename the 'random array' to 'myBigFatArray'
 Then print all data 

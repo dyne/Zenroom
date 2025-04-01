@@ -1,0 +1,10 @@
+Given I have a 'string array' named 'to_be_hashed'
+
+When I create the 'base64 array' named 'array of hashes'
+
+Foreach 'element_to_be_hashed' in 'to_be_hashed'
+When I create the hash of 'element_to_be_hashed'
+and I move 'hash' in 'array of hashes'
+EndForeach
+
+Then print 'array of hashes'

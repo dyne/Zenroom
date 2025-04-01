@@ -1,0 +1,7 @@
+Rule check version 2.0.0
+Scenario schnorr
+Given I have a 'schnorr public key'
+and I have a 'schnorr signature'
+and I have a 'base64' named 'bigfile'
+When I verify the 'bigfile' has a schnorr signature in 'schnorr signature' by 'Alice'
+Then print the string 'Bigfile Signature is valid'

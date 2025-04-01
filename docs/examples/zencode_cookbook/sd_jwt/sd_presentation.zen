@@ -1,0 +1,10 @@
+Scenario 'sd_jwt'
+Scenario 'es256'
+
+Given I have a 'decoded selective disclosure' named 'signed selective disclosure'
+Given I have a 'string array' named 'some disclosure'
+
+When I use signed selective disclosure 'signed selective disclosure' only with disclosures 'some disclosure'
+
+Then print 'signed selective disclosure' as 'decoded selective disclosure'
+

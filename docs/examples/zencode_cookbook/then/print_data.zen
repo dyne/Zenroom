@@ -1,0 +1,2 @@
+Given I have the 'string dictionary' named 'dictionary'
+Then print all data

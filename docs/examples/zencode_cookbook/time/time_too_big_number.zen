@@ -1,0 +1,2 @@
+Given I have a 'time' named 'time_number'
+Then print the data

@@ -1,0 +1,4 @@
+rule check version 1.0.0
+Given nothing
+When I create the random of '256' bits
+Then print the 'random'

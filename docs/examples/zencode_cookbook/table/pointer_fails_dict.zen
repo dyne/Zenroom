@@ -1,0 +1,7 @@
+Given I have a 'string dictionary' named 'dict'
+and I have a 'string' named 'non existing key'
+
+When I set pointer to 'dict'
+and I enter 'non existing key' with pointer
+
+Then print 'pointer'

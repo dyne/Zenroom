@@ -1,0 +1,6 @@
+Given I have a 'base64' named 'left'
+When I write string 'a left string to be hashed' in 'source'
+and I create the hash of 'source'
+When I verify 'left' is equal to 'hash'
+Then print the string 'OK'
+Then print data

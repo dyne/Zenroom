@@ -1,0 +1,12 @@
+scenario 'dp3t'
+rule check version 1.0.0
+rule input encoding hex
+rule output encoding hex
+Given I have an 'hex array' named 'list of infected'
+When I create the random pick from 'list of infected'
+and I rename the 'random pick' to 'secret day key'
+and I write number '180' in 'epoch'
+and I write string 'Broadcast key' in 'broadcast key'
+and I create the ephemeral ids for today
+# and the 'secret day key' is found in 'list of infected'
+Then print the 'ephemeral ids'

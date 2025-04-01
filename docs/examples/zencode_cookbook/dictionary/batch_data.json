@@ -1,0 +1,34 @@
+{
+	"TransactionsBatchA": {
+		"MetaData": "This var is Not a Table",
+		"number": 1234,
+		"Information": {
+			"Metadata": "TransactionsBatchB6789",
+			"Buyer": "John Doe"
+		},
+		"ABC-Transactions1Data": {
+			"timestamp": 1597573139,
+			"TransactionValue": 1500,
+			"PricePerKG": 100,
+			"TransferredProductAmount": 15,
+			"UndeliveredProductAmount": 7,
+			"ProductPurchasePrice": 50
+		},
+		"ABC-Transactions2Data": {
+			"timestamp": 1597573239,
+			"TransactionValue": 1600,
+			"TransferredProductAmount": 20,
+			"PricePerKG": 80
+		},
+		"ABC-Transactions3Data": {
+			"timestamp": 1597573340,
+			"TransactionValue": 700,
+			"PricePerKG": 70,
+			"TransferredProductAmount": 10
+		}
+	},
+	"dictionaryToBeFound": "Information",
+	"numberToBeFound": "number",
+	"salesStartTimestamp": 1597573200,
+	"PricePerKG": 3
+}

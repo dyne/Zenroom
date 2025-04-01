@@ -7,9 +7,9 @@ When I verify 'myThirdNumber' is equal to 'myFourthNumber'
 # LESS, MORE, EQUAL
 # Number comparisons: those are pretty self explaining.
 When I verify number 'myFourthNumber' is less or equal than 'myThirdNumber'
-When I verify number 'myFirstNumber' is less than  'myThirdNumber'
-When I verify number 'myThirdNumber' is more or equal than 'mySecondNumber'
-When I verify number 'myThirdNumber' is more than 'mySecondNumber'
+When I verify number 'a' is less than  'myThirdNumber'
+When I verify number 'myThirdNumber' is more or equal than 'b'
+When I verify number 'myThirdNumber' is more than 'b'
 
 # FOUND, NOT FOUND, FOUND AT LEAST n TIMES
 # The "is found" statement, takes two objects as input: 

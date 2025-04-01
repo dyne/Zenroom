@@ -1,0 +1,11 @@
+{
+    "my_dict": {
+        "str": "hello"
+    },
+	"keyring": {
+		"eddsa": "Cwj9CcqHNoBnXBo8iDfnhFkQeDun4Y4LStd2m3TEAYAg",
+        "ecdh": "yxL8P0pLHxsl3m8Nt6m9Zm0wSMzrWlD0JTAWlaheQg4="
+	},
+	"to_be_signed": "some data to be signed",
+    "base64_string": "aGVsbG8gbXkgZnJpZW5k"
+}

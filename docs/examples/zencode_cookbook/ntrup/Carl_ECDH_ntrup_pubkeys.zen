@@ -1,0 +1,8 @@
+Rule check version 2.0.0
+Scenario qp : Create the public keys
+Given I am known as 'Carl'
+and I have my 'keyring'
+When I create the kyber public key
+and I create the ntrup public key
+Then print my 'ntrup public key'
+and print my 'kyber public key'

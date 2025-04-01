@@ -1,0 +1,11 @@
+Given I have a 'hex' named 'zeroseed'
+
+When I create the random of '32' bytes
+and I rename 'random' to 'first'
+
+When I seed the random with 'zeroseed'
+and I create the random of '32' bytes
+
+When I verify 'random' is equal to 'first'
+
+Then print the 'random' as 'hex'

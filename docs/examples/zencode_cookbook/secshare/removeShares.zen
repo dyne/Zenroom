@@ -2,21 +2,10 @@
 # Here we load the "secret shares", which is a an array of base64 numbers
 Given I have a 'base64 array' named 'mySharedSecret'
 
-# Here we are simply removing 4 randomly chosen shares from the array,
-# so that only 4 are left.
+# Here we are simply selecting 5 random shares from the array
 
-When I pick the random object in 'mySharedSecret'
-and I remove the 'random object' from 'mySharedSecret'
-and I delete 'random object'
-and I pick the random object in 'mySharedSecret'
-and I remove the 'random object' from 'mySharedSecret'
-and I delete 'random object'
-and I pick the random object in 'mySharedSecret'
-and I remove the 'random object' from 'mySharedSecret'
-and I delete 'random object'
-and I pick the random object in 'mySharedSecret'
-and I remove the 'random object' from 'mySharedSecret'
+When I create the random array with '5' elements from 'mySharedSecret'
 
 # Now we have an array with 5 shares that print out
-When I rename the 'mySharedSecret' to 'my5partsOfTheSharedSecret'
+When I rename the 'random array' to 'my5partsOfTheSharedSecret'
 Then print the 'my5partsOfTheSharedSecret'

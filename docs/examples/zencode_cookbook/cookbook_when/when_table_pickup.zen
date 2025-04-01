@@ -3,7 +3,7 @@ Given I have a 'string dictionary' named 'dictionary'
 #pickup an element of a dictionary
 When I pickup from path 'dictionary.string_1'
 #pickup an element of a dictionary and return in base64
-When I pickup a '' from path 'dictionary.string_2'
+When I pickup a 'string' from path 'dictionary.string_2'
 #take an element of a dictionary
 When I take 'string_3' from path 'dictionary'
 

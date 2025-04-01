@@ -1,0 +1,7 @@
+Scenario credential
+Given I am 'Participant_2'
+and I have my 'keyring'
+and I have a 'credential signature'
+when I create the credentials
+then print my 'credentials'
+and print my 'keyring'

@@ -1,0 +1,20 @@
+Scenario 'http': create a GET request concatenating values on a HTTP url
+
+# the parameters are loaded as string dictionary
+Given I have a 'string dictionary' named 'parameters'
+
+# create the get parameters string
+When I create the http get parameters from 'parameters'
+and I rename 'http_get_parameters' to 'get_parameters_without_percent_endoing'
+When I create the http get parameters from 'parameters' using percent encoding
+and I rename 'http_get_parameters' to 'get_parameters_with_percent_endoing'
+
+# empty dict
+When I create the 'string dictionary' named 'empty'
+and I create the http get parameters from 'empty' using percent encoding
+and I rename 'http_get_parameters' to 'empty_get_parameters'
+
+Then print the 'get_parameters_without_percent_endoing'
+and print the 'get_parameters_with_percent_endoing'
+and print the 'empty_get_parameters'
+

@@ -8,15 +8,15 @@ Given I have a 'string array' named 'myNestedArray' inside 'myFirstObject'
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
 Given I have a 'string array' named 'myThirdArray' inside 'myThirdObject' 
 Given I have a 'string array' named 'myFourthArray' inside 'myFourthObject'
-Given I have a 'number array' named 'myFirstNumberArray' inside 'myFirstObject'
+Given I have a 'number array' named 'aArray' inside 'myFirstObject'
 Given I have a 'string array' named 'myCopyOfFirstArray' inside 'myThirdObject'
 Given I have a 'base64 array' named 'myOnlyEcpArray' inside 'myFirstObject'
 Given I have a 'base64 array' named 'myOnlyEcp2Array' inside 'myFirstObject'
-Given I have a 'number array' named 'mySecondNumberArray'
+Given I have a 'number array' named 'bArray'
 
 # Load Numbers
-Given I have a 'number' named 'myFirstNumber' in 'myFirstObject'
-Given I have a 'number' named 'mySecondNumber' in 'mySecondObject'
+Given I have a 'number' named 'a' in 'myFirstObject'
+Given I have a 'number' named 'b' in 'mySecondObject'
 Given I have a 'number' named 'myFourthNumber' inside 'myFourthObject'
 Given I have a 'number' named 'myThirdNumber' inside 'myThirdObject' 
 # Load Strings
@@ -106,7 +106,7 @@ And I rename the 'HMAC' to 'hmacOfMyFourteenthString'
 # and sums then it into a new object called "aggregation" that we'll rename immediately.
 # It works on both arrays and dictionaries, the data type needs to be 
 # specified as in the example.
-When I create the aggregation of array 'myFirstNumberArray'
+When I create the aggregation of array 'aArray'
 And I rename the 'aggregation' to 'aggregationOfMyFirstNumberArray'
 
 # Now let's print out everything

@@ -1,0 +1,726 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Zenroom LUA</title>
+    <link rel="stylesheet" href="" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Zenroom</h1>
+
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/OCTET.html">OCTET</a></li>
+  <li><a href="../modules/HASH.html">HASH</a></li>
+  <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><a href="../modules/BIG.html">BIG</a></li>
+  <li><a href="../modules/FLOAT.html">FLOAT</a></li>
+  <li><a href="../modules/TIME.html">TIME</a></li>
+  <li><a href="../modules/AES.html">AES</a></li>
+  <li><a href="../modules/ECDH.html">ECDH</a></li>
+  <li><a href="../modules/ED.html">ED</a></li>
+  <li><a href="../modules/P256.html">P256</a></li>
+  <li><a href="../modules/QP.html">QP</a></li>
+  <li><a href="../modules/String.html">String</a></li>
+  <li><a href="../modules/Table.html">Table</a></li>
+  <li><a href="../modules/INSPECT.html">INSPECT</a></li>
+  <li><a href="../modules/lua.zencode.html">lua.zencode</a></li>
+  <li><strong>BBS</strong></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>BBS</code></h1>
+<p>
+
+<h1>BBS signature scheme</h1>
+
+
+<p> The BBS signature scheme (also known as the Boneh-Boyen-Shacham signature scheme)
+ is a cryptographic signature scheme based on pairing-based cryptography: the BBS scheme is particularly
+ notable for its use of bilinear pairings on elliptic curves,
+ which enable efficient verification and compact signatures.</p>
+</p>
+<p>
+ It is a probabilistic digital signature scheme based on the discrete logarithm problem, i.e.
+ the difficult of finding the dicrete logarithm in a gruop of prime order.</p>
+
+<p> The BBS signature scheme utilizes two elliptic curves in its construction:
+ E1: y ^ 2 = x ^ 3 + 4 defined over the finite field GF(p). </p>
+
+<p> E2: y ^ 2 = x ^ 3 + 4 * (I + 1) where I ^ 2 + 1 = 0 defined over the finite field GF(p^2)</p>
+
+<p> where p = (t - 1)^2 * (t^4 - t^2 + 1) / 3 + t and t = -2^63 - 2^62 - 2^60 - 2^57 - 2^48 - 2^16.</p>
+
+<p> Let be observed that p is not a prime number and the two subgroups G1 and G2 of E1 and E2 are
+ the two groups used for the pairing having the same order
+ r = 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001 which is a prime factor of p.</p>
+
+<p> Public keys and key generation are considered as points in G2 and signatures as point in G1.
+ This choice allows to provide short signatures with strong security guarantees.</p>
+
+<p> </p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#ciphersuite">ciphersuite (hash)</a></td>
+	<td class="summary">Return a specific ciphersuite based on the provided hash name.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#keygen">keygen (ciphersuite, key_material, key_info, key_dst)</a></td>
+	<td class="summary">Generate a secret key (sk) for use in cryptographic operations.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#hash_to_field_m1_c2">hash_to_field_m1_c2 (ciphersuite, msg, dst)</a></td>
+	<td class="summary">Hash a message into two field elements in the prime field of an elliptic curve.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#hash_to_curve">hash_to_curve (ciphersuite, msg, dst)</a></td>
+	<td class="summary">Hash a message to a point on an elliptic curve.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#create_generators">create_generators (ciphersuite, count)</a></td>
+	<td class="summary">Create a set of cryptographic generators.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#messages_to_scalars">messages_to_scalars (ciphersuite, messages)</a></td>
+	<td class="summary">Convert a list of messages, a vector of octets, into a list of scalar values using a cryptographic hash function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#sign">sign (ciphersuite, sk, header, messages)</a></td>
+	<td class="summary">The Sign operation returns a BBS signature from a secret key (sk), over a header and a set of messages.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octets_to_pub_key">octets_to_pub_key (pk)</a></td>
+	<td class="summary">Ensure that the public key is valid, in the right subgroup, and not the identity element.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#verify">verify (ciphersuite, pk, signature, header, messages)</a></td>
+	<td class="summary">Validate a BBS signature.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#calculate_random_scalars">calculate_random_scalars (count)</a></td>
+	<td class="summary">Generate a table of random scalars that are uniformly distributed modulo the ECP order.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#proof_gen">proof_gen (ciphersuite, pk, signature, header, ph, messages, indexes)</a></td>
+	<td class="summary">Allow a user to prove knowledge of a valid signature while selectively revealing some messages and keeping others hidden.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#proof_verify">proof_verify (ciphersuite, pk, header, ph, messages, indexes)</a></td>
+	<td class="summary">It is responsible for validating a BBS proof.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "ciphersuite"></a>
+    <strong>ciphersuite (hash)</strong>
+    </dt>
+    <dd>
+    Return a specific ciphersuite based on the provided hash name. <br/>
+ There are two possibilities for the output: the configuration for SHAKE-256 or the configuration for SHA-256.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">hash</span>
+         a string with the name of the hash function, sha256 or shake256
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a ciphersuite configuration
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">bbs = <span class="global">require</span><span class="string">'crypto_bbs'</span>
+**<span class="global">select</span> the hash sha256
+suite = bbs.<span class="function-name">ciphersuite</span>(<span class="string">'sha256'</span>)
+**<span class="global">print</span> <span class="keyword">for</span> example the ciphersuite ID
+<span class="global">print</span>(suite.ciphersuite_ID)
+**<span class="global">print</span>: BBS_BLS12381G1_XMD:SHA-<span class="number">256</span>_SSWU_RO_</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "keygen"></a>
+    <strong>keygen (ciphersuite, key_material, key_info, key_dst)</strong>
+    </dt>
+    <dd>
+    Generate a secret key (sk) for use in cryptographic operations. <br/>
+The function uses a provided ciphersuite, key material, key info, and domain separation tag (DST) to derive the secret key.
+The ciphersuite is a table containing the cipher suite configuration.
+Key material is an optional input used as the seed for key generation. If not provided, a secure random value of 32 bytes is generated.
+Key info is an optional addition information. If not provided, it defaults to an empty octet.
+key DST is an optional domain separation tag. If not provided, it defaults to the ciphersuite's ciphersuite_ID concatenated with the string 'KEYGEN_DST_'.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ciphersuite</span>
+
+
+
+        </li>
+        <li><span class="parameter">key_material</span>
+
+
+
+        </li>
+        <li><span class="parameter">key_info</span>
+
+
+
+        </li>
+        <li><span class="parameter">key_dst</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        sk, a private key 32 bytes long
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">bbs = <span class="global">require</span><span class="string">'crypto_bbs'</span>
+**generate ciphersuite <span class="keyword">and</span>  key_m, key_info, key_dst as random octet of <span class="number">32</span> bytes
+ciphersuite = bbs.<span class="function-name">ciphersuite</span>(<span class="string">'sha256'</span>)
+key_material = O.<span class="function-name">random</span>(<span class="number">32</span>)
+key_info = O.<span class="function-name">random</span>(<span class="number">32</span>)
+key_dst = O.<span class="function-name">randopm</span>(<span class="number">32</span>)
+**calculate the private key
+sk = bbs.<span class="function-name">keygen</span>(ciphersuite, key_material, key_info, key_dst)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "hash_to_field_m1_c2"></a>
+    <strong>hash_to_field_m1_c2 (ciphersuite, msg, dst)</strong>
+    </dt>
+    <dd>
+    Hash a message into two field elements in the prime field of an elliptic curve.
+This is a common operation in cryptographic protocols, <br/>
+where messages need to be mapped to field elements.
+The third input of the function, the domain separation tag, ensures that the same input message can be hashed differently
+for different purposes, preventing collisions or unintended reuse of hash outputs.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ciphersuite</span>
+
+
+
+        </li>
+        <li><span class="parameter">msg</span>
+         the input message to be hashed
+        </li>
+        <li><span class="parameter">dst</span>
+         a domain separation tag
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a table containing the two field elements
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">bbs = <span class="global">require</span><span class="string">'crypto_bbs'</span>
+**define a ciphersuite, a DST <span class="keyword">and</span> a random message
+ciphersuite = bbs.<span class="function-name">ciphersuite</span>(<span class="string">'sha256'</span>)
+DST_hash_to_field = <span class="string">'QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_'</span>
+msg = O.<span class="function-name">random</span>(<span class="number">32</span>)
+**<span class="keyword">return</span> the <span class="global">table</span> H. H[<span class="number">1</span>] <span class="keyword">and</span> H[<span class="number">2</span>] will be the two field elements
+H = bbs.<span class="function-name">hash_to_field_m1_c2</span>(ciphersuite, msg, DST_hash_to_field)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "hash_to_curve"></a>
+    <strong>hash_to_curve (ciphersuite, msg, dst)</strong>
+    </dt>
+    <dd>
+    Hash a message to a point on an elliptic curve.  This is a common operation in cryptographic protocols, where messages
+need to be mapped to curve points for operations like signing and verification.
+It uses <a href="../modules/BBS.html#hash_to_field_m1_c2">hash_to_field_m1_c2</a> function to hash the message into two field elements
+that are mapped to a point on the elliptic curve.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ciphersuite</span>
+
+
+
+        </li>
+        <li><span class="parameter">msg</span>
+         the input message to be hashed
+        </li>
+        <li><span class="parameter">dst</span>
+         a domain separation tag
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the final curve point after clearing the cofactor
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">bbs = <span class="global">require</span><span class="string">'crypto_bbs'</span>
+**define a ciphersuite, a DST <span class="keyword">and</span> a random message
+ciphersuite = bbs.<span class="function-name">ciphersuite</span>(<span class="string">'sha256'</span>)
+DST_hash_to_field = <span class="string">'QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_'</span>
+msg = O.<span class="function-name">random</span>(<span class="number">32</span>)
+**<span class="keyword">return</span> the curve point
+P = bbs.<span class="function-name">hash_to_curve</span>(ciphersuite, msg, DST_hash_to_field)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "create_generators"></a>
+    <strong>create_generators (ciphersuite, count)</strong>
+    </dt>
+    <dd>
+    Create a set of cryptographic generators. <br/>
+These generators are points on an elliptic curve and are used in operations like signing and verification.
+The function ensures that the generators are created deterministically and securely,
+based on a seed value and domain separation tags.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ciphersuite</span>
+
+
+
+        </li>
+        <li><span class="parameter">count</span>
+         the number of generators to create
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the first 'count' generators from the ciphersuite.GENERATORS table
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">bbs = <span class="global">require</span><span class="string">'crypto_bbs'</span>
+**define a ciphersuite <span class="keyword">and</span> a count
+ciphersuite = bbs.<span class="function-name">ciphersuite</span>(<span class="string">'sha256'</span>)
+count = <span class="number">5</span>
+**<span class="keyword">return</span> a <span class="global">table</span> G of <span class="number">5</span> generators
+G = bbs.<span class="function-name">create_generators</span>(ciphersuite,count)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "messages_to_scalars"></a>
+    <strong>messages_to_scalars (ciphersuite, messages)</strong>
+    </dt>
+    <dd>
+    Convert a list of messages, a vector of octets, into a list of scalar values using a cryptographic hash function.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ciphersuite</span>
+
+
+
+        </li>
+        <li><span class="parameter">messages</span>
+         a set of messages
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a vector of scalars stored as octet
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">bbs = <span class="global">require</span><span class="string">'crypto_bbs'</span>
+**define a ciphersuite <span class="keyword">and</span> a set of random messages
+ciphersuite = bbs.<span class="function-name">ciphersuite</span>(<span class="string">'sha256'</span>)
+map_messages_to_scalar_messages = {
+    O.<span class="function-name">random</span>(<span class="number">32</span>),
+    O.<span class="function-name">random</span>(<span class="number">64</span>),
+    O.<span class="function-name">random</span>(<span class="number">16</span>)
+}
+**<span class="keyword">return</span> a vector of octets
+output_scalar = bbs.<span class="function-name">messages_to_scalars</span>(ciphersuite,map_messages_to_scalar_messages)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "sign"></a>
+    <strong>sign (ciphersuite, sk, header, messages)</strong>
+    </dt>
+    <dd>
+    The Sign operation returns a BBS signature from a secret key (sk), over a header and a set of messages. <br/>
+It uses the <code>core_sign</code> function, that computes a deterministic signature from a secret key (sk), a set of generators (points of G1)
+and optionally a header and a vector of messages.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ciphersuite</span>
+
+
+
+        </li>
+        <li><span class="parameter">sk</span>
+         the secret key as an octet
+        </li>
+        <li><span class="parameter">header</span>
+
+
+
+        </li>
+        <li><span class="parameter">messages</span>
+         array of octet strings stored as octet
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the signature
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">bbs = <span class="global">require</span><span class="string">'crypto_bbs'</span>
+**define a ciphersuite, a secret key, a public key, an header <span class="keyword">and</span> a message
+ciphersuite = bbs.<span class="function-name">ciphersuite</span>(<span class="string">'sha256'</span>)
+SECRET_KEY = <span class="string">"60e55110f76883a13d030b2f6bd11883422d5abde717569fc0731f51237169fc"</span>
+HEADER = <span class="string">"11223344556677889900aabbccddeeff"</span>
+SINGLE_MSG_ARRAY = { O.<span class="function-name">from_hex</span>(<span class="string">"9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02"</span>) }
+**calculate the signature <span class="keyword">for</span> the given message
+output_signature = bbs.<span class="function-name">sign</span>(ciphersuite, BIG.<span class="function-name">new</span>(O.<span class="function-name">from_hex</span>(SECRET_KEY)), O.<span class="function-name">from_hex</span>(HEADER), SINGLE_MSG_ARRAY)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "octets_to_pub_key"></a>
+    <strong>octets_to_pub_key (pk)</strong>
+    </dt>
+    <dd>
+    Ensure that the public key is valid, in the right subgroup, and not the identity element.
+It converts the public key (pk) into a point W on the elliptic curve in G2 and checks if W is in the correct subgroup.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pk</span>
+         the public key
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the point W
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">bbs = <span class="global">require</span><span class="string">'crypto_bbs'</span>
+**define a ciphersuite <span class="keyword">and</span> a public key
+ciphersuite = bbs.<span class="function-name">ciphersuite</span>(<span class="string">'sha256'</span>)
+PUBLIC_KEY = <span class="string">"a820f230f6ae38503b86c70dc50b61c58a77e45c39ab25c0652bbaa8fa136f2851bd4781c9dcde39fc9d1d52c9e60268061e7d7632171d
+              91aa8d460acee0e96f1e7c4cfb12d3ff9ab5d5dc91c277db75c845d649ef3c4f63aebc364cd55ded0c"</span>
+**calculate the point W
+W = bbs.<span class="function-name">octets_to_pub_key</span>(O.<span class="function-name">from_hex</span>(PUBLIC_KEY))</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "verify"></a>
+    <strong>verify (ciphersuite, pk, signature, header, messages)</strong>
+    </dt>
+    <dd>
+    Validate a BBS signature.  To do this it uses the <code>core_verify</code> function, which verify if the signature is valid.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ciphersuite</span>
+
+
+
+        </li>
+        <li><span class="parameter">pk</span>
+         the public key as an octet
+        </li>
+        <li><span class="parameter">signature</span>
+         as an octet
+        </li>
+        <li><span class="parameter">header</span>
+
+
+
+        </li>
+        <li><span class="parameter">messages</span>
+         an array of octet strings as octet
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean, true if the signature is valid, false otherwise
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">**from the usage <span class="keyword">in</span> the sign <span class="keyword">function</span>, check <span class="keyword">if</span> the signature is valid
+<span class="keyword">if</span> bbs.<span class="function-name">verify</span>(ciphersuite, O.<span class="function-name">from_hex</span>(PUBLIC_KEY), output_signature, O.<span class="function-name">from_hex</span>(HEADER), SINGLE_MSG_ARRAY) <span class="keyword">then</span> <span class="global">print</span> (<span class="string">"valid signature"</span>)
+<span class="keyword">else</span> <span class="global">print</span>(<span class="string">"invalid signature"</span>)
+<span class="keyword">end</span>
+**<span class="global">print</span>:valid signature</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "calculate_random_scalars"></a>
+    <strong>calculate_random_scalars (count)</strong>
+    </dt>
+    <dd>
+    Generate a table of random scalars that are uniformly distributed modulo the ECP order.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">count</span>
+         number of random scalars to generate
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a table of uniformly distributed random scalars modulo the ECP order
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">**generate a <span class="global">table</span> of <span class="number">5</span> random scalars
+T = bbs.<span class="function-name">calculate_random_scalars</span>(<span class="number">5</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "proof_gen"></a>
+    <strong>proof_gen (ciphersuite, pk, signature, header, ph, messages, indexes)</strong>
+    </dt>
+    <dd>
+    Allow a user to prove knowledge of a valid signature while selectively revealing some messages and keeping others hidden.
+It uses other functions during the process. In particular, the <code>proof_init()</code> function constructs commitments using the signature, public key, message generators, and random scalars.
+The <code>proof_challenge_calculate</code> function generates a challenge value from the commitments. The <code>proof_finalize</code> function
+computes the final proof values based on the challenge and initial commitments.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ciphersuite</span>
+
+
+
+        </li>
+        <li><span class="parameter">pk</span>
+         the public key
+        </li>
+        <li><span class="parameter">signature</span>
+
+
+
+        </li>
+        <li><span class="parameter">header</span>
+
+
+
+        </li>
+        <li><span class="parameter">ph</span>
+         the presentation header
+        </li>
+        <li><span class="parameter">messages</span>
+         an array of messages
+        </li>
+        <li><span class="parameter">indexes</span>
+         an array of indexes of messages the prover wants to reveal
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a zero-knowledge proof that can be verified without revealing the entire signature.
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">bbs = <span class="global">require</span><span class="string">'crypto_bbs'</span>
+**define ciphersuite, sk, pk, header, single message array, presentation header <span class="keyword">and</span> calculate a valid signature
+ciphersuite = bbs.<span class="function-name">ciphersuite</span>(<span class="string">'sha256'</span>)
+SECRET_KEY = <span class="string">"60e55110f76883a13d030b2f6bd11883422d5abde717569fc0731f51237169fc"</span>
+PUBLIC_KEY = <span class="string">"a820f230f6ae38503b86c70dc50b61c58a77e45c39ab25c0652bbaa8fa136f2851bd4781c9dcde39fc9d1d52c9e60268061e7d7
+              632171d91aa8d460acee0e96f1e7c4cfb12d3ff9ab5d5dc91c277db75c845d649ef3c4f63aebc364cd55ded0c"</span>
+HEADER = <span class="string">"11223344556677889900aabbccddeeff"</span>
+SINGLE_MSG_ARRAY = { O.<span class="function-name">from_hex</span>(<span class="string">"9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02"</span>) }
+PRESENTATION_HEADER = O.<span class="function-name">from_hex</span>(<span class="string">"bed231d880675ed101ead304512e043ade9958dd0241ea70b4b3957fba941501"</span>)
+output_signature = bbs.<span class="function-name">sign</span>(ciphersuite, BIG.<span class="function-name">new</span>(O.<span class="function-name">from_hex</span>(SECRET_KEY)), O.<span class="function-name">from_hex</span>(PUBLIC_KEY), O.<span class="function-name">from_hex</span>(HEADER), SINGLE_MSG_ARRAY)
+**<span class="keyword">return</span> the proof like an octet
+pg_output = bbs.<span class="function-name">proof_gen</span>(ciphersuite, O.<span class="function-name">from_hex</span>(PUBLIC_KEY), output_signature, O.<span class="function-name">from_hex</span>(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {<span class="number">1</span>})</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "proof_verify"></a>
+    <strong>proof_verify (ciphersuite, pk, header, ph, messages, indexes)</strong>
+    </dt>
+    <dd>
+    It is responsible for validating a BBS proof.  This proof was generated by <a href="../modules/BBS.html#proof_gen">proof_gen</a> and allows a verifier to confirm that a signer possesses a valid BBS
+signature while selectively revealing only some signed messages.
+It uses some other functions: the <code>octets_to_proof</code> function converts the proof octet string into its mathematical components (group elements and scalars).
+The <code>proof_verify_init</code> function computes the expected commitments for disclosed and undisclosed messages.
+The <code>proof_challenge_calculate</code> ensures that the challenge scalar was computed correctly.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ciphersuite</span>
+
+
+
+        </li>
+        <li><span class="parameter">pk</span>
+         the public key
+        </li>
+        <li><span class="parameter">header</span>
+
+
+
+        </li>
+        <li><span class="parameter">ph</span>
+         the presentation header
+        </li>
+        <li><span class="parameter">messages</span>
+         an array of messages
+        </li>
+        <li><span class="parameter">indexes</span>
+         an rray of indexes specifying which messages were disclosed
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true if the proof is valid, false otherwise
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">**from the usage <span class="keyword">in</span> the proof_gen <span class="keyword">function</span>, check <span class="keyword">if</span> the proof is valid
+<span class="keyword">if</span>  bbs.<span class="function-name">proof_verify</span>(ciphersuite, O.<span class="function-name">from_hex</span>(PUBLIC_KEY), pg_output, O.<span class="function-name">from_hex</span>(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {<span class="number">1</span>}) <span class="keyword">then</span> <span class="global">print</span>(<span class="string">"valid proof"</span>)
+<span class="keyword">else</span> <span class="global">print</span>(<span class="string">"invalid proof"</span>)
+<span class="keyword">end</span>
+**<span class="global">print</span>: valid proof</pre>
+    </ul>
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2025-03-25 10:33:58 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

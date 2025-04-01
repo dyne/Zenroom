@@ -1,0 +1,17 @@
+Scenario 'eddsa': verify
+
+Given I have a 'string array' named 'zip arrays'
+
+Given I have a 'string array' named 'messages'
+Given I have a 'eddsa signature array' named 'signatures'
+Given I have a 'eddsa public key array' named 'public keys'
+
+When I create the 'string array' named 'res'
+
+Foreach value prefix 'loop variable ' at the same position in arrays 'zip arrays'
+    If I verify 'loop variable messages' has a eddsa signature in 'loop variable signatures' by 'loop variable public keys'
+        When I move 'loop variable messages' in 'res'
+    EndIf
+EndForeach
+
+Then print the 'res'

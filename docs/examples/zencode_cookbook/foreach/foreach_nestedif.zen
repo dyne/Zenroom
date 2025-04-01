@@ -1,0 +1,25 @@
+Given I have a 'float array' named 'numbers'
+Given I have a 'float array' named 'numbers2'
+Given I have a 'float' named 'limit'
+Given I have a 'float' named 'zero'
+When I create the 'float array'
+When I rename 'float array' to 'floats'
+Foreach 'x' in 'numbers'
+Foreach 'y' in 'numbers2'
+If I verify number 'x' is more than 'limit'
+If I verify number 'y' is more than 'limit'
+When I copy 'x' in 'floats'
+endif
+endif
+EndForeach
+EndForeach
+If I verify number 'zero' is less than 'limit'
+If I verify number 'zero' is less than 'limit'
+Foreach 'a' in 'numbers'
+Foreach 'b' in 'numbers2'
+When I copy 'b' in 'floats'
+EndForeach
+EndForeach
+endif
+endif
+Then print 'floats'

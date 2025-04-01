@@ -1,0 +1,5 @@
+rule output encoding hex
+Given nothing
+When I write string 'a string to be hashed' in 'source'
+and I create the multihash of 'source' using 'sha3_256'
+Then print the 'multihash'

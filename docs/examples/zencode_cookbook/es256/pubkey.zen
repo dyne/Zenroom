@@ -1,0 +1,5 @@
+Scenario es256
+Given I am known as 'Bob'
+Given I have my 'keyring'
+When I create the es256 public key
+Then print my 'es256 public key'

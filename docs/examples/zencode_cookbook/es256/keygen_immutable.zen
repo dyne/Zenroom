@@ -1,0 +1,9 @@
+Scenario es256
+Given I am known as 'Carl'
+When I create the es256 key
+and I copy the 'es256' from 'keyring' to 'es256 before'
+and I create the es256 public key
+and I copy the 'es256' from 'keyring' to 'es256 after'
+and I verify 'es256 before' is equal to 'es256 after'
+Then print 'es256 before' as 'hex'
+and print 'es256 after' as 'hex'

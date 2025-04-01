@@ -1,0 +1,16 @@
+Scenario 'w3c': did document manipulation
+Scenario 'ecdh': ecdh pk
+Scenario 'eddsa': eddsa pk
+Scenario 'reflow': reflow pk
+Scenario 'ethereum': ethereum add
+
+Given I have a 'did document' named 'didDocument'
+
+When I create the 'ecdh' public key from did document 'didDocument'
+When I create the 'reflow' public key from did document 'didDocument'
+When I create the 'bitcoin' public key from did document 'didDocument'
+When I create the 'eddsa' public key from did document 'didDocument'
+
+When I remove 'didDocument'
+
+Then print the data

@@ -1,0 +1,5 @@
+Given I have a 'string array' named 'haystack'
+and I have a 'number' named 'quorum'
+and I have a 'string' named 'needle'
+When I verify the 'needle' is found in 'haystack' at least 'quorum' times
+Then Print the string 'Success'

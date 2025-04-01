@@ -1,0 +1,4 @@
+Scenario 'sd_jwt'
+
+Given I have a 'signed selective disclosure'
+Then print the 'signed selective disclosure'

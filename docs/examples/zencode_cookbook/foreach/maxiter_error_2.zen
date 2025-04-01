@@ -1,0 +1,11 @@
+Given I have a 'float' named 'start_float'
+Given I have a 'float' named 'step_float'
+Given I have a 'float' named 'end_out_of_limit_float'
+
+When I create the 'string array' named 'res'
+
+Foreach 'i' in sequence from 'start_float' to 'end_out_of_limit_float' with step 'step_float'
+   When I move 'i' in 'res'
+EndForeach
+
+Then print the 'res'

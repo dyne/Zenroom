@@ -1,0 +1,6 @@
+Given that I have a 'string' named 'eddsa public key'
+Given that I rename 'eddsa_public_key' to 'eddsa string'
+Given that I have a 'base58' named 'eddsa public key'
+Given I have a 'string' named 'comment'
+When I append 'comment' to 'eddsa string'
+Then print all data

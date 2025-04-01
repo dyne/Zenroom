@@ -1,0 +1,7 @@
+Given I have a 'hex' named 'missing public key'
+and I have a 'string dictionary' named 'does not exists'
+When I create the random 'random'
+and I create the 'string dictioanry' named 'hello'
+
+Then print codec
+and print 'hello'

@@ -1,0 +1,7 @@
+Given I have a 'string array' in path 'my_dict.result.my_string_array'
+and I have a 'number array' in path 'my_dict.result.my_number_array'
+and I have a 'hex' in path 'my_dict.result.my_hex'
+and I have a 'base64' in path 'my_dict.result.my_base64'
+and I have a 'base58' in path 'my_dict.result.my_base58'
+
+Then print the data

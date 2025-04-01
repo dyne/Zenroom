@@ -1,0 +1,33 @@
+Rule input number strict
+Given I have a 'float' named 'small_float'
+Given I have a 'float' named 'big_float'
+
+When I copy 'small_float' to 'sf_to_hex'
+When I copy 'small_float' to 'sf_to_base58'
+When I copy 'small_float' to 'sf_to_base64'
+When I copy 'small_float' to 'sf_to_binary'
+When I copy 'small_float' to 'sf_to_url64'
+When I copy 'small_float' to 'sf_to_string'
+
+When I copy 'big_float' to 'bf_to_hex'
+When I copy 'big_float' to 'bf_to_base58'
+When I copy 'big_float' to 'bf_to_base64'
+When I copy 'big_float' to 'bf_to_binary'
+When I copy 'big_float' to 'bf_to_url64'
+When I copy 'big_float' to 'bf_to_string'
+
+Then print the 'small_float'
+Then print the 'sf_to_hex' as 'hex'
+Then print the 'sf_to_base64' as 'base64'
+Then print the 'sf_to_base58' as 'base58'
+Then print the 'sf_to_binary' as 'binary'
+Then print the 'sf_to_url64' as 'url64'
+Then print the 'sf_to_string' as 'string'
+
+Then print the 'big_float'
+Then print the 'bf_to_hex' as 'hex'
+Then print the 'bf_to_base64' as 'base64'
+Then print the 'bf_to_base58' as 'base58'
+Then print the 'bf_to_binary' as 'binary'
+Then print the 'bf_to_url64' as 'url64'
+Then print the 'bf_to_string' as 'string'

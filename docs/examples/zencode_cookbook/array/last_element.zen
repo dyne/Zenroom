@@ -1,0 +1,16 @@
+Scenario 'ethereum': array of signatures
+
+Given I have a 'string array' named 'smallarray'
+Given I have a 'string dictionary' named 'smalldict'
+Given I have a 'ethereum signature array' named 'smallSignatures'
+
+When I create the copy of last element from 'smallarray'
+and I rename 'copy_of_last_element' to 'last array'
+When I create the copy of last element from 'smalldict'
+and I rename 'copy_of_last_element' to 'last dict'
+When I create the copy of last element from 'smallSignatures'
+and I rename 'copy_of_last_element' to 'last signature'
+
+Then print the 'last array'
+Then print the 'last dict'
+Then print the 'last signature'

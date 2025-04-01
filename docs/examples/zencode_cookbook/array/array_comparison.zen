@@ -1,0 +1,6 @@
+rule input encoding url64
+rule output encoding url64
+Given I have a 'url64 array' named 'left array'
+and I have a 'url64 array' named 'right array'
+When I verify 'left array' is equal to 'right array'
+Then print the string 'OK'

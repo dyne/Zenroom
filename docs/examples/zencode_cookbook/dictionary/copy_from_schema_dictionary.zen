@@ -1,0 +1,4 @@
+Scenario 'ethereum': copy element
+Given I have a 'ethereum address signature pair dictionary' named 'addresses_signatures'
+When I create the copy of 'add_sig_1' from dictionary 'addresses_signatures'
+Then print the 'copy'

@@ -1,0 +1,5 @@
+Rule check version abc
+
+Given nothing
+When I create the random 'random'
+Then print the data

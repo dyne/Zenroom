@@ -1,0 +1,12 @@
+{
+    "dictionary": {
+        "str": "hello world!",
+        "empty_str": "",
+        "another_str": "goodbye world!",
+    },
+    "array": [
+        "hello world!",
+        "",
+        "goodbye world!"
+    ]
+}

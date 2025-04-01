@@ -1,0 +1,5 @@
+Scenario credential: publish verifier
+Given that I am known as 'The Authority'
+and I have my 'keyring'
+When I create the issuer public key
+Then print my 'issuer public key'

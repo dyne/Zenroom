@@ -1,0 +1,10 @@
+Scenario 'w3c': jws
+
+Given I have a 'string dictionary' named 'payload'
+Given I have a 'keyring'
+
+When I create jws header for es256 signature with public key
+When I create jws signature of header 'jws header' and payload 'payload'
+
+Then print the 'jws signature'
+and print the 'jws header'

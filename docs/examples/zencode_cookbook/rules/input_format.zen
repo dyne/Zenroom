@@ -1,0 +1,6 @@
+Rule input format json
+Rule input encoding base58
+Scenario 'ecdh': public key
+
+Given I have a 'ecdh public key'
+Then print the data

@@ -1,0 +1,9 @@
+Scenario 'eddsa': Generate the public key
+Scenario 'schnorr': Generate the public key
+
+Given I have the 'keyring'
+When I create the eddsa public key
+When I create the schnorr public key
+and debug
+
+Then print the data

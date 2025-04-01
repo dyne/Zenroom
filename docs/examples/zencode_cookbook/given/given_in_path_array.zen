@@ -1,0 +1,12 @@
+Given I have a 'number' in path 'my_dict.result.my_number_array.1'
+and I rename '1' to 'my_number_array_1'
+Given I have a 'string' in path 'my_dict.result.my_string_array.2'
+and I rename '2' to 'my_string_array_2'
+Given I have a 'string' in path 'my_array.1.1'
+and I rename '1' to 'my_array_1_1'
+Given I have a 'string' in path 'my_array.2.1'
+and I rename '1' to 'my_array_2_1'
+Given I have a 'string' in path 'my_array.2.2.hi'
+and I rename 'hi' to 'my_array_2_2_hi'
+
+Then print the data

@@ -1,0 +1,26 @@
+{
+    "my_dict": {
+        "result": {
+            "my_string_array": [
+                "hello",
+                "world"
+            ],
+            "my_number_array": [
+                1,
+                2,
+                3
+            ]
+        }
+    },
+    "my_array": [
+        {
+            "1": "hello"
+        },
+        [
+            "one",
+            {
+                "hi": "world"
+            }
+        ]
+    ]
+}

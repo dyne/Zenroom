@@ -1,0 +1,4 @@
+Rule unknown ignore
+Given I have the 'string array' named 'array'
+Given I have the 'string array' named 'dictionary'
+Then print all data

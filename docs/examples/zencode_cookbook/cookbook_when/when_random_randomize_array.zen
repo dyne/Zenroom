@@ -1,0 +1,5 @@
+Given I have a 'string array' named 'ordered'
+
+When I randomize the 'ordered' array
+
+Then I print the 'ordered'

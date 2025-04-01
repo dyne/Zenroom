@@ -1,0 +1,11 @@
+Scenario eddsa
+Given I have a 'string' named 'hex_path'
+and I have a 'string' named 'base58_path'
+and I have a 'string' named 'base64_path'
+and I have a 'eddsa public key'
+When I append the 'hex' of 'eddsa_public_key' to 'hex_path'
+and I append the 'base58' of 'eddsa_public_key' to 'base58_path'
+and I append the 'base64' of 'eddsa_public_key' to 'base64_path'
+Then print the 'hex_path'
+and print the 'base58 path'
+and print the 'base64 path'

@@ -1,0 +1,16 @@
+{
+    "dict": {
+        "this": "dict",
+        "should": "not",
+        "be": "signed"
+    },
+    "nested_table": [
+        [
+            "hello",
+            "world"
+        ],
+        [
+            "this should also not be signed"
+        ]
+    ]
+}

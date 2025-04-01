@@ -1,0 +1,8 @@
+Scenario 'sd_jwt'
+
+Given I have 'signed_selective_disclosure'
+
+When I create the disclosed kv from signed selective disclosure 'signed_selective_disclosure'
+
+Then print the 'disclosed kv'
+

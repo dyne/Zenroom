@@ -1,0 +1,7 @@
+Scenario 'http': url with port
+
+Given I have a 'string' named 'url_with_port'
+
+When I create the url from 'url_with_port'
+
+Then print the 'url'

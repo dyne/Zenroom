@@ -1,0 +1,5 @@
+Given nothing
+When I create the bitcoin key
+When I create the bitcoin address
+Then print the 'keyring'
+Then print data

@@ -1,0 +1,5 @@
+Scenario bbs
+Given I have a 'bbs shake public key' in 'Bob'
+and I have a 'bbs shake signature'
+Then print the 'bbs shake signature'
+and print the 'bbs shake public key'

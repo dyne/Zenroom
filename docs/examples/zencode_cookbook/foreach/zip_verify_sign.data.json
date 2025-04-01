@@ -1,0 +1,7 @@
+{
+    "zip_arrays": [
+        "messages",
+        "signatures",
+        "public keys"
+    ]
+}

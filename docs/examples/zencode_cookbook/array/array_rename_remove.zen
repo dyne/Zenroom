@@ -1,0 +1,9 @@
+rule input encoding url64
+rule output encoding hex
+Given I have a 'url64 array' named 'bonnetjes'
+When I create the random pick from 'bonnetjes'
+and I rename the 'random pick' to 'lucky one'
+and I remove the 'lucky one' from 'bonnetjes'
+# redundant check
+and I verify the 'lucky one' is not found in 'bonnetjes'
+Then print the 'lucky one'

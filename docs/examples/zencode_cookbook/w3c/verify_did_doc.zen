@@ -1,0 +1,9 @@
+Scenario 'w3c': did document manipulation
+Scenario 'ecdh': ecdh pk
+
+Given I have a 'did document' named 'did_document'
+Given I have a 'did document' named 'signer_did_document'
+
+When I verify the did document named 'did_document' is signed by 'signer_did_document'
+
+Then print the string 'did document verified'

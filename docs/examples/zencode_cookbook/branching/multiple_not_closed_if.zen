@@ -1,0 +1,6 @@
+Given nothing
+When I set 'my_string' to 'test' as 'string'
+If I verify 'my_string' is found
+If I verify 'my_string' is equal to 'test'
+Then I print 'my string'
+If I verify 'my_string' is not equal to 'not_test'

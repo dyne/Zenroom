@@ -1,0 +1,21 @@
+Given I have a 'string array' named 'myStringArray'
+Given I have a 'base64 array' named 'myBase64Array'
+Given I have a 'string dictionary' named 'myStringDictionary'
+Given I have a 'base64 dictionary' named 'myBase64Dictionary'
+
+When I create the json escaped string of 'myStringArray'
+and I rename the 'json escaped string' to 'json.myStringArray'
+
+When I create the json escaped string of 'myBase64Array'
+and I rename the 'json escaped string' to 'json.myBase64Array'
+
+When I create the json escaped string of 'myStringDictionary'
+and I rename the 'json escaped string' to 'json.myStringDictionary'
+
+When I create the json escaped string of 'myBase64Dictionary'
+and I rename the 'json escaped string' to 'json.myBase64Dictionary'
+
+Then print the 'json.myStringArray'
+Then print the 'json.myBase64Array'
+Then print the 'json.myStringDictionary'
+Then print the 'json.myBase64Dictionary'

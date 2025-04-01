@@ -1,0 +1,5 @@
+rule output sorting false
+
+Given I have a 'string dictionary' named 'reverse order'
+and debug
+Then print all data

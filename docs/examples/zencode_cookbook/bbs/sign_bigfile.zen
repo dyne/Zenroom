@@ -1,0 +1,7 @@
+Rule check version 2.0.0
+Scenario bbs
+Given that I am known as 'Alice'
+and I have my 'keyring'
+and I have a 'base64' named 'bigfile'
+When I create the bbs signature of 'bigfile'
+Then print the 'bbs signature'

@@ -1,0 +1,3 @@
+Scenario ethereum
+Given I have a 'ethereum address' named 'storage contract'
+Then print 'storage contract'

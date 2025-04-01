@@ -1,0 +1,6 @@
+Scenario schnorr
+Given I have a 'schnorr signature'
+When I create the schnorr key
+and I create the schnorr public key
+Then print the 'schnorr signature'
+and print the 'schnorr public key'

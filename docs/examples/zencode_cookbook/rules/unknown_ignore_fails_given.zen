@@ -1,0 +1,6 @@
+Rule unknown ignore
+
+Given nothing
+Given I test the rule with a statement that does not exist
+When I write string 'test passed' in 'result'
+Then print the data

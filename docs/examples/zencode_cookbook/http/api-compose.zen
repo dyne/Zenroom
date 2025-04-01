@@ -7,7 +7,7 @@ Given I have a 'string' named 'lat'
 Given I have a 'string' named 'product'
 Given I have a 'string' named 'output'
 
-# The statement 'create the url' creates an object to which parameters 
+# The statement 'create the url' creates an object to which parameters
 # can be appended to create a valid GET request
 When I create the url from 'base-url'
 

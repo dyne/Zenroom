@@ -1,0 +1,14 @@
+rule check version 1.0.0
+Scenario ecdh: Sign a new Identity
+Given that I am known as 'Authority'
+and I have my 'keyring'
+and I have a 'string dictionary' named 'Identity'
+and I have a 'string dictionary' named 'HistoryOfTransactions'
+When I create the signature of 'Identity'
+and I rename the 'signature' to 'Identity.signature'
+and I create the signature of 'HistoryOfTransactions'
+and I rename the 'signature' to 'HistoryOfTransactions.signature'
+Then print the 'Identity'
+and print the 'Identity.signature'
+and print the 'HistoryOfTransactions'
+and print the 'HistoryOfTransactions.signature'

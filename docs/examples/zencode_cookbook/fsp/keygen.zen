@@ -1,0 +1,4 @@
+Scenario fsp
+Given nothing
+When I create the fsp key
+Then print the keyring

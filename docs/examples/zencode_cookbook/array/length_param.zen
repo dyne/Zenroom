@@ -1,0 +1,6 @@
+Given I have a 'string array' named 'array'
+
+When I create the size of 'array'
+and I copy 'size' from 'array' to 'copy'
+
+Then print the 'copy'

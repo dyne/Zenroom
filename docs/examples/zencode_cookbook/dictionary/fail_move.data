@@ -1,0 +1,7 @@
+{
+   "myMessage": "Dear Bob, your name is too short, goodbye - Alice.",
+   "ecdh signature": {
+      "r": "/cCmwHoaHGc7lbh60OMjG9ylUmAm20pbrnCN9w7NWJM=",
+      "s": "KXS+Ci0joCuZgUPYjrf7Qc+7d9lIqlHnCSooSwUk1CU="
+    }
+}

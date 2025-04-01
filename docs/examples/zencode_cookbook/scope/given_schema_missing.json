@@ -1,0 +1,1 @@
+{"CODEC":{"does_not_exists":{"encoding":"string","missing":true,"name":"does_not_exists","root":"myFirstObject","zentype":"d"},"missing_public_key":{"encoding":"hex","missing":true,"name":"missing_public_key","root":"Alice","zentype":"e"},"myStringArray":{"encoding":"string","name":"myStringArray","root":"myFirstObject","zentype":"a"}}}

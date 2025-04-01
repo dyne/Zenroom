@@ -1,0 +1,1496 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Zenroom LUA</title>
+    <link rel="stylesheet" href="" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Zenroom</h1>
+
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Global_Big_Functions">Global Big Functions </a></li>
+<li><a href="#Class_Big">Class Big </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/OCTET.html">OCTET</a></li>
+  <li><a href="../modules/HASH.html">HASH</a></li>
+  <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><strong>BIG</strong></li>
+  <li><a href="../modules/FLOAT.html">FLOAT</a></li>
+  <li><a href="../modules/TIME.html">TIME</a></li>
+  <li><a href="../modules/AES.html">AES</a></li>
+  <li><a href="../modules/ECDH.html">ECDH</a></li>
+  <li><a href="../modules/ED.html">ED</a></li>
+  <li><a href="../modules/P256.html">P256</a></li>
+  <li><a href="../modules/QP.html">QP</a></li>
+  <li><a href="../modules/String.html">String</a></li>
+  <li><a href="../modules/Table.html">Table</a></li>
+  <li><a href="../modules/INSPECT.html">INSPECT</a></li>
+  <li><a href="../modules/lua.zencode.html">lua.zencode</a></li>
+  <li><a href="../modules/BBS.html">BBS</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>BIG</code></h1>
+<p>
+
+<h1>Big Number Arithmetic (BIG)</h1>
+
+
+<p> Base arithmetical operations on big numbers.</p>
+</p>
+<p> Most operators are overloaded and can be used on BIG numbers as if they would be natural. Multiplications by <a href="../modules/ECP.html#">ECP</a> curve points are also possible using ECP as first argument.</p>
+
+<p> For explanations and example usage see <a href="https://dev.zenroom.org/crypto">dev.zenroom.org/crypto</a>.</p>
+    <h3>Info:</h3>
+    <ul>
+        <li><strong>Copyright</strong>: Dyne.org foundation 2017-2018</li>
+        <li><strong>License</strong>: AGPLv3</li>
+        <li><strong>Author</strong>: Denis "Jaromil" Roio</li>
+    </ul>
+
+
+<h2><a href="#Global_Big_Functions">Global Big Functions </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#new">new ([octet])</a></td>
+	<td class="summary">Create a new Big number.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#from_decimal">from_decimal (string)</a></td>
+	<td class="summary">Convert a decimal string into a big integer object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#modrand">modrand (modulo)</a></td>
+	<td class="summary">Generate a random Big number whose ceiling is defined by the modulo to another number.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#random">random ()</a></td>
+	<td class="summary">Generate a random Big number whose ceiling is the order of the curve.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#modsqrt">modsqrt (n, p)</a></td>
+	<td class="summary">Tonelli-Shanks algorithm.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#zenadd">zenadd (a, b)</a></td>
+	<td class="summary">Perform algebraic sum of two Big numbers, taking under account their zencode signs.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#zensub">zensub (a, b)</a></td>
+	<td class="summary">Perform algebraic subtraction of two Big numbers, taking under account their zencode signs.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#zenmul">zenmul (a, b)</a></td>
+	<td class="summary">Perform algebraic multiplication of two Big numbers, taking under account their zencode signs.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#zendiv">zendiv (a, b)</a></td>
+	<td class="summary">Perform algebraic division of two Big numbers, taking under account their zencode signs.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#zenpositive">zenpositive (n)</a></td>
+	<td class="summary">Check whether a given Big number is positive.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#zenmod">zenmod (a, b)</a></td>
+	<td class="summary">Compute the modulo operation of two Big numbers (a and b),
+ensuring that both numbers are positive.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#zenopposite">zenopposite (a)</a></td>
+	<td class="summary">Compute the opposite (additive inverse) of a Big number.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#is_integer">is_integer (data)</a></td>
+	<td class="summary">Check whether a given Lua value is an integer or a string representation of an integer.</td>
+	</tr>
+</table>
+<h2><a href="#Class_Big">Class Big </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#big:__gc">big:__gc ()</a></td>
+	<td class="summary">It is a destructor for a Big number object in Lua.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:bits">big:bits ()</a></td>
+	<td class="summary">Calculate the number of bits required to represent a Big number.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:bytes">big:bytes ()</a></td>
+	<td class="summary">Calculate the number of bytes required to represent a Big number.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:fixed">big:fixed (len, boolean)</a></td>
+	<td class="summary">Fixed size encoding for integer with big endian order.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:decimal">big:decimal ()</a></td>
+	<td class="summary">Convert a Big integer into a decimal string representation.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:octet">big:octet ()</a></td>
+	<td class="summary">Convert a Big number into an octet.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:__concat">big:__concat (data)</a></td>
+	<td class="summary">Concatenate two Big integer objects into a single octet.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:hex">big:hex ()</a></td>
+	<td class="summary">Convert a Big number in hexadecimal format.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:int">big:int ()</a></td>
+	<td class="summary">Convert a Big number into a Lua integer.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:__eq">big:__eq (data)</a></td>
+	<td class="summary">Compare two Big numbers for equality.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:__lt">big:__lt (data)</a></td>
+	<td class="summary">Provide a simple way to check if one Big integer is less than another.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:__lte">big:__lte (data)</a></td>
+	<td class="summary">Provide a simple way to check if one Big integer is less than or equal another.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:__add">big:__add (data)</a></td>
+	<td class="summary">Add two Big numbers and return the result as a new Big number.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:__sub">big:__sub (data)</a></td>
+	<td class="summary">Subtract two Big numbers and return the result as a new Big number.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:modsub">big:modsub (data, modulo)</a></td>
+	<td class="summary">Perform modular subtraction of two Big numbers modulus a third Big number.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:__mul">big:__mul (data)</a></td>
+	<td class="summary">Provide a flexible way to perform multiplication involving big integers,
+supporting both scalar multiplication with ECP points and modular multiplication of two big integers.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:modpower">big:modpower (n, m)</a></td>
+	<td class="summary">Perform modular exponentiation between Big numbers.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:sqr">big:sqr ()</a></td>
+	<td class="summary">Compute the square of a Big number.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:monty">big:monty (mod)</a></td>
+	<td class="summary">Perform Montgomery reduction on a double Big number using a modulus.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:__mod">big:__mod (m)</a></td>
+	<td class="summary">Compute the modulo operation on a Big number "b" using a modulus "m".</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:__div">big:__div (data)</a></td>
+	<td class="summary">Perform integer division of two Big numbers.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:modmul">big:modmul (coefficient, modulo)</a></td>
+	<td class="summary">Multiply a Big number by another Big while ceiling the operation to a modulo to avoid excessive results.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:moddiv">big:moddiv (d, m)</a></td>
+	<td class="summary">Perform modular division using Big numbers arithmetic.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:modsqr">big:modsqr (m)</a></td>
+	<td class="summary">Perform modular squaring on Big numbers.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:modneg">big:modneg (m)</a></td>
+	<td class="summary">Compute the modular negation of a large integer y modulo another large integer m, i.e.,
+−y mod m.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:jacobi">big:jacobi (y)</a></td>
+	<td class="summary">Compute the Jacobi symbol of two Big numbers x and y.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:modinv">big:modinv (m)</a></td>
+	<td class="summary">Compute the modular inverse of a large integer y modulo another large integer m.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:parity">big:parity ()</a></td>
+	<td class="summary">Check the parity (whether a number is even or odd) of a Big number.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#big:__shr">big:__shr (n)</a></td>
+	<td class="summary">Perform a right shift operation on a Big number (c) by a specified number of bits (n).</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Global_Big_Functions"></a>Global Big Functions </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "new"></a>
+    <strong>new ([octet])</strong>
+    </dt>
+    <dd>
+    Create a new Big number.  If an argument is present, import it as <a href="../modules/OCTET.html#">OCTET</a> and initialise it with its value.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">octet</span>
+         value
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new Big number
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "from_decimal"></a>
+    <strong>from_decimal (string)</strong>
+    </dt>
+    <dd>
+    Convert a decimal string into a big integer object. <br/>
+It works only for positive numbers.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">string</span>
+         representing a decimal number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the big integer object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "modrand"></a>
+    <strong>modrand (modulo)</strong>
+    </dt>
+    <dd>
+    Generate a random Big number whose ceiling is defined by the modulo to another number.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">modulo</span>
+         another BIG number, usually <a href="../modules/ECP.html#order">ECP.order</a>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new Big number
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--generate a random Big number starting from the EC BLS381
+</span>BIG.<span class="function-name">modrand</span>(ECP.<span class="function-name">order</span>())</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "random"></a>
+    <strong>random ()</strong>
+    </dt>
+    <dd>
+    Generate a random Big number whose ceiling is the order of the curve.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new Big number
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "modsqrt"></a>
+    <strong>modsqrt (n, p)</strong>
+    </dt>
+    <dd>
+    Tonelli-Shanks algorithm.  Given as input two bigs n and p compute the square root of n modulo p
+where p is an odd prime and n is a square modulo p.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">n</span>
+         Big number
+        </li>
+        <li><span class="parameter">p</span>
+         odd Big number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the result of the modular square root computation
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "zenadd"></a>
+    <strong>zenadd (a, b)</strong>
+    </dt>
+    <dd>
+    Perform algebraic sum of two Big numbers, taking under account their zencode signs. <br/>
+The result is stored in a new Big number and pushed onto the Lua stack.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">a</span>
+         Big number
+        </li>
+        <li><span class="parameter">b</span>
+         Big number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the sum a+b
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "zensub"></a>
+    <strong>zensub (a, b)</strong>
+    </dt>
+    <dd>
+    Perform algebraic subtraction of two Big numbers, taking under account their zencode signs. <br/>
+The result is stored in a new Big number and pushed onto the Lua stack.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">a</span>
+         Big number
+        </li>
+        <li><span class="parameter">b</span>
+         Big number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the subtraction a-b
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "zenmul"></a>
+    <strong>zenmul (a, b)</strong>
+    </dt>
+    <dd>
+    Perform algebraic multiplication of two Big numbers, taking under account their zencode signs. <br/>
+The result is stored in a new Big number and pushed onto the Lua stack.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">a</span>
+         Big number
+        </li>
+        <li><span class="parameter">b</span>
+         Big number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the multiplication a*b
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "zendiv"></a>
+    <strong>zendiv (a, b)</strong>
+    </dt>
+    <dd>
+    Perform algebraic division of two Big numbers, taking under account their zencode signs. <br/>
+The result is stored in a new Big number and pushed onto the Lua stack.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">a</span>
+         Big number
+        </li>
+        <li><span class="parameter">b</span>
+         Big number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the division a/b
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "zenpositive"></a>
+    <strong>zenpositive (n)</strong>
+    </dt>
+    <dd>
+    Check whether a given Big number is positive.
+If it is positive the output is true, otherwise false.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">n</span>
+         a Big number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean value
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "zenmod"></a>
+    <strong>zenmod (a, b)</strong>
+    </dt>
+    <dd>
+    Compute the modulo operation of two Big numbers (a and b),
+ensuring that both numbers are positive.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">a</span>
+         Big number
+        </li>
+        <li><span class="parameter">b</span>
+         Big number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a mod b
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "zenopposite"></a>
+    <strong>zenopposite (a)</strong>
+    </dt>
+    <dd>
+    Compute the opposite (additive inverse) of a Big number.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">a</span>
+         Big number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the result of the opposite operation
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create a Big number
+</span>y = big.<span class="function-name">from_decimal</span>(<span class="string">"123234442341233983797129732792324343"</span>)
+<span class="comment">--estimate the opposite
+</span><span class="global">print</span>(big.<span class="function-name">zenopposite</span>(y):<span class="function-name">decimal</span>())
+<span class="comment">--print: -123234442341233983797129732792324343</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "is_integer"></a>
+    <strong>is_integer (data)</strong>
+    </dt>
+    <dd>
+    Check whether a given Lua value is an integer or a string representation of an integer.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">data</span>
+         a Lua value
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean value
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Class_Big"></a>Class Big </h2>
+
+          <div class="section-description">
+          Object Methods
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "big:__gc"></a>
+    <strong>big:__gc ()</strong>
+    </dt>
+    <dd>
+    It is a destructor for a Big number object in Lua.  It is for freeing the memory allocated for
+ the Big number and ensuring there are no memory leaks.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "big:bits"></a>
+    <strong>big:bits ()</strong>
+    </dt>
+    <dd>
+    Calculate the number of bits required to represent a Big number.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the number of bits
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create a Big number
+</span>b = BIG.<span class="function-name">new</span>(<span class="number">1983783819133422</span>)
+<span class="comment">--calculate the number of bits
+</span><span class="global">print</span>(b:<span class="function-name">bits</span>())
+<span class="comment">--print: 94</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "big:bytes"></a>
+    <strong>big:bytes ()</strong>
+    </dt>
+    <dd>
+    Calculate the number of bytes required to represent a Big number.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the number of bytes
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create a Big number
+</span>b = BIG.<span class="function-name">new</span>(<span class="number">1983783819133422</span>)
+<span class="comment">--calculate the number of bytes
+</span><span class="global">print</span>(b:<span class="function-name">bytes</span>())
+<span class="comment">--print: 11</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "big:fixed"></a>
+    <strong>big:fixed (len, boolean)</strong>
+    </dt>
+    <dd>
+    Fixed size encoding for integer with big endian order.
+If the second parameter is 'false' it uses little endian order.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">len</span>
+         bytes size
+        </li>
+        <li><span class="parameter">boolean</span>
+         use big endian order (if omitted by default is true)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a fixed-length octet
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create a Big number
+</span>b = BIG.<span class="function-name">from_decimal</span>(<span class="string">"1234567891234569213839813381"</span>)
+ 	<span class="comment">--bytes size equal to 10
+</span> 	<span class="global">print</span>(b:<span class="function-name">fixed</span>(<span class="number">10</span>):<span class="function-name">hex</span>())
+<span class="comment">--print: 03fd35eb7ce4f16ec9962b05</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "big:decimal"></a>
+    <strong>big:decimal ()</strong>
+    </dt>
+    <dd>
+    Convert a Big integer into a decimal string representation.
+Slow but only for export.
+It work only for positive numbers.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        string which represent a decimal number (only digits 0-9)
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create a Big number
+</span>b = BIG.<span class="function-name">from_decimal</span>(<span class="string">"1234567891234569213"</span>)
+<span class="comment">--print decimal number
+</span><span class="global">print</span>(b:<span class="function-name">decimal</span>())</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "big:octet"></a>
+    <strong>big:octet ()</strong>
+    </dt>
+    <dd>
+    Convert a Big number into an octet.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        an octet
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "big:__concat"></a>
+    <strong>big:__concat (data)</strong>
+    </dt>
+    <dd>
+    Concatenate two Big integer objects into a single octet.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">data</span>
+         a big integer object to concatenate
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the concatenated octet object
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create two octets
+</span>b = BIG.<span class="function-name">from_decimal</span>(<span class="string">"1234567891"</span>)
+b2 = BIG.<span class="function-name">from_decimal</span>(<span class="string">"234569213"</span>)
+<span class="comment">--concatenate them
+</span>conc = b:<span class="function-name">__concat</span>(b2)
+<span class="comment">--print in hexadecimal
+</span><span class="comment">--print b: 499602d3
+</span><span class="comment">--print b2: 0dfb3dfd
+</span><span class="comment">--print conc: 499602d30dfb3dfd</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "big:hex"></a>
+    <strong>big:hex ()</strong>
+    </dt>
+    <dd>
+    Convert a Big number in hexadecimal format.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        an octet in hex
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "big:int"></a>
+    <strong>big:int ()</strong>
+    </dt>
+    <dd>
+    Convert a Big number into a Lua integer. <br/>
+The function handles big integers that fit within 32 bits and truncates larger integers to 32 bits with a warning.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a Lua integer
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "big:__eq"></a>
+    <strong>big:__eq (data)</strong>
+    </dt>
+    <dd>
+    Compare two Big numbers for equality.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">data</span>
+         a Big integer to compare
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean value
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "big:__lt"></a>
+    <strong>big:__lt (data)</strong>
+    </dt>
+    <dd>
+    Provide a simple way to check if one Big integer is less than another.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">data</span>
+         a Big integer to compare
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean value
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create two Big integers
+</span>b = BIG.<span class="function-name">from_decimal</span>(<span class="string">"12345678914124724921472194"</span>)
+b2 = BIG.<span class="function-name">from_decimal</span>(<span class="string">"1234"</span>)
+<span class="comment">--compare them
+</span><span class="keyword">if</span> b:<span class="function-name">__lt</span>(b2) <span class="keyword">then</span> <span class="global">print</span>(<span class="string">"b is less than b2"</span>)
+<span class="keyword">else</span> <span class="global">print</span>(<span class="string">"b isn't less than b2"</span>)
+<span class="keyword">end</span>
+<span class="comment">--print: b isn't less than b2</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "big:__lte"></a>
+    <strong>big:__lte (data)</strong>
+    </dt>
+    <dd>
+    Provide a simple way to check if one Big integer is less than or equal another.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">data</span>
+         a Big integer to compare
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean value
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "big:__add"></a>
+    <strong>big:__add (data)</strong>
+    </dt>
+    <dd>
+    Add two Big numbers and return the result as a new Big number.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">data</span>
+         a Big integer to add
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the sum of the two Big numbers
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create two Big numbers
+</span>b = BIG.<span class="function-name">from_decimal</span>(<span class="string">"12345678914124724921472194"</span>)
+b2 = BIG.<span class="function-name">from_decimal</span>(<span class="string">"12343234234242334423432"</span>)
+<span class="comment">--make the sum
+</span><span class="global">print</span>(b:<span class="function-name">__add</span>(b2):<span class="function-name">decimal</span>())
+<span class="comment">--print: 12358022148358967255895626</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "big:__sub"></a>
+    <strong>big:__sub (data)</strong>
+    </dt>
+    <dd>
+    Subtract two Big numbers and return the result as a new Big number.
+If the second argument is bigger than the first argument,
+the behavior depends on whether the big integers are in regular size or double size mode.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">data</span>
+         a Big integer to subtract
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the difference of the two Big numbers
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create two Big numbers
+</span>b = BIG.<span class="function-name">from_decimal</span>(<span class="string">"12345678914124724921472194"</span>)
+b2 = BIG.<span class="function-name">from_decimal</span>(<span class="string">"12343234234242334423432"</span>)
+<span class="comment">--make the difference
+</span><span class="global">print</span>(b:<span class="function-name">__sub</span>(b2):<span class="function-name">decimal</span>())
+<span class="comment">--print: 12333335679890482587048762</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "big:modsub"></a>
+    <strong>big:modsub (data, modulo)</strong>
+    </dt>
+    <dd>
+    Perform modular subtraction of two Big numbers modulus a third Big number.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">data</span>
+         a Big number to subtract
+        </li>
+        <li><span class="parameter">modulo</span>
+         the modulus of the operation
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create the two big numbers to subtract
+</span>b = BIG.<span class="function-name">from_decimal</span>(<span class="string">"12345678914124724921472194"</span>)
+b2 = BIG.<span class="function-name">from_decimal</span>(<span class="string">"12343234234242334423432"</span>)
+<span class="comment">--define the modulo
+</span>mod = BIG.<span class="function-name">from_decimal</span>(<span class="string">"1234"</span>)
+<span class="global">print</span>(b:<span class="function-name">modsub</span>(b2, mod):<span class="function-name">decimal</span>())
+<span class="comment">--print: 576	</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "big:__mul"></a>
+    <strong>big:__mul (data)</strong>
+    </dt>
+    <dd>
+    Provide a flexible way to perform multiplication involving big integers,
+supporting both scalar multiplication with ECP points and modular multiplication of two big integers.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">data</span>
+         a big integer or an ECP point
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the result of the multiplication
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "big:modpower"></a>
+    <strong>big:modpower (n, m)</strong>
+    </dt>
+    <dd>
+    Perform modular exponentiation between Big numbers.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">n</span>
+         exponent (Big number)
+        </li>
+        <li><span class="parameter">m</span>
+         modulus (Big number)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a Big number x^n mod m
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create three Big numbers
+</span>x = big.<span class="function-name">from_decimal</span>(<span class="string">"12341212142425354332324242422"</span>)
+n = big.<span class="function-name">from_decimal</span>(<span class="string">"15376863816838361893936136936"</span>)
+m = big.<span class="function-name">from_decimal</span>(<span class="string">"31873379237941484018414806743"</span>)
+<span class="comment">--calculate x^n mod m
+</span><span class="global">print</span>(x:<span class="function-name">modpower</span>(n,m):<span class="function-name">decimal</span>())
+<span class="comment">--print: 26994051819303675513763443877</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "big:sqr"></a>
+    <strong>big:sqr ()</strong>
+    </dt>
+    <dd>
+    Compute the square of a Big number.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the square of a Big number
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "big:monty"></a>
+    <strong>big:monty (mod)</strong>
+    </dt>
+    <dd>
+    Perform Montgomery reduction on a double Big number using a modulus.
+Montgomery reduction is an efficient algorithm used in modular arithmetic to avoid expensive division operations,
+often used in cryptographic computations.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">mod</span>
+         the modulus
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a big number representing the Montgomery-reduced value
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "big:__mod"></a>
+    <strong>big:__mod (m)</strong>
+    </dt>
+    <dd>
+    Compute the modulo operation on a Big number "b" using a modulus "m".
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">m</span>
+         the modulus
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        b mod m
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create the two Big numbers "b" and "m"
+</span>b = big.<span class="function-name">from_decimal</span>(<span class="string">"123234442341233983797129732792324343"</span>)
+m = big.<span class="function-name">from_decimal</span>(<span class="string">"165257575713"</span>)
+<span class="comment">--compute b mod m
+</span><span class="global">print</span>(b:<span class="function-name">__mod</span>(m):<span class="function-name">decimal</span>())
+<span class="comment">--print: 39084337405</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "big:__div"></a>
+    <strong>big:__div (data)</strong>
+    </dt>
+    <dd>
+    Perform integer division of two Big numbers.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">data</span>
+         a Big number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the integer part of the division of two Big numbers
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create two Big numbers
+</span>b1 = big.<span class="function-name">from_decimal</span>(<span class="string">"123234442341233983797129732792324343"</span>)
+b2 = big.<span class="function-name">from_decimal</span>(<span class="string">"165257575713"</span>)
+<span class="comment">--compute ⌊b1/b2⌋
+</span><span class="global">print</span>(b1:<span class="function-name">__div</span>(b2):<span class="function-name">decimal</span>())
+<span class="comment">--print: 745711304365574914096826</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "big:modmul"></a>
+    <strong>big:modmul (coefficient, modulo)</strong>
+    </dt>
+    <dd>
+    Multiply a Big number by another Big while ceiling the operation to a modulo to avoid excessive results. <br/>
+This operation is to be preferred to the simple overladed operator * in most cases where such a multiplication takes place.
+It may replace * in the future as a simplification.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">coefficient</span>
+         another Big number
+        </li>
+        <li><span class="parameter">modulo</span>
+         usually <a href="../modules/ECP.html#order">ECP.order</a>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new Big number
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "big:moddiv"></a>
+    <strong>big:moddiv (d, m)</strong>
+    </dt>
+    <dd>
+    Perform modular division using Big numbers arithmetic.
+It computes (y/d) mod m.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">d</span>
+         the divisor (Big number)
+        </li>
+        <li><span class="parameter">m</span>
+         the modulus (Big number)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the result of the modular division
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--define y, d and m
+</span>y = big.<span class="function-name">from_decimal</span>(<span class="string">"123234442341233983797129732792324343"</span>)
+d = big.<span class="function-name">from_decimal</span>(<span class="string">"165257575713"</span>)
+m = big.<span class="function-name">from_decimal</span>(<span class="string">"165257"</span>)
+<span class="comment">--compute (y/d) mod m
+</span><span class="global">print</span>(y:<span class="function-name">moddiv</span>(d,m):<span class="function-name">decimal</span>())
+<span class="global">print</span>: <span class="number">38881</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "big:modsqr"></a>
+    <strong>big:modsqr (m)</strong>
+    </dt>
+    <dd>
+    Perform modular squaring on Big numbers.
+Compute the modular square of a Big number y modulo another Big number m, i.e.,
+y^2 mod m.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">m</span>
+         the modulus
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the result of the modular squaring operation
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--define the two big integers
+</span>y = big.<span class="function-name">from_decimal</span>(<span class="string">"123234442341233983797129732792324343"</span>)
+m = big.<span class="function-name">from_decimal</span>(<span class="string">"165257575713"</span>)
+<span class="comment">--compute y^2 mod m
+</span><span class="global">print</span>(y:<span class="function-name">modsqr</span>(m):<span class="function-name">decimal</span>())
+<span class="comment">--print: 86198167171</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "big:modneg"></a>
+    <strong>big:modneg (m)</strong>
+    </dt>
+    <dd>
+    Compute the modular negation of a large integer y modulo another large integer m, i.e.,
+−y mod m.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">m</span>
+         the modulus
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the result of the modular negation operation
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--define the two big integers
+</span>y = big.<span class="function-name">from_decimal</span>(<span class="string">"123234442341233983797129732792324343"</span>)
+m = big.<span class="function-name">from_decimal</span>(<span class="string">"165257575713"</span>)
+<span class="comment">--compute -y mod m
+</span><span class="global">print</span>(y:<span class="function-name">modneg</span>(m):<span class="function-name">decimal</span>())
+<span class="comment">--print: 126173238308</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "big:jacobi"></a>
+    <strong>big:jacobi (y)</strong>
+    </dt>
+    <dd>
+    Compute the Jacobi symbol of two Big numbers x and y.  The Jacobi symbol is a mathematical function used in number theory,
+particularly in primality testing and quadratic residue calculations.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">y</span>
+         a Big number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the result of the Jacobi symbol computation as an integer
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create two Big numbers x and y
+</span>x = big.<span class="function-name">from_decimal</span>(<span class="string">"123234442341233983797129732792324343"</span>)
+y = big.<span class="function-name">from_decimal</span>(<span class="string">"165257575713243243323242243423"</span>)
+<span class="comment">--compute the jacobi symbol
+</span><span class="global">print</span>(x:<span class="function-name">jacobi</span>(y))
+<span class="comment">--print: -1</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "big:modinv"></a>
+    <strong>big:modinv (m)</strong>
+    </dt>
+    <dd>
+    Compute the modular inverse of a large integer y modulo another large integer m. <br/>
+The modular inverse of y modulo m is a value x such that: x*y = 1 mod m
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">m</span>
+         the modulus
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the result of the modular inverse computation
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create two Big numbers y and m
+</span>y = big.<span class="function-name">from_decimal</span>(<span class="string">"123234442341233983797129732792324343"</span>)
+m = big.<span class="function-name">from_decimal</span>(<span class="string">"165257575713243243323242243423"</span>)
+<span class="comment">--compute x
+</span><span class="global">print</span>(y:<span class="function-name">modinv</span>(m):<span class="function-name">decimal</span>())
+<span class="comment">--print: 59313399677853266981606933073</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "big:parity"></a>
+    <strong>big:parity ()</strong>
+    </dt>
+    <dd>
+    Check the parity (whether a number is even or odd) of a Big number.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean value (true if odd, false if even)
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "big:__shr"></a>
+    <strong>big:__shr (n)</strong>
+    </dt>
+    <dd>
+    Perform a right shift operation on a Big number (c) by a specified number of bits (n).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">n</span>
+         the number of bits to shift
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the result of the right shift operation
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2025-03-25 10:33:58 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

@@ -1,0 +1,7 @@
+Rule check version 2.0.0
+Scenario qp : Create and publish the kyber public key
+Given I am 'Alice'
+#and I have a 'kyber private key'
+and I have a 'hex' named 'private key'
+When I create the kyber public key with secret key 'private key'
+Then print my 'kyber public key'

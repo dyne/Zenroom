@@ -1,0 +1,22 @@
+Scenario 'ecdh': Create the key
+Scenario 'ethereum': Create the key
+Scenario 'reflow': Create the key
+Scenario 'eddsa' : Create the key
+Scenario 'credential': Create the key
+Scenario 'bbs': Create the key
+Scenario 'es256': Create the key
+
+Given my name is in a 'string' named 'controller'
+
+# Here we are creating the keys
+When I create the ecdh key
+When I create the eddsa key
+When I create the ethereum key
+When I create the reflow key
+When I create the bitcoin key
+When I create the issuer key
+When I create the bbs key
+When I create the es256 key
+
+Then print my 'keyring'
+and print my name in 'controller'

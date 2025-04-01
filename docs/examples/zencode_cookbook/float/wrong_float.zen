@@ -1,0 +1,2 @@
+Given I have a 'float' named 'fp_str'
+Then print all data

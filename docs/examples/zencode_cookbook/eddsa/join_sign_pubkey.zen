@@ -1,0 +1,5 @@
+Scenario eddsa
+Given I have a 'eddsa public key' in 'Alice'
+and I have a 'eddsa signature'
+Then print the 'eddsa signature'
+and print the 'eddsa public key'

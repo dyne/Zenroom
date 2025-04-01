@@ -1,0 +1,6 @@
+Scenario es256
+Given I have a 'es256 signature'
+When I create the es256 key
+and I create the es256 public key
+Then print the 'es256 signature'
+and print the 'es256 public key'

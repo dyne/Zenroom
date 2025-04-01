@@ -1,0 +1,4 @@
+Scenario credential
+Given I am 'The Authority'
+when I create the issuer key
+Then print my 'keyring'

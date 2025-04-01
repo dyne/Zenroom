@@ -1,0 +1,2 @@
+Given I have a 'base58' part of 'sfx onebyte' before string suffix '@'
+Then print the 'sfx_onebyte' as 'hex'

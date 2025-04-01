@@ -1,0 +1,7 @@
+Scenario 'w3c': jws
+
+Given I have a 'string' named 'jws signature'
+
+When I verify the jws signature in 'jws signature'
+
+Then print the string 'signature verified'

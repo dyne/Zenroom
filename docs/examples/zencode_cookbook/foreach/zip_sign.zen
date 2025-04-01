@@ -1,0 +1,20 @@
+Scenario 'eddsa': sign
+
+Given I have a 'string array' named 'messages'
+Given I have a 'base58 array' named 'eddsa_secret_keys'
+
+When I create the 'eddsa signature array' named 'signatures'
+When I create the 'eddsa public key array' named 'public_keys'
+
+Foreach value prefix 'first_loop_' at the same position in arrays 'eddsa_secret_keys' and 'messages'
+    When I create the eddsa key with secret key 'first_loop_eddsa_secret_keys'
+    When I create the eddsa signature of 'first_loop_messages'
+    And I move 'eddsa signature' in 'signatures'
+    When I create the eddsa public key
+    And I move 'eddsa public key' in 'public_keys'
+    When I remove the 'keyring'
+EndForeach
+
+Then print the 'signatures'
+Then print the 'public keys'
+Then print the 'messages'

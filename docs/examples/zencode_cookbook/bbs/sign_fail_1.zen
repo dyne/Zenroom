@@ -1,0 +1,12 @@
+Scenario 'bbs': sign
+
+# data
+Given I have a 'string dictionary' named 'dict'
+
+# keys
+Given I am known as 'Alice'
+and I have my 'keyring'
+
+When I create the bbs signature of 'dict'
+
+Then print the data

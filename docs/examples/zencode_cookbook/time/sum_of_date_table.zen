@@ -1,0 +1,27 @@
+    Given I have a 'date table' named 'date_table'
+    Given I have a 'date table' named 'another_date_table'
+    Given I have a 'time' named 'timestamp'
+    Given I have a 'time' named 'another_timestamp'
+
+    When I create the result of 'date_table' + 'another_date_table'
+    and I rename 'result' to 'sum_of_date_tables'
+
+    When I create the result of 'timestamp' + 'another_timestamp'
+    and I rename 'result' to 'sum_of_timestamp'
+
+    When I create the result of 'date_table' + 'timestamp'
+    and I rename 'result' to 'sum_of_date_table_and_timestamp'
+
+    When I create the result of 'timestamp' + 'date_table'
+    and I rename 'result' to 'sum_of_timestamp_and_date_table'
+
+    When I verify 'sum_of_timestamp_and_date_table' is equal to 'sum_of_date_table_and_timestamp'
+
+    When I create the result of 'another_date_table' + 'another_timestamp'
+    and I rename 'result' to 'sum_of_timestamp_and_another_date_table'
+
+    Then print the 'sum_of_timestamp_and_another_date_table'
+    Then print the 'sum_of_timestamp_and_date_table'
+    Then print the 'sum_of_date_table_and_timestamp'
+    Then print the 'sum_of_timestamp'
+    Then print the 'sum_of_date_tables'

@@ -1,0 +1,9 @@
+Scenario 'ecdh': sign
+Given I have a 'ecdh signature'
+and I have a 'base64' named 'base64_string'
+
+When I copy 'base64_string' as 'string' to 'string_from_base64'
+When I move 'ecdh signature' as 'ecdh signature' to 'new_ecdh_siganture_with_string_encoding'
+
+Then print the 'string_from_base64'
+Then print the 'new_ecdh_siganture_with_string_encoding'

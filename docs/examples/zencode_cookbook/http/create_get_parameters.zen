@@ -1,0 +1,21 @@
+Scenario 'http': create a GET request concatenating values on a HTTP url
+
+Given I have a 'string' named 'param1'
+Given I have a 'integer' named 'param2'
+Given I have a 'time' named 'param3'
+Given I have a 'number' named 'param4'
+
+When I create the 'string dictionary' named 'parameters'
+and I copy 'param1' in 'parameters'
+and I copy 'param2' in 'parameters'
+and I copy 'param3' in 'parameters'
+and I copy 'param4' in 'parameters'
+
+# create the get parameters string
+When I create the http get parameters from 'parameters'
+and I rename 'http_get_parameters' to 'get_parameters_without_percent_endoing'
+When I create the http get parameters from 'parameters' using percent encoding
+and I rename 'http_get_parameters' to 'get_parameters_with_percent_endoing'
+
+Then print the 'get_parameters_without_percent_endoing'
+and print the 'get_parameters_with_percent_endoing'

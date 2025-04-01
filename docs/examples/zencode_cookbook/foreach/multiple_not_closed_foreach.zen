@@ -1,0 +1,17 @@
+Given nothing
+When I create the 'string array' named 'loop'
+When I set 'str' to 'a' as 'string'
+and I move 'str' in 'loop'
+When I set 'str' to 'b' as 'string'
+and I move 'str' in 'loop'
+When I write string '' in 'res'
+Foreach 'a' in 'loop'
+    When I append 'a' to 'res'
+    Foreach 'b' in 'loop'
+        When I append 'b' to 'res'
+        Foreach 'c' in 'loop'
+            When I append 'c' to 'res'
+        EndForeach
+    EndForeach
+EndForeach
+Then print 'res'

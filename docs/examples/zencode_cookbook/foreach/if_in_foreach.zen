@@ -1,0 +1,10 @@
+Given I have a 'float array' named 'xs'
+Given I have a 'float' named 'limit'
+When I create the 'float array' named 'new array'
+Foreach 'x' in 'xs'
+If I verify number 'x' is less than 'limit'
+When I move 'x' in 'new array'
+Endif
+EndForeach
+When I rename 'new array' to 'new nums'
+Then print 'new nums'

@@ -1,0 +1,10 @@
+Scenario 'w3c': did document manipulation
+Scenario 'es256': signature
+
+Given I have a 'string dictionary' named 'header'
+Given I have a 'string dictionary' named 'payload'
+Given I have a 'keyring'
+
+When I create jws signature of header 'header' and payload 'payload'
+
+Then print the 'jws signature'

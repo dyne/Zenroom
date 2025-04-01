@@ -1,0 +1,8 @@
+Given nothing
+When I set 'string' to 'hello world!' as 'string'
+and I create the hash to point 'ECP' of 'string'
+and I rename 'hash to point' to 'hash to point ecp'
+and I create the hash to point 'ECP2' of 'string'
+and I rename 'hash to point' to 'hash to point ecp2'
+Then print 'hash to point ecp'
+Then print 'hash to point ecp2'

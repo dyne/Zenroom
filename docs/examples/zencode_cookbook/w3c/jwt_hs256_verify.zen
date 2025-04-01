@@ -1,0 +1,6 @@
+Scenario 'w3c': did document manipulation
+Given I have a 'json web token'
+
+When I verify the json web token in 'json web token' using 'password'
+
+Then print the string 'ok'

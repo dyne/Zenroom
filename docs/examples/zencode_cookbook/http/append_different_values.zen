@@ -1,0 +1,26 @@
+Scenario 'http': create a GET request concatenating values on a HTTP url
+
+Given I have a 'string' named 'param1'
+Given I have a 'integer' named 'param2'
+Given I have a 'time' named 'param3'
+Given I have a 'number' named 'param4'
+
+When I set 'string_url' to 'openid-credential-issuer://www.example.com' as 'string'
+and I create the url from 'string_url'
+and I copy 'url' to 'another_url'
+
+# no encoding
+When I append 'param1' as http request to 'url'
+When I append 'param2' as http request to 'url'
+When I append 'param3' as http request to 'url'
+When I append 'param4' as http request to 'url'
+
+# percent encoding
+When I append percent encoding of 'param1' as http request to 'another_url'
+When I append percent encoding of 'param2' as http request to 'another_url'
+When I append percent encoding of 'param3' as http request to 'another_url'
+When I append percent encoding of 'param4' as http request to 'another_url'
+
+
+Then print the 'url'
+and print the 'another_url'

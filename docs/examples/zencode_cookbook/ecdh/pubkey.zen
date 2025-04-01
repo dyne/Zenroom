@@ -1,0 +1,5 @@
+Scenario ecdh
+Given I am known as 'Bob'
+Given I have my 'keyring'
+When I create the ecdh public key
+Then print my 'ecdh public key'

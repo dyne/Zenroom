@@ -1,0 +1,8 @@
+Rule check version 2.0.0
+Given I have a 'string array' named 'identities'
+When I create the flat array of contents in 'identities'
+and I rename 'flat array' to 'contents flat array'
+When I create the flat array of keys in 'identities'
+and I rename 'flat array' to 'keys flat array'
+Then print the 'keys flat array' as 'float'
+and print the 'contents flat array'

@@ -1,0 +1,17 @@
+Given I have a 'float array' named 'xs'
+Given I have a 'float' named 'one'
+Given I have a 'float' named 'limit'
+When I create the new array
+If I verify number 'one' is less than 'limit'
+Foreach 'x' in 'xs'
+When I move 'x' in 'new array'
+EndForeach
+Foreach 'x' in 'xs'
+When I move 'x' in 'new array'
+EndForeach
+When I write string 'ciccio' in 'ciccio'
+Foreach 'x' in 'xs'
+When I move 'x' in 'new array'
+EndForeach
+Endif
+Then print 'new array' as 'string'

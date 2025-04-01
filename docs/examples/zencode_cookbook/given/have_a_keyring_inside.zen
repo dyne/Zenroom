@@ -1,0 +1,4 @@
+rule check version 1.0.0
+scenario 'ecdh'
+	 Given I have a 'keyring' inside 'Bobbino'
+	 Then print the 'keyring'

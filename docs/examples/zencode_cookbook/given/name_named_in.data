@@ -1,0 +1,10 @@
+{
+	"UserData": {
+	        "Sender": "Alice in wonderland"
+	},
+	"Alice in wonderland": {
+		"keyring": {
+			"ecdh": "2mZDRS1rE4jT5EuozwZfbS+GLE7ogBfgWOr30wXoe3g="
+		}
+	}
+}

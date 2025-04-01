@@ -1,0 +1,4 @@
+rule output encoding hex
+Given I have a 'string array' named 'source'
+When I create the key derivations of each object in 'source'
+Then print 'key derivations'

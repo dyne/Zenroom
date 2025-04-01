@@ -1,0 +1,11 @@
+Given I have a 'string dictionary' named 'dataFromEndpoint'
+and I have a 'string' named 'key_inside_list'
+
+When I set pointer to 'dataFromEndpoint'
+and I enter 'list' with pointer
+and I enter '1' with pointer
+and I enter 'key_inside_list' with pointer
+and I move 'key_inside_list' in 'pointer'
+
+Then print 'pointer'
+and print 'dataFromEndpoint'

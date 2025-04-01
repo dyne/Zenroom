@@ -1,0 +1,9 @@
+Given I have a 'time' named 'lower'
+Given I have a 'time' named 'grater'
+
+When I verify number 'grater' is more than 'lower'
+and I verify number 'lower' is less than 'grater'
+and I verify 'grater' is equal to 'grater'
+and I verify 'lower' is not equal to 'grater'
+
+Then print the string 'OK'

@@ -1,0 +1,5 @@
+Given I have a 'number dictionary' named 'dict'
+Given I have a 'number array' named 'arr'
+
+When I create the result of 'dict.arr.1.a + dict.arr.2.dict_in_arr.b + dict.dict_in_dict.c + arr.1'
+Then print the 'result'

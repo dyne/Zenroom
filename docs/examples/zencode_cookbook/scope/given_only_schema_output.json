@@ -1,0 +1,1 @@
+{"CODEC":{"keyring":{"encoding":"complex","name":"keyring","root":"Alice","schema":"keyring","zentype":"e"},"myFirstObject":{"encoding":"string","name":"myFirstObject","zentype":"d"},"mySecondObject":{"encoding":"string","name":"mySecondObject","zentype":"d"}}}

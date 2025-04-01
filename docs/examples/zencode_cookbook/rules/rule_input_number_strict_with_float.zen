@@ -1,0 +1,8 @@
+Rule input number strict
+
+Given I have a 'float' named 'num'
+and I rename 'num' to 'float_num'
+Given I have a 'time' named 'num'
+and I rename 'num' to 'time_num'
+
+Then print the data

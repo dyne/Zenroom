@@ -1,0 +1,5 @@
+    {
+        "numbers_of_random": 10,
+        "modulo_int": "1234567890",
+        "modulo_float": 100
+    }

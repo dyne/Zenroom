@@ -1,0 +1,7 @@
+Given I have a 'string'
+
+When I create the 'hex dictionary' named 'hex_data'
+
+Then print the 'string' as 'hex' in 'hex_data'
+# one more statement for trigger heapguard check
+and print the 'string'

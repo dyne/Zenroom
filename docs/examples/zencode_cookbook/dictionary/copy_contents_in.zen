@@ -1,0 +1,4 @@
+Given I have a 'string dictionary' named 'blockchains'
+Given that I have a 'string dictionary' named 'TransactionsBatchA'
+When I copy contents of 'blockchains' in 'TransactionsBatchA'
+Then print 'TransactionsBatchA'

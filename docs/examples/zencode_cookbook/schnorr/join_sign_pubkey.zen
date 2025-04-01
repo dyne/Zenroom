@@ -1,0 +1,5 @@
+Scenario schnorr
+Given I have a 'schnorr public key' in 'Alice'
+and I have a 'schnorr signature'
+Then print the 'schnorr signature'
+and print the 'schnorr public key'

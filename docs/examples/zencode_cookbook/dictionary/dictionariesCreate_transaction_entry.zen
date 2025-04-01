@@ -1,0 +1,12 @@
+rule check version 1.0.0
+Scenario ecdh
+Given nothing
+When I create the 'string dictionary'
+and I rename the 'string dictionary' to 'ABC-TransactionsStatement'
+and I write number '108' in 'TransactionsConcluded'
+and I write string 'Transaction Control Dictionary' in 'nameOfDictionary'
+and I write number '21' in 'AverageAmountPerTransaction'
+and I move 'nameOfDictionary' in 'ABC-TransactionsStatement'
+and I move 'TransactionsConcluded' in 'ABC-TransactionsStatement'
+and I move 'AverageAmountPerTransaction' in 'ABC-TransactionsStatement'
+Then print the 'ABC-TransactionsStatement'

@@ -1,0 +1,6 @@
+Given nothing
+When I set 'my_string' to 'test' as 'string'
+If I verify 'my_string' is found
+Then I print 'my string'
+EndIf
+EndIf

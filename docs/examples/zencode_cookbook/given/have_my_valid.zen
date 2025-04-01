@@ -1,0 +1,5 @@
+rule check version 1.0.0
+scenario 'ecdh'
+	 Given I am 'Andrea'
+	 and I have my valid 'keyring'
+	 Then print the 'keyring'

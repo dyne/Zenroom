@@ -1,0 +1,2 @@
+Given I have a 'string dictionary' named 'array'
+Then print the data

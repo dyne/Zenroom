@@ -1,0 +1,5 @@
+Rule input encoding base123
+Scenario 'ecdh': public key
+
+Given I have a 'ecdh public key'
+Then print the data

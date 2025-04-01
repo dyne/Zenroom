@@ -1,0 +1,28 @@
+Given I have a 'float array' named 'numbers'
+Given I have a 'float' named 'limit'
+Given I have a 'float' named 'zero'
+Given I have a 'float' named 'two'
+Given I have a 'float' named 'ten'
+
+When I create the 'float array' named 'y'
+Foreach 'x' in 'numbers'
+If I verify 'x' is equal to 'limit'
+When I break foreach
+EndIf
+When I move 'x' in 'y'
+EndForeach
+
+If I verify 'x' is found
+When I remove 'x'
+EndIf
+
+When I create the 'float array' named 'z'
+Foreach 'x' in sequence from 'zero' to 'ten' with step 'two'
+If I verify 'x' is equal to 'limit'
+When I exit foreach
+EndIf
+When I copy 'x' in 'z'
+EndForeach
+
+Then print 'y'
+Then print 'z'

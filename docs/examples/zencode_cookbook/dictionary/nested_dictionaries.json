@@ -1,0 +1,28 @@
+{
+   "dataTime0":{
+      "Active_energy_imported_kWh":4027.66,
+      "Ask_Price":0.1,
+      "Currency":"EUR",
+      "Expiry":3600,
+      "Timestamp":"1422779638",
+      "TimeServer":"http://showcase.api.linx.twenty57.net/UnixTime/tounix?date=now"
+   },
+   "nested":{
+      "dataTime1":{
+         "Active_energy_imported_kWh":4030,
+         "Ask_Price":0.15,
+         "Currency":"EUR",
+         "Expiry":3600,
+         "Timestamp":"1422779633",
+         "TimeServer":"http://showcase.api.linx.twenty57.net/UnixTime/tounix?date=now"
+      },
+      "dataTime2":{
+         "Active_energy_imported_kWh":4040.25,
+         "Ask_Price":0.15,
+         "Currency":"EUR",
+         "Expiry":3600,
+         "Timestamp":"1422779634",
+         "TimeServer":"http://showcase.api.linx.twenty57.net/UnixTime/tounix?date=now"
+      }
+   }
+}

@@ -1,0 +1,5 @@
+    Given nothing
+    If I verify 'object' is not found
+    When I exit with error message 'Object not found'
+    EndIf
+    Then print the string 'object found'

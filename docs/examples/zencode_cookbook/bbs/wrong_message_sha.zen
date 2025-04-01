@@ -1,0 +1,7 @@
+Rule check version 2.0.0
+Scenario bbs
+Given I have a 'bbs public key'
+and I have a 'bbs signature'
+and I have a 'string array' named 'myStringArray'
+When I verify the 'myStringArray' has a bbs signature in 'bbs signature' by 'Alice'
+Then print the string 'Signature is valid'

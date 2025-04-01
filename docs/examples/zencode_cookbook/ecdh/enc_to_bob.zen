@@ -1,0 +1,13 @@
+Rule check version 1.0.0
+Scenario 'ecdh':
+	Given that I am known as 'Alice'
+	and I have my 'keyring'
+	and I have a 'ecdh' public key from 'Bob'
+	When I write string 'This is my secret message.' in 'message'
+	and I write string 'This is the header' in 'header'
+	and I encrypt the secret message of 'message' for 'Bob'
+	and I create the ecdh public key
+	Then print the 'secret message'
+	and print my 'ecdh public key'
+	and print my 'keyring'
+	and print all data

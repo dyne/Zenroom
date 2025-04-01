@@ -1,0 +1,2 @@
+    Given I have a 'integer' named 'negative big'
+    Then print the 'negative big' as 'float'

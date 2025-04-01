@@ -1,0 +1,12 @@
+Given I have a 'string array' named 'identities'
+Given I have a 'string dictionary' named 'identity'
+
+When I create the flat array of contents in 'identities'
+When I rename the 'flat array' to 'flattened array 1'
+
+When I create the flat array of keys in 'identity'
+When I rename the 'flat array' to 'flattened array 2'
+
+Then print the 'flattened array 1'
+Then print the 'flattened array 2'
+Then print the string 'succes'

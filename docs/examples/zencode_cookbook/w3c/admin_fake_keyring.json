@@ -1,0 +1,14 @@
+    {
+        "timestamp": "1703064997357",
+        "controller": "fake admin",
+        "fake_admin": {
+            "keyring": {
+                "ecdh": "P+R97TQnLIhaTkATxwQT661sLiOxSYLDvetSt57CNCo=",
+                "eddsa": "Bbad7evauGKhpgrCjAyTJMpdLZSQY2pL7vi8ySJurYVG"
+            }
+        },
+        "signer_did_spec": "sandbox.zenroomtest_A",
+        "header": {
+                  "alg": "ES256K"
+        }
+    }

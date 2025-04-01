@@ -1,0 +1,4 @@
+Scenario bbs
+Given I have a 'integer' named 'bbssk'
+When I create the bbs public key with secret key 'bbssk'
+Then print 'bbs public key'

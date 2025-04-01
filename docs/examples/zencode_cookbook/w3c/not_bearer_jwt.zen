@@ -1,0 +1,5 @@
+Scenario 'w3c': bearer json web token
+Given I have a 'bearer json web token' named 'token'
+
+When I pickup a 'string dictionary' from path 'token.payload'
+Then print the 'payload'

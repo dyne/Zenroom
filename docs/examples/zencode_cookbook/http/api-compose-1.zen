@@ -1,0 +1,5 @@
+Scenario http: create a GET request concatenating values on a HTTP url
+
+Given I have a 'string' named 'base-url'
+When I create the url from 'base-url'
+Then print all data

@@ -1,0 +1,14 @@
+{
+ "arr": [1,1,1,1],
+ "dict": {
+   "hello": "world",
+   "nice": "world",
+   "big": "world"
+ },
+ "empty_dict": {},
+ "nested_arr": [
+   { "nested": "nested" },
+   { "nested": "nested" }
+ ]
+
+}

@@ -1,0 +1,14 @@
+{
+    "header": {
+              "alg": "ES256",
+              "b64": true,
+              "crit": ["b64"]
+    },
+    "payload": {
+               "iss": "joe",
+               "http://example.com/is_root": true
+    },
+    "keyring": {
+               "es256": "hqQUHoEbLJIqcoLEvEtu8kJ3WbhaskDb5Sl/ygPN220="
+    }
+}

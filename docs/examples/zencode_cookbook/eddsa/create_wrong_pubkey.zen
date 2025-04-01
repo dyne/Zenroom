@@ -1,0 +1,6 @@
+Scenario eddsa
+Given I have a 'eddsa signature'
+When I create the eddsa key
+and I create the eddsa public key
+Then print the 'eddsa signature'
+and print the 'eddsa public key'

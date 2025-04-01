@@ -1,0 +1,12 @@
+Given I have a 'string' named 'json_encoded_dict'
+Given I have a 'string' named 'not_json_encoded_dict'
+
+When I verify 'json_encoded_dict' is a json
+# equivalently
+When I verify 'json_encoded_dict' is a valid json
+
+If I verify 'not_json_encoded_dict' is a json
+Then print the string '[!] validte not_json_encoded_dict'
+EndIf
+
+Then print the string 'validate json encoded dicr'

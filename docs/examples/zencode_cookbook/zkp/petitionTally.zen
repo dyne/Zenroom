@@ -5,3 +5,4 @@ Scenario petition: tally
     Given I have a valid 'petition'
     When I create a petition tally
     Then print the 'petition tally'
+    Then print the 'petition'

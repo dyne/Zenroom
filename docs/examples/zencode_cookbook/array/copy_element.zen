@@ -1,0 +1,22 @@
+Given I have a 'string array' named 'my array'
+Given I have a 'string dictionary' named 'my_nested_dict'
+Given I have a 'integer' named 'key_array_int'
+Given I have a 'float' named 'key_array_float'
+Given I have a 'string' named 'key_dict'
+
+# with inline keys
+When I create the 'string_from_array_1' from '1' in 'my_array'
+When I create the 'string_from_dictionary_1' from 'pluto' in 'my_nested_dict'
+When I create the 'dictionary_from_dictionary' from 'my_dict' in 'my_nested_dict'
+
+# with variables as keys
+When I create the 'string_from_array_2' from 'key_array_int' in 'my_array'
+When I create the 'string_from_array_3' from 'key_array_float' in 'my_array'
+When I create the 'string_from_dictionary_2' from 'key_dict' in 'my_nested_dict'
+
+Then print the 'string_from_array_1'
+Then print the 'string_from_array_2'
+Then print the 'string_from_array_3'
+Then print the 'string_from_dictionary_1'
+Then print the 'string_from_dictionary_2'
+Then print the 'dictionary_from_dictionary'

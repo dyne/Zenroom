@@ -1,0 +1,13 @@
+Scenario 'sd_jwt'
+Scenario 'es256'
+
+Given I am known as 'The Issuer'
+and I have my 'keyring'
+
+Given I have 'selective_disclosure'
+
+When I create the signed selective disclosure of 'selective_disclosure'
+
+Then print the 'signed selective disclosure'
+
+

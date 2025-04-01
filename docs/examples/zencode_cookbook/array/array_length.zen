@@ -1,0 +1,3 @@
+Given I have a 'url64 array' named 'bonnetjes'
+When I create the size of 'bonnetjes'
+Then print the 'size'

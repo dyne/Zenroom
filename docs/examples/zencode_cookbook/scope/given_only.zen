@@ -1,0 +1,6 @@
+Given I am 'Alice'
+and I have my 'hex' named 'missing public key'
+Given I have a 'string array' named 'myStringArray' in 'myFirstObject'
+And I have a 'string dictionary' named 'does not exists' in 'myFirstObject'
+When I create the random 'random'
+Then print codec

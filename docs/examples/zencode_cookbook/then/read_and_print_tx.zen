@@ -1,0 +1,4 @@
+Scenario ethereum
+Given I have a 'ethereum transaction' named 'tx'
+Then print 'to' from 'tx'
+Then print data

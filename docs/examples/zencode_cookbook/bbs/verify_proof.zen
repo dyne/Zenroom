@@ -1,0 +1,8 @@
+Scenario bbs
+Given I have a 'bbs public key'
+and I have a 'bbs proof'
+and I have a 'base64' named 'bbs presentation header'
+and I have a 'number array' named 'bbs disclosed indexes'
+and I have a 'string array' named 'bbs disclosed messages'
+When I verify the bbs proof
+Then print the string  'bbs zkp verification successful'

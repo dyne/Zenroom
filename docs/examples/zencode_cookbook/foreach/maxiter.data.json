@@ -1,0 +1,35 @@
+{
+    "start_int": "1",
+    "step_int": "1",
+    "end_in_limit_int": "10",
+    "end_out_of_limit_int": "11",
+    "start_float": 1,
+    "step_float": 1,
+    "end_in_limit_float": 10,
+    "end_out_of_limit_float": 11,
+    "array_in_limit": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j"
+    ],
+    "array_out_of_limit": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j",
+        "k"
+    ]
+}

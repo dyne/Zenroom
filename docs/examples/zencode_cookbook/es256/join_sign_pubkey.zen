@@ -1,0 +1,5 @@
+Scenario es256
+Given I have a 'es256 public key' in 'Alice'
+and I have a 'es256 signature'
+Then print the 'es256 signature'
+and print the 'es256 public key'
