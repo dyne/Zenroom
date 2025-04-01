@@ -451,11 +451,6 @@ local function _rm_zeros_in(t)
 end
 -- https://github.com/dyne/Zenroom/issues/175
 When("remove zero values in ''", function(target)
-    local zeros <const> = {
-        number = 0,
-        ['zenroom.float'] = F.new(0),
-        ['zenroom.big'] = BIG.new(0)
-    }
     local t = have(target)
     zencode_assert(luatype(t) == 'table', "Invalid table object: "..target)
     ACK[target] = _rm_zeros_in(t)
