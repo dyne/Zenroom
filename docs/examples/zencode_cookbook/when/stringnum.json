@@ -1,0 +1,10 @@
+{
+	"api": "http://3.68.108.18/api/v1/blocks/latest",
+	"path": "blocks/",
+	"latest": {
+		"result": {
+			"height": 102
+		}
+	}
+
+}

@@ -1,0 +1,9 @@
+Scenario 'ethereum': move signature in an array
+
+Given I have a 'ethereum signature'
+
+When I create the 'ethereum signature array' named 'signatures'
+
+When I move 'ethereum signature' in 'signatures'
+
+Then print the 'signatures'

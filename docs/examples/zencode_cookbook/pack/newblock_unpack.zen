@@ -1,0 +1,5 @@
+Given I have a 'base64' named 'mpack'
+and I have a 'hex dictionary' named 'newblock'
+When I create the 'decoded' decoded from mpack 'mpack'
+and I verify 'decoded' is equal to 'newblock'
+Then print the string 'MPACK SUCCESS'

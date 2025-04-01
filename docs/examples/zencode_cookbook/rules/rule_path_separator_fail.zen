@@ -1,0 +1,5 @@
+Rule path separator --
+
+Given I have a 'string' in path 'my_dict--my_array--1--2--world'
+
+Then print the data

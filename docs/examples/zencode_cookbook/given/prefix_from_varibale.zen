@@ -1,0 +1,7 @@
+Scenario 'w3c': token
+Given I have a 'string' part of 'token' before string suffix 'suffix'
+and I rename 'token' to 'bearer'
+Given I have a 'json web token' part of 'token' after string prefix 'prefix'
+When I pickup a 'string dictionary' from path 'token.payload'
+Then print the 'payload'
+Then print the 'bearer'

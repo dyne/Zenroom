@@ -1,0 +1,5 @@
+Scenario schnorr
+Given I am known as 'Bob'
+Given I have my 'keyring'
+When I create the schnorr public key
+Then print my 'schnorr public key'

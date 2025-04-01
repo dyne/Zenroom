@@ -1,0 +1,21 @@
+# Problem:
+# calcuate the factorial of 'number'
+
+Given I have a 'number' named 'number'
+Given I have a 'number' named '0'
+Given I have a 'number' named '1'
+
+When I set 'factorial' to '1' as 'number'
+
+If I verify number 'number' is less than '0'
+    When I exit with error message 'factorial exists only for positive number'
+EndIf
+If I verify number 'number' is more than '1'
+    Foreach 'i' in sequence from '1' to 'number' with step '1'
+        When I create the result of 'factorial' * 'i'
+        When I remove 'factorial'
+        When I rename 'result' to 'factorial'
+    EndForeach
+EndIf
+
+Then print 'factorial'

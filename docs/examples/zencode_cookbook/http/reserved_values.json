@@ -1,0 +1,21 @@
+{
+    "colon": ":",
+    "slash": "/",
+    "question_mark": "?",
+    "hash": "#",
+    "percentage": "%",
+    "square_bracket_open": "[",
+    "square_bracket_close": "]",
+    "at": "@",
+    "esclamation_mark": "!",
+    "dollar": "$",
+    "single_quote": "'",
+    "parenthesis_open": "(",
+    "parenthesis_close": ")",
+    "asterisk": "*",
+    "plus": "+",
+    "comma": ",",
+    "semicolon": ";",
+    "equal": "=",
+    "space": " "
+}

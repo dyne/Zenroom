@@ -1,0 +1,22 @@
+# Problem:
+# reverse the list in input
+
+Given I have a 'number array' named 'list'
+Given I have a 'number' named '0'
+Given I have a 'number' named '1'
+
+When I create the 'number array' named 'res'
+
+# limit of iteration
+When I create the size of 'list'
+and I create the result of 'size' - '1'
+and I rename 'result' to 'limit'
+
+Foreach 'i' in sequence from '0' to 'limit' with step '1'
+    When I create the result of 'size' - 'i'
+    and I copy 'result' from 'list' to 'temp'
+    and I move 'temp' in 'res'
+    and I remove 'result'
+EndForeach
+
+Then print 'res'

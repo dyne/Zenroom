@@ -1,0 +1,6 @@
+Scenario ecdh
+Given I have a 'ecdh signature'
+When I create the ecdh key
+and I create the ecdh public key
+Then print the 'ecdh signature'
+and print the 'ecdh public key'

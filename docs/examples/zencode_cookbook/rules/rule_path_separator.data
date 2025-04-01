@@ -1,0 +1,14 @@
+{
+    "my_dict": {
+        "my_array": [
+            [
+                {
+                    "hello": "world"
+                },
+                {
+                    "world": "hello"
+                }
+            ]
+        ]
+    }
+}

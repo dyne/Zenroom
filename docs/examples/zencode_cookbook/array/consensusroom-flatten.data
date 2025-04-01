@@ -1,0 +1,29 @@
+{
+ "identities": [
+  [
+   "https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp"
+  ],
+  [
+   "https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp"
+  ],
+  [
+   "https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp"
+  ],
+  [
+   "https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp"
+  ]
+ ],
+ "identity": {
+  "uid": "random",
+  "ip": "hostname -I",
+  "baseUrl": "http://hostname -I",
+  "port_http": "1000",
+  "port_https": "1001",
+  "public_key": "BGiQeHz55rNc/k/iy7wLzR1jNcq/MOy8IyS6NBZ0kY3Z4sExlyFXcILcdmWDJZp8FyrILOC6eukLkRNt7Q5tzWU=",
+  "version": "2",
+  "announceAPI": "/api/consensusroom-announce",
+  "get-6-timestampsAPI": "/api/consensusroom-get-6-timestamps",
+  "timestampAPI": "/api/consensusroom-get-timestamp",
+  "tracker": "https://apiroom.net/"
+ }
+}

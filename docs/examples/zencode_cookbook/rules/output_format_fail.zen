@@ -1,0 +1,7 @@
+Rule output format not_a_format
+Scenario 'ecdh': pk
+
+Given I have nothing
+When I create the ecdh key
+and I create the ecdh public key
+Then print the 'ecdh public key'

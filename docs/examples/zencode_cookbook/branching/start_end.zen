@@ -1,0 +1,23 @@
+Given I have a 'string' named 'str'
+and I have a 'string' named 'sub'
+
+When I create the 'string array' named 'results'
+
+If I verify 'str' starts with 'sub'
+When I insert string 'str starts with sub' in 'results'
+endif
+
+If I verify 'str' ends with 'who?'
+When I insert string 'str ends with string who?' in 'results'
+endif
+
+If I verify 'str' ends with 'sub'
+When I insert string 'str ends with sub' in 'results'
+endif
+
+If I verify 'str' starts with 'did:dyne*'
+When I insert string 'str starts with string did:dyne*' in 'results'
+endif
+
+Then print the 'results'
+

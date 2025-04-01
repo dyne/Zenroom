@@ -1,0 +1,386 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Zenroom LUA</title>
+    <link rel="stylesheet" href="" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Zenroom</h1>
+
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Class_TIME">Class TIME </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/OCTET.html">OCTET</a></li>
+  <li><a href="../modules/HASH.html">HASH</a></li>
+  <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><a href="../modules/BIG.html">BIG</a></li>
+  <li><a href="../modules/FLOAT.html">FLOAT</a></li>
+  <li><strong>TIME</strong></li>
+  <li><a href="../modules/AES.html">AES</a></li>
+  <li><a href="../modules/ECDH.html">ECDH</a></li>
+  <li><a href="../modules/ED.html">ED</a></li>
+  <li><a href="../modules/P256.html">P256</a></li>
+  <li><a href="../modules/QP.html">QP</a></li>
+  <li><a href="../modules/String.html">String</a></li>
+  <li><a href="../modules/Table.html">Table</a></li>
+  <li><a href="../modules/INSPECT.html">INSPECT</a></li>
+  <li><a href="../modules/lua.zencode.html">lua.zencode</a></li>
+  <li><a href="../modules/BBS.html">BBS</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>TIME</code></h1>
+<p>
+
+<h1>TIME</h1>
+
+<p>This class allows to work with TIME objects.</p>
+</p>
+<p> All TIME objects are float number.
+Since all TIME objects are 32 bit signed, there are two limitations for values allowed:</p>
+
+<p>-The MAXIMUM TIME value allowed is the number 2147483647 (<code>t_max = TIME.new(2147483647)</code>)</p>
+
+<p>-The MINIMUM TIME value allowed is the number -2147483647 (<code>t_min = TIME.new(-2147483647)</code>) </p>
+
+
+<h2><a href="#Class_TIME">Class TIME </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#time:new">time:new ([octet])</a></td>
+	<td class="summary">Create a new time.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#time:detect_time_value">time:detect_time_value (t)</a></td>
+	<td class="summary">It checks if the given input (either a number or a string) falls within a specific range of time values.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#time:__add">time:__add (t2)</a></td>
+	<td class="summary">Allow to do the sum between two time object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#time:__sub">time:__sub (t2)</a></td>
+	<td class="summary">Allow to subtract two time object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#time:__unm">time:__unm ()</a></td>
+	<td class="summary">Calculate the opposite of a time object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#time:__eq">time:__eq (t2)</a></td>
+	<td class="summary">Given two time objects, it checks if they are equal.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#time:__lt">time:__lt ()</a></td>
+	<td class="summary">Given two time object it checks if the first one is less (&lt;) then the second one</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#time:__lte">time:__lte ()</a></td>
+	<td class="summary">Given two time object it checks if the first one is less (&lt;=) then the second one</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#time:__tostring">time:__tostring ()</a></td>
+	<td class="summary">This method converts a time object to a string</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header has-description"><a name="Class_TIME"></a>Class TIME </h2>
+
+          <div class="section-description">
+          Global TIME Functions
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "time:new"></a>
+    <strong>time:new ([octet])</strong>
+    </dt>
+    <dd>
+    Create a new time.  If an argument is present,
+import it as <a href="../modules/OCTET.html#">OCTET</a> and initialise it with its value.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">octet</span>
+         value (32 bit)
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new float number
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "time:detect_time_value"></a>
+    <strong>time:detect_time_value (t)</strong>
+    </dt>
+    <dd>
+    It checks if the given input (either a number or a string) falls within a specific range of time values.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         a time value
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean value: true if the time value is too much big or too much low. false, otherwise
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "time:__add"></a>
+    <strong>time:__add (t2)</strong>
+    </dt>
+    <dd>
+    Allow to do the sum between two time object.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t2</span>
+         the time to sum
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        return the sum if it allowed. It might be return the error message "Result of addition out of range" if the result of the sum is too much big
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">oct1 = OCTET.<span class="function-name">random</span>(<span class="number">4</span>)
+oct2 = OCTET.<span class="function-name">random</span>(<span class="number">4</span>)
+t1 = time.<span class="function-name">new</span>(oct1)
+t2 = time.<span class="function-name">new</span>(oct2)
+sum = t1:<span class="function-name">__add</span>(t2)	</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "time:__sub"></a>
+    <strong>time:__sub (t2)</strong>
+    </dt>
+    <dd>
+    Allow to subtract two time object.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t2</span>
+         the time to subtract
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        return the subtraction if it allowed. It might be return the error message "Result of subtraction out of range" if the result of the subtraction is too much big
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">The same of the method <span class="function-name">__add</span>()</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "time:__unm"></a>
+    <strong>time:__unm ()</strong>
+    </dt>
+    <dd>
+    Calculate the opposite of a time object.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the opposite a time object
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">oct1 = OCTET.<span class="function-name">random</span>(<span class="number">4</span>)
+t1 = time.<span class="function-name">new</span>(oct1)
+opp = t1:<span class="function-name">__unm</span>() 	</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "time:__eq"></a>
+    <strong>time:__eq (t2)</strong>
+    </dt>
+    <dd>
+    Given two time objects, it checks if they are equal.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t2</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean value "true" if they are equal, "false" otherwise
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">oct1 = OCTET.<span class="function-name">random</span>(<span class="number">4</span>)
+t1 = time.<span class="function-name">new</span>(oct1)
+bool = t1:<span class="function-name">__eq</span>(t1)
+<span class="keyword">if</span> bool <span class="keyword">then</span> <span class="global">print</span>(<span class="string">"true"</span>)		<span class="comment">--Output: true
+</span><span class="keyword">else</span> <span class="global">print</span>(<span class="string">"false"</span>)
+<span class="keyword">end</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "time:__lt"></a>
+    <strong>time:__lt ()</strong>
+    </dt>
+    <dd>
+    Given two time object it checks if the first one is less (&lt;) then the second one
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean value "true" if the first argument is less than the second one, "false" otherwise
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">The same of :<span class="function-name">__eq</span>()</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "time:__lte"></a>
+    <strong>time:__lte ()</strong>
+    </dt>
+    <dd>
+    Given two time object it checks if the first one is less (&lt;=) then the second one
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean value "true" if the first argument is less or equal than the second one, "false" otherwise
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">The same of :<span class="function-name">__eq</span>()</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "time:__tostring"></a>
+    <strong>time:__tostring ()</strong>
+    </dt>
+    <dd>
+    This method converts a time object to a string
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the string representation of a time object
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">oct1 = OCTET.<span class="function-name">random</span>(<span class="number">4</span>)
+t1 = time.<span class="function-name">new</span>(oct1)
+t1:<span class="function-name">__tostring</span>()	</pre>
+    </ul>
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2025-03-25 10:33:58 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

@@ -1,0 +1,53 @@
+Rule check version 2.0.0
+Scenario 'ecdh': keypair management and ECDSA signature
+
+# Here we load a keypair to sign stuff
+# Given that I am 'JackInTheShop'
+# Given that I have my valid 'keypair'
+
+# Here we are loading string dictionaries that contain numbers we will use
+Given that I have a 'string dictionary' named 'Transactions1Data'
+Given that I have a 'string dictionary' named 'Transactions2Data'
+
+# Here we load some numbers that are at root level
+Given that I have a 'number' named 'salesStartTimestamp'
+Given that I have a 'number' named 'lastYearPricePerKG'
+Given that I have a 'number' named 'lastYearMonthlySales'
+Given that I have a 'number' named 'lastYearAvgTransactionsValue'
+
+
+# Here we calculate the difference of two values, inside two dictionaries
+When I create the result of 'TransferredProductAmount' in 'Transactions1Data' - 'TransferredProductAmount' in 'Transactions2Data'
+and I rename the 'result' to 'salesDifference'
+
+
+# Here we divide a number at root level with a number inside a dictionary
+When I create the result of 'lastYearAvgTransactionsValue' / 'TransactionValue' in 'Transactions2Data'
+and I rename the 'result' to 'percentOfSalesinTransaction2'
+
+When I create the result of 'PricePerKG' in 'Transactions1Data' / 'lastYearPricePerKG'
+and I rename the 'result' to 'priceRampinTransaction1'
+
+
+# Here we create a dictionary
+When I create the 'number dictionary'
+and I rename the 'number dictionary' to 'salesReport'
+
+# Here we move elements into the newly created dictionary
+
+When I move 'salesDifference' in 'salesReport'
+When I move 'priceRampinTransaction1' in 'salesReport'
+When I move 'percentOfSalesinTransaction2' in 'salesReport'
+
+
+When I create the hash of 'salesReport' using 'sha256'
+When I rename the 'hash' to 'salesReport.hash'
+
+# Here we produce an ECDSA signature the newly created dictionary using
+# When I create the signature of 'salesReport'
+# and I rename the 'signature' to 'salesReport.signature'
+
+#Print out the data we produced along
+Then print the 'salesReport'
+# Then print the 'salesReport.signature'
+Then print the 'salesReport.hash'

@@ -1,0 +1,6 @@
+Scenario 'ecdh'
+# below the statement needed
+Given my name is in a 'string' named 'Sender' inside 'UserData'
+
+Given that I have my 'keyring'
+Then print my 'keyring'

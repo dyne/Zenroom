@@ -1,0 +1,10 @@
+Scenario ecdh: Encrypt a message with the password
+Given nothing
+# only inline input, no KEYS or DATA passed
+When I write string 'my secret word' in 'password'
+and I write string 'a very short but very confidential message' in 'whisper'
+and I write string 'for your eyes only' in 'header'
+# header is implicitly used when encrypt
+and I encrypt the secret message 'whisper' with 'password'
+# anything introduced by 'the' becomes a new variable
+Then print the 'secret message'

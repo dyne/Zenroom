@@ -1,0 +1,13 @@
+{
+	"dict": {
+        "hello": "world"
+    },
+    "array": [
+        "hello",
+        "world"
+    ],
+    "ecdh_pks": [
+        "BLOYXryyAI7rPuyNbI0/1CfLFd7H/NbX+osqyQHjPR9BPK1lYSPOixZQWvFK+rkkJ+aJbYp6kii2Y3+fZ5vl2MA=",
+        "BKRCtsZf8PxlIO5C/rQ8brFimDMgITrqKGiD/9YMdrdeIThLoN7Zm6oAQcVGBYso6aWQmkY70I3Dg2GRAv2gCog="
+    ]
+}

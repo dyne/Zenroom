@@ -1,0 +1,52 @@
+# Problem:
+# print all prime numbers till a certain number 'end'
+# Note:
+# The total complexity of this algorithm is O((n*sqrt(n))/logn), we are checking only for prime divisors till sqrt(n)
+
+Given I have a 'number' named 'end'
+
+Given I have a 'number' named '0'
+Given I have a 'number' named '1'
+Given I have a 'number' named '2'
+
+When I create the 'number array' named 'res'
+
+If I verify number 'end' is less or equal than '2'
+    When I exit with error message 'end should be grater than 2'
+EndIf
+
+When I set 'sqrt' to '1' as 'number'
+When I set 'sqrt^2' to '1' as 'number'
+
+If I verify number 'end' is more than '1'
+    Foreach 'i' in sequence from '2' to 'end' with step '1'
+        If I verify number 'sqrt^2' is less than 'i'
+            When I create the result of 'sqrt' + '1'
+            and I remove 'sqrt'
+            and I rename 'result' to 'sqrt'
+            When I create the result of 'sqrt' * 'sqrt'
+            and I remove 'sqrt^2'
+            and I rename 'result' to 'sqrt^2'
+        EndIf
+        Foreach 'j' in 'res'
+            If I verify number 'j' is more than 'sqrt'
+                When I break foreach
+            EndIf
+            When I create the result of 'i' % 'j'
+            If I verify 'result' is equal to '0'
+                When I set 'not_prime' to 'true' as 'string'
+                When I remove 'result'
+                When I break the foreach
+            EndIf
+            When I remove 'result'
+        EndForeach
+        If I verify 'not_prime' is not found
+            When I copy 'i' in 'res'
+        EndIf
+        If I verify 'not_prime' is found
+            When I remove 'not_prime'
+        EndIf
+    EndForeach
+EndIf
+
+Then print 'res'

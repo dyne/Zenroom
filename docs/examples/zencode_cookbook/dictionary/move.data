@@ -1,0 +1,15 @@
+{
+	"myDict": {
+		 "name": "Bruce",
+		 "surname": "Wayne",
+		 "age": "44"
+	},
+	"myArray": [
+			 "John",
+			 "Doe",
+		 	 "42"
+	],
+	"myString": "who?",
+	"mySecondString": "where?",
+	"name": "mySecondString"
+}

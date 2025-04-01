@@ -11,37 +11,37 @@ When I write string 'This is my lovely new string!' in 'nameOfSecondNewVariable'
 # sum, subtract, multiply, divide, modulo with values, see the examples below. The output of the 
 # statement will be an object named "result" that we immediately rename.
 # The operators allowed are: +, -, *, /, %.
-When I create the result of 'mySecondNumber' + 'myThirdNumber'
+When I create the result of 'b' + 'myThirdNumber'
 and I rename the 'result' to 'resultOfmyFirstSum'
-When I create the result of 'mySecondNumber' - 'myThirdNumber'
+When I create the result of 'b' - 'myThirdNumber'
 and I rename the 'result' to 'resultOfmyFirstSubtraction'
-When I create the result of 'mySecondNumber' * 'myThirdNumber'
+When I create the result of 'b' * 'myThirdNumber'
 and I rename the 'result' to 'resultOfmyFirstMultiplication'
-When I create the result of 'mySecondNumber' / 'myThirdNumber'
+When I create the result of 'b' / 'myThirdNumber'
 and I rename the 'result' to 'resultOfmyFirstDivision'
-When I create the result of 'mySecondNumber' % 'myThirdNumber'
+When I create the result of 'b' % 'myThirdNumber'
 and I rename the 'result' to 'resultOfmyFirstModulo'
 
 # Now let's do some math with the number that we just created: 
 
-When I create the result of 'mySecondNumber' + 'nameOfFirstNewVariable'
+When I create the result of 'b' + 'nameOfFirstNewVariable'
 and I rename the 'result' to 'resultOfmySecondSum'
-When I create the result of 'mySecondNumber' * 'nameOfFirstNewVariable'
+When I create the result of 'b' * 'nameOfFirstNewVariable'
 and I rename the 'result' to 'resultOfmySecondMultiplication'
 
 # INVERT SIGN
 # you can invert the sign of a number using this statement
-# in this example, we create an inverted version of 'myFirstNumber' 
+# in this example, we create an inverted version of 'a' 
 # that goes from '1.2345' to '-1.2345'
-When I create the result of 'myFirstNumber' inverted sign
-and I rename the 'result' to 'myFirstNumberInvertedSign'
+When I create the result of 'a' inverted sign
+and I rename the 'result' to 'aInvertedSign'
 
 
 # APPEND
 # The "append" statement are pretty self-explaining: 
 # append a simple object of any encoding to another one
 When I append 'mySecondString' to 'myFifteenthString' 
-When I append 'mySecondNumber' to 'myThirdNumber' 
+When I append 'b' to 'myThirdNumber' 
 
 # RENAME
 # The "rename" statement: we've been hinting at this for a while now,
@@ -64,8 +64,7 @@ When I copy 'myFirstArray' to 'copyOfMyFirstArray'
 # You can copy a certain element from an array, to a new object named "copy", with the
 # same encoding of the array, in the root level of the data. 
 # We are immeediately renaming the outout for your convenience.
-When I create the copy of element '3' from array 'myFourthArray'
-and I rename the 'copy' to 'copyOfElement3OfmyFourthArray'
+When I copy '3' from 'myFourthArray' to 'copyOfElement3OfmyFourthArray'
 
 # SPLIT (leftmost, rightmost)
 # The "split" statements, take as input the name of a string and a numeric value,
@@ -83,18 +82,18 @@ When I randomize the 'myFourthArray' array
 
 
 # PICK RANDOM
-# The "pick a random object in" picks randomly an object from the target array
-# and puts into a newly created object named "random_object".
+# The "create a random pick from" picks randomly an element from the target array
+# and puts into a newly created variable named "random_pick".
 # The name is hardcoded, the object can be renamed.
-When I pick the random object in 'myFirstArray'
-and I rename the 'random_object' to 'myRandomlyPickedObject'
+When I create random pick from 'myFirstArray'
+and I rename the 'random_pick' to 'myRandomlyPickedObject'
 
-# CREATE RANDOM DICTIONARY 
-# If you need several objects from a dictionary, you can use this statement
-# it will create a new dictionary with the defined amount of objects,
-# picked from the original dictionary 
-When I create the random dictionary with 'mySecondNumber' random objects from 'myOnlyEcpArray'
-and I rename the 'random_dictionary' to 'myNewlyCreatedRandomDictionary'
+# PICK MULTIPLE RANDOM ELEMENTS
+# If you need several objects from a table, you can use this statement
+# it will create a new table (array if source was an array, or dictionary otherwise)
+# with the defined amount of objects picked from the original table
+When I create random array with 'b' elements from 'myOnlyEcpArray'
+and I rename the 'random_array' to 'myNewlyCreatedRandomArray'
 
 # CREATE FLAT ARRAY
 # The "flat array" statement, take as input the name of an array or a dictionary,

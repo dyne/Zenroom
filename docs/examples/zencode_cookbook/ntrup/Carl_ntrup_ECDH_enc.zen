@@ -1,0 +1,11 @@
+Rule check version 2.0.0
+Scenario qp : Bob creates secret and its ciphertext for Carl with Kyber and ntrup
+Given I am 'Bob'
+and I have a 'ntrup public key' from 'Carl'
+and I have a 'kyber public key' from 'Carl'
+When I create the ntrup kem for 'Carl'
+and I create the kyber kem for 'Carl'
+Then print the 'ntrup ciphertext' from 'ntrup kem'
+and print the 'ntrup secret' from 'ntrup kem'
+Then print the 'kyber ciphertext' from 'kyber kem'
+and print the 'kyber secret' from 'kyber kem'

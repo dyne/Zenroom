@@ -1,0 +1,27 @@
+{"Andrea":{
+      "keyring":{
+	 "ecdh":"IIiTD89L6/sbIvaUc5jAVR88ySigaBXppS5GLUjm7Dv2OLKbNIVdiZ48jpLGskKVDPpukKe4R0A="
+      },
+   },
+   "stuff": {
+    "robba":"1000",
+	"quantity":1000,
+    "peppe":[
+	"peppe2",
+	"peppe3",
+	"peppe4"
+	]
+	},
+
+	"Bobbino":{
+      "keyring":{
+	 "ecdh":"IIiTD89L6/sbIvaUc5jAVR88ySigaBXppS5GLUjm7Dv2OLKbNIVdiZ48jpLGskKVDPpukKe4R0A="
+				},
+    "robbaB":"1000",
+    "peppeB":[
+	"peppe2B",
+	"peppe3B",
+	"peppe4B"
+	]
+	}
+ }

@@ -1,0 +1,5 @@
+Scenario multidarkroom
+Scenario credential
+Given I am 'Participant_2'
+When I create the credential key
+Then print my 'keyring'

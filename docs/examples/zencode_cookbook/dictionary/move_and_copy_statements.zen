@@ -1,0 +1,27 @@
+Scenario 'eddsa': sign
+Scenario 'ecdh': sign
+Given I have a 'keyring'
+and I have a 'base64' named 'base64_string'
+and I have a 'string' named 'to_be_signed'
+and I have a 'string dictionary' named 'my_dict'
+
+# sign
+When I create the eddsa signature of 'to_be_signed'
+and I create the ecdh signature of 'to_be_signed'
+
+# copy
+When I copy 'my_dict' to 'result_copy'
+and I copy 'to_be_signed' to 'signed' in 'result_copy'
+and I copy 'eddsa signature' as 'base58' in 'result_copy'
+and I copy 'ecdh signature' as 'ecdh_signature' in 'result_copy'
+and I copy 'base64_string' as 'string' in 'result_copy'
+
+# move statement
+When I rename 'my_dict' to 'result_move'
+and I move 'to_be_signed' to 'signed' in 'result_move'
+and I move 'eddsa signature' as 'base58' in 'result_move'
+and I move 'ecdh signature' as 'ecdh_signature' in 'result_move'
+and I move 'base64_string' as 'string' in 'result_move'
+
+Then print the 'result_copy'
+Then print the 'result_move'

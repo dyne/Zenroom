@@ -10,13 +10,13 @@ When I move 'myFirstString' in 'myFirstArray'
 # SIZE
 # These two statements create objects, named "size"
 # containing the size of the array
-When I create the size of 'mySecondNumberArray'
+When I create the size of 'bArray'
 
 # SUM 
 # These two statements create objects, named "aggregation" and "sum value" containing the 
 # arithmetic sum of the array, they work only with "number array"
-When I create the aggregation of array 'mySecondNumberArray'
-When I create the sum value of elements in array 'mySecondNumberArray'
+When I create the aggregation of array 'bArray'
+When I create the sum value of elements in array 'bArray'
 
 # STATISTICAL INFORMATIONS
 # These statements perform some statistical operations on the arrays
@@ -24,14 +24,14 @@ When I create the sum value of elements in array 'mySecondNumberArray'
 # variance of the elements of the array, saving them in three object named
 # respectively "average", "standard deviation" and "variance", and
 # they work only with "number array"
-When I create the average of elements in array 'mySecondNumberArray'
-When I create the standard deviation of elements in array 'mySecondNumberArray'
-When I create the variance of elements in array 'mySecondNumberArray'
+When I create the average of elements in array 'bArray'
+When I create the standard deviation of elements in array 'bArray'
+When I create the variance of elements in array 'bArray'
 
 # COPY ELEMENT
 # This statement creates a an object named "copy" containing
 # the given element of the array
-When I create the copy of element '2' from array 'mySecondNumberArray'
+When I copy '2' from 'bArray' to 'copy'
 
 # REMOVE
 # The "remove" statement does the opposite of the one above:
@@ -40,7 +40,7 @@ When I create the copy of element '2' from array 'mySecondNumberArray'
 When I rename the 'myThirdArray' to 'myJustRenamedArray'
 When I remove the 'mySixteenthString' from 'myJustRenamedArray'
 
-Then print the 'mySecondNumberArray'
+Then print the 'bArray'
 Then print the 'myFirstArray'
 Then print the 'myJustRenamedArray'
 

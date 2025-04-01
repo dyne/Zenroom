@@ -1,0 +1,4 @@
+Scenario 'ethereum': copy element
+Given I have a 'ethereum address signature pair array' named 'addresses_signatures'
+When I copy '1' from 'addresses_signatures' to 'copy'
+Then print the 'copy'

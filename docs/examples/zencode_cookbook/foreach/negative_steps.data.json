@@ -1,0 +1,8 @@
+{
+    "int_start": "1",
+    "int_end": "-10",
+    "int_step": "-1",
+    "num_start": 1,
+    "num_end": -10,
+    "num_step": -1
+}

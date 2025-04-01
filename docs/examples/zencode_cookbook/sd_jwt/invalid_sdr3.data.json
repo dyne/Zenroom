@@ -1,0 +1,1 @@
+{"selective_disclosure_request":{"fields":["given_name","age",{"address": "street"}],"object":{"age":42,"family_name":"Lippo","given_name":"Mimmo"}}}

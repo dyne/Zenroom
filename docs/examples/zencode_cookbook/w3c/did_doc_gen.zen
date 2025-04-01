@@ -1,0 +1,185 @@
+Rule input encoding base58
+Rule output encoding base58
+
+Scenario 'ecdh': Use the key
+Scenario 'ethereum': Use the key
+Scenario 'reflow': Use the key
+Scenario 'eddsa' : Use the key
+Scenario 'credential': Use the key
+Scenario 'bbs': Use the key
+Scenario 'es256': Use the key
+
+# load the request settings
+Given I have a 'string array' named '@context'
+
+# load the new identity public keys and description
+Given I have a 'string' named 'did_spec'
+Given I have a 'string' named 'identity'
+and I rename 'identity' to 'description'
+and I have a 'eddsa_public_key'
+and I rename 'eddsa_public_key' to 'identity pk'
+Given I have a 'ethereum_address'
+Given I have a 'ecdh_public_key'
+Given I have a 'reflow_public_key'
+Given I have a 'bbs public key'
+Given I have a 'es256 public key'
+Given I have a 'base58' named 'bitcoin public key'
+# import as a key for crypto checks (then transofrmed into table in zenroom)
+Given I have a 'issuer public key'
+and I rename 'issuer public key' to 'table issuer public key'
+# import as a base58 to be then inserted easily in the did doc
+Given I have a 'base58' named 'issuer public key'
+
+#TODO: validate eddsa public key
+
+### Formulate the DID creation request
+When I create the 'string dictionary' named 'did document'
+and I move '@context' in 'did document'
+and I move 'description' in 'did document'
+
+## did spec and id
+When I set 'did:dyne:' to 'did:dyne:' as 'string'
+and I append 'did_spec' to 'did:dyne:'
+and I append the string ':' to 'did:dyne:'
+and I append the 'base58' of 'identity pk' to 'did:dyne:'
+and I copy the 'did:dyne:' to 'id' in 'did document'
+
+## veririfcationMethod
+When I create the 'string array' named 'verificationMethod'
+
+# 1-ecdsa public key
+When I create the 'string dictionary' named 'verification-key'
+# pk
+When I create the 'base58' string of 'ecdh public key'
+When I move the 'base58' to 'publicKeyBase58' in 'verification-key'
+# type
+When I set 'type' to 'EcdsaSecp256k1VerificationKey2019' as 'string'
+When I move 'type' in 'verification-key'
+# id
+When I copy 'did:dyne:' to 'id'
+When I append the string '#ecdh_public_key' to 'id'
+When I move 'id' in 'verification-key'
+# controller
+When I copy the 'did:dyne:' to 'controller' in 'verification-key'
+When I move 'verification-key' in 'verificationMethod'
+
+# 2-reflow public key
+When I create the 'string dictionary' named 'verification-key'
+# pk
+When I create the 'base58' string of 'reflow public key'
+When I move the 'base58' to 'publicKeyBase58' in 'verification-key'
+# type
+When I set 'type' to 'ReflowBLS12381VerificationKey' as 'string'
+When I move 'type' in 'verification-key'
+# id
+When I copy 'did:dyne:' to 'id'
+When I append the string '#reflow_public_key' to 'id'
+When I move 'id' in 'verification-key'
+# controller
+When I copy the 'did:dyne:' to 'controller' in 'verification-key'
+When I move 'verification-key' in 'verificationMethod'
+
+# 3-bitcoin public key
+When I create the 'string dictionary' named 'verification-key'
+# pk
+When I create the 'base58' string of 'bitcoin public key'
+and I move the 'base58' to 'publicKeyBase58' in 'verification-key'
+# type
+When I set 'type' to 'EcdsaSecp256k1VerificationKey2019' as 'string'
+When I move 'type' in 'verification-key'
+# id
+When I copy 'did:dyne:' to 'id'
+When I append the string '#bitcoin_public_key' to 'id'
+When I move 'id' in 'verification-key'
+# controller
+When I copy the 'did:dyne:' to 'controller' in 'verification-key'
+When I move 'verification-key' in 'verificationMethod'
+
+# 4-eddsa public key
+When I create the 'string dictionary' named 'verification-key'
+# pk
+When I create the 'base58' string of 'identity pk'
+and I move the 'base58' to 'publicKeyBase58' in 'verification-key'
+# type
+When I set 'type' to 'Ed25519VerificationKey2018' as 'string'
+When I move 'type' in 'verification-key'
+# id
+When I copy 'did:dyne:' to 'id'
+When I append the string '#eddsa_public_key' to 'id'
+When I move 'id' in 'verification-key'
+# controller
+When I copy the 'did:dyne:' to 'controller' in 'verification-key'
+When I move 'verification-key' in 'verificationMethod'
+
+# 5-ethereum address
+When I create the 'string dictionary' named 'verification-key'
+# address
+# this follows the CAIP-10(https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-10.md) spec
+# thus it is: namespace + ":" + chain_id + ":" + address
+When I set 'blockchainAccountId' to 'eip155:1:0x' as 'string'
+When I append the 'hex' of 'ethereum address' to 'blockchainAccountId'
+When I move 'blockchainAccountId' in 'verification-key'
+# type
+When I set 'type' to 'EcdsaSecp256k1RecoveryMethod2020' as 'string'
+When I move 'type' in 'verification-key'
+# id
+When I copy 'did:dyne:' to 'id'
+When I append the string '#ethereum_address' to 'id'
+When I move 'id' in 'verification-key'
+# controller
+When I copy the 'did:dyne:' to 'controller' in 'verification-key'
+When I move 'verification-key' in 'verificationMethod'
+
+# 6-es256 public key
+When I create the 'string dictionary' named 'verification-key'
+# pk
+When I create the 'base58' string of 'es256 public key'
+and I move the 'base58' to 'publicKeyBase58' in 'verification-key'
+# type
+When I set 'type' to 'EcdsaSecp256r1VerificationKey' as 'string'
+When I move 'type' in 'verification-key'
+# id
+When I copy 'did:dyne:' to 'id'
+When I append the string '#es256_public_key' to 'id'
+When I move 'id' in 'verification-key'
+# controller
+When I copy the 'did:dyne:' to 'controller' in 'verification-key'
+When I move 'verification-key' in 'verificationMethod'
+
+# 7-bbs public key
+When I create the 'string dictionary' named 'verification-key'
+# pk
+When I create the 'base58' string of 'bbs public key'
+and I move the 'base58' to 'publicKeyBase58' in 'verification-key'
+# type
+When I set 'type' to 'BbsVerificationKey' as 'string'
+When I move 'type' in 'verification-key'
+# id
+When I copy 'did:dyne:' to 'id'
+When I append the string '#bbs_public_key' to 'id'
+When I move 'id' in 'verification-key'
+# controller
+When I copy the 'did:dyne:' to 'controller' in 'verification-key'
+When I move 'verification-key' in 'verificationMethod'
+
+# 8-issuer public key
+When I create the 'string dictionary' named 'verification-key'
+# pk
+When I create the 'base58' string of 'issuer public key'
+and I move the 'base58' to 'publicKeyBase58' in 'verification-key'
+# type
+When I set 'type' to 'CoconutVerificationKey' as 'string'
+When I move 'type' in 'verification-key'
+# id
+When I copy 'did:dyne:' to 'id'
+When I append the string '#issuer_public_key' to 'id'
+When I move 'id' in 'verification-key'
+# controller
+When I copy the 'did:dyne:' to 'controller' in 'verification-key'
+When I move 'verification-key' in 'verificationMethod'
+
+When I move 'verificationMethod' in 'did document'
+### DID-Document ended
+
+# print did document
+Then print the 'did document' as 'string' in 'request'

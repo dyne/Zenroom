@@ -1,0 +1,13 @@
+{
+    "str": "hello",
+    "integer": "123456789123456789123456789",
+    "float": 1234,
+    "dict": {
+            "str_1": "hello",
+            "str_2": "world"
+    },
+    "array": [
+             "hello",
+             "world"
+    ]
+}

@@ -1,0 +1,10 @@
+Given I have a 'float' named 'a'
+Given I have a 'float' named 'b'
+Given I have a 'float' named 'c'
+When I create the result of '-(-a+b)-c'
+and I rename 'result' to 'zero1'
+When I create the result of 'a-(-(-c)+b)'
+and I rename 'result' to 'zero2'
+When I verify 'zero1' is equal to 'zero2'
+Then print the string 'OK'
+Then print data

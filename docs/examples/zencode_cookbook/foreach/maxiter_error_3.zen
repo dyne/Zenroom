@@ -1,0 +1,9 @@
+Given I have a 'string array' named 'array_out_of_limit'
+
+When I create the 'string array' named 'res'
+
+Foreach 'i' in 'array_out_of_limit'
+    When I move 'i' in 'res'
+EndForeach
+
+Then print the 'res'

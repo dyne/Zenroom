@@ -1,0 +1,7 @@
+Scenario 'w3c': did document manipulation
+Given I have a 'string dictionary' named 'payload'
+Given I have a 'string' named 'password'
+
+When I create the json web token of 'payload' using 'password'
+and debug
+Then print the 'json web token'

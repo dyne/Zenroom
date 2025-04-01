@@ -1,0 +1,48 @@
+Given I have a 'string dictionary' named '1'
+Given I have a 'string dictionary' named '2'
+Given I have a 'string dictionary' named '3'
+Given I have a 'string dictionary' named '4'
+Given I have a 'string dictionary' named '5'
+Given I have a 'string dictionary' named '6'
+
+Given I have the 'string' named 'non numero'
+
+When I create the copy of 'myTimestamp' from dictionary '1'
+When I rename the 'copy' to 'time1'
+
+When I create the copy of 'myTimestamp' from dictionary '2'
+When I rename the 'copy' to 'time2'
+
+When I create the copy of 'myTimestamp' from dictionary '3'
+When I rename the 'copy' to 'time3'
+
+When I create the copy of 'myTimestamp' from dictionary '4'
+When I rename the 'copy' to 'time4'
+
+When I create the copy of 'myTimestamp' from dictionary '5'
+When I rename the 'copy' to 'time5'
+
+When I create the copy of 'myTimestamp' from dictionary '6'
+When I rename the 'copy' to 'time6'
+
+# move timestamps in array to create average and variance
+
+When I create the 'string array'
+When I rename the 'string array' to 'allTimestamps'
+
+When I move 'time1' in 'allTimestamps'
+When I move 'time2' in 'allTimestamps'
+When I move 'time3' in 'allTimestamps'
+When I move 'time4' in 'allTimestamps'
+When I move 'time5' in 'allTimestamps'
+When I move 'time6' in 'allTimestamps'
+# When I move 'non numero' in 'allTimestamps'
+
+When I create the average of elements in array 'allTimestamps'
+When I create the variance of elements in array 'allTimestamps'
+When I create the standard deviation of elements in array 'allTimestamps'
+
+Then print the 'average'
+Then print the 'variance'
+Then print the 'standard deviation'
+Then print the 'allTimestamps'

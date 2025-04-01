@@ -1,0 +1,16 @@
+Given I have a 'string dictionary' named 'myDict'
+Given I have a 'string array' named 'myNestedArray'
+Given I have a 'string dictionary' named 'myNestedDict'
+Given I have a 'number dictionary' named 'myNumberDict'
+
+Given I have a 'string array' named 'filters'
+
+When I filter 'filters' fields from 'myDict'
+When I filter 'filters' fields from 'myNestedArray'
+When I filter 'filters' fields from 'myNestedDict'
+When I filter 'filters' fields from 'myNumberDict'
+
+Then print the 'myDict'
+and print the 'myNestedArray'
+and print the 'myNestedDict'
+and print the 'myNumberDict'

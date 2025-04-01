@@ -1,0 +1,4 @@
+Scenario ecdh: Generate a random password
+Given nothing
+When I create the random 'password'
+Then print the 'password'

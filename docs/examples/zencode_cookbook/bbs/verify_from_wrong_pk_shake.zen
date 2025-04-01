@@ -1,0 +1,6 @@
+Scenario bbs
+Given I have a 'bbs shake public key'
+and I have a 'bbs shake signature'
+and I have a 'hex array' named 'myStringArray'
+When I verify the 'myStringArray' has a bbs shake signature in 'bbs shake signature' by 'Alice'
+Then print the string 'Signature is valid'

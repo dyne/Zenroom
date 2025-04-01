@@ -1,0 +1,4 @@
+Given nothing
+When I set 'my_prefix' to 'did:dyne:' as 'string'
+and I append the string 'sandbox:' to 'my_prefix'
+Then print 'my prefix'

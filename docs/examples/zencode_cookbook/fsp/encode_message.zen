@@ -1,0 +1,6 @@
+	Scenario fsp
+	Given I have a 'keyring'
+    and I have a 'string' named 'message'
+	When I create the random 'fsp nonce'
+	and I create the fsp ciphertext of 'message'
+	Then print the 'fsp ciphertext'

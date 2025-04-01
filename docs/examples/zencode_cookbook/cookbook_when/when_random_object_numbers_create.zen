@@ -1,0 +1,11 @@
+Given nothing
+
+# array of 5 random integers
+When I create the random array with '5' numbers
+When I rename the 'random array' to '5 random numbers'
+
+# array of 5 random integers with a maximum value of 16
+When I create the random array with '5' numbers modulo '16'
+When I rename the 'random array' to '5 random numbers modulo 16'
+
+Then print the data

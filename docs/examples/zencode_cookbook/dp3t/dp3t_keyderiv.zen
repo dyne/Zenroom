@@ -1,0 +1,8 @@
+scenario 'dp3t': Decentralized Privacy-Preserving Proximity Tracing
+rule check version 1.0.0
+rule input encoding hex
+rule output encoding hex
+Given I have an 'hex' named 'secret day key'
+# TODO: if the key is found in HEAP then parse secret day key as octet in default encoding
+When I renew the secret day key to a new day
+Then print the 'secret day key'

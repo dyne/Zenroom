@@ -1,0 +1,21 @@
+{
+	"Transactions1Data": {
+		"timestamp": 1597573139,
+		"TransactionValue": 1500,
+		"PricePerKG": 100,
+		"TransferredProductAmount": 15,
+		"UndeliveredProductAmount": 7,
+		"ProductPurchasePrice": 50
+	},
+	"Transactions2Data": {
+		"timestamp": 1597573239,
+		"TransactionValue": 1600,
+		"TransferredProductAmount": 20,
+		"PricePerKG": 80
+	},
+	"dictionaryToBeFound": "Information",
+	"salesStartTimestamp": 1597573200,
+	"lastYearPricePerKG": 30,
+	"lastYearMonthlySales": 15,
+	"lastYearAvgTransactionsValue": 1500
+}

@@ -1,0 +1,8 @@
+Given I have a 'string dictionary' named 'dict'
+and I have a 'string' named 'not an array key'
+
+When I set pointer to 'dict'
+and I enter 'list' with pointer
+and I enter 'not an array key' with pointer
+
+Then print 'pointer'

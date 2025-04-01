@@ -1,0 +1,9 @@
+{
+    "dict_from": {
+        "str_3": "!"
+    },
+    "dict_to": {
+            "str_1": "hello",
+            "str_2": "world"
+    }
+}

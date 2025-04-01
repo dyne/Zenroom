@@ -1,0 +1,9 @@
+Rule check version 1.0.0
+Scenario 'ecdh':
+	Given that I am known as 'Bob'
+	and I have my 'keyring'
+	and I have a 'ecdh' public key from 'Alice'
+	and I have a 'secret message'
+	When I decrypt the text of 'secret message' from 'Alice'
+	Then print the 'text' as 'string'
+	and print the 'header' from 'secret message' as 'string'

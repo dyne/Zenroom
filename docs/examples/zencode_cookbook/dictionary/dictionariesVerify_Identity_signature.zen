@@ -1,0 +1,11 @@
+rule check version 1.0.0
+Scenario ecdh: Verify the Identity signature
+Given I have a 'ecdh public key' from 'Authority'
+and I have a 'string dictionary' named 'Identity'
+and I have a 'string dictionary' named 'HistoryOfTransactions'
+and I have a 'signature' named 'Identity.signature'
+and I have a 'signature' named 'HistoryOfTransactions.signature'
+When I verify the 'Identity' has a signature in 'Identity.signature' by 'Authority'
+When I verify the 'HistoryOfTransactions' has a signature in 'HistoryOfTransactions.signature' by 'Authority'
+Then print the string 'Signature of Identity by Authority is Valid'
+and print the string 'Signature of HistoryOfTransactions by Authority is Valid'

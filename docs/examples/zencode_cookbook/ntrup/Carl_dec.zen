@@ -1,0 +1,20 @@
+Rule check version 2.0.0
+Scenario qp : Carl creates the ntrup and kyber secrets
+Given that I am known as 'Carl'
+and I have my 'keyring'
+and I have a 'ntrup ciphertext'
+and I have a 'ntrup secret'
+and I have a 'kyber ciphertext'
+and I have a 'kyber secret'
+
+When I rename the 'ntrup secret' to 'Bob ntrup secret'
+and I create the ntrup secret from 'ntrup ciphertext'
+
+When I rename the 'kyber secret' to 'Bob kyber secret'
+and I create the kyber secret from 'kyber ciphertext'
+
+If I verify 'Bob ntrup secret' is equal to 'ntrup secret'
+If I verify 'Bob kyber secret' is equal to 'kyber secret'
+Then print string 'Success!!!'
+EndIf
+EndIf

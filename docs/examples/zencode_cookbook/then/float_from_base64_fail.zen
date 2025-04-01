@@ -1,0 +1,2 @@
+    Given I have a 'base64' named 'b64'
+    Then print the 'b64' as 'number'

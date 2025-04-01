@@ -1,0 +1,5 @@
+    Given I have a 'string' named 'error'
+    If I verify 'object' is not found
+    When I exit with error message 'error'
+    EndIf
+    Then print the string 'object found'

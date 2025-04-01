@@ -1,0 +1,6 @@
+rule output encoding hex
+Given nothing
+When I create the random 'source'
+and I write string 'my pbkdf password' in 'secret'
+and I create the key derivation of 'source' with password 'secret'
+Then print 'key derivation'

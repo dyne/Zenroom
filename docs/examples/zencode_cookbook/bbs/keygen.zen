@@ -1,0 +1,5 @@
+Scenario bbs
+Given I am known as 'Bob'
+When I create the keyring
+and I create the bbs key
+Then print my 'keyring'

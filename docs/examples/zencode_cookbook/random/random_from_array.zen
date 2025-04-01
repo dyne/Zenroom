@@ -1,0 +1,7 @@
+rule check version 1.0.0
+Given nothing
+When I create the random array with '32' elements each of '256' bits
+and I create random pick from 'random array'
+and I remove the 'random pick' from 'random array'
+and I verify the 'random pick' is not found in 'random array'
+Then print the 'random pick'

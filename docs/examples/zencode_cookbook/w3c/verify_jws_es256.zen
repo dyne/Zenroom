@@ -1,0 +1,11 @@
+Scenario 'es256': signature verifcation
+Scenario 'w3c': jws
+
+Given I have a 'string' named 'jws signature'
+and I have a 'es256 public key'
+and I have a 'string' named 'payload'
+
+When I verify 'payload' has a jws signature in 'jws signature'
+When I verify the jws signature in 'jws signature'
+
+Then print the string 'signature verified'

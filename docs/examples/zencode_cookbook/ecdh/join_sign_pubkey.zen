@@ -1,0 +1,5 @@
+Scenario ecdh
+Given I have a 'ecdh public key' in 'Alice'
+and I have a 'ecdh signature'
+Then print the 'ecdh signature'
+and print the 'ecdh public key'

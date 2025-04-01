@@ -1,0 +1,14 @@
+{
+	"Sender": "Alice",
+	"Alice": {
+		"keyring": {
+			"ecdh": "2mZDRS1rE4jT5EuozwZfbS+GLE7ogBfgWOr30wXoe3g="
+		}
+	},
+	"Friends": {
+		"Bob": "BJX5HFLhTxd+QeCcywWP4i7QXufoI83j/VvzoaTlfHjJBJeEIhCIUQHIm+paH/aJWHSnAQC0Mea0IiYb7z4Z4bk=",
+		"Jenna": "BNRzlJ4csYlWgycGGiK/wgoEw3OizCdx9MWg06rxUBTP5rP9qPASOW5KY8YgmNjW5k7lLpboboHrsApWsvgkMN4="
+	},
+	"Recipient": "Bob",
+	"Message": "Hi, Bob!"
+}

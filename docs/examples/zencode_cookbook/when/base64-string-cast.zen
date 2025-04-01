@@ -1,0 +1,5 @@
+Given I have a 'string dictionary' named 'newblock'
+When I pickup from path 'newblock.newblock-mpack'
+When I create the 'base64' cast of strings in 'newblock-mpack'
+and I create the 'contents' decoded from mpack 'base64'
+Then print the 'contents' as 'string'

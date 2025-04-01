@@ -1,0 +1,10 @@
+{
+	"to_be_hashed": [
+		"a",
+		"b",
+		"john",
+		12345,
+		"john@doe.com",
+		"(!)"
+	]
+}

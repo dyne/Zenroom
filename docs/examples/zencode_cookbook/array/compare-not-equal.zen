@@ -1,0 +1,11 @@
+Given I have a 'string array' named 'arr'
+Given I have a 'string dictionary' named 'dict'
+Given I have a 'string array' named 'nested_arr'
+
+If I verify the elements in 'arr' are not all equal
+If I verify the elements in 'dict' are not all equal
+If I verify the elements in 'nested arr' are not all equal
+Then print string 'OK'
+EndIf
+EndIf
+EndIf

@@ -1,0 +1,13 @@
+Given I have a 'number' named 'left'
+and I have a 'number' named 'right'
+
+If I verify number 'left' is less than 'right'
+and I verify 'right' is equal to 'right'
+Then print string 'right is higher'
+and print string 'and I am right'
+endif
+endif
+
+If I verify number 'left' is more than 'right'
+Then print string 'left is higher'
+endif

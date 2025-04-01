@@ -1,0 +1,5 @@
+Scenario bbs
+Given I have a 'bbs public key' in 'Alice'
+and I have a 'bbs signature'
+Then print the 'bbs signature'
+and print the 'bbs public key'

@@ -1,0 +1,8 @@
+Scenario 'ecdh': move something in a signature
+
+Given I have a 'ecdh signature'
+Given I have a 'string' named 'myMessage'
+
+When I move 'myMessage' in 'ecdh signature'
+
+Then print the 'ecdh signature'

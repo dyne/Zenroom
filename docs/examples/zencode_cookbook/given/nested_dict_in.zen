@@ -1,0 +1,2 @@
+Given that I have a 'string' named 'id' in 'authentication'
+Then print all data

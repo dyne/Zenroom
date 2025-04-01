@@ -1,0 +1,5 @@
+Scenario bbs
+Given I am known as 'Bob'
+Given I have my 'keyring'
+When I create the bbs public key
+Then print my 'bbs public key'

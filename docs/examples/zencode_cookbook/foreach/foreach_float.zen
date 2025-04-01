@@ -1,0 +1,9 @@
+Given I have a 'float' named 'zero'
+Given I have a 'float' named 'one'
+Given I have a 'float' named 'limit'
+When I create the 'float array' named 'new array'
+Foreach 'x' in sequence from 'zero' to 'limit' with step 'one'
+When I move 'x' in 'new array'
+EndForeach
+When I rename 'new array' to 'new strings'
+Then print 'new strings'

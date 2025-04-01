@@ -1,0 +1,5 @@
+Scenario credential
+Given I am 'Participant_1'
+and I have my 'keyring'
+When I create the credential request
+Then print my 'credential request'

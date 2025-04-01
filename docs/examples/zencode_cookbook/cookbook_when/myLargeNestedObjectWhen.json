@@ -1,6 +1,6 @@
 {
   "myFirstObject": {
-    "myFirstNumber": 1.2345,
+    "a": 1.2345,
     "myFirstString": "Hello World!",
     "myFirstHex": "616e7976616c7565",
     "myFirstBase64": "SGVsbG8gV29ybGQh",
@@ -11,7 +11,7 @@
       "Hello World! myFirstObject, myFirstArray[1]",
       "Hello World! myFirstObject, myFirstArray[2]"
     ],
-    "myFirstNumberArray": [
+    "aArray": [
       10,
       20,
       30,
@@ -50,7 +50,7 @@
     }
   },
   "mySecondObject": {
-    "mySecondNumber": 2,
+    "b": 2,
     "mySecondString": "...and hi everybody!",
     "mySecondArray": [
       "anotherString1",
@@ -119,7 +119,7 @@
     "UndeliveredProductAmount": 100,
     "ProductPurchasePrice": 1
   },
-  "mySecondNumberArray": [
+  "bArray": [
     567,
     748,
     907,

@@ -1,0 +1,18 @@
+Given I have a 'float' named 'numbers_of_random'
+and I have a 'integer' named 'modulo_int'
+and I have a 'float' named 'modulo_float'
+# modulo in statement
+When I create the random array with '64' integers modulo '100'
+and I rename 'random_array' to 'modulo_in_statement'
+# modulo as integer
+When I create the random array with 'numbers_of_random' integers modulo 'modulo_int'
+and I rename 'random_array' to 'modulo_as_int'
+# modulo as float
+When I create the random array with 'numbers_of_random' numbers modulo 'modulo_float'
+and I rename 'random array' to 'modulo_as_float'
+
+and I create the aggregation of array 'modulo_in_statement'
+Then print the 'modulo_in_statement'
+and print the 'modulo_as_int'
+and print the 'modulo_as_float'
+and print the 'aggregation'

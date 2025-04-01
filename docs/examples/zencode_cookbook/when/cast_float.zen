@@ -1,0 +1,6 @@
+Given  have a 'base64' named 'b64'
+Given I have a 'integer'
+When create the float 'fb64' cast of integer in 'b64'
+When create the float 'finteger' cast of integer in 'integer'
+
+Then print data

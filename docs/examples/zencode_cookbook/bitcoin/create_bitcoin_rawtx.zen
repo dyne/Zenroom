@@ -1,0 +1,11 @@
+Given I have the 'keyring'
+and I have a 'satoshi amount'
+and I have a 'satoshi fee'
+and I have a 'testnet address'
+and I have a 'testnet unspent'
+
+When I create the testnet transaction to 'testnet address'
+and I sign the testnet transaction
+and I create the testnet raw transaction
+Then print the 'testnet raw transaction' as 'hex'
+and print the 'keyring'

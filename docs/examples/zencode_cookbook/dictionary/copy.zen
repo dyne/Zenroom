@@ -1,0 +1,13 @@
+Given I have a 'string dictionary' named 'myDict'
+Given I have a 'string array' named 'myArray'
+Given I have a 'string' named 'myString'
+Given I have a 'string' named 'mySecondString'
+Given I have a 'string' named 'name'
+
+When I copy 'myArray' in 'myDict'
+When I copy 'myDict' in 'myArray'
+When I copy named by 'name' in 'myArray'
+When I copy 'surname' from 'myDict' in 'myArray'
+
+Then print the 'myDict'
+and print the 'myArray'

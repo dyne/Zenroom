@@ -1,0 +1,6 @@
+Given I have a 'string dictionary' named 'data' inside 'dataFromEndpoint'
+When I create the copy of 'batches' from dictionary 'data'
+When I rename the 'copy' to 'batches'
+When I create the copy of 'header_signature' from dictionary 'batches'
+then print the 'copy'
+and print the 'batches'

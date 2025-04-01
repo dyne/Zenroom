@@ -1,0 +1,12 @@
+{
+   "blockchains":{
+      "b1":{
+         "endpoint":"http://pesce.com/" ,
+         "last-transaction": "123"
+      },
+      "b2":{
+         "endpoint":"http://fresco.com/",
+         "last-transaction": "234"
+      }
+   }
+}

@@ -1,0 +1,6 @@
+rule check version 1.0.0
+Given nothing
+When I set 'whole' to 'Zenroom works great' as 'string'
+and I split the leftmost '3' bytes of 'whole'
+Then print the 'leftmost' as 'string'
+and print the 'whole' as 'string'

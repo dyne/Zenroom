@@ -1,0 +1,25 @@
+{
+	"my_string": "hello",
+	"my_array": [
+		"This array contains 5 strings",
+		"This array contains 5 strings",
+		"This array contains 5 strings",
+		"This array contains 5 strings",
+		"This array contains 5 strings"
+	],
+	"my_dict": {
+		"number of elements": "3",
+		"string": "hello",
+		"number": "3"
+	},
+	"2_int": "2",
+	"3_int": "3",
+	"4_int": "4",
+	"5_int": "5",
+	"6_int": "6",
+	"2_float": 2,
+	"3_float": 3,
+	"4_float": 4,
+	"5_float": 5,
+	"6_float": 6
+}

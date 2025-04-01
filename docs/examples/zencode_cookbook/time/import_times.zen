@@ -1,0 +1,5 @@
+Given I have a 'time' named 'time_small'
+Given I have a 'string dictionary' named 'time_in_dict'
+Given I have a 'time' named 'real_timestamp'
+and debug
+Then print all data

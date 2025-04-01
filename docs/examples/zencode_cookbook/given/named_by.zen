@@ -1,0 +1,6 @@
+
+# Given I have a 'string' named 'friend'
+Given I have a 'string' named by 'friend'
+
+Then print all data
+

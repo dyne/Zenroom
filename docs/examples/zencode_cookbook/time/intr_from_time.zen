@@ -1,0 +1,9 @@
+Given I have a 'string dictionary' named 'string_dictionary'
+
+When I pickup from path 'string_dictionary.time'
+and I create integer 'int_from_dict' cast of timestamp 'time'
+
+When I create timestamp
+and I create integer 'int_from_timestamp' cast of timestamp 'timestamp'
+
+Then print the data

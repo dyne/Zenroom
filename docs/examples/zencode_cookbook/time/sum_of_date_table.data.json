@@ -1,0 +1,15 @@
+{
+    "date_table": {
+        "year": 1,
+        "month": 1,
+        "day": 5
+    },
+    "another_date_table": {
+        "year": 25000,
+        "moth": 3,
+        "day": 20,
+        "sec": 200
+    },
+    "timestamp": 0,
+    "another_timestamp": 1712324515
+}

@@ -1,0 +1,14 @@
+Given nothing
+
+# 32 bytes long random
+When I create the random '32 byte long random'
+
+# 1 byte (or 8 bits) long random
+When I create the random of '8' bits
+When I rename the 'random' to '1 byte long random'
+
+# 2 bytes long random
+When I create the random of '2' bytes
+When I rename the 'random' to '2 bytes long random'
+
+Then print the data

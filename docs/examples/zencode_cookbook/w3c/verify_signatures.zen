@@ -1,0 +1,43 @@
+Scenario 'w3c': did document
+Scenario 'ecdh': verify sign
+Scenario 'eddsa': verify sign
+# Scenario 'ethereum': verify sign
+Scenario 'reflow': verify sign
+Scenario 'credential': verify sign
+Scenario 'bbs': verify sign
+Scenario 'es256': verify sign
+
+# load did document and signatures
+Given I have a 'did document'
+and I have a 'ecdh signature'
+and I have a 'eddsa signature'
+# and I have a 'ethereum signature'
+# and I have a 'reflow signature'
+and I have a 'bbs signature'
+and I have a 'es256 signature'
+and I have a 'string dictionary' named 'json'
+and I have a 'string' named 'simple message' in 'json'
+
+# proof
+Given and I have a 'credential proof'
+
+# Here I use the publc keys to verify the sgnatures
+
+When I create 'ecdh' public key from did document 'did document'
+When I verify the 'json' has a ecdh signature in 'ecdh signature' by 'ecdh public key'
+
+When I create 'eddsa' public key from did document 'did document'
+When I verify the 'json' has a eddsa signature in 'eddsa signature' by 'eddsa public key'
+
+When I create 'bbs' public key from did document 'did document'
+When I verify the 'simple message' has a bbs signature in 'bbs signature' by 'bbs public key'
+
+When I create 'es256' public key from did document 'did document'
+When I verify the 'json' has a es256 signature in 'es256 signature' by 'es256 public key'
+
+When I create 'issuer' public key from did document 'did document'
+When I aggregate all the issuer public keys
+When I verify the credential proof
+
+# verification is succesfull
+Then print the string 'signature verified!!!'

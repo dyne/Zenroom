@@ -1,10 +1,10 @@
 {
    "myObject":{
-      "myNumber_1":1234567890,
-      "myNumber_2":1234567890,
-      "myNumber_3":1234567890,
-      "myNumber_4":1234567890, 
-   	  "myNumber_5":12345678,  
+      "myNumber_1":"1234567890",
+      "myNumber_2":"1234567890",
+      "myNumber_3":"1234567890",
+      "myNumber_4":"1234567890",
+      "myNumber_5":"12345678",
 	  "myString_1":"Hello World!",
 	  "myString_2":"Hello World!",
 	  "myString_3":"Hello World!",
@@ -61,27 +61,27 @@
 	  "myNumberArray_1":[
          "123",
 		 "456",
-		 "1234.5678"
+		 "1234"
       ],
 	  "myNumberArray_2":[
          "123",
 		 "456",
-		 "1234.5678"
+		 "1234"
       ],
 	  "myNumberArray_3":[
          "123",
 		 "456",
-		 "1234.5678"
+		 "1234"
       ],
 	  "myNumberArray_4":[
          "123",
 		 "456",
-		 "1234.5678"
+		 "1234"
       ],
 	  "myNumberArray_5":[
          "123",
 		 "456",
-		 "1234.5678"
+		 "1234"
       ]
    },
    "Alice":{

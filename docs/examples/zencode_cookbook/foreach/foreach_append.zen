@@ -1,0 +1,34 @@
+Given I have a 'integer array' named 'numbers'
+Given I have a 'integer' named 'const'
+Given I have a 'float' named 'counter'
+Given I have a 'integer' named 'limit'
+When I create the 'integer array' named 'new nums'
+When I create the new array
+When I rename 'new array' to 'old keys'
+When I create the 'integer dictionary' named 'ifdict'
+When I set 'resultname' to 'result' as 'string'
+Foreach 'x' in 'numbers'
+When I create the result of '(x + 12) / const'
+When I copy 'result' to 'result in array'
+# some comments
+# some comments
+# some comments
+# some comments
+If I verify number 'limit' is less than 'x'
+When I set 'keyname' to 'key' as 'string'
+When I append 'x' to 'keyname'
+Endif
+When I move 'result in array' in 'new nums'
+If I verify number 'limit' is less than 'x'
+When I rename the object named by 'resultname' to named by 'keyname'
+Endif
+If I verify number 'limit' is less than 'x'
+When I move named by 'keyname' in 'ifdict'
+Endif
+When I remove 'keyname'
+# some comments
+# some comments
+# some comments
+EndForeach
+Then print 'new nums'
+Then print 'ifdict'

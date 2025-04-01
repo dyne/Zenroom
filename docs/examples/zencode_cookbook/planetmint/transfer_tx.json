@@ -1,0 +1,7 @@
+{
+  "keyring": {
+    "eddsa": "AeCvymMgC1RdzGMYVA34RuHsJNuVpgmhRa4eNKQkUPCN"
+  },
+    "ed25519_public_key": "8BHtEUgWHFDeap59BC6L6coa3qdH2fP23iXzG194q4ym",
+    "planetmint_transaction": "{\"asset\":{\"id\":\"39be9f7f917dcb3d2244e5f71b68381d97180c32b54cf031aef8ad2acecea769\"},\"id\":null,\"inputs\":[{\"fulfillment\":null,\"fulfills\":{\"output_index\":0,\"transaction_id\":\"f527fa0e17addda7c8df4287a2f6fc6d56cebf71ed414cd7b96ac5dbf1750eb9\"},\"owners_before\":[\"8BHtEUgWHFDeap59BC6L6coa3qdH2fP23iXzG194q4ym\"]},{\"fulfillment\":null,\"fulfills\":{\"output_index\":1,\"transaction_id\":\"2bd8193229dff308f3f7e94b455695e9016a674f651ad0df03b98596b735884e\"},\"owners_before\":[\"8BHtEUgWHFDeap59BC6L6coa3qdH2fP23iXzG194q4ym\"]}],\"metadata\":null,\"operation\":\"TRANSFER\",\"outputs\":[{\"amount\":\"10000000000000000\",\"condition\":{\"details\":{\"public_key\":\"8BHtEUgWHFDeap59BC6L6coa3qdH2fP23iXzG194q4ym\",\"type\":\"ed25519-sha-256\"},\"uri\":\"ni:\/\/\/sha-256;87HfOFRmfv2UwmunAbNnxTLKX5tKR7mn23nS2DX6UsE?fpt=ed25519-sha-256&cost=131072\"},\"public_keys\":[\"8BHtEUgWHFDeap59BC6L6coa3qdH2fP23iXzG194q4ym\"]},{\"amount\":\"50000000000000000\",\"condition\":{\"details\":{\"public_key\":\"DRH8bHnstFroRQYtKf7rPjnxdCiG4xiVSnpudE17YcdC\",\"type\":\"ed25519-sha-256\"},\"uri\":\"ni:\/\/\/sha-256;R3YZD9PsRCcEeBh49rZ287QIOuEblbWUNiZu-aFsd_g?fpt=ed25519-sha-256&cost=131072\"},\"public_keys\":[\"DRH8bHnstFroRQYtKf7rPjnxdCiG4xiVSnpudE17YcdC\"]}],\"version\":\"2.0\"}"
+}

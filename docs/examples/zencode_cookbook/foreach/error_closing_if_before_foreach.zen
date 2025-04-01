@@ -1,0 +1,9 @@
+Given nothing
+When I create the 'string dictionary' named 'arr'
+If I verify 'arr' is found
+Foreach 'el' in 'arr'
+When done
+# the following line are inverted
+EndIf
+Endforeach
+Then print the data

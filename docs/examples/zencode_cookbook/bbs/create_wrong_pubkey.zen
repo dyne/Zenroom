@@ -1,0 +1,6 @@
+Scenario bbs
+Given I have a 'bbs signature'
+When I create the bbs key
+and I create the bbs public key
+Then print the 'bbs signature'
+and print the 'bbs public key'

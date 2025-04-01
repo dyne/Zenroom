@@ -1,0 +1,21 @@
+Scenario 'sd_jwt'
+Scenario 'es256'
+
+Given I have a 'decoded selective disclosure' named 'signed selective disclosure'
+Given I have a 'string array' named 'present_disclosure'
+Given I have a 'string' named 'single_present_disclosure'
+Given I have a 'string array' named 'missing_disclosure'
+Given I have a 'string' named 'single_missing_disclosure'
+
+If I verify disclosures 'present_disclosure' are found in signed selective disclosure 'signed selective disclosure'
+Then print the 'present_disclosure'
+EndIf
+If I verify disclosures 'single_present_disclosure' are found in signed selective disclosure 'signed selective disclosure'
+Then print the 'single_present_disclosure'
+EndIf
+If I verify disclosures 'missing_disclosure' are found in signed selective disclosure 'signed selective disclosure'
+Then print the 'missing_disclosure'
+EndIf
+If I verify disclosures 'single_missing_disclosure' are found in signed selective disclosure 'signed selective disclosure'
+Then print the 'single_missing_disclosure'
+EndIf

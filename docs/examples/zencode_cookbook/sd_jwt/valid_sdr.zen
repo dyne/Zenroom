@@ -1,0 +1,4 @@
+Scenario 'sd_jwt'
+
+Given I have 'selective_disclosure_request'
+Then print data

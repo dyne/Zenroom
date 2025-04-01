@@ -1,0 +1,5 @@
+rule output encoding hex
+rule input encoding hex
+Given I have a 'multihash'
+and debug
+Then print the 'multihash'

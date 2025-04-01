@@ -1,0 +1,9 @@
+Rule path separator -
+
+Given I have a 'string dictionary' named 'my_dict'
+Given I have a 'string' in path 'my_dict-my_array-1-2-world'
+
+When I pickup from path 'my_dict-my_array-1-1-hello'
+
+Then print the 'world'
+Then print the 'hello'

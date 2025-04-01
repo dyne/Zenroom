@@ -1,0 +1,10 @@
+Given I have a 'time' named 'exp'
+Given I have a 'time' named 'timestamp'
+
+When I create the result of 'timestamp' + 'exp'
+and I rename 'result' to 'sum'
+When I create the result of 'timestamp' - 'exp'
+and I rename 'result' to 'sub'
+
+Then print the 'sum'
+and print the 'sub'

@@ -1,0 +1,7 @@
+Given nothing
+
+When I create the random 'random'
+When I copy 'random' to 'dest'
+
+Then print 'random'
+Then print 'dest'

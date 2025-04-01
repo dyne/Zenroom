@@ -1,0 +1,13 @@
+{
+  "my_array": ["pluto", "paperino", "topolino"],
+  "my_nested_dict": {
+    "pluto": "dog",
+    "topolino": "mouse",
+    "my_dict": {
+        "paperino": "duck"
+    }
+  },
+  "key_array_int": "2",
+  "key_array_float": 3,
+  "key_dict": "topolino"
+}

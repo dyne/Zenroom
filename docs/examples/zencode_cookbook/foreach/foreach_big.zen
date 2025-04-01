@@ -1,0 +1,8 @@
+Given I have a 'integer' named 'zero'
+Given I have a 'integer' named 'one'
+Given I have a 'integer' named 'limit'
+When I create the 'integer array' named 'new array'
+Foreach 'x' in sequence from 'zero' to 'limit' with step 'one'
+When I move 'x' in 'new array'
+EndForeach
+Then print 'new array'

@@ -1,0 +1,6 @@
+rule check version 1.0.0
+scenario 'ecdh'
+	 Given I am 'Andrea'
+	 and my 'keyring' is valid
+	 Then print all data
+    # keyring is not printed

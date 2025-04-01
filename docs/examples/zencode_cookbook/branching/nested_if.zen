@@ -1,0 +1,31 @@
+Given I have a 'string dictionary' named 'external_qr_content'
+Given I have a 'string' named 'credential_issuer' inside 'external_qr_content'
+Given I have a 'string array' named 'credential_configuration_ids' inside 'external_qr_content'
+
+If I verify 'grants' is found in 'external_qr_content'
+    When I pickup from path 'external_qr_content.grants'
+    If I verify 'authorization_code' is found in 'grants'
+        When I pickup from path 'grants.authorization_code'
+        If I verify 'authorization_server' is found in 'authorization_code'
+            When I pickup from path 'authorization_code.authorization_server'
+            Then print the 'authorization_server'
+        EndIf
+    EndIf
+    If I verify 'urn:ietf:params:oauth:grant-type:pre-authorized_code' is found in 'grants'
+        When I pickup from path 'grants.urn:ietf:params:oauth:grant-type:pre-authorized_code'
+        If I verify 'pre-authorized_code' is found in 'urn:ietf:params:oauth:grant-type:pre-authorized_code'
+            When I pickup from path 'urn:ietf:params:oauth:grant-type:pre-authorized_code.pre-authorized_code'
+            Then print the 'pre-authorized_code'
+        EndIf
+    EndIf
+EndIf
+
+When I copy '1' from 'credential_configuration_ids' to 'credential_configuration_id'
+
+If I verify 'credential_issuer' ends with '/'
+    When I split rightmost '1' bytes of 'credential_issuer'
+EndIf
+When I append the string '/.well-known/openid-credential-issuer' to 'credential_issuer'
+
+Then print the 'credential_configuration_id'
+Then print the 'credential_issuer'

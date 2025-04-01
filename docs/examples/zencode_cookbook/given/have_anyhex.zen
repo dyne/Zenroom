@@ -1,0 +1,3 @@
+rule check version 1.0.0
+	 Given I have a 'hex' named 'anykey'
+	 Then print the 'anykey' as 'string'

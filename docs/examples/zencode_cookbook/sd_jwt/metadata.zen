@@ -1,0 +1,3 @@
+Scenario 'sd_jwt': sign JSON
+Given I have a 'supported selective disclosure'
+Then print data

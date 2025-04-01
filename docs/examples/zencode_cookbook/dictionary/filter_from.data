@@ -1,0 +1,60 @@
+{
+	"myDict": {
+		 "name": "John",
+		 "surname": "Doe",
+		 "age": "42"
+	},
+	"myNestedArray": [
+			 {
+		 	  	"name": "John",
+			  	"surname": "Doe",
+		 	  	"age": "42"
+			 },
+		       	 {
+		 	  	"name": "Jane",
+		 	  	"surname": "Moe",
+		 	  	"age": "31"
+			 },
+		         {
+		 	  	"name": "Amber",
+		 	  	"surname": "Williams",
+		 	  	"age": "68"
+			 },
+		       	 {
+		       		"surname": "Tyson"
+			 }
+	],
+	"myNestedDict": {
+		       "myDict1": {
+		 	  	"name": "John",
+			  	"surname": "Doe",
+		 	  	"age": "42"
+				},
+		       "myDict2": {
+		 	  	"name": "Jane",
+		 	  	"surname": "Moe",
+		 	  	"age": "31"
+				},
+		       "myDict3": {
+		 	  	"name": "Bruce",
+		 	  	"surname": "Wayne"
+				},
+		       "myDict4": {
+		       		"surname": "Tyson"
+				},
+		       "myDict5": {
+		       		"myDict6": {
+					   "name": "Alfred",
+					   "surname": "Pennyworth"
+					   }
+				}
+	},
+	"myNumberDict": {
+			"height" : 182,
+			"age" : 55
+	},
+	"filters": [
+		   "name",
+		   "age"
+	]
+}

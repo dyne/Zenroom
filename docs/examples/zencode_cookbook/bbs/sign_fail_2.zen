@@ -1,0 +1,12 @@
+Scenario 'bbs': sign
+
+# data
+Given I have a 'string array' named 'nested_table'
+
+# keys
+Given I am known as 'Alice'
+and I have my 'keyring'
+
+When I create the bbs signature of 'nested_table'
+
+Then print the data

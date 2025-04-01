@@ -1,0 +1,9 @@
+Scenario 'w3c': sign JSON
+Scenario 'ecdh': (required)
+Given that I am 'Authority'
+Given I have my 'keyring'
+Given I have a 'string dictionary' named 'simple'
+When I create the jws header for es256k signature
+When I create jws detached signature of header 'jws header' and payload 'simple'
+Then print the 'jws detached signature'
+and print the 'simple'

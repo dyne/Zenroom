@@ -1,0 +1,13 @@
+Given I  have a 'string' named 'str'
+and I have a 'integer'
+and I have a 'float'
+and I have a 'string dictionary' named 'dict'
+and I have a 'string array' named 'array'
+
+When I verify 'str' is found
+and I verify 'integer' is found
+and I verify 'float' is found
+and I verify 'dict' is found
+and I verify 'array' is found
+
+Then print the string 'found everything'

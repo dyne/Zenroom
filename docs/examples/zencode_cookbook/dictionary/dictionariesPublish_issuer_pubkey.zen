@@ -1,0 +1,6 @@
+rule check version 1.0.0
+Scenario 'ecdh': Publish the public key
+Given that I am known as 'Authority'
+and I have my 'keyring'
+When I create the ecdh public key
+Then print my 'ecdh public key'

@@ -1,0 +1,6 @@
+Scenario 'w3c': did document manipulation
+
+Given I have a 'did document'
+When I create the json escaped string of 'did document'
+Then print data
+

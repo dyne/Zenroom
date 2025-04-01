@@ -1,0 +1,10 @@
+Scenario 'sd_jwt' : sd_jwt
+
+Given I have a 'signed_selective_disclosure array' named 'arr'
+
+Foreach 'x' in 'arr'
+When I rename 'x' to 'res'
+and I break the foreach
+Endforeach
+
+Then print the 'res'

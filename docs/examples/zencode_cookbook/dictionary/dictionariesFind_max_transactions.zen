@@ -1,0 +1,57 @@
+rule check version 1.0.0
+Scenario ecdh: sign the result
+
+# import the Authority keypair
+Given that I am known as 'Authority'
+and I have my 'keyring'
+
+# import the blockchain data
+Given I have a 'string dictionary' named 'ABC-TransactionListSecondBatch'
+and I have a 'string dictionary' named 'ABC-TransactionListFirstBatch'
+and I have a 'time' named 'timestamp'
+
+# find the last (most recent) sum
+When I find the max value 'timestamp' for dictionaries in 'ABC-TransactionListSecondBatch'
+and rename the 'max value' to 'last sum'
+and I set 'last sum known' to '1597573440' as 'time'
+and I verify 'last sum' is equal to 'last sum known'
+
+When I find the min value 'timestamp' for dictionaries in 'ABC-TransactionListSecondBatch'
+and rename the 'min value' to 'first sum'
+and I set 'first sum known' to '1597573040' as 'time'
+and I verify 'first sum' is equal to 'first sum known'
+
+# compute the total values of recent transactions not included in last sum
+and create the sum value 'TransactionValue' for dictionaries in 'ABC-TransactionListFirstBatch' where 'timestamp' > 'last sum'
+and rename the 'sum value' to 'TotalTransactionsValue'
+and create the sum value 'TransferredProductAmount' for dictionaries in 'ABC-TransactionListFirstBatch' where 'timestamp' > 'last sum'
+and rename the 'sum value' to 'TotalTransferredProductAmount'
+
+# retrieve the values in last sum
+When I find the 'TransactionValue' for dictionaries in 'ABC-TransactionListSecondBatch' where 'timestamp' = 'last sum'
+And I create the sum value of elements in array 'TransactionValue'
+And I rename the 'sum value' to 'TransactionValueSum'
+When I find the 'TransferredProductAmount' for dictionaries in 'ABC-TransactionListSecondBatch' where 'timestamp' = 'last sum'
+And I create the sum value of elements in array 'TransferredProductAmount'
+And I rename the 'sum value' to 'TransferredProductAmountSum'
+
+# sum the last with the new aggregated values from recent transactions
+and I create the result of 'TotalTransactionsValue' + 'TransactionValueSum'
+and I rename the 'result' to 'TransactionValueSums'
+and I create the result of 'TotalTransferredProductAmount' + 'TransferredProductAmountSum'
+and I rename the 'result' to 'TransactionProductAmountSums'
+
+# create the entry for the new sum
+and I create the 'number dictionary'
+and I move 'TransactionValueSums' in 'number dictionary'
+and I move 'TransactionProductAmountSums' in 'number dictionary'
+and I move 'timestamp' in 'number dictionary'
+and I rename the 'number dictionary' to 'New-ABC-TransactionsSum'
+
+# sign the new entry
+and I create the signature of 'New-ABC-TransactionsSum'
+and I rename the 'signature' to 'New-ABC-TransactionsSum.signature'
+
+# print the result
+Then print the 'New-ABC-TransactionsSum'
+and print the 'New-ABC-TransactionsSum.signature'

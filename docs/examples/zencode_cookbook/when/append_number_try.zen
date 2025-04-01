@@ -1,0 +1,8 @@
+Given I have a 'string dictionary' named 'latest'
+
+and I have a 'string' named 'path'
+
+When I pickup from path 'latest.result.height'
+and I append 'height' to 'path'
+
+Then print the 'path'

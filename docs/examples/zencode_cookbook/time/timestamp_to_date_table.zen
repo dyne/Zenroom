@@ -1,0 +1,5 @@
+    Given I have a 'time' named 'timestamp'
+
+    When I create date table of timestamp 'timestamp'
+
+    Then print the 'date table'

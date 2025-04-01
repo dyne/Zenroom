@@ -1,0 +1,7 @@
+Scenario ethereum
+
+Given I have a 'hex' named '0xprefix'
+Given I rename '0xprefix' to 'myhex'
+Given I have a 'ethereum address' named '0xprefix'
+
+Then print data

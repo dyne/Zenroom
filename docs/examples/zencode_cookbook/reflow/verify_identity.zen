@@ -1,4 +1,4 @@
-Scenario 'reflow' : Verify the identity in the seal 
+Scenario 'reflow' : Verify the identity in the seal
 Given I have a 'reflow seal'
 Given I have a 'string dictionary' named 'Sale'
 When I create the reflow identity of 'Sale'

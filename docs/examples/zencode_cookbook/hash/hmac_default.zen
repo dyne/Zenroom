@@ -1,0 +1,6 @@
+rule output encoding hex
+Given nothing
+When I create the random 'source'
+and I write string 'my HMAC key' in 'secret'
+and I create the HMAC of 'source' with key 'secret'
+Then print 'HMAC'

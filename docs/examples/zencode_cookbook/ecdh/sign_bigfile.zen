@@ -1,0 +1,7 @@
+Rule check version 2.0.0
+Scenario ecdh
+Given that I am known as 'Alice'
+and I have my 'keyring'
+and I have a 'base64' named 'bigfile'
+When I create the ecdh signature of 'bigfile'
+Then print the 'ecdh signature'

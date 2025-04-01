@@ -1,0 +1,29 @@
+{
+    "json": {
+        "simple message": "hello world",
+        "simple dictionary": { "hello" : "world" },
+        "simple array": [ "hello", "world" ]
+    },
+    "Alice": {
+        "credential_request": {
+            "commit": "AgxaE6cXstFWa7aMZ8xnhaFFhsNx+M425Oze3eQRBGz875bTCkX1/9bPjEn0Lu0O0w==",
+            "pi_s": {
+                "commit": "CnOREb3Rx6Kf552vZfN8tzrNIn+palJ+6PdbhHOIdco=",
+                "rk": "UE/pxMeN6hA4lUhYB3/zkan28cjTMPu0VyvDhEKGX1Y=",
+                "rm": "cWkRLdKYyTYLq8leeOlAw1yQEJopHv8/2JGcmOQl1bQ=",
+                "rr": "UoSW5ojkyLofT5cW+4f2GAYihUTPrtBnwh7bDFDzKHs="
+            },
+            "public": "AhYCP1Ct2ZapJuTYNTzWMUIlgPwFNweJFTrJ/0UWg9a/UwvY8g/9VPTgRJCV0X1SXA==",
+            "sign": {
+                "a": "AwtH8piZkVF/uPhjvzHFIjWWYee0HLBVtJ/UaSaUaBJJZrkiSibB4kvOCQAvmUpK9Q==",
+                "b": "AgBioegDQ1mmgsphlFPCq61bASzVPi6ugpixwOuIUZP11z9aX51WzeU/cp8bw82SEw=="
+            }
+        }
+    },
+    "reflow_seal": {
+        "SM": "AgszTl/cnllWhVbD9gtJal2fVDhdeW4seLbtvwUHEu2qOG7EkXx/0pwhfuABLIorog==",
+        "identity": "Agy3w73Mu1b155J5FD5CsUIdx3YQ5C5m8qvHABelVjdvIDF+j79mJ+4iosp1waOMAA==",
+        "verifier": "Ba76hy9H7Gkrpr0Pa+HQBWL6wefi7XLKNeV42YF/NOFwaOPHIvzwlUwrZT9big73EF60VEoPQqLBw9SnXsGRFAfpoW+4zDXZu1xHkNGxg7oRphsKNY4n7i7LhVcshPyPCjW2PrEyh3+2fBaGK4v05GfxWUoJSv7kXvUgC/VWT3/kYuBcNE/JpkPWggbMnNYLDvq+fLfO/75+TGG1wNq4JdJ4lye4idTftUV0takDxxozzNPrzosAgkXnxJ1ek4yA"
+    },
+    "issuer_public_key": "2eeoyWMdUh1KxbLNydhZxpbNDqh1aGiJaCMwMWP4PpqyD1oEBW9rmBaET5ZugQvocw3w5NzL1znB2SmSJLmd5J13QNnP4xGtmT8itf3j7jyakGBLmy3zg2sXJvkqZLsDySoHEfjJLGP8c5CbZvQCSydphNo4NWoi6s2RXBLotSXMQ2NsrcL6HoYsnJxTFcEDcFMuYiDGyyzpATPLBBNEVQ4VypdKtwrzgqwkMk1SDjiEqhwy61hYHknCJM6bDhirnjptpxL"
+}

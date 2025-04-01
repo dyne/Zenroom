@@ -1,0 +1,7 @@
+rule check version 1.0.0
+Given nothing
+When I write number '161917811' in 'left'
+and I write number '161917812' in 'right'
+and I verify number 'left' is less or equal than 'right'
+Then print the string 'OK'
+Then print data

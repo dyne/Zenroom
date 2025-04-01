@@ -1,0 +1,5 @@
+Scenario eddsa
+Given I am known as 'Bob'
+Given I have my 'keyring'
+When I create the eddsa public key
+Then print my 'eddsa public key'

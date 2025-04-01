@@ -1,0 +1,17 @@
+{
+   "myFirstObject":{
+      "myNumber":11223344,
+      "myString":"Hello World!",
+      "myStringArray":[
+         "String1",
+         "String2",
+         "String3",
+         "String4"
+      ]
+   },
+    "Alice":{
+		  "keyring":{
+			 "ecdh":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM="
+		  }
+	   }
+}

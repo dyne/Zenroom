@@ -1,0 +1,83 @@
+# Problem:
+# print all prime numbers in a range
+# Note:
+# this is just for educational purpose, there are better method that are not just check if the
+# the number is divisible for all the numbers in the range (2, n/2)
+
+Given I have a 'number' named 'start'
+Given I have a 'number' named 'end'
+Given I have a 'number' named '0'
+Given I have a 'number' named '1'
+Given I have a 'number' named '2'
+Given I have a 'number' named '3'
+Given I have a 'number' named '4'
+Given I have a 'number' named '5'
+Given I have a 'number' named '6'
+
+When I create the 'number array' named 'res'
+
+If I verify number 'start' is more than 'end'
+    When I exit with error message 'star must be less than end'
+EndIf
+
+# In zenroom when we try to do a foreach where the start is less than the end
+# an error is thrown, thus since the inner loop start from 2, the end, that is the
+# floor of n/2, should be at least 3 thus n should start from 6.
+# Thus this if here take into considerations the prime number before 6 and if they
+# are in the range, they are added
+If I verify number 'end' is more or equal than '2'
+    If I verify number 'start' is less or equal than '2'
+        When I copy '2' in 'res'
+    EndIf
+EndIf
+If I verify number 'end' is more or equal than '3'
+    If I verify number 'start' is less or equal than '3'
+        When I copy '3' in 'res'
+    EndIf
+EndIf
+If I verify number 'end' is more or equal than '5'
+    If I verify number 'start' is less or equal than '5'
+        When I copy '5' in 'res'
+    EndIf
+EndIf
+
+# prime numbers grater than 6
+If I verify number 'end' is more than '6'
+    If I verify number 'start' is less than '6'
+        When I remove 'start'
+        and I copy '6' to 'start'
+    EndIf
+    Foreach 'i' in sequence from 'start' to 'end' with step '1'
+        When I create the result of 'i' % '2'
+        When I rename 'result' to 'is_even'
+        If I verify 'is_even' is equal to '0'
+            When I set 'not_prime' to 'true' as 'string'
+        EndIf
+        If I verify 'is_even' is equal to '1'
+            When I create the result of 'i' - '1'
+            When I rename 'result' to 'even'
+            When I create the result of 'even' / '2'
+            When I remove 'even'
+            When I rename the 'result' to 'limit'
+            Foreach 'j' in sequence from '2' to 'limit' with step '1'
+                When I create the result of 'i' % 'j'
+                If I verify 'result' is equal to '0'
+                    When I set 'not_prime' to 'true' as 'string'
+                    When I remove 'result'
+                    When I break the foreach
+                EndIf
+                When I remove 'result'
+            EndForeach
+            When I remove 'limit'
+        EndIf
+        If I verify 'not_prime' is not found
+            When I copy 'i' in 'res'
+        EndIf
+        If I verify 'not_prime' is found
+            When I remove 'not_prime'
+        EndIf
+        When I remove 'is_even'
+    EndForeach
+EndIf
+
+Then print 'res'

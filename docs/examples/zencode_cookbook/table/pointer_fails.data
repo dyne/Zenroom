@@ -1,0 +1,10 @@
+{
+  "dict": {
+    "list": [
+        "hello",
+        "world"
+    ]
+  },
+  "not an array key": "not a number",
+  "non existing key": "not a dict key"
+}

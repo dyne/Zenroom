@@ -1,0 +1,6 @@
+Given I have a 'hex' named 'my hex'
+
+When I copy 'my hex' to 'dest'
+
+Then print 'my hex'
+Then print 'dest'

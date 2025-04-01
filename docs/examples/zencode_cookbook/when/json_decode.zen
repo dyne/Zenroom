@@ -1,0 +1,21 @@
+Given I have a 'string' named 'json.myStringArray'
+Given I have a 'string' named 'json.myBase64Array'
+Given I have a 'string' named 'json.myStringDictionary'
+Given I have a 'string' named 'json.myBase64Dictionary'
+
+When I create the json unescaped object of 'json.myStringArray'
+and I rename the 'json unescaped object' to 'myStringArray'
+
+When I create the json unescaped object of 'json.myBase64Array'
+and I rename the 'json unescaped object' to 'myBase64Array'
+
+When I create the json unescaped object of 'json.myStringDictionary'
+and I rename the 'json unescaped object' to 'myStringDictionary'
+
+When I create the json unescaped object of 'json.myBase64Dictionary'
+and I rename the 'json unescaped object' to 'myBase64Dictionary'
+
+Then print the 'myStringArray'
+Then print the 'myBase64Array'
+Then print the 'myStringDictionary'
+Then print the 'myBase64Dictionary'

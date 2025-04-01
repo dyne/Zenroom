@@ -1,0 +1,6 @@
+	Scenario fsp
+	Given I have a 'keyring'
+	and I have a 'fsp ciphertext'
+	and I have a 'fsp response'
+	When I create the fsp cleartext of response 'fsp response' to 'fsp ciphertext'
+	Then print the 'fsp cleartext' as 'string'

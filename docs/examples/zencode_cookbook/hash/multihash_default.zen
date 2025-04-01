@@ -1,0 +1,6 @@
+rule output encoding hex
+Given nothing
+When I create the random 'source'
+and I create the multihash of 'source'
+and debug
+Then print 'multihash'

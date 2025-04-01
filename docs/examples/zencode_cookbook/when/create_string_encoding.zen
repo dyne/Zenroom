@@ -1,0 +1,4 @@
+Scenario eddsa
+Given I have a 'eddsa public key'
+When I create the 'hex' string of 'eddsa public key'
+Then print the 'hex'

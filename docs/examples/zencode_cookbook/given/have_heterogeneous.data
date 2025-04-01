@@ -1,0 +1,11 @@
+{
+	"myObject":{
+		"myNumber":1000,
+		"myString":"Hello World!",
+		"myArray":[
+			"String1",
+			"String2",
+			"String3"
+		]
+	}
+}

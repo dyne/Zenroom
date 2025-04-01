@@ -1,0 +1,16 @@
+Given I have a 'integer' named 'big'
+
+When I copy 'big' to 'big_to_hex'
+When I copy 'big' to 'big_to_base58'
+When I copy 'big' to 'big_to_base64'
+When I copy 'big' to 'big_to_binary'
+When I copy 'big' to 'big_to_url64'
+When I copy 'big' to 'big_to_integer'
+
+Then print the 'big'
+Then print the 'big_to_hex' as 'hex'
+Then print the 'big_to_base64' as 'base64'
+Then print the 'big_to_base58' as 'base58'
+Then print the 'big_to_binary' as 'binary'
+Then print the 'big_to_url64' as 'url64'
+Then print the 'big_to_integer' as 'integer'

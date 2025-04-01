@@ -1,0 +1,4 @@
+rule check version 1.0.0
+scenario 'ecdh'
+	 Given I have a valid 'number' named 'quantity' inside 'stuff'
+	 Then print the 'quantity'

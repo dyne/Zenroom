@@ -1,0 +1,6 @@
+{
+  "id": "did:example:123456789abcdefghi#keys-1",
+  "strange_id": "did::",
+  "very_strange_id": "::",
+  "separator": ":"
+}

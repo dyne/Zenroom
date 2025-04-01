@@ -1,0 +1,6 @@
+rule output encoding hex
+rule set hash sha512
+Given nothing
+When I create the random 'source'
+and I create the hash of 'source'
+Then print 'hash'

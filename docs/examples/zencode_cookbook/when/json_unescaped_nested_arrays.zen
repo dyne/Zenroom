@@ -1,0 +1,5 @@
+Given I have a 'string' named 'nested_array'
+
+When I create the json unescaped object of 'nested_array'
+
+Then print the 'json unescaped object'

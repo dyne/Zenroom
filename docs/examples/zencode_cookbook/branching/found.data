@@ -1,0 +1,16 @@
+{
+	"str": "good",
+	"empty_arr": [],
+	"not_empty_dict": {
+		      "empty_octet":""
+		      },
+	"arr": ["hello",
+		"goodmorning",
+		"hi",
+		"goodevening"],
+	"dict": {
+		"hello": "world",
+		"nice": "world",
+		"big": "world"
+		}
+}

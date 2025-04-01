@@ -1,0 +1,43 @@
+Rule check version 2.0.0
+
+Given that I have a 'string' named 'dictionaryToBeFound'
+Given that I have a 'string' named 'numberToBeFound'
+Given that I have a 'string dictionary' named 'TransactionsBatchA'
+Given that I have a 'time' named 'salesStartTimestamp'
+
+# Here we search if a certain dictionary and a number exists in the list
+When I verify the 'dictionaryToBeFound' is found in 'TransactionsBatchA'
+and I verify the 'numberToBeFound' is found in 'TransactionsBatchA'
+
+# Here we find the highest value of an element, in all dictionaries
+When I find the max value 'PricePerKG' for dictionaries in 'TransactionsBatchA'
+and I rename the 'max value' to 'maxPricePerKG'
+
+# Here we sum the values of an element, from all dictionaries
+When I create the sum value 'TransactionValue' for dictionaries in 'TransactionsBatchA'
+and I rename the 'sum value' to 'sumValueAllTransactions'
+
+# Here we sum the values of an element, from all dictionaries, with a condition
+When I create the sum value 'TransferredProductAmount' for dictionaries in 'TransactionsBatchA' where 'timestamp' > 'salesStartTimestamp'
+and I rename the 'sum value' to 'transferredProductAmountafterSalesStart'
+
+# Here we create a dictionary
+When I create the 'number dictionary'
+and I rename the 'number dictionary' to 'salesReport'
+
+
+# Here we move elements into the newly created dictionary
+When I move 'maxPricePerKG' in 'salesReport'
+When I move 'sumValueAllTransactions' in 'salesReport'
+When I move 'transferredProductAmountafterSalesStart' in 'salesReport'
+
+
+When I create the hash of 'salesReport' using 'sha512'
+When I rename the 'hash' to 'sha512hashOfsalesReport'
+
+When I create the random pick from 'TransactionsBatchA'
+When I remove the 'random pick' from 'TransactionsBatchA'
+
+#Print out the data we produced along
+# We also print the dictionary 'Information' as hex, just for fun
+Then print the 'salesReport'

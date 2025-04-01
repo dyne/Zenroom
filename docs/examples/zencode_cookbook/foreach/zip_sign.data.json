@@ -1,0 +1,12 @@
+{
+    "eddsa_secret_keys": [
+        "Arvs7PhbiKBJLF1nVBimTVMoc9Vwo9FkV6a5EnLZQ2Xn",
+        "9myJK8rFrcwxnp4kLuDKoBottuNWyofUJHXaFVVreL71",
+        "5TumuoGuJNCxmdTWxtxMC4n2A6oNPUWWftgbpymhTY94"
+    ],
+    "messages": [
+        "message from Alice",
+        "message from Bob",
+        "message from Charlie"
+    ]
+}

@@ -1,0 +1,15 @@
+Scenario 'ecdh':
+Given my name is in a 'string' named 'Sender'
+Given that I have my 'keyring'
+Given I have a 'string' named 'Recipient'
+Given I have a 'string' named 'Message'
+
+# below the statement needed
+Given that I have a 'public key' named by 'Recipient' inside 'Friends'
+
+When I rename the object named by 'Recipient' to 'SecretRecipient'
+When I encrypt the secret message of 'Message' for 'SecretRecipient'
+When I rename the 'secret message' to 'SecretMessage'
+
+Then print the 'SecretMessage'
+Then print the 'SecretRecipient'

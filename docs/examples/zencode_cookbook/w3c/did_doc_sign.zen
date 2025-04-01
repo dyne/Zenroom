@@ -1,0 +1,40 @@
+    Rule input encoding base58
+    Scenario 'w3c': did doc
+    Scenario 'eddsa': verify signature
+    Scenario 'ecdh': verify signature
+
+    Given I have a 'string dictionary' named 'did document'
+    and I have a 'string' named 'timestamp'
+    and I have a 'eddsa signature'
+    and I have a 'string' named 'jws detached signature'
+    and I have a 'string' named 'id'
+
+    Given I have a 'string dictionary' named 'proof'
+    and I have a 'did document' named 'signer_did_document' 
+
+    # extract signer pks
+    When I create the 'ecdh' public key from did document 'signer_did_document'
+    and I create the 'eddsa' public key from did document 'signer_did_document'
+
+    # verify eddsa
+    When I create the 'string dictionary' named 'signed_by_eddsa'
+    and I copy 'did document' in 'signed_by_eddsa'
+    and I copy 'timestamp' in 'signed_by_eddsa'
+    and I create the json escaped string of 'signed_by_eddsa'
+    and I verify the 'json escaped string' has a eddsa signature in 'eddsa signature' by 'eddsa public key'
+    and I remove 'json escaped string'
+
+    # verify ecdsa
+    When I verify the 'did document' has a jws signature in 'jws detached signature'
+
+    # create proof
+    and I move 'jws detached signature' to 'jws' in 'proof'
+    and I copy the 'timestamp' to 'created' in 'proof'
+
+    # proof's verification method
+    When I copy 'id' to 'verificationMethod'
+    and I append the string '#ecdh_public_key' to 'verificationMethod'
+    and I move 'verificationMethod' in 'proof'
+    and I move 'proof' in 'did document'
+
+    Then print the 'did document'

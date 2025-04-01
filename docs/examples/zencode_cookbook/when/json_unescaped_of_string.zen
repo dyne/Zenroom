@@ -1,0 +1,5 @@
+Given I have a 'string' named 'myString'
+
+When I create the json unescaped object of 'myString'
+
+Then print the 'json unescaped object'

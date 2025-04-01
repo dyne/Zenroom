@@ -1,0 +1,13 @@
+Scenario 'w3c': sign JSON
+Scenario 'ecdh': (required)
+Given that I am 'Authority'
+Given I have my 'keyring'
+Given I have a 'string dictionary' named 'did document'
+
+When I create jws header for secp256k1 signature
+When I create the jws detached signature of header 'jws header' and payload 'did document'
+When I create the 'string dictionary' named 'proof'
+When I move 'jws detached signature' to 'jws' in 'proof'
+When I move 'proof' in 'did document'
+
+Then print the 'did document'

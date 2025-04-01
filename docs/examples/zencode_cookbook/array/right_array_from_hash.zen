@@ -1,0 +1,6 @@
+rule input encoding url64
+rule output encoding url64
+Given I have a 'url64 array' named 'bonnetjes'
+When I create the hashes of each object in 'bonnetjes'
+and rename the 'hashes' to 'right array'
+Then print the 'right array'

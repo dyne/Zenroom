@@ -1,0 +1,9 @@
+{
+    "header": {
+              "alg": "ES256"
+    },
+    "payload": "joe",
+    "keyring": {
+               "es256": "hqQUHoEbLJIqcoLEvEtu8kJ3WbhaskDb5Sl/ygPN220="
+    }
+}

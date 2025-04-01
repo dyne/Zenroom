@@ -1,0 +1,5 @@
+rule check version 1.0.0
+rule input encoding string
+rule output encoding string
+	 Given I have a 'string' named 'anykey'
+	 Then print the 'anykey'

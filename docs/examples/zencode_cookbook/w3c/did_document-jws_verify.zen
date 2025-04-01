@@ -1,0 +1,8 @@
+Scenario 'w3c': verify signature
+Scenario 'ecdh': (required)
+Given I have a 'ecdh public key' inside 'Authority'
+and I have a 'string dictionary' named 'did document'
+
+When I verify the did document named 'did document'
+
+Then print the string 'W3C JWS IS VALID'

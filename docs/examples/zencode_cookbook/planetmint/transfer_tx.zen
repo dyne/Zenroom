@@ -1,0 +1,5 @@
+Scenario 'planetmint': sign outputs
+Given I have the 'keyring'
+Given I have a 'string' named 'planetmint transaction'
+When I create the planetmint signatures of 'planetmint transaction'
+Then print the data

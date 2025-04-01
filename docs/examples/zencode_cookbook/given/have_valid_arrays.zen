@@ -1,0 +1,5 @@
+Given I have a valid 'string array' named 'myArray' in 'myObject'
+Given I have a valid 'string' named 'myString' in 'myObject'
+Given I have a valid 'number' named 'myNumber' in 'myObject'
+When I randomize the 'myArray' array
+Then print all data

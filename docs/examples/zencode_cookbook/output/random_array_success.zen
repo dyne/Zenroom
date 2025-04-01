@@ -1,0 +1,5 @@
+Given nothing
+When I create the random array with '64' numbers modulo '100'
+and I create the aggregation of array 'random array'
+Then print the 'random array'
+and print the 'aggregation'

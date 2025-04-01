@@ -1,0 +1,4 @@
+{
+    "json_encoded_dict": "{\"first\":\"hello\",\"second\":\"world!\"}",
+    "not_json_encoded_dict": "this is not a json"
+}

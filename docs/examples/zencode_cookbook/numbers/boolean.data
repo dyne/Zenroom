@@ -1,0 +1,6 @@
+{ "mycat": {
+    "black": true,
+    "white": false,
+     "name": "cat",
+     "age": 6 }
+}

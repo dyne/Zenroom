@@ -1,0 +1,7 @@
+Rule check version 2.0.0
+Scenario ecdh
+Given I have a 'ecdh public key'
+and I have a 'ecdh signature'
+and I have a 'base64' named 'bigfile'
+When I verify the 'bigfile' has a ecdh signature in 'ecdh signature' by 'Alice'
+Then print the string 'Bigfile Signature is valid'

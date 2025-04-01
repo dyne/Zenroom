@@ -1,0 +1,5 @@
+rule check version 1.0.0
+Scenario 'ecdh': Create the keyring
+Given that I am known as 'Authority'
+When I create the ecdh key
+Then print my keyring

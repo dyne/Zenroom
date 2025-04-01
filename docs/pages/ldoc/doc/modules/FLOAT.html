@@ -1,0 +1,533 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Zenroom LUA</title>
+    <link rel="stylesheet" href="" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Zenroom</h1>
+
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Global_Float_Functions">Global Float Functions </a></li>
+<li><a href="#Class_Float">Class Float </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/OCTET.html">OCTET</a></li>
+  <li><a href="../modules/HASH.html">HASH</a></li>
+  <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><a href="../modules/BIG.html">BIG</a></li>
+  <li><strong>FLOAT</strong></li>
+  <li><a href="../modules/TIME.html">TIME</a></li>
+  <li><a href="../modules/AES.html">AES</a></li>
+  <li><a href="../modules/ECDH.html">ECDH</a></li>
+  <li><a href="../modules/ED.html">ED</a></li>
+  <li><a href="../modules/P256.html">P256</a></li>
+  <li><a href="../modules/QP.html">QP</a></li>
+  <li><a href="../modules/String.html">String</a></li>
+  <li><a href="../modules/Table.html">Table</a></li>
+  <li><a href="../modules/INSPECT.html">INSPECT</a></li>
+  <li><a href="../modules/lua.zencode.html">lua.zencode</a></li>
+  <li><a href="../modules/BBS.html">BBS</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>FLOAT</code></h1>
+<p>
+
+<h1>Float (F)</h1>
+
+
+<p>Floating-point numbers are a fundamental data type in computing used to represent real numbers (numbers with fractional parts).</p>
+</p>
+<p>
+They are designed to handle a wide range of magnitudes, from very small to very large values, by using a scientific notation-like format in binary.</p>
+
+<p> Tollerance EPS=0.000001.</p>
+
+
+<h2><a href="#Global_Float_Functions">Global Float Functions </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#F.new">F.new ([octet])</a></td>
+	<td class="summary">Create a new float number.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#F.is_float">F.is_float (data)</a></td>
+	<td class="summary">Check whether a given Lua value is a floating-point number or a string representation of a floating-point number.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#F.opposite">F.opposite (data)</a></td>
+	<td class="summary">Find the opposite of a float number.</td>
+	</tr>
+</table>
+<h2><a href="#Class_Float">Class Float </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#f:octet">f:octet ()</a></td>
+	<td class="summary">Convert a float number into an octet.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#f:__eq">f:__eq (num)</a></td>
+	<td class="summary">Check whether two float numbers are approximately equal within a small tolerance (EPS).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#f:__lt">f:__lt (num)</a></td>
+	<td class="summary">Check whether one float number is less than another float number.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#f:__add">f:__add (num)</a></td>
+	<td class="summary">Perform addition on two float numbers.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#f:__sub">f:__sub (num)</a></td>
+	<td class="summary">Perform subtraction on two float numbers.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#f:__mul">f:__mul (num)</a></td>
+	<td class="summary">Perform multiplication on two float numbers.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#f:__div">f:__div (num)</a></td>
+	<td class="summary">Perform division on two float numbers.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#f:__mod">f:__mod (m)</a></td>
+	<td class="summary">Compute the floating-point modulo of two float numbers.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#f:__tostring">f:__tostring ()</a></td>
+	<td class="summary">Convert a float number into a string representation.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Global_Float_Functions"></a>Global Float Functions </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "F.new"></a>
+    <strong>F.new ([octet])</strong>
+    </dt>
+    <dd>
+    Create a new float number.  If an argument is present,
+import it as <a href="../modules/OCTET.html#">OCTET</a> and initialise it with its value.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">octet</span>
+         value
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new float number
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create a new float number
+</span>n = F.<span class="function-name">new</span>(<span class="number">1.2343233</span>)
+<span class="global">print</span>(n)
+<span class="comment">--print: 1.234323</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "F.is_float"></a>
+    <strong>F.is_float (data)</strong>
+    </dt>
+    <dd>
+    Check whether a given Lua value is a floating-point number or a string representation of a floating-point number.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">data</span>
+         a Lua value (number or string)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean value (true if data is float)
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">if</span> (F.<span class="function-name">is_float</span>(<span class="number">1.234</span>)) <span class="keyword">then</span> <span class="global">print</span>(<span class="string">"ok"</span>)
+<span class="keyword">else</span> <span class="global">print</span>(<span class="string">"no"</span>) <span class="keyword">end</span>
+<span class="comment">--print: ok</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "F.opposite"></a>
+    <strong>F.opposite (data)</strong>
+    </dt>
+    <dd>
+    Find the opposite of a float number.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">data</span>
+         a float number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the opposite of the float number
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create a float number
+</span>f = F.<span class="function-name">new</span>(<span class="number">1.234</span>)
+<span class="global">print</span>(F.<span class="function-name">opposite</span>(f))
+<span class="comment">--print: -1.234</span></pre>
+    </ul>
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Class_Float"></a>Class Float </h2>
+
+          <div class="section-description">
+          Object Methods
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "f:octet"></a>
+    <strong>f:octet ()</strong>
+    </dt>
+    <dd>
+    Convert a float number into an octet.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the octet representation of the float number
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create a float number
+</span>f = BIG.<span class="function-name">new</span>(<span class="number">0.245432</span>)
+<span class="comment">--convert into an octet and print in hex
+</span><span class="global">print</span>(f:<span class="function-name">octet</span>():<span class="function-name">hex</span>())
+<span class="comment">--print: 302e323435343332</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "f:__eq"></a>
+    <strong>f:__eq (num)</strong>
+    </dt>
+    <dd>
+    Check whether two float numbers are approximately equal within a small tolerance (EPS).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">num</span>
+         a float number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean value
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create two float numbers
+</span>f = F.<span class="function-name">new</span>(<span class="number">0.24543256</span>)
+num = F.<span class="function-name">new</span>(<span class="number">0.24543257</span>)
+<span class="comment">--check if they are equal within EPS
+</span><span class="keyword">if</span>(f:<span class="function-name">__eq</span>(num)) <span class="keyword">then</span> <span class="global">print</span>(<span class="string">"ok"</span>)
+<span class="keyword">else</span> <span class="global">print</span>(<span class="string">"no"</span>)
+<span class="keyword">end</span>
+<span class="comment">--print: ok</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "f:__lt"></a>
+    <strong>f:__lt (num)</strong>
+    </dt>
+    <dd>
+    Check whether one float number is less than another float number.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">num</span>
+         a float number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a boolean value
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "f:__add"></a>
+    <strong>f:__add (num)</strong>
+    </dt>
+    <dd>
+    Perform addition on two float numbers.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">num</span>
+         a float number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the result of the addition
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create two float numbers
+</span>f = F.<span class="function-name">new</span>(<span class="number">0.2454325</span>)
+num = F.<span class="function-name">new</span>(<span class="number">0.2454326</span>)
+<span class="comment">--make the addition
+</span><span class="global">print</span>(f:<span class="function-name">__add</span>(num))
+<span class="comment">--print: 0.490865</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "f:__sub"></a>
+    <strong>f:__sub (num)</strong>
+    </dt>
+    <dd>
+    Perform subtraction on two float numbers.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">num</span>
+         a float number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the result of the subtraction
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create two float numbers
+</span>f = F.<span class="function-name">new</span>(<span class="number">1.2342</span>)
+num = F.<span class="function-name">new</span>(<span class="number">2.4223</span>)
+<span class="comment">--make the subtraction
+</span><span class="global">print</span>(f:<span class="function-name">__sub</span>(num))
+<span class="comment">--print: -1.1881</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "f:__mul"></a>
+    <strong>f:__mul (num)</strong>
+    </dt>
+    <dd>
+    Perform multiplication on two float numbers.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">num</span>
+         a float number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the result of the multiplication
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create two float numbers
+</span>f = F.<span class="function-name">new</span>(<span class="number">1.2342</span>)
+num = F.<span class="function-name">new</span>(<span class="number">2.4223</span>)
+<span class="comment">--make the multiplication
+</span><span class="global">print</span>(f:<span class="function-name">__mul</span>(num))
+<span class="comment">--print: 2.989603</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "f:__div"></a>
+    <strong>f:__div (num)</strong>
+    </dt>
+    <dd>
+    Perform division on two float numbers.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">num</span>
+         a float number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the result of the division
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create two float numbers
+</span>f = F.<span class="function-name">new</span>(<span class="number">1.2342</span>)
+num = F.<span class="function-name">new</span>(<span class="number">2.4223</span>)
+<span class="comment">--make the division
+</span><span class="global">print</span>(f:<span class="function-name">__div</span>(num))
+<span class="comment">--print: 0.509516</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "f:__mod"></a>
+    <strong>f:__mod (m)</strong>
+    </dt>
+    <dd>
+    Compute the floating-point modulo of two float numbers.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">m</span>
+         the modulus
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the result of the modulo operation
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--create two float numbers
+</span>f = F.<span class="function-name">new</span>(<span class="number">1.43223</span>)
+m = F.<span class="function-name">new</span>(<span class="number">0.3423</span>)
+<span class="comment">--apply the modulo operation
+</span><span class="global">print</span>(f:<span class="function-name">__mod</span>(m))
+<span class="comment">--print: 0.06303</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "f:__tostring"></a>
+    <strong>f:__tostring ()</strong>
+    </dt>
+    <dd>
+    Convert a float number into a string representation.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the string representation
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2025-03-25 10:33:58 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
