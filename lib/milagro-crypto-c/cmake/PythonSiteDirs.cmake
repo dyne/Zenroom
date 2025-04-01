@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.5)
 
 execute_process(COMMAND
   python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"
