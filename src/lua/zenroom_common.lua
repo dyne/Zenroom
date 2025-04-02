@@ -238,16 +238,16 @@ _G['deepsortmap'] = _deepsortmap
 local function _deepmask(fun, tdata, mask)
     local luatype = luatype
     if luatype(fun) ~= 'function' then
-        error("Internal error: deepmask 1st argument is not a function", 3)
+        error("Deepmask arg 1 not a function: "..luatype(mask), 3)
     end
     if not mask then
-        error("Internal error: deepmask 3rd argument is nil", 2)
+        error("Deepmask arg 3 is nil", 2)
     end
     if luatype(tdata) ~= 'table' then
-        error("Internal error: deepmask 2nd argument is not a table", 3)
+        error("Deepmask arg 2 not a table: "..luatype(mask), 3)
     end
     if mask and luatype(mask) ~= 'table' then
-        error("Internal error: deepmask 3rd argument is not a table", 3)
+        error("Deepmask arg 3 not a table: "..luatype(mask), 3)
     end
     local res = {}
     for k, v in pairs(tdata) do
