@@ -101,22 +101,25 @@
  -- return leftmost and rightmost if definition string indicates
  -- a lua table: dictionary, array or schema
  local function expect_table(definition)
-    local toks = strtok(definition, '_')
-    local res = { rightmost = toks[#toks] }
-    if res.rightmost == 'array'
-       or
-       res.rightmost == 'dictionary'
-    then
-       res.leftwords = '' -- concat all left words in toks minus the last
-       for i = 1, #toks - 2 do
-		  res.leftwords = res.leftwords .. toks[i] .. '_'
-       end
-       res.leftwords = uscore( res.leftwords .. toks[#toks - 1] )
-       -- no trailing underscore
-       return res
-    end
-	return nil
-    -- schemas may or may be not tables
+   local toks = strtok(definition, '_')
+   local res = { rightmost = toks[#toks] }
+   if #toks == 1 and res.rightmost == 'dictionary' then
+     return res -- dictionary alone is accepted as customizable
+   end
+   if res.rightmost == 'array'
+     or
+     res.rightmost == 'dictionary'
+   then
+     res.leftwords = '' -- concat all left words in toks minus the last
+     for i = 1, #toks - 2 do
+       res.leftwords = res.leftwords .. toks[i] .. '_'
+     end
+     res.leftwords = uscore( res.leftwords .. toks[#toks - 1] )
+     -- no trailing underscore
+     return res
+   end
+   return nil
+   -- schemas may or may be not tables
  end
 
  --- Given block (IN read-only memory)
@@ -175,32 +178,40 @@
     -- value_encoding: base64, hex, etc.
     -- data_type: array, dictionary, structure
     if objtype == 'table' then
-       local def = expect_table(definition)
-       if not def then -- check if the last word is among zentype collections
-		  error("Cannot take object: expected '"..definition
-				.."' but found '"..objtype.."' (not a dictionary or array)",3)
-       end
-       -- schema type in array or dict
-       t = ZEN.schemas[ def.leftwords ]
-       if t then
-		  return ({
-				fun = t,
-				zentype = string.sub(def.rightmost,1,1),
-				schema = def.leftwords,
-				luatype = objtype,
-				raw = obj,
-		  })
-       end
-       -- normal type in input encoding: string, base64 etc.
-       res = input_encoding(def.leftwords)
-       if res then
-		  res.zentype = string.sub(def.rightmost,1,1)
-		  res.raw = obj
-		  res.schema = nil
-		  return (res)
-       end
-       error("Cannot take object: invalid "..def.rightmost.." with encoding "..def.leftwords, 3)
-       return nil
+      local def = expect_table(definition)
+      if not def then -- check if the last word is among zentype collections
+        error("Cannot take object: expected '"..definition
+              .."' but found '"..objtype.."' (not a dictionary or array)",3)
+      end
+      -- mixed dictionary has a custom deepmask CODEC defined in Given
+      if not def.leftwords and def.rightmost == 'dictionary' then
+        res = input_encoding('string')
+        res.zentype = 'd'
+        res.raw = obj
+        res.st = 'c' -- '__custom_dictionary__'
+        return(res)
+      end
+      -- schema type in array or dict
+      t = ZEN.schemas[ def.leftwords ]
+      if t then
+        return ({
+            fun = t,
+            zentype = string.sub(def.rightmost,1,1),
+            schema = def.leftwords,
+            luatype = objtype,
+            raw = obj,
+        })
+      end
+      -- normal type in input encoding: string, base64 etc.
+      res = input_encoding(def.leftwords)
+      if res then
+        res.zentype = string.sub(def.rightmost,1,1)
+        res.raw = obj
+        res.schema = nil
+        return (res)
+      end
+      error("Cannot take object: invalid "..def.rightmost.." with encoding "..def.leftwords, 3)
+      return nil
     end
 
     if objtype == 'number' then
@@ -454,7 +465,7 @@ end
  --   encoding: encoding of object data, both basic and schema
  --   zentype:  zencode type: 'e'lement, 'a'rray or 'd'ictionary
  --   schema: schema name used to import or nil when basic object
- --   st: schema type properties, so far just 'o'pen or none
+ --   st: schema type properties, so far just 'o'pen or 'c'ustom
  -- }
  function new_codec(cname, parameters, clone)
     if not cname then error("Missing name in new codec", 2) end

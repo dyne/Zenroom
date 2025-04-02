@@ -238,36 +238,64 @@ _G['deepsortmap'] = _deepsortmap
 
 -- function to be used when converting codecs with complex trees
 -- mask is a dictionary of functions to be applied in place
-local function _deepmask(fun,t,mask)
-   local luatype = luatype
-   if luatype(fun) ~= 'function' then
-      error("Internal error: deepmask 1st argument is not a function", 3)
-      return nil end
-   if luatype(t) ~= 'table' then
-      error("Internal error: deepmask 2nd argument is not a table", 3)
-      return nil end
-   if luatype(mask) ~= 'table' then
-      error("Internal error: deepmask 3nd argument is not a table", 3)
-      return nil end
-   local res = { }
-   for k,v in pairs(t) do
-      if luatype(v) == 'table' then
-	 if not mask or not mask[k] then
-	    res[k] = _deepmask(fun,v) -- switch to deepmap?
-	 else
-	    res[k] = _deepmask(fun,v,mask[k]) -- recursion
-	 end
-      else
-	 if not mask or not mask[k] then -- check tree of funcs
-	    res[k] = fun(v,k)
-	 else
-	    res[k] = mask[k](v,k)
-	 end
-      end
-   end
-   return setmetatable(res, getmetatable(t))
+local function _deepmask(fun, tdata, mask)
+    local luatype = luatype
+    if luatype(fun) ~= 'function' then
+        error("Deepmask arg 1 not a function: "..luatype(mask), 3)
+    end
+    if not mask then
+        error("Deepmask arg 3 is nil", 2)
+    end
+    if luatype(tdata) ~= 'table' then
+        error("Deepmask arg 2 not a table: "..luatype(mask), 3)
+    end
+    if mask and luatype(mask) ~= 'table' then
+        error("Deepmask arg 3 not a table: "..luatype(mask), 3)
+    end
+    local res = {}
+    for k, v in pairs(tdata) do
+        local maskp <const> = mask[k]
+        if not maskp then
+            res[k] = fun(v, k)
+            goto continue
+        end
+        if luatype(v) == 'table' then
+            res[k] = _deepmask(fun, v, maskp)
+            goto continue
+        end
+        if not maskp then
+            res[k] = fun(v, k)
+            goto continue
+        end
+        local encoder
+        if luatype(maskp) == 'function' then
+            encoder = maskp
+        else
+            encoder = get_encoding_function(maskp)
+        end
+        if not encoder then
+            error("Invalid encoding found in "..k
+                  ..": "..encoder,2)
+        end
+        res[k] = encoder(v, k)
+        ::continue::
+    end
+    return setmetatable(res, getmetatable(tdata))
 end
 _G['deepmask'] = _deepmask
+
+local function _mask_set(t, path, value)
+    local current = t
+    local nump <const> = #path
+    for i = 1, nump - 1 do
+        local key = path[i]
+        if not current[key] then current[key] = {} end
+        current = current[key]
+    end
+    current[path[nump]] = value
+    return t
+end
+_G['deepmask_set'] = _mask_set
 
 function isarray(obj)
    if not obj then
