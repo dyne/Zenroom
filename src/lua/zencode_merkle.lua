@@ -28,9 +28,10 @@ local function create_merkle_tree(data_table)
     return tree[1] -- The Merkle root
 end
 
-When("create the merkle root of ''", 
+When("create merkle root of ''", 
     function(name)
         local data = ACK[name] 
         ACK.merkle_root = create_merkle_tree(data) 
+        new_codec('merkle root', {zentype = "string"})
     end
 )
