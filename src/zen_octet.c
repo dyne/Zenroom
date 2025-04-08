@@ -1000,6 +1000,57 @@ end:
 
 
 /***
+Decode a uuid-encoded string into an octet object of 16 bytes.
+
+	@function OCTET.from_uuid
+	@param str uuid-encoded string
+	@return decoded octet object
+ */
+#define UUID_STR_LEN 36
+static int from_uuid(lua_State *L) {
+	BEGIN();
+	const char *s = lua_tostring(L, 1);
+	if(!s) {
+		zerror(L, "%s :: invalid argument", __func__); // fatal
+		lua_pushboolean(L, 0);
+		END(1); }
+	const int inlen = strlen(s);
+	if(inlen!=UUID_STR_LEN) {
+		zerror(L, "%s :: invalid uuid argument length: %i", __func__,inlen);
+		lua_pushboolean(L, 0);
+		END(1); }
+	char *tmp = strdup(s);
+	// From bip39 it can be at most 32bytes
+	octet *o = o_new(L,UUID_STR_LEN+1);
+	// replace all '-' with zero
+	for(char *p = (char*)tmp; *p!=0x0; p++) if(*p=='-') *p = 0x0;
+	if(hex2buf(o->val,tmp) != 4) {
+		zerror(L, "%s :: invalid uuid parsed", __func__);
+		lua_pushboolean(L, 0);
+		END(1); }
+	if(hex2buf(o->val+4, tmp+9) != 2) {
+		zerror(L, "%s :: invalid uuid parsed", __func__);
+		lua_pushboolean(L, 0);
+		END(1); }
+	if(hex2buf(o->val+6,tmp+14) != 2) {
+		zerror(L, "%s :: invalid uuid parsed", __func__);
+		lua_pushboolean(L, 0);
+		END(1); }
+	if(hex2buf(o->val+8,tmp+19) != 2) {
+		zerror(L, "%s :: invalid uuid parsed", __func__);
+		lua_pushboolean(L, 0);
+		END(1); }
+	if(hex2buf(o->val+10,tmp+24) != 6) {
+		zerror(L, "%s :: invalid uuid parsed", __func__);
+		lua_pushboolean(L, 0);
+		END(1); }
+	free(tmp);
+	o->len = 16;
+	END(1);
+}
+
+
+/***
 	Create an octet filled with zero values up to indicated size or its maximum size.
 
 	@int[opt=octet:max] length fill with zero up to this size, use maximum octet size if omitted
@@ -3097,6 +3148,7 @@ int luaopen_octet(lua_State *L) {
 		{"from_hex",   from_hex},
 		{"from_bin",   from_bin},
 		{"from_mnemonic",   from_mnemonic},
+		{"from_uuid", from_uuid},
 		{"base64",from_base64},
 		{"url64",from_url64},
 		{"base58",from_base58},
@@ -3113,6 +3165,7 @@ int luaopen_octet(lua_State *L) {
 		{"to_array",  to_array},
 		{"to_octet",  to_octet},
 		{"to_bin",    to_bin},
+//		{"to_uuid",   to_uuid},
 		// {"zcash_topoint", zcash_topoint},
 		{"to_mnemonic", to_mnemonic},
 		{"random",  new_random},
