@@ -37,14 +37,19 @@ local function create_merkle_tree(data_table, hastype)
     return tree[1] -- The Merkle root
 end
 
+local function tree_and_codec(data, hash)
+    ACK.merkle_root = create_merkle_tree(data, hash) 
+    return new_codec('merkle root', {zentype = "string"})
+end 
+
+
 When("create merkle root of ''", 
     function(name)
         local data = ACK[name] 
         if type(data) ~= 'table' then
             error("Can only use tables")
         end
-        ACK.merkle_root = create_merkle_tree(data) 
-        new_codec('merkle root', {zentype = "string"})
+        tree_and_codec(data)
     end
 )
 
@@ -54,29 +59,26 @@ When("create merkle root of '' using hash ''",
         if type(data) ~= 'table' then
             error("Can only use tables")
         end
-        ACK.merkle_root = create_merkle_tree(data, hash) 
-        new_codec('merkle root', {zentype = "string"})
+        tree_and_codec(data,hash)
     end
 )
 
 When("create merkle root of dictionary path ''",
     function(name)
-        local data, _ = pick_from_path(name)
+        local data, _ = pick_from_path(name, true)
         if type(data) ~= 'table' then
             error("Can only use tables")
         end
-        ACK.merkle_root = create_merkle_tree(data) 
-        new_codec('merkle root', {zentype = "string"})
+        tree_and_codec(data)
     end
 )
 
 When("create merkle root of dictionary path '' using hash ''",
     function(name, hash)
-        local data, _ = pick_from_path(name)
+        local data, _ = pick_from_path(name, true)
         if type(data) ~= 'table' then
             error("Can only use tables")
         end
-        ACK.merkle_root = create_merkle_tree(data, hash) 
-        new_codec('merkle root', {zentype = "string"})
+        tree_and_codec(data,hash)
     end
 )
