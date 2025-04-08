@@ -31,6 +31,20 @@ end
 When("create merkle root of ''", 
     function(name)
         local data = ACK[name] 
+        if type(data) ~= 'table' then
+            error("Can only use tables")
+        end
+        ACK.merkle_root = create_merkle_tree(data) 
+        new_codec('merkle root', {zentype = "string"})
+    end
+)
+
+When("create merkle root of dictionary path ''",
+    function(name)
+        local data, _ = pick_from_path(name)
+        if type(data) ~= 'table' then
+            error("Can only use tables")
+        end
         ACK.merkle_root = create_merkle_tree(data) 
         new_codec('merkle root', {zentype = "string"})
     end
