@@ -79,14 +79,19 @@ local function _verify_merkle_tree(root, name)
     local data_table = pick_from_path(name, true)
     local merkle_root = ACK[root]
     
-    if not data_table or not merkle_root or type(data_table) ~= 'table' then
+    if not data_table or not merkle_root then
+        error("Inserted values should be not nill", 2)
+    end 
+
+    if type(data_table) ~= 'table' then
         error("Table not found in path: "..name, 2)
     end 
 
     local computed_root = _create_merkle_tree(data_table)
 
-    zencode_assert( computed_root == merkle_root,
-        "Verification fail: elements are not equal")
+    if computed_root ~= merkle_root then
+        error("Verification fail: elements are not equal", 2)
+    end
 
     return computed_root == merkle_root
 end
