@@ -1059,12 +1059,11 @@ Encode an octet object of 16 bytes in uuid notation.
 
  static int to_uuid(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	const octet *o = o_arg(L, 1);
 	if (!o || o->len != 16) {
-        zerror(L, "to_uuid: expected 16-byte octet");
-        o_free(L, o);
-        lua_pushnil(L);
-        END(1);
+        failed_msg = "expected 16 bytes octet";
+        goto end;
     }
 	char tmp[UUID_STR_LEN+1];
 	snprintf(tmp, sizeof(tmp),
@@ -1075,6 +1074,9 @@ Encode an octet object of 16 bytes in uuid notation.
 		(unsigned char)o->val[12], (unsigned char)o->val[13], (unsigned char)o->val[14], (unsigned char)o->val[15]);
 end:
 	o_free(L,o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	lua_pushstring(L, tmp);
 	END(1);
 	
