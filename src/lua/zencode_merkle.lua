@@ -72,3 +72,24 @@ When("create merkle root of ''", _zencode_merkle_tree)
 When("create merkle root of '' using hash ''", _zencode_merkle_tree)
 When("create merkle root of dictionary path ''", _zencode_merkle_tree)
 When("create merkle root of dictionary path '' using hash ''", _zencode_merkle_tree)
+
+-- Function to verify the integrity of a Merkle tree
+local function _verify_merkle_tree(root, name)
+    
+    local data_table = pick_from_path(name, true)
+    local merkle_root = ACK[root]
+    
+    if not data_table or not merkle_root or type(data_table) ~= 'table' then
+        error("Table not found in path: "..name, 2)
+    end 
+
+    local computed_root = _create_merkle_tree(data_table)
+
+    zencode_assert( computed_root == merkle_root,
+        "Verification fail: elements are not equal")
+
+    return computed_root == merkle_root
+end
+
+When("verify merkle root '' of ''", _verify_merkle_tree)
+When("verify merkle root '' of dictionary path ''", _verify_merkle_tree)
