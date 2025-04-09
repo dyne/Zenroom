@@ -1049,6 +1049,38 @@ static int from_uuid(lua_State *L) {
 	END(1);
 }
 
+/***
+Encode an octet object of 16 bytes in uuid notation.
+
+	@function OCTET.to_uuid
+	@param str octet object
+	@return encoded octet object
+ */
+
+ static int to_uuid(lua_State *L) {
+	BEGIN();
+	const octet *o = o_arg(L, 1);
+	if (!o || o->len != 16) {
+        zerror(L, "to_uuid: expected 16-byte octet");
+        o_free(L, o);
+        lua_pushnil(L);
+        END(1);
+    }
+	char tmp[UUID_STR_LEN+1];
+	snprintf(tmp, sizeof(tmp),
+		"%02hhx%02hhx%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx",
+		(unsigned char)o->val[0],  (unsigned char)o->val[1],  (unsigned char)o->val[2],  (unsigned char)o->val[3], 
+		(unsigned char)o->val[4],  (unsigned char)o->val[5],  (unsigned char)o->val[6],  (unsigned char)o->val[7], 
+		(unsigned char)o->val[8],  (unsigned char)o->val[9],  (unsigned char)o->val[10], (unsigned char)o->val[11],
+		(unsigned char)o->val[12], (unsigned char)o->val[13], (unsigned char)o->val[14], (unsigned char)o->val[15]);
+end:
+	o_free(L,o);
+	lua_pushstring(L, tmp);
+	END(1);
+	
+}
+
+
 
 /***
 	Create an octet filled with zero values up to indicated size or its maximum size.
@@ -3165,7 +3197,7 @@ int luaopen_octet(lua_State *L) {
 		{"to_array",  to_array},
 		{"to_octet",  to_octet},
 		{"to_bin",    to_bin},
-//		{"to_uuid",   to_uuid},
+		{"to_uuid",   to_uuid},
 		// {"zcash_topoint", zcash_topoint},
 		{"to_mnemonic", to_mnemonic},
 		{"random",  new_random},
