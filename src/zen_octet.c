@@ -1014,7 +1014,11 @@ static int from_uuid(lua_State *L) {
 		zerror(L, "%s :: invalid argument", __func__); // fatal
 		lua_pushboolean(L, 0);
 		END(1); }
-	const int inlen = strlen(s);
+	int inlen = strlen(s);
+	if (strncmp(s, "urn:uuid:", 9) == 0) {
+		s+=9;
+		inlen-=9;  
+	}
 	if(inlen!=UUID_STR_LEN) {
 		zerror(L, "%s :: invalid uuid argument length: %i", __func__,inlen);
 		lua_pushboolean(L, 0);
