@@ -33,8 +33,8 @@ local function _hash(data, hashtype)
     return _hf:process(data)
 end
 
--- Function to create a Merkle tree from a table of data
-local function _create_merkle_tree(data_table, hashtype)
+-- Function to create a Merkle root from a table of data
+local function _create_merkle_root(data_table, hashtype)
     local tree = {}
 
     -- Hash each piece of data and add to the tree
@@ -59,22 +59,22 @@ local function _create_merkle_tree(data_table, hashtype)
     return tree[1] -- The Merkle root
 end
 
-local function _zencode_merkle_tree(name, hashtype)
+local function _zencode_merkle_root(name, hashtype)
     local data = pick_from_path(name, true)
     if not data or type(data) ~= 'table' then
         error("Table not found in path: "..name, 2)
     end
-    ACK.merkle_root = _create_merkle_tree(data, hashtype)
+    ACK.merkle_root = _create_merkle_root(data, hashtype)
     return new_codec('merkle root', {zentype = "string"})
 end
 
-When("create merkle root of ''", _zencode_merkle_tree)
-When("create merkle root of '' using hash ''", _zencode_merkle_tree)
-When("create merkle root of dictionary path ''", _zencode_merkle_tree)
-When("create merkle root of dictionary path '' using hash ''", _zencode_merkle_tree)
+When("create merkle root of ''", _zencode_merkle_root)
+When("create merkle root of '' using hash ''", _zencode_merkle_root)
+When("create merkle root of dictionary path ''", _zencode_merkle_root)
+When("create merkle root of dictionary path '' using hash ''", _zencode_merkle_root)
 
--- Function to verify the integrity of a Merkle tree
-local function _verify_merkle_tree(root, name)
+-- Function to verify the integrity of a Merkle root
+local function _verify_merkle_root(root, name)
     
     local data_table = pick_from_path(name, true)
     local merkle_root = ACK[root]
@@ -87,7 +87,7 @@ local function _verify_merkle_tree(root, name)
         error("Table not found in path: "..name, 2)
     end 
 
-    local computed_root = _create_merkle_tree(data_table)
+    local computed_root = _create_merkle_root(data_table)
 
     if computed_root ~= merkle_root then
         error("Verification fail: elements are not equal", 2)
@@ -96,5 +96,38 @@ local function _verify_merkle_tree(root, name)
     return computed_root == merkle_root
 end
 
-When("verify merkle root '' of ''", _verify_merkle_tree)
-When("verify merkle root '' of dictionary path ''", _verify_merkle_tree)
+When("verify merkle root '' of ''", _verify_merkle_root)
+When("verify merkle root '' of dictionary path ''", _verify_merkle_root)
+
+
+
+-- Function to create a Merkle tree from a table of data
+local function _create_merkle_tree(data_table, hashtype)
+    local tree = {}
+
+    -- Hash each piece of data and add to the tree (tree basis leafs)
+    for _, data in ipairs(data_table) do
+        table.insert(tree, _hash(data, hashtype))
+    end
+
+    local temp_tree = tree 
+
+    -- Build the tree by hashing pairs of nodes until a single hash (the root) is obtained
+    while #temp_tree > 1 do    
+        local temp_tree_step = {}
+        for i = 1, #temp_tree, 2 do
+            if i + 1 <= #temp_tree then                
+                local concatenated_hashes = temp_tree[i] .. temp_tree[i + 1]
+                table.insert(tree, _hash(concatenated_hashes, hashtype))
+                table.insert(temp_tree_step, _hash(concatenated_hashes, hashtype) )
+            else
+                table.insert(tree, temp_tree[i])
+                table.insert(temp_tree_step, temp_tree[i])    
+            end
+        end
+        temp_tree = temp_tree_step
+    end
+    
+    return tree -- The merkle tree 
+    
+end
