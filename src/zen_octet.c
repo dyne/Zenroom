@@ -1019,8 +1019,23 @@ static int from_uuid(lua_State *L) {
 		zerror(L, "%s :: invalid uuid argument length: %i", __func__,inlen);
 		lua_pushboolean(L, 0);
 		END(1); }
+	// check the right positions of '-'
+	for (int i = 0; i < 4; i++) {
+		int positions[] = {8, 13, 18, 23};
+		int pos = positions[i];
+		if (s[pos] != '-') {
+			zerror(L, "%s :: invalid '-' positions!", __func__);
+			lua_pushboolean(L, 0);
+			END(1); }
+	}
+	//check if the input string is hexadecimal
+	char *exs = strdup(s);
+	for(char *p = (char*)exs; *p!=0x0; p++) if(*p=='-') *p = 'aa';
+	if(!is_hex(L, exs)) {
+		zerror(L, "hex sequence invalid"); 
+		lua_pushboolean(L, 0);
+		END(1); }
 	char *tmp = strdup(s);
-	// From bip39 it can be at most 32bytes
 	octet *o = o_new(L,UUID_STR_LEN+1);
 	// replace all '-' with zero
 	for(char *p = (char*)tmp; *p!=0x0; p++) if(*p=='-') *p = 0x0;
