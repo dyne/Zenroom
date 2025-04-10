@@ -1,0 +1,6 @@
+Scenario 'merkle': create merkle root
+Given I have a 'string array' named 'data'
+
+When I create the merkle root of 'data'
+
+Then print the 'merkle root'
