@@ -1084,19 +1084,25 @@ Encode an octet object of 16 bytes in uuid notation.
         failed_msg = "expected 16 bytes octet";
         goto end;
     }
-	char tmp[UUID_STR_LEN+1];
-	snprintf(tmp, sizeof(tmp),
-		"%02hhx%02hhx%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx",
-		(unsigned char)o->val[0],  (unsigned char)o->val[1],  (unsigned char)o->val[2],  (unsigned char)o->val[3], 
-		(unsigned char)o->val[4],  (unsigned char)o->val[5],  (unsigned char)o->val[6],  (unsigned char)o->val[7], 
-		(unsigned char)o->val[8],  (unsigned char)o->val[9],  (unsigned char)o->val[10], (unsigned char)o->val[11],
-		(unsigned char)o->val[12], (unsigned char)o->val[13], (unsigned char)o->val[14], (unsigned char)o->val[15]);
+	char tmp[32];
+	char dst[UUID_STR_LEN+1];
+	buf2hex(tmp, o->val, 16);
+	static const int dash_positions[] = {8, 13, 18, 23};
+    int src_pos = 0;
+	for(int i = 0; i < 36; i++) {
+        if((i == 8) || (i == 13) || (i == 18) || (i == 23)) {
+            dst[i] = '-';
+        } else {
+            dst[i] = tmp[src_pos++];
+        }
+    }
+	dst[36] = '\0';
 end:
 	o_free(L,o);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
-	lua_pushstring(L, tmp);
+	lua_pushstring(L, dst);
 	END(1);
 	
 }
