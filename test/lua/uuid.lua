@@ -5,7 +5,7 @@ uuids = {"550e8400-e29b-41d4-a716-446655440000",
 
 for _,v in ipairs(uuids) do
     oct = O.from_uuid(v)
-    assert(O.to_uuid(oct)==v)
+    assert(oct:uuid()==v)
 end
 print("✅ All valid input tests passed!")
 

@@ -3252,6 +3252,7 @@ int luaopen_octet(lua_State *L) {
 		{"str",    to_string},
 		{"array",  to_array},
 		{"bin",    to_bin},
+		{"uuid",    to_uuid},
 		{"eq", eq},
 		{"pad", pad},
 		{"max", max},
