@@ -325,6 +325,8 @@
     elseif what =='mnemonic' then
        -- mnemonic has no check function (TODO:)
        return f_factory_encoder('mnemonic', O.from_mnemonic, nil)
+    elseif what =='uuid' then
+      return f_factory_encoder('uuid', O.from_uuid, nil)
     elseif what == 'int' or what == 'integer' then -- aka BIG
        return f_factory_encoder('integer', BIG.from_decimal, BIG.is_integer)
     elseif what == 'float' or what == 'num' or what == 'number' then
@@ -391,6 +393,7 @@ end
     binary = O.to_bin,
     bin = O.to_bin,
     mnemonic = O.to_mnemonic,
+    uuid = O.to_uuid,
     float = to_number_f,
     number = to_number_f,
     integer = BIG.to_decimal,

@@ -1000,6 +1000,121 @@ end:
 
 
 /***
+Decode a uuid-encoded string into an octet object of 16 bytes.
+
+	@function OCTET.from_uuid
+	@param str uuid-encoded string
+	@return decoded octet object
+ */
+#define UUID_STR_LEN 36
+static int from_uuid(lua_State *L) {
+	BEGIN();
+	const char *type = luaL_typename(L, 1);
+	if (strcmp(type, "string") != 0) {
+		zerror(L, "%s :: the input is not a string", __func__); // fatal
+		lua_pushboolean(L, 0);
+		END(1); }
+	const char *s = lua_tostring(L, 1);
+	if(!s) {
+		zerror(L, "%s :: invalid argument", __func__); // fatal
+		lua_pushboolean(L, 0);
+		END(1); }
+	int inlen = strlen(s);
+	if (strncmp(s, "urn:uuid:", 9) == 0) {
+		s+=9;
+		inlen-=9;  
+	}
+	if(inlen!=UUID_STR_LEN) {
+		zerror(L, "%s :: invalid uuid argument length: %i", __func__,inlen);
+		lua_pushboolean(L, 0);
+		END(1); }
+	// check the right positions of '-'
+	for (int i = 0; i < 4; i++) {
+		int positions[] = {8, 13, 18, 23};
+		int pos = positions[i];
+		if (s[pos] != '-') {
+			zerror(L, "%s :: invalid '-' positions!", __func__);
+			lua_pushboolean(L, 0);
+			END(1); }
+	}
+	//check if the input string is hexadecimal
+	char *exs = strdup(s);
+	for(char *p = (char*)exs; *p!=0x0; p++) if(*p=='-') *p = 'aa';
+	if(!is_hex(L, exs)) {
+		zerror(L, "hex sequence invalid"); 
+		lua_pushboolean(L, 0);
+		END(1); }
+	char *tmp = strdup(s);
+	octet *o = o_new(L,UUID_STR_LEN+1);
+	// replace all '-' with zero
+	for(char *p = (char*)tmp; *p!=0x0; p++) if(*p=='-') *p = 0x0;
+	if(hex2buf(o->val,tmp) != 4) {
+		zerror(L, "%s :: invalid uuid parsed", __func__);
+		lua_pushboolean(L, 0);
+		END(1); }
+	if(hex2buf(o->val+4, tmp+9) != 2) {
+		zerror(L, "%s :: invalid uuid parsed", __func__);
+		lua_pushboolean(L, 0);
+		END(1); }
+	if(hex2buf(o->val+6,tmp+14) != 2) {
+		zerror(L, "%s :: invalid uuid parsed", __func__);
+		lua_pushboolean(L, 0);
+		END(1); }
+	if(hex2buf(o->val+8,tmp+19) != 2) {
+		zerror(L, "%s :: invalid uuid parsed", __func__);
+		lua_pushboolean(L, 0);
+		END(1); }
+	if(hex2buf(o->val+10,tmp+24) != 6) {
+		zerror(L, "%s :: invalid uuid parsed", __func__);
+		lua_pushboolean(L, 0);
+		END(1); }
+	free(tmp);
+	o->len = 16;
+	END(1);
+}
+
+/***
+Encode an octet object of 16 bytes in uuid notation.
+
+	@function OCTET.to_uuid
+	@param str octet object
+	@return encoded octet object
+ */
+
+ static int to_uuid(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const octet *o = o_arg(L, 1);
+	if (!o || o->len != 16) {
+        failed_msg = "expected 16 bytes octet";
+        goto end;
+    }
+	char tmp[32];
+	char dst[UUID_STR_LEN+1];
+	buf2hex(tmp, o->val, 16);
+	static const int dash_positions[] = {8, 13, 18, 23};
+    int src_pos = 0;
+	for(int i = 0; i < 36; i++) {
+        if((i == 8) || (i == 13) || (i == 18) || (i == 23)) {
+            dst[i] = '-';
+        } else {
+            dst[i] = tmp[src_pos++];
+        }
+    }
+	dst[36] = '\0';
+end:
+	o_free(L,o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	lua_pushstring(L, dst);
+	END(1);
+	
+}
+
+
+
+/***
 	Create an octet filled with zero values up to indicated size or its maximum size.
 
 	@int[opt=octet:max] length fill with zero up to this size, use maximum octet size if omitted
@@ -3097,6 +3212,7 @@ int luaopen_octet(lua_State *L) {
 		{"from_hex",   from_hex},
 		{"from_bin",   from_bin},
 		{"from_mnemonic",   from_mnemonic},
+		{"from_uuid", from_uuid},
 		{"base64",from_base64},
 		{"url64",from_url64},
 		{"base58",from_base58},
@@ -3113,6 +3229,7 @@ int luaopen_octet(lua_State *L) {
 		{"to_array",  to_array},
 		{"to_octet",  to_octet},
 		{"to_bin",    to_bin},
+		{"to_uuid",   to_uuid},
 		// {"zcash_topoint", zcash_topoint},
 		{"to_mnemonic", to_mnemonic},
 		{"random",  new_random},
@@ -3165,6 +3282,7 @@ int luaopen_octet(lua_State *L) {
 		{"str",    to_string},
 		{"array",  to_array},
 		{"bin",    to_bin},
+		{"uuid",    to_uuid},
 		{"eq", eq},
 		{"pad", pad},
 		{"max", max},
