@@ -1009,6 +1009,11 @@ Decode a uuid-encoded string into an octet object of 16 bytes.
 #define UUID_STR_LEN 36
 static int from_uuid(lua_State *L) {
 	BEGIN();
+	const char *type = luaL_typename(L, 1);
+	if (strcmp(type, "string") != 0) {
+		zerror(L, "%s :: the input is not a string", __func__); // fatal
+		lua_pushboolean(L, 0);
+		END(1); }
 	const char *s = lua_tostring(L, 1);
 	if(!s) {
 		zerror(L, "%s :: invalid argument", __func__); // fatal
