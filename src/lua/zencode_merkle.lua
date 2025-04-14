@@ -131,3 +131,27 @@ local function _create_merkle_tree(data_table, hashtype)
     return tree -- The merkle tree 
     
 end
+
+
+local function _create_merkle_tree2(data_table, hashtype)
+    local N = #data_table
+    --creation of the empty tree
+    local tree = {}
+    for i = 1, 2*N do
+        tree[i] = "0"
+    end
+
+    --hashing the data input a filling the end of the tree
+    for i = N + 1, 2*N do
+        tree[i] = _hash(data_table[i - N], hashtype)
+    end 
+    
+    --filling the vector tree: the node in position i has as leafs the nodes in position 2i and 2i+1
+    for i = N, 2, -1 do
+        local concatenated = tree[2*i - 1] .. tree[2*i]
+        tree[i] = _hash(concatenated, hashtype)
+    end 
+    
+    return tree
+      
+end
