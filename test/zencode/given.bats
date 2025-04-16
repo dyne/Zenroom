@@ -602,3 +602,19 @@ EOF
     save_output 'prefix_from_varibale.json'
     assert_output '{"bearer":"BEARER","payload":{"aud":"did:dyne:sandbox.signroom:PTDvvQn1iWQiVxkfsDnUid8FbieKbHq46Qs8c9CZx67","exp":1709896027,"iat":1709892427,"iss":"https://authz-server1.zenswarm.forkbomb.eu:3100","sub":"6da2cb24972337faa55406d60bfdbe5038495879"}}'
 }
+
+@test "codec: uuid" {
+    cat <<EOF | save_asset given_uuid.data.json
+{
+    "data1": "urn:uuid:550e8400-e29b-41d4-a716-446655440000",
+    "data2": "VQ6EAOKbQdSnFkRmVUQAAA=="
+}
+EOF
+    cat <<EOF | zexe given_uuid.zen given_uuid.data.json
+Given I have a 'uuid' named 'data1'
+Given I have a 'base64' named 'data2'
+Then print the 'data2' as 'uuid'
+EOF
+    save_output given_uuid.out.json
+    assert_output '{"data2":"550e8400-e29b-41d4-a716-446655440000"}'
+} 

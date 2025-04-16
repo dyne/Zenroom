@@ -110,3 +110,26 @@ Then print 'address_to_bin' as 'bin'
 }
 ```
 
+## uuid
+A UUID (Universally Unique Identifier) is a 16-byte identifier used to uniquely label information in computer systems. It is typically represented as a 32-character hexadecimal string, divided into five groups separated by hyphens (e.g., 123e4567-e89b-12d3-a456-426614174000).
+
+Consider the following 16-byte base64 string
+
+```json
+{
+   "data": "VQ6EAOKbQdSnFkRmVUQAAA=="
+}
+```
+and the script
+
+```
+Given I have a 'base64' named 'data'
+Then print the 'data' as 'uuid'
+```
+the output will be
+
+```json
+{
+   "data":"550e8400-e29b-41d4-a716-446655440000"
+}
+```
