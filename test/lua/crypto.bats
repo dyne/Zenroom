@@ -31,5 +31,6 @@ load ../bats_setup
     Z bbs.lua
     Z zcash.lua
     Z hkdf.lua
-	Z fsp.lua
+    Z fsp.lua
+    Z uuid.lua
 }

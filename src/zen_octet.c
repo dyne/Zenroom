@@ -1010,66 +1010,62 @@ Decode a uuid-encoded string into an octet object of 16 bytes.
 static int from_uuid(lua_State *L) {
 	BEGIN();
 	const char *type = luaL_typename(L, 1);
+	char *failed_msg = NULL;
+	char *exs = NULL;
+	char *tmp = NULL;
 	if (strcmp(type, "string") != 0) {
-		zerror(L, "%s :: the input is not a string", __func__); // fatal
-		lua_pushboolean(L, 0);
-		END(1); }
+		failed_msg = "the input is not a string";
+		goto end;
+	}
 	const char *s = lua_tostring(L, 1);
 	if(!s) {
-		zerror(L, "%s :: invalid argument", __func__); // fatal
-		lua_pushboolean(L, 0);
-		END(1); }
+		failed_msg = "invalid argument";
+		goto end;
+	}
 	int inlen = strlen(s);
 	if (strncmp(s, "urn:uuid:", 9) == 0) {
 		s+=9;
-		inlen-=9;  
+		inlen-=9;
 	}
 	if(inlen!=UUID_STR_LEN) {
-		zerror(L, "%s :: invalid uuid argument length: %i", __func__,inlen);
-		lua_pushboolean(L, 0);
-		END(1); }
+		failed_msg = "invalid uuid argument length";
+		goto end;
+	}
 	// check the right positions of '-'
 	for (int i = 0; i < 4; i++) {
 		int positions[] = {8, 13, 18, 23};
 		int pos = positions[i];
 		if (s[pos] != '-') {
-			zerror(L, "%s :: invalid '-' positions!", __func__);
-			lua_pushboolean(L, 0);
-			END(1); }
+			failed_msg = "invalid '-' positions!";
+			goto end;
+		}
 	}
 	//check if the input string is hexadecimal
-	char *exs = strdup(s);
+	exs = strdup(s);
 	for(char *p = (char*)exs; *p!=0x0; p++) if(*p=='-') *p = 'aa';
 	if(!is_hex(L, exs)) {
-		zerror(L, "hex sequence invalid"); 
-		lua_pushboolean(L, 0);
-		END(1); }
-	char *tmp = strdup(s);
+		failed_msg = "hex sequence invalid";
+		goto end;
+	}
+	tmp = strdup(s);
 	octet *o = o_new(L,UUID_STR_LEN+1);
 	// replace all '-' with zero
 	for(char *p = (char*)tmp; *p!=0x0; p++) if(*p=='-') *p = 0x0;
-	if(hex2buf(o->val,tmp) != 4) {
-		zerror(L, "%s :: invalid uuid parsed", __func__);
-		lua_pushboolean(L, 0);
-		END(1); }
-	if(hex2buf(o->val+4, tmp+9) != 2) {
-		zerror(L, "%s :: invalid uuid parsed", __func__);
-		lua_pushboolean(L, 0);
-		END(1); }
-	if(hex2buf(o->val+6,tmp+14) != 2) {
-		zerror(L, "%s :: invalid uuid parsed", __func__);
-		lua_pushboolean(L, 0);
-		END(1); }
-	if(hex2buf(o->val+8,tmp+19) != 2) {
-		zerror(L, "%s :: invalid uuid parsed", __func__);
-		lua_pushboolean(L, 0);
-		END(1); }
-	if(hex2buf(o->val+10,tmp+24) != 6) {
-		zerror(L, "%s :: invalid uuid parsed", __func__);
-		lua_pushboolean(L, 0);
-		END(1); }
-	free(tmp);
+	if(hex2buf(o->val,tmp) != 4
+		|| hex2buf(o->val+4, tmp+9) != 2
+		|| hex2buf(o->val+6, tmp+14) != 2
+		|| hex2buf(o->val+8, tmp+19) != 2
+		|| hex2buf(o->val+10, tmp+24) != 6) {
+		failed_msg = "invalid uuid parsed";
+		goto end;
+	}
 	o->len = 16;
+end:
+	if(tmp) free(tmp);
+	if(exs) free(exs);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
@@ -1089,7 +1085,7 @@ Encode an octet object of 16 bytes in uuid notation.
         failed_msg = "expected 16 bytes octet";
         goto end;
     }
-	char tmp[32];
+	char tmp[33];
 	char dst[UUID_STR_LEN+1];
 	buf2hex(tmp, o->val, 16);
 	static const int dash_positions[] = {8, 13, 18, 23};
