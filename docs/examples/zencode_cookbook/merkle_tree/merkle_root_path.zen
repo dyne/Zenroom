@@ -1,6 +1,0 @@
-Scenario 'merkle': create merkle root
-Given I have a 'string dictionary' named 'data'
-
-When I create the merkle root of dictionary path 'data.data1'
-
-Then print the 'merkle root'
