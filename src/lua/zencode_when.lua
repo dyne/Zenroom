@@ -69,6 +69,19 @@ When("append string '' to ''", function(hstr, dest)
 	ACK[dest] = dst
 end)
 
+When("prepend string '' to ''", function(hstr, dest)
+	local dst = have(dest)
+	zencode_assert(luatype(dst) ~= 'table', "Cannot append to table: "..dest)
+	-- if the destination is a number, fix encoding to string
+	if isnumber(dst) then
+	   dst = O.from_string( tostring(dst) )
+	   CODEC[dest].encoding = "string"
+	   CODEC[dest].zentype = 'e'
+	end
+	dst = O.from_string(hstr) .. dst:octet()
+	ACK[dest] = dst
+end)
+
 When("append '' of '' to ''", function(enc, src, dest)
 	local from = have(src)
 	local to = have(dest)
@@ -222,6 +235,7 @@ When("rename object named by '' to named by ''", function(old,new)
 	CODEC[olds] = nil
 end)
 
+-- create '' from '' as ''
 When("create '' string of ''", function(encoding, src)
 		local orig = have(src)
 		zencode_assert(luatype(orig) ~= 'table', "Source element is not a table: "..src)
