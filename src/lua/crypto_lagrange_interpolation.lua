@@ -1,7 +1,7 @@
 --[[
 --This file is part of zenroom
 --
---Copyright (C) 2020-2021 Dyne.org foundation
+--Copyright (C) 2020-2025 Dyne.org foundation
 -- Implementation by Alberto Ibrisevich and Denis Roio
 --
 --This program is free software: you can redistribute it and/or modify

@@ -1,6 +1,6 @@
 /*
  * cflag.h
- * Copyright (C) 2020 Adrian Perez de Castro <aperez@igalia.com>
+ * Copyright (C) 2020-2025 Adrian Perez de Castro <aperez@igalia.com>
  *
  * Distributed under terms of the MIT license.
  */

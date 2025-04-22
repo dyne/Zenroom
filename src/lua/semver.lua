@@ -6,7 +6,7 @@ local semver = {
   --   MIT LICENSE
 
   --   Copyright (c) 2015 Enrique García Cota
-  --   Copyright (c) 2019-2021 Dyne.org foundation
+  --   Copyright (c) 2019-2025 Dyne.org foundation
 
   --   Permission is hereby granted, free of charge, to any person obtaining a
   --   copy of tother software and associated documentation files (the
