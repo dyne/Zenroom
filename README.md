@@ -61,6 +61,8 @@ For many quick running examples visit the
 
 Many applications already include Zenroom and use the Zencode language.
 
+- [CREDIMI: EUDI-ARF wallet certification](https://credimi.io)
+- [DIDROOM: EUDI and W3C VC wallet, verifier and issuer dashboard](https://didroom.com) 
 - [W3C compatible Distributed Identity did:dyne](https://did.dyne.org)
 - [Global Passport Project](https://globalpassportproject.org)
 - [Keypairoom mnemonic deterministic and private keypairs](https://github.com/LedgerProject/keypairoom)
@@ -112,31 +114,39 @@ There are various build targets, just type make to have a list:
  posix-lib        Dynamic library for generic POSIX
  linux-exe        Dynamic executable for GNU/Linux
  linux-lib        Dynamic library for GNU/Linux
+ debug-asan       Address sanitizer debug build
+ debug-gprof      Address sanitizer debug build
  musl             Static executable for Musl
  win-exe          Executable for Windows x86 64bit
  win-dll          Dynamic lib (DLL) for Windows x86 64bit
  osx-exe          Executable for Apple MacOS
  osx-lib          Library for Apple MacOS native
+ ios-armv7        Libraries for Apple iOS native armv7
+ ios-arm64        Libraries for Apple iOS native arm64
+ ios-sim          Libraries for Apple iOS simulator on XCode
  node-wasm        WebAssembly (WASM) for Javascript in-browser (Emscripten)
+ check            Run tests using the current binary executable build
+ check-js         Run tests using the WASM build for Node
+ check-osx        Run tests using the OSX binary executable build
 ```
 
 ## License
 
-Copyright (C) 2017-2023 Dyne.org foundation
+Copyright (C) 2017-2025 Dyne.org foundation
 
 Designed and written by Denis "[Jaromil](https://jaromil.dyne.org)"
 Roio with the help of [Puria](https://github.com/puria) Nafisi Azizi
 and [Andrea](https://www.linkedin.com/in/andrea-d-intino/) D'Intino.
 
 Includes code contributions by Alberto Lerda, Matteo Cristino, Danilo
-Spinella, Luca Di Domenico and Rebecca Selvaggini.
+Spinella, Luca Di Domenico, Rebecca Selvaggini, Filippo Trotter, Nicola Suzzi, Giulio Sacchet.
 
 Reviews and suggestions contributed by: Richard Stallman, Daniele
 Lacamera, Enrico Zimuel, Sofía Celi, Sebastian Blichfeld, Adam Burns,
-Thomas Fuerstner and Jürgen Eckel.
+Thomas Fuerstner, Jürgen Eckel, Massimo Romano
 
 Zenroom [complies with the REUSE license specification](https://api.reuse.software/info/github.com/dyne/zenroom) and redistributes:
-- Lua 5.4 - Copyright © 1994–2023 Lua.org, PUC-Rio.
+- Lua 5.4 - Copyright © 1994–2025 Lua.org, PUC-Rio.
 - Apache Milagro Crypto Library (AMCL)
 - Various Lua libraries released under Apache/MIT/CC0 license
 
