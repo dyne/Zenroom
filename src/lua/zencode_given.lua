@@ -452,6 +452,22 @@ Given("'' in path ''", function(enc, path)
     gc()
 end)
 
+Given("'' part of path '' after string prefix ''", function(enc, path, pfx_name)
+          local ele_from_path, dest = pick_from_path(path)
+          local pfx = IN[pfx_name] or pfx_name
+          local plen = #pfx
+          elelen = #ele_from_path
+          zencode_assert(elelen > plen, "String too short: "
+                         .. path.. "("..elelen..") prefix("..plen..")")
+          zencode_assert(string.sub(ele_from_path, 1, plen) == pfx,
+                         "Prefix not found in "..path..": "..pfx_name)
+          -- if not conv and ZEN.schemas[what] then conv = what end
+          ZEN.TMP = guess_conversion(string.sub(ele_from_path,plen+1,elelen), enc)
+          ZEN.TMP.name = dest
+          ack(dest)
+          gc()
+end)
+
 local function _deep_transform(t, path, enc)
     local current = t
     local nump <const> = #path

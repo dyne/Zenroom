@@ -633,3 +633,44 @@ EOF
     save_output 'custom_dictionary_result.json'
     assert_output "$test_data"
 }
+
+@test "Given path before prefix or after suffix" {
+      cat << EOF | save_asset 'w3c_credential.json'
+{
+  "document": {
+    "@context": [
+      "https://www.w3.org/ns/credentials/v2",
+      "https://www.w3.org/ns/credentials/examples/v2"
+    ],
+    "credentialSubject": {
+      "alumniOf": "The School of Examples",
+      "id": "did:example:abcdefgh"
+    },
+    "description": "A minimum viable example of an Alumni Credential.",
+    "id": "urn:uuid:58172aac-d8ba-11ed-83dd-0b3aef56cc33",
+    "issuer": "https://vc.example/issuers/5678",
+    "name": "Alumni Credential",
+    "proof": {
+      "created": "2023-02-24T23:36:38Z",
+      "cryptosuite": "eddsa-rdfc-2022",
+      "proofPurpose": "assertionMethod",
+      "proofValue": "z2YwC8z3ap7yx1nZYCg4L3j3ApHsF8kgPdSb5xoS1VR7vPG3F561B52hYnQF9iseabecm3ijx4K1FBTQsCZahKZme",
+      "type": "DataIntegrityProof",
+      "verificationMethod": "did:key:z6MkrJVnaZkeFzdQyMZu1cgjg7k1pZZ6pvBQ7XJPt4swbTQ2#z6MkrJVnaZkeFzdQyMZu1cgjg7k1pZZ6pvBQ7XJPt4swbTQ2"
+    },
+    "type": [
+      "VerifiableCredential",
+      "AlumniCredential"
+    ],
+    "validFrom": "2023-01-01T00:00:00Z"
+  }
+}
+EOF
+    cat <<EOF | zexe path_before_prefix.zen w3c_credential.json
+    Given I have a 'base58' part of path 'document.proof.proofValue' after string prefix 'z'
+    Then print 'proofValue' as 'base64'
+EOF
+    save_output 'path_before_prefix.json'
+    assert_output '{"proofValue":"TY5TwtWz8qeJF1PrFsqZMyW9sNPPxb4Qk9ChhCb174V4ytwP1LX03Q0c4K79FasSC3qJTQ6wlP/aTmVTzR7VDQ=="}'
+}
+
