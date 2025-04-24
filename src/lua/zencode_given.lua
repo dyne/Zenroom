@@ -197,7 +197,7 @@ function operate_conversion(guessed)
 
         if guessed.check then
             if not guessed.check(guessed.raw) then
-                error("Could not read " .. guessed.name)
+                error("Cannot decode " .. guessed.name.. " with encoding "..guessed.encoding)
             end
         end
         -- fun may return two values: val and optional param
