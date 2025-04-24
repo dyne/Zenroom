@@ -468,6 +468,24 @@ Given("'' part of path '' after string prefix ''", function(enc, path, pfx_name)
           gc()
 end)
 
+
+Given("'' part of path '' before string suffix ''", function(enc, path, sfx_name)
+          local ele_from_path, dest = pick_from_path(path)
+          local sfx = IN[sfx_name] or sfx_name
+          local slen = #sfx
+          elelen = #ele_from_path
+          zencode_assert(elelen > slen, "String too short: "
+                         .. path.. "("..elelen..") prefix("..slen..")")
+          zencode_assert(string.sub(ele_from_path, elelen-slen+1, elelen) == sfx,
+                         "Suffix not found in "..path..": "..sfx_name)
+          -- if not conv and ZEN.schemas[what] then conv = what end
+          ZEN.TMP = guess_conversion(I.spy(string.sub(ele_from_path,1,elelen-slen)), enc)
+          ZEN.TMP.name = dest
+          ack(dest)
+          gc()
+end)
+
+
 local function _deep_transform(t, path, enc)
     local current = t
     local nump <const> = #path
