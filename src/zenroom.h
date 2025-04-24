@@ -33,7 +33,7 @@
 
 int zenroom_exec(const char *script, const char *conf, const char *keys, const char *data);
 
-int zencode_exec(const char *script, const char *conf, const char *keys, const char *data);
+int zencode_exec(const char *script, const char *conf, const char *keys, const char *data, const char *extra);
 
 // in case buffers should be used instead of stdout/err file
 // descriptors, this call defines where to print out the output and

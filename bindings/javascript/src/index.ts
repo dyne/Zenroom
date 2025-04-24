@@ -4,6 +4,7 @@ type ZenroomProps = {
   data?: string | null;
   keys?: string | null;
   conf?: string | null;
+  extra?: string | null;
 };
 
 type ZenroomResult = {
@@ -35,6 +36,7 @@ export const zencode_exec = async (
       "string",
       "string",
       "string",
+      "string",
     ]);
     Module.print = (t: string) => (result += t);
     Module.printErr = (t: string) => (logs += t);
@@ -47,8 +49,8 @@ export const zencode_exec = async (
     Module.onAbort = () => {
       reject({ result, logs });
     };
-    const { data = null, keys = null, conf = null } = { ...props };
-    _exec(zencode, conf, keys, data);
+    const { data = null, keys = null, extra = null, conf = null } = { ...props };
+    _exec(zencode, conf, keys, data, extra);
   });
 };
 
