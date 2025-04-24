@@ -40,7 +40,7 @@ Given I have a 'integer' named 'int_fp'
 Then print all data
 EOF
     run $ZENROOM_EXECUTABLE -z -a wrong_int.json wrong_int.zen
-    assert_line --partial 'Could not read int_fp'
+    assert_line --partial 'Cannot decode int_fp with encoding integer'
 }
 
 @test 'import float from non numeric string' {
@@ -52,5 +52,5 @@ Given I have a 'float' named 'fp_str'
 Then print all data
 EOF
     run $ZENROOM_EXECUTABLE -z -a wrong_float.json wrong_float.zen
-    assert_line --partial 'Could not read fp_str'
+    assert_line --partial 'Cannot decode fp_str with encoding float'
 }
