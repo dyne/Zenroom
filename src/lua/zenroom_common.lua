@@ -394,7 +394,9 @@ end
 
 function deprecated(old, new, func)
     local warn_func = function(...)
-        warn(table.concat({"DEPRECATED:\n", old, "\nuse instead\n", new}))
+        local space, comma = "\n", ""
+        if CONF.debug.format == 'compact' then space = " "; comma = "," end
+        warn("DEPRECATED:"..space..old..comma..space.."use instead:"..space..new)
         func(...)
     end
     return old, warn_func
