@@ -31,7 +31,7 @@
 /////////////////////////////////////////
 // high level api: one simple call
 
-int zenroom_exec(const char *script, const char *conf, const char *keys, const char *data);
+int zenroom_exec(const char *script, const char *conf, const char *keys, const char *data, const char *extra, const char *context);
 
 int zencode_exec(const char *script, const char *conf, const char *keys, const char *data, const char *extra, const char *context);
 
