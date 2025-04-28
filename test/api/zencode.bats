@@ -21,6 +21,7 @@ save() {
     LDADD="-L$R -lzenroom"
     CFLAGS="$CFLAGS -I$R/src"
     cc ${CFLAGS} -ggdb -o zencode_exec $T/zencode.c ${LDADD}
+    cc ${CFLAGS} -ggdb -o zenroom_exec $T/zenroom.c ${LDADD}
 }
 
 @test "ZENCODE API :: zencode_exec only conf keys and data" {
@@ -45,7 +46,18 @@ EOF
     data='{"data":"data"}'
     keys='{"keys":"keys"}'
     extra='{"extra":"extra"}'
-    LD_LIBRARY_PATH=$R ./zencode_exec "$script" "" "$data" "$keys" "$extra"> extra_zencode
+    LD_LIBRARY_PATH=$R ./zencode_exec "$script" "" "$keys" "$data" "$extra"> extra_zencode
     save extra_zencode
     assert_output '{"data":"data","extra":"extra","keys":"keys"}'
+}
+
+@test "ZENCODE API :: zenroom_exec all inputs " {
+    script="print(DATA..KEYS..EXTRA..CONTEXT)"
+    data='USING '
+    keys='ALL '
+    extra='ZENROOM '
+    context='INPUTS'
+    LD_LIBRARY_PATH=$R ./zenroom_exec "$script" "" "$keys" "$data" "$extra" "$context"> extra_context_zenroom
+    save extra_context_zenroom
+    assert_output 'USING ALL ZENROOM INPUTS'
 }
