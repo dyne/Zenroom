@@ -568,3 +568,17 @@ test("get all the statements from the then scenario", async (t) => {
   t.deepEqual(jsonResult.When, []);
   t.is(jsonResult.Then && jsonResult.Then.length !== 0, true);
 })
+
+test("does run zencode with extra and context", async (t) => {
+  const { result } = await zencode_exec(`
+  given I have a 'string' named 'data'
+  and I have a 'string' named 'keys'
+  and I have a 'string' named 'extra'
+  Then print all data`, { data: '{"data": "data"}', keys: '{"keys": "keys"}', extra: '{"extra": "extra"}' });
+  t.is(result, '{"data":"data","extra":"extra","keys":"keys"}\n');
+});
+
+test("does run zenroom_exec with extra and context", async (t) => {
+  const { result } = await zenroom_exec(`print(DATA..KEYS..EXTRA..CONTEXT)`, { data: "USING ", keys: "ALL ", extra: "ZENROOM ", context: "INPUTS" });
+  t.is(result, "USING ALL ZENROOM INPUTS\n");
+});
