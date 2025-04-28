@@ -322,3 +322,12 @@ EOF
     save_output 'custom_dictionary_result.json'
     assert_output '{"custom":{"encoded":"AhVCQPry2svggZcn5H","name":"Alice","nested":{"code":"nested code","crypto":{"iv":"aW5pdGlhbGl6YXRpb24gdmVjdG9y","key":"c2VjcmV0IGtleQ=="}},"secret":"1001101011000100001100110101101101000110100110111011110101111001000101000011100100100100100001010000010011011101000011010100100111000111000100110100100110100010100101011111111011100101101000011100011010000101000001111111010001011010100111100001110001111011"}}'
 }
+
+@test "Then print description of data" {
+    cat <<EOF | zexe print_description_of_data.zen custom_dictionary_result.json
+      Given I have a 'dictionary' named 'custom'
+      Then print 'custom' as 'description'
+EOF
+    save_output 'custom dictionary description'
+    assert_output '{"custom":{"encoded":"( 18 bytes zenroom.octet )","name":"( 5 bytes zenroom.octet )","nested":{"code":"( 11 bytes zenroom.octet )","crypto":{"iv":"( 28 bytes zenroom.octet )","key":"( 16 bytes zenroom.octet )"}},"secret":"( 256 bytes zenroom.octet )"}}'
+}

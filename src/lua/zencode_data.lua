@@ -363,6 +363,13 @@ local function to_number_f(data)
   return res
 end
 
+local function to_description_f(data)
+  local t <const> = type(data)
+  local s <const> = #data
+  local res <const> = "( "..tostring(s).." bytes "..t.." )"
+  return res
+end
+
  -- factory function returns a small outcast function that applies
  -- return guessed.fun(guessed.raw)safety checks on values like
  -- exceptions for numbers and booleans
@@ -416,7 +423,8 @@ end
     float = to_number_f,
     number = to_number_f,
     integer = BIG.to_decimal,
-    time = to_number_f
+    time = to_number_f,
+    description = to_description_f
  }
 
 -- takes a string returns the function, good for use in deepmap(fun,table)
