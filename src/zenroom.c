@@ -500,15 +500,17 @@ int _check_zenroom_result(zenroom_t *zz) {
   return(exitcode);
 }
 
-int zencode_exec(const char *script, const char *conf, const char *keys, const char *data, const char *extra) {
+int zencode_exec(const char *script, const char *conf, const char *keys, const char *data,
+	const char *extra, const char *context) {
 
-	const char *c, *k, *d, *e;
+	const char *c, *k, *d, *e, *x;
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
 	e = extra ? (extra[0] == '\0') ? NULL : extra : NULL;
+	x = context ? (context[0] == '\0') ? NULL : context : NULL;
 
-	zenroom_t *Z = zen_init_extra(c, k, d, e, NULL);
+	zenroom_t *Z = zen_init_extra(c, k, d, e, x);
 	if (_check_zenroom_init(Z) != SUCCESS) return ERR_INIT;
 	if (_check_script_arg(Z, script) != SUCCESS) return ERR_INIT;
 
