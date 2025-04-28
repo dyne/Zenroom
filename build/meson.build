@@ -128,7 +128,7 @@ endif
 
 if suite.contains('api')
 ## BATS tests in test/api
-tests = [ 'hash', 'sign' ]
+tests = [ 'hash', 'sign', 'x509', 'zencode' ]
 foreach test_suite : tests
     test('api_'+test_suite.underscorify(),
 	 bats_bin,
