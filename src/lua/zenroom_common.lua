@@ -448,6 +448,76 @@ function pick_from_path(path, no_dest)
     return res, dest
 end
 
+-- set an element deep down
+-- @param path to dest separated by points
+-- @param value to set in path
+function set_in_path(path, value)
+    local path_array <const> = strtok(uscore(path), CONF.path.separator)
+    if #path_array == 0 then
+        error("set_in_path path input is empty", 2)
+    end
+    local current_path = ""
+    local current = ACK
+
+    for i = 1, #path_array - 1 do
+        local raw_key = path_array[i]
+        local key = tonumber(raw_key) or raw_key
+        current_path = fif(i == 1, "", current_path .. ".") .. raw_key
+
+        -- Current must always be a table
+        if luatype(current) ~= "table" then
+            error("Path error at segment '" .. current_path .. "': not a table")
+        end
+        -- Handle array case
+        if luatype(key) == "number" then
+            local arr_length = isarray(current)
+            if not arr_length then
+                error("Path error at '" .. current_path .. "': expected array, found " .. luatype(current[key]))
+            end
+            if current[key] == nil then
+                if key ~= arr_length + 1 then
+                    error("Invalid array index at '" .. current_path .. "': expected position between 1 and " .. (arr_length + 1))
+                end
+                current[key] = {}
+            end
+        else
+            if current[key] ~= nil then
+                local ltc <const> = luatype(current[key])
+                if ltc ~= "table" then
+                    error("Path conflict at '" .. current_path .. "': expected table, found " .. ltc)
+                end
+            else
+                current[key] = {}
+            end
+        end
+        current = current[key]
+    end
+
+    local final_raw = path_array[#path_array]
+    local final_key = tonumber(final_raw) or final_raw
+    current_path = current_path.."."..final_raw
+
+    if luatype(current) ~= "table" then
+        error("Cannot assign at path '" .. current_path .. "': parent is not a table")
+    end
+    -- Make sure to not overwrite existing value
+    if current[final_key] ~= nil then
+        error("Cannot overwrite existing value at path '" .. current_path .. "'")
+    end
+    -- Final value: if it's an array index, make sure it's next free position
+    if luatype(final_key) == "number" then
+        local arr_length = isarray(current)
+        if not arr_length then
+            error("Path error at '" .. current_path .. "': expected array, found " .. luatype(current))
+        end
+        if final_key ~= arr_length + 1 then
+            error("Invalid array index at '" .. current_path .. "': expected position " .. (arr_length + 1))
+        end
+    end
+    current[final_key] = value
+end
+
+
 -- -- MULTIBASE
 
 -- Unicode, character, encoding, description, status
