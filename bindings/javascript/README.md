@@ -1,15 +1,16 @@
-# Use Zenroom in JavaScript
+<div align="center">
+
+# Zenroom js bindings 🧰
+
+###  Zenroom js bindings provides a javascript wrapper of <a href="https://github.com/dyne/Zenroom">Zenroom</a>, a secure and small virtual machine for crypto language processing.
+
+</div>
 
 <p align="center">
  <a href="https://dev.zenroom.org/">
     <img src="https://raw.githubusercontent.com/dyne/Zenroom/master/docs/_media/images/zenroom_logo.png" height="140" alt="Zenroom">
   </a>
 </p>
-
-<h1 align="center">
-  Zenroom js bindings 🧰</br>
-  <sub>Zenroom js bindings provides a javascript wrapper of <a href="https://github.com/dyne/Zenroom">Zenroom</a>, a secure and small virtual machine for crypto language processing.</sub>
-</h1>
 
 <p align="center">
   <a href="https://badge.fury.io/js/zenroom">
@@ -20,6 +21,7 @@
   </a>
 </p>
 
+---
 <br><br>
 
 ## 💾 Install
@@ -28,9 +30,13 @@ Stable releases are published on https://www.npmjs.com/package/zenroom that
 have a slow pace release schedule that you can install with
 
 ```bash
-yarn add zenroom
-# or if you use npm
 npm install zenroom
+# or using yarn
+yarn add zenroom
+# or using pnpm
+pnpm add zenroom
+# or using bun
+bun add zenroom
 ```
 
 ---
@@ -46,6 +52,8 @@ Both of this functions accepts a mandatory **SCRIPT** to be executed and some op
 
 - DATA
 - KEYS
+- EXTRA
+- CONTEXT
 - [CONF](https://dev.zenroom.org/#/pages/zenroom-config)
 
 **All in form of strings.** This means that if you want to pass a JSON you have to `JSON.stringify` it before.
@@ -83,6 +91,8 @@ const zencodeEncrypt = `
   Scenario 'ecdh': Encrypt a message with the password
   Given that I have a 'string' named 'password'
   Given that I have a 'string' named 'message'
+  Given that I have a 'string' named 'extra'
+  When I append 'extra' to 'message'
   When I encrypt the secret message 'message' with 'password'
   Then print the 'secret message'`;
 
@@ -98,9 +108,16 @@ const zenData = `
   }
 `;
 
+const zenExtra = `
+  {
+      "extra": "!!!"
+  }
+`;
+
 zencode_exec(zencodeEncrypt, {
   data: zenData,
   keys: zenKeys,
+  extra: zenExtra,
   conf: `debug=1`,
 })
   .then((result) => {
@@ -124,12 +141,14 @@ zenroom_exec(lua)
 // to pass the optional parameters you pass an object literal eg.
 
 try {
-  const result = await zenroom_exec(`print(DATA)`, {
-    data: "Some data",
-    keys: "Some other data",
+  const result = await zenroom_exec(`print(DATA..KEYS..EXTRA..CONTEXT)`, {
+    data: "Hello ",
+    keys: "from ",
+    extra: "Zenroom ",
+    context: "developers",
     conf: `debug=1`,
   });
-  console.log(result); // => Some data
+  console.log(result); // => Hello from Zenroom developers
 } catch (e) {
   console.error(e);
 }
