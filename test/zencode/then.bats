@@ -329,5 +329,5 @@ EOF
       Then print 'custom' as 'description'
 EOF
     save_output 'custom dictionary description'
-    assert_output '{"custom":{"encoded":"( 18 bytes zenroom.octet )","name":"( 5 bytes zenroom.octet )","nested":{"code":"( 11 bytes zenroom.octet )","crypto":{"iv":"( 28 bytes zenroom.octet )","key":"( 16 bytes zenroom.octet )"}},"secret":"( 256 bytes zenroom.octet )"}}'
+    assert_output '{"custom":{"encoded":"AhVCQPry2svggZcn5H","name":"Alice","nested":{"code":"nested code","crypto":{"iv":"aW5pdGlhbGl6YXRpb24gdmVjdG9y","key":"c2VjcmV0IGtleQ=="}},"secret":"( 256 bytes zenroom.octet )"}}'
 }

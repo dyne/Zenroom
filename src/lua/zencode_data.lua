@@ -363,17 +363,24 @@ local function to_number_f(data)
   return res
 end
 
+-- a new 'description' codec to print out dictionaries in unusable but
+-- readable form.  this is a non-reversible transformation that
+-- outputs just size of objects when they are 64 bytes long or above,
+-- else string
 local function to_description_f(data)
-  local t <const> = type(data)
   local s <const> = #data
-  local res <const> = "( "..tostring(s).." bytes "..t.." )"
-  return res
+  if s < 64 then -- assume is not a string over 32 bytes
+    return data:to_string()
+  else
+    local t <const> = type(data)
+    local res <const> = "( "..tostring(s).." bytes "..t.." )"
+    return res
+  end
 end
 
  -- factory function returns a small outcast function that applies
  -- return guessed.fun(guessed.raw)safety checks on values like
  -- exceptions for numbers and booleans
-
  local function f_factory_outcast(fun)
     return function(data)
        local dt = type(data)
