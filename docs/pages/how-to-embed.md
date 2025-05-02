@@ -8,14 +8,17 @@ To call Zenroom from an host program is very simple: there isn't an API to learn
 int zencode_exec(char *script,
                  char *conf,
 				 char *keys,
-                 char *data);
+                 char *data,
+				 char *extra,
+				 char *context);
 ```
 The input string buffers will not be modified by the call, they are:
 - `script`: the [Zencode script](https://dev.zenroom.org/#/pages/zencode-cookbook-intro) to be executed
 - `conf`: a series of comma separated key=value pairs
-- `keys`: JSON formatted data passed as input to the script
-- `data`: JSON formatted data passed as input to the script
-
+- `keys`: JSON input, secured and stored server-side when running as API
+- `data`: JSON input, received from clients when running as API
+- `extra`: JSON input, extra channel when needed
+- `context`: free format, reserved for future use as MPC environment
 This is all you need to know to start using Zenroom in your software, to try it out you may want to jump directly to the [specific instructions for language bindings](https://dev.zenroom.org/#/pages/how-to-embed?id=language-bindings).
 
 Here can you find the latest [zenroom.h header file](https://github.com/dyne/Zenroom/blob/master/src/zenroom.h)
