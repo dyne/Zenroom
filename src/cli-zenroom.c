@@ -256,6 +256,8 @@ int main(int argc, char **argv) {
 	contextfile [0] = '\0';
 	data        [0] = '\0';
 	keys        [0] = '\0';
+	extra       [0] = '\0';
+	context     [0] = '\0';
 	introspect  [0] = '\0';
 	// conf[0] = '\0';
 	script[0] = '\0';
