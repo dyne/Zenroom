@@ -18,6 +18,8 @@ where:
 * **`-c`** followed by a string indicates the [configuration](zenroom-config.md) to use
 * **`-k`** indicates the path to contract keys file
 * **`-a`** indicates the path to contract data file
+* **`-e`** indicates the path to contract extra file
+* **`-x`** indicates the path to contract context file
 * **`-z`** activates the **zenCode** interpreter (rather than Lua)
 * **`-v`** run only the given phase and reutrn if the input is valid for the given smart contract
 * **`-l`**  allows to load an external lua library before executing zencode.
