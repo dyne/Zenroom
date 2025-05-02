@@ -50,7 +50,7 @@ When('create es256 public key',function()
 	local sk = havekey'es256'
 	ACK.es256_public_key = ES256.pubgen(sk)
 	new_codec('es256 public key', { zentype = 'e',
-					encoding = 'base64'})
+                                    encoding = 'base64'})
 end)
 
 local function _pubkey_from_secret(sec)
@@ -73,25 +73,45 @@ When("create es256 public key with secret key ''",function(sec)
 	empty'es256 public key'
 	ACK.es256_public_key = ES256.pubgen(sk)
 	new_codec('es256 public key', { zentype = 'e',
-					encoding = 'base64'})
+                                    encoding = 'base64'})
 end)
 
 -- generate the sign for a msg and verify
 When("create es256 signature of ''",function(doc)
-	local sk = havekey'es256'
-	local obj = have(doc)
+	local sk <const> = havekey'es256'
+	local obj <const> = have(doc)
 	empty'es256 signature'
-	ACK.es256_signature = ES256.sign(sk, zencode_serialize(obj))
+    local ot <const> = type(obj)
+    if iszen(ot) then
+        ACK.es256_signature = ES256.sign(sk, obj:octet())
+    elseif ot == 'table' then
+        ACK.es256_signature = ES256.sign(sk, zencode_serialize(obj))
+    else
+        ACK.es256_signature = ES256.sign(sk, obj)
+    end
 	new_codec('es256 signature', { zentype = 'e',
-				       encoding = 'base64'})
+                                   encoding = 'base64'})
 end)
 
 IfWhen("verify '' has a es256 signature in '' by ''",function(msg, sig, by)
-	  local pk = load_pubkey_compat(by, 'es256')
-	  local m = have(msg)
-	  local s = have(sig)
-	  zencode_assert(
-	     ES256.verify(pk, zencode_serialize(m), s),
-	     'The es256 signature by '..by..' is not authentic'
-	  )
+	  local pk <const> = load_pubkey_compat(by, 'es256')
+	  local m <const> = have(msg)
+	  local s <const> = have(sig)
+      local mt <const> = type(m)
+      if iszen(mt) then
+          zencode_assert(
+              ES256.verify(pk, m:octet(), s),
+              'The es256 signature by '..by..' is not authentic'
+          )
+      elseif mt == 'table' then
+          zencode_assert(
+              ES256.verify(pk, zencode_serialize(m), s),
+              'The es256 signature by '..by..' is not authentic'
+          )
+      else
+          zencode_assert(
+              ES256.verify(pk, m, s),
+              'The es256 signature by '..by..' is not authentic'
+          )
+      end
 end)
