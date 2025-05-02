@@ -537,15 +537,18 @@ int zenroom_exec(const char *script, const char *conf, const char *keys, const c
 }
 
 int zencode_exec_tobuf(const char *script, const char *conf, const char *keys, const char *data,
-		char *stdout_buf, size_t stdout_len,
-		char *stderr_buf, size_t stderr_len) {
+	const char *extra, const char *context,
+	char *stdout_buf, size_t stdout_len,
+	char *stderr_buf, size_t stderr_len) {
 
-	const char *c, *k, *d;
+	const char *c, *k, *d, *e, *x;
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
+	e = extra ? (extra[0] == '\0') ? NULL : extra : NULL;
+	x = context ? (context[0] == '\0') ? NULL : context : NULL;
 
-	zenroom_t *Z = zen_init(c, k, d);
+	zenroom_t *Z = zen_init_extra(c, k, d, e, x);
 	if (_check_zenroom_init(Z) != SUCCESS) return ERR_INIT;
 	if (_check_script_arg(Z, script) != SUCCESS) return ERR_INIT;
 
@@ -560,15 +563,18 @@ int zencode_exec_tobuf(const char *script, const char *conf, const char *keys, c
 
 
 int zenroom_exec_tobuf(const char *script, const char *conf, const char *keys, const char *data,
-		char *stdout_buf, size_t stdout_len,
-		char *stderr_buf, size_t stderr_len) {
+	const char *extra, const char *context,
+	char *stdout_buf, size_t stdout_len,
+	char *stderr_buf, size_t stderr_len) {
 
-	const char *c, *k, *d;
+	const char *c, *k, *d, *e, *x;
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
+	e = extra ? (extra[0] == '\0') ? NULL : extra : NULL;
+	x = context ? (context[0] == '\0') ? NULL : context : NULL;
 
-	zenroom_t *Z = zen_init(c, k, d);
+	zenroom_t *Z = zen_init_extra(c, k, d, e, x);
 	if (_check_zenroom_init(Z) != SUCCESS) return ERR_INIT;
 	if (_check_script_arg(Z, script) != SUCCESS) return ERR_INIT;
 

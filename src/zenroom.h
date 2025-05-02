@@ -38,10 +38,10 @@ int zencode_exec(const char *script, const char *conf, const char *keys, const c
 // in case buffers should be used instead of stdout/err file
 // descriptors, this call defines where to print out the output and
 // the maximum sizes allowed for it. Output is NULL terminated.
-int zenroom_exec_tobuf(const char *script, const char *conf, const char *keys, const char *data,
+int zenroom_exec_tobuf(const char *script, const char *conf, const char *keys, const char *data, const char *extra, const char *context,
                        char *stdout_buf, size_t stdout_len,
                        char *stderr_buf, size_t stderr_len);
-int zencode_exec_tobuf(const char *script, const char *conf, const char *keys, const char *data,
+int zencode_exec_tobuf(const char *script, const char *conf, const char *keys, const char *data, const char *extra, const char *context,
                        char *stdout_buf, size_t stdout_len,
                        char *stderr_buf, size_t stderr_len);
 
