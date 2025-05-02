@@ -155,11 +155,15 @@ static char *conffile = NULL;
 static char *keysfile = NULL;
 static char *scriptfile = NULL;
 static char *datafile = NULL;
+static char *extrafile = NULL;
+static char *contextfile = NULL;
 static char *sideload = NULL;
 static char *sidescript = NULL;
 static char *script = NULL;
 static char *keys = NULL;
 static char *data = NULL;
+static char *extra = NULL;
+static char *context = NULL;
 static char *introspect = NULL;
 
 // for benchmark, breaks c99 spec
@@ -171,10 +175,14 @@ int cli_alloc_buffers() {
 	sideload = malloc(MAX_STRING);
 	keysfile = malloc(MAX_STRING);
 	datafile = malloc(MAX_STRING);
+	extrafile = malloc(MAX_STRING);
+	contextfile = malloc(MAX_STRING);
 	script = malloc(MAX_FILE);
 	sidescript = malloc(MAX_FILE);
 	keys = malloc(MAX_FILE);
 	data = malloc(MAX_FILE);
+	extra = malloc(MAX_FILE);
+	context = malloc(MAX_FILE);
 	introspect = malloc(MAX_STRING);
 	return(1);
 }
@@ -182,12 +190,17 @@ int cli_alloc_buffers() {
 int cli_free_buffers() {
 	free(conffile);
 	free(scriptfile);
-	free(sidescript);
+	free(sideload);
 	free(keysfile);
 	free(datafile);
+	free(extrafile);
+	free(contextfile);
 	free(script);
+	free(sidescript);
 	free(keys);
 	free(data);
+	free(extra);
+	free(context);
 	free(introspect);
 	return(1);
 }
@@ -202,18 +215,48 @@ int main(int argc, char **argv) {
 
 	zenroom_t *Z;
 
-	const char *short_options = "hsD:ic:k:a:zvl:";
+	const char *short_options = "hsD:ic:k:a:e:x:zvl:";
 	const char *help          =
-		"Usage: zenroom [-h] [-s] [ -D scenario ] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ -z | -v ] [ -l lib ] [ script.lua ]\n";
+		"Zenroom\n"
+		"Secure language interpreter of the domain-specific Zencode, making it easy to execute fast cryptographic operations on any data structure\n\n"
+		"Usage:\n"
+		"  zenroom [options] [script]\n\n"
+		"Options:\n"
+		"  -h              Print this help message\n"
+		"  -i              Start interactive Lua mode (default scripting language)\n"
+		"  -z              Start ZenCode mode (rather than Lua)\n"
+		"  -c config       Load configuration from file\n"
+		"  -a data.json    Load data JSON file\n"
+		"  -k keys.json    Load keys JSON file\n"
+		"  -e extra.json   Load extra JSON file\n"
+		"  -x context      Load context from file\n"
+		"  -D scenario     Print all the statements under the scenario\n"
+		"  -v              Validate input data\n"
+		"  -s              Activate seccomp execution (Linux only)\n"
+		"  -l lib.lua      Load an external Lua library from file\n"
+		"\n"
+		"Examples:\n"
+		"  zenroom script.lua\n"
+		"    Runs the lua script in script.lua\n"
+		"  zenroom -i\n"
+		"    Starts an interactive Lua console\n"
+		"  zenroom -z\n"
+		"    Starts an interactive zenCode console\n"
+		"  zenroom -z script.zen\n"
+		"    Runs the zenCode script in script.zen\n"
+		"  zenroom -z -a data.json -k keys.json -e extra.json script.zen\n"
+		"    Runs the zenCode script in script.zen with data, keys and extra loaded from files\n";
 	int pid, status, retval;
-	conffile   [0] = '\0';
-	scriptfile [0] = '\0';
-	sideload   [0] = '\0';
-	keysfile   [0] = '\0';
-	datafile   [0] = '\0';
-	data       [0] = '\0';
-	keys       [0] = '\0';
-	introspect [0] = '\0';
+	conffile    [0] = '\0';
+	scriptfile  [0] = '\0';
+	sideload    [0] = '\0';
+	keysfile    [0] = '\0';
+	datafile    [0] = '\0';
+	extrafile   [0] = '\0';
+	contextfile [0] = '\0';
+	data        [0] = '\0';
+	keys        [0] = '\0';
+	introspect  [0] = '\0';
 	// conf[0] = '\0';
 	script[0] = '\0';
 	int verbosity = 1;
@@ -241,6 +284,12 @@ int main(int argc, char **argv) {
 			break;
 		case 'a':
 			snprintf(datafile,MAX_STRING-1,"%s",optarg);
+			break;
+		case 'e':
+			snprintf(extrafile,MAX_STRING-1,"%s",optarg);
+			break;
+		case 'x':
+			snprintf(contextfile,MAX_STRING-1,"%s",optarg);
 			break;
 		case 'c':
 			snprintf(conffile,MAX_STRING-1,"%s",optarg);
@@ -277,13 +326,25 @@ int main(int argc, char **argv) {
 		load_file(data, fopen(datafile, "r"));
 	}
 
+	if(extrafile[0]!='\0' && verbosity) {
+		if(verbosity) fprintf(stderr, "reading EXTRA from file: %s\n", extrafile);
+		load_file(extra, fopen(extrafile, "r"));
+	}
+
+	if(contextfile[0]!='\0' && verbosity) {
+		if(verbosity) fprintf(stderr, "reading CONTEXT from file: %s\n", contextfile);
+		load_file(context, fopen(contextfile, "r"));
+	}
+
 	if(interactive) {
 		////////////////////////////////////
 		// start an interactive repl console
-		Z = zen_init(
+		Z = zen_init_extra(
 			conffile[0]?conffile:NULL,
 			keys[0]?keys:NULL,
-			data[0]?data:NULL);
+			data[0]?data:NULL,
+			extra[0]?extra:NULL,
+			context[0]?context:NULL);
 		if(!Z) {
 		  fprintf(stderr, "Internal error in Zenroom initialization\n");
 		  return(EXIT_FAILURE);
@@ -308,9 +369,7 @@ int main(int argc, char **argv) {
 		int res;
 		if(verbosity) fprintf(stderr, "Interactive console, press ctrl-d to quit.\n");
 		res = repl_loop(Z);
-		if(res)
-			// quits on ctrl-D
-			zen_teardown(Z);
+		if(res) zen_teardown(Z); // quits on ctrl-D
 		cli_free_buffers();
 		return(res);
 	}
@@ -318,16 +377,16 @@ int main(int argc, char **argv) {
 	///////////////////
 	// Input validation
 	if (valid_input) {
-	  int exitcode;
-	  if(scriptfile[0]!='\0') load_file(script, fopen(scriptfile, "rb"));
-	  else load_file(script, stdin);
-	  exitcode = zencode_valid_input(script, "scope=given",
-									 (keys[0])?keys:NULL,
-									 (data[0])?data:NULL, NULL);
-	  if(exitcode)
-		fprintf(stderr, "Execution failed.\n");
-	  cli_free_buffers();
-	  return(exitcode);
+		int exitcode;
+		if(scriptfile[0]!='\0') load_file(script, fopen(scriptfile, "rb"));
+		else load_file(script, stdin);
+		exitcode = zencode_valid_input(script, "scope=given",
+										(keys[0])?keys:NULL,
+										(data[0])?data:NULL,
+										(extra[0])?extra:NULL);
+		if(exitcode) fprintf(stderr, "Execution failed.\n");
+		cli_free_buffers();
+		return(exitcode);
 	} /////////////////
 
 	///////
@@ -341,10 +400,12 @@ int main(int argc, char **argv) {
 	// time from here
     clock_gettime(CLOCK_MONOTONIC, &before);
 
-	Z = zen_init(
+	Z = zen_init_extra(
 			(conffile[0])?conffile:NULL,
 			(keys[0])?keys:NULL,
-			(data[0])?data:NULL);
+			(data[0])?data:NULL,
+			(extra[0])?extra:NULL,
+			(context[0])?context:NULL);
 	if(!Z) {
 		fprintf(stderr, "Initialisation failed.\n");
 		cli_free_buffers();
