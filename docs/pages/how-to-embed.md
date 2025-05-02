@@ -7,10 +7,10 @@ To call Zenroom from an host program is very simple: there isn't an API to learn
 ```c
 int zencode_exec(char *script,
                  char *conf,
-				 char *keys,
+                 char *keys,
                  char *data,
-				 char *extra,
-				 char *context);
+                 char *extra,
+                 char *context);
 ```
 The input string buffers will not be modified by the call, they are:
 - `script`: the [Zencode script](https://dev.zenroom.org/#/pages/zencode-cookbook-intro) to be executed
@@ -49,6 +49,7 @@ In addition to the main `zencode_exec` function there is another one that copies
 ```c
 int zencode_exec_tobuf(char *script, char *conf,
                        char *keys,   char *data,
+                       char *extra, char *context,
                        char *stdout_buf, size_t stdout_len,
                        char *stderr_buf, size_t stderr_len);
 ```
