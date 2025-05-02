@@ -211,11 +211,9 @@ int main(int argc, char **argv) {
 	int   zencode             = 0;
 	int valid_input = 0;
 	int use_seccomp = 0;
-	cli_alloc_buffers();
 
 	zenroom_t *Z;
-
-	const char *short_options = "hsD:ic:k:a:e:x:zvl:";
+	const char *short_options = ":hsD:ic:k:a:e:x:zvl:";
 	const char *help          =
 		"Zenroom\n"
 		"Secure language interpreter of the domain-specific Zencode, making it easy to execute fast cryptographic operations on any data structure\n\n"
@@ -246,7 +244,16 @@ int main(int argc, char **argv) {
 		"    Runs the zenCode script in script.zen\n"
 		"  zenroom -z -a data.json -k keys.json -e extra.json script.zen\n"
 		"    Runs the zenCode script in script.zen with data, keys and extra loaded from files\n";
+	const char *please_help = "Please use -h for help.\n";
+	for (int i = 1; i < argc; i++) {
+		if (strncmp(argv[i], "--", 2) == 0) {
+			fprintf(stderr, "Invalid option: long option like '%s' are not supported.\n\n", argv[i]);
+			fprintf(stderr, "%s", please_help);
+			return EXIT_FAILURE;
+		}
+	}
 	int pid, status, retval;
+	cli_alloc_buffers();
 	conffile    [0] = '\0';
 	scriptfile  [0] = '\0';
 	sideload    [0] = '\0';
@@ -304,8 +311,9 @@ int main(int argc, char **argv) {
 		  valid_input = 1;
 		  interactive = 0;
 		  break;
-		case '?': fprintf(stderr, "%s", help); cli_free_buffers(); return EXIT_FAILURE;
-		default:  fprintf(stderr, "%s", help); cli_free_buffers(); return EXIT_FAILURE;
+		case ':': fprintf(stderr, "Option '-%c' requires an argument\n\n%s", optopt, please_help); cli_free_buffers(); return EXIT_FAILURE;
+		case '?': fprintf(stderr, "Invalid option: '-%c'\n\n%s", optopt, please_help); cli_free_buffers(); return EXIT_FAILURE;
+		default:  fprintf(stderr, "Error: unknown option '-%c'\n\n%s", optopt, please_help); cli_free_buffers(); return EXIT_FAILURE;
 		}
 	}
 
