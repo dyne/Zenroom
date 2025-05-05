@@ -393,13 +393,43 @@ When("create selective disclosure of ''", function(sdr_name)
 end)
 
 When("create signed selective disclosure of ''", function(sdp_name)
-    local p256 = havekey'es256'
-    local sdp = have(sdp_name)
+    local p256 <const> = havekey'es256'
+    local sdp <const> = have(sdp_name)
+    ACK.signed_selective_disclosure =
+        {
+            jwt = SD_JWT.create_jwt(
+                sdp.payload, p256,
+                { sign = ES256.sign,
+                  name = 'ES256' }),
+            disclosures = sdp.disclosures,
+        }
+    new_codec('signed_selective_disclosure')
+end)
 
-    ACK.signed_selective_disclosure = {
-        jwt=SD_JWT.create_jwt_es256(sdp.payload, p256),
-        disclosures=sdp.disclosures,
-    }
+When("create signed selective disclosure of '' with ''",
+     function(sdp_name, algo)
+    local sk <const> = havekey(algo:lower())
+    local sdp <const> = have(sdp_name)
+    local alg <const> = algo:upper()
+    local crypto = { }
+    if alg == 'ES256' then
+        crypto.sign = ES256.sign
+    elseif alg == 'EDDSA' then
+        crypto.sign = ED.sign
+    elseif alg == 'MLDSA44' then
+        crypto.sign = QP.mldsa44_signature
+    elseif alg == 'SECP256K1' then
+        crypto.sign = ECDH.sign
+    end
+    if not crypto.sign then
+        error("Unsupported SD-JWT signature: "..algo)
+    end
+    crypto.name = alg
+    ACK.signed_selective_disclosure =
+        {
+            jwt = SD_JWT.create_jwt(sdp.payload, sk, crypto),
+            disclosures = sdp.disclosures,
+        }
     new_codec('signed_selective_disclosure')
 end)
 
