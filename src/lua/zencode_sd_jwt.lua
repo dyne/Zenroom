@@ -417,7 +417,7 @@ When("create signed selective disclosure of '' with ''",
     elseif alg == 'EDDSA' then
         crypto.sign = ED.sign
     elseif alg == 'MLDSA44' then
-        crypto.sign = QP.mldsa44_signature
+        crypto.sign = PQ.mldsa44_signature
     elseif alg == 'SECP256K1' then
         crypto.sign = ECDH.sign
     end
