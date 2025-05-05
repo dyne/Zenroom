@@ -180,8 +180,12 @@
     if objtype == 'table' then
       local def = expect_table(definition)
       if not def then -- check if the last word is among zentype collections
-        error("Cannot take object: expected '"..definition
-              .."' but found '"..objtype.."' (not a dictionary or array)",3)
+        -- fallback to string dictionary or array
+        if isdictionary(obj) then
+          def = expect_table('string_dictionary')
+        else
+          def = expect_table('string_array')
+        end
       end
       -- mixed dictionary has a custom deepmask CODEC defined in Given
       if not def.leftwords and def.rightmost == 'dictionary' then
@@ -236,7 +240,7 @@
     if objtype == 'string' then
        res = input_encoding(definition)
        res.zentype = 'e'
-	   res.schema = nil
+       res.schema = nil
        res.raw = obj
        return (res)
     end
@@ -317,9 +321,12 @@
  -- gets a string and returns the associated function, string and prefix
  -- comes before schema check
  function input_encoding(what)
-    if not luatype(what) == 'string' then
-       error("Call to input_encoding argument is not a string: "..type(what),2)
-    end
+   if not what then
+     error("Call to input_encoding with argument nil",2)
+   end
+   if not luatype(what) == 'string' then
+     error("Call to input_encoding argument is not a string: "..type(what),2)
+   end
     if what == 'u64' or what == 'url64' then
        return f_factory_encoder('url64', O.from_url64, O.is_url64)
     elseif what == 'b64' or what =='base64' then
@@ -345,8 +352,9 @@
     elseif what == 'time' then
        return f_factory_encoder('time', TIME.new, nil)
     end
-    error("Input encoding not found: " .. what, 2)
-    return nil
+    warn("Unknown input encoding '"..what.."': using default '"..
+         CONF.input.encoding.encoding.."'")
+    return input_encoding(CONF.input.encoding.encoding)
  end
 
 local function to_number_f(data)

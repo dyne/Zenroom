@@ -116,7 +116,7 @@ Given I have a 'ecdh public key'
 Then print the data
 EOF
     run $ZENROOM_EXECUTABLE -z -a base58_output.json input_encoding_fail.zen
-    assert_line --partial 'Input encoding not found: base123'
+    assert_line --partial "Unknown input encoding 'base123': using default"
 }
 
 @test "Rule input format" {

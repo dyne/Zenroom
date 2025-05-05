@@ -13,6 +13,21 @@ EOF
     assert_output '{"random":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="}'
 }
 
+@test "Given anything" {
+    test_data='{"custom":{"encoded":"AhVCQPry2svggZcn5H","name":"Alice","nested":{"code":"nested code","crypto":{"iv":"696e697469616c697a6174696f6e20766563746f72","key":"c2VjcmV0IGtleQ=="}}},"secret":"696e697469616c697a6174696f6e20766563746f72"}'
+    echo "$test_data" | save_asset 'custom_dictionary.json'
+    cat <<EOF | zexe custom_dictionary.zen custom_dictionary.json
+    rule input encoding string
+    rule output encoding string
+    Given I have 'custom'
+    Given I have 'secret'
+    Then print 'custom' as 'description'
+    and print 'secret' as 'string'
+EOF
+    save_output 'anything_dictionary_result.json'
+    assert_output '{"custom":{"encoded":"AhVCQPry2svggZcn5H","name":"Alice","nested":{"code":"nested code","crypto":{"iv":"696e697469616c697a6174696f6e20766563746f72","key":"c2VjcmV0IGtleQ=="}}},"secret":"696e697469616c697a6174696f6e20766563746f72"}'
+}
+
 @test "Given nothing with something in input" {
     cat <<EOF | save_asset fail_nothing.data
 {"a": 1}
