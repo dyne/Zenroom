@@ -14,7 +14,7 @@ SUBDOC=sd_jwt
         "credential_configurations_supported":{
             "IdentityCredential":{
                 "credential_signing_alg_values_supported":[
-                    "ES256"
+                    "ES256", "EDDSA", "MLDSA44"
                 ],
                 "cryptographic_binding_methods_supported":[
                     "jwk",
@@ -32,7 +32,7 @@ SUBDOC=sd_jwt
                 "proof_types_supported":{
                     "jwt":{
                         "proof_signing_alg_values_supported":[
-                            "ES256"
+                            "ES256", "EDDSA", "MLDSA44"
                         ]
                     }
                 },

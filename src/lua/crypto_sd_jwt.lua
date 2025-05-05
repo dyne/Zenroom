@@ -47,6 +47,7 @@ local function export_str_dict(obj)
 		 end
 	  elseif tv == 'zenroom.octet' then res = v:str()
 	  elseif tv == 'boolean' then res = v
+      -- elseif iszen(tv) then res = v:octet():str()
 	  else
  		 error("Invalid value found in SD-JWT array: "..tv)
 	  end
@@ -139,10 +140,10 @@ end
 -- but we are in zenroom and if I print the same object I obtain the
 -- same representation, thus I can keep the object and print it only
 -- on export, yay!
-function sd_jwt.create_jwt_es256(payload, sk)
+function sd_jwt.create_jwt(payload, sk, algo)
     local header, b64header, b64payload, hmac
     header = {
-        alg=O.from_string("ES256"),
+        alg=O.from_string(algo.name),
         typ=O.from_string("vc+sd-jwt")
     }
     local payload_str = export_str_dict(payload)
@@ -150,7 +151,7 @@ function sd_jwt.create_jwt_es256(payload, sk)
     local header_str = export_str_dict(header)
     b64header = O.from_string(JSON.raw_encode(header_str, true)):url64()
 
-    local signature = ES256.sign(sk, O.from_string(b64header .. "." .. b64payload))
+    local signature = algo.sign(sk, O.from_string(b64header .. "." .. b64payload))
     return {
         header=header,
         payload=payload,
