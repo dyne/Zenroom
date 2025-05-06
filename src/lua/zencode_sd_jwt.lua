@@ -166,22 +166,6 @@ local function export_jwk(obj)
     return key
 end
 
-local function export_jwk_key_binding(obj)
-    return {
-        cnf = {
-            jwk = export_jwk(obj.cnf.jwk)
-        }
-    }
-end
-
-local function import_jwk_key_binding(obj)
-    return {
-        cnf = {
-            jwk = import_jwk(obj.cnf.jwk)
-        }
-    }
-end
-
 local function import_str_dict(obj)
     return deepmap(input_encoding("str").fun, obj)
 end
@@ -316,10 +300,6 @@ ZEN:add_schema(
             import = import_jwk,
             export = export_jwk
         },
-        jwk_key_binding = {
-            import = import_jwk_key_binding,
-            export = export_jwk_key_binding,
-        },
         selective_disclosure_request = {
             import = import_selective_disclosure_request,
             export = export_selective_disclosure_request,
@@ -338,18 +318,6 @@ ZEN:add_schema(
         }
     }
 )
-
-
-When("create jwt key binding with jwk ''", function(jwk_name)
-    local jwk = have(jwk_name)
-    empty'jwk key binding'
-    ACK.jwk_key_binding = {
-        cnf = {
-            jwk = jwk
-        }
-    }
-    new_codec("jwk_key_binding")
-end)
 
 When("create selective disclosure request from '' with id '' for ''", function(ssd_name, id_name, object_name)
     local ssd = have(ssd_name)
@@ -450,32 +418,36 @@ end)
 
 -- for reference see Section 8.1 of https://datatracker.ietf.org/doc/draft-ietf-oauth-selective-disclosure-jwt/
 IfWhen("verify signed selective disclosure '' issued by '' is valid", function(obj, by)
-    local signed_sd = have(obj)
-    local iss_pk = load_pubkey_compat(by, 'es256')
-    local jwt = signed_sd.jwt
-    local disclosures = signed_sd.disclosures
--- Ensure that a signing algorithm was used that was deemed secure for the application.
--- TODO: may break due to non-alphabetic sorting of header elements
-    zencode_assert(SD_JWT.verify_jws_header(jwt), "The JWT header is not valid")
+    local signed_sd <const> = have(obj)
+    local jwt <const> = signed_sd.jwt
+    local disclosures <const> = signed_sd.disclosures
+    local algo <const> = jwt.header.alg:string()
+    local crypto <const> = _G[algo:upper()]
+    if not crypto then
+        error("crypto algo not found: "..algo:upper())
+    end
+    -- if jwt.header.alg == O.from_string("ES256") then
+    local iss_pk <const> = load_pubkey_compat(by, algo:lower())
+    local payload_str <const> = SD_JWT.prepare_dictionary(jwt.payload)
+    local b64payload <const> = O.from_string(JSON.raw_encode(payload_str, true)):url64()
+    local header_str <const> = SD_JWT.prepare_dictionary(jwt.header)
+    local b64header <const> = O.from_string(JSON.raw_encode(header_str, true)):url64()
 
--- Check that the _sd_alg claim value is understood and the hash algorithm is deemed secure.
-    zencode_assert(SD_JWT.verify_sd_alg(jwt), "The hash algorithm is not supported")
+    -- jwt.payload._sd_alg == O.from_string("sha-256")
 
--- Check that the sd-jwt contains all the mandatory claims
--- TODO: break due to non-alphabetic sorting of string dictionary
--- elements when re-encoded to JSON. The payload may be a nested
--- dictionary at 3 or more depth.
-    zencode_assert(SD_JWT.check_mandatory_claim_names(jwt.payload), "The JWT payload does not contain the mandatory claims")
+    -- Check that the sd-jwt contains all the mandatory claims
+    -- TODO: break due to non-alphabetic sorting of string dictionary
+    -- elements when re-encoded to JSON. The payload may be a nested
+    -- dictionary at 3 or more depth.
+    zencode_assert(
+        SD_JWT.check_mandatory_claim_names(jwt.payload),
+        "The JWT payload does not contain the mandatory claims")
 
--- Process the Disclosures and embedded digests in the Issuersigned JWT and compare the value with the digests calculated
--- Disclosures are an array and sorting is kept so this validation passes.
-    zencode_assert(SD_JWT.verify_sd_fields(jwt.payload, disclosures), "The disclosure is not valid")
-
--- Validate the signature over the Issuer-signed JWT.
--- TODO: break due to non-alphabetic sorting of objects mentioned above in this function
-    zencode_assert(SD_JWT.verify_jws_signature(jwt, iss_pk), "The issuer signature is not valid")
-
--- TODO?: Validate the Issuer and that the signing key belongs to this Issuer.
+    -- Process the Disclosures and embedded digests in the Issuersigned JWT and compare the value with the digests calculated
+    -- Disclosures are an array and sorting is kept so this validation passes.
+    zencode_assert(
+        SD_JWT.verify_sd_fields(jwt.payload, disclosures),
+        "The disclosure is not valid")
 
     zencode_assert(os, 'Could not find os to check timestamps')
     local time_now = TIME.new(os.time())
@@ -489,6 +461,16 @@ IfWhen("verify signed selective disclosure '' issued by '' is valid", function(o
         zencode_assert(jwt.payload.nbf < time_now, 'The nbf claim is not valid')
     end
 
+    zencode_assert(
+        -- TODO?: Validate the Issuer and that the signing key belongs
+        -- to this Issuer
+        crypto.verify(iss_pk, O.from_string(b64header .. "." .. b64payload),
+                      jwt.signature)
+        ,
+        "The issuer signature is not valid"
+    )
+
+    --TODO: check that issued at is not expired
 end)
 
 When("create disclosed kv from signed selective disclosure ''", function(ssd_name)

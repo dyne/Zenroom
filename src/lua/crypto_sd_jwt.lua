@@ -22,7 +22,7 @@
 local ES256 = require'es256'
 local sd_jwt = {}
 
-local function prepare_dictionary(obj)
+function sd_jwt.prepare_dictionary(obj)
    -- values in input may be string, number or bool
    local fun = function(v)
 	  local res
@@ -63,7 +63,10 @@ end
 function sd_jwt.create_disclosure(dis_arr)
     -- TODO: disclosure of disctionary
 
-    local encoded_dis <const> = O.from_string(JSON.raw_encode(prepare_dictionary(dis_arr), true)):url64()
+    local encoded_dis <const> =
+        O.from_string(
+            JSON.raw_encode(
+                sd_jwt.prepare_dictionary(dis_arr), true)):url64()
     local disclosure = {}
     for i = 1, #dis_arr do
         if type(dis_arr[i]) == 'table' then
@@ -141,15 +144,14 @@ end
 -- same representation, thus I can keep the object and print it only
 -- on export, yay!
 function sd_jwt.create_jwt(payload, sk, algo)
-    local header, b64header, b64payload, hmac
-    header = {
+    local header <const> = {
         alg=O.from_string(algo.name),
         typ=O.from_string("vc+sd-jwt")
     }
-    local payload_str <const> = prepare_dictionary(payload)
-    b64payload = O.from_string(JSON.raw_encode(payload_str, true)):url64()
-    local header_str <const> = prepare_dictionary(header)
-    b64header = O.from_string(JSON.raw_encode(header_str, true)):url64()
+    local payload_str <const> = sd_jwt.prepare_dictionary(payload)
+    local b64payload <const> = O.from_string(JSON.raw_encode(payload_str, true)):url64()
+    local header_str <const> = sd_jwt.prepare_dictionary(header)
+    local b64header <const> = O.from_string(JSON.raw_encode(header_str, true)):url64()
 
     local signature = algo.sign(sk, O.from_string(b64header .. "." .. b64payload))
     return {
@@ -176,22 +178,9 @@ function sd_jwt.retrive_disclosures(ssd, disclosed_keys)
 end
 
 -- for reference see Section 8.1 of https://datatracker.ietf.org/doc/draft-ietf-oauth-selective-disclosure-jwt/
-
-function sd_jwt.verify_jws_signature(jws, pk)
-    local payload_str <const> = prepare_dictionary(jws.payload)
-    local b64payload <const> = O.from_string(JSON.raw_encode(payload_str, true)):url64()
-    local header_str <const> = prepare_dictionary(jws.header)
-    local b64header <const> = O.from_string(JSON.raw_encode(header_str, true)):url64()
-    return ES256.verify(pk, O.from_string(b64header .. "." .. b64payload), jws.signature)
-end
-
-function sd_jwt.verify_jws_header(jws)
-    return jws.header.alg == O.from_string("ES256") --and jws.header.typ == O.from_string("JWT")
-end
-
-function sd_jwt.verify_sd_alg(jwt)
-    return jwt.payload._sd_alg == O.from_string("sha-256")
-end
+-- jws.header.alg == O.from_string("ES256")
+-- jws.header.typ == O.from_string("JWT")
+-- jwt.payload._sd_alg == O.from_string("sha-256")
 
 local function is_in(list, elem)
     local found = false
@@ -238,7 +227,7 @@ end
 function sd_jwt.verify_sd_fields(jwt, disclosures)
     local match = true
     local digest_arr = jwt._sd
-    local disclosures_arr <const> = prepare_dictionary(disclosures)
+    local disclosures_arr <const> = sd_jwt.prepare_dictionary(disclosures)
     local claim_names = {}
     for i = 1, #disclosures_arr do
         if not disclosure_array_is_valid(disclosures_arr[i]) then

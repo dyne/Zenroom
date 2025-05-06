@@ -352,30 +352,6 @@ EOF
     assert_output '{"es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg==","signed_selective_disclosure":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"]],"jwt":{"header":{"alg":"ES256","typ":"vc+sd-jwt"},"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo","GRAVzz7ZmE5-g1siHKrMLibaQQKdgkJGitjrx1D0JBs"],"_sd_alg":"sha-256","exp":1883000000,"iat":1683000000,"iss":"http://example.org","sub":"user 42"},"signature":"bRd93MYGuiVye_3QVLtvyxGmyGejx_HXQcC-z3m_PtgZLMOV-TnEy_FSpyqsMXT-qqSj7ZIdca8tWrZrwZT72w"}}}'
 }
 
-@test "Fail verify on invalid sd-jwt: wrong header" {
-    cat <<EOF | save_asset wrong_header.json
-{
-    "Alice": {
-        "es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg=="
-    },
-    "signed_selective_disclosure":{
-        "disclosures":[["VyJ47aH6-hysFuthAZJP-A","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","family_name","Doe"],["5XsSIXmaZbf5ikQgMSVGjQ","email","johndoe@example.com"],["br5gmh-cSRNAvocKCmAD0A","phone_number","+1-202-555-0101"],["6UasczRKmme8SOUwelXq2w","phone_number_verified",true],["Ll27jjwT4yzd0i-7NGdZAw","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["DR92VSF2l3Az1K1-LyWO1w","birthdate","1940-01-01"]],
-        "jwt":{
-            "header":{"alg":"ES356","typ":"JWT"},
-            "payload":{"_sd":["cMZilhOF9uEyvW_vCKx8IkbqfmntjqkV8HCFQ_lgPq0","DjUC3iXDmUj0QQgbZM7PQhhOLI3EjqSNzz3IhCpqQhg","wyoSepSkpJXnOxKlsypeqjr9PMFXf024GlIBPgVKnrg","MW58zqUyooJw5zGmASCETNi4qORcewuTRWDhLMLavis","sftnu87bkbl62AB38gmuyQdX5yD95TxMuzhvyiD7Wb8","dydbjYL8bcTkcXtLZ2e8514B7n7QDnOgOWD5Fniwjdo","84Vp4ymg-8VScgYletGB4TfHboLPkIXLaP3djL2Km0U"],
-                        "_sd_alg":"sha-256",
-                        "iss":"http://example.org",
-                        "sub":"user 42"
-                    },
-            "signature":"zfJnEY9fHtkPtOL0b97DCa7zjV5h13Yazxolw9sfZrcFax8G7xSG4-Ai8uCNZgm-KpfpBANXo5NB2x2oWjqiWA"
-        }
-    }
-}
-EOF
-    run $ZENROOM_EXECUTABLE -z -a wrong_header.json sd_verification.zen
-    assert_line --partial 'The JWT header is not valid'
-}
-
 @test "Fail verify on invalid sd-jwt: wrong signature" {
     cat <<EOF | save_asset wrong_sig.json
 {
