@@ -94,7 +94,7 @@ local function import_supported_selective_disclosure(obj)
         check_display(v.display)
         check_support(v, 'format', {'ldp_vc','dc+sd-jwt'})
         if v.format == 'dc+sd-jwt' then
-            check_support(v, 'credential_signing_alg_values_supported', {'ES256'})
+            check_support(v, 'credential_signing_alg_values_supported', {'ES256','EDDSA','MLDSA44','SECP256K1'})
             if (not v.vct) then
                 error("Invalid supported selective disclosure: missing parameter vct", 2)
             end
@@ -130,9 +130,9 @@ end
 -- TODO: implement jwk for other private/public keys
 local function import_jwk(obj)
     zencode_assert(obj.kty, "The input is not a valid JSON Web Key, missing kty")
-    zencode_assert(obj.kty == "EC", "kty must be EC, given is "..obj.kty)
+    -- zencode_assert(obj.kty == "EC", "kty must be EC, given is "..obj.kty)
     zencode_assert(obj.crv, "The input is not a valid JSON Web Key, missing crv")
-    zencode_assert(obj.crv == "P-256", "crv must be P-256, given is "..obj.crv)
+    -- zencode_assert(obj.crv == "P-256", "crv must be P-256, given is "..obj.crv)
     zencode_assert(obj.x, "The input is not a valid JSON Web Key, missing x")
     zencode_assert(#O.from_url64(obj.x) == 32, "Wrong length in field 'x', expected 32 given is ".. #O.from_url64(obj.x))
     zencode_assert(obj.y, "The input is not a valid JSON Web Key, missing y")
@@ -145,7 +145,7 @@ local function import_jwk(obj)
         y = O.from_url64(obj.y)
     }
     if obj.alg then
-        zencode_assert(obj.alg == "ES256", "alg must be ES256, given is "..obj.alg)
+        -- zencode_assert(obj.alg == "ES256", "alg must be ES256, given is "..obj.alg)
         res.alg = O.from_string(obj.alg)
     end
     if obj.use then
