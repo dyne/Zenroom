@@ -75,17 +75,16 @@ When("create merkle root of dictionary path '' using hash ''", _zencode_merkle_r
 
 -- Function to verify the integrity of a Merkle root
 local function _verify_merkle_root(root, name)
-    
     local data_table = pick_from_path(name, true)
     local merkle_root = ACK[root]
-    
+
     if not data_table or not merkle_root then
         error("Inserted values should be not nill", 2)
-    end 
+    end
 
     if type(data_table) ~= 'table' then
         error("Table not found in path: "..name, 2)
-    end 
+    end
 
     local computed_root = _create_merkle_root(data_table)
 
@@ -99,7 +98,6 @@ end
 When("verify merkle root '' of ''", _verify_merkle_root)
 When("verify merkle root '' of dictionary path ''", _verify_merkle_root)
 
-
 local function _create_merkle_tree(data_table, hashtype)
     local N = #data_table
     --creation of the empty tree
@@ -111,16 +109,15 @@ local function _create_merkle_tree(data_table, hashtype)
     --hashing the data input a filling the end of the tree
     for i = N + 1, 2*N do
         tree[i] = _hash(data_table[i - N], hashtype)
-    end 
-    
+    end
+
     --filling the vector tree: the node in position i has as leafs the nodes in position 2i and 2i+1
     for i = N, 2, -1 do
         local concatenated = tree[2*i - 1] .. tree[2*i]
         tree[i] = _hash(concatenated, hashtype)
-    end 
-    
+    end
+
     return tree
-      
 end
 
 
@@ -136,14 +133,12 @@ local function _create_merkle_tree_for_tests(data_table, hashtype)
     --in Frigo's RFC the base leaves are already hashed
     for i = N + 1, 2*N do
         tree[i] = data_table[i - N]
-    end 
-    
+    end
 
     for i = N, 2, -1 do
         local concatenated = tree[2*i - 1] .. tree[2*i]
         tree[i] = _hash(concatenated, hashtype)
-    end 
-    
+    end
+
     return tree
-      
 end
