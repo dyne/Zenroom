@@ -100,40 +100,7 @@ When("verify merkle root '' of ''", _verify_merkle_root)
 When("verify merkle root '' of dictionary path ''", _verify_merkle_root)
 
 
-
--- Function to create a Merkle tree from a table of data
 local function _create_merkle_tree(data_table, hashtype)
-    local tree = {}
-
-    -- Hash each piece of data and add to the tree (tree basis leafs)
-    for _, data in ipairs(data_table) do
-        table.insert(tree, _hash(data, hashtype))
-    end
-
-    local temp_tree = tree 
-
-    -- Build the tree by hashing pairs of nodes until a single hash (the root) is obtained
-    while #temp_tree > 1 do    
-        local temp_tree_step = {}
-        for i = 1, #temp_tree, 2 do
-            if i + 1 <= #temp_tree then                
-                local concatenated_hashes = temp_tree[i] .. temp_tree[i + 1]
-                table.insert(tree, _hash(concatenated_hashes, hashtype))
-                table.insert(temp_tree_step, _hash(concatenated_hashes, hashtype) )
-            else
-                table.insert(tree, temp_tree[i])
-                table.insert(temp_tree_step, temp_tree[i])    
-            end
-        end
-        temp_tree = temp_tree_step
-    end
-    
-    return tree -- The merkle tree 
-    
-end
-
-
-local function _create_merkle_tree2(data_table, hashtype)
     local N = #data_table
     --creation of the empty tree
     local tree = {}
@@ -147,6 +114,31 @@ local function _create_merkle_tree2(data_table, hashtype)
     end 
     
     --filling the vector tree: the node in position i has as leafs the nodes in position 2i and 2i+1
+    for i = N, 2, -1 do
+        local concatenated = tree[2*i - 1] .. tree[2*i]
+        tree[i] = _hash(concatenated, hashtype)
+    end 
+    
+    return tree
+      
+end
+
+
+-- The following function is just used for testing test vectors from Frigo's RFC already hashed
+local function _create_merkle_tree_for_tests(data_table, hashtype)
+    local N = #data_table
+    --creation of the empty tree
+    local tree = {}
+    for i = 1, 2*N do
+        tree[i] = "0"
+    end
+
+    --in Frigo's RFC the base leaves are already hashed
+    for i = N + 1, 2*N do
+        tree[i] = data_table[i - N]
+    end 
+    
+
     for i = N, 2, -1 do
         local concatenated = tree[2*i - 1] .. tree[2*i]
         tree[i] = _hash(concatenated, hashtype)
