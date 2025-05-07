@@ -255,7 +255,7 @@ end)
 
 local function take_out_f(path, dest, format)
     if dest then path = path..CONF.path.separator..dest end
-    local ele <const>, dest <const> = pick_from_path(path)
+    local ele <const>, dest <const> = read_from_path(path)
     ACK[dest] = ele
     if format then
         new_codec(dest, guess_conversion(ACK[dest], format))

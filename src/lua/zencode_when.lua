@@ -120,7 +120,7 @@ When("write string '' in path ''", function(content, dest_path)
     local maybe = mayhave(dest_path)
     local path = maybe and maybe:octet():string() or dest_path
     have(string.match(path, "^[^%.]+"))
-    set_in_path(path, O.from_string(content))
+    write_to_path(path, O.from_string(content))
 end)
 
 -- ... and from a number

@@ -680,7 +680,7 @@ end
 -- @param path path to variable separated by points
 -- @return element found following the path
 -- @return name of the destination
-function pick_from_path(path, no_dest)
+function read_from_path(path, no_dest)
   local path_array = strtok(uscore(path), CONF.path.separator)
   local root = path_array[1]
   table.remove(path_array, 1)
@@ -706,10 +706,10 @@ end
 -- set an element deep down
 -- @param path to dest separated by points
 -- @param value to set in path
-function set_in_path(path, value)
+function write_to_path(path, value)
   local path_array <const> = strtok(uscore(path), CONF.path.separator)
   if #path_array == 0 then
-      error("set_in_path path input is empty", 2)
+      error("write_to_path path input is empty", 2)
   end
   local current_path = ""
   local current = ACK

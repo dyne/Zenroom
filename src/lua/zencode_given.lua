@@ -445,7 +445,7 @@ Given("'' part of '' before string suffix ''", function(enc, src, sfx_name)
 end)
 
 Given("'' in path ''", function(enc, path)
-    local ele_from_path, dest = pick_from_path(path)
+    local ele_from_path, dest = read_from_path(path)
     ZEN.TMP = guess_conversion(ele_from_path, enc)
     ZEN.TMP.name = dest
     ack(dest)
@@ -453,7 +453,7 @@ Given("'' in path ''", function(enc, path)
 end)
 
 Given("'' part of path '' after string prefix ''", function(enc, path, pfx_name)
-          local ele_from_path, dest = pick_from_path(path)
+          local ele_from_path, dest = read_from_path(path)
           local pfx = IN[pfx_name] or pfx_name
           local plen = #pfx
           elelen = #ele_from_path
@@ -470,7 +470,7 @@ end)
 
 
 Given("'' part of path '' before string suffix ''", function(enc, path, sfx_name)
-          local ele_from_path, dest = pick_from_path(path)
+          local ele_from_path, dest = read_from_path(path)
           local sfx = IN[sfx_name] or sfx_name
           local slen = #sfx
           elelen = #ele_from_path
