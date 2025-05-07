@@ -47,11 +47,11 @@ for i = 1, 4 do
     assert(tree[4 + i] == _hash(leaves[i], "sha256"))
 end
 
-assert(tree[4] == _hash(_hash(data2[3],"sha256") .. _hash(data2[4], "sha256"), "sha256"))
-assert(tree[3] == _hash(_hash(data2[1],"sha256") .. _hash(data2[2], "sha256"), "sha256"))
+assert(tree[4] == _hash(_hash(leaves[3],"sha256") .. _hash(leaves[4], "sha256"), "sha256"))
+assert(tree[3] == _hash(_hash(leaves[1],"sha256") .. _hash(leaves[2], "sha256"), "sha256"))
 
-local leaves5 = _hash(_hash(data2[1],"sha256") .. _hash(data2[2], "sha256"), "sha256")
-local leaves6 = _hash(_hash(data2[3],"sha256") .. _hash(data2[4], "sha256"), "sha256")
+local leaves5 = _hash(_hash(leaves[1],"sha256") .. _hash(leaves[2], "sha256"), "sha256")
+local leaves6 = _hash(_hash(leaves[3],"sha256") .. _hash(leaves[4], "sha256"), "sha256")
 
 --tree[2] is the root
 --used both since zencode_merkle.lua has a function that generates directly the root
