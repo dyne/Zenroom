@@ -22,11 +22,72 @@
 
 local W3C = require_once "crypto_w3c"
 
+--for reference on JSON Web Key see RFC7517
+-- TODO: implement jwk for other private/public keys
+local function import_jwk(obj)
+    zencode_assert(obj.kty, "The input is not a valid JSON Web Key, missing kty")
+    -- zencode_assert(obj.kty == "EC", "kty must be EC, given is "..obj.kty)
+    -- zencode_assert(obj.crv, "The input is not a valid JSON Web Key, missing crv")
+    -- zencode_assert(obj.crv == "P-256", "crv must be P-256, given is "..obj.crv)
+    zencode_assert(obj.x, "The input is not a valid JSON Web Key, missing x")
+    zencode_assert(#O.from_url64(obj.x) == 32, "Wrong length in field 'x', expected 32 given is ".. #O.from_url64(obj.x))
+    zencode_assert(obj.y, "The input is not a valid JSON Web Key, missing y")
+    zencode_assert(#O.from_url64(obj.y) == 32, "Wrong length in field 'y', expected 32 given is ".. #O.from_url64(obj.y))
+
+    local res = {
+        kty = O.from_string(obj.kty),
+        crv = O.from_string(obj.crv),
+        x = O.from_url64(obj.x),
+        y = O.from_url64(obj.y)
+    }
+    if obj.alg then
+        -- zencode_assert(obj.alg == "ES256", "alg must be ES256, given is "..obj.alg)
+        res.alg = O.from_string(obj.alg)
+    end
+    if obj.use then
+        zencode_assert(obj.use == "sig", "use must be sig, given is "..obj.use)
+        res.use = O.from_string(obj.use)
+    end
+    if obj.kid then
+        res.kid = O.from_url64(obj.kid)
+    end
+    return res
+end
+
+local function export_jwk(obj)
+    local key = {
+        kty = O.to_string(obj.kty),
+        crv = O.to_string(obj.crv),
+        x = O.to_url64(obj.x),
+        y = O.to_url64(obj.y)
+    }
+    if obj.use then
+        key.use = O.to_string(obj.use)
+    end
+    if obj.alg then
+        key.alg = O.to_string(obj.alg)
+    end
+    if obj.kid then
+        key.kid = O.to_url64(obj.kid)
+    end
+
+    return key
+end
+
+ZEN:add_schema(
+    {
+        jwk = {
+            import = import_jwk,
+            export = export_jwk
+        }
+    }
+)
+
 local function _create_jwk(alg, sk_flag, pk)
     empty 'jwk'
     ACK.jwk = deepmap(O.from_string, W3C.create_string_jwk(alg, sk_flag, pk))
-    new_codec('jwk', { zentype = 'd',
-                       encoding = 'string' })
+    new_codec('jwk') -- { schemazentype = 'd',
+                      -- encoding = 'string' })
 end
 
 When("create jwk of p256 public key", function() _create_jwk('ES256') end)
