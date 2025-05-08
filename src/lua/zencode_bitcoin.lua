@@ -20,8 +20,7 @@
 --on Saturday, 9th April 2022
 --]]
 
-local btc -- mostly loaded at init
-if not BTC then btc = require_once('crypto_bitcoin') else btc = BTC end
+BTC = require_once'crypto_bitcoin'
 
 local function _bitcoin_unspent_import(obj)
     local res = {}
