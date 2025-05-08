@@ -76,13 +76,13 @@ QSORT = require('qsort_op') -- optimized table sort
 table.sort = QSORT -- override native table sort
 SPELL = require('spell')
 JSON = require('zenroom_json')
-ECDH = require('zenroom_ecdh')
+
 -- ECDH public keys cannot function as ECP because of IANA 7303
 AES = require('aes')
 ECP = require('zenroom_ecp')
 ECP2 = require('zenroom_ecp2')
 HASH = require('zenroom_hash')
-BTC = require('crypto_bitcoin') -- Bitcoin primitives imported by default
+-- BTC = require('crypto_bitcoin') -- Bitcoin primitives imported by default
 O = OCTET -- alias
 INT = BIG -- alias
 F = FLOAT
@@ -128,6 +128,16 @@ if _G['ZENCODE_SCOPE'] ~= 'GIVEN' then
    load_scenario('zencode_table')
    load_scenario('zencode_time')
    load_scenario('zencode_math')
+-- default DSA algos and global aliases
+   load_scenario'zencode_ecdh'
+   ES256K = ECDH
+   SECP256K1 = ECDH
+   load_scenario'zencode_qp'
+   PQS = QP
+   load_scenario'zencode_eddsa'
+   EDDSA = ED
+   load_scenario'zencode_es256'
+   P256 = ES256
 end
 
 -- this is to evaluate expressions or derivate a column
