@@ -24,6 +24,7 @@ Scenario 'eddsa' : Create the key
 Scenario 'credential': Create the key
 Scenario 'bbs': Create the key
 Scenario 'es256': Create the key
+Scenario 'bitcoin': Create the key
 
 Given my name is in a 'string' named 'controller'
 
@@ -54,6 +55,7 @@ Scenario 'eddsa' : Create the key
 Scenario 'credential': Create the key
 Scenario 'bbs': Create the key
 Scenario 'es256': Create the key
+Scenario 'bitcoin': Create the key
 
 Given my name is in a 'string' named 'controller'
 and I have my 'keyring'

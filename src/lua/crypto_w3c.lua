@@ -243,4 +243,48 @@ function W3C.create_string_jwk(alg, sk_flag, pk)
     return jwk
 end
 
+function W3C.import_jwt(obj)
+    local function decode_jwt_parts(s)
+        if type(s) == 'string' then
+            return O.from_string(s)
+        elseif type(s) == 'number' then
+            return fif(TIME.detect_time_value(s), TIME.new, FLOAT.new)(s)
+        else
+            return s
+        end
+    end
+    local function import_jwt_dict(d)
+        return JSON.decode(
+            schema_get(
+                trim(d),
+                '.', O.from_url64, tostring):string())
+        -- return deepmap(input_encoding("str").fun,
+        --                JSON.raw_decode(O.from_url64(trim(d)):str()))
+    end
+    local toks = strtok(obj, ".")
+    -- TODO: verify this is a valid jwt
+    return {
+        header = deepmap(decode_jwt_parts,import_jwt_dict(toks[1])),
+        payload = deepmap(decode_jwt_parts,import_jwt_dict(toks[2])),
+        signature = O.from_url64(toks[3]),
+    }
+end
+
+function W3C.export_jwt(obj)
+    local header = O.to_url64(O.from_string(JSON.encode(obj.header, 'string')))
+    local payload = O.to_url64(O.from_string(JSON.encode(obj.payload, 'string')))
+    return header .. '.' .. payload .. '.' .. obj.signature:url64()
+end
+--     local encstr <const> = get_encoding_function("string")
+--     return table.concat({
+--         O.from_string
+--         (JSON.raw_encode
+--          (deepmap(encstr, obj.header),true)):url64(),
+--         O.from_string
+--         (JSON.raw_encode
+--          (deepmap(encstr,obj.payload),true)):url64(),
+--         O.to_url64(obj.signature),
+--     }, ".")
+-- end
+
 return W3C
