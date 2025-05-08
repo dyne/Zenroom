@@ -20,51 +20,14 @@
 --on Tuesday, 8th April 2025
 --]]
 
-local function _hash(data, hashtype)
-    hashtype = hashtype or CONF.hash
-    --default hashtype: sha256
-    --possible hashtype:
-    --sha512
-    --sha3_256
-    --sha3_512
-    --shake256
-    --keccak256
-    local _hf <const> = HASH:init(hashtype)
-    return _hf:process(data)
-end
-
--- Function to create a Merkle root from a table of data
-local function _create_merkle_root(data_table, hashtype)
-    local tree = {}
-
-    -- Hash each piece of data and add to the tree
-    for _, data in ipairs(data_table) do
-        table.insert(tree, _hash(data, hashtype))
-    end
-
-    -- Build the tree by hashing pairs of nodes until a single hash (the root) is obtained
-    while #tree > 1 do
-        local temp_tree = {}
-        for i = 1, #tree, 2 do
-            if i + 1 <= #tree then
-                local concatenated_hashes = tree[i] .. tree[i + 1]
-                table.insert(temp_tree, _hash(concatenated_hashes, hashtype))
-            else
-                table.insert(temp_tree, tree[i])
-            end
-        end
-        tree = temp_tree
-    end
-
-    return tree[1] -- The Merkle root
-end
+local MT = require'crypto_merkle'
 
 local function _zencode_merkle_root(name, hashtype)
     local data = pick_from_path(name, true)
     if not data or type(data) ~= 'table' then
         error("Table not found in path: "..name, 2)
     end
-    ACK.merkle_root = _create_merkle_root(data, hashtype)
+    ACK.merkle_root = MT.create_merkle_root(data, hashtype)
     return new_codec('merkle root', {zentype = "string"})
 end
 
@@ -75,70 +38,17 @@ When("create merkle root of dictionary path '' using hash ''", _zencode_merkle_r
 
 -- Function to verify the integrity of a Merkle root
 local function _verify_merkle_root(root, name)
+    local merkle_root = have(root)
     local data_table = pick_from_path(name, true)
-    local merkle_root = ACK[root]
-
-    if not data_table or not merkle_root then
-        error("Inserted values should be not nill", 2)
-    end
-
-    if type(data_table) ~= 'table' then
+    if not data_table or type(data_table) ~= 'table' then
         error("Table not found in path: "..name, 2)
     end
 
-    local computed_root = _create_merkle_root(data_table)
-
+    local computed_root = MT.create_merkle_root(data_table)
     if computed_root ~= merkle_root then
-        error("Verification fail: elements are not equal", 2)
+        error('The merkle root in '..root..' does not match '..name, 2)
     end
-
-    return computed_root == merkle_root
 end
 
-When("verify merkle root '' of ''", _verify_merkle_root)
-When("verify merkle root '' of dictionary path ''", _verify_merkle_root)
-
-local function _create_merkle_tree(data_table, hashtype)
-    local N = #data_table
-    --creation of the empty tree
-    local tree = {}
-    for i = 1, 2*N do
-        tree[i] = "0"
-    end
-
-    --hashing the data input a filling the end of the tree
-    for i = N + 1, 2*N do
-        tree[i] = _hash(data_table[i - N], hashtype)
-    end
-
-    --filling the vector tree: the node in position i has as leafs the nodes in position 2i and 2i+1
-    for i = N, 2, -1 do
-        local concatenated = tree[2*i - 1] .. tree[2*i]
-        tree[i] = _hash(concatenated, hashtype)
-    end
-
-    return tree
-end
-
-
--- The following function is just used for testing test vectors from Frigo's RFC already hashed
-local function _create_merkle_tree_for_tests(data_table, hashtype)
-    local N = #data_table
-    --creation of the empty tree
-    local tree = {}
-    for i = 1, 2*N do
-        tree[i] = "0"
-    end
-
-    --in Frigo's RFC the base leaves are already hashed
-    for i = N + 1, 2*N do
-        tree[i] = data_table[i - N]
-    end
-
-    for i = N, 2, -1 do
-        local concatenated = tree[2*i - 1] .. tree[2*i]
-        tree[i] = _hash(concatenated, hashtype)
-    end
-
-    return tree
-end
+IfWhen("verify merkle root '' of ''", _verify_merkle_root)
+IfWhen("verify merkle root '' of dictionary path ''", _verify_merkle_root)
