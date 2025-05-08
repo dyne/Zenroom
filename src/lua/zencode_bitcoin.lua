@@ -20,8 +20,7 @@
 --on Saturday, 9th April 2022
 --]]
 
-local btc -- mostly loaded at init
-if not BTC then btc = require_once('crypto_bitcoin') else btc = BTC end
+BTC = require_once'crypto_bitcoin'
 
 -- TODO: any mean to verify that the content of address and txid is valid
 local function _get_addr(obj)
