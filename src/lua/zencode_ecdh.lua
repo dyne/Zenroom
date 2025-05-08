@@ -20,6 +20,8 @@
 --on Saturday, 9th April 2022
 --]]
 
+ECDH = require_once'zenroom_ecdh'
+
 -- defined outside because reused across different schemas
 local function public_key_f(o)
 	local res = CONF.input.encoding.fun(o)
