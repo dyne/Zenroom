@@ -60,14 +60,14 @@ end
 
 function MT.create_merkle_tree(data_table, hashtype)
     local N = #data_table
-    local tree = {"0"} -- set the first element to "0"
+    local tree = {}
     -- hashing the data input a filling the end of the tree
-    for i = N + 1, 2*N do
-        tree[i] = _hash(data_table[i - N], hashtype)
+    for i = N , 2*N-1 do
+        tree[i] = _hash(data_table[ i+1-N ], hashtype)
     end
     -- filling the vector tree: the node in position i has as leafs the nodes in position 2i and 2i+1
-    for i = N, 2, -1 do
-        local concatenated = tree[2*i - 1] .. tree[2*i]
+    for i = N - 1, 1, -1 do
+        local concatenated = tree[ 2*i ] .. tree[ 2*i+1 ]
         tree[i] = _hash(concatenated, hashtype)
     end
     return tree
@@ -76,14 +76,14 @@ end
 -- The following function is just used for testing test vectors from Frigo's RFC already hashed
 function MT.create_merkle_tree_from_table_of_hashes(data_table, hashtype)
     local N = #data_table
-    local tree = {"0"} -- set the first element to "0"
+    local tree = {}
 
     --in Frigo's RFC the base leaves are already hashed
-    for i = N + 1, 2*N do
-        tree[i] = data_table[i - N]
+    for i = N, 2*N-1 do
+        tree[i] = data_table[ i+1-N ]
     end
-    for i = N, 2, -1 do
-        local concatenated = tree[2*i - 1] .. tree[2*i]
+    for i = N-1, 1, -1 do
+        local concatenated = tree[ 2*i ] .. tree[ 2*i+1 ]
         tree[i] = _hash(concatenated, hashtype)
     end
 

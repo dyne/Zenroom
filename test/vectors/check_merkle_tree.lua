@@ -21,7 +21,7 @@ local leaves = {leaves1, leaves2, leaves3, leaves4, leaves5}
 
 -- Used a special version for the creation of the merkle tree that supposes test vectors already hashed
 local tree = MT.create_merkle_tree_from_table_of_hashes(leaves, "sha256")
-assert(tree[2] == root, "The root of the tree does not match the expected value")
+assert(tree[1] == root, "The root of the tree does not match the expected value")
 
 print("TEST from Frigo's code")
 
@@ -36,11 +36,11 @@ local tree = MT.create_merkle_tree(leaves, "sha256")
 local root = MT.create_merkle_root(leaves,"sha256")
 
 for i = 1, 4 do
-    assert(tree[4 + i] == _hash(leaves[i], "sha256"), "Leaf "..i.." does not match the expected value")
+    assert(tree[4 + i -1] == _hash(leaves[i], "sha256"), "Leaf "..i.." does not match the expected value")
 end
 
-assert(tree[4] == _hash(_hash(leaves[3],"sha256") .. _hash(leaves[4], "sha256"), "sha256"), "Leaf 4 does not match the expected value")
-assert(tree[3] == _hash(_hash(leaves[1],"sha256") .. _hash(leaves[2], "sha256"), "sha256"), "Leaf 3 does not match the expected value")
+assert(tree[3] == _hash(_hash(leaves[3],"sha256") .. _hash(leaves[4], "sha256"), "sha256"), "Leaf 4 does not match the expected value")
+assert(tree[2] == _hash(_hash(leaves[1],"sha256") .. _hash(leaves[2], "sha256"), "sha256"), "Leaf 3 does not match the expected value")
 
 local leaves5 = _hash(_hash(leaves[1],"sha256") .. _hash(leaves[2], "sha256"), "sha256")
 local leaves6 = _hash(_hash(leaves[3],"sha256") .. _hash(leaves[4], "sha256"), "sha256")
@@ -48,7 +48,7 @@ local leaves6 = _hash(_hash(leaves[3],"sha256") .. _hash(leaves[4], "sha256"), "
 --tree[2] is the root
 --used both since zencode_merkle.lua has a function that generates directly the root
 
-assert(tree[2] == _hash(leaves5 .. leaves6, "sha256"), "Leaf 2 does not match the expected value")
+assert(tree[1] == _hash(leaves5 .. leaves6, "sha256"), "Leaf 2 does not match the expected value")
 assert(root == _hash(leaves5 .. leaves6, "sha256"), "Root does not match the expected value")
 
 
