@@ -19,7 +19,6 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --]]
 
-local ES256 = require'es256'
 local sd_jwt = {}
 
 function sd_jwt.prepare_dictionary(obj)
@@ -160,27 +159,6 @@ function sd_jwt.create_jwt(payload, sk, algo)
         signature=signature,
     }
 end
-
--- Given as input a signed selective disclosure 'ssd' and a list of strings 'disclosed_keys'
--- Return the list of disclosure array with keys in 'disclosed_keys'
-function sd_jwt.retrive_disclosures(ssd, disclosed_keys)
-    local disclosures = {}
-    local all_dis <const> = ssd.disclosures
-    for _,k in pairs(disclosed_keys) do
-        for ind, arr in pairs(all_dis) do
-            if arr[2] == k then
-                table.insert(disclosures, arr)
-                break
-            end
-        end
-    end
-    return disclosures
-end
-
--- for reference see Section 8.1 of https://datatracker.ietf.org/doc/draft-ietf-oauth-selective-disclosure-jwt/
--- jws.header.alg == O.from_string("ES256")
--- jws.header.typ == O.from_string("JWT")
--- jwt.payload._sd_alg == O.from_string("sha-256")
 
 local function is_in(list, elem)
     local found = false
