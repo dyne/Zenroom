@@ -19,7 +19,8 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --]]
 
-local SD_JWT = require'crypto_sd_jwt'
+local SD_JWT = require_once'crypto_sd_jwt'
+local W3C = require_once'crypto_w3c'
 
 local function import_url_f(obj)
     -- TODO: validation URL
@@ -114,58 +115,6 @@ local function export_supported_selective_disclosure(obj)
     return res
 end
 
---for reference on JSON Web Key see RFC7517
--- TODO: implement jwk for other private/public keys
-local function import_jwk(obj)
-    zencode_assert(obj.kty, "The input is not a valid JSON Web Key, missing kty")
-    -- zencode_assert(obj.kty == "EC", "kty must be EC, given is "..obj.kty)
-    zencode_assert(obj.crv, "The input is not a valid JSON Web Key, missing crv")
-    -- zencode_assert(obj.crv == "P-256", "crv must be P-256, given is "..obj.crv)
-    zencode_assert(obj.x, "The input is not a valid JSON Web Key, missing x")
-    zencode_assert(#O.from_url64(obj.x) == 32, "Wrong length in field 'x', expected 32 given is ".. #O.from_url64(obj.x))
-    zencode_assert(obj.y, "The input is not a valid JSON Web Key, missing y")
-    zencode_assert(#O.from_url64(obj.y) == 32, "Wrong length in field 'y', expected 32 given is ".. #O.from_url64(obj.y))
-
-    local res = {
-        kty = O.from_string(obj.kty),
-        crv = O.from_string(obj.crv),
-        x = O.from_url64(obj.x),
-        y = O.from_url64(obj.y)
-    }
-    if obj.alg then
-        -- zencode_assert(obj.alg == "ES256", "alg must be ES256, given is "..obj.alg)
-        res.alg = O.from_string(obj.alg)
-    end
-    if obj.use then
-        zencode_assert(obj.use == "sig", "use must be sig, given is "..obj.use)
-        res.use = O.from_string(obj.use)
-    end
-    if obj.kid then
-        res.kid = O.from_url64(obj.kid)
-    end
-    return res
-end
-
-local function export_jwk(obj)
-    local key = {
-        kty = O.to_string(obj.kty),
-        crv = O.to_string(obj.crv),
-        x = O.to_url64(obj.x),
-        y = O.to_url64(obj.y)
-    }
-    if obj.use then
-        key.use = O.to_string(obj.use)
-    end
-    if obj.alg then
-        key.alg = O.to_string(obj.alg)
-    end
-    if obj.kid then
-        key.kid = O.to_url64(obj.kid)
-    end
-
-    return key
-end
-
 local function import_str_dict(obj)
     return deepmap(input_encoding("str").fun, obj)
 end
@@ -244,20 +193,6 @@ local function export_decoded_selective_disclosure(obj)
     }
 end
 
-local function import_jwt(obj)
-    local function import_jwt_dict(d)
-        return import_str_dict(
-            JSON.raw_decode(O.from_url64(d):str()))
-    end
-    local toks = strtok(obj, ".")
-    -- TODO: verify this is a valid jwt
-    return {
-        header = import_jwt_dict(toks[1]),
-        payload = import_jwt_dict(toks[2]),
-        signature = O.from_url64(toks[3]),
-    }
-end
-
 local function import_signed_selective_disclosure(obj)
     zencode_assert(obj:sub(#obj, #obj) == '~', "JWT binding not implemented")
     local toks = strtok(obj, "~")
@@ -266,22 +201,18 @@ local function import_signed_selective_disclosure(obj)
         disclosures[#disclosures+1] = JSON.raw_decode(O.from_url64(toks[i]):str())
     end
     return {
-        jwt = import_jwt(toks[1]),
+        jwt = W3C.import_jwt(toks[1]),
         disclosures = import_str_dict(disclosures),
     }
 end
 
-local function export_jwt(obj)
-    return table.concat({
-        O.from_string(JSON.raw_encode(export_str_dict(obj.header), true)):url64(),
-        O.from_string(JSON.raw_encode(export_str_dict(obj.payload), true)):url64(),
-        O.to_url64(obj.signature),
-    }, ".")
-end
-
 local function export_signed_selective_disclosure(obj)
     local records = {
-        export_jwt(obj.jwt)
+        table.concat(
+            {O.from_string(JSON.raw_encode(export_str_dict(obj.jwt.header), true)):url64(),
+             O.from_string(JSON.raw_encode(export_str_dict(obj.jwt.payload), true)):url64(),
+             O.to_url64(obj.jwt.signature),
+            }, ".")
     }
     for _, d in pairs(export_str_dict(obj.disclosures)) do
         records[#records+1] = O.from_string(JSON.raw_encode(d, true)):url64()
@@ -295,10 +226,6 @@ ZEN:add_schema(
         supported_selective_disclosure = {
             import = import_supported_selective_disclosure,
             export = export_supported_selective_disclosure
-        },
-        jwk = {
-            import = import_jwk,
-            export = export_jwk
         },
         selective_disclosure_request = {
             import = import_selective_disclosure_request,
@@ -343,57 +270,91 @@ end)
 
 When("create selective disclosure of ''", function(sdr_name)
     local sdr = have(sdr_name)
-    local sdp = SD_JWT.create_sd(sdr)
+    local sdp = SD_JWT.create_sd(sdr) -- TODO: hash algo as arg
     ACK.selective_disclosure = sdp
     new_codec('selective_disclosure')
 end)
 
+-- require and return crypto class according to:
+-- https://www.iana.org/assignments/jose/jose.xhtml
+-- use procedural branching to instantiate only when needed
+local function resolve_crypto_algo(algo)
+    local alg <const> = algo:upper()
+    if alg == 'ES256' then
+        -- ECDSA using P-256 and SHA-256 [RFC7518, Section 3.4]
+        return({ name = 'ES256',
+                 sign = ES256.sign,
+                 verify = ES256.verify})
+    elseif alg == 'EDDSA' then
+        -- EdDSA signature algorithms [RFC8037, Section 3.1]
+        return({name = 'EDDSA',
+                sign = ED.sign,
+                verify = ED.verify})
+    elseif alg == 'ML-DSA-44' or alg == 'MLDSA44' then
+        return({name = 'ML-DSA-44',
+                sign = PQ.mldsa44_signature,
+                verify = PQ.mldsa44_verify })
+    elseif alg == 'ES256K' or alg == 'ECDH' then
+        -- ECDSA using secp256k1 curve and SHA-256 [RFC8812, Section 3.2]
+        return({name = 'ES256K',
+                sign = ECDH.sign,
+                verify = ECDH.verify })
+    end
+    error("Unsupported JOSE crypto algorithm: "..alg,2)
+end
+
+-- take a IANA registered string about the crypto algo and return the
+-- secret key if found in keyring using havekey
+local function resolve_secret_key(algo)
+    local alg <const> = algo:lower()
+    if alg == 'es256' then return(havekey(alg)) end
+    if alg == 'eddsa' then return(havekey(alg)) end
+    if alg == 'ml-dsa-44' or alg == 'mldsa44'
+    then return(havekey'mldsa44') end
+    if alg == 'es256k' or alg == 'ecdh' or alg == 'secp256k1'
+    then return(havekey'ecdh') end
+    error("Unsupported secret key: "..alg,2)
+end
+
+
 When("create signed selective disclosure of ''", function(sdp_name)
-    local p256 <const> = havekey'es256'
     local sdp <const> = have(sdp_name)
-    ACK.signed_selective_disclosure =
-        {
-            jwt = SD_JWT.create_jwt(
-                sdp.payload, p256,
-                { sign = ES256.sign,
-                  name = 'ES256' }),
-            disclosures = sdp.disclosures,
-        }
+    ACK.signed_selective_disclosure = {
+        jwt = SD_JWT.create_jwt(sdp.payload,
+                                resolve_secret_key('es256'),
+                                resolve_crypto_algo('es256')),
+        disclosures = sdp.disclosures,
+    }
     new_codec('signed_selective_disclosure')
 end)
 
 When("create signed selective disclosure of '' with ''",
      function(sdp_name, algo)
-    local sk <const> = havekey(algo:lower())
     local sdp <const> = have(sdp_name)
-    local alg <const> = algo:upper()
-    local crypto = { }
-    if alg == 'ES256' then
-        crypto.sign = ES256.sign
-    elseif alg == 'EDDSA' then
-        crypto.sign = ED.sign
-    elseif alg == 'MLDSA44' then
-        crypto.sign = PQ.mldsa44_signature
-    elseif alg == 'SECP256K1' then
-        crypto.sign = ECDH.sign
-    end
-    if not crypto.sign then
-        error("Unsupported SD-JWT signature: "..algo)
-    end
-    crypto.name = alg
-    ACK.signed_selective_disclosure =
-        {
-            jwt = SD_JWT.create_jwt(sdp.payload, sk, crypto),
-            disclosures = sdp.disclosures,
-        }
+    local alg <const> = mayhave(algo)
+    ACK.signed_selective_disclosure = {
+        jwt = SD_JWT.create_jwt(sdp.payload,
+                                resolve_secret_key(alg or algo),
+                                resolve_crypto_algo(alg or algo)),
+        disclosures = sdp.disclosures,
+    }
     new_codec('signed_selective_disclosure')
 end)
 
 When("use signed selective disclosure '' only with disclosures ''", function(ssd_name, lis)
     local ssd = have(ssd_name)
     local disclosed_keys = have(lis)
-    local disclosure = SD_JWT.retrive_disclosures(ssd, disclosed_keys)
-    ssd.disclosures = disclosure
+    local all_dis <const> = ssd.disclosures
+    local new_disclosures = { }
+    for _,k in pairs(disclosed_keys) do
+        for ind, arr in pairs(all_dis) do
+            if arr[2] == k then
+                table.insert(new_disclosures, arr)
+                break
+            end
+        end
+    end
+    ssd.disclosures = new_disclosures
 end)
 
 IfWhen("verify disclosures '' are found in signed selective disclosure ''", function(lis, ssd_name)
@@ -422,10 +383,7 @@ IfWhen("verify signed selective disclosure '' issued by '' is valid", function(o
     local jwt <const> = signed_sd.jwt
     local disclosures <const> = signed_sd.disclosures
     local algo <const> = jwt.header.alg:string()
-    local crypto <const> = _G[algo:upper()]
-    if not crypto then
-        error("crypto algo not found: "..algo:upper())
-    end
+    local crypto <const> = resolve_crypto_algo(algo)
     -- if jwt.header.alg == O.from_string("ES256") then
     local iss_pk <const> = load_pubkey_compat(by, algo:lower())
     local payload_str <const> = SD_JWT.prepare_dictionary(jwt.payload)
