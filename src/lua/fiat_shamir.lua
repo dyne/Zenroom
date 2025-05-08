@@ -1,9 +1,11 @@
+local FS = {}
+
 local function Aes(key, plaintext)
     local zero = O.from_hex('00000000000000000000000000000000')
     return AES.ctr_encrypt(key, zero, plaintext)
 end
 
-local function fiat_shamir(transcript,n_bytes,start_index)
+function FS.fiat_shamir(transcript,n_bytes,start_index)
     local key = sha256(transcript)
     local stream = O.new()
     local n_blocks = math.ceil(start_index/16)+math.ceil(n_bytes/16)
@@ -14,7 +16,7 @@ local function fiat_shamir(transcript,n_bytes,start_index)
 end
     
 
-function generate_nat(m, transcript)
+function FS.generate_nat(m, transcript)
 --generates a random natural between 0 and m-1 inclusive
     assert(type(m) == "zenroom.big", "m is not a BIG")
     assert(type(transcript) == "zenroom.octet", "transcript is not an octet")
@@ -27,7 +29,7 @@ function generate_nat(m, transcript)
     local r = m
     local start_index = 0 
     while m:__lte(r) do 
-        local b = fiat_shamir(transcript, n_bytes, start_index)
+        local b = FS.fiat_shamir(transcript, n_bytes, start_index)
         local k = big.new(b:reverse())
         r = k:__mod(mod)
         start_index = start_index+n_bytes
@@ -35,10 +37,22 @@ function generate_nat(m, transcript)
     return r
 end 
 
-transcript = O.from_string("tesefwfwddddfewf")
-m = big.from_decimal("13675127219174")
-result = generate_nat(m,transcript)
-print(result:decimal())
-print(m:decimal())
-assert(result:__lte(m), "generate_nat() generated a number over the indicated limit")
+return FS
+
+
+--tr_1 = O.from_string("test")
+--len_1 = O.from_number(tr_1:__len()):reverse():sub(1,8)
+--zero = O.from_hex('00')
+--transcript_1 = zero:__concat(len_1):__concat(tr_1)
+--result_1 = fiat_shamir(transcript_1,20,0):hex()
+--assert(result_1 == "ca44c5bc2d395c8b88a28891ccaa05b447ba00dc", "fiat_shmair() doesn't return the expected stream")
+
+--tr_2 = O.from_string("tesefwfwddddfewf")
+--len_2 = O.from_number(tr_2:__len()):reverse():sub(1,8)
+--transcript_2 = zero:__concat(len_2):__concat(tr_2)
+--m = big.from_decimal("13675127219174")
+--result_2 = generate_nat(m,transcript_2)
+--print(result_2:decimal())
+--print(m:decimal())
+--assert(result_2:__lte(m), "generate_nat() generated a number over the indicated limit")
 
