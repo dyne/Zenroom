@@ -35,7 +35,7 @@ local function _bitcoin_unspent_import(obj)
         end
         table.insert(res, {
             address = address,
-            amount  = schema_get(v, n_amount, btc.value_btc_to_satoshi, tostring),
+            amount  = schema_get(v, n_amount, BTC.value_btc_to_satoshi, tostring),
             txid    = schema_get(v, n_txid, OCTET.from_hex, tostring),
             vout    = schema_get(v, n_vout, INT.new)
         })
@@ -48,7 +48,7 @@ local function _bitcoin_unspent_export(obj)
         -- to_segwit: octet, version number(0), 'bc' or 'tc'
         table.insert(res, {
             address = v.address:segwit(0, 'tb'),
-            amount  = btc.value_satoshi_to_btc(v.amount),
+            amount  = BTC.value_satoshi_to_btc(v.amount),
             txid    = v.txid:hex(),
             vout    = v.vout
         })
@@ -154,7 +154,7 @@ local function _import_wif(sec, name)
 		local sk = have(sec)
 		local res
 		if #sk == 32+6 then -- wif
-		   btc.wif_to_sk(sk) -- checks
+		   BTC.wif_to_sk(sk) -- checks
 		   res = sk
 		elseif #sk == 32 then
 		   res = sk
@@ -191,7 +191,7 @@ local function _create_addr(name,pfx)
 	else
 	   pk = ECDH.sk_to_pubc( havekey(name) )
 	end
-	ACK[name..'_address'] = { raw = btc.address_from_public_key(pk),
+	ACK[name..'_address'] = { raw = BTC.address_from_public_key(pk),
 				  version = F.new(0),
 				  network = O.from_string(pfx) }
 	new_codec(name..' address')
@@ -207,7 +207,7 @@ local function _create_tx(name, recipient)
 	local q       = have'satoshi amount'
 	local fee     = have'satoshi fee'
 	local unspent = have(name..' unspent')
-	local tx = btc.build_tx_from_unspent(unspent, to, q, fee, ACK.sender)
+	local tx = BTC.build_tx_from_unspent(unspent, to, q, fee, ACK.sender)
 	zencode_assert(tx, "Not enough "..name.." in the unspent list")
 	ACK[name..'_transaction'] = tx
 	new_codec(name..'_transaction') -- TODO: { schema = 'transaction' })
@@ -221,7 +221,7 @@ local function _sign_tx(name)
    local sk = havekey(name)
    local tx = have(name..'_transaction')
    zencode_assert(not tx.witness, "The "..name.." transaction is already signed")
-   tx.witness = btc.build_witness(tx, sk)
+   tx.witness = BTC.build_witness(tx, sk)
 end
 When("sign bitcoin transaction", function() _sign_tx('bitcoin') end)
 When("sign testnet transaction", function() _sign_tx('testnet') end)
@@ -230,7 +230,7 @@ local function _toraw_tx(name)
 	local tx = have(name..' transaction')
 	local dst = name..'_raw_transaction'
 	empty(dst)
-	ACK[dst] = btc.build_raw_transaction(tx)
+	ACK[dst] = BTC.build_raw_transaction(tx)
 	new_codec(dst, { encoding = 'hex' })
 end
 
