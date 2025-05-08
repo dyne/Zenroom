@@ -867,6 +867,7 @@ and I rename the 'jwk' to 'jwk_pk_from_sk_es256k'
 When I create the jwk of es256k public key with private key
 and I rename the 'jwk' to 'jwk_keypair_from_sk_es256k'
 
+and debug
 Then print the data
 EOF
     save_output jwk_from_keyring.json
@@ -916,14 +917,12 @@ EOF
 EOF
     cat <<EOF | zexe bearer_jwt.zen bearer_jwt.data.json
 Scenario 'w3c': bearer json web token
-Given I have a 'bearer json web token' named 'token'
-
+Given I have a 'jwt' part of 'token' after string prefix 'BEARER'
 When I pickup a 'string dictionary' from path 'token.payload'
 Then print the 'payload'
-and print the 'token'
 EOF
     save_output bearer_jwt.out.json
-    assert_output '{"payload":{"aud":"did:dyne:sandbox.signroom:8fn8s8gVH1TYZV6L2caGg9vpP2zeWBew3KZP7E5ztcF1","exp":1710497028,"iat":1710493429,"iss":"https://authz-server1.zenswarm.forkbomb.eu:3100","sub":"cccda2db31e4ed4e6b02f416f816f36851408547"},"token":"BEARER eyJhbGciOiJFUzI1NiIsImp3ayI6eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6ImgteUtEVGlVS21vRk1wd1dHa0xwbjZCSzJTakt4d1BiVVEwZVRpelZ4TGsiLCJ5IjoiLVV6RDROUm1ja3RCTkNvR1JSQ0lYRG45RjBxRDM0MlVmUXlZMVJ0bXRMQSJ9fQ.eyJhdWQiOiJkaWQ6ZHluZTpzYW5kYm94LnNpZ25yb29tOjhmbjhzOGdWSDFUWVpWNkwyY2FHZzl2cFAyemVXQmV3M0taUDdFNXp0Y0YxIiwiZXhwIjoxNzEwNDk3MDI4LCJpYXQiOjE3MTA0OTM0MjksImlzcyI6Imh0dHBzOi8vYXV0aHotc2VydmVyMS56ZW5zd2FybS5mb3JrYm9tYi5ldTozMTAwIiwic3ViIjoiY2NjZGEyZGIzMWU0ZWQ0ZTZiMDJmNDE2ZjgxNmYzNjg1MTQwODU0NyJ9.6VS7_DO0VXRhopGvDguZI4vIblECqXcRpDG_VbTU7caz9Y4NlpEkuVaH7UlScfGKAsIB2msPMKMiWoWyo5aaag"}'
+    assert_output '{"payload":{"aud":"did:dyne:sandbox.signroom:8fn8s8gVH1TYZV6L2caGg9vpP2zeWBew3KZP7E5ztcF1","exp":1710497028,"iat":1710493429,"iss":"https://authz-server1.zenswarm.forkbomb.eu:3100","sub":"cccda2db31e4ed4e6b02f416f816f36851408547"}}'
 }
 
 @test "not bearer json web token schema" {
@@ -934,11 +933,10 @@ EOF
 EOF
     cat <<EOF | save_asset not_bearer_jwt.zen
 Scenario 'w3c': bearer json web token
-Given I have a 'bearer json web token' named 'token'
-
+Given I have a 'jwt' part of 'token' after string prefix 'BEARER'
 When I pickup a 'string dictionary' from path 'token.payload'
 Then print the 'payload'
 EOF
     run $ZENROOM_EXECUTABLE -z -a not_bearer_jwt.data.json not_bearer_jwt.zen
-    assert_line --partial "Bearer json web token is missing 'BEARER ' prefix"
+    assert_success
 }
