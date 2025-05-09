@@ -22,13 +22,31 @@
 
 local ED = require'ed'
 
+local already_warned = false
+
+local function warn_base58()
+    if not already_warned then
+        already_warned = true
+        warn("In the next version default encoding for eddsa pk and signature will change from base58 to config-defined encoding (default: base64)")
+    end
+end
+
+local schema = {
+    import = function(o)
+        warn_base58()
+        return schema_get(o, '.', O.from_base58, tostring)
+    end,
+    export = function(o)
+        warn_base58()
+        return O.to_base58(o)
+    end
+}
+
 ZEN:add_schema(
-   {
-      eddsa_public_key = { import = O.from_base58,
-			   export = O.to_base58 },
-      eddsa_signature = { import = O.from_base58,
-			  export = O.to_base58 }
-   }
+    {
+        eddsa_public_key = schema,
+        eddsa_signature = schema
+    }
 )
 
 -- generate the private key
