@@ -15,6 +15,14 @@ function FS.fiat_shamir(transcript,n_bytes,start_index)
     return stream:sub(start_index+1, start_index+n_bytes), start_index+n_bytes
 end
     
+local function ceil_div8(n)
+    assert(type(n) == "zenroom.big", "m is not a BIG")
+    if n:__mod(big.new(8)):__eq(big.new(0)) then
+        return n:__div(big.new(8)) 
+    else
+        return n:__div(big.new(8)):__add(big.new(1))
+    end 
+end
 
 function FS.generate_nat(m, transcript, start_index)
 --generates a random natural between 0 and m-1 inclusive
@@ -24,16 +32,51 @@ function FS.generate_nat(m, transcript, start_index)
     while big.new(2):modpower(l,ECP.order()):__lt(m) do
         l = big.zenadd(l,big.new(1))
     end
-    local n_bytes = l:__div(big.new(8)):__add(big.new(1)):int()
+    local n_bytes = ceil_div8(l):int()
     local mod = big.new(2):modpower(l,ECP.order())
     local r = m
     while m:__lte(r) do 
-        local b, c = FS.fiat_shamir(transcript, n_bytes, start_index)
+        b, start_index = FS.fiat_shamir(transcript, n_bytes, start_index)
         local k = big.new(b:reverse())
         r = k:__mod(mod)
-        start_index = c
     end 
-    return r, start_index+n_bytes
+    return r, start_index
+end 
+
+function FS.generate_field_element_p(transcript,p,start_index)
+    assert(type(p) == "zenroom.big", "p is not a BIG")
+    local nat, si =  FS.generate_nat(p,transcript,start_index)
+    oct = O.new(nat)
+    return oct:reverse(), si
+end 
+
+function FS.generate_field_element_gf(transcript,deg,start_index)
+    assert(type(deg) == "number", "deg is not a number")
+    local n_bytes = deg/8
+    local nat, si = FS.fiat_shamir(transcript,n_bytes,start_index)
+    return nat, si
+end
+
+function FS.generate_challenge_p(transcript,p,len,start_index)
+    assert(type(p) == "zenroom.big", "p is not a BIG")
+    assert(type(len) == "number", "len is not a number")
+    local array = {}
+    for i = 1, len do 
+        elt, start_index =  FS.generate_field_element_p(transcript,p,start_index)
+        table.insert(array,elt)
+    end
+    return array, start_index
+end 
+
+function FS.generate_challenge_gf(transcript,deg,len,start_index)
+    assert(type(deg) == "number", "deg is not a number")
+    assert(type(len) == "number", "len is not a number")
+    local array = {}
+    for i = 1, len do 
+        elt, start_index =  FS.generate_field_element_gf(transcript,deg,start_index)
+        table.insert(array,elt)
+    end
+    return array, start_index
 end 
 
 return FS
