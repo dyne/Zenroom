@@ -11,7 +11,7 @@ assert(result_1 == "ca44c5bc2d395c8b88a28891ccaa05b447ba00dc", "FS.fiat_shmair()
 print("OK: generation of stream")
 
 m = big.from_decimal("1000000000")
-result_2 = FS.generate_nat(m,transcript_1)
+result_2 = FS.generate_nat(m,transcript_1,0)
 assert(result_2:decimal() == "190593325", "FS.generate_nat() doesn't return the expected random number")
 print("OK: generation of a random number")
 
@@ -32,7 +32,50 @@ end
 test_bytes(transcript_1)
 print("OK: test bytes")
 
+local function mask(n)
+    assert(type(n) == "zenroom.big", "m is not a BIG")
+    local oct = O.new(n)
+    local len = oct:__len()
+    local mask = O.from_bin("0"):pad(len)
+    local band = O.from_hex("01"):pad(len)
+    while oct:__band(mask) ~= oct do
+        mask = mask:__shl(1)
+        mask = mask:__bor(band)
+    end
+    return mask
+end
 
 
+local function test_nat(transcript, ub)
+    --check that no bit is stuck at 0 or 1.
+    assert(type(ub) == "zenroom.big", "m is not a BIG")
+    local N = 100
+    local sub = big.zensub(ub,big.new(1))
+    local oct = O.new(ub)
+    local len = oct:__len()
+    local bor = O.from_bin("0"):pad(len)
+    local band = bor:__bnot()
+    local start_index = 0
+    for i = 0, N do 
+        local u, c = FS.generate_nat(ub,transcript,start_index)
+        assert(u:__lte(ub), "generate_nat() generated a number over the indicated limit")
+        u = O.new(u)
+        band = band:__band(u:reverse():pad(len):reverse())
+        bor = bor:__bor(u:reverse():pad(len):reverse())
+        start_index = c
+    end 
+    assert(band == O.from_bin("0"):pad(len), "NO RANDOM: a bit is always equal to 1" )
+    assert(bor == mask(sub), "NO RANDOM: a bit is always equal to 0")
+end 
+
+num_1 = big.from_decimal("7")
+num_2 = big.from_decimal("8")
+num_3 = big.from_decimal("9")
+num_4 = big.from_decimal("4294967295")
+test_nat(transcript_1,num_1)
+test_nat(transcript_1,num_2)
+test_nat(transcript_1,num_3)
+test_nat(transcript_1,num_4)
+print("OK: test natural")
 
 
