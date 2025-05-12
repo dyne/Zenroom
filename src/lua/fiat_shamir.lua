@@ -5,18 +5,40 @@ local function Aes(key, plaintext)
     return AES.ctr_encrypt(key, zero, plaintext)
 end
 
+local function ceil_div16(n)
+    assert(type(n) == "number", "n is not a number")
+    if math.fmod(n,16) == "0" then
+        return n/16 
+    else
+        return math.ceil(n/16)
+    end 
+end
+
+local function floor_div16(n)
+    assert(type(n) == "number", "n is not a number")
+    if math.fmod(n,16) == "0" then
+        return n/16 
+    else
+        return math.floor(n/16)
+    end 
+end
+
 function FS.fiat_shamir(transcript,n_bytes,start_index)
     local key = sha256(transcript)
     local stream = O.new()
-    local n_blocks = math.ceil(start_index/16)+math.ceil(n_bytes/16)
-    for i = 0, n_blocks-1 do 
+    local n_blocks = ceil_div16(n_bytes)+1
+    for i = floor_div16(start_index), floor_div16(start_index)+n_blocks-1 do 
         stream = stream:__concat(Aes(key, O.from_number(i):reverse()))
     end 
-    return stream:sub(start_index+1, start_index+n_bytes), start_index+n_bytes
+    if n_bytes == 0 then
+        return O.from_number(0), start_index+1
+    else 
+        return stream:sub(math.fmod(start_index,16)+1, math.fmod(start_index,16)+n_bytes), start_index+n_bytes
+    end 
 end
     
 local function ceil_div8(n)
-    assert(type(n) == "zenroom.big", "m is not a BIG")
+    assert(type(n) == "zenroom.big", "n is not a BIG")
     if n:__mod(big.new(8)):__eq(big.new(0)) then
         return n:__div(big.new(8)) 
     else
@@ -28,6 +50,9 @@ function FS.generate_nat(m, transcript, start_index)
 --generates a random natural between 0 and m-1 inclusive
     assert(type(m) == "zenroom.big", "m is not a BIG")
     assert(type(transcript) == "zenroom.octet", "transcript is not an octet")
+    if m:__eq(big.new(1)) then 
+        return big.new(0), start_index+1
+    end 
     local l = big.new(0) 
     while big.new(2):modpower(l,ECP.order()):__lt(m) do
         l = big.zenadd(l,big.new(1))
@@ -35,12 +60,16 @@ function FS.generate_nat(m, transcript, start_index)
     local n_bytes = ceil_div8(l):int()
     local mod = big.new(2):modpower(l,ECP.order())
     local r = m
-    while m:__lte(r) do 
-        b, start_index = FS.fiat_shamir(transcript, n_bytes, start_index)
-        local k = big.new(b:reverse())
-        r = k:__mod(mod)
-    end 
-    return r, start_index
+    if n_bytes == 0 then 
+        return big.new(0), start_index+1
+    else
+        while m:__lte(r) do 
+            b, start_index = FS.fiat_shamir(transcript, n_bytes, start_index)
+            local k = big.new(b:reverse())
+            r = k:__mod(mod)
+        end  
+        return r, start_index
+    end
 end 
 
 function FS.generate_field_element_p(transcript,p,start_index)

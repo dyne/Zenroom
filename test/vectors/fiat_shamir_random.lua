@@ -93,4 +93,63 @@ assert(array[1]:hex() == "ca44c5bc2d395c8b" and
     array[5]:hex() == "4bfec61da916547c" ,
     "FS.generate_challenge_p() doesn't return the expected random numbers")
 
+
+local function test_elt(transcript,p)
+    local N = 30
+    local Elt = FS.generate_challenge_p(transcript,p,N,0)
+    for i = 1, N do 
+        for j = 1, N do
+            if i ~= j then 
+                assert(Elt[i]~=Elt[j], "FS.generate_challenge_p() generates no random numbers")
+            end 
+        end 
+    end 
+end 
+
+test_elt(transcript_1,p)
 print("OK: test array of random field elements")
+
+local function swap(array, i, j, n)
+    local k = array[i]
+    table.insert(array,i,array[j]) 
+    table.remove(array,i+1)
+    table.insert(array,j,k)
+    table.remove(array,j+1)
+    return array
+end
+
+local function choose(n, k, transcript)
+    assert(k <= n, "k is bigger than n")
+    local array = {}
+    for i = 1, n do
+        array[i] = i
+    end 
+    local start_index=0
+    for i = 1, k do
+        m, start_index = FS.generate_nat(big.new(n):__sub(big.new(i)), transcript, start_index)
+        j = i + m:decimal()
+        array = swap(array,i,j,n)
+    end
+    return array
+end 
+
+local function test_choose(transcript,n,k)
+    local array = choose(n,k,transcript)
+    for i = 1, k do 
+        assert(array[i] <= n, "element in the array is bigger then n")
+    end 
+    table.sort(array)
+    for i = 2, k do 
+        assert(array[i-1] < array[i], "NO RANDOM: equal elements in the array")
+    end 
+end 
+
+for k = 1, 33 do 
+    test_choose(transcript_1, 33, k)
+end 
+
+test_choose(transcript_1,10000,42)
+test_choose(transcript_1,10000,10000)
+
+print("OK: test choose")
+
