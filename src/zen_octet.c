@@ -1549,13 +1549,15 @@ static int concat_n(lua_State *L) {
 			goto end;
 		}
 	}
-	octet *n = o_new(L, x->len+y->len);
+	octet *n = o_new(L, x->len+y->len+1);
 	if(!n) {
 		failed_msg = "Could not create OCTET";
 		goto end;
 	}
-	OCT_copy(n, (octet*)x);
-	OCT_joctet(n, (octet*)y);
+	memcpy(n->val, x->val, x->len);
+	memcpy(n->val+x->len, y->val, y->len);
+	n->len = x->len+y->len;
+	n->max = n->len+1;
 end:
 	if(y!=&ys) o_free(L, y);
 	if(x!=&xs) o_free(L, x);
