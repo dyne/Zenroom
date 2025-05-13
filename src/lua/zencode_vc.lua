@@ -84,7 +84,7 @@ When("sign verifiable credential named ''", function(vc)
     local sk = havekey'ecdh' -- assuming secp256k1
     zencode_assert(not credential.proof,'The object is already signed: ' .. vc)
     ACK[vc].proof = {
-        ['type'] = O.from_string('Zenroom v'.._G.ZENROOM_VERSION.original),
+        ['type'] = O.from_string('Zenroom '.._G.ZENROOM_VERSION.original),
         -- "Signature", -- TODO: check what to write here for secp256k1
         -- created = "2018-06-18T21:19:10Z",
 
