@@ -834,8 +834,8 @@ function zenguard(val, key) -- AKA watchdog
    local tv <const> = type(val)
    if not (tv == 'boolean' or iszen(tv)) then
 	   ZEN:debug()
-      error("Zenguard detected an invalid value in HEAP: "
-	    ..key.." ("..type(val)..")", 3)
+	   error("Zenguard detected an invalid value in HEAP: "
+			 ..key.." ("..type(val)..")", 3)
       return nil
    end
 end
