@@ -55,22 +55,14 @@ local function import_jwk(obj)
 end
 
 local function export_jwk(obj)
-    local key = {
-        kty = O.to_string(obj.kty),
-        crv = O.to_string(obj.crv),
-        x = O.to_url64(obj.x),
-        y = O.to_url64(obj.y)
-    }
-    if obj.use then
-        key.use = O.to_string(obj.use)
-    end
-    if obj.alg then
-        key.alg = O.to_string(obj.alg)
-    end
-    if obj.kid then
-        key.kid = O.to_url64(obj.kid)
-    end
-
+    local key = { }
+    if obj.kty then key.kty = O.to_string(obj.kty) end
+    if obj.crv then key.crv = O.to_string(obj.crv) end
+    if obj.x   then key.x =   O.to_url64(obj.x) end
+    if obj.y   then key.y =   O.to_url64(obj.y) end
+    if obj.use then key.use = O.to_string(obj.use) end
+    if obj.alg then key.alg = O.to_string(obj.alg) end
+    if obj.kid then key.kid = O.to_url64(obj.kid) end
     return key
 end
 
