@@ -182,7 +182,7 @@ function W3C.create_jws(s, h, p, d)
         if iszen(t) then
             return ho:octet():to_string()
         end
-        if t == 'bool' then return ho end
+        if t == 'boolean' then return ho end
         return tostring(t)
     end
     local header = { -- default
