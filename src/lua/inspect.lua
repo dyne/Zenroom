@@ -364,16 +364,18 @@ function Inspector:putValue(v, exp)
          tv == 'cdata' or tv == 'ctype' then
     self:puts(tostring(v))
   elseif tv == 'table' then
-	 if #v > 0 then self:puts("["..#v.."] ") end
+      local olen <const> = #v
+	 if olen > 0 then self:puts("["..olen.."] ") end
 	 self:putTable(v, exporter)
   elseif iszen(tv) then
       local olen <const> = #v
       local i <const> = v:octet()
       if tv == "zenroom.octet" then
           if olen == 0 then self:puts("octet[0] (null)")
-          elseif olen < 64 and olen ~= 32 and olen ~= 64 then
+          elseif olen < 64 and not (olen == 32 or olen == 64) then
               -- print as strings some octets
-               self:puts("octet[" .. olen .. "] " .. v:to_string())
+               self:puts("octet[" .. olen .. "] \""
+                         .. v:to_string()..'\" (as string)')
           else self:puts("octet[" .. olen .. "] " .. exporter(v))
           end
       elseif tv == "zenroom.big" then
