@@ -34,7 +34,26 @@ end
 -- @return octet which should be printed as string
 function W3C.serialize(any)
     if luatype(any) == 'table' then
-        return O.from_string(O.to_url64(O.from_string(JSON.encode(any))))
+        return (
+            O.from_string
+            (O.to_url64
+             (O.from_string
+              (JSON.encode
+               (deepmap
+                (function(o)
+                        local t <const> = type(o)
+                        if t == 'boolean' then
+                            return(o)
+                        elseif iszen(t) then
+                            return O.to_string(o:octet())
+                        else
+                            return(tostring(o))
+                        end
+                end,any))
+              )
+             )
+            )
+        )
     else
         if not iszen(type(any)) then
             error("W3C serialize called with wrong argument type: "
@@ -54,11 +73,12 @@ function W3C.deserialize(any)
         error("W3C deserialize called with wrong argument type: "
               ..type(any),2)
     end
-    local s <const> = O.to_string(O.from_url64(O.to_string(any:octet())))
+    local u <const> = O.from_url64(O.to_string(any))
+    local s <const> = O.to_string(u)
     if jsontok(s) then
         return JSON.decode(s)
     else
-        return(O.from_string(s))
+        return(u)
     end
 end
 
@@ -153,12 +173,24 @@ end
 -- @param d the detached flag, if set to true and payload is present, remove payload from jws
 -- @return octet string containing the jws
 function W3C.create_jws(s, h, p, d)
-    local header <const> = h or
-        { -- default
-            alg = 'ES256K',
-            b64 = true,
-            crit = {'b64'}
-        }
+    if h and luatype(h) ~= 'table' then
+        error('W3C create JWS wrong argument type for header: '
+              ..type(h),2)
+    end
+    local function _headers_from_octets(ho)
+        local t <const> = type(ho)
+        if iszen(t) then
+            return ho:octet():to_string()
+        end
+        if t == 'bool' then return ho end
+        return tostring(t)
+    end
+    local header = { -- default
+        alg = 'ES256K',
+        b64 = true,
+        crit = {'b64'}
+    }
+    if h then header = deepmap(_headers_from_octets,h) end
     local dot <const> = O.from_string('.')
     local payload = p -- may be changed by detached flag
     local signature = s
@@ -169,6 +201,9 @@ function W3C.create_jws(s, h, p, d)
         if not header.alg then
             error('Algorithm not specified in jws header', 2)
         end
+        I.spy({ algo = header.alg,
+                header = header,
+                payload = JSON.encode(payload) })
         local to_be_signed <const> =
             W3C.serialize(header)
             ..
