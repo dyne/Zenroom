@@ -218,7 +218,7 @@ function W3C.create_jws(s, h, p, d)
         if not(signature.r and signature.s) then
             error('The signature table does not contains r and s', 2)
         end
-        signature = signature.r .. signature.s
+        signature = signature.r:pad(32) .. signature.s:pad(32)
     end
     return (W3C.serialize(header)
             ..dot..
