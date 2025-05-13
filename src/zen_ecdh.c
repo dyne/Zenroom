@@ -68,40 +68,6 @@ extern void ecdh_init(lua_State *L, ecdh *e);
 
 ecdh ECDH;
 
-/// Global ECDH functions
-// @section ECDH.globals
-
-// // internal to instance inside init.lua
-// int ecdh_new(lua_State *L) {
-// 	ecdh *e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
-// 	ecdh_init(e);
-// 	luaL_getmetatable(L, "zenroom.ecdh");
-// 	lua_setmetatable(L, -2);
-// 	ECDH = e; // global pointer to a single ECDH instance
-// 	return(1);
-// }
-void ecdh_free(lua_State *L, ecdh *e) {
-	(void)L;
-	if(e) free(e);
-}
-
-ecdh* ecdh_arg(lua_State *L,int n) {
-	Z(L);
-	void *ud = luaL_testudata(L, n, "zenroom.ecdh");
-	if(ud) {
-		ecdh *result = (ecdh*)malloc(sizeof(ecdh));
-		*result = *(ecdh*)ud;
-		return result;
-	}
-	zerror(L, "invalid ecdh in argument");
-	return NULL;
-}
-
-int ecdh_destroy(lua_State *L) {
-	(void)L;
-	// no allocation done
-	return 0; }
-
 /// Instance Methods
 // @type keyring
 
@@ -163,7 +129,7 @@ static int ecdh_pubgen(lua_State *L) {
 		failed_msg = "Could not duplicate secret key";
 		goto end;
 	}
-	OCT_copy(tmp, sk);
+	OCT_copy(tmp, (octet*)sk);
 	OCT_pad(tmp, ECDH.fieldsize);
 	octet *pk = o_new(L,ECDH.fieldsize*2 +1);
 	if(pk == NULL) {
@@ -200,7 +166,7 @@ static int ecdh_pubcheck(lua_State *L) {
 		lerror(L, "Could not allocate public key");
 		lua_pushboolean(L, 0);
 	} else {
-		lua_pushboolean(L, (*ECDH.ECP__PUBLIC_KEY_VALIDATE)(pk)==0);
+		lua_pushboolean(L, (*ECDH.ECP__PUBLIC_KEY_VALIDATE)((octet*)pk)==0);
 		o_free(L, pk);
 	}
 	END(1);
@@ -224,25 +190,24 @@ static int ecdh_pubcheck(lua_State *L) {
 static int ecdh_session(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *f = NULL, *s = NULL, *sk = NULL, *pk = NULL;
-	f = o_arg(L, 1);
+	const octet *f = o_arg(L, 1);
 	if(f == NULL) {
 		failed_msg = "Could not allocate session key";
 		goto end;
 	}
-	s = o_arg(L, 2);
+	const octet *s = o_arg(L, 2);
 	if(s == NULL) {
 		failed_msg = "Could not allocate session key";
 		goto end;
 	}
 	// ECDH_OK is 0 in milagro's ecdh.h.in
-	pk = (*ECDH.ECP__PUBLIC_KEY_VALIDATE)(s)== 0 ? s : NULL;
-	if(!pk) pk = (*ECDH.ECP__PUBLIC_KEY_VALIDATE)(f)== 0 ? f : NULL;
+	const octet *pk = (*ECDH.ECP__PUBLIC_KEY_VALIDATE)((octet*)s)== 0 ? s : NULL;
+	if(!pk) pk = (*ECDH.ECP__PUBLIC_KEY_VALIDATE)((octet*)f)== 0 ? f : NULL;
 	if(!pk) {
 		failed_msg = "public key not found in any argument";
 		goto end;
 	}
-	sk = (pk == s) ? f : s;
+	const octet *sk = (pk == s) ? f : s;
 	octet *kdf = o_new(L, SHA256);
 	if(!kdf) {
 		failed_msg = "Could not create KDF";
@@ -253,7 +218,7 @@ static int ecdh_session(lua_State *L) {
 		failed_msg = "Could not create shared key";
 		goto end;
 	}
-	(*ECDH.ECP__SVDP_DH)(sk,pk,ses);
+	(*ECDH.ECP__SVDP_DH)((octet*)sk,(octet*)pk,ses);
 	// NULL would be used internally by KDF2 as 'p' in the hash
 	// function ehashit(sha,z,counter,p,&H,0);
 	KDF2(SHA256,ses,NULL,SHA256,kdf);
@@ -285,7 +250,7 @@ static int ecdh_pub_xy(lua_State *L) {
 		failed_msg = "Could not allocate public key";
 		goto end;
 	}
-	if((*ECDH.ECP__PUBLIC_KEY_VALIDATE)(pk)!=0) {
+	if((*ECDH.ECP__PUBLIC_KEY_VALIDATE)((octet*)pk)!=0) {
 		failed_msg = "Invalid public key passed as argument";
 		goto end;
 	}
@@ -345,13 +310,12 @@ end:
 static int ecdh_dsa_sign(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *sk = NULL, *m = NULL, *k = NULL;
-	sk = o_arg(L,1);
+	const octet *sk = o_arg(L,1);
 	if(sk == NULL) {
 		failed_msg = "Could not allocate secret key";
 		goto end;
 	}
-	m = o_arg(L,2);
+	const octet *m = o_arg(L,2);
 	if(m == NULL) {
 		failed_msg = "Could not allocate message";
 		goto end;
@@ -362,44 +326,47 @@ static int ecdh_dsa_sign(lua_State *L) {
 	// this argument is provided here mostly for testing purposes with
 	// pre-calculated vectors.
 	int max_size = 64;
+	octet *r = NULL, *s = NULL, *k = NULL;
 	if(lua_isnoneornil(L, 3)) {
 		// return a table
 		lua_createtable(L, 0, 2);
-		octet *r = o_new(L,max_size);
+		r = o_new(L,max_size);
 		if(r == NULL) {
 			failed_msg = "Could not create signautre.r";
 			goto end;
 		}
 		lua_setfield(L, -2, "r");
-		octet *s = o_new(L,max_size);
+		s = o_new(L,max_size);
 		if(s == NULL) {
 			failed_msg = "Could not create signautre.s";
 			goto end;
 		}
 		lua_setfield(L, -2, "s");
 		Z(L);
-		(*ECDH.ECP__SP_DSA)( max_size, Z->random_generator, NULL, sk, m, r, s);
+		(*ECDH.ECP__SP_DSA)( max_size, Z->random_generator, NULL,
+							 (octet*)sk, (octet*)m, r, s);
 	} else {
-		const octet *k = o_arg(L, 3);
+		k = (octet*)o_arg(L, 3);
 		if(k == NULL) {
 			failed_msg = "Could not allocate ephemeral key";
 			goto end;
 		}
 		// return a table
 		lua_createtable(L, 0, 2);
-		octet *r = o_new(L,max_size);
+		r = o_new(L,max_size);
 		if(r == NULL) {
 			failed_msg = "Could not create signautre.r";
 			goto end;
 		}
 		lua_setfield(L, -2, "r");
-		octet *s = o_new(L,max_size);
+		s = o_new(L,max_size);
 		if(s == NULL) {
 			failed_msg = "Could not create signautre.s";
 			goto end;
 		}
 		lua_setfield(L, -2, "s");
-		(*ECDH.ECP__SP_DSA)( max_size, NULL, k, sk, m, r, s );
+		(*ECDH.ECP__SP_DSA)( max_size, NULL,
+							 k, (octet*)sk, (octet*)m, r, s );
 	}
 end:
 	o_free(L, k);
@@ -432,13 +399,12 @@ end:
 static int ecdh_dsa_sign_det(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *sk = NULL, *m = NULL;
-	sk = o_arg(L,1);
+	const octet *sk = o_arg(L,1);
 	if(sk == NULL) {
 		failed_msg = "Could not allocate secret key";
 		goto end;
 	}
-	m = o_arg(L,2);
+	const octet *m = o_arg(L,2);
 	if(m == NULL) {
 		failed_msg = "Could not allocate message";
 		goto end;
@@ -470,7 +436,7 @@ static int ecdh_dsa_sign_det(lua_State *L) {
 		failed_msg = "Could not create signautre.s";
 		goto end;
 	}
-	(*ECDH.ECP__SP_DSA_DET)( (int) n, sk, m, r, s, k);
+	(*ECDH.ECP__SP_DSA_DET)( (int) n, (octet*)sk, (octet*)m, r, s, k);
 
 end:
 	o_free(L, m);
@@ -487,13 +453,12 @@ For the generation of the k parameter we use HMAC with the SHA function of corre
 static int ecdh_dsa_sign_det_hashed(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *sk = NULL, *m = NULL;
-	sk = o_arg(L, 1);
+	const octet *sk = o_arg(L, 1);
 	if(sk == NULL) {
 		failed_msg = "Could not allocate secret key";
 		goto end;
 	}
-	m = o_arg(L, 2);
+	const octet *m = o_arg(L, 2);
 	if(m == NULL) {
 		failed_msg = "Could not allocate message";
 		goto end;
@@ -526,7 +491,8 @@ static int ecdh_dsa_sign_det_hashed(lua_State *L) {
 	}
 	lua_setfield(L, -2, "s");
 	// Size of a big256 used with SECP256k1
-	(*ECDH.ECP__SP_DSA_DET_NOHASH)((int)n, sk, m, r, s, &parity);
+	(*ECDH.ECP__SP_DSA_DET_NOHASH)
+		((int)n, (octet*)sk, (octet*)m, r, s, &parity);
 
 	lua_pushboolean(L, parity);
 end:
@@ -552,13 +518,12 @@ end:
 static int ecdh_dsa_sign_hashed(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *sk = NULL, *m = NULL, *k = NULL;
-	sk = o_arg(L, 1);
+	const octet *sk = o_arg(L, 1);
 	if(sk == NULL) {
 		failed_msg = "Could not allocate secret key";
 		goto end;
 	}
-	m = o_arg(L, 2);
+	const octet *m = o_arg(L, 2);
 	if(m == NULL) {
 		failed_msg = "Could not allocate message";
 		goto end;
@@ -579,6 +544,7 @@ static int ecdh_dsa_sign_hashed(lua_State *L) {
 		failed_msg = "size of input does not match";
 		goto end;
 	}
+	octet *k = NULL;
 	if(lua_isnoneornil(L, 4)) {
 		// return a table
 		lua_createtable(L, 0, 2);
@@ -596,9 +562,11 @@ static int ecdh_dsa_sign_hashed(lua_State *L) {
 		lua_setfield(L, -2, "s");
 		// Size of a big256 used with SECP256k1
 		Z(L);
-		(*ECDH.ECP__SP_DSA_NOHASH)((int)n, Z->random_generator, NULL, sk, m, r, s, &parity);
+		(*ECDH.ECP__SP_DSA_NOHASH)
+			((int)n, Z->random_generator, NULL,
+			 (octet*)sk, (octet*)m, r, s, &parity);
 	} else {
-		k = o_arg(L, 4);
+		k = (octet*)o_arg(L, 4);
 		if(k == NULL) {
 			failed_msg = "Could not allocate ephemeral key";
 			goto end;
@@ -618,7 +586,8 @@ static int ecdh_dsa_sign_hashed(lua_State *L) {
 		}
 		lua_setfield(L, -2, "s");
 		// Size of a big256 used with SECP256k1
-		(*ECDH.ECP__SP_DSA_NOHASH)((int)n, NULL, k, sk, m, r, s, &parity);
+		(*ECDH.ECP__SP_DSA_NOHASH)
+			((int)n, NULL, k, (octet*)sk, (octet*)m, r, s, &parity);
 	}
 	lua_pushboolean(L, parity);
 end:
@@ -650,34 +619,34 @@ static int ecdh_dsa_verify(lua_State *L) {
 	// IEEE1363 ECDSA Signature Verification. Signature C and D on F
 	// is verified using public key W
 	char *failed_msg = NULL;
-	octet *pk = NULL, *m = NULL, *r = NULL, *s = NULL;
-	pk = o_arg(L, 1);
+	const octet *pk = o_arg(L, 1);
 	if(pk == NULL) {
 		failed_msg = "Could not allocate public key";
 		goto end;
 	}
-	m = o_arg(L, 2);
+	const octet *m = o_arg(L, 2);
 	if(m == NULL) {
 		failed_msg = "Could not allocate message";
 		goto end;
 	}
+	octet *r = NULL, *s = NULL;
 	if(lua_type(L, 3) == LUA_TTABLE) {
 		lua_getfield(L, 3, "r");
 		lua_getfield(L, 3, "s"); // -2 stack
-		r = o_arg(L, -2);
+		r = (octet *)o_arg(L, -2);
 		if(r == NULL) {
 			failed_msg = "Could not allocate signature.r";
 			goto end;
 		}
-		s = o_arg(L, -1);
+		s = (octet *)o_arg(L, -1);
 		if(s == NULL) {
 			failed_msg = "Could not allocate signautre.s";
 			goto end;
 		}
 	} else {
-		r = o_arg(L, 3);
+		r = (octet *)o_arg(L, 3);
 		if(r->len != 64) {
-			warn(L,"signature argument is %u bytes long",r->len);
+			warning(L,"signature argument is %u bytes long",r->len);
 			failed_msg = "signature argument invalid: not 64 bytes long";
 			goto end;
 		}
@@ -686,7 +655,7 @@ static int ecdh_dsa_verify(lua_State *L) {
 		s->len = 32;
 	}
 	int max_size = 64;
-	int res = (*ECDH.ECP__VP_DSA)(max_size, pk, m, r, s);
+	int res = (*ECDH.ECP__VP_DSA)(max_size, (octet*)pk, (octet*)m, r, s);
 	if(res <0) // ECDH_INVALID in milagro/include/ecdh.h.in (!?!)
 		// TODO: maybe suggest fixing since there seems to be
 		// no criteria between ERROR (used in the first check
@@ -726,26 +695,27 @@ static int ecdh_dsa_verify_det(lua_State *L) {
 	// IEEE1363 ECDSA Signature Verification. Signature C and D on F
 	// is verified using public key W
 	char *failed_msg = NULL;
-	octet *pk = NULL, *m = NULL, *r = NULL, *s = NULL;
-	pk = o_arg(L, 1);
+	const octet *pk = o_arg(L, 1);
 	if(pk == NULL) {
 		failed_msg = "Could not allocate public key";
 		goto end;
 	}
-	m = o_arg(L, 2);
+	const octet *m = o_arg(L, 2);
 	if(m == NULL) {
 		failed_msg = "Could not allocate message";
 		goto end;
+
 	}
+	octet *r = NULL, *s = NULL;
 	if(lua_type(L, 3) == LUA_TTABLE) {
 		lua_getfield(L, 3, "r");
 		lua_getfield(L, 3, "s"); // -2 stack
-		r = o_arg(L, -2);
+		r = (octet*)o_arg(L, -2);
 		if(r == NULL) {
 			failed_msg = "Could not allocate signature.r";
 			goto end;
 		}
-		s = o_arg(L, -1);
+		s = (octet*)o_arg(L, -1);
 		if(s == NULL) {
 			failed_msg = "Could not allocate signautre.s";
 			goto end;
@@ -760,7 +730,7 @@ static int ecdh_dsa_verify_det(lua_State *L) {
 		failed_msg = "invalid size zero for material to sign";
 		goto end;
 	}
-	int res = (*ECDH.ECP__VP_DSA)((int) n, pk, m, r, s);
+	int res = (*ECDH.ECP__VP_DSA)((int) n, (octet*)pk, (octet*)m, r, s);
 	if(res <0) // ECDH_INVALID in milagro/include/ecdh.h.in (!?!)
 		// TODO: maybe suggest fixing since there seems to be
 		// no criteria between ERROR (used in the first check
@@ -785,26 +755,26 @@ static int ecdh_dsa_verify_hashed(lua_State *L) {
 	// IEEE1363 ECDSA Signature Verification. Signature C and D on F
 	// is verified using public key W
 	char *failed_msg = NULL;
-	octet *pk = NULL, *m = NULL, *r = NULL, *s = NULL;
-	pk = o_arg(L, 1);
+	const octet *pk = o_arg(L, 1);
 	if(pk == NULL) {
 		failed_msg = "Could not allocate public key";
 		goto end;
 	}
-	m = o_arg(L, 2);
+	const octet *m = o_arg(L, 2);
 	if(m == NULL) {
 		failed_msg = "Could not allocate message";
 		goto end;
 	}
+	octet *r = NULL, *s = NULL;
 	if(lua_type(L, 3) == LUA_TTABLE) {
 		lua_getfield(L, 3, "r");
 		lua_getfield(L, 3, "s"); // -2 stack
-		r = o_arg(L, -2);
+		r = (octet*)o_arg(L, -2);
 		if(r == NULL) {
 			failed_msg = "Could not allocate signautre.r";
 			goto end;
 		}
-		s = o_arg(L, -1);
+		s = (octet*)o_arg(L, -1);
 		if(s == NULL) {
 			failed_msg = "Could not allocate signautre.s";
 			goto end;
@@ -822,7 +792,8 @@ static int ecdh_dsa_verify_hashed(lua_State *L) {
 	if (m->len != (int)n) {
 		failed_msg = "size of input does not match";
 	}
-	int res = (*ECDH.ECP__VP_DSA_NOHASH)((int)n, pk, m, r, s);
+	int res = (*ECDH.ECP__VP_DSA_NOHASH)
+		((int)n, (octet*)pk, (octet*)m, r, s);
 	if(res <0) // ECDH_INVALID in milagro/include/ecdh.h.in (!?!)
 		// TODO: maybe suggest fixing since there seems to be
 		// no criteria between ERROR (used in the first check
@@ -865,8 +836,7 @@ end:
 static int ecdh_aead_encrypt(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *k = NULL, *in = NULL, *iv = NULL, *h = NULL;
-	k =  o_arg(L, 1);
+	const octet *k =  o_arg(L, 1);
 	if(k == NULL) {
 		failed_msg = "Could not allocate aes key";
 		goto end;
@@ -877,12 +847,12 @@ static int ecdh_aead_encrypt(lua_State *L) {
 		failed_msg = "ECDH encryption aborted";
 		goto end;
 	}
-	in = o_arg(L, 2);
+	const octet *in = o_arg(L, 2);
 	if(in == NULL) {
 		failed_msg = "Could not allocate message";
 		goto end;
 	}
-	iv = o_arg(L, 3);
+	const octet *iv = o_arg(L, 3);
 	if(iv == NULL) {
 		failed_msg = "Could not allocate iv";
 		goto end;
@@ -892,7 +862,8 @@ static int ecdh_aead_encrypt(lua_State *L) {
 		failed_msg = "ECDH encryption aborted";
 		goto end;
 	}
-	h =  o_arg(L, 4);
+	const octet *h = o_arg(L, 4);
+	HEDLEY_ASSUME(h != NULL);
 	if(h == NULL) {
 		failed_msg = "Could not allocate header";
 		goto end;
@@ -908,7 +879,8 @@ static int ecdh_aead_encrypt(lua_State *L) {
 		failed_msg = "Could not create authentication tag";
 		goto end;
 	}
-	AES_GCM_ENCRYPT(k, iv, h, in, out, t);
+	AES_GCM_ENCRYPT
+		((octet*)k, (octet*)iv, (octet*)h, (octet*)in, out, t);
 end:
 	o_free(L, h);
 	o_free(L, iv);
@@ -937,8 +909,7 @@ end:
 static int ecdh_aead_decrypt(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *k = NULL, *in = NULL, *iv = NULL, *h = NULL;
-	k = o_arg(L, 1);
+	const octet *k = o_arg(L, 1);
 	if(k == NULL) {
 		failed_msg = "Could not allocate aes key";
 		goto end;
@@ -948,12 +919,12 @@ static int ecdh_aead_decrypt(lua_State *L) {
 		failed_msg = "ECDH decryption aborted";
 		goto end;
 	}
-	in = o_arg(L, 2);
+	const octet *in = o_arg(L, 2);
 	if(in == NULL) {
 		failed_msg = "Could not allocate messsage";
 		goto end;
 	}
-	iv = o_arg(L, 3);
+	const octet *iv = o_arg(L, 3);
 	if(iv == NULL) {
 		failed_msg = "Could not allocate iv";
 		goto end;
@@ -963,7 +934,7 @@ static int ecdh_aead_decrypt(lua_State *L) {
 		failed_msg = "ECDH decryption aborted";
 		goto end;
 	}
-	h = o_arg(L, 4);
+	const octet *h = o_arg(L, 4);
 	if(h == NULL) {
 		failed_msg = "Could not allocate header";
 		goto end;
@@ -979,7 +950,7 @@ static int ecdh_aead_decrypt(lua_State *L) {
 		failed_msg = "Could not create authentication tag";
 		goto end;
 	}
-	AES_GCM_DECRYPT(k, iv, h, in, out, t2);
+	AES_GCM_DECRYPT((octet*)k, (octet*)iv, (octet*)h, (octet*)in, out, t2);
 end:
 	o_free(L, h);
 	o_free(L, iv);
@@ -1064,8 +1035,7 @@ static int ecdh_cofactor(lua_State *L) {
 static int ecdh_dsa_recovery(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *x = NULL, *m = NULL, *r = NULL, *s = NULL;
-	x = o_arg(L, 1);
+	const octet *x = o_arg(L, 1);
 	if(x == NULL) {
 		failed_msg = "Could not allocate x-coordinate";
 		goto end;
@@ -1076,20 +1046,21 @@ static int ecdh_dsa_recovery(lua_State *L) {
 		failed_msg = "parity of y coordinate has to be a integer";
 		goto end;
 	}
-	m = o_arg(L, 3);
+	const octet *m = o_arg(L, 3);
 	if(m == NULL) {
 		failed_msg = "Could not allocate message";
 		goto end;
 	}
+	octet *r = NULL, *s = NULL;
 	if(lua_type(L, 4) == LUA_TTABLE) {
 		lua_getfield(L, 4, "r");
 		lua_getfield(L, 4, "s");
-		r = o_arg(L, -2);
+		r = (octet*) o_arg(L, -2);
 		if(r == NULL) {
 			failed_msg = "Could not allocate signautre.r";
 			goto end;
 		}
-		s = o_arg(L, -1);
+		s = (octet*) o_arg(L, -1);
 		if(s == NULL) {
 			failed_msg = "Could not allocate signautre.s";
 			goto end;
@@ -1104,7 +1075,8 @@ static int ecdh_dsa_recovery(lua_State *L) {
 		goto end;
 	}
 
-	lua_pushboolean(L, !(*ECDH.ECP__PUBLIC_KEY_RECOVERY)(x, (int)y, m, r, s, pk));
+	lua_pushboolean(L, !(*ECDH.ECP__PUBLIC_KEY_RECOVERY)
+					((octet*)x, (int)y, (octet*)m, r, s, pk));
 end:
 	o_free(L, s);
 	o_free(L, r);
@@ -1150,10 +1122,8 @@ int luaopen_ecdh(lua_State *L) {
 		{"add", ecdh_add},
 		{NULL,NULL}};
 	const struct luaL_Reg ecdh_methods[] = {
-		{"__gc", ecdh_destroy},
 		{NULL,NULL}
 	 };
-
 
 	ecdh_init(L, &ECDH);
 
