@@ -675,8 +675,15 @@ static int ecdh_dsa_verify(lua_State *L) {
 			goto end;
 		}
 	} else {
-		failed_msg = "signature argument invalid: not a table";
-		goto end;
+		r = o_arg(L, 3);
+		if(r->len != 64) {
+			warn(L,"signature argument is %u bytes long",r->len);
+			failed_msg = "signature argument invalid: not 64 bytes long";
+			goto end;
+		}
+		s = o_alloc(L,32);
+		memcpy(s->val, r->val+32, 32);
+		s->len = 32;
 	}
 	int max_size = 64;
 	int res = (*ECDH.ECP__VP_DSA)(max_size, pk, m, r, s);
@@ -689,7 +696,7 @@ static int ecdh_dsa_verify(lua_State *L) {
 	else
 		lua_pushboolean(L, 1);
 end:
-	o_free(L, s);
+	if(s) o_free(L, s);
 	o_free(L, r);
 	o_free(L, m);
 	o_free(L, pk);
