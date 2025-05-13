@@ -669,13 +669,13 @@ static int ecdh_dsa_verify(lua_State *L) {
 	octet *r = NULL, *s = NULL;
 	if(lua_type(L, 3) == LUA_TUSERDATA) {
 		r = (octet *)o_arg(L, 3);
-		if(r->len != 64) {
+		if(r->len < 62 || r->len > 64) {
 			warning(L,"signature argument is %u bytes long",r->len);
-			failed_msg = "signature argument invalid: not 64 bytes long";
+			failed_msg = "wrong signature argument size: 62 <= sig <= 64";
 			goto end;
 		}
-		octet *left = o_alloc(L, 36);
-		octet *right = o_alloc(L, 36);
+		octet *left = o_alloc(L, 32);
+		octet *right = o_alloc(L, 32);
 		int res = verify64_with_partition_attempts(pk, m, r, left, right);
 		o_free(L, left);
 		o_free(L, right);
