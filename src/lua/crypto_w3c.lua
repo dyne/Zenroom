@@ -75,7 +75,7 @@ function W3C.deserialize(any)
     end
     local u <const> = O.from_url64(O.to_string(any))
     local s <const> = O.to_string(u)
-    if jsontok(s) then
+    if JSON.validate(s) then
         return JSON.decode(s)
     else
         return(u)
@@ -201,9 +201,6 @@ function W3C.create_jws(s, h, p, d)
         if not header.alg then
             error('Algorithm not specified in jws header', 2)
         end
-        I.spy({ algo = header.alg,
-                header = header,
-                payload = JSON.encode(payload) })
         local to_be_signed <const> =
             W3C.serialize(header)
             ..
@@ -214,6 +211,7 @@ function W3C.create_jws(s, h, p, d)
             W3C.resolve_crypto_algo(O.to_string(header.alg))
         local sk <const> = havekey(crypto.keyname)
         signature = crypto.sign(sk, to_be_signed)
+
     end
     payload = (d and O.from_string('')) or payload
     if luatype(signature) == 'table' then
@@ -229,6 +227,32 @@ function W3C.create_jws(s, h, p, d)
             W3C.serialize(signature))
 end
 
+-- Parse a JWS string and return a structure with header, payload and
+-- signature in a dictionary:
+-- { header, header_enc, payload, payload_enc, signature, signature_enc }
+function W3C.parse_jws(jws_enc)
+    local tjws    <const> = strtok(O.to_string(jws_enc), '.')
+    if tjws[1] == '' then error("The JWS has no header", 2) end
+    if not JSON.validate(O.from_url64(tjws[1]):string()) then
+        error("The JWS header is not a valid JSON",2) end
+    if tjws[3] == '' then error("The JWS has no signature", 2) end
+    local ho <const> = O.from_string(tjws[1])
+    local res = {
+        header_enc = ho,
+        header = W3C.deserialize(ho)
+    }
+    if luatype(res.header) ~= 'table' then
+        error('The JWS header is not a dictionary', 2) end
+    if tjws[2] ~= '' then
+        local po <const> = O.from_string(tjws[2])
+        res.payload_enc = po
+        res.payload = W3C.deserialize(po)
+    end
+    local so <const> = O.from_string(tjws[3])
+    res.signature_enc = so
+    res.signature = W3C.deserialize(so)
+    return res
+end
 
 -- Verify a jws signature from a document proof
 -- @param src the name of the object containing the document

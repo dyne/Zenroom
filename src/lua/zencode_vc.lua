@@ -81,8 +81,8 @@ end)
 
 When("sign verifiable credential named ''", function(vc)
     local credential = have(vc)
-    local sk = havekey'ecdh' -- assuming secp256k1
-    zencode_assert(not credential.proof,'The object is already signed: ' .. vc)
+    zencode_assert(not credential.proof,
+                   'The object is already signed: ' .. vc)
     ACK[vc].proof = {
         ['type'] = O.from_string('Zenroom '.._G.ZENROOM_VERSION.original),
         -- "Signature", -- TODO: check what to write here for secp256k1
@@ -98,5 +98,18 @@ IfWhen("verify verifiable credential named ''", function(src)
     local document = have(src)
     zencode_assert(document.proof and document.proof.jws,
         'The object has no signature: ' .. src)
-    W3C.verify_jws_from_proof(src, document)
+    local proof <const> = document.proof
+    document.proof = nil
+    local jws <const> = W3C.parse_jws(proof.jws)
+    if jws.payload then
+        zencode_assert(W3C.serialize(document) == jws.payload_enc,
+                       "The JWS proof contains a different payload")
+    end
+    local crypto  <const> = W3C.resolve_crypto_algo(jws.header.alg)
+    local pk = mayhave('jws_public_key')
+    if not pk then pk = have(crypto.keyname..'_public_key') end
+    local to_be_verified <const> =
+        jws.header_enc..O.from_string('.')..W3C.serialize(document)
+    zencode_assert(crypto.verify(pk, to_be_verified, jws.signature),
+                   'Invalid verifiable credential signature of: '..src)
 end)

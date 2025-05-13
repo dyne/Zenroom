@@ -132,59 +132,37 @@ IfWhen(deprecated("verify jws signature of ''",
 ))
 
 IfWhen("verify '' has a jws signature in ''", function(n_payload, n_jws)
-           local jws     <const> = have(n_jws)
+           local jws_enc <const> = have(n_jws)
            local payload <const> = have(n_payload)
            local pser    <const> = W3C.serialize(payload)
-           local tjws    <const> = strtok(jws:string(), '.')
-           zencode_assert( tjws[1] ~= '', "The JWS has no header")
-           -- I.spy(W3C.deserialize(O.from_string(tjws[1])))
-           zencode_assert( jsontok(O.from_url64(tjws[1]):string()),
-                                   "The JWS header is not a valid JSON")
-           zencode_assert( tjws[3] ~= '', "The JWS has no signature")
-           local phead   <const> = O.from_string(tjws[1])
-           local header  <const> = W3C.deserialize(phead)
-           zencode_assert( luatype(header)=='table',
-                           'The JWS header is not a dictionary')
-           local crypto  <const> = W3C.resolve_crypto_algo(header.alg)
+           local jws     <const> = W3C.parse_jws(jws_enc)
+           local crypto  <const> = W3C.resolve_crypto_algo(jws.header.alg)
            -- the payload is passed as argument so we assume this to
            -- be a detached signature, in case another payload is
            -- present in the jws then we also verify it is the same as
            -- the detached one
-           if tjws[2] ~= '' then
-               zencode_assert(pser == O.from_string(tjws[2]),
+           if jws.payload then
+               zencode_assert(pser == jws.payload_enc,
                               "The JWS contains a different payload")
            end
-           I.spy({ header = W3C.deserialize(phead),
-                   payload = JSON.encode(payload) })
-           local to_be_verified <const> = phead..O.from_string('.')..pser
-           local psig    <const> = W3C.deserialize(O.from_string(tjws[3]))
-           I.spy({len= #psig,psig = psig:hex()})
-
+           local to_be_verified <const> =
+               jws.header_enc..O.from_string('.')..pser
            -- if header.alg == 'ES256K' then
                -- TODO: split signature in r and s should be done in ECDH
            local pk = mayhave('jws_public_key')
-           if not pk then pk = mayhave(crypto.keyname..'_public_key') end
-           zencode_assert(crypto.verify(pk, to_be_verified, psig),
+           if not pk then pk = have(crypto.keyname..'_public_key') end
+           zencode_assert(crypto.verify(pk, to_be_verified, jws.signature),
                           'Invalid JWS signature of: '..n_payload)
 end)
 
 IfWhen("verify jws signature in ''", function(n_jws)
-           local jws     <const> = have(n_jws)
-           local tjws    <const> = strtok(jws:string(), '.')
-           zencode_assert( tjws[1] ~= '', "The JWS has no header")
-           zencode_assert( jsontok(O.from_url64(tjws[1]):string()),
-                                   "The JWS header is not a valid JSON")
-           zencode_assert( tjws[2] ~= '', "The JWS has no payload")
-           zencode_assert( tjws[3] ~= '', "The JWS has no signature")
-           local phead   <const> = O.from_string(tjws[1])
-           local header  <const> = W3C.deserialize(phead)
-           zencode_assert( luatype(header)=='table',
-                           'The JWS header is not a dictionary')
-           local crypto  <const> = W3C.resolve_crypto_algo(header.alg)
-           local to_be_verified <const> = phead..O.from_string('.')..pser
-           local psig    <const> = W3C.deserialize(O.from_string(tjws[3]))
+           local jws_enc <const> = have(n_jws)
+           local jws     <const> = W3C.parse_jws(jws_enc)
+           zencode_assert( jws.payload, "The JWS has no payload")
+           local crypto  <const> = W3C.resolve_crypto_algo(jws.header.alg)
+           local to_be_verified <const> = jws.header_enc..O.from_string('.')..jws.payload_enc
            local pk = mayhave('jws_public_key')
-           if not pk then pk = mayhave(crypto.keyname..'_public_key') end
-           zencode_assert(crypto.verify(pk, to_be_verified, psig),
+           if not pk then pk = have(crypto.keyname..'_public_key') end
+           zencode_assert(crypto.verify(pk, to_be_verified, jws.signature),
                           'Invalid JWS signature of: '..n_payload)
 end)
