@@ -15,3 +15,7 @@ load ../bats_setup
 @test "W3C Data Integrity ECDSA" {
     ${ZENROOM_EXECUTABLE} $T/check_w3c-vc-di-ecdsa.lua
 }
+
+@test "Deterministic ECDSA" {
+    ${ZENROOM_EXECUTABLE} $T/check_ecdsa_deterministic.lua
+}

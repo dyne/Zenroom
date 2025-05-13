@@ -11,26 +11,41 @@ local test_vectors = {
 
 -- "Haskoin test vectors for RFC 6979 ECDSA (secp256k1, SHA-256)"
 -- "(PrvKey HEX, message, R || S as HEX)"
-local test_vec_2 = {{ "0000000000000000000000000000000000000000000000000000000000000001",
-    "Everything should be made as simple as possible, but not simpler.", "33a69cd2065432a30f3d1ce4eb0d59b8ab58c74f27c41a7fdb5696ad4e6108c96f807982866f785d3f6418d24163ddae117b7db4d5fdf0071de069fa54342262"
+local test_vec_2 = {
+    {
+        "0000000000000000000000000000000000000000000000000000000000000001",
+        "Everything should be made as simple as possible, but not simpler.",
+        "33a69cd2065432a30f3d1ce4eb0d59b8ab58c74f27c41a7fdb5696ad4e6108c96f807982866f785d3f6418d24163ddae117b7db4d5fdf0071de069fa54342262"
     },
-    { "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140",
-    "Equations are more important to me, because politics is for the present, but an equation is something for eternity.", "54c4a33c6423d689378f160a7ff8b61330444abb58fb470f96ea16d99d4a2fed07082304410efa6b2943111b6a4e0aaa7b7db55a07e9861d1fb3cb1f421044a5"
+    {
+        "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140",
+        "Equations are more important to me, because politics is for the present, but an equation is something for eternity.",
+        "54c4a33c6423d689378f160a7ff8b61330444abb58fb470f96ea16d99d4a2fed07082304410efa6b2943111b6a4e0aaa7b7db55a07e9861d1fb3cb1f421044a5"
     },
-    { "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140",
-    "Not only is the Universe stranger than we think, it is stranger than we can think.", "ff466a9f1b7b273e2f4c3ffe032eb2e814121ed18ef84665d0f515360dab3dd06fc95f5132e5ecfdc8e5e6e616cc77151455d46ed48f5589b7db7771a332b283"
+    {
+        "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140",
+        "Not only is the Universe stranger than we think, it is stranger than we can think.",
+        "ff466a9f1b7b273e2f4c3ffe032eb2e814121ed18ef84665d0f515360dab3dd06fc95f5132e5ecfdc8e5e6e616cc77151455d46ed48f5589b7db7771a332b283"
     },
-    { "0000000000000000000000000000000000000000000000000000000000000001",
-    "How wonderful that we have met with a paradox. Now we have some hope of making progress.", "c0dafec8251f1d5010289d210232220b03202cba34ec11fec58b3e93a85b91d375afdc06b7d6322a590955bf264e7aaa155847f614d80078a90292fe205064d3"
+    {
+        "0000000000000000000000000000000000000000000000000000000000000001",
+        "How wonderful that we have met with a paradox. Now we have some hope of making progress.",
+        "c0dafec8251f1d5010289d210232220b03202cba34ec11fec58b3e93a85b91d375afdc06b7d6322a590955bf264e7aaa155847f614d80078a90292fe205064d3"
     },
-    { "69ec59eaa1f4f2e36b639716b7c30ca86d9a5375c7b38d8918bd9c0ebc80ba64",
-    "Computer science is no more about computers than astronomy is about telescopes.", "7186363571d65e084e7f02b0b77c3ec44fb1b257dee26274c38c928986fea45d0de0b38e06807e46bda1f1e293f4f6323e854c86d58abdd00c46c16441085df6"
+    {
+        "69ec59eaa1f4f2e36b639716b7c30ca86d9a5375c7b38d8918bd9c0ebc80ba64",
+        "Computer science is no more about computers than astronomy is about telescopes.",
+        "7186363571d65e084e7f02b0b77c3ec44fb1b257dee26274c38c928986fea45d0de0b38e06807e46bda1f1e293f4f6323e854c86d58abdd00c46c16441085df6"
     },
-    { "00000000000000000000000000007246174ab1e92e9149c6e446fe194d072637",
-    "...if you aren't, at any given time, scandalized by code you wrote five or even three years ago, you're not learning anywhere near enough", "fbfe5076a15860ba8ed00e75e9bd22e05d230f02a936b653eb55b61c99dda4870e68880ebb0050fe4312b1b1eb0899e1b82da89baa5b895f612619edf34cbd37"
+    {
+        "00000000000000000000000000007246174ab1e92e9149c6e446fe194d072637",
+        "...if you aren't, at any given time, scandalized by code you wrote five or even three years ago, you're not learning anywhere near enough",
+        "fbfe5076a15860ba8ed00e75e9bd22e05d230f02a936b653eb55b61c99dda4870e68880ebb0050fe4312b1b1eb0899e1b82da89baa5b895f612619edf34cbd37"
     },
-    { "000000000000000000000000000000000000000000056916d0f9b31dc9b637f3",
-    "The question of whether computers can think is like the question of whether submarines can swim.", "cde1302d83f8dd835d89aef803c74a119f561fbaef3eb9129e45f30de86abbf906ce643f5049ee1f27890467b77a6a8e11ec4661cc38cd8badf90115fbd03cef"
+    {
+        "000000000000000000000000000000000000000000056916d0f9b31dc9b637f3",
+        "The question of whether computers can think is like the question of whether submarines can swim.",
+        "cde1302d83f8dd835d89aef803c74a119f561fbaef3eb9129e45f30de86abbf906ce643f5049ee1f27890467b77a6a8e11ec4661cc38cd8badf90115fbd03cef"
     }
 }
 
@@ -53,7 +68,7 @@ for i,v in pairs(test_vec_2) do
     print("Test case " .. i)
     local sk = O.from_hex(v[1])
     local msg = O.from_string(v[2])
-    local sig = ECDH.sign_ecdh_deterministic(sk, msg, 32)
+    local sig = ECDH.sign_deterministic(sk, msg, 32)
 
     local pk = ECDH.pubgen(sk)
     assert(ECDH.verify_deterministic(pk, msg, sig, 32), "FAILED SIGN")
@@ -67,6 +82,7 @@ for i,v in pairs(test_vec_2) do
     assert((sig.r):hex() == string.sub(v[3],1,64), "Wrong r")
     assert((sig.s):hex() == string.sub(v[3],65,128), "Wrong s")
 end
+
 
 print("---------------------")
 print("Deterministic ECDSA HASHED test 2")
@@ -95,10 +111,7 @@ for n,v in pairs(msgs) do
     assert(ECDH.verify(alice.public, O.from_string(v), sig), "Invalid signature")
 
     assert(ECDH.verify_deterministic(alice.public, O.from_string(v), sig, 64), "Invalid signature")
-    print("Test failure case " .. n)
     assert(not ECDH.verify_deterministic(alice.public, sha256(O.from_string(v)), sig, 64), "Valid signature with wrong msg")
-    print("Test 2 failure case " .. n)
     assert(not ECDH.verify_deterministic(O.random(64), O.from_string(v), sig, 64), "Valid signature with wrong pubkey")
-    print("Test 3 failure case " .. n)
     assert(not ECDH.verify_deterministic(alice.public, O.from_string(v), {["r"] = O.random(64), ["s"] = O.random(64)}, 64), "Valid signature with wrong sig")
 end
