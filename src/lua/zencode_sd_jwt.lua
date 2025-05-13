@@ -287,54 +287,13 @@ When("create selective disclosure of ''", function(sdr_name)
     new_codec('selective_disclosure')
 end)
 
--- require and return crypto class according to:
--- https://www.iana.org/assignments/jose/jose.xhtml
--- use procedural branching to instantiate only when needed
-local function resolve_crypto_algo(algo)
-    local alg <const> = algo:upper()
-    if alg == 'ES256' then
-        -- ECDSA using P-256 and SHA-256 [RFC7518, Section 3.4]
-        return({ name = 'ES256',
-                 sign = ES256.sign,
-                 verify = ES256.verify})
-    elseif alg == 'EDDSA' then
-        -- EdDSA signature algorithms [RFC8037, Section 3.1]
-        return({name = 'EDDSA',
-                sign = ED.sign,
-                verify = ED.verify})
-    elseif alg == 'ML-DSA-44' or alg == 'MLDSA44' then
-        return({name = 'ML-DSA-44',
-                sign = PQ.mldsa44_signature,
-                verify = PQ.mldsa44_verify })
-    elseif alg == 'ES256K' or alg == 'ECDH' then
-        -- ECDSA using secp256k1 curve and SHA-256 [RFC8812, Section 3.2]
-        return({name = 'ES256K',
-                sign = ECDH.sign,
-                verify = ECDH.verify })
-    end
-    error("Unsupported JOSE crypto algorithm: "..alg,2)
-end
-
--- take a IANA registered string about the crypto algo and return the
--- secret key if found in keyring using havekey
-local function resolve_secret_key(algo)
-    local alg <const> = algo:lower()
-    if alg == 'es256' then return(havekey(alg)) end
-    if alg == 'eddsa' then return(havekey(alg)) end
-    if alg == 'ml-dsa-44' or alg == 'mldsa44'
-    then return(havekey'mldsa44') end
-    if alg == 'es256k' or alg == 'ecdh' or alg == 'secp256k1'
-    then return(havekey'ecdh') end
-    error("Unsupported secret key: "..alg,2)
-end
-
 
 When("create signed selective disclosure of ''", function(sdp_name)
     local sdp <const> = have(sdp_name)
     ACK.signed_selective_disclosure = {
         jwt = SD_JWT.create_jwt(sdp.payload,
-                                resolve_secret_key('es256'),
-                                resolve_crypto_algo('es256')),
+                                W3C.resolve_secret_key('es256'),
+                                W3C.resolve_crypto_algo('es256')),
         disclosures = sdp.disclosures,
     }
     new_codec('signed_selective_disclosure')
@@ -346,8 +305,8 @@ When("create signed selective disclosure of '' with ''",
     local alg <const> = mayhave(algo)
     ACK.signed_selective_disclosure = {
         jwt = SD_JWT.create_jwt(sdp.payload,
-                                resolve_secret_key(alg or algo),
-                                resolve_crypto_algo(alg or algo)),
+                                W3C.resolve_secret_key(alg or algo),
+                                W3C.resolve_crypto_algo(alg or algo)),
         disclosures = sdp.disclosures,
     }
     new_codec('signed_selective_disclosure')
@@ -395,7 +354,7 @@ IfWhen("verify signed selective disclosure '' issued by '' is valid", function(o
     local jwt <const> = signed_sd.jwt
     local disclosures <const> = signed_sd.disclosures
     local algo <const> = jwt.header.alg:string()
-    local crypto <const> = resolve_crypto_algo(algo)
+    local crypto <const> = W3C.resolve_crypto_algo(algo)
     -- if jwt.header.alg == O.from_string("ES256") then
     local iss_pk <const> = load_pubkey_compat(by, algo:lower())
     local payload_str <const> = SD_JWT.prepare_dictionary(jwt.payload)
