@@ -651,8 +651,9 @@ static int ecdh_dsa_verify(lua_State *L) {
 			goto end;
 		}
 		s = o_alloc(L,32);
-		memcpy(s->val, r->val+32, 32);
+		memmove(s->val, r->val+32, 32);
 		s->len = 32;
+		r->len = 32;
 	}
 	int max_size = 64;
 	int res = (*ECDH.ECP__VP_DSA)(max_size, (octet*)pk, (octet*)m, r, s);
