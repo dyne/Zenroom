@@ -367,45 +367,46 @@ function Inspector:putValue(v, exp)
 	 if #v > 0 then self:puts("["..#v.."] ") end
 	 self:putTable(v, exporter)
   elseif iszen(tv) then
-	 if tv == "zenroom.octet" then
-		if #v == 0 then self:puts("octet[0] (null)")
-		else self:puts("octet[" .. #v .. "] " .. exporter(v))
-		end
-	 elseif tv == "zenroom.big" then
-		local i = v:octet()
-		self:puts("int[" .. #i.. "] " .. exporter(v, "integer"))
-	 elseif tv == "zenroom.float" then
-		self:puts("float " .. exporter(v, "float")) -- exporter(i))
-	 elseif tv == "zenroom.time" then
-		self:puts("time " .. exporter(v, "time")) -- exporter(i))
-	 elseif tv == "zenroom.ecp" then
-		local i = v:octet()
-		if v == "Infinity" or v == ECP.infinity() then
-		   self:puts("ecp[...] (Infinity)")
-		else
-		   self:puts("ecp[" .. #i.. "] " .. exporter(i))
-		end
-	 elseif tv == "zenroom.ecp2" then
-		local i = v:octet()
-		if v == "Infinity" or v == ECP2.infinity() then
-		   self:puts("ecp[...] (Infinity)")
-		else
-		   self:puts("ecp2[" ..#i.. "] ".. exporter(i))
-		end
-	 elseif tv == "zenroom.fp12" then
-		local i = v:octet()
-		self:puts("fp12[" ..#i.. "] ".. exporter(i))
-	 elseif tv == "zenroom.ecdh" then
-		local pk = v:public()
-		local sk = v:private()
-		if not pk and not sk then self:puts("ecdh keyring is empty\n")
-		else
-		   if pk then self:puts("ecdh.public["..#pk.."] ".. exporter(pk).."\n") end
-		   if sk then self:puts("ecdh.private["..#sk.."] ".. exporter(sk).."\n") end
-		end
-	 else
-		self:puts(exporter(v:octet()))
-	 end
+      local olen <const> = #v
+      local i <const> = v:octet()
+      if tv == "zenroom.octet" then
+          if olen == 0 then self:puts("octet[0] (null)")
+          elseif olen < 64 and olen ~= 32 and olen ~= 64 then
+              -- print as strings some octets
+               self:puts("octet[" .. olen .. "] " .. v:to_string())
+          else self:puts("octet[" .. olen .. "] " .. exporter(v))
+          end
+      elseif tv == "zenroom.big" then
+          self:puts("int[" .. #i.. "] " .. exporter(v, "integer"))
+      elseif tv == "zenroom.float" then
+          self:puts("float " .. exporter(v, "float")) -- exporter(i))
+      elseif tv == "zenroom.time" then
+          self:puts("time " .. exporter(v, "time")) -- exporter(i))
+      elseif tv == "zenroom.ecp" then
+          if v == "Infinity" or v == ECP.infinity() then
+              self:puts("ecp[...] (Infinity)")
+          else
+              self:puts("ecp[" .. #i.. "] " .. exporter(i))
+          end
+      elseif tv == "zenroom.ecp2" then
+          if v == "Infinity" or v == ECP2.infinity() then
+              self:puts("ecp[...] (Infinity)")
+          else
+              self:puts("ecp2[" ..#i.. "] ".. exporter(i))
+          end
+      elseif tv == "zenroom.fp12" then
+          self:puts("fp12[" ..#i.. "] ".. exporter(i))
+      elseif tv == "zenroom.ecdh" then
+          local pk = v:public()
+          local sk = v:private()
+          if not pk and not sk then self:puts("ecdh keyring is empty\n")
+          else
+              if pk then self:puts("ecdh.public["..#pk.."] ".. exporter(pk).."\n") end
+              if sk then self:puts("ecdh.private["..#sk.."] ".. exporter(sk).."\n") end
+          end
+      else
+          self:puts(exporter(v:octet()))
+      end
   else
     self:puts('<',tv,' ',self:getId(v),'>')
   end
