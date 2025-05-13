@@ -24,6 +24,7 @@ local ED = require'ed'
 
 local already_warned = false
 
+-- deprecation message to be removed in v6 passing to default encoding for EDDSA
 local function warn_base58()
     if not already_warned then
         already_warned = true
