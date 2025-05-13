@@ -83,15 +83,15 @@ When("sign verifiable credential named ''", function(vc)
     local credential = have(vc)
     local sk = havekey'ecdh' -- assuming secp256k1
     zencode_assert(not credential.proof,'The object is already signed: ' .. vc)
-    local proof = {
-        type = 'Zenroom v'.._G.ZENROOM_VERSION.original,
+    ACK[vc].proof = {
+        ['type'] = O.from_string('Zenroom v'.._G.ZENROOM_VERSION.original),
         -- "Signature", -- TODO: check what to write here for secp256k1
         -- created = "2018-06-18T21:19:10Z",
-        proofPurpose = 'authenticate' -- assertionMethod", -- TODO: check
+
+        -- create a JWS detached signature of the payload, default alg
+        jws = W3C.create_jws(false, nil, credential, true),
+        proofPurpose = O.from_string'authenticate' -- assertionMethod", -- TODO: check
     }
-    local cred_str = W3C.json_encoding(vc)
-    proof.jws = W3C.jws_signature_to_octet(ECDH.sign(sk, cred_str))
-    ACK[vc].proof = deepmap(OCTET.from_string, proof)
 end)
 
 IfWhen("verify verifiable credential named ''", function(src)
