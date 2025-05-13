@@ -601,6 +601,43 @@ end:
 	END(2);
 }
 
+// Internal function: sometimes signatures come into a serialized form
+// while r and s may be each 31 bytes long, so we end up with 63 byte
+// sized signatures and more seldomly with 62 (at least theoretical,
+// never seen one) so we try all possible combinations since the
+// serialization does not say where one ends and the other continues.
+HEDLEY_WARN_UNUSED_RESULT
+HEDLEY_NON_NULL(1, 2, 3)
+int verify64_with_partition_attempts
+	(const octet *pk, const octet *m,
+	 const octet* input, octet* left, octet* right) {
+    // validate input size (62-64 bytes)
+    if (!input || input->len < 62 || input->len > 64)
+        return 0;
+    // possible partition combinations to try (left, right)
+    const int splits[][2] = {
+        {32, 32}, {31, 33}, {33, 31},  // For 64-byte input
+		{31, 32}, {32, 31},            // For 63-byte input
+        {31, 31}, {30, 32}, {32, 30}   // For 62-byte input
+    };
+    for (size_t i = 0; i < sizeof(splits)/sizeof(splits[0]); i++) {
+        int l = splits[i][0];
+        int r = splits[i][1];
+        // skip impossible splits for current input size
+        if (l + r != input->len) continue;
+        // validate partition sizes (30-32 bytes)
+        if ((l >= 30 && l <= 32) && (r >= 30 && r <= 32)) {
+            memcpy(left->val, input->val, l);
+            memcpy(right->val, input->val + l, r);
+            left->len = l;
+            right->len = r;
+			int res = (*ECDH.ECP__VP_DSA)
+				(64, (octet*)pk, (octet*)m, left, right);
+			if(res>=0) return 1;
+        }
+    }
+    return 0;
+}
 
 /**
    Elliptic Curve Digital Signature Algorithm (ECDSA) verification
@@ -637,9 +674,14 @@ static int ecdh_dsa_verify(lua_State *L) {
 			failed_msg = "signature argument invalid: not 64 bytes long";
 			goto end;
 		}
-		s = o_alloc(L,32);
-		memmove(s->val, r->val+32, 32);
-		s->len = 32;
+		octet *left = o_alloc(L, 36);
+		octet *right = o_alloc(L, 36);
+		int res = verify64_with_partition_attempts(pk, m, r, left, right);
+		o_free(L, left);
+		o_free(L, right);
+		if(res) lua_pushboolean(L, 1);
+		else    lua_pushboolean(L, 0);
+		goto end;
 	} else if(lua_type(L, 3) == LUA_TTABLE) {
 		lua_getfield(L, 3, "r");
 		lua_getfield(L, 3, "s"); // -2 stack
