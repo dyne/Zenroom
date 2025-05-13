@@ -29,6 +29,39 @@ local function require_once_fun(scenario, fun_name)
     return f
 end
 
+-- generate a serialized url64(JSON) encoded  octet string of any object
+-- @param any the object to serialize
+-- @return octet which should be printed as string
+function W3C.serialize(any)
+    if luatype(any) == 'table' then
+        return O.from_string(O.to_url64(O.from_string(JSON.encode(any))))
+    else
+        if not iszen(type(any)) then
+            error("W3C serialize called with wrong argument type: "
+                  ..type(any),2)
+        end
+        if #any == 0 then return O.from_string('') end
+        return O.from_string(O.to_url64(any:octet()))
+    end
+end
+
+-- generate a de-serialized object from
+-- any serialized octet
+-- @param jws the object to serialize
+-- @return object which can be also a table
+function W3C.deserialize(any)
+    if not iszen(type(any)) then
+        error("W3C deserialize called with wrong argument type: "
+              ..type(any),2)
+    end
+    local s <const> = O.to_string(O.from_url64(O.to_string(any:octet())))
+    if jsontok(s) then
+        return JSON.decode(s)
+    else
+        return(O.from_string(s))
+    end
+end
+
 -- utlity to encode a JSON as octet string based on its original encoding
 -- if octet are passed as input it will check that the original string was
 -- a json or a json encoded in url64
@@ -117,49 +150,48 @@ end
 -- @param s the signature, if not present payload can not be empty string
 -- @param h the header (optional), default is ecdsa on secp256k1
 -- @param p the payload (optional), default is empty string
--- @param d the detached falg, if set to true and payload is present, remove payload from jws
+-- @param d the detached flag, if set to true and payload is present, remove payload from jws
 -- @return octet string containing the jws
-function W3C.jws_signature_to_octet(s, h, p, d)
-    local header = h or
-        O.from_string(JSON.encode(
-                          {
-                              alg = 'ES256K',
-                              b64 = true,
-                              crit = {'b64'}
-                          }
-        ))
-    local payload = (p and O.to_url64(p)) or ""
+function W3C.create_jws(s, h, p, d)
+    local header <const> = h or
+        { -- default
+            alg = 'ES256K',
+            b64 = true,
+            crit = {'b64'}
+        }
+    local dot <const> = O.from_string('.')
+    local payload = p -- may be changed by detached flag
     local signature = s
     if not signature then
-        local header_json = JSON.decode(header:string())
-        if not header_json.alg then
-            error('Algorithm not specified in jws header', 2)
-        end
-        if not payload or payload == "" then
+        if not payload then
             error('Can not create a jws signature without the payload', 2)
         end
-        local to_be_signed = O.from_string(O.to_url64(header)..'.'..payload)
-        if header_json.alg == 'ES256K' then
-            local sk = havekey'ecdh'
-            local signature_table = require_once_fun('ecdh', 'sign')(sk, to_be_signed)
-            signature = signature_table.r .. signature_table.s
-        elseif header_json.alg == 'ES256' then
-            local sk = havekey'es256'
-            signature = require_once_fun('es256', 'sign')(sk, to_be_signed)
-        else
-            error(header_json.alg .. ' algorithm not yet supported by zenroom jws signature', 2)
+        if not header.alg then
+            error('Algorithm not specified in jws header', 2)
         end
+        local to_be_signed <const> =
+            W3C.serialize(header)
+            ..
+            O.from_string('.')
+            ..
+            W3C.serialize(payload)
+        local crypto <const> =
+            W3C.resolve_crypto_algo(O.to_string(header.alg))
+        local sk <const> = havekey(crypto.keyname)
+        signature = crypto.sign(sk, to_be_signed)
     end
-    payload = (d and "") or payload
+    payload = (d and O.from_string('')) or payload
     if luatype(signature) == 'table' then
-        if not(s.r and s.s) then
+        if not(signature.r and signature.s) then
             error('The signature table does not contains r and s', 2)
         end
-        signature = s.r .. s.s
+        signature = signature.r .. signature.s
     end
-    return (OCTET.to_url64(header) ..
-            '.' .. payload ..
-            '.' .. OCTET.to_url64(signature))
+    return (W3C.serialize(header)
+            ..dot..
+            W3C.serialize(payload)
+            ..dot..
+            W3C.serialize(signature))
 end
 
 
@@ -186,6 +218,133 @@ function W3C.verify_jws_from_proof(src, document, public_key)
             error('The signature does not validate: ' .. src, 2)
         end
     end
+end
+
+
+-- require and return crypto class according to:
+-- https://www.iana.org/assignments/jose/jose.xhtml
+-- use procedural branching to instantiate only when needed
+function W3C.resolve_crypto_algo(algo)
+    if type(algo) ~= 'string' then
+        error('W3C resolve crypto algo called with wrong argument type: '
+        ..type(algo),2)
+    end
+    local alg <const> = algo:upper()
+    if alg == 'ES256' then
+        -- ECDSA using P-256 and SHA-256 [RFC7518, Section 3.4]
+        return({ name = 'ES256',
+                 sign = ES256.sign,
+                 verify = ES256.verify,
+                 pubgen = ES256.pubgen,
+                 public_xy = ES256.public_xy,
+                 keyname = 'es256'
+        })
+    elseif alg == 'EDDSA' then
+        -- EdDSA signature algorithms [RFC8037, Section 3.1]
+        return({name = 'EDDSA',
+                sign = ED.sign,
+                verify = ED.verify,
+                pubgen = ED.pubgen,
+                keyname = 'eddsa'
+        })
+    elseif alg == 'ML-DSA-44' or alg == 'MLDSA44' then
+        return({name = 'ML-DSA-44',
+                sign = PQ.mldsa44_signature,
+                verify = PQ.mldsa44_verify,
+                pubgen = PQ.mldsa44_pubgen,
+                keyname = 'mldsa44'
+        })
+    elseif alg == 'ES256K' or alg == 'ECDH' then
+        -- ECDSA using secp256k1 curve and SHA-256 [RFC8812, Section 3.2]
+        return({name = 'ES256K',
+                sign = ECDH.sign,
+                verify = ECDH.verify,
+                pubgen = ECDH.pubgen,
+                public_xy = ECDH.public_xy,
+                keyname = 'ecdh'
+        })
+    end
+    error("Unsupported JOSE crypto algorithm: "..alg,2)
+end
+
+-- take a IANA registered string about the crypto algo and return the
+-- secret key if found in keyring using havekey
+function W3C.resolve_secret_key(algo)
+    local alg <const> = algo:lower()
+    if alg == 'es256' then return(havekey(alg)) end
+    if alg == 'eddsa' then return(havekey(alg)) end
+    if alg == 'ml-dsa-44' or alg == 'mldsa44'
+    then return(havekey'mldsa44') end
+    if alg == 'es256k' or alg == 'ecdh' or alg == 'secp256k1'
+    then return(havekey'ecdh') end
+    error("Unsupported secret key: "..alg,2)
+end
+
+-- create a jwk encoded key starting from the realtive sk/pk
+-- @param alg alg in jwk
+-- @param sk_flag sk flag, if true the alg sk will be inserted in the jwk
+-- @param pk a specific public key to be used
+-- @return jwk
+function W3C.create_jwk(alg, sk_flag, pk)
+    if sk_flag and pk then
+        error('JWK can not be created with zenroom sk and custom pk', 2)
+    end
+    local crypto <const> = W3C.resolve_crypto_algo(alg)
+    local jwk = { alg = O.from_string(crypto.name) }
+    local sk
+    if sk_flag then
+        sk = W3C.resolve_secret_key(alg)
+    end
+    local pub = pk or mayhave'es256 public key'
+    if not pub and crypto.pubgen then
+        if not sk then
+            sk = W3C.resolve_secret_key(alg)
+        end
+        pub = crypto.pubgen(sk)
+    end
+    if crypto.name == 'ES256' then
+        jwk.kty = O.from_string'EC'
+        jwk.crv = O.from_string'P-256'
+        if pub then
+            jwk.x, jwk.y = crypto.public_xy(pub)
+        end
+        if sk_flag then
+            jwk.d = sk
+        end
+        return jwk
+    end
+    if crypto.name == 'EDDSA' then
+        jwk.kty = O.from_string'EC'
+        jwk.crv = O.from_string'P-256'
+        if pub then
+            jwk.x = pub
+        end
+        if sk_flag then
+            jwk.d = sk
+        end
+        return jwk
+    end
+    if crypto.name == 'ES256K' then
+        jwk.kty = O.from_string'EC'
+        jwk.crv = O.from_string'secp256k1'
+        if pub then
+            jwk.x, jwk.y = crypto.public_xy(pub)
+        end
+        if sk_flag then
+            jwk.d = sk
+        end
+        return jwk
+    end
+    if crypto.name == 'ML-DSA-44' then
+        if pub then
+            jwk.x = pub
+        end
+        if sk_flag then
+            jwk.d = sk
+        end
+        return jwk
+    end
+    error('Unsupported JWK crypto algorithm: '..alg,2)
 end
 
 -- create a jwk encoded key starting from the realtive sk/pk
