@@ -479,7 +479,8 @@ Given("'' part of path '' before string suffix ''", function(enc, path, sfx_name
           zencode_assert(string.sub(ele_from_path, elelen-slen+1, elelen) == sfx,
                          "Suffix not found in "..path..": "..sfx_name)
           -- if not conv and ZEN.schemas[what] then conv = what end
-          ZEN.TMP = guess_conversion(I.spy(string.sub(ele_from_path,1,elelen-slen)), enc)
+          ZEN.TMP = guess_conversion(
+              string.sub(ele_from_path,1,elelen-slen), enc)
           ZEN.TMP.name = dest
           ack(dest)
           gc()
