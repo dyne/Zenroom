@@ -630,7 +630,17 @@ static int ecdh_dsa_verify(lua_State *L) {
 		goto end;
 	}
 	octet *r = NULL, *s = NULL;
-	if(lua_type(L, 3) == LUA_TTABLE) {
+	if(lua_type(L, 3) == LUA_TUSERDATA) {
+		r = (octet *)o_arg(L, 3);
+		if(r->len != 64) {
+			warning(L,"signature argument is %u bytes long",r->len);
+			failed_msg = "signature argument invalid: not 64 bytes long";
+			goto end;
+		}
+		s = o_alloc(L,32);
+		memmove(s->val, r->val+32, 32);
+		s->len = 32;
+	} else if(lua_type(L, 3) == LUA_TTABLE) {
 		lua_getfield(L, 3, "r");
 		lua_getfield(L, 3, "s"); // -2 stack
 		r = (octet *)o_arg(L, -2);
@@ -644,16 +654,8 @@ static int ecdh_dsa_verify(lua_State *L) {
 			goto end;
 		}
 	} else {
-		r = (octet *)o_arg(L, 3);
-		if(r->len != 64) {
-			warning(L,"signature argument is %u bytes long",r->len);
-			failed_msg = "signature argument invalid: not 64 bytes long";
-			goto end;
-		}
-		s = o_alloc(L,32);
-		memmove(s->val, r->val+32, 32);
-		s->len = 32;
-		r->len = 32;
+		failed_msg = "signature argument invalid";
+		goto end;
 	}
 	int max_size = 64;
 	int res = (*ECDH.ECP__VP_DSA)(max_size, (octet*)pk, (octet*)m, r, s);
@@ -666,7 +668,7 @@ static int ecdh_dsa_verify(lua_State *L) {
 	else
 		lua_pushboolean(L, 1);
 end:
-	if(s) o_free(L, s);
+	o_free(L, s);
 	o_free(L, r);
 	o_free(L, m);
 	o_free(L, pk);
