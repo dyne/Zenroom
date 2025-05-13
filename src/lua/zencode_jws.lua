@@ -60,7 +60,7 @@ local function _create_jws_header(alg, pk)
     if pk then
         ACK.jws_header.jwk = W3C.create_jwk(alg)
     end
-    new_codec('jws_header', { zentype = 'd' })
+    new_codec('jws_header', { zentype = 'd', encoding = 'string' })
 end
 
 When("create jws header for p256 signature", function() _create_jws_header('ES256') end)
@@ -162,7 +162,9 @@ IfWhen("verify jws signature in ''", function(n_jws)
            local crypto  <const> = W3C.resolve_crypto_algo(jws.header.alg)
            local to_be_verified <const> = jws.header_enc..O.from_string('.')..jws.payload_enc
            local pk = mayhave('jws_public_key')
-           if not pk then pk = have(crypto.keyname..'_public_key') end
+           if not pk then pk = mayhave(crypto.keyname..'_public_key') end
+           if not pk then pk = W3C.jwk_public_key(I.spy(jws.header), crypto) end
+           zencode_assert(pk, 'Public key not found for JWS signature')
            zencode_assert(crypto.verify(pk, to_be_verified, jws.signature),
-                          'Invalid JWS signature of: '..n_payload)
+                          'Invalid JWS signature in: '..n_jws)
 end)

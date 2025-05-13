@@ -254,6 +254,47 @@ function W3C.parse_jws(jws_enc)
     return res
 end
 
+-- Extract the public key from a JWK inside the a JWS header: it may
+-- contain the pk of the signature when typ is dpop+jwt and header.jwk
+-- is present among other requirements defined in:
+-- oauth-dpop's 4.2. DPoP Proof JWT Syntax
+-- https://www.ietf.org/archive/id/draft-ietf-oauth-dpop-13.html
+-- @param header the jws header that should contain the public key
+-- @param crypto crypto algo that is already resolved for this header
+-- @return pk and crypto algo
+function W3C.jwk_public_key(header, crypto)
+    if header.typ ~= 'dpop+jwt' then
+        warn("JWS type is not 'dpop+jwt': "..header.typ)
+        return nil
+    end
+    if not header.jwk then
+        warn("JWS header doesn't contains a jwk")
+        return nil
+    end
+    if header.jwk.kty ~= 'EC' then
+        warn('JWK public key type is not EC', 2)
+        return nil
+    end
+    if not header.jwk.crv then
+        warn('JWK curve type undefined', 2)
+        return nil
+    end
+    local jwk_crypto <const> = W3C.resolve_crypto_algo(header.jwk.crv)
+    if crypto and jwk_crypto.keyname ~= crypto.keyname then
+        warn('JWK crypto algo is different from JWS: '..jwk_crypto.keyname)
+        return nil
+    end
+    local res
+    if header.jwk.x and header.jwk.y then
+        res = O.from_url64(header.jwk.x):pad(32)
+            ..O.from_url64(header.jwk.y):pad(32)
+    else
+        warn("JWK misses public key coordinates x/y", 2)
+        return nil
+    end
+    return res, jwk_crypto
+end
+
 -- Verify a jws signature from a document proof
 -- @param src the name of the object containing the document
 -- @param document the document to be verified
@@ -289,7 +330,8 @@ function W3C.resolve_crypto_algo(algo)
         ..type(algo),2)
     end
     local alg <const> = algo:upper()
-    if alg == 'ES256' then
+    if alg == 'ES256' or alg == 'secp256r1'
+        or alg == 'P-256' then
         -- ECDSA using P-256 and SHA-256 [RFC7518, Section 3.4]
         return({ name = 'ES256',
                  sign = ES256.sign,
@@ -313,7 +355,7 @@ function W3C.resolve_crypto_algo(algo)
                 pubgen = PQ.mldsa44_pubgen,
                 keyname = 'mldsa44'
         })
-    elseif alg == 'ES256K' or alg == 'ECDH' then
+    elseif alg == 'ES256K' or alg == 'ECDH' or alg == 'secp256k1' then
         -- ECDSA using secp256k1 curve and SHA-256 [RFC8812, Section 3.2]
         return({name = 'ES256K',
                 sign = ECDH.sign,
