@@ -90,4 +90,61 @@ function MT.create_merkle_tree_from_table_of_hashes(data_table, hashtype)
     return tree
 end
 
+
+
+--Indeces could have to be shifted
+local function _generate_leaves_for_proof1(tree, pos)
+    local indeces_set = {}
+    pos = pos + N
+
+
+    table.insert(indeces_set, pos)
+
+    while pos > 2 do
+        
+        if pos%2 == 0 then
+            table.insert(indeces_set, pos - 1 )
+        else
+            table.insert(indeces_set, pos + 1 )
+        end
+
+        pos = math.ceil(pos/2)
+    end
+
+    local set = {}
+    local m = #indeces_set
+
+    table.sort(indeces_set)
+
+    for i = 1, m do
+        set[i] = {tree[indeces_set[i]], indeces_set[i]}
+    end
+
+    return set
+end
+
+
+
+--check the index with official version: could have to be shifted
+local function _verify_proof(proof, pos, root, hashtype)
+    --local pos = pos + N   -- we can suppose to have N = number of leaves
+    local n = #proof
+    
+    local t = _hash(proof[n-1][1] .. proof[n][1]) 
+    n = n-2
+
+    while n > 0 do
+        if proof[n][2]%2 == 0 then
+            t = _hash(t .. proof[n][1])
+        else
+            t = _hash(proof[n][1] .. t)
+        end
+        n = n-1
+    end
+    
+    return t 
+    --return t == root
+end
+
+
 return MT
