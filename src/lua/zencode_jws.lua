@@ -97,63 +97,33 @@ When("create jws detached signature of header '' and payload ''", function(heade
                                           encoding = 'string' })
 end)
 
-local function _verify_jws(payload, jws)
-    local n_jws <const> = jws or 'jws'
-    local o_jws <const> = have(n_jws)
-    local o_payload = have(payload) and W3C.serialize(payload)
-    local enc_payload
-    if o_payload then
-        local c_payload = CODEC[payload].encoding
-        if c_payload == 'url64' or luatype(ACK[payload]) == 'table' then
-            enc_payload = O.from_string(O.to_url64(o_payload)) 
-        elseif c_payload == 'string' then
-            enc_payload = o_payload
-        else
-            error('encoding for payload not accpeted: '..c_payload, 2)
-        end
+local function _verify_jws(n_payload, n_jws)
+    local jws_enc <const> = have(n_jws or 'jws')
+    local payload <const> = have(n_payload)
+    local pser    <const> = W3C.serialize(payload)
+    local jws     <const> = W3C.parse_jws(jws_enc)
+    local crypto  <const> = W3C.resolve_crypto_algo(jws.header.alg)
+    -- the payload is passed as argument so we assume this to
+    -- be a detached signature, in case another payload is
+    -- present in the jws then we also verify it is the same as
+    -- the detached one
+    if jws.payload then
+        zencode_assert(pser == jws.payload_enc,
+                       "The JWS contains a different payload")
     end
-    local signature, verify_f, pub, signed = W3C.jws_octet_to_signature(o_jws, enc_payload)
-    if not pub then
-        error('Public key to verify the jws signature not found', 2)
-    end
-    if not verify_f(pub, signed, signature) then
-        -- retro compatibility, but non jws compliant signature
-        if o_payload and verify_f(pub, o_payload, signature) then
-            warn('Raw signature of the payload verified, but is non standard jws')
-        else
-            error('The signature does not validate: ' .. n_jws, 2)
-        end
-    end
+    local to_be_verified <const> =
+        jws.header_enc..O.from_string('.')..pser
+    -- if header.alg == 'ES256K' then
+    -- TODO: split signature in r and s should be done in ECDH
+    local pk = mayhave('jws_public_key')
+    if not pk then pk = have(crypto.keyname..'_public_key') end
+    zencode_assert(crypto.verify(pk, to_be_verified, jws.signature),
+                   'Invalid JWS signature of: '..n_payload)
 end
-
 IfWhen(deprecated("verify jws signature of ''",
                   "verify '' has a jws signature in ''",
-                  _verify_jws
-))
-
-IfWhen("verify '' has a jws signature in ''", function(n_payload, n_jws)
-           local jws_enc <const> = have(n_jws)
-           local payload <const> = have(n_payload)
-           local pser    <const> = W3C.serialize(payload)
-           local jws     <const> = W3C.parse_jws(jws_enc)
-           local crypto  <const> = W3C.resolve_crypto_algo(jws.header.alg)
-           -- the payload is passed as argument so we assume this to
-           -- be a detached signature, in case another payload is
-           -- present in the jws then we also verify it is the same as
-           -- the detached one
-           if jws.payload then
-               zencode_assert(pser == jws.payload_enc,
-                              "The JWS contains a different payload")
-           end
-           local to_be_verified <const> =
-               jws.header_enc..O.from_string('.')..pser
-           -- if header.alg == 'ES256K' then
-               -- TODO: split signature in r and s should be done in ECDH
-           local pk = mayhave('jws_public_key')
-           if not pk then pk = have(crypto.keyname..'_public_key') end
-           zencode_assert(crypto.verify(pk, to_be_verified, jws.signature),
-                          'Invalid JWS signature of: '..n_payload)
-end)
+                  _verify_jws))
+IfWhen("verify '' has a jws signature in ''", _verify_jws)
 
 IfWhen("verify jws signature in ''", function(n_jws)
            local jws_enc <const> = have(n_jws)
