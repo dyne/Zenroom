@@ -49,7 +49,12 @@ int hex2buf(char *dst, const char *hex) {
 		if(hex[j+1] == '\0') {
 			return -1;
 		}
-		dst[i] = (hextable[(short)hex[j]]<<4) + hextable[(short)hex[j+1]];
+		register hi = hextable[(short)hex[j]];
+		register lo = hextable[(short)hex[j+1]];
+		if(hi < 0 || lo < 0) {
+			return -1;
+		}
+		dst[i] = (hi << 4) | lo;
 	}
 	return(i);
 }
