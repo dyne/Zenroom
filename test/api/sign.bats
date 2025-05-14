@@ -11,8 +11,8 @@ setup() {
     ZTMP="$BATS_FILE_TMPDIR"
     cd $ZTMP
     # vectors
-    STR448='abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq'
-    STR896='abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu'
+    STR448='6162636462636465636465666465666765666768666768696768696A68696A6B696A6B6C6A6B6C6D6B6C6D6E6C6D6E6F6D6E6F706E6F7071'
+    STR896='61626364656667686263646566676869636465666768696A6465666768696A6B65666768696A6B6C666768696A6B6C6D6768696A6B6C6D6E68696A6B6C6D6E6F696A6B6C6D6E6F706A6B6C6D6E6F70716B6C6D6E6F7071726C6D6E6F707172736D6E6F70717273746E6F707172737475'
 }
 
 save() {
@@ -61,7 +61,7 @@ run_exec() {
 @test "SIGN API :: eddsa create" {
     run_exec sign_create eddsa `cat eddsa_sk_seed` "$STR448" > eddsa_signature
     save eddsa_signature
-    assert_output '5ae82e02cf216eb6eb5a310a994c90626d070566263360db75e22acf138a9c7294e10f24d8e8665c43dfcbc89ef09c405d56318da23134037ff62aa30ce67f0a'
+    assert_output 'b2efa19f6c51a929e4155a8ee1df57abeef8e1b9556366551f9e1ec3ea2476b6c3bbcb93e8a23d5cfffa50f968cb84aa5e1e06bf1b884509ae35603b20999a01'
 }
 
 @test "SIGN API :: eddsa verify OK" {
