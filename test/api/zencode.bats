@@ -17,6 +17,17 @@ save() {
     export output=`cat $ZTMP/$1`
 }
 
+run_exec() {
+    binary="$1"
+    shift
+    if strings "$R/libzenroom.so" 2>/dev/null | grep -q "__asan_init"; then
+        export LD_PRELOAD=$(gcc -print-file-name=libasan.so)
+    else
+        unset LD_PRELOAD
+    fi
+    LD_LIBRARY_PATH=$R "./$binary" "$@"
+}
+
 @test "ZENCODE API :: Compile tests" {
     LDADD="-L$R -lzenroom"
     CFLAGS="$CFLAGS -I$R/src"
@@ -32,7 +43,7 @@ Given nothing
 Then print the string 'Hello World'
 EOF
 )"
-    LD_LIBRARY_PATH=$R ./zencode_exec "$script" "" "" ""> simple_zencode
+    run_exec zencode_exec "$script" "" "" "" > simple_zencode
     save simple_zencode
     assert_output '{"output":["Hello_World"]}'
 }
@@ -48,7 +59,7 @@ EOF
     data='{"data":"data"}'
     keys='{"keys":"keys"}'
     extra='{"extra":"extra"}'
-    LD_LIBRARY_PATH=$R ./zencode_exec "$script" "" "$keys" "$data" "$extra"> extra_zencode
+    run_exec zencode_exec "$script" "" "$keys" "$data" "$extra"> extra_zencode
     save extra_zencode
     assert_output '{"data":"data","extra":"extra","keys":"keys"}'
 }
@@ -59,7 +70,7 @@ Given nothing
 Then print the string 'Hello World'
 EOF
 )"
-    LD_LIBRARY_PATH=$R ./zencode_exec_tobuf "$script" "" "" ""> simple_zencode_tobuf
+    run_exec zencode_exec_tobuf "$script" "" "" ""> simple_zencode_tobuf
     save simple_zencode_tobuf
     assert_output '{"output":["Hello_World"]}'
 }
@@ -75,7 +86,7 @@ EOF
     data='{"data":"data"}'
     keys='{"keys":"keys"}'
     extra='{"extra":"extra"}'
-    LD_LIBRARY_PATH=$R ./zencode_exec_tobuf "$script" "" "$keys" "$data" "$extra"> extra_zencode_tobuf
+    run_exec zencode_exec_tobuf "$script" "" "$keys" "$data" "$extra"> extra_zencode_tobuf
     save extra_zencode_tobuf
     assert_output '{"data":"data","extra":"extra","keys":"keys"}'
 }
@@ -86,7 +97,7 @@ EOF
     keys='ALL '
     extra='ZENROOM '
     context='INPUTS'
-    LD_LIBRARY_PATH=$R ./zenroom_exec "$script" "" "$keys" "$data" "$extra" "$context"> extra_context_zenroom
+    run_exec zenroom_exec "$script" "" "$keys" "$data" "$extra" "$context"> extra_context_zenroom
     save extra_context_zenroom
     assert_output 'USING ALL ZENROOM INPUTS'
 }
@@ -97,7 +108,7 @@ EOF
     keys='ALL '
     extra='ZENROOM '
     context='INPUTS'
-    LD_LIBRARY_PATH=$R ./zenroom_exec_tobuf "$script" "" "$keys" "$data" "$extra" "$context"> extra_context_zenroom_tobuf
+    run_exec zenroom_exec_tobuf "$script" "" "$keys" "$data" "$extra" "$context"> extra_context_zenroom_tobuf
     save extra_context_zenroom_tobuf
     assert_output 'USING ALL ZENROOM INPUTS'
 }
