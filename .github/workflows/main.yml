@@ -106,9 +106,7 @@ jobs:
           pip3 install --prefer-binary meson ninja
       - name: Build GNU/Linux ${{ matrix.command }}
         run: |
-          make linux-exe ${{ matrix.command }}
-          make -C src clean
-          make linux-lib ${{ matrix.command }}
+          make debug-asan ${{ matrix.command }}
       - name: Check all tests on ${{ matrix.command }}
         run: |
           make check
