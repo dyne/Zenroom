@@ -18,6 +18,17 @@ save() {
     export output=`cat $ZTMP/$1`
 }
 
+run_exec() {
+    binary="$1"
+    shift
+    if strings "$R/libzenroom.so" 2>/dev/null | grep -q "__asan_init"; then
+        export LD_PRELOAD=$(gcc -print-file-name=libasan.so)
+    else
+        unset LD_PRELOAD
+    fi
+    LD_LIBRARY_PATH=$R "./$binary" "$@"
+}
+
 @test "X509 AMCL LIB :: Compile test" {
     AMCL="${R}/lib/milagro-crypto-c/build/lib"
     LDADD="${AMCL}/libamcl_core.a ${AMCL}/libamcl_x509.a"
@@ -32,19 +43,19 @@ save() {
 }
 
 @test "X509 AMCL LIB :: Run test for RSA" {
-      LD_LIBRARY_PATH=$R ./x509 > test_x509
+      run_exec ./x509 > test_x509
       save test_x509
       >&3 cat test_x509
 }
 
 @test "X509 Zenroom LIB :: Run test for P256 Didroom" {
-      LD_LIBRARY_PATH=$R ./x509_didroom > test_x509_didroom
+      run_exec ./x509_didroom > test_x509_didroom
       save test_x509_didroom
       >&3 cat test_x509_didroom
 }
 
 @test "X509 Zenroom LIB :: Run test for Post-Quantum X509" {
-      LD_LIBRARY_PATH=$R ./x509_postquantum > test_x509_postquantum
+      run_exec ./x509_postquantum > test_x509_postquantum
       save test_x509_postquantum
       >&3 cat test_x509_postquantum
 }

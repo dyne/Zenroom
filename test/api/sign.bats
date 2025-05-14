@@ -19,6 +19,18 @@ save() {
     >&3 echo " 💾 $1"
     export output=`cat $ZTMP/$1`
 }
+
+run_exec() {
+    binary="$1"
+    shift
+    if strings "$R/libzenroom.so" 2>/dev/null | grep -q "__asan_init"; then
+        export LD_PRELOAD=$(gcc -print-file-name=libasan.so)
+    else
+        unset LD_PRELOAD
+    fi
+    LD_LIBRARY_PATH=$R "./$binary" "$@"
+}
+
 @test "SIGN API :: Compile tests" {
     LDADD="-L$R -lzenroom"
     CFLAGS="$CFLAGS -I$R/src"
@@ -29,11 +41,11 @@ save() {
 }
 
 @test "SIGN API :: eddsa keygen" {
-    LD_LIBRARY_PATH=$R ./sign_keygen eddsa > eddsa_sk
+    run_exec sign_keygen eddsa > eddsa_sk
     save eddsa_sk
 }
 @test "SIGN API :: eddsa keygen with external seed" {
-    LD_LIBRARY_PATH=$R ./sign_keygen eddsa \
+    run_exec sign_keygen eddsa \
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 \
   > eddsa_sk_seed
     save eddsa_sk_seed
@@ -41,31 +53,31 @@ save() {
 }
 
 @test "SIGN API :: eddsa pubgen" {
-    LD_LIBRARY_PATH=$R ./sign_pubgen eddsa `cat eddsa_sk_seed` > eddsa_pk
+    run_exec sign_pubgen eddsa `cat eddsa_sk_seed` > eddsa_pk
     save eddsa_pk
     assert_output 'e78735703bf56140a00a6f867ca926fa0945e8b5752325e6593ea680d55d41bc'
 }
 
 @test "SIGN API :: eddsa create" {
-    LD_LIBRARY_PATH=$R ./sign_create eddsa `cat eddsa_sk_seed` "$STR448" > eddsa_signature
+    run_exec sign_create eddsa `cat eddsa_sk_seed` "$STR448" > eddsa_signature
     save eddsa_signature
     assert_output '5ae82e02cf216eb6eb5a310a994c90626d070566263360db75e22acf138a9c7294e10f24d8e8665c43dfcbc89ef09c405d56318da23134037ff62aa30ce67f0a'
 }
 
 @test "SIGN API :: eddsa verify OK" {
-    LD_LIBRARY_PATH=$R ./sign_verify eddsa `cat eddsa_pk` "$STR448" `cat eddsa_signature` > eddsa_verification
+    run_exec sign_verify eddsa `cat eddsa_pk` "$STR448" `cat eddsa_signature` > eddsa_verification
     save eddsa_verification
     assert_output '1'
 }
 
 @test "SIGN API :: eddsa verify ERR msg" {
-    LD_LIBRARY_PATH=$R ./sign_verify eddsa `cat eddsa_pk` "$STR896" `cat eddsa_signature`> eddsa_verification
+    run_exec sign_verify eddsa `cat eddsa_pk` "$STR896" `cat eddsa_signature`> eddsa_verification
     save eddsa_verification
     assert_output '0'
 }
 
 @test "SIGN API :: eddsa verify ERR sig" {
-    LD_LIBRARY_PATH=$R ./sign_verify eddsa `cat eddsa_pk` "$STR448" "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"> eddsa_verification
+    run_exec sign_verify eddsa `cat eddsa_pk` "$STR448" "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"> eddsa_verification
     save eddsa_verification
     assert_output '0'
 }
