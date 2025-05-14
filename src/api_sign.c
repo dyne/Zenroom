@@ -129,7 +129,11 @@ static char* hex2buf_alloc(const char *name, const char *hex, size_t *size) {
 		_err("api_sign %s :: cannot allocate %u bytes",name,hexlen);
 		return NULL;
 	}
-	hex2buf(out,hex);
+	if(hex2buf(out,hex) < 0) {
+		free(out);
+		_err("api_sign %s :: cannot do hex2buf %s",name,hex);
+		return NULL;
+	};
 	if(*size<=0) *size = hexlen;
 	return(out);
 }
@@ -145,6 +149,7 @@ int zenroom_sign_keygen(const char *algo, const char *rngseed) {
 		}
 		csprng *rng = api_rng_alloc(rngseed);
 		if(!rng) {
+			free(sk);
 			_err("%s :: error initializing the random generator",__func__);
 			return FAIL();
 		}
@@ -179,7 +184,7 @@ int zenroom_sign_pubgen(const char *algo, const char *key) {
 
 		outlen = sizeof(ed25519_public_key); // set output length
 		pk = malloc(outlen);
-		if(!pk) { _err("%s :: cannot allocate pk",__func__); return FAIL(); }
+		if(!pk) { free(sk);_err("%s :: cannot allocate pk",__func__); return FAIL(); }
 		ed25519_publickey((const unsigned char*)sk,pk);
 		free(sk);
 	}
@@ -204,11 +209,11 @@ int zenroom_sign_create(const char *algo, const char *key, const char *msg) {
 		char *sk = hex2buf_alloc("ed25519_secret_key",key,&keysize);
 		if(!sk) {_err("%s :: invalid arg: sk",__func__);return FAIL();}
 		ed25519_publickey(sk, pk); // calculate public key
-		outlen = sizeof(ed25519_signature); // set output length
-		sig = malloc(outlen);
 		size_t msglen = 0;
 		char *msg_b = hex2buf_alloc("message",msg,&msglen);
-		if(!msg_b) { _err("%s :: invalid arg: msg",__func__); return FAIL(); }
+		if(!msg_b) {free(sk);_err("%s :: invalid arg: msg",__func__);return FAIL();}
+		outlen = sizeof(ed25519_signature); // set output length
+		sig = malloc(outlen);
 		ed25519_sign((unsigned char*)msg_b, msglen, sk, pk, sig);
 		free(sk);
 		free(msg_b);
@@ -231,10 +236,10 @@ int zenroom_sign_verify(const char *algo, const char *pk, const char *msg, const
 		if(!pk_b){_err("%s :: invalid arg pk",__func__);return FAIL();}
 		size_t sigsize = sizeof(ed25519_signature);
 		const char *sig_b = hex2buf_alloc("ed25519_signature",sig,&sigsize);
-		if(!sig_b){_err("%s :: invalid arg sig",__func__);return FAIL();}
+		if(!sig_b){ free(pk_b);_err("%s :: invalid arg sig",__func__);return FAIL();}
 		size_t msglen = 0;
 		const char *msg_b = hex2buf_alloc("message",msg,&msglen);
-		if(!msg_b) { _err("%s :: invalid arg: msg",__func__); return FAIL(); }
+		if(!msg_b) { free(pk_b);free(sig_b);_err("%s :: invalid arg: msg",__func__); return FAIL(); }
 		res = 0==ed25519_sign_open(msg_b, msglen, pk_b, sig_b);
 		free(pk_b);
 		free(sig_b);
