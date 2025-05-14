@@ -49,8 +49,8 @@ int hex2buf(char *dst, const char *hex) {
 		if(hex[j+1] == '\0') {
 			return -1;
 		}
-		register hi = hextable[(short)hex[j]];
-		register lo = hextable[(short)hex[j+1]];
+		register int hi = hextable[(short)hex[j]];
+		register int lo = hextable[(short)hex[j+1]];
 		if(hi < 0 || lo < 0) {
 			return -1;
 		}
