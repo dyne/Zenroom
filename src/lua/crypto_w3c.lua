@@ -29,7 +29,7 @@ local function require_once_fun(scenario, fun_name)
     return f
 end
 
--- generate a serialized url64(JSON) encoded  octet string of any object
+-- generate a serialized url64(JSON) encoded octet string of any object
 -- @param any the object to serialize
 -- @return octet which should be printed as string
 function W3C.serialize(any)
