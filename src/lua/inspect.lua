@@ -10,7 +10,7 @@
 -- @author Kikito <a href="http://github.com/kikito/inspect.lua">github.com/kikito/inspect.lua</a>
 -- @license MIT
 
-local inspect ={
+local inspect = {
   _VERSION = 'inspect.lua 3.1.0',
   _URL     = 'http://github.com/kikito/inspect.lua',
   _DESCRIPTION = 'human-readable representations of tables'
