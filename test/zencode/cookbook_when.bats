@@ -1847,7 +1847,7 @@ Then print 'random dictionary'
 EOF
     save_output when_random_from_table.out.json
     assert_output '{"random_array":[1,3],"random_dictionary":{"str3":"world","str4":"!"},"random_pick":"world"}'
-}  
+}
 
 @test "hash to point on a curve" {
     cat <<EOF | save_asset when_hash_to_point.data.json
@@ -1869,4 +1869,30 @@ Then print 'hash to point ecp'
 EOF
     save_output when_hash_to_point.out.json
     assert_output '{"hash_to_point_ecp":"AxAXy/Tldf0HPLWpeby/p9r5N5KWsRtyOOhupzDyD+zgpiyIM9ET0sBhcfXQyxD2Iw==","hash_to_point_ecp2":"EKDkY8NZoPBUrXbCKuGTfACzGhYjDN1ukN4WFeC1KruGArzmM2GjcNl540ccj1NwBmJripsCB8dKAZdHsPExCa2bd1HXbCvOIlaT0+yvl8Zb+MjzPAuvOs2y9rpKK/+GBGkYvsUr8aoHyijjv34XjG+6APolthn9+RA3p+Eluos5RjoIiPsYcgixpF+8rj4OEWDf3to6w2qomLHGf0lwhEzMZbPZ67zGYXUkJHSR2cGT/jdPufs7M9Havmq0iCiY"}'
-}  
+}
+
+@test "write string in path" {
+    cat <<EOF | save_asset write_string_in_path.data.json
+{
+    "path": "a.b.c.1.1.d",
+    "a": {
+        "b": {
+        }
+    }
+}
+EOF
+    cat <<EOF | zexe write_string_in_path.zen write_string_in_path.data.json
+Given I have a 'string' named 'path'
+Given I have a 'string dictionary' named 'a'
+
+When I write string 'hello' in path 'path'
+When I write string 'hello' in path 'a.b.e'
+When I write string 'hello' in path 'a.b.c.2'
+When I write string 'hello' in path 'a.b.c.1.2'
+
+Then print 'a'
+
+EOF
+    save_output write_string_in_path.out.json
+    assert_output '{"a":{"b":{"c":[[{"d":"hello"},"hello"],"hello"],"e":"hello"}}}'
+}
