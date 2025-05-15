@@ -147,4 +147,30 @@ local function _verify_proof(proof, pos, root, hashtype)
 end
 
 
+
+-- n = number of leaves generating tree
+-- pos = table containing positions of the leaves to prove
+-- np = number of proofs, is #pos (?)
+local function _compressed_merkle_proof_tree(n, pos, np)
+    assert(np > 0, "A Merkle proof with 0 leaves is not defined.")
+    --initializing a vector tree[] will contain a boolean (if a leaf of the tree is need or not to create the proof)
+    local tree = {}
+    for i = 1, 2*n do
+        tree[i] = false
+    end
+
+    for ip = 1, np do
+        assert(pos[ip] < n, "Invalid position for leaf in Merkle tree")
+        tree[pos[ip]+n] = true   --is a leaf of the tree so it is in the tree and we put its positon in tree[] true
+    end
+
+    for i = n, 2, -1 do
+        tree[i] = tree[2*i-1] or tree[2*i]
+    end
+
+    assert(tree[2], "the root is not in the tree")
+
+    return tree
+end
+
 return MT
