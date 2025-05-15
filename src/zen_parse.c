@@ -74,7 +74,8 @@ static int lua_trim_spaces(lua_State* L) {
 	const char* end;
 	size_t size;
 	front = luaL_checklstring(L,1,&size);
-	end = &front[size - 1];
+	if (size == 0) end = front;
+	else end = &front[size - 1];
 	while (size && isspace(*front)) {
 		size--;
 		front++;
@@ -83,7 +84,8 @@ static int lua_trim_spaces(lua_State* L) {
 		size--;
 		end--;
 	}
-	lua_pushlstring(L,front,(size_t)(end - front) + 1);
+	if (size == 0) lua_pushliteral(L, "");
+	else lua_pushlstring(L, front, (size_t)(end - front) + 1);
 	return 1;
 }
 
