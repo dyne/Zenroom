@@ -10,7 +10,7 @@
 -- @author Kikito <a href="http://github.com/kikito/inspect.lua">github.com/kikito/inspect.lua</a>
 -- @license MIT
 
-local inspect ={
+local inspect = {
   _VERSION = 'inspect.lua 3.1.0',
   _URL     = 'http://github.com/kikito/inspect.lua',
   _DESCRIPTION = 'human-readable representations of tables'
@@ -368,8 +368,8 @@ function Inspector:putValue(v, exp)
 	 if olen > 0 then self:puts("["..olen.."] ") end
 	 self:putTable(v, exporter)
   elseif iszen(tv) then
-      local olen <const> = #v
       local i <const> = v:octet()
+      local olen <const> = #i
       if tv == "zenroom.octet" then
           if olen == 0 then self:puts("octet[0] (null)")
           elseif olen < 64 and not (olen == 32 or olen == 64) then
@@ -379,7 +379,7 @@ function Inspector:putValue(v, exp)
           else self:puts("octet[" .. olen .. "] " .. exporter(v))
           end
       elseif tv == "zenroom.big" then
-          self:puts("int[" .. #i.. "] " .. exporter(v, "integer"))
+          self:puts("int[" .. olen.. "] " .. exporter(v, "integer"))
       elseif tv == "zenroom.float" then
           self:puts("float " .. exporter(v, "float")) -- exporter(i))
       elseif tv == "zenroom.time" then
@@ -388,16 +388,16 @@ function Inspector:putValue(v, exp)
           if v == "Infinity" or v == ECP.infinity() then
               self:puts("ecp[...] (Infinity)")
           else
-              self:puts("ecp[" .. #i.. "] " .. exporter(i))
+              self:puts("ecp[" ..olen.. "] " .. exporter(i))
           end
       elseif tv == "zenroom.ecp2" then
           if v == "Infinity" or v == ECP2.infinity() then
               self:puts("ecp[...] (Infinity)")
           else
-              self:puts("ecp2[" ..#i.. "] ".. exporter(i))
+              self:puts("ecp2[" ..olen.. "] ".. exporter(i))
           end
       elseif tv == "zenroom.fp12" then
-          self:puts("fp12[" ..#i.. "] ".. exporter(i))
+          self:puts("fp12[" ..olen.. "] ".. exporter(i))
       elseif tv == "zenroom.ecdh" then
           local pk = v:public()
           local sk = v:private()
@@ -407,7 +407,7 @@ function Inspector:putValue(v, exp)
               if sk then self:puts("ecdh.private["..#sk.."] ".. exporter(sk).."\n") end
           end
       else
-          self:puts(exporter(v:octet()))
+          self:puts(exporter(v))
       end
   else
     self:puts('<',tv,' ',self:getId(v),'>')
