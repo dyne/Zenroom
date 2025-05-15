@@ -113,7 +113,7 @@ export const zenroom_hash_init = async (
 
 export const zenroom_hash_update = async (
   hash_ctx: string,
-  buffer: Uint8Array
+  buffer: string
 ): Promise<ZenroomResult> => {
   const Module = await getModule();
   return new Promise((resolve, reject) => {
@@ -121,7 +121,7 @@ export const zenroom_hash_update = async (
     let logs = "";
     const _exec = Module.cwrap("zenroom_hash_update", "number", [
       "string",
-      "array",
+      "string",
       "number",
     ]);
     Module.print = (t: string) => (result += t);
@@ -164,18 +164,18 @@ export const zenroom_hash_final = async (
 
 export const zenroom_hash = async (
   hash_type: string,
-  ab: ArrayBuffer
+  ab: string
 ): Promise<ZenroomResult> => {
   const bytesChunkSize = 1024 * 64;
   let ctx = await zenroom_hash_init(hash_type);
   let i = 0;
-  for (i = 0; i < ab.byteLength; i += bytesChunkSize) {
+  for (i = 0; i < ab.length; i += bytesChunkSize) {
     const upperLimit =
-      i + bytesChunkSize > ab.byteLength ? ab.byteLength : i + bytesChunkSize;
-    const i8a = new Uint8Array(ab.slice(i, upperLimit));
+      i + bytesChunkSize > ab.length ? ab.length : i + bytesChunkSize;
+    const i8a = ab.slice(i, upperLimit);
     ctx = await zenroom_hash_update(ctx.result, i8a);
   }
-  return zenroom_hash_final(ctx.result);
+  return await zenroom_hash_final(ctx.result);
 };
 
 export const zencode_valid_input = async (
