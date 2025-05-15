@@ -157,7 +157,12 @@ int zenroom_hash_final(const char *hash_ctx) {
 	register char prefix = hash_ctx[0];
 	register int len;
 	octet tmp;
-	char *sh;
+	char *sh = NULL;
+	char *hash_result = malloc(90);
+	if (!hash_result) {
+		failed_msg = "cannot allocate hash_result";
+		goto end;
+	}
 	if (prefix == ZEN_SHA512) {
 		tmp.len = 64;
 		tmp.val = (char *)malloc(64);
@@ -196,11 +201,6 @@ int zenroom_hash_final(const char *hash_ctx) {
 		HASH256_hash((hash256 *)sh, tmp.val);
 	} else {
 		failed_msg = "invalid hash context prefix";
-		goto end;
-	}
-	char *hash_result = malloc(90);
-	if (!hash_result) {
-		failed_msg = "cannot allocate hash_result";
 		goto end;
 	}
 	OCT_tobase64(hash_result, &tmp);
