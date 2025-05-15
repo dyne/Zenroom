@@ -42,14 +42,14 @@ int print_ctx_hex(char prefix, void *sh, int len) {
 	char *hash_ctx = malloc((len << 1) + 2);
 	if (!hash_ctx) {
 		_err("%s :: cannot allocate hash_ctx", __func__);
-		return FAIL();
+		return 1;
 	}
 	hash_ctx[0] = prefix;
 	buf2hex(hash_ctx + 1, (const char *)sh, (const size_t)len);
 	hash_ctx[(len << 1) + 1] = 0x0; // null terminated string
 	_out("%s", hash_ctx);
 	free(hash_ctx);
-	return OK();
+	return 0;
 }
 
 // returns a fills hash_ctx, which must be pre-allocated externally
@@ -67,8 +67,7 @@ int zenroom_hash_init(const char *hash_type) {
 			return FAIL();
 		}
 		HASH512_init((hash512 *)sh); // amcl init
-	}
-	else if (strcasecmp(hash_type, "sha256") == 0) {
+	} else if (strcasecmp(hash_type, "sha256") == 0) {
 		prefix = ZEN_SHA256;
 		len = sizeof(hash256);
 		sh = calloc(len, 1);
@@ -77,8 +76,7 @@ int zenroom_hash_init(const char *hash_type) {
 			return FAIL();
 		}
 		HASH256_init((hash256 *)sh); // amcl init
-	}
-	else {
+	} else {
 		_err("%s :: invalid hash type: %s", __func__, hash_type);
 		return FAIL();
 	}
@@ -121,8 +119,7 @@ int zenroom_hash_update(const char *hash_ctx,
 		for (c = 0; c < buffer_len; c++) {
 			HASH512_process((hash512 *)sh, hex_buf[c]);
 		}
-	}
-	else if (prefix == ZEN_SHA256) {
+	} else if (prefix == ZEN_SHA256) {
 		len = sizeof(hash256);
 		sh = malloc(len);
 		if (!sh) {
@@ -136,8 +133,7 @@ int zenroom_hash_update(const char *hash_ctx,
 		for (c = 0; c < buffer_len; c++) {
 			HASH256_process((hash256 *)sh, hex_buf[c]);
 		}
-	}
-	else {
+	} else {
 		failed_msg = "invalid hash context prefix";
 		goto end;
 	}
@@ -160,11 +156,6 @@ int zenroom_hash_final(const char *hash_ctx) {
 	char *failed_msg = NULL;
 	register char prefix = hash_ctx[0];
 	register int len;
-	char *hash_result = malloc(90);
-	if (!hash_result) {
-		failed_msg = "cannot allocate hash_result";
-		goto end;
-	}
 	octet tmp;
 	char *sh;
 	if (prefix == ZEN_SHA512) {
@@ -185,8 +176,7 @@ int zenroom_hash_final(const char *hash_ctx) {
 			goto end;
 		};
 		HASH512_hash((hash512 *)sh, tmp.val);
-	}
-	else if (prefix == ZEN_SHA256) {
+	} else if (prefix == ZEN_SHA256) {
 		tmp.len = 32;
 		tmp.val = (char *)malloc(32);
 		if (!tmp.val) {
@@ -204,9 +194,13 @@ int zenroom_hash_final(const char *hash_ctx) {
 			goto end;
 		};
 		HASH256_hash((hash256 *)sh, tmp.val);
-	}
-	else {
+	} else {
 		failed_msg = "invalid hash context prefix";
+		goto end;
+	}
+	char *hash_result = malloc(90);
+	if (!hash_result) {
+		failed_msg = "cannot allocate hash_result";
 		goto end;
 	}
 	OCT_tobase64(hash_result, &tmp);
