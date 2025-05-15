@@ -13,6 +13,12 @@ ifeq (,$(findstring clang,$(CC)))
 endif
 endif
 
+# Remove sanitizer flags that break inline assembly with clang
+ifneq (,$(findstring clang,$(CC)))
+	SANITIZER_FLAGS := -fsanitize=address -fsanitize=undefined
+	CFLAGS := $(strip $(filter-out $(SANITIZER_FLAGS),$(CFLAGS)))
+endif
+
 all: $(LIB)
 
 %.o: %.c
