@@ -20,12 +20,11 @@ save() {
 run_exec() {
     binary="$1"
     shift
-    if strings "$R/libzenroom.so" 2>/dev/null | grep -q "__asan_init"; then
-        export LD_PRELOAD=$(gcc -print-file-name=libasan.so)
-    else
-        unset LD_PRELOAD
+    unset LD_PRELOAD
+    if strings "$R/libzenroom.so" | grep -q "__asan_init"; then
+         export LD_PRELOAD=$(cc -print-file-name=libasan.so)
     fi
-    LD_LIBRARY_PATH=$R "./$binary" "$@"
+    LD_LIBRARY_PATH=$R LD_PRELOAD=$LD_PRELOAD "./$binary" "$@"
 }
 
 @test "ZENCODE API :: Compile tests" {

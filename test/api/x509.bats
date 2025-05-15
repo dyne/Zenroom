@@ -21,12 +21,11 @@ save() {
 run_exec() {
     binary="$1"
     shift
-    if strings "$R/libzenroom.so" 2>/dev/null | grep -q "__asan_init"; then
-        export LD_PRELOAD=$(gcc -print-file-name=libasan.so)
-    else
-        unset LD_PRELOAD
+    unset LD_PRELOAD
+    if strings "$R/libzenroom.so" | grep -q "__asan_init"; then
+         export LD_PRELOAD=$(cc -print-file-name=libasan.so)
     fi
-    LD_LIBRARY_PATH=$R "./$binary" "$@"
+    LD_LIBRARY_PATH=$R LD_PRELOAD=$LD_PRELOAD "./$binary" "$@"
 }
 
 @test "X509 AMCL LIB :: Compile test" {
@@ -45,17 +44,17 @@ run_exec() {
 @test "X509 AMCL LIB :: Run test for RSA" {
       run_exec ./x509 > test_x509
       save test_x509
-      >&3 cat test_x509
+      # >&3 cat test_x509
 }
 
 @test "X509 Zenroom LIB :: Run test for P256 Didroom" {
       run_exec ./x509_didroom > test_x509_didroom
       save test_x509_didroom
-      >&3 cat test_x509_didroom
+      # >&3 cat test_x509_didroom
 }
 
 @test "X509 Zenroom LIB :: Run test for Post-Quantum X509" {
       run_exec ./x509_postquantum > test_x509_postquantum
       save test_x509_postquantum
-      >&3 cat test_x509_postquantum
+      # >&3 cat test_x509_postquantum
 }
