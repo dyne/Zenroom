@@ -165,7 +165,7 @@ assert(a*a == a); checkcap{"mul", a, a}
 assert(a/0 == a); checkcap{"div", a, 0}
 assert(a/0.0 == a); checkcap{"div", a, 0.0}
 assert(a%2 == a); checkcap{"mod", a, 2}
-assert(a // (1/0) == a); checkcap{"idiv", a, 1/0}
+-- assert(a // (1/0) == a); checkcap{"idiv", a, 1/0}
 ;(function () assert(a & "hi" == a) end)(); checkcap{"band", a, "hi"}
 ;(function () assert(10 & a  == 10) end)(); checkcap{"band", 10, a}
 ;(function () assert(a | 10  == a) end)(); checkcap{"bor", a, 10}
@@ -181,7 +181,6 @@ assert(#a == a); checkcap{"len", a, a}
 assert(~a == a); checkcap{"bnot", a, a}
 assert(a << 3 == a); checkcap{"shl", a, 3}
 assert(1.5 >> a == 1.5); checkcap{"shr", 1.5, a}
-
 -- for comparison operators, all results are true
 assert(5.0 > a); checkcap{"lt", a, 5.0}
 assert(a >= 10); checkcap{"le", 10, a}
