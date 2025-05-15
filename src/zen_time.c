@@ -196,8 +196,10 @@ static int detect_time_value(lua_State *L) {
 	BEGIN();
 	int result = 0;
 	if(lua_isnumber(L, 1)) {
-		int n = lua_tonumber(L, 1);
-		result = n >= AUTODETECTED_TIME_MIN && n <= AUTODETECTED_TIME_MAX;
+		lua_Number n = lua_tonumber(L, 1);
+		if (n >= INT_MIN && n <= INT_MAX) {
+			result = n >= AUTODETECTED_TIME_MIN && n <= AUTODETECTED_TIME_MAX;
+		}
 	} else if(lua_isstring(L, 1)) {
 		const char* arg = lua_tostring(L, 1);
 		char *pEnd;
