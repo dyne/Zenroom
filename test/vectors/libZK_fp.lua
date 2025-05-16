@@ -1,3 +1,5 @@
+print("TEST VECTORS from Frigo's RFC: fp_test")
+
 function sub(a,b,p)
     assert(type(p) == "zenroom.big", "p is not a BIG")
     assert(type(a) == "zenroom.big", "a is not a BIG")
@@ -5,7 +7,7 @@ function sub(a,b,p)
     if a:modsub(b,p):__eq(p) then 
         return big.new(0)
     else
-        return a:modsub(b,p)
+        return a:modsub(b,p):__mod(p)
     end
 end 
 
@@ -67,9 +69,6 @@ local function fibonacci(p)
     assert(a:__eq(of_string(s,p)), "fibonacci() doesn't return the expected output")
 end 
 
-
-local p_1 = big.from_decimal("18446744073709551557")
-local fib_1 = fibonacci(p_1)
 
 function modinv_0(x,p)
     assert(type(p) == "zenroom.big", "p is not a BIG")
@@ -138,6 +137,7 @@ end
 
 
 local function neg(p)
+    assert(type(p) == "zenroom.big", "p is not a BIG")
     for i = 0, 999 do 
         local x = big.new(i)
         x = x:modneg(p)
@@ -146,4 +146,109 @@ local function neg(p)
     end 
 end     
 
-neg(p_1)
+local function wraparound(p)
+    assert(type(p) == "zenroom.big", "p is not a BIG")
+    local k = 32
+    local f2k = 2*k
+    for i = -k, k do 
+        for j = -k, k do 
+            fi = sub(big.new(f2k),big.new(i+2*k),p)
+            fj = sub(big.new(f2k),big.new(j+2*k),p)
+            fa = sub(big.new(f2k),big.new(i+j+2*k),p)
+            fs = sub(big.new(f2k),big.new(i-j+2*k),p)
+            a = ckadd(fi,fj,p)
+            s = cksub(fi,fj,p)
+            assert(a:__eq(fa), "error in wraparound() function")
+            assert(s:__eq(fs), "error in wraparound() function")  
+        end 
+    end
+end 
+
+--create two tables with 6 elements. in the second one there are the inverses of the previous one
+function evaluation_point(p) 
+    assert(type(p) == "zenroom.big", "p is not a BIG")
+    local kNPolyEvaluationPoints = 6;
+    poly_evaluation_point_ = {}
+    inv_small_scalars= {}
+    for i = 0, kNPolyEvaluationPoints-1 do 
+        poly_evaluation_point_[i+1] = big.new(i)
+        if (i == 0) then
+            inv_small_scalars[i+1] = big.new(0)
+        else 
+            inv_small_scalars[i+1] = poly_evaluation_point_[i+1]:modinv(p)
+        end 
+    end
+    return poly_evaluation_point_, inv_small_scalars
+end 
+
+--return an element of the first output of evaluation_point() function
+function poly_evaluation_point(j,p)
+    assert(type(p) == "zenroom.big", "p is not a BIG")
+    local kNPolyEvaluationPoints = 6;
+    assert(j<=kNPolyEvaluationPoints, "j>kNPolyEvaluationPoints")
+    poly_ev, inv_scal = evaluation_point(p)
+    return poly_ev[j]
+end
+
+--return an element of the second output of evaluation_point() function
+--return (X[k] - X[k - i])^{-1}, were X[i] is the i-th poly evalaluation point.
+function newton_denominator(k,i,p)
+    assert(type(p) == "zenroom.big", "p is not a BIG")
+    local kNPolyEvaluationPoints = 6;
+    assert(k<=kNPolyEvaluationPoints, "k>kNPolyEvaluationPoints")
+    assert(i<=k, "i>k")
+    assert(k~=(k-i), "k=(k-i)" )
+    poly_ev, inv_scal = evaluation_point(p)
+    return inv_scal[i]
+end 
+
+
+local function poly_evaluation_points(p)
+    assert(type(p) == "zenroom.big", "p is not a BIG")
+    local kNPolyEvaluationPoints = 6;
+    for i = 1, kNPolyEvaluationPoints do 
+        for j = 1, kNPolyEvaluationPoints do 
+            if i ~= j then
+                assert(poly_evaluation_point(i,p) ~= poly_evaluation_point(j,p), "error in the poly_evaluation_points() function") 
+            end
+        end
+    end
+    for i = 2, kNPolyEvaluationPoints-1 do 
+        for k = kNPolyEvaluationPoints, i+1, -1 do 
+            dx = sub(poly_evaluation_point(k,p),poly_evaluation_point(k-i+1,p),p)
+            assert(big.new(1):__eq(dx:modmul(newton_denominator(k,i,p),p)), "error in poly_evaluation_points() function") 
+        end 
+    end
+end 
+
+local function onefield(p)
+    mult(p)
+    factorial(p)
+    fibonacci(p)
+    wraparound(p)
+    neg(p)
+    inverse(p)
+    poly_evaluation_points(p)
+end 
+
+local function test_Fp_Allsizes()
+    local prime_element = {
+        big.from_decimal("18446744073709551557"),
+        big.from_decimal("340282366920938463463374607431768211297"),
+        big.from_decimal("6277101735386680763835789423207666416102355444464034512659"),
+        big.from_decimal("115792089237316195423570985008687907853269984665640564039457584007913129639747"),
+        big.from_decimal("2135987035920910082395021706169552114602704522356652769947041607822219725780640550022962086936379"),
+        big.from_decimal("39402006196394479212279040100143613805079739270465446667948293404245721771497210611414266254884915640806627990306499"),
+        --prime for Fp256
+        big.from_decimal("115792089210356248762697446949407573530086143415290314195533631308867097853951"),
+        --prime for Fp128
+        big.from_decimal("340282042402384805036647824275747635201")
+    }
+
+    for i, p in ipairs(prime_element) do
+        onefield(p)
+    end 
+    return("OK test Fp AllSizes")
+end
+
+print(test_Fp_Allsizes())
