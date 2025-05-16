@@ -105,7 +105,7 @@ IfWhen("verify verifiable credential named ''", function(src)
         zencode_assert(W3C.serialize(document) == jws.payload_enc,
                        "The JWS proof contains a different payload")
     end
-    local crypto  <const> = W3C.resolve_crypto_algo(jws.header.alg)
+    local crypto  <const> = CRYPTO.signature_from_anystring(jws.header.alg)
     local pk = mayhave('jws_public_key')
     if not pk then pk = have(crypto.keyname..'_public_key') end
     local to_be_verified <const> =

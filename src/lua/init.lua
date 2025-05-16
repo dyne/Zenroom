@@ -76,6 +76,7 @@ QSORT = require('qsort_op') -- optimized table sort
 table.sort = QSORT -- override native table sort
 SPELL = require('spell')
 JSON = require('zenroom_json')
+CRYPTO = require('crypto_routes')
 
 -- ECDH public keys cannot function as ECP because of IANA 7303
 AES = require('aes')
