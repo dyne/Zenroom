@@ -20,7 +20,7 @@
 --on Thursday, 26th September 2024
 --]]
 
-local W3C = require_once "crypto_w3c"
+-- local W3C = require_once "crypto_w3c"
 
 local ETHEREUM_ADDRESS = "ethereum_address"
 local EDDSA_PUBLIC_KEY = "eddsa_public_key"
@@ -89,7 +89,7 @@ When("sign verifiable credential named ''", function(vc)
         -- created = "2018-06-18T21:19:10Z",
 
         -- create a JWS detached signature of the payload, default alg
-        jws = W3C.create_jws(false, nil, credential, true),
+        jws = JOSE.create_jws(false, nil, credential, true),
         proofPurpose = O.from_string'authenticate' -- assertionMethod", -- TODO: check
     }
 end)
@@ -100,16 +100,16 @@ IfWhen("verify verifiable credential named ''", function(src)
         'The object has no signature: ' .. src)
     local proof <const> = document.proof
     document.proof = nil
-    local jws <const> = W3C.parse_jws(proof.jws)
+    local jws <const> = JOSE.parse_jws(proof.jws)
     if jws.payload then
-        zencode_assert(W3C.serialize(document) == jws.payload_enc,
+        zencode_assert(JOSE.serialize(document) == jws.payload_enc,
                        "The JWS proof contains a different payload")
     end
-    local crypto  <const> = CRYPTO.signature_from_anystring(jws.header.alg)
+    local crypto  <const> = CRYPTO.load(jws.header.alg)
     local pk = mayhave('jws_public_key')
     if not pk then pk = have(crypto.keyname..'_public_key') end
     local to_be_verified <const> =
-        jws.header_enc..O.from_string('.')..W3C.serialize(document)
+        jws.header_enc..O.from_string('.')..JOSE.serialize(document)
     zencode_assert(crypto.verify(pk, to_be_verified, jws.signature),
                    'Invalid verifiable credential signature of: '..src)
 end)

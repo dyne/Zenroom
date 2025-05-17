@@ -56,15 +56,33 @@ local W3C = require_once "crypto_w3c"
 -- @param alg alg in jws header
 -- @param pk pk flag, is true the alg pk is set in the header in jwk format
 local function _create_jws_header(alg, pk)
-    ACK.jws_header = {['alg'] = O.from_string(CRYPTO.alg:upper())}
+    local crypto <const> = CRYPTO.load(alg)
+    ACK.jws_header = {['alg'] = O.from_string(crypto.IANA)}
     if pk then
-        ACK.jws_header.jwk = W3C.create_jwk(alg)
+        ACK.jws_header.jwk = JOSE.create_jwk(crypto.IANA)
     end
     new_codec('jws_header', { zentype = 'd', encoding = 'string' })
 end
 
-When("create jws header for '' signature", _create_jws_header)
-When("create jws header for '' signature with public key", function(alg) _create_jws_header(alg, true) end)
+When("create jws header for '' signature", function(algo_name)
+         local crypto <const> = CRYPTO.load(algo_name)
+         empty'jws_header'
+         ACK.jws_header = { alg = O.from_string(crypto.IANA) }
+         -- TODO: generate UID
+         new_codec('jws_header', { zentype = 'd', encoding = 'string' })
+end)
+
+When("create jws header for '' signature with public key", function(algo_name)
+         local crypto <const> = CRYPTO.load(algo_name)
+         local pk = mayhave(crypto.IANA..'_public_key')
+         if not pk then pk = mayhave(crypto.keyname..'_public_key') end
+         if not pk then pk = mayhave(algo_name..'_public_key') end
+         zencode_assert(pk,'Public key not found for: '..algo_name)
+         empty'jws_header'
+         ACK.jws_header = { alg = O.from_string(crypto.IANA) }
+         -- TODO: generate UID
+         new_codec('jws_header', { zentype = 'd', encoding = 'string' })
+end)
 
 When(deprecated("create jws header for p256 signature",
                 "create jws header for '' signature", function() _create_jws_header('ES256') end))
@@ -96,7 +114,7 @@ When("create jws signature of header '' and payload ''", function(header, payloa
     empty'jws_signature'
     local h <const> = have(header)
     local p <const> = have(payload)
-    ACK['jws_signature'] = W3C.create_jws(nil, h, p, false)
+    ACK['jws_signature'] = JOSE.create_jws(nil, h, p, false)
     new_codec('jws_signature', { zentype = 'e',
                                  encoding = 'string' })
 end)
@@ -107,7 +125,7 @@ When("create jws detached signature of header '' and payload ''", function(heade
     empty'jws_detached_signature'
     local h <const> = have(header)
     local p <const> = have(payload)
-    ACK['jws_detached_signature'] = W3C.create_jws(nil, h, p, true)
+    ACK['jws_detached_signature'] = JOSE.create_jws(nil, h, p, true)
     new_codec('jws_detached_signature', { zentype = 'e',
                                           encoding = 'string' })
 end)
@@ -117,7 +135,7 @@ local function _verify_jws(n_payload, n_jws)
     local payload <const> = have(n_payload)
     local pser    <const> = JOSE.serialize(payload)
     local jws     <const> = JOSE.parse_jws(jws_enc)
-    local crypto  <const> = CRYPTO.signature_from_anystring(jws.header.alg)
+    local crypto  <const> = CRYPTO.load(jws.header.alg)
     -- the payload is passed as argument so we assume this to
     -- be a detached signature, in case another payload is
     -- present in the jws then we also verify it is the same as
@@ -144,7 +162,7 @@ IfWhen("verify jws signature in ''", function(n_jws)
            local jws_enc <const> = have(n_jws)
            local jws     <const> = JOSE.parse_jws(jws_enc)
            zencode_assert( jws.payload, "The JWS has no payload")
-           local crypto  <const> = CRYPTO.signature_from_anystring(jws.header.alg)
+           local crypto  <const> = CRYPTO.load(jws.header.alg)
            local to_be_verified <const> = jws.header_enc..O.from_string('.')..jws.payload_enc
            local pk = mayhave('jws_public_key')
            if not pk then pk = mayhave(crypto.keyname..'_public_key') end
