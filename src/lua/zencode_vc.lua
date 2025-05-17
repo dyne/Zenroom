@@ -20,7 +20,7 @@
 --on Thursday, 26th September 2024
 --]]
 
-local W3C = require_once "crypto_w3c"
+-- local W3C = require_once "crypto_w3c"
 
 local ETHEREUM_ADDRESS = "ethereum_address"
 local EDDSA_PUBLIC_KEY = "eddsa_public_key"
@@ -81,22 +81,35 @@ end)
 
 When("sign verifiable credential named ''", function(vc)
     local credential = have(vc)
-    local sk = havekey'ecdh' -- assuming secp256k1
-    zencode_assert(not credential.proof,'The object is already signed: ' .. vc)
-    local proof = {
-        type = 'Zenroom v'.._G.ZENROOM_VERSION.original,
+    zencode_assert(not credential.proof,
+                   'The object is already signed: ' .. vc)
+    ACK[vc].proof = {
+        ['type'] = O.from_string('Zenroom '.._G.ZENROOM_VERSION.original),
         -- "Signature", -- TODO: check what to write here for secp256k1
         -- created = "2018-06-18T21:19:10Z",
-        proofPurpose = 'authenticate' -- assertionMethod", -- TODO: check
+
+        -- create a JWS detached signature of the payload, default alg
+        jws = JOSE.create_jws(false, nil, credential, true),
+        proofPurpose = O.from_string'authenticate' -- assertionMethod", -- TODO: check
     }
-    local cred_str = W3C.json_encoding(vc)
-    proof.jws = W3C.jws_signature_to_octet(ECDH.sign(sk, cred_str))
-    ACK[vc].proof = deepmap(OCTET.from_string, proof)
 end)
 
 IfWhen("verify verifiable credential named ''", function(src)
     local document = have(src)
     zencode_assert(document.proof and document.proof.jws,
         'The object has no signature: ' .. src)
-    W3C.verify_jws_from_proof(src, document)
+    local proof <const> = document.proof
+    document.proof = nil
+    local jws <const> = JOSE.parse_jws(proof.jws)
+    if jws.payload then
+        zencode_assert(JOSE.serialize(document) == jws.payload_enc,
+                       "The JWS proof contains a different payload")
+    end
+    local crypto  <const> = CRYPTO.load(jws.header.alg)
+    local pk = mayhave('jws_public_key')
+    if not pk then pk = have(crypto.keyname..'_public_key') end
+    local to_be_verified <const> =
+        jws.header_enc..O.from_string('.')..JOSE.serialize(document)
+    zencode_assert(crypto.verify(pk, to_be_verified, jws.signature),
+                   'Invalid verifiable credential signature of: '..src)
 end)

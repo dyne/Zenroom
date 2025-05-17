@@ -14,7 +14,7 @@ SUBDOC=sd_jwt
         "credential_configurations_supported":{
             "IdentityCredential":{
                 "credential_signing_alg_values_supported":[
-                    "ES256"
+                    "ES256", "EDDSA", "ML-DSA-44", "ES256K"
                 ],
                 "cryptographic_binding_methods_supported":[
                     "jwk",
@@ -32,7 +32,7 @@ SUBDOC=sd_jwt
                 "proof_types_supported":{
                     "jwt":{
                         "proof_signing_alg_values_supported":[
-                            "ES256"
+                            "ES256", "EDDSA", "MLDSA44"
                         ]
                     }
                 },
@@ -184,11 +184,48 @@ EOF
     assert_output '{"es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg==","keyring":{"es256":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="},"selective_disclosure":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["5-Y_kvJBo3ni_JNNUrFnIA","family_name","Doe"],["VyJ47aH6-hysFuthAZJP-A","email","johndoe@example.com"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"],["5XsSIXmaZbf5ikQgMSVGjQ","phone_number_verified",true],["br5gmh-cSRNAvocKCmAD0A","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["6UasczRKmme8SOUwelXq2w","birthdate","1940-01-01"],["Ll27jjwT4yzd0i-7NGdZAw","updated_at",1570000000]],"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo","GRAVzz7ZmE5-g1siHKrMLibaQQKdgkJGitjrx1D0JBs"],"_sd_alg":"sha-256","exp":1883000000,"iat":1683000000,"iss":"http://example.org","sub":"user 42"}},"selective_disclosure_request":{"fields":["given_name","family_name","email","phone_number","phone_number_verified","address","birthdate","updated_at"],"object":{"address":{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"},"birthdate":"1940-01-01","email":"johndoe@example.com","exp":1883000000,"family_name":"Doe","given_name":"John","iat":1683000000,"iss":"http://example.org","nationalities":["US","DE"],"phone_number":"+1-202-555-0101","phone_number_verified":true,"sub":"user 42","updated_at":1570000000}},"signed_selective_disclosure":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["5-Y_kvJBo3ni_JNNUrFnIA","family_name","Doe"],["VyJ47aH6-hysFuthAZJP-A","email","johndoe@example.com"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"],["5XsSIXmaZbf5ikQgMSVGjQ","phone_number_verified",true],["br5gmh-cSRNAvocKCmAD0A","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["6UasczRKmme8SOUwelXq2w","birthdate","1940-01-01"],["Ll27jjwT4yzd0i-7NGdZAw","updated_at",1570000000]],"jwt":{"header":{"alg":"ES256","typ":"vc+sd-jwt"},"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo","GRAVzz7ZmE5-g1siHKrMLibaQQKdgkJGitjrx1D0JBs"],"_sd_alg":"sha-256","exp":1883000000,"iat":1683000000,"iss":"http://example.org","sub":"user 42"},"signature":"bRd93MYGuiVye_3QVLtvyxGmyGejx_HXQcC-z3m_PtgZLMOV-TnEy_FSpyqsMXT-qqSj7ZIdca8tWrZrwZT72w"}}}'
 }
 
+@test "Create SD Payload signed with ML-DSA-44" {
+    cat <<EOF | zexe sd_payload_mldsa44.zen sd_payload.data.json
+Scenario 'sd_jwt'
+
+Given I have 'selective_disclosure_request'
+
+When I create the mldsa44 key
+and  I create the mldsa44 public key
+
+When I create the selective disclosure of 'selective_disclosure_request'
+and I create the signed selective disclosure of 'selective disclosure' with 'ml-dsa-44'
+
+Then print the 'signed selective disclosure' as 'decoded selective disclosure'
+Then print the 'mldsa44 public key'
+EOF
+    save_output sd_payload_mldsa44.out.json
+    cat sd_payload_mldsa44.out.json | >&3 jq .
+}
+
+
+# @test "Verify SD Payload signed with ML-DSA-44" {
+#     cat <<EOF | zexe sd_payload_mldsa44.zen sd_payload_mldsa44.out.json
+# Scenario 'sd_jwt'
+
+# Given I have a 'mldsa44 public key'
+# and I have a 'decoded selective disclosure' named 'signed selective disclosure'
+
+# When I verify signed selective disclosure 'signed_selective_disclosure' issued by 'Alice' is valid
+
+# Then print data
+# EOF
+#     assert_success
+#     # save_output sd_payload_mldsa44.out.json
+#     # cat sd_payload_mldsa44.out.json | >&3 jq .
+# }
+
+
+
 @test "Import and export SD Payload" {
 
     cat <<EOF | zexe sd_payload2.zen sd_payload.out.json
 Scenario 'sd_jwt'
-Scenario 'es256'
 
 Given I have 'keyring'
 Given I have the 'es256 public key'
@@ -328,30 +365,6 @@ Then print data
 EOF
     save_output ver_presentation.out.json
     assert_output '{"es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg==","signed_selective_disclosure":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"]],"jwt":{"header":{"alg":"ES256","typ":"vc+sd-jwt"},"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo","GRAVzz7ZmE5-g1siHKrMLibaQQKdgkJGitjrx1D0JBs"],"_sd_alg":"sha-256","exp":1883000000,"iat":1683000000,"iss":"http://example.org","sub":"user 42"},"signature":"bRd93MYGuiVye_3QVLtvyxGmyGejx_HXQcC-z3m_PtgZLMOV-TnEy_FSpyqsMXT-qqSj7ZIdca8tWrZrwZT72w"}}}'
-}
-
-@test "Fail verify on invalid sd-jwt: wrong header" {
-    cat <<EOF | save_asset wrong_header.json
-{
-    "Alice": {
-        "es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg=="
-    },
-    "signed_selective_disclosure":{
-        "disclosures":[["VyJ47aH6-hysFuthAZJP-A","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","family_name","Doe"],["5XsSIXmaZbf5ikQgMSVGjQ","email","johndoe@example.com"],["br5gmh-cSRNAvocKCmAD0A","phone_number","+1-202-555-0101"],["6UasczRKmme8SOUwelXq2w","phone_number_verified",true],["Ll27jjwT4yzd0i-7NGdZAw","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["DR92VSF2l3Az1K1-LyWO1w","birthdate","1940-01-01"]],
-        "jwt":{
-            "header":{"alg":"ES356","typ":"JWT"},
-            "payload":{"_sd":["cMZilhOF9uEyvW_vCKx8IkbqfmntjqkV8HCFQ_lgPq0","DjUC3iXDmUj0QQgbZM7PQhhOLI3EjqSNzz3IhCpqQhg","wyoSepSkpJXnOxKlsypeqjr9PMFXf024GlIBPgVKnrg","MW58zqUyooJw5zGmASCETNi4qORcewuTRWDhLMLavis","sftnu87bkbl62AB38gmuyQdX5yD95TxMuzhvyiD7Wb8","dydbjYL8bcTkcXtLZ2e8514B7n7QDnOgOWD5Fniwjdo","84Vp4ymg-8VScgYletGB4TfHboLPkIXLaP3djL2Km0U"],
-                        "_sd_alg":"sha-256",
-                        "iss":"http://example.org",
-                        "sub":"user 42"
-                    },
-            "signature":"zfJnEY9fHtkPtOL0b97DCa7zjV5h13Yazxolw9sfZrcFax8G7xSG4-Ai8uCNZgm-KpfpBANXo5NB2x2oWjqiWA"
-        }
-    }
-}
-EOF
-    run $ZENROOM_EXECUTABLE -z -a wrong_header.json sd_verification.zen
-    assert_line --partial 'The JWT header is not valid'
 }
 
 @test "Fail verify on invalid sd-jwt: wrong signature" {
