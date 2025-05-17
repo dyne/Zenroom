@@ -150,6 +150,15 @@ int zen_init_pmain(lua_State *L) { // protected mode init
 
 	zen_require_override(L,0);
 	if(!zen_lua_init(L)) {
+		const char* msg = lua_tostring(L, -1);
+		if (msg == NULL) {
+			msg = "error object is not a string";
+		}
+		// Get stack trace
+		luaL_traceback(L, L, msg, 1);
+		const char* traceback = lua_tostring(L, -1);
+		_err("LUA: %s\n", traceback);
+		lua_pop(L, 2);  // Pop error message and traceback
 		zerror(L, "Initialisation of lua scripts failed");
 		return(LUA_ERRRUN);
 	}
@@ -370,6 +379,51 @@ void zen_teardown(zenroom_t *ZZ) {
 	ZZ = NULL;
 }
 
+
+static int pcall_ZEN_traceback(lua_State *L) {
+	const char *msg = lua_tostring(L, 1);
+    if (msg == NULL) {
+        lua_pushstring(L, "(error object is not a string)");
+    }
+    luaL_traceback(L, L, msg, 1);
+    return 1;
+}
+int pcall_ZEN_method(lua_State *L, const char *method) {
+    int exitcode = 0;
+    int original_top = lua_gettop(L);
+    lua_pushcfunction(L, pcall_ZEN_traceback);
+    int errhandler_pos = lua_gettop(L);
+    lua_getglobal(L, "ZEN");
+    if (!lua_istable(L, -1)) {
+        zerror(L,"ZEN class is not found");
+        lua_settop(L, original_top);
+        return 2;
+    }
+    lua_getfield(L, -1, method);
+    if (!lua_isfunction(L, -1)) {
+        zerror(L,"ZEN.%s method does not exist",method);
+        lua_settop(L, original_top);
+        return 2;
+    }
+    lua_pushvalue(L, -2);
+    int call_result = lua_pcall(L, 1, 0, errhandler_pos);
+    if (call_result != LUA_OK) {
+        exitcode = 2;
+        // ZEN.OK = false must be protected
+        lua_pushcfunction(L, pcall_ZEN_traceback);
+        lua_getglobal(L, "ZEN");
+        lua_pushboolean(L, 0);
+        if (lua_pcall(L, 2, 0, errhandler_pos) != LUA_OK) {
+            zerror(L,"Error setting ZEN.OK: %s", lua_tostring(L, -1));
+            lua_pop(L, 1);
+        }
+        // Print error with traceback
+        zerror(L,"ZEN:run(): %s", lua_tostring(L, -1));
+    }
+    lua_settop(L, original_top);
+    return exitcode;
+}
+
 HEDLEY_NON_NULL(1,2)
 int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
 	HEDLEY_ASSUME(ZZ!=NULL);
@@ -395,13 +449,12 @@ int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
 	return ZZ->exitcode;
   }
   // fastalloc32_status(ZMM);
-  ZZ->exitcode = luaL_dostring
-	(L,"local _res, _err <const> = pcall( function() ZEN:run() end)\n"
-	 "if not _res then exitcode(2) ZEN.OK = false error(_err,2) end\n");
-  if(ZZ->exitcode != SUCCESS) {
-	zerror(L, "Zencode runtime error");
-	zerror(L, "%s", lua_tostring(L, -1));
-	return ZZ->exitcode;
+  // ZZ->exitcode = luaL_dostring
+  // 	(L,"local _res, _err <const> = pcall( function() ZEN:run() end)\n"
+  // 	 "if not _res then exitcode(2) ZEN.OK = false error(_err,2) end\n");
+  if (pcall_ZEN_method(L,"run") != SUCCESS) {
+	  ZZ->exitcode = ERR_RUN;
+	  return ERR_RUN;
   }
   // fastalloc32_status(ZMM);
   if(ZZ->exitcode == SUCCESS) func(L, "Zencode successfully executed");

@@ -136,7 +136,7 @@ typedef struct {
 // EXIT CODES
 #define ERR_INIT 4
 #define ERR_PARSE 3
-#define ERR_EXEC 2
+#define ERR_RUN 2
 #define ERR_GENERIC 1 // EXIT_FAILURE
 #define SUCCESS 0 // EXIT_SUCCESS
 
