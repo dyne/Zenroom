@@ -20,6 +20,7 @@
 --on Thursday, 26th September 2024
 --]]
 
+JOSE = require_once'crypto_jose'
 load_scenario('zencode_jwk')
 load_scenario('zencode_jws')
 load_scenario('zencode_jwt')
