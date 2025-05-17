@@ -144,7 +144,7 @@ end
 -- on export, yay!
 function sd_jwt.create_jwt(payload, sk, algo)
     local header <const> = {
-        alg=O.from_string(algo.name),
+        alg=O.from_string(algo.IANA), -- TODO: does JWT contains .alg ?!
         typ=O.from_string("vc+sd-jwt")
     }
     local payload_str <const> = sd_jwt.prepare_dictionary(payload)
