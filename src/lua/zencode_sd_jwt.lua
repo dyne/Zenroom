@@ -293,7 +293,7 @@ When("create signed selective disclosure of ''", function(sdp_name)
     ACK.signed_selective_disclosure = {
         jwt = SD_JWT.create_jwt(sdp.payload,
                                 havekey('es256'),
-                                CRYPTO.signature_from_anystring('es256')),
+                                CRYPTO.load('es256')),
         disclosures = sdp.disclosures,
     }
     new_codec('signed_selective_disclosure')
@@ -303,10 +303,9 @@ When("create signed selective disclosure of '' with ''",
      function(sdp_name, algo)
     local sdp <const> = have(sdp_name)
     local alg <const> = mayhave(algo)
+    local crypto <const> = CRYPTO.load(alg or algo)
     ACK.signed_selective_disclosure = {
-        jwt = SD_JWT.create_jwt(sdp.payload,
-                                havekey(CRYPTO.IANA_to_keyname(alg or algo)),
-                                CRYPTO.signature_from_anystring(alg or algo)),
+        jwt = SD_JWT.create_jwt(sdp.payload, havekey(crypto.keyname), crypto),
         disclosures = sdp.disclosures,
     }
     new_codec('signed_selective_disclosure')
@@ -354,7 +353,7 @@ IfWhen("verify signed selective disclosure '' issued by '' is valid", function(o
     local jwt <const> = signed_sd.jwt
     local disclosures <const> = signed_sd.disclosures
     local algo <const> = jwt.header.alg:string()
-    local crypto <const> = CRYPTO.signature_from_anystring(algo)
+    local crypto <const> = CRYPTO.load(algo)
     -- if jwt.header.alg == O.from_string("ES256") then
     local iss_pk <const> = load_pubkey_compat(by, algo:lower())
     local payload_str <const> = SD_JWT.prepare_dictionary(jwt.payload)
