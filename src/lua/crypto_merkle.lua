@@ -92,23 +92,51 @@ end
 
 
 
---Indeces could have to be shifted
-local function _generate_leaves_for_proof1(tree, pos)
+local function MT.generate_proof(tree, pos)
     local indeces_set = {}
-    pos = pos + N
-
+    local N = (#tree+1)/2
+    pos = pos + N - 1
 
     table.insert(indeces_set, pos)
 
-    while pos > 2 do
-        
+    while pos > 1 do       
         if pos%2 == 0 then
-            table.insert(indeces_set, pos - 1 )
-        else
             table.insert(indeces_set, pos + 1 )
+        else
+            table.insert(indeces_set, pos - 1 )
         end
+        pos = math.floor(pos/2)
+    end
 
-        pos = math.ceil(pos/2)
+    local proof = {}
+    local m = #indeces_set
+
+    table.sort(indeces_set)
+
+    for i = 1, m do
+        table.insert(proof, tree[indeces_set[i]])
+    end
+
+    return proof
+end
+
+
+local function MT.verify_proof(proof, pos, root, n , hashtype)
+    if n == 1 then
+        return proof[1]
+    end
+    
+    pos = pos + n - 1
+    local indeces_set = {}
+    table.insert(indeces_set, pos)
+
+    while pos > 1 do        
+        if pos%2 == 0 then
+            table.insert(indeces_set, pos + 1 )
+        else
+            table.insert(indeces_set, pos - 1 )
+        end
+        pos = math.floor(pos/2)
     end
 
     local set = {}
@@ -117,33 +145,36 @@ local function _generate_leaves_for_proof1(tree, pos)
     table.sort(indeces_set)
 
     for i = 1, m do
-        set[i] = {tree[indeces_set[i]], indeces_set[i]}
+        table.insert(set, {proof[i], indeces_set[i]} )
     end
 
-    return set
-end
-
-
-
---check the index with official version: could have to be shifted
-local function _verify_proof(proof, pos, root, hashtype)
-    --local pos = pos + N   -- we can suppose to have N = number of leaves
-    local n = #proof
+    local n = #proof    
+    local t = _hash(set[n-1][1] .. set[n][1]) 
     
-    local t = _hash(proof[n-1][1] .. proof[n][1]) 
     n = n-2
 
     while n > 0 do
-        if proof[n][2]%2 == 0 then
-            t = _hash(t .. proof[n][1])
+        if set[n][2]%2 == 1 then
+            t = _hash(t .. set[n][1])
         else
-            t = _hash(proof[n][1] .. t)
+            t = _hash(set[n][1] .. t)
         end
         n = n-1
     end
     
     return t 
     --return t == root
+end
+
+
+local function MT.merkle_tree_len(n)
+    local r = 0
+    local pos = 2*n - 1 
+    while pos > 1 do
+        r = r + 1
+        pos = math.ceil(pos/2)
+    end
+    return r
 end
 
 

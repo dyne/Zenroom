@@ -52,6 +52,44 @@ assert(tree[1] == _hash(leaves5 .. leaves6, "sha256"), "Leaf 2 does not match th
 assert(root == _hash(leaves5 .. leaves6, "sha256"), "Root does not match the expected value")
 
 
+Print("TEST _generate_proof from Frigo's code")
+
+for number_leaves = 1, 64 do
+    local leaves = {}
+    for i = 1, number_leaves do
+        local leaf = OCTET.from_number(i)
+        table.insert(leaves, leaf)
+    end
+
+    local tree = MT.create_merkle_tree(leaves, 'sha256')
+    local root = tree1[1]
+    local nproof = 7
+    
+    assert(number_leaves <= 2^(nproof-1))
+
+    for pos = 1, number_leaves do
+        local proof = MT.generate_leaves_for_proof(tree1, pos)
+        local size_proof = #proof
+        
+        assert(#proof <= nproof)
+        assert(#proof >= 1)
+        assert(0 == math.floor(number_leaves/2^(#proof)))
+
+        if pos + 1 == number_leaves then
+            assert(MT.merkle_tree_len(number_leaves) == #proof) 
+        end
+
+        proof[size_proof] = proof[size_proof]:shl_circular(1)
+        assert(MT.verify_proof(proof, pos, root, number_leaves, 'sha256') ~= root)
+        proof[size_proof] = proof[size_proof]:shr_circular(1)
+        assert(MT.verify_proof(proof, pos, root, number_leaves, 'sha256') == root)
+    end
+end
+
+
+
+
+
 
 
 
