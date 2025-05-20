@@ -252,3 +252,60 @@ local function test_Fp_Allsizes()
 end
 
 print(test_Fp_Allsizes())
+
+local function RootOfUnity_test()
+    local p = big.from_decimal("21888242871839275222246405745257275088548364400416034343698204186575808495617")
+    local omega = of_string("19103219067921713944291392827692070036145651957329286315305642004821462161904",p)
+    for i = 1, 28 do 
+        assert(omega ~= big.new(1), "error in the root of unity test")
+        omega = omega:modmul(omega,p)
+    end 
+    assert(omega:__eq(big.new(1)), "error in the root of unity test")
+    return("OK test root of unity")
+end 
+
+print(RootOfUnity_test())
+
+local function InverseSecp256k1()
+    local p = big.from_decimal("115792089237316195423570985008687907853269984665640564039457584007908834671663")
+    --invert a bunch of powers of two
+    local t = big.new(1)
+    for i = 1, 1000 do 
+        ti = t:modinv(p)
+        one = t:modmul(ti, p)
+        assert(one:__eq(big.new(1)), "error in the InverseSecp256k1 test")
+        tii = ti:modinv(p)
+        assert(t:__eq(tii), "error in the InverseSecp256k1 test")
+        t = t:__add(t):__mod(p)
+    end 
+    return ("OK inverse test")
+end 
+
+print(InverseSecp256k1())
+
+function of_bytes(byte_table,p)
+    local little_endian = ""
+    for i = #byte_table, 1, -1 do
+        little_endian = little_endian .. string.format("%02X", byte_table[i])
+    end
+    local num = big.new(hex (little_endian))
+    if num:__lte(p) then 
+        return true
+    else 
+        return false
+    end 
+end 
+
+local function castable()
+    local p = big.from_decimal("115792089237316195423570985008687907853269984665640564039457584007908834671663")
+    local b = {0xDD, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+               0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+               0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+               0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}
+    assert(of_bytes(b,p) == false, "error in of_bytes() function")
+    b[32] = 0xEF
+    assert(of_bytes(b,p) == true, "error in of_bytes() function")
+    return ("OK castable test")
+end
+
+print(castable())
