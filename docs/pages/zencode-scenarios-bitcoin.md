@@ -30,16 +30,16 @@ Particularly the generation of private and public key (and the creation and sign
 ## Private key
 The script below generates a **bitcoin testnet** private key. 
 
-Note: you don't need to declare your identity using the statement ***Given I am 'User1234'***, but you can still do it if it comes handy, and then use the statement ***Then print my 'keys'*** to format the output.
+Note: you don't need to declare your identity using the statement ***Given I am 'User1234'***, but you can still do it if it comes handy, and then use the statement ***Then print my 'keyring'*** to format the output.
 
-[](../_media/examples/zencode_cookbook/bitcoin/keygen.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/bitcoin/create_testnet_key.zen ':include :type=code gherkin')
 
 The output should look like this: 
 
-[](../_media/examples/zencode_cookbook/bitcoin/keys.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/bitcoin/create_testnet_key.out.json ':include :type=code json')
 
 You want to store this into the file 
-<a href="../_media/examples/zencode_cookbook/bitcoin/keys.json" download>keys.json</a>
+<a href="../_media/examples/zencode_cookbook/bitcoin/create_testnet_key.out.json" download>keyring.json</a>
 
 ### Generate a private key from a known seed 
 
@@ -61,15 +61,15 @@ Which requires you to load a 32 bytes long *base64* object named 'mySeed', the s
 Once you have created a private key, you can feed it to the following script to generate the public key:
 
 
-[](../_media/examples/zencode_cookbook/bitcoin/pubkeygen.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/bitcoin/create_testnet_public_key.zen ':include :type=code gherkin')
 
 
 The output should look like this: 
 
-[](../_media/examples/zencode_cookbook/bitcoin/pubkey.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/bitcoin/create_testnet_public_key.out.json ':include :type=code json')
 
 You want to store this into the file 
-<a href="../_media/examples/zencode_cookbook/bitcoin/pubkey.json" download>pubkey.json</a>
+<a href="../_media/examples/zencode_cookbook/bitcoin/create_testnet_public_key.out.json" download>pubkey.json</a>
 
 
 # Create testnet address
@@ -77,12 +77,12 @@ You want to store this into the file
 
 Next, you'll need to generate a **bitcoin testnet address**, you'll need the <a href="../_media/examples/zencode_cookbook/bitcoin/keys.json" download>keys.json</a> you've just generated as input to the following script: 
 
-[](../_media/examples/zencode_cookbook/bitcoin/pubgen.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/bitcoin/create_testnet_address.zen ':include :type=code gherkin')
 
 
 The output should look like: 
 
-[](../_media/examples/zencode_cookbook/bitcoin/address.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/bitcoin/create_testnet_address.out.json ':include :type=code json')
 
 
 # The transaction: setup and execution
@@ -110,27 +110,18 @@ Then, get a **list of the unspent transactions from your address**, which is aga
 
 The result should be a JSON file looking like: 
 
-[](../_media/examples/zencode_cookbook/bitcoin/unspent.json ':include :type=code json')
-
-Now merge the <a href="../_media/examples/zencode_cookbook/bitcoin/transaction_data.json" download>transaction_data.json</a>
-  and <a href="../_media/examples/zencode_cookbook/bitcoin/unspent.json" download>unspent.json</a>  two files together into <a href="../_media/examples/zencode_cookbook/bitcoin/order.json" download>order.json</a>. 
-  
-You can do so for example by using **jq**: 
- 
-```bash
- jq -s '.[0] * .[1]' unspent.json  transaction_data.json
-```
+[](../_media/examples/zencode_cookbook/bitcoin/create_transaction.data.json ':include :type=code json')
 
 ## Create the transaction 
 
-Now, you can feed the file **order.json** to the script:
+Now, you can feed the files **unspent_transaction.json** and **transaction_data.json** to the script:
 
-[](../_media/examples/zencode_cookbook/bitcoin/sign.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/bitcoin/create_transaction.zen ':include :type=code gherkin')
 
 
 Which will produce an unsigned transaction, formatted in human-readable JSON, that should look like:
 
-[](../_media/examples/zencode_cookbook/bitcoin/transaction.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/bitcoin/create_transaction.out.json ':include :type=code json')
 
 If the recipient address is saved under a name other than **recipient** then the transaction can be created using the statement:
 
@@ -140,17 +131,17 @@ When I create the testnet transaction to ''
 
 ## Sign the transaction and format as raw transaction 
 
-You can now pass the transaction produced from the above script, along with <a href="../_media/examples/zencode_cookbook/bitcoin/keys.json" download>keys.json</a> to the following script that will sign the transaction and format it so that we can pass it to any Bitcoin node. 
+You can now pass the transaction produced from the above script, along with <a href="../_media/examples/zencode_cookbook/bitcoin/create_testnet_key.out.json" download>keyring.json</a> to the following script that will sign the transaction and format it so that we can pass it to any Bitcoin node. 
 
 [](../_media/examples/zencode_cookbook/bitcoin/sign_transaction.zen ':include :type=code gherkin')
 
 The signed transaction should look like:
 
-[](../_media/examples/zencode_cookbook/bitcoin/rawtx.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/bitcoin/sign_transaction.out.json ':include :type=code json')
 
-**Note: this script and the previous one can be merged** into one script that creates the transaction, signs it and prints it out as raw transaction. 
+**Note: this script and the previous one can be merged** into one script that creates the transaction, signs it and prints it out as raw transaction.
 
-In this example we kept the script separated as this script was originally meant to demonstrate how to make an **offline Bitcoin wallet**, where the signature happens on different machine (which can be kept offline for security reasons). You can merge the two scripts and feed the resulting script with <a href="../_media/examples/zencode_cookbook/bitcoin/keys.json" download>keys.json</a> we created on top of this page and <a href="../_media/examples/zencode_cookbook/bitcoin/order.json" download>order.json</a>
+In this example we kept the script separated as this script was originally meant to demonstrate how to make an **offline Bitcoin wallet**, where the signature happens on different machine (which can be kept offline for security reasons). You can merge the two scripts and feed the resulting script with <a href="../_media/examples/zencode_cookbook/bitcoin/create_testnet_key.out.json" download>keyring.json</a> we created on top of this page and <a href="../_media/examples/zencode_cookbook/bitcoin/create_transaction.data.json" download>order.json</a>
 
 
 
@@ -160,37 +151,3 @@ All the smart contracts and the data you see in this page are generated by the s
  - *git clone https://github.com/dyne/Zenroom.git*
  - install  **jq**
  - download a [zenroom binary](https://zenroom.org/#downloads) and place it */bin* or */usr/bin* or in *./Zenroom/src*
-
-
-
-
-<!-- Temp removed, 
-
-We grouped together all the statements that perform object manipulation, so: 
-
-
- ***Math operations***: sum, subtraction, multiplication, division and modulo, between numbers
- 
- ***Invert sign*** invert the sign of a number 
- 
- ***Append*** a simple object to another
- 
- ***Rename*** an object
-  
- ***Delete*** an object from the memory stack
- 
- ***Copy*** an object into new object
- 
- ***Split string*** using leftmost or rightmost bytes
- 
- ***Randomize*** the elements of an array
- 
- ***Create string/number*** (statement "write in")
- 
- ***Pick a random element*** from an array
- 
-
-
-
--->
-### 
