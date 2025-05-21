@@ -181,27 +181,100 @@ end
 
 -- n = number of leaves generating tree
 -- pos = table containing positions of the leaves to prove
--- np = number of proofs, is #pos (?)
-local function _compressed_merkle_proof_tree(n, pos, np)
+-- np = number of pos, is #pos (?)
+local function MT.compressed_merkle_proof_tree(n, pos)
+    local np = #pos
     assert(np > 0, "A Merkle proof with 0 leaves is not defined.")
     --initializing a vector tree[] will contain a boolean (if a leaf of the tree is need or not to create the proof)
     local tree = {}
-    for i = 1, 2*n do
+    for i = 1, 2*n-1 do
         tree[i] = false
     end
 
     for ip = 1, np do
-        assert(pos[ip] < n, "Invalid position for leaf in Merkle tree")
-        tree[pos[ip]+n] = true   --is a leaf of the tree so it is in the tree and we put its positon in tree[] true
+        assert(pos[ip] < n+1, "Invalid position for leaf in Merkle tree")
+        tree[pos[ip]+n-1] = true   --is a leaf of the tree so it is in the tree and we put its positon in tree[] true
     end
 
-    for i = n, 2, -1 do
-        tree[i] = tree[2*i-1] or tree[2*i]
+    for i = n-1, 1, -1 do
+        tree[i] = tree[2*i] or tree[2*i+1]
     end
 
-    assert(tree[2], "the root is not in the tree")
+    assert(tree[1], "the root is not in the tree")
 
     return tree
+end
+
+
+-- pos is an array of positions
+-- np is just #pos
+-- n number of leaves
+local function MT.generate_compressed_proof(pos, n, tree)
+    local np = #pos
+    local boolean_tree = _compressed_merkle_proof_tree(n, pos)
+    local proof = {}
+    local size = #tree
+    for i = n-1, 1, -1 do   --frigo uses n instead of n-1 TO CHECK
+        if boolean_tree[i] then
+            local child = 2*i
+            if boolean_tree[child] == true then
+                child = 2*i + 1
+            end
+            if boolean_tree[child] == false then
+                table.insert(proof, tree[child])
+            end
+        end
+
+    end
+
+    return proof
+end
+
+--leaves which are in pos, not all leaves
+local function MT.verify_compressed_proof(proof, leaves, pos, n, root, hashtype )
+    local np = #pos
+    local tree = {}
+    local defined = {}
+    for i = 1, 2*n-1 do
+        defined[i] = false
+    end
+
+    local boolean_tree = _compressed_merkle_proof_tree(n , pos)
+    local proof_lenght = #proof
+    
+    local sz = 0    
+    for i = n-1, 1, -1 do   --frigo uses n instead of n-1 TO CHECK
+        if boolean_tree[i] then
+            local child = 2*i
+            if boolean_tree[child] == true then
+                child = 2*i + 1
+            end
+            if boolean_tree[child] == false then
+                if sz >= proof_lenght then
+                    return false
+                end
+                sz = sz+1
+                tree[child] = proof[sz]
+                defined[child] = true
+            end
+        end
+    end 
+
+    for ip = 1, np do
+        local l = pos[ip] + n - 1
+        tree[l] = leaves[ip]
+        defined[l] = true
+    end
+
+    for i = n-1, 1, -1 do
+        if defined[2*i] and defined[2*i+1] then
+            tree[i] = _hash(tree[2*i] .. tree[2*i+1])
+            defined[i] = true
+        end
+    end
+
+    return tree[1] == root
+    --return tree[1] 
 end
 
 return MT
