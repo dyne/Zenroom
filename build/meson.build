@@ -35,7 +35,7 @@ endif
 
 ## BATS tests in vectors
 if suite.contains('vectors')
-  tests = [ 'aes', 'ecdsa_p256', 'hmac', 'eddsa', 'sha', 'rsa', 'qp' ]
+  tests = [ 'aes', 'ecdsa_p256', 'hmac', 'eddsa', 'sha', 'rsa', 'qp', 'merkletree' ]
   foreach test_suite : tests
     test('vectors_'+test_suite.underscorify(),
 		 bats_bin,
