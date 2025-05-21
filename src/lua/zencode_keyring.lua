@@ -110,7 +110,7 @@ local keytypes <const> = {
     },
     testnet = {
         import = function(obj) return schema_get(obj, 'testnet', BTC.wif_to_sk, O.from_base58) end,
-        export = function(obj) return O.to_base58(BTC.sk_to_wif(obj.bitcoin, 'testnet')) end
+        export = function(obj) return O.to_base58(BTC.sk_to_wif(obj.testnet, 'testnet')) end
     },
     ethereum = {
         import = function(obj) return schema_get(obj, 'ethereum', nop, O.from_hex) end,
