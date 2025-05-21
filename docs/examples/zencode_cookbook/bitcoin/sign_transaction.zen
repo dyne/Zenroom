@@ -1,4 +1,4 @@
-Given I have the 'keys'
+Given I have the 'keyring'
 and I have a 'base64 dictionary' named 'testnet transaction'
 When I sign the testnet transaction
 and I create the testnet raw transaction
