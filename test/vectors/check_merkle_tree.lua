@@ -23,6 +23,19 @@ local leaves = {leaves1, leaves2, leaves3, leaves4, leaves5}
 local tree = MT.create_merkle_tree_from_table_of_hashes(leaves, "sha256")
 assert(tree[1] == root, "The root of the tree does not match the expected value")
 
+local pos = {1,2}
+local proof = MT.generate_compressed_proof(pos, #leaves, tree1)
+
+assert(proof[1] == "084fed08b978af4d7d196a7446a86b58009e636b611db16211b65a9aadff29c5")
+assert(proof[2] == "f03808f5b8088c61286d505e8e93aa378991d9889ae2d874433ca06acabcd493")
+
+local pos = {2,4}
+local proof = MT.generate_compressed_proof(pos, #leaves, tree1)
+
+assert(proof[1] == "e77b9a9ae9e30b0dbdb6f510a264ef9de781501d7b6b92ae89eb059c5ab743db")
+assert(proof[2] == "084fed08b978af4d7d196a7446a86b58009e636b611db16211b65a9aadff29c5")
+assert(proof[3] == "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a")
+
 print("TEST from Frigo's code")
 
 local leaves1 = "100"
