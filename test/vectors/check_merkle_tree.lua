@@ -128,7 +128,34 @@ for n = 200, 300 do
 end
 
 
+print("TEST ZeroLengthProof from Frigo's code")
+-- Testing MT.verify_compressed_proof in case of an empty proof is had
+-- In the FIRST test the verify must be able to compute the root even though the empty proof since all leaves are had
+-- In the SECOND test the verify mustn't be able to compute the root since only a leaf anche an empty proof are had 
 
+local data = {
+    "100",
+    "101",
+    "102",
+    "103"
+}
+
+local tree = MT.create_merkle_tree(data, 'sha256')
+local root = tree[1]
+
+local empty_proof = {}
+
+local leaves_for_proof4 = {}
+for i = 1, 4 do
+    table.insert(leaves_for_proof4, _hash(data2[i], 'sha256'))
+end
+
+local pos = {1,2,3,4}
+assert(_verify_compressed_proof(empty_proof, leaves_for_proof4, pos, 4 ,root, 'sha256'))
+
+local leaves_for_proof1 = {_hash(data2[1], 'sha256')}
+local pos = {1}
+assert(_verify_compressed_proof(empty_proof, leaves_for_proof1, pos, 1 ,root, 'sha256') == false)
 
 
 
