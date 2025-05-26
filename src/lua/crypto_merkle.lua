@@ -92,7 +92,7 @@ end
 
 
 
-local function MT.generate_proof(tree, pos)
+function MT.generate_proof(tree, pos)
     local indeces_set = {}
     local N = (#tree+1)/2
     pos = pos + N - 1
@@ -121,7 +121,7 @@ local function MT.generate_proof(tree, pos)
 end
 
 
-local function MT.verify_proof(proof, pos, root, n , hashtype)
+function MT.verify_proof(proof, pos, root, n , hashtype)
     if n == 1 then
         return proof[1]
     end
@@ -167,7 +167,7 @@ local function MT.verify_proof(proof, pos, root, n , hashtype)
 end
 
 
-local function MT.merkle_tree_len(n)
+function MT.merkle_tree_len(n)
     local r = 0
     local pos = 2*n - 1 
     while pos > 1 do
@@ -182,7 +182,7 @@ end
 -- n = number of leaves generating tree
 -- pos = table containing positions of the leaves to prove
 -- np = number of pos, is #pos (?)
-local function MT.compressed_merkle_proof_tree(n, pos)
+function MT.compressed_merkle_proof_tree(n, pos)
     local np = #pos
     assert(np > 0, "A Merkle proof with 0 leaves is not defined.")
     --initializing a vector tree[] will contain a boolean (if a leaf of the tree is need or not to create the proof)
@@ -209,7 +209,7 @@ end
 -- pos is an array of positions
 -- np is just #pos
 -- n number of leaves
-local function MT.generate_compressed_proof(pos, n, tree)
+function MT.generate_compressed_proof(pos, n, tree)
     local np = #pos
     local boolean_tree = MT.compressed_merkle_proof_tree(n, pos)
     local proof = {}
@@ -231,7 +231,7 @@ local function MT.generate_compressed_proof(pos, n, tree)
 end
 
 --leaves which are in pos, not all leaves
-local function MT.verify_compressed_proof(proof, leaves, pos, n, root, hashtype )
+function MT.verify_compressed_proof(proof, leaves, pos, n, root, hashtype )
     local np = #pos
     local tree = {}
     local defined = {}
@@ -280,7 +280,7 @@ end
 -- The Following function will be just used for creating a random setting for the verify_compressed_proof in check_merkle_tree
 -- n is the number of leaves
 -- batch_size the number of leaves to prove
-local function MT.setup_batch(n, batch_size, hashtype)
+function MT.setup_batch(n, batch_size, hashtype)
     local data = {}
     local leaves = {}
     local pos = {}
@@ -290,7 +290,7 @@ local function MT.setup_batch(n, batch_size, hashtype)
         local leaf = OCTET.from_number(i)
         table.insert(data, leaf)            -- data not alredy hashed
         table.insert(leaves, _hash(leaf))   -- leaves have to be hashed
-        table.insert(set, i)                --c reating a set where we will extract random indeces in the next step
+        table.insert(set, i)                -- creating a set where we will extract random indeces in the next step
     end
 
     local tree = MT.create_merkle_tree(data, hashtype)    
