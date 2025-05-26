@@ -65,7 +65,7 @@ assert(tree[1] == _hash(leaves5 .. leaves6, "sha256"), "Leaf 2 does not match th
 assert(root == _hash(leaves5 .. leaves6, "sha256"), "Root does not match the expected value")
 
 
-Print("TEST _generate_proof from Frigo's code")
+Print("TEST for MT.generate_proof from Frigo's code")
 
 for number_leaves = 1, 64 do
     local leaves = {}
@@ -100,6 +100,32 @@ for number_leaves = 1, 64 do
 end
 
 
+print("TEST for MT.generate_compressed_proof from Frigo's code")
+
+local size = {1, 10, 80}
+
+for i = 1, 3 do
+    for n = 200, 300 do
+        local pos, leaves_for_proof, leaves, tree = MT.setup_batch(n, size[i], 'sha256')    -- size[i] is the test size
+        local root = tree[1]
+        local proof = MT.generate_compressed_proof(pos, n, tree)
+        assert(MT.verify_compressed_proof(proof, leaves_for_proof, pos, n ,root, 'sha256'))
+    end
+end
+
+
+local kTestSize = 80
+for n = 200, 300 do
+    local pos, leaves_for_proof, leaves, tree = MT.setup_batch(n, kTestSize , 'sha256')
+    local root = tree[1]
+    local proof = MT.generate_compressed_proof(pos, n, tree)
+    local size_proof = #proof
+    for ei = 1, size_proof do
+        proof[size_proof] = proof[size_proof]:shl_circular(1)
+        assert(MT.verify_compressed_proof(proof, leaves_for_proof, pos, n ,root, 'sha256') == false)
+        proof[size_proof] = proof[size_proof]:shr_circular(1)
+    end
+end
 
 
 
