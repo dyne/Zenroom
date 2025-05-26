@@ -211,7 +211,7 @@ end
 -- n number of leaves
 local function MT.generate_compressed_proof(pos, n, tree)
     local np = #pos
-    local boolean_tree = _compressed_merkle_proof_tree(n, pos)
+    local boolean_tree = MT.compressed_merkle_proof_tree(n, pos)
     local proof = {}
     local size = #tree
     for i = n-1, 1, -1 do   --frigo uses n instead of n-1 TO CHECK
@@ -239,7 +239,7 @@ local function MT.verify_compressed_proof(proof, leaves, pos, n, root, hashtype 
         defined[i] = false
     end
 
-    local boolean_tree = _compressed_merkle_proof_tree(n , pos)
+    local boolean_tree = MT.compressed_merkle_proof_tree(n , pos)
     local proof_lenght = #proof
     
     local sz = 0    
@@ -273,8 +273,42 @@ local function MT.verify_compressed_proof(proof, leaves, pos, n, root, hashtype 
         end
     end
 
-    return tree[1] == root
-    --return tree[1] 
+    return defined[1] and tree[1] == root 
+end
+
+
+-- The Following function will be just used for creating a random setting for the verify_compressed_proof in check_merkle_tree
+-- n is the number of leaves
+-- batch_size the number of leaves to prove
+local function MT.setup_batch(n, batch_size, hashtype)
+    local data = {}
+    local leaves = {}
+    local pos = {}
+    local set = {}
+    
+    for i = 1, n do
+        local leaf = OCTET.from_number(i)
+        table.insert(data, leaf)            -- data not alredy hashed
+        table.insert(leaves, _hash(leaf))   -- leaves have to be hashed
+        table.insert(set, i)                --c reating a set where we will extract random indeces in the next step
+    end
+
+    local tree = MT.create_merkle_tree(data, hashtype)    
+    local leaves_for_proof = {}
+
+    for i = 1, batch_size do
+        random_index = math.random(n+1-i)
+        table.insert(pos, set[random_index])   
+        table.remove(set, random_index)
+    end
+
+    table.sort(pos)     --ordered set of pos of the leaves to take for the proof
+
+    for i = 1, #pos do
+        table.insert(leaves_for_proof, leaves[pos[i]])
+    end
+
+    return pos, leaves_for_proof, leaves, tree
 end
 
 return MT
