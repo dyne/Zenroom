@@ -23,133 +23,124 @@
 local btc -- mostly loaded at init
 if not BTC then btc = require_once('crypto_bitcoin') else btc = BTC end
 
--- TODO: any mean to verify that the content of address and txid is valid
-local function _get_addr(obj)
-   local res = schema_get(obj, '.', O.from_base58, tostring)
-   if not res then error("invalid segwit address",2) end
-   return res
-end
-
 local function _bitcoin_unspent_import(obj)
-   local res = {}
-   for _,v in pairs(obj) do
-      -- compatibility with electrum and bitcoin core
-      local n_amount = fif( v.amount, 'amount', 'value')
-      local n_txid = fif( v.txid, 'txid', 'prevout_hash')
-      local n_vout = fif( v.vout, 'vout', 'prevout_n')
-      local address
-      if v.address then
-	 address = schema_get(v,'address', O.from_segwit, tostring)
-      end
-      local amount  = schema_get(v,n_amount, btc.value_btc_to_satoshi, tostring)
-      local txid    = schema_get(v,n_txid, OCTET.from_hex, tostring)
-      local vout    = INT.new(v[n_vout])
-      table.insert(res, { address = address,
-			  amount  = amount,
-			  txid    = txid,
-			  vout    = vout })
+    local res = {}
+    for _,v in pairs(obj) do
+        -- compatibility with electrum and bitcoin core
+        local n_amount = fif( v.amount, 'amount', 'value')
+        local n_txid = fif( v.txid, 'txid', 'prevout_hash')
+        local n_vout = fif( v.vout, 'vout', 'prevout_n')
+        local address
+        if v.address then
+	        address = schema_get(v,'address', O.from_segwit, tostring)
+        end
+        table.insert(res, {
+            address = address,
+            amount  = schema_get(v, n_amount, btc.value_btc_to_satoshi, tostring),
+            txid    = schema_get(v, n_txid, OCTET.from_hex, tostring),
+            vout    = schema_get(v, n_vout, INT.new)
+        })
    end
-   return(res)
+   return res
 end
 local function _bitcoin_unspent_export(obj)
-   local res = { }
-   for _,v in pairs(obj) do
-      -- to_segwit: octet, version number(0), 'bc' or 'tc'
-      local address = v.address:segwit(0, 'tb')
-      local amount = btc.value_satoshi_to_btc(v.amount)
-      local txid = v.txid:hex()
-      local vout = v.vout
-      table.insert(res, { address = address,
-			  amount  = amount,
-			  txid    = txid,
-			  vout    = vout })
-   end
-   return res
+    local res = { }
+    for _,v in pairs(obj) do
+        -- to_segwit: octet, version number(0), 'bc' or 'tc'
+        table.insert(res, {
+            address = v.address:segwit(0, 'tb'),
+            amount  = btc.value_satoshi_to_btc(v.amount),
+            txid    = v.txid:hex(),
+            vout    = v.vout
+        })
+    end
+    return res
 end
 
 local function _satoshi_unspent_import(obj)
-   local res = {}
-   -- TODO: quick fix on import from number format, to improve later
-   for _,v in pairs(obj) do
-      amount = schema_get(v,'value', BIG.from_decimal, tostring)
-      if type(amount) == 'number' then
-         amount = BIG.from_decimal(tostring(amount))
-      end
-      -- compatibility with electrum and bitcoin core
-      table.insert(res, { amount = amount,
-			  txid    = schema_get(v,'txid', OCTET.from_hex, tostring),
-			  vout    = F.new(v.vout) })
-   end
-   return(res)
+    local res = {}
+    for _,v in pairs(obj) do
+        table.insert(res, {
+            amount = schema_get(v,'value', INT.new),
+            txid   = schema_get(v,'txid', OCTET.from_hex, tostring),
+            vout   = F.new(v.vout)
+        })
+    end
+    return(res)
 end
 local function _satoshi_unspent_export(obj)
-   local res = { }
-   for _,v in pairs(obj) do
-      local amount = BIG.to_decimal(v.amount)
-      local txid = v.txid:hex()
-      local vout = v.vout
-      table.insert(res, { amount  = amount,
-			  txid    = txid,
-			  vout    = vout })
-   end
-   return res
+    local res = {}
+    for _,v in pairs(obj) do
+        table.insert(res, {
+            amount = BIG.to_decimal(v.amount),
+            txid   = v.txid:hex(),
+            vout   = v.vout
+        })
+    end
+    return res
 end
 
 local function _address_import(obj)
-   local raw, version, network
-   raw, version = O.from_segwit(tostring(obj))
-   network = obj:sub(0,2)
-   return
-	  { raw = raw, version = F.new(version), network = O.from_string(network) }
+    local raw, version = O.from_segwit(tostring(obj))
+    local network = obj:sub(0,2)
+    return {
+        raw = raw,
+        version = F.new(version),
+        network = O.from_string(network)
+    }
 end
 local function _address_export(obj)
-   if not obj.raw then error("Cannot export invalid bitcoin address",2) end
-   return O.to_segwit(obj.raw, tonumber(obj.version), O.to_string(obj.network))
+    if not obj.raw then error("Cannot export invalid bitcoin address",2) end
+    return O.to_segwit(obj.raw, tonumber(obj.version), O.to_string(obj.network))
 end
 
-local function _wif_import(obj)	return schema_get(obj, '.', BTC.wif_to_sk, O.from_base58) end
-local function _wif_bitcoin_export(obj)	return O.to_base58( BTC.sk_to_wif( obj, 'bitcoin') ) end
-local function _wif_testnet_export(obj)	return O.to_base58( BTC.sk_to_wif( obj, 'testnet') ) end
-
 local function _pk_import(o)
-    local res = CONF.input.encoding.fun(o)
-    zencode_assert(#res == 33, 'Invalid public key size: '..#res)
-    zencode_assert(
-        ECDH.pubcheck(ECDH.uncompress_public_key(res)),
-        'Public key is not a valid point on curve'
-    )
+    local res = schema_get(o, '.')
+    if #res ~= 33 then
+        error('Invalid public key size: '..#res, 2)
+    end
+    if not ECDH.pubcheck(ECDH.uncompress_public_key(res)) then
+        error('Public key is not a valid point on curve', 2)
+    end
     return res
 end
 
 ZEN:add_schema(
     {
-        bitcoin_public_key = { import = _pk_import },
-      bitcoin_key = { import = _wif_import,
-					  export = _wif_bitcoin_export },
-      testnet_key = { import = _wif_import,
-					  export = _wif_testnet_export },
-      satoshi_amount            = {
-		 import = function(obj)
-			return schema_get(obj, '.', BIG.from_decimal, tostring) end,
-		 export = BIG.to_decimal
-	  },
-      satoshi_fee               = {
-		 import = function(obj)
-			return schema_get(obj, '.', BIG.from_decimal, tostring) end,
-		 export = BIG.to_decimal
-	  },
-      satoshi_unspent = { import = _satoshi_unspent_import,
-						  export = _satoshi_unspent_export },
-      bitcoin_unspent = { import = _bitcoin_unspent_import,
-						  export = _bitcoin_unspent_export },
-      testnet_unspent = { import = _bitcoin_unspent_import,
-						  export = _bitcoin_unspent_export },
-      bitcoin_address = { import = _address_import,
-						  export = _address_export },
-      testnet_address = { import = _address_import,
-						  export = _address_export },
+        bitcoin_public_key = {
+            import = _pk_import
+        },
+        satoshi_amount = {
+            import = function(obj) return schema_get(obj, '.', BIG.from_decimal, tostring) end,
+            export = BIG.to_decimal
+        },
+        satoshi_fee = {
+            import = function(obj) return schema_get(obj, '.', BIG.from_decimal, tostring) end,
+            export = BIG.to_decimal
+        },
+        satoshi_unspent = {
+            import = _satoshi_unspent_import,
+            export = _satoshi_unspent_export
+        },
+        bitcoin_unspent = {
+            import = _bitcoin_unspent_import,
+            export = _bitcoin_unspent_export
+        },
+        testnet_unspent = {
+            import = _bitcoin_unspent_import,
+            export = _bitcoin_unspent_export
+        },
+        bitcoin_address = {
+            import = _address_import,
+            export = _address_export
+        },
+        testnet_address = {
+            import = _address_import,
+            export = _address_export
+        },
       -- TODO: { schema = 'transaction' })
-})
+    }
+)
 
 -- generate a keypair in "bitcoin" format (only x coord, 03 prepended)
 local function _keygen(name)
