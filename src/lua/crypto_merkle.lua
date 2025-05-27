@@ -290,7 +290,7 @@ function MT.setup_batch(n, batch_size, hashtype)
         local leaf = OCTET.from_number(i)
         table.insert(data, leaf)            -- data not alredy hashed
         table.insert(leaves, _hash(leaf))   -- leaves have to be hashed
-        table.insert(set, i)                --c reating a set where we will extract random indeces in the next step
+        table.insert(set, i)                -- creating a set where we will extract random indeces in the next step
     end
 
     local tree = MT.create_merkle_tree(data, hashtype)    
