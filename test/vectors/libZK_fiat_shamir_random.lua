@@ -1,4 +1,27 @@
-local FS = require'libZK_fiat_shamir'
+--[[
+--This file is part of zenroom
+--
+--Copyright (C) 2021-2025 Dyne.org foundation
+--designed, written and maintained by Giulio Sacchet
+--
+--This program is free software: you can redistribute it and/or modify
+--it under the terms of the GNU Affero General Public License v3.0
+--
+--This program is distributed in the hope that it will be useful,
+--but WITHOUT ANY WARRANTY; without even the implied warranty of
+--MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--GNU Affero General Public License for more details.
+--
+--Along with this program you should have received a copy of the
+--GNU Affero General Public License v3.0
+--If not, see http://www.gnu.org/licenses/agpl.txt
+--
+--References:
+--https://github.com/google/longfellow-zk/blob/main/lib/random/random_test.cc
+--
+--]]
+
+local FS = require'crypto_fiat_shamir'
 
 print("TEST VECTORS from Frigo's RFC")
 

@@ -1,3 +1,28 @@
+--[[
+--This file is part of zenroom
+--
+--Copyright (C) 2021-2025 Dyne.org foundation
+--designed, written and maintained by Giulio Sacchet
+--
+--This program is free software: you can redistribute it and/or modify
+--it under the terms of the GNU Affero General Public License v3.0
+--
+--This program is distributed in the hope that it will be useful,
+--but WITHOUT ANY WARRANTY; without even the implied warranty of
+--MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--GNU Affero General Public License for more details.
+--
+--Along with this program you should have received a copy of the
+--GNU Affero General Public License v3.0
+--If not, see http://www.gnu.org/licenses/agpl.txt
+--
+--
+--References:
+--https://datatracker.ietf.org/doc/html/draft-google-cfrg-libzk-00#name-sumcheck
+--https://github.com/google/longfellow-zk/blob/main/lib/random
+--
+--]]
+
 local FS = {}
 
 local function Aes(key, plaintext)
