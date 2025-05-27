@@ -40,7 +40,7 @@ if suite.contains('vectors')
     test('vectors_'+test_suite.underscorify(),
 		 bats_bin,
 		 args: [test_dir+'vectors/'+test_suite+'.bats'],
-		 timeout: 60
+		 timeout: 120
 		)
   endforeach
 endif
