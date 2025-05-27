@@ -16,7 +16,7 @@
 --GNU Affero General Public License v3.0
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
--- Sources fo the code are the following:
+-- Sources of the code are the following:
 -- https://datatracker.ietf.org/doc/draft-google-cfrg-libzk/  Matteo Frigo RFC, last updated version 2025-03-03, draft (first version)
 -- https://github.com/google/longfellow-zk/tree/main/lib/merkle 
 --
