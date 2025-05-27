@@ -1,3 +1,26 @@
+--[[
+--This file is part of zenroom
+--
+--Copyright (C) 2021-2025 Dyne.org foundation
+--designed, written and maintained by Giulio Sacchet
+--
+--This program is free software: you can redistribute it and/or modify
+--it under the terms of the GNU Affero General Public License v3.0
+--
+--This program is distributed in the hope that it will be useful,
+--but WITHOUT ANY WARRANTY; without even the implied warranty of
+--MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--GNU Affero General Public License for more details.
+--
+--Along with this program you should have received a copy of the
+--GNU Affero General Public License v3.0
+--If not, see http://www.gnu.org/licenses/agpl.txt
+--
+--References:
+--https://github.com/google/longfellow-zk/blob/main/lib/algebra/fp_test.cc
+--
+--]]
+
 print("TEST VECTORS from Frigo's RFC: fp_test")
 
 function sub(a,b,p)
@@ -44,6 +67,7 @@ local function cksub(a,b,p)
     return r
 end 
 
+--this function takes a long string of numbers, interprets that like a number and return the number modulo p
 function of_string(s,p)
     local a = big.new(0) 
     local base = big.new(10)
@@ -283,6 +307,7 @@ end
 
 print(InverseSecp256k1())
 
+--this function takes an array of bytes, consifer it like a string, convert the string to a big number and check if the new number is bigger or lesser than p
 function of_bytes(byte_table,p)
     local little_endian = ""
     for i = #byte_table, 1, -1 do
