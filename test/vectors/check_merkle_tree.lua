@@ -75,13 +75,13 @@ for number_leaves = 1, 64 do
     end
 
     local tree = MT.create_merkle_tree(leaves, 'sha256')
-    local root = tree1[1]
+    local root = tree[1]
     local nproof = 7
     
     assert(number_leaves <= 2^(nproof-1))
 
     for pos = 1, number_leaves do
-        local proof = MT.generate_leaves_for_proof(tree1, pos)
+        local proof = MT.generate_proof(tree, pos)
         local size_proof = #proof
         
         assert(#proof <= nproof)
