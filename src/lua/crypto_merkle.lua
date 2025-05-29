@@ -39,7 +39,13 @@ local function _hash(data, hashtype)
     return _hf:process(data)
 end
 
+-- NOTATION used:
+-- data_table = {data1, data2,..}  OCTET form
+-- leaves = {hash(data1), hash(data2),..}  HASHTYPE form
+
+
 -- Function to create a Merkle root from a table of data
+-- data table must be OCTET
 function MT.create_merkle_root(data_table, hashtype)
     local tree = {}
     -- Hash each piece of data and add to the tree
@@ -62,6 +68,7 @@ function MT.create_merkle_root(data_table, hashtype)
     return tree[1] -- The Merkle root
 end
 
+-- data_table must be OCTET
 function MT.create_merkle_tree(data_table, hashtype)
     local N = #data_table
     local tree = {}
@@ -78,13 +85,15 @@ function MT.create_merkle_tree(data_table, hashtype)
 end
 
 -- The following function is just used for testing test vectors from Frigo's RFC already hashed
-function MT.create_merkle_tree_from_table_of_hashes(data_table, hashtype)
-    local N = #data_table
+-- Here, data_table are the hash of data from the previous functions.
+-- In this case, data_table_hashed are already leaves just to insert directley into the tree.
+function MT.create_merkle_tree_from_table_of_hashes(data_table_hashed, hashtype)
+    local N = #data_table_hashed
     local tree = {}
 
     --in Frigo's RFC the base leaves are already hashed
     for i = N, 2*N-1 do
-        tree[i] = data_table[ i+1-N ]
+        tree[i] = data_table_hashed[ i+1-N ]
     end
     for i = N-1, 1, -1 do
         local concatenated = tree[ 2*i ] .. tree[ 2*i+1 ]
@@ -125,6 +134,9 @@ function MT.generate_proof(tree, pos)
 end
 
 
+-- proof is a set of data already hashed since it comes from the tree in the previous function 
+-- where all data of the tree are already hashed
+-- pos is the position of the leaf to prove in the data_table (not to be considered in the tree).
 function MT.verify_proof(proof, pos, root, n , hashtype)
     if n == 1 then
         return proof[1]
@@ -184,7 +196,7 @@ end
 
 
 -- n = number of leaves generating tree
--- pos = table containing positions of the leaves to prove
+-- pos = table containing positions of the leaves to prove in data_table (not to be considered in the tree)
 -- np = number of pos, is #pos (?)
 function MT.compressed_merkle_proof_tree(n, pos)
     local np = #pos
@@ -210,9 +222,8 @@ function MT.compressed_merkle_proof_tree(n, pos)
 end
 
 
--- pos is an array of positions
--- np is just #pos
--- n number of leaves
+-- pos is an array of positions of the leaves to prove: must be position from data_table (or leaves) not from the tree
+-- n number of leaves (that are number of data inputs in MT.create_merkle_tree)
 function MT.generate_compressed_proof(pos, n, tree)
     local np = #pos
     local boolean_tree = MT.compressed_merkle_proof_tree(n, pos)
@@ -234,7 +245,8 @@ function MT.generate_compressed_proof(pos, n, tree)
     return proof
 end
 
---leaves which are in pos, not all leaves
+--leaves which are in positions pos from the data_table (is the same in case of leaves already hashed), not all leaves
+-- leaves must be already hashed: they are the hash of the input data (octet) of MT.create_merkle_tree
 function MT.verify_compressed_proof(proof, leaves, pos, n, root, hashtype )
     local np = #pos
     local tree = {}
