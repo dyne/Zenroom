@@ -56,6 +56,16 @@ quantum-proof:
 	LDFLAGS="${ldflags}" \
 	${MAKE} -C ${pwd}/lib/pqclean
 
+longfellow-zk:
+	$(info -- Building Longfellow Zero-Knowledge lib)
+	CC="${longfellow_cc:-$cc}" \
+	LD=${ld} \
+	AR=${ar} \
+	RANLIB=${ranlib} \
+	CFLAGS="${longfellow_cflags} ${cflags}" \
+	LDFLAGS="${ldflags}" \
+	${MAKE} -C ${pwd}/lib/longfellow-zk
+
 check-milagro: milagro
 	CC=${cc} CFLAGS="${cflags}" $(MAKE) -C ${pwd}/lib/milagro-crypto-c test
 
