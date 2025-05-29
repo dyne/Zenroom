@@ -20,7 +20,7 @@ ZEN_INCLUDES += -Isrc -Ilib/lua54/src									\
 -Ilib/ed25519-donna -Wall -Wextra
 
 BUILD_DEPS ?= apply-patches milagro lua54 embed-lua mlkem	\
-				quantum-proof ed25519-donna
+				quantum-proof ed25519-donna longfellow-zk
 
 pwd := $(shell pwd)
 mil := ${pwd}/build/milagro
@@ -42,6 +42,7 @@ ldadd += ${milib}/libamcl_core.a
 ldadd += ${pwd}/lib/pqclean/libqpz.a
 ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
 ldadd += ${pwd}/lib/mlkem/test/build/libmlkem.a
+ldadd += ${pwd}/lib/longfellow-zk/liblongfellow-zk.a
 
 # ----------------
 # zenroom defaults
@@ -92,5 +93,9 @@ ed25519_cc ?= ${cc}
 # mlkem settings
 mlkem_cc ?= ${cc}
 
+#-----------------
+# longfellow-zk settings
+longfellow_cc ?= ${cc}
+longfellow_cflags ?= -I.
 
 # }}}
