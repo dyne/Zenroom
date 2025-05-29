@@ -108,6 +108,12 @@ end
 function MT.generate_proof(tree, pos)
     local indeces_set = {}
     local N = (#tree+1)/2
+    
+    -- checking positions of the leaves
+    if pos > N then
+        error("invalid position for leaf",2)
+    end
+    
     pos = pos + N - 1
 
     table.insert(indeces_set, pos)
@@ -140,6 +146,11 @@ end
 function MT.verify_proof(proof, pos, root, n , hashtype)
     if n == 1 then
         return proof[1]
+    end
+    
+    -- checking positions of the leaves
+    if pos > N then
+        error("invalid position for leaf",2)
     end
     
     pos = pos + n - 1
@@ -200,7 +211,9 @@ end
 -- np = number of pos, is #pos (?)
 function MT.compressed_merkle_proof_tree(n, pos)
     local np = #pos
-    assert(np > 0, "A Merkle proof with 0 leaves is not defined.")
+    if np < 0 then
+        error("A Merkle proof with 0 leaves is not defined.",2)
+    end
     --initializing a vector tree[] will contain a boolean (if a leaf of the tree is need or not to create the proof)
     local tree = {}
     for i = 1, 2*n-1 do
@@ -208,7 +221,9 @@ function MT.compressed_merkle_proof_tree(n, pos)
     end
 
     for ip = 1, np do
-        assert(pos[ip] < n+1, "Invalid position for leaf in Merkle tree")
+        if pos[ip] > n then
+            error("Invalid position for leaf in Merkle tree",2)
+        end
         tree[pos[ip]+n-1] = true   --is a leaf of the tree so it is in the tree and we put its positon in tree[] true
     end
 
@@ -216,7 +231,9 @@ function MT.compressed_merkle_proof_tree(n, pos)
         tree[i] = tree[2*i] or tree[2*i+1]
     end
 
-    assert(tree[1], "the root is not in the tree")
+    if tree[1] == false then
+        error("the root is not in the tree",2)
+    end
 
     return tree
 end
@@ -224,11 +241,19 @@ end
 
 -- pos is an array of positions of the leaves to prove: must be position from data_table (or leaves) not from the tree
 -- n number of leaves (that are number of data inputs in MT.create_merkle_tree)
-function MT.generate_compressed_proof(pos, n, tree)
+function MT.generate_compressed_proof(pos, tree)
+    local n = (#tree + 1)/2
     local np = #pos
     local boolean_tree = MT.compressed_merkle_proof_tree(n, pos)
     local proof = {}
     local size = #tree
+    -- checking positions of the leaves
+    for i = 1, np do
+        if pos[i] > n then
+            error("invalid position for leaf",2)
+        end
+    end
+    
     for i = n-1, 1, -1 do   --frigo uses n instead of n-1 TO CHECK
         if boolean_tree[i] then
             local child = 2*i
@@ -249,6 +274,14 @@ end
 -- leaves must be already hashed: they are the hash of the input data (octet) of MT.create_merkle_tree
 function MT.verify_compressed_proof(proof, leaves, pos, n, root, hashtype )
     local np = #pos
+
+    -- checking positions of the leaves
+    for i = 1, np do
+        if pos[i] > n then
+            error("invalid position for leaf",2)
+        end
+    end
+    
     local tree = {}
     local defined = {}
     for i = 1, 2*n-1 do
