@@ -21,8 +21,4 @@ clean:
 %.cc.o: %.cc
 	$(CC) -std=c++17 \
 	$(CFLAGS) \
-	-c $< -o $@ \
-	-DVERSION=\"${VERSION}\" \
-	-DCURRENT_YEAR=\"${CURRENT_YEAR}\" \
-	-DCOMMIT=\"${COMMIT}\" \
-	-DBRANCH=\"${BRANCH}\"
+	-c $< -o $@
