@@ -149,7 +149,7 @@ function MT.verify_proof(proof, pos, root, n , hashtype)
     end
     
     -- checking positions of the leaves
-    if pos > N then
+    if pos > n then
         error("invalid position for leaf",2)
     end
     
@@ -176,21 +176,20 @@ function MT.verify_proof(proof, pos, root, n , hashtype)
     end
 
     local n = #proof    
-    local t = _hash(set[n-1][1] .. set[n][1]) 
+    local t = _hash(set[n-1][1] .. set[n][1], hashtype) 
     
     n = n-2
 
     while n > 0 do
         if set[n][2]%2 == 1 then
-            t = _hash(t .. set[n][1])
+            t = _hash(t .. set[n][1], hashtype)
         else
-            t = _hash(set[n][1] .. t)
+            t = _hash(set[n][1] .. t, hashtype)
         end
         n = n-1
     end
     
     return t 
-    --return t == root
 end
 
 
@@ -317,7 +316,7 @@ function MT.verify_compressed_proof(proof, leaves, pos, n, root, hashtype )
 
     for i = n-1, 1, -1 do
         if defined[2*i] and defined[2*i+1] then
-            tree[i] = _hash(tree[2*i] .. tree[2*i+1])
+            tree[i] = _hash(tree[2*i] .. tree[2*i+1], hashtype)
             defined[i] = true
         end
     end
@@ -338,7 +337,7 @@ function MT.setup_batch(n, batch_size, hashtype)
     for i = 1, n do
         local leaf = OCTET.from_number(i)
         table.insert(data, leaf)            -- data not alredy hashed
-        table.insert(leaves, _hash(leaf))   -- leaves have to be hashed
+        table.insert(leaves, _hash(leaf, hashtype))   -- leaves have to be hashed
         table.insert(set, i)                -- creating a set where we will extract random indeces in the next step
     end
 
@@ -346,7 +345,7 @@ function MT.setup_batch(n, batch_size, hashtype)
     local leaves_for_proof = {}
 
     for i = 1, batch_size do
-        random_index = math.random(n+1-i)
+        local random_index = math.random(n+1-i)
         table.insert(pos, set[random_index])   
         table.remove(set, random_index)
     end
