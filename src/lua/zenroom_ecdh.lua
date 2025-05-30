@@ -20,7 +20,7 @@
 --on Tuesday, 20th July 2021
 --]]
 
-local ecdh = require'ecdh'
+local ecdh = require_once'ecdh'
 
 function ecdh.compress_public_key(public)
    local x, y = ECDH.pubxy(public)

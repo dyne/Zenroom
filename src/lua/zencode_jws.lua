@@ -22,118 +22,152 @@
 
 local W3C = require_once "crypto_w3c"
 
-When(deprecated(
-        "create jws signature of ''",
-        "create jws detached signature with header '' and payload ''",
-        function(src)
-            warn('raw signature of the payload, non standard jws')
-            local source_str = W3C.json_encoding(src)
-            empty'jws'
-            local sk = havekey'ecdh' -- assuming secp256k1
-            ACK.jws = O.from_string(
-                W3C.jws_signature_to_octet(ECDH.sign(sk, source_str)) )
-            new_codec('jws', { zentype = 'e',
-                                encoding = 'string' })
-        end
-    )
-)
+-- When(deprecated(
+--         "create jws signature of ''",
+--         "create jws detached signature with header '' and payload ''",
+--         function(src)
+--             warn('raw signature of the payload, non standard jws')
+--             local source_str = W3C.json_encoding(src)
+--             empty'jws'
+--             local sk = havekey'ecdh' -- assuming secp256k1
+--             ACK.jws = O.from_string(
+--                 W3C.jws_signature_to_octet(ECDH.sign(sk, source_str)) )
+--             new_codec('jws', { zentype = 'e',
+--                                 encoding = 'string' })
+--         end
+--     )
+-- )
 
-When(deprecated(
-        "create jws signature using ecdh signature in ''",
-        "create jws detached signature with header '' and payload ''",
-        function(sign)
-            warn('external signature can be not jws compliant')
-            local signature = have(sign)
-            empty'jws'
-            ACK.jws = O.from_string(jws_signature_to_octet(signature))
-            new_codec('jws', { zentype = 'e',
-                                encoding = 'string' })
-        end
-    )
-)
+-- When(deprecated(
+--         "create jws signature using ecdh signature in ''",
+--         "create jws detached signature with header '' and payload ''",
+--         function(sign)
+--             warn('external signature can be not jws compliant')
+--             local signature = have(sign)
+--             empty'jws'
+--             ACK.jws = O.from_string(jws_signature_to_octet(signature))
+--             new_codec('jws', { zentype = 'e',
+--                                 encoding = 'string' })
+--         end
+--     )
+-- )
 
 -- return a header for jws
 -- @param alg alg in jws header
 -- @param pk pk flag, is true the alg pk is set in the header in jwk format
 local function _create_jws_header(alg, pk)
-    local header = {['alg'] = alg}
+    local crypto <const> = CRYPTO.load(alg)
+    ACK.jws_header = {['alg'] = O.from_string(crypto.IANA)}
     if pk then
-        header.jwk = W3C.create_string_jwk(alg)
+        ACK.jws_header.jwk = JOSE.create_jwk(crypto.IANA)
     end
-    ACK.jws_header = deepmap(O.from_string, header)
-    new_codec('jws_header', { zentype = 'd',
-                              encoding = 'string' })
+    new_codec('jws_header', { zentype = 'd', encoding = 'string' })
 end
 
-When("create jws header for p256 signature", function() _create_jws_header('ES256') end)
-When("create jws header for es256 signature", function() _create_jws_header('ES256') end)
-When("create jws header for secp256r1 signature", function() _create_jws_header('ES256') end)
-When("create jws header for p256 signature with public key", function() _create_jws_header('ES256', true) end)
-When("create jws header for es256 signature with public key", function() _create_jws_header('ES256', true) end)
-When("create jws header for secp256r1 signature with public key", function() _create_jws_header('ES256', true) end)
+When("create jws header for '' signature", function(algo_name)
+         local crypto <const> = CRYPTO.load(algo_name)
+         empty'jws_header'
+         ACK.jws_header = { alg = O.from_string(crypto.IANA) }
+         -- TODO: generate UID
+         new_codec('jws_header', { zentype = 'd', encoding = 'string' })
+end)
 
-When("create jws header for ecdh signature", function() _create_jws_header('ES256K') end)
-When("create jws header for es256k signature", function() _create_jws_header('ES256K') end)
-When("create jws header for secp256k1 signature", function() _create_jws_header('ES256K') end)
-When("create jws header for ecdh signature with public key", function() _create_jws_header('ES256K', true) end)
-When("create jws header for es256k signature with public key", function() _create_jws_header('ES256K', true) end)
-When("create jws header for secp256k1 signature with public key", function() _create_jws_header('ES256K', true) end)
+When("create jws header for '' signature with public key", function(algo_name)
+         local crypto <const> = CRYPTO.load(algo_name)
+         local pk = mayhave(crypto.IANA..'_public_key')
+         if not pk then pk = mayhave(crypto.keyname..'_public_key') end
+         if not pk then pk = mayhave(algo_name..'_public_key') end
+         zencode_assert(pk,'Public key not found for: '..algo_name)
+         empty'jws_header'
+         ACK.jws_header = { alg = O.from_string(crypto.IANA) }
+         -- TODO: generate UID
+         new_codec('jws_header', { zentype = 'd', encoding = 'string' })
+end)
 
-local function _create_jws(header, payload, detached)
-    local n_output = (detached and 'jws_detached_signature') or 'jws_signature'
-    local o_header = W3C.json_encoding(header)
-    local o_payload = W3C.json_encoding(payload)
-    empty(n_output)
-    ACK[n_output] = O.from_string(
-        W3C.jws_signature_to_octet(nil, o_header, o_payload, detached)
-    )
-    new_codec(n_output, { zentype = 'e',
-                          encoding = 'string' })
-end
+When(deprecated("create jws header for p256 signature",
+                "create jws header for '' signature", function() _create_jws_header('ES256') end))
+When(deprecated("create jws header for es256 signature",
+                "create jws header for '' signature", function() _create_jws_header('ES256') end))
+When(deprecated("create jws header for secp256r1 signature",
+                "create jws header for '' signature", function() _create_jws_header('ES256') end))
+When(deprecated("create jws header for ecdh signature",
+                "create jws header for '' signature", function() _create_jws_header('ES256K') end))
+When(deprecated("create jws header for es256k signature",
+                "create jws header for '' signature", function() _create_jws_header('ES256K') end))
+When(deprecated("create jws header for secp256k1 signature",
+                "create jws header for '' signature", function() _create_jws_header('ES256K') end))
+
+When(deprecated("create jws header for p256 signature with public key",
+                "create jws header for '' signature with public key", function() _create_jws_header('ES256', true) end))
+When(deprecated("create jws header for es256 signature with public key",
+                "create jws header for '' signature with public key", function() _create_jws_header('ES256', true) end))
+When(deprecated("create jws header for secp256r1 signature with public key",
+                "create jws header for '' signature with public key", function() _create_jws_header('ES256', true) end))
+When(deprecated("create jws header for ecdh signature with public key",
+                "create jws header for '' signature with public key", function() _create_jws_header('ES256K', true) end))
+When(deprecated("create jws header for es256k signature with public key",
+                "create jws header for '' signature with public key", function() _create_jws_header('ES256K', true) end))
+When(deprecated("create jws header for secp256k1 signature with public key",
+                "create jws header for '' signature with public key", function() _create_jws_header('ES256K', true) end))
 
 When("create jws signature of header '' and payload ''", function(header, payload)
-    _create_jws(header, payload, false)
+    empty'jws_signature'
+    local h <const> = have(header)
+    local p <const> = have(payload)
+    ACK['jws_signature'] = JOSE.create_jws(nil, h, p, false)
+    new_codec('jws_signature', { zentype = 'e',
+                                 encoding = 'string' })
 end)
 
--- jws result will be without pyaload, signature is always perform on header.payload
+-- jws result will be without pyaload, signature is always perform on
+-- header.payload
 When("create jws detached signature of header '' and payload ''", function(header, payload)
-    _create_jws(header, payload, true)
+    empty'jws_detached_signature'
+    local h <const> = have(header)
+    local p <const> = have(payload)
+    ACK['jws_detached_signature'] = JOSE.create_jws(nil, h, p, true)
+    new_codec('jws_detached_signature', { zentype = 'e',
+                                          encoding = 'string' })
 end)
 
-local function _verify_jws(payload, jws)
-    local n_jws = jws or 'jws'
-    local o_jws = have(n_jws)
-    local o_payload = payload and W3C.json_encoding(payload)
-    local enc_payload
-    if o_payload then
-        local c_payload = CODEC[payload].encoding
-        if c_payload == 'url64' or luatype(ACK[payload]) == 'table' then
-            enc_payload = O.from_string(O.to_url64(o_payload)) 
-        elseif c_payload == 'string' then
-            enc_payload = o_payload
-        else
-            error('encoding for payload not accpeted: '..c_payload, 2)
-        end
+local function _verify_jws(n_payload, n_jws)
+    local jws_enc <const> = have(n_jws or 'jws')
+    local payload <const> = have(n_payload)
+    local pser    <const> = JOSE.serialize(payload)
+    local jws     <const> = JOSE.parse_jws(jws_enc)
+    local crypto  <const> = CRYPTO.load(jws.header.alg)
+    -- the payload is passed as argument so we assume this to
+    -- be a detached signature, in case another payload is
+    -- present in the jws then we also verify it is the same as
+    -- the detached one
+    if jws.payload then
+        zencode_assert(pser == jws.payload_enc,
+                       "The JWS contains a different payload")
     end
-    local signature, verify_f, pub, signed = W3C.jws_octet_to_signature(o_jws, enc_payload)
-    if not pub then
-        error('Public key to verify the jws signature not found', 2)
-    end
-    if not verify_f(pub, signed, signature) then
-        -- retro compatibility, but non jws compliant signature
-        if o_payload and verify_f(pub, o_payload, signature) then
-            warn('Raw signature of the payload verified, but is non standard jws')
-        else
-            error('The signature does not validate: ' .. n_jws, 2)
-        end
-    end
+    local to_be_verified <const> =
+        jws.header_enc..O.from_string('.')..pser
+    -- if header.alg == 'ES256K' then
+    -- TODO: split signature in r and s should be done in ECDH
+    local pk = mayhave('jws_public_key')
+    if not pk then pk = have(crypto.keyname..'_public_key') end
+    zencode_assert(crypto.verify(pk, to_be_verified, jws.signature),
+                   'Invalid JWS signature of: '..n_payload)
 end
-
 IfWhen(deprecated("verify jws signature of ''",
                   "verify '' has a jws signature in ''",
-                  _verify_jws
-))
-
+                  _verify_jws))
 IfWhen("verify '' has a jws signature in ''", _verify_jws)
 
-IfWhen("verify jws signature in ''", function(jws) _verify_jws(nil, jws) end)
+IfWhen("verify jws signature in ''", function(n_jws)
+           local jws_enc <const> = have(n_jws)
+           local jws     <const> = JOSE.parse_jws(jws_enc)
+           zencode_assert( jws.payload, "The JWS has no payload")
+           local crypto  <const> = CRYPTO.load(jws.header.alg)
+           local to_be_verified <const> = jws.header_enc..O.from_string('.')..jws.payload_enc
+           local pk = mayhave('jws_public_key')
+           if not pk then pk = mayhave(crypto.keyname..'_public_key') end
+           if not pk then pk = JOSE.jwk_to_pk(jws.header, crypto) end
+           zencode_assert(pk, 'Public key not found for JWS signature')
+           zencode_assert(crypto.verify(pk, to_be_verified, jws.signature),
+                          'Invalid JWS signature in: '..n_jws)
+end)

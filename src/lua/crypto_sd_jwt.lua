@@ -19,10 +19,9 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --]]
 
-local ES256 = require'es256'
 local sd_jwt = {}
 
-local function export_str_dict(obj)
+function sd_jwt.prepare_dictionary(obj)
    -- values in input may be string, number or bool
    local fun = function(v)
 	  local res
@@ -47,6 +46,7 @@ local function export_str_dict(obj)
 		 end
 	  elseif tv == 'zenroom.octet' then res = v:str()
 	  elseif tv == 'boolean' then res = v
+      -- elseif iszen(tv) then res = v:octet():str()
 	  else
  		 error("Invalid value found in SD-JWT array: "..tv)
 	  end
@@ -62,7 +62,10 @@ end
 function sd_jwt.create_disclosure(dis_arr)
     -- TODO: disclosure of disctionary
 
-    local encoded_dis = O.from_string(JSON.raw_encode(export_str_dict(dis_arr), true)):url64()
+    local encoded_dis <const> =
+        O.from_string(
+            JSON.raw_encode(
+                sd_jwt.prepare_dictionary(dis_arr), true)):url64()
     local disclosure = {}
     for i = 1, #dis_arr do
         if type(dis_arr[i]) == 'table' then
@@ -139,57 +142,22 @@ end
 -- but we are in zenroom and if I print the same object I obtain the
 -- same representation, thus I can keep the object and print it only
 -- on export, yay!
-function sd_jwt.create_jwt_es256(payload, sk)
-    local header, b64header, b64payload, hmac
-    header = {
-        alg=O.from_string("ES256"),
+function sd_jwt.create_jwt(payload, sk, algo)
+    local header <const> = {
+        alg=O.from_string(algo.IANA), -- TODO: does JWT contains .alg ?!
         typ=O.from_string("vc+sd-jwt")
     }
-    local payload_str = export_str_dict(payload)
-    b64payload = O.from_string(JSON.raw_encode(payload_str, true)):url64()
-    local header_str = export_str_dict(header)
-    b64header = O.from_string(JSON.raw_encode(header_str, true)):url64()
+    local payload_str <const> = sd_jwt.prepare_dictionary(payload)
+    local b64payload <const> = O.from_string(JSON.raw_encode(payload_str, true)):url64()
+    local header_str <const> = sd_jwt.prepare_dictionary(header)
+    local b64header <const> = O.from_string(JSON.raw_encode(header_str, true)):url64()
 
-    local signature = ES256.sign(sk, O.from_string(b64header .. "." .. b64payload))
+    local signature = algo.sign(sk, O.from_string(b64header .. "." .. b64payload))
     return {
         header=header,
         payload=payload,
         signature=signature,
     }
-end
-
--- Given as input a signed selective disclosure 'ssd' and a list of strings 'disclosed_keys'
--- Return the list of disclosure array with keys in 'disclosed_keys'
-function sd_jwt.retrive_disclosures(ssd, disclosed_keys)
-    local disclosures = {}
-    local all_dis = ssd.disclosures
-    for _,k in pairs(disclosed_keys) do
-        for ind, arr in pairs(all_dis) do
-            if arr[2] == k then
-                table.insert(disclosures, arr)
-                break
-            end
-        end
-    end
-    return disclosures
-end
-
--- for reference see Section 8.1 of https://datatracker.ietf.org/doc/draft-ietf-oauth-selective-disclosure-jwt/
-
-function sd_jwt.verify_jws_signature(jws, pk)
-    local payload_str = export_str_dict(jws.payload)
-    local b64payload = O.from_string(JSON.raw_encode(payload_str, true)):url64()
-    local header_str = export_str_dict(jws.header)
-    local b64header = O.from_string(JSON.raw_encode(header_str, true)):url64()
-    return ES256.verify(pk, O.from_string(b64header .. "." .. b64payload), jws.signature)
-end
-
-function sd_jwt.verify_jws_header(jws)
-    return jws.header.alg == O.from_string("ES256") --and jws.header.typ == O.from_string("JWT")
-end
-
-function sd_jwt.verify_sd_alg(jwt)
-    return jwt.payload._sd_alg == O.from_string("sha-256")
 end
 
 local function is_in(list, elem)
@@ -237,7 +205,7 @@ end
 function sd_jwt.verify_sd_fields(jwt, disclosures)
     local match = true
     local digest_arr = jwt._sd
-    local disclosures_arr = export_str_dict(disclosures)
+    local disclosures_arr <const> = sd_jwt.prepare_dictionary(disclosures)
     local claim_names = {}
     for i = 1, #disclosures_arr do
         if not disclosure_array_is_valid(disclosures_arr[i]) then
