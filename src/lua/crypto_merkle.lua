@@ -149,7 +149,7 @@ function MT.verify_proof(proof, pos, root, n , hashtype)
     end
     
     -- checking positions of the leaves
-    if pos > N then
+    if pos > n then
         error("invalid position for leaf",2)
     end
     
