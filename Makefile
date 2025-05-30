@@ -126,6 +126,7 @@ clean:
 	$(MAKE) clean -C ${pwd}/lib/lua54/src
 	$(MAKE) clean -C ${pwd}/lib/pqclean
 	$(MAKE) clean -C ${pwd}/lib/mlkem
+	$(MAKE) clean -C ${pwd}/lib/longfellow-zk
 	rm -rf ${pwd}/lib/milagro-crypto-c/build
 	$(MAKE) clean -C ${pwd}/src
 	if [ -d "bindings" ]; then $(MAKE) clean -C ${pwd}/bindings; fi
