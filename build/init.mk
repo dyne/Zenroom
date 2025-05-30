@@ -13,10 +13,11 @@ ZEN_SOURCES := src/zenroom.o src/zen_error.o src/lua_functions.o		\
     src/zen_ecdh.o src/zen_x509.o src/zen_aes.o src/zen_qp.o			\
     src/zen_ed.o src/zen_float.o src/zen_time.o src/api_hash.o			\
     src/api_sign.o src/randombytes.o src/zen_fuzzer.o src/cortex_m.o	\
-    src/p256-m.o src/zen_p256.o src/zen_rsa.o src/zen_bbs.o
+    src/p256-m.o src/zen_p256.o src/zen_rsa.o src/zen_bbs.o				\
+    src/zen_longfellow.o
 
-ZEN_INCLUDES += -Isrc -Ilib/lua54/src									\
--Ilib/milagro-crypto-c/build/include -Ilib/milagro-crypto-c/include		\
+ZEN_INCLUDES += -Isrc -Ilib/lua54/src -Ilib							\
+-Ilib/milagro-crypto-c/build/include -Ilib/milagro-crypto-c/include	\
 -Ilib/ed25519-donna -Wall -Wextra
 
 BUILD_DEPS ?= apply-patches milagro lua54 embed-lua mlkem	\
