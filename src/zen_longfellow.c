@@ -22,6 +22,7 @@
 #include <zen_error.h>
 #include <lua_functions.h>
 #include <zen_octet.h>
+#include <encoding.h>
 #include <longfellow-zk/circuits/mdoc/mdoc_zk.h>
 #include <randombytes.h>
 
@@ -30,13 +31,31 @@ static int circuit_gen(lua_State *L) {
 	CircuitGenerationErrorCode res;
 	uint8_t *circuit;
 	size_t circuit_len;
-	const ZkSpecStruct *zk_spec = &kZkSpecs[0]; // v1
-	const ZkSpecStruct* found_zk_spec =
-		find_zk_spec(zk_spec->system, zk_spec->circuit_hash);
-	res = generate_circuit(found_zk_spec, &circuit, &circuit_len);
-	// TODO check res
-	act(L,"Circuit spec v%lu with %lu attributes (%lu bytes)",
+	// char circuit_hash_hex[129];
+	ZkSpecStruct *zk_spec = NULL;
+	// number argument, import
+	int tn;
+	lua_Integer n = lua_tointegerx(L,1,&tn);
+	if(tn) {
+		act(L, "Requested circuit: %i",n);
+		zk_spec = &kZkSpecs[n-1]; // v1 -> [0]...
+	} else {
+		zerror(L, "Missing argument: longfellow circuit version");
+		END(0);
+	}
+	// const ZkSpecStruct* found_zk_spec =
+	// 	find_zk_spec(zk_spec->system, zk_spec->circuit_hash);
+	if(!zk_spec) {
+		zerror(L,"Circuit spec not found: %i",tn);
+		END(0);
+	}
+	act(L,"Generating circuit v%lu with %lu attributes (%lu bytes)",
 		zk_spec->version, zk_spec->num_attributes, circuit_len);
+	// buf2hex(circuit_hash_hex, zk_spec->circuit_hash, 64);
+	// circuit_hash_hex[64] = 0x0;
+	act(L,"%s %s",zk_spec->system, zk_spec->circuit_hash);
+	res = generate_circuit(zk_spec, &circuit, &circuit_len);
+	// TODO check res
 	// newuserdata already pushes the object in lua's stack
 	octet *o = (octet *)lua_newuserdata(L, sizeof(octet));
 	if(HEDLEY_UNLIKELY(o==NULL)) {
