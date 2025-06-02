@@ -44,8 +44,7 @@ ldadd += ${pwd}/lib/pqclean/libqpz.a
 ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
 ldadd += ${pwd}/lib/mlkem/test/build/libmlkem.a
 ldadd += ${pwd}/lib/longfellow-zk/liblongfellow-zk.a
-ldadd += -lzstd
-ldadd += -lstdc++
+ldadd += -lzstd -lstdc++ -lcrypto
 
 # ----------------
 # zenroom defaults
@@ -99,6 +98,6 @@ mlkem_cc ?= ${cc}
 #-----------------
 # longfellow-zk settings
 longfellow_cc ?= ${cc}
-longfellow_cflags ?= -I ${pwd}/src -I. -DWITHOUT_OPENSSL
+longfellow_cflags ?= -I ${pwd}/src -I.
 
 # }}}
