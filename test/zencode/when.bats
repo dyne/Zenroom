@@ -505,3 +505,13 @@ EOF
     save_output copy_move_from_to.out.json
     assert_output '{"array_from":["world"],"dict_from":{"str_2":"world"},"float_pos":3,"int_pos":"3","str_pos_for_array":"3","str_pos_for_dict":"str_3","string_copied_from_array":"world","string_copied_from_array_with_float_pos":"!","string_copied_from_array_with_int_pos":"!","string_copied_from_array_with_str_pos":"!","string_copied_from_dict":"world","string_copied_from_dict_with_str_pos":"!","string_moved_from_array":"hello","string_moved_from_array_with_float_pos":"!","string_moved_from_array_with_int_pos":"!","string_moved_from_array_with_str_pos":"!","string_moved_from_dict":"hello","string_moved_from_dict_with_str_pos":"!"}'
 }
+
+@test "uuid v4 creation" {
+    cat <<EOF | zexe creation_of_uuid_v4.zen 
+Given nothing
+When I create random uuid v4 
+Then print the data
+EOF
+    save_output creation_of_uuid_v4.out.json
+    assert_output '{"uuid":"5dd8c062-3f91-63de-7ebb-260c23c7d1df"}'
+}
