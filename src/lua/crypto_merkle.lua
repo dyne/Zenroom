@@ -145,7 +145,7 @@ end
 -- pos is the position of the leaf to prove in the data_table (not to be considered in the tree).
 function MT.verify_proof(proof, pos, root, n , hashtype)
     if n == 1 then
-        return proof[1]
+        return proof[1] == root
     end
     
     -- checking positions of the leaves
