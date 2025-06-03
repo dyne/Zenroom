@@ -9,9 +9,9 @@ local function encode_time()
     len = 10
     local result = {}
     for i = len, 1, -1 do 
-        local mod = time:__mod(big.new(32)):int() 
+        local mod = (time % big.new(32)):int() 
         result[i] = ENCODING[mod+1]
-        time = big.zendiv(big.zensub(time,mod),big.new(32))
+        time = (time - mod) / big.new(32)
     end 
     return table.concat(result)
 end
