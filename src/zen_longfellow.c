@@ -223,6 +223,29 @@ static const char *_prover_error_to_string(MdocProverErrorCode err) {
     return error_strings[err];
 }
 
+static const char *_verifier_error_to_string(MdocVerifierErrorCode err) {
+    static const char* error_strings[] = {
+        "Success",                          // MDOC_VERIFIER_SUCCESS
+        "Circuit parsing failed",           // MDOC_VERIFIER_CIRCUIT_PARSING_FAILURE
+        "Proof too small",                  // MDOC_VERIFIER_PROOF_TOO_SMALL
+        "Hash parsing failed",              // MDOC_VERIFIER_HASH_PARSING_FAILURE
+        "Signature parsing failed",         // MDOC_VERIFIER_SIGNATURE_PARSING_FAILURE
+        "General failure",                  // MDOC_VERIFIER_GENERAL_FAILURE
+        "Null input",                       // MDOC_VERIFIER_NULL_INPUT
+        "Invalid input",                    // MDOC_VERIFIER_INVALID_INPUT
+        "Arguments too small",              // MDOC_VERIFIER_ARGUMENTS_TOO_SMALL
+        "Attribute count mismatch",         // MDOC_VERIFIER_ATTRIBUTE_NUMBER_MISMATCH
+        "Invalid ZK spec version"           // MDOC_VERIFIER_INVALID_ZK_SPEC_VERSION
+    };
+
+    const size_t num_errors = sizeof(error_strings)/sizeof(error_strings[0]);
+
+    if ((unsigned int)err >= num_errors) {
+        return "Unknown error code";
+    }
+    return error_strings[err];
+}
+
 static int mdoc_prove(lua_State *L) {
 	BEGIN();
 	int returned = 0;
@@ -253,12 +276,12 @@ static int mdoc_prove(lua_State *L) {
 	o_free(L,opkx);
 	o_free(L,opky);
 	// MdocProverErrorCode run_mdoc_prover(
-	//     const uint8_t *bcp, size_t bcsz, /* circuit data */
+	//     const uint8_t *bcp, size_t bcsz, // circuit data
 	//     const uint8_t *mdoc, size_t mdoc_len, const char *pkx,
-	//     const char *pky,                          /* string rep of public key */
-	//     const uint8_t *transcript, size_t tr_len, /* session transcript */
+	//     const char *pky,               //string rep of public key
+	//     const uint8_t *transcript, size_t tr_len, // session transcript
 	//     const RequestedAttribute *attrs, size_t attrs_len,
-	//     const char *now, /* time formatted as "2023-11-02T09:00:00Z" */
+	//     const char *now, // time formatted as "2023-11-02T09:00:00Z"
 	//     uint8_t **prf, size_t *proof_len, const ZkSpecStruct *zk_spec) {
 	res = run_mdoc_prover((const uint8_t *)circuit->val, circuit->len,
 						  (const uint8_t *)mdoc->val, mdoc->len+1,
@@ -301,7 +324,60 @@ static int get_circuit_id(lua_State *L) {
 
 static int mdoc_verify(lua_State *L) {
 	BEGIN();
+	const octet *circuit = o_arg(L,1);
+	const octet *proof = o_arg(L,2);
+	const octet *opkx = o_arg(L,3);
+	const octet *opky = o_arg(L,4);
+	const octet *trans = o_arg(L,5);
+	size_t attrs_len;
+	RequestedAttribute* attrs = _get_attributes(L,6,&attrs_len);
+	const octet *now = o_arg(L,7);
+	const octet *doc_type = o_arg(L,8);
+	const ZkSpecStruct *zkspec = _get_zkspec(L,9);
+	if(zkspec->num_attributes != attrs_len) {
+		zerror(L,"Wrong number of attributes: %li (expected %li)",
+			   attrs_len, zkspec->num_attributes);
+		goto endgame;
+	}
+	MdocVerifierErrorCode res;
+	// pks need to be 0x prefixed and zero terminated hex strings
+	char pkx[68]; pkx[0]='0'; pkx[1]='x';
+	buf2hex(&pkx[2],opkx->val,32);
+	pkx[64+2] = 0x0;
+	char pky[68]; pky[0]='0'; pky[1]='x';
+	buf2hex(&pky[2],opky->val,32);
+	pky[64+2] = 0x0;
+	o_free(L,opkx);
+	o_free(L,opky);
+	// MdocVerifierErrorCode run_mdoc_verifier(
+    // const uint8_t* bcp, size_t bcsz,     // circuit data
+    // const char* pkx, const char* pky,   // string rep of public key
+    // const uint8_t* transcript, size_t tr_len, // session transcript
+    // const RequestedAttribute* attrs, size_t attrs_len,
+    // const char* now, // time formatted as "2023-11-02T09:00:00Z"
+    // const uint8_t* zkproof, size_t proof_len, const char* docType,
+    // const ZkSpecStruct* zk_spec_version);
+	res = run_mdoc_verifier((const uint8_t *)circuit->val, circuit->len,
+							pkx, pky,
+							(const uint8_t *)trans->val, trans->len,
+							attrs, attrs_len,
+							now->val,
+							(const uint8_t *)proof->val, proof->len,
+							doc_type->val, zkspec);
+	if(res != MDOC_VERIFIER_SUCCESS) {
+		zerror(L, "MDOC verifier error: %s",
+			   _verifier_error_to_string(res));
+		lua_pushboolean(L,0);
+	} else {
+		lua_pushboolean(L,1);
+	}
 
+ endgame:
+	o_free(L,circuit);
+	o_free(L,proof);
+	o_free(L,trans);
+	if(attrs) free(attrs);
+	o_free(L,now);
 	END(1);
 }
 
@@ -311,6 +387,7 @@ int luaopen_longfellow(lua_State *L) {
 		{"gen_circuit", circuit_gen},
 		{"mdoc_example", mdoc_example},
 		{"mdoc_prove", mdoc_prove},
+		{"mdoc_verify", mdoc_verify},
 		{"circuit_id", get_circuit_id},
 		// {"verify", verify},
 		{NULL,NULL}
