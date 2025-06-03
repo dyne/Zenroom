@@ -108,31 +108,16 @@ static int mdoc_example(lua_State *L) {
 	pky->len = 32;
     lua_settable(L, -3);
     lua_pushstring(L, "transcript");
-	octet *trans = o_new(L, tests->transcript_size);
-	memcpy(trans->val, tests->transcript, tests->transcript_size);
-	trans->len = tests->transcript_size;
+	push_buffer_to_octet(L,tests->transcript,tests->transcript_size);
     lua_settable(L, -3);
-    if (tests->now) { // Check if pointer is valid
-		lua_pushstring(L, "now");
-		octet *now = o_new(L, NOW_DATA_SIZE);
-		memcpy(now->val, tests->now, NOW_DATA_SIZE);
-		now->len = NOW_DATA_SIZE;
-		lua_settable(L, -3);
-	}
-    // // doc_type is null terminated
+	lua_pushstring(L, "now");
+	push_buffer_to_octet(L,tests->now,NOW_DATA_SIZE);
+	lua_settable(L, -3);
     lua_pushstring(L, "doc_type");
-    octet *dtype = o_new(L,64);
-    memset(dtype->val,0x0,64);
-    size_t dtype_len = strlen(tests->doc_type);
-    size_t dlen = dtype_len<64?dtype_len:63;
-    memcpy(dtype->val, tests->doc_type, dlen);
-    dtype->len = dlen;
+	push_string_to_octet(L,tests->doc_type);
     lua_settable(L, -3);
-    // // mdoc
     lua_pushstring(L, "mdoc");
-	octet *mdoc = o_new(L,tests->mdoc_size);
-	memcpy(mdoc->val, tests->mdoc, tests->mdoc_size);
-	mdoc->len = tests->mdoc_size;
+	push_buffer_to_octet(L,tests->mdoc,tests->mdoc_size);
     lua_settable(L, -3);
     END(1);
 }

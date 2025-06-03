@@ -167,7 +167,7 @@ int is_bin(lua_State *L, const char *in) {
 	return len;
 }
 
-// allocate octet without internally, no lua involved
+// allocate an octet without pushing it to the lua stack
 octet* o_alloc(lua_State *L, int size) {
 	if(HEDLEY_UNLIKELY(size<0)) {
 		zerror(L, "Cannot create octet, size less than zero");
@@ -190,7 +190,7 @@ octet* o_alloc(lua_State *L, int size) {
 	o->max = size;
 	o->len = 0;
 	o->val[0] = 0x0;
-	//	o->ref = 1;
+	// o->ref = 0;
 	return(o);
 }
 
@@ -367,6 +367,13 @@ void push_buffer_to_octet(lua_State *L, char *p, size_t len) {
 	o->len = len;
 }
 
+// pushes a null-terminated string to a new octet and keeps its
+// null-termination
+void push_string_to_octet(lua_State *L, char *p) {
+	octet* o = o_new(L, strlen(p)+1);
+	strcpy(o->val,p);
+	o->len = o->max-1;
+}
 
 int o_destroy(lua_State *L) {
 	void *ud = luaL_testudata(L, 1, "zenroom.octet");

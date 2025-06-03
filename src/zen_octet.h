@@ -59,6 +59,7 @@ void o_free(lua_State *L, HEDLEY_NO_ESCAPE const octet *o);
 
 void push_octet_to_hex_string(lua_State *L, octet *o);
 void push_buffer_to_octet(lua_State *L, char *p, size_t len);
+void push_string_to_octet(lua_State *L, char *p);
 
 // all octet based types are forced to use our internal memory pool
 extern void *ZMM;
