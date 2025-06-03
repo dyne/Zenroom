@@ -97,7 +97,7 @@ for number_leaves = 1, 64 do
         end
 
         proof[size_proof] = proof[size_proof]:shl_circular(1)
-        assert(MT.verify_proof(proof, pos, root, number_leaves, 'sha256') ~= false)
+        assert(MT.verify_proof(proof, pos, root, number_leaves, 'sha256') == false)
         proof[size_proof] = proof[size_proof]:shr_circular(1)
         assert(MT.verify_proof(proof, pos, root, number_leaves, 'sha256'))
     end
