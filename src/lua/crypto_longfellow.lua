@@ -90,52 +90,61 @@ longfellow.mdoc_prover = function(circuit, mdoc,
     { zk         = c_zk.mdoc_prove(circuit.compressed,
                            mdoc, pkx, pky, trans,
                            attr, nownow, circuit.zkspec:int()),
-      transcript = trans, -- TODO: safe to attach it to the zk proof?
       zkspec     = circuit.zkspec }
-      if not proof.zk then
-        error("Proof creation error",2)
-    end
+    if not proof.zk then return nil end
     return proof
 end
 
 longfellow.mdoc_verifier = function(circuit, proof,
-                                    pkx, pky,
+                                    pkx, pky, trans,
                                     attr, now, doc_type)
     if not type(circuit)=='table' then
         error("Invalid circuit not a table",2)
-    end
-    if not type(circuit.compressed)=='zenroom.octet' then
+    elseif type(circuit.compressed)~='zenroom.octet' then
         error("Invalid compressed circuit not an octet",2)
-    end
-    if not type(proof)=='table' and type(proof.zk) == 'zenroom.octet' then
+    elseif circuit.zkspec ~= proof.zkspec then
+        error("Circuit zkspec version does not match proof",2)
+    elseif not type(proof)=='table'
+        and type(proof.zk) == 'zenroom.octet' then
         error("Invalid proof does not contain a ZK octet",2)
-    end
-    if type(proof.transcript)~='zenroom.octet' or #proof.transcript < 32 then
-        error("Invalid proof.transcript not an octet",2)
-    end
-    if #pkx ~= 32 or #pky ~= 32
+    elseif type(trans)~='zenroom.octet' or #trans < 32 then
+        error("Invalid transcript not an octet",2)
+    elseif #pkx ~= 32 or #pky ~= 32
         or type(pkx) ~= 'zenroom.octet'
         or type(pky) ~= 'zenroom.octet' then
         error("Invalid public keys coordinates x or y",2)
-    end
-    if type(attr)~='table' or #attr < 1
+    elseif type(attr)~='table' or #attr < 1
         or not attr[1].id or not attr[1].value then
         error("Invalid attributes table",2)
-    end
-    if type(doc_type) ~= 'zenroom.octet' then
+    elseif type(doc_type) ~= 'zenroom.octet' then
         error("Invalid doctype not an octet:"..type(doc_type))
+    end
+    for _,v in ipairs(attr) do
+        if not v.id then error("Missing id in attributes table",2) end
+        if not v.value then error("Missing value in attributes table",2) end
+        if luatype(v.value)=='table' then
+            error("Invalid table value in attributes",2)
+        end
+        if luatype(v.id)=='table' then
+            error("Invalid table id in attributes",2)
+        end
     end
     -- get UTC time (ZULU) using '!*t' to avoid timezone conversion
     -- then format as "YYYY-MM-DDTHH:MM:SSZ" (20 chars)
     local nownow <const> = now
         or O.from_string(os.date("!%Y-%m-%dT%H:%M:%SZ",
                                  os.time(os.date("!*t"))))
-    local res <const> = c_zk.mdoc_verify(circuit.compressed,
-                                         proof.zk, pkx, pky,
-                                         proof.transcript,
-                                         attr, nownow,
-                                         doc_type, circuit.zkspec:int())
-    return res
+    if not is_zulu_date(nownow) then
+        error("Timestamp is not in ISO 8601 format",2)
+    end
+    return c_zk.mdoc_verify(circuit.compressed,
+                            proof.zk,
+                            pkx, pky,
+                            trans,
+                            attr,
+                            nownow,
+                            doc_type,
+                            proof.zkspec:int())
 end
 
 longfellow.circuit_id = function(circ)
