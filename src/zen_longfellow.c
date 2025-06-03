@@ -312,6 +312,7 @@ static int mdoc_prove(lua_State *L) {
 	}
 	proof->len = proof_bytelen;
 	proof->max = proof_bytelen;
+	proof->ref = 1;
 	returned = 1;
  endgame:
 	o_free(L,circuit);
