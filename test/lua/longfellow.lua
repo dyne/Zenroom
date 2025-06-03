@@ -2,19 +2,38 @@
 
 ZK = require'crypto_longfellow'
 
-example = I.spy(ZK.mdoc_example(1))
+example = ZK.mdoc_example(1)
+I.schema({example = example})
 
 circ = ZK.generate_circuit(1)
 print(ZK.circuit_id(circ))
 
+-- single
+attributes = {
+    {
+        id = 'age_over_18',
+        value = ZK.yes
+    }
+}
+
 print'generate proof'
 proof = ZK.mdoc_prover(circ,
-                      example.mdoc,
-                      example.pkx,
-                      example.pky,
-                      example.transcript,
-                      {{id='age_over_18',value=O.from_hex'f5'}},
-                      example.now)
+                       example.mdoc,
+                       example.pkx,
+                       example.pky,
+                       example.transcript, -- goes into proof
+                       attributes,
+                       example.now)
+I.schema({proof=proof})
+print'verify proof'
+assert( ZK.mdoc_verifier(circ,
+                         proof,
+                         example.pkx,
+                         example.pky,
+                         attributes,
+                         example.now,
+                         example.doc_type
+) )
 
 -- circ = LFZK.gen_circuit(2)
 -- describe_circuit('v2',circ)

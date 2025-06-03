@@ -23,9 +23,9 @@ local c_zk = require_once'longfellow'
 local longfellow = { }
 
 -- values used as true and false in mdoc
-longfellow['true'] = O.from_hex'f5'
+longfellow['yes'] = O.from_hex'f5'
 
-longfellow['false'] = O.from_hex'f4'
+longfellow['no'] = O.from_hex'f4'
 
 longfellow.mdoc_example = function(num)
     local res <const> = c_zk.mdoc_example(num)
@@ -72,15 +72,60 @@ longfellow.mdoc_prover = function(circuit, mdoc,
     -- then format as "YYYY-MM-DDTHH:MM:SSZ" (20 chars)
     local nownow <const> = now
         or O.from_string(os.date("!%Y-%m-%dT%H:%M:%SZ",
-                                 os.time(os.date("!*t")))
+                                 os.time(os.date("!*t"))))
     local proof <const> =
-        c_zk.mdoc_prove(circuit.compressed,
-                        mdoc, pkx, pky, trans,
-                        attr, nownow, circuit.zkspec)
-    if not proof then
+    { zk = c_zk.mdoc_prove(circuit.compressed,
+                           mdoc, pkx, pky, trans,
+                           attr, nownow, circuit.zkspec),
+      transcript = trans, -- TODO: safe to attach it to the zk proof?
+      zkspec = circuit.zkspec }
+      if not proof.zk then
         error("Proof creation error",2)
     end
     return proof
+end
+
+longfellow.mdoc_verifier = function(circuit, proof,
+                                    pkx, pky,
+                                    attr, now, doc_type)
+    if not type(circuit)=='table' then
+        error("Invalid circuit not a table",2)
+    end
+    if not type(circuit.compressed)=='zenroom.octet' then
+        error("Invalid compressed circuit not an octet",2)
+    end
+    if not type(proof)=='table' and type(proof.zk) == 'zenroom.octet' then
+        error("Invalid proof does not contain a ZK octet",2)
+    end
+    if type(proof.transcript)~='zenroom.octet' or #proof.transcript < 32 then
+        error("Invalid proof.transcript not an octet",2)
+    end
+    if #pkx ~= 32 or #pky ~= 32
+        or type(pkx) ~= 'zenroom.octet'
+        or type(pky) ~= 'zenroom.octet' then
+        error("Invalid public keys coordinates x or y",2)
+    end
+    if type(attr)~='table' or #attr < 1
+        or not attr[1].id or not attr[1].value then
+        error("Invalid attributes table",2)
+    end
+    if type(doc_type) ~= 'zenroom.octet' then
+        error("Invalid doctype not an octet:"..type(doc_type))
+    end
+    -- get UTC time (ZULU) using '!*t' to avoid timezone conversion
+    -- then format as "YYYY-MM-DDTHH:MM:SSZ" (20 chars)
+    local nownow <const> = now
+        or O.from_string(os.date("!%Y-%m-%dT%H:%M:%SZ",
+                                 os.time(os.date("!*t"))))
+    local res <const> = c_zk.mdoc_verify(circuit.compressed,
+                                         proof.zk, pkx, pky,
+                                         proof.transcript,
+                                         attr, nownow,
+                                         doc_type, circuit.zkspec)
+    if not res then
+        error("Invalid ZK proof",2)
+    end
+    return res
 end
 
 longfellow.circuit_id = function(circ)
