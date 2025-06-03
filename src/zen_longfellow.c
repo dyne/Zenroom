@@ -82,12 +82,12 @@ static int circuit_gen(lua_State *L) {
 
 // formatted as ZULU string time "2024-01-30T09:00:00Z"
 #define NOW_DATA_SIZE 20
-#define NUM_MDOC_TESTS 4 // instantiated in in mdoc_examples.h
+#define NUM_MDOC_TESTS 6 // instantiated in in mdoc_examples.h
 
 static int mdoc_example(lua_State *L) {
 	BEGIN();
     int index = luaL_checkinteger(L, 1); // Argument at stack index 1
-    if (index < 1 || index >= NUM_MDOC_TESTS) {
+    if (index < 1 || index > NUM_MDOC_TESTS) {
 		zerror(L, "Example index out of bounds");
 		END(0);
 	}
@@ -108,31 +108,16 @@ static int mdoc_example(lua_State *L) {
 	pky->len = 32;
     lua_settable(L, -3);
     lua_pushstring(L, "transcript");
-	octet *trans = o_new(L, tests->transcript_size);
-	memcpy(trans->val, tests->transcript, tests->transcript_size);
-	trans->len = tests->transcript_size;
+	push_buffer_to_octet(L,tests->transcript,tests->transcript_size);
     lua_settable(L, -3);
-    if (tests->now) { // Check if pointer is valid
-		lua_pushstring(L, "now");
-		octet *now = o_new(L, NOW_DATA_SIZE);
-		memcpy(now->val, tests->now, NOW_DATA_SIZE);
-		now->len = NOW_DATA_SIZE;
-		lua_settable(L, -3);
-	}
-    // // doc_type is null terminated
+	lua_pushstring(L, "now");
+	push_buffer_to_octet(L,tests->now,NOW_DATA_SIZE);
+	lua_settable(L, -3);
     lua_pushstring(L, "doc_type");
-    octet *dtype = o_new(L,64);
-    memset(dtype->val,0x0,64);
-    size_t dtype_len = strlen(tests->doc_type);
-    size_t dlen = dtype_len<64?dtype_len:63;
-    memcpy(dtype->val, tests->doc_type, dlen);
-    dtype->len = dlen;
+	push_string_to_octet(L,tests->doc_type);
     lua_settable(L, -3);
-    // // mdoc
     lua_pushstring(L, "mdoc");
-	octet *mdoc = o_new(L,tests->mdoc_size);
-	memcpy(mdoc->val, tests->mdoc, tests->mdoc_size);
-	mdoc->len = tests->mdoc_size;
+	push_buffer_to_octet(L,tests->mdoc,tests->mdoc_size);
     lua_settable(L, -3);
     END(1);
 }
@@ -284,7 +269,9 @@ static int mdoc_prove(lua_State *L) {
 						  zkspec);
 	if(res != MDOC_PROVER_SUCCESS) {
 		warning(L, "MDOC prover error: %s",
-			   _prover_error_to_string(res));
+				_prover_error_to_string(res));
+		lua_pushnil(L);
+		returned = 1;
 		goto endgame;
 	}
 	// pushes the buffer in lua's stack
@@ -374,10 +361,10 @@ int luaopen_longfellow(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg longfellow_class[] = {
 		{"gen_circuit", circuit_gen},
+		{"circuit_id", get_circuit_id},
 		{"mdoc_example", mdoc_example},
 		{"mdoc_prove", mdoc_prove},
 		{"mdoc_verify", mdoc_verify},
-		{"circuit_id", get_circuit_id},
 		// {"verify", verify},
 		{NULL,NULL}
 	};
