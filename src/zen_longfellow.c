@@ -61,11 +61,11 @@ static int circuit_gen(lua_State *L) {
 		END(0);
 	}
 	// char circuit_hash_hex[129];
-	act(L,"Generating ZK circuit v%lu with %lu attributes",
+	func(L,"Generating ZK circuit v%lu with %lu attributes",
 		zk_spec->version, zk_spec->num_attributes);
 	// buf2hex(circuit_hash_hex, zk_spec->circuit_hash, 64);
 	// circuit_hash_hex[64] = 0x0;
-	act(L,"%s %s",zk_spec->system, zk_spec->circuit_hash);
+	func(L,"%s %s",zk_spec->system, zk_spec->circuit_hash);
 	res = generate_circuit(zk_spec, &circuit, &circuit_len);
 	if(res != CIRCUIT_GENERATION_SUCCESS) {
 		zerror(L,"Internal error generating circuit: %i",res);
@@ -87,7 +87,11 @@ static int circuit_gen(lua_State *L) {
 	}
 	o->len = circuit_len;
 	o->max = circuit_len;
-	END(1);
+	lua_pushstring(L,zk_spec->system);
+	lua_pushnumber(L,zk_spec->version);
+	lua_pushnumber(L,zk_spec->num_attributes);
+	lua_pushstring(L,zk_spec->circuit_hash);
+	END(5);
 }
 
 // formatted as ZULU string time "2024-01-30T09:00:00Z"
@@ -285,7 +289,7 @@ static int mdoc_prove(lua_State *L) {
 	//     const char *now, // time formatted as "2023-11-02T09:00:00Z"
 	//     uint8_t **prf, size_t *proof_len, const ZkSpecStruct *zk_spec) {
 	res = run_mdoc_prover((const uint8_t *)circuit->val, circuit->len,
-						  (const uint8_t *)mdoc->val, mdoc->len+1,
+						  (const uint8_t *)mdoc->val, mdoc->len,
 						  pkx, pky,
 						  (const uint8_t *)trans->val, trans->len,
 						  attrs, attrs_len,
