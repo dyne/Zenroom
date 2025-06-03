@@ -16,7 +16,7 @@ ZEN_SOURCES := src/zenroom.o src/zen_error.o src/lua_functions.o		\
     src/p256-m.o src/zen_p256.o src/zen_rsa.o src/zen_bbs.o				\
     src/zen_longfellow.o
 
-ZEN_INCLUDES += -Isrc -Ilib/lua54/src -Ilib							\
+ZEN_INCLUDES += -Isrc -Ilib/lua54/src -Ilib -I/usr/local/include	\
 -Ilib/milagro-crypto-c/build/include -Ilib/milagro-crypto-c/include	\
 -Ilib/ed25519-donna -Wall -Wextra
 
@@ -43,6 +43,7 @@ ldadd += ${milib}/libamcl_core.a
 ldadd += ${pwd}/lib/pqclean/libqpz.a
 ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
 ldadd += ${pwd}/lib/mlkem/test/build/libmlkem.a
+# ldadd += /usr/local/lib/libmdoc.a
 ldadd += ${pwd}/lib/longfellow-zk/liblongfellow-zk.a
 ldadd += -lzstd -lstdc++ -lcrypto
 
