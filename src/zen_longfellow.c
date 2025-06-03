@@ -71,22 +71,8 @@ static int circuit_gen(lua_State *L) {
 		zerror(L,"Internal error generating circuit: %i",res);
 		END(0);
 	}
-	// TODO check res
-	// newuserdata already pushes the object in lua's stack
-	octet *o = (octet *)lua_newuserdata(L, sizeof(octet));
-	if(HEDLEY_UNLIKELY(o==NULL)) {
-		zerror(L, "Cannot create octet, lua_newuserdata failure");
-		END(0);
-	}
-	luaL_getmetatable(L, "zenroom.octet");
-	lua_setmetatable(L, -2);
-	o->val = (char*)circuit; // alloc'ed by generate_circuit
-	if(HEDLEY_UNLIKELY(o->val==NULL)) {
-		zerror(L, "Cannot create circuit, null ptr");
-		END(0);
-	}
-	o->len = circuit_len;
-	o->max = circuit_len;
+	// pushes the buffer in lua's stack
+	o_push(L, circuit, circuit_len);
 	lua_pushstring(L,zk_spec->system);
 	lua_pushnumber(L,zk_spec->version);
 	lua_pushnumber(L,zk_spec->num_attributes);
@@ -297,26 +283,12 @@ static int mdoc_prove(lua_State *L) {
 						  &proof_bytes, &proof_bytelen,
 						  zkspec);
 	if(res != MDOC_PROVER_SUCCESS) {
-		zerror(L, "MDOC prover error: %s",
+		warning(L, "MDOC prover error: %s",
 			   _prover_error_to_string(res));
 		goto endgame;
 	}
-	// newuserdata already pushes the object in lua's stack
-	octet *proof = (octet *)lua_newuserdata(L, sizeof(octet));
-	if(HEDLEY_UNLIKELY(proof==NULL)) {
-		zerror(L, "Cannot create octet, lua_newuserdata failure");
-		goto endgame;
-	}
-	luaL_getmetatable(L, "zenroom.octet");
-	lua_setmetatable(L, -2);
-	proof->val = (char*)proof_bytes; // alloc'ed by mdoc_prover
-	if(HEDLEY_UNLIKELY(proof->val==NULL)) {
-		zerror(L, "Cannot create proof, null ptr");
-		goto endgame;
-	}
-	proof->len = proof_bytelen;
-	proof->max = proof_bytelen;
-	proof->ref = 1;
+	// pushes the buffer in lua's stack
+	o_push(L, proof_bytes, proof_bytelen);
 	returned = 1;
  endgame:
 	o_free(L,circuit);
