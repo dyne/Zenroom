@@ -473,3 +473,36 @@ function multibase_decode(src)
     }
     return trans[pfx](val)
 end
+
+function is_zulu_date(input)
+    -- Check basic pattern (supports dates with or without time in Zulu/UTC)
+    local str = fif(iszen(type(input)),input:octet():string(),input)
+    local y, m, d, hour, min, sec =
+        string.match(str,"^(%d%d%d%d)-(%d%d)-(%d%d)T?(%d?%d?)%:?(%d?%d?)%:?(%d?%d?)Z?$")
+    -- if no date part matched, invalid
+    if not y or not m or not d then
+        return false
+    end
+    -- convert to numbers
+    y, m, d = tonumber(y), tonumber(m), tonumber(d)
+    hour = tonumber(hour) or 0
+    min = tonumber(min) or 0
+    sec = tonumber(sec) or 0
+    -- validate ranges
+    if m < 1 or m > 12 then return false end
+    if d < 1 or d > 31 then return false end
+    if hour < 0 or hour > 23 then return false end
+    if min < 0 or min > 59 then return false end
+    if sec < 0 or sec > 59 then return false end
+    -- check month-day validity (e.g., Feb 30 is invalid)
+    local days_in_month = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
+    -- handle leap years (Feb 29)
+    if m == 2 then
+        local is_leap = (y % 400 == 0) or (y % 100 ~= 0 and y % 4 == 0)
+        days_in_month[2] = is_leap and 29 or 28
+    end
+    if d > days_in_month[m] then
+        return false
+    end
+    return true
+end
