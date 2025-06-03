@@ -87,7 +87,6 @@ static int circuit_gen(lua_State *L) {
 	}
 	o->len = circuit_len;
 	o->max = circuit_len;
-	o->ref = 1;
 	END(1);
 }
 
@@ -129,13 +128,15 @@ static int mdoc_example(lua_State *L) {
 		memcpy(now->val, tests->now, NOW_DATA_SIZE);
 		now->len = NOW_DATA_SIZE;
 		lua_settable(L, -3);
-    }
-    // // doc_type
+	}
+    // // doc_type is null terminated
     lua_pushstring(L, "doc_type");
-	octet *dtype = o_new(L,64);
-	size_t dtype_len = strlen(tests->doc_type);
-	memcpy(dtype->val, tests->doc_type, dtype_len);
-	dtype->len = dtype_len;
+    octet *dtype = o_new(L,64);
+    memset(dtype->val,0x0,64);
+    size_t dtype_len = strlen(tests->doc_type);
+    size_t dlen = dtype_len<64?dtype_len:63;
+    memcpy(dtype->val, tests->doc_type, dlen);
+    dtype->len = dlen;
     lua_settable(L, -3);
     // // mdoc
     lua_pushstring(L, "mdoc");
@@ -296,17 +297,29 @@ static int mdoc_prove(lua_State *L) {
 			   _prover_error_to_string(res));
 		goto endgame;
 	}
-	octet *proof = o_new(L,proof_bytelen);
-	returned = 1;
-	memcpy(proof->val,proof_bytes,proof_bytelen);
+	// newuserdata already pushes the object in lua's stack
+	octet *proof = (octet *)lua_newuserdata(L, sizeof(octet));
+	if(HEDLEY_UNLIKELY(proof==NULL)) {
+		zerror(L, "Cannot create octet, lua_newuserdata failure");
+		goto endgame;
+	}
+	luaL_getmetatable(L, "zenroom.octet");
+	lua_setmetatable(L, -2);
+	proof->val = (char*)proof_bytes; // alloc'ed by mdoc_prover
+	if(HEDLEY_UNLIKELY(proof->val==NULL)) {
+		zerror(L, "Cannot create proof, null ptr");
+		goto endgame;
+	}
 	proof->len = proof_bytelen;
+	proof->max = proof_bytelen;
+	proof->ref = 1;
+	returned = 1;
  endgame:
 	o_free(L,circuit);
 	o_free(L,mdoc);
 	o_free(L,trans);
 	if(attrs) free(attrs);
 	o_free(L,now);
-
 	END(returned);
 }
 
