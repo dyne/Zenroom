@@ -190,7 +190,7 @@ octet* o_alloc(lua_State *L, int size) {
 	o->max = size;
 	o->len = 0;
 	o->val[0] = 0x0;
-	o->ref = 1;
+	//	o->ref = 1;
 	return(o);
 }
 
@@ -336,6 +336,28 @@ octet *o_dup(lua_State *L, const octet *o) {
 	return(n);
 }
 
+// push a new octet without allocating new buffer but reusing the one
+// in arg. does not reuse o_new or o_alloc, does no new buffer alloc.
+octet *o_push(lua_State *L, const char *buf, size_t len) {
+	if(HEDLEY_UNLIKELY(buf==NULL)) {
+		zerror(L, "Cannot push octet, null ptr");
+		return(NULL);
+	}
+	// newuserdata already pushes the object in lua's stack
+	octet *o = (octet *)lua_newuserdata(L, sizeof(octet));
+	if(HEDLEY_UNLIKELY(o==NULL)) {
+		zerror(L, "Cannot create octet, lua_newuserdata failure");
+		return(NULL);
+	}
+	luaL_getmetatable(L, "zenroom.octet");
+	lua_setmetatable(L, -2);
+	o->val = (char*)buf; // allocated by caller, freed by gc
+	o->len = len;
+	o->max = len;
+	o->ref = 1;
+	return(o);
+}
+	
 void push_buffer_to_octet(lua_State *L, char *p, size_t len) {
 	octet* o = o_new(L, len);
 	// newuserdata already pushes the object in lua's stack
