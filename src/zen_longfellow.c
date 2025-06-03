@@ -61,7 +61,7 @@ static int circuit_gen(lua_State *L) {
 		END(0);
 	}
 	// char circuit_hash_hex[129];
-	act(L,"Generating circuit v%lu with %lu attributes",
+	act(L,"Generating ZK circuit v%lu with %lu attributes",
 		zk_spec->version, zk_spec->num_attributes);
 	// buf2hex(circuit_hash_hex, zk_spec->circuit_hash, 64);
 	// circuit_hash_hex[64] = 0x0;
