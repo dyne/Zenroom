@@ -36,8 +36,21 @@ longfellow.mdoc_example = function(num)
 end
 
 longfellow.generate_circuit = function(num)
-    local res <const> = { compressed = c_zk.gen_circuit(num),
-                          zkspec = num }
+    -- C func returns the compressed circuit and:
+	-- lua_pushstring(L,zk_spec->system);
+	-- lua_pushstring(L,zk_spec->version);
+	-- lua_pushstring(L,zk_spec->num_attributes);
+	-- lua_pushstring(L,zk_spec->circuit_hash);
+
+    compressed, system, version,
+        num_attributes, circuit_hash = c_zk.gen_circuit(num)
+
+    local res <const> = { compressed = compressed,
+                          system =     O.from_string(system),
+                          version =    FLOAT.new(version),
+                          attributes = FLOAT.new(num_attributes),
+                          hash =       O.from_hex(circuit_hash),
+                          zkspec =     BIG.new(num) }
     if not res.compressed then
         error("Longfellow-ZK generate circuit failure",2)
     end
@@ -74,11 +87,11 @@ longfellow.mdoc_prover = function(circuit, mdoc,
         or O.from_string(os.date("!%Y-%m-%dT%H:%M:%SZ",
                                  os.time(os.date("!*t"))))
     local proof <const> =
-    { zk = c_zk.mdoc_prove(circuit.compressed,
+    { zk         = c_zk.mdoc_prove(circuit.compressed,
                            mdoc, pkx, pky, trans,
-                           attr, nownow, circuit.zkspec),
+                           attr, nownow, circuit.zkspec:int()),
       transcript = trans, -- TODO: safe to attach it to the zk proof?
-      zkspec = circuit.zkspec }
+      zkspec     = circuit.zkspec }
       if not proof.zk then
         error("Proof creation error",2)
     end
@@ -121,19 +134,16 @@ longfellow.mdoc_verifier = function(circuit, proof,
                                          proof.zk, pkx, pky,
                                          proof.transcript,
                                          attr, nownow,
-                                         doc_type, circuit.zkspec)
-    if not res then
-        error("Invalid ZK proof",2)
-    end
+                                         doc_type, circuit.zkspec:int())
     return res
 end
 
 longfellow.circuit_id = function(circ)
-    local res <const> = c_zk.circuit_id(circ.compressed, circ.zkspec)
+    local res <const> = c_zk.circuit_id(circ.compressed, circ.zkspec:int())
     if not res then
         error("Unrecognized ZK circuit ID",2)
     end
-    return O.from_string(res:hex())
+    return res
 end
 
 return longfellow
