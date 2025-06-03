@@ -25,6 +25,7 @@
 #include <encoding.h>
 #include <randombytes.h>
 #include <longfellow-zk/circuits/mdoc/mdoc_zk.h>
+#include <longfellow-zk/circuits/mdoc/mdoc_examples.h>
 
 static ZkSpecStruct *_get_zkspec(lua_State *L, int idx) {
 	ZkSpecStruct *zk_spec;
@@ -94,56 +95,56 @@ static int circuit_gen(lua_State *L) {
 #define NOW_DATA_SIZE 20
 #define NUM_MDOC_TESTS 4 // instantiated in in mdoc_examples.h
 
-// static int mdoc_example(lua_State *L) {
-// 	BEGIN();
-//     int index = luaL_checkinteger(L, 1); // Argument at stack index 1
-//     if (index < 1 || index >= NUM_MDOC_TESTS) {
-// 		zerror(L, "Example index out of bounds");
-// 		END(0);
-// 	}
-// 	func(L,"Getting MDOC example %i",index);
-// 	const struct MdocTests *tests = &mdoc_tests[index-1];
-//     lua_newtable(L);
-//     lua_pushstring(L, "pkx");
-// 	octet *pkx = o_new(L,32+4);
-// 	// test_data->pk* are hex sequences prefixed with 0x. here we
-// 	// import them into octets from that format. later we'll cast them
-// 	// back into such strings, so that inside zenroom they are binary
-// 	hex2buf(pkx->val, tests->pkx->as_pointer[2]);
-// 	pkx->len = 32;
-//     lua_settable(L, -3);
-//     lua_pushstring(L, "pky");
-// 	octet *pky = o_new(L,32+4);
-// 	hex2buf(pky->val, tests->pky->as_pointer[2]);
-// 	pky->len = 32;
-//     lua_settable(L, -3);
-//     lua_pushstring(L, "transcript");
-// 	octet *trans = o_new(L, tests->transcript_size);
-// 	memcpy(trans->val, tests->transcript, tests->transcript_size);
-// 	trans->len = tests->transcript_size;
-//     lua_settable(L, -3);
-//     if (tests->now) { // Check if pointer is valid
-// 		lua_pushstring(L, "now");
-// 		octet *now = o_new(L, NOW_DATA_SIZE);
-// 		memcpy(now->val, tests->now, NOW_DATA_SIZE);
-// 		now->len = NOW_DATA_SIZE;
-// 		lua_settable(L, -3);
-//     }
-//     // // doc_type
-//     lua_pushstring(L, "doc_type");
-// 	octet *dtype = o_new(L,64);
-// 	size_t dtype_len = strlen(tests->doc_type);
-// 	memcpy(dtype->val, tests->doc_type, dtype_len);
-// 	dtype->len = dtype_len;
-//     lua_settable(L, -3);
-//     // // mdoc
-//     lua_pushstring(L, "mdoc");
-// 	octet *mdoc = o_new(L,tests->mdoc_size);
-// 	memcpy(mdoc->val, tests->mdoc, tests->mdoc_size);
-// 	mdoc->len = tests->mdoc_size;
-//     lua_settable(L, -3);
-//     END(1);
-// }
+static int mdoc_example(lua_State *L) {
+	BEGIN();
+    int index = luaL_checkinteger(L, 1); // Argument at stack index 1
+    if (index < 1 || index >= NUM_MDOC_TESTS) {
+		zerror(L, "Example index out of bounds");
+		END(0);
+	}
+	func(L,"Getting MDOC example %i",index);
+	const struct MdocTests *tests = &mdoc_tests[index-1];
+    lua_newtable(L);
+    lua_pushstring(L, "pkx");
+	octet *pkx = o_new(L,32+4);
+	// test_data->pk* are hex sequences prefixed with 0x. here we
+	// import them into octets from that format. later we'll cast them
+	// back into such strings, so that inside zenroom they are binary
+	hex2buf(pkx->val, &tests->pkx[2]);//->as_pointer[2]);
+	pkx->len = 32;
+    lua_settable(L, -3);
+    lua_pushstring(L, "pky");
+	octet *pky = o_new(L,32+4);
+	hex2buf(pky->val, &tests->pky[2]);//->as_pointer[2]);
+	pky->len = 32;
+    lua_settable(L, -3);
+    lua_pushstring(L, "transcript");
+	octet *trans = o_new(L, tests->transcript_size);
+	memcpy(trans->val, tests->transcript, tests->transcript_size);
+	trans->len = tests->transcript_size;
+    lua_settable(L, -3);
+    if (tests->now) { // Check if pointer is valid
+		lua_pushstring(L, "now");
+		octet *now = o_new(L, NOW_DATA_SIZE);
+		memcpy(now->val, tests->now, NOW_DATA_SIZE);
+		now->len = NOW_DATA_SIZE;
+		lua_settable(L, -3);
+    }
+    // // doc_type
+    lua_pushstring(L, "doc_type");
+	octet *dtype = o_new(L,64);
+	size_t dtype_len = strlen(tests->doc_type);
+	memcpy(dtype->val, tests->doc_type, dtype_len);
+	dtype->len = dtype_len;
+    lua_settable(L, -3);
+    // // mdoc
+    lua_pushstring(L, "mdoc");
+	octet *mdoc = o_new(L,tests->mdoc_size);
+	memcpy(mdoc->val, tests->mdoc, tests->mdoc_size);
+	mdoc->len = tests->mdoc_size;
+    lua_settable(L, -3);
+    END(1);
+}
 
 typedef struct {
     const char* id;
@@ -308,7 +309,7 @@ int luaopen_longfellow(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg longfellow_class[] = {
 		{"gen_circuit", circuit_gen},
-		// {"mdoc_example", mdoc_example},
+		{"mdoc_example", mdoc_example},
 		{"mdoc_prove", mdoc_prove},
 		{"circuit_id", get_circuit_id},
 		// {"verify", verify},
