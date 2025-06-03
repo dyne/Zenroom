@@ -189,7 +189,7 @@ function MT.verify_proof(proof, pos, root, n , hashtype)
         n = n-1
     end
     
-    return t 
+    return t == root
 end
 
 
