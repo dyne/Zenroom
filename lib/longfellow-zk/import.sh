@@ -50,7 +50,7 @@ zk/zk_proof.h ligero/ligero_param.h merkle/merkle_commitment.h
 merkle/merkle_tree.h zk/zk_common.h arrays/eq.h
 sumcheck/transcript_sumcheck.h zk/zk_prover.h ligero/ligero_prover.h
 ligero/ligero_transcript.h sumcheck/prover_layers.h zk/zk_verifier.h
-ligero/ligero_verifier.h circuits/mdoc/mdoc_examples.h
+ligero/ligero_verifier.h
 
 EOF
 
