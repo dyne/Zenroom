@@ -3,6 +3,9 @@
 
 ZK = require'crypto_longfellow'
 
+local one_claim_prover_t = { }
+local one_claim_verify_t = { }
+
 local circ
 if DATA then
     -- to speed up tests:
@@ -36,13 +39,17 @@ function run_test(circuit, example, attributes)
     printerr'================'
     printerr(example.doc_type)
     printerr(attributes[1].id..' = '..attributes[1].value)
+    local start = os.clock()
     local proof <const> = ZK.mdoc_prover(circuit, example.mdoc,
         example.pkx, example.pky, example.transcript, attributes,
         example.now)
     assert(proof)
+    table.insert(one_claim_prover_t, os.clock() - start)
+    start = os.clock()
     assert( ZK.mdoc_verifier(circuit, proof, example.pkx, example.pky,
                              example.transcript, attributes,
                              example.now, example.doc_type) )
+    table.insert(one_claim_verify_t, os.clock() - start)
 end
 
 -- first three simple age_over_18 tests need to be successful
@@ -91,6 +98,9 @@ end
 
 printerr'============='
 printerr'ALL TESTS OK!'
+
+print(JSON.encode(one_claim_prover_t))
+print(JSON.encode(one_claim_verify_t))
 
 -- circ = LFZK.gen_circuit(2)
 -- describe_circuit('v2',circ)
