@@ -291,6 +291,76 @@ int is_base45(const char* src) {
 	return error ? -1 : i;
 }
 
+static const char alpha_b32[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+
+static const uint8_t b32table[256] = {
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	26, 27, 28, 29, 30, 31, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+	15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 64, 64, 64, 64, 64,
+	64, 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+	15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+  };
+
+int b32encode(char *dest, const char *src, int len) {
+	int buffer = 0;
+	int bitsLeft = 0;
+	int j = 0;
+	for (int i = 0; i < len; i++) {
+		buffer <<= 8;
+		buffer |= (unsigned char)src[i];
+		bitsLeft += 8;
+
+		while (bitsLeft >= 5) {
+			dest[j++] = alpha_b32[(buffer >> (bitsLeft - 5)) & 0x1F];
+			bitsLeft -= 5;
+		}
+	}
+	if (bitsLeft > 0) {
+		dest[j++] = alpha_b32[(buffer << (5 - bitsLeft)) & 0x1F];
+	}
+	// Pad to make output length a multiple of 8
+	while (j % 8 != 0) {
+		dest[j++] = '=';
+	}
+	dest[j] = '\0';
+	return j + 1;
+}
+
+int b32decode(char *dest, const char *src) {
+    int i = 0, j = 0;
+    uint32_t buffer = 0;
+    int bitsLeft = 0;
+    uint8_t val;
+    while (src[i]) {
+        if (src[i] == '=') { 
+            break;
+        }
+        val = b32table[(uint8_t)src[i]];
+        if (val == 255) {
+            i++;
+            continue;
+        }
+        buffer = (buffer << 5) | val;
+        bitsLeft += 5;
+        if (bitsLeft >= 8) {
+            bitsLeft -= 8;
+            dest[j++] = (buffer >> bitsLeft) & 0xFF;
+        }
+        i++;
+    }
+    return j; 
+}
 /**
  * Imported from https://github.com/trezor/trezor-crypto/blob/master/bip39.c
  * Changes of Alberto Lerda on 29th Sept 2021
