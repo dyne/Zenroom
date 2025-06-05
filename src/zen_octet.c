@@ -1000,6 +1000,30 @@ static int from_base45(lua_State *L) {
 }
 
 /***
+Decode a base32-encoded string into an octet object,
+after checking if the input string is valid base32.
+
+	@function OCTET.from_base32
+	@param str base32-encoded string
+	@return decoded octet object
+ */
+
+ static int from_base32(lua_State *L) {
+    BEGIN();
+    const char *s = lua_tostring(L, 1);
+    luaL_argcheck(L, s != NULL, 1, "base32 string expected");
+    int len_in = strlen(s);
+    int max_len_out = len_in * 5 / 8;
+    octet *o = o_new(L, max_len_out);
+    int decoded_len = b32decode(o->val, s);
+    if (decoded_len < 0) {
+        lerror(L, "base32 invalid string or empty input");
+        return 0;
+    }
+    o->len = decoded_len;
+    END(1);
+}
+/***
 Decode a mnemonic-encoded string into an octet object,
 after checking if the input string is valid mnemonic.
 
@@ -1354,6 +1378,25 @@ static int to_base45 (lua_State *L) {
 	int newlen = b45encode(NULL, o->val, o->len);
 	char *b = malloc(newlen);
 	b45encode(b, o->val, o->len);
+	lua_pushstring(L, b);
+	free(b);
+	o_free(L, o);
+	END(1);
+}
+
+/***
+	Encode an octet in base32 notation.
+
+	@function OCTET:base32
+	@return a string representing the octet's contents in base32
+*/
+
+static int to_base32(lua_State *L) {
+	BEGIN();
+	const octet *o = o_arg(L, 1);
+	int newlen = ((o->len + 4) / 5) * 8;
+	char *b = malloc(newlen + 1); // +1 per il '\0'
+	b32encode(b, o->val, o->len);
 	lua_pushstring(L, b);
 	free(b);
 	o_free(L, o);
@@ -3259,6 +3302,7 @@ int luaopen_octet(lua_State *L) {
 		{"from_number",from_number},
 		{"from_base64",from_base64},
 		{"from_base45",from_base45},
+		{"from_base32",from_base32},
 		{"from_url64",from_url64},
 		{"from_base58",from_base58},
 		{"from_string",from_string},
@@ -3277,6 +3321,7 @@ int luaopen_octet(lua_State *L) {
 		{"bin",   from_bin},
 		{"to_hex"   , to_hex},
 		{"to_base64", to_base64},
+		{"to_base32", to_base32},
 		{"to_url64",  to_url64},
 		{"to_base58", to_base58},
 		{"to_string", to_string},
@@ -3333,6 +3378,7 @@ int luaopen_octet(lua_State *L) {
 		{"url64",  to_url64},
 		{"base58", to_base58},
 		{"base45", to_base45},
+		{"base32", to_base32},
 		{"string", to_string},
 		{"octet",  to_octet},
 		{"str",    to_string},
@@ -3345,6 +3391,7 @@ int luaopen_octet(lua_State *L) {
 		{"to_url64",  to_url64},
 		{"to_base58", to_base58},
 		{"to_base45", to_base45},
+		{"to_base32", to_base32},
 		{"to_string", to_string},
 		{"to_octet",  to_octet},
 		{"to_str",    to_string},
