@@ -291,6 +291,69 @@ int is_base45(const char* src) {
 	return error ? -1 : i;
 }
 
+static const char alpha_b32[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+
+static const uint8_t b32table[256] = {
+    [0 ... 255] = 64,
+    ['A'] = 0,  ['B'] = 1,  ['C'] = 2,  ['D'] = 3,  ['E'] = 4,  ['F'] = 5,  ['G'] = 6,  ['H'] = 7,
+    ['I'] = 8,  ['J'] = 9,  ['K'] = 10, ['L'] = 11, ['M'] = 12, ['N'] = 13, ['O'] = 14, ['P'] = 15,
+    ['Q'] = 16, ['R'] = 17, ['S'] = 18, ['T'] = 19, ['U'] = 20, ['V'] = 21, ['W'] = 22, ['X'] = 23,
+    ['Y'] = 24, ['Z'] = 25,
+    ['2'] = 26, ['3'] = 27, ['4'] = 28, ['5'] = 29, ['6'] = 30, ['7'] = 31,
+    ['a'] = 0,  ['b'] = 1,  ['c'] = 2,  ['d'] = 3,  ['e'] = 4,  ['f'] = 5,  ['g'] = 6,  ['h'] = 7,
+    ['i'] = 8,  ['j'] = 9,  ['k'] = 10, ['l'] = 11, ['m'] = 12, ['n'] = 13, ['o'] = 14, ['p'] = 15,
+    ['q'] = 16, ['r'] = 17, ['s'] = 18, ['t'] = 19, ['u'] = 20, ['v'] = 21, ['w'] = 22, ['x'] = 23,
+    ['y'] = 24, ['z'] = 25,
+};
+int b32encode(char *dest, const char *src, int len) {
+	int buffer = 0;
+	int bitsLeft = 0;
+	int j = 0;
+	for (int i = 0; i < len; i++) {
+		buffer <<= 8;
+		buffer |= (unsigned char)src[i];
+		bitsLeft += 8;
+
+		while (bitsLeft >= 5) {
+			dest[j++] = alpha_b32[(buffer >> (bitsLeft - 5)) & 0x1F];
+			bitsLeft -= 5;
+		}
+	}
+	if (bitsLeft > 0) {
+		dest[j++] = alpha_b32[(buffer << (5 - bitsLeft)) & 0x1F];
+	}
+	// Pad to make output length a multiple of 8
+	while (j % 8 != 0) {
+		dest[j++] = '=';
+	}
+	dest[j] = '\0';
+	return j + 1;
+}
+
+int b32decode(char *dest, const char *src) {
+    int i = 0, j = 0;
+    uint32_t buffer = 0;
+    int bitsLeft = 0;
+    uint8_t val;
+    while (src[i]) {
+        if (src[i] == '=') { 
+            break;
+        }
+        val = b32table[(uint8_t)src[i]];
+        if (val == 64) {
+            i++;
+            continue;
+        }
+        buffer = (buffer << 5) | val;
+        bitsLeft += 5;
+        if (bitsLeft >= 8) {
+            bitsLeft -= 8;
+            dest[j++] = (buffer >> bitsLeft) & 0xFF;
+        }
+        i++;
+    }
+    return j; 
+}
 /**
  * Imported from https://github.com/trezor/trezor-crypto/blob/master/bip39.c
  * Changes of Alberto Lerda on 29th Sept 2021

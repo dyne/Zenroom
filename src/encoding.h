@@ -38,6 +38,9 @@ int b45encode(char *dest, const char *src, int len);
 int b45decode(char *dest, const char *src);
 int is_base45(const char* src);
 
+int b32encode(char *dest, const char *src, int len);
+int b32decode(char *dest, const char *src);
+
 int mnemonic_from_data(char *mnemo, const char *data, int len);
 int mnemonic_to_bits(const char *mnemonic, char *entropy);
 int mnemonic_check_and_bits(const char *mnemonic, int* len, char *bits);
