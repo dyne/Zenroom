@@ -343,6 +343,8 @@
     elseif what =='mnemonic' then
        -- mnemonic has no check function (TODO:)
        return f_factory_encoder('mnemonic', O.from_mnemonic, nil)
+    elseif what =='b32' or what =='base32' then
+       return f_factory_encoder('base32', O.from_base32, O.is_base32)
     elseif what =='uuid' then
       return f_factory_encoder('uuid', O.from_uuid, nil)
     elseif what == 'int' or what == 'integer' then -- aka BIG
@@ -423,6 +425,7 @@ end
     base64 = O.to_base64,
     url64 = O.to_url64,
     base58 = O.to_base58,
+    base32 = O.to_base32,
     binary = O.to_bin,
     bin = O.to_bin,
     mnemonic = O.to_mnemonic,

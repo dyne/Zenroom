@@ -579,6 +579,27 @@ static int lua_is_bin(lua_State *L) {
 	END(1);
 }
 
+/***
+	Check if a Lua string is a valid base32-encoded string.
+	*If the string is valid base32, it pushes true, otherwise it pushes false onto the Lua stack.
+
+	@function OCTET.is_base32
+	@param s a Lua string
+	@return a boolean value
+ */
+static int lua_is_base32(lua_State *L) {
+	BEGIN();
+	const char *s = lua_tostring(L, 1);
+	luaL_argcheck(L, s != NULL, 1, "string expected");
+	int len = is_base32(s);
+	if(!len) {
+		lua_pushboolean(L, 0);
+		func(L, "string is not a valid base32 sequence");
+		END(1); }
+	lua_pushboolean(L, 1);
+	END(1);
+}
+
 // to emulate 128bit counters, de facto truncate integers to 64bit
 typedef struct { uint64_t high, low; } uint128_t;
 
@@ -1012,7 +1033,7 @@ after checking if the input string is valid base32.
     BEGIN();
     const char *s = lua_tostring(L, 1);
     luaL_argcheck(L, s != NULL, 1, "base32 string expected");
-    int len_in = strlen(s);
+    int len_in = is_base32(s);
     int max_len_out = len_in * 5 / 8;
     octet *o = o_new(L, max_len_out);
     int decoded_len = b32decode(o->val, s);
@@ -3299,6 +3320,7 @@ int luaopen_octet(lua_State *L) {
 		{"is_base58", lua_is_base58},
 		{"is_hex", lua_is_hex},
 		{"is_bin", lua_is_bin},
+		{"is_base32", lua_is_base32},
 		{"from_number",from_number},
 		{"from_base64",from_base64},
 		{"from_base45",from_base45},
