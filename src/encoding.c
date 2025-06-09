@@ -354,6 +354,28 @@ int b32decode(char *dest, const char *src) {
     }
     return j; 
 }
+
+int is_base32(const char *in) {
+    if (!in) return 0;
+    const unsigned char *p = (const unsigned char *)in;
+    int i = 0;
+    int padding_started = 0;
+    while (p[i]) {
+        if (p[i] == '=') {
+            padding_started = 1;
+        } else {
+            if (padding_started) {
+                return 0;
+            }
+            if (b32table[p[i]] == 64) {
+                return 0;
+            }
+        }
+        i++;
+    }
+    return i; 
+}
+
 /**
  * Imported from https://github.com/trezor/trezor-crypto/blob/master/bip39.c
  * Changes of Alberto Lerda on 29th Sept 2021
