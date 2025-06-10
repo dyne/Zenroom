@@ -628,6 +628,9 @@ end
 -- return true: caller skip execution and go to ::continue::
 -- return false: execute statement
 local function manage_branching(stack, x)
+	-- skip execution if If statement is the first in a ended loop
+	if stack.ITER_head and stack.ITER_head.pos == 0 then return false end
+
 	stack.branch_condition = nil
 	local b = stack.branch
 	local v = stack.branch_valid
