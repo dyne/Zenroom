@@ -110,6 +110,22 @@ Then print 'address_to_bin' as 'bin'
 }
 ```
 
+
+## base32
+Base32 encoding represents binary data using 32 ASCII characters (A-Z, 2-7). Output is padded with '=' to make the total length a multiple of 8 characters.
+
+```
+When I rename the 'address' to 'address_to_base32'
+
+Then print 'address_to_base32' as 'base32'
+```
+
+```json
+{
+   "address_to_base32": "KN2HE2LOM4QHI3ZAMVXGG33EMU======"
+}
+```
+
 ## uuid
 A UUID (Universally Unique Identifier) is a 16-byte identifier used to uniquely label information in computer systems. It is typically represented as a 32-character hexadecimal string, divided into five groups separated by hyphens (e.g., 123e4567-e89b-12d3-a456-426614174000).
 
