@@ -21,6 +21,7 @@
 --]]
 
 local QP = require'qp'
+_G['PQ'] = QP -- correct object name globally
 
 local function dilithium_public_key_f(obj)
    local res = schema_get(obj, '.')

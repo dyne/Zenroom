@@ -65,6 +65,15 @@ while (tot<100) or (not shorter) do
 	end
 	assert(ecdh.verify(alice.public, m, sig), "ecdh verify failed")
 	assert(not ecdh.verify(alice.public, sha256(m),sig), "ecdh verify failed")
+    local len = #(sig.r..sig.s)
+    if len < 64 then
+        print('sig.r..sig.s '..#(sig.r..sig.s))
+        I.print({r=sig.r:hex(),s=sig.s:hex()})
+    end
+    local c = sig.r..sig.s
+	assert(ecdh.verify(alice.public, m, c), "ecdh verify failed")
+	assert(not ecdh.verify(alice.public, sha256(m), c), "ecdh verify failed")
+
 	tot = tot+1
 end
 
