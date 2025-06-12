@@ -42,6 +42,10 @@ int b32encode(char *dest, const char *src, int len);
 int b32decode(char *dest, const char *src);
 int is_base32(const char *in);
 
+int b32crockford_encode(char *dest, const char *src, int len, int checksum);
+int b32crockford_decode(char *dest, const char *src, int checksum);
+int is_base32_crockford(const char *in, int checksum);
+
 int mnemonic_from_data(char *mnemo, const char *data, int len);
 int mnemonic_to_bits(const char *mnemonic, char *entropy);
 int mnemonic_check_and_bits(const char *mnemonic, int* len, char *bits);
