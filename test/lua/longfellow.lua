@@ -3,8 +3,10 @@
 
 ZK = require'crypto_longfellow'
 
+local circuit_generation_t = { }
 local one_claim_prover_t = { }
 local one_claim_verify_t = { }
+local one_claim_proof_s = { }
 
 local circ
 if DATA then
@@ -19,7 +21,9 @@ if DATA then
              zkspec = BIG.new(1) }
 else -- live generation is sloow..
     printerr'ZK Circuit generation... please wait...'
+	local start = os.clock()
     circ = ZK.generate_circuit(1)
+	table.insert(circuit_generation_t, os.clock() - start)
     I.schema({system = circ.system:string(),
               circuit = circ})
     -- calculate circuit hash and check that is same as zk_spec hash
@@ -44,6 +48,7 @@ function run_test(circuit, example, attributes)
         example.pkx, example.pky, example.transcript, attributes,
         example.now)
     assert(proof)
+	table.insert(one_claim_proof_s, #proof.zk)
     table.insert(one_claim_prover_t, os.clock() - start)
     start = os.clock()
     assert( ZK.mdoc_verifier(circuit, proof, example.pkx, example.pky,
@@ -99,8 +104,10 @@ end
 printerr'============='
 printerr'ALL TESTS OK!'
 
-print(JSON.encode(one_claim_prover_t))
-print(JSON.encode(one_claim_verify_t))
+print(JSON.encode({circuit_generation_timing=circuit_generation_t}))
+print(JSON.encode({prover_timings=one_claim_prover_t}))
+print(JSON.encode({verify_timings=one_claim_verify_t}))
+print(JSON.encode({proof_sizes=one_claim_proof_s}))
 
 -- circ = LFZK.gen_circuit(2)
 -- describe_circuit('v2',circ)
