@@ -66,8 +66,17 @@ local function import_supported_selective_disclosure(obj)
                     break
                end 
             end
-        else 
-            found = obj[what] == needed
+        else
+            if (type(needed) == 'table') then
+                for _,v in pairs(needed) do
+                    if obj[what] == v then
+                        found = true
+                        break
+                    end
+                end
+            else
+                found = obj[what] == needed
+            end
         end
         if(not found) then
             error("Found parameter not supported in " .. what, 3)
@@ -83,13 +92,16 @@ local function import_supported_selective_disclosure(obj)
     local creds = obj.credential_configurations_supported
     for _,v in pairs(creds) do
         check_display(v.display)
-        check_support(v, 'format', 'vc+sd-jwt')
-        check_support(v, 'credential_signing_alg_values_supported', {'ES256'})
+        check_support(v, 'format', {'ldp_vc','dc+sd-jwt'})
+        if v.format == 'dc+sd-jwt' then
+            check_support(v, 'credential_signing_alg_values_supported', {'ES256'})
+            if (not v.vct) then
+                error("Invalid supported selective disclosure: missing parameter vct", 2)
+            end
+        end
+        if v.format == 'ldp_vc' then check_support(v, 'credential_signing_alg_values_supported', {'Ed25519Signature2018'}) end
         check_support(v, 'cryptographic_binding_methods_supported', {"jwk", "did:dyne:sandbox.signroom"})
         -- check_support(creds[i], 'proof_types_supported', {jwt = { proof_signing_alg_values_supported = {"ES256"}}})
-        if (not v.vct) then
-            error("Invalid supported selective disclosure: missing parameter vct", 2)
-        end
         -- claims and everything in it are optional
     end
 
@@ -363,8 +375,8 @@ When("create selective disclosure request from '' with id '' for ''", function(s
     zencode_assert(credential, "Unknown credential id")
     local claims = credential.claims
     local fields = {}
-    for k,_ in pairs(claims) do
-        table.insert(fields, O.from_str(k))
+    for _,v in pairs(claims) do
+        table.insert(fields, v.path[1])
     end
     ACK.selective_disclosure_request = {
         fields = fields,
