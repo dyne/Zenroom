@@ -505,3 +505,39 @@ EOF
     save_output copy_move_from_to.out.json
     assert_output '{"array_from":["world"],"dict_from":{"str_2":"world"},"float_pos":3,"int_pos":"3","str_pos_for_array":"3","str_pos_for_dict":"str_3","string_copied_from_array":"world","string_copied_from_array_with_float_pos":"!","string_copied_from_array_with_int_pos":"!","string_copied_from_array_with_str_pos":"!","string_copied_from_dict":"world","string_copied_from_dict_with_str_pos":"!","string_moved_from_array":"hello","string_moved_from_array_with_float_pos":"!","string_moved_from_array_with_int_pos":"!","string_moved_from_array_with_str_pos":"!","string_moved_from_dict":"hello","string_moved_from_dict_with_str_pos":"!"}'
 }
+
+@test "uuid v4 creation" {
+    cat <<EOF | zexe creation_of_uuid_v4.zen 
+Given nothing
+When I create random uuid v4 
+Then print the data
+EOF
+    save_output creation_of_uuid_v4.out.json
+    assert_output '{"uuid":"5dd8c062-3f91-63de-7ebb-260c23c7d1df"}'
+}
+
+@test "base32: encoding and decoding" {
+    cat <<EOF | save_asset b32_encoding_decoding.data.json
+{ 
+    "my_b32":"AAI777Y=",
+    "my_hex":"0011ffff",
+    "my_base64":"ABH//w=="
+}
+EOF
+    cat <<EOF | zexe b32_encoding_decoding.zen b32_encoding_decoding.data.json
+Given I have a 'base32' named 'my_b32'
+Given I have a 'hex' named 'my_hex'
+Given I have a 'base64' named 'my_base64'
+
+When I copy 'my_b32' as 'base64' to 'dest_b32'  
+When I copy 'my_hex' as 'base32' to 'dest_hex' 
+When I copy 'my_base64' as 'base32' to 'dest_b64'   
+
+Then print 'dest b32'
+Then print 'dest b64'
+Then print 'dest hex'
+
+EOF
+    save_output b32_encoding_decoding.out.json
+    assert_output '{"dest_b32":"ABH//w==","dest_b64":"AAI777Y=","dest_hex":"AAI777Y="}'
+}

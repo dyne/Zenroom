@@ -23,6 +23,7 @@
 
 #include <stdbool.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "bip39_english.h"
 #include <amcl.h>
@@ -289,6 +290,180 @@ int is_base45(const char* src) {
 	i = i / 3 * 2 + (i % 3) / 2; // length of decoded string
 
 	return error ? -1 : i;
+}
+
+static const char alpha_b32[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+
+static const uint8_t b32table[256] = {
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,  
+    64, 64, 26, 27, 28, 29, 30, 31, 64, 64, 64, 64, 64, 64, 64, 64,  
+    64,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,  
+    15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 64, 64, 64, 64, 64,  
+    64,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,  
+    15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64
+};
+int b32encode(char *dest, const char *src, int len) {
+	int buffer = 0;
+	int bitsLeft = 0;
+	int j = 0;
+	for (int i = 0; i < len; i++) {
+		buffer <<= 8;
+		buffer |= (unsigned char)src[i];
+		bitsLeft += 8;
+
+		while (bitsLeft >= 5) {
+			dest[j++] = alpha_b32[(buffer >> (bitsLeft - 5)) & 0x1F];
+			bitsLeft -= 5;
+		}
+	}
+	if (bitsLeft > 0) {
+		dest[j++] = alpha_b32[(buffer << (5 - bitsLeft)) & 0x1F];
+	}
+	// Pad to make output length a multiple of 8
+	while (j % 8 != 0) {
+		dest[j++] = '=';
+	}
+	dest[j] = '\0';
+	return j + 1;
+}
+
+int b32decode(char *dest, const char *src) {
+    int i = 0, j = 0;
+    uint32_t buffer = 0;
+    int bitsLeft = 0;
+    uint8_t val;
+    while (src[i]) {
+        if (src[i] == '=') { 
+            break;
+        }
+        val = b32table[(uint8_t)src[i]];
+        if (val == 64) {
+            i++;
+            continue;
+        }
+        buffer = (buffer << 5) | val;
+        bitsLeft += 5;
+        if (bitsLeft >= 8) {
+            bitsLeft -= 8;
+            dest[j++] = (buffer >> bitsLeft) & 0xFF;
+        }
+        i++;
+    }
+    return j; 
+}
+
+int is_base32(const char *in) {
+    if (!in) return 0;
+    const unsigned char *p = (const unsigned char *)in;
+    int i = 0;
+    int padding_started = 0;
+    while (p[i]) {
+        if (p[i] == '=') {
+            padding_started = 1;
+        } else {
+            if (padding_started) {
+                return 0;
+            }
+            if (b32table[p[i]] == 64) {
+                return 0;
+            }
+        }
+        i++;
+    }
+    return i; 
+}
+
+// Crockford Base32 alphabet without I, L, O, U
+static const char alpha_b32_crockford[] = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+
+static const uint8_t crockford_table[256] = {
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 32, 64, 33,  
+     0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 64, 64, 64, 34, 64, 64,  
+    64, 10, 11, 12, 13, 14, 15, 16, 17,  1, 18, 19,  1, 20, 21, 0,  
+    22, 23, 24, 25, 26, 64, 27, 28, 29, 30, 31, 64, 64, 64, 64, 36,  
+    64, 10, 11, 12, 13, 14, 15, 16, 17,  1, 18, 19,  1, 20, 21, 0,  
+    22, 23, 24, 25, 26, 64, 27, 28, 29, 30, 31, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64
+};
+
+int b32crockford_encode(char *dest, const char *src, int len, int with_checksum) {
+    uint32_t buffer = 0;
+    int bitsLeft = 0;
+    int j = 0;
+    uint32_t total = 0;
+    for (int i = 0; i < len; ++i) {
+        buffer = (buffer << 8) | (unsigned char)src[i];
+        bitsLeft += 8;
+        total = (total * 256 + (unsigned char)src[i]) % 37;
+        while (bitsLeft >= 5) {
+            dest[j++] = alpha_b32_crockford[(buffer >> (bitsLeft - 5)) & 0x1F];
+            bitsLeft -= 5;
+        }
+    }
+    if (bitsLeft > 0) {
+        dest[j++] = alpha_b32_crockford[(buffer << (5 - bitsLeft)) & 0x1F];
+    }
+    if (with_checksum) {
+        static const char checksum_chars[] = "0123456789ABCDEFGHJKMNPQRSTVWXYZ*~$=U";  
+		dest[j++] = checksum_chars[total % 37];
+    }
+    dest[j] = '\0';
+    return j;
+}
+
+int b32crockford_decode(char *dest, const char *src, int with_checksum) {
+    int len = strlen(src);
+    if (with_checksum && len > 0) len--; 
+    uint32_t buffer = 0;
+    int bitsLeft = 0;
+    int j = 0;
+    for (int i = 0; i < len; ++i) {
+        uint8_t val = crockford_table[(uint8_t)src[i]];
+        if (val == 64) return -1; 
+        buffer = (buffer << 5) | val;
+        bitsLeft += 5;
+        if (bitsLeft >= 8) {
+            bitsLeft -= 8;
+            dest[j++] = (buffer >> bitsLeft) & 0xFF;
+        }
+    }
+    return j;
+}
+
+int is_base32_crockford(const char *in, int with_checksum) {
+    if (!in) return 0;
+    const unsigned char *p = (const unsigned char *)in;
+    int i = 0;
+    int len = strlen(in);
+    int check_len = with_checksum ? len - 1 : len;
+    for (i = 0; i < check_len; i++) {
+        if (crockford_table[p[i]] == 255)
+            return 0;
+    }
+    if (with_checksum && len > 0) {
+        const char *cs = strchr("0123456789ABCDEFGHJKMNPQRSTVWXYZ*~$=U", toupper(in[len - 1]));
+        if (!cs) return 0;
+    }
+    return len;
 }
 
 /**

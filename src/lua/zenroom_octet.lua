@@ -104,5 +104,13 @@ function base58(data)
    elseif iszen(t) then return data:octet():base58() -- any zenroom type to octet
    end
 end
+function base32(data)
+    local t = type(data)
+    if(t == "string") then
+       if O.is_base32(data) then return O.from_base32(data)
+       else return O.from_str(data):base32() end
+    elseif iszen(t) then return data:octet():base32() -- any zenroom type to octet
+    end
+end
 
 return octet
