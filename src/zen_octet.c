@@ -1492,15 +1492,16 @@ static int to_base32_crockford(lua_State *L) {
 	char *tmp = malloc(raw_len + 1);
 	if (!tmp) lerror(L, "allocation failed");
 	b32crockford_encode(tmp, o->val, o->len, use_checksum);
-	if (hyphen_pos > 0 && hyphen_pos < raw_len) {
-		char *b = malloc(raw_len + 2); 
+	if (hyphen_pos > 0 && hyphen_pos < strlen(tmp)) {
+		size_t len = strlen(tmp);
+		char *b = malloc(len + 2); 
 		if (!b) {
 			free(tmp);
 			lerror(L, "allocation failed");
 		}
 		memcpy(b, tmp, hyphen_pos);
 		b[hyphen_pos] = '-';
-		strcpy(b + hyphen_pos + 1, tmp + hyphen_pos);
+		strcpy(b + hyphen_pos + 1, tmp + hyphen_pos); 
 		lua_pushstring(L, b);
 		free(b);
 	} else {
