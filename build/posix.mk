@@ -2,6 +2,7 @@
 include build/init.mk
 
 COMPILER ?= gcc
+COMPILER ?= g++
 
 ifdef LINUX
 	system := Linux
@@ -41,6 +42,8 @@ endif
 # activate CCACHE etc.
 include build/plugins.mk
 
+include build/deps.mk
+
 all: deps zenroom zencode-exec
 
 deps: ${BUILD_DEPS}
@@ -66,5 +69,3 @@ libzenroom.dylib: deps ${ZEN_SOURCES}
 	$(info === Building the zenroom shared dynamic library)
 	${zenroom_cc} ${cflags} -shared ${ZEN_SOURCES} -dynamiclib \
 		-o $@ ${ldflags} ${ldadd}
-
-include build/deps.mk

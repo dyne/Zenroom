@@ -20,7 +20,7 @@
 --
 --]]
 
-ES256 = require_once('es256')
+local ES256 = require_once'es256'
 
 local function public_key_f(obj)
 	local res = schema_get(obj, '.')
