@@ -72,16 +72,18 @@ When("trace", function() ZEN:debug_traceback() end)
 Then("trace", function() ZEN:debug_traceback() end)
 
 local function debug_heap_schema()
-    warn(I.inspect(
-             {
-                 a_GIVEN_in = IN,
-                 c_WHEN_ack = ACK,
-                 c_CODEC_ack = CODEC,
-                 c_CACHE_ack = CACHE,
-                 d_THEN_out = OUT
-             },
-       { schema = true }
-   )) -- print only keys without values
+    local _heap <const> = I.inspect({
+        a_CODEC_ack = CODEC,
+        b_GIVEN_in = IN,
+        c_WHEN_ack = ACK,
+        d_THEN_out = OUT
+    },{ schema = true })
+    -- print only keys without values
+    if CONF.debug.format == 'compact' and LOGFMT == 'JSON' then
+        printerr('"J64 HEAP: '..OCTET.from_string(_heap):base64()..'",')
+    else
+        warn(_heap)
+    end
 end
 
 local function debug_heap_dump()
