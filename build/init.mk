@@ -45,11 +45,12 @@ ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
 ldadd += ${pwd}/lib/mlkem/test/build/libmlkem.a
 # ldadd += /usr/local/lib/libmdoc.a
 ldadd += ${pwd}/lib/longfellow-zk/liblongfellow-zk.a
-ldadd += -lzstd -lstdc++ -lcrypto
+ldadd += ${pwd}/lib/zstd/libzstd.a
 
 # ----------------
 # zenroom defaults
 cc := gcc
+cxx := g++
 zenroom_cc := ${cc}
 # defined further below
 # quantum_proof_cc := ${cc}
@@ -98,7 +99,7 @@ mlkem_cc ?= ${cc}
 
 #-----------------
 # longfellow-zk settings
-longfellow_cc ?= ${cc}
-longfellow_cflags ?= -I ${pwd}/src -I.
+longfellow_cxx ?= ${cxx}
+longfellow_cflags ?= -I ${pwd}/src -I. -I../zstd -mpclmul
 
 # }}}
