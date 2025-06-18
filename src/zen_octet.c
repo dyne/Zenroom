@@ -3433,6 +3433,7 @@ int luaopen_octet(lua_State *L) {
 		{"to_hex"   , to_hex},
 		{"to_base64", to_base64},
 		{"to_base32", to_base32},
+		{"to_base32_crockford", to_base32_crockford},
 		{"to_url64",  to_url64},
 		{"to_base58", to_base58},
 		{"to_string", to_string},

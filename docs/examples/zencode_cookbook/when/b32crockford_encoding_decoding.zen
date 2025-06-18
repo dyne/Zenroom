@@ -1,0 +1,14 @@
+Given I have a 'base32crockford' named 'my_b32_crockford'
+Given I have a 'base32crockford_cs' named 'my_b32_crockford_cs'
+Given I have a 'hex' named 'my_hex'
+Given I have a 'string' named 'my_string'
+
+When I copy 'my_b32_crockford' as 'string' to 'dest_string'  
+When I copy 'my_b32_crockford_cs' as 'hex' to 'dest_hex'  
+When I copy 'my_hex' as 'base32crockford' to 'dest_b32_crockford' 
+When I copy 'my_string' as 'base32crockford_cs' to 'dest_b32_crockford_cs'   
+
+Then print 'dest_string'
+Then print 'dest_b32_crockford'
+Then print 'dest_b32_crockford_cs'
+Then print 'dest_hex'
