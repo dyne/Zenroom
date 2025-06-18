@@ -345,6 +345,10 @@
        return f_factory_encoder('mnemonic', O.from_mnemonic, nil)
     elseif what =='b32' or what =='base32' then
        return f_factory_encoder('base32', O.from_base32, O.is_base32)
+    elseif what =='b32crockford' or what =='base32crockford' then
+       return f_factory_encoder('base32crockford', function(s) return O.from_base32_crockford(s, false) end, O.is_base32_crockford)
+    elseif what =='b32crockford_cs' or what =='base32crockford_cs' then
+      return f_factory_encoder('base32crockford_cs', function(s) return O.from_base32_crockford(s, true) end, O.is_base32_crockford)
     elseif what =='uuid' then
       return f_factory_encoder('uuid', O.from_uuid, nil)
     elseif what == 'int' or what == 'integer' then -- aka BIG
@@ -426,6 +430,8 @@ end
     url64 = O.to_url64,
     base58 = O.to_base58,
     base32 = O.to_base32,
+    base32crockford = function(octet) return O.to_base32_crockford(octet, false, 0) end,
+    base32crockford_cs = function(octet) return O.to_base32_crockford(octet, true, 0) end,
     binary = O.to_bin,
     bin = O.to_bin,
     mnemonic = O.to_mnemonic,

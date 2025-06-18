@@ -541,3 +541,32 @@ EOF
     save_output b32_encoding_decoding.out.json
     assert_output '{"dest_b32":"ABH//w==","dest_b64":"AAI777Y=","dest_hex":"AAI777Y="}'
 }
+
+@test "base32crockford: encoding and decoding also with checksum" {
+    cat <<EOF | save_asset b32crockford_encoding_decoding.data.json
+{ 
+    "my_b32_crockford":"ADT74TBECWG78VS0CNQ66VV4CM",
+    "my_b32_crockford_cs":"ADT74TBECWG78VS0CNQ66VV4CMS",
+    "my_hex":"537472696e6720746f20656e636f6465",
+    "my_string":"String to encode"
+}
+EOF
+    cat <<EOF | zexe b32crockford_encoding_decoding.zen b32crockford_encoding_decoding.data.json
+Given I have a 'base32crockford' named 'my_b32_crockford'
+Given I have a 'base32crockford_cs' named 'my_b32_crockford_cs'
+Given I have a 'hex' named 'my_hex'
+Given I have a 'string' named 'my_string'
+
+When I copy 'my_b32_crockford' as 'string' to 'dest_string'  
+When I copy 'my_b32_crockford_cs' as 'hex' to 'dest_hex'  
+When I copy 'my_hex' as 'base32crockford' to 'dest_b32_crockford' 
+When I copy 'my_string' as 'base32crockford_cs' to 'dest_b32_crockford_cs'   
+
+Then print 'dest_string'
+Then print 'dest_b32_crockford'
+Then print 'dest_b32_crockford_cs'
+Then print 'dest_hex'
+EOF
+    save_output b32crockford_encoding_decoding.out.json
+    assert_output '{"dest_b32_crockford":"ADT74TBECWG78VS0CNQ66VV4CM","dest_b32_crockford_cs":"ADT74TBECWG78VS0CNQ66VV4CMS","dest_hex":"537472696e6720746f20656e636f6465","dest_string":"String to encode"}'
+}
