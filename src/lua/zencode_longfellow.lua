@@ -18,7 +18,9 @@
 --
 --]]
 
-local LF = require_once'crypto_longfellow'
+local LF <const> = require_once'crypto_longfellow'
+local P256 <const> = require_once'es256'
+local OUTCONV <const> = CONF.output.encoding.fun
 
 local function import_longfellow_circuit_f(circ)
     if not isdictionary(circ) then
@@ -33,18 +35,19 @@ local function import_longfellow_circuit_f(circ)
     if not circ.version then
         error("longfellow circuit is missing version number",2)
     end
-    if not circ.attributes then
+    if not circ.num_attributes then
         error("longfellow circuit is missing number of attributes",2)
     end
     if not circ.zkspec then
         error("longfellow circuit is missing zkspec version",2)
     end
     return({
-            compressed = schema_get(compressed,'.'),
-            system =     O.from_string(system),
-            version =    BIG.from_decimal(version),
-            attributes = BIG.from_decimal(num_attributes),
-            zkspec =     BIG.from_decimal(num)
+            compressed = schema_get(circ.compressed,'.'),
+            system =     O.from_string(circ.system),
+            version =    BIG.from_decimal(circ.version),
+            num_attributes = BIG.from_decimal(circ.num_attributes),
+            zkspec =     BIG.from_decimal(circ.zkspec),
+            hash       = O.from_hex(circ.hash)
            })
 end
 
@@ -61,7 +64,7 @@ local function export_longfellow_circuit_f(circ)
     if not circ.version then
         error("longfellow circuit is missing version number",2)
     end
-    if not circ.attributes then
+    if not circ.num_attributes then
         error("longfellow circuit is missing number of attributes",2)
     end
     if not circ.zkspec then
@@ -69,52 +72,101 @@ local function export_longfellow_circuit_f(circ)
     end
     local conv <const> = CONF.output.encoding.fun
     return({
-            compressed = conv(compressed),
-            system =     O.to_string(system),
-            version =    tonumber(BIG.to_decimal(version)),
-            attributes = tonumber(BIG.to_decimal(num_attributes)),
-            zkspec =     tonumber(BIG.to_decimal(num))
+            compressed = conv(circ.compressed),
+            system =     O.to_string(circ.system),
+            version =    tonumber(BIG.to_decimal(circ.version)),
+            num_attributes = tonumber(BIG.to_decimal(circ.num_attributes)),
+            zkspec =     tonumber(BIG.to_decimal(circ.zkspec)),
+            hash =       O.to_hex(sha256(circ.compressed))
            })
+end
+
+local function import_longfellow_attributes_f(val)
+    local res = { }
+    for _,v in ipairs(val) do
+        local imp = { id = O.from_string(v.id) }
+              imp.value  = O.from_string(v.value)
+        table.insert(res, imp)
+    end
+    return res
+end
+
+local function import_longfellow_proof_f(val)
+    return({ zk = schema_get(val, 'zk'),
+             zkspec = schema_get(val, 'zkspec', INT.new) })
+end
+local function export_longfellow_proof_f(val)
+    return({ zk = OUTCONV(val.zk),
+             zkspec = tonumber(BIG.to_decimal(val.zkspec)) })
 end
 
 ZEN:add_schema(
     {
-        longfellow_circuit = {
-            import = import_longfellow_circuit_f,
-            expirt = export_longfellow_circuit_f
+        attributes = {
+            import = import_longfellow_attributes_f,
+            export = export_longfellow_attributes_f,
         },
-        longfellow_proof = {
+        circuit = {
+            import = import_longfellow_circuit_f,
+            export = export_longfellow_circuit_f
+        },
+        proof = {
             import = import_longfellow_proof_f,
             export = export_longfellow_proof_f
         }
     }
 )
 
-When("create longfellow circuit id ''", function(circuit_id)
+When("create circuit id ''", function(circuit_id)
          empty'longfellow circuit'
          local id <const> = tonumber(circuit_id)
-         ACK.longfellow_circuit = LF.generate_circuit(id)
-         new_codec'longfellow circuit'
+         ACK.circuit = LF.generate_circuit(id)
+         new_codec'circuit'
 end)
 
-When("create longfellow proof of attributes '' in mdoc ''",
+When("create proof of attributes '' in mdoc ''",
      function(attributes, mdoc)
          empty'longfellow proof'
-         local circ <const> = have'longfellow circuit'
-         local trans <const> = have'longfellow transcript'
-         local pk <const> = have'public key'
-         local attr <const> = have(attributes)
-         zencode_assert(isdictionary(attr),
-                        "attributes are not a dictionary")
-         local mdoc <const> = have(mdoc)
-         local pkx <const> = pk:sub(1,32)
-         local pky <const> = pk:sub(33,64)
-         local now <const> =
+         local circ <const> = have'circuit'
+         local trans <const> = have'transcript'
+         local now <const> = mayhave'now' or
              O.from_string(os.date("!%Y-%m-%dT%H:%M:%SZ",
                                    os.time(os.date("!*t"))))
-         ACK.longfellow_proof = LF.mdoc_prover
-         (circuit, mdoc, pkx, pky, trans,
+         local pk <const> = have'public key'
+         zencode_assert(#pk==64, "public key length is not 64 bytes (P256)")
+         zencode_assert(P256.pubcheck(pk), "invalid P256 public key")
+         local attr <const> = have(attributes)
+         local document <const> = have(mdoc)
+         local pkx <const> = pk:sub(1,32)
+         local pky <const> = pk:sub(33,64)
+         I.warn({pkx=pkx,pky=pky,attr=attr})
+         ACK.proof = LF.mdoc_prover
+         (circ, document, pkx, pky, trans,
           deepmap(O.to_string, attr), now)
+         zencode_assert(ACK.proof,"Longfellow proof generation error")
          -- TODO: convert all proof contents to octets?
-         new_codec'longfellow proof'
+         new_codec'proof'
+end)
+
+
+When("verify proof of attributes '' in proof ''",
+     function(attributes, proof)
+         local circ <const> = have'circuit'
+         local trans <const> = have'transcript'
+         local now <const> = mayhave'now' or
+             O.from_string(os.date("!%Y-%m-%dT%H:%M:%SZ",
+                                   os.time(os.date("!*t"))))
+         local pk <const> = have'public key'
+         zencode_assert(#pk==64, "public key length is not 64 bytes (P256)")
+         zencode_assert(P256.pubcheck(pk), "invalid P256 public key")
+         local attr <const> = have(attributes)
+         local zk <const> = have(proof)
+         local pkx <const> = pk:sub(1,32)
+         local pky <const> = pk:sub(33,64)
+         zencode_assert( LF.mdoc_verifier
+                         (circ, zk, pkx, pky, trans,
+                          deepmap(O.to_string, attr), now,
+                          O.from_string('org.iso.18013.5.1.mDL')),
+                         "Error in longfellow ZK verification: invalid proof")
+         -- TODO: convert all proof contents to octets?
 end)
