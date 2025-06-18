@@ -58,7 +58,7 @@ quantum-proof:
 
 longfellow-zk:
 	$(info -- Building Longfellow Zero-Knowledge lib)
-	CC="${longfellow_cc:-$cc}" \
+	CXX="${longfellow_cxx}" \
 	LD=${ld} \
 	AR=${ar} \
 	RANLIB=${ranlib} \

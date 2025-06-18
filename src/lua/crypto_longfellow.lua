@@ -47,12 +47,13 @@ longfellow.generate_circuit = function(num)
 
     local res <const> = { compressed = compressed,
                           system =     O.from_string(system),
-                          version =    FLOAT.new(version),
-                          attributes = FLOAT.new(num_attributes),
+                          version =    INT.new(version),
+                          num_attributes = INT.new(num_attributes),
                           hash =       O.from_hex(circuit_hash),
-                          zkspec =     BIG.new(num) }
+                          zkspec =     INT.new(num) }
     if not res.compressed then
-        error("Longfellow-ZK generate circuit failure",2)
+        return nil
+        -- error("Longfellow-ZK generate circuit failure",2)
     end
     return res
 end
@@ -99,7 +100,10 @@ longfellow.mdoc_prover = function(circuit, mdoc,
                            mdoc, pkx, pky, trans,
                            attr, nownow, circuit.zkspec:int()),
       zkspec     = circuit.zkspec }
-    if not proof.zk then return nil end
+    if not proof.zk then
+        return nil
+        -- error("Error in longfellow mdoc_prove C call",2)
+    end
     return proof
 end
 
@@ -125,7 +129,7 @@ longfellow.mdoc_verifier = function(circuit, proof,
         or not attr[1].id or not attr[1].value then
         error("Invalid attributes table",2)
     elseif type(doc_type) ~= 'zenroom.octet' then
-        error("Invalid doctype not an octet:"..type(doc_type))
+        error("Invalid doctype not an octet: "..type(doc_type))
     end
     for _,v in ipairs(attr) do
         if not v.id then error("Missing id in attributes table",2) end
