@@ -71,6 +71,19 @@ Given("trace", function() ZEN:debug_traceback() end)
 When("trace", function() ZEN:debug_traceback() end)
 Then("trace", function() ZEN:debug_traceback() end)
 
+local function debug_heap_schema()
+    warn(I.inspect(
+             {
+                 a_GIVEN_in = IN,
+                 c_WHEN_ack = ACK,
+                 c_CODEC_ack = CODEC,
+                 c_CACHE_ack = CACHE,
+                 d_THEN_out = OUT
+             },
+       { schema = true }
+   )) -- print only keys without values
+end
+
 local function debug_heap_dump()
    local ack <const> = ACK
    local keyring = ack.keyring
@@ -92,25 +105,18 @@ local function debug_heap_dump()
    else -- CONF.debug.format == 'log'
 	  -- ack.keyring = '(hidden)'
 	  if keyring then
-		 I.schema({KEYRING = keyring})
-		 ack.keyring = '(hidden)'
+          I.inspect({KEYRING = ack.keyring}, { schema = true })
+          ack.keyring = '(hidden)'
 	  end
-	  I.warn({a_GIVEN_in = IN,
-			  c_WHEN_ack = ack,
-			  c_CODEC_ack = CODEC,
-			  c_CACHE_ack = CACHE,
-			  d_THEN_out = OUT})
+      I.inspect({a_GIVEN_in = IN,
+                 c_WHEN_ack = ack,
+                 c_CODEC_ack = CODEC,
+                 c_CACHE_ack = CACHE,
+                 d_THEN_out = OUT},
+          { schema = true }
+      )
    end
    ack.keyring = keyring
-end
-
-local function debug_heap_schema()
-   I.schema({SCHEMA = {a_GIVEN_in = IN,
-					   c_WHEN_ack = ACK,
-					   c_CODEC_ack = CODEC,
-					   c_CACHE_ack = CACHE,
-					   d_THEN_out = OUT}})
-   -- print only keys without values
 end
 
 
@@ -129,16 +135,16 @@ zencode_assert = function(condition, errmsg)
 end
 
 function ZEN:debug()
-	debug_heap_dump()
+	debug_heap_schema()
 	ZEN:debug_traceback()
 end
 
 -- local function debug_obj_dump()
 -- local function debug_obj_schema()
 
-Given("debug", function() ZEN:debug() end)
-When("debug",  function() ZEN:debug() end)
-Then("debug",  function() ZEN:debug() end)
+Given("debug", function() debug_heap_schema() ZEN:debug_traceback() end)
+When("debug",  function() debug_heap_schema() ZEN:debug_traceback() end)
+Then("debug",  function() debug_heap_schema() ZEN:debug_traceback() end)
 
 Given("schema", function() debug_heap_schema() end)
 When("schema",  function() debug_heap_schema() end)

@@ -368,12 +368,23 @@ function Inspector:putValue(v, exp)
 	 self:putTable(v, exporter)
   elseif iszen(tv) then
 	 if tv == "zenroom.octet" then
-		if #v == 0 then self:puts("octet[0] (null)")
-		else self:puts("octet[" .. #v .. "] " .. exporter(v))
-		end
+         local len <const> = #v
+         if len == 0 then
+             self:puts("octet[0] (null)")
+         elseif self.schema and ( len == 16 or len == 32 or len == 64 ) then
+             self:puts("octet[" .. #v .. "] " .. O.to_hex(v))
+         elseif self.schema and len < 31 then
+             self:puts("octet[" .. #v .. "] " .. O.to_string(v))
+         else
+             self:puts("octet[" .. #v .. "] " .. exporter(v))
+         end
 	 elseif tv == "zenroom.big" then
-		local i = v:octet()
-		self:puts("int[" .. #i.. "] " .. exporter(v, "integer"))
+         local i <const> = v:octet()
+         if self.schema and #i < 8 then
+             self:puts("dec[" .. #i .."] ".. BIG.to_decimal(v))
+         else
+             self:puts("int[" .. #i.. "] " .. exporter(v, "integer"))
+         end
 	 elseif tv == "zenroom.float" then
 		self:puts("float " .. exporter(v, "float")) -- exporter(i))
 	 elseif tv == "zenroom.time" then
@@ -426,6 +437,7 @@ function inspect.inspect(root, options)
   end
 
   local inspector = setmetatable({
+    schema           = schema,
     depth            = depth,
     level            = 0,
     buffer           = {},
