@@ -104,22 +104,22 @@ ZEN:add_schema(
 
 IfWhen("verify did document named ''", function(src)
     local document = have(src)
-    zencode_assert(document.proof and document.proof.jws,
-        'The object has no signature: ' .. src)
+    if not zencode_assert(document.proof and document.proof.jws,
+        'The object has no signature: ' .. src) then return end
     W3C.verify_jws_from_proof(src, document)
 end)
 
 IfWhen("verify did document named '' is signed by ''", function(src, signer_did_doc)
     local document = have(src)
     local signer_document = have(signer_did_doc)
-    zencode_assert(document.proof and document.proof.jws,
-        'The object has no signature: ' .. src)
-    zencode_assert(document.proof.verificationMethod,
-        'The proof inside '..src..' has no verificationMethod')
+    if not zencode_assert(document.proof and document.proof.jws,
+        'The object has no signature: ' .. src) then return end
+    if not zencode_assert(document.proof.verificationMethod,
+        'The proof inside '..src..' has no verificationMethod') then return end
     local data = strtok(O.to_string(document.proof.verificationMethod), '#' )
     local signer_id = O.from_string(data[1])
-    zencode_assert(signer_id == signer_document.id,
-                'The signer id in proof is different from the one in '..signer_did_doc)
+    if not zencode_assert(signer_id == signer_document.id,
+                'The signer id in proof is different from the one in '..signer_did_doc) then return end
     local i = 1
     local pk = nil
     repeat
@@ -129,7 +129,7 @@ IfWhen("verify did document named '' is signed by ''", function(src, signer_did_
         end
         i = i+1
     until( ( not signer_document.verificationMethod[i] ) or pk )
-    zencode_assert(pk , data[2]..' used to sign '..src..' not found in the did document '..signer_did_doc)
+    if not zencode_assert(pk , data[2]..' used to sign '..src..' not found in the did document '..signer_did_doc) then return end
     W3C.verify_jws_from_proof(src, document, pk)
 end)
 

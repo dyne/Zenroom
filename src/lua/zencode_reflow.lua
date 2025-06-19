@@ -393,20 +393,20 @@ IfWhen("verify material passport of ''",function(obj)
 	  local src = have(obj)
 	  local mp = have'material passport'
 	  local pub = have'issuer public key'
-	  zencode_assert(mp.seal.fingerprints,
-				 "No fingerprints found in material passport seal: "..obj)
+	  if not zencode_assert(mp.seal.fingerprints,
+				 "No fingerprints found in material passport seal: "..obj) then return end
 	  local UID = _makeuid(src)
-	  zencode_assert(UID == mp.seal.identity,
-				 "Object does not match material passport identity (needs track and trace?): "..obj)
+	  if not zencode_assert(UID == mp.seal.identity,
+				 "Object does not match material passport identity (needs track and trace?): "..obj) then return end
 	  local SID = UID + _aggregate_array(mp.seal.fingerprints)
-	  zencode_assert(
+	  if not zencode_assert(
 		 ECP2.miller(mp.seal.verifier, SID)
 		 ==
 		 ECP2.miller(G2, mp.seal.SM),
-		 "Object matches, but seal is invalid: "..obj)
-	  zencode_assert(
+		 "Object matches, but seal is invalid: "..obj) then return end
+	  if not zencode_assert(
 		 ABC.verify_cred_uid(pub, mp.proof, mp.zeta, SID),
-		 "Object and seal are valid, but proof of issuance fails: "..obj)
+		 "Object and seal are valid, but proof of issuance fails: "..obj) then return end
 end)
 
 -- Complex check calculates UID of object and compares to seal, if

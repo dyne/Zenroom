@@ -195,13 +195,13 @@ end)
 
 IfWhen("verify petition signature is not a duplicate", function()
     if luatype(ACK.petition.list) == 'table' then
-        zencode_assert(
+        if not zencode_assert(
             (not array_contains(
                 ACK.petition.list,
                 ACK.petition_signature.uid_signature
             )),
             'Duplicate petition signature detected'
-        )
+        ) then return end
     else
         ACK.petition.list = {}
     end

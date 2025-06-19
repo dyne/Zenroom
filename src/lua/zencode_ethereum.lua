@@ -465,8 +465,8 @@ end)
 local function _verify_address_signature_array(add_sig, doc, fun)
     local hmsg = _prepare_msg_f(doc)
     local address_signature, address_signature_codec = have(add_sig)
-    zencode_assert(address_signature_codec.schema, "The ethereum address signature pair array is not a schema")
-    zencode_assert(address_signature_codec.zentype == "a", "The ethereum address signature pair array is not an array")
+    if not zencode_assert(address_signature_codec.schema, "The ethereum address signature pair array is not a schema") then return end
+    if not zencode_assert(address_signature_codec.zentype == "a", "The ethereum address signature pair array is not an array") then return end
     return fun(address_signature, hmsg)
 end
 
@@ -474,8 +474,8 @@ IfWhen("verify ethereum address signature pair array '' of ''", function(add_sig
     _verify_address_signature_array(add_sig, doc,
         function(address_signature_pair, hmsg)
             for _, v in pairs(address_signature_pair) do
-                zencode_assert(ETH.verify_signature_from_address(v.signature, v.address, fif(v.signature.v:parity(), 0, 1), hmsg),
-                    'The ethereum signature by '..ETH.checksum_encode(v.address)..' is not authentic')
+                if not zencode_assert(ETH.verify_signature_from_address(v.signature, v.address, fif(v.signature.v:parity(), 0, 1), hmsg),
+                    'The ethereum signature by '..ETH.checksum_encode(v.address)..' is not authentic') then return end
             end
         end
     )
