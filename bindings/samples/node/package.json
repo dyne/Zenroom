@@ -1,0 +1,18 @@
+{
+  "name": "node",
+  "version": "1.0.0",
+  "description": "Sample node project using the local npm build of nodejs",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "author": "Puria 💣 Nafisi Azizi <puria@dyne.org>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dyne/zenroom/issues"
+  },
+  "homepage": "https://github.com/dyne/zenroom#readme",
+  "dependencies": {
+    "zenroom": "file:../../javascript"
+  }
+}
