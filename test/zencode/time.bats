@@ -222,3 +222,28 @@ EOF
     save_output sum_of_date_table.out.json
     assert_output --regexp '\{"sum_of_date_table_and_timestamp":\{"day":6,"hour":[0-9]+,"min":0,"month":2,"sec":0,"year":1971\},"sum_of_date_tables":\{"day":25,"hour":0,"min":0,"month":1,"sec":200,"year":25001\},"sum_of_timestamp":1712324515,"sum_of_timestamp_and_another_date_table":\{"day":25,"hour":[0-9]+,"min":41,"month":4,"sec":255,"year":27024\},"sum_of_timestamp_and_date_table":\{"day":6,"hour":[0-9]+,"min":0,"month":2,"sec":0,"year":1971\}\}'
 }
+
+@test "utc time" {
+    cat <<EOF | save_asset utc_time.data.json
+{
+    "fixed_timestamp": "1745568429"
+}
+EOF
+    cat <<EOF | zexe utc_time.zen utc_time.data.json
+Given I have a 'time' named 'fixed_timestamp'
+
+When I create the UTC timestamp of now
+and I rename 'UTC_timestamp' to 'utc_now'
+When I create the UTC timestamp of 'fixed_timestamp'
+and I rename 'UTC_timestamp' to 'utc_fixed'
+
+When I create timestamp of UTC timestamp 'utc_fixed'
+When I verify 'fixed_timestamp' is equal to 'timestamp'
+
+Then print the 'utc_now'
+and print the 'utc_fixed'
+and print the 'timestamp'
+EOF
+    save_output utc_time.out.json
+    assert_output --regexp '\{"timestamp":1745568429,"utc_fixed":"2025-04-25T08:07:09Z","utc_now":"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z"\}'
+}
