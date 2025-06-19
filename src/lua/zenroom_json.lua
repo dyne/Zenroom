@@ -63,6 +63,60 @@ J.encode = function(tab,enc,whitespace)
       )
 end
 
+
+-- generate a serialized url64(JSON) encoded octet string of any object
+-- @param any the object to serialize
+-- @return octet which should be printed as string
+J.serialize = function(any)
+    if luatype(any) == 'table' then
+        return (
+            O.from_string
+            (O.to_url64
+             (O.from_string
+              (JSON.encode
+               (deepmap
+                (function(o)
+                        local t <const> = type(o)
+                        if t == 'boolean' then
+                            return(o)
+                        elseif iszen(t) then
+                            return O.to_string(o:octet())
+                        else
+                            return(tostring(o))
+                        end
+                end,any))
+              )
+             )
+            )
+        )
+    else
+        if not iszen(type(any)) then
+            error("JSON serialize called with wrong argument type: "
+                  ..type(any),2)
+        end
+        if #any == 0 then return O.from_string('') end
+        return O.from_string(O.to_url64(any:octet()))
+    end
+end
+
+-- generate a de-serialized object from
+-- any serialized octet
+-- @param jws the object to serialize
+-- @return object which can be also a table
+J.deserialize = function(any)
+    if not iszen(type(any)) then
+        error("JOSE deserialize called with wrong argument type: "
+              ..type(any),2)
+    end
+    local u <const> = O.from_url64(O.to_string(any))
+    local s <const> = O.to_string(u)
+    if JSON.validate(s) then
+        return JSON.decode(s)
+    else
+        return(u)
+    end
+end
+
 J.auto = function(obj)
    local t = type(obj)
    if t == 'table' then
