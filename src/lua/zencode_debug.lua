@@ -127,7 +127,7 @@ zencode_assert = function(condition, errmsg)
     if ZEN.branch_condition then
         ZEN.branch_valid = ZEN.branch_valid - 1
         table.insert(traceback, errmsg)
-        return true
+        return false
     end
     -- ZEN.debug() -- prints all data in memory
     -- table.insert(traceback, '[!] '..errmsg)

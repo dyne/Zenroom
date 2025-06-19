@@ -186,7 +186,7 @@ local function _is_found_in(ele_name, obj_name)
         local el = O.to_string(ele)
         return obj[el] and (luatype(obj[el]) == 'table' or tonumber(obj[el]) or #obj[el] ~= 0)
     else
-        zencode_assert(false, "Invalid container type: "..obj.." is "..obj_codec)
+        zencode_assert(false, "Invalid container type: "..obj.." is "..obj_codec.zentype)
     end
 end
 
@@ -202,13 +202,13 @@ end)
 
 IfWhen("verify '' is found in '' at least '' times", function(ele_name, obj_name, times)
     local ele, ele_codec = have(ele_name)
-    zencode_assert( luatype(ele) ~= 'table',
-                "Invalid use of table in object comparison: "..ele_name)
+    if not zencode_assert( luatype(ele) ~= 'table',
+                "Invalid use of table in object comparison: "..ele_name) then return end
     local num = have(times)
     local obj, obj_codec = have(obj_name)
-    zencode_assert( luatype(obj) == 'table',
-                "Not a table: "..obj_name)
-    zencode_assert( obj_codec.zentype == 'a', "Not an array: "..obj_name)
+    if not zencode_assert( luatype(obj) == 'table',
+                "Not a table: "..obj_name) then return end
+    if not zencode_assert( obj_codec.zentype == 'a', "Not an array: "..obj_name) then return end
     local constructor = fif(type(num) == "zenroom.big", BIG.new, F.new)
     local found = constructor(0)
     local one = constructor(1)

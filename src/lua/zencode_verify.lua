@@ -164,11 +164,11 @@ local function _check_compare_length(obj_name, num_name)
     local obj_ztype = obj_codec.zentype
     local num, num_codec = have(num_name)
     local num_enc = num_codec.encoding
-    zencode_assert(obj_ztype == "a" or obj_ztype == "d" or
+    if not zencode_assert(obj_ztype == "a" or obj_ztype == "d" or
         (obj_ztype == "e" and obj_codec.encoding == "string"),
-        "Can not compute the length for type "..obj_ztype)
-    zencode_assert(num_enc == "integer" or num_enc == "float",
-        "Can not compare the length of "..obj_name.." with number of type "..num_enc)
+        "Can not compute the length for type "..obj_ztype) then return end
+    if not zencode_assert(num_enc == "integer" or num_enc == "float",
+        "Can not compare the length of "..obj_name.." with number of type "..num_enc) then return end
     local obj_len_enc = { ["integer"] = BIG.new, ["float"] = F.new }
     local obj_len
     if obj_ztype == "a" or obj_ztype == "e" then
@@ -276,22 +276,22 @@ end
 
 IfWhen("verify '' is a email",function(name)
     local A = ACK[name]
-    zencode_assert(A, 'Object not found: ' .. name)
+    if not zencode_assert(A, 'Object not found: ' .. name) then return end
     local res, err = validemail(O.to_string(A))
     zencode_assert(res, err)
 end)
 
 IfWhen("verify '' contains a list of emails",function(name)
     local A = ACK[name]
-    zencode_assert(A, 'Object not found: ' .. name)
-    zencode_assert(
+    if not zencode_assert(A, 'Object not found: ' .. name) then return end
+    if not zencode_assert(
       luatype(A) == 'table',
       'Object is not a container: ' .. name
-    )
+    ) then return end
     local res, err
     for k, v in pairs(A) do
       res, err = validemail(O.to_string(v))
-      zencode_assert(res, (err or 'OK') .. ' on email: ' .. O.to_string(v))
+      if not zencode_assert(res, (err or 'OK') .. ' on email: ' .. O.to_string(v)) then return end
     end
 end)
 
@@ -304,10 +304,10 @@ IfWhen("verify elements in '' are equal", function(obj_name)
             first = v
             first_idx = k
         else
-            zencode_assert(_eq(first, v),
+            if not zencode_assert(_eq(first, v),
                 "Verification failed: the elements in position "
                 .. k .. " and " .. first_idx
-                .. "are not equal")
+                .. "are not equal") then return end
         end
     end
 end)
@@ -344,14 +344,14 @@ local function start_with_from(str, sub, start)
       sub_codec.encoding = 'string'
       sub_codec.zentype = 'e'
    end
-   zencode_assert(str_codec.zentype == 'e' and
+   if not zencode_assert(str_codec.zentype == 'e' and
 	      sub_codec.zentype == 'e',
-	      "Verification failed: one or both inputs are not elements")
-   zencode_assert(str_codec.encoding == 'string' and
+	      "Verification failed: one or both inputs are not elements") then return end
+   if not zencode_assert(str_codec.encoding == 'string' and
 	      sub_codec.encoding == 'string',
-	      "Verification failed: one or both inputs are not strings")
-   zencode_assert(#sub_oct <= #str_oct,
-	      "Verification failed: substring is longer than the string")
+	      "Verification failed: one or both inputs are not strings") then return end
+   if not zencode_assert(#sub_oct <= #str_oct,
+	      "Verification failed: substring is longer than the string") then return end
    local s = str_oct:string()
    local b = sub_oct:string()
    start = start or (#s-#b+1)

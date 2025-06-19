@@ -330,9 +330,9 @@ end)
 IfWhen("verify disclosures '' are found in signed selective disclosure ''", function(lis, ssd_name)
     local ssd = have(ssd_name)
     local disclosed_keys, c_disclosed_keys = have(lis)
-    zencode_assert(c_disclosed_keys.zentype ~= 'd', "Disclosures must be a single value or an array")
+    if not zencode_assert(c_disclosed_keys.zentype ~= 'd', "Disclosures must be a single value or an array") then return end
     if c_disclosed_keys.zentype == 'e' then
-        zencode_assert(type(disclosed_keys) == 'zenroom.octet', "Disclosures must a single value or an array")
+        if not zencode_assert(type(disclosed_keys) == 'zenroom.octet', "Disclosures must a single value or an array") then return end
         disclosed_keys = {disclosed_keys}
     end
     for _,k in pairs(disclosed_keys) do
@@ -343,7 +343,7 @@ IfWhen("verify disclosures '' are found in signed selective disclosure ''", func
                 break
             end
         end
-        zencode_assert(found, "Disclosure key not found: "..k:octet():string())
+        if not zencode_assert(found, "Disclosure key not found: "..k:octet():string()) then return end
     end
 end)
 
@@ -367,36 +367,36 @@ IfWhen("verify signed selective disclosure '' issued by '' is valid", function(o
     -- TODO: break due to non-alphabetic sorting of string dictionary
     -- elements when re-encoded to JSON. The payload may be a nested
     -- dictionary at 3 or more depth.
-    zencode_assert(
+    if not zencode_assert(
         SD_JWT.check_mandatory_claim_names(jwt.payload),
-        "The JWT payload does not contain the mandatory claims")
+        "The JWT payload does not contain the mandatory claims") then return end
 
     -- Process the Disclosures and embedded digests in the Issuersigned JWT and compare the value with the digests calculated
     -- Disclosures are an array and sorting is kept so this validation passes.
-    zencode_assert(
+    if not zencode_assert(
         SD_JWT.verify_sd_fields(jwt.payload, disclosures),
-        "The disclosure is not valid")
+        "The disclosure is not valid") then return end
 
-    zencode_assert(os, 'Could not find os to check timestamps')
+    if not zencode_assert(os, 'Could not find os to check timestamps') then return end
     local time_now = TIME.new(os.time())
     if(jwt.payload.iat) then
-        zencode_assert(jwt.payload.iat < time_now, 'The iat claim is not valid')
+        if not zencode_assert(jwt.payload.iat < time_now, 'The iat claim is not valid') then return end
     end
     if(jwt.payload.exp) then
-        zencode_assert(jwt.payload.exp > time_now, 'The exp claim is not valid')
+        if not zencode_assert(jwt.payload.exp > time_now, 'The exp claim is not valid') then return end
     end
     if(jwt.payload.nbf) then
-        zencode_assert(jwt.payload.nbf < time_now, 'The nbf claim is not valid')
+        if not zencode_assert(jwt.payload.nbf < time_now, 'The nbf claim is not valid') then return end
     end
 
-    zencode_assert(
+    if not zencode_assert(
         -- TODO?: Validate the Issuer and that the signing key belongs
         -- to this Issuer
         crypto.verify(iss_pk, O.from_string(b64header .. "." .. b64payload),
                       jwt.signature)
         ,
         "The issuer signature is not valid"
-    )
+    ) then return end
 
     --TODO: check that issued at is not expired
 end)

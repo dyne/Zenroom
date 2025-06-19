@@ -818,3 +818,22 @@ EOF
     save_output nested_1.out.json
     assert_output '{"arr":[],"res":[]}'
 }
+
+@test "false branching exit after first failing zencode assert" {
+    cat << EOF | save_asset false_branching_exit.data.json
+{
+	"dict": {
+		"hello": "world"
+	}
+}
+EOF
+    cat << EOF | zexe false_branching_exit.zen false_branching_exit.data.json
+Given I have a 'string dictionary' named 'dict'
+If I verify 'dict' has prefix 'ey'
+Then print the string 'dict has a prefix'
+EndIf
+Then print the string 'dict has no prefix'
+EOF
+    save_output 'false_branching_exit.out.json'
+    assert_output '{"output":["dict_has_no_prefix"]}'
+}

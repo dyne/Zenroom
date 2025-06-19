@@ -151,8 +151,8 @@ end)
 
 IfWhen("verify '' is a json", function(src)
     local obj, obj_c = have(src)
-    zencode_assert(obj_c.zentype == 'e', "Encoded JSON is not an element: "..src)
-    zencode_assert(obj_c.encoding == 'string', "Encoded JSON is not an string: "..src)
+    if not zencode_assert(obj_c.zentype == 'e', "Encoded JSON is not an element: "..src) then return end
+    if not zencode_assert(obj_c.encoding == 'string', "Encoded JSON is not an string: "..src) then return end
     zencode_assert(JSON.validate(O.to_string(obj)), "Invalid JSON object: "..src)
 end)
 
