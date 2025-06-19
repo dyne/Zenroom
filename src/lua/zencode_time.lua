@@ -93,3 +93,36 @@ When("create date table of timestamp ''", function(t)
     ACK.date_table = import_date_table(os.date("*t", tonumber(timestamp)))
     new_codec('date_table', { zentype = 'e', encoding = 'complex', schema = 'date_table'})
 end)
+
+local function _UTC_timestamp(t_name)
+    zencode_assert(os, 'Could not find os')
+    local t = tonumber((t_name and have(t_name)) or os.time(os.date("!*t")))
+    if t_name and CODEC[t_name] and CODEC[t_name].encoding ~= 'time' then
+        error('Invalid time encoding: ' .. timestamp_codec.encoding, 2)
+    end
+    ACK.UTC_timestamp = O.from_string(os.date("!%Y-%m-%dT%H:%M:%SZ", t))
+    new_codec('UTC_timestamp', { zentype = 'e', encoding = 'string'})
+end
+
+When("create UTC timestamp of now", _UTC_timestamp)
+When("create UTC timestamp of ''", _UTC_timestamp)
+
+When("create timestamp of UTC timestamp ''", function(t)
+    zencode_assert(os, 'Could not find os')
+    local utc_timestamp, utc_timestamp_codec = have(t)
+    zencode_assert(utc_timestamp_codec.encoding == 'string',
+        'Invalid UTC timestamp encoding: ' .. utc_timestamp_codec.encoding)
+    local year, month, day, hour, min, sec = utc_timestamp:string():match("(%d+)%-(%d+)%-(%d+)T(%d+):(%d+):(%d+)Z")
+    local utc_table = {
+        year = tonumber(year),
+        month = tonumber(month),
+        day = tonumber(day),
+        hour = tonumber(hour),
+        min = tonumber(min),
+        sec = tonumber(sec),
+        isdst = false
+    }
+    local offset = math.floor(os.difftime(os.time(), os.time(os.date("!*t"))))
+    ACK.timestamp = TIME.new(os.time(utc_table) + offset)
+    new_codec('timestamp', { zentype = 'e', encoding = 'time'})
+end)
