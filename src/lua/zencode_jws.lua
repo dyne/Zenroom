@@ -133,7 +133,7 @@ end)
 local function _verify_jws(n_payload, n_jws)
     local jws_enc <const> = have(n_jws or 'jws')
     local payload <const> = have(n_payload)
-    local pser    <const> = JOSE.serialize(payload)
+    local pser    <const> = JSON.serialize(payload)
     local jws     <const> = JOSE.parse_jws(jws_enc)
     local crypto  <const> = CRYPTO.load(jws.header.alg)
     -- the payload is passed as argument so we assume this to

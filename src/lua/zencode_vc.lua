@@ -102,14 +102,14 @@ IfWhen("verify verifiable credential named ''", function(src)
     document.proof = nil
     local jws <const> = JOSE.parse_jws(proof.jws)
     if jws.payload then
-        zencode_assert(JOSE.serialize(document) == jws.payload_enc,
+        zencode_assert(JSON.serialize(document) == jws.payload_enc,
                        "The JWS proof contains a different payload")
     end
     local crypto  <const> = CRYPTO.load(jws.header.alg)
     local pk = mayhave('jws_public_key')
     if not pk then pk = have(crypto.keyname..'_public_key') end
     local to_be_verified <const> =
-        jws.header_enc..O.from_string('.')..JOSE.serialize(document)
+        jws.header_enc..O.from_string('.')..JSON.serialize(document)
     zencode_assert(crypto.verify(pk, to_be_verified, jws.signature),
                    'Invalid verifiable credential signature of: '..src)
 end)
