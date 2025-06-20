@@ -74,12 +74,12 @@ end)
 
 When("create jws header for '' signature with public key", function(algo_name)
          local crypto <const> = CRYPTO.load(algo_name)
-         local pk = mayhave(crypto.IANA..'_public_key')
-         if not pk then pk = mayhave(crypto.keyname..'_public_key') end
-         if not pk then pk = mayhave(algo_name..'_public_key') end
-         zencode_assert(pk,'Public key not found for: '..algo_name)
          empty'jws_header'
          ACK.jws_header = { alg = O.from_string(crypto.IANA) }
+         local jwk = JOSE.create_jwk(crypto.IANA)
+         jwk.x = O.from_string(jwk.x:to_url64())
+         jwk.y = O.from_string(jwk.y:to_url64())
+         ACK.jws_header.jwk = jwk
          -- TODO: generate UID
          new_codec('jws_header', { zentype = 'd', encoding = 'string' })
 end)
