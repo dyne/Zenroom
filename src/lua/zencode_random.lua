@@ -87,6 +87,11 @@ end)
 When("create random of '' bytes", function(n)
     _create_random('random', _get_bytes(n))
 end)
+When("create random uuid v4", function() 
+    empty'uuid'
+    ACK.uuid = O.from_string(OCTET.random(16):to_uuid())
+    new_codec('uuid', { zentype = 'e',  encoding = 'string'})
+end)
 
 When(
     deprecated(
