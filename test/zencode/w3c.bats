@@ -118,7 +118,7 @@ Scenario 'ecdh': (required)
 Given that I am 'Authority'
 Given I have my 'keyring'
 Given I have a 'string dictionary' named 'simple'
-When I create the jws header for es256k signature
+When I create the jws header for 'es256k' signature
 When I create jws detached signature of header 'jws header' and payload 'simple'
 Then print the 'jws detached signature'
 and print the 'simple'
@@ -274,7 +274,7 @@ Given that I am 'Authority'
 Given I have my 'keyring'
 Given I have a 'string dictionary' named 'did document'
 
-When I create jws header for secp256k1 signature
+When I create jws header for 'secp256k1' signature
 When I create the jws detached signature of header 'jws header' and payload 'did document'
 When I create the 'string dictionary' named 'proof'
 When I move 'jws detached signature' to 'jws' in 'proof'
@@ -819,14 +819,14 @@ Scenario 'w3c': jws
 Given I have a 'string dictionary' named 'payload'
 Given I have a 'keyring'
 
-When I create jws header for es256 signature with public key
+When I create jws header for 'es256' signature with public key
 When I create jws signature of header 'jws header' and payload 'payload'
 
 Then print the 'jws signature'
 and print the 'jws header'
 EOF
     save_output jws_header_with_pk.json
-    assert_output '{"jws_header":{"alg":"ES256","jwk":{"crv":"P-256","kty":"EC","x":"LzOheBTJ7wIcII4MWkzoETuGroDn9ihIGEeVSbByUig","y":"O5jtuuAveJwSKjOnFOz2uTavhoi3fom3oz1538GxFeg"}},"jws_signature":"eyJhbGciOiJFUzI1NiIsImp3ayI6eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6Ikx6T2hlQlRKN3dJY0lJNE1Xa3pvRVR1R3JvRG45aWhJR0VlVlNiQnlVaWciLCJ5IjoiTzVqdHV1QXZlSndTS2pPbkZPejJ1VGF2aG9pM2ZvbTNvejE1MzhHeEZlZyJ9fQ.eyJodHRwOi8vZXhhbXBsZS5jb20vaXNfcm9vdCI6dHJ1ZSwiaXNzIjoiam9lIn0.gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39saxXORooFUl7iHYvEu_SU-IjKDbeDde7n7QG5hxOziTVUQ"}'
+    assert_output '{"jws_header":{"alg":"ES256","jwk":{"alg":"ES256","crv":"P-256","key_ops":["verify"],"kty":"EC","x":"LzOheBTJ7wIcII4MWkzoETuGroDn9ihIGEeVSbByUig","y":"O5jtuuAveJwSKjOnFOz2uTavhoi3fom3oz1538GxFeg"}},"jws_signature":"eyJhbGciOiJFUzI1NiIsImp3ayI6eyJhbGciOiJFUzI1NiIsImNydiI6IlAtMjU2Iiwia2V5X29wcyI6WyJ2ZXJpZnkiXSwia3R5IjoiRUMiLCJ4IjoiTHpPaGVCVEo3d0ljSUk0TVdrem9FVHVHcm9EbjlpaElHRWVWU2JCeVVpZyIsInkiOiJPNWp0dXVBdmVKd1NLak9uRk96MnVUYXZob2kzZm9tM296MTUzOEd4RmVnIn19.eyJodHRwOi8vZXhhbXBsZS5jb20vaXNfcm9vdCI6dHJ1ZSwiaXNzIjoiam9lIn0.gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39saxdCFHU9ZuUVTBdSluhD8JK4Tb22mRKZBOQkNmp5bjpbg"}'
 
     cat <<EOF | zexe verify_jws_header_with_pk.zen jws_header_with_pk.json
 Scenario 'w3c': jws
