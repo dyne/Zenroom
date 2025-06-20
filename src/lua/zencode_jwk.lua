@@ -56,13 +56,14 @@ end
 
 local function export_jwk(obj)
     local key = { }
+    if obj.d   then key.d =   O.to_string(obj.d) end
     if obj.kty then key.kty = O.to_string(obj.kty) end
     if obj.crv then key.crv = O.to_string(obj.crv) end
-    if obj.x   then key.x =   O.to_url64(obj.x) end
-    if obj.y   then key.y =   O.to_url64(obj.y) end
+    if obj.x   then key.x =   O.to_string(obj.x) end
+    if obj.y   then key.y =   O.to_string(obj.y) end
     if obj.use then key.use = O.to_string(obj.use) end
     if obj.alg then key.alg = O.to_string(obj.alg) end
-    if obj.kid then key.kid = O.to_url64(obj.kid) end
+    if obj.kid then key.kid = O.to_string(obj.kid) end
     return key
 end
 
