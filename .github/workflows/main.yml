@@ -243,7 +243,7 @@ jobs:
     if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_JS') && github.event_name == 'pull_request'"
     strategy:
       matrix:
-        node-version: [20.18.0]
+        node-version: [ lts/*, current ]
     env:
       EM_VERSION: 4.0.1
     steps:
@@ -328,7 +328,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
       - run: yarn
       - name: Tag release
         id: tag_release
@@ -356,7 +356,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: 20.18.0
+          node-version: 22.x
       - uses: mymindstorm/setup-emsdk@v14
         with:
           version: ${{ env.EM_VERSION }}
@@ -586,7 +586,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
       - uses: actions/download-artifact@v4
         with:
