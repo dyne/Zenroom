@@ -126,6 +126,21 @@ Then print 'address_to_base32' as 'base32'
 }
 ```
 
+## base32 crockford
+Base32 Crockford is a human-friendly encoding using digits 0–9 and letters A–Z (excluding I, L, O, and U), designed for readability, error tolerance, and optional checksum support. The checksum uses 37 possible characters: 0–9 and A–Z (excluding I, L, and O) plus *, ~, $, =.
+
+```
+When I rename the 'address' to 'address_to_base32crockford'
+
+Then print 'address_to_base32crockford' as 'base32crockford'
+```
+
+```json
+{
+   "address_to_base32crockford": "ADT74TBECWG78VS0CNQ66VV4CM"
+}
+```
+
 ## uuid
 A UUID (Universally Unique Identifier) is a 16-byte identifier used to uniquely label information in computer systems. It is typically represented as a 32-character hexadecimal string, divided into five groups separated by hyphens (e.g., 123e4567-e89b-12d3-a456-426614174000).
 
