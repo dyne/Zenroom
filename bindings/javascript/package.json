@@ -61,7 +61,7 @@
     "README.md"
   ],
   "devDependencies": {
-    "@ava/typescript": "^5.0.0",
+    "@ava/typescript": "^6.0.0",
     "@istanbuljs/nyc-config-typescript": "^1.0.2",
     "@types/node": "^22.5.4",
     "ava": "^6.1.3",
