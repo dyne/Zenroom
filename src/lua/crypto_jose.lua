@@ -29,7 +29,7 @@ function jose.create_jwk(alg, sk_flag, pk)
         if pub then
             table.insert(key_ops,O.from_string'verify')
             -- custom call since we know has .public_xy
-            jwk.x, jwk.y = crypto.lib.public_xy(pub)
+            jwk.x, jwk.y = crypto.class.public_xy(pub)
         end
         if sk_flag then
             table.insert(key_ops,O.from_string'sign')
@@ -60,7 +60,7 @@ function jose.create_jwk(alg, sk_flag, pk)
         if pub then
             table.insert(key_ops,O.from_string'verify')
             -- custom call since we know has .public_xy
-            jwk.x, jwk.y = crypto.lib.public_xy(pub)
+            jwk.x, jwk.y = crypto.class.public_xy(pub)
         end
         if sk_flag then
             table.insert(key_ops,O.from_string'sign')
@@ -184,8 +184,8 @@ end
 -- @return pk and crypto algo
 function jose.jwk_to_pk(header, crypto)
     if header.typ ~= 'dpop+jwt' then
-        warn("JWS type is not 'dpop+jwt': "..header.typ)
-        return nil
+        warn("JWS type is not 'dpop+jwt': "..(header.typ or 'nil'))
+        -- return nil
     end
     if not header.jwk then
         warn("JWS header doesn't contains a jwk")
