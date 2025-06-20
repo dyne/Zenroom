@@ -3,9 +3,9 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 [tools]
-emsdk = "4"
+emsdk = "4.0.10"
 meson = "1"
 ninja = "latest"
-node = "22"
+node = "22.16.0"
 rust = "stable"
 yarn = "1"
