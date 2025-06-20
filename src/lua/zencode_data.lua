@@ -636,7 +636,7 @@ function apply_encoding(src_name, src_enc, dest_enc)
   local encoded_src
   -- accpet also schemas as encoding
   if ZEN.schemas[uscore(src_enc)] then
-      if uscore(src_enc) ~= src_codec.schema then
+      if src_codec.schema and uscore(src_enc) ~= src_codec.schema then
           error("Source schema: "..src_codec.schema.." does not match encoding "..src_enc)
       end
       if f_src_enc == default_export_f then
