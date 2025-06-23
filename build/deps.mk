@@ -77,6 +77,15 @@ ed25519-donna:
 	LDFLAGS="${ldflags}" \
 	$(MAKE) -C ${pwd}/lib/ed25519-donna
 
+zstd:
+	echo "-- Building ZSTD compression lib"
+	CC="${zstd_cc}" \
+	AR=${ar} \
+	CFLAGS="${cflags}" \
+	LDFLAGS="${ldflags}" \
+	$(MAKE) -C ${pwd}/lib/zstd libzstd.a \
+	  ZSTD_LIB_DICTBUILDER=0 ZSTD_LEGACY_SUPPORT=0
+
 # multilevel build flags:
 # MLKEM_K=2 corresponds to ML-KEM-512
 # MLKEM_K=3 corresponds to ML-KEM-768

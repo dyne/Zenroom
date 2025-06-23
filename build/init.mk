@@ -21,7 +21,7 @@ ZEN_INCLUDES += -Isrc -Ilib/lua54/src -Ilib -I/usr/local/include	\
 -Ilib/ed25519-donna -Wall -Wextra
 
 BUILD_DEPS ?= apply-patches milagro lua54 embed-lua mlkem	\
-				quantum-proof ed25519-donna longfellow-zk
+				quantum-proof ed25519-donna longfellow-zk zstd
 
 pwd := $(shell pwd)
 mil := ${pwd}/build/milagro
@@ -101,5 +101,9 @@ mlkem_cc ?= ${cc}
 # longfellow-zk settings
 longfellow_cxx ?= ${cxx}
 longfellow_cflags ?= -I ${pwd}/src -I. -I../zstd -mpclmul
+
+#-----------------
+# zstd settings
+zstd_cc ?= ${cc}
 
 # }}}
