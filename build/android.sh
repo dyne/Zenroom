@@ -32,22 +32,23 @@ build() {
 		abi="x86_64"
 	}
 	# make clean
-	mkdir -p zenroom-android/${1}
+	mkdir -p zenroom-android/jni/${abi}
 	make -f build/android.mk all \
 		 COMPILER=${target}-linux-${platform}-clang \
 		 COMPILER_CXX=${target}-linux-${platform}-clang++ \
 		 longfellow_cflags="${cflags}" \
-		 ANDROID_ABI="${abi}" ANDROID_TARGET="${1}" \
+		 ANDROID_ABI="${abi}" ANDROID_TARGET="${target}" \
 		 ANDROID_PLATFORM="${platform}" \
 		 RELEASE=1
-
-	cp -v libzenroom.so zenroom-android/${1}/
+	cp -v libzenroom.so zenroom-android/jni/${abi}/
 }
 
-#build x86_64
-#build aarch64
+build x86_64
+build aarch64
 build i686
-#build armv7a
+build armv7a
 
+cp -v bindings/java/classes.jar zenroom-android/
+cd zenroom-android && zip -r -9 ../zenroom-android.aar .
 >&3 echo "Build done!"
 >&3 tree zenroom-android

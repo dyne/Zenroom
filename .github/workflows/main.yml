@@ -462,13 +462,12 @@ jobs:
       - name: Build C source code with Makefile
         run: |
           ./build/android.sh
-          zip -r zenroom-android.zip zenroom-android
       - name: Upload artifacts for Android
         uses: actions/upload-artifact@v4
         with:
           name: release-android
           path: |
-            zenroom-android.zip
+            zenroom-android.aar
 
   file-changes:
     name: "🗃️  Check file changes"
