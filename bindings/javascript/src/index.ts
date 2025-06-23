@@ -208,16 +208,12 @@ export const zencode_valid_input = async (
   });
 };
 
-export const introspect = async (zencode, props?: ZenroomProps) => {
+export const introspect = async (zencode: string, props?: ZenroomProps) => {
   try {
     const { result } = await zencode_valid_input(zencode, props);
     return JSON.parse(result).CODEC;
-  } catch ({ logs }) {
-    const heap = JSON.parse(logs)
-      .filter((l) => l.startsWith("J64 HEAP:"))
-      .map((l) => l.replace("J64 HEAP:", "").trim())[0];
-
-    return JSON.parse(Buffer.from(heap, "base64").toString("utf-8"));
+  } catch {
+    return null;
   }
 };
 

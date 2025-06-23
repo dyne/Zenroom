@@ -309,6 +309,14 @@ Then print codec`
   });
 });
 
+test("Check the introspection 2", async (t) => {
+  const r = await introspect(
+    `Given I have a 'string dictionary' named 'request' in 'dict'
+Then print the 'request'`
+  );
+  t.is(r, null);
+});
+
 test("Check the introspection with data", async (t) => {
   const data = `{
   "myFirstObject":{
