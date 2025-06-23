@@ -43,11 +43,11 @@ cd -
 # create test data
 echo "${0}: Creating test zencode ${ZENCODE_SCRIPT}..."
 cat << EOF | tee ${ZENCODE_SCRIPT}
-rule check version 1.0.0
-Scenario 'simple': Create the keypair
+# rule check version 5
+Scenario 'ecdh': Create the ecdh key
 Given that I am known as 'Alice'
-When I create the keypair
-Then print my data
+When I create the ecdh key
+Then print my 'keyring'
 EOF
 # run test
 Z="java -classpath ${ZEN_JAVA_CLASSPATH} -Djava.library.path=${ZEN_JAVA_LIB_PATH} ${ZENCODE_TEST_CLASS} ${ZENCODE_SCRIPT}"
