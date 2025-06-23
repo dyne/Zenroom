@@ -22,13 +22,14 @@ build() {
 		abi="arm64-v8a"
 	}
 	[ "$1" == "i686" ] && {
+		cflags="$cflags -mpclmul"
 		abi="x86"
 	}
 	[ "$1" == "x86_64" ] && {
 		cflags="$cflags -mpclmul"
 		abi="x86_64"
 	}
-	# make clean
+	make clean
 	mkdir -p zenroom-android/${1}
 	make -f build/posix.mk libzenroom.so LIBRARY=1 \
 		 longfellow_cflags="${cflags}" \
@@ -40,8 +41,8 @@ build() {
 }
 
 #build x86_64
-build aarch64
-#build i686
+#build aarch64
+build i686
 #build armv7a
 
 >&3 echo "Build done!"
