@@ -11,10 +11,12 @@ command -v x86_64-linux-android21-clang > /dev/null || {
 }
 
 build() {
-	local andro=android21
-	cflags="-I ${pwd}/src -I. -I../zstd -DWITHOUT_OPENSSL"
+	local target="$1"
+	local platform="android21"
+	local cflags="-I ${pwd}/src -I. -I../zstd -DWITHOUT_OPENSSL -DJNI=1"
+	local abi=""
 	[ "$1" == "armv7a" ] && {
-		andro=androideabi21
+		platform="androideabi21"
 		abi="armeabi-v7a"
 	}
 	[ "$1" == "aarch64" ] && {
@@ -29,14 +31,16 @@ build() {
 		cflags="$cflags -mpclmul"
 		abi="x86_64"
 	}
-	make clean
+	# make clean
 	mkdir -p zenroom-android/${1}
-	make -f build/posix.mk libzenroom.so LIBRARY=1 \
+	make -f build/android.mk all \
+		 COMPILER=${target}-linux-${platform}-clang \
+		 COMPILER_CXX=${target}-linux-${platform}-clang++ \
 		 longfellow_cflags="${cflags}" \
-		 COMPILER=${1}-linux-${andro}-clang \
-		 COMPILER_CXX=${1}-linux-${andro}-clang++ \
-		 ANDROID_ABI=${abi} APP_STL=c++_static \
+		 ANDROID_ABI="${abi}" ANDROID_TARGET="${1}" \
+		 ANDROID_PLATFORM="${platform}" \
 		 RELEASE=1
+
 	cp -v libzenroom.so zenroom-android/${1}/
 }
 
