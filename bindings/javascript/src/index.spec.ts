@@ -314,7 +314,13 @@ test("Check the introspection 2", async (t) => {
     `Given I have a 'string dictionary' named 'request' in 'dict'
 Then print the 'request'`
   );
-  t.is(r, null);
+  const res = `{
+    a_CODEC_ack = {},
+    b_GIVEN_in = {},
+    c_WHEN_ack = {},
+    d_THEN_out = {}
+}`
+  t.is(r, res);
 });
 
 test("Check the introspection with data", async (t) => {

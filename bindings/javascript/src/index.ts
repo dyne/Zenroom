@@ -212,8 +212,18 @@ export const introspect = async (zencode: string, props?: ZenroomProps) => {
   try {
     const { result } = await zencode_valid_input(zencode, props);
     return JSON.parse(result).CODEC;
-  } catch {
-    return null;
+  } catch (e) {
+    let err: string;
+    if (e.logs) {
+      const heap = JSON.parse(e.logs)
+        .filter((l: string) => l.startsWith("J64 HEAP:"))
+        .map((l: string) => l.replace("J64 HEAP:", "").trim())[0];
+      if (heap) {
+        return Buffer.from(heap, "base64").toString("utf-8");
+      }
+      err = e.logs;
+    }
+    throw new Error("Failed to introspect zencode: " + (err ?? e.msg) );
   }
 };
 
