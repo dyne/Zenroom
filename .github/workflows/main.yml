@@ -461,24 +461,7 @@ jobs:
           echo "PATH=$PATH" >> $GITHUB_ENV
       - name: Build C source code with Makefile
         run: |
-          make clean
-          mkdir -p zenroom-android/aarch64
-          make posix-lib COMPILER=aarch64-linux-android21-clang RELEASE=1 CCACHE=1
-          mv libzenroom.so zenroom-android/aarch64/
-          make clean
-          mkdir -p zenroom-android/x86_64
-          make posix-lib COMPILER=x86_64-linux-android21-clang RELEASE=1 CCACHE=1
-          mv libzenroom.so zenroom-android/x86_64
-          make clean
-          mkdir -p zenroom-android/i686
-          make posix-lib COMPILER=i686-linux-android21-clang RELEASE=1 CCACHE=1
-          mv libzenroom.so zenroom-android/i686
-          make clean
-          mkdir -p zenroom-android/armv7a
-          make posix-lib COMPILER=armv7a-linux-androideabi21-clang RELEASE=1 CCACHE=1
-          mv libzenroom.so zenroom-android/armv7a
-      - name: Pack build results
-        run: |
+          ./build/android.sh
           zip -r zenroom-android.zip zenroom-android
       - name: Upload artifacts for Android
         uses: actions/upload-artifact@v4
