@@ -77,7 +77,7 @@ J.serialize = function(any)
                (deepmap
                 (function(o)
                         local t <const> = type(o)
-                        if t == 'boolean' then
+                        if t == 'boolean' or t == 'zenroom.time' then
                             return(o)
                         elseif iszen(t) then
                             return O.to_string(o:octet())
