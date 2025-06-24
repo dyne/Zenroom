@@ -22,10 +22,10 @@ public class testZenroom {
     public static String context = "";
 
     public static void main(String[] args) {
-	String script = "";
+		String script = "";
         script = new String (readAllBytesJava7(args[0]));
         String result = (new Zencode()).execute(script, conf, keys, data, extra, context);
-  	System.out.printf("testZenroom result: %s", result);
+		System.out.printf("testZenroom result: %s", result);
     }
 
     private static String readAllBytesJava7(String filePath) {

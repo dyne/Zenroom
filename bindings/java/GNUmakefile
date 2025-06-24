@@ -16,4 +16,4 @@ all:
 
 test:
 	javac testZenroom.java
-	java -Djava.library.path=../../zenroom-android/x86_64 testZenroom
+	java -Djava.library.path=../../ testZenroom keygen.zen

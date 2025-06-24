@@ -35,8 +35,6 @@ build() {
 	rm -f bindings/java/zenroom_jni.o
 	mkdir -p zenroom-android/jni/${abi}
 	make -f build/android.mk all \
-		 COMPILER=${target}-linux-${platform}-clang \
-		 COMPILER_CXX=${target}-linux-${platform}-clang++ \
 		 longfellow_cflags="${cflags}" \
 		 ANDROID_ABI="${abi}" ANDROID_TARGET="${target}" \
 		 ANDROID_PLATFORM="${platform}" \
@@ -49,7 +47,15 @@ build aarch64
 build i686
 build armv7a
 
+#VERSION=`git describe --tags | cut -d- -f1`
 cp -v bindings/java/classes.jar zenroom-android/
+cat << EOF > zenroom-android/AndroidManifest.xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="dyne.zenroom">
+    <application />
+</manifest>
+EOF
 cd zenroom-android && zip -r -9 ../zenroom-android.aar .; cd -
 >&2 echo "=== Android build done:"
 >&2 ls -l zenroom-android.aar

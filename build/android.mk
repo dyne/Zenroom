@@ -1,12 +1,8 @@
 ## Initialize build defaults
 include build/init.mk
 
-# # COMPILER := ${ANDROID_TARGET}-linux-${ANDROID_PLATFORM}-clang
-# # COMPILER_CXX := ${ANDROID_TARGET}-linux-${ANDROID_PLATFORM}-clang++
-# cc := ${COMPILER}
-# cxx := ${COMPILER_CXX}
-
-# milagro_cmake_flags += -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake -DCMAKE_ANDROID_NDK=${ANDROID_NDK_HOME} -DANDROID_ABI=${ANDROID_ABI} -DANDROID_PLATFORM=${ANDROID_PLATFORM}
+COMPILER := ${ANDROID_TARGET}-linux-${ANDROID_PLATFORM}-clang
+COMPILER_CXX := ${ANDROID_TARGET}-linux-${ANDROID_PLATFORM}-clang++
 
 system := Linux
 cflags += -fPIC -DLIBRARY -O3 ${cflags_protection} -DWITHOUT_OPENSSL
