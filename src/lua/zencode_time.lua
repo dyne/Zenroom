@@ -94,26 +94,31 @@ When("create date table of timestamp ''", function(t)
     new_codec('date_table', { zentype = 'e', encoding = 'complex', schema = 'date_table'})
 end)
 
-local function _UTC_timestamp(t_name)
+local function _timestamp2UTC(t_name, dest)
     zencode_assert(os, 'Could not find os')
-    local t = tonumber((t_name and have(t_name)) or os.time(os.date("!*t")))
+    local d <const> = dest or 'UTC_timestamp'
+    empty(d)
+    local t <const> = tonumber((t_name and have(t_name)) or os.time(os.date("!*t")))
     if t_name and CODEC[t_name] and CODEC[t_name].encoding ~= 'time' then
         error('Invalid time encoding: ' .. timestamp_codec.encoding, 2)
     end
-    ACK.UTC_timestamp = O.from_string(os.date("!%Y-%m-%dT%H:%M:%SZ", t))
-    new_codec('UTC_timestamp', { zentype = 'e', encoding = 'string'})
+    ACK[d] = O.from_string(os.date("!%Y-%m-%dT%H:%M:%SZ", t))
+    new_codec(d, { zentype = 'e', encoding = 'string'})
 end
 
-When("create UTC timestamp of now", _UTC_timestamp)
-When("create UTC timestamp of ''", _UTC_timestamp)
+When("create UTC timestamp of now", _timestamp2UTC)
+When("create UTC timestamp of ''", _timestamp2UTC)
+When("create ZULU timestamp of now", function() _timestamp2UTC(nil, 'ZULU_timestamp') end)
+When("create ZULU timestamp of ''", function(t_name) _timestamp2UTC(t_name, 'ZULU_timestamp') end)
 
-When("create timestamp of UTC timestamp ''", function(t)
-    zencode_assert(os, 'Could not find os')
-    local utc_timestamp, utc_timestamp_codec = have(t)
-    zencode_assert(utc_timestamp_codec.encoding == 'string',
-        'Invalid UTC timestamp encoding: ' .. utc_timestamp_codec.encoding)
-    local year, month, day, hour, min, sec = utc_timestamp:string():match("(%d+)%-(%d+)%-(%d+)T(%d+):(%d+):(%d+)Z")
-    local utc_table = {
+local function _UTC2timestamp(t_name)
+    if not os then error('Could not find os', 2) end
+    local utc_timestamp, utc_timestamp_codec <const> = have(t_name)
+    if utc_timestamp_codec.encoding ~= 'string' then
+        error('Invalid UTC timestamp encoding: ' .. utc_timestamp_codec.encoding, 2)
+    end
+    local year, month, day, hour, min, sec <const> = utc_timestamp:string():match("(%d+)%-(%d+)%-(%d+)T(%d+):(%d+):(%d+)Z")
+    local utc_table <const> = {
         year = tonumber(year),
         month = tonumber(month),
         day = tonumber(day),
@@ -122,7 +127,10 @@ When("create timestamp of UTC timestamp ''", function(t)
         sec = tonumber(sec),
         isdst = false
     }
-    local offset = math.floor(os.difftime(os.time(), os.time(os.date("!*t"))))
+    local offset <const> = math.floor(os.difftime(os.time(), os.time(os.date("!*t"))))
     ACK.timestamp = TIME.new(os.time(utc_table) + offset)
     new_codec('timestamp', { zentype = 'e', encoding = 'time'})
-end)
+end
+
+When("create timestamp of UTC timestamp ''", _UTC2timestamp)
+When("create timestamp of ZULU timestamp ''", _UTC2timestamp)
