@@ -943,3 +943,27 @@ EOF
     run $ZENROOM_EXECUTABLE -z -a not_bearer_jwt.data.json not_bearer_jwt.zen
     assert_success
 }
+
+@test "timestamp in jws body" {
+    cat <<EOF | zexe jws_timestamp.zen
+Scenario 'w3c': jws
+Scenario 'es256': key
+
+Given nothing
+When I create es256 key
+
+When I create the 'string dictionary' named 'DPoP-payload'
+When I set 'iat' to '1750771160' as 'time'
+When I move 'iat' in 'DPoP-payload'
+
+When I create jws header for 'ES256' signature with public key
+When I set 'typ' to 'dpop+jwt' as 'string'
+When I move 'typ' in 'jws header'
+
+When I create the jws signature of header 'jws header' and payload 'DPoP-payload'
+
+Then print the 'jws signature'
+EOF
+    save_output jws_timestamp.out.json
+    assert_output '{"jws_signature":"eyJhbGciOiJFUzI1NiIsImp3ayI6eyJhbGciOiJFUzI1NiIsImNydiI6IlAtMjU2Iiwia2V5X29wcyI6WyJ2ZXJpZnkiXSwia3R5IjoiRUMiLCJ4IjoiZ3l2S09OWlppRm1UVWJRc2VvSjZLZEFZSlB5Rml4djByTVhMMlQzOXNhdyIsInkiOiJNNGtkeU9QWXpLZi1nb1FMcVVHS21ZV0QxUXYwYmNRU1ByVkhGQzRkVWdvIn0sInR5cCI6ImRwb3Arand0In0.eyJpYXQiOjE3NTA3NzExNjB9.F8sdx5dB7P5vBU-VsHp2UNh2bF0nRq2b81iwThzCBRwKQOk3ULUU_R41y1V19tMCvAjFObPKs-bqdD4xF_zizQ"}'
+}
