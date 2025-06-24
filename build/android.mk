@@ -19,4 +19,4 @@ libzenroom.so: deps ${ZEN_SOURCES} bindings/java/zenroom_jni.o
 	APP_STL=c++_static ANDROID_ABI=${ANDROID_ABI} \
 	${COMPILER} ${cflags} -shared ${ZEN_SOURCES} \
 		bindings/java/zenroom_jni.o \
-		-o $@ ${ldflags} ${ldadd}
+		-o $@ ${ldflags} ${ldadd} -llog
