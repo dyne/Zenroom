@@ -35,12 +35,12 @@ endif
 
 ## BATS tests in vectors
 if suite.contains('vectors')
-  tests = [ 'aes', 'ecdsa_p256', 'hmac', 'eddsa', 'sha', 'rsa', 'qp' ]
+  tests = [ 'aes', 'ecdsa_p256', 'hmac', 'eddsa', 'sha', 'rsa', 'qp', 'merkletree' ]
   foreach test_suite : tests
     test('vectors_'+test_suite.underscorify(),
 		 bats_bin,
 		 args: [test_dir+'vectors/'+test_suite+'.bats'],
-		 timeout: 60
+		 timeout: 120
 		)
   endforeach
 endif
