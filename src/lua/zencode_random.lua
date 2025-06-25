@@ -20,6 +20,7 @@
 --on Saturday, 27th November 2021
 --]]
 
+local uu = require 'crypto_ulid'
 -- utils
 local function _get_bytes(n)
     local num = tonumber(mayhave(n) or n)
@@ -88,9 +89,19 @@ When("create random of '' bytes", function(n)
     _create_random('random', _get_bytes(n))
 end)
 When("create random uuid v4", function() 
-    empty'uuid'
-    ACK.uuid = O.from_string(OCTET.random(16):to_uuid())
-    new_codec('uuid', { zentype = 'e',  encoding = 'string'})
+    empty'uuid_v4'
+    ACK.uuid_v4 = O.from_string(uu.uuid_v4())
+    new_codec('uuid_v4', { zentype = 'e',  encoding = 'string'})
+end)
+When("create random uuid v1", function() 
+    empty'uuid_v1'
+    ACK.uuid_v1 = O.from_string(uu.uuid_v1())
+    new_codec('uuid_v1', { zentype = 'e',  encoding = 'string'})
+end)
+When("create random ulid", function() 
+    empty'ulid'
+    ACK.ulid = O.from_string(uu.ulid())
+    new_codec('ulid', { zentype = 'e',  encoding = 'string'})
 end)
 
 When(
