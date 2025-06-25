@@ -46,6 +46,7 @@ ldadd += ${pwd}/lib/mlkem/test/build/libmlkem.a
 # ldadd += /usr/local/lib/libmdoc.a
 ldadd += ${pwd}/lib/longfellow-zk/liblongfellow-zk.a
 ldadd += ${pwd}/lib/zstd/libzstd.a
+ldadd += -lstdc++
 
 # ----------------
 # zenroom defaults
