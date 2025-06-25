@@ -26,7 +26,7 @@
 // SHA256. For a pseudo-random function, this library uses AES in ECB mode.
 // Finally, this library provides a method to generate random bytes using the
 // openssl library.
-3
+
 #include <cstddef>
 #include <cstdint>
 #include <cstring>

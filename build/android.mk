@@ -16,7 +16,8 @@ deps: ${BUILD_DEPS}
 
 libzenroom.so: deps ${ZEN_SOURCES} bindings/java/zenroom_jni.o
 	$(info === Building the zenroom shared lib for Android)
-	APP_STL=c++_static ANDROID_ABI=${ANDROID_ABI} \
+	APP_STL="c++_shared" ANDROID_ABI=${ANDROID_ABI} \
 	${COMPILER} ${cflags} -shared ${ZEN_SOURCES} \
 		bindings/java/zenroom_jni.o \
-		-o $@ ${ldflags} ${ldadd} -llog -lm
+		-o $@ ${ldflags} ${ldadd} \
+		-llog -lm -frtti -fexceptions -lc++_shared -latomic

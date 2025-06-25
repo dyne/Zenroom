@@ -65,7 +65,7 @@ for i in ${sources[@]}; do
 done
 echo "util/sha256.cc.o    \\" >> sources.mk
 echo "util/aes_ecb.cc.o    \\" >> sources.mk
-echo "util/randombytes.cc.o \\" >> sources.mk
+# echo "util/randombytes.cc.o \\" >> sources.mk
 
 echo >> sources.mk
 

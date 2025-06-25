@@ -10,14 +10,20 @@ command -v x86_64-linux-android21-clang > /dev/null || {
 	exit 1
 }
 
+rm -rf zenroom-android zenroom-android.aar
+
+
 build() {
 	local target="$1"
 	local platform="android21"
 	local cflags="-I ${pwd}/src -I. -I../zstd -DWITHOUT_OPENSSL -DJNI=1"
 	local abi=""
+	local ndk_libs_path="toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/"
+	ndk_libs="$1-linux-android"
 	[ "$1" == "armv7a" ] && {
 		platform="androideabi21"
 		abi="armeabi-v7a"
+		ndk_libs="arm-linux-androideabi"
 	}
 	[ "$1" == "aarch64" ] && {
 		cflags="$cflags -march=armv8-a+crypto"
@@ -40,6 +46,7 @@ build() {
 		 ANDROID_PLATFORM="${platform}" \
 		 RELEASE=1
 	cp -v libzenroom.so zenroom-android/jni/${abi}/
+	cp -v ${ANDROID_NDK_HOME}/${ndk_libs_path}/${ndk_libs}/libc++_shared.so zenroom-android/jni/${abi}/
 }
 
 build x86_64
@@ -60,3 +67,4 @@ cd zenroom-android && zip -r -9 ../zenroom-android.aar .; cd -
 >&2 echo "=== Android build done:"
 >&2 ls -l zenroom-android.aar
 >&2 tree zenroom-android
+>&2 sha256sum zenroom-android.aar
