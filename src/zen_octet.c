@@ -550,6 +550,27 @@ static int lua_is_bin(lua_State *L) {
 	END(1);
 }
 
+/***
+	Check if a Lua string is a valid base32-encoded string.
+	*If the string is valid base32, it pushes true, otherwise it pushes false onto the Lua stack.
+
+	@function OCTET.is_base32
+	@param s a Lua string
+	@return a boolean value
+ */
+static int lua_is_base32(lua_State *L) {
+	BEGIN();
+	const char *s = lua_tostring(L, 1);
+	luaL_argcheck(L, s != NULL, 1, "string expected");
+	int len = is_base32(s);
+	if(!len) {
+		lua_pushboolean(L, 0);
+		func(L, "string is not a valid base32 sequence");
+		END(1); }
+	lua_pushboolean(L, 1);
+	END(1);
+}
+
 // to emulate 128bit counters, de facto truncate integers to 64bit
 typedef struct { uint64_t high, low; } uint128_t;
 
@@ -970,6 +991,72 @@ static int from_base45(lua_State *L) {
 }
 
 /***
+Decode a base32-encoded string into an octet object,
+after checking if the input string is valid base32.
+
+	@function OCTET.from_base32
+	@param str base32-encoded string
+	@return decoded octet object
+ */
+
+ static int from_base32(lua_State *L) {
+    BEGIN();
+    const char *s = lua_tostring(L, 1);
+    luaL_argcheck(L, s != NULL, 1, "base32 string expected");
+    int len_in = is_base32(s);
+    int max_len_out = len_in * 5 / 8;
+    octet *o = o_new(L, max_len_out);
+    int decoded_len = b32decode(o->val, s);
+    if (decoded_len < 0) {
+        lerror(L, "base32 invalid string or empty input");
+        return 0;
+    }
+    o->len = decoded_len;
+    END(1);
+}
+
+/***
+Decode a base32 crockford-encoded string into an octet object,
+after checking if the input string is valid base32 crockford.
+It can also take a second parameter (true) if you want to perform decoding with a checksum. 
+Additionally, before decoding, it removes the '-' characters.
+
+	@function OCTET.from_base32_crockford
+	@param str base32 crockford-encoded string
+	@param boolean by default it is set to false
+	@return decoded octet object
+ */
+static int from_base32_crockford(lua_State *L) {
+	BEGIN();
+	const char *s_in = lua_tostring(L, 1);
+	luaL_argcheck(L, s_in != NULL, 1, "base32 string expected");
+	int use_checksum = lua_toboolean(L, 2);
+	char *s = malloc(strlen(s_in) + 1);
+	if (!s) lerror(L, "allocation failed");
+	int k = 0;
+	for (int i = 0; s_in[i]; i++) {
+		if (s_in[i] != '-') s[k++] = s_in[i];
+	}
+	s[k] = '\0';
+	int len_in = is_base32_crockford(s, use_checksum);
+	if (len_in == 0) {
+		free(s);
+		lerror(L, "invalid Crockford base32 string");
+		return 0;
+	}
+	int max_len_out = len_in * 5 / 8;
+	octet *o = o_new(L, max_len_out);
+	int decoded_len = b32crockford_decode(o->val, s, use_checksum);
+	free(s);
+	if (decoded_len < 0) {
+		lerror(L, "base32 decoding failed");
+		return 0;
+	}
+	o->len = decoded_len;
+	END(1);
+}
+
+/***
 Decode a mnemonic-encoded string into an octet object,
 after checking if the input string is valid mnemonic.
 
@@ -1299,6 +1386,71 @@ static int to_base45 (lua_State *L) {
 	b45encode(b, o->val, o->len);
 	lua_pushstring(L, b);
 	free(b);
+	o_free(L, o);
+	END(1);
+}
+
+/***
+	Encode an octet in base32 notation.
+
+	@function OCTET:base32
+	@return a string representing the octet's contents in base32
+*/
+
+static int to_base32(lua_State *L) {
+	BEGIN();
+	const octet *o = o_arg(L, 1);
+	int newlen = ((o->len + 4) / 5) * 8;
+	char *b = malloc(newlen + 1); // +1 per il '\0'
+	b32encode(b, o->val, o->len);
+	lua_pushstring(L, b);
+	free(b);
+	o_free(L, o);
+	END(1);
+}
+
+/***
+Encode an octet in base32 crockford notation.
+This method can take two optional parameters. The first one concerns the checksum: 
+by default, it is set to false, but if you want encoding with a checksum, simply set it to true.
+The other parameter is a natural number that allows inserting a hyphen at that position in the resulting string after encoding.
+
+	@function OCTET:base32_crockford
+	@param boolean for the checksum (optional)
+	@param hyphen_pos (optional)
+	@return a string representing the octet's contents in base32 crockford
+*/
+static int to_base32_crockford(lua_State *L) {
+	BEGIN();
+	const octet *o = o_arg(L, 1);
+	int use_checksum = lua_toboolean(L, 2);
+	int hyphen_pos = 0;
+	if (!lua_isnoneornil(L, 3)) {
+		luaL_argcheck(L, lua_isinteger(L, 3), 3, "hyphen position must be an integer");
+		hyphen_pos = lua_tointeger(L, 3);
+		if (hyphen_pos < 0) hyphen_pos = 0;
+	}
+	int raw_len = ((o->len + 4) / 5) * 8;
+	if (use_checksum) raw_len += 1;
+	char *tmp = malloc(raw_len + 1);
+	if (!tmp) lerror(L, "allocation failed");
+	b32crockford_encode(tmp, o->val, o->len, use_checksum);
+	if (hyphen_pos > 0 && hyphen_pos < strlen(tmp)) {
+		size_t len = strlen(tmp);
+		char *b = malloc(len + 2); 
+		if (!b) {
+			free(tmp);
+			lerror(L, "allocation failed");
+		}
+		memcpy(b, tmp, hyphen_pos);
+		b[hyphen_pos] = '-';
+		strcpy(b + hyphen_pos + 1, tmp + hyphen_pos); 
+		lua_pushstring(L, b);
+		free(b);
+	} else {
+		lua_pushstring(L, tmp);
+	}
+	free(tmp);
 	o_free(L, o);
 	END(1);
 }
@@ -3198,9 +3350,12 @@ int luaopen_octet(lua_State *L) {
 		{"is_base58", lua_is_base58},
 		{"is_hex", lua_is_hex},
 		{"is_bin", lua_is_bin},
+		{"is_base32", lua_is_base32},
 		{"from_number",from_number},
 		{"from_base64",from_base64},
 		{"from_base45",from_base45},
+		{"from_base32",from_base32},
+		{"from_base32_crockford",from_base32_crockford},
 		{"from_url64",from_url64},
 		{"from_base58",from_base58},
 		{"from_string",from_string},
@@ -3219,6 +3374,8 @@ int luaopen_octet(lua_State *L) {
 		{"bin",   from_bin},
 		{"to_hex"   , to_hex},
 		{"to_base64", to_base64},
+		{"to_base32", to_base32},
+		{"to_base32_crockford", to_base32_crockford},
 		{"to_url64",  to_url64},
 		{"to_base58", to_base58},
 		{"to_string", to_string},
@@ -3274,6 +3431,8 @@ int luaopen_octet(lua_State *L) {
 		{"url64",  to_url64},
 		{"base58", to_base58},
 		{"base45", to_base45},
+		{"base32", to_base32},
+		{"base32crockford", to_base32_crockford},
 		{"string", to_string},
 		{"octet",  to_octet},
 		{"str",    to_string},
@@ -3286,6 +3445,8 @@ int luaopen_octet(lua_State *L) {
 		{"to_url64",  to_url64},
 		{"to_base58", to_base58},
 		{"to_base45", to_base45},
+		{"to_base32", to_base32},
+		{"to_base32_crockford", to_base32_crockford},
 		{"to_string", to_string},
 		{"to_octet",  to_octet},
 		{"to_str",    to_string},
