@@ -2,8 +2,6 @@
  * crypto_hash/sha512/ref/ from http://bench.cr.yp.to/supercop.html
  * by D. J. Bernstein */
 
-#if defined(WITHOUT_OPENSSL)
-
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -350,5 +348,3 @@ void sha256(uint8_t *out, const uint8_t *in, size_t inlen) {
     sha256_inc_init(&state);
     sha256_inc_finalize(out, &state, in, inlen);
 }
-
-#endif // WITHOUT_OPENSSL
