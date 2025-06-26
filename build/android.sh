@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 [ -r ${ANDROID_NDK_HOME}/README.md ] || {
 	>&2 echo "ANDROID_NDK_HOME environment not set"
 	exit 1
@@ -16,7 +18,7 @@ rm -rf zenroom-android zenroom-android.aar
 build() {
 	local target="$1"
 	local platform="android21"
-	local cflags="-I ${pwd}/src -I. -I../zstd -DWITHOUT_OPENSSL -DJNI=1"
+	local cflags=""
 	local abi=""
 	local ndk_libs_path="toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/"
 	ndk_libs="$1-linux-android"
@@ -26,21 +28,21 @@ build() {
 		ndk_libs="arm-linux-androideabi"
 	}
 	[ "$1" == "aarch64" ] && {
-		cflags="$cflags -march=armv8-a+crypto"
+		cflags="-march=armv8-a+crypto"
 		abi="arm64-v8a"
 	}
 	[ "$1" == "i686" ] && {
-		cflags="$cflags -mpclmul"
+		cflags="-mpclmul"
 		abi="x86"
 	}
 	[ "$1" == "x86_64" ] && {
-		cflags="$cflags -mpclmul"
+		cflags="-mpclmul"
 		abi="x86_64"
 	}
 	make clean
 	rm -f bindings/java/zenroom_jni.o
 	mkdir -p zenroom-android/jni/${abi}
-	make -f build/android.mk all \
+	make -f build/android.mk all DEBUG=1 \
 		 longfellow_cflags="${cflags}" \
 		 ANDROID_ABI="${abi}" ANDROID_TARGET="${target}" \
 		 ANDROID_PLATFORM="${platform}" \
