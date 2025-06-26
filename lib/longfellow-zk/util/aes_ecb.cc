@@ -8,8 +8,6 @@
 //   National Institute of Standards and Technology Special
 //   Publication 800-38A 2001 ED
 
-#if defined(WITHOUT_OPENSSL)
-
 #include <string.h>
 #include "util/aes_ecb.h"
 
@@ -230,4 +228,3 @@ void AES_ECB_encrypt(const struct AES_ctx* ctx, uint8_t* buf)
   Cipher((state_t*)buf, ctx->RoundKey);
 }
 
-#endif // WITHOUT_OPENSSL
