@@ -5,7 +5,11 @@ COMPILER := ${ANDROID_TARGET}-linux-${ANDROID_PLATFORM}-clang
 COMPILER_CXX := ${ANDROID_TARGET}-linux-${ANDROID_PLATFORM}-clang++
 
 system := Linux
-cflags += -fPIC -DLIBRARY -O3 ${cflags_protection} -DWITHOUT_OPENSSL
+cflags := -I ${pwd}/src -I. -I../zstd -fPIC -DLIBRARY
+
+ifdef DEBUG
+	cflags += -ggdb -DDEBUG=1 ${ZEN_INCLUDES}
+endif
 
 include build/plugins.mk
 include build/deps.mk
