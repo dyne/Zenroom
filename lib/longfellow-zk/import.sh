@@ -12,7 +12,7 @@
 
 readarray -t sources <<EOF
 
-util/crypto.cc util/log.cc ec/p256.cc algebra/nat.cc
+util/log.cc ec/p256.cc algebra/nat.cc
 circuits/sha/flatsha256_witness.cc circuits/sha/sha256_constants.cc
 circuits/base64/decode_util.cc circuits/mdoc/mdoc_zk.cc
 circuits/mdoc/zk_spec.cc circuits/sha3/sha3_reference.cc
