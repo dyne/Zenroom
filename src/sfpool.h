@@ -71,8 +71,10 @@ static inline void _secure_zero(void *ptr, uint32_t size) {
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__ppc64__) || defined(__LP64__)
 #define ptr_t uint64_t
+#define ptr_align 8
 #else
 #define ptr_t uint32_t
+#define ptr_align 4
 #endif
 #if !defined(__MUSL__)
 static_assert(sizeof(ptr_t) == sizeof(void*), "Unknown memory pointer size detected");
@@ -81,6 +83,11 @@ static inline bool _is_in_pool(sfpool_t *pool, const void *ptr) {
   volatile ptr_t p = (ptr_t)ptr;
   return(p >= (ptr_t)pool->data
          && p < (ptr_t)(pool->data + pool->total_bytes));
+}
+static inline void* memalign(const void* ptr) {
+    register ptr_t mask = ptr_align - 1;
+    ptr_t aligned = (ptr_t)ptr + mask & ~mask;
+    return (void*)aligned;
 }
 
 // Create memory manager
@@ -92,7 +99,7 @@ size_t sfpool_init(sfpool_t *pool, size_t nmemb, size_t blocksize) {
 	pool->secure_lock = false;
   size_t totalsize = nmemb * blocksize;
 #if defined(__EMSCRIPTEN__)
-  pool->data = (uint8_t *)malloc(totalsize);
+  pool->data = (uint8_t *)memalign(malloc(totalsize+4));
 #elif defined(_WIN32)
   pool->data = VirtualAlloc(NULL, totalsize,
                             MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
@@ -258,6 +265,13 @@ void *sfpool_realloc(void *restrict opaque, void *ptr, const size_t size) {
     return NULL;
 #endif
   }
+}
+
+int sfpool_contains(void *restrict opaque, const void *ptr) {
+  sfpool_t *pool = (sfpool_t*)opaque;
+  int res = 0;
+  if( _is_in_pool(pool,ptr) ) res = 1;
+  return res;
 }
 
 // Debug function to print memory manager state
