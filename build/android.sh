@@ -12,8 +12,18 @@ command -v x86_64-linux-android21-clang > /dev/null || {
 	exit 1
 }
 
-rm -rf zenroom-android zenroom-android.aar
+[ "$1" == "" ] || {
+	case "$1" in
+		release)
+			BUILD_MODE="RELEASE=1"
+			;;
+		debug)
+			BUILD_MODE="DEBUG=1"
+			;;
+	esac
+}
 
+rm -rf zenroom-android zenroom-android.aar
 
 build() {
 	local target="$1"
@@ -42,7 +52,7 @@ build() {
 	make clean
 	rm -f bindings/java/zenroom_jni.o
 	mkdir -p zenroom-android/jni/${abi}
-	make -f build/android.mk all DEBUG=1 \
+	make -f build/android.mk all ${BUILD_MODE} \
 		 longfellow_cflags="${cflags}" \
 		 ANDROID_ABI="${abi}" ANDROID_TARGET="${target}" \
 		 ANDROID_PLATFORM="${platform}" \
