@@ -150,7 +150,7 @@ local function _rpn_eval(rpn)
                 res = v
             else
                 -- handle path divided by conf separator in value name
-                res = pick_from_path(v, true)
+                res = read_from_path(v, true)
             end
         end
         insert(values, res)
