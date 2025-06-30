@@ -45,6 +45,9 @@ octet *o_dup(lua_State *L, const octet *o);
 HEDLEY_NON_NULL(1)
 const octet* o_arg(lua_State *L, int n);
 
+HEDLEY_NON_NULL(1,2)
+octet *o_push(lua_State *L, const char *buf, size_t len);
+
 // These functions are internal and not exposed to lua's stack
 // to make an octet visible to lua can be done using o_dup
 HEDLEY_MALLOC
@@ -56,6 +59,7 @@ void o_free(lua_State *L, HEDLEY_NO_ESCAPE const octet *o);
 
 void push_octet_to_hex_string(lua_State *L, octet *o);
 void push_buffer_to_octet(lua_State *L, char *p, size_t len);
+void push_string_to_octet(lua_State *L, char *p);
 
 // all octet based types are forced to use our internal memory pool
 extern void *ZMM;

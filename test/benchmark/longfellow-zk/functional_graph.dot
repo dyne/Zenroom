@@ -1,0 +1,33 @@
+graph G {
+  compound=true
+  start [shape=Mdiamond];
+  circuit [label="CIRCUIT\n(may be stored\nand reused)" shape=cylinder];
+  proof [label="\nPROOF\nto be used\nonly once\n\n" shape=signature]
+  attributes [label="Attributes\n{id:\"age\",\nvalue:\"18\"}" shape=Msquare]
+  pk_prover [label="Issuer's\npublic\nkeys" shape=component]
+  pk_verif [label="Issuer's\npublic\nkeys" shape=component]
+  subgraph cluster_prove {
+    node [style=filled,color=white];
+    MDOC
+    "Transcript\nTimestamp\nzkSpecVer";
+    label = "run_mdoc_prover(...)";
+  }
+  
+  subgraph cluster_verif {
+    node [style=filled,color=white];
+    doctype [label="DocType\nTranscript\nTimestamp\nzkSpecVer"]
+    label = "run_mdoc_verifier(...)";
+  }
+
+  start -- circuit [label=" generate_circuit(v)"];
+  start -- attributes [label=" select disclosure"]
+  circuit -- MDOC [lhead=cluster_prove]
+  attributes -- MDOC [lhead=cluster_prove]
+  pk_prover -- MDOC [lhead=cluster_prove label=" from PKI"]
+  MDOC -- proof [ltail=cluster_prove]
+  proof -- doctype [lhead=cluster_verif]
+  circuit -- doctype [lhead=cluster_verif]
+  attributes -- doctype [lhead=cluster_verif]
+  pk_verif -- doctype [lhead=cluster_verif label=" from PKI"]
+
+}

@@ -2,6 +2,7 @@
 include build/init.mk
 
 COMPILER ?= gcc
+COMPILER ?= g++
 
 ifdef LINUX
 	system := Linux

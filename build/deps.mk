@@ -56,6 +56,16 @@ quantum-proof:
 	LDFLAGS="${ldflags}" \
 	${MAKE} -C ${pwd}/lib/pqclean
 
+longfellow-zk:
+	$(info -- Building Longfellow Zero-Knowledge lib)
+	CXX="${longfellow_cxx}" \
+	LD=${ld} \
+	AR=${ar} \
+	RANLIB=${ranlib} \
+	CFLAGS="${longfellow_cflags} ${cflags}" \
+	LDFLAGS="${ldflags}" \
+	${MAKE} -C ${pwd}/lib/longfellow-zk
+
 check-milagro: milagro
 	CC=${cc} CFLAGS="${cflags}" $(MAKE) -C ${pwd}/lib/milagro-crypto-c test
 
@@ -66,6 +76,15 @@ ed25519-donna:
 	CFLAGS="${cflags}" \
 	LDFLAGS="${ldflags}" \
 	$(MAKE) -C ${pwd}/lib/ed25519-donna
+
+zstd:
+	echo "-- Building ZSTD compression lib"
+	CC="${zstd_cc}" \
+	AR=${ar} \
+	CFLAGS="${cflags}" \
+	LDFLAGS="${ldflags}" \
+	$(MAKE) -C ${pwd}/lib/zstd libzstd.a \
+	  ZSTD_LIB_DICTBUILDER=0 ZSTD_LEGACY_SUPPORT=0
 
 # multilevel build flags:
 # MLKEM_K=2 corresponds to ML-KEM-512
