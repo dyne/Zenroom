@@ -147,12 +147,12 @@ extern int X509_find_validity(octet *c);
 */
 extern int X509_find_subject(octet *c,int *len);
 
-/** @brief
- *
-	@param c an X.509 certificate
-	@return true if self-signed, else false
-*/
-extern int X509_self_signed(octet *c);
+/* /\** @brief */
+/*  * */
+/* 	@param c an X.509 certificate */
+/* 	@return true if self-signed, else false */
+/* *\/ */
+/* extern int X509_self_signed(octet *c); */
 
 /** @brief
  *

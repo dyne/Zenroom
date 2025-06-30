@@ -7,9 +7,11 @@ COMPILER ?= g++
 ifdef LINUX
 	system := Linux
 	cflags += -fPIC -D'ARCH="LINUX"' -DARCH_LINUX
-	ldadd += -lm
+	ldadd += -lm -lcrypto
 endif
-
+ifdef DEBUG
+	cflags += -ggdb -DDEBUG=1 ${ZEN_INCLUDES}
+endif
 ifdef ASAN
 	system := Linux
 	cflags := -fPIC -D'ARCH="LINUX"' -DARCH_LINUX
@@ -18,7 +20,7 @@ ifdef ASAN
 #   big_256_28.c:911:32: runtime error: left shift of 220588237 by 20 places cannot be represented in type 'int'
 	cflags += ${cflags_asan} ${ZEN_INCLUDES}
 	ldflags := -fsanitize=address -fsanitize=undefined
-	ldadd += -lm
+	ldadd += -lm -lcrypto
 else
 ifdef RELEASE
 	cflags += -O3 ${cflags_protection}

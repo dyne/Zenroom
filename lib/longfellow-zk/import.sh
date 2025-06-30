@@ -12,7 +12,7 @@
 
 readarray -t sources <<EOF
 
-util/log.cc ec/p256.cc algebra/nat.cc
+util/crypto.cc util/log.cc ec/p256.cc algebra/nat.cc
 circuits/sha/flatsha256_witness.cc circuits/sha/sha256_constants.cc
 circuits/base64/decode_util.cc circuits/mdoc/mdoc_zk.cc
 circuits/mdoc/zk_spec.cc circuits/sha3/sha3_reference.cc
@@ -22,9 +22,9 @@ EOF
 
 readarray -t headers <<EOF
 
-util/panic.h algebra/fp.h algebra/fp_generic.h algebra/limb.h
-util/serialization.h algebra/static_string.h algebra/sysdep.h
-algebra/fp_p256.h ec/elliptic_curve.h util/ceildiv.h
+util/crypto.h util/panic.h algebra/fp.h algebra/fp_generic.h
+algebra/limb.h util/serialization.h algebra/static_string.h
+algebra/sysdep.h algebra/fp_p256.h ec/elliptic_curve.h util/ceildiv.h
 algebra/convolution.h algebra/blas.h algebra/fft.h
 algebra/permutations.h algebra/twiddle.h algebra/rfft.h algebra/fp2.h
 algebra/reed_solomon.h algebra/utility.h arrays/dense.h algebra/poly.h
@@ -63,8 +63,8 @@ for i in ${sources[@]}; do
 	[ -r "$h" ] && cp "$h" "${i%.cc}.h"
 	echo "${i}.o \\" >> sources.mk
 done
-echo "util/sha256.cc.o    \\" >> sources.mk
-echo "util/aes_ecb.cc.o    \\" >> sources.mk
+#echo "util/sha256.cc.o    \\" >> sources.mk
+#echo "util/aes_ecb.cc.o    \\" >> sources.mk
 # echo "util/randombytes.cc.o \\" >> sources.mk
 
 echo >> sources.mk

@@ -50,6 +50,7 @@ build() {
 		abi="x86_64"
 	}
 	make clean
+	rm -r libzenroom.so
 	rm -f bindings/java/zenroom_jni.o
 	mkdir -p zenroom-android/jni/${abi}
 	make -f build/android.mk all ${BUILD_MODE} \

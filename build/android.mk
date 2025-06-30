@@ -5,7 +5,7 @@ COMPILER := ${ANDROID_TARGET}-linux-${ANDROID_PLATFORM}-clang
 COMPILER_CXX := ${ANDROID_TARGET}-linux-${ANDROID_PLATFORM}-clang++
 
 system := Linux
-cflags := -I ${pwd}/src -I. -I../zstd -fPIC -DLIBRARY
+cflags := -I ${pwd}/src -I. -I../zstd -fPIC -DLIBRARY -I${ANDROID_NDK_HOME}/openssl/${ANDROID_TARGET}/include
 
 ifdef DEBUG
 	cflags += -ggdb -DDEBUG=1 ${ZEN_INCLUDES}
@@ -25,5 +25,5 @@ libzenroom.so: deps ${ZEN_SOURCES} bindings/java/zenroom_jni.o
 	APP_STL="c++_shared" ANDROID_ABI=${ANDROID_ABI} \
 	${COMPILER} ${cflags} -shared ${ZEN_SOURCES} \
 		bindings/java/zenroom_jni.o \
-		-o $@ ${ldflags} ${ldadd} \
+		-o $@ ${ldflags} ${ldadd} ${ANDROID_NDK_HOME}/openssl/${ANDROID_TARGET}/lib/libcrypto.a \
 		-llog -lm -frtti -fexceptions -lc++_shared -latomic
