@@ -243,10 +243,12 @@ static int mdoc_prove(lua_State *L) {
 	size_t proof_bytelen;
 	MdocProverErrorCode res;
 	// pks need to be 0x prefixed and zero terminated hex strings
-	char pkx[68]; pkx[0]='0'; pkx[1]='x';
+	char *pkx = malloc(68);
+	char *pky = malloc(68);
+	pkx[0]='0'; pkx[1]='x';
 	buf2hex(&pkx[2],opkx->val,32);
 	pkx[64+2] = 0x0;
-	char pky[68]; pky[0]='0'; pky[1]='x';
+	pky[0]='0'; pky[1]='x';
 	buf2hex(&pky[2],opky->val,32);
 	pky[64+2] = 0x0;
 	o_free(L,opkx);
@@ -267,6 +269,7 @@ static int mdoc_prove(lua_State *L) {
 						  now->val,
 						  &proof_bytes, &proof_bytelen,
 						  zkspec);
+	free(pkx); free(pky);
 	if(res != MDOC_PROVER_SUCCESS) {
 		warning(L, "MDOC prover error: %s",
 				_prover_error_to_string(res));
@@ -352,6 +355,7 @@ static int mdoc_verify(lua_State *L) {
 	o_free(L,circuit);
 	o_free(L,proof);
 	o_free(L,trans);
+	o_free(L,doc_type);
 	if(attrs) free(attrs);
 	o_free(L,now);
 	END(1);
