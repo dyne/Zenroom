@@ -716,10 +716,11 @@ static int from_string(lua_State *L) {
 		zerror(L, "%s: invalid string size: %u", __func__, len);
 		lerror(L, "operation aborted");
 		return 0; }
-	octet *o = o_new(L, len);
+	octet *o = o_new(L, len+1);
 	register int i = 0;
 	for(i=0;s[i] != 0x0;i++) o->val[i]=s[i];
 	o->len = i;
+	o->val[i] = 0x0;
 	END(1);
 }
 
