@@ -57,3 +57,10 @@ path = ["src/varint.*"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "Copyright (c) 2024 Joshua J Baker"
 SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = ["lib/longfellow-zk/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright (c) 2025 Google LLC."
+SPDX-License-Identifier = "Apache-2.0"
+
