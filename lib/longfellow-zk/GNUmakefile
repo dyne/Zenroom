@@ -8,8 +8,8 @@ include sources.mk
 all: liblongfellow-zk.a
 
 # liblongfellow-zk.a: CFLAGS += -mpclmul
-liblongfellow-zk.a: ${SOURCES}
-	$(AR) -r $@ ${SOURCES}
+liblongfellow-zk.a: $(SOURCES)
+	$(AR) -r $@ $(SOURCES)
 
 clean:
 	find . -name "*.cc.o" -type f -delete
@@ -17,6 +17,4 @@ clean:
 
 # hard-code build information
 %.cc.o: %.cc
-	"$(CXX)" -std=c++17 \
-	$(CFLAGS) \
-	-c $< -o $@
+	$(CXX) -std=c++17 $(CFLAGS) -c -o $@ $<
