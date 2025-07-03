@@ -72,7 +72,7 @@ tests = [
 'mlkem512', 'ntrup', 'numbers', 'output', 'pack', 'parser',
 'planetmint', 'pvss', 'random', 'reflow','rules', 'scope', 'sd_jwt',
 'secshare', 'table', 'then', 'time', 'w3c', 'w3c_did', 'when',
-'zenswarm', 'zkp', 'zkp_multi_petitions', 'longfellow-zk'
+'zenswarm', 'zkp', 'zkp_multi_petitions', 'longfellow'
 
 ]
 # non-portable: 'cookbook_hash_pdf'

@@ -88,7 +88,7 @@ jobs:
     needs: [reuse, c-lint, lua-lint]
     strategy:
       matrix:
-        command: [COMPILER=gcc, COMPILER=clang]
+        cc: [COMPILER=gcc COMPILER_CXX=g++,COMPILER=clang COMPILER_CXX=clang++]
       fail-fast: false
     runs-on: "ubuntu-latest"
     steps:
