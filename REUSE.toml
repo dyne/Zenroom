@@ -59,6 +59,12 @@ SPDX-FileCopyrightText = "Copyright (c) 2024 Joshua J Baker"
 SPDX-License-Identifier = "MIT"
 
 [[annotations]]
+path = ["lib/zstd/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright (c) 2016-present, Facebook, Inc."
+SPDX-License-Identifier = "BSD-3-Clause"
+
+[[annotations]]
 path = ["lib/longfellow-zk/**"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "Copyright (c) 2025 Google LLC."
