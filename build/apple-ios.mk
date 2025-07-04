@@ -3,6 +3,7 @@ include build/init.mk
 
 OS := iphoneos
 COMPILER := $(shell xcrun --sdk iphoneos -f gcc 2>/dev/null)
+COMPILER_CXX := $(shell xcrun --sdk iphoneos -f g++ 2>/dev/null)
 ar := $(shell xcrun --sdk iphoneos -f ar 2>/dev/null)
 ld := $(shell xcrun --sdk iphoneos -f ld 2>/dev/null)
 ranlib := $(shell xcrun --sdk iphoneos -f ranlib 2>/dev/null)
@@ -31,15 +32,17 @@ ios-arm64: ${BUILD_DEPS} ${ZEN_SOURCES}
 		${ZEN_SOURCES} ${ldadd}
 
 ios-sim: cc := $(shell xcrun --sdk iphonesimulator -f gcc 2>/dev/null)
+ios-sim: cxx := $(shell xcrun --sdk iphonesimulator -f g++ 2>/dev/null)
 ios-sim: ar := $(shell xcrun --sdk iphonesimulator -f ar 2>/dev/null)
 ios-sim: ld := $(shell xcrun --sdk iphonesimulator -f ld 2>/dev/null)
 ios-sim: ranlib := $(shell xcrun --sdk iphonesimulator -f ranlib 2>/dev/null)
 ios-sim: cflags += -arch x86_64 -arch arm64 -isysroot $(shell xcrun --sdk iphonesimulator --show-sdk-path 2>/dev/null)
 ios-sim: quantum_proof_cc := ${cc}
-ios-sim: ed25519_cc := ${cc}
-ios-sim: libcc_cc := ${cc}
-ios-sim: luacc_cc := ${cc}
 ios-sim: zenroom_cc := ${cc}
+ios-sim: ed25519_cc := ${cc}
+ios-sim: lua_cc := ${cc}
+ios-sim: longfellow_cxx := ${cxx}
+ios-sim: zstd_cc := ${cc}
 ios-sim: ${BUILD_DEPS} ${ZEN_SOURCES}
 	TARGET=sim libtool -static -o zenroom-ios-sim.a \
 		${ZEN_SOURCES} ${ldadd}
