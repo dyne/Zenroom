@@ -32,7 +32,7 @@ class Limb {
  public:
   using T = Limb<W64>;
 
-#if __WORDSIZE == 64
+#if __WORDSIZE == 64 || defined(_WIN64)
   using limb_t = uint64_t;
 #else
   using limb_t = uint32_t;

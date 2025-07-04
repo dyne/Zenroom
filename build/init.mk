@@ -102,6 +102,7 @@ mlkem_cc ?= ${cc}
 # longfellow-zk settings
 longfellow_cxx ?= ${cxx}
 longfellow_cflags += -I ${pwd}/src -I. -I../zstd -fPIC -DLIBRARY -mpclmul
+
 #-----------------
 # zstd settings
 zstd_cc ?= ${cc}
