@@ -35,5 +35,4 @@ load ../bats_setup
     Z hkdf.lua
     Z fsp.lua
     Z uuid.lua
-    Z longfellow.lua
 }
