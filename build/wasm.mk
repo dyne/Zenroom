@@ -11,8 +11,9 @@ WASM_EXPORTS := '["_malloc","_free","_calloc","_realloc","_zenroom_exec","_zenco
 # EMSDK should point to installation of EMSDK i.e.: /opt/emsdk
 EMSCRIPTEN ?= ${EMSDK}/upstream/emscripten
 cc := ${EMSCRIPTEN}/emcc
+cxx := ${EMSCRIPTEN}/em++
 ar := ${EMSCRIPTEN}/emar
-ld := ${cc}
+ld := ${cxx}
 ranlib := ${EMSCRIPTEN}/emranlib
 
 quantum_proof_cc := ${cc}
@@ -20,6 +21,9 @@ ed25519_cc := ${cc}
 libcc_cc := ${cc}
 lua_cc := ${cc}
 zenroom_cc := ${cc}
+zstd_cc := ${cc}
+longfellow_cxx := ${cxx}
+longfellow_cflags := -I ${pwd}/src -I. -I../zstd -fPIC -DLIBRARY -msimd128
 
 system := Javascript
 ld_emsdk_settings := -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
@@ -38,7 +42,7 @@ all: ${BUILD_DEPS} zenroom.js
 
 zenroom.js: ${ZEN_SOURCES}
 	$(info === Linking Zenroom WASM for Javascript)
-	${cc} ${cflags} ${ZEN_SOURCES} \
+	${ld} ${cflags} ${ZEN_SOURCES} \
 		-o $@ ${ldflags} ${ldadd}
 
 include build/deps.mk
