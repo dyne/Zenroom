@@ -7,7 +7,6 @@ cxx := ${COMPILER_CXX}
 quantum_proof_cc := ${cc}
 zenroom_cc := ${cc}
 ed25519_cc := ${cc}
-libtcc_cc := ${cc}
 lua_cc := ${cc}
 longfellow_cxx := ${cxx}
 zstd_cc := ${cc}
