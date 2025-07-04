@@ -6,6 +6,7 @@ COMPILER_CXX := ${ANDROID_TARGET}-linux-${ANDROID_PLATFORM}-clang++
 
 system := Linux
 cflags := -I ${pwd}/src -I. -I../zstd -fPIC -DLIBRARY
+ldadd += -lstdc++
 
 ifdef DEBUG
 	cflags += -ggdb -DDEBUG=1 ${ZEN_INCLUDES}

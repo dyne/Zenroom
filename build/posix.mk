@@ -4,10 +4,15 @@ include build/init.mk
 COMPILER ?= gcc
 COMPILER ?= g++
 
+ldadd += -lm -lstdc++
+
 ifdef LINUX
 	system := Linux
 	cflags += -fPIC -D'ARCH="LINUX"' -DARCH_LINUX
-	ldadd += -lm
+endif
+ifdef OSX
+	COMPILER := clang
+	cflags += -fPIC -D'ARCH="OSX"' -DARCH_OSX
 endif
 
 ifdef ASAN
@@ -18,25 +23,6 @@ ifdef ASAN
 #   big_256_28.c:911:32: runtime error: left shift of 220588237 by 20 places cannot be represented in type 'int'
 	cflags += ${cflags_asan} ${ZEN_INCLUDES}
 	ldflags := -fsanitize=address -fsanitize=undefined
-	ldadd += -lm
-else
-ifdef RELEASE
-	cflags += -O3 ${cflags_protection}
-else
-# default is DEBUG
-	cflags += ${cflags_debug}
-endif
-endif
-ifdef GPROF
-	cflags += -pg
-endif
-ifdef OSX
-	COMPILER := clang
-	cflags += -fPIC -D'ARCH="OSX"' -DARCH_OSX
-endif
-
-ifdef LIBRARY
-	cflags += -fPIC -DLIBRARY
 endif
 
 # activate CCACHE etc.

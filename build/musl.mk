@@ -1,17 +1,24 @@
 ## Initialize build defaults
 include build/init.mk
 
-COMPILER ?= musl-gcc
+BUILD_DEPS := apply-patches milagro lua54 embed-lua mlkem	\
+				quantum-proof ed25519-donna
+
+COMPILER := musl-gcc
 
 cflags += -static -std=gnu99 -fPIC -D'ARCH="MUSL"' -D__MUSL__ -DARCH_MUSL
 ldflags += -static
 system := Linux
 
-ifdef DEBUG
-	cflags += ${cflags_debug}
-else
-	cflags += -O3 ${cflags_protection}
-endif
+ldadd += ${milib}/libamcl_curve_${ecp_curve}.a
+ldadd += ${milib}/libamcl_pairing_${ecp_curve}.a
+ldadd += ${milib}/libamcl_curve_${ecdh_curve}.a
+ldadd += ${milib}/libamcl_rsa_2048.a ${milib}/libamcl_rsa_4096.a
+ldadd += ${milib}/libamcl_x509.a
+ldadd += ${milib}/libamcl_core.a
+ldadd += ${pwd}/lib/pqclean/libqpz.a
+ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
+ldadd += ${pwd}/lib/mlkem/test/build/libmlkem.a
 
 # activate CCACHE etc.
 include build/plugins.mk

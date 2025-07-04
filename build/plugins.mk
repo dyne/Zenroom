@@ -17,6 +17,14 @@ else
 	cflags += ${cflags_debug}
 endif
 
+ifdef GPROF
+	cflags += -pg
+endif
+
+ifdef LIBRARY
+	cflags += -fPIC -DLIBRARY
+endif
+
 ifdef CCACHE
 	milagro_cmake_flags += -DCMAKE_C_COMPILER_LAUNCHER=ccache
 	quantum_proof_cc := ccache ${cc}
