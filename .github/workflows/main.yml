@@ -123,7 +123,7 @@ jobs:
       - uses: hendrikmuhs/ccache-action@v1.2
       - name: install dependencies
         run : |
-          sudo apt install -y jq gcc-mingw-w64
+          sudo apt install -y jq gcc-mingw-w64 g++-mingw-w64
       - name: Build x86_64 windows .exe
         run: |
           make win-exe CCACHE=1
@@ -393,7 +393,7 @@ jobs:
             build/release-intro.md
       - name: Install build deps
         run: |
-          sudo apt install -qy tree jq cmake make gcc musl-tools musl-dev gcc-mingw-w64 libreadline-dev ccache
+          sudo apt install -qy tree jq cmake make gcc musl-tools musl-dev gcc-mingw-w64 g++-mingw-w64 libreadline-dev ccache
       - name: Build x86_64 with musl-system
         run: |
           make musl RELEASE=1 CCACHE=1
