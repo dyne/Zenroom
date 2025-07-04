@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Sample node project using the local npm build of nodejs",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "node index.js"
   },
