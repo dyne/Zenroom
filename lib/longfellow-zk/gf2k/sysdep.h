@@ -246,6 +246,11 @@ static inline gf2_128_elt_t gf2_128_mul(gf2_128_elt_t x, gf2_128_elt_t y) {
 }
 
 }  // namespace proofs
+
+// The code section below has a different copyright has a different copyright
+
+#elif defined(__wasm_simd128__) || defined(__wasi__) || defined(__wasm__) || defined(__EMSCRIPTEN__)
+#include <gf2k/sysdep_wasm.h>
 #else
 #error "unimplemented gf2k/sysdep.h"
 #endif
