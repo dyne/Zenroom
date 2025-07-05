@@ -10,6 +10,7 @@ cflags += -static -std=gnu99 -fPIC -D'ARCH="MUSL"' -D__MUSL__ -DARCH_MUSL
 ldflags += -static
 system := Linux
 
+ldadd := ${pwd}/lib/lua54/src/liblua.a
 ldadd += ${milib}/libamcl_curve_${ecp_curve}.a
 ldadd += ${milib}/libamcl_pairing_${ecp_curve}.a
 ldadd += ${milib}/libamcl_curve_${ecdh_curve}.a
