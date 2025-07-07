@@ -102,14 +102,56 @@ jobs:
       - name: install dependencies
         run: |
           sudo apt install -yq jq libreadline-dev
-          ${{ matrix.command }} sudo apt install -yq $COMPILER
+          ${{ matrix.cc }} sudo apt install -yq $COMPILER
           pip3 install --prefer-binary meson ninja
-      - name: Build GNU/Linux ${{ matrix.command }}
+      - name: Build GNU/Linux ${{ matrix.cc }}
         run: |
-          make debug-asan ${{ matrix.command }}
-      - name: Check all tests on ${{ matrix.command }}
+          make debug-asan ${{ matrix.cc }}
+      - name: Check all tests on ${{ matrix.cc }}
         run: |
           make check
+
+  musl-test:
+    name: 💪 Musl test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Get SHA256 of musl-dyne.tar.xz
+        id: get-sum
+        run: |
+          curl -s "https://files.dyne.org/?file=musl/SHA256SUMS.txt" -o checksums.txt
+          HASH=$(grep musl-dyne.tar.xz checksums.txt | awk '{print $1}')
+          echo "hash=$HASH" >> $GITHUB_OUTPUT
+      - name: Cache musl-dyne using SHA256
+        id: cache-musl
+        uses: actions/cache@v4
+        with:
+          path: .cache/musl-dyne
+          key: musl-dyne-${{ steps.get-sum.outputs.hash }}
+      - name: Copy to /opt/musl-dyne if cache hit
+        if: steps.cache-musl.outputs.cache-hit == 'true'
+        run: |
+          sudo mkdir -p /opt/musl-dyne
+          sudo rm -rf /opt/musl-dyne/*
+          sudo cp -a .cache/musl-dyne/. /opt/musl-dyne/
+      - name: Download and extract if cache miss
+        if: steps.cache-musl.outputs.cache-hit != 'true'
+        run: |
+          wget -O musl-dyne.tar.xz "https://files.dyne.org/?file=musl/musl-dyne.tar.xz"
+          mkdir -p .cache/musl-dyne
+          tar -xJf musl-dyne.tar.xz -C .cache/musl-dyne --strip-components=1
+          rm musl-dyne.tar.xz
+          sudo rm -rf /opt/musl-dyne/*
+          sudo cp -a .cache/musl-dyne/. /opt/musl-dyne/
+      - uses: hendrikmuhs/ccache-action@v1.2
+      - name: install dependencies
+        run: |
+          sudo apt install -yq jq libreadline-dev wget
+      - name: Build x86_64 with musl-system
+        run: |
+          make musl RELEASE=1 CCACHE=1
 
   windows-build:
     name: 🪟 Windows build test
