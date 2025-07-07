@@ -32,7 +32,7 @@ class Limb {
  public:
   using T = Limb<W64>;
 
-#if defined(__x86_64__) || defined(_WIN64)
+#if defined(__x86_64__) || defined(_M_X64) || defined(__aarch64__) || defined(_WIN64)
   using limb_t = uint64_t;
 #else
   using limb_t = uint32_t;
