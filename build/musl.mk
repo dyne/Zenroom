@@ -2,7 +2,7 @@
 include build/init.mk
 
 BUILD_DEPS := apply-patches milagro lua54 embed-lua mlkem	\
-				quantum-proof ed25519-donna
+				quantum-proof ed25519-donna longfellow-zk zstd
 
 COMPILER := musl-gcc
 
@@ -20,6 +20,8 @@ ldadd += ${milib}/libamcl_core.a
 ldadd += ${pwd}/lib/pqclean/libqpz.a
 ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
 ldadd += ${pwd}/lib/mlkem/test/build/libmlkem.a
+ldadd += ${pwd}/lib/longfellow-zk/liblongfellow-zk.a
+ldadd += ${pwd}/lib/zstd/libzstd.a
 
 # activate CCACHE etc.
 include build/plugins.mk
