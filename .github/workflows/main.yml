@@ -113,7 +113,9 @@ jobs:
 
   musl-test:
     name: 💪 Musl test
+    needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
+    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_MUSL') && github.event_name == 'pull_request'"
     steps:
       - uses: actions/checkout@v4
         with:
