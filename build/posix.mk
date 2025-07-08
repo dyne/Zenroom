@@ -2,7 +2,7 @@
 include build/init.mk
 
 COMPILER ?= gcc
-COMPILER ?= g++
+COMPILER_CXX ?= g++
 
 ldadd += -lm -lstdc++
 
@@ -35,23 +35,23 @@ deps: ${BUILD_DEPS}
 cli_sources := src/cli-zenroom.o src/repl.o
 zenroom: ${ZEN_SOURCES} ${cli_sources}
 	$(info === Building the zenroom CLI)
-	${zenroom_cc} ${cflags} ${ZEN_SOURCES} ${cli_sources} \
+	${cxx} ${cflags} ${ZEN_SOURCES} ${cli_sources} \
 		-o $@ ${ldflags} ${ldadd} -lreadline
 
 zencode-exec: ${ZEN_SOURCES} src/zencode-exec.o
 	$(info === Building the zencode-exec utility)
-	${zenroom_cc} ${cflags} ${ZEN_SOURCES} src/zencode-exec.o \
+	${cxx} ${cflags} ${ZEN_SOURCES} src/zencode-exec.o \
 		-o $@ ${ldflags} ${ldadd}
 
 libzenroom.so: deps ${ZEN_SOURCES}
 	$(info === Building the zenroom shared library)
-	${zenroom_cc} ${cflags} -shared ${ZEN_SOURCES} \
+	${cxx} ${cflags} -shared ${ZEN_SOURCES} \
 		-o $@ ${ldflags} ${ldadd}
 
 # OSX specific target
 libzenroom.dylib: deps ${ZEN_SOURCES}
 	$(info === Building the zenroom shared dynamic library)
-	${zenroom_cc} ${cflags} -shared ${ZEN_SOURCES} -dynamiclib \
+	${cxx} ${cflags} -shared ${ZEN_SOURCES} -dynamiclib \
 		-o $@ ${ldflags} ${ldadd}
 
 include build/deps.mk
