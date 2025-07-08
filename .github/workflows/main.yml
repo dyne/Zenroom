@@ -148,7 +148,7 @@ jobs:
       - uses: hendrikmuhs/ccache-action@v1.2
       - name: install dependencies
         run: |
-          sudo apt install -yq jq libreadline-dev wget
+          sudo apt install -yq jq libreadline-dev
       - name: Build x86_64 with musl-system
         run: |
           make musl RELEASE=1 CCACHE=1
@@ -433,9 +433,36 @@ jobs:
           name: documentation
           path: |
             build/release-intro.md
+      - name: Get SHA256 of musl-dyne.tar.xz
+        id: get-sum
+        run: |
+          curl -s "https://files.dyne.org/?file=musl/SHA256SUMS.txt" -o checksums.txt
+          HASH=$(grep musl-dyne.tar.xz checksums.txt | awk '{print $1}')
+          echo "hash=$HASH" >> $GITHUB_OUTPUT
+      - name: Cache musl-dyne using SHA256
+        id: cache-musl
+        uses: actions/cache@v4
+        with:
+          path: .cache/musl-dyne
+          key: musl-dyne-${{ steps.get-sum.outputs.hash }}
+      - name: Copy to /opt/musl-dyne if cache hit
+        if: steps.cache-musl.outputs.cache-hit == 'true'
+        run: |
+          sudo mkdir -p /opt/musl-dyne
+          sudo rm -rf /opt/musl-dyne/*
+          sudo cp -a .cache/musl-dyne/. /opt/musl-dyne/
+      - name: Download and extract if cache miss
+        if: steps.cache-musl.outputs.cache-hit != 'true'
+        run: |
+          wget -O musl-dyne.tar.xz "https://files.dyne.org/?file=musl/musl-dyne.tar.xz"
+          mkdir -p .cache/musl-dyne
+          tar -xJf musl-dyne.tar.xz -C .cache/musl-dyne --strip-components=1
+          rm musl-dyne.tar.xz
+          sudo rm -rf /opt/musl-dyne/*
+          sudo cp -a .cache/musl-dyne/. /opt/musl-dyne/
       - name: Install build deps
         run: |
-          sudo apt install -qy tree jq cmake make gcc musl-tools musl-dev gcc-mingw-w64 g++-mingw-w64 libreadline-dev ccache
+          sudo apt install -qy tree jq cmake make gcc gcc-mingw-w64 g++-mingw-w64 libreadline-dev ccache
       - name: Build x86_64 with musl-system
         run: |
           make musl RELEASE=1 CCACHE=1
