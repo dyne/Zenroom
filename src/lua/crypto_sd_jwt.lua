@@ -145,7 +145,7 @@ end
 function sd_jwt.create_jwt(payload, sk, algo)
     local header <const> = {
         alg=O.from_string(algo.IANA), -- TODO: does JWT contains .alg ?!
-        typ=O.from_string("vc+sd-jwt")
+        typ=O.from_string("dc+sd-jwt")
     }
     local payload_str <const> = sd_jwt.prepare_dictionary(payload)
     local b64payload <const> = O.from_string(JSON.raw_encode(payload_str, true)):url64()
