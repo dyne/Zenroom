@@ -11,7 +11,7 @@ cflags += -O2 -fPIC ${cflags_protection}
 cflags += -D'ARCH="OSX"' -DNO_SYSTEM -DARCH_OSX
 cflags += -DLIBCMALLOC
 lua_cflags += -DLUA_USE_IOS
-ldflags := -lm
+ldadd := $(filter-out -lstdc++,$(ldadd))
 platform := ios
 
 # activate CCACHE etc.
