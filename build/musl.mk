@@ -1,8 +1,8 @@
 ## Initialize build defaults
 include build/init.mk
 
-COMPILER := /opt/musl-dyne/bin/x86_64-linux-musl-gcc
-COMPILER_CXX := /opt/musl-dyne/bin/x86_64-linux-musl-g++
+COMPILER ?= /opt/musl-dyne/bin/x86_64-linux-musl-gcc
+COMPILER_CXX ?= /opt/musl-dyne/bin/x86_64-linux-musl-g++
 
 cflags += -static -std=gnu99 -fPIC -D'ARCH="MUSL"' -D__MUSL__ -DARCH_MUSL
 ldflags += -static
