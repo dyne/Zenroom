@@ -25,6 +25,9 @@
 #if defined(__ANDROID__)
 #include <android/log.h>
 #endif
+#if defined(__EMSCRIPTEN__)
+#include <emscripten/emscripten.h>
+#endif
 
 #if defined(__ABSL__)
 #include "third_party/absl/log/log.h"
@@ -89,6 +92,20 @@ void log(enum LogLevel l, const char* format, ...) {
         break;
       case LogLevel::INFO:
         LOG(INFO) << tmp;
+        break;
+    }
+  }
+#elif defined(__EMSCRIPTEN__)
+  if (l <= _LOG_LEVEL) {
+    switch (l) {
+      case ERROR:
+        EM_ASM({ console.error(UTF8ToString($0)); }, tmp);
+        break;
+      case WARNING:
+        EM_ASM({ console.warn(UTF8ToString($0)); }, tmp);
+        break;
+      case INFO:
+        EM_ASM({ console.log(UTF8ToString($0)); }, tmp);
         break;
     }
   }
