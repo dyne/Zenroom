@@ -20,6 +20,7 @@
 #else
 #include <cstdio>
 #include <cstdlib>
+#include "util/log.h"
 #endif
 
 namespace proofs {
@@ -29,6 +30,7 @@ inline void check(bool truth, const char* why) {
   CHECK(truth) << why;
 #else
   if (!truth) {
+    log(INFO, "PANIC %s", why);
     fprintf(stderr, "%s", why);
     abort();
   }
