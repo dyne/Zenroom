@@ -34,24 +34,84 @@ static inline gf2_128_elt_t gf2_128_of_uint64x2(const std::array<uint64_t, 2>& x
 static inline gf2_128_elt_t gf2_128_add(gf2_128_elt_t x, gf2_128_elt_t y) {
   return wasm_v128_xor(x, y);
 }
-  static inline gf2_128_elt_t gf2_128_mul(gf2_128_elt_t x, gf2_128_elt_t y) {
-    const v128_t poly = wasm_i64x2_splat(0x87);
-    // split into 32-bit halves for 32x32->64 multiplication
-    v128_t x_lo = wasm_u32x4_shr(x, 0);    // x0_lo, x1_lo, x2_lo, x3_lo
-    v128_t x_hi = wasm_u32x4_shr(x, 32);   // x0_hi, x1_hi, x2_hi, x3_hi
-    v128_t y_lo = wasm_u32x4_shr(y, 0);    // y0_lo, y1_lo, y2_lo, y3_lo
-    v128_t y_hi = wasm_u32x4_shr(y, 32);   // y0_hi, y1_hi, y2_hi, y3_hi
-    // compute partial products (32x32->64)
-    v128_t t0 = wasm_i64x2_mul(x_lo, y_lo);
-    v128_t t1a = wasm_i64x2_mul(x_lo, y_hi);
-    v128_t t1b = wasm_i64x2_mul(x_hi, y_lo);
-    v128_t t2 = wasm_i64x2_mul(x_hi, y_hi);
-    // combine middle terms (t1a + t1b)
-    v128_t t1 = wasm_v128_xor(t1a, t1b);
-    // reduction modulo x^128 + x^7 + x^2 + x + 1 (0x87)
-    v128_t shifted = wasm_i64x2_shl(t1, 32);
-    v128_t reduced = wasm_i64x2_shr(t1, 63);  // Mask for reduction
-    reduced = wasm_v128_and(reduced, poly);
-    return wasm_v128_xor(t0, wasm_v128_xor(shifted, reduced));
+
+// Carryless multiplication of two 64-bit integers
+// Helper function for 64x64->128 carryless multiply
+static inline void clmul64(uint64_t a, uint64_t b, uint64_t* hi, uint64_t* lo) {
+  *lo = 0;
+  *hi = 0;
+  for (int i = 0; i < 64; ++i) {
+    if ((b >> i) & 1) {
+      *lo ^= a << i;
+      if (i > 0) *hi ^= a >> (64 - i);
+    }
   }
+}
+
+// Reduction modulo x^128 + x^7 + x^2 + x + 1
+static inline v128_t reduce(uint64_t r3, uint64_t r2, uint64_t r1, uint64_t r0) {
+  const uint64_t POLY = 0x87;
+
+  // First, compute the multiplication of the high 128 bits by POLY.
+  // C_H * POLY = (r3*x^64 + r2) * POLY
+  // This is equivalent to (r3*POLY)*x^64 + (r2*POLY)
+
+  uint64_t p1, p0;
+  clmul64(r2, POLY, &p1, &p0); // p = r2 * POLY
+
+  uint64_t q1, q0;
+  clmul64(r3, POLY, &q1, &q0); // q = r3 * POLY
+
+  // The full product C_H * POLY is q*x^64 + p.
+  // q*x^64 = (q1*x^64 + q0)*x^64 = q1*x^128 + q0*x^64
+  // modulo P(x), this is: q1*POLY + q0*x^64
+
+  // Combine the terms: C_H*POLY = q1*POLY + (q0+p1)*x^64 + p0
+  uint64_t m_hi = q0 ^ p1;
+  uint64_t m_lo = p0;
+
+  // Now, XOR this with the low 128 bits (r1, r0).
+  uint64_t res_hi = r1 ^ m_hi;
+  uint64_t res_lo = r0 ^ m_lo;
+
+  // Finally, XOR the remainder from the q1*x^128 term.
+  // q1 comes from clmul64(r3, POLY), where r3 is 64-bit and POLY is 8-bit.
+  // The product is at most 71 bits, so q1 has at most 7 non-zero bits.
+  // clmul64(q1, POLY) will produce a result less than 15 bits, so t1 will be 0.
+  uint64_t t1, t0;
+  clmul64(q1, POLY, &t1, &t0);
+
+  res_hi ^= t1;
+  res_lo ^= t0;
+
+  // The result (res_hi, res_lo) is now fully reduced.
+  return wasm_i64x2_make(res_lo, res_hi);
+}
+
+// GF(2^128) multiplication
+static inline v128_t gf2_128_mul(v128_t a, v128_t b) {
+  uint64_t a0 = wasm_i64x2_extract_lane(a, 0);
+  uint64_t a1 = wasm_i64x2_extract_lane(a, 1);
+  uint64_t b0 = wasm_i64x2_extract_lane(b, 0);
+  uint64_t b1 = wasm_i64x2_extract_lane(b, 1);
+
+  uint64_t z0_hi, z0_lo;
+  uint64_t z1_hi, z1_lo;
+  uint64_t z2_hi, z2_lo;
+  uint64_t z3_hi, z3_lo;
+
+  clmul64(a0, b0, &z0_hi, &z0_lo);
+  clmul64(a0, b1, &z1_hi, &z1_lo);
+  clmul64(a1, b0, &z2_hi, &z2_lo);
+  clmul64(a1, b1, &z3_hi, &z3_lo);
+
+  // Combine results
+  uint64_t r0 = z0_lo;
+  uint64_t r1 = z0_hi ^ z1_lo ^ z2_lo;
+  uint64_t r2 = z1_hi ^ z2_hi ^ z3_lo;
+  uint64_t r3 = z3_hi;
+
+  return reduce(r3, r2, r1, r0);
+}
+
 }  // namespace proofs
