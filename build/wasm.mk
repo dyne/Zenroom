@@ -2,7 +2,7 @@
 include build/init.mk
 
 JS_INIT_MEM :=8MB
-JS_MAX_MEM := 256MB
+JS_MAX_MEM := 1024MB
 JS_STACK_SIZE := 7MB
 
 # Add here any function used from JS
@@ -29,7 +29,7 @@ system := Javascript
 ld_emsdk_settings := -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
 ld_emsdk_settings += -sEXPORT_ES6 -sMODULARIZE=1	-sSINGLE_FILE=1 --embed-file 'src/lua@/'
 ld_emsdk_settings += -sMALLOC=dlmalloc --no-heap-copy -sALLOW_MEMORY_GROWTH=1
-ld_emsdk_settings += -sINITIAL_MEMORY=${JS_INIT_MEM} -sMAXIMUM_MEMORY=${JS_MAX_MEM} -sSTACK_SIZE=${JS_STACK_SIZE}
+ld_emsdk_settings += -sINITIAL_MEMORY=${JS_INIT_MEM} -sMAXIMUM_MEMORY=${JS_MAX_MEM} -sSTACK_SIZE=${JS_STACK_SIZE} -sASSERTIONS
 ld_emsdk_settings += -sINCOMING_MODULE_JS_API=print,printErr -s EXPORTED_FUNCTIONS=${WASM_EXPORTS} -s EXPORTED_RUNTIME_METHODS='["ccall","cwrap"]'
 ld_emsdk_optimizations := -O2 -sSTRICT -flto -sUSE_SDL=0 -sEVAL_CTORS=1
 cc_emsdk_settings := -DARCH_WASM -D'ARCH="WASM"'
