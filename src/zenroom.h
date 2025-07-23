@@ -78,7 +78,7 @@ int zenroom_sign_verify(const char *algo, const char *pk, const char *msg, const
 
 
 // lower level api: init (exec_line*) teardown
-extern void *restrict ZEN;
+extern void *ZEN;
 
 #define RANDOM_SEED_LEN 64
 #define STR_MAXITER_LEN 10
