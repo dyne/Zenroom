@@ -139,7 +139,6 @@ When("create proof of attributes '' in mdoc ''",
          local document <const> = have(mdoc)
          local pkx <const> = pk:sub(1,32)
          local pky <const> = pk:sub(33,64)
-         I.warn({pkx=pkx,pky=pky,attr=attr})
          ACK.proof = LF.mdoc_prover
          (circ, document, pkx, pky, trans,
           deepmap(O.to_string, attr), now)
