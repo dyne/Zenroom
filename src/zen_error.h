@@ -66,7 +66,6 @@ int FAIL(void);
 
 // lua context error message
 HEDLEY_PRINTF_FORMAT(2,3)
-HEDLEY_NO_RETURN
 void lerror(void *L, const char *fmt, ...);
 
 HEDLEY_PRINTF_FORMAT(2,3)
