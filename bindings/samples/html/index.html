@@ -207,7 +207,10 @@
               "result",
               JSON.stringify(JSON.parse(r.result), null, 2),
             );
-            setTabContent("logs", r.logs); // JSON.stringify(JSON.parse(r.logs), null, 2));
+            setTabContent(
+              "logs",
+              JSON.stringify(JSON.parse(r.logs), null, 2)
+            );
           })
           .catch((e) => {
             setTabContent("result", e.result);
