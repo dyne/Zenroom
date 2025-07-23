@@ -55,13 +55,6 @@ namespace proofs {
 		}
 		SHA256(const SHA256&) = delete;
 		SHA256& operator=(const SHA256&) = delete;
-		~SHA256() {
-			if (state_.ctx) {
-				if (!finalized_) {
-					sha256_inc_ctx_release(&state_);
-				}
-			}
-		}
 		void Update(const uint8_t* bytes, size_t n) {
 			if (finalized_) {
 				ReInit();
