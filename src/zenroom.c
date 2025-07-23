@@ -62,7 +62,7 @@
 void *restrict ZMM = NULL;
 
 // GLOBAL POINTER TO ZENROOM CONTEXT
-void *restrict ZEN = NULL;
+void *ZEN = NULL;
 
 // prototypes from zen_octet.c
 extern void push_buffer_to_octet(lua_State *L, char *p, size_t len);

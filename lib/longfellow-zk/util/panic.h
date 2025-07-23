@@ -1,40 +1,44 @@
-// Copyright 2024 Google LLC.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/* This file is part of Zenroom (https://zenroom.dyne.org)
+ *
+ * Copyright (C) 2025 Dyne.org foundation
+ * designed, written and maintained by Denis Roio <jaromil@dyne.org>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
 
 #ifndef PRIVACY_PROOFS_ZK_LIB_UTIL_PANIC_H_
 #define PRIVACY_PROOFS_ZK_LIB_UTIL_PANIC_H_
 
-#if defined(__ABSL__)
-#include "third_party/absl/log/check.h"
-#else
 #include <cstdio>
 #include <cstdlib>
+
 #include "util/log.h"
-#endif
+
+extern "C" {
+#include <zenroom.h>
+// declares extern void *ZEN;
+#include <zen_error.h>
+}
 
 namespace proofs {
 
 inline void check(bool truth, const char* why) {
-#if defined(__ABSL__)
-  CHECK(truth) << why;
-#else
   if (!truth) {
     log(INFO, "PANIC %s", why);
-    fprintf(stderr, "%s", why);
-    abort();
+	lerror(((zenroom_t*)ZEN)->lua,"%s",why);
   }
-#endif
 }
 
 };  // namespace proofs
