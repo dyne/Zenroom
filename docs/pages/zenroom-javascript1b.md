@@ -26,6 +26,14 @@ This is exactly what we used to create a WASM (WebAssembly) build by using the E
 
 So let’s start by our first hello world example in node.js I’m familiar with yarn so I’ll use that but if you prefer you can use `npm `
 
+First, make sure you have **node 22** running:
+
+```bash
+node -v
+```
+That should return something ```v22.17.1``` (node 20 or previous won't work).
+
+Now create a folder and a node project, and  add zenroom javascript wrapper as a dependency. The wrapper is a very simple utility around the pure emscripten build.
 
 ```bash
 mkdir hello-world-zencode
@@ -33,9 +41,6 @@ cd !$
 yarn init
 yarn add zenroom
 ```
-
-
-The previous commands create a folder and a js project and will add zenroom javascript wrapper as a dependency. The wrapper is a very simple utility around the pure emscripten build.
 
 
 Next create a `index.js` with the following content
