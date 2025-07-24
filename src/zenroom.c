@@ -368,6 +368,7 @@ void zen_teardown(zenroom_t *ZZ) {
 	ZMM = NULL;
 	free(ZZ);
 	ZZ = NULL;
+	ZEN = NULL;
 }
 
 HEDLEY_NON_NULL(1,2)
