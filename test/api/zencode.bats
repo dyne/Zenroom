@@ -30,6 +30,15 @@ save() {
     cc ${CFLAGS} -ggdb -o zenroom_exec_tobuf $T/zenroom_to_buf.c ${LDADD}
 }
 
+@test "ZENCODE API :: zencode_exec 100 times with conf" {
+    script="$(cat <<EOF
+Given nothing
+Then print the string 'Hello World'
+EOF
+)"
+    LD_LIBRARY_PATH=$R ./zencode_exec "$script" "debug=2,logfmt=json" "" "" "" "" "100"> iteration_zencode
+}
+
 @test "ZENCODE API :: zencode_exec only conf keys and data" {
     script="$(cat <<EOF
 Given nothing
