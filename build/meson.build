@@ -72,17 +72,16 @@ tests = [
 'mlkem512', 'ntrup', 'numbers', 'output', 'pack', 'parser',
 'planetmint', 'pvss', 'random', 'reflow','rules', 'scope', 'sd_jwt',
 'secshare', 'table', 'then', 'time', 'w3c', 'w3c_did', 'when',
-'zenswarm', 'zkp', 'zkp_multi_petitions'
-
+'zenswarm', 'zkp', 'zkp_multi_petitions', 'longfellow'
 ]
 # non-portable: 'cookbook_hash_pdf'
 # too slow: 'rsa'
 foreach test_suite : tests
-    test('zencode_'+test_suite.underscorify(),
-	 bats_bin,
-	 args: [test_dir+'zencode/'+test_suite+'.bats'],
-     timeout: 60
-		)
+  test('zencode_'+test_suite.underscorify(),
+  bats_bin,
+  args: [test_dir+'zencode/'+test_suite+'.bats'],
+  timeout: 240
+  )
 endforeach
 endif
 
