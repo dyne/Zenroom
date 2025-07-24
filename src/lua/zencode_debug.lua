@@ -72,12 +72,17 @@ When("trace", function() ZEN:debug_traceback() end)
 Then("trace", function() ZEN:debug_traceback() end)
 
 local function debug_heap_schema()
+    local k <const> = ACK.keyring
+    if ACK.keyring then
+        ACK.keyring = '(hidden)'
+    end
     local _heap <const> = I.inspect({
         a_CODEC_ack = CODEC,
         b_GIVEN_in = IN,
         c_WHEN_ack = ACK,
         d_THEN_out = OUT
     },{ schema = true })
+    ACK.keyring = k
     -- print only keys without values
     if CONF.debug.format == 'compact' and LOGFMT == 'JSON' then
         printerr('"J64 HEAP: '..OCTET.from_string(_heap):base64()..'",')
