@@ -1140,7 +1140,7 @@ end:
 
 
 /***
-	Create an octet filled with zero values up to indicated size or its maximum size.
+	Check that an octet is filled only with zero values through all its size
 
 	@int[opt=octet:max] length fill with zero up to this size, use maximum octet size if omitted
 	@function OCTET.zero
@@ -1160,6 +1160,33 @@ static int zero(lua_State *L) {
 	n->len = len;
 	END(1);
 }
+
+/***
+	Create an octet filled with zero values up to indicated size or its maximum size.
+
+	@param str octet object
+	@function OCTET.is_zero
+	@return bool true or false
+*/
+static int is_zero(lua_State *L) {
+	BEGIN();
+	octet *o = o_arg(L,1);
+	if(o->len<1) {
+		lua_pushboolean(L, 0);
+		goto endgame;
+	}
+	bool nonzero = false;
+	register int i;;
+    for (i = 0; i < o->len; i++) {
+        nonzero |= o->val[i] ? true : false;
+    }
+	lua_pushboolean(L, !nonzero);
+ endgame:
+	o_free(L,o);
+	END(1);
+}
+
+
 
 /// Object Methods
 // @type OCTET
@@ -3215,6 +3242,7 @@ int luaopen_octet(lua_State *L) {
 		{"new",   newoctet},
 		{"empty",   new_empty_octet}, // OCTET.empty()
 		{"zero",  zero},
+		{"is_zero", is_zero},
 		{"crc",  crc8},
 		{"concat",concat_n},
 		{"xor",   xor_shrink},
@@ -3290,6 +3318,7 @@ int luaopen_octet(lua_State *L) {
 		{NULL,NULL}
 	};
 	const struct luaL_Reg octet_methods[] = {
+		{"is_zero", is_zero},
 		{"crc",  crc8},
 		{"xor",   xor_shrink},
 		{"xor_shrink", xor_shrink},
