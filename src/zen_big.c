@@ -293,6 +293,7 @@ static int newbig(lua_State *L) {
 		BIG_zero(c->val);
 		if((int)n>0)
 			BIG_inc(c->val, (int)n);
+		BIG_norm(c->val);
 		return 1; }
 
 	// octet argument, import
