@@ -380,10 +380,13 @@ function Inspector:putValue(v, exp)
          end
 	 elseif tv == "zenroom.big" then
          local i <const> = v:octet()
-         if self.schema and #i < 8 then
-             self:puts("dec[" .. #i .."] ".. BIG.to_decimal(v))
+         local len <const> = #i
+         if self.schema and len < 8 then
+             self:puts("dec[" .. len .."] ".. BIG.to_decimal(v))
+         elseif len == 16 or len == 32 or len == 64 then
+             self:puts("big[" .. len .. "] " .. O.to_hex(i))
          else
-             self:puts("int[" .. #i.. "] " .. exporter(v, "integer"))
+             self:puts("big[" .. len.. "] " .. exporter(v, "integer"))
          end
 	 elseif tv == "zenroom.float" then
 		self:puts("float " .. exporter(v, "float")) -- exporter(i))
