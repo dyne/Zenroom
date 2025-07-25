@@ -371,6 +371,8 @@ function Inspector:putValue(v, exp)
          local len <const> = #v
          if len == 0 then
              self:puts("octet[0] (null)")
+         elseif v:is_zero() then
+             self:puts("octet[" .. #v .. "] (all zero)")
          elseif self.schema and ( len == 16 or len == 32 or len == 64 ) then
              self:puts("octet[" .. #v .. "] " .. O.to_hex(v))
          elseif self.schema and len < 31 then

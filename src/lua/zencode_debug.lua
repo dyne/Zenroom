@@ -72,9 +72,24 @@ When("trace", function() ZEN:debug_traceback() end)
 Then("trace", function() ZEN:debug_traceback() end)
 
 local function debug_heap_schema()
+    -- TODO: here we assume that keyring is only made of BIG or OCTET
+    local function zero_all_contents(v)
+        local t <const> = type(v)
+        if t == 'table' then
+            zero_all_contents(v)
+        else
+            if t == 'zenroom.big' then
+                return BIG.new(#v:octet())
+            elseif iszen(t) then
+                return O.zero(#v:octet())
+            else
+                return O.zero(1)
+            end
+        end
+    end
     local k <const> = ACK.keyring
     if ACK.keyring then
-        ACK.keyring = '(hidden)'
+        ACK.keyring = deepmap(zero_all_contents,ACK.keyring)
     end
     local _heap <const> = I.inspect({
         a_CODEC_ack = CODEC,
