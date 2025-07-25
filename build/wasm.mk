@@ -2,7 +2,7 @@
 include build/init.mk
 
 JS_INIT_MEM :=8MB
-JS_MAX_MEM := 1024MB
+JS_MAX_MEM := 1792MB
 JS_STACK_SIZE := 7MB
 
 # Add here any function used from JS
