@@ -260,10 +260,6 @@ static const uint8_t iv_256[32] = {
 };
 
 void sha256_inc_init(sha256ctx *state) {
-    //state->ctx = (uint8_t*)malloc(SHA256CTX_BYTES);
-    //if (state->ctx == NULL) {
-    //    exit(111);
-    //}
     for (size_t i = 0; i < 32; ++i) {
         state->ctx[i] = iv_256[i];
     }
@@ -273,11 +269,6 @@ void sha256_inc_init(sha256ctx *state) {
 }
 
 void sha256_inc_ctx_clone(sha256ctx *stateout, const sha256ctx *statein) {
-    //stateout->ctx = (uint8_t*)malloc(SHA256CTX_BYTES);
-    //if (stateout->ctx == NULL) {
-    //    exit(111);
-    //}
-    //memcpy(stateout->ctx, statein->ctx, SHA256CTX_BYTES);
     for (size_t i = 0; i < SHA256CTX_BYTES; ++i) {
         stateout->ctx[i] = statein->ctx[i];
     }
