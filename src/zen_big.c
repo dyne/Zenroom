@@ -266,6 +266,7 @@ static void _algebraic_sum(big *c, big *a, big *b, char *failed_msg) {
     @return a new Big number
     @function BIG.new
 */
+static int big_from_decimal_string(lua_State *L);
 static int newbig(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -294,8 +295,19 @@ static int newbig(lua_State *L) {
 		if((int)n>0)
 			BIG_inc(c->val, (int)n);
 		BIG_norm(c->val);
-		return 1; }
+		return 1;
+	}
 
+	const char *type = luaL_typename(L, 1);
+	if(strlen(type) > 5) {
+		if (strncmp("number",type,6)==0) {
+			zerror(L, "BIG.new number input support only 32 bit integers, use strings for larger numbers");
+			return 0;
+		}
+		if(strncmp("string",type,6)==0) {
+			return big_from_decimal_string(L);
+		}
+	}
 	// octet argument, import
 	const octet *o = o_arg(L, 1);
 	if(!o) {
