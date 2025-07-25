@@ -5,6 +5,7 @@ load ../bats_setup
     Z big_decimal.lua
     Z big_shift.lua
     Z big_to_fixed_oct.lua
+    Z big_gregorian_epoch_timestamp.lua
     Z export_float.lua
     Z export_time.lua
     Z time_arithmetics.lua
