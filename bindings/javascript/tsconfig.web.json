@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig",
+  "compilerOptions": {
+    "target": "esnext",
+    "outDir": "dist/web",
+    "module": "esnext"
+  },
+  "exclude": ["node_modules/**"]
+}

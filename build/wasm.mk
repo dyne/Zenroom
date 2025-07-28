@@ -27,7 +27,7 @@ longfellow_cflags := -I ${pwd}/src -I. -I../zstd -fPIC -DLIBRARY -msimd128
 
 system := Javascript
 ld_emsdk_settings := -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
-ld_emsdk_settings += -sEXPORT_ES6 -sMODULARIZE=1	-sSINGLE_FILE=1 --embed-file 'src/lua@/'
+ld_emsdk_settings += -sMODULARIZE=1	-sSINGLE_FILE=1 --embed-file 'src/lua@/'
 ld_emsdk_settings += -sMALLOC=dlmalloc --no-heap-copy -sALLOW_MEMORY_GROWTH=1
 ld_emsdk_settings += -sINITIAL_MEMORY=${JS_INIT_MEM} -sMAXIMUM_MEMORY=${JS_MAX_MEM} -sSTACK_SIZE=${JS_STACK_SIZE} -sASSERTIONS
 ld_emsdk_settings += -sINCOMING_MODULE_JS_API=print,printErr -s EXPORTED_FUNCTIONS=${WASM_EXPORTS} -s EXPORTED_RUNTIME_METHODS='["ccall","cwrap"]'
@@ -38,11 +38,16 @@ cc_emsdk_optimizations := -O2 -sSTRICT -flto -fno-rtti -fno-exceptions
 ldflags += -lm ${ld_emsdk_optimizations} ${ld_emsdk_settings}
 cflags += ${cc_emsdk_settings} ${cc_emsdk_optimizations}
 
-all: ${BUILD_DEPS} zenroom.js
+all: ${BUILD_DEPS} zenroom.js zenroom.web.js
 
 zenroom.js: ${ZEN_SOURCES}
 	$(info === Linking Zenroom WASM for Javascript)
 	${ld} ${cflags} ${ZEN_SOURCES} \
 		-o $@ ${ldflags} ${ldadd}
+
+zenroom.web.js: ${ZEN_SOURCES}
+	$(info === Linking Zenroom WASM for Javascript)
+	${ld} ${cflags} ${ZEN_SOURCES} \
+		-o $@ ${ldflags} -sEXPORT_ES6 ${ldadd}
 
 include build/deps.mk
