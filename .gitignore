@@ -32,7 +32,8 @@ test/**/*.zen
 zenroom
 zencode-exec
 build/zenroom
-src/zenroom.js
+zenroom.js
+zenroom.web.js
 src/zenroom.js.mem
 src/zenroom.wasm
 src/zenroom.wasm.js

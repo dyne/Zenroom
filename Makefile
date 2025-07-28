@@ -145,6 +145,7 @@ clean:
 	rm -f ${pwd}/luac54
 	rm -f ${pwd}/libzenroom.so
 	rm -f ${pwd}/zenroom.js
+	rm -f ${pwd}/zenroom.web.js
 
 # -------------------
 # Parsing the documentation
