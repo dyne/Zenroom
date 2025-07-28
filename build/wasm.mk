@@ -46,7 +46,7 @@ zenroom.js: ${ZEN_SOURCES}
 		-o $@ ${ldflags} ${ldadd}
 
 zenroom.web.js: ${ZEN_SOURCES}
-	$(info === Linking Zenroom WASM for Javascript)
+	$(info === Linking Zenroom WASM for the web)
 	${ld} ${cflags} ${ZEN_SOURCES} \
 		-o $@ ${ldflags} -sEXPORT_ES6 ${ldadd}
 
