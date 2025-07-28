@@ -2129,17 +2129,36 @@ end:
  */
 static int big_modinv(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	big *y = big_arg(L, 1);
 	big *m = big_arg(L, 2);
-	big *x = big_new(L);
-	if(y && m && x) {
-		big_init(L,x);
-		BIG_invmodp(x->val, y->val, m->val);
+	if(!y || !m) {
+		failed_msg = "Could not create BIG";
+		goto end;
 	}
+	if(BIG_parity(m->val) == 0) {
+		failed_msg = "modinv modulo must be and odd number";
+		goto end;
+	}
+	BIG gcd, one;
+	BIG_one(one);
+	BIG_gcd(gcd, y->val, m->val);
+	if ( BIG_comp(gcd, one) != 0) {
+		failed_msg = "modinv can not be computed, gcd(y,m) != 1";
+		goto end;
+	}
+	big *x = big_new(L);
+	if(!x) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
+	big_init(L,x);
+	BIG_invmodp(x->val, y->val, m->val);
+end:
 	big_free(L,y);
 	big_free(L,m);
-	if(!y || !m || !x) {
-		THROW("Could not create BIG");
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
