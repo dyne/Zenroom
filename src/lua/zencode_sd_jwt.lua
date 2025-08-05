@@ -227,10 +227,25 @@ local function export_signed_selective_disclosure(obj)
             }, ".")
     }
     for _, d in pairs(export_str_dict(obj.disclosures)) do
-        records[#records+1] = O.from_string(JSON.raw_encode(d, true)):url64()
+        table.insert(records, O.from_string(JSON.raw_encode(d, true)):url64())
     end
-    records[#records+1] = ""
-    return table.concat(records, "~")
+    return table.concat(records, "~") .. "~"
+end
+
+local function import_signed_selective_disclosure_wiht_kb(obj)
+    local last_pos = obj:match(".*()~")
+    if not last_pos then
+        error("Invalid signed selective disclosure with key binding: " .. obj, 2)
+    end
+    local res = import_signed_selective_disclosure(obj:sub(1, last_pos))
+    res.key_binding = W3C.import_jwt(obj:sub(last_pos+1))
+    return res
+end
+
+local function export_signed_selective_disclosure_wiht_kb(obj)
+    local ssd = export_signed_selective_disclosure(obj)
+    local kb = W3C.export_jwt(obj.key_binding)
+    return ssd .. kb
 end
 
 ZEN:add_schema(
@@ -254,6 +269,10 @@ ZEN:add_schema(
         signed_selective_disclosure = {
             import = import_signed_selective_disclosure,
             export = export_signed_selective_disclosure,
+        },
+        signed_selective_disclosure_with_key_binding = {
+            import = import_signed_selective_disclosure_wiht_kb,
+            export = export_signed_selective_disclosure_wiht_kb,
         }
     }
 )

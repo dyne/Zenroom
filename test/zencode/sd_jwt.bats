@@ -688,3 +688,31 @@ EOF
     save_output create_disclosed_kv.out.json
     assert_output '{"disclosed_kv":{"address":{"country_code":"DE","locality":"Irgendwo","postal_code":"12345","street_address":"Sonnenstrasse 23"},"birth_family_name":"Schmidt","birthdate":"1973-01-01","family_name":"Mustermann","first_name":"Erika","is_over_18":true,"is_over_21":true,"is_over_65":false,"nationalities":[{"...":"JuL32QXDzizl-L6CLrfxfjpZsX3O6vsfpCVd1jkwJYg"}]}}'
 }
+
+@test "import sd-jwt+kb" {
+    cat <<EOF | save_asset import_sd-jwt+kb.data.json
+{
+    "sd-jwt+kb": "eyJhbGciOiAiRVMyNTYiLCAidHlwIjogImV4YW1wbGUrc2Qtand0In0.eyJfc2QiOiBbIkNyUWU3UzVrcUJBSHQtbk1ZWGdjNmJkdDJTSDVhVFkxc1VfTS1QZ2tqUEkiLCAiSnpZakg0c3ZsaUgwUjNQeUVNZmVadTZKdDY5dTVxZWhabzdGN0VQWWxTRSIsICJQb3JGYnBLdVZ1Nnh5bUphZ3ZrRnNGWEFiUm9jMkpHbEFVQTJCQTRvN2NJIiwgIlRHZjRvTGJnd2Q1SlFhSHlLVlFaVTlVZEdFMHc1cnREc3JaemZVYW9tTG8iLCAiWFFfM2tQS3QxWHlYN0tBTmtxVlI2eVoyVmE1TnJQSXZQWWJ5TXZSS0JNTSIsICJYekZyendzY002R242Q0pEYzZ2Vks4QmtNbmZHOHZPU0tmcFBJWmRBZmRFIiwgImdiT3NJNEVkcTJ4Mkt3LXc1d1BFemFrb2I5aFYxY1JEMEFUTjNvUUw5Sk0iLCAianN1OXlWdWx3UVFsaEZsTV8zSmx6TWFTRnpnbGhRRzBEcGZheVF3TFVLNCJdLCAiaXNzIjogImh0dHBzOi8vaXNzdWVyLmV4YW1wbGUuY29tIiwgImlhdCI6IDE2ODMwMDAwMDAsICJleHAiOiAxODgzMDAwMDAwLCAic3ViIjogInVzZXJfNDIiLCAibmF0aW9uYWxpdGllcyI6IFt7Ii4uLiI6ICJwRm5kamtaX1ZDem15VGE2VWpsWm8zZGgta284YUlLUWM5RGxHemhhVllvIn0sIHsiLi4uIjogIjdDZjZKa1B1ZHJ5M2xjYndIZ2VaOGtoQXYxVTFPU2xlclAwVmtCSnJXWjAifV0sICJfc2RfYWxnIjogInNoYS0yNTYiLCAiY25mIjogeyJqd2siOiB7Imt0eSI6ICJFQyIsICJjcnYiOiAiUC0yNTYiLCAieCI6ICJUQ0FFUjE5WnZ1M09IRjRqNFc0dmZTVm9ISVAxSUxpbERsczd2Q2VHZW1jIiwgInkiOiAiWnhqaVdXYlpNUUdIVldLVlE0aGJTSWlyc1ZmdWVjQ0U2dDRqVDlGMkhaUSJ9fX0.MczwjBFGtzf-6WMT-hIvYbkb11NrV1WMO-jTijpMPNbswNzZ87wY2uHz-CXo6R04b7jYrpj9mNRAvVssXou1iw~WyJlbHVWNU9nM2dTTklJOEVZbnN4QV9BIiwgImZhbWlseV9uYW1lIiwgIkRvZSJd~WyJBSngtMDk1VlBycFR0TjRRTU9xUk9BIiwgImFkZHJlc3MiLCB7InN0cmVldF9hZGRyZXNzIjogIjEyMyBNYWluIFN0IiwgImxvY2FsaXR5IjogIkFueXRvd24iLCAicmVnaW9uIjogIkFueXN0YXRlIiwgImNvdW50cnkiOiAiVVMifV0~WyIyR0xDNDJzS1F2ZUNmR2ZyeU5STjl3IiwgImdpdmVuX25hbWUiLCAiSm9obiJd~WyJsa2x4RjVqTVlsR1RQVW92TU5JdkNBIiwgIlVTIl0~eyJhbGciOiAiRVMyNTYiLCAidHlwIjogImtiK2p3dCJ9.eyJub25jZSI6ICIxMjM0NTY3ODkwIiwgImF1ZCI6ICJodHRwczovL3ZlcmlmaWVyLmV4YW1wbGUub3JnIiwgImlhdCI6IDE3NDg1MzcyNDQsICJzZF9oYXNoIjogIjBfQWYtMkItRWhMV1g1eWRoX3cyeHp3bU82aU02NkJfMlFDRWFuSTRmVVkifQ.T3SIus2OidNl41nmVkTZVCKKhOAX97aOldMyHFiYjHm261eLiJ1YiuONFiMN8QlCmYzDlBLAdPvrXh52KaLgUQ"
+}
+EOF
+    cat <<EOF | zexe import_sd-jwt+kb.zen import_sd-jwt+kb.data.json
+Scenario 'sd_jwt': sd-jwt+kb
+
+Given I have a 'signed selective disclosure with key binding' named 'sd-jwt+kb'
+
+When I pickup a 'string dictionary' from path 'sd-jwt+kb.jwt.header'
+When I rename 'header' to 'sd-jet.header'
+When I pickup a 'string dictionary' from path 'sd-jwt+kb.jwt.payload'
+When I rename 'payload' to 'sd-jet.payload'
+When I pickup a 'string dictionary' from path 'sd-jwt+kb.disclosures'
+
+When I pickup a 'string dictionary' from path 'sd-jwt+kb.key_binding.header'
+When I rename 'header' to 'kb.header'
+When I pickup a 'string dictionary' from path 'sd-jwt+kb.key_binding.payload'
+When I rename 'payload' to 'kb.payload'
+
+Then print the data
+EOF
+    save_output import_sd-jwt+kb.out.json
+    assert_output '{"disclosures":[["eluV5Og3gSNII8EYnsxA_A","family_name","Doe"],["AJx-095VPrpTtN4QMOqROA","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["2GLC42sKQveCfGfryNRN9w","given_name","John"],["lklxF5jMYlGTPUovMNIvCA","US"]],"kb.header":{"alg":"ES256","typ":"kb+jwt"},"kb.payload":{"aud":"https://verifier.example.org","iat":1748537244,"nonce":"1234567890","sd_hash":"0_Af-2B-EhLWX5ydh_w2xzwmO6iM66B_2QCEanI4fUY"},"sd-jet.header":{"alg":"ES256","typ":"example+sd-jwt"},"sd-jet.payload":{"_sd":["CrQe7S5kqBAHt-nMYXgc6bdt2SH5aTY1sU_M-PgkjPI","JzYjH4svliH0R3PyEMfeZu6Jt69u5qehZo7F7EPYlSE","PorFbpKuVu6xymJagvkFsFXAbRoc2JGlAUA2BA4o7cI","TGf4oLbgwd5JQaHyKVQZU9UdGE0w5rtDsrZzfUaomLo","XQ_3kPKt1XyX7KANkqVR6yZ2Va5NrPIvPYbyMvRKBMM","XzFrzwscM6Gn6CJDc6vVK8BkMnfG8vOSKfpPIZdAfdE","gbOsI4Edq2x2Kw-w5wPEzakob9hV1cRD0ATN3oQL9JM","jsu9yVulwQQlhFlM_3JlzMaSFzglhQG0DpfayQwLUK4"],"_sd_alg":"sha-256","cnf":{"jwk":{"crv":"P-256","kty":"EC","x":"TCAER19Zvu3OHF4j4W4vfSVoHIP1ILilDls7vCeGemc","y":"ZxjiWWbZMQGHVWKVQ4hbSIirsVfuecCE6t4jT9F2HZQ"}},"exp":1883000000,"iat":1683000000,"iss":"https://issuer.example.com","nationalities":[{"...":"pFndjkZ_VCzmyTa6UjlZo3dh-ko8aIKQc9DlGzhaVYo"},{"...":"7Cf6JkPudry3lcbwHgeZ8khAv1U1OSlerP0VkBJrWZ0"}],"sub":"user_42"},"sd-jwt+kb":"eyJhbGciOiAiRVMyNTYiLCAidHlwIjogImV4YW1wbGUrc2Qtand0In0.eyJfc2QiOiBbIkNyUWU3UzVrcUJBSHQtbk1ZWGdjNmJkdDJTSDVhVFkxc1VfTS1QZ2tqUEkiLCAiSnpZakg0c3ZsaUgwUjNQeUVNZmVadTZKdDY5dTVxZWhabzdGN0VQWWxTRSIsICJQb3JGYnBLdVZ1Nnh5bUphZ3ZrRnNGWEFiUm9jMkpHbEFVQTJCQTRvN2NJIiwgIlRHZjRvTGJnd2Q1SlFhSHlLVlFaVTlVZEdFMHc1cnREc3JaemZVYW9tTG8iLCAiWFFfM2tQS3QxWHlYN0tBTmtxVlI2eVoyVmE1TnJQSXZQWWJ5TXZSS0JNTSIsICJYekZyendzY002R242Q0pEYzZ2Vks4QmtNbmZHOHZPU0tmcFBJWmRBZmRFIiwgImdiT3NJNEVkcTJ4Mkt3LXc1d1BFemFrb2I5aFYxY1JEMEFUTjNvUUw5Sk0iLCAianN1OXlWdWx3UVFsaEZsTV8zSmx6TWFTRnpnbGhRRzBEcGZheVF3TFVLNCJdLCAiX3NkX2FsZyI6ICJzaGEtMjU2IiwgImNuZiI6IHsiandrIjogeyJjcnYiOiAiUC0yNTYiLCAia3R5IjogIkVDIiwgIngiOiAiVENBRVIxOVp2dTNPSEY0ajRXNHZmU1ZvSElQMUlMaWxEbHM3dkNlR2VtYyIsICJ5IjogIlp4amlXV2JaTVFHSFZXS1ZRNGhiU0lpcnNWZnVlY0NFNnQ0alQ5RjJIWlEifX0sICJleHAiOiAxODgzMDAwMDAwLCAiaWF0IjogMTY4MzAwMDAwMCwgImlzcyI6ICJodHRwczovL2lzc3Vlci5leGFtcGxlLmNvbSIsICJuYXRpb25hbGl0aWVzIjogW3siLi4uIjogInBGbmRqa1pfVkN6bXlUYTZVamxabzNkaC1rbzhhSUtRYzlEbEd6aGFWWW8ifSwgeyIuLi4iOiAiN0NmNkprUHVkcnkzbGNid0hnZVo4a2hBdjFVMU9TbGVyUDBWa0JKcldaMCJ9XSwgInN1YiI6ICJ1c2VyXzQyIn0.MczwjBFGtzf-6WMT-hIvYbkb11NrV1WMO-jTijpMPNbswNzZ87wY2uHz-CXo6R04b7jYrpj9mNRAvVssXou1iw~WyJlbHVWNU9nM2dTTklJOEVZbnN4QV9BIiwgImZhbWlseV9uYW1lIiwgIkRvZSJd~WyJBSngtMDk1VlBycFR0TjRRTU9xUk9BIiwgImFkZHJlc3MiLCB7ImNvdW50cnkiOiAiVVMiLCAibG9jYWxpdHkiOiAiQW55dG93biIsICJyZWdpb24iOiAiQW55c3RhdGUiLCAic3RyZWV0X2FkZHJlc3MiOiAiMTIzIE1haW4gU3QifV0~WyIyR0xDNDJzS1F2ZUNmR2ZyeU5STjl3IiwgImdpdmVuX25hbWUiLCAiSm9obiJd~WyJsa2x4RjVqTVlsR1RQVW92TU5JdkNBIiwgIlVTIl0~eyJhbGciOiJFUzI1NiIsInR5cCI6ImtiK2p3dCJ9.eyJhdWQiOiJodHRwczovL3ZlcmlmaWVyLmV4YW1wbGUub3JnIiwiaWF0IjoxNzQ4NTM3MjQ0LCJub25jZSI6IjEyMzQ1Njc4OTAiLCJzZF9oYXNoIjoiMF9BZi0yQi1FaExXWDV5ZGhfdzJ4endtTzZpTTY2Ql8yUUNFYW5JNGZVWSJ9.T3SIus2OidNl41nmVkTZVCKKhOAX97aOldMyHFiYjHm261eLiJ1YiuONFiMN8QlCmYzDlBLAdPvrXh52KaLgUQ"}'
+}
