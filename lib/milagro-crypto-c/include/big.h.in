@@ -563,6 +563,15 @@ extern void BIG_XXX_mod2m(BIG_XXX x,int m);
 */
 extern void BIG_XXX_dmod2m(DBIG_XXX x,int m);
 
+/** @brief Calculate r = gcd(a,b)
+ *
+	Calculate the Greatest Common Divisor of a and b
+	@param r BIG number, on exit = gcd(a,b)
+	@param a BIG number
+	@param b BIG number
+*/
+extern void BIG_XXX_gcd(BIG_XXX r, BIG_XXX a, BIG_XXX b);
+
 /**	@brief Calculates a*b+c+*d
  *
 	Calculate partial product of a.b, add in carry c, and add total to d
