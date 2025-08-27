@@ -164,18 +164,24 @@ static inline gf2_128_elt_t gf2_128_add(gf2_128_elt_t x, gf2_128_elt_t y) {
 // I don't know how to express in C.
 static inline poly8x16_t pmul64x8(poly8x8_t x, poly8_t y) {
   const poly8x16_t zero{};
-  poly8x16_t prod = vmull_p8(x, vdup_n_p8(y));
+  poly16x8_t wide = vmull_p8(x, vdup_n_p8(y));
+  poly8x16_t prod = vreinterpretq_p8_p16(wide);
   poly8x16x2_t uzp = vuzpq_p8(prod, zero);
-  return veorq_u8(uzp.val[0], vextq_p8(uzp.val[1], uzp.val[1], 15));
+  uint8x16_t lhs = vreinterpretq_u8_p8(uzp.val[0]);
+  uint8x16_t rhs = vreinterpretq_u8_p8(vextq_p8(uzp.val[1], uzp.val[1], 15));
+  return vreinterpretq_p8_u8(veorq_u8(lhs, rhs));
 }
 
 // multiply/add.  Return (cout, s) = cin + x * y where the final sum
 // would be (cout << 8) + s.
 static inline poly8x16x2_t pmac64x8(poly8x16_t cin, poly8x8_t x, poly8_t y) {
   const poly8x16_t zero{};
-  poly8x16_t prod = vmull_p8(x, vdup_n_p8(y));
+  poly16x8_t wide = vmull_p8(x, vdup_n_p8(y));
+  poly8x16_t prod = vreinterpretq_p8_p16(wide);
   poly8x16x2_t uzp = vuzpq_p8(prod, zero);
-  uzp.val[0] = veorq_u8(uzp.val[0], cin);
+  uint8x16_t lhs = vreinterpretq_u8_p8(uzp.val[0]);
+  uint8x16_t rhs = vreinterpretq_u8_p8(cin);
+  uzp.val[0] = vreinterpretq_p8_u8(veorq_u8(lhs, rhs));
   return uzp;
 }
 
@@ -184,46 +190,68 @@ static inline poly8x16_t pmul64x64(poly8x8_t x, poly8x8_t y) {
 
   poly8x16x2_t prod = pmac64x8(r, x, y[0]);
   r = prod.val[0];
+  uint8x16_t ur = vreinterpretq_u8_p8(r);
 
   prod = pmac64x8(prod.val[1], x, y[1]);
-  r = veorq_u8(r, vextq_p8(prod.val[0], prod.val[0], 15));
+  uint8x16_t rhs = vreinterpretq_u8_p8(vextq_p8(prod.val[0], prod.val[0], 15));
+  ur = veorq_u8(ur, rhs);
 
   prod = pmac64x8(prod.val[1], x, y[2]);
-  r = veorq_u8(r, vextq_p8(prod.val[0], prod.val[0], 14));
+  rhs = vreinterpretq_u8_p8(vextq_p8(prod.val[0], prod.val[0], 14));
+  ur = veorq_u8(ur, rhs);
 
   prod = pmac64x8(prod.val[1], x, y[3]);
-  r = veorq_u8(r, vextq_p8(prod.val[0], prod.val[0], 13));
+  rhs = vreinterpretq_u8_p8(vextq_p8(prod.val[0], prod.val[0], 13));
+  ur = veorq_u8(ur, rhs);
 
   prod = pmac64x8(prod.val[1], x, y[4]);
-  r = veorq_u8(r, vextq_p8(prod.val[0], prod.val[0], 12));
+  rhs = vreinterpretq_u8_p8(vextq_p8(prod.val[0], prod.val[0], 12));
+  ur = veorq_u8(ur, rhs);
 
   prod = pmac64x8(prod.val[1], x, y[5]);
-  r = veorq_u8(r, vextq_p8(prod.val[0], prod.val[0], 11));
+  rhs = vreinterpretq_u8_p8(vextq_p8(prod.val[0], prod.val[0], 11));
+  ur = veorq_u8(ur, rhs);
 
   prod = pmac64x8(prod.val[1], x, y[6]);
-  r = veorq_u8(r, vextq_p8(prod.val[0], prod.val[0], 10));
+  rhs = vreinterpretq_u8_p8(vextq_p8(prod.val[0], prod.val[0], 10));
+  ur = veorq_u8(ur, rhs);
 
   prod = pmac64x8(prod.val[1], x, y[7]);
-  r = veorq_u8(r, vextq_p8(prod.val[0], prod.val[0], 9));
-  r = veorq_u8(r, vextq_p8(prod.val[1], prod.val[1], 8));
+  rhs = vreinterpretq_u8_p8(vextq_p8(prod.val[0], prod.val[0], 9));
+  ur = veorq_u8(ur, rhs);
+  rhs = vreinterpretq_u8_p8(vextq_p8(prod.val[1], prod.val[1], 8));
+  ur = veorq_u8(ur, rhs);
 
-  return r;
+  return vreinterpretq_p8_u8(ur);
 }
 
 static inline gf2_128_elt_t vmull_low(gf2_128_elt_t t0, gf2_128_elt_t t1) {
   // vreinterpretq_p64_p8() seems not to be defined, use
   // static_cast<poly64x2_t>
-  return static_cast<poly64x2_t>(pmul64x64(vget_low_p8(t0), vget_low_p8(t1)));
+  poly8x16_t t0_bytes = vreinterpretq_p8_p64(t0);
+  poly8x16_t t1_bytes = vreinterpretq_p8_p64(t1);
+  poly8x8_t t0_low  = vget_low_p8(t0_bytes);
+  poly8x8_t t1_low  = vget_low_p8(t1_bytes);
+  poly8x16_t low_prod = pmul64x64(t0_low, t1_low);
+  return vreinterpretq_p64_p8(low_prod);
+  // return static_cast<poly64x2_t>(pmul64x64(t0_low, t1_low));
 }
 static inline gf2_128_elt_t vmull_high(gf2_128_elt_t t0, gf2_128_elt_t t1) {
-  return static_cast<poly64x2_t>(pmul64x64(vget_high_p8(t0), vget_high_p8(t1)));
+  poly8x16_t t0_bytes = vreinterpretq_p8_p64(t0);
+  poly8x16_t t1_bytes = vreinterpretq_p8_p64(t1);
+  poly8x8_t t0_high = vget_high_p8(t0_bytes);
+  poly8x8_t t1_high = vget_high_p8(t1_bytes);
+  poly8x16_t high_prod = pmul64x64(t0_high, t1_high);
+  return vreinterpretq_p64_p8(high_prod);
+  // return static_cast<poly64x2_t>(pmul64x64(vget_high_p8(t0), vget_high_p8(t1)));
 }
 
 // vextq_p64() seems not to be defined.
 static inline gf2_128_elt_t vextq_p64_1_emul(gf2_128_elt_t t0,
                                              gf2_128_elt_t t1) {
-  return static_cast<poly64x2_t>(
-      vextq_p8(static_cast<poly8x16_t>(t0), static_cast<poly8x16_t>(t1), 8));
+  return vreinterpretq_p64_p8(vextq_p8(vreinterpretq_p8_p64(t0), vreinterpretq_p8_p64(t1), 8));
+  // return static_cast<poly64x2_t>(
+  //    vextq_p8(static_cast<poly8x16_t>(t0), static_cast<poly8x16_t>(t1), 8));
 }
 
 // return t0 + x^64 * t1
@@ -234,8 +262,17 @@ static inline gf2_128_elt_t gf2_128_reduce(gf2_128_elt_t t0, gf2_128_elt_t t1) {
   uint64x2_t t1_ext = vreinterpretq_u64_p64(vextq_p64_1_emul(zero, t1));
   t0_u = veorq_u64(t0_u, t1_ext);
   t0 = vreinterpretq_p64_u64(t0_u);
-  poly8x16_t prod = pmul64x8(vget_high_p8(t1), poly);
-  t0 = static_cast<poly64x2_t>(veorq_u8(static_cast<poly8x16_t>(t0), prod));
+  poly8x16_t t1_bytes = vreinterpretq_p8_p64(t1);
+  poly8x16_t prod = pmul64x8(vget_high_p8(t1_bytes), poly);
+  t0 = vreinterpretq_p64_p8(
+	vreinterpretq_p8_u8(
+	  veorq_u8(
+	    vreinterpretq_u8_p8(vreinterpretq_p8_p64(t0)),
+	    vreinterpretq_u8_p8(prod)
+	  )
+	)
+  );
+  // t0 = static_cast<poly64x2_t>(veorq_u8(static_cast<poly8x16_t>(t0), prod));
   return t0;
 }
 
