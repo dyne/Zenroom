@@ -111,6 +111,36 @@ jobs:
         run: |
           make check
 
+  linux-arm-test:
+    name: 🐧 Linux ARM64 check tests (gcc and clang)
+    needs: [reuse, c-lint, lua-lint]
+    strategy:
+      matrix:
+        cc: [COMPILER=gcc COMPILER_CXX=g++,COMPILER=clang COMPILER_CXX=clang++]
+      fail-fast: false
+    runs-on: ubuntu-24.04-arm
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: hendrikmuhs/ccache-action@v1.2
+      - name: install dependencies
+        run: |
+          sudo apt install -yq jq libreadline-dev
+          ${{ matrix.cc }} sudo apt install -yq $COMPILER
+          pip3 install --prefer-binary meson ninja
+      - name: Build GNU/Linux ${{ matrix.cc }}
+        run: |
+          make linux-exe ${{ matrix.cc }} CCACHE=1
+          make linux-lib ${{ matrix.cc }} CCACHE=1
+      - name: Check all tests on ${{ matrix.cc }}
+        run: |
+          make check
+
   musl-test:
     name: 💪 Musl test
     needs: [reuse, c-lint, lua-lint]
