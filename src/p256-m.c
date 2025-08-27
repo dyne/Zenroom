@@ -199,6 +199,24 @@ static uint64_t u32_muladd64(uint32_t x, uint32_t y, uint32_t z, uint32_t t)
 #define MULADD64_ASM
 #define MULADD64_SMALL
 
+#elif defined(__aarch64__)
+
+static uint64_t u32_muladd64(uint32_t x, uint32_t y, uint32_t z, uint32_t t)
+{
+    uint64_t result;
+    __asm__ (
+        "umulh  %x[hi], %w[x], %w[y]\n\t"   // upper 32 bits of x*y
+        "mul    %w[lo], %w[x], %w[y]\n\t"  // lower 32 bits of x*y
+        "adds   %w[lo], %w[lo], %w[z]\n\t"
+        "adc    %x[hi], %x[hi], %w[t]\n\t"
+        : [hi] "=&r"(t), [lo] "=&r"(z)
+        : [x] "r"(x), [y] "r"(y), [z] "r"(z), [t] "r"(t)
+        : "cc"
+    );
+    return ((uint64_t)t << 32) | z;
+}
+#define MULADD64_ASM
+
 #else /* __ARM_FEATURE_DSP */
 
 /*
