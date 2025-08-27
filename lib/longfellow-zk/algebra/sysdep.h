@@ -129,7 +129,8 @@ static inline void mulq(uint64_t* l, uint64_t* h, uint64_t a, uint64_t b) {
 #elif defined(__GNUC__) && defined(__aarch64__) && defined(__SIZEOF_INT128__) // pure-C fallback
 
 static inline unsigned long long adc(unsigned long long* a, unsigned long long b, unsigned long long c) {
-  unsigned __int128 sum = (unsigned __int128)(*a) + b + c;
+  typedef unsigned __int128 uint128_t;
+  uint128_t sum = (uint128_t)(*a) + b + c;
   *a = (uint64_t)sum;
   return (uint64_t)(sum >> 64);
 }
@@ -145,7 +146,8 @@ static inline unsigned int adc(unsigned int* a, unsigned int b, unsigned int c) 
 }
 
 static inline unsigned long long sbb(unsigned long long* a, unsigned long long b, unsigned long long c) {
-  unsigned __int128 diff = (unsigned __int128)(*a) - b - c;
+  typedef unsigned __int128 uint128_t;
+  uint128_t diff = (uint128_t)(*a) - b - c;
   *a = (uint64_t)diff;
   return (uint64_t)(diff >> 64);
 }
@@ -155,7 +157,7 @@ static inline unsigned long sbb(unsigned long* a, unsigned long b, unsigned long
   return (unsigned long)(diff >> 32);
 }
 static inline unsigned int sbb(unsigned int* a, unsigned int b, unsigned int c) {
-  unsigned int64_t diff = (uint64_t)(*a) - b - c;
+  uint64_t diff = (uint64_t)(*a) - b - c;
   *a = (unsigned int)diff;
   return (unsigned int)(diff >> 32);
 }
@@ -163,7 +165,7 @@ static inline unsigned int sbb(unsigned int* a, unsigned int b, unsigned int c) 
 static inline void mulq(uint64_t* l, uint64_t* h, uint64_t a, uint64_t b) {
   __uint128_t p = (__uint128_t)b * (__uint128_t)a;
   *l = (uint64_t)p;
-  *h = (uint64_t)p >> 64;
+  *h = (uint64_t)(p >> 64);
 }
 
 #endif
