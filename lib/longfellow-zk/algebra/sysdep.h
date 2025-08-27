@@ -140,7 +140,7 @@ static inline unsigned long adc(unsigned long* a, unsigned long b, unsigned long
   return (unsigned long)(sum >> 32);
 }
 static inline unsigned int adc(unsigned int* a, unsigned int b, unsigned int c) {
-  unsigned int64_t sum = (uint64_t)(*a) + b + c;
+  uint64_t sum = (uint64_t)(*a) + b + c;
   *a = (unsigned int)sum;
   return (unsigned int)(sum >> 32);
 }
