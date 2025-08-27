@@ -122,7 +122,7 @@ static inline gf2_128_elt_t gf2_128_mul(gf2_128_elt_t x, gf2_128_elt_t y) {
 }
 }  // namespace proofs
 
-#elif defined(__arm__) || defined(__aarch64__)
+#elif defined(__arm__)
 //
 // Implementation for arm/neon without AES instructions
 //
@@ -143,7 +143,7 @@ static inline gf2_128_elt_t gf2_128_of_uint64x2(
 }
 
 static inline gf2_128_elt_t gf2_128_add(gf2_128_elt_t x, gf2_128_elt_t y) {
-  return vaddq_p64(x, y);
+  return veorq_u64(x, y);
 }
 
 // Emulate vmull_p64() with vmull_p8().
@@ -164,7 +164,7 @@ static inline poly8x16_t pmul64x8(poly8x8_t x, poly8_t y) {
   const poly8x16_t zero{};
   poly8x16_t prod = vmull_p8(x, vdup_n_p8(y));
   poly8x16x2_t uzp = vuzpq_p8(prod, zero);
-  return vaddq_p8(uzp.val[0], vextq_p8(uzp.val[1], uzp.val[1], 15));
+  return veorq_u8(uzp.val[0], vextq_p8(uzp.val[1], uzp.val[1], 15));
 }
 
 // multiply/add.  Return (cout, s) = cin + x * y where the final sum
@@ -173,7 +173,7 @@ static inline poly8x16x2_t pmac64x8(poly8x16_t cin, poly8x8_t x, poly8_t y) {
   const poly8x16_t zero{};
   poly8x16_t prod = vmull_p8(x, vdup_n_p8(y));
   poly8x16x2_t uzp = vuzpq_p8(prod, zero);
-  uzp.val[0] = vaddq_p8(uzp.val[0], cin);
+  uzp.val[0] = veorq_u8(uzp.val[0], cin);
   return uzp;
 }
 
@@ -184,26 +184,26 @@ static inline poly8x16_t pmul64x64(poly8x8_t x, poly8x8_t y) {
   r = prod.val[0];
 
   prod = pmac64x8(prod.val[1], x, y[1]);
-  r = vaddq_p8(r, vextq_p8(prod.val[0], prod.val[0], 15));
+  r = veorq_u8(r, vextq_p8(prod.val[0], prod.val[0], 15));
 
   prod = pmac64x8(prod.val[1], x, y[2]);
-  r = vaddq_p8(r, vextq_p8(prod.val[0], prod.val[0], 14));
+  r = veorq_u8(r, vextq_p8(prod.val[0], prod.val[0], 14));
 
   prod = pmac64x8(prod.val[1], x, y[3]);
-  r = vaddq_p8(r, vextq_p8(prod.val[0], prod.val[0], 13));
+  r = veorq_u8(r, vextq_p8(prod.val[0], prod.val[0], 13));
 
   prod = pmac64x8(prod.val[1], x, y[4]);
-  r = vaddq_p8(r, vextq_p8(prod.val[0], prod.val[0], 12));
+  r = veorq_u8(r, vextq_p8(prod.val[0], prod.val[0], 12));
 
   prod = pmac64x8(prod.val[1], x, y[5]);
-  r = vaddq_p8(r, vextq_p8(prod.val[0], prod.val[0], 11));
+  r = veorq_u8(r, vextq_p8(prod.val[0], prod.val[0], 11));
 
   prod = pmac64x8(prod.val[1], x, y[6]);
-  r = vaddq_p8(r, vextq_p8(prod.val[0], prod.val[0], 10));
+  r = veorq_u8(r, vextq_p8(prod.val[0], prod.val[0], 10));
 
   prod = pmac64x8(prod.val[1], x, y[7]);
-  r = vaddq_p8(r, vextq_p8(prod.val[0], prod.val[0], 9));
-  r = vaddq_p8(r, vextq_p8(prod.val[1], prod.val[1], 8));
+  r = veorq_u8(r, vextq_p8(prod.val[0], prod.val[0], 9));
+  r = veorq_u8(r, vextq_p8(prod.val[1], prod.val[1], 8));
 
   return r;
 }
@@ -228,8 +228,8 @@ static inline gf2_128_elt_t vextq_p64_1_emul(gf2_128_elt_t t0,
 static inline gf2_128_elt_t gf2_128_reduce(gf2_128_elt_t t0, gf2_128_elt_t t1) {
   const poly8_t poly = static_cast<poly8_t>(0x87);
   const gf2_128_elt_t zero = {0x0, 0x0};
-  t0 = vaddq_p64(t0, vextq_p64_1_emul(zero, t1));
-  t0 = vaddq_p64(t0, pmul64x8(vget_high_p8(t1), poly));
+  t0 = veorq_u64(t0, vextq_p64_1_emul(zero, t1));
+  t0 = veorq_u64(t0, pmul64x8(vget_high_p8(t1), poly));
   return t0;
 }
 
@@ -237,7 +237,7 @@ static inline gf2_128_elt_t gf2_128_mul(gf2_128_elt_t x, gf2_128_elt_t y) {
   gf2_128_elt_t swx = vextq_p64_1_emul(x, x);
   gf2_128_elt_t t1a = vmull_high(swx, y);
   gf2_128_elt_t t1b = vmull_low(swx, y);
-  gf2_128_elt_t t1 = vaddq_p64(t1a, t1b);
+  gf2_128_elt_t t1 = veorq_u64(t1a, t1b);
   gf2_128_elt_t t2 = vmull_high(x, y);
   t1 = gf2_128_reduce(t1, t2);
   gf2_128_elt_t t0 = vmull_low(x, y);
