@@ -102,6 +102,7 @@ mlkem_cc ?= ${cc}
 # longfellow-zk settings
 longfellow_cxx ?= ${cxx}
 longfellow_cflags += -I ${pwd}/src -I. -I../zstd -fPIC -DLIBRARY
+ARCH := $(shell uname -m)
 ifeq ($(ARCH),x86_64)
     longfellow_cflags += -mpclmul
 endif
