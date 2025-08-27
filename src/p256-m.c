@@ -203,17 +203,18 @@ static uint64_t u32_muladd64(uint32_t x, uint32_t y, uint32_t z, uint32_t t)
 
 static uint64_t u32_muladd64(uint32_t x, uint32_t y, uint32_t z, uint32_t t)
 {
-    uint64_t result;
+    uint64_t lo, hi;
     __asm__ (
-        "umulh  %x[hi], %w[x], %w[y]\n\t"   // upper 32 bits of x*y
-        "mul    %w[lo], %w[x], %w[y]\n\t"  // lower 32 bits of x*y
-        "adds   %w[lo], %w[lo], %w[z]\n\t"
-        "adc    %x[hi], %x[hi], %w[t]\n\t"
-        : [hi] "=&r"(t), [lo] "=&r"(z)
-        : [x] "r"(x), [y] "r"(y), [z] "r"(z), [t] "r"(t)
+        "umulh  %x[hi], %x[x], %x[y]\n\t"
+        "mul    %x[lo], %x[x], %x[y]\n\t"
+        "adds   %x[lo], %x[lo], %x[z]\n\t"
+        "adc    %x[hi], %x[hi], %x[t]\n\t"
+        : [lo] "=&r"(lo), [hi] "=&r"(hi)
+        : [x] "r"((uint64_t)x), [y] "r"((uint64_t)y),
+          [z] "r"((uint64_t)z), [t] "r"((uint64_t)t)
         : "cc"
     );
-    return ((uint64_t)t << 32) | z;
+	return (hi << 32) | (lo & 0xFFFFFFFF);
 }
 #define MULADD64_ASM
 
