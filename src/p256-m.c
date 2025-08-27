@@ -206,11 +206,11 @@ static uint64_t u32_muladd64(uint32_t x, uint32_t y, uint32_t z, uint32_t t)
     uint32_t lo, hi;
     __asm__ (
         "mul    %w[lo], %w[x], %w[y]\n\t"   // lo = x * y (low 32 bits)
-        "umulh  %w[hi], %w[x], %w[y]\n\t"   // hi = x * y (high 32 bits)
+        "umulh  %x[hi], %x[x], %x[y]\n\t"   // hi = x * y (high 32 bits) (use 64bits regs because umulh only exists in 64-bit mode)
         "adds   %w[lo], %w[lo], %w[z]\n\t"  // add z to low, set carry
         "adc    %w[hi], %w[hi], %w[t]\n\t"  // add t + carry to high
         : [lo] "=&r"(lo), [hi] "=&r"(hi)
-        : [x] "r"(x), [y] "r"(y), [z] "r"(z), [t] "r"(t)
+        : [x] "r"((uint64_t)x), [y] "r"((uint64_t)y), [z] "r"(z), [t] "r"(t)
         : "cc"
     );
     return ((uint64_t)hi << 32) | lo;
