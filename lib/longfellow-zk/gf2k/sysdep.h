@@ -143,7 +143,9 @@ static inline gf2_128_elt_t gf2_128_of_uint64x2(
 }
 
 static inline gf2_128_elt_t gf2_128_add(gf2_128_elt_t x, gf2_128_elt_t y) {
-  return veorq_u64(x, y);
+  uint64x2_t ux = vreinterpretq_u64_p64(x);
+  uint64x2_t uy = vreinterpretq_u64_p64(y);
+  return vreinterpretq_p64_u64(veorq_u64(ux, uy));
 }
 
 // Emulate vmull_p64() with vmull_p8().
@@ -228,8 +230,12 @@ static inline gf2_128_elt_t vextq_p64_1_emul(gf2_128_elt_t t0,
 static inline gf2_128_elt_t gf2_128_reduce(gf2_128_elt_t t0, gf2_128_elt_t t1) {
   const poly8_t poly = static_cast<poly8_t>(0x87);
   const gf2_128_elt_t zero = {0x0, 0x0};
-  t0 = veorq_u64(t0, vextq_p64_1_emul(zero, t1));
-  t0 = veorq_u64(t0, pmul64x8(vget_high_p8(t1), poly));
+  uint64x2_t t0_u = vreinterpretq_u64_p64(t0);
+  uint64x2_t t1_ext = vreinterpretq_u64_p64(vextq_p64_1_emul(zero, t1));
+  t0_u = veorq_u64(t0_u, t1_ext);
+  t0 = vreinterpretq_p64_u64(t0_u);
+  poly8x16_t prod = pmul64x8(vget_high_p8(t1), poly);
+  t0 = static_cast<poly64x2_t>(veorq_u8(static_cast<poly8x16_t>(t0), prod));
   return t0;
 }
 
@@ -237,7 +243,8 @@ static inline gf2_128_elt_t gf2_128_mul(gf2_128_elt_t x, gf2_128_elt_t y) {
   gf2_128_elt_t swx = vextq_p64_1_emul(x, x);
   gf2_128_elt_t t1a = vmull_high(swx, y);
   gf2_128_elt_t t1b = vmull_low(swx, y);
-  gf2_128_elt_t t1 = veorq_u64(t1a, t1b);
+  uint64x2_t t1_u = vreinterpretq_u64_p64(t1a) ^ vreinterpretq_u64_p64(t1b);
+  gf2_128_elt_t t1 = vreinterpretq_p64_u64(t1_u);
   gf2_128_elt_t t2 = vmull_high(x, y);
   t1 = gf2_128_reduce(t1, t2);
   gf2_128_elt_t t0 = vmull_low(x, y);
