@@ -90,7 +90,7 @@ jobs:
       matrix:
         cc: [COMPILER=gcc COMPILER_CXX=g++,COMPILER=clang COMPILER_CXX=clang++]
       fail-fast: false
-    runs-on: "ubuntu-latest"
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
         with:
@@ -120,11 +120,11 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - name: Get SHA256 of musl-dyne.tar.xz
+      - name: Get SHA256 of dyne-gcc-musl-x86_64.tar.xz
         id: get-sum
         run: |
           curl -s "https://files.dyne.org/?file=musl/SHA256SUMS.txt" -o checksums.txt
-          HASH=$(grep musl-dyne.tar.xz checksums.txt | awk '{print $1}')
+          HASH=$(grep dyne-gcc-musl-x86_64.tar.xz checksums.txt | awk '{print $1}')
           echo "hash=$HASH" >> $GITHUB_OUTPUT
       - name: Cache musl-dyne using SHA256
         id: cache-musl
@@ -141,10 +141,10 @@ jobs:
       - name: Download and extract if cache miss
         if: steps.cache-musl.outputs.cache-hit != 'true'
         run: |
-          wget -O musl-dyne.tar.xz "https://files.dyne.org/?file=musl/musl-dyne.tar.xz"
+          wget -O dyne-gcc-musl-x86_64.tar.xz "https://files.dyne.org/?file=musl/dyne-gcc-musl-x86_64.tar.xz"
           mkdir -p .cache/musl-dyne
-          tar -xJf musl-dyne.tar.xz -C .cache/musl-dyne --strip-components=1
-          rm musl-dyne.tar.xz
+          tar -xJf dyne-gcc-musl-x86_64.tar.xz -C .cache/musl-dyne --strip-components=1
+          rm dyne-gcc-musl-x86_64.tar.xz
           sudo rm -rf /opt/musl-dyne/*
           sudo cp -a .cache/musl-dyne/. /opt/musl-dyne/
       - uses: hendrikmuhs/ccache-action@v1.2
@@ -435,11 +435,11 @@ jobs:
           name: documentation
           path: |
             build/release-intro.md
-      - name: Get SHA256 of musl-dyne.tar.xz
+      - name: Get SHA256 of dyne-gcc-musl-x86_64.tar.xz
         id: get-sum
         run: |
           curl -s "https://files.dyne.org/?file=musl/SHA256SUMS.txt" -o checksums.txt
-          HASH=$(grep musl-dyne.tar.xz checksums.txt | awk '{print $1}')
+          HASH=$(grep dyne-gcc-musl-x86_64.tar.xz checksums.txt | awk '{print $1}')
           echo "hash=$HASH" >> $GITHUB_OUTPUT
       - name: Cache musl-dyne using SHA256
         id: cache-musl
@@ -456,10 +456,10 @@ jobs:
       - name: Download and extract if cache miss
         if: steps.cache-musl.outputs.cache-hit != 'true'
         run: |
-          wget -O musl-dyne.tar.xz "https://files.dyne.org/?file=musl/musl-dyne.tar.xz"
+          wget -O dyne-gcc-musl-x86_64.tar.xz "https://files.dyne.org/?file=musl/dyne-gcc-musl-x86_64.tar.xz"
           mkdir -p .cache/musl-dyne
-          tar -xJf musl-dyne.tar.xz -C .cache/musl-dyne --strip-components=1
-          rm musl-dyne.tar.xz
+          tar -xJf dyne-gcc-musl-x86_64.tar.xz -C .cache/musl-dyne --strip-components=1
+          rm dyne-gcc-musl-x86_64.tar.xz
           sudo rm -rf /opt/musl-dyne/*
           sudo cp -a .cache/musl-dyne/. /opt/musl-dyne/
       - name: Install build deps
