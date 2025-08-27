@@ -168,6 +168,32 @@ static inline void mulq(uint64_t* l, uint64_t* h, uint64_t a, uint64_t b) {
   *h = (uint64_t)(p >> 64);
 }
 
+#elif defined(__arm__) && defined(__GNUC__)
+
+static inline unsigned int adc(unsigned int* a, unsigned int b, unsigned int c) {
+    uint64_t sum = (uint64_t)(*a) + b + c;
+    *a = (unsigned int)sum;
+    return (unsigned int)(sum >> 32);
+}
+static inline unsigned long adc(unsigned long* a, unsigned long b, unsigned long c) {
+    return adc((unsigned int*)a, (unsigned int)b, (unsigned int)c);
+}
+
+static inline unsigned int sbb(unsigned int* a, unsigned int b, unsigned int c) {
+    uint64_t diff = (uint64_t)(*a) - b - c;
+    *a = (unsigned int)diff;
+    return (unsigned int)(diff >> 32);
+}
+static inline unsigned long sbb(unsigned long* a, unsigned long b, unsigned long c) {
+    return sbb((unsigned int*)a, (unsigned int)b, (unsigned int)c);
+}
+
+static inline void mulq(uint32_t* l, uint32_t* h, uint32_t a, uint32_t b) {
+    uint64_t p = (uint64_t)a * (uint64_t)b;
+    *l = (uint32_t)p;
+    *h = (uint32_t)(p >> 32);
+}
+
 #endif
 
 static inline void mulq(uint32_t* l, uint32_t* h, uint32_t a, uint32_t b) {
