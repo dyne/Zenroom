@@ -178,6 +178,21 @@ static inline unsigned int adc(unsigned int* a, unsigned int b, unsigned int c) 
 static inline unsigned long adc(unsigned long* a, unsigned long b, unsigned long c) {
     return adc((unsigned int*)a, (unsigned int)b, (unsigned int)c);
 }
+static inline unsigned long long adc(unsigned long long* a, unsigned long long b, unsigned long long c) {
+    uint32_t a_lo = (uint32_t)(*a);
+    uint32_t a_hi = (uint32_t)(*a >> 32);
+    uint32_t b_lo = (uint32_t)b;
+    uint32_t b_hi = (uint32_t)(b >> 32);
+    uint32_t carry_lo = 0;
+
+    uint32_t sum_lo = a_lo + b_lo + (uint32_t)c;
+    carry_lo = (sum_lo < a_lo) || ((sum_lo == a_lo) && ((uint32_t)c != 0));
+
+    uint32_t sum_hi = a_hi + b_hi + carry_lo;
+
+    *a = ((unsigned long long)sum_hi << 32) | sum_lo;
+    return (sum_hi >> 31) & 1;
+}
 
 static inline unsigned int sbb(unsigned int* a, unsigned int b, unsigned int c) {
     uint64_t diff = (uint64_t)(*a) - b - c;
@@ -186,6 +201,19 @@ static inline unsigned int sbb(unsigned int* a, unsigned int b, unsigned int c) 
 }
 static inline unsigned long sbb(unsigned long* a, unsigned long b, unsigned long c) {
     return sbb((unsigned int*)a, (unsigned int)b, (unsigned int)c);
+}
+static inline unsigned long long sbb(unsigned long long* a, unsigned long long b, unsigned long long c) {
+    uint32_t a_lo = (uint32_t)(*a);
+    uint32_t a_hi = (uint32_t)(*a >> 32);
+    uint32_t b_lo = (uint32_t)b;
+    uint32_t b_hi = (uint32_t)(b >> 32);
+
+    uint32_t borrow_lo = (a_lo < b_lo + (uint32_t)c) ? 1 : 0;
+    uint32_t diff_lo = a_lo - b_lo - (uint32_t)c;
+    uint32_t diff_hi = a_hi - b_hi - borrow_lo;
+
+    *a = ((unsigned long long)diff_hi << 32) | diff_lo;
+    return (diff_hi >> 31) & 1; // return borrow
 }
 
 static inline void mulq(uint32_t* l, uint32_t* h, uint32_t a, uint32_t b) {
