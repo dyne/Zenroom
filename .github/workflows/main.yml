@@ -641,7 +641,7 @@ jobs:
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: javascript-artifact
           path: .
@@ -657,7 +657,7 @@ jobs:
     needs: [js-build-release, python-sdist, apple-release, linux-release]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: artifact
           path: dist
@@ -672,7 +672,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: download binary artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: |
             zenroom-bin
@@ -708,7 +708,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Remove tag
-        uses: dev-drprasad/delete-tag-and-release@v1.0
+        uses: dev-drprasad/delete-tag-and-release@v1.1
         with:
           tag_name: ${{ needs.semantic-release.outputs.version }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
