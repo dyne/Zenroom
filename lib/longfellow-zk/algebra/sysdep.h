@@ -216,12 +216,6 @@ static inline unsigned long long sbb(unsigned long long* a, unsigned long long b
     return (diff_hi >> 31) & 1; // return borrow
 }
 
-static inline void mulq(uint32_t* l, uint32_t* h, uint32_t a, uint32_t b) {
-    uint64_t p = (uint64_t)a * (uint64_t)b;
-    *l = (uint32_t)p;
-    *h = (uint32_t)(p >> 32);
-}
-
 #endif
 
 static inline void mulq(uint32_t* l, uint32_t* h, uint32_t a, uint32_t b) {
