@@ -126,6 +126,26 @@ static inline void mulq(uint64_t* l, uint64_t* h, uint64_t a, uint64_t b) {
 #else  // defined(__SIZEOF_INT128__)
 #define SYSDEP_MULQ64_NOT_DEFINED
 #endif  // defined(__SIZEOF_INT128__)
+#elif defined(__GNUC__) && defined(__aarch64__) && defined(__SIZEOF_INT128__) // pure-C fallback
+
+static inline uint64_t adc(uint64_t* a, uint64_t b, uint64_t c) {
+  unsigned __int128 sum = (unsigned __int128)(*a) + b + c;
+  *a = (uint64_t)sum;
+  return (uint64_t)(sum >> 64);
+}
+
+static inline uint64_t sbb(uint64_t* a, uint64_t b, uint64_t c) {
+  unsigned __int128 diff = (unsigned __int128)(*a) - b - c;
+  *a = (uint64_t)diff;
+  return (uint64_t)(diff >> 64); // upper bit used as borrow
+}
+
+static inline void mulq(uint64_t* l, uint64_t* h, uint64_t a, uint64_t b) {
+  __uint128_t p = (__uint128_t)b * (__uint128_t)a;
+  *l = (uint64_t)p;
+  *h = (uint64_t)p >> 64;
+}
+
 #endif
 
 static inline void mulq(uint32_t* l, uint32_t* h, uint32_t a, uint32_t b) {
