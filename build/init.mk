@@ -101,7 +101,16 @@ mlkem_cc ?= ${cc}
 #-----------------
 # longfellow-zk settings
 longfellow_cxx ?= ${cxx}
-longfellow_cflags += -I ${pwd}/src -I. -I../zstd -fPIC -DLIBRARY -mpclmul
+longfellow_cflags += -I ${pwd}/src -I. -I../zstd -fPIC -DLIBRARY
+ifeq ($(ARCH),x86_64)
+    longfellow_cflags += -mpclmul
+endif
+ifeq ($(ARCH),i686)
+    longfellow_cflags += -mpclmul
+endif
+ifeq ($(ARCH),aarch64)
+    longfellow_cflags += -march=armv8-a+crypto
+endif
 
 #-----------------
 # zstd settings
