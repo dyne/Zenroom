@@ -30,7 +30,7 @@
 #define BIG_MULSIGN(A, B) ((A) * (B))
 
 typedef struct {
-	char zencode_positive;
+	signed char zencode_positive;
 	int  len; // modbytes
 	int  chunksize;
 	chunk *val;
