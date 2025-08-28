@@ -126,94 +126,172 @@ static inline void mulq(uint64_t* l, uint64_t* h, uint64_t a, uint64_t b) {
 #else  // defined(__SIZEOF_INT128__)
 #define SYSDEP_MULQ64_NOT_DEFINED
 #endif  // defined(__SIZEOF_INT128__)
-#elif defined(__GNUC__) && defined(__aarch64__) && defined(__SIZEOF_INT128__) // pure-C fallback
+#elif defined(__GNUC__) && defined(__aarch64__)
 
-static inline unsigned long long adc(unsigned long long* a, unsigned long long b, unsigned long long c) {
-  typedef unsigned __int128 uint128_t;
-  uint128_t sum = (uint128_t)(*a) + b + c;
-  *a = (uint64_t)sum;
-  return (uint64_t)(sum >> 64);
+static inline unsigned int adc(unsigned int* a, unsigned int b, unsigned int c) {
+  unsigned int result;
+  unsigned int carry_out;
+  __asm__ volatile (
+    "adc %w[result], %w[a_val], %w[b_val]\n\t"
+    "cset %w[carry_out], cs"
+    : [result] "=r" (result),
+      [carry_out] "=r" (carry_out)
+    : [a_val] "r" (*a),
+      [b_val] "r" (b),
+      "c" (c)
+    : "cc"
+  );
+  *a = result;
+  return carry_out;
 }
 static inline unsigned long adc(unsigned long* a, unsigned long b, unsigned long c) {
-  unsigned long long sum = (unsigned long long)(*a) + b + c;
-  *a = (unsigned long)sum;
-  return (unsigned long)(sum >> 32);
+  unsigned long result;
+  unsigned long carry_out;
+  __asm__ volatile (
+    "adc %[result], %[a_val], %[b_val]\n\t"
+    "cset %[carry_out], cs"
+    : [result] "=r" (result),
+      [carry_out] "=r" (carry_out)
+    : [a_val] "r" (*a),
+      [b_val] "r" (b),
+      "c" (c)
+    : "cc"
+  );
+  *a = result;
+  return carry_out;
 }
-static inline unsigned int adc(unsigned int* a, unsigned int b, unsigned int c) {
-  uint64_t sum = (uint64_t)(*a) + b + c;
-  *a = (unsigned int)sum;
-  return (unsigned int)(sum >> 32);
+static inline unsigned long long adc(unsigned long long* a, unsigned long long b, unsigned long long c) {
+  // Same as unsigned long on AArch64
+  return adc((unsigned long*)a, (unsigned long)b, (unsigned long)c);
 }
 
-static inline unsigned long long sbb(unsigned long long* a, unsigned long long b, unsigned long long c) {
-  typedef unsigned __int128 uint128_t;
-  uint128_t diff = (uint128_t)(*a) - b - c;
-  *a = (uint64_t)diff;
-  return (uint64_t)(diff >> 64);
+static inline unsigned int sbb(unsigned int* a, unsigned int b, unsigned int c) {
+  unsigned int result;
+  unsigned int borrow_out;
+  __asm__ volatile (
+    "sbc %w[result], %w[a_val], %w[b_val]\n\t"
+    "cset %w[borrow_out], cc"
+    : [result] "=r" (result),
+      [borrow_out] "=r" (borrow_out)
+    : [a_val] "r" (*a),
+      [b_val] "r" (b),
+      "c" (c)
+    : "cc"
+  );
+  *a = result;
+  return borrow_out;
 }
 static inline unsigned long sbb(unsigned long* a, unsigned long b, unsigned long c) {
-  unsigned long long diff = (unsigned long long)(*a) - b - c;
-  *a = (unsigned long)diff;
-  return (unsigned long)(diff >> 32);
+  unsigned long result;
+  unsigned long borrow_out;
+  __asm__ volatile (
+    "sbc %[result], %[a_val], %[b_val]\n\t"
+    "cset %[borrow_out], cc"
+    : [result] "=r" (result),
+      [borrow_out] "=r" (borrow_out)
+    : [a_val] "r" (*a),
+      [b_val] "r" (b),
+      "c" (c)
+    : "cc"
+  );
+  *a = result;
+  return borrow_out;
 }
-static inline unsigned int sbb(unsigned int* a, unsigned int b, unsigned int c) {
-  uint64_t diff = (uint64_t)(*a) - b - c;
-  *a = (unsigned int)diff;
-  return (unsigned int)(diff >> 32);
+static inline unsigned long long sbb(unsigned long long* a, unsigned long long b, unsigned long long c) {
+  // Same as unsigned long on AArch64
+  return sbb((unsigned long*)a, (unsigned long)b, (unsigned long)c);
 }
 
 static inline void mulq(uint64_t* l, uint64_t* h, uint64_t a, uint64_t b) {
-  __uint128_t p = (__uint128_t)b * (__uint128_t)a;
+  __uint128_t p = (__uint128_t)a * (__uint128_t)b;
   *l = (uint64_t)p;
   *h = (uint64_t)(p >> 64);
 }
 
 #elif defined(__arm__) && defined(__GNUC__)
 
-static inline unsigned int adc(unsigned int* a, unsigned int b, unsigned int c) {
-    uint64_t sum = (uint64_t)(*a) + b + c;
-    *a = (unsigned int)sum;
-    return (unsigned int)(sum >> 32);
+static inline unsigned int adc(unsigned int* a, unsigned int b,
+                               unsigned int c) {
+  unsigned int result;
+  unsigned int carry_out;
+  __asm__ volatile (
+    "adds %[result], %[a_val], %[b_val]\n\t"
+    "adc %[carry_out], %[zero], %[zero]"
+    : [result] "=&r" (result),
+      [carry_out] "=&r" (carry_out)
+    : [a_val] "r" (*a),
+      [b_val] "r" (b),
+      [zero] "r" (0U)
+    : "cc"
+  );
+  if (c) {
+    __asm__ volatile (
+      "adds %[result], %[result], #1\n\t"
+      "adc %[carry_out], %[carry_out], %[zero]"
+      : [result] "+r" (result),
+        [carry_out] "+r" (carry_out)
+      : [zero] "r" (0U)
+      : "cc"
+    );
+  }
+  *a = result;
+  return carry_out;
 }
-static inline unsigned long adc(unsigned long* a, unsigned long b, unsigned long c) {
-    return adc((unsigned int*)a, (unsigned int)b, (unsigned int)c);
+static inline unsigned long adc(unsigned long* a, unsigned long b,
+                                unsigned long c) {
+  return adc((unsigned int*)a, (unsigned int)b, (unsigned int)c);
 }
-static inline unsigned long long adc(unsigned long long* a, unsigned long long b, unsigned long long c) {
-    uint32_t a_lo = (uint32_t)(*a);
-    uint32_t a_hi = (uint32_t)(*a >> 32);
-    uint32_t b_lo = (uint32_t)b;
-    uint32_t b_hi = (uint32_t)(b >> 32);
-    uint32_t carry_lo = 0;
-
-    uint32_t sum_lo = a_lo + b_lo + (uint32_t)c;
-    carry_lo = (sum_lo < a_lo) || ((sum_lo == a_lo) && ((uint32_t)c != 0));
-
-    uint32_t sum_hi = a_hi + b_hi + carry_lo;
-
-    *a = ((unsigned long long)sum_hi << 32) | sum_lo;
-    return (sum_hi >> 31) & 1;
+static inline unsigned long long adc(unsigned long long* a,
+                                     unsigned long long b,
+                                     unsigned long long c) {
+  unsigned int* a_ptr = (unsigned int*)a;
+  unsigned int* b_ptr = (unsigned int*)&b;
+  unsigned int carry = (unsigned int)c;
+  unsigned int lo_carry = adc(&a_ptr[0], b_ptr[0], carry);
+  unsigned int hi_carry = adc(&a_ptr[1], b_ptr[1], lo_carry);
+  return hi_carry;
 }
 
-static inline unsigned int sbb(unsigned int* a, unsigned int b, unsigned int c) {
-    uint64_t diff = (uint64_t)(*a) - b - c;
-    *a = (unsigned int)diff;
-    return (unsigned int)(diff >> 32);
+static inline unsigned int sbb(unsigned int* a, unsigned int b,
+                               unsigned int c) {
+  unsigned int result;
+  unsigned int borrow_out;
+  __asm__ volatile (
+    "subs %[result], %[a_val], %[b_val]\n\t"
+    "sbc %[borrow_out], %[zero], %[zero]"
+    : [result] "=&r" (result),
+      [borrow_out] "=&r" (borrow_out)
+    : [a_val] "r" (*a),
+      [b_val] "r" (b),
+      [zero] "r" (0U)
+    : "cc"
+  );
+  if (c) {
+    __asm__ volatile (
+      "subs %[result], %[result], #1\n\t"
+      "sbc %[borrow_out], %[borrow_out], %[zero]"
+      : [result] "+r" (result),
+        [borrow_out] "+r" (borrow_out)
+      : [zero] "r" (0U)
+      : "cc"
+    );
+  }
+  *a = result;
+  return borrow_out;
 }
-static inline unsigned long sbb(unsigned long* a, unsigned long b, unsigned long c) {
-    return sbb((unsigned int*)a, (unsigned int)b, (unsigned int)c);
+static inline unsigned long sbb(unsigned long* a, unsigned long b,
+                                unsigned long c) {
+  return sbb((unsigned int*)a, (unsigned int)b, (unsigned int)c);
 }
-static inline unsigned long long sbb(unsigned long long* a, unsigned long long b, unsigned long long c) {
-    uint32_t a_lo = (uint32_t)(*a);
-    uint32_t a_hi = (uint32_t)(*a >> 32);
-    uint32_t b_lo = (uint32_t)b;
-    uint32_t b_hi = (uint32_t)(b >> 32);
-
-    uint32_t borrow_lo = (a_lo < b_lo + (uint32_t)c) ? 1 : 0;
-    uint32_t diff_lo = a_lo - b_lo - (uint32_t)c;
-    uint32_t diff_hi = a_hi - b_hi - borrow_lo;
-
-    *a = ((unsigned long long)diff_hi << 32) | diff_lo;
-    return (diff_hi >> 31) & 1; // return borrow
+static inline unsigned long long sbb(unsigned long long* a,
+                                     unsigned long long b,
+                                     unsigned long long c) {
+  unsigned int* a_ptr = (unsigned int*)a;
+  unsigned int* b_ptr = (unsigned int*)&b;
+  unsigned int borrow = (unsigned int)c;
+  unsigned int lo_borrow = sbb(&a_ptr[0], b_ptr[0], borrow);
+  unsigned int hi_borrow = sbb(&a_ptr[1], b_ptr[1], lo_borrow);
+  return hi_borrow;
 }
 
 #endif
