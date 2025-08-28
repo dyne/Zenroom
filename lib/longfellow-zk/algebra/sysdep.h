@@ -132,20 +132,25 @@ static inline unsigned int adc(unsigned int* a, unsigned int b, unsigned int c) 
   unsigned int result;
   unsigned int carry_out;
   __asm__ volatile (
-    // Set carry flag based on input carry (c)
-    "cmp %w[carry_in], #0\n\t"
-    "cset w16, ne\n\t"           // Set w16 to 1 if carry_in != 0
-    "adds wzr, w16, #0\n\t"      // This sets C=1 if w16=1, C=0 if w16=0
-    // Perform the addition with carry
-    "adc %w[result], %w[a_val], %w[b_val]\n\t"
-    "cset %w[carry_out], cs"     // cs = HS (C=1) = carry occurred
-    : [result] "=r" (result),
-      [carry_out] "=r" (carry_out)
+    "adds %w[result], %w[a_val], %w[b_val]\n\t"
+    "adc %w[carry_out], %w[zero], %w[zero]"
+    : [result] "=&r" (result),
+      [carry_out] "=&r" (carry_out)
     : [a_val] "r" (*a),
       [b_val] "r" (b),
-      [carry_in] "r" (c)
-    : "cc", "w16"
+      [zero] "r" (0U)
+    : "cc"
   );
+  if (c) {
+    __asm__ volatile (
+      "adds %w[result], %w[result], #1\n\t"
+      "adc %w[carry_out], %w[carry_out], %w[zero]"
+      : [result] "+r" (result),
+        [carry_out] "+r" (carry_out)
+      : [zero] "r" (0U)
+      : "cc"
+    );
+  }
   *a = result;
   return carry_out;
 }
@@ -153,20 +158,25 @@ static inline unsigned long adc(unsigned long* a, unsigned long b, unsigned long
   unsigned long result;
   unsigned long carry_out;
   __asm__ volatile (
-    // Set carry flag based on input carry (c)
-    "cmp %[carry_in], #0\n\t"
-    "cset x16, ne\n\t"           // Set x16 to 1 if carry_in != 0
-    "adds xzr, x16, #0\n\t"      // This sets C=1 if x16=1, C=0 if x16=0
-    // Perform the addition with carry
-    "adc %[result], %[a_val], %[b_val]\n\t"
-    "cset %[carry_out], cs"      // cs = HS (C=1) = carry occurred
-    : [result] "=r" (result),
-      [carry_out] "=r" (carry_out)
+    "adds %[result], %[a_val], %[b_val]\n\t"
+    "adc %[carry_out], %[zero], %[zero]"
+    : [result] "=&r" (result),
+      [carry_out] "=&r" (carry_out)
     : [a_val] "r" (*a),
       [b_val] "r" (b),
-      [carry_in] "r" (c)
-    : "cc", "x16"
+      [zero] "r" (0UL)
+    : "cc"
   );
+  if (c) {
+    __asm__ volatile (
+      "adds %[result], %[result], #1\n\t"
+      "adc %[carry_out], %[carry_out], %[zero]"
+      : [result] "+r" (result),
+        [carry_out] "+r" (carry_out)
+      : [zero] "r" (0UL)
+      : "cc"
+    );
+  }
   *a = result;
   return carry_out;
 }
@@ -179,44 +189,51 @@ static inline unsigned int sbb(unsigned int* a, unsigned int b, unsigned int c) 
   unsigned int result;
   unsigned int borrow_out;
   __asm__ volatile (
-    // Set carry flag based on input borrow (c)
-    // For sbb: borrow=0 means C=1 (no borrow), borrow=1 means C=0 (borrow)
-    "cmp %w[borrow_in], #0\n\t"
-    "cset w16, eq\n\t"           // Set w16 to 1 if borrow_in == 0 (inverse logic)
-    "adds wzr, w16, #0\n\t"      // This sets C=1 if w16=1, C=0 if w16=0
-    // Perform the subtraction with borrow
-    "sbc %w[result], %w[a_val], %w[b_val]\n\t"
-    "cset %w[borrow_out], cc"    // cc = LO (C=0) = borrow occurred
-    : [result] "=r" (result),
-      [borrow_out] "=r" (borrow_out)
+    "subs %w[result], %w[a_val], %w[b_val]\n\t"
+    "sbc %w[borrow_out], %w[zero], %w[zero]"
+    : [result] "=&r" (result),
+      [borrow_out] "=&r" (borrow_out)
     : [a_val] "r" (*a),
       [b_val] "r" (b),
-      [borrow_in] "r" (c)
-    : "cc", "w16"
+      [zero] "r" (0U)
+    : "cc"
   );
+  if (c) {
+    __asm__ volatile (
+      "subs %w[result], %w[result], #1\n\t"
+      "sbc %w[borrow_out], %w[borrow_out], %w[zero]"
+      : [result] "+r" (result),
+        [borrow_out] "+r" (borrow_out)
+      : [zero] "r" (0U)
+      : "cc"
+    );
+  }
   *a = result;
   return borrow_out;
 }
-
 static inline unsigned long sbb(unsigned long* a, unsigned long b, unsigned long c) {
   unsigned long result;
   unsigned long borrow_out;
   __asm__ volatile (
-    // Set carry flag based on input borrow (c)
-    // For sbb: borrow=0 means C=1 (no borrow), borrow=1 means C=0 (borrow)
-    "cmp %[borrow_in], #0\n\t"
-    "cset x16, eq\n\t"           // Set x16 to 1 if borrow_in == 0 (inverse logic)
-    "adds xzr, x16, #0\n\t"      // This sets C=1 if x16=1, C=0 if x16=0
-	// Perform the subtraction with borrow
-    "sbc %[result], %[a_val], %[b_val]\n\t"
-    "cset %[borrow_out], cc"     // cc = LO (C=0) = borrow occurred
-    : [result] "=r" (result),
-      [borrow_out] "=r" (borrow_out)
+    "subs %[result], %[a_val], %[b_val]\n\t"
+    "sbc %[borrow_out], %[zero], %[zero]"
+    : [result] "=&r" (result),
+      [borrow_out] "=&r" (borrow_out)
     : [a_val] "r" (*a),
       [b_val] "r" (b),
-      [borrow_in] "r" (c)
-    : "cc", "x16"
+      [zero] "r" (0UL)
+    : "cc"
   );
+  if (c) {
+    __asm__ volatile (
+      "subs %[result], %[result], #1\n\t"
+      "sbc %[borrow_out], %[borrow_out], %[zero]"
+      : [result] "+r" (result),
+        [borrow_out] "+r" (borrow_out)
+      : [zero] "r" (0UL)
+      : "cc"
+    );
+  }
   *a = result;
   return borrow_out;
 }
