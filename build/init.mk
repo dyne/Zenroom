@@ -112,6 +112,9 @@ endif
 ifeq ($(ARCH),aarch64)
     longfellow_cflags += -march=armv8-a+crypto
 endif
+ifeq ($(ARCH),armv7l)
+    longfellow_cflags += -march=armv7-a -mfpu=neon
+endif
 
 #-----------------
 # zstd settings
