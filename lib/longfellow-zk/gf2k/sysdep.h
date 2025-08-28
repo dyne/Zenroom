@@ -129,23 +129,21 @@ static inline gf2_128_elt_t gf2_128_mul(gf2_128_elt_t x, gf2_128_elt_t y) {
 #include <arm_neon.h>  // IWYU pragma: keep
 
 namespace proofs {
-using gf2_128_elt_t = poly64x2_t;
+using gf2_128_elt_t = uint64x2_t;
 
 static inline std::array<uint64_t, 2> uint64x2_of_gf2_128(gf2_128_elt_t x) {
-  return std::array<uint64_t, 2>{static_cast<uint64_t>(x[0]),
-                                 static_cast<uint64_t>(x[1])};
+  return std::array<uint64_t, 2>{x[0],x[1]};
 }
 
-static inline gf2_128_elt_t gf2_128_of_uint64x2(
-    const std::array<uint64_t, 2> &x) {
-  return gf2_128_elt_t{static_cast<poly64_t>(x[0]),
-                       static_cast<poly64_t>(x[1])};
+static inline gf2_128_elt_t gf2_128_of_uint64x2(const std::array<uint64_t, 2> &x) {
+  return gf2_128_elt_t{x[0],x[1]};
 }
 
 static inline gf2_128_elt_t gf2_128_add(gf2_128_elt_t x, gf2_128_elt_t y) {
-  uint64x2_t ux = vreinterpretq_u64_p64(x);
-  uint64x2_t uy = vreinterpretq_u64_p64(y);
-  return vreinterpretq_p64_u64(veorq_u64(ux, uy));
+  return veorq_u64(x, y);
+  // uint64x2_t ux = vreinterpretq_u64_p64(x);
+  // uint64x2_t uy = vreinterpretq_u64_p64(y);
+  // return vreinterpretq_p64_u64(veorq_u64(ux, uy));
 }
 
 // Emulate vmull_p64() with vmull_p8().
@@ -228,28 +226,28 @@ static inline poly8x16_t pmul64x64(poly8x8_t x, poly8x8_t y) {
 static inline gf2_128_elt_t vmull_low(gf2_128_elt_t t0, gf2_128_elt_t t1) {
   // vreinterpretq_p64_p8() seems not to be defined, use
   // static_cast<poly64x2_t>
-  poly8x16_t t0_bytes = vreinterpretq_p8_p64(t0);
-  poly8x16_t t1_bytes = vreinterpretq_p8_p64(t1);
+  poly8x16_t t0_bytes = vreinterpretq_p8_u64(t0);
+  poly8x16_t t1_bytes = vreinterpretq_p8_u64(t1);
   poly8x8_t t0_low  = vget_low_p8(t0_bytes);
   poly8x8_t t1_low  = vget_low_p8(t1_bytes);
   poly8x16_t low_prod = pmul64x64(t0_low, t1_low);
-  return vreinterpretq_p64_p8(low_prod);
+  return vreinterpretq_u64_p8(low_prod);
   // return static_cast<poly64x2_t>(pmul64x64(t0_low, t1_low));
 }
 static inline gf2_128_elt_t vmull_high(gf2_128_elt_t t0, gf2_128_elt_t t1) {
-  poly8x16_t t0_bytes = vreinterpretq_p8_p64(t0);
-  poly8x16_t t1_bytes = vreinterpretq_p8_p64(t1);
+  poly8x16_t t0_bytes = vreinterpretq_p8_u64(t0);
+  poly8x16_t t1_bytes = vreinterpretq_p8_u64(t1);
   poly8x8_t t0_high = vget_high_p8(t0_bytes);
   poly8x8_t t1_high = vget_high_p8(t1_bytes);
   poly8x16_t high_prod = pmul64x64(t0_high, t1_high);
-  return vreinterpretq_p64_p8(high_prod);
+  return vreinterpretq_u64_p8(high_prod);
   // return static_cast<poly64x2_t>(pmul64x64(vget_high_p8(t0), vget_high_p8(t1)));
 }
 
 // vextq_p64() seems not to be defined.
 static inline gf2_128_elt_t vextq_p64_1_emul(gf2_128_elt_t t0,
                                              gf2_128_elt_t t1) {
-  return vreinterpretq_p64_p8(vextq_p8(vreinterpretq_p8_p64(t0), vreinterpretq_p8_p64(t1), 8));
+  return vreinterpretq_u64_p8(vextq_p8(vreinterpretq_p8_u64(t0), vreinterpretq_p8_u64(t1), 8));
   // return static_cast<poly64x2_t>(
   //    vextq_p8(static_cast<poly8x16_t>(t0), static_cast<poly8x16_t>(t1), 8));
 }
@@ -258,30 +256,26 @@ static inline gf2_128_elt_t vextq_p64_1_emul(gf2_128_elt_t t0,
 static inline gf2_128_elt_t gf2_128_reduce(gf2_128_elt_t t0, gf2_128_elt_t t1) {
   const poly8_t poly = static_cast<poly8_t>(0x87);
   const gf2_128_elt_t zero = {0x0, 0x0};
-  uint64x2_t t0_u = vreinterpretq_u64_p64(t0);
-  uint64x2_t t1_ext = vreinterpretq_u64_p64(vextq_p64_1_emul(zero, t1));
-  t0_u = veorq_u64(t0_u, t1_ext);
-  t0 = vreinterpretq_p64_u64(t0_u);
-  poly8x16_t t1_bytes = vreinterpretq_p8_p64(t1);
-  poly8x16_t prod = pmul64x8(vget_high_p8(t1_bytes), poly);
-  t0 = vreinterpretq_p64_p8(
-	vreinterpretq_p8_u8(
-	  veorq_u8(
-	    vreinterpretq_u8_p8(vreinterpretq_p8_p64(t0)),
-	    vreinterpretq_u8_p8(prod)
-	  )
-	)
-  );
+  uint8x16_t t0_bytes = vreinterpretq_u8_u64(t0);
+  uint8x16_t t1_bytes = vreinterpretq_u8_u64(t1);
+  uint8x16_t t1_ext_bytes = vextq_u8(vreinterpretq_u8_u64(zero), t1_bytes, 8);
+  t0_bytes = veorq_u8(t0_bytes, t1_ext_bytes);
+
+  uint8x8_t t1_high = vget_high_u8(t1_bytes);
+  uint8x8_t poly_vec = vdup_n_u8(poly);
+  uint16x8_t wide = vmull_u8(t1_high, poly_vec);
+  uint8x16_t prod = vreinterpretq_u8_u16(wide);
+  t0_bytes = veorq_u8(t0_bytes, prod);
+
   // t0 = static_cast<poly64x2_t>(veorq_u8(static_cast<poly8x16_t>(t0), prod));
-  return t0;
+  return vreinterpretq_u64_u8(t0_bytes);
 }
 
 static inline gf2_128_elt_t gf2_128_mul(gf2_128_elt_t x, gf2_128_elt_t y) {
   gf2_128_elt_t swx = vextq_p64_1_emul(x, x);
   gf2_128_elt_t t1a = vmull_high(swx, y);
   gf2_128_elt_t t1b = vmull_low(swx, y);
-  uint64x2_t t1_u = vreinterpretq_u64_p64(t1a) ^ vreinterpretq_u64_p64(t1b);
-  gf2_128_elt_t t1 = vreinterpretq_p64_u64(t1_u);
+  gf2_128_elt_t t1 = veorq_u64(t1a, t1b);
   gf2_128_elt_t t2 = vmull_high(x, y);
   t1 = gf2_128_reduce(t1, t2);
   gf2_128_elt_t t0 = vmull_low(x, y);
