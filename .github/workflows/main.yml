@@ -82,7 +82,7 @@ jobs:
       working-directory: src/lua
       run: |
         luacheck --config .luacheckrc --std lua54 .
-          
+
   linux-test:
     name: 🐧 Linux check tests (gcc and clang)
     needs: [reuse, c-lint, lua-lint]
@@ -236,6 +236,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: pguyot/arm-runner-action@v2
         with:
+          cpu: cortex-a7
           commands: |
             sudo apt-get update -yq
             sudo apt-get install -yq --no-install-recommends make cmake gcc jq libreadline-dev xxd git python3-venv
