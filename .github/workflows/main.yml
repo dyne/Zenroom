@@ -111,7 +111,7 @@ jobs:
         run: |
           make check
 
-  linux-arm-test:
+  linux-aarch64-test:
     name: 🐧 Linux ARM64 check tests (gcc and clang)
     needs: [reuse, c-lint, lua-lint]
     strategy:
@@ -144,17 +144,26 @@ jobs:
   musl-test:
     name: 💪 Musl test
     needs: [reuse, c-lint, lua-lint]
-    runs-on: ubuntu-latest
-    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_MUSL') && github.event_name == 'pull_request'"
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            musl: dyne-gcc-musl-x86_64.tar.xz
+            cc: COMPILER=/opt/musl-dyne/gcc-musl/bin/x86_64-linux-musl-gcc COMPILER_CXX=/opt/musl-dyne/gcc-musl/bin/x86_64-linux-musl-g++
+          - os: ubuntu-24.04-arm
+            musl: dyne-gcc-musl-arm_64.tar.xz
+            cc: COMPILER=/opt/musl-dyne/gcc-musl/bin/aarch64-linux-musl-gcc COMPILER_CXX=/opt/musl-dyne/gcc-musl/bin/aarch64-linux-musl-g++
+    runs-on: ${{ matrix.os }}
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'SKIP_MUSL') && github.event_name == 'pull_request' }}
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - name: Get SHA256 of dyne-gcc-musl-x86_64.tar.xz
+      - name: Get SHA256 of ${{ matrix.musl }}
         id: get-sum
         run: |
           curl -s "https://files.dyne.org/?file=musl/SHA256SUMS.txt" -o checksums.txt
-          HASH=$(grep dyne-gcc-musl-x86_64.tar.xz checksums.txt | awk '{print $1}')
+          HASH=$(grep ${{ matrix.musl }} checksums.txt | awk '{print $1}')
           echo "hash=$HASH" >> $GITHUB_OUTPUT
       - name: Cache musl-dyne using SHA256
         id: cache-musl
@@ -171,24 +180,24 @@ jobs:
       - name: Download and extract if cache miss
         if: steps.cache-musl.outputs.cache-hit != 'true'
         run: |
-          wget -O dyne-gcc-musl-x86_64.tar.xz "https://files.dyne.org/?file=musl/dyne-gcc-musl-x86_64.tar.xz"
+          wget -O ${{ matrix.musl }} "https://files.dyne.org/?file=musl/${{ matrix.musl }}"
           mkdir -p .cache/musl-dyne
-          tar -xJf dyne-gcc-musl-x86_64.tar.xz -C .cache/musl-dyne --strip-components=1
-          rm dyne-gcc-musl-x86_64.tar.xz
+          tar -xJf ${{ matrix.musl }} -C .cache/musl-dyne --strip-components=1
+          rm ${{ matrix.musl }}
           sudo rm -rf /opt/musl-dyne/*
           sudo cp -a .cache/musl-dyne/. /opt/musl-dyne/
       - uses: hendrikmuhs/ccache-action@v1.2
       - name: install dependencies
         run: |
           sudo apt install -yq jq libreadline-dev
-      - name: Build x86_64 with musl-system
+      - name: Build with musl-system
         run: |
-          make musl RELEASE=1 CCACHE=1
+          make musl ${{ matrix.cc }} RELEASE=1 CCACHE=1
 
   windows-build:
     name: 🪟 Windows build test
     needs: [reuse, c-lint, lua-lint]
-    if: "github.event_name == 'pull_request'"
+    if: github.event_name == 'pull_request'
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v5
@@ -207,7 +216,7 @@ jobs:
   osx-test:
     name: 🍎 Apple OSX check tests
     needs: [reuse, c-lint, lua-lint]
-    if: "github.event_name == 'pull_request'"
+    if: github.event_name == 'pull_request'
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
@@ -227,10 +236,10 @@ jobs:
           otool -hv libzenroom.dylib
           make check-osx
 
-  arm32-test:
+  linux-armv7l-test:
     name: 🦾 ARM32 build test
     needs: [reuse, c-lint, lua-lint]
-    if: "contains(github.event.pull_request.labels.*.name, 'TEST_ARM32') && github.event_name == 'pull_request'"
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'TEST_ARM32') && github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -250,7 +259,7 @@ jobs:
     name: 🐹 go build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
-    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_GO') && github.event_name == 'pull_request'"
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'SKIP_GO') && github.event_name == 'pull_request' }}
     strategy:
       matrix:
         go: ['stable','oldstable']
@@ -283,7 +292,7 @@ jobs:
     name: 🦀 rust build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
-    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_RUST') && github.event_name == 'pull_request'"
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'SKIP_RUST') && github.event_name == 'pull_request' }}
     strategy:
       matrix:
         rust: ['stable', 'nightly']
@@ -315,7 +324,7 @@ jobs:
     name: 🐯 NodeJS WASM check tests
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
-    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_JS') && github.event_name == 'pull_request'"
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'SKIP_JS') && github.event_name == 'pull_request' }}
     strategy:
       matrix:
         node-version: [22.16.0]
@@ -349,7 +358,7 @@ jobs:
   python-check:
     name: 🐍 Python checks
     needs: [reuse, c-lint, lua-lint]
-    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_PY') && github.event_name == 'pull_request'"
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'SKIP_PY') && github.event_name == 'pull_request' }}
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -421,7 +430,7 @@ jobs:
   js-build-release:
     name: 🐯 js build release
     needs: [semantic-release]
-    if: ${{ needs.semantic-release.outputs.release == 'True' }}
+    if: needs.semantic-release.outputs.release == 'True'
     runs-on: ubuntu-latest
     env:
       EM_VERSION: 4.0.10
@@ -454,7 +463,7 @@ jobs:
     name: 🐧 Binary builds on Ubuntu (Linux, Windows, Android)
     runs-on: ubuntu-latest
     needs: [semantic-release]
-    if: ${{ needs.semantic-release.outputs.release == 'True' }}
+    if: needs.semantic-release.outputs.release == 'True'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -575,7 +584,7 @@ jobs:
     name: "🗃️  Check file changes"
     runs-on: ubuntu-latest
     needs: [semantic-release]
-    if: "needs.semantic-release.outputs.release == 'True'"
+    if: needs.semantic-release.outputs.release == 'True'
     outputs:
       python3: ${{ steps.filter.outputs.python3 }}
     steps:
@@ -591,7 +600,7 @@ jobs:
     name: 🐍 Python create source distribution
     runs-on: ubuntu-latest
     needs: [semantic-release, file-changes]
-    if: "needs.semantic-release.outputs.release == 'True' && needs.file-changes.outputs.python3 == 'true'"
+    if: ${{ needs.semantic-release.outputs.release == 'True' && needs.file-changes.outputs.python3 == 'true' }}
     defaults:
       run:
         working-directory: bindings/python3
@@ -613,7 +622,7 @@ jobs:
     name: 🍎 apple osx and ios release build
     needs: [semantic-release]
     runs-on: macos-latest
-    if: ${{ needs.semantic-release.outputs.release == 'True' }}
+    if: needs.semantic-release.outputs.release == 'True'
     steps:
       - uses: actions/checkout@v5
         with:
