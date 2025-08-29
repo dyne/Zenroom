@@ -150,7 +150,7 @@ jobs:
           - musl: dyne-gcc-musl-x86_64.tar.xz
             cc: COMPILER=/opt/musl-dyne/gcc-musl/bin/x86_64-linux-musl-gcc COMPILER_CXX=/opt/musl-dyne/gcc-musl/bin/x86_64-linux-musl-g++
           - musl: dyne-gcc-musl-arm_64.tar.xz
-            cc: COMPILER=/opt/musl-dyne/gcc-musl/bin/aarch64-linux-musl-gcc COMPILER_CXX=/opt/musl-dyne/gcc-musl/bin/aarch64-linux-musl-g++
+            cc: TARGET_ARCH=aarch64 COMPILER=/opt/musl-dyne/gcc-musl/bin/aarch64-linux-musl-gcc COMPILER_CXX=/opt/musl-dyne/gcc-musl/bin/aarch64-linux-musl-g++
     runs-on: ubuntu-latest
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'SKIP_MUSL') && github.event_name == 'pull_request' }}
     steps:
