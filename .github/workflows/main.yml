@@ -190,8 +190,8 @@ jobs:
           meson setup meson/ build/ -D "tests=['determinism','vectors','lua','zencode','blockchain','bindings']"
           ninja -C meson test
 
-  test-musl-aarch64:
-    name: 💪 Test musl-aarch64 build
+  test-musl-arm_64:
+    name: 💪 Test musl-arm_64 build
     needs: [musl-test]
     runs-on: ubuntu-24.04-arm
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'SKIP_MUSL') && github.event_name == 'pull_request' }}
@@ -208,11 +208,11 @@ jobs:
       - name: Download musl build artifact
         uses: actions/download-artifact@v5
         with:
-          name: test-linux-aarch64
+          name: test-linux-arm_64
       - run: |
-          unzip zenroom-aarch64-linux.zip
-          cp zenroom-aarch64-linux/zencode-exec ./zencode-exec
-          cp zenroom-aarch64-linux/zenroom      ./zenroom
+          unzip zenroom-arm_64-linux.zip
+          cp zenroom-arm_64-linux/zencode-exec ./zencode-exec
+          cp zenroom-arm_64-linux/zenroom      ./zenroom
           meson setup meson/ build/ -D "tests=['determinism','vectors','lua','zencode','blockchain','bindings']"
           ninja -C meson test
 
