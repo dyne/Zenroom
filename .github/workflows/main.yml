@@ -236,7 +236,7 @@ jobs:
         with:
           name: test-linux-aarch64
       - run: |
-          unzip test-linux-aarch64.zip
+          unzip zenroom-aarch64-linux.zip
           cp zenroom-aarch64-linux/zencode-exec ./zencode-exec
           cp zenroom-aarch64-linux/zenroom      ./zenroom
           meson setup meson/ build/ -D "tests=['determinism','vectors','lua','zencode','blockchain','bindings']"
