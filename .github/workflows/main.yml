@@ -205,6 +205,35 @@ jobs:
           name: test-linux-${{ matrix.arch }}
           path: |
             zenroom-${{ matrix.arch }}-linux.zip
+      - name: run tests for x86_64
+        if: matrix.arch == 'x86_64'
+        run: |
+          make check
+
+  test-musl-aarch64:
+    name: 💪 Test musl-aarch64 build
+    needs: [musl-test]
+    runs-on: ubuntu-24.04-arm
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'SKIP_MUSL') && github.event_name == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: install dependencies
+        run: |
+          pip3 install --prefer-binary meson ninja
+      - name: Download musl build artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: test-linux-aarch64
+      - run: |
+          unzip test-linux-aarch64.zip
+          cp zenroom-aarch64-linux/zencode-exec ./zencode-exec
+          cp zenroom-aarch64-linux/zenroom      ./zenroom
+          make check
 
   windows-build:
     name: 🪟 Windows build test
