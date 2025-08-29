@@ -213,7 +213,8 @@ jobs:
         if: matrix.arch == 'x86_64'
         run: |
           pip3 install --prefer-binary meson ninja
-          make check
+          meson setup meson/ build/ -D "tests=['determinism','vectors','lua','zencode','blockchain','bindings']"
+          ninja -C meson test
 
   test-musl-aarch64:
     name: 💪 Test musl-aarch64 build
@@ -238,7 +239,8 @@ jobs:
           unzip test-linux-aarch64.zip
           cp zenroom-aarch64-linux/zencode-exec ./zencode-exec
           cp zenroom-aarch64-linux/zenroom      ./zenroom
-          make check
+          meson setup meson/ build/ -D "tests=['determinism','vectors','lua','zencode','blockchain','bindings']"
+          ninja -C meson test
 
   windows-build:
     name: 🪟 Windows build test
