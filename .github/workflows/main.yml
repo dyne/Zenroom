@@ -147,9 +147,11 @@ jobs:
     strategy:
       matrix:
         include:
-          - musl: dyne-gcc-musl-x86_64.tar.xz
+          - arch: x86_64
+            musl: dyne-gcc-musl-x86_64.tar.xz
             cc: COMPILER=/opt/musl-dyne/gcc-musl/bin/x86_64-linux-musl-gcc COMPILER_CXX=/opt/musl-dyne/gcc-musl/bin/x86_64-linux-musl-g++
-          - musl: dyne-gcc-musl-arm_64.tar.xz
+          - arch: aarch64
+            musl: dyne-gcc-musl-arm_64.tar.xz
             cc: ARCH=aarch64 COMPILER=/opt/musl-dyne/gcc-musl/bin/aarch64-linux-musl-gcc COMPILER_CXX=/opt/musl-dyne/gcc-musl/bin/aarch64-linux-musl-g++
     runs-on: ubuntu-latest
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'SKIP_MUSL') && github.event_name == 'pull_request' }}
@@ -191,6 +193,18 @@ jobs:
       - name: Build with musl-system
         run: |
           make musl ${{ matrix.cc }} RELEASE=1 CCACHE=1
+      - name: Pack build results
+        run: |
+          mkdir -p zenroom-${{ matrix.arch }}-linux
+          cp zenroom      zenroom-${{ matrix.arch }}-linux/
+          cp zencode-exec zenroom-${{ matrix.arch }}-linux/
+          zip -r          zenroom-${{ matrix.arch }}-linux.zip zenroom-${{ matrix.arch }}-linux
+      - name: Upload artifact linux-amd64
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-linux-${{ matrix.arch }}
+          path: |
+            zenroom-${{ matrix.arch }}-linux.zip
 
   windows-build:
     name: 🪟 Windows build test
