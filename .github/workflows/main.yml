@@ -147,13 +147,11 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-            musl: dyne-gcc-musl-x86_64.tar.xz
+          - musl: dyne-gcc-musl-x86_64.tar.xz
             cc: COMPILER=/opt/musl-dyne/gcc-musl/bin/x86_64-linux-musl-gcc COMPILER_CXX=/opt/musl-dyne/gcc-musl/bin/x86_64-linux-musl-g++
-          - os: ubuntu-24.04-arm
-            musl: dyne-gcc-musl-arm_64.tar.xz
+          - musl: dyne-gcc-musl-arm_64.tar.xz
             cc: COMPILER=/opt/musl-dyne/gcc-musl/bin/aarch64-linux-musl-gcc COMPILER_CXX=/opt/musl-dyne/gcc-musl/bin/aarch64-linux-musl-g++
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'SKIP_MUSL') && github.event_name == 'pull_request' }}
     steps:
       - uses: actions/checkout@v5
