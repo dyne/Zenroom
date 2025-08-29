@@ -146,60 +146,34 @@ jobs:
     needs: [reuse, c-lint, lua-lint]
     strategy:
       matrix:
-        include:
-          - arch: x86_64
-            musl: dyne-gcc-musl-x86_64.tar.xz
-            cc: COMPILER=/opt/musl-dyne/gcc-musl/bin/x86_64-linux-musl-gcc COMPILER_CXX=/opt/musl-dyne/gcc-musl/bin/x86_64-linux-musl-g++
-          - arch: aarch64
-            musl: dyne-gcc-musl-arm_64.tar.xz
-            cc: ARCH=aarch64 COMPILER=/opt/musl-dyne/gcc-musl/bin/aarch64-linux-musl-gcc COMPILER_CXX=/opt/musl-dyne/gcc-musl/bin/aarch64-linux-musl-g++
+        arch: [x86_64, arm_64]
     runs-on: ubuntu-latest
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'SKIP_MUSL') && github.event_name == 'pull_request' }}
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - name: Get SHA256 of ${{ matrix.musl }}
-        id: get-sum
-        run: |
-          curl -s "https://files.dyne.org/?file=musl/SHA256SUMS.txt" -o checksums.txt
-          HASH=$(grep ${{ matrix.musl }} checksums.txt | awk '{print $1}')
-          echo "hash=$HASH" >> $GITHUB_OUTPUT
-      - name: Cache musl-dyne using SHA256
-        id: cache-musl
-        uses: actions/cache@v4
+      - name: Setup musl toolchain
+        id: musl
+        uses: dyne/musl-action@main
         with:
-          path: .cache/musl-dyne
-          key: musl-dyne-${{ steps.get-sum.outputs.hash }}
-      - name: Copy to /opt/musl-dyne if cache hit
-        if: steps.cache-musl.outputs.cache-hit == 'true'
-        run: |
-          sudo mkdir -p /opt/musl-dyne
-          sudo rm -rf /opt/musl-dyne/*
-          sudo cp -a .cache/musl-dyne/. /opt/musl-dyne/
-      - name: Download and extract if cache miss
-        if: steps.cache-musl.outputs.cache-hit != 'true'
-        run: |
-          wget -O ${{ matrix.musl }} "https://files.dyne.org/?file=musl/${{ matrix.musl }}"
-          mkdir -p .cache/musl-dyne
-          tar -xJf ${{ matrix.musl }} -C .cache/musl-dyne --strip-components=1
-          rm ${{ matrix.musl }}
-          sudo rm -rf /opt/musl-dyne/*
-          sudo cp -a .cache/musl-dyne/. /opt/musl-dyne/
+          target_arch: ${{ matrix.arch }}
       - uses: hendrikmuhs/ccache-action@v1.2
       - name: install dependencies
         run: |
           sudo apt install -yq jq libreadline-dev
       - name: Build with musl-system
         run: |
-          make musl ${{ matrix.cc }} RELEASE=1 CCACHE=1
+          arch=""
+          if [ "${{ matrix.arch }}" = "arm_64" ]; then arch="ARCH=aarch64"; fi
+          make musl ${arch} COMPILER=${{ steps.musl.outputs.CC }} COMPILER_CXX=${{ steps.musl.outputs.CXX }} RELEASE=1 CCACHE=1
       - name: Pack build results
         run: |
-          mkdir -p zenroom-${{ matrix.arch }}-linux
+          mkdir -p        zenroom-${{ matrix.arch }}-linux
           cp zenroom      zenroom-${{ matrix.arch }}-linux/
           cp zencode-exec zenroom-${{ matrix.arch }}-linux/
           zip -r          zenroom-${{ matrix.arch }}-linux.zip zenroom-${{ matrix.arch }}-linux
-      - name: Upload artifact linux-amd64
+      - name: Upload artifact test-linux-${{ matrix.arch }}
         uses: actions/upload-artifact@v4
         with:
           name: test-linux-${{ matrix.arch }}
