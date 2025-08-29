@@ -205,9 +205,14 @@ jobs:
           name: test-linux-${{ matrix.arch }}
           path: |
             zenroom-${{ matrix.arch }}-linux.zip
+      - uses: actions/setup-python@v5
+        if: matrix.arch == 'x86_64'
+        with:
+          python-version: '3.13'
       - name: run tests for x86_64
         if: matrix.arch == 'x86_64'
         run: |
+          pip3 install --prefer-binary meson ninja
           make check
 
   test-musl-aarch64:
