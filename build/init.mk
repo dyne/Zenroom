@@ -102,17 +102,17 @@ mlkem_cc ?= ${cc}
 # longfellow-zk settings
 longfellow_cxx ?= ${cxx}
 longfellow_cflags += -I ${pwd}/src -I. -I../zstd -fPIC -DLIBRARY
-TARGET_ARCH ?= $(shell uname -m)
-ifeq ($(TARGET_ARCH),x86_64)
+ARCH ?= $(shell uname -m)
+ifeq ($(ARCH),x86_64)
     longfellow_cflags += -mpclmul
 endif
-ifeq ($(TARGET_ARCH),i686)
+ifeq ($(ARCH),i686)
     longfellow_cflags += -mpclmul
 endif
-ifeq ($(TARGET_ARCH),aarch64)
+ifeq ($(ARCH),aarch64)
     longfellow_cflags += -march=armv8-a+crypto
 endif
-ifeq ($(TARGET_ARCH),armv7l)
+ifeq ($(ARCH),armv7l)
     longfellow_cflags += -march=armv7-a -mfpu=neon
 endif
 
