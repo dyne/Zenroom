@@ -224,6 +224,9 @@ jobs:
           cp zenroom-arm_64-linux/zencode-exec  ./zencode-exec
           cp zenroom-arm_64-linux/zenroom       ./zenroom
           cp zenroom-arm_64-linux/libzenroom.so ./libzenroom.so
+          # api test need milagro library to be built
+          make -f build/posix.mk deps BUILD_DEPS=milagro
+          # run tests
           make check
 
   windows-build:
