@@ -204,6 +204,7 @@ jobs:
         if: matrix.arch == 'x86_64'
         run: |
           pip3 install --prefer-binary meson ninja
+          cp zenroom-${{ matrix.arch }}-linux/* .
           make check
 
   test-musl-arm_64:
