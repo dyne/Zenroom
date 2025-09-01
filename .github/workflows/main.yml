@@ -503,7 +503,77 @@ jobs:
             ./bindings/javascript/dist/
 
   linux-release:
-    name: 🐧 Binary builds on Ubuntu (Linux, Windows, Android)
+    name: 🐧 Binary builds on Ubuntu (x86_64, arm_64, arm_hf)
+    runs-on: ubuntu-latest
+    needs: [semantic-release]
+    strategy:
+      matrix:
+        arch: [x86_64, arm_64, arm_hf]
+    if: needs.semantic-release.outputs.release == 'True'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Setup musl toolchain
+        id: musl
+        uses: dyne/musl-action@main
+        with:
+          target_arch: ${{ matrix.arch }}
+      - uses: hendrikmuhs/ccache-action@v1.2
+      - name: Install build deps
+        run: |
+          sudo apt install -qy jq libreadline-dev
+          # used to cross compile shared library
+          case "${{ matrix.arch }}" in
+            arm_64) sudo apt install -yq gcc-aarch64-linux-gnu g++-aarch64-linux-gnu ;;
+            arm_hf) sudo apt install -yq gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf ;;
+          esac
+      - name: Build ${{ matrix.arch }} with musl-system
+        run: |
+          arch=""
+          lib_compilers=""
+          case "${{ matrix.arch }}" in
+            arm_64)
+              arch="ARCH=aarch64"
+              lib_compilers="COMPILER=aarch64-linux-gnu-gcc COMPILER_CXX=aarch64-linux-gnu-g++"
+              ;;
+            arm_hf)
+              arch="ARCH=armv7l"
+              lib_compilers="COMPILER=arm-linux-gnueabihf-gcc COMPILER_CXX=arm-linux-gnueabihf-g++"
+              ;;
+          esac
+          make musl ${arch} COMPILER=${{ steps.musl.outputs.CC }} COMPILER_CXX=${{ steps.musl.outputs.CXX }} RELEASE=1 CCACHE=1
+          make -C src clean
+          make linux-lib ${arch} ${lib_compilers} RELEASE=1 CCACHE=1
+      - name: Pack build results
+        run: |
+          mkdir -p         zenroom-${{ matrix.arch }}-linux
+          cp zenroom       zenroom-${{ matrix.arch }}-linux/
+          cp zencode-exec  zenroom-${{ matrix.arch }}-linux/
+          cp libzenroom.so zenroom-${{ matrix.arch }}-linux/
+          zip -r           zenroom-${{ matrix.arch }}-linux.zip zenroom-${{ matrix.arch }}-linux
+          if [ "${{ matrix.arch }}" = "x86_64" ]; then
+            cp zenroom-${{ matrix.arch }}-linux.zip zenroom-linux.zip
+          fi
+      - name: Upload artifact linux-${{ matrix.arch }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-linux-${{ matrix.arch }}
+          path: |
+            zenroom-${{ matrix.arch }}-linux.zip
+      - name: Upload artifact linux-x86_64
+        if: matrix.arch == 'x86_64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-bin-linux-${{ matrix.arch }}
+          path: |
+            zenroom
+            zencode-exec
+            zenroom-linux.zip
+
+  windows-android-release:
+    name: 🪟  Windows and 🤖 Android binary builds on Ubuntu
     runs-on: ubuntu-latest
     needs: [semantic-release]
     if: needs.semantic-release.outputs.release == 'True'
@@ -518,70 +588,10 @@ jobs:
           name: documentation
           path: |
             build/release-intro.md
-      - name: Get SHA256 of dyne-gcc-musl-x86_64.tar.xz
-        id: get-sum
-        run: |
-          curl -s "https://files.dyne.org/?file=musl/SHA256SUMS.txt" -o checksums.txt
-          HASH=$(grep dyne-gcc-musl-x86_64.tar.xz checksums.txt | awk '{print $1}')
-          echo "hash=$HASH" >> $GITHUB_OUTPUT
-      - name: Cache musl-dyne using SHA256
-        id: cache-musl
-        uses: actions/cache@v4
-        with:
-          path: .cache/musl-dyne
-          key: musl-dyne-${{ steps.get-sum.outputs.hash }}
-      - name: Copy to /opt/musl-dyne if cache hit
-        if: steps.cache-musl.outputs.cache-hit == 'true'
-        run: |
-          sudo mkdir -p /opt/musl-dyne
-          sudo rm -rf /opt/musl-dyne/*
-          sudo cp -a .cache/musl-dyne/. /opt/musl-dyne/
-      - name: Download and extract if cache miss
-        if: steps.cache-musl.outputs.cache-hit != 'true'
-        run: |
-          wget -O dyne-gcc-musl-x86_64.tar.xz "https://files.dyne.org/?file=musl/dyne-gcc-musl-x86_64.tar.xz"
-          mkdir -p .cache/musl-dyne
-          tar -xJf dyne-gcc-musl-x86_64.tar.xz -C .cache/musl-dyne --strip-components=1
-          rm dyne-gcc-musl-x86_64.tar.xz
-          sudo rm -rf /opt/musl-dyne/*
-          sudo cp -a .cache/musl-dyne/. /opt/musl-dyne/
-      - name: Install build deps
-        run: |
-          sudo apt install -qy tree jq cmake make gcc gcc-mingw-w64 g++-mingw-w64 libreadline-dev ccache
-      - name: Build x86_64 with musl-system
-        run: |
-          make musl RELEASE=1 CCACHE=1
-      - name: Upload artifact linux-amd64
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-bin-linux-amd64
-          path: |
-            zenroom
-            zencode-exec
-      - name: Pack build results
-        run: |
-          mkdir -p zenroom-linux
-          cp zenroom      zenroom-linux/
-          cp zencode-exec zenroom-linux/
-      - name: Clean for next build
-        run: |
-          make clean
-      - name: Build x86_64 shlib
-        run: |
-          make linux-lib RELEASE=1 CCACHE=1
-      - name: Pack build results
-        run: |
-          mkdir -p zenroom-linux
-          cp libzenroom.so zenroom-linux/
-          zip -r zenroom-linux.zip zenroom-linux
-      - name: Upload artifact linux-amd64
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-linux-amd64
-          path: |
-            zenroom-linux.zip
-      - name: Clean for next build
-        run: make clean
+      - uses: hendrikmuhs/ccache-action@v1.2
+      - name: install dependencies
+        run : |
+          sudo apt install -y jq gcc-mingw-w64 g++-mingw-w64
       - name: Build x86_64 windows .exe
         run: |
           make win-exe RELEASE=1 CCACHE=1
@@ -714,7 +724,7 @@ jobs:
   npm-release:
     name: 📦 npm release
     runs-on: ubuntu-latest
-    needs: [js-build-release, apple-release, linux-release]
+    needs: [js-build-release, apple-release, linux-release, windows-android-release]
     steps:
       - uses: actions/checkout@v5
         with:
@@ -737,7 +747,7 @@ jobs:
 
   pypi-release:
     name: 📦 PyPI release
-    needs: [js-build-release, python-sdist, apple-release, linux-release]
+    needs: [js-build-release, python-sdist, apple-release, linux-release, windows-android-release]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v5
@@ -751,7 +761,7 @@ jobs:
 
   draft-binary-release:
     name: 📦 Pack release
-    needs: [semantic-release, js-build-release, apple-release, linux-release]
+    needs: [semantic-release, js-build-release, apple-release, linux-release, windows-android-release]
     runs-on: ubuntu-latest
     steps:
       - name: download binary artifacts
@@ -776,13 +786,13 @@ jobs:
 
   publish_docker_image:
     name: 🐳 Publish Docker image
-    needs: [semantic-release, js-build-release, apple-release, linux-release]
+    needs: [semantic-release, js-build-release, apple-release, linux-release, windows-android-release]
     uses: ForkbombEu/workflows/.github/workflows/publish-ghcr.yml@main
     secrets: inherit
 
   remove-tag-on-fail:
     name: 🧻 Remove tag on fail
-    needs: [semantic-release, js-build-release, apple-release, linux-release]
+    needs: [semantic-release, js-build-release, apple-release, linux-release, windows-android-release]
     runs-on: ubuntu-latest
     if: ${{ (failure() || cancelled()) && needs.semantic-release.outputs.release == 'True' }}
     steps:
