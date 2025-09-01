@@ -183,13 +183,11 @@ jobs:
               ;;
           esac
           make musl ${arch} COMPILER=${{ steps.musl.outputs.CC }} COMPILER_CXX=${{ steps.musl.outputs.CXX }} RELEASE=1 CCACHE=1
-          make -C src clean
-          make linux-lib ${arch} ${lib_compilers} RELEASE=1 CCACHE=1
-      - name: Pack build results
-        run: |
           mkdir -p         zenroom-${{ matrix.arch }}-linux
           cp zenroom       zenroom-${{ matrix.arch }}-linux/
           cp zencode-exec  zenroom-${{ matrix.arch }}-linux/
+          make clean
+          make linux-lib ${arch} ${lib_compilers} RELEASE=1 CCACHE=1
           cp libzenroom.so zenroom-${{ matrix.arch }}-linux/
           zip -r           zenroom-${{ matrix.arch }}-linux.zip zenroom-${{ matrix.arch }}-linux
       - name: Upload artifact test-linux-${{ matrix.arch }}
