@@ -145,6 +145,7 @@ jobs:
     name: 💪 Musl test
     needs: [reuse, c-lint, lua-lint]
     strategy:
+      fail-fast: false
       matrix:
         arch: [x86_64, arm_64]
     runs-on: ubuntu-latest
@@ -162,17 +163,27 @@ jobs:
       - name: install dependencies
         run: |
           sudo apt install -yq jq libreadline-dev
+          if [ "${{ matrix.arch }}" = "arm_64" ]; then
+           sudo apt install -yq gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          fi
       - name: Build with musl-system
         run: |
           arch=""
-          if [ "${{ matrix.arch }}" = "arm_64" ]; then arch="ARCH=aarch64"; fi
+          lib_compilers=""
+          if [ "${{ matrix.arch }}" = "arm_64" ]; then
+            arch="ARCH=aarch64"
+            lib_compilers="COMPILER=aarch64-linux-gnu-gcc COMPILER_CXX=aarch64-linux-gnu-g++"
+          fi
           make musl ${arch} COMPILER=${{ steps.musl.outputs.CC }} COMPILER_CXX=${{ steps.musl.outputs.CXX }} RELEASE=1 CCACHE=1
+          make -C src clean
+          make linux-lib ${arch} ${lib_compilers} RELEASE=1 CCACHE=1
       - name: Pack build results
         run: |
-          mkdir -p        zenroom-${{ matrix.arch }}-linux
-          cp zenroom      zenroom-${{ matrix.arch }}-linux/
-          cp zencode-exec zenroom-${{ matrix.arch }}-linux/
-          zip -r          zenroom-${{ matrix.arch }}-linux.zip zenroom-${{ matrix.arch }}-linux
+          mkdir -p         zenroom-${{ matrix.arch }}-linux
+          cp zenroom       zenroom-${{ matrix.arch }}-linux/
+          cp zencode-exec  zenroom-${{ matrix.arch }}-linux/
+          cp libzenroom.so zenroom-${{ matrix.arch }}-linux/
+          zip -r           zenroom-${{ matrix.arch }}-linux.zip zenroom-${{ matrix.arch }}-linux
       - name: Upload artifact test-linux-${{ matrix.arch }}
         uses: actions/upload-artifact@v4
         with:
@@ -187,8 +198,7 @@ jobs:
         if: matrix.arch == 'x86_64'
         run: |
           pip3 install --prefer-binary meson ninja
-          meson setup meson/ build/ -D "tests=['determinism','vectors','lua','zencode','blockchain','bindings']"
-          ninja -C meson test
+          make check
 
   test-musl-arm_64:
     name: 💪 Test musl-arm_64 build
@@ -211,10 +221,10 @@ jobs:
           name: test-linux-arm_64
       - run: |
           unzip zenroom-arm_64-linux.zip
-          cp zenroom-arm_64-linux/zencode-exec ./zencode-exec
-          cp zenroom-arm_64-linux/zenroom      ./zenroom
-          meson setup meson/ build/ -D "tests=['determinism','vectors','lua','zencode','blockchain','bindings']"
-          ninja -C meson test
+          cp zenroom-arm_64-linux/zencode-exec  ./zencode-exec
+          cp zenroom-arm_64-linux/zenroom       ./zenroom
+          cp zenroom-arm_64-linux/libzenroom.so ./libzenroom.so
+          make check
 
   windows-build:
     name: 🪟 Windows build test
