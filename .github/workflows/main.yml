@@ -147,7 +147,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [x86_64, arm_64]
+        arch: [x86_64, arm_64, arm_hf]
     runs-on: ubuntu-latest
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'SKIP_MUSL') && github.event_name == 'pull_request' }}
     steps:
@@ -163,17 +163,25 @@ jobs:
       - name: install dependencies
         run: |
           sudo apt install -yq jq libreadline-dev
-          if [ "${{ matrix.arch }}" = "arm_64" ]; then
-           sudo apt install -yq gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
-          fi
+          # used to cross compile shared library
+          case "${{ matrix.arch }}" in
+            arm_64) sudo apt install -yq gcc-aarch64-linux-gnu g++-aarch64-linux-gnu ;;
+            arm_hf) sudo apt install -yq gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf ;;
+          esac
       - name: Build with musl-system
         run: |
           arch=""
           lib_compilers=""
-          if [ "${{ matrix.arch }}" = "arm_64" ]; then
-            arch="ARCH=aarch64"
-            lib_compilers="COMPILER=aarch64-linux-gnu-gcc COMPILER_CXX=aarch64-linux-gnu-g++"
-          fi
+          case "${{ matrix.arch }}" in
+            arm_64)
+              arch="ARCH=aarch64"
+              lib_compilers="COMPILER=aarch64-linux-gnu-gcc COMPILER_CXX=aarch64-linux-gnu-g++"
+              ;;
+            arm_hf)
+              arch="ARCH=armv7l"
+              lib_compilers="COMPILER=arm-linux-gnueabihf-gcc COMPILER_CXX=arm-linux-gnueabihf-g++"
+              ;;
+          esac
           make musl ${arch} COMPILER=${{ steps.musl.outputs.CC }} COMPILER_CXX=${{ steps.musl.outputs.CXX }} RELEASE=1 CCACHE=1
           make -C src clean
           make linux-lib ${arch} ${lib_compilers} RELEASE=1 CCACHE=1
