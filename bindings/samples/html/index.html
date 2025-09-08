@@ -211,6 +211,8 @@
               "logs",
               JSON.stringify(JSON.parse(r.logs), null, 2)
             );
+            setTabContent("heap", "");
+            setTabContent("trace", "");
           })
           .catch((e) => {
             setTabContent("result", e.result);
