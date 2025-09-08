@@ -217,6 +217,7 @@
             setTabContent("logs", e.logs);
             console.error(e);
             setTabContent("heap", extractHeapJsonFromLogs(e.logs));
+            setTabContent("trace", extractTraceJsonFromLogs(e.logs));
           });
         localStorage.setItem("zen_script", script);
         localStorage.setItem("zen_data", data);
@@ -266,13 +267,13 @@
         markTabDirty(tab);
       }
 
-      function extractHeapJsonFromLogs(logs) {
+      function extractFromLogs(logs, prefix) {
         const parsed = [];
         try {
           const lines = JSON.parse(logs);
           for (const line of lines) {
-            if (line.startsWith("J64 HEAP:")) {
-              const b64 = line.slice("J64 HEAP:".length).trim();
+            if (line.startsWith(prefix)) {
+              const b64 = line.slice(prefix.length).trim();
               parsed.push(atob(b64));
             }
           }
@@ -280,6 +281,15 @@
           console.error("Error parsing log lines:", e);
         }
         return parsed;
+      }
+
+      function extractHeapJsonFromLogs(logs) {
+        return extractFromLogs(logs, "J64 HEAP:");
+      }
+
+      function extractTraceJsonFromLogs(logs) {
+        const trace = extractFromLogs(logs, "J64 TRACE:");
+        return JSON.stringify(JSON.parse(trace), null, 2);
       }
 
       function loadFromStorage() {
