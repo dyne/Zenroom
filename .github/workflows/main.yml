@@ -271,6 +271,14 @@ jobs:
         run: |
           pip3 install --prefer-binary meson ninja
       - uses: hendrikmuhs/ccache-action@v1.2
+      - name: Build ios-arm64
+        run: |
+          make ios-arm64 RELEASE=1 CCACHE=1
+          make clean
+      - name: Build ios-sim
+        run: |
+          make ios-sim   RELEASE=1 CCACHE=1
+          make clean
       - run: |
           make osx-exe CCACHE=1
           make -C src clean
@@ -679,9 +687,6 @@ jobs:
         with:
           fetch-depth: 0
       - uses: hendrikmuhs/ccache-action@v1.2
-      - name: Install ccache
-        run: |
-          brew install ccache
       - run: |
           make osx-exe RELEASE=1 CCACHE=1
           make -C src clean
