@@ -103,6 +103,9 @@ mlkem_cc ?= ${cc}
 longfellow_cxx ?= ${cxx}
 longfellow_cflags += -I ${pwd}/src -I. -I../zstd -fPIC -DLIBRARY
 ARCH ?= $(shell uname -m)
+ifeq ($(shell uname -s),Darwin)
+    longfellow_cflags += -Xarch_x86_64 -mpclmul -Xarch_arm64  ""
+endif
 ifeq ($(ARCH),x86_64)
     longfellow_cflags += -mpclmul
 endif
