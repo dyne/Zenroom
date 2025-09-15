@@ -21,6 +21,7 @@
 --]]
 
 local W3C = require_once "crypto_w3c"
+local JOSE = require_once "crypto_jose"
 
 -- When(deprecated(
 --         "create jws signature of ''",
