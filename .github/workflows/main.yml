@@ -704,8 +704,6 @@ jobs:
           name: release-apple-osx
           path: |
             zenroom-osx.zip
-            zenroom
-            zencode-exec
       - name: Build ios libs
         run: |
           make ios-arm64 RELEASE=1 CCACHE=1
