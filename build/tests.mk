@@ -35,7 +35,7 @@ luacheck:
 	@echo "Running Luacheck analysis (requires lua-check installed)"
 	luacheck --config src/lua/.luacheckrc --codes src/lua/**.lua
 
-check-osx: test-exec := ./src/zenroom.command
+check-osx: test-exec := ./src/zenroom
 check-osx: prepare-executables
 	@cp -v ${test-exec} test/zenroom
 	$(call bats, test/lua)
