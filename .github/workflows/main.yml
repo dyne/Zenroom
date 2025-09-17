@@ -440,7 +440,7 @@ jobs:
         run: |
           cd ../..
           make osx-exe RELEASE=1
-          cp zencode-exec.command /usr/local/bin/zencode-exec
+          cp zencode-exec /usr/local/bin/zencode-exec
         if: runner.os == 'macOS'
       - run: |
           ./prepare.sh
@@ -694,8 +694,8 @@ jobs:
       - name: Pack build results
         run: |
           mkdir -p zenroom-osx
-          cp zenroom.command      zenroom-osx/
-          cp zencode-exec.command zenroom-osx/
+          cp zenroom      zenroom-osx/
+          cp zencode-exec zenroom-osx/
           mv libzenroom.dylib     zenroom-osx/
           zip -r zenroom-osx.zip zenroom-osx
       - name: Upload artifacts for Apple OSX
@@ -704,8 +704,8 @@ jobs:
           name: release-apple-osx
           path: |
             zenroom-osx.zip
-            zenroom.command
-            zencode-exec.command
+            zenroom
+            zencode-exec
       - name: Build ios libs
         run: |
           make ios-arm64 RELEASE=1 CCACHE=1
