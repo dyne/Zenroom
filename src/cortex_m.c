@@ -188,11 +188,11 @@ int main(void)
   // parse the argc argv
   char *delim = " ";
   size_t cmd_len = strlen(cmd_line);
-  char *ptr = strtok(cmd_line, delim);
+  char *ptr = strok_r(cmd_line, delim);
   // ignore src/zenroom.bin
   if (strstr(ptr, "bin") != NULL)
   {
-    ptr = strtok(NULL, delim);
+    ptr = strok_r(NULL, delim);
   }
 
   bool zencode = false;
@@ -203,12 +203,12 @@ int main(void)
   {
     if (strncmp(ptr, "-k", 2) == 0)
     {
-      ptr = strtok(NULL, delim);
+      ptr = strok_r(NULL, delim);
       snprintf(keysfile, MAX_FILE_NAME - 1, "%s", ptr);
     }
     else if (strncmp(ptr, "-a", 2) == 0)
     {
-      ptr = strtok(NULL, delim);
+      ptr = strok_r(NULL, delim);
       snprintf(datafile, MAX_FILE_NAME - 1, "%s", ptr);
     }
     else if (strncmp(ptr, "-z", 2) == 0)
@@ -217,14 +217,14 @@ int main(void)
     }
     else if (strncmp(ptr, "-c", 2) == 0)
     {
-      ptr = strtok(NULL, delim);
+      ptr = strok_r(NULL, delim);
       snprintf(conffile, MAX_STRING - 1, "%s", ptr);
     }
     else
     {
       snprintf(scriptfile, MAX_FILE_NAME - 1, "%s", ptr);
     }
-    ptr = strtok(NULL, delim);
+    ptr = strok_r(NULL, delim);
   }
 
   if (keysfile[0] != '\0')
