@@ -46,21 +46,6 @@ chmod +x zencode-exec
 sudo cp zencode-exec /usr/local/bin/
 ```
 
-### ** MacOS **
-
-> [!WARNING]
-> On Mac OS, the executable is `zencode-exec.command` and you have to symlink it to `zencode-exec`
-
-```bash
-# install zenroom wrapper
-pip install zenroom
-
-# install zencode-exec and copy it into PATH
-wget https://github.com/dyne/zenroom/releases/latest/download/zencode-exec.command
-chmod +x zencode-exec.command
-sudo cp zencode-exec.command /usr/local/bin/
-sudo ln -s /usr/local/bin/zencode-exec.command /usr/local/bin/zencode-exec
-```
 ### ** Windows **
 
 > [!WARNING]
