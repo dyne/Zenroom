@@ -57,8 +57,6 @@ win-dll: ## Dynamic lib (DLL) for Windows x86 64bit
 
 osx-exe: ## Executable for Apple MacOS
 	$(MAKE) -f build/posix.mk OSX=1
-	@cp zenroom zenroom.command
-	@cp zencode-exec zencode-exec.command
 
 osx-lib: ## Library for Apple MacOS native
 	$(MAKE) -f build/posix.mk libzenroom.dylib OSX=1 LIBRARY=1

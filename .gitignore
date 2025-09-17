@@ -7,6 +7,7 @@ config.status
 build/lua_sandbox*
 build/luazen
 .env
+.venv
 .python-version
 docs/test
 docs/pub
@@ -38,7 +39,7 @@ src/zenroom.js.mem
 src/zenroom.wasm
 src/zenroom.wasm.js
 src/zenroom-shared
-src/zenroom.command
+src/zenroom
 build/Zenroom-*
 build/xtensa-*
 build/*wasm
