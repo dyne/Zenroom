@@ -12,6 +12,7 @@ ifdef LINUX
 endif
 ifdef OSX
 	COMPILER := clang
+	COMPILER_CXX := clang++
 	cflags += -fPIC -D'ARCH="OSX"' -DARCH_OSX
 endif
 
