@@ -4,7 +4,7 @@ include build/init.mk
 COMPILER ?= gcc
 COMPILER_CXX ?= g++
 
-ldadd += -lm -lstdc++
+ldadd += -lm
 
 ifdef LINUX
 	system := Linux
