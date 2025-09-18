@@ -110,8 +110,5 @@
       "**/*.spec.js",
       "**/zenroom.js"
     ]
-  },
-  "engines": {
-    "node": ">=22"
   }
 }
