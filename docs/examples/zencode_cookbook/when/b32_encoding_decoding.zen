@@ -1,0 +1,12 @@
+Given I have a 'base32' named 'my_b32'
+Given I have a 'hex' named 'my_hex'
+Given I have a 'base64' named 'my_base64'
+
+When I copy 'my_b32' as 'base64' to 'dest_b32'  
+When I copy 'my_hex' as 'base32' to 'dest_hex' 
+When I copy 'my_base64' as 'base32' to 'dest_b64'   
+
+Then print 'dest b32'
+Then print 'dest b64'
+Then print 'dest hex'
+
