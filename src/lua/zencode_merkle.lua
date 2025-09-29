@@ -2,7 +2,7 @@
 --This file is part of zenroom
 --
 --Copyright (C) 2025 Dyne.org foundation
---designed, written and maintained by Denis Roio <jaromil@dyne.org>
+--designed, written and maintained Nicola Suzzi and Matteo Cristino
 --
 --This program is free software: you can redistribute it and/or modify
 --it under the terms of the GNU Affero General Public License v3.0
