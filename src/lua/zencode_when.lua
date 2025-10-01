@@ -166,10 +166,17 @@ When("create json escaped string of ''", function(src)
 end)
 
 When("create json unescaped object of ''", function(src)
-    local obj = have(src)
+    local obj <const> = have(src)
     empty'json_unescaped_object'
+    local json_value_parse <const> = function(v)
+        local v_type <const> = type(v)  
+        if v_type == "boolean" then return v
+        elseif v_type == "number" then return F.new(v)
+        else return O.from_string(v)
+        end
+    end
     ACK.json_unescaped_object = deepmap(
-        OCTET.from_string,
+        json_value_parse,
         JSON.decode(O.to_string(obj))
     )
     new_codec('json_unescaped_object', {encoding = 'string'})
