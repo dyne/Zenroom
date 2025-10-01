@@ -23,7 +23,7 @@
 local MT = require'crypto_merkle'
 
 local function _zencode_merkle_root(name, hashtype)
-    local data = pick_from_path(name, true)
+    local data = read_from_path(name, true)
     if not data or type(data) ~= 'table' then
         error("Table not found in path: "..name, 2)
     end
@@ -39,7 +39,7 @@ When("create merkle root of dictionary path '' using hash ''", _zencode_merkle_r
 -- Function to verify the integrity of a Merkle root
 local function _verify_merkle_root(root, name)
     local merkle_root = have(root)
-    local data_table = pick_from_path(name, true)
+    local data_table = read_from_path(name, true)
     if not data_table or type(data_table) ~= 'table' then
         error("Table not found in path: "..name, 2)
     end
