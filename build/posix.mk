@@ -29,7 +29,7 @@ endif
 # activate CCACHE etc.
 include build/plugins.mk
 
-all: deps zenroom zencode-exec
+all: deps zenroom lua-exec zencode-exec
 
 deps: ${BUILD_DEPS}
 
@@ -39,8 +39,15 @@ zenroom: ${ZEN_SOURCES} ${cli_sources}
 	${cxx} ${cflags} ${ZEN_SOURCES} ${cli_sources} \
 		-o $@ ${ldflags} ${ldadd} -lreadline
 
-zencode-exec: ${ZEN_SOURCES} src/zencode-exec.o
+lua-exec: ${ZEN_SOURCES}
+	$(info === Building the lua-exec utility)
+	${cxx} ${cflags}  -DLUA_EXEC -c src/zencode-exec.c
+	${cxx} ${cflags} ${ZEN_SOURCES} src/zencode-exec.o \
+		-o $@ ${ldflags} ${ldadd}
+
+zencode-exec: ${ZEN_SOURCES}
 	$(info === Building the zencode-exec utility)
+	${cxx} ${cflags}  -DZEN_EXEC -c src/zencode-exec.c
 	${cxx} ${cflags} ${ZEN_SOURCES} src/zencode-exec.o \
 		-o $@ ${ldflags} ${ldadd}
 

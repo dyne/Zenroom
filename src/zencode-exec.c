@@ -30,6 +30,12 @@
 #include <sys/poll.h>
 #endif
 
+#if defined(LUA_EXEC)
+#define CMDNAME "lua-exec"
+#else
+#define CMDNAME "zencode-exec"
+#endif
+
 static void _getline(char *in) {
 	register int ret;
 	if( ! fgets(in, MAX_FILE, stdin) ) { in[0]=0x0; return; }
@@ -38,12 +44,12 @@ static void _getline(char *in) {
 	if(in[0]=='\r') { in[0]=0x0; return; } // remove carriage return on empty line
 	ret = strlen(in);
 	if(ret<4) {// min base64 is 4 chars
-		fprintf(stderr,"zencode-exec error: input line too short.\n");
+		fprintf(stderr,"%s error: input line too short.\n", CMDNAME);
 		exit(EXIT_FAILURE);
 	}
 	if(in[ret-2]=='\r') { in[ret-2]=0x0; return; } // remove ending CRLF
 	if(in[ret-1]=='\n') { in[ret-1]=0x0; return; } // remove ending LF
-	fprintf(stderr, "zencode-exec invalid input\n");
+	fprintf(stderr, "%s invalid input\n", CMDNAME);
 	exit(EXIT_FAILURE);
 }
 
@@ -76,7 +82,7 @@ int main(int argc, char **argv) {
   fds.events = POLLIN;
   ret = poll(&fds, 1, -1); // by default wait until input
   if(ret == 0) {
-	fprintf(stderr,"usage: stream | zencode-exec\n");
+	fprintf(stderr,"usage: stream | %s\n",CMDNAME);
 	exit(1);
   } else if(ret != 1) {
 	fprintf(stderr,"stdin error: %s\n",strerror(errno));
@@ -86,7 +92,7 @@ int main(int argc, char **argv) {
 
   if( fgets(conf, MAX_CONFIG, stdin) ) {
 	if(strlen(conf)>=MAX_CONFIG) {
-	  fprintf(stderr,"zencode-exec error: conf string out of bounds.\n");
+	  fprintf(stderr,"%s error: conf string out of bounds.\n",CMDNAME);
 	  return EXIT_FAILURE;
 	}
 	if(conf[0] != '\n')	{
@@ -96,17 +102,17 @@ int main(int argc, char **argv) {
 	  snprintf(conf,MAX_CONFIG,"logfmt=json");
 	}
   } else {
-	fprintf(stderr, "zencode-exec missing conf at line 1: %s\n",strerror(errno));
+	fprintf(stderr, "%s missing conf at line 1: %s\n",CMDNAME,strerror(errno));
 	return EXIT_FAILURE;
   }
 
   if( ! fgets(script_b64, MAX_ZENCODE, stdin) ) {
-	fprintf(stderr, "zencode-exec missing script at line 2: %s\n",strerror(errno));
+	fprintf(stderr, "%s missing script at line 2: %s\n",CMDNAME,strerror(errno));
 	return EXIT_FAILURE;
   }
   ret = strlen(script_b64);
   if( ret < 16) {
-	fprintf(stderr, "zencode-exec error: script too short.\n");
+	fprintf(stderr, "%s error: script too short.\n",CMDNAME);
 	return EXIT_FAILURE;
   }
   if( script_b64[ret-2]=='\r' ) script_b64[ret-2] = 0x0; // remove ending CRLF
@@ -145,7 +151,11 @@ CONF.input.format.fun = function(obj) return JSON.decode(OCTET.from_base64(obj):
 CONF.code.encoding.fun = function(obj) return OCTET.from_base64(obj):str() end \
 ");
 
+#if defined(LUA_EXEC)
+  zen_exec_lua(Z, script_b64);
+#else
   zen_exec_zencode(Z, script_b64);
+#endif
 
   register int exitcode = Z->exitcode;
   zen_teardown(Z);
