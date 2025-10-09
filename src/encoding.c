@@ -115,6 +115,53 @@ int is_url64(const char *in) {
 	return(c);
 }
 
+#include <ctype.h>
+#include <string.h>
+
+// strict RFC 4648 base64 validator: returns 0 if invalid, else length
+// of the base64 portion (excluding trailing \r\n or \n)
+int is_base64(const char *in) {
+    if (!in) return 0;
+    int len = strlen(in);
+    // strip trailing newline(s)
+    if (len > 0 && in[len-1] == '\n') {
+        len--;
+        if (len > 0 && in[len-1] == '\r') {
+            len--;
+        }
+    }
+    if (len == 0) return 0;
+    // length must be multiple of 4
+    if (len % 4 != 0) return 0;
+    int padding = 0;
+    for (int i = 0; i < len; i++) {
+        unsigned char ch = (unsigned char)in[i];
+        if (isalnum(ch) || ch == '+' || ch == '/') {
+            if (padding > 0) {
+                // once padding starts, no more base64 chars allowed
+                return 0;
+            }
+        } else if (ch == '=') {
+            padding++;
+            // only last two chars can be '='
+            if (i < len - 2) return 0;
+        } else {
+            return 0; // invalid character
+        }
+    }
+    if (padding > 2) return 0;
+    return len;
+}
+
+#define MAX_OCTET 4096000 // max 4MiB for octets (zenroom.h)
+int B64decode(char *dest, const char *src) {
+	octet o;
+	o.val = dest;
+	o.max = MAX_OCTET;
+	OCT_frombase64(&o, (char*)src);
+	return o.len;
+}
+
 int U64decode(char *dest, const char *src) {
 	register const unsigned char *bufin;
 	register unsigned char *bufout;
