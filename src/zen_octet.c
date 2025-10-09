@@ -96,24 +96,6 @@ static int _min(int x, int y) { if(x < y) return x;	else return y; }
 
 extern int _octet_to_big(lua_State *L, big *dst, const octet *src);
 
-// assumes null terminated string
-// returns 0 if not base else length of base encoded string
-int is_base64(const char *in) {
-	if(!in) { return 0; }
-	int c;
-	// check b64: header
-	// if(in[0]!='b' || in[1]!='6' || in[2]!='4' || in[3]!=':') return 0;
-	// check all valid characters
-	for(c=0; in[c]!='\0'; c++) {
-		if (!(isalnum(in[c])
-			  || '+' == in[c]
-			  || '=' == in[c]
-			  || '/' == in[c])) {
-			return 0; }
-	}
-	return c;
-}
-
 void push_octet_to_hex_string(lua_State *L, octet *o) {
 	char *s = malloc((o->len<<1)+1); // string len = double +1
 	buf2hex(s, o->val, o->len);
