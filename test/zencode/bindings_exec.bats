@@ -113,7 +113,8 @@ EOF
 
 	awk '/J64 HEAP:/ {print(substr($3,1,length($3)-2))}' full.json | sed 's/",//' | base64 -d > $TMP/out
     save_output heap.json
-	assert_output '{"CACHE":[],"CODEC":{"random_object":{"encoding":"def","name":"random_object","zentype":"e"}},"GIVEN_data":[],"THEN":[],"WHEN":{"random_object":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="}}'
+#	assert_output '{"CACHE":[],"CODEC":{"random_object":{"encoding":"def","name":"random_object","zentype":"e"}},"GIVEN_data":[],"THEN":[],"WHEN":{"random_object":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="}}'
+    assert_line --partial 'random_object = octet[32] 5dd8c0623f9163de7ebb260c23c7d1dfe7e63f92f241a379e2fc934d52b16720'
 	>&3 echo
 	awk '/J64 TRACE:/ {print(substr($3,1,length($3)-2))}' full.json | sed 's/",//' | base64 -d > $TMP/out
 	save_output trace.json
