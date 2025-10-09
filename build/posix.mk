@@ -33,22 +33,26 @@ all: deps zenroom lua-exec zencode-exec
 
 deps: ${BUILD_DEPS}
 
+# main() for zencode-exec and lua-exec
+aux_source  := src/zencode-exec
 cli_sources := src/cli-zenroom.o src/repl.o
 zenroom: ${ZEN_SOURCES} ${cli_sources}
 	$(info === Building the zenroom CLI)
 	${cxx} ${cflags} ${ZEN_SOURCES} ${cli_sources} \
 		-o $@ ${ldflags} ${ldadd} -lreadline
 
+lua-exec: cflags += -DLUA_EXEC
 lua-exec: ${ZEN_SOURCES}
 	$(info === Building the lua-exec utility)
-	${cxx} ${cflags}  -DLUA_EXEC -c src/zencode-exec.c
-	${cxx} ${cflags} ${ZEN_SOURCES} src/zencode-exec.o \
+	${zenroom_cc} ${cflags} -DLUA_EXEC \
+		-c ${aux_source}.c -o ${aux_source}.o
+	${cxx} ${cflags} ${ZEN_SOURCES} ${aux_source}.o \
 		-o $@ ${ldflags} ${ldadd}
 
 zencode-exec: ${ZEN_SOURCES}
 	$(info === Building the zencode-exec utility)
-	${cxx} ${cflags}  -DZEN_EXEC -c src/zencode-exec.c
-	${cxx} ${cflags} ${ZEN_SOURCES} src/zencode-exec.o \
+	${zenroom_cc} ${cflags} -c ${aux_source}.c -o ${aux_source}.o
+	${cxx} ${cflags} ${ZEN_SOURCES} ${aux_source}.o \
 		-o $@ ${ldflags} ${ldadd}
 
 libzenroom.so: deps ${ZEN_SOURCES}
