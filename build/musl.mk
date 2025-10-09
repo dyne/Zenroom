@@ -15,6 +15,7 @@ all: deps zenroom zencode-exec
 
 deps: ${BUILD_DEPS}
 
+ZEXE := src/zencode-exec
 cli_sources := src/cli-zenroom.o src/repl.o
 zenroom: ${ZEN_SOURCES} ${cli_sources}
 	$(info === Building the zenroom CLI)
@@ -23,14 +24,12 @@ zenroom: ${ZEN_SOURCES} ${cli_sources}
 
 lua-exec: ${ZEN_SOURCES}
 	$(info === Building the lua-exec utility)
-	${cxx} ${cflags}  -DLUA_EXEC -c src/zencode-exec.c
-	${cxx} ${cflags} ${ZEN_SOURCES} src/zencode-exec.o \
-		-o $@ ${ldflags} ${ldadd}
+	${cxx} ${cflags} ${ZEN_SOURCES} src/zencode-exec.c \
+		-o $@ ${ldflags} ${ldadd} -DLUA_EXEC
 
 zencode-exec: ${ZEN_SOURCES}
 	$(info === Building the zencode-exec utility)
-	${cxx} ${cflags}  -DZEN_EXEC -c src/zencode-exec.c
-	${cxx} ${cflags} ${ZEN_SOURCES} src/zencode-exec.o \
-		-o $@ ${ldflags} ${ldadd}
+	${cxx} ${cflags} ${ZEN_SOURCES} src/zencode-exec.c \
+		-o $@ ${ldflags} ${ldadd} -DZEN_EXEC
 
 include build/deps.mk
