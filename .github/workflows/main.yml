@@ -270,6 +270,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip3 install --prefer-binary meson ninja
+          brew install bash
       - uses: hendrikmuhs/ccache-action@v1.2
       - name: Build ios-arm64
         run: |
