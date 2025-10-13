@@ -13,11 +13,17 @@ type ZenResult struct {
 	Logs string;
 }
 func ZencodeExec(script string, conf string, keys string, data string) (ZenResult, bool) {
-	return ZencodeExecExtra(script, conf, keys, data, "", "")
+	return ZenExecExtra("zencode-exec",script, conf, keys, data, "", "")
+}
+func ZencodeExecExtra(script string, conf string, keys string, data string, extra string, context string) (ZenResult, bool) {
+	return ZenExecExtra("zencode-exec",script, conf, keys, data, extra, context)
+}
+func LuaExe(script string, conf string, keys string, data string, extra string, context string) (ZenResult, bool) {
+	return ZenExecExtra("lua-exec",script, conf, keys, data, extra, context)
 }
 
-func ZencodeExecExtra(script string, conf string, keys string, data string, extra string, context string) (ZenResult, bool) {
-	execCmd := exec.Command("zencode-exec")
+func ZenExecExtra(aux string, script string, conf string, keys string, data string, extra string, context string) (ZenResult, bool) {
+	execCmd := exec.Command(aux)
 
 	stdout, err := execCmd.StdoutPipe()
 	if err != nil {
