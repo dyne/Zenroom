@@ -23,12 +23,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <getopt.h>
 
 #include <zenroom.h>
+#include <encoding.h>
 
 #if !defined(ARCH_WIN)
 #include <sys/poll.h>
 #endif
+
 
 #if defined(LUA_EXEC)
 #define CMDNAME "lua-exec"
@@ -36,45 +39,62 @@
 #define CMDNAME "zencode-exec"
 #endif
 
-static void _getline(char *in) {
-	register int ret;
-	if( ! fgets(in, MAX_FILE, stdin) ) { in[0]=0x0; return; }
-	ret = strlen(in);
-	if(in[0]=='\n') { in[0]=0x0; return; } // remove newline on empty line
-	if(in[0]=='\r') { in[0]=0x0; return; } // remove carriage return on empty line
-	ret = strlen(in);
-	if(ret<4) {// min base64 is 4 chars
-		fprintf(stderr,"%s error: input line too short.\n", CMDNAME);
+static char conf        [MAX_CONFIG];
+static char script_b64  [MAX_ZENCODE];
+static char keys_b64    [MAX_FILE];
+static char data_b64    [MAX_FILE];
+static char extra_b64   [MAX_FILE];
+static char context_b64 [MAX_FILE];
+
+static char *line_alloc(char *in, int max) {
+	if( ! fgets(in, max, stdin) ) return NULL;
+	if(in[0]=='\n') return NULL; // newline is empty line
+	if(in[0]=='\r') return NULL; // carriage return is empty line
+	int len = is_base64(in);
+	if(!len) {
+		fprintf(stderr,"Invalid input base64 encoding\n");
 		exit(EXIT_FAILURE);
 	}
-	if(in[ret-2]=='\r') { in[ret-2]=0x0; return; } // remove ending CRLF
-	if(in[ret-1]=='\n') { in[ret-1]=0x0; return; } // remove ending LF
-	fprintf(stderr, "%s invalid input\n", CMDNAME);
-	exit(EXIT_FAILURE);
+	in[len]=0x0;
+	if(in[len-2]=='\r') in[len-2]=0x0; // remove ending CRLF
+	if(in[len-1]=='\n') in[len-1]=0x0; // remove ending LF
+	char *line = malloc(B64decoded_len(len));
+	int reallen = B64decode(line, in);
+	line[reallen] = 0x0;
+	return(line);
 }
 
 int main(int argc, char **argv) {
   (void)argc;
   (void)argv;
-  register int ret;
+  int ret;
   zenroom_t *Z;
 
 #if !defined(ARCH_WIN)
   struct pollfd fds;
 #endif
 
-  char script_b64[MAX_ZENCODE];
-  char keys_b64[MAX_FILE];
-  char data_b64[MAX_FILE];
-  char conf[MAX_CONFIG];
-  char extra_b64[MAX_FILE];
-  char context_b64[MAX_FILE];
+  conf[0] = 0x0;
   script_b64[0] = 0x0;
   keys_b64[0] = 0x0;
   data_b64[0] = 0x0;
   extra_b64[0] = 0x0;
   context_b64[0] = 0x0;
-  conf[0] = 0x0;
+
+  int opt;
+  const char *short_options = "v";
+  while((opt = getopt(argc, argv, short_options)) != -1) {
+	  switch(opt) {
+	  case 'v':
+#if defined(LUA_EXEC)
+		  fprintf(stderr,"Lua auxiliary executor for Zenroom bindings\n");
+#else
+		  fprintf(stderr,"Zencode auxiliary executor for Zenroom bindings\n");
+#endif
+		  exit(0);
+		  break;
+	  }
+  }
 
 // TODO(jaromil): find a way to check stdin on windows
 #if !defined(ARCH_WIN)
@@ -91,73 +111,52 @@ int main(int argc, char **argv) {
 #endif
 
   if( fgets(conf, MAX_CONFIG, stdin) ) {
-	if(strlen(conf)>=MAX_CONFIG) {
-	  fprintf(stderr,"%s error: conf string out of bounds.\n",CMDNAME);
-	  return EXIT_FAILURE;
-	}
-	if(conf[0] != '\n')	{
-	  conf[strlen(conf)-1] = 0x0; // remove ending LF
-	  strcat(conf,",logfmt=json");
-	} else {
-	  snprintf(conf,MAX_CONFIG,"logfmt=json");
-	}
+	  if(strlen(conf)>=MAX_CONFIG) {
+		  fprintf(stderr,"%s error: conf string out of bounds.\n",CMDNAME);
+		  return EXIT_FAILURE;
+	  }
+	  if(conf[0] != '\n')	{
+		  int cl = strlen(conf);
+		  if( conf[cl-2]=='\r' ) conf[cl-2] = 0x0; // remove ending CRLF
+		  if( conf[cl-1]=='\n' ) conf[cl-1] = 0x0; // remove ending LF
+		  conf[cl] = 0x0;
+		  strcat(conf,",logfmt=json");
+	  } else {
+		  snprintf(conf,MAX_CONFIG,"logfmt=json");
+	  }
   } else {
-	fprintf(stderr, "%s missing conf at line 1: %s\n",CMDNAME,strerror(errno));
-	return EXIT_FAILURE;
+	  fprintf(stderr, "%s missing conf at line 1: %s\n",CMDNAME,strerror(errno));
+	  return EXIT_FAILURE;
   }
 
-  if( ! fgets(script_b64, MAX_ZENCODE, stdin) ) {
-	fprintf(stderr, "%s missing script at line 2: %s\n",CMDNAME,strerror(errno));
-	return EXIT_FAILURE;
-  }
-  ret = strlen(script_b64);
-  if( ret < 16) {
-	fprintf(stderr, "%s error: script too short.\n",CMDNAME);
-	return EXIT_FAILURE;
-  }
-  if( script_b64[ret-2]=='\r' ) script_b64[ret-2] = 0x0; // remove ending CRLF
-  if( script_b64[ret-1]=='\n' ) script_b64[ret-1] = 0x0; // remove ending LF
+  char *script =  line_alloc(script_b64,  MAX_ZENCODE);
+  char *keys =    line_alloc(keys_b64,    MAX_FILE);
+  char *data =    line_alloc(data_b64,    MAX_FILE);
+  char *extra =   line_alloc(extra_b64,   MAX_FILE);
+  char *context = line_alloc(context_b64, MAX_FILE);
+  // call zenroom init with all arguments
+  Z = zen_init_extra(conf,keys,data,extra,context);
+  free(keys);
+  free(data);
+  free(extra);
+  free(context);
 
-  _getline(keys_b64);
-  _getline(data_b64);
-  _getline(extra_b64);
-  _getline(context_b64);
-
-	// {
-	// 	fprintf(stderr,"%s\n",conf);
-	// 	fprintf(stderr,"%s\n",script_b64);
-	// 	fprintf(stderr,"%s\n",keys_b64);
-	// 	fprintf(stderr,"%s\n",data_b64);
-	// 	fprintf(stderr,"%s\n",extra_b64);
-	// 	fprintf(stderr,"%s\n",context_b64);
-	// }
-
-  Z = zen_init_extra(conf,
-					 keys_b64[0]?keys_b64:NULL,
-					 data_b64[0]?data_b64:NULL,
-					 extra_b64[0]?extra_b64:NULL,
-					 context_b64[0]?context_b64:NULL);
   if(!Z) {
 	fprintf(stderr, "\"[!] Initialisation failed\",\n");
 	fprintf(stderr,"\"ZENROOM JSON LOG END\" ]\n");
 	return EXIT_FAILURE;
   }
 
-  // TODO(jaromil): if used elsewhere promote to conf directives
-  // heap and trace dumps in base64 encoded json
-  zen_exec_lua(Z, "\
-CONF.debug.format='compact' \n\
-CONF.input.format.fun = function(obj) return JSON.decode(OCTET.from_base64(obj):str()) end \n\
-CONF.code.encoding.fun = function(obj) return OCTET.from_base64(obj):str() end \
-");
-
+  // call zenroom exec
 #if defined(LUA_EXEC)
-  zen_exec_lua(Z, script_b64);
+  zen_exec_lua(Z, script);
 #else
-  zen_exec_zencode(Z, script_b64);
+  // heap and trace dumps in base64 encoded json (J64)
+  zen_exec_lua(Z, "CONF.debug.format='compact'");
+  zen_exec_zencode(Z, script);
 #endif
-
-  register int exitcode = Z->exitcode;
+  free(script);
+  int exitcode = Z->exitcode;
   zen_teardown(Z);
   return exitcode;
 }
