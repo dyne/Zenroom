@@ -1581,3 +1581,39 @@ void BIG_XXX_dfromBytesLen(DBIG_XXX a,char *b,int s)
     a[DMNV_XXX]=0;
 #endif
 }
+
+/* set r = GCD(a, b) */
+void BIG_XXX_gcd(BIG_XXX r, BIG_XXX a, BIG_XXX b)
+{
+    BIG_XXX u, v, temp;
+    BIG_XXX_copy(u, a);
+    BIG_XXX_copy(v, b);
+    BIG_XXX_zero(temp);
+
+    // Remove common powers of two from u and v
+    int k = 0;
+    while (BIG_XXX_parity(u) == 0 && BIG_XXX_parity(v) == 0) {
+        BIG_XXX_shr(u, 1);
+        BIG_XXX_shr(v, 1);
+        k++;
+    }
+
+    // Now u is odd
+    while (!BIG_XXX_iszilch(u)) {
+        while (BIG_XXX_parity(u) == 0) BIG_XXX_shr(u, 1);
+        while (BIG_XXX_parity(v) == 0) BIG_XXX_shr(v, 1);
+
+        if (BIG_XXX_comp(u, v) >= 0) {
+            BIG_XXX_sub(u, u, v);
+            BIG_XXX_norm(u); // Normalize if needed
+            BIG_XXX_shr(u, 1);
+        } else {
+            BIG_XXX_sub(v, v, u);
+            BIG_XXX_norm(v);
+            BIG_XXX_shr(v, 1);
+        }
+    }
+
+    BIG_XXX_copy(r, v); // GCD is in v
+    while (k-- > 0) BIG_XXX_shl(r, 1); // Restore common powers of 2
+}
