@@ -1,25 +1,26 @@
 package zenroom
 
 import (
+	b64 "encoding/base64"
 	"io"
 	"log"
 	"os/exec"
 	"strings"
-	b64 "encoding/base64"
 )
 
 type ZenResult struct {
-	Output string;
-	Logs string;
+	Output string
+	Logs   string
 }
+
 func ZencodeExec(script string, conf string, keys string, data string) (ZenResult, bool) {
-	return ZenExecExtra("zencode-exec",script, conf, keys, data, "", "")
+	return ZenExecExtra("zencode-exec", script, conf, keys, data, "", "")
 }
 func ZencodeExecExtra(script string, conf string, keys string, data string, extra string, context string) (ZenResult, bool) {
-	return ZenExecExtra("zencode-exec",script, conf, keys, data, extra, context)
+	return ZenExecExtra("zencode-exec", script, conf, keys, data, extra, context)
 }
-func LuaExe(script string, conf string, keys string, data string, extra string, context string) (ZenResult, bool) {
-	return ZenExecExtra("lua-exec",script, conf, keys, data, extra, context)
+func LuaExec(script string, conf string, keys string, data string, extra string, context string) (ZenResult, bool) {
+	return ZenExecExtra("lua-exec", script, conf, keys, data, extra, context)
 }
 
 func ZenExecExtra(aux string, script string, conf string, keys string, data string, extra string, context string) (ZenResult, bool) {
@@ -36,12 +37,10 @@ func ZenExecExtra(aux string, script string, conf string, keys string, data stri
 	}
 
 	stdin, err := execCmd.StdinPipe()
-    if err != nil {
+	if err != nil {
 		log.Fatalf("Failed to create stdin pipe: %v", err)
-    }
-    defer stdin.Close()
-
-
+	}
+	defer stdin.Close()
 
 	io.WriteString(stdin, conf)
 	io.WriteString(stdin, "\n")
