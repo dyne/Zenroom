@@ -5,9 +5,9 @@ import (
 )
 
 // ZENROOM is not available in new bindings
-/*func TestBasicCall(t *testing.T) {
+func TestBasicCall(t *testing.T) {
 	script := "print (1)"
-	res, _ := ZenroomExec(script, "", "", "")
+	res, _ := LuaExec(script, "", "", "", "", "")
 	if res.Output == "1" {
 		t.Errorf("calling print (1), got:%s", res.Output)
 	}
@@ -15,7 +15,7 @@ import (
 
 func TestVersion(t *testing.T) {
 	script := "print(VERSION)"
-	res, _ := ZenroomExec(script, "", "", "")
+	res, _ := LuaExec(script, "", "", "", "", "")
 
 	fmt.Printf("Zenroom version: %s\n", res.Output)
 }
@@ -39,13 +39,13 @@ func TestCallStrings(t *testing.T) {
 	}
 	for _, testcase := range testcases {
 		t.Run(testcase.label, func(t *testing.T) {
-			res, _ := ZenroomExec(testcase.script, "", "", "")
+			res, _ := LuaExec(testcase.script, "", "", "", "", "")
 			if res.Output != testcase.resp {
 				t.Errorf("calling [%s] got %s", testcase.script, res.Output)
 			}
 		})
 	}
-}*/
+}
 
 func TestZencode(t *testing.T) {
 	script := `Scenario 'ecdh': Create the keypair
