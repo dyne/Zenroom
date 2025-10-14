@@ -11,7 +11,7 @@ system := Linux
 # activate CCACHE etc.
 include build/plugins.mk
 
-all: deps zenroom zencode-exec
+all: deps zenroom lua-exec zencode-exec
 
 deps: ${BUILD_DEPS}
 
