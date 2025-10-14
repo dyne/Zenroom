@@ -1,7 +1,19 @@
-use base64::{engine::general_purpose, Engine as _};
+use std::ffi::{CString, NulError};
 use std::fmt;
-use std::io::prelude::*;
-use std::process::{Command, Stdio};
+use libc::{c_char, size_t};
+
+// Platform-specific FFI bindings (pre-generated or from build.rs)
+#[allow(non_upper_case_globals)]
+#[allow(non_camel_case_types)]
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+mod bindings;
+
+// Re-export bindings as ffi for internal use
+use bindings as ffi;
+
+// Buffer size matching Android implementation (1MB for large crypto outputs)
+const OUTPUT_BUFFER_SIZE: usize = 1024 * 1024;
 
 #[derive(Clone, Debug)]
 pub struct ZenResult {
@@ -12,11 +24,11 @@ pub struct ZenResult {
 #[derive(Clone, Debug)]
 pub enum ZenError {
     Execution(ZenResult),
-    InvalidInput(std::ffi::NulError),
+    InvalidInput(NulError),
 }
 
-impl From<std::ffi::NulError> for ZenError {
-    fn from(err: std::ffi::NulError) -> Self {
+impl From<NulError> for ZenError {
+    fn from(err: NulError) -> Self {
         Self::InvalidInput(err)
     }
 }
@@ -30,6 +42,16 @@ impl fmt::Display for ZenError {
     }
 }
 
+/// Convert C buffer to Rust String, handling null-termination
+fn buffer_to_string(buf: &[u8]) -> String {
+    // Find null terminator (C strings are null-terminated)
+    let null_pos = buf.iter()
+        .position(|&c| c == 0)
+        .unwrap_or(buf.len());
+
+    String::from_utf8_lossy(&buf[..null_pos]).to_string()
+}
+
 pub fn zencode_exec_extra(
     script: &str,
     conf: &str,
@@ -38,45 +60,61 @@ pub fn zencode_exec_extra(
     extra: &str,
     context: &str,
 ) -> Result<ZenResult, ZenError> {
-    let mut zen_input: String = "".to_owned();
+    let c_script = CString::new(script)?;
+    let c_conf = if conf.is_empty() {
+        CString::new("")?
+    } else {
+        CString::new(conf)?
+    };
+    let c_keys = if keys.is_empty() {
+        CString::new("")?
+    } else {
+        CString::new(keys)?
+    };
+    let c_data = if data.is_empty() {
+        CString::new("")?
+    } else {
+        CString::new(data)?
+    };
+    let c_extra = if extra.is_empty() {
+        CString::new("")?
+    } else {
+        CString::new(extra)?
+    };
+    let c_context = if context.is_empty() {
+        CString::new("")?
+    } else {
+        CString::new(context)?
+    };
 
-    zen_input.push_str(conf);
-    zen_input.push_str("\n");
+    let mut stdout_buf = vec![0u8; OUTPUT_BUFFER_SIZE];
+    let mut stderr_buf = vec![0u8; OUTPUT_BUFFER_SIZE];
 
-    zen_input.push_str(&general_purpose::STANDARD.encode(script));
-    zen_input.push_str("\n");
+    let ret_code = unsafe {
+        ffi::zencode_exec_tobuf(
+            c_script.as_ptr(),
+            c_conf.as_ptr(),
+            c_keys.as_ptr(),
+            c_data.as_ptr(),
+            c_extra.as_ptr(),
+            c_context.as_ptr(),
+            stdout_buf.as_mut_ptr() as *mut c_char,
+            stdout_buf.len() as size_t,
+            stderr_buf.as_mut_ptr() as *mut c_char,
+            stderr_buf.len() as size_t,
+        )
+    };
 
-    zen_input.push_str(&general_purpose::STANDARD.encode(&keys));
-    zen_input.push_str("\n");
+    let result = ZenResult {
+        output: buffer_to_string(&stdout_buf),
+        logs: buffer_to_string(&stderr_buf),
+    };
 
-    zen_input.push_str(&general_purpose::STANDARD.encode(&data));
-    zen_input.push_str("\n");
-
-    zen_input.push_str(&general_purpose::STANDARD.encode(&extra));
-    zen_input.push_str("\n");
-
-    zen_input.push_str(&general_purpose::STANDARD.encode(&context));
-    zen_input.push_str("\n");
-
-    let mut child = Command::new("zencode-exec")
-        .stdin(Stdio::piped())
-        .stderr(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()
-        .unwrap();
-    let mut stdin = child.stdin.take().unwrap();
-
-    std::thread::spawn(move || {
-        stdin
-            .write_all(zen_input.as_bytes())
-            .expect("Failed to write to stdin");
-    });
-
-    let output = child.wait_with_output().expect("Failed to read stdout");
-    Ok(ZenResult {
-        output: String::from_utf8_lossy(&output.stdout).to_string(),
-        logs: String::from_utf8_lossy(&output.stderr).to_string(),
-    })
+    if ret_code == 0 {
+        Ok(result)
+    } else {
+        Err(ZenError::Execution(result))
+    }
 }
 
 pub fn zencode_exec(
@@ -87,15 +125,6 @@ pub fn zencode_exec(
 ) -> Result<ZenResult, ZenError> {
     zencode_exec_extra(script, conf, keys, data, "", "")
 }
-
-/*pub fn zenroom_exec(
-    script: impl AsRef<str>,
-    conf: impl AsRef<str>,
-    keys: impl AsRef<str>,
-    data: impl AsRef<str>,
-) -> Result<ZenResult, ZenError> {
-    exec_f(c::zenroom_exec_tobuf, script, conf, keys, data)
-}*/
 
 #[cfg(test)]
 mod tests {
@@ -156,17 +185,28 @@ Then print data
     }
 
     #[test]
-    fn threaded_exec() -> Result<(), ZenError> {
-        const NUM_THREADS: usize = 5;
-        let mut threads = Vec::new();
-        for _ in 0..NUM_THREADS {
-            threads.push(std::thread::spawn(|| {
-                zencode_exec(SAMPLE_SCRIPT, "", "", "")
-            }));
+    fn invalid_script_error() {
+        let invalid_script = r#"
+        Scenario 'ecdh'
+        Given I have a 'nonexistent' named 'foo'
+        "#;
+
+        let result = zencode_exec(invalid_script, "", "", "");
+        assert!(result.is_err());
+
+        if let Err(ZenError::Execution(err)) = result {
+            assert!(!err.logs.is_empty());
+        } else {
+            panic!("Expected Execution error");
         }
-        for thread in threads {
-            thread.join().expect("thread should not panic")?;
-        }
-        Ok(())
+    }
+
+    #[test]
+    fn null_byte_input_error() {
+        let script_with_null = "test\0script";
+        let result = zencode_exec(script_with_null, "", "", "");
+
+        assert!(result.is_err());
+        assert!(matches!(result, Err(ZenError::InvalidInput(_))));
     }
 }

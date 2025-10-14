@@ -139,7 +139,8 @@ Roio with the help of [Puria](https://github.com/puria) Nafisi Azizi
 and [Andrea](https://www.linkedin.com/in/andrea-d-intino/) D'Intino.
 
 Includes code contributions by Alberto Lerda, Matteo Cristino, Danilo
-Spinella, Luca Di Domenico, Rebecca Selvaggini, Filippo Trotter, Nicola Suzzi, Giulio Sacchet.
+Spinella, Luca Di Domenico, Rebecca Selvaggini, Filippo Trotter, 
+Nicola Suzzi, Giulio Sacchet and Adrien Pujol.
 
 Reviews and suggestions contributed by: Richard Stallman, Daniele
 Lacamera, Enrico Zimuel, Sofía Celi, Sebastian Blichfeld, Adam Burns,
