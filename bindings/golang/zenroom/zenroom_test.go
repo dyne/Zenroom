@@ -1,6 +1,7 @@
 package zenroom
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -58,7 +59,6 @@ Then print the keyring`
 	}
 }
 
-
 func TestZencodeExtra(t *testing.T) {
 	script := `Scenario 'ecdh': Create the keypair
 Given I have a 'string' named 'keys'
@@ -66,7 +66,7 @@ Given I have a 'string' named 'data'
 Given I have a 'string' named 'extra'
 Then print data
 `
-res, success := ZencodeExecExtra(script, "", `{"keys": "keys"}`, `{"data": "data"}`, `{"extra": "extra"}`, "")
+	res, success := ZencodeExecExtra(script, "", `{"keys": "keys"}`, `{"data": "data"}`, `{"extra": "extra"}`, "")
 	if !success {
 		t.Error(res.Logs)
 	}
