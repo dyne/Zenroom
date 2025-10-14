@@ -186,6 +186,7 @@ jobs:
           mkdir -p         zenroom-${{ matrix.arch }}-linux
           cp zenroom       zenroom-${{ matrix.arch }}-linux/
           cp zencode-exec  zenroom-${{ matrix.arch }}-linux/
+          cp lua-exec      zenroom-${{ matrix.arch }}-linux/
           make clean
           make linux-lib ${arch} ${lib_compilers} RELEASE=1 CCACHE=1
           cp libzenroom.so zenroom-${{ matrix.arch }}-linux/
@@ -229,6 +230,7 @@ jobs:
       - run: |
           unzip zenroom-arm_64-linux.zip
           cp zenroom-arm_64-linux/zencode-exec  ./zencode-exec
+          cp zenroom-arm_64-linux/lua-exec      ./lua-exec
           cp zenroom-arm_64-linux/zenroom       ./zenroom
           cp zenroom-arm_64-linux/libzenroom.so ./libzenroom.so
           # api test need milagro library to be built
@@ -333,6 +335,7 @@ jobs:
       - run: |
           make linux-exe CCACHE=1
           cp zencode-exec /usr/local/bin/
+          cp lua-exec     /usr/local/bin/
       - name: 🧪 test bindings go-${{ matrix.go }}
         working-directory: bindings/golang/zenroom
         run: make test
@@ -365,6 +368,7 @@ jobs:
       - run: |
           make linux-exe CCACHE=1
           cp zencode-exec /usr/local/bin/
+          cp lua-exec     /usr/local/bin/
       - name: 🧪 test bindings rust-${{ matrix.rust }}
         working-directory: bindings/rust
         run: cargo test
@@ -436,12 +440,14 @@ jobs:
           cd ../..
           make linux-exe RELEASE=1
           cp zencode-exec /usr/local/bin/
+          cp lua-exec     /usr/local/bin/
         if: runner.os == 'Linux'
       - name: Build zencode-exec on Apple/OSX
         run: |
           cd ../..
           make osx-exe RELEASE=1
           cp zencode-exec /usr/local/bin/zencode-exec
+          cp lua-exec     /usr/local/bin/lua-exec
         if: runner.os == 'macOS'
       - run: |
           ./prepare.sh
@@ -555,6 +561,7 @@ jobs:
           mkdir -p         zenroom-${{ matrix.arch }}-linux
           cp zenroom       zenroom-${{ matrix.arch }}-linux/
           cp zencode-exec  zenroom-${{ matrix.arch }}-linux/
+          cp lua-exec      zenroom-${{ matrix.arch }}-linux/
           make clean
           make linux-lib ${arch} ${lib_compilers} RELEASE=1 CCACHE=1
           cp libzenroom.so zenroom-${{ matrix.arch }}-linux/
@@ -577,6 +584,7 @@ jobs:
           path: |
             zenroom
             zencode-exec
+            lua-exec
             zenroom-linux.zip
 
   windows-android-release:
@@ -609,6 +617,7 @@ jobs:
           mkdir -p zenroom-win64
           cp zenroom.exe        zenroom-win64/
           cp zencode-exec.exe   zenroom-win64/
+          cp lua-exec.exe       zenroom-win64/
           mv libzenroom_dll.lib zenroom-win64/
           mv zenroom.dll        zenroom-win64/
           zip -r zenroom-win64.zip zenroom-win64
@@ -620,6 +629,7 @@ jobs:
             zenroom-win64.zip
             zenroom.exe
             zencode-exec.exe
+            lua-exec.exe
       - name: Install specific NDK version
         run: |
           export ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
@@ -697,6 +707,7 @@ jobs:
           mkdir -p zenroom-osx
           cp zenroom      zenroom-osx/
           cp zencode-exec zenroom-osx/
+          cp lua-exec     zenroom-osx/
           mv libzenroom.dylib     zenroom-osx/
           zip -r zenroom-osx.zip zenroom-osx
       - name: Upload artifacts for Apple OSX
