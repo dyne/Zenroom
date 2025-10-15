@@ -617,7 +617,6 @@ jobs:
           mkdir -p zenroom-win64
           cp zenroom.exe        zenroom-win64/
           cp zencode-exec.exe   zenroom-win64/
-          cp lua-exec.exe       zenroom-win64/
           mv libzenroom_dll.lib zenroom-win64/
           mv zenroom.dll        zenroom-win64/
           zip -r zenroom-win64.zip zenroom-win64
@@ -629,7 +628,6 @@ jobs:
             zenroom-win64.zip
             zenroom.exe
             zencode-exec.exe
-            lua-exec.exe
       - name: Install specific NDK version
         run: |
           export ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
