@@ -12,15 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef PRIVACY_PROOFS_ZK_LIB_CIRCUITS_SHA3_SHA3_ROUND_CONSTANTS_H_
-#define PRIVACY_PROOFS_ZK_LIB_CIRCUITS_SHA3_SHA3_ROUND_CONSTANTS_H_
+#ifndef PRIVACY_PROOFS_ZK_LIB_CIRCUITS_MDOC_MDOC_DECOMPRESS_H_
+#define PRIVACY_PROOFS_ZK_LIB_CIRCUITS_MDOC_MDOC_DECOMPRESS_H_
 
+#include <cstddef>
 #include <cstdint>
-#include <cstdlib>
+#include <vector>
 
 namespace proofs {
-extern const uint64_t sha3_rc[24];
-extern const size_t sha3_rotc[24];
+extern size_t decompress(std::vector<uint8_t>& bytes, const uint8_t* compressed,
+                         size_t compressed_len);
 }  // namespace proofs
 
-#endif  // PRIVACY_PROOFS_ZK_LIB_CIRCUITS_SHA3_SHA3_ROUND_CONSTANTS_H_
+#endif  // PRIVACY_PROOFS_ZK_LIB_CIRCUITS_MDOC_MDOC_DECOMPRESS_H_

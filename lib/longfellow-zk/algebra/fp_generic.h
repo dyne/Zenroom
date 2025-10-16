@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -246,6 +246,13 @@ class FpGeneric {
   // satisfied. All untrusted input should be handled via the of_bytes method.
   Elt of_scalar(uint64_t a) const { return of_scalar_field(a); }
 
+  // basis for the binary representation of of_scalar(), so that
+  // of_scalar(sum_i b[i] 2^i) = sum_i b[i] beta(i)
+  Elt beta(size_t i) const {
+    check(i < 64, "i < 64");
+    return of_scalar(static_cast<uint64_t>(1) << i);
+  }
+
   Elt of_scalar_field(uint64_t a) const { return of_scalar_field(N(a)); }
   Elt of_scalar_field(const std::array<uint64_t, W64>& a) const {
     return of_scalar_field(N(a));
@@ -295,6 +302,18 @@ class FpGeneric {
     check(k != (k - i), "k != (k - i)");
     return inv_small_scalars_[/* k - (k - i) = */ i];
   }
+
+  // Type for counters.  For prime fields counters and field
+  // elements have the same representation, so all conversions
+  // are trivial.
+  struct CElt {
+    Elt e;
+  };
+  CElt as_counter(uint64_t a) const { return CElt{of_scalar_field(a)}; }
+
+  // Convert a counter into *some* field element such that the counter is
+  // zero (as a counter) iff the field element is zero.
+  Elt znz_indicator(const CElt& celt) const { return celt.e; }
 
  private:
   void maybe_minus_m(limb_t a[kLimbs], limb_t ah) const {
