@@ -117,18 +117,7 @@ local function _UTC2timestamp(t_name)
     if utc_timestamp_codec.encoding ~= 'string' then
         error('Invalid UTC timestamp encoding: ' .. utc_timestamp_codec.encoding, 2)
     end
-    local year, month, day, hour, min, sec <const> = utc_timestamp:string():match("(%d+)%-(%d+)%-(%d+)T(%d+):(%d+):(%d+)Z")
-    local utc_table <const> = {
-        year = tonumber(year),
-        month = tonumber(month),
-        day = tonumber(day),
-        hour = tonumber(hour),
-        min = tonumber(min),
-        sec = tonumber(sec),
-        isdst = false
-    }
-    local offset <const> = math.floor(os.difftime(os.time(), os.time(os.date("!*t"))))
-    ACK.timestamp = TIME.new(os.time(utc_table) + offset)
+    ACK.timestamp = zulu2timestamp(utc_timestamp)
     new_codec('timestamp', { zentype = 'e', encoding = 'time'})
 end
 
