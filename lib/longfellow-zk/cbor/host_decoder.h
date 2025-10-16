@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -276,8 +276,12 @@ class CborDoc {
       case UNSIGNED:
         if (u_.u64 < 24) {
           return 1;
+        } else if (u_.u64 < 256) {
+          return 2;
+        } else if (u_.u64 < 65536) {
+          return 3;
         }
-        return 2;
+        return 5;
       case BYTES:
       case TEXT:
         return u_.string.len;

@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,21 +31,59 @@ extern "C" {
 //   library).
 //   - circuit_hash - SHA265 hash of the output of generate_circuit() function,
 //   the circuit in compressed format. It's converted to a hex string. Every
-//   time the circuit changes, the hash must be manaully calculated and a new
+//   time the circuit changes, the hash must be manually calculated and a new
 //   ZKSpec added to this list.
 //   - num_attributes. number of attributes the circuit supports,
 //   - version. version of the ZK specification
+//.  - block_enc_hash. block_enc parameter for the ZK proof of the hash
+//     component. Version 3 uses the legacy-computed value, v4 uses optimized
+//     values.
+//   - block_enc_sig. block_enc parameter for the ZK proof of the signature
+//     component.
 // }
 
 const ZkSpecStruct kZkSpecs[kNumZkSpecs] = {
+    // Circuits produced on 2025-08-21
     {"longfellow-libzk-v1",
-     "2836f0df5b7c2c431be21411831f8b3d2b7694b025a9d56a25086276161f7a93", 1, 1},
+     "f88a39e561ec0be02bb3dfe38fb609ad154e98decbbe632887d850fc612fea6f", 1, 5,
+     4096, 2945},
     {"longfellow-libzk-v1",
-     "40a24808f53f516b3e653ec898342c46acf3b4a98433013548e780d2ffb1b4d0", 2, 1},
+     "f51b7248b364462854d306326abded169854697d752d3bb6d9a9446ff7605ddb", 2, 5,
+     4025, 2945},
     {"longfellow-libzk-v1",
-     "0f5a3bfa24a1252544fda4602fea98fc69b6296b64d4c7e48f2420de2910bf55", 3, 1},
+     "c27195e03e22c9ab4efe9e1dabd2c33aa8b2429cc4e86410c6f12542d3c5e0a1", 3, 5,
+     4121, 2945},
     {"longfellow-libzk-v1",
-     "96b71d7173c0341860d7b1b8fbcceca3d55347ecca1c9617e7d6efbb6b5cf344", 4, 1},
+     "fa5fadfb2a916d3b71144e9b412eff78f71fd6a6d4607eac10de66b195868b7a", 4, 5,
+     4283, 2945},
+
+    // Circuits produced on 2025-07-22.
+    {"longfellow-libzk-v1",
+     "89288b9aa69d2120d211618fcca8345deb4f85d2e710c220cc9c059bbee4c91f", 1, 4,
+     4096, 4096},
+    {"longfellow-libzk-v1",
+     "d260f7ef1bc82a25ad174d61a9611ba4a6e0c8f2f8520d2b6ea1549c79abcd55", 2, 4,
+     4096, 4096},
+    {"longfellow-libzk-v1",
+     "77aa19bdb547b68a30deb37b94d3a506222a455806afcddda88d591493e9a689", 3, 4,
+     4096, 4096},
+    {"longfellow-libzk-v1",
+     "31bc7c86c71871dad73619e7da7c5a379221602a3f28ea991b05da1ef656d13c", 4, 4,
+     4096, 4096},
+
+    // Circuits produced on 2025-06-13
+    {"longfellow-libzk-v1",
+     "bd3168ea0a9096b4f7b9b61d1c210dac1b7126a9ec40b8bc770d4d485efce4e9", 1, 3,
+     4096, 4096},
+    {"longfellow-libzk-v1",
+     "40b2b68088f1d4c93a42edf01330fed8cac471cdae2b192b198b4d4fc41c9083", 2, 3,
+     4096, 4096},
+    {"longfellow-libzk-v1",
+     "99a5da3739df68c87c7a380cc904bb275dbd4f1b916c3d297ba9d15ee86dd585", 3, 3,
+     4096, 4096},
+    {"longfellow-libzk-v1",
+     "5249dac202b61e03361a2857867297ee7b1d96a8a4c477d15a4560bde29f704f", 4, 3,
+     4096, 4096},
 };
 
 const ZkSpecStruct *find_zk_spec(const char *system_name,

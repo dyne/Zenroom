@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,8 +28,10 @@
 #include "circuits/ecdsa/verify_witness.h"
 #include "circuits/logic/bit_plucker_encoder.h"
 #include "circuits/mac/mac_witness.h"
+#include "circuits/mdoc/mdoc_attribute_ids.h"
 #include "circuits/mdoc/mdoc_constants.h"
 #include "circuits/mdoc/mdoc_hash.h"
+#include "circuits/mdoc/mdoc_zk.h"
 #include "circuits/sha/flatsha256_witness.h"
 #include "gf2k/gf2_128.h"
 #include "util/crypto.h"
@@ -37,14 +39,6 @@
 #include "util/panic.h"
 
 namespace proofs {
-
-/* This struct allows a verifier to express which attribute and value the prover
- * must claim. */
-struct OpenedAttribute {
-  uint8_t id[32];
-  uint8_t value[64];
-  size_t id_len, value_len;
-};
 
 struct CborIndex {
   size_t k, v, ndx;
@@ -65,6 +59,8 @@ struct FullAttribute {
   size_t val_ind;
   size_t val_len;
 
+  const uint8_t* mdl_ns;  // mdl namespace for the attribute
+
   // Index for this attribute among all attributes in the mdoc hash list.
   size_t digest_id;
   CborIndex mso;
@@ -76,8 +72,12 @@ struct FullAttribute {
   // The original mdoc into which all offsets point.
   const uint8_t* doc;
 
-  bool operator==(const OpenedAttribute& y) const {
+  bool operator==(const RequestedAttribute& y) const {
     return y.id_len == id_len && memcmp(y.id, &doc[id_ind], id_len) == 0;
+  }
+
+  size_t witness_length(const RequestedAttribute& attr) {
+    return id_len + val_len + 1 + 12;
   }
 };
 
@@ -149,40 +149,42 @@ class ParsedMdoc {
     if (ns == nullptr) return false;
 
     // Find the attribute witness we need from here.
-    // For now, we only support 1 namespace.
-    auto mldns = ns[1].lookup(resp, 17, (uint8_t*)"org.iso.18013.5.1", di);
-    if (mldns == nullptr) return false;
-    size_t ai = 0;
-    auto tattr = mldns[1].index(ai++);
-    while (tattr != nullptr) {
-      CborDoc er;
-      // Decode the map in this tagged attribute.
-      size_t pos = tattr->children_[0].u_.string.pos;
-      size_t end = pos + tattr->children_[0].u_.string.len;
-      if (!er.decode(resp, end, pos, 0)) {
-        return false;
+    for (const char* sn : kSupportedNamespaces) {
+      auto mldns = ns[1].lookup(resp, strlen(sn), (const uint8_t*)sn, di);
+      if (mldns == nullptr) continue;
+      size_t ai = 0;
+      auto tattr = mldns[1].index(ai++);
+      while (tattr != nullptr) {
+        CborDoc er;
+        // Decode the map in this tagged attribute.
+        size_t pos = tattr->children_[0].u_.string.pos;
+        size_t end = pos + tattr->children_[0].u_.string.len;
+        if (!er.decode(resp, end, pos, 0)) {
+          return false;
+        }
+
+        auto ei = er.lookup(resp, 17, (uint8_t*)"elementIdentifier", di);
+        if (ei == nullptr) return false;
+        auto ev = er.lookup(resp, 12, (uint8_t*)"elementValue", di);
+        if (ev == nullptr) return false;
+        auto digid = er.lookup(resp, 8, (uint8_t*)"digestID", di);
+        if (digid == nullptr) return false;
+
+        attributes_.push_back((FullAttribute){
+            ei[1].position(),
+            ei[1].length(),
+            ev[1].position(),
+            ev[1].length(),
+            (const uint8_t*)sn,
+            static_cast<size_t>(digid[1].u_.u64), /* digest_id */
+            {0, 0, 0},                            /* default mso_ind */
+            tattr->header_pos_,                   /* tag_ind */
+            tattr->children_[0].u_.string.len +
+                4, /* +4 for the D8 18 58 <> prefix */
+            resp});
+
+        tattr = mldns[1].index(ai++);
       }
-
-      auto ei = er.lookup(resp, 17, (uint8_t*)"elementIdentifier", di);
-      if (ei == nullptr) return false;
-      auto ev = er.lookup(resp, 12, (uint8_t*)"elementValue", di);
-      if (ev == nullptr) return false;
-      auto digid = er.lookup(resp, 8, (uint8_t*)"digestID", di);
-      if (digid == nullptr) return false;
-
-      attributes_.push_back(
-          (FullAttribute){ei[1].position(),
-                          ei[1].length(),
-                          ev[1].position(),
-                          ev[1].length(),
-                          static_cast<size_t>(digid[1].u_.u64), /* digest_id */
-                          {0, 0, 0},          /* default mso_ind */
-                          tattr->header_pos_, /* tag_ind */
-                          tattr->children_[0].u_.string.len +
-                              4, /* +4 for the D8 18 58 <> prefix */
-                          resp});
-
-      tattr = mldns[1].index(ai++);
     }
 
     auto ds = docs0[0].lookup(resp, 12, (uint8_t*)"deviceSigned", di);
@@ -235,13 +237,21 @@ class ParsedMdoc {
     if (nvd == nullptr) return false;
     copy_kv_header(value_digests_, nvd);
 
+    // For backwards compatibility with 1f circuits, copy the hard-coded org_ if
+    // it is present. TODO(shelat): Remove this once all 1f circuits have
+    // been updated.
     auto norg = nvd[1].lookup(pmso, kOrgLen, kOrgID, org_.ndx);
-    if (norg == nullptr) return false;
-    copy_kv_header(org_, norg);
+    if (norg != nullptr) {
+      copy_kv_header(org_, norg);
+    }
 
     for (auto& attr : attributes_) {
+      size_t index;
+      auto nss = nvd[1].lookup(pmso, strlen((const char*)attr.mdl_ns),
+                               attr.mdl_ns, index);
+      if (nss == nullptr) return false;
       uint64_t hi = (uint64_t)attr.digest_id;
-      auto hattr = norg[1].lookup_unsigned(hi, attr.mso.ndx);
+      auto hattr = nss[1].lookup_unsigned(hi, attr.mso.ndx);
       if (hattr == nullptr) return false;
       copy_kv_header(attr.mso, hattr);
     }
@@ -311,21 +321,28 @@ Nat nat_from_hash(const uint8_t data[], size_t len) {
   return ne;
 }
 
+// Append the cbor encoding of the length of a bytestring to buf.
+// This method handles bytestrings that are up to 255 bytes long.
 static inline void append_bytes_len(std::vector<uint8_t>& buf, size_t len) {
-  if (len > 256) {
-    uint8_t ll[] = {0x59, (uint8_t)((len >> 8) & 0xff), (uint8_t)(len & 0xff)};
-    buf.insert(buf.end(), ll, ll + 3);
-  } else {
+  check(len < 65536, "Bytestring length too large");
+  if (len < 24) {
+    buf.push_back(0x40 + len);
+  } else if (len < 256) {
     uint8_t ll[] = {0x58, static_cast<uint8_t>(len & 0xff)};
     buf.insert(buf.end(), ll, ll + 2);
+  } else {
+    uint8_t ll[] = {0x59, (uint8_t)((len >> 8) & 0xff), (uint8_t)(len & 0xff)};
+    buf.insert(buf.end(), ll, ll + 3);
   }
 }
 
+// Append the cbor encoding of the length of a text string to buf.
+// This method handles text strings that are up to 255 bytes long.
 static inline void append_text_len(std::vector<uint8_t>& buf, size_t len) {
   check(len < 256, "Text length too large");
   if (len < 24) {
     buf.push_back(0x60 + len);
-  } else if (len < 255) {
+  } else if (len < 256) {
     buf.push_back(0x78);
     buf.push_back(len);
   }
@@ -361,7 +378,7 @@ static Nat compute_transcript_hash(
   };
   std::vector<uint8_t> deviceNameSpacesBytes = {0xD8, 0x18, 0x41, 0xA0};
 
-  if (docType != nullptr) {
+  if (docType != nullptr && docType->size() < 256) {
     docTypeBytes.clear();
     append_text_len(docTypeBytes, docType->size());
     docTypeBytes.insert(docTypeBytes.end(), docType->begin(), docType->end());
@@ -399,11 +416,61 @@ void fill_bit_string(DenseFiller<Field>& filler, const uint8_t s[/*len*/],
                      size_t len, size_t max, const Field& Fs) {
   std::vector<typename Field::Elt> v(max * 8, Fs.of_scalar(2));
   for (size_t i = 0; i < max && i < len; ++i) {
-    for (size_t j = 0; j < 8; ++j) {
-      v[i * 8 + j] = (s[i] >> j & 0x1) ? Fs.one() : Fs.zero();
-    }
+    fill_byte(v, s[i], i, Fs);
   }
   filler.push_back(v);
+}
+
+template <class Field>
+void fill_byte(std::vector<typename Field::Elt>& v, uint8_t b, size_t i,
+               const Field& F) {
+  for (size_t j = 0; j < 8; ++j) {
+    v[i * 8 + j] = (b >> j & 0x1) ? F.one() : F.zero();
+  }
+}
+
+template <class Field>
+bool fill_attribute(DenseFiller<Field>& filler, const RequestedAttribute& attr,
+                    const Field& F, size_t version) {
+  // In version 3, the attribute is encoded as the raw cbor string that
+  // included <name of identifier> <elementValue> <attributeValue>.
+  // In version 4, the attribute is encoded as
+  // <len(identifier)> <name of identifier> <elementValue> <attributeValue>.
+  // This extra length field distinguishes the two attributes:
+  //   "aamva/domestic_driving_privileges" from "iso/driving_privileges." No
+  // other valid attribute name is a proper suffix of another.  See the
+  // mdoc_attribute_ids.h file for the full list of attribute names and our
+  // restrictions.
+
+  std::vector<uint8_t> vbuf;
+  std::vector<typename Field::Elt> v(96 * 8, F.zero());
+
+  if (version >= 4) {
+    // Append the length of the elementIdentifier.
+    append_text_len(vbuf, attr.id_len);
+  }
+  vbuf.insert(vbuf.end(), attr.id, attr.id + attr.id_len);
+  append_text_len(vbuf, 12);  // len of "elementValue"
+  const char* ev = "elementValue";
+  vbuf.insert(vbuf.end(), ev, ev + 12);
+
+  vbuf.insert(vbuf.end(), attr.cbor_value,
+              attr.cbor_value + attr.cbor_value_len);
+
+  if (vbuf.size() > 96) {
+    log(ERROR, "Attribute %s is too long: %zu", attr.id, vbuf.size());
+    return false;
+  }
+  size_t len = 0;
+  for (size_t j = 0; j < vbuf.size() && len < 96; ++j, ++len) {
+    fill_byte(v, vbuf[j], len, F);
+  }
+  filler.push_back(v);
+  if (version >= 4) {
+    // In version 4, add the OpenedAttribute.len field.
+    filler.push_back(len, 8, F);
+  }
+  return true;
 }
 
 template <class EC, class ScalarField>
@@ -576,8 +643,8 @@ class MdocHashWitness {
 
   bool compute_witness(const uint8_t mdoc[/* len */], size_t len,
                        const uint8_t transcript[/* tlen */], size_t tlen,
-                       const OpenedAttribute attrs[], size_t attrs_len,
-                       const uint8_t tnow[/*20*/]) {
+                       const RequestedAttribute attrs[], size_t attrs_len,
+                       const uint8_t tnow[/*20*/], size_t version) {
     if (!pm_.parse_device_response(len, mdoc)) {
       log(ERROR, "Failed to parse device response");
       return false;
@@ -616,19 +683,13 @@ class MdocHashWitness {
     attr_mso_.resize(attrs_len);
     attr_ev_.resize(attrs_len);
     attr_ei_.resize(attrs_len);
-
     attr_bytes_.resize(attrs_len);
-    for (size_t i = 0; i < attrs_len; ++i) {
-      attr_bytes_[i].resize(128);
-    }
-
     atw_.resize(attrs_len);
-    for (size_t i = 0; i < attrs_len; ++i) {
-      atw_[i].resize(2);
-    }
 
     // Match the attributes with the witnesses from the deviceResponse.
     for (size_t i = 0; i < attrs_len; ++i) {
+      attr_bytes_[i].resize(128);
+      atw_[i].resize(2);
       bool found = false;
       for (auto fa : pm_.attributes_) {
         if (fa == attrs[i]) {
@@ -637,7 +698,16 @@ class MdocHashWitness {
               &attr_bytes_[i][0], &atw_[i][0]);
           attr_mso_[i] = fa.mso;
           attr_ei_[i].offset = fa.id_ind - fa.tag_ind;
-          attr_ei_[i].len = fa.id_len;
+          if (version >= 4) {
+            // In version 4, the attribute id is encoded as the length of the
+            // id followed by the id.  The witness starts at the id, so we
+            // subtract 1 or 2 to get the offset, depending on the id length.
+            attr_ei_[i].offset -= 1;
+            if (fa.id_len > 23) {
+              attr_ei_[i].offset -= 1;
+            }
+          }
+          attr_ei_[i].len = fa.witness_length(attrs[i]);
           attr_ev_[i].offset = fa.val_ind - fa.tag_ind;
           attr_ev_[i].len = fa.val_len;
           found = true;
