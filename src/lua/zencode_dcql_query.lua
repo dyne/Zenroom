@@ -111,6 +111,44 @@ Example of dcql_query to eliminate before merging:
 
 -- TODO: create a schema to validate dcql_query in input
 
+
+-- helper functions
+local function _parse_dcsdjwt(string_cred)
+    local toks <const> = strtok(string_cred, "~")
+    local disclosures = {}
+    for i=2, #toks do
+        disclosures[#disclosures + 1] = JSON.raw_decode(O.from_url64(toks[i]):str())
+    end
+    local jwt <const> = W3C.import_jwt(toks[1])
+    return {
+        header = jwt.header,
+        payload = jwt.payload,
+        signature = jwt.signature,
+        disclosures = disclosures,
+    }
+end
+
+local function _check_path(path, root)
+    for i = 2, #path do
+        if type(root) ~= "table" or root[path[i]] == nil then
+            return nil
+        end
+        root = root[path[i]]
+    end
+    return root
+end
+
+local function _map_to_type(v)
+    if type(v) == "zenroom.float" then
+        return tonumber(tostring(v))
+    elseif type(v) == "boolean" then
+        return v
+    else
+        return O.to_string(v)
+    end
+end
+
+-- ldp_vc checker
 local function _check_ldp_vc(cred, string_query)
     if cred['@context'] == nil or
        cred['type'] == nil or
@@ -150,23 +188,20 @@ local function _check_ldp_vc(cred, string_query)
     end
     -- match claims
     for _, claim in ipairs(string_query.claims) do
-        local copy_cred = cred
+        local root = cred
         local path <const> = claim.path
         local values <const> = claim.values
         -- path exists
-        for _, p in ipairs(path) do
-            if copy_cred[p] == nil then
-                warn("Credential does not have the required path: " .. table.concat(path, '.'))
-                return false
-            end
-            copy_cred = copy_cred[p]
+        local root = _map_to_type(_check_path(path, root[path[1]]));
+        if root == nil then
+            warn("Credential does not have the required path: " .. table.concat(path, '.'))
+            return false
         end
         -- if values is specified, check that the value under the path matches one of them
         if values and (#values > 0) then
             local value_found = false
-            local string_cred_value <const> = O.to_string(copy_cred)
             for _, v in ipairs(values) do
-                if string_cred_value == v then
+                if root == v then
                     value_found = true
                     break
                 end
@@ -180,41 +215,7 @@ local function _check_ldp_vc(cred, string_query)
     return true
 end
 
-local function _parse_dcsdjwt(string_cred)
-    local toks <const> = strtok(string_cred, "~")
-    local disclosures = {}
-    for i=2, #toks do
-        disclosures[#disclosures + 1] = JSON.raw_decode(O.from_url64(toks[i]):str())
-    end
-    local jwt <const> = W3C.import_jwt(toks[1])
-    return {
-        header = jwt.header,
-        payload = jwt.payload,
-        signature = jwt.signature,
-        disclosures = disclosures,
-    }
-end
-
-local function _check_path(path, root)
-    for i = 2, #path do
-        if type(root) ~= "table" or root[path[i]] == nil then
-            return nil
-        end
-        root = root[path[i]]
-    end
-    return root
-end
-
-local function map(v)
-    if type(v) == "zenroom.float" then
-        return tonumber(tostring(v))
-    elseif type(v) == "boolean" then
-        return v
-    else
-        return O.to_string(v)
-    end
-end
-
+-- dc+sd-jwt checker
 local function _check_dcsdjwt(cred, string_query)
     local parsed_cred <const> = _parse_dcsdjwt(cred:string())
     -- match vct_values
@@ -260,7 +261,7 @@ local function _check_dcsdjwt(cred, string_query)
             ::continue::
         end
         if not claim_path_found then
-            local root = map(_check_path(path, parsed_cred.payload[path[1]]));
+            local root = _map_to_type(_check_path(path, parsed_cred.payload[path[1]]));
             if root ~= nil then
                 if values and (#values > 0) then
                     local value_found = false
@@ -308,7 +309,7 @@ When("create matching credentials from '' matching dcql_query ''", function(cred
     )
     local out = {}
     for _, query in pairs(dcql_query.credentials) do
-        local string_query <const> = deepmap(map, query)
+        local string_query <const> = deepmap(_map_to_type, query)
         out[string_query.id] = {}
         local matching_credentials <const> = credentials[string_query.format]
         if matching_credentials == nil then
