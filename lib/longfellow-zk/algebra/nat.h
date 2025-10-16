@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -124,7 +124,7 @@ class Nat : public Limb<W64> {
       base = 16u;
     }
     const char* p = s;
-    for (; (p - s) < kMaxStringLen && *p; p++) {
+    for (size_t len = 0; len < kMaxStringLen && *p; ++len, ++p) {
       auto d = safe_digit(*p, base);
       if (!d.has_value()) {
         return std::nullopt;

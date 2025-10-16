@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -99,6 +99,8 @@ class GF2_128 {
     kinvx_ = of_scalar_field(invx);
 
     Elt g = subfield_generator();
+    kg_ = g;
+    kinvg_ = invertf(g);
 
     // basis of the subfield = {1, g, g^2, ...}
     beta_[0] = one();
@@ -124,6 +126,13 @@ class GF2_128 {
         check(dx != zero(), "dx != zero()");
         newton_denominators_[k][i] = invertf(dx);
       }
+    }
+
+    // basis of counters
+    Elt cgi(g);  // = g ^ {2^i}, initially i = 0
+    for (size_t i = 0; i < kSubFieldBits; ++i) {
+      counter_beta_[i] = cgi;
+      mul(cgi, cgi);
     }
   }
 
@@ -212,6 +221,8 @@ class GF2_128 {
   Elt mone() const { return kone_; }
   Elt x() const { return kx_; }
   Elt invx() const { return kinvx_; }
+  Elt g() const { return kg_; }
+  Elt invg() const { return kinvg_; }
   Elt beta(size_t i) const {
     check(i < kSubFieldBits, "i < kSubFieldBits");
     return beta_[i];
@@ -269,12 +280,46 @@ class GF2_128 {
     return v;
   }
 
+  // Type for counters.  We represent unsigned integer n as g^n
+  // where g is the generator of the subfield.
+  struct CElt {
+    Elt e;
+
+    bool operator==(const CElt& y) const { return e == y.e; }
+    bool operator!=(const CElt& y) const { return !operator==(y); }
+  };
+  CElt as_counter(uint64_t a) const {
+    // 2^{bits} - 2 fits, 2^{bits} - 1 does not
+    check((a + 1u) != 0, "as_counter() arg too large");
+    check(((a + 1u) >> kSubFieldBits) == 0, "as_counter() arg too large");
+    Elt r(one());
+    for (size_t i = 0; i < kSubFieldBits; ++i) {
+      if ((a >> i) & 1) {
+        mul(r, counter_beta(i));
+      }
+    }
+    return CElt{r};
+  }
+  Elt counter_beta(size_t i) const {
+    check(i < kSubFieldBits, "i < kSubFieldBits");
+    return counter_beta_[i];
+  }
+
+  // Convert a counter into *some* field element such that the counter is
+  // zero (as a counter) iff the field element is zero.  Since
+  // n as a counter is g^n, we have ((g^n - 1) = 0) <=> (n = 0)
+  Elt znz_indicator(const CElt& celt) const { return subf(celt.e, one()); }
+
  private:
   Elt kone_;
   Elt kx_;
-  Elt kinvx_;                // x^{-1}
-  Elt beta_[kSubFieldBits];  // basis of the subfield viewed as a
-                             // vector space over GF(2)
+  Elt kinvx_;  // x^{-1}
+  Elt kg_;
+  Elt kinvg_;                        // g^{-1}
+  Elt beta_[kSubFieldBits];          // basis of the subfield viewed as a
+                                     // vector space over GF(2)
+  Elt counter_beta_[kSubFieldBits];  // basis of the multiplicative group
+                                     // of counters.
 
   // LU decomposition of beta_, in unpacked format.  We store L^{-1}
   // instead of L, see comments in beta_ref()

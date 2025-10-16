@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -167,10 +167,17 @@ On input Elt ind, and Elt arr[], returns arr[ind].
 This muxer is useful when the same array needs to be muxed multiple times
 with different indices.  It differs from the above classes in that it
 precomputes the coefficient array, which can depend on EltW inputs.
+
+The template parameter N indicates the size of the array.
+The template parameter PP defines the set of points used for the interpolation.
+This value defaults to N, which defines the set of points
+    { -N-1, -N-3, -N-5, ..., N-3, N-1}
+but in some cases, one may want to explicitly specify the set of points.
 */
-template <class Logic, size_t LOGN>
+template <class Logic, size_t N, size_t PP = N>
 class EltMuxer {
-  static constexpr size_t kN = 1 << LOGN;
+  static constexpr size_t kN = N;
+  static constexpr size_t kPP = PP;
 
  public:
   using Field = typename Logic::Field;
@@ -214,7 +221,7 @@ class EltMuxer {
   PolyN even_lagrange_basis(size_t k) {
     PolyN X, Y;
     for (size_t i = 0; i < kN; ++i) {
-      X[i] = bit_plucker_point<Field, kN>()(i, l_.f_);
+      X[i] = bit_plucker_point<Field, PP>()(i, l_.f_);
       Y[i] = l_.f_.of_scalar((i == k));
     }
     return InterpolationN::monomial_of_lagrange(Y, X, l_.f_);

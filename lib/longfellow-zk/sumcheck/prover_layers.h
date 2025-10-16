@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -153,6 +153,8 @@ class ProverLayers {
   using index_t = typename Quad<Field>::index_t;
   using CPoly = typename LayerProof<Field>::CPoly;
   using WPoly = typename LayerProof<Field>::WPoly;
+  using FCPoly = typename LayerProof<Field>::FCPoly;
+  using FWPoly = typename LayerProof<Field>::FWPoly;
 
   /*
   Engage in single-layer sumcheck on
@@ -333,12 +335,14 @@ class ProverLayers {
 
   CPoly cpoly_at_dense(const Dense<Field>* D, corner_t p0, corner_t p1,
                        const Field& F) {
-    return CPoly::extend(D->t2_at_corners(p0, p1, F), F);
+    auto tmp = FCPoly::extend(D->t2_at_corners(p0, p1, F), F);
+    return CPoly(tmp);
   }
 
   WPoly wpoly_at_dense(const Dense<Field>* D, corner_t p0, corner_t p1,
                        const Field& F) {
-    return WPoly::extend(D->t2_at_corners(p0, p1, F), F);
+    auto tmp = FWPoly::extend(D->t2_at_corners(p0, p1, F), F);
+    return WPoly(tmp);
   }
 };
 }  // namespace proofs

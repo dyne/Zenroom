@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -160,7 +160,7 @@ class Scheduler {
         }
 
         // create copy wires
-        for (size_t d = nfo.depth + 1; d < nfo.max_needed_depth; ++d) {
+        for (d = nfo.depth + 1; d < nfo.max_needed_depth; ++d) {
           quad_corner_t lop_dm1 = lop;
 
           // allocate the LOP at depth D

@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -145,6 +145,10 @@ struct LigeroParam {
   size_t iw;     // first witness row
   size_t iq;     // first quadratic row
 
+  // Deprecated version of the constructor attempts to optimize the block_enc
+  // parameter. This optimization can now be performed offline and stored as
+  // a parameter in ZkSpecStruct.
+  // TODO(shelat): Remove this constructor once version 3 is deprecated.
   LigeroParam(size_t nw, size_t nq, size_t rateinv, size_t nreq)
       : nw(nw), nq(nq), rateinv(rateinv), nreq(nreq) {
     r = nreq;
@@ -161,17 +165,18 @@ struct LigeroParam {
 
     // recompute parameters
     layout(best_block_enc);
-    proofs::check(block_enc > block, "block_enc > block");
-
-    ildt = 0;
-    idot = 1;
-    iquad = 2;
-    iw = 3;
-    iq = iw + nwrow;
-    proofs::check(nrow == iq + 3 * nqtriples, "nrow == iq + 3 * nqtriples");
+    sanity();
   }
 
- private:
+  // Constructor that accepts a pre-computed block_enc.
+  LigeroParam(size_t nw, size_t nq, size_t rateinv, size_t nreq,
+              size_t be)
+      : nw(nw), nq(nq), rateinv(rateinv), nreq(nreq), block_enc(be) {
+    r = nreq;
+    check(layout(block_enc) < SIZE_MAX, "block_enc too large");
+    sanity();
+  }
+
   // Return an estimate of the proof size.
   //
   // This function is kind of a hack in that it breaks abstraction
@@ -287,6 +292,17 @@ struct LigeroParam {
 
     sz = std::min<uint64_t>(sz, SIZE_MAX);
     return static_cast<size_t>(sz);
+  }
+
+ private:
+  void sanity() {
+    proofs::check(block_enc > block, "block_enc > block");
+    ildt = 0;
+    idot = 1;
+    iquad = 2;
+    iw = 3;
+    iq = iw + nwrow;
+    proofs::check(nrow == iq + 3 * nqtriples, "nrow == iq + 3 * nqtriples");
   }
 };
 
