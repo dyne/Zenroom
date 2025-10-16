@@ -20,6 +20,8 @@
 --on Tuesday, 14th October 2025
 --]]
 
+local W3C = require_once'crypto_w3c'
+
 --[[
 Example of dcql_query to eliminate before merging:
 - {
@@ -178,7 +180,109 @@ local function _check_ldp_vc(cred, string_query)
     return true
 end
 
-local function _check_dcsdjwt(cred)
+local function _parse_dcsdjwt(string_cred)
+    local toks <const> = strtok(string_cred, "~")
+    local disclosures = {}
+    for i=2, #toks do
+        disclosures[#disclosures + 1] = JSON.raw_decode(O.from_url64(toks[i]):str())
+    end
+    local jwt <const> = W3C.import_jwt(toks[1])
+    return {
+        header = jwt.header,
+        payload = jwt.payload,
+        signature = jwt.signature,
+        disclosures = disclosures,
+    }
+end
+
+local function _check_path(path, root)
+    for i = 2, #path do
+        if type(root) ~= "table" or root[path[i]] == nil then
+            return nil
+        end
+        root = root[path[i]]
+    end
+    return root
+end
+
+local function map(v)
+    if type(v) == "zenroom.float" then
+        return tonumber(tostring(v))
+    elseif type(v) == "boolean" then
+        return v
+    else
+        return O.to_string(v)
+    end
+end
+
+local function _check_dcsdjwt(cred, string_query)
+    local parsed_cred <const> = _parse_dcsdjwt(cred:string())
+    -- match vct_values
+    local cred_vct <const> = (parsed_cred.payload.vct or parsed_cred.payload.type):string()
+    local vct_values <const> = string_query.meta.vct_values
+    if cred_vct ~= vct_values[1] then
+        warn("Invalid credential, vct does not match: " .. cred_vct .. " != " .. vct_values[1])
+        return false
+    end
+    -- not expired
+    local cred_exp <const> = TIME.new(parsed_cred.payload.exp)
+    local now <const> = TIME.new(os.time())
+    if (now > cred_exp) then
+        warn("Credential is expired")
+        return false
+    end
+    -- match claims
+    for _, claim in ipairs(string_query.claims) do
+        local path <const> = claim.path
+        local values <const> = claim.values
+        local claim_path_found = false
+        -- path exists
+        for _, d in ipairs(parsed_cred.disclosures) do
+            if path[1] == d[2] then
+                local root = _check_path(path, d[3])
+                if root == nil then goto continue end
+                if values and (#values > 0) then
+                    local value_found = false
+                    for _, v in ipairs(values) do
+                        if root == v then
+                            value_found = true
+                            break
+                        end
+                    end
+                    if not value_found then
+                        warn("Credential value does not match any of the required values for path: " .. table.concat(path, '.'))
+                        return false
+                    end
+                end
+                claim_path_found = true
+                break
+            end
+            ::continue::
+        end
+        if not claim_path_found then
+            local root = map(_check_path(path, parsed_cred.payload[path[1]]));
+            if root ~= nil then
+                if values and (#values > 0) then
+                    local value_found = false
+                    for _, v in ipairs(values) do
+                        if root == v then
+                            value_found = true
+                            break
+                        end
+                    end
+                    if value_found then
+                        claim_path_found = true
+                    end
+                else
+                    claim_path_found = true
+                end
+            end
+        end
+        if not claim_path_found then
+            warn("Credential does not have the required path: " .. table.concat(path, '.'))
+            return false
+        end
+    end
     return true
 end
 
@@ -204,7 +308,7 @@ When("create matching credentials from '' matching dcql_query ''", function(cred
     )
     local out = {}
     for _, query in pairs(dcql_query.credentials) do
-        local string_query <const> = deepmap(O.to_string, query)
+        local string_query <const> = deepmap(map, query)
         out[string_query.id] = {}
         local matching_credentials <const> = credentials[string_query.format]
         if matching_credentials == nil then
