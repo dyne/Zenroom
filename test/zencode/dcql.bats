@@ -478,6 +478,13 @@ EOF
 }
 
 @test "DCQL: select credentials matching a DCQL query" {
+    if date --version >/dev/null 2>&1; then
+        # GNU date
+        next_day=$(date -u -d "1 day" +"%Y-%m-%dT%H:%M:%SZ")
+    else
+        # BSD/macOS date
+        next_day=$(date -u -v+1d +"%Y-%m-%dT%H:%M:%SZ")
+    fi
     cat << EOF | save_asset dcql_query.data.json
 {
     "my_query": {
@@ -522,7 +529,7 @@ EOF
                     "IDCredential"
                 ],
                 "issuer": "https://example.com/credential_issuer",
-                "validUntil": "$(date -u -d '1 day' +"%Y-%m-%dT%H:%M:%SZ")",
+                "validUntil": "$next_day",
                 "credentialSubject": {
                     "given_name": "Max",
                     "family_name": "Mustermann",
@@ -555,7 +562,7 @@ EOF
                     "NOT MATCHING TYPE"
                 ],
                 "issuer": "https://example.com/credential_issuer",
-                "validUntil": "$(date -u -d '1 day' +"%Y-%m-%dT%H:%M:%SZ")",
+                "validUntil": "$next_day",
                 "credentialSubject": {
                     "given_name": "Max",
                     "family_name": "Mustermann",
@@ -588,7 +595,7 @@ EOF
                     "IDCredential"
                 ],
                 "issuer": "https://example.com/credential_issuer",
-                "validUntil": "$(date -u -d '1 day' +"%Y-%m-%dT%H:%M:%SZ")",
+                "validUntil": "$next_day",
                 "credentialSubject": {
                     "given_name": "Max",
                     "family_name": "Mustermann",
