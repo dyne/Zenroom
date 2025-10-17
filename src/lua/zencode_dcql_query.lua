@@ -22,33 +22,13 @@
 
 local DCQL = require'crypto_dcql_query'
 
-local function _map_from_type(v)
-    if type(v) == "number" then
-        return F.new(v)
-    elseif type(v) == "boolean" then
-        return v
-    else
-        return O.from_string(v)
-    end
-end
-
-local function _map_to_type(v)
-    if type(v) == "zenroom.float" then
-        return tonumber(tostring(v))
-    elseif type(v) == "boolean" then
-        return v
-    else
-        return O.to_string(v)
-    end
-end
-
 local function import_dcql_query(obj)
     DCQL.validate_query(obj)
-    return schema_get(obj, '.', nil, _map_from_type)
+    return deepmap(input_encoding("string").fun, obj)
 end
 
 local function export_dcql_query(obj)
-    return deepmap(_map_to_type, obj)
+    return deepmap(get_encoding_function("string"), obj)
 end
 
 ZEN:add_schema(
@@ -76,7 +56,7 @@ When("create credentials from '' matching dcql_query ''", function(creds, dcql)
     )
     local out = {}
     for _, query in pairs(dcql_query.credentials) do
-        local string_query <const> = deepmap(_map_to_type, query)
+        local string_query <const> = deepmap(get_encoding_function("string"), query)
         out[string_query.id] = {}
         local matching_credentials <const> = credentials[string_query.format]
         if matching_credentials == nil then
@@ -87,9 +67,10 @@ When("create credentials from '' matching dcql_query ''", function(creds, dcql)
             error("Credential format not yet suppoerted: " .. string_query.format)
         end
         for _, cred in ipairs(matching_credentials) do
-            if checker(cred, string_query) then
-                table.insert(out[string_query.id], cred)
-            end
+            checker(cred, string_query, out)
+            -- if checker(cred, string_query) then
+            --    table.insert(out[string_query.id], cred)
+            -- end
         end
         ::continue::
     end

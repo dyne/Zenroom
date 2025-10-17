@@ -235,6 +235,8 @@ end
 -----------------------------------
 -- check functions for dcql_query matching
 
+local _map_to_type <const> = get_encoding_function("string")
+
 -- helper functions
 local function _parse_dcsdjwt(string_cred)
     local toks <const> = strtok(string_cred, "~")
@@ -251,6 +253,20 @@ local function _parse_dcsdjwt(string_cred)
     }
 end
 
+local function _encode_dcsdjwt(obj_cred)
+    local records = {
+        table.concat(
+            {O.from_string(JSON.raw_encode(deepmap(_map_to_type, obj_cred.header), true)):url64(),
+             O.from_string(JSON.raw_encode(deepmap(_map_to_type, obj_cred.payload), true)):url64(),
+             O.to_url64(obj_cred.signature),
+            }, ".")
+    }
+    for _, d in pairs(obj_cred.disclosures) do
+        table.insert(records, O.from_string(JSON.raw_encode(d, true)):url64())
+    end
+    return O.from_string(table.concat(records, "~") .. "~")
+end
+
 local function _check_path(path, root)
     for i = 2, #path do
         if type(root) ~= "table" or root[path[i]] == nil then
@@ -261,18 +277,48 @@ local function _check_path(path, root)
     return root
 end
 
-local function _map_to_type(v)
-    if type(v) == "zenroom.float" then
-        return tonumber(tostring(v))
-    elseif type(v) == "boolean" then
-        return v
-    else
-        return O.to_string(v)
+local function _validate_claim_ldp_vc(claim, cred)
+    local path <const> = claim.path
+    local values <const> = claim.values
+
+    local root = _map_to_type(_check_path(path, cred[path[1]]))
+    if root == nil then
+        warn("Credential does not have the required path: " .. table.concat(path, '.'))
+        return false
     end
+    if values and #values > 0 then
+        local value_found = false
+        for _, v in ipairs(values) do
+            if root == v then
+                value_found = true
+                break
+            end
+        end
+        if not value_found then
+            warn("Credential value does not match any of the required values for path: " .. table.concat(path, '.'))
+            return false
+        end
+    end
+    return true
+end
+
+local function _build_claim_path_sets(claims, cred, stop_on_fail)
+    local claim_path_sets = {}
+    for _, claim in ipairs(claims) do
+        if not _validate_claim_ldp_vc(claim, cred) then
+            if stop_on_fail then
+                return nil, false
+            else
+                return nil, true
+            end
+        end
+        table.insert(claim_path_sets, claim.path)
+    end
+    return claim_path_sets, true
 end
 
 -- ldp_vc checker
-DCQL.check_fn.ldp_vc = function(cred, string_query)
+DCQL.check_fn.ldp_vc = function(cred, string_query, out)
     if cred['@context'] == nil or
        cred['type'] == nil or
        cred['credentialSubject'] == nil then
@@ -310,35 +356,104 @@ DCQL.check_fn.ldp_vc = function(cred, string_query)
         return false
     end
     -- match claims
-    for _, claim in ipairs(string_query.claims) do
-        local path <const> = claim.path
-        local values <const> = claim.values
-        -- path exists
-        local root = _map_to_type(_check_path(path, cred[path[1]]));
-        if root == nil then
-            warn("Credential does not have the required path: " .. table.concat(path, '.'))
-            return false
-        end
-        -- if values is specified, check that the value under the path matches one of them
-        if values and (#values > 0) then
-            local value_found = false
-            for _, v in ipairs(values) do
-                if root == v then
-                    value_found = true
-                    break
+    if string_query.claim_sets ~= nil then
+        for _, sets in ipairs(string_query.claim_sets) do
+            local claims = {}
+            for _, claim_id in ipairs(sets) do
+                local found
+                for _, c in ipairs(string_query.claims) do
+                    if c.id == claim_id then
+                        found = c
+                        break
+                    end
                 end
+                if found == nil then
+                    warn("Claim id in claim_sets not found in claims: " .. claim_id)
+                    goto continue_set
+                end
+                table.insert(claims, found)
             end
-            if not value_found then
-                warn("Credential value does not match any of the required values for path: " .. table.concat(path, '.'))
-                return false
+            local claim_path_sets, valid <const> = _build_claim_path_sets(claims, cred, false)
+            if valid and claim_path_sets then
+                table.insert(out[string_query.id], {
+                    credential = cred,
+                    claim_path_sets = deepmap(O.from_string, claim_path_sets)
+                })
+            end
+            ::continue_set::
+        end
+    else
+        local claim_path_sets, valid = build_claim_path_sets(string_query.claims, cred, true)
+        if not valid or not claim_path_sets then return false end
+        table.insert(out[string_query.id], {
+            credential = cred,
+            claim_path_sets = deepmap(O.from_string, claim_path_sets)
+        })
+    end
+end
+
+local function _validate_claim_dcsdjwt(parsed, claim, selected_disclosures, stop_on_fail)
+    local path <const> = claim.path
+    local values <const> = claim.values
+    -- Try matching in disclosures first
+    for _, d in ipairs(parsed.disclosures) do
+        if path[1] == d[2] then
+            local root = _check_path(path, d[3])
+            if root ~= nil then
+                if values and #values > 0 then
+                    local ok = false
+                    for _, v in ipairs(values) do
+                        if root == v then
+                            ok = true
+                            break
+                        end
+                    end
+                    if not ok then
+                        warn("Credential value does not match required values for path: " .. table.concat(path, '.'))
+                        return false
+                    end
+                end
+                table.insert(selected_disclosures, d)
+                return true
             end
         end
+    end
+    -- Try matching in payload
+    local root = _map_to_type(_check_path(path, parsed.payload[path[1]]))
+    if root == nil then
+        warn("Credential does not have the required path: " .. table.concat(path, '.'))
+        return false
+    end
+    if values and #values > 0 then
+        for _, v in ipairs(values) do
+            if root == v then
+                return true
+            end
+        end
+        warn("Credential value does not match required values for path: " .. table.concat(path, '.'))
+        return false
     end
     return true
 end
 
+local function _build_claim_path_sets_and_disclosures(parsed, claims, stop_on_fail)
+    local claim_path_sets = {}
+    local selected_disclosures = {}
+    for _, claim in ipairs(claims) do
+        if not _validate_claim_dcsdjwt(parsed, claim, selected_disclosures, stop_on_fail) then
+            if stop_on_fail then
+                return nil, nil, false
+            else
+                return nil, nil, true  -- skip set
+            end
+        end
+        table.insert(claim_path_sets, claim.path)
+    end
+    return claim_path_sets, selected_disclosures, true
+end
+
 -- dc+sd-jwt checker
-DCQL.check_fn['dc+sd-jwt'] = function(cred, string_query)
+DCQL.check_fn['dc+sd-jwt'] = function(cred, string_query, out)
     local parsed_cred <const> = _parse_dcsdjwt(cred:string())
     -- match vct_values
     local cred_vct <const> = (parsed_cred.payload.vct or parsed_cred.payload.type):string()
@@ -355,58 +470,42 @@ DCQL.check_fn['dc+sd-jwt'] = function(cred, string_query)
         return false
     end
     -- match claims
-    for _, claim in ipairs(string_query.claims) do
-        local path <const> = claim.path
-        local values <const> = claim.values
-        local claim_path_found = false
-        -- path exists
-        for _, d in ipairs(parsed_cred.disclosures) do
-            if path[1] == d[2] then
-                local root = _check_path(path, d[3])
-                if root == nil then goto continue end
-                if values and (#values > 0) then
-                    local value_found = false
-                    for _, v in ipairs(values) do
-                        if root == v then
-                            value_found = true
-                            break
-                        end
-                    end
-                    if not value_found then
-                        warn("Credential value does not match any of the required values for path: " .. table.concat(path, '.'))
-                        return false
+    if string_query.claim_sets ~= nil then
+        for _, sets in ipairs(string_query.claim_sets) do
+            local claims = {}
+            for _, claim_id in ipairs(sets) do
+                local found
+                for _, c in ipairs(string_query.claims) do
+                    if c.id == claim_id then
+                        found = c
+                        break
                     end
                 end
-                claim_path_found = true
-                break
-            end
-            ::continue::
-        end
-        if not claim_path_found then
-            local root = _map_to_type(_check_path(path, parsed_cred.payload[path[1]]));
-            if root ~= nil then
-                if values and (#values > 0) then
-                    local value_found = false
-                    for _, v in ipairs(values) do
-                        if root == v then
-                            value_found = true
-                            break
-                        end
-                    end
-                    if value_found then
-                        claim_path_found = true
-                    end
-                else
-                    claim_path_found = true
+                if found == nil then
+                    warn("Claim id in claim_sets not found in claims: " .. claim_id)
+                    goto continue_set
                 end
+                table.insert(claims, found)
             end
+            local claim_path_sets, selected_disclosures, valid <const> = _build_claim_path_sets_and_disclosures(parsed_cred, claims, false)
+            if valid and claim_path_sets then
+                parsed_cred.disclosures = selected_disclosures
+                table.insert(out[string_query.id], {
+                    credential = _encode_dcsdjwt(parsed_cred),
+                    claim_path_sets = deepmap(O.from_string, claim_path_sets)
+                })
+            end
+            ::continue_set::
         end
-        if not claim_path_found then
-            warn("Credential does not have the required path: " .. table.concat(path, '.'))
-            return false
-        end
+    else
+        local claim_path_sets, selected_disclosures, valid <const> = _build_claim_path_sets_and_disclosures(parsed_cred, string_query.claims, true)
+        if not valid or not claim_path_sets then return false end
+        parsed_cred.disclosures = selected_disclosures
+        table.insert(out[string_query.id], {
+            credential = _encode_dcsdjwt(parsed_cred),
+            claim_path_sets = deepmap(O.from_string, claim_path_sets)
+        })
     end
-    return true
 end
 
 return DCQL
