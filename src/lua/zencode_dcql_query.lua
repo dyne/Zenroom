@@ -488,6 +488,9 @@ When("create matching credentials from '' matching dcql_query ''", function(cred
             goto continue
         end
         local checker <const> = checkers[string_query.format]
+        if not checker then
+            error("Credential format not yet suppoerted: " .. string_query.format)
+        end
         for _, cred in ipairs(matching_credentials) do
             if checker(cred, string_query) then
                 table.insert(out[string_query.id], cred)
