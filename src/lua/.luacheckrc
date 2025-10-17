@@ -12,7 +12,7 @@ globals = {
     'G2','ABC','ECDH', 'schema_get', 'deepsortmap', 
     'check_codec', 'ZKP_challenge', 'SHA256', 'SHA512', 'sha256', 'sha512',
     'printerr', 'act', 'notice', 'warn', 'error', 'xxx', 'fatal', 'trim', 'serialize', 'iszen',
-    'DEBUG', 'ZEN_traceback', 'input_encoding', 'output_encoding', 'get_format',
+    'DEBUG', 'ZEN_traceback', 'input_encoding', 'get_encoding_function', 'get_format',
     'isarray', 'isdictionary', 'array_contains',
     'guess_conversion', 'operate_conversion', 'deepcopy', 'guess_outcast', 'new_codec',
     'hex', 'str', 'bin', 'base64', 'url64', 'base58',
