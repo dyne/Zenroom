@@ -383,7 +383,7 @@ DCQL.check_fn.ldp_vc = function(cred, string_query, out)
             ::continue_set::
         end
     else
-        local claim_path_sets, valid = build_claim_path_sets(string_query.claims, cred, true)
+        local claim_path_sets, valid = _build_claim_path_sets(string_query.claims, cred, true)
         if not valid or not claim_path_sets then return false end
         table.insert(out[string_query.id], {
             credential = cred,
@@ -392,7 +392,7 @@ DCQL.check_fn.ldp_vc = function(cred, string_query, out)
     end
 end
 
-local function _validate_claim_dcsdjwt(parsed, claim, selected_disclosures, stop_on_fail)
+local function _validate_claim_dcsdjwt(parsed, claim, selected_disclosures)
     local path <const> = claim.path
     local values <const> = claim.values
     -- Try matching in disclosures first
@@ -440,7 +440,7 @@ local function _build_claim_path_sets_and_disclosures(parsed, claims, stop_on_fa
     local claim_path_sets = {}
     local selected_disclosures = {}
     for _, claim in ipairs(claims) do
-        if not _validate_claim_dcsdjwt(parsed, claim, selected_disclosures, stop_on_fail) then
+        if not _validate_claim_dcsdjwt(parsed, claim, selected_disclosures) then
             if stop_on_fail then
                 return nil, nil, false
             else
