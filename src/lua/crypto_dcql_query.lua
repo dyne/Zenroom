@@ -314,7 +314,7 @@ DCQL.check_fn.ldp_vc = function(cred, string_query)
         local path <const> = claim.path
         local values <const> = claim.values
         -- path exists
-        root = _map_to_type(_check_path(path, cred[path[1]]));
+        local root = _map_to_type(_check_path(path, cred[path[1]]));
         if root == nil then
             warn("Credential does not have the required path: " .. table.concat(path, '.'))
             return false
