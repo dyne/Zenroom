@@ -22,95 +22,268 @@
 
 local W3C = require_once'crypto_w3c'
 
---[[
-Example of dcql_query to eliminate before merging:
-- {
-  "credentials": [
-    {
-      "id": "my_credential",
-      "format": "dc+sd-jwt",
-      "meta": {
-        "vct_values": [
-          "discount_from_voucher"
-        ]
-      },
-      "claims": [
-        {
-          "path": [
-            "has_discount_from_voucher"
-          ],
-          "values": [
-            "20",
-            "30"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "my_other_credential",
-      "format": "ldp_vc",
-      "meta": {
-        "type_values": [
-          "discountCredential"
-        ]
-      },
-      "claims": [
-        {
-          "path": [
-            "credentialSubject",
-            "discountPercentage"
-          ],
-          "values": [
-            "20",
-            "30"
-          ]
-        }
-      ]
-    }
-  ]
+local supported_credential_formats <const> = {
+    jwt_vc_json = true,
+    ldp_vc = true,
+    mso_mdoc = true,
+    ['dc+sd-jwt'] = true
 }
-- {
-  "credentials": [
-    {
-      "id": "my_credential",
-      "format": "ldp_vc",
-      "meta": {
-        "type_values": [
-          [
-            "questionnaire"
-          ]
-        ]
-      },
-      "claims": [
-        {
-          "path": [
-            "credentialSubject",
-            "formid"
-          ],
-          "values": []
-        },
-        {
-          "path": [
-            "credentialSubject",
-            "instanceid"
-          ],
-          "values": []
-        },
-        {
-          "path": [
-            "credentialSubject",
-            "submissiondate"
-          ],
-          "values": []
-        }
-      ]
-    }
-  ]
+local supported_credential_ta_types <const> = {
+    aki = true,
+    etsi_tl = true,
+    openid_federation = true
 }
---]]
 
--- TODO: create a schema to validate dcql_query in input
+local function _map_from_type(v)
+    if type(v) == "number" then
+        return F.new(v)
+    elseif type(v) == "boolean" then
+        return v
+    else
+        return O.from_string(v)
+    end
+end
 
+local function _map_to_type(v)
+    if type(v) == "zenroom.float" then
+        return tonumber(tostring(v))
+    elseif type(v) == "boolean" then
+        return v
+    else
+        return O.to_string(v)
+    end
+end
+
+local function is_nonempty_array(x)
+    local n <const> = isarray(x)
+    return type(n) == "number" and n > 0
+end
+
+local function is_nonempty_string(x)
+    return type(x) == "string" and #x > 0
+end
+
+local function import_dcql_query(obj)
+    zencode_assert(type(obj) == 'table', 'Invalid dcql_query: not a table')
+    -- credentials: REQUIRED
+    local credentials <const> = obj.credentials
+    zencode_assert(
+        is_nonempty_array(credentials),
+        'Invalid dcql_query: missing credentials array'
+    )
+    local id_set = {}
+    for _, cred in ipairs(credentials) do
+        zencode_assert(
+            isdictionary(cred),
+            'Invalid dcql_query: credential is not a dictionary'
+        )
+        -- id: REQUIRED
+        zencode_assert(
+            type(cred.id) == 'string' and cred.id:match("^[%w_-]+$") and not id_set[cred.id],
+            'Invalid dcql_query: missing or invalid credential id'
+        )
+        id_set[cred.id] = true
+        -- format: REQUIRED
+        zencode_assert(
+            type(cred.format) == 'string' and supported_credential_formats[cred.format],
+            'Invalid dcql_query: missing or invalid credential format'
+        )
+        -- multiple: OPTIONAL (default: false)
+        if cred.multiple ~= nil then
+            zencode_assert(
+                type(cred.multiple) == 'boolean',
+                'Invalid dcql_query: invalid multiple field, it must be a boolean'
+            )
+        end
+        -- meta: REQUIRED
+        zencode_assert(
+            isdictionary(cred.meta),
+            'Invalid dcql_query: missing meta object'
+        )
+        if cred.format == 'ldp_vc' or cred.format == 'jwt_vc_json' then
+            -- type_values: REQUIRED for ldp_vc
+            zencode_assert(
+                is_nonempty_array(cred.meta.type_values),
+                'Invalid dcql_query: missing or invalid meta.type_values array'
+            )
+            for _, tv_array in ipairs(cred.meta.type_values) do
+                zencode_assert(
+                    is_nonempty_array(tv_array),
+                    'Invalid dcql_query: invalid meta.type_values element, it must be a non-empty array'
+                )
+                for _, tv in ipairs(tv_array) do
+                    zencode_assert(
+                        is_nonempty_string(tv),
+                        'Invalid dcql_query: invalid meta.type_values value, it must be a non-empty string'
+                    )
+                end
+            end
+        elseif cred.format == 'dc+sd-jwt' then
+            -- vct_values: REQUIRED for dc+sd-jwt
+            zencode_assert(
+                is_nonempty_array(cred.meta.vct_values),
+                'Invalid dcql_query: missing or invalid meta.vct_values array, it must contain at least one value'
+            )
+            for _, vct in ipairs(cred.meta.vct_values) do
+                zencode_assert(
+                    is_nonempty_string(vct),
+                    'Invalid dcql_query: invalid meta.vct_values value, it must be a non-empty string'
+                )
+            end
+        elseif cred.format == 'mso_mdoc' then
+            -- doctype_value: REQUIRED for mso_mdoc
+            zencode_assert(
+                is_nonempty_string(cred.meta.doctype_value),
+                'Invalid dcql_query: missing or invalid meta.doctype_value, it must be a non-empty string'
+            )
+        end
+        -- trusted_authorities: OPTIONAL
+        if cred.trusted_authorities ~= nil then
+            zencode_assert(
+                is_nonempty_array(cred.trusted_authorities),
+                'Invalid dcql_query: invalid trusted_authorities array'
+            )
+            for _, v in ipairs(cred.trusted_authorities) do
+                zencode_assert(
+                    v.type and type(v.type) == 'string' and supported_credential_ta_types[v.type],
+                    'Invalid dcql_query: invalid trusted_authorities.type'
+                )
+                zencode_assert(
+                    v.values and is_nonempty_array(v.values),
+                    'Invalid dcql_query: invalid trusted_authorities.id'
+                )
+                for k, _ in ipairs(v) do
+                    zencode_assert(
+                        k == 'type' or k == 'values',
+                        'Invalid dcql_query: unknown field in trusted_authorities: ' .. k
+                    )
+                end
+            end
+        end
+        -- require_cryptographic_holder_binding: OPTIONAL (default: true)
+        if cred.require_cryptographic_holder_binding ~= nil then
+            zencode_assert(
+                type(cred.require_cryptographic_holder_binding) == 'boolean',
+                'Invalid dcql_query: invalid require_cryptographic_holder_binding field, it must be a boolean'
+            )
+        end
+        -- claims: OPTIONAL
+        local claims_id_set = {}
+        if cred.claims ~= nil then
+            zencode_assert(
+                is_nonempty_array(cred.claims),
+                'Invalid dcql_query: invalid claims array'
+            )
+            for _, claim in ipairs(cred.claims) do
+                zencode_assert(
+                    isdictionary(claim),
+                    'Invalid dcql_query: claim is not a dictionary'
+                )
+                -- id: REQUIRED if claim_sets is present
+                if cred.claim_sets ~= nil or claim.id then
+                    zencode_assert(
+                        type(claim.id) == 'string' and claim.id:match("^[%w_-]+$") and not claims_id_set[claim.id],
+                        'Invalid dcql_query: missing or invalid claim id'
+                    )
+                    claims_id_set[claim.id] = true
+                end
+                -- path: REQUIRED
+                zencode_assert(
+                    is_nonempty_array(claim.path),
+                    'Invalid dcql_query: invalid claim.path array'
+                )
+                -- values: OPTIONAL
+                if claim.values ~= nil then
+                    zencode_assert(
+                        is_nonempty_array(claim.values),
+                        'Invalid dcql_query: invalid claim.values array'
+                    )
+                    for _, v in ipairs(claim.values) do
+                        zencode_assert(
+                            type(v) == 'string' or type(v) == 'number' or type(v) == 'boolean',
+                            'Invalid dcql_query: invalid claim.values value, it must be a string, number or boolean'
+                        )
+                    end
+                end
+            end
+        end
+        -- claim_sets: OPTIONAL
+        if cred.claim_sets ~= nil then
+            -- claim_sets must be abstent if claims is absent
+            zencode_assert(
+                cred.claims ~= nil,
+                'Invalid dcql_query: claim_sets present but claims is absent'
+            )
+            zencode_assert(
+                is_nonempty_array(cred.claim_sets),
+                'Invalid dcql_query: invalid claim_sets array'
+            )
+            for _, claim_set in ipairs(cred.claim_sets) do
+                zencode_assert(
+                    is_nonempty_array(claim_set),
+                    'Invalid dcql_query: claim_set is not a non-empty array'
+                )
+                for _, claim_id in ipairs(claim_set) do
+                    zencode_assert(
+                        type(claim_id) == 'string' and claims_id_set[claim_id],
+                        'Invalid dcql_query: invalid claim_set claim id reference'
+                    )
+                end
+            end
+        end
+    end
+    -- credential_sets: OPTIONAL
+    if obj.credential_sets ~= nil then
+        zencode_assert(
+            is_nonempty_array(obj.credential_sets),
+            'Invalid dcql_query: invalid credential_sets array'
+        )
+        for _, credential_set in ipairs(obj.credential_sets) do
+            zencode_assert(
+                isdictionary(credential_set),
+                'Invalid dcql_query: credential_set is not a dictionary'
+            )
+            -- options: REQUIRED
+            zencode_assert(
+                credential_set.options and is_nonempty_array(credential_set.options),
+                'Invalid dcql_query: invalid credential_set.options array'
+            )
+            for _, option_array in ipairs(credential_set.options) do
+                zencode_assert(
+                    is_nonempty_array(option_array),
+                    'Invalid dcql_query: invalid credential_set.options element, it must be a non-empty array'
+                )
+                for _, option in ipairs(option_array) do
+                    zencode_assert(
+                        type(option) == 'string' and id_set[option],
+                        'Invalid dcql_query: invalid credential_set.options reference'
+                    )
+                end
+            end
+            -- required: OPTIONAL (default: true)
+            if credential_set.required ~= nil then
+                zencode_assert(
+                    type(credential_set.required) == 'boolean',
+                    'Invalid dcql_query: invalid credential_set.required field, it must be a boolean'
+                )
+            end
+        end
+    end
+    return schema_get(obj, '.', nil, _map_from_type)
+end
+
+local function export_dcql_query(obj)
+    return deepmap(_map_to_type, obj)
+end
+
+ZEN:add_schema(
+    {
+        dcql_query = {
+            import = import_dcql_query,
+            export = export_dcql_query
+        }
+    }
+)
 
 -- helper functions
 local function _parse_dcsdjwt(string_cred)
@@ -303,9 +476,8 @@ When("create matching credentials from '' matching dcql_query ''", function(cred
     )
     local dcql_query, dcql_query_codec <const> = have(dcql)
     zencode_assert(
-        dcql_query_codec.encoding == 'string' and
-        dcql_query_codec.zentype == 'd',
-        "Invalid dcql_query, it must be a string dictionary: "..dcql
+        dcql_query_codec.schema == 'dcql_query' and dcql_query_codec.zentype == 'e', 
+        "Invalid dcql_query: "..dcql
     )
     local out = {}
     for _, query in pairs(dcql_query.credentials) do
