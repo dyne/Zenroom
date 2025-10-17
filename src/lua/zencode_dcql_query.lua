@@ -62,7 +62,7 @@ ZEN:add_schema(
 
 -- credential list is a dictionary where the fields are the type of credential
 -- and the values are arrays of credentials of that type (maybe a schema can be created for this)
-When("create matching credentials from '' matching dcql_query ''", function(creds, dcql)
+When("create credentials from '' matching dcql_query ''", function(creds, dcql)
     empty('matching credentials')
     local credentials, credentials_codec <const> = have(creds)
     zencode_assert(
@@ -93,6 +93,6 @@ When("create matching credentials from '' matching dcql_query ''", function(cred
         end
         ::continue::
     end
-    ACK.matching_credentials = out
-    new_codec('matching_credentials', { zentype = 'd', encoding = 'string' })
+    ACK.credentials = out
+    new_codec('credentials', { zentype = 'd', encoding = 'string' })
 end)
