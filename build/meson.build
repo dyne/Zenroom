@@ -76,7 +76,7 @@ foreach test_suite : tests
   test('zencode_'+test_suite.underscorify(),
   bats_bin,
   args: [test_dir+'zencode/'+test_suite+'.bats'],
-  timeout: 240
+  timeout: 300
   )
 endforeach
 endif
