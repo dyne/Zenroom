@@ -368,7 +368,7 @@ DCQL.check_fn.ldp_vc = function(cred, string_query, out)
             ::continue_set::
         end
     else
-        for _, claim in ipairs(claims) do
+        for _, claim in ipairs(string_query.claims) do
             if not _validate_claim_ldp_vc(claim, cred) then
                 warn("Credential does not match required claims")
                 return false
