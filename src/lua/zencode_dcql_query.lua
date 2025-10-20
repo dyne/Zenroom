@@ -68,9 +68,6 @@ When("create credentials from '' matching dcql_query ''", function(creds, dcql)
         end
         for _, cred in ipairs(matching_credentials) do
             checker(cred, string_query, out)
-            -- if checker(cred, string_query) then
-            --    table.insert(out[string_query.id], cred)
-            -- end
         end
         ::continue::
     end
