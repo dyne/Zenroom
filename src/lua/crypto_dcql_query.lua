@@ -302,21 +302,6 @@ local function _validate_claim_ldp_vc(claim, cred)
     return true
 end
 
-local function _build_claim_path_sets(claims, cred, stop_on_fail)
-    local claim_path_sets = {}
-    for _, claim in ipairs(claims) do
-        if not _validate_claim_ldp_vc(claim, cred) then
-            if stop_on_fail then
-                return nil, false
-            else
-                return nil, true
-            end
-        end
-        table.insert(claim_path_sets, claim.path)
-    end
-    return claim_path_sets, true
-end
-
 -- ldp_vc checker
 DCQL.check_fn.ldp_vc = function(cred, string_query, out)
     if cred['@context'] == nil or
@@ -373,22 +358,23 @@ DCQL.check_fn.ldp_vc = function(cred, string_query, out)
                 end
                 table.insert(claims, found)
             end
-            local claim_path_sets, valid <const> = _build_claim_path_sets(claims, cred, false)
-            if valid and claim_path_sets then
-                table.insert(out[string_query.id], {
-                    credential = cred,
-                    claim_path_sets = deepmap(O.from_string, claim_path_sets)
-                })
+            for _, claim in ipairs(claims) do
+                if not _validate_claim_ldp_vc(claim, cred) then
+                    goto continue_set
+                end
             end
+            table.insert(out[string_query.id], cred)
+            break
             ::continue_set::
         end
     else
-        local claim_path_sets, valid = _build_claim_path_sets(string_query.claims, cred, true)
-        if not valid or not claim_path_sets then return false end
-        table.insert(out[string_query.id], {
-            credential = cred,
-            claim_path_sets = deepmap(O.from_string, claim_path_sets)
-        })
+        for _, claim in ipairs(claims) do
+            if not _validate_claim_ldp_vc(claim, cred) then
+                warn("Credential does not match required claims")
+                return false
+            end
+        end
+        table.insert(out[string_query.id], cred)
     end
 end
 
@@ -436,22 +422,6 @@ local function _validate_claim_dcsdjwt(parsed, claim, selected_disclosures)
     return true
 end
 
-local function _build_claim_path_sets_and_disclosures(parsed, claims, stop_on_fail)
-    local claim_path_sets = {}
-    local selected_disclosures = {}
-    for _, claim in ipairs(claims) do
-        if not _validate_claim_dcsdjwt(parsed, claim, selected_disclosures) then
-            if stop_on_fail then
-                return nil, nil, false
-            else
-                return nil, nil, true  -- skip set
-            end
-        end
-        table.insert(claim_path_sets, claim.path)
-    end
-    return claim_path_sets, selected_disclosures, true
-end
-
 -- dc+sd-jwt checker
 DCQL.check_fn['dc+sd-jwt'] = function(cred, string_query, out)
     local parsed_cred <const> = _parse_dcsdjwt(cred:string())
@@ -487,24 +457,27 @@ DCQL.check_fn['dc+sd-jwt'] = function(cred, string_query, out)
                 end
                 table.insert(claims, found)
             end
-            local claim_path_sets, selected_disclosures, valid <const> = _build_claim_path_sets_and_disclosures(parsed_cred, claims, false)
-            if valid and claim_path_sets then
-                parsed_cred.disclosures = selected_disclosures
-                table.insert(out[string_query.id], {
-                    credential = _encode_dcsdjwt(parsed_cred),
-                    claim_path_sets = deepmap(O.from_string, claim_path_sets)
-                })
+            local selected_disclosures = {}
+            for _, claim in ipairs(claims) do
+                if not _validate_claim_dcsdjwt(parsed_cred, claim, selected_disclosures) then
+                    warn("Credential does not match required claims")
+                    goto continue_set
+                end
             end
+            parsed_cred.disclosures = selected_disclosures
+            table.insert(out[string_query.id], _encode_dcsdjwt(parsed_cred))
             ::continue_set::
         end
     else
-        local claim_path_sets, selected_disclosures, valid <const> = _build_claim_path_sets_and_disclosures(parsed_cred, string_query.claims, true)
-        if not valid or not claim_path_sets then return false end
+        local selected_disclosures = {}
+        for _, claim in ipairs(string_query.claims) do
+            if not _validate_claim_dcsdjwt(parsed_cred, claim, selected_disclosures) then
+                warn("Credential does not match required claims")
+                return false
+            end
+        end
         parsed_cred.disclosures = selected_disclosures
-        table.insert(out[string_query.id], {
-            credential = _encode_dcsdjwt(parsed_cred),
-            claim_path_sets = deepmap(O.from_string, claim_path_sets)
-        })
+        table.insert(out[string_query.id], _encode_dcsdjwt(parsed_cred))
     end
 end
 
