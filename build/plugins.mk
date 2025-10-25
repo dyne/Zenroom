@@ -10,6 +10,7 @@ ed25519_cc := ${cc}
 lua_cc := ${cc}
 longfellow_cxx := ${cxx}
 zstd_cc := ${cc}
+zk-circuit-lang_cxx := ${cxx}
 
 ifdef RELEASE
 	cflags +=  -O3 ${cflags_protection}
@@ -35,4 +36,5 @@ ifdef CCACHE
 	lua_cc := ccache ${cc}
 	zstd_cc := ccache ${cc}
 	longfellow_cxx := ccache ${cxx}
+	zk-circuit-lang_cxx := ccache ${cxx}
 endif

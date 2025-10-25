@@ -66,6 +66,18 @@ longfellow-zk:
 	LDFLAGS="${ldflags}" \
 	${MAKE} -C ${pwd}/lib/longfellow-zk
 
+
+zk-circuit-lang:
+	$(info -- Building Longfellow ZK Circuit Lanuage bindings)
+	CXX="${zk-circuit-lang_cxx}" \
+	LD=${ld} \
+	AR=${ar} \
+	RANLIB=${ranlib} \
+	CXXFLAGS="${zk-circuit-lang_cxxflags} ${cflags}" \
+	LDFLAGS="${ldflags}" \
+	${MAKE} -C ${pwd}/lib/zk-circuit-lang
+
+
 check-milagro: milagro
 	CC=${cc} CFLAGS="${cflags}" $(MAKE) -C ${pwd}/lib/milagro-crypto-c test
 
