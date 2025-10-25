@@ -18,10 +18,11 @@ ZEN_SOURCES := src/zenroom.o src/zen_error.o src/lua_functions.o		\
 
 ZEN_INCLUDES += -Isrc -Ilib/lua54/src -Ilib -I/usr/local/include	\
 -Ilib/milagro-crypto-c/build/include -Ilib/milagro-crypto-c/include	\
--Ilib/ed25519-donna -Wall -Wextra
+-Ilib/ed25519-donna -Ilib/longfellow-zk -Wall -Wextra
 
 BUILD_DEPS ?= apply-patches milagro lua54 embed-lua mlkem	\
-				quantum-proof ed25519-donna longfellow-zk zstd
+				quantum-proof ed25519-donna longfellow-zk	\
+				zk-circuit-lang zstd
 
 pwd := $(shell pwd)
 mil := ${pwd}/build/milagro
@@ -46,6 +47,7 @@ ldadd += ${pwd}/lib/mlkem/test/build/libmlkem.a
 # ldadd += /usr/local/lib/libmdoc.a
 ldadd += ${pwd}/lib/longfellow-zk/liblongfellow-zk.a
 ldadd += ${pwd}/lib/zstd/libzstd.a
+ldadd += ${pwd}/lib/zk-circuit-lang/libzk-circuit-lang.a
 ldadd += -lstdc++
 
 # ----------------
@@ -117,6 +119,29 @@ ifeq ($(ARCH),aarch64)
 endif
 ifeq ($(ARCH),armv7l)
     longfellow_cflags += -march=armv7-a -mfpu=neon
+endif
+
+
+#-----------------
+# zk circuit language settings
+zk-circuit-lang_cxx ?= ${cxx}
+zk-circuit-lang_cxxflags += -I ${pwd}/src -I. -I../zstd -fPIC -DLIBRARY
+zk-circuit-lang_cxxflags += -I ../lua54/src -I../longfellow-zk
+ARCH ?= $(shell uname -m)
+ifeq ($(shell uname -s),Darwin)
+    zk-circuit-lang_cxxflags += -Xarch_x86_64 -mpclmul -Xarch_arm64  ""
+endif
+ifeq ($(ARCH),x86_64)
+    zk-circuit-lang_cxxflags += -mpclmul
+endif
+ifeq ($(ARCH),i686)
+    zk-circuit-lang_cxxflags += -mpclmul
+endif
+ifeq ($(ARCH),aarch64)
+    zk-circuit-lang_cxxflags += -march=armv8-a+crypto
+endif
+ifeq ($(ARCH),armv7l)
+    zk-circuit-lang_cxxflags += -march=armv7-a -mfpu=neon
 endif
 
 #-----------------
