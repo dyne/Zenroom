@@ -506,10 +506,10 @@ end
 
 function DCQL.match_credential_sets(dcql_query, filtered_credentials)
     if not dcql_query.credential_sets then
-        return {
+        return {{
             required = true,
             matching_credential_sets = {filtered_credentials}
-        }
+        }}
     end
 
     local result = {}

@@ -507,6 +507,19 @@ EOF
                 ]
             },
             {
+                "id": "example_ldp_vc_2",
+                "format": "ldp_vc",
+                "meta": {
+                    "type_values": [["IDCredential2"]]
+                },
+                "claims": [
+                    {"path": ["credentialSubject", "family_name"]},
+                    {"path": ["credentialSubject", "given_name"]},
+                    {"path": ["credentialSubject", "birthdate"]},
+                    {"path": ["credentialSubject", "locality"]}
+                ]
+            },
+            {
                 "id": "example_sd_jwt",
                 "format": "dc+sd-jwt",
                 "meta": {
@@ -521,6 +534,59 @@ EOF
                     ["a", "b"],
                     ["b", "c"]
                 ]
+            },
+            {
+                "id": "example_not_cred",
+                "format": "dc+sd-jwt",
+                "meta": {
+                    "vct_values": ["not_existing"]
+                },
+                "claims": [
+                    {"path": ["no_claim"]},
+                ]
+            },
+            {
+                "id": "non_existing_credential",
+                "format": "ldp_vc",
+                "meta": {
+                    "type_values": [["not_existing_again"]]
+                },
+                "claims": [
+                    {"path": ["credentialSubject", "no_claim_again"]},
+                ]
+            }
+        ],
+        "credential_sets": [
+            {
+                "options": [
+                    [
+                        "example_ldp_vc",
+                        "example_not_cred"
+                    ],
+                    [
+                        "example_ldp_vc",
+                        "example_sd_jwt"
+                    ],
+                    [
+                        "example_ldp_vc_2",
+                        "example_sd_jwt"
+                    ]
+                ]
+            },
+            {
+                "options": [
+                    [
+                        "example_ldp_vc"
+                    ]
+                ]
+            },
+            {
+                "options": [
+                    [
+                        "non_existing_credential"
+                    ]
+                ],
+                "required": false
             }
         ]
     },
@@ -549,6 +615,59 @@ EOF
                         "postal_code": "123456",
                         "country": "DE"
                     }
+                },
+                "proof": {
+                    "type": "DataIntegrityProof",
+                    "cryptosuite": "eddsa-rdfc-2022",
+                    "created": "2025-03-19T15:30:15Z",
+                    "proofValue": "not a real signature proof",
+                    "proofPurpose": "assertionMethod",
+                    "verificationMethod": "did:example:issuer#keys-1"
+                }
+            },
+            {
+                "@context": [
+                    "https://www.w3.org/2018/credentials/v1",
+                    "https://www.w3.org/2018/credentials/examples/v1",
+                    "https://w3id.org/security/data-integrity/v2"
+                ],
+                "id": "https://example.com/credentials/1872",
+                "type": [
+                    "VerifiableCredential",
+                    "IDCredential2"
+                ],
+                "issuer": "https://example.com/credential_issuer",
+                "validUntil": "$next_day",
+                "credentialSubject": {
+                    "given_name": "Max",
+                    "family_name": "Mustermann",
+                    "birthdate": "1998-01-11",
+                    "locality": "Musterstadt"
+                },
+                "proof": {
+                    "type": "DataIntegrityProof",
+                    "cryptosuite": "eddsa-rdfc-2022",
+                    "created": "2025-03-19T15:30:15Z",
+                    "proofValue": "not a real signature proof",
+                    "proofPurpose": "assertionMethod",
+                    "verificationMethod": "did:example:issuer#keys-1"
+                }
+            },
+            {
+                "@context": [
+                    "https://www.w3.org/2018/credentials/v1",
+                    "https://www.w3.org/2018/credentials/examples/v1",
+                    "https://w3id.org/security/data-integrity/v2"
+                ],
+                "id": "https://example.com/credentials/1872",
+                "type": [
+                    "VerifiableCredential",
+                    "not_existing_again"
+                ],
+                "issuer": "https://example.com/credential_issuer",
+                "validUntil": "$next_day",
+                "credentialSubject": {
+                    "no_claim_again": "claim",
                 },
                 "proof": {
                     "type": "DataIntegrityProof",
@@ -642,6 +761,6 @@ EOF
     save_output dcql_query.out.json
     # done to avoid checking validUntil since it is time-dependent
     clean_output=$(echo "$output" | sed -E 's/"validUntil":"[^"]*Z"/"validUntil":"IGNORED"/g')
-    expected='{"credentials":{"example_ldp_vc":[{"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3id.org/security/data-integrity/v2"],"credentialSubject":{"address":{"country":"DE","locality":"Musterstadt","postal_code":"123456","street_address":"Sandanger 25"},"birthdate":"1998-01-11","family_name":"Mustermann","given_name":"Max"},"id":"https://example.com/credentials/1872","issuer":"https://example.com/credential_issuer","proof":{"created":"2025-03-19T15:30:15Z","cryptosuite":"eddsa-rdfc-2022","proofPurpose":"assertionMethod","proofValue":"not a real signature proof","type":"DataIntegrityProof","verificationMethod":"did:example:issuer#keys-1"},"type":["VerifiableCredential","IDCredential"],"validUntil":"IGNORED"}],"example_sd_jwt":["eyJhbGciOiAiRVMyNTYiLCAidHlwIjogImRjK3NkLWp3dCJ9.eyJfc2QiOiBbInlvTFZfYmt0dWZtMHBFaGFiSi1Rd1VxYUM5RmNMYkxIMDYwUkNQWjViTzAiXSwgIl9zZF9hbGciOiAic2hhLTI1NiIsICJjbmYiOiB7Imp3ayI6IHsiY3J2IjogIlAtMjU2IiwgImt0eSI6ICJFQyIsICJ4IjogInpKLTR1d0VWVlYxQW9GcW1yZVlzUlh1SjhGbzVHRVVUeTZ0aklBdjdUcFkiLCAieSI6ICJWb1h2YTNUSkdzSjluOVlXNXcwamUwenpTaGZic3dBZ3pIcjVMRkJIM2xnIn19LCAiZXhwIjogMTc5MjE2NzU5OCwgImlhdCI6IDE3NjA2MzE1OTgsICJpc3MiOiAiaHR0cHM6Ly9pc3N1ZXIxLnplbnN3YXJtLmZvcmtib21iLmV1L2NyZWRlbnRpYWxfaXNzdWVyIiwgIm5iZiI6IDE3NjA2MzE1OTgsICJzdWIiOiAiZGlkOmR5bmU6c2FuZGJveC5zaWducm9vbTo0S0V5bVdnTERVZjFMTmNrZXhZOTZkZkt6NXZINzlkaURla2dMTVI5RldwSCIsICJ0eXBlIjogImRpc2NvdW50X2Zyb21fdm91Y2hlciJ9.oREhEn5mspszmYxJOYAyWV8WoAsC4A6ymf-TWEBhXAokFGYmgd0doIJZvbVdYKyRkuvte6dNJnbymhN5xUhdlQ~WyJFSmw3N2lEa1Mzc2tIQURPaTFSN1VBIiwgImhhc19kaXNjb3VudF9mcm9tX3ZvdWNoZXIiLCAxMF0~","eyJhbGciOiAiRVMyNTYiLCAidHlwIjogImRjK3NkLWp3dCJ9.eyJfc2QiOiBbInlvTFZfYmt0dWZtMHBFaGFiSi1Rd1VxYUM5RmNMYkxIMDYwUkNQWjViTzAiXSwgIl9zZF9hbGciOiAic2hhLTI1NiIsICJjbmYiOiB7Imp3ayI6IHsiY3J2IjogIlAtMjU2IiwgImt0eSI6ICJFQyIsICJ4IjogInpKLTR1d0VWVlYxQW9GcW1yZVlzUlh1SjhGbzVHRVVUeTZ0aklBdjdUcFkiLCAieSI6ICJWb1h2YTNUSkdzSjluOVlXNXcwamUwenpTaGZic3dBZ3pIcjVMRkJIM2xnIn19LCAiZXhwIjogMTc5MjE2NzU5OCwgImlhdCI6IDE3NjA2MzE1OTgsICJpc3MiOiAiaHR0cHM6Ly9pc3N1ZXIxLnplbnN3YXJtLmZvcmtib21iLmV1L2NyZWRlbnRpYWxfaXNzdWVyIiwgIm5iZiI6IDE3NjA2MzE1OTgsICJzdWIiOiAiZGlkOmR5bmU6c2FuZGJveC5zaWducm9vbTo0S0V5bVdnTERVZjFMTmNrZXhZOTZkZkt6NXZINzlkaURla2dMTVI5RldwSCIsICJ0eXBlIjogImRpc2NvdW50X2Zyb21fdm91Y2hlciJ9.oREhEn5mspszmYxJOYAyWV8WoAsC4A6ymf-TWEBhXAokFGYmgd0doIJZvbVdYKyRkuvte6dNJnbymhN5xUhdlQ~"]}}'
+    expected='{"credentials":[{"matching_credential_sets":[{"example_ldp_vc":[{"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3id.org/security/data-integrity/v2"],"credentialSubject":{"address":{"country":"DE","locality":"Musterstadt","postal_code":"123456","street_address":"Sandanger 25"},"birthdate":"1998-01-11","family_name":"Mustermann","given_name":"Max"},"id":"https://example.com/credentials/1872","issuer":"https://example.com/credential_issuer","proof":{"created":"2025-03-19T15:30:15Z","cryptosuite":"eddsa-rdfc-2022","proofPurpose":"assertionMethod","proofValue":"not a real signature proof","type":"DataIntegrityProof","verificationMethod":"did:example:issuer#keys-1"},"type":["VerifiableCredential","IDCredential"],"validUntil":"IGNORED"}],"example_sd_jwt":["eyJhbGciOiAiRVMyNTYiLCAidHlwIjogImRjK3NkLWp3dCJ9.eyJfc2QiOiBbInlvTFZfYmt0dWZtMHBFaGFiSi1Rd1VxYUM5RmNMYkxIMDYwUkNQWjViTzAiXSwgIl9zZF9hbGciOiAic2hhLTI1NiIsICJjbmYiOiB7Imp3ayI6IHsiY3J2IjogIlAtMjU2IiwgImt0eSI6ICJFQyIsICJ4IjogInpKLTR1d0VWVlYxQW9GcW1yZVlzUlh1SjhGbzVHRVVUeTZ0aklBdjdUcFkiLCAieSI6ICJWb1h2YTNUSkdzSjluOVlXNXcwamUwenpTaGZic3dBZ3pIcjVMRkJIM2xnIn19LCAiZXhwIjogMTc5MjE2NzU5OCwgImlhdCI6IDE3NjA2MzE1OTgsICJpc3MiOiAiaHR0cHM6Ly9pc3N1ZXIxLnplbnN3YXJtLmZvcmtib21iLmV1L2NyZWRlbnRpYWxfaXNzdWVyIiwgIm5iZiI6IDE3NjA2MzE1OTgsICJzdWIiOiAiZGlkOmR5bmU6c2FuZGJveC5zaWducm9vbTo0S0V5bVdnTERVZjFMTmNrZXhZOTZkZkt6NXZINzlkaURla2dMTVI5RldwSCIsICJ0eXBlIjogImRpc2NvdW50X2Zyb21fdm91Y2hlciJ9.oREhEn5mspszmYxJOYAyWV8WoAsC4A6ymf-TWEBhXAokFGYmgd0doIJZvbVdYKyRkuvte6dNJnbymhN5xUhdlQ~WyJFSmw3N2lEa1Mzc2tIQURPaTFSN1VBIiwgImhhc19kaXNjb3VudF9mcm9tX3ZvdWNoZXIiLCAxMF0~","eyJhbGciOiAiRVMyNTYiLCAidHlwIjogImRjK3NkLWp3dCJ9.eyJfc2QiOiBbInlvTFZfYmt0dWZtMHBFaGFiSi1Rd1VxYUM5RmNMYkxIMDYwUkNQWjViTzAiXSwgIl9zZF9hbGciOiAic2hhLTI1NiIsICJjbmYiOiB7Imp3ayI6IHsiY3J2IjogIlAtMjU2IiwgImt0eSI6ICJFQyIsICJ4IjogInpKLTR1d0VWVlYxQW9GcW1yZVlzUlh1SjhGbzVHRVVUeTZ0aklBdjdUcFkiLCAieSI6ICJWb1h2YTNUSkdzSjluOVlXNXcwamUwenpTaGZic3dBZ3pIcjVMRkJIM2xnIn19LCAiZXhwIjogMTc5MjE2NzU5OCwgImlhdCI6IDE3NjA2MzE1OTgsICJpc3MiOiAiaHR0cHM6Ly9pc3N1ZXIxLnplbnN3YXJtLmZvcmtib21iLmV1L2NyZWRlbnRpYWxfaXNzdWVyIiwgIm5iZiI6IDE3NjA2MzE1OTgsICJzdWIiOiAiZGlkOmR5bmU6c2FuZGJveC5zaWducm9vbTo0S0V5bVdnTERVZjFMTmNrZXhZOTZkZkt6NXZINzlkaURla2dMTVI5RldwSCIsICJ0eXBlIjogImRpc2NvdW50X2Zyb21fdm91Y2hlciJ9.oREhEn5mspszmYxJOYAyWV8WoAsC4A6ymf-TWEBhXAokFGYmgd0doIJZvbVdYKyRkuvte6dNJnbymhN5xUhdlQ~"]},{"example_ldp_vc_2":[{"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3id.org/security/data-integrity/v2"],"credentialSubject":{"birthdate":"1998-01-11","family_name":"Mustermann","given_name":"Max","locality":"Musterstadt"},"id":"https://example.com/credentials/1872","issuer":"https://example.com/credential_issuer","proof":{"created":"2025-03-19T15:30:15Z","cryptosuite":"eddsa-rdfc-2022","proofPurpose":"assertionMethod","proofValue":"not a real signature proof","type":"DataIntegrityProof","verificationMethod":"did:example:issuer#keys-1"},"type":["VerifiableCredential","IDCredential2"],"validUntil":"IGNORED"}],"example_sd_jwt":["eyJhbGciOiAiRVMyNTYiLCAidHlwIjogImRjK3NkLWp3dCJ9.eyJfc2QiOiBbInlvTFZfYmt0dWZtMHBFaGFiSi1Rd1VxYUM5RmNMYkxIMDYwUkNQWjViTzAiXSwgIl9zZF9hbGciOiAic2hhLTI1NiIsICJjbmYiOiB7Imp3ayI6IHsiY3J2IjogIlAtMjU2IiwgImt0eSI6ICJFQyIsICJ4IjogInpKLTR1d0VWVlYxQW9GcW1yZVlzUlh1SjhGbzVHRVVUeTZ0aklBdjdUcFkiLCAieSI6ICJWb1h2YTNUSkdzSjluOVlXNXcwamUwenpTaGZic3dBZ3pIcjVMRkJIM2xnIn19LCAiZXhwIjogMTc5MjE2NzU5OCwgImlhdCI6IDE3NjA2MzE1OTgsICJpc3MiOiAiaHR0cHM6Ly9pc3N1ZXIxLnplbnN3YXJtLmZvcmtib21iLmV1L2NyZWRlbnRpYWxfaXNzdWVyIiwgIm5iZiI6IDE3NjA2MzE1OTgsICJzdWIiOiAiZGlkOmR5bmU6c2FuZGJveC5zaWducm9vbTo0S0V5bVdnTERVZjFMTmNrZXhZOTZkZkt6NXZINzlkaURla2dMTVI5RldwSCIsICJ0eXBlIjogImRpc2NvdW50X2Zyb21fdm91Y2hlciJ9.oREhEn5mspszmYxJOYAyWV8WoAsC4A6ymf-TWEBhXAokFGYmgd0doIJZvbVdYKyRkuvte6dNJnbymhN5xUhdlQ~WyJFSmw3N2lEa1Mzc2tIQURPaTFSN1VBIiwgImhhc19kaXNjb3VudF9mcm9tX3ZvdWNoZXIiLCAxMF0~","eyJhbGciOiAiRVMyNTYiLCAidHlwIjogImRjK3NkLWp3dCJ9.eyJfc2QiOiBbInlvTFZfYmt0dWZtMHBFaGFiSi1Rd1VxYUM5RmNMYkxIMDYwUkNQWjViTzAiXSwgIl9zZF9hbGciOiAic2hhLTI1NiIsICJjbmYiOiB7Imp3ayI6IHsiY3J2IjogIlAtMjU2IiwgImt0eSI6ICJFQyIsICJ4IjogInpKLTR1d0VWVlYxQW9GcW1yZVlzUlh1SjhGbzVHRVVUeTZ0aklBdjdUcFkiLCAieSI6ICJWb1h2YTNUSkdzSjluOVlXNXcwamUwenpTaGZic3dBZ3pIcjVMRkJIM2xnIn19LCAiZXhwIjogMTc5MjE2NzU5OCwgImlhdCI6IDE3NjA2MzE1OTgsICJpc3MiOiAiaHR0cHM6Ly9pc3N1ZXIxLnplbnN3YXJtLmZvcmtib21iLmV1L2NyZWRlbnRpYWxfaXNzdWVyIiwgIm5iZiI6IDE3NjA2MzE1OTgsICJzdWIiOiAiZGlkOmR5bmU6c2FuZGJveC5zaWducm9vbTo0S0V5bVdnTERVZjFMTmNrZXhZOTZkZkt6NXZINzlkaURla2dMTVI5RldwSCIsICJ0eXBlIjogImRpc2NvdW50X2Zyb21fdm91Y2hlciJ9.oREhEn5mspszmYxJOYAyWV8WoAsC4A6ymf-TWEBhXAokFGYmgd0doIJZvbVdYKyRkuvte6dNJnbymhN5xUhdlQ~"]}],"required":true},{"matching_credential_sets":[{"example_ldp_vc":[{"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3id.org/security/data-integrity/v2"],"credentialSubject":{"address":{"country":"DE","locality":"Musterstadt","postal_code":"123456","street_address":"Sandanger 25"},"birthdate":"1998-01-11","family_name":"Mustermann","given_name":"Max"},"id":"https://example.com/credentials/1872","issuer":"https://example.com/credential_issuer","proof":{"created":"2025-03-19T15:30:15Z","cryptosuite":"eddsa-rdfc-2022","proofPurpose":"assertionMethod","proofValue":"not a real signature proof","type":"DataIntegrityProof","verificationMethod":"did:example:issuer#keys-1"},"type":["VerifiableCredential","IDCredential"],"validUntil":"IGNORED"}]}],"required":true},{"matching_credential_sets":[{"non_existing_credential":[{"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3id.org/security/data-integrity/v2"],"credentialSubject":{"no_claim_again":"claim"},"id":"https://example.com/credentials/1872","issuer":"https://example.com/credential_issuer","proof":{"created":"2025-03-19T15:30:15Z","cryptosuite":"eddsa-rdfc-2022","proofPurpose":"assertionMethod","proofValue":"not a real signature proof","type":"DataIntegrityProof","verificationMethod":"did:example:issuer#keys-1"},"type":["VerifiableCredential","not_existing_again"],"validUntil":"IGNORED"}]}],"required":false}]}'
     assert_equal "$clean_output" "$expected"
 }
