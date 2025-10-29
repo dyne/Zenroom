@@ -236,6 +236,12 @@ end
 -- check functions for dcql_query matching
 
 local _map_to_type <const> = get_encoding_function("string")
+local function _contains(tbl, str)
+    for _, v in ipairs(tbl) do
+        if v == str then return true end
+    end
+    return false
+end
 
 -- helper functions
 local function _parse_dcsdjwt(string_cred)
@@ -428,8 +434,8 @@ DCQL.check_fn['dc+sd-jwt'] = function(cred, string_query, out)
     -- match vct_values
     local cred_vct <const> = (parsed_cred.payload.vct or parsed_cred.payload.type):string()
     local vct_values <const> = string_query.meta.vct_values
-    if cred_vct ~= vct_values[1] then
-        warn("Invalid credential, vct does not match: " .. cred_vct .. " != " .. vct_values[1])
+    if not _contains(vct_values, cred_vct) then
+        warn("Invalid credential, vct does not match: " .. cred_vct .. " not in [" .. table.concat(vct_values, ", ") .. "]")
         return false
     end
     -- not expired
@@ -480,5 +486,73 @@ DCQL.check_fn['dc+sd-jwt'] = function(cred, string_query, out)
         table.insert(out[string_query.id], _encode_dcsdjwt(parsed_cred))
     end
 end
+
+-----------------------------------
+-- parse output to match credential_sets
+
+local function _generate_credential_combinations(filtered_credentials, option)
+    local combination = {}
+
+    for _, query_id in ipairs(option) do
+        local creds = filtered_credentials[query_id]
+        if not creds or #creds == 0 then
+            return nil  -- This option is invalid
+        end
+        combination[query_id] = creds  -- Add ALL credentials for this query_id
+    end
+
+    return combination
+end
+
+function DCQL.match_credential_sets(dcql_query, filtered_credentials)
+    if not dcql_query.credential_sets then
+        return {
+            required = true,
+            matching_credential_sets = {filtered_credentials}
+        }
+    end
+
+    local result = {}
+    local seen_combinations = {}
+
+    for _, set_def in ipairs(dcql_query.credential_sets) do
+        local set_combinations = {}
+        local is_required = set_def.required ~= false
+
+        for _, option in ipairs(set_def.options) do
+            local combination = _generate_credential_combinations(filtered_credentials, option)
+            if combination then
+                -- Create a simple key to avoid exact duplicates
+                local key_parts = {}
+                for query_id in pairs(combination) do
+                    table.insert(key_parts, query_id)
+                end
+                table.sort(key_parts)
+                local key = table.concat(key_parts, "|")
+
+                if not seen_combinations[key] then
+                    seen_combinations[key] = true
+                    table.insert(set_combinations, combination)
+                end
+            end
+        end
+
+        -- If required set has no valid combinations, return empty
+        if is_required and #set_combinations == 0 then
+            return {}
+        end
+
+        -- Add all valid combinations for this set
+        if #set_combinations > 0 then
+            table.insert(result, {
+                required = is_required,
+                matching_credential_sets = set_combinations
+            })
+        end
+    end
+
+    return result
+end
+
 
 return DCQL

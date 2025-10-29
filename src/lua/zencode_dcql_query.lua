@@ -55,22 +55,22 @@ When("create credentials from '' matching dcql_query ''", function(creds, dcql)
         "Invalid dcql_query: "..dcql
     )
     local out = {}
-    for _, query in pairs(dcql_query.credentials) do
-        local string_query <const> = deepmap(get_encoding_function("string"), query)
-        out[string_query.id] = {}
-        local matching_credentials <const> = credentials[string_query.format]
+    local string_query <const> = deepmap(get_encoding_function("string"), dcql_query)
+    for _, query in pairs(string_query.credentials) do
+        out[query.id] = {}
+        local matching_credentials <const> = credentials[query.format]
         if matching_credentials == nil then
             goto continue
         end
-        local checker <const> = DCQL.check_fn[string_query.format]
+        local checker <const> = DCQL.check_fn[query.format]
         if not checker then
-            error("Credential format not yet suppoerted: " .. string_query.format)
+            error("Credential format not yet suppoerted: " .. query.format)
         end
         for _, cred in ipairs(matching_credentials) do
-            checker(cred, string_query, out)
+            checker(cred, query, out)
         end
         ::continue::
     end
-    ACK.credentials = out
+    ACK.credentials = DCQL.match_credential_sets(string_query, out)
     new_codec('credentials', { zentype = 'd', encoding = 'string' })
 end)
