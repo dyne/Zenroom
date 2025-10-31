@@ -58,10 +58,10 @@ local function check_display(display)
 end
 
 local function import_supported_selective_disclosure(obj)
-    local check_support = function(obj, what, needed)
-        found = false
-        if(type(obj[what]) == 'table') then
-            for k,v in pairs(obj[what]) do
+    local check_support = function(o, what, needed)
+        local found = false
+        if(type(o[what]) == 'table') then
+            for k,v in pairs(o[what]) do
                if v == needed[k] then
                     found = true
                     break
@@ -70,13 +70,13 @@ local function import_supported_selective_disclosure(obj)
         else
             if (type(needed) == 'table') then
                 for _,v in pairs(needed) do
-                    if obj[what] == v then
+                    if o[what] == v then
                         found = true
                         break
                     end
                 end
             else
-                found = obj[what] == needed
+                found = o[what] == needed
             end
         end
         if(not found) then
@@ -122,7 +122,7 @@ local function export_supported_selective_disclosure(obj)
         res.authorization_servers[k] = v:str()
     end
     res.credential_configurations_supported =
-        deepmap(function(obj) return obj:str() end,
+        deepmap(function(o) return o:str() end,
             obj.credential_configurations_supported)
     return res
 end
@@ -141,8 +141,8 @@ local function import_selective_disclosure_request(obj)
 
     for i=1, #obj.fields do
         zencode_assert(type(obj.fields[i]) == 'string', "The object with key fields must be a string array")
-        found = false
-        for k,v in pairs(obj.object) do
+        local found = false
+        for k in pairs(obj.object) do
             if k == obj.fields[i] then
                 found = true
                 break
@@ -208,7 +208,7 @@ end
 local function import_signed_selective_disclosure(obj)
     zencode_assert(obj:sub(#obj, #obj) == '~', "JWT binding not implemented")
     local toks = strtok(obj, "~")
-    disclosures = {}
+    local disclosures = {}
     for i=2,#toks do
         disclosures[#disclosures+1] = JSON.raw_decode(O.from_url64(toks[i]):str())
     end
@@ -345,7 +345,7 @@ When("use signed selective disclosure '' only with disclosures ''", function(ssd
     local all_dis <const> = ssd.disclosures
     local new_disclosures = { }
     for _,k in pairs(disclosed_keys) do
-        for ind, arr in pairs(all_dis) do
+        for _, arr in pairs(all_dis) do
             if arr[2] == k then
                 table.insert(new_disclosures, arr)
                 break
