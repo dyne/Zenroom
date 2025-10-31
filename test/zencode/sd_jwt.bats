@@ -716,3 +716,378 @@ EOF
     save_output import_sd-jwt+kb.out.json
     assert_output '{"disclosures":[["eluV5Og3gSNII8EYnsxA_A","family_name","Doe"],["AJx-095VPrpTtN4QMOqROA","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["2GLC42sKQveCfGfryNRN9w","given_name","John"],["lklxF5jMYlGTPUovMNIvCA","US"]],"kb.header":{"alg":"ES256","typ":"kb+jwt"},"kb.payload":{"aud":"https://verifier.example.org","iat":1748537244,"nonce":"1234567890","sd_hash":"0_Af-2B-EhLWX5ydh_w2xzwmO6iM66B_2QCEanI4fUY"},"sd-jet.header":{"alg":"ES256","typ":"example+sd-jwt"},"sd-jet.payload":{"_sd":["CrQe7S5kqBAHt-nMYXgc6bdt2SH5aTY1sU_M-PgkjPI","JzYjH4svliH0R3PyEMfeZu6Jt69u5qehZo7F7EPYlSE","PorFbpKuVu6xymJagvkFsFXAbRoc2JGlAUA2BA4o7cI","TGf4oLbgwd5JQaHyKVQZU9UdGE0w5rtDsrZzfUaomLo","XQ_3kPKt1XyX7KANkqVR6yZ2Va5NrPIvPYbyMvRKBMM","XzFrzwscM6Gn6CJDc6vVK8BkMnfG8vOSKfpPIZdAfdE","gbOsI4Edq2x2Kw-w5wPEzakob9hV1cRD0ATN3oQL9JM","jsu9yVulwQQlhFlM_3JlzMaSFzglhQG0DpfayQwLUK4"],"_sd_alg":"sha-256","cnf":{"jwk":{"crv":"P-256","kty":"EC","x":"TCAER19Zvu3OHF4j4W4vfSVoHIP1ILilDls7vCeGemc","y":"ZxjiWWbZMQGHVWKVQ4hbSIirsVfuecCE6t4jT9F2HZQ"}},"exp":1883000000,"iat":1683000000,"iss":"https://issuer.example.com","nationalities":[{"...":"pFndjkZ_VCzmyTa6UjlZo3dh-ko8aIKQc9DlGzhaVYo"},{"...":"7Cf6JkPudry3lcbwHgeZ8khAv1U1OSlerP0VkBJrWZ0"}],"sub":"user_42"},"sd-jwt+kb":"eyJhbGciOiAiRVMyNTYiLCAidHlwIjogImV4YW1wbGUrc2Qtand0In0.eyJfc2QiOiBbIkNyUWU3UzVrcUJBSHQtbk1ZWGdjNmJkdDJTSDVhVFkxc1VfTS1QZ2tqUEkiLCAiSnpZakg0c3ZsaUgwUjNQeUVNZmVadTZKdDY5dTVxZWhabzdGN0VQWWxTRSIsICJQb3JGYnBLdVZ1Nnh5bUphZ3ZrRnNGWEFiUm9jMkpHbEFVQTJCQTRvN2NJIiwgIlRHZjRvTGJnd2Q1SlFhSHlLVlFaVTlVZEdFMHc1cnREc3JaemZVYW9tTG8iLCAiWFFfM2tQS3QxWHlYN0tBTmtxVlI2eVoyVmE1TnJQSXZQWWJ5TXZSS0JNTSIsICJYekZyendzY002R242Q0pEYzZ2Vks4QmtNbmZHOHZPU0tmcFBJWmRBZmRFIiwgImdiT3NJNEVkcTJ4Mkt3LXc1d1BFemFrb2I5aFYxY1JEMEFUTjNvUUw5Sk0iLCAianN1OXlWdWx3UVFsaEZsTV8zSmx6TWFTRnpnbGhRRzBEcGZheVF3TFVLNCJdLCAiX3NkX2FsZyI6ICJzaGEtMjU2IiwgImNuZiI6IHsiandrIjogeyJjcnYiOiAiUC0yNTYiLCAia3R5IjogIkVDIiwgIngiOiAiVENBRVIxOVp2dTNPSEY0ajRXNHZmU1ZvSElQMUlMaWxEbHM3dkNlR2VtYyIsICJ5IjogIlp4amlXV2JaTVFHSFZXS1ZRNGhiU0lpcnNWZnVlY0NFNnQ0alQ5RjJIWlEifX0sICJleHAiOiAxODgzMDAwMDAwLCAiaWF0IjogMTY4MzAwMDAwMCwgImlzcyI6ICJodHRwczovL2lzc3Vlci5leGFtcGxlLmNvbSIsICJuYXRpb25hbGl0aWVzIjogW3siLi4uIjogInBGbmRqa1pfVkN6bXlUYTZVamxabzNkaC1rbzhhSUtRYzlEbEd6aGFWWW8ifSwgeyIuLi4iOiAiN0NmNkprUHVkcnkzbGNid0hnZVo4a2hBdjFVMU9TbGVyUDBWa0JKcldaMCJ9XSwgInN1YiI6ICJ1c2VyXzQyIn0.MczwjBFGtzf-6WMT-hIvYbkb11NrV1WMO-jTijpMPNbswNzZ87wY2uHz-CXo6R04b7jYrpj9mNRAvVssXou1iw~WyJlbHVWNU9nM2dTTklJOEVZbnN4QV9BIiwgImZhbWlseV9uYW1lIiwgIkRvZSJd~WyJBSngtMDk1VlBycFR0TjRRTU9xUk9BIiwgImFkZHJlc3MiLCB7ImNvdW50cnkiOiAiVVMiLCAibG9jYWxpdHkiOiAiQW55dG93biIsICJyZWdpb24iOiAiQW55c3RhdGUiLCAic3RyZWV0X2FkZHJlc3MiOiAiMTIzIE1haW4gU3QifV0~WyIyR0xDNDJzS1F2ZUNmR2ZyeU5STjl3IiwgImdpdmVuX25hbWUiLCAiSm9obiJd~WyJsa2x4RjVqTVlsR1RQVW92TU5JdkNBIiwgIlVTIl0~eyJhbGciOiJFUzI1NiIsInR5cCI6ImtiK2p3dCJ9.eyJhdWQiOiJodHRwczovL3ZlcmlmaWVyLmV4YW1wbGUub3JnIiwiaWF0IjoxNzQ4NTM3MjQ0LCJub25jZSI6IjEyMzQ1Njc4OTAiLCJzZF9oYXNoIjoiMF9BZi0yQi1FaExXWDV5ZGhfdzJ4endtTzZpTTY2Ql8yUUNFYW5JNGZVWSJ9.T3SIus2OidNl41nmVkTZVCKKhOAX97aOldMyHFiYjHm261eLiJ1YiuONFiMN8QlCmYzDlBLAdPvrXh52KaLgUQ"}'
 }
+
+@test "create signed selective disclosuer with nested objects" {
+    cat << EOF | save_asset netsed_obj.data.json
+{
+	"iss_wk": {
+		"credential_issuer": "https://ci.test.didroom.com/credential_issuer",
+		"credential_endpoint": "https://ci.test.didroom.com/credential_issuer/credential",
+		"nonce_endpoint": "https://ci.test.didroom.com/credential_issuer/nonce",
+		"authorization_servers": [
+			"https://as.test.didroom.com/authz_server"
+		],
+		"display": [
+			{
+				"name": "test ci",
+				"locale": "en-US"
+			}
+		],
+		"jwks": {
+			"keys": [
+				{
+					"kid": "did:dyne:sandbox.genericissuer:Ac2puXYFWPix34A5G3QWSCH3jstPt7jKWBuHeKgA7Mi3#es256_public_key",
+					"crv": "P-256",
+					"alg": "ES256",
+					"kty": "EC"
+				}
+			]
+		},
+		"credential_configurations_supported": {
+			"VerifiablePIDSDJWT": {
+				"format": "dc+sd-jwt",
+				"cryptographic_binding_methods_supported": [
+					"jwk",
+					"did:dyne:sandbox.signroom"
+				],
+				"credential_signing_alg_values_supported": [
+					"ES256"
+				],
+				"proof_types_supported": {
+					"jwt": {
+						"proof_signing_alg_values_supported": [
+							"ES256"
+						]
+					}
+				},
+				"display": [
+					{
+						"name": "VerifiablePIDSDJWT",
+						"locale": "en-US",
+						"logo": {
+							"url": "https://www.iconbolt.com/preview/facebook/streamline-core-duo/user-identifier-card-identifier-card-user-profile-username-password-userid-authentication-id-badge-access-identity-name-identification-credential.svg",
+							"alt_text": "VerifiablePIDSDJWT logo",
+							"uri": "https://www.iconbolt.com/preview/facebook/streamline-core-duo/user-identifier-card-identifier-card-user-profile-username-password-userid-authentication-id-badge-access-identity-name-identification-credential.svg"
+						},
+						"background_color": "#12107c",
+						"text_color": "#FFFFFF",
+						"description": "Verifiable PID dc+sd-jwt"
+					}
+				],
+				"vct": "VerifiablePIDSDJWT",
+				"claims": [
+					{
+						"mandatory": true,
+						"display": [
+							{
+								"locale": "en-US",
+								"name": "Given name",
+								"id": "given_name"
+							}
+						],
+						"path": [
+							"given_name"
+						]
+					},
+					{
+						"mandatory": true,
+						"display": [
+							{
+								"locale": "en-US",
+								"name": "Family name",
+								"id": "family_name"
+							}
+						],
+						"path": [
+							"family_name"
+						]
+					},
+					{
+						"mandatory": true,
+						"display": [
+							{
+								"locale": "en-US",
+								"name": "Birthdate",
+								"id": "birth_date"
+							}
+						],
+						"path": [
+							"birth_date"
+						]
+					},
+					{
+						"mandatory": true,
+						"display": [
+							{
+								"locale": "en-US",
+								"name": "Birth place",
+								"id": "birth_place"
+							}
+						],
+						"path": [
+							"birth_place"
+						]
+					},
+					{
+						"mandatory": true,
+						"display": [
+							{
+								"locale": "en-US",
+								"name": "Locality",
+								"id": "address.locality"
+							}
+						],
+						"path": [
+							"address",
+							"locality"
+						]
+					},
+					{
+						"mandatory": true,
+						"display": [
+							{
+								"locale": "en-US",
+								"name": "Region",
+								"id": "address.region"
+							}
+						],
+						"path": [
+							"address",
+							"region"
+						]
+					},
+					{
+						"mandatory": true,
+						"display": [
+							{
+								"locale": "en-US",
+								"name": "Postal code",
+								"id": "address.postal_code"
+							}
+						],
+						"path": [
+							"address",
+							"postal_code"
+						]
+					},
+					{
+						"mandatory": true,
+						"display": [
+							{
+								"locale": "en-US",
+								"name": "Country",
+								"id": "address.country"
+							}
+						],
+						"path": [
+							"address",
+							"country"
+						]
+					},
+					{
+						"mandatory": true,
+						"display": [
+							{
+								"locale": "en-US",
+								"name": "Street address",
+								"id": "address.street_address"
+							}
+						],
+						"path": [
+							"address",
+							"street_address"
+						]
+					},
+					{
+						"mandatory": true,
+						"display": [
+							{
+								"locale": "en-US",
+								"name": "Formatted address",
+								"id": "address.formatted"
+							}
+						],
+						"path": [
+							"address",
+							"formatted"
+						]
+					},
+					{
+						"mandatory": true,
+						"display": [
+							{
+								"locale": "en-US",
+								"name": "age_over_18",
+								"id": "age_over_18"
+							}
+						],
+						"path": [
+							"age_over_18"
+						]
+					},
+					{
+						"mandatory": true,
+						"display": [
+							{
+								"locale": "en-US",
+								"name": "age_over_65",
+								"id": "age_over_65"
+							}
+						],
+						"path": [
+							"age_over_65"
+						]
+					}
+				]
+			},
+			"discount_from_voucher": {
+				"format": "dc+sd-jwt",
+				"cryptographic_binding_methods_supported": [
+					"jwk",
+					"did:dyne:sandbox.signroom"
+				],
+				"credential_signing_alg_values_supported": [
+					"ES256"
+				],
+				"proof_types_supported": {
+					"jwt": {
+						"proof_signing_alg_values_supported": [
+							"ES256"
+						]
+					}
+				},
+				"display": [
+					{
+						"name": "dc+sd-jwt Voucher Credential",
+						"locale": "en-US",
+						"logo": {
+							"url": "https://storage.needpix.com/rsynced_images/discount-2540494_1280.png",
+							"alt_text": "dc+sd-jwt Voucher Credential logo",
+							"uri": "https://storage.needpix.com/rsynced_images/discount-2540494_1280.png"
+						},
+						"background_color": "#12107c",
+						"text_color": "#FFFFFF",
+						"description": "This is a voucher credential released in dc+sd-jwt format"
+					}
+				],
+				"vct": "discount_from_voucher",
+				"claims": [
+					{
+						"mandatory": true,
+						"display": [
+							{
+								"locale": "en-US",
+								"name": "Has a discount from Voucher",
+								"id": "has_discount_from_voucher"
+							}
+						],
+						"path": [
+							"has_discount_from_voucher"
+						]
+					}
+				]
+			},
+			"VoucherCredential": {
+				"format": "ldp_vc",
+				"cryptographic_binding_methods_supported": [
+					"jwk",
+					"did:dyne:sandbox.signroom"
+				],
+				"credential_signing_alg_values_supported": [
+					"Ed25519Signature2018"
+				],
+				"proof_types_supported": {
+					"jwt": {
+						"proof_signing_alg_values_supported": [
+							"ES256"
+						]
+					}
+				},
+				"display": [
+					{
+						"name": "W3C-VC Voucher Credential",
+						"locale": "en-US",
+						"logo": {
+							"url": "https://www.pngmart.com/files/8/Voucher-PNG-Transparent-Image.png",
+							"alt_text": "W3C-VC Voucher Credential logo",
+							"uri": "https://www.pngmart.com/files/8/Voucher-PNG-Transparent-Image.png"
+						},
+						"background_color": "#12107c",
+						"text_color": "#FFFFFF",
+						"description": "This is a voucher credential released in W3C-VC format"
+					}
+				],
+				"claims": [
+					{
+						"mandatory": true,
+						"display": [
+							{
+								"locale": "en-US",
+								"name": "Has a discount from Voucher",
+								"id": "has_discount_from_voucher"
+							}
+						],
+						"path": [
+							"has_discount_from_voucher"
+						]
+					}
+				],
+				"credentials_definition": {
+					"@context": [
+						"https://www.w3.org/ns/credentials/v2",
+						"https://www.w3.org/ns/credentials/examples/v2"
+					],
+					"type": [
+						"VerifiableCredential",
+						"VoucherCredential"
+					]
+				}
+			}
+		}
+	},
+	"credential_configuration_id": "VerifiablePIDSDJWT",
+	"holder_claims": {
+		"given_name": "Bob",
+		"family_name": "Doe",
+		"birth_date": "1997-04-04",
+		"birth_place": "IT",
+		"nationalities": [
+			"IT"
+		],
+		"address": {
+			"locality": "Turin",
+			"region": "Piedmont",
+			"postal_code": "10122",
+			"country": "IT",
+			"street_address": "Via Alessandro Manzoni 12",
+			"formatted": "Via Alessandro Manzoni 12, Turin, 10122, Piedmont, Italy"
+		},
+		"age_over_18": true,
+		"age_over_65": false
+	}
+}
+EOF
+cat << EOF | save_asset netsed_obj.keys.json
+{
+   "keyring": {
+      "es256": "GA6ydqbuUeheaUAYzwF2e/KZLSLXGY0av2uILohD2Vk="
+   }
+}
+EOF
+cat << EOF | zexe netsed_obj.zen netsed_obj.data.json netsed_obj.keys.json
+Scenario 'sd_jwt': ssd 
+
+Given I have a 'supported_selective_disclosure' named 'iss_wk'
+Given I have a 'string dictionary' named 'holder_claims'
+Given I have a 'string' named 'credential_configuration_id'
+Given I have a 'keyring'
+
+When I create the selective disclosure request from 'iss_wk' with id 'credential_configuration_id' for 'holder_claims'
+When I create selective disclosure of 'selective_disclosure_request'
+When I create the signed selective disclosure of 'selective disclosure'
+
+Then print 'signed selective disclosure'
+EOF
+    save_output netsed_obj.out.json
+    assert_output '{"signed_selective_disclosure":"eyJhbGciOiAiRVMyNTYiLCAidHlwIjogImRjK3NkLWp3dCJ9.eyJfc2QiOiBbIjRzY3NLTTJPVUlvVThlV1E0cEhVWFQ5eUkzajIyb1lfRTJtcENydXRuLW8iLCAiV19WeFZLR2YxX25jV2ZBalJvSlVHeDdZZUhSaEt6Yl91Y1ZoQ0xVNjlEYyIsICJwbmdqLUVtX1RSNUxFWUxrc0NibTRVSFNUcW8temUzNXJscGwtenpjbkd3IiwgIjlDX3VaNmNfS2FxQkJBT0FrZnFCQlRsck0xbnJFWlFVcV9FOGR2N2Q4a28iLCAibVpXZWhMR2h6dVFmdHZTUm5RVHBzWTRvdDdsVGtiT2VGcDNEdUpLQzJBQSIsICJQYkZpQzFNd25aSHFnMVUyNXh0RnpSX0VjMDJ3TjF5eVk0RlNVSmlwSnhZIiwgIjBsUEtaVjJVUmNJNm9YOTNuVXRIRkhmRWZRYVotWHBXbGxaeDFMczNaMEkiXSwgIl9zZF9hbGciOiAic2hhLTI1NiJ9.i95SyUjPhs5_PQinx1cHsOHXwbDGlr11ONaXrk13vFIq5P9CKAnbVo9qhA9FC0OOb5YuzDWJ-RLJeNvlwQUZHw~WyJYZGpBWWotUlk5NS11eVlNSThmUjN3IiwgImdpdmVuX25hbWUiLCAiQm9iIl0~WyI1LVlfa3ZKQm8zbmlfSk5OVXJGbklBIiwgImZhbWlseV9uYW1lIiwgIkRvZSJd~WyJWeUo0N2FINi1oeXNGdXRoQVpKUC1BIiwgImJpcnRoX2RhdGUiLCAiMTk5Ny0wNC0wNCJd~WyJ2SVhHWm16b3ZucEc3UV80bVVKc093IiwgImJpcnRoX3BsYWNlIiwgIklUIl0~WyI1WHNTSVhtYVpiZjVpa1FnTVNWR2pRIiwgImFkZHJlc3MiLCB7ImNvdW50cnkiOiAiSVQiLCAiZm9ybWF0dGVkIjogIlZpYSBBbGVzc2FuZHJvIE1hbnpvbmkgMTIsIFR1cmluLCAxMDEyMiwgUGllZG1vbnQsIEl0YWx5IiwgImxvY2FsaXR5IjogIlR1cmluIiwgInBvc3RhbF9jb2RlIjogIjEwMTIyIiwgInJlZ2lvbiI6ICJQaWVkbW9udCIsICJzdHJlZXRfYWRkcmVzcyI6ICJWaWEgQWxlc3NhbmRybyBNYW56b25pIDEyIn1d~WyJicjVnbWgtY1NSTkF2b2NLQ21BRDBBIiwgImFnZV9vdmVyXzE4IiwgdHJ1ZV0~WyI2VWFzY3pSS21tZThTT1V3ZWxYcTJ3IiwgImFnZV9vdmVyXzY1IiwgZmFsc2Vd~"}'
+}
