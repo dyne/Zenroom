@@ -284,13 +284,22 @@ When("create selective disclosure request from '' with id '' for ''", function(s
 
     local credential
     for _,v in pairs(ssd.credential_configurations_supported) do
-        if v.vct == id then credential = v end
+        if v.vct == id then
+            credential = v
+            break
+        end
     end
-    zencode_assert(credential, "Unknown credential id")
+    zencode_assert(credential, "Unknown credential id: " .. id)
     local claims = credential.claims
     local fields = {}
+    local already_included_fields = {}
     for _,v in pairs(claims) do
-        table.insert(fields, v.path[1])
+        local field = v.path[1]
+        local field_string = field:string()
+        if not already_included_fields[field_string] then
+            table.insert(fields, field)
+            already_included_fields[field_string] = true
+        end
     end
     ACK.selective_disclosure_request = {
         fields = fields,
