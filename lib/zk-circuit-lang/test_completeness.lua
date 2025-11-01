@@ -345,6 +345,30 @@ test_method("array_ops", "void scan_xor(BitW[], size_t, size_t, bool)", logic, "
 print()
 
 -- ============================================================================
+-- Test Router Primitives
+-- ============================================================================
+print(BOLD .. BLUE .. "Testing Router Primitives (mdoc parsing)..." .. RESET)
+
+-- Add router primitives category to results tracking
+results.router_primitives = {tested = 0, passed = 0, missing = 0}
+
+-- Test variable-bit bit vectors
+test_method("router_primitives", "LuaBitVecVar vinput_var(size_t)", logic, "vinput_var", "Variable-bit input")
+test_method("router_primitives", "LuaBitVecVar vbit_var(size_t, uint64_t)", logic, "vbit_var", "Variable-bit constant")
+
+-- Test variable-bit vector operations
+test_method("router_primitives", "BitW vlt_var(LuaBitVecVar&, LuaBitVecVar&)", logic, "vlt_var", "Variable-bit less-than")
+test_method("router_primitives", "BitW vleq_var(LuaBitVecVar&, LuaBitVecVar&)", logic, "vleq_var", "Variable-bit less-equal")
+test_method("router_primitives", "BitW veq_var(LuaBitVecVar&, LuaBitVecVar&)", logic, "veq_var", "Variable-bit equality")
+
+-- Test routing creation
+test_method("router_primitives", "LuaRouting create_routing()", logic, "create_routing", "Create routing instance")
+test_method("router_primitives", "LuaBitPlucker create_bit_plucker()", logic, "create_bit_plucker", "Create bit plucker instance")
+test_method("router_primitives", "LuaMemcmp create_memcmp()", logic, "create_memcmp", "Create memcmp instance")
+
+print()
+
+-- ============================================================================
 -- Print Summary
 -- ============================================================================
 print(BOLD .. CYAN .. "=" .. string.rep("=", 78) .. RESET)
@@ -385,6 +409,7 @@ print_category_results("Other BitVec Sizes", "bitvec_other")
 print_category_results("Conversion Operations", "conversion_ops")
 print_category_results("Aggregate Operations", "aggregate_ops")
 print_category_results("Array Operations", "array_ops")
+print_category_results("Router Primitives", "router_primitives")
 
 print()
 print(BOLD .. string.rep("-", 78) .. RESET)
