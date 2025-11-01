@@ -377,7 +377,59 @@ void register_zk_bindings(sol::state_view& lua) {
         "leq_array", &LuaLogic::leq_array,
         "scan_and", &LuaLogic::scan_and,
         "scan_or", &LuaLogic::scan_or,
-        "scan_xor", &LuaLogic::scan_xor
+        "scan_xor", &LuaLogic::scan_xor,
+        
+        // Router primitives
+        "vinput_var", &LuaLogic::vinput_var,
+        "vbit_var", &LuaLogic::vbit_var,
+        "create_routing", &LuaLogic::create_routing,
+        "create_bit_plucker", &LuaLogic::create_bit_plucker,
+        "create_memcmp", &LuaLogic::create_memcmp,
+        "vlt_var", &LuaLogic::vlt_var,
+        "vleq_var", &LuaLogic::vleq_var,
+        "veq_var", &LuaLogic::veq_var
+    );
+    
+    // ========================================================================
+    // Router Primitives
+    // ========================================================================
+    
+    // Variable-bit bit vector
+    auto bitvec_var = lua.new_usertype<LuaBitVecVar>("BitVecVar",
+        sol::constructors<>(),
+        
+        "get", &LuaBitVecVar::get,
+        "set", &LuaBitVecVar::set,
+        "size", &LuaBitVecVar::size,
+        
+        sol::meta_function::index, &LuaBitVecVar::get,
+        sol::meta_function::new_index, &LuaBitVecVar::set,
+        sol::meta_function::length, &LuaBitVecVar::size
+    );
+    
+    // Routing class
+    auto routing = lua.new_usertype<LuaRouting>("Routing",
+        sol::constructors<>(),
+        
+        "shift8", &LuaRouting::shift8,
+        "unshift8", &LuaRouting::unshift8
+    );
+    
+    // BitPlucker class
+    auto bit_plucker = lua.new_usertype<LuaBitPlucker>("BitPlucker",
+        sol::constructors<>(),
+        
+        "pluck", &LuaBitPlucker::pluck,
+        "unpack_v32", &LuaBitPlucker::unpack_v32,
+        "packed_input_v32", &LuaBitPlucker::packed_input_v32
+    );
+    
+    // Memcmp class
+    auto memcmp = lua.new_usertype<LuaMemcmp>("Memcmp",
+        sol::constructors<>(),
+        
+        "lt", &LuaMemcmp::lt,
+        "leq", &LuaMemcmp::leq
     );
     
     // GF2_128 Wire Wrappers
