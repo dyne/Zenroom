@@ -161,6 +161,26 @@ class Nat : public Limb<W64> {
     return *this;
   }
 
+  // *this += x * y
+  template <size_t WX, size_t WY>
+  T& mac(const Nat<WX>& x, const Nat<WY>& y) {
+    constexpr size_t kLimbsX = Nat<WX>::kLimbs;
+    constexpr size_t kLimbsY = Nat<WY>::kLimbs;
+    static_assert(kLimbs >= kLimbsX + kLimbsY);
+    if (WX > WY) {
+      return mac(y, x);
+    } else {
+      // WX <= WY, outer loop on WX
+      for (size_t i = 0; i < kLimbsX; ++i) {
+        limb_t l[kLimbsY], h[kLimbsY];
+        mulhl(kLimbsY, l, h, x.limb_[i], y.limb_);
+        accum(kLimbs - i, limb_ + i, kLimbsY, l);
+        accum(kLimbs - i - 1, limb_ + i + 1, kLimbsY, h);
+      }
+      return *this;
+    }
+  }
+
  private:
   // b *= a, returns false if overflow occurred.
   static bool muls(limb_t b[kLimbs], limb_t a) {
