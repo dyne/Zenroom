@@ -775,16 +775,6 @@ class Logic {
   }
 
   template <size_t N>
-  bool vequal(const bitvec<N>* a, const bitvec<N>& b) const {
-    for (size_t i = 0; i < N; ++i) {
-      auto eai = eval((*a)[i]);
-      auto ebi = eval(b[i]);
-      if (eai != ebi) return false;
-    }
-    return true;
-  }
-
-  template <size_t N>
   bitvec<N> vbit(uint64_t x) const {
     bitvec<N> r;
     bits(N, r.data(), x);
@@ -932,13 +922,13 @@ class Logic {
   }
 
   template <size_t N>
-  BitW veq(const bitvec<N>& a, const bitvec<N>& b) const {
-    return eq(N, a.data(), b.data());
+  BitW veq(const bitvec<N>* a, const bitvec<N>& b) const {
+    return eq(N, (*a).data(), b.data());
   }
   template <size_t N>
   BitW veq(const bitvec<N>& a, uint64_t val) const {
     auto v = vbit<N>(val);
-    return veq(a, v);
+    return veq(&a, v);
   }
   template <size_t N>
   BitW vlt(const bitvec<N>* a, const bitvec<N>& b) const {
@@ -982,9 +972,14 @@ class Logic {
   // bk_->{input,output}.  Because C++ templates are lazily expanded,
   // this class compiles even with backends that do not support I/O,
   // as long as you don't expand vinput(), voutput().
-  EltW eltw_input() const { return bk_->input(); }
-  BitW input() const { return BitW(bk_->input(), f_); }
-  void output(const BitW& x, size_t i) const { bk_->output(eval(x), i); }
+  EltW eltw_input() const { return bk_->input_wire(); }
+  BitW input() const {
+    BitW x(bk_->input_wire(), f_);
+    assert_is_bit(x);
+    return x;
+  }
+  void output(const EltW& x, size_t i) const { bk_->output_wire(x, i); }
+  void output(const BitW& x, size_t i) const { output(eval(x), i); }
   size_t wire_id(const BitW& v) const { return bk_->wire_id(v.x); }
   size_t wire_id(const EltW& x) const { return bk_->wire_id(x); }
 

@@ -51,10 +51,9 @@ class CompilerBackend {
   }
   V apy(const V& y, const Elt& a) const { return q_->apy(y, a); }
 
-  V input() const { return q_->input(); }
-  void output(size_t n, V wire_id) const { q_->output(n, wire_id); }
-//  size_t wire_id(const V& a) const { return q_->wire_id(a); }
-  size_t wire_id(const V& a) const { return a; }
+  V input_wire() const { return q_->input_wire(); }
+  void output_wire(size_t n, V wire_id) const { q_->output_wire(n, wire_id); }
+  size_t wire_id(const V& a) const { return q_->wire_id(a); }
 
  private:
   QuadCircuitF* q_;

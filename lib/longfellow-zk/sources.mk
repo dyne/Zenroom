@@ -11,4 +11,5 @@ circuits/sha3/sha3_round_constants.cc.o \
 circuits/mdoc/mdoc_decompress.cc.o \
 util/sha256.cc.o    \
 util/aes_ecb.cc.o    \
-
+util/crypto.cc.o \
+util/log.cc.o

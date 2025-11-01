@@ -17,7 +17,6 @@
 
 #include <stddef.h>
 
-#include "circuits/compiler/compiler.h"
 #include "circuits/logic/bit_plucker.h"
 
 namespace proofs {
@@ -47,21 +46,21 @@ class VerifyCircuit {
     EltW int_y[kBits - 1];
     EltW int_z[kBits - 1];
 
-    void input(QuadCircuit<Field>& Q) {
-      rx = Q.input();
-      ry = Q.input();
-      rx_inv = Q.input();
-      s_inv = Q.input();
-      pk_inv = Q.input();
+    void input(const LogicCircuit& lc) {
+      rx = lc.eltw_input();
+      ry = lc.eltw_input();
+      rx_inv = lc.eltw_input();
+      s_inv = lc.eltw_input();
+      pk_inv = lc.eltw_input();
       for (size_t i = 0; i < 8; ++i) {
-        pre[i] = Q.input();
+        pre[i] = lc.eltw_input();
       }
       for (size_t i = 0; i < kBits; ++i) {
-        bi[i] = Q.input();
+        bi[i] = lc.eltw_input();
         if (i < kBits - 1) {
-          int_x[i] = Q.input();
-          int_y[i] = Q.input();
-          int_z[i] = Q.input();
+          int_x[i] = lc.eltw_input();
+          int_y[i] = lc.eltw_input();
+          int_z[i] = lc.eltw_input();
         }
       }
     }

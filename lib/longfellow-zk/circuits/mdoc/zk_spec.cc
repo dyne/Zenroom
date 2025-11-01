@@ -43,6 +43,19 @@ extern "C" {
 // }
 
 const ZkSpecStruct kZkSpecs[kNumZkSpecs] = {
+    // Circuits produced on 2025-10-10
+    {"longfellow-libzk-v1",
+     "137e5a75ce72735a37c8a72da1a8a0a5df8d13365c2ae3d2c2bd6a0e7197c7c6", 1, 6,
+     4096, 2945},
+    {"longfellow-libzk-v1",
+     "b4bb6f01b7043f4f51d8302a30b36e3d4d2d0efc3c24557ab9212ad524a9764e", 2, 6,
+     4025, 2945},
+    {"longfellow-libzk-v1",
+     "b2211223b954b34a1081e3fbf71b8ea2de28efc888b4be510f532d6ba76c2010", 3, 6,
+     4121, 2945},
+    {"longfellow-libzk-v1",
+     "c70b5f44a1365c53847eb8948ad5b4fdc224251a2bc02d958c84c862823c49d6", 4, 6,
+     4283, 2945},
     // Circuits produced on 2025-08-21
     {"longfellow-libzk-v1",
      "f88a39e561ec0be02bb3dfe38fb609ad154e98decbbe632887d850fc612fea6f", 1, 5,

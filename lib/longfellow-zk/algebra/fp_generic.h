@@ -49,6 +49,7 @@ class FpGeneric {
 
   static constexpr bool kCharacteristicTwo = false;
   static constexpr size_t kNPolyEvaluationPoints = 6;
+  N m_;
 
   /* The Elt struct represented an element in the finite field.
    */
@@ -69,7 +70,7 @@ class FpGeneric {
 
     mprime_ = -inv_mod_b(m_.limb_[0]);
     rsquare_ = Elt{N(1)};
-    for (size_t bits = 2 * kBits; bits > 0; bits--) {
+    for (size_t bits = 0; bits < 2 * kBits; ++bits) {
       add(rsquare_, rsquare_);
     }
 
@@ -78,7 +79,7 @@ class FpGeneric {
       // directly, since mul() requires k_[0] and k_[1] to be
       // defined
       k_[i] = Elt{N(i)};
-      mul0(k_[i], rsquare_);
+      mul0(k_[i].n, rsquare_);
     }
 
     mone_ = negf(k_[1]);
@@ -122,26 +123,38 @@ class FpGeneric {
     }
   }
 
+  // Field arithmetic.  We allow field operations on both Nat and Elt,
+  // the idea being that Elt is a Nat in Montgomery form, and
+  // Montgomery is just multiplication by a constant.  Thus,
+  // we allow addition and subtraction of Nats, and multiplication
+  // of Nat by Elt, but not Nat by Nat since we only
+  // have a Montgomery multiplier.
+
   // a += y
-  void add(Elt& a, const Elt& y) const {
+  void add(N& a, const N& y) const {
     if (kLimbs == 1) {
-      limb_t aa = a.n.limb_[0], yy = y.n.limb_[0], mm = m_.limb_[0];
-      a.n.limb_[0] = addcmovc(aa - mm, yy, aa + yy);
+      limb_t aa = a.limb_[0], yy = y.limb_[0], mm = m_.limb_[0];
+      a.limb_[0] = addcmovc(aa - mm, yy, aa + yy);
     } else {
-      limb_t ah = add_limb(kLimbs, a.n.limb_, y.n.limb_);
-      maybe_minus_m(a.n.limb_, ah);
+      limb_t ah = add_limb(kLimbs, a.limb_, y.limb_);
+      maybe_minus_m(a.limb_, ah);
     }
   }
 
+  void add(Elt& a, const Elt& y) const { add(a.n, y.n); }
+
   // a -= y
-  void sub(Elt& a, const Elt& y) const {
+  //
+  void sub(N& a, const N& y) const {
     if (kLimbs == 1) {
-      a.n.limb_[0] = sub_sysdep(a.n.limb_[0], y.n.limb_[0], m_.limb_[0]);
+      a.limb_[0] = sub_sysdep(a.limb_[0], y.limb_[0], m_.limb_[0]);
     } else {
-      limb_t ah = sub_limb(kLimbs, a.n.limb_, y.n.limb_);
-      maybe_plus_m(a.n.limb_, ah);
+      limb_t ah = sub_limb(kLimbs, a.limb_, y.limb_);
+      maybe_plus_m(a.limb_, ah);
     }
   }
+
+  void sub(Elt& a, const Elt& y) const { sub(a.n, y.n); }
 
   // x *= y, Montgomery
   void mul(Elt& x, const Elt& y) const {
@@ -154,8 +167,11 @@ class FpGeneric {
         return;
       }
     }
-    mul0(x, y);
+    mul0(x.n, y);
   }
+
+  // Nat by Elt
+  void mul(N& x, const Elt& y) const { mul0(x, y); }
 
   // x = -x
   void neg(Elt& x) const {
@@ -262,6 +278,39 @@ class FpGeneric {
     return to_montgomery(a);
   }
 
+  // Reduction of a Nat<WX> into a field Elt.
+  // For optimization purposes, the reduce() algorithm
+  // computes a scaled answer which must be normalized at the end.
+  // The scale factor is computed by a relatively slow routine
+  // reduce_scale(), which returns a special type indexed
+  // by WX to avoid confusion.
+  template <size_t WX>
+  struct ScaleElt {
+    Elt e;
+  };
+
+  template <size_t WX>
+  ScaleElt<WX> reduce_scale() const {
+    Elt e = rsquare_;
+    for (size_t i = 0; i < Nat<WX>::kBits; ++i) {
+      add(e, e);
+    }
+    return ScaleElt<WX>{e};
+  }
+
+  template <size_t WX>
+  Elt reduce(const Nat<WX>& x, const ScaleElt<WX>& scale) const {
+    Elt r;
+    r.n = reduce_nat(x);
+    mul(r, scale.e);
+    return r;
+  }
+
+  template <size_t WX>
+  Elt reduce(const Nat<WX>& x) const {
+    return reduce(x, reduce_scale<WX>());
+  }
+
   std::optional<Elt> of_bytes_field(const uint8_t ab[/* kBytes */]) const {
     N an = N::of_bytes(ab);
     if (an < m_) {
@@ -315,6 +364,24 @@ class FpGeneric {
   // zero (as a counter) iff the field element is zero.
   Elt znz_indicator(const CElt& celt) const { return celt.e; }
 
+  // dot product
+  struct NatScaledForDot {
+    N n;
+  };
+  NatScaledForDot prescale_for_dot(Elt e) const {
+    ScaleElt<W64 + 2> scale = reduce_scale<W64 + 2>();
+    mul(e, scale.e);
+    return NatScaledForDot{from_montgomery(e)};
+  }
+  Elt dot(size_t n, const Nat<1> a[/*n*/],
+          const NatScaledForDot b[/*n*/]) const {
+    Nat<W64 + 2> s{};
+    for (size_t i = 0; i < n; ++i) {
+      s.mac(a[i], b[i].n);
+    }
+    return Elt{reduce_nat(s)};
+  }
+
  private:
   void maybe_minus_m(limb_t a[kLimbs], limb_t ah) const {
     limb_t a1[kLimbs];
@@ -339,14 +406,14 @@ class FpGeneric {
 
   // unoptimized montgomery multiplication that does not
   // depend on the constants zero() and one() being defined.
-  void mul0(Elt& x, const Elt& y) const {
+  void mul0(N& x, const Elt& y) const {
     limb_t a[2 * kLimbs + 1];  // uninitialized
-    mulstep<true>(a, x.n.limb_[0], y.n.limb_);
+    mulstep<true>(a, x.limb_[0], y.n.limb_);
     for (size_t i = 1; i < kLimbs; ++i) {
-      mulstep<false>(a + i, x.n.limb_[i], y.n.limb_);
+      mulstep<false>(a + i, x.limb_[i], y.n.limb_);
     }
     maybe_minus_m(a + kLimbs, a[2 * kLimbs]);
-    mov(kLimbs, x.n.limb_, a + kLimbs);
+    mov(kLimbs, x.limb_, a + kLimbs);
   }
 
   template <bool first>
@@ -395,9 +462,24 @@ class FpGeneric {
     return a;
   }
 
-  N m_;
+  // Unscaled reduction of X into a Nat<W64>.  The result
+  // must be multiplied by reduce_scale<WX>
+  template <size_t WX>
+  N reduce_nat(const Nat<WX>& x) const {
+    constexpr size_t kLimbsX = Nat<WX>::kLimbs;
+    limb_t a[kLimbs + kLimbsX + 1] = {};
+    for (size_t i = 0; i < kLimbsX; ++i) {
+      accum(kLimbs + 1, &a[i], 1, &x.limb_[i]);
+      OPS::reduction_step(&a[i], mprime_, m_);
+    }
+    maybe_minus_m(a + kLimbsX, a[kLimbs + kLimbsX]);
+    N n;
+    mov(kLimbs, n.limb_, a + kLimbsX);
+    return n;
+  }
+
   N negm_;
-  Elt rsquare_;
+  Elt rsquare_;  // 2^(kbits + kBits) mod p
   limb_t mprime_;
   Elt k_[3];  // small constants
   Elt half_;  // 1/2

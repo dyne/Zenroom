@@ -26,7 +26,7 @@
 namespace proofs {
 
 enum CborTag { UNSIGNED, NEGATIVE, BYTES, TEXT, ARRAY, MAP, TAG, PRIMITIVE };
-enum CborPrimitive { FALSE, TRUE, CNULL };
+enum CborPrimitive { CFALSE, CTRUE, CNULL };
 
 // CBOR decoder for a subset of CBOR used in MDOC.
 //
@@ -175,10 +175,10 @@ class CborDoc {
         t_ = PRIMITIVE;
         switch (count) {
           case 20:
-            u_.p = FALSE;
+            u_.p = CFALSE;
             break;
           case 21:
-            u_.p = TRUE;
+            u_.p = CTRUE;
             break;
           case 22:
             u_.p = CNULL;

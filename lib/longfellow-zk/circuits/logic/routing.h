@@ -28,81 +28,179 @@ namespace proofs {
 The Routing class implements circuits that shift an array by a variable number
 of positions. The following table can help pick parameters for a shift:
 
-shift_bit[2][2][1]    depth: 2 wires: 6 in: 4 out:2 use:6 ovh:0 t:5 cse:0 notn:7
-unshift_bit[2][2][1]  depth: 2 wires: 6 in: 4 out:2 use:6 ovh:0 t:5 cse:0 notn:7
-shift_bit[4][4][1]    depth: 3 wires: 17 in: 7 out:4 use:15 ovh:2 t:23 cse:0
-notn:27 unshift_bit[4][4][1]  depth: 3 wires: 17 in: 7 out:4 use:15 ovh:2 t:23
-cse:0 notn:27 shift_bit[4][4][2]    depth: 3 wires: 19 in: 7 out:4 use:15 ovh:4
-t:23 cse:2 notn:20 unshift_bit[4][4][2]  depth: 3 wires: 19 in: 7 out:4 use:15
-ovh:4 t:23 cse:2 notn:20 shift_bit[8][8][1]    depth: 4 wires: 41 in: 12 out:8
-use:36 ovh:5 t:70 cse:0 notn:83 unshift_bit[8][8][1]  depth: 4 wires: 41 in: 12
-out:8 use:36 ovh:5 t:70 cse:0 notn:83 shift_bit[8][8][2]    depth: 4 wires: 44
-in: 12 out:8 use:32 ovh:12 t:64 cse:2 notn:62 unshift_bit[8][8][2]  depth: 4
-wires: 44 in: 12 out:8 use:32 ovh:12 t:67 cse:2 notn:68 shift_bit[16][16][1]
-depth: 5 wires: 94 in: 21 out:16 use:85 ovh:9 t:186 cse:0 notn:227
-unshift_bit[16][16][1]  depth: 5 wires: 94 in: 21 out:16 use:85 ovh:9 t:186
-cse:0 notn:227 shift_bit[16][16][2]    depth: 4 wires: 82 in: 21 out:16 use:61
-ovh:21 t:137 cse:4 notn:147 unshift_bit[16][16][2]  depth: 4 wires: 82 in: 21
-out:16 use:61 ovh:21 t:137 cse:4 notn:147 shift_bit[16][16][4]    depth: 4
-wires: 94 in: 21 out:16 use:61 ovh:33 t:203 cse:58 notn:255
-unshift_bit[16][16][4]  depth: 4 wires: 94 in: 21 out:16 use:61 ovh:33 t:203
-cse:58 notn:255 shift_bit[32][32][1]    depth: 6 wires: 212 in: 38 out:32
-use:198 ovh:14 t:463 cse:0 notn:579 unshift_bit[32][32][1]  depth: 6 wires: 212
-in: 38 out:32 use:198 ovh:14 t:463 cse:0 notn:579 shift_bit[32][32][2]    depth:
-5 wires: 184 in: 38 out:32 use:142 ovh:42 t:351 cse:4 notn:405
-unshift_bit[32][32][2]  depth: 5 wires: 184 in: 38 out:32 use:142 ovh:42 t:366
-cse:4 notn:435 shift_bit[32][32][4]    depth: 5 wires: 193 in: 38 out:32 use:118
-ovh:75 t:371 cse:13 notn:427 unshift_bit[32][32][4]  depth: 5 wires: 193 in: 38
-out:32 use:118 ovh:75 t:413 cse:13 notn:511 shift_bit[64][64][1]    depth: 7
-wires: 475 in: 71 out:64 use:455 ovh:20 t:1109 cse:0 notn:1411
-unshift_bit[64][64][1]  depth: 7 wires: 475 in: 71 out:64 use:455 ovh:20 t:1109
-cse:0 notn:1411 shift_bit[64][64][2]    depth: 5 wires: 353 in: 71 out:64
-use:275 ovh:78 t:747 cse:6 notn:922 unshift_bit[64][64][2]  depth: 5 wires: 353
-in: 71 out:64 use:275 ovh:78 t:747 cse:6 notn:922 shift_bit[64][64][4]    depth:
-5 wires: 363 in: 71 out:64 use:223 ovh:140 t:954 cse:22 notn:1319
-unshift_bit[64][64][4]  depth: 5 wires: 363 in: 71 out:64 use:223 ovh:140 t:954
-cse:22 notn:1319 shift_bit[128][128][1]  depth: 8 wires: 1059 in: 136 out:128
-use:1032 ovh:27 t:2588 cse:0 notn:3331 unshift_bit[128][128][1]  depth: 8 wires:
-1059 in: 136 out:128 use:1032 ovh:27 t:2588 cse:0 notn:3331
-shift_bit[128][128][2]    depth: 6 wires: 808 in: 136 out:128 use:660 ovh:148
-t:1842 cse:6 notn:2332 unshift_bit[128][128][2]  depth: 6 wires: 808 in: 136
-out:128 use:660 ovh:148 t:1905 cse:6 notn:2458 shift_bit[128][128][4]    depth:
-5 wires: 695 in: 136 out:128 use:428 ovh:267 t:2406 cse:69 notn:3686
-unshift_bit[128][128][4]  depth: 5 wires: 695 in: 136 out:128 use:428 ovh:267
-t:2826 cse:69 notn:4526 shift_bit[256][256][1]    depth: 9 wires: 2348 in: 265
-out:256 use:2313 ovh:35 t:5924 cse:0 notn:7683 unshift_bit[256][256][1]  depth:
-9 wires: 2348 in: 265 out:256 use:2313 ovh:35 t:5924 cse:0 notn:7683
-shift_bit[256][256][2]    depth: 6 wires: 1588 in: 265 out:256 use:1305 ovh:283
-t:3905 cse:8 notn:5153 unshift_bit[256][256][2]  depth: 6 wires: 1588 in: 265
-out:256 use:1305 ovh:283 t:3905 cse:8 notn:5153 shift_bit[256][256][4]    depth:
-5 wires: 1355 in: 265 out:256 use:825 ovh:530 t:6750 cse:116 notn:11309
-unshift_bit[256][256][4]  depth: 5 wires: 1355 in: 265 out:256 use:825 ovh:530
-t:6750 cse:116 notn:11309 shift_bit[256][256][8]    depth: 5 wires: 1595 in: 265
-out:256 use:825 ovh:770 t:33990 cse:2756 notn:65309 unshift_bit[256][256][8]
-depth: 5 wires: 1595 in: 265 out:256 use:825 ovh:770 t:33990 cse:2756 notn:65309
-shift_bit[512][512][1]    depth: 10 wires: 5174 in: 522 out:512 use:5130 ovh:44
-t:13357 cse:0 notn:17411 unshift_bit[512][512][1]  depth: 10 wires: 5174 in: 522
-out:512 use:5130 ovh:44 t:13357 cse:0 notn:17411 shift_bit[512][512][2] depth: 7
-wires: 3644 in: 522 out:512 use:3098 ovh:546 t:9289 cse:8 notn:12323
-unshift_bit[512][512][2]  depth: 7 wires: 3644 in: 522 out:512 use:3098 ovh:546
-t:9544 cse:8 notn:12833 shift_bit[512][512][4]    depth: 6 wires: 3148 in: 522
-out:512 use:2094 ovh:1054 t:11361 cse:33 notn:17462 unshift_bit[512][512][4]
-depth: 6 wires: 3148 in: 522 out:512 use:2094 ovh:1054 t:11361 cse:33 notn:17462
-shift_bit[512][512][8]    depth: 6 wires: 3194 in: 522 out:512 use:1618 ovh:1576
-t:18192 cse:224 notn:31029 unshift_bit[512][512][8]  depth: 6 wires: 3194 in:
-522 out:512 use:1618 ovh:1576 t:21912 cse:224 notn:38469
-shift_bit[1024][1024][1]  depth: 11 wires: 11329 in: 1035 out:1024 use:11275
-ovh:54 t:29751 cse:0 notn:38915 unshift_bit[1024][1024][1]  depth: 11 wires:
-11329 in: 1035 out:1024 use:11275 ovh:54 t:29751 cse:0 notn:38915
-shift_bit[1024][1024][2]    depth: 7 wires: 7243 in: 1035 out:1024 use:6175
-ovh:1068 t:19547 cse:10 notn:26664 unshift_bit[1024][1024][2]  depth: 7 wires:
-7243 in: 1035 out:1024 use:6175 ovh:1068 t:19547 cse:10 notn:26664
-shift_bit[1024][1024][4]    depth: 6 wires: 6232 in: 1035 out:1024 use:4155
-ovh:2077 t:26989 cse:80 notn:43573 unshift_bit[1024][1024][4]  depth: 6 wires:
-6232 in: 1035 out:1024 use:4155 ovh:2077 t:30769 cse:80 notn:51133
-shift_bit[1024][1024][8]    depth: 6 wires: 6296 in: 1035 out:1024 use:3179
-ovh:3117 t:52409 cse:332 notn:94285 unshift_bit[1024][1024][8]  depth: 6 wires:
-6296 in: 1035 out:1024 use:3179 ovh:3117 t:52409 cse:332 notn:94285
+shift_bit[2][2][1] depth: 2 wires: 6 in: 4 out:2 use:6 ovh:0 t:5 cse:0
+notn:7
+
+unshift_bit[2][2][1] depth: 2 wires: 6 in: 4 out:2 use:6 ovh:0 t:5
+cse:0 notn:7
+
+shift_bit[4][4][1] depth: 3 wires: 17 in: 7 out:4 use:15 ovh:2 t:23
+cse:0 notn:27
+
+unshift_bit[4][4][1] depth: 3 wires: 17 in: 7 out:4 use:15 ovh:2 t:23
+cse:0 notn:27
+
+shift_bit[4][4][2] depth: 3 wires: 19 in: 7 out:4 use:15 ovh:4 t:23
+cse:2 notn:20
+
+unshift_bit[4][4][2] depth: 3 wires: 19 in: 7 out:4 use:15 ovh:4 t:23
+cse:2 notn:20
+
+shift_bit[8][8][1] depth: 4 wires: 41 in: 12 out:8 use:36 ovh:5 t:70
+cse:0 notn:83
+
+unshift_bit[8][8][1] depth: 4 wires: 41 in: 12 out:8 use:36 ovh:5 t:70
+cse:0 notn:83
+
+shift_bit[8][8][2] depth: 4 wires: 44 in: 12 out:8 use:32 ovh:12 t:64
+cse:2 notn:62
+
+unshift_bit[8][8][2] depth: 4 wires: 44 in: 12 out:8 use:32 ovh:12
+t:67 cse:2 notn:68
+
+shift_bit[16][16][1] depth: 5 wires: 94 in: 21 out:16 use:85 ovh:9
+t:186 cse:0 notn:227
+
+unshift_bit[16][16][1] depth: 5 wires: 94 in: 21 out:16 use:85 ovh:9
+t:186 cse:0 notn:227
+
+shift_bit[16][16][2] depth: 4 wires: 82 in: 21 out:16 use:61 ovh:21
+t:137 cse:4 notn:147
+
+unshift_bit[16][16][2] depth: 4 wires: 82 in: 21 out:16 use:61 ovh:21
+t:137 cse:4 notn:147
+
+shift_bit[16][16][4] depth: 4 wires: 94 in: 21 out:16 use:61 ovh:33
+t:203 cse:58 notn:255
+
+unshift_bit[16][16][4] depth: 4 wires: 94 in: 21 out:16 use:61 ovh:33
+t:203 cse:58 notn:255
+
+shift_bit[32][32][1] depth: 6 wires: 212 in: 38 out:32 use:198 ovh:14
+t:463 cse:0 notn:579
+
+unshift_bit[32][32][1] depth: 6 wires: 212 in: 38 out:32 use:198
+ovh:14 t:463 cse:0 notn:579
+
+shift_bit[32][32][2] depth: 5 wires: 184 in: 38 out:32 use:142 ovh:42
+t:351 cse:4 notn:405
+
+unshift_bit[32][32][2] depth: 5 wires: 184 in: 38 out:32 use:142
+ovh:42 t:366 cse:4 notn:435
+
+shift_bit[32][32][4] depth: 5 wires: 193 in: 38 out:32 use:118 ovh:75
+t:371 cse:13 notn:427
+
+unshift_bit[32][32][4] depth: 5 wires: 193 in: 38 out:32 use:118
+ovh:75 t:413 cse:13 notn:511
+
+shift_bit[64][64][1] depth: 7 wires: 475 in: 71 out:64 use:455 ovh:20
+t:1109 cse:0 notn:1411
+
+unshift_bit[64][64][1] depth: 7 wires: 475 in: 71 out:64 use:455
+ovh:20 t:1109 cse:0 notn:1411
+
+shift_bit[64][64][2] depth: 5 wires: 353 in: 71 out:64 use:275 ovh:78
+t:747 cse:6 notn:922
+
+unshift_bit[64][64][2] depth: 5 wires: 353 in: 71 out:64 use:275
+ovh:78 t:747 cse:6 notn:922
+
+shift_bit[64][64][4] depth: 5 wires: 363 in: 71 out:64 use:223 ovh:140
+t:954 cse:22 notn:1319
+
+unshift_bit[64][64][4] depth: 5 wires: 363 in: 71 out:64 use:223
+ovh:140 t:954 cse:22 notn:1319
+
+shift_bit[128][128][1] depth: 8 wires: 1059 in: 136 out:128 use:1032
+ovh:27 t:2588 cse:0 notn:3331
+
+unshift_bit[128][128][1] depth: 8 wires: 1059 in: 136 out:128 use:1032
+ovh:27 t:2588 cse:0 notn:3331
+
+shift_bit[128][128][2] depth: 6 wires: 808 in: 136 out:128 use:660
+ovh:148 t:1842 cse:6 notn:2332
+
+unshift_bit[128][128][2] depth: 6 wires: 808 in: 136 out:128 use:660
+ovh:148 t:1905 cse:6 notn:2458
+
+shift_bit[128][128][4] depth: 5 wires: 695 in: 136 out:128 use:428
+ovh:267 t:2406 cse:69 notn:3686
+
+unshift_bit[128][128][4] depth: 5 wires: 695 in: 136 out:128 use:428
+ovh:267 t:2826 cse:69 notn:4526
+
+shift_bit[256][256][1] depth: 9 wires: 2348 in: 265 out:256 use:2313
+ovh:35 t:5924 cse:0 notn:7683
+
+unshift_bit[256][256][1] depth: 9 wires: 2348 in: 265 out:256 use:2313
+ovh:35 t:5924 cse:0 notn:7683
+
+shift_bit[256][256][2] depth: 6 wires: 1588 in: 265 out:256 use:1305
+ovh:283 t:3905 cse:8 notn:5153
+
+unshift_bit[256][256][2] depth: 6 wires: 1588 in: 265 out:256 use:1305
+ovh:283 t:3905 cse:8 notn:5153
+
+shift_bit[256][256][4] depth: 5 wires: 1355 in: 265 out:256 use:825
+ovh:530 t:6750 cse:116 notn:11309
+
+unshift_bit[256][256][4] depth: 5 wires: 1355 in: 265 out:256 use:825
+ovh:530 t:6750 cse:116 notn:11309
+
+shift_bit[256][256][8] depth: 5 wires: 1595 in: 265 out:256 use:825
+ovh:770 t:33990 cse:2756 notn:65309
+
+unshift_bit[256][256][8] depth: 5 wires: 1595 in: 265 out:256 use:825
+ovh:770 t:33990 cse:2756 notn:65309
+
+shift_bit[512][512][1] depth: 10 wires: 5174 in: 522 out:512 use:5130
+ovh:44 t:13357 cse:0 notn:17411
+
+unshift_bit[512][512][1] depth: 10 wires: 5174 in: 522 out:512
+use:5130 ovh:44 t:13357 cse:0 notn:17411
+
+shift_bit[512][512][2] depth: 7 wires: 3644 in: 522 out:512 use:3098
+ovh:546 t:9289 cse:8 notn:12323
+
+unshift_bit[512][512][2] depth: 7 wires: 3644 in: 522 out:512 use:3098
+ovh:546 t:9544 cse:8 notn:12833
+
+shift_bit[512][512][4] depth: 6 wires: 3148 in: 522 out:512 use:2094
+ovh:1054 t:11361 cse:33 notn:17462
+
+unshift_bit[512][512][4] depth: 6 wires: 3148 in: 522 out:512 use:2094
+ovh:1054 t:11361 cse:33 notn:17462
+
+shift_bit[512][512][8] depth: 6 wires: 3194 in: 522 out:512 use:1618
+ovh:1576 t:18192 cse:224 notn:31029
+
+unshift_bit[512][512][8] depth: 6 wires: 3194 in: 522 out:512 use:1618
+ovh:1576 t:21912 cse:224 notn:38469
+
+shift_bit[1024][1024][1] depth: 11 wires: 11329 in: 1035 out:1024
+use:11275 ovh:54 t:29751 cse:0 notn:38915
+
+unshift_bit[1024][1024][1] depth: 11 wires: 11329 in: 1035 out:1024
+use:11275 ovh:54 t:29751 cse:0 notn:38915
+
+shift_bit[1024][1024][2] depth: 7 wires: 7243 in: 1035 out:1024
+use:6175 ovh:1068 t:19547 cse:10 notn:26664
+
+unshift_bit[1024][1024][2] depth: 7 wires: 7243 in: 1035 out:1024
+use:6175 ovh:1068 t:19547 cse:10 notn:26664
+
+shift_bit[1024][1024][4] depth: 6 wires: 6232 in: 1035 out:1024
+use:4155 ovh:2077 t:26989 cse:80 notn:43573
+
+unshift_bit[1024][1024][4] depth: 6 wires: 6232 in: 1035 out:1024
+use:4155 ovh:2077 t:30769 cse:80 notn:51133
+
+shift_bit[1024][1024][8] depth: 6 wires: 6296 in: 1035 out:1024
+use:3179 ovh:3117 t:52409 cse:332 notn:94285
+
+unshift_bit[1024][1024][8] depth: 6 wires: 6296 in: 1035 out:1024
+use:3179 ovh:3117 t:52409 cse:332 notn:94285
 */
 template <class Logic>
 class Routing {

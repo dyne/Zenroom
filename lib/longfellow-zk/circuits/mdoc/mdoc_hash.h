@@ -19,7 +19,6 @@
 #include <cstdint>
 #include <vector>
 
-#include "circuits/compiler/compiler.h"
 #include "circuits/logic/bit_plucker.h"
 #include "circuits/logic/memcmp.h"
 #include "circuits/logic/routing.h"
@@ -44,6 +43,7 @@ template <class LogicCircuit, class Field>
 class MdocHash {
   using v8 = typename LogicCircuit::v8;
   using v32 = typename LogicCircuit::v32;
+  using v64 = typename LogicCircuit::v64;
   using v256 = typename LogicCircuit::v256;
 
   using vind = typename LogicCircuit::template bitvec<kCborIndexBits>;
@@ -117,7 +117,7 @@ class MdocHash {
       attrb_.resize(num_attr);
     }
 
-    void input(QuadCircuit<Field>& Q, const LogicCircuit& lc) {
+    void input(const LogicCircuit& lc) {
       nb_ = lc.template vinput<8>();
 
       // sha input init =========================
@@ -125,7 +125,7 @@ class MdocHash {
         in_[i] = lc.template vinput<8>();
       }
       for (size_t j = 0; j < kMaxSHABlocks; j++) {
-        sig_sha_[j].input(Q);
+        sig_sha_[j].input(lc);
       }
 
       valid_from_.input(lc);
@@ -139,7 +139,7 @@ class MdocHash {
           attrb_[ai].push_back(lc.template vinput<8>());
         }
         for (size_t j = 0; j < 2; j++) {
-          attr_sha_[ai][j].input(Q);
+          attr_sha_[ai][j].input(lc);
         }
         attr_mso_[ai].input(lc);
         attr_ei_[ai].input(lc);
@@ -154,9 +154,14 @@ class MdocHash {
                               const v8 now[/*20*/], const v256& e,
                               const v256& dpkx, const v256& dpky,
                               const Witness& vw) const {
-    sha_.assert_message_hash_with_prefix(kMaxSHABlocks, vw.nb_, vw.in_,
-                                         kCose1Prefix, kCose1PrefixLen, e,
-                                         vw.sig_sha_);
+    auto preimage = construct_signature_preimage(vw);
+    lc_.vassert_is_bit(vw.nb_);
+    lc_.vleq(vw.nb_, kMaxSHABlocks);
+    sha_.assert_message_hash(kMaxSHABlocks, vw.nb_, preimage.data(), e,
+                             vw.sig_sha_);
+
+    // Find the length of the MSO in bytes. Use this to range check each index.
+    v64 len = sha_.find_len(kMaxSHABlocks, preimage.data(), vw.nb_);
 
     // Shift a portion of the MSO into buf and check it.
     const v8 zz = lc_.template vbit<8>(0);  // cannot appear in strings
@@ -168,6 +173,7 @@ class MdocHash {
     // The +2 corresponds to the length.
 
     // validFrom <= now
+    check_index(vw.valid_from_.k, len);
     r_.shift(vw.valid_from_.k, kValidFromLen + kDateLen, &cmp_buf[0],
              kMaxMsoLen, vw.in_ + 5 + 2, zz, /*unroll=*/3);
     assert_bytes_at(kValidFromLen, &cmp_buf[0], kValidFromCheck);
@@ -175,6 +181,7 @@ class MdocHash {
     lc_.assert1(cmp);
 
     // now <= validUntil
+    check_index(vw.valid_until_.k, len);
     r_.shift(vw.valid_until_.k, kValidUntilLen + kDateLen, &cmp_buf[0],
              kMaxMsoLen, vw.in_ + 5 + 2, zz, /*unroll=*/3);
     assert_bytes_at(kValidUntilLen, &cmp_buf[0], kValidUntilCheck);
@@ -182,6 +189,7 @@ class MdocHash {
     lc_.assert1(cmp);
 
     // DPK_{x,y}
+    check_index(vw.dev_key_info_.k, len);
     r_.shift(vw.dev_key_info_.k, kDeviceKeyInfoLen + 3 + 32 + 32, &cmp_buf[0],
              kMaxMsoLen, vw.in_ + 5 + 2, zz, /*unroll=*/3);
     assert_bytes_at(kDeviceKeyInfoLen, &cmp_buf[0], kDeviceKeyInfoCheck);
@@ -193,6 +201,7 @@ class MdocHash {
 
     // Attributes parsing
     // valueDigests, ignore byte 13 \in {A1,A2} representing map size.
+    check_index(vw.value_digests_.k, len);
     r_.shift(vw.value_digests_.k, kValueDigestsLen, cmp_buf.data(), kMaxMsoLen,
              vw.in_ + 5 + 2, zz, /*unroll=*/3);
     assert_bytes_at(13, &cmp_buf[0], kValueDigestsCheck);
@@ -201,6 +210,7 @@ class MdocHash {
     for (size_t ai = 0; ai < vw.num_attr_; ++ai) {
       v8 B[96];
       // Check the hash matches the value in the signed MSO.
+      check_index(vw.attr_mso_[ai].k, len);
       r_.shift(vw.attr_mso_[ai].k, 2 + 32, &cmp_buf[0], kMaxMsoLen,
                vw.in_ + 5 + 2, zz, /*unroll=*/3);
 
@@ -212,18 +222,53 @@ class MdocHash {
       for (size_t j = 0; j < 256; ++j) {
         mm[j] = cmp_buf[2 + (255 - j) / 8][(j % 8)];
       }
+      lc_.vassert_is_bit(mm);
 
       auto two = lc_.template vbit<8>(2);
       sha_.assert_message_hash(2, two, vw.attrb_[ai].data(), mm,
                                vw.attr_sha_[ai].data());
 
+      v64 salted_len = sha_.find_len(2, vw.attrb_[ai].data(), two);
+
       // Check that the attribute_id and value occur in the hashed text.
+      check_index(vw.attr_ei_[ai].offset, salted_len);
       r_.shift(vw.attr_ei_[ai].offset, 96, B, 128, vw.attrb_[ai].data(), zz, 3);
       assert_attribute(96, oa[ai].len, B, oa[ai]);
     }
   }
 
  private:
+  std::vector<v8> construct_signature_preimage(const Witness& vw) const {
+    std::vector<v8> bbuf(64 * kMaxSHABlocks);
+    for (size_t i = 0; i < 64 * kMaxSHABlocks; ++i) {
+      if (i < kCose1PrefixLen) {
+        lc_.bits(8, bbuf[i].data(), kCose1Prefix[i]);
+      } else {
+        bbuf[i] = vw.in_[i - kCose1PrefixLen];
+      }
+    }
+    return bbuf;
+  }
+
+  // Checks that the index is less than the length. The len is given as bits
+  // in a v64 in big endian order, and the index is given as a byte index.
+  void check_index(vind index, v64 len) const {
+    lc_.vassert_is_bit(index);
+    auto low = lc_.template slice<0, 3>(len);
+    auto mid = lc_.template slice<3, 3 + kCborIndexBits>(len);
+    auto hi = lc_.template slice<3 + kCborIndexBits, 64>(len);
+    lc_.assert1(lc_.vlt(&index, mid));
+
+    // Because check_index is called on several indices, the following two
+    // checks will be called several times. However, the compiler removes
+    // redundant checks, and it is convenient to verify the ranges in one
+    // function. An alternative would be to verify the low 3 bits of len
+    // and upper 40+ bits of len are 0, and then rely on that invariant in
+    // this method, but that separates the logic, and this is easier to audit.
+    lc_.vassert0(low);
+    lc_.vassert0(hi);
+  }
+
   void assert_bytes_at(size_t len, const v8 buf[/*>=len*/],
                        const uint8_t want[/*len*/]) const {
     for (size_t i = 0; i < len; ++i) {
@@ -299,8 +344,8 @@ class MdocHash {
   // 6C text(12) 76616C756544696765737473  "valueDigests" A{1,2} # map(1,2)
   //     71 text(17) 6F72672E69736F2E31383031332E352E31 "org.iso.18013.5.1"
   static constexpr uint8_t kValueDigestsCheck[] = {
-      0x6C, 0x76, 0x61, 0x6C, 0x75, 0x65, 0x44, 0x69, 0x67,
-      0x65, 0x73, 0x74, 0x73,
+      0x6C, 0x76, 0x61, 0x6C, 0x75, 0x65, 0x44,
+      0x69, 0x67, 0x65, 0x73, 0x74, 0x73,
   };
   static constexpr size_t kValueDigestsLen = sizeof(kValueDigestsCheck);
 
