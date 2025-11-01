@@ -1,0 +1,722 @@
+// Copyright (C) 2025 Dyne.org foundation
+// designed, written and maintained by Denis Roio <jaromil@dyne.org>
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+#ifndef LONGFELLOW_ZK_LUA_BINDINGS_H_
+#define LONGFELLOW_ZK_LUA_BINDINGS_H_
+
+#include <memory>
+#include <vector>
+#include <string>
+
+#include "sol.hpp"
+#include "ec/p256.h"
+#include "algebra/fp_p256.h"
+#include "algebra/fp2.h"
+#include "gf2k/gf2_128.h"
+#include "circuits/compiler/compiler.h"
+#include "circuits/logic/logic.h"
+#include "circuits/logic/compiler_backend.h"
+#include "sumcheck/circuit.h"
+#include "custom_backend.h"
+
+namespace proofs {
+namespace lua {
+
+// ============================================================================
+// Field Type Wrappers
+// ============================================================================
+
+// Wrapper for Fp256Base field elements
+class LuaFp256Elt {
+public:
+    using Field = Fp256Base;
+    using Elt = Field::Elt;
+    
+    Elt value;
+    const Field* field;
+    
+    LuaFp256Elt(const Elt& v, const Field* f) : value(v), field(f) {}
+    
+    // Arithmetic operations
+    LuaFp256Elt add(const LuaFp256Elt& other) const {
+        return LuaFp256Elt(field->addf(value, other.value), field);
+    }
+    
+    LuaFp256Elt sub(const LuaFp256Elt& other) const {
+        return LuaFp256Elt(field->subf(value, other.value), field);
+    }
+    
+    LuaFp256Elt mul(const LuaFp256Elt& other) const {
+        return LuaFp256Elt(field->mulf(value, other.value), field);
+    }
+    
+    LuaFp256Elt neg() const {
+        return LuaFp256Elt(field->negf(value), field);
+    }
+    
+    LuaFp256Elt inv() const {
+        return LuaFp256Elt(field->invertf(value), field);
+    }
+    
+    bool eq(const LuaFp256Elt& other) const {
+        return value == other.value;
+    }
+    
+    // Note: to_string() not available, field elements are opaque
+};
+
+// Wrapper for GF2_128 field elements
+class LuaGF2128Elt {
+public:
+    using Field = GF2_128<>;
+    using Elt = Field::Elt;
+    
+    Elt value;
+    const Field* field;
+    
+    LuaGF2128Elt(const Elt& v, const Field* f) : value(v), field(f) {}
+    
+    LuaGF2128Elt add(const LuaGF2128Elt& other) const {
+        return LuaGF2128Elt(field->addf(value, other.value), field);
+    }
+    
+    LuaGF2128Elt mul(const LuaGF2128Elt& other) const {
+        return LuaGF2128Elt(field->mulf(value, other.value), field);
+    }
+    
+    bool eq(const LuaGF2128Elt& other) const {
+        return value == other.value;
+    }
+};
+
+// ============================================================================
+// Field Instance Wrappers
+// ============================================================================
+
+class LuaFp256Field {
+public:
+    Fp256Base field;
+    
+    LuaFp256Field() : field() {}
+    
+    // Prevent copying (fields aren't copyable)
+    LuaFp256Field(const LuaFp256Field&) = delete;
+    LuaFp256Field& operator=(const LuaFp256Field&) = delete;
+    
+    LuaFp256Elt zero() const {
+        return LuaFp256Elt(field.zero(), &field);
+    }
+    
+    LuaFp256Elt one() const {
+        return LuaFp256Elt(field.one(), &field);
+    }
+    
+    LuaFp256Elt two() const {
+        return LuaFp256Elt(field.two(), &field);
+    }
+    
+    LuaFp256Elt half() const {
+        return LuaFp256Elt(field.half(), &field);
+    }
+    
+    LuaFp256Elt of_scalar(uint64_t x) const {
+        return LuaFp256Elt(field.of_scalar(x), &field);
+    }
+    
+    // Functional arithmetic operations
+    LuaFp256Elt addf(const LuaFp256Elt& a, const LuaFp256Elt& b) const {
+        return LuaFp256Elt(field.addf(a.value, b.value), &field);
+    }
+    
+    LuaFp256Elt subf(const LuaFp256Elt& a, const LuaFp256Elt& b) const {
+        return LuaFp256Elt(field.subf(a.value, b.value), &field);
+    }
+    
+    LuaFp256Elt mulf(const LuaFp256Elt& a, const LuaFp256Elt& b) const {
+        return LuaFp256Elt(field.mulf(a.value, b.value), &field);
+    }
+    
+    LuaFp256Elt negf(const LuaFp256Elt& a) const {
+        return LuaFp256Elt(field.negf(a.value), &field);
+    }
+    
+    LuaFp256Elt invertf(const LuaFp256Elt& a) const {
+        return LuaFp256Elt(field.invertf(a.value), &field);
+    }
+};
+
+class LuaGF2128Field {
+public:
+    GF2_128<> field;
+    
+    LuaGF2128Field() : field() {}
+    
+    // Prevent copying
+    LuaGF2128Field(const LuaGF2128Field&) = delete;
+    LuaGF2128Field& operator=(const LuaGF2128Field&) = delete;
+    
+    LuaGF2128Elt zero() const {
+        return LuaGF2128Elt(field.zero(), &field);
+    }
+    
+    LuaGF2128Elt one() const {
+        return LuaGF2128Elt(field.one(), &field);
+    }
+    
+    // Functional arithmetic operations
+    LuaGF2128Elt addf(const LuaGF2128Elt& a, const LuaGF2128Elt& b) const {
+        return LuaGF2128Elt(field.addf(a.value, b.value), &field);
+    }
+    
+    LuaGF2128Elt mulf(const LuaGF2128Elt& a, const LuaGF2128Elt& b) const {
+        return LuaGF2128Elt(field.mulf(a.value, b.value), &field);
+    }
+};
+
+// ============================================================================
+// Low-Level Arithmetic Circuit API (QuadCircuit)
+// ============================================================================
+
+class LuaQuadCircuit {
+public:
+    using Field = Fp256Base;
+    std::unique_ptr<QuadCircuit<Field>> circuit;
+    Field field;
+    
+    LuaQuadCircuit() : field(), circuit(std::make_unique<QuadCircuit<Field>>(field)) {}
+    
+    // Wire creation
+    size_t input_wire() { return circuit->input_wire(); }
+    void private_input() { circuit->private_input(); }
+    void begin_full_field() { circuit->begin_full_field(); }
+    
+    // Arithmetic operations
+    size_t add(size_t op0, size_t op1) { return circuit->add(op0, op1); }
+    size_t sub(size_t op0, size_t op1) { return circuit->sub(op0, op1); }
+    size_t mul(size_t op0, size_t op1) { return circuit->mul(op0, op1); }
+    
+    size_t mul_scalar(const LuaFp256Elt& k, size_t op) {
+        return circuit->mul(k.value, op);
+    }
+    
+    size_t mul_scaled(const LuaFp256Elt& k, size_t op0, size_t op1) {
+        return circuit->mul(k.value, op0, op1);
+    }
+    
+    size_t linear(size_t op0) { return circuit->linear(op0); }
+    
+    size_t linear_scaled(const LuaFp256Elt& k, size_t op0) {
+        return circuit->linear(k.value, op0);
+    }
+    
+    size_t konst(const LuaFp256Elt& k) { return circuit->konst(k.value); }
+    
+    size_t axpy(size_t y, const LuaFp256Elt& a, size_t x) {
+        return circuit->axpy(y, a.value, x);
+    }
+    
+    size_t apy(size_t y, const LuaFp256Elt& a) {
+        return circuit->apy(y, a.value);
+    }
+    
+    // Constraints
+    size_t assert0(size_t op) { return circuit->assert0(op); }
+    
+    // Output
+    void output_wire(size_t n, size_t wire_id) { circuit->output_wire(n, wire_id); }
+    
+    // Compilation
+    void mkcircuit(size_t nc) {
+        // Note: This returns a Circuit but we don't expose it to Lua yet
+        // In a full implementation, we'd need to wrap Circuit<Field> too
+        circuit->mkcircuit(nc);
+    }
+    
+    // Metrics
+    size_t ninput() const { return circuit->ninput_; }
+    size_t npub_input() const { return circuit->npub_input_; }
+    size_t noutput() const { return circuit->noutput_; }
+    size_t depth() const { return circuit->depth_; }
+    size_t nwires() const { return circuit->nwires_; }
+    size_t nquad_terms() const { return circuit->nquad_terms_; }
+};
+
+// ============================================================================
+// High-Level Boolean Logic API
+// ============================================================================
+
+// Wrapper for BitW (boolean wire with basis tracking)
+class LuaBitW {
+public:
+    using Field = Fp256Base;
+    using Elt = Field::Elt;
+    using Backend = CustomCompilerBackend<Field>;
+    using LogicType = Logic<Field, Backend>;
+    using BitW = typename LogicType::BitW;
+    
+    BitW wire;
+    const LogicType* logic;
+    
+    LuaBitW(const BitW& w, const LogicType* l) : wire(w), logic(l) {}
+    
+    // Get underlying wire index
+    size_t wire_id() const {
+        // For BitW, the wire ID is stored in the x field
+        return logic->wire_id(wire);
+    }
+};
+
+// Wrapper for EltW (field element wire)
+class LuaEltW {
+public:
+    using Field = Fp256Base;
+    using Backend = CustomCompilerBackend<Field>;
+    using LogicType = Logic<Field, Backend>;
+    using EltW = typename LogicType::EltW;
+    
+    EltW wire;
+    const LogicType* logic;
+    
+    LuaEltW(const EltW& w, const LogicType* l) : wire(w), logic(l) {}
+    
+    size_t wire_id() const {
+        return logic->wire_id(wire);
+    }
+};
+
+// Wrapper for bit vectors
+template <size_t N>
+class LuaBitVec {
+public:
+    using Field = Fp256Base;
+    using Backend = CustomCompilerBackend<Field>;
+    using LogicType = Logic<Field, Backend>;
+    using bitvec = typename LogicType::template bitvec<N>;
+    
+    bitvec vec;
+    const LogicType* logic;
+    
+    LuaBitVec(const bitvec& v, const LogicType* l) : vec(v), logic(l) {}
+    
+    // Array-like access (1-indexed for Lua)
+    LuaBitW get(size_t i) const {
+        if (i < 1 || i > N) {
+            throw std::out_of_range("Index out of range");
+        }
+        return LuaBitW(vec[i - 1], logic);
+    }
+    
+    void set(size_t i, const LuaBitW& bit) {
+        if (i < 1 || i > N) {
+            throw std::out_of_range("Index out of range");
+        }
+        vec[i - 1] = bit.wire;
+    }
+    
+    size_t size() const { return N; }
+};
+
+// Main Logic wrapper
+class LuaLogic {
+public:
+    using Field = Fp256Base;
+    using Backend = CustomCompilerBackend<Field>;
+    using LogicType = Logic<Field, Backend>;
+    
+    std::unique_ptr<LuaQuadCircuit> quad_circuit;
+    std::unique_ptr<Backend> backend;
+    std::unique_ptr<LogicType> logic;
+    
+    LuaLogic() {
+        quad_circuit = std::make_unique<LuaQuadCircuit>();
+        backend = std::make_unique<Backend>(quad_circuit->circuit.get());
+        logic = std::make_unique<LogicType>(backend.get(), quad_circuit->field);
+    }
+    
+    // Field operations
+    LuaFp256Elt zero() const { return LuaFp256Elt(logic->zero(), &quad_circuit->field); }
+    LuaFp256Elt one() const { return LuaFp256Elt(logic->one(), &quad_circuit->field); }
+    LuaFp256Elt mone() const { return LuaFp256Elt(logic->mone(), &quad_circuit->field); }
+    LuaFp256Elt elt(uint64_t a) const { return LuaFp256Elt(logic->elt(a), &quad_circuit->field); }
+    
+    // Wire arithmetic
+    LuaEltW add(const LuaEltW& a, const LuaEltW& b) {
+        return LuaEltW(logic->add(&a.wire, b.wire), logic.get());
+    }
+    
+    LuaEltW sub(const LuaEltW& a, const LuaEltW& b) {
+        return LuaEltW(logic->sub(&a.wire, b.wire), logic.get());
+    }
+    
+    LuaEltW mul(const LuaEltW& a, const LuaEltW& b) {
+        return LuaEltW(logic->mul(&a.wire, b.wire), logic.get());
+    }
+    
+    LuaEltW mul_scalar(const LuaFp256Elt& k, const LuaEltW& b) {
+        return LuaEltW(logic->mul(k.value, b.wire), logic.get());
+    }
+    
+    LuaEltW mul_3arg(const LuaFp256Elt& k, const LuaEltW& a, const LuaEltW& b) {
+        return LuaEltW(backend->mul(k.value, a.wire, b.wire), logic.get());
+    }
+    
+    LuaEltW mux_elt(const LuaBitW& control, const LuaEltW& iftrue, const LuaEltW& iffalse) {
+        return LuaEltW(logic->mux(&control.wire, &iftrue.wire, iffalse.wire), logic.get());
+    }
+    
+    LuaEltW konst(const LuaFp256Elt& a) {
+        return LuaEltW(logic->konst(a.value), logic.get());
+    }
+    
+    LuaEltW konst_int(uint64_t a) {
+        return LuaEltW(logic->konst(a), logic.get());
+    }
+    
+    // Linear algebra operations
+    LuaEltW ax(const LuaFp256Elt& a, const LuaEltW& x) {
+        return LuaEltW(logic->ax(a.value, x.wire), logic.get());
+    }
+    
+    LuaEltW axy(const LuaFp256Elt& a, const LuaEltW& x, const LuaEltW& y) {
+        return LuaEltW(logic->axy(a.value, &x.wire, y.wire), logic.get());
+    }
+    
+    LuaEltW axpy(const LuaEltW& y, const LuaFp256Elt& a, const LuaEltW& x) {
+        return LuaEltW(logic->axpy(&y.wire, a.value, x.wire), logic.get());
+    }
+    
+    LuaEltW apy(const LuaEltW& y, const LuaFp256Elt& a) {
+        return LuaEltW(logic->apy(y.wire, a.value), logic.get());
+    }
+    
+    // Boolean operations
+    LuaBitW bit(size_t b) {
+        return LuaBitW(logic->bit(b), logic.get());
+    }
+    
+    LuaBitW lnot(const LuaBitW& x) {
+        return LuaBitW(logic->lnot(x.wire), logic.get());
+    }
+    
+    LuaBitW land(const LuaBitW& a, const LuaBitW& b) {
+        return LuaBitW(logic->land(&a.wire, b.wire), logic.get());
+    }
+    
+    LuaBitW lor(const LuaBitW& a, const LuaBitW& b) {
+        return LuaBitW(logic->lor(&a.wire, b.wire), logic.get());
+    }
+    
+    LuaBitW lxor(const LuaBitW& a, const LuaBitW& b) {
+        return LuaBitW(logic->lxor(&a.wire, b.wire), logic.get());
+    }
+    
+    LuaBitW limplies(const LuaBitW& a, const LuaBitW& b) {
+        return LuaBitW(logic->limplies(&a.wire, b.wire), logic.get());
+    }
+    
+    LuaBitW mux(const LuaBitW& control, const LuaBitW& iftrue, const LuaBitW& iffalse) {
+        // Note: mux signature is (BitW*, BitW*, BitW&)
+        return LuaBitW(logic->mux(&control.wire, &iftrue.wire, iffalse.wire), logic.get());
+    }
+    
+    // SHA-256 specific operations
+    LuaBitW lCh(const LuaBitW& x, const LuaBitW& y, const LuaBitW& z) {
+        return LuaBitW(logic->lCh(&x.wire, &y.wire, z.wire), logic.get());
+    }
+    
+    LuaBitW lMaj(const LuaBitW& x, const LuaBitW& y, const LuaBitW& z) {
+        return LuaBitW(logic->lMaj(&x.wire, &y.wire, z.wire), logic.get());
+    }
+    
+    LuaBitW lxor3(const LuaBitW& a, const LuaBitW& b, const LuaBitW& c) {
+        return LuaBitW(logic->lxor3(&a.wire, &b.wire, c.wire), logic.get());
+    }
+    
+    LuaBitW rebase(const LuaFp256Elt& d0, const LuaFp256Elt& d1, const LuaBitW& v) {
+        return LuaBitW(logic->rebase(d0.value, d1.value, v.wire), logic.get());
+    }
+    
+    LuaEltW lmul(const LuaBitW& a, const LuaEltW& b) {
+        return LuaEltW(logic->lmul(&a.wire, b.wire), logic.get());
+    }
+    
+    LuaBitW lor_exclusive(const LuaBitW& a, const LuaBitW& b) {
+        return LuaBitW(logic->lor_exclusive(&a.wire, b.wire), logic.get());
+    }
+    
+    // Conversion operations
+    LuaEltW eval(const LuaBitW& v) {
+        return LuaEltW(logic->eval(v.wire), logic.get());
+    }
+    
+    LuaEltW as_scalar8(const LuaBitVec<8>& v) {
+        return LuaEltW(logic->as_scalar(v.vec), logic.get());
+    }
+    
+    LuaEltW as_scalar32(const LuaBitVec<32>& v) {
+        return LuaEltW(logic->as_scalar(v.vec), logic.get());
+    }
+    
+    LuaEltW as_scalar64(const LuaBitVec<64>& v) {
+        return LuaEltW(logic->as_scalar(v.vec), logic.get());
+    }
+    
+    // Assertions
+    LuaEltW assert0_elt(const LuaEltW& a) {
+        return LuaEltW(logic->assert0(a.wire), logic.get());
+    }
+    
+    LuaEltW assert0_bit(const LuaBitW& v) {
+        return LuaEltW(logic->assert0(v.wire), logic.get());
+    }
+    
+    LuaEltW assert1(const LuaBitW& v) {
+        return LuaEltW(logic->assert1(v.wire), logic.get());
+    }
+    
+    LuaEltW assert_eq_elt(const LuaEltW& a, const LuaEltW& b) {
+        return LuaEltW(logic->assert_eq(&a.wire, b.wire), logic.get());
+    }
+    
+    LuaEltW assert_eq_bit(const LuaBitW& a, const LuaBitW& b) {
+        return LuaEltW(logic->assert_eq(&a.wire, b.wire), logic.get());
+    }
+    
+    LuaEltW assert_is_bit(const LuaBitW& b) {
+        return LuaEltW(logic->assert_is_bit(b.wire), logic.get());
+    }
+    
+    // I/O
+    LuaEltW eltw_input() {
+        return LuaEltW(logic->eltw_input(), logic.get());
+    }
+    
+    LuaBitW input() {
+        return LuaBitW(logic->input(), logic.get());
+    }
+    
+    void output(const LuaBitW& x, size_t i) {
+        logic->output(x.wire, i);
+    }
+    
+    // Bit vectors (8-bit)
+    LuaBitVec<8> vinput8() {
+        return LuaBitVec<8>(logic->vinput<8>(), logic.get());
+    }
+    
+    LuaBitVec<8> vbit8(uint64_t x) {
+        return LuaBitVec<8>(logic->vbit<8>(x), logic.get());
+    }
+    
+    LuaBitVec<8> vnot8(const LuaBitVec<8>& x) {
+        return LuaBitVec<8>(logic->vnot(x.vec), logic.get());
+    }
+    
+    LuaBitVec<8> vand8(const LuaBitVec<8>& a, const LuaBitVec<8>& b) {
+        return LuaBitVec<8>(logic->vand(&a.vec, b.vec), logic.get());
+    }
+    
+    LuaBitVec<8> vor8(const LuaBitVec<8>& a, const LuaBitVec<8>& b) {
+        return LuaBitVec<8>(logic->vor(&a.vec, b.vec), logic.get());
+    }
+    
+    LuaBitVec<8> vxor8(const LuaBitVec<8>& a, const LuaBitVec<8>& b) {
+        return LuaBitVec<8>(logic->vxor(&a.vec, b.vec), logic.get());
+    }
+    
+    LuaBitVec<8> vadd8(const LuaBitVec<8>& a, const LuaBitVec<8>& b) {
+        return LuaBitVec<8>(logic->vadd(a.vec, b.vec), logic.get());
+    }
+    
+    LuaBitW veq8(const LuaBitVec<8>& a, const LuaBitVec<8>& b) {
+        return LuaBitW(logic->veq(&a.vec, b.vec), logic.get());
+    }
+    
+    LuaBitW vlt8(const LuaBitVec<8>& a, const LuaBitVec<8>& b) {
+        return LuaBitW(logic->vlt(&a.vec, b.vec), logic.get());
+    }
+    
+    LuaBitW vleq8(const LuaBitVec<8>& a, const LuaBitVec<8>& b) {
+        return LuaBitW(logic->vleq(&a.vec, b.vec), logic.get());
+    }
+    
+    LuaBitVec<8> vCh8(const LuaBitVec<8>& x, const LuaBitVec<8>& y, const LuaBitVec<8>& z) {
+        return LuaBitVec<8>(logic->vCh(&x.vec, &y.vec, z.vec), logic.get());
+    }
+    
+    LuaBitVec<8> vMaj8(const LuaBitVec<8>& x, const LuaBitVec<8>& y, const LuaBitVec<8>& z) {
+        return LuaBitVec<8>(logic->vMaj(&x.vec, &y.vec, z.vec), logic.get());
+    }
+    
+    LuaBitVec<8> vxor3_8(const LuaBitVec<8>& a, const LuaBitVec<8>& b, const LuaBitVec<8>& c) {
+        return LuaBitVec<8>(logic->vxor3(&a.vec, &b.vec, c.vec), logic.get());
+    }
+    
+    LuaBitVec<8> vshr8(const LuaBitVec<8>& a, size_t shift, size_t b = 0) {
+        return LuaBitVec<8>(logic->vshr(a.vec, shift, b), logic.get());
+    }
+    
+    LuaBitVec<8> vshl8(const LuaBitVec<8>& a, size_t shift, size_t b = 0) {
+        return LuaBitVec<8>(logic->vshl(a.vec, shift, b), logic.get());
+    }
+    
+    LuaBitVec<8> vrotr8(const LuaBitVec<8>& a, size_t b) {
+        return LuaBitVec<8>(logic->vrotr(a.vec, b), logic.get());
+    }
+    
+    LuaBitVec<8> vrotl8(const LuaBitVec<8>& a, size_t b) {
+        return LuaBitVec<8>(logic->vrotl(a.vec, b), logic.get());
+    }
+    
+    LuaBitVec<8> vadd8_const(const LuaBitVec<8>& a, uint64_t val) {
+        return LuaBitVec<8>(logic->vadd(a.vec, val), logic.get());
+    }
+    
+    LuaBitW veq8_const(const LuaBitVec<8>& a, uint64_t val) {
+        return LuaBitW(logic->veq(a.vec, val), logic.get());
+    }
+    
+    LuaBitW vlt8_const(const LuaBitVec<8>& a, uint64_t val) {
+        return LuaBitW(logic->vlt(a.vec, val), logic.get());
+    }
+    
+    // Bit vectors (32-bit)
+    LuaBitVec<32> vinput32() {
+        return LuaBitVec<32>(logic->vinput<32>(), logic.get());
+    }
+    
+    LuaBitVec<32> vbit32(uint64_t x) {
+        return LuaBitVec<32>(logic->vbit<32>(x), logic.get());
+    }
+    
+    LuaBitVec<32> vadd32(const LuaBitVec<32>& a, const LuaBitVec<32>& b) {
+        return LuaBitVec<32>(logic->vadd(a.vec, b.vec), logic.get());
+    }
+    
+    LuaBitW veq32(const LuaBitVec<32>& a, const LuaBitVec<32>& b) {
+        return LuaBitW(logic->veq(&a.vec, b.vec), logic.get());
+    }
+    
+    LuaBitVec<32> vnot32(const LuaBitVec<32>& x) {
+        return LuaBitVec<32>(logic->vnot(x.vec), logic.get());
+    }
+    
+    LuaBitVec<32> vand32(const LuaBitVec<32>& a, const LuaBitVec<32>& b) {
+        return LuaBitVec<32>(logic->vand(&a.vec, b.vec), logic.get());
+    }
+    
+    LuaBitVec<32> vor32(const LuaBitVec<32>& a, const LuaBitVec<32>& b) {
+        return LuaBitVec<32>(logic->vor(&a.vec, b.vec), logic.get());
+    }
+    
+    LuaBitVec<32> vxor32(const LuaBitVec<32>& a, const LuaBitVec<32>& b) {
+        return LuaBitVec<32>(logic->vxor(&a.vec, b.vec), logic.get());
+    }
+    
+    LuaBitW vlt32(const LuaBitVec<32>& a, const LuaBitVec<32>& b) {
+        return LuaBitW(logic->vlt(&a.vec, b.vec), logic.get());
+    }
+    
+    LuaBitW vleq32(const LuaBitVec<32>& a, const LuaBitVec<32>& b) {
+        return LuaBitW(logic->vleq(&a.vec, b.vec), logic.get());
+    }
+    
+    LuaBitVec<32> vCh32(const LuaBitVec<32>& x, const LuaBitVec<32>& y, const LuaBitVec<32>& z) {
+        return LuaBitVec<32>(logic->vCh(&x.vec, &y.vec, z.vec), logic.get());
+    }
+    
+    LuaBitVec<32> vMaj32(const LuaBitVec<32>& x, const LuaBitVec<32>& y, const LuaBitVec<32>& z) {
+        return LuaBitVec<32>(logic->vMaj(&x.vec, &y.vec, z.vec), logic.get());
+    }
+    
+    LuaBitVec<32> vxor3_32(const LuaBitVec<32>& a, const LuaBitVec<32>& b, const LuaBitVec<32>& c) {
+        return LuaBitVec<32>(logic->vxor3(&a.vec, &b.vec, c.vec), logic.get());
+    }
+    
+    LuaBitVec<32> vshr32(const LuaBitVec<32>& a, size_t shift, size_t b = 0) {
+        return LuaBitVec<32>(logic->vshr(a.vec, shift, b), logic.get());
+    }
+    
+    LuaBitVec<32> vshl32(const LuaBitVec<32>& a, size_t shift, size_t b = 0) {
+        return LuaBitVec<32>(logic->vshl(a.vec, shift, b), logic.get());
+    }
+    
+    LuaBitVec<32> vrotr32(const LuaBitVec<32>& a, size_t b) {
+        return LuaBitVec<32>(logic->vrotr(a.vec, b), logic.get());
+    }
+    
+    LuaBitVec<32> vrotl32(const LuaBitVec<32>& a, size_t b) {
+        return LuaBitVec<32>(logic->vrotl(a.vec, b), logic.get());
+    }
+    
+    // Bit vectors (64-bit)
+    LuaBitVec<64> vinput64() {
+        return LuaBitVec<64>(logic->vinput<64>(), logic.get());
+    }
+    
+    LuaBitVec<64> vbit64(uint64_t x) {
+        return LuaBitVec<64>(logic->vbit<64>(x), logic.get());
+    }
+    
+    LuaBitVec<64> vadd64(const LuaBitVec<64>& a, const LuaBitVec<64>& b) {
+        return LuaBitVec<64>(logic->vadd(a.vec, b.vec), logic.get());
+    }
+    
+    LuaBitW veq64(const LuaBitVec<64>& a, const LuaBitVec<64>& b) {
+        return LuaBitW(logic->veq(&a.vec, b.vec), logic.get());
+    }
+    
+    // Bit vectors (16-bit)
+    LuaBitVec<16> vinput16() {
+        return LuaBitVec<16>(logic->vinput<16>(), logic.get());
+    }
+    
+    LuaBitVec<16> vbit16(uint64_t x) {
+        return LuaBitVec<16>(logic->vbit<16>(x), logic.get());
+    }
+    
+    // Bit vectors (128-bit)
+    LuaBitVec<128> vinput128() {
+        return LuaBitVec<128>(logic->vinput<128>(), logic.get());
+    }
+    
+    LuaBitVec<128> vbit128(uint64_t x) {
+        return LuaBitVec<128>(logic->vbit<128>(x), logic.get());
+    }
+    
+    // Bit vectors (256-bit)
+    LuaBitVec<256> vinput256() {
+        return LuaBitVec<256>(logic->vinput<256>(), logic.get());
+    }
+    
+    LuaBitVec<256> vbit256(uint64_t x) {
+        return LuaBitVec<256>(logic->vbit<256>(x), logic.get());
+    }
+    
+    // Access underlying quad circuit
+    LuaQuadCircuit& get_circuit() { return *quad_circuit; }
+};
+
+// ============================================================================
+// Registration Functions
+// ============================================================================
+
+void register_zk_bindings(sol::state_view& lua);
+
+}  // namespace lua
+}  // namespace proofs
+
+#endif  // LONGFELLOW_ZK_LUA_BINDINGS_H_
