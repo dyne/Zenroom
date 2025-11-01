@@ -372,12 +372,14 @@ All library code in `namespace proofs { ... }`
 
 ### Current Implementation Status
 
-**Overall: 90/105 methods (85% complete)**
+**Overall: 105/120 methods (87% complete)**
 
 **✅ Fully Implemented (100%):**
 - Field arithmetic (Fp256Base, GF2_128)
+- GF128 field arithmetic (zero, one, addf, mulf)
 - EltW operations (field element wires)
 - BitW operations (boolean wires)
+- GF128 logic operations (add, mul, konst, eltw_input, output, assert_eq_elt)
 - SHA-256 specific primitives (lCh, lMaj, lxor3)
 - BitVec<32> operations
 - Conversion operations (BitW ↔ EltW)
@@ -527,5 +529,5 @@ Based on upstream work:
 
 **Last Updated**: November 2025  
 **Maintainer**: Denis Roio (jaromil@dyne.org)  
-**Lua DSL Status**: 85% Complete (90/105 methods)  
+**Lua DSL Status**: 87% Complete (105/120 methods)  
 **License**: GNU Affero General Public License v3.0

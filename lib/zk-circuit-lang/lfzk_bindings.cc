@@ -361,6 +361,45 @@ void register_zk_bindings(sol::state_view& lua) {
         "get_circuit", &LuaLogic::get_circuit
     );
     
+    // GF2_128 Wire Wrappers
+    auto gf2128_bitw = lua.new_usertype<LuaGF2128BitW>("GF2128BitW",
+        sol::constructors<>(),
+        "wire_id", &LuaGF2128BitW::wire_id
+    );
+    
+    auto gf2128_eltw = lua.new_usertype<LuaGF2128EltW>("GF2128EltW",
+        sol::constructors<>(),
+        "wire_id", &LuaGF2128EltW::wire_id
+    );
+    
+    // GF2_128 Logic (high-level API for GF2_128)
+    auto gf2128_logic = lua.new_usertype<LuaGF2128Logic>("GF2128Logic",
+        sol::constructors<LuaGF2128Logic()>(),
+        
+        // Field operations
+        "zero", &LuaGF2128Logic::zero,
+        "one", &LuaGF2128Logic::one,
+        
+        // Wire arithmetic
+        "add", &LuaGF2128Logic::add,
+        "mul", &LuaGF2128Logic::mul,
+        "mul_scalar", &LuaGF2128Logic::mul_scalar,
+        "konst", sol::overload(
+            &LuaGF2128Logic::konst,
+            &LuaGF2128Logic::konst_int
+        ),
+        
+        // I/O
+        "eltw_input", &LuaGF2128Logic::eltw_input,
+        "output", &LuaGF2128Logic::output,
+        
+        // Assertions
+        "assert_eq_elt", &LuaGF2128Logic::assert_eq_elt,
+        
+        // Access underlying circuit
+        "get_circuit", &LuaGF2128Logic::get_circuit
+    );
+    
     // ========================================================================
     // Utility Functions (global namespace)
     // ========================================================================
@@ -379,6 +418,10 @@ void register_zk_bindings(sol::state_view& lua) {
     
     lua.set_function("create_logic", []() -> LuaLogic* {
         return new LuaLogic();
+    });
+    
+    lua.set_function("create_gf2128_logic", []() -> LuaGF2128Logic* {
+        return new LuaGF2128Logic();
     });
     
     // ========================================================================

@@ -711,6 +711,112 @@ public:
 };
 
 // ============================================================================
+// GF2_128 Wire Wrappers
+// ============================================================================
+
+// Wrapper for GF2_128 BitW (boolean wire with basis tracking)
+class LuaGF2128BitW {
+public:
+    using Field = GF2_128<>;
+    using Elt = Field::Elt;
+    using Backend = CustomCompilerBackend<Field>;
+    using LogicType = Logic<Field, Backend>;
+    using BitW = typename LogicType::BitW;
+    
+    BitW wire;
+    const LogicType* logic;
+    
+    LuaGF2128BitW(const BitW& w, const LogicType* l) : wire(w), logic(l) {}
+    
+    // Get underlying wire index
+    size_t wire_id() const {
+        // For BitW, the wire ID is stored in the x field
+        return logic->wire_id(wire);
+    }
+};
+
+// Wrapper for GF2_128 EltW (field element wire)
+class LuaGF2128EltW {
+public:
+    using Field = GF2_128<>;
+    using Backend = CustomCompilerBackend<Field>;
+    using LogicType = Logic<Field, Backend>;
+    using EltW = typename LogicType::EltW;
+    
+    EltW wire;
+    const LogicType* logic;
+    
+    LuaGF2128EltW(const EltW& w, const LogicType* l) : wire(w), logic(l) {}
+    
+    size_t wire_id() const {
+        return logic->wire_id(wire);
+    }
+};
+
+// ============================================================================
+// GF2_128 Logic Wrapper
+// ============================================================================
+
+class LuaGF2128Logic {
+public:
+    using Field = GF2_128<>;
+    using Backend = CustomCompilerBackend<Field>;
+    using LogicType = Logic<Field, Backend>;
+    
+    std::unique_ptr<QuadCircuit<Field>> circuit;
+    std::unique_ptr<Backend> backend;
+    std::unique_ptr<LogicType> logic;
+    
+    LuaGF2128Logic() {
+        circuit = std::make_unique<QuadCircuit<Field>>(Field());
+        backend = std::make_unique<Backend>(circuit.get());
+        logic = std::make_unique<LogicType>(backend.get(), Field());
+    }
+    
+    // Field operations
+    LuaGF2128Elt zero() const { return LuaGF2128Elt(logic->zero(), &logic->f_); }
+    LuaGF2128Elt one() const { return LuaGF2128Elt(logic->one(), &logic->f_); }
+    
+    // Wire arithmetic
+    LuaGF2128EltW add(const LuaGF2128EltW& a, const LuaGF2128EltW& b) {
+        return LuaGF2128EltW(logic->add(&a.wire, b.wire), logic.get());
+    }
+    
+    LuaGF2128EltW mul(const LuaGF2128EltW& a, const LuaGF2128EltW& b) {
+        return LuaGF2128EltW(logic->mul(&a.wire, b.wire), logic.get());
+    }
+    
+    LuaGF2128EltW mul_scalar(const LuaGF2128Elt& k, const LuaGF2128EltW& b) {
+        return LuaGF2128EltW(logic->mul(k.value, b.wire), logic.get());
+    }
+    
+    LuaGF2128EltW konst(const LuaGF2128Elt& a) {
+        return LuaGF2128EltW(logic->konst(a.value), logic.get());
+    }
+    
+    LuaGF2128EltW konst_int(uint64_t a) {
+        return LuaGF2128EltW(logic->konst(a), logic.get());
+    }
+    
+    // I/O
+    LuaGF2128EltW eltw_input() {
+        return LuaGF2128EltW(logic->eltw_input(), logic.get());
+    }
+    
+    void output(const LuaGF2128EltW& x, size_t i) {
+        logic->output(x.wire, i);
+    }
+    
+    // Assertions
+    LuaGF2128EltW assert_eq_elt(const LuaGF2128EltW& a, const LuaGF2128EltW& b) {
+        return LuaGF2128EltW(logic->assert_eq(&a.wire, b.wire), logic.get());
+    }
+    
+    // Access underlying circuit
+    QuadCircuit<Field>& get_circuit() { return *circuit; }
+};
+
+// ============================================================================
 // Registration Functions
 // ============================================================================
 
