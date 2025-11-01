@@ -31,9 +31,17 @@
 #include "circuits/logic/compiler_backend.h"
 #include "sumcheck/circuit.h"
 #include "custom_backend.h"
+#include "circuits/logic/routing.h"
+#include "circuits/logic/bit_plucker.h"
+#include "circuits/logic/memcmp.h"
 
 namespace proofs {
 namespace lua {
+
+// Constants used in mdoc circuits
+static constexpr size_t kCborIndexBits = 13;
+static constexpr size_t kSHAPluckerBits = 4;
+static constexpr size_t kMACPluckerBits = 4;
 
 // ============================================================================
 // Field Type Wrappers
@@ -327,6 +335,208 @@ public:
     }
     
     size_t size() const { return N; }
+};
+
+// ============================================================================
+// Router Primitives
+// ============================================================================
+
+// Wrapper for variable-bit bit vectors (used for CBOR indices)
+class LuaBitVecVar {
+public:
+    using Field = Fp256Base;
+    using Backend = CustomCompilerBackend<Field>;
+    using LogicType = Logic<Field, Backend>;
+    
+    std::vector<typename LogicType::BitW> bits;
+    const LogicType* logic;
+    size_t size_;
+    
+    LuaBitVecVar(const std::vector<typename LogicType::BitW>& b, const LogicType* l, size_t size) 
+        : bits(b), logic(l), size_(size) {}
+    
+    // Array-like access (1-indexed for Lua)
+    LuaBitW get(size_t i) const {
+        if (i < 1 || i > size_) {
+            throw std::out_of_range("Index out of range");
+        }
+        return LuaBitW(bits[i - 1], logic);
+    }
+    
+    void set(size_t i, const LuaBitW& bit) {
+        if (i < 1 || i > size_) {
+            throw std::out_of_range("Index out of range");
+        }
+        bits[i - 1] = bit.wire;
+    }
+    
+    size_t size() const { return size_; }
+};
+
+// Wrapper for Routing class
+class LuaRouting {
+public:
+    using Field = Fp256Base;
+    using Backend = CustomCompilerBackend<Field>;
+    using LogicType = Logic<Field, Backend>;
+    using RoutingType = Routing<LogicType>;
+    
+    std::unique_ptr<RoutingType> routing;
+    const LogicType* logic;
+    
+    LuaRouting(const LogicType* l) : logic(l), routing(std::make_unique<RoutingType>(*l)) {}
+    
+    // Shift operation: B[i] = A[i + amount] for 0 <= i < k
+    template <class T>
+    void shift(size_t logn, const LuaBitVecVar& amount, size_t k, sol::table B_table, 
+               size_t n, sol::table A_table, const T& defaultA, size_t unroll) {
+        
+        // Convert Lua tables to C++ arrays
+        std::vector<typename LogicType::BitW> amount_bits;
+        for (size_t i = 1; i <= amount.size(); i++) {
+            amount_bits.push_back(amount.get(i).wire);
+        }
+        
+        std::vector<T> A_array;
+        for (size_t i = 1; i <= n; i++) {
+            A_array.push_back(A_table[i]);
+        }
+        
+        std::vector<T> B_array(k);
+        
+        // Call the routing shift
+        routing->shift(logn, amount_bits.data(), k, B_array.data(), n, A_array.data(), defaultA, unroll);
+        
+        // Copy results back to Lua table
+        for (size_t i = 1; i <= k; i++) {
+            B_table[i] = B_array[i - 1];
+        }
+    }
+    
+    // Unshift operation: A[i + amount] = B[i] for 0 <= i < k
+    template <class T>
+    void unshift(size_t logn, const LuaBitVecVar& amount, size_t n, sol::table A_table, 
+                 size_t k, sol::table B_table, const T& defaultB, size_t unroll) {
+        
+        std::vector<typename LogicType::BitW> amount_bits;
+        for (size_t i = 1; i <= amount.size(); i++) {
+            amount_bits.push_back(amount.get(i).wire);
+        }
+        
+        std::vector<T> A_array;
+        for (size_t i = 1; i <= n; i++) {
+            A_array.push_back(A_table[i]);
+        }
+        
+        std::vector<T> B_array;
+        for (size_t i = 1; i <= k; i++) {
+            B_array.push_back(B_table[i]);
+        }
+        
+        routing->unshift(logn, amount_bits.data(), n, A_array.data(), k, B_array.data(), defaultB, unroll);
+        
+        for (size_t i = 1; i <= n; i++) {
+            A_table[i] = A_array[i - 1];
+        }
+    }
+    
+    // Convenience methods for common bit vector types
+    void shift8(size_t logn, const LuaBitVecVar& amount, size_t k, sol::table B_table, 
+                size_t n, sol::table A_table, const LuaBitVec<8>& defaultA, size_t unroll) {
+        shift(logn, amount, k, B_table, n, A_table, defaultA.vec, unroll);
+    }
+    
+    void unshift8(size_t logn, const LuaBitVecVar& amount, size_t n, sol::table A_table, 
+                  size_t k, sol::table B_table, const LuaBitVec<8>& defaultB, size_t unroll) {
+        unshift(logn, amount, n, A_table, k, B_table, defaultB.vec, unroll);
+    }
+};
+
+// Wrapper for BitPlucker class
+class LuaBitPlucker {
+public:
+    using Field = Fp256Base;
+    using Backend = CustomCompilerBackend<Field>;
+    using LogicType = Logic<Field, Backend>;
+    
+    std::unique_ptr<BitPlucker<LogicType, kSHAPluckerBits>> plucker;
+    const LogicType* logic;
+    
+    LuaBitPlucker(const LogicType* l) : logic(l), 
+        plucker(std::make_unique<BitPlucker<LogicType, kSHAPluckerBits>>(*l)) {}
+    
+    // Extract bits from a field element
+    LuaBitVecVar pluck(const LuaEltW& e) {
+        auto result = plucker->pluck(e.wire);
+        std::vector<typename LogicType::BitW> bits;
+        for (size_t i = 0; i < kSHAPluckerBits; i++) {
+            bits.push_back(result[i]);
+        }
+        return LuaBitVecVar(bits, logic, kSHAPluckerBits);
+    }
+    
+    // Unpack packed 32-bit value
+    LuaBitVec<32> unpack_v32(sol::table packed_table) {
+        typename BitPlucker<LogicType, kSHAPluckerBits>::packed_v32 packed;
+        for (size_t i = 0; i < packed.size(); i++) {
+            packed[i] = packed_table[i + 1];
+        }
+        auto result = plucker->unpack_v32(packed);
+        return LuaBitVec<32>(result, logic);
+    }
+    
+    // Create packed input
+    sol::table packed_input_v32() {
+        auto packed = BitPlucker<LogicType, kSHAPluckerBits>::packed_input<
+            typename BitPlucker<LogicType, kSHAPluckerBits>::packed_v32>(*logic);
+        // Note: We need to get the Lua state from somewhere - this is a placeholder
+        // In a real implementation, we'd need to pass the Lua state through
+        sol::table result;
+        for (size_t i = 0; i < packed.size(); i++) {
+            result[i + 1] = packed[i];
+        }
+        return result;
+    }
+};
+
+// Wrapper for Memcmp class
+class LuaMemcmp {
+public:
+    using Field = Fp256Base;
+    using Backend = CustomCompilerBackend<Field>;
+    using LogicType = Logic<Field, Backend>;
+    
+    std::unique_ptr<Memcmp<LogicType>> memcmp;
+    const LogicType* logic;
+    
+    LuaMemcmp(const LogicType* l) : logic(l), 
+        memcmp(std::make_unique<Memcmp<LogicType>>(*l)) {}
+    
+    // A < B for byte arrays
+    LuaBitW lt(size_t n, sol::table A_table, sol::table B_table) {
+        std::vector<typename LogicType::v8> A_array, B_array;
+        for (size_t i = 1; i <= n; i++) {
+            LuaBitVec<8> a_elem = A_table[i];
+            LuaBitVec<8> b_elem = B_table[i];
+            A_array.push_back(a_elem.vec);
+            B_array.push_back(b_elem.vec);
+        }
+        auto result = memcmp->lt(n, A_array.data(), B_array.data());
+        return LuaBitW(result, logic);
+    }
+    
+    // A <= B for byte arrays
+    LuaBitW leq(size_t n, sol::table A_table, sol::table B_table) {
+        std::vector<typename LogicType::v8> A_array, B_array;
+        for (size_t i = 1; i <= n; i++) {
+            LuaBitVec<8> a_elem = A_table[i];
+            LuaBitVec<8> b_elem = B_table[i];
+            A_array.push_back(a_elem.vec);
+            B_array.push_back(b_elem.vec);
+        }
+        auto result = memcmp->leq(n, A_array.data(), B_array.data());
+        return LuaBitW(result, logic);
+    }
 };
 
 // Main Logic wrapper
@@ -789,6 +999,60 @@ public:
         return LuaBitW(result, logic.get());
     }
 
+    // Router primitives
+    LuaBitVecVar vinput_var(size_t bits) {
+        std::vector<typename LogicType::BitW> result;
+        for (size_t i = 0; i < bits; i++) {
+            result.push_back(logic->input());
+        }
+        return LuaBitVecVar(result, logic.get(), bits);
+    }
+    
+    LuaBitVecVar vbit_var(size_t bits, uint64_t value) {
+        std::vector<typename LogicType::BitW> result;
+        for (size_t i = 0; i < bits; i++) {
+            result.push_back(logic->bit((value >> i) & 1));
+        }
+        return LuaBitVecVar(result, logic.get(), bits);
+    }
+    
+    LuaRouting create_routing() {
+        return LuaRouting(logic.get());
+    }
+    
+    LuaBitPlucker create_bit_plucker() {
+        return LuaBitPlucker(logic.get());
+    }
+    
+    LuaMemcmp create_memcmp() {
+        return LuaMemcmp(logic.get());
+    }
+    
+    // Variable-bit vector operations
+    LuaBitW vlt_var(const LuaBitVecVar& a, const LuaBitVecVar& b) {
+        if (a.size() != b.size()) {
+            throw std::invalid_argument("Bit vectors must have same size");
+        }
+        auto result = logic->lt(a.size(), a.bits.data(), b.bits.data());
+        return LuaBitW(result, logic.get());
+    }
+    
+    LuaBitW vleq_var(const LuaBitVecVar& a, const LuaBitVecVar& b) {
+        if (a.size() != b.size()) {
+            throw std::invalid_argument("Bit vectors must have same size");
+        }
+        auto result = logic->leq(a.size(), a.bits.data(), b.bits.data());
+        return LuaBitW(result, logic.get());
+    }
+    
+    LuaBitW veq_var(const LuaBitVecVar& a, const LuaBitVecVar& b) {
+        if (a.size() != b.size()) {
+            throw std::invalid_argument("Bit vectors must have same size");
+        }
+        auto result = logic->eq(a.size(), a.bits.data(), b.bits.data());
+        return LuaBitW(result, logic.get());
+    }
+    
     // Array operations
     LuaBitW eq0(size_t w, sol::table bitw_array) {
         std::vector<typename LogicType::BitW> bits;
