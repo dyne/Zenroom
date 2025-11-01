@@ -28,8 +28,10 @@ local BOLD = "\27[1m"
 -- Test results tracking
 local results = {
     field_arithmetic = {tested = 0, passed = 0, missing = 0},
+    gf128_field_arithmetic = {tested = 0, passed = 0, missing = 0},
     eltw_ops = {tested = 0, passed = 0, missing = 0},
     bitw_ops = {tested = 0, passed = 0, missing = 0},
+    gf128_logic_ops = {tested = 0, passed = 0, missing = 0},
     bitvec8_ops = {tested = 0, passed = 0, missing = 0},
     bitvec32_ops = {tested = 0, passed = 0, missing = 0},
     bitvec_other = {tested = 0, passed = 0, missing = 0},
@@ -107,6 +109,20 @@ test_method("field_arithmetic", "Elt invertf(Elt)", Fp, "invertf", "Field invers
 print()
 
 -- ============================================================================
+-- Test GF128 Field Arithmetic
+-- ============================================================================
+print(BOLD .. BLUE .. "Testing GF128 Field Arithmetic..." .. RESET)
+
+local Gf128 = create_gf2128_field()
+
+test_method("gf128_field_arithmetic", "Elt zero()", Gf128, "zero", "Zero element")
+test_method("gf128_field_arithmetic", "Elt one()", Gf128, "one", "One element")
+test_method("gf128_field_arithmetic", "Elt addf(Elt, Elt)", Gf128, "addf", "Field addition")
+test_method("gf128_field_arithmetic", "Elt mulf(Elt, Elt)", Gf128, "mulf", "Field multiplication")
+
+print()
+
+-- ============================================================================
 -- Test Logic Class Setup
 -- ============================================================================
 print(BOLD .. BLUE .. "Testing Logic Class Creation..." .. RESET)
@@ -172,6 +188,34 @@ test_method("bitw_ops", "void output(BitW&, size_t)", logic, "output", "Output b
 test_method("bitw_ops", "BitW rebase(Elt, Elt, BitW&)", logic, "rebase", "Change bit basis")
 test_method("bitw_ops", "EltW lmul(BitW*, EltW&)", logic, "lmul", "Multiply bit * EltW")
 test_method("bitw_ops", "BitW lor_exclusive(BitW*, BitW&)", logic, "lor_exclusive", "Exclusive OR (XOR)")
+
+print()
+
+-- ============================================================================
+-- Test GF128 Logic Operations
+-- ============================================================================
+print(BOLD .. BLUE .. "Testing GF128 Logic Operations..." .. RESET)
+
+local gf128_logic_created = pcall(function()
+    gf128_logic = create_gf2128_logic()
+end)
+
+if gf128_logic_created then
+    test_method("gf128_logic_ops", "Elt zero()", gf128_logic, "zero", "GF128 zero element")
+    test_method("gf128_logic_ops", "Elt one()", gf128_logic, "one", "GF128 one element")
+    test_method("gf128_logic_ops", "EltW eltw_input()", gf128_logic, "eltw_input", "GF128 input wire")
+    test_method("gf128_logic_ops", "EltW add(EltW*, EltW&)", gf128_logic, "add", "GF128 wire addition")
+    test_method("gf128_logic_ops", "EltW mul(EltW*, EltW&)", gf128_logic, "mul", "GF128 wire multiplication")
+    test_method("gf128_logic_ops", "EltW mul(Elt, EltW&)", gf128_logic, "mul_scalar", "GF128 scalar multiplication")
+    test_method("gf128_logic_ops", "EltW konst(Elt)", gf128_logic, "konst", "GF128 constant wire from Elt")
+    test_method("gf128_logic_ops", "EltW konst(uint64_t)", gf128_logic, "konst", "GF128 constant wire from int")
+    test_method("gf128_logic_ops", "void output(EltW&, size_t)", gf128_logic, "output", "GF128 output wire")
+    test_method("gf128_logic_ops", "EltW assert_eq(EltW*, EltW&)", gf128_logic, "assert_eq_elt", "GF128 wire equality assertion")
+    test_method("gf128_logic_ops", "QuadCircuit<Field>& get_circuit()", gf128_logic, "get_circuit", "GF128 circuit access")
+else
+    print(RED .. "✗ Failed to create GF128 Logic object" .. RESET)
+    results.gf128_logic_ops.missing = 11 -- All GF128 logic methods
+end
 
 print()
 
@@ -330,8 +374,10 @@ local function print_category_results(name, category)
 end
 
 print_category_results("Field Arithmetic", "field_arithmetic")
+print_category_results("GF128 Field Arithmetic", "gf128_field_arithmetic")
 print_category_results("EltW Operations", "eltw_ops")
 print_category_results("BitW Operations", "bitw_ops")
+print_category_results("GF128 Logic Operations", "gf128_logic_ops")
 print_category_results("SHA-256 Operations", "sha_ops")
 print_category_results("BitVec<8> Operations", "bitvec8_ops")
 print_category_results("BitVec<32> Operations", "bitvec32_ops")
