@@ -15,14 +15,14 @@ local F = create_fp256_field()
 print("=== Building Circuit: x^2 + 3x + 2 = 20 ===\n")
 
 -- Public input: expected result (20)
-local result_pub = Q:input()
+local result_pub = Q:input_wire()
 print("Created public input (result)")
 
 -- Mark boundary between public and private inputs
 Q:private_input()
 
 -- Private input: x (the secret value)
-local x = Q:input()
+local x = Q:input_wire()
 print("Created private input (x)")
 
 -- Compute x^2

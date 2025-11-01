@@ -319,6 +319,10 @@ void register_zk_bindings(sol::state_view& lua) {
         "vadd8_const", &LuaLogic::vadd8_const,
         "veq8_const", &LuaLogic::veq8_const,
         "vlt8_const", &LuaLogic::vlt8_const,
+        "vor_exclusive8", &LuaLogic::vor_exclusive8,
+        "voutput8", &LuaLogic::voutput8,
+        "vassert0_8", &LuaLogic::vassert0_8,
+        "vassert_eq8", &LuaLogic::vassert_eq8,
         
         // 32-bit vector operations
         "vinput32", &LuaLogic::vinput32,
@@ -358,7 +362,22 @@ void register_zk_bindings(sol::state_view& lua) {
         "vbit256", &LuaLogic::vbit256,
         
         // Access underlying circuit
-        "get_circuit", &LuaLogic::get_circuit
+        "get_circuit", &LuaLogic::get_circuit,
+        
+        // Aggregate operations
+        "add_range", &LuaLogic::add_range,
+        "mul_range", &LuaLogic::mul_range,
+        "land_range", &LuaLogic::land_range,
+        "lor_range", &LuaLogic::lor_range,
+        
+        // Array operations
+        "eq0", &LuaLogic::eq0,
+        "eq_array", &LuaLogic::eq_array,
+        "lt_array", &LuaLogic::lt_array,
+        "leq_array", &LuaLogic::leq_array,
+        "scan_and", &LuaLogic::scan_and,
+        "scan_or", &LuaLogic::scan_or,
+        "scan_xor", &LuaLogic::scan_xor
     );
     
     // GF2_128 Wire Wrappers

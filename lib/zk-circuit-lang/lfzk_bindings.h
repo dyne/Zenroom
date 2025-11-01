@@ -592,6 +592,23 @@ public:
     LuaBitW vlt8_const(const LuaBitVec<8>& a, uint64_t val) {
         return LuaBitW(logic->vlt(a.vec, val), logic.get());
     }
+
+    // Missing 8-bit vector operations
+    LuaBitVec<8> vor_exclusive8(const LuaBitVec<8>& a, const LuaBitVec<8>& b) {
+        return LuaBitVec<8>(logic->vor_exclusive(&a.vec, b.vec), logic.get());
+    }
+
+    void voutput8(const LuaBitVec<8>& x, size_t i0) {
+        logic->voutput(x.vec, i0);
+    }
+
+    void vassert0_8(const LuaBitVec<8>& x) {
+        logic->vassert0(x.vec);
+    }
+
+    void vassert_eq8(const LuaBitVec<8>& x, const LuaBitVec<8>& y) {
+        logic->vassert_eq(&x.vec, y.vec);
+    }
     
     // Bit vectors (32-bit)
     LuaBitVec<32> vinput32() {
@@ -708,6 +725,155 @@ public:
     
     // Access underlying quad circuit
     LuaQuadCircuit& get_circuit() { return *quad_circuit; }
+
+    // Aggregate operations
+    LuaEltW add_range(size_t i0, size_t i1, sol::function f) {
+        // Convert Lua function to C++ std::function
+        std::function<LuaEltW(size_t)> cpp_func = [&](size_t i) -> LuaEltW {
+            return f(i);
+        };
+        
+        // Convert to backend function
+        std::function<typename LogicType::EltW(size_t)> backend_func = 
+            [&](size_t i) -> typename LogicType::EltW {
+                LuaEltW result = cpp_func(i);
+                return result.wire;
+            };
+        
+        auto result = logic->add(i0, i1, backend_func);
+        return LuaEltW(result, logic.get());
+    }
+
+    LuaEltW mul_range(size_t i0, size_t i1, sol::function f) {
+        std::function<LuaEltW(size_t)> cpp_func = [&](size_t i) -> LuaEltW {
+            return f(i);
+        };
+        
+        std::function<typename LogicType::EltW(size_t)> backend_func = 
+            [&](size_t i) -> typename LogicType::EltW {
+                LuaEltW result = cpp_func(i);
+                return result.wire;
+            };
+        
+        auto result = logic->mul(i0, i1, backend_func);
+        return LuaEltW(result, logic.get());
+    }
+
+    LuaBitW land_range(size_t i0, size_t i1, sol::function f) {
+        std::function<LuaBitW(size_t)> cpp_func = [&](size_t i) -> LuaBitW {
+            return f(i);
+        };
+        
+        std::function<typename LogicType::BitW(size_t)> backend_func = 
+            [&](size_t i) -> typename LogicType::BitW {
+                LuaBitW result = cpp_func(i);
+                return result.wire;
+            };
+        
+        auto result = logic->land(i0, i1, backend_func);
+        return LuaBitW(result, logic.get());
+    }
+
+    LuaBitW lor_range(size_t i0, size_t i1, sol::function f) {
+        std::function<LuaBitW(size_t)> cpp_func = [&](size_t i) -> LuaBitW {
+            return f(i);
+        };
+        
+        std::function<typename LogicType::BitW(size_t)> backend_func = 
+            [&](size_t i) -> typename LogicType::BitW {
+                LuaBitW result = cpp_func(i);
+                return result.wire;
+            };
+        
+        auto result = logic->lor(i0, i1, backend_func);
+        return LuaBitW(result, logic.get());
+    }
+
+    // Array operations
+    LuaBitW eq0(size_t w, sol::table bitw_array) {
+        std::vector<typename LogicType::BitW> bits;
+        for (size_t i = 1; i <= w; i++) {
+            LuaBitW bit = bitw_array[i];
+            bits.push_back(bit.wire);
+        }
+        auto result = logic->eq0(w, bits.data());
+        return LuaBitW(result, logic.get());
+    }
+
+    LuaBitW eq_array(size_t w, sol::table a_array, sol::table b_array) {
+        std::vector<typename LogicType::BitW> a_bits, b_bits;
+        for (size_t i = 1; i <= w; i++) {
+            LuaBitW a_bit = a_array[i];
+            LuaBitW b_bit = b_array[i];
+            a_bits.push_back(a_bit.wire);
+            b_bits.push_back(b_bit.wire);
+        }
+        auto result = logic->eq(w, a_bits.data(), b_bits.data());
+        return LuaBitW(result, logic.get());
+    }
+
+    LuaBitW lt_array(size_t w, sol::table a_array, sol::table b_array) {
+        std::vector<typename LogicType::BitW> a_bits, b_bits;
+        for (size_t i = 1; i <= w; i++) {
+            LuaBitW a_bit = a_array[i];
+            LuaBitW b_bit = b_array[i];
+            a_bits.push_back(a_bit.wire);
+            b_bits.push_back(b_bit.wire);
+        }
+        auto result = logic->lt(w, a_bits.data(), b_bits.data());
+        return LuaBitW(result, logic.get());
+    }
+
+    LuaBitW leq_array(size_t w, sol::table a_array, sol::table b_array) {
+        std::vector<typename LogicType::BitW> a_bits, b_bits;
+        for (size_t i = 1; i <= w; i++) {
+            LuaBitW a_bit = a_array[i];
+            LuaBitW b_bit = b_array[i];
+            a_bits.push_back(a_bit.wire);
+            b_bits.push_back(b_bit.wire);
+        }
+        auto result = logic->leq(w, a_bits.data(), b_bits.data());
+        return LuaBitW(result, logic.get());
+    }
+
+    void scan_and(sol::table bitw_array, size_t i0, size_t i1, bool backward) {
+        std::vector<typename LogicType::BitW> bits;
+        for (size_t i = 1; i <= bitw_array.size(); i++) {
+            LuaBitW bit = bitw_array[i];
+            bits.push_back(bit.wire);
+        }
+        logic->scan_and(bits.data(), i0, i1, backward);
+        // Update the array with modified values
+        for (size_t i = 1; i <= bits.size(); i++) {
+            bitw_array[i] = LuaBitW(bits[i-1], logic.get());
+        }
+    }
+
+    void scan_or(sol::table bitw_array, size_t i0, size_t i1, bool backward) {
+        std::vector<typename LogicType::BitW> bits;
+        for (size_t i = 1; i <= bitw_array.size(); i++) {
+            LuaBitW bit = bitw_array[i];
+            bits.push_back(bit.wire);
+        }
+        logic->scan_or(bits.data(), i0, i1, backward);
+        // Update the array with modified values
+        for (size_t i = 1; i <= bits.size(); i++) {
+            bitw_array[i] = LuaBitW(bits[i-1], logic.get());
+        }
+    }
+
+    void scan_xor(sol::table bitw_array, size_t i0, size_t i1, bool backward) {
+        std::vector<typename LogicType::BitW> bits;
+        for (size_t i = 1; i <= bitw_array.size(); i++) {
+            LuaBitW bit = bitw_array[i];
+            bits.push_back(bit.wire);
+        }
+        logic->scan_xor(bits.data(), i0, i1, backward);
+        // Update the array with modified values
+        for (size_t i = 1; i <= bits.size(); i++) {
+            bitw_array[i] = LuaBitW(bits[i-1], logic.get());
+        }
+    }
 };
 
 // ============================================================================
