@@ -152,6 +152,7 @@ class Dense {
 template <class Field>
 class DenseFiller {
   using Elt = typename Field::Elt;
+  using CElt = typename Field::CElt;
 
  public:
   // Caller must ensure that W remains valid.
@@ -165,6 +166,8 @@ class DenseFiller {
     w_.v_[pos_++] = x;
     return *this;
   }
+
+  DenseFiller& push_back(const CElt& x) { return push_back(x.e); }
 
   template <size_t N>
   DenseFiller& push_back(const std::array<Elt, N>& a) {

@@ -17,7 +17,6 @@
 
 #include <cstddef>
 
-#include "circuits/compiler/compiler.h"
 #include "circuits/ecdsa/verify_circuit.h"
 #include "circuits/logic/bit_plucker.h"
 #include "circuits/mac/mac_circuit.h"
@@ -62,15 +61,15 @@ class MdocSignature {
     EcdsaWitness dpk_sig_;
     MACWitness macs_[3];
 
-    void input(QuadCircuit<Field>& Q, const LogicCircuit& lc) {
-      e_ = Q.input();
-      dpkx_ = Q.input();
-      dpky_ = Q.input();
+    void input(const LogicCircuit& lc) {
+      e_ = lc.eltw_input();
+      dpkx_ = lc.eltw_input();
+      dpky_ = lc.eltw_input();
 
-      mdoc_sig_.input(Q);
-      dpk_sig_.input(Q);
+      mdoc_sig_.input(lc);
+      dpk_sig_.input(lc);
       for (size_t i = 0; i < 3; ++i) {
-        macs_[i].input(lc, Q);
+        macs_[i].input(lc);
       }
     }
   };

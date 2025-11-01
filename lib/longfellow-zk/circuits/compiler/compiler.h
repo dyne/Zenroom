@@ -94,7 +94,7 @@ class QuadCircuit {
     proofs::check(ki1 == 1, "ki1 == 1");
 
     // make sure node 0 exists, carrying input[0] = F.one()
-    input();
+    input_wire();
   }
 
   // Produce a linear term 1 * op0 that the compiler will not
@@ -216,7 +216,11 @@ class QuadCircuit {
     return add(y, konst(a));
   }
 
-  size_t input() { return push_node(node(quad_corner_t(ninput_++))); }
+  // Create an input wire.
+  //
+  // Most code should never call this function directly.  Call
+  // Logic::eltw_input() instead.
+  size_t input_wire() { return push_node(node(quad_corner_t(ninput_++))); }
 
   // This function demarcates the end of the public inputs and beginning of
   // private inputs. It can only be called once.
@@ -238,7 +242,7 @@ class QuadCircuit {
 
   size_t ninput() const { return ninput_; }
 
-  void output(size_t n, size_t wire_id) {
+  void output_wire(size_t n, size_t wire_id) {
     output_internal(n, quad_corner_t(wire_id));
   }
 

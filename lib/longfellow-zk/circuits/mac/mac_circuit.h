@@ -32,7 +32,6 @@
 #include <algorithm>
 #include <cstddef>
 
-#include "circuits/compiler/compiler.h"
 #include "circuits/logic/logic.h"
 #include "gf2k/gf2_128.h"
 
@@ -74,19 +73,10 @@ class MAC {
     packed_v128 aa_[2];
     packed_v256 xx_;  // The value to be checked
 
-    template <typename T>
-    static T packed_input(QuadCircuit<typename Logic::Field>& Q) {
-      T r;
-      for (size_t i = 0; i < r.size(); ++i) {
-        r[i] = Q.input();
-      }
-      return r;
-    }
-
-    void input(const Logic& LC, QuadCircuit<typename Logic::Field>& Q) {
-      aa_[0] = packed_input<packed_v128>(Q);
-      aa_[1] = packed_input<packed_v128>(Q);
-      xx_ = packed_input<packed_v256>(Q);
+    void input(const Logic& lc) {
+      aa_[0] = BitPlucker::template packed_input<packed_v128>(lc);
+      aa_[1] = BitPlucker::template packed_input<packed_v128>(lc);
+      xx_ = BitPlucker::template packed_input<packed_v256>(lc);
     }
   };
 
@@ -98,7 +88,7 @@ class MAC {
   // that takes the message in bit-wise form. Additionally, the order parameter
   // is used to ensure that the message does not overflow the field.
   void verify_mac(EltW msg, const v128 mac[/*2*/], const v128& av,
-                     const Witness& vw, Nat order) const {
+                  const Witness& vw, Nat order) const {
     check(Field::kBits >= 256, "Field::kBits < 256");
     v128 msg2[2];
     unpack_msg(msg2, msg, order, vw);
@@ -159,16 +149,14 @@ class MACGF2 {
   using v8 = typename Logic<GF2_128<>, Backend>::v8;
   using v256 = typename Logic<GF2_128<>, Backend>::v256;
 
-  explicit MACGF2(const Logic<GF2_128<>, Backend>& lc)
-      : lc_(lc) {}
+  explicit MACGF2(const Logic<GF2_128<>, Backend>& lc) : lc_(lc) {}
   class Witness {
    public:
     EltW aa_[2];
 
-    void input(const Logic<GF2_128<>, Backend>& lc,
-               QuadCircuit<GF2_128<>>& Q) {
-      aa_[0] = Q.input();
-      aa_[1] = Q.input();
+    void input(const Logic<GF2_128<>, Backend>& lc) {
+      aa_[0] = lc.eltw_input();
+      aa_[1] = lc.eltw_input();
     }
   };
 

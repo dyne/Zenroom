@@ -160,7 +160,7 @@ CircuitGenerationErrorCode generate_circuit(const ZkSpecStruct* zk_spec_version,
 int circuit_id(uint8_t id[/*kSHA256DigestSize*/], const uint8_t* bcp,
                size_t bcsz, const ZkSpecStruct* zk_spec);
 
-enum { kNumZkSpecs = 12 };
+enum { kNumZkSpecs = 16 };
 // This is a hardcoded list of all the ZK specifications supported by this
 // library. Every time a new breaking change is introduced in either the circuit
 // format or its interpretation, a new version must be added here.
