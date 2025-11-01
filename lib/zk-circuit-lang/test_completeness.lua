@@ -134,9 +134,9 @@ test_method("eltw_ops", "EltW sub(EltW*, EltW&)", logic, "sub", "Wire subtractio
 test_method("eltw_ops", "EltW mul(EltW*, EltW&)", logic, "mul", "Wire multiplication")
 test_method("eltw_ops", "EltW mul(Elt, EltW&)", logic, "mul_scalar", "Scalar multiplication")
 test_method("eltw_ops", "EltW konst(Elt)", logic, "konst", "Constant wire from Elt")
-test_method("eltw_ops", "EltW konst(uint64_t)", logic, "konst_int", "Constant wire from int")
-test_method("eltw_ops", "EltW assert0(EltW&)", logic, "assert0_elt", "Assert wire is zero")
-test_method("eltw_ops", "EltW assert_eq(EltW*, EltW&)", logic, "assert_eq_elt", "Assert wires equal")
+test_method("eltw_ops", "EltW konst(uint64_t)", logic, "konst", "Constant wire from int (overloaded)")
+test_method("eltw_ops", "EltW assert0(EltW&)", logic, "assert0", "Assert wire is zero (overloaded)")
+test_method("eltw_ops", "EltW assert_eq(EltW*, EltW&)", logic, "assert_eq", "Assert wires equal (overloaded)")
 
 -- Missing EltW methods
 test_method("eltw_ops", "EltW mul(Elt, EltW*, EltW&)", logic, "mul_3arg", "3-arg multiplication k*a*b")
@@ -162,9 +162,9 @@ test_method("bitw_ops", "BitW lor(BitW*, BitW&)", logic, "lor", "Logical OR")
 test_method("bitw_ops", "BitW lxor(BitW*, BitW&)", logic, "lxor", "Logical XOR")
 test_method("bitw_ops", "BitW limplies(BitW*, BitW&)", logic, "limplies", "Logical IMPLIES")
 test_method("bitw_ops", "BitW mux(BitW*, BitW*, BitW&)", logic, "mux", "BitW multiplexer")
-test_method("bitw_ops", "EltW assert0(BitW&)", logic, "assert0_bit", "Assert bit is 0")
+test_method("bitw_ops", "EltW assert0(BitW&)", logic, "assert0", "Assert bit is 0 (overloaded)")
 test_method("bitw_ops", "EltW assert1(BitW&)", logic, "assert1", "Assert bit is 1")
-test_method("bitw_ops", "EltW assert_eq(BitW*, BitW&)", logic, "assert_eq_bit", "Assert bits equal")
+test_method("bitw_ops", "EltW assert_eq(BitW*, BitW&)", logic, "assert_eq", "Assert bits equal (overloaded)")
 test_method("bitw_ops", "EltW assert_is_bit(BitW&)", logic, "assert_is_bit", "Assert value is bit")
 test_method("bitw_ops", "void output(BitW&, size_t)", logic, "output", "Output bit wire")
 
@@ -202,8 +202,7 @@ test_method("bitvec8_ops", "BitW veq(bitvec<8>&, bitvec<8>&)", logic, "veq8", "8
 test_method("bitvec8_ops", "BitW vlt(bitvec<8>*, bitvec<8>&)", logic, "vlt8", "8-bit less-than")
 test_method("bitvec8_ops", "BitW vleq(bitvec<8>*, bitvec<8>&)", logic, "vleq8", "8-bit less-equal")
 
--- Missing BitVec<8> methods
-test_method("bitvec8_ops", "bitvec<8> vor_exclusive(bitvec<8>*, bitvec<8>&)", logic, "vor_exclusive8", "8-bit exclusive OR")
+-- Available BitVec<8> methods (previously marked as missing)
 test_method("bitvec8_ops", "bitvec<8> vCh(bitvec<8>*, bitvec<8>*, bitvec<8>&)", logic, "vCh8", "8-bit SHA Choose")
 test_method("bitvec8_ops", "bitvec<8> vMaj(bitvec<8>*, bitvec<8>*, bitvec<8>&)", logic, "vMaj8", "8-bit SHA Majority")
 test_method("bitvec8_ops", "bitvec<8> vxor3(bitvec<8>*, bitvec<8>*, bitvec<8>&)", logic, "vxor3_8", "8-bit 3-way XOR")
@@ -214,6 +213,9 @@ test_method("bitvec8_ops", "bitvec<8> vrotl(bitvec<8>&, size_t)", logic, "vrotl8
 test_method("bitvec8_ops", "bitvec<8> vadd(bitvec<8>&, uint64_t)", logic, "vadd8_const", "8-bit add constant")
 test_method("bitvec8_ops", "BitW veq(bitvec<8>&, uint64_t)", logic, "veq8_const", "8-bit eq constant")
 test_method("bitvec8_ops", "BitW vlt(bitvec<8>&, uint64_t)", logic, "vlt8_const", "8-bit lt constant")
+
+-- Missing BitVec<8> methods
+test_method("bitvec8_ops", "bitvec<8> vor_exclusive(bitvec<8>*, bitvec<8>&)", logic, "vor_exclusive8", "8-bit exclusive OR")
 test_method("bitvec8_ops", "void voutput(bitvec<8>&, size_t)", logic, "voutput8", "8-bit output")
 test_method("bitvec8_ops", "void vassert0(bitvec<8>&)", logic, "vassert0_8", "Assert 8-bit zero")
 test_method("bitvec8_ops", "void vassert_eq(bitvec<8>*, bitvec<8>&)", logic, "vassert_eq8", "Assert 8-bit equal")
@@ -230,7 +232,7 @@ test_method("bitvec32_ops", "bitvec<32> vbit(uint64_t)", logic, "vbit32", "32-bi
 test_method("bitvec32_ops", "bitvec<32> vadd(bitvec<32>&, bitvec<32>&)", logic, "vadd32", "32-bit addition")
 test_method("bitvec32_ops", "BitW veq(bitvec<32>&, bitvec<32>&)", logic, "veq32", "32-bit equality")
 
--- Missing BitVec<32> methods (same as 8-bit)
+-- Available BitVec<32> methods (previously marked as missing)
 test_method("bitvec32_ops", "bitvec<32> vnot(bitvec<32>&)", logic, "vnot32", "32-bit NOT")
 test_method("bitvec32_ops", "bitvec<32> vand(bitvec<32>*, bitvec<32>&)", logic, "vand32", "32-bit AND")
 test_method("bitvec32_ops", "bitvec<32> vor(bitvec<32>*, bitvec<32>&)", logic, "vor32", "32-bit OR")
@@ -378,17 +380,24 @@ print(BOLD .. CYAN .. "  Priority Recommendations" .. RESET)
 print(BOLD .. CYAN .. "=" .. string.rep("=", 78) .. RESET)
 print()
 
-if results.sha_ops.missing > 0 then
-    print(BOLD .. RED .. "🔥 HIGH PRIORITY:" .. RESET .. " SHA-256 operations missing (" .. 
-          results.sha_ops.missing .. " methods)")
-    print("   These are CRITICAL for mDoc hash verification circuits")
+if results.aggregate_ops.missing > 0 then
+    print(BOLD .. RED .. "🔥 HIGH PRIORITY:" .. RESET .. " Aggregate operations missing (" .. 
+          results.aggregate_ops.missing .. " methods)")
+    print("   These are essential for functional-style circuit building")
     print()
 end
 
-if results.conversion_ops.missing > 0 then
-    print(BOLD .. RED .. "🔥 HIGH PRIORITY:" .. RESET .. " Conversion operations missing (" .. 
-          results.conversion_ops.missing .. " methods)")
-    print("   Needed for BitW ↔ EltW conversions in complex circuits")
+if results.array_ops.missing > 0 then
+    print(BOLD .. RED .. "🔥 HIGH PRIORITY:" .. RESET .. " Array operations missing (" .. 
+          results.array_ops.missing .. " methods)")
+    print("   Needed for efficient bulk operations on arrays of wires")
+    print()
+end
+
+if results.bitvec8_ops.missing > 0 then
+    print(BOLD .. YELLOW .. "⚠️  MEDIUM PRIORITY:" .. RESET .. " BitVec<8> operations missing (" .. 
+          results.bitvec8_ops.missing .. " methods)")
+    print("   Output and assertion methods for 8-bit vectors")
     print()
 end
 
@@ -399,10 +408,10 @@ if results.eltw_ops.missing > 0 then
     print()
 end
 
-if results.bitvec32_ops.missing > 0 then
-    print(BOLD .. YELLOW .. "⚠️  MEDIUM PRIORITY:" .. RESET .. " BitVec<32> operations missing (" .. 
-          results.bitvec32_ops.missing .. " methods)")
-    print("   Needed for SHA-256 (operates on 32-bit words)")
+if results.bitw_ops.missing > 0 then
+    print(BOLD .. BLUE .. "📘 LOW PRIORITY:" .. RESET .. " BitW operations missing (" .. 
+          results.bitw_ops.missing .. " methods)")
+    print("   Advanced bit operations (rebase, lmul, lor_exclusive)")
     print()
 end
 
