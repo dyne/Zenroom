@@ -82,8 +82,8 @@ print("  4. verify_mac(dpkx, mac_dpkx, a_v, mac_witness[1])")
 print("  5. verify_mac(dpky, mac_dpky, a_v, mac_witness[2])")
 
 -- Placeholder constraint to make circuit valid
-local check = logic_sig:mul(pkX, pkY)
-local diff = logic_sig:sub(check, hash_tr)
+local check = pkX * pkY
+local diff = check - hash_tr
 logic_sig:assert0(diff)
 
 Q_sig:mkcircuit(1)
@@ -183,8 +183,8 @@ print(string.format("  4. Verify %d attribute hashes", NUM_ATTR))
 print("  5. Verify MACs bind circuits")
 
 -- Placeholder constraint
-local check_hash = logic_hash:mul(e_hash, dpkx_hash)
-local diff_hash = logic_hash:sub(check_hash, dpky_hash)
+local check_hash = e_hash * dpkx_hash
+local diff_hash = check_hash - dpky_hash
 logic_hash:assert0(diff_hash)
 
 Q_hash:mkcircuit(1)

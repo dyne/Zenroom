@@ -28,15 +28,15 @@ local y = L:eltw_input()
 print("Created field element inputs: x, y")
 
 -- Compute 3x
-local three_x = L:mul(three, x)
+local three_x = three * x
 print("Computed: 3x")
 
 -- Compute 5y
-local five_y = L:mul(five, y)
+local five_y = five * y
 print("Computed: 5y")
 
 -- Compute 3x + 5y
-local sum = L:add(three_x, five_y)
+local sum = three_x + five_y
 print("Computed: 3x + 5y")
 
 -- Create constant wire for 100

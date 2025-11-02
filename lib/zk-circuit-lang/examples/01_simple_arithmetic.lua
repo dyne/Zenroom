@@ -26,25 +26,25 @@ local x = Q:input_wire()
 print("Created private input (x)")
 
 -- Compute x^2
-local x_squared = Q:mul(x, x)
+local x_squared = x * x
 print("Computed x^2")
 
 -- Compute 3x
 local three = F:of_scalar(3)
-local three_x = Q:mul(three, x)
+local three_x = three * x
 print("Computed 3x")
 
 -- Compute x^2 + 3x
-local x2_plus_3x = Q:add(x_squared, three_x)
+local x2_plus_3x = x_squared + three_x
 print("Computed x^2 + 3x")
 
 -- Add constant 2
 local two = F:of_scalar(2)
-local polynomial = Q:apy(x2_plus_3x, two)
+local polynomial = x2_plus_3x + two
 print("Added constant 2")
 
 -- Assert result equals public input
-local difference = Q:sub(polynomial, result_pub)
+local difference = polynomial - result_pub
 Q:assert0(difference)
 print("Added constraint: polynomial == result_pub")
 
