@@ -24,6 +24,7 @@ void register_zk_bindings(sol::state_view& lua) {
     // Field Element Types
     // ========================================================================
     
+    // Register LuaFp256Elt with operators - use method names instead of operators
     auto fp256_elt = lua.new_usertype<LuaFp256Elt>("Fp256Elt",
         sol::constructors<>(),
         
@@ -31,19 +32,37 @@ void register_zk_bindings(sol::state_view& lua) {
         sol::meta_function::addition, &LuaFp256Elt::add,
         sol::meta_function::subtraction, &LuaFp256Elt::sub,
         sol::meta_function::multiplication, &LuaFp256Elt::mul,
+        sol::meta_function::division, &LuaFp256Elt::div,
         sol::meta_function::unary_minus, &LuaFp256Elt::neg,
         sol::meta_function::equal_to, &LuaFp256Elt::eq,
+        sol::meta_function::to_string, &LuaFp256Elt::to_string,
         
         // Methods
-        "inv", &LuaFp256Elt::inv
+        "add", &LuaFp256Elt::add,
+        "sub", &LuaFp256Elt::sub,
+        "mul", &LuaFp256Elt::mul,
+        "div", &LuaFp256Elt::div,
+        "neg", &LuaFp256Elt::neg,
+        "inv", &LuaFp256Elt::inv,
+        "eq", &LuaFp256Elt::eq,
+        "to_string", &LuaFp256Elt::to_string
     );
     
+    // Register LuaGF2128Elt with operators
     auto gf2128_elt = lua.new_usertype<LuaGF2128Elt>("GF2128Elt",
         sol::constructors<>(),
         
         sol::meta_function::addition, &LuaGF2128Elt::add,
         sol::meta_function::multiplication, &LuaGF2128Elt::mul,
-        sol::meta_function::equal_to, &LuaGF2128Elt::eq
+        sol::meta_function::bitwise_xor, &LuaGF2128Elt::xor_op,
+        sol::meta_function::equal_to, &LuaGF2128Elt::eq,
+        sol::meta_function::to_string, &LuaGF2128Elt::to_string,
+        
+        "add", &LuaGF2128Elt::add,
+        "mul", &LuaGF2128Elt::mul,
+        "xor", &LuaGF2128Elt::xor_op,
+        "eq", &LuaGF2128Elt::eq,
+        "to_string", &LuaGF2128Elt::to_string
     );
     
     // ========================================================================
@@ -134,16 +153,46 @@ void register_zk_bindings(sol::state_view& lua) {
     // High-Level Boolean Logic
     // ========================================================================
     
-    // BitW (boolean wire)
+    // Register LuaBitW with operators
     auto bitw = lua.new_usertype<LuaBitW>("BitW",
         sol::constructors<>(),
-        "wire_id", &LuaBitW::wire_id
+        
+        sol::meta_function::bitwise_and, &LuaBitW::land,
+        sol::meta_function::bitwise_or, &LuaBitW::lor,
+        sol::meta_function::bitwise_xor, &LuaBitW::lxor,
+        sol::meta_function::bitwise_not, &LuaBitW::lnot,
+        sol::meta_function::equal_to, &LuaBitW::eq,
+        sol::meta_function::to_string, &LuaBitW::to_string,
+        
+        "land", &LuaBitW::land,
+        "lor", &LuaBitW::lor,
+        "lxor", &LuaBitW::lxor,
+        "lnot", &LuaBitW::lnot,
+        "eq", &LuaBitW::eq,
+        "wire_id", &LuaBitW::wire_id,
+        "to_string", &LuaBitW::to_string
     );
     
-    // EltW (field element wire)
+    // Register LuaEltW with operators
     auto eltw = lua.new_usertype<LuaEltW>("EltW",
         sol::constructors<>(),
-        "wire_id", &LuaEltW::wire_id
+        
+        sol::meta_function::addition, &LuaEltW::add,
+        sol::meta_function::subtraction, &LuaEltW::sub,
+        sol::meta_function::multiplication, sol::overload(
+            static_cast<LuaEltW(LuaEltW::*)(const LuaEltW&) const>(&LuaEltW::mul),
+            static_cast<LuaEltW(LuaEltW::*)(const LuaFp256Elt&) const>(&LuaEltW::mul_scalar)
+        ),
+        sol::meta_function::equal_to, &LuaEltW::eq,
+        sol::meta_function::to_string, &LuaEltW::to_string,
+        
+        "add", &LuaEltW::add,
+        "sub", &LuaEltW::sub,
+        "mul", &LuaEltW::mul,
+        "mul_scalar", &LuaEltW::mul_scalar,
+        "eq", &LuaEltW::eq,
+        "wire_id", &LuaEltW::wire_id,
+        "to_string", &LuaEltW::to_string
     );
     
     // BitVec8
@@ -158,7 +207,10 @@ void register_zk_bindings(sol::state_view& lua) {
         // Lua array indexing
         sol::meta_function::index, &LuaBitVec<8>::get,
         sol::meta_function::new_index, &LuaBitVec<8>::set,
-        sol::meta_function::length, &LuaBitVec<8>::size
+        sol::meta_function::length, &LuaBitVec<8>::size,
+        sol::meta_function::to_string, &LuaBitVec<8>::to_string,
+        
+        "to_string", &LuaBitVec<8>::to_string
     );
     
     // BitVec32
@@ -171,7 +223,10 @@ void register_zk_bindings(sol::state_view& lua) {
         
         sol::meta_function::index, &LuaBitVec<32>::get,
         sol::meta_function::new_index, &LuaBitVec<32>::set,
-        sol::meta_function::length, &LuaBitVec<32>::size
+        sol::meta_function::length, &LuaBitVec<32>::size,
+        sol::meta_function::to_string, &LuaBitVec<32>::to_string,
+        
+        "to_string", &LuaBitVec<32>::to_string
     );
     
     // BitVec64
@@ -404,7 +459,10 @@ void register_zk_bindings(sol::state_view& lua) {
         
         sol::meta_function::index, &LuaBitVecVar::get,
         sol::meta_function::new_index, &LuaBitVecVar::set,
-        sol::meta_function::length, &LuaBitVecVar::size
+        sol::meta_function::length, &LuaBitVecVar::size,
+        sol::meta_function::to_string, &LuaBitVecVar::to_string,
+        
+        "to_string", &LuaBitVecVar::to_string
     );
     
     // Routing class
