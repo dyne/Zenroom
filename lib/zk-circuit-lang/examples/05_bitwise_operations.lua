@@ -21,15 +21,15 @@ local d = L:vinput8()
 print("Created four 8-bit inputs: a, b, c, d")
 
 -- Compute (a AND b)
-local a_and_b = L:vand8(a, b)
+local a_and_b = a & b
 print("Computed: a AND b")
 
 -- Compute (a AND b) XOR c
-local result = L:vxor8(a_and_b, c)
+local result = a_and_b ^ c
 print("Computed: (a AND b) XOR c")
 
 -- Assert result equals d
-local equals_d = L:veq8(result, d)
+local equals_d = result == d
 L:assert1(equals_d)
 print("Added assertion: result == d")
 

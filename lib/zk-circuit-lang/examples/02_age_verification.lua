@@ -25,8 +25,9 @@ local min_age = L:vbit8(18)
 print("Created constant: min_age = 18")
 
 -- Check if age >= 18
--- vleq8(a, b) returns true if a <= b
--- So vleq8(18, age) checks if 18 <= age
+-- Using vleq8(min_age, age) which checks if min_age <= age
+-- With operators, we can use: age >= min_age
+-- But since vleq8(a, b) means a <= b, we need to use vleq8(min_age, age)
 local is_adult = L:vleq8(min_age, age)
 print("Created comparison: age >= 18")
 
