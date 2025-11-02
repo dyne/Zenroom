@@ -165,6 +165,7 @@ static char *data = NULL;
 static char *extra = NULL;
 static char *context = NULL;
 static char *introspect = NULL;
+static char *scriptarg = NULL;
 
 // for benchmark, breaks c99 spec
 struct timespec before = {0}, after = {0};
@@ -184,6 +185,7 @@ int cli_alloc_buffers() {
 	extra = malloc(MAX_FILE);
 	context = malloc(MAX_FILE);
 	introspect = malloc(MAX_STRING);
+	scriptarg = malloc(MAX_STRING);
 	return(1);
 }
 
@@ -202,6 +204,7 @@ int cli_free_buffers() {
 	free(extra);
 	free(context);
 	free(introspect);
+	free(scriptarg);
 	return(1);
 }
 
@@ -213,7 +216,7 @@ int main(int argc, char **argv) {
 	int use_seccomp = 0;
 
 	zenroom_t *Z;
-	const char *short_options = ":hsD:ic:k:a:e:x:zvl:";
+	const char *short_options = ":hsD:ic:k:a:x:y:e:zvl:";
 	const char *help          =
 		"Zenroom\n"
 		"Secure language interpreter of the domain-specific Zencode, making it easy to execute fast cryptographic operations on any data structure\n\n"
@@ -226,10 +229,11 @@ int main(int argc, char **argv) {
 		"  -c config       Load configuration from file\n"
 		"  -a data.json    Load data JSON file\n"
 		"  -k keys.json    Load keys JSON file\n"
-		"  -e extra.json   Load extra JSON file\n"
-		"  -x context      Load context from file\n"
+		"  -x extra.json   Load extra JSON file\n"
+		"  -y context      Load context from file\n"
 		"  -D scenario     Print all the statements under the scenario\n"
 		"  -v              Validate input data\n"
+		"  -e              Execute a Lua one-liner at startup\n"
 		"  -s              Activate seccomp execution (Linux only)\n"
 		"  -l lib.lua      Load an external Lua library from file\n"
 		"\n"
@@ -266,6 +270,7 @@ int main(int argc, char **argv) {
 	extra       [0] = '\0';
 	context     [0] = '\0';
 	introspect  [0] = '\0';
+	scriptarg   [0] = '\0';
 	// conf[0] = '\0';
 	script[0] = '\0';
 	int verbosity = 1;
@@ -294,11 +299,14 @@ int main(int argc, char **argv) {
 		case 'a':
 			snprintf(datafile,MAX_STRING-1,"%s",optarg);
 			break;
-		case 'e':
+		case 'x':
 			snprintf(extrafile,MAX_STRING-1,"%s",optarg);
 			break;
-		case 'x':
+		case 'y':
 			snprintf(contextfile,MAX_STRING-1,"%s",optarg);
+			break;
+		case 'e':
+			snprintf(scriptarg,MAX_STRING-1,"%s",optarg);
 			break;
 		case 'c':
 			snprintf(conffile,MAX_STRING-1,"%s",optarg);
@@ -472,6 +480,9 @@ int main(int argc, char **argv) {
 		// load a file as script and execute
 		if(verbosity) fprintf(stderr, "reading code from file: %s\n", scriptfile);
 		load_file(script, fopen(scriptfile, "rb"));
+	} else if(scriptarg[0]!='\0') {
+		if(verbosity) fprintf(stderr, "executing argument: %s\n",scriptarg);
+		snprintf(script,"%s",scriptarg);
 	} else {
 		////////////////////////
 		// get another argument from stdin
