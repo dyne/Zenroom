@@ -87,9 +87,13 @@ local function debug_heap_schema()
             end
         end
     end
+    local ik <const> = IN.keyring
     local k <const> = ACK.keyring
     if ACK.keyring then
         ACK.keyring = deepmap(zero_all_contents,ACK.keyring)
+    end
+    if IN.keyring then
+        IN.keyring = deepmap(zero_all_contents, IN.keyring)
     end
     local _heap <const> = I.inspect({
         a_CODEC_ack = CODEC,
@@ -98,6 +102,7 @@ local function debug_heap_schema()
         d_THEN_out = OUT
     },{ schema = true })
     ACK.keyring = k
+    IN.keyring = ik
     -- print only keys without values
     if CONF.debug.format == 'compact' and LOGFMT == 'JSON' then
         printerr('"J64 HEAP: '..OCTET.from_string(_heap):base64()..'",')
