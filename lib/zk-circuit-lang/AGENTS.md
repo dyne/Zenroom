@@ -372,7 +372,7 @@ All library code in `namespace proofs { ... }`
 
 ### Current Implementation Status
 
-**Overall: 105/120 methods (87% complete)**
+**Overall: 128/128 methods (100% complete)**
 
 **✅ Fully Implemented (100%):**
 - Field arithmetic (Fp256Base, GF2_128)
@@ -381,16 +381,13 @@ All library code in `namespace proofs { ... }`
 - BitW operations (boolean wires)
 - GF128 logic operations (add, mul, konst, eltw_input, output, assert_eq_elt)
 - SHA-256 specific primitives (lCh, lMaj, lxor3)
+- BitVec<8> operations (including output/assertion methods)
 - BitVec<32> operations
 - Conversion operations (BitW ↔ EltW)
 - Linear algebra operations (ax, axpy, apy, axy)
-
-**✅ Mostly Implemented (83%):**
-- BitVec<8> operations (missing output/assertion methods)
-
-**❌ Missing (0%):**
 - Aggregate operations (functional programming constructs)
 - Array operations (bulk operations on arrays)
+- Router primitives (mdoc parsing, CBOR handling)
 
 ### Key Features Available
 
@@ -488,25 +485,27 @@ L:assert1(is_adult)
 ### Known Issues & Limitations
 
 1. **Circuit Property Access**: Circuit metrics (depth, wires) not properly exposed
-2. **Missing Functional Constructs**: Aggregate and array operations not implemented
-3. **Limited Error Handling**: Some C++ exceptions not properly caught in Lua
+2. **Limited Error Handling**: Some C++ exceptions not properly caught in Lua
+3. **Template Specialization**: Some advanced template features may need additional testing
 
 ### Future Development Directions
 
 **Short-term (High Priority)**:
-- Implement missing aggregate operations
-- Add array operations for bulk processing
-- Fix circuit property access
+- Fix circuit property access (depth, wires metrics)
+- Improve error handling and exception propagation
+- Add comprehensive documentation and tutorials
 
 **Medium-term**:
 - Add support for ECDSA verification circuits
 - Implement SHA-256 full circuit
 - Add mDoc-specific circuit building
+- Performance optimization and benchmarking
 
 **Long-term**:
 - Support for alternative proof systems
 - Mobile platform optimization
 - Enhanced debugging and profiling
+- WASM compilation and browser support
 
 Based on upstream work:
 - Support for more credential types (JWT, W3C VC)
@@ -529,5 +528,5 @@ Based on upstream work:
 
 **Last Updated**: November 2025  
 **Maintainer**: Denis Roio (jaromil@dyne.org)  
-**Lua DSL Status**: 87% Complete (105/120 methods)  
+**Lua DSL Status**: 100% Complete (128/128 methods)  
 **License**: GNU Affero General Public License v3.0
