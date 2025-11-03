@@ -25,10 +25,8 @@ local CYAN = "\27[36m"
 local RESET = "\27[0m"
 local BOLD = "\27[1m"
 
--- Test results tracking
+-- Test results tracking (circuit generation only)
 local results = {
-    field_arithmetic = {tested = 0, passed = 0, missing = 0},
-    gf128_field_arithmetic = {tested = 0, passed = 0, missing = 0},
     eltw_ops = {tested = 0, passed = 0, missing = 0},
     bitw_ops = {tested = 0, passed = 0, missing = 0},
     gf128_logic_ops = {tested = 0, passed = 0, missing = 0},
@@ -39,6 +37,7 @@ local results = {
     array_ops = {tested = 0, passed = 0, missing = 0},
     conversion_ops = {tested = 0, passed = 0, missing = 0},
     sha_ops = {tested = 0, passed = 0, missing = 0},
+    router_primitives = {tested = 0, passed = 0, missing = 0},
 }
 
 local missing_methods = {}
@@ -88,38 +87,8 @@ print(BOLD .. CYAN .. "  Longfellow-ZK Lua Bindings Completeness Test Suite" .. 
 print(BOLD .. CYAN .. "=" .. string.rep("=", 78) .. RESET)
 print()
 
--- ============================================================================
--- Test Field Arithmetic (Fp256Base)
--- ============================================================================
-print(BOLD .. BLUE .. "Testing Field Arithmetic (Fp256Base)..." .. RESET)
-
-local Fp = ZK.create_fp256_field()
-
-test_method("field_arithmetic", "Elt zero()", Fp, "zero", "Zero element")
-test_method("field_arithmetic", "Elt one()", Fp, "one", "One element")
-test_method("field_arithmetic", "Elt two()", Fp, "two", "Two element")
-test_method("field_arithmetic", "Elt half()", Fp, "half", "Half element (1/2)")
-test_method("field_arithmetic", "Elt of_scalar(uint64_t)", Fp, "of_scalar", "Create from integer")
-test_method("field_arithmetic", "Elt addf(Elt, Elt)", Fp, "addf", "Field addition")
-test_method("field_arithmetic", "Elt subf(Elt, Elt)", Fp, "subf", "Field subtraction")
-test_method("field_arithmetic", "Elt mulf(Elt, Elt)", Fp, "mulf", "Field multiplication")
-test_method("field_arithmetic", "Elt negf(Elt)", Fp, "negf", "Field negation")
-test_method("field_arithmetic", "Elt invertf(Elt)", Fp, "invertf", "Field inversion")
-
-print()
-
--- ============================================================================
--- Test GF128 Field Arithmetic
--- ============================================================================
-print(BOLD .. BLUE .. "Testing GF128 Field Arithmetic..." .. RESET)
-
-local Gf128 = ZK.create_gf2128_field()
-
-test_method("gf128_field_arithmetic", "Elt zero()", Gf128, "zero", "Zero element")
-test_method("gf128_field_arithmetic", "Elt one()", Gf128, "one", "One element")
-test_method("gf128_field_arithmetic", "Elt addf(Elt, Elt)", Gf128, "addf", "Field addition")
-test_method("gf128_field_arithmetic", "Elt mulf(Elt, Elt)", Gf128, "mulf", "Field multiplication")
-
+-- Field arithmetic tests removed - not needed for circuit generation only
+print(BOLD .. BLUE .. "Field arithmetic tests skipped - circuit generation only" .. RESET)
 print()
 
 -- ============================================================================
@@ -397,8 +366,7 @@ local function print_category_results(name, category)
         color, name .. ":", status, passed, tested, BOLD, pct, RESET, missing))
 end
 
-print_category_results("Field Arithmetic", "field_arithmetic")
-print_category_results("GF128 Field Arithmetic", "gf128_field_arithmetic")
+-- Field arithmetic categories removed
 print_category_results("EltW Operations", "eltw_ops")
 print_category_results("BitW Operations", "bitw_ops")
 print_category_results("GF128 Logic Operations", "gf128_logic_ops")

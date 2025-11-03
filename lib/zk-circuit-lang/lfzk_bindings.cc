@@ -20,86 +20,6 @@ namespace proofs {
 namespace lua {
 
 void register_zk_bindings(sol::state_view& lua) {
-    // ========================================================================
-    // Field Element Types
-    // ========================================================================
-    
-    // Register LuaFp256Elt with operators - use method names instead of operators
-    auto fp256_elt = lua.new_usertype<LuaFp256Elt>("Fp256Elt",
-        sol::constructors<>(),
-        
-        // Arithmetic operators (metamethods for Lua operators)
-        sol::meta_function::addition, &LuaFp256Elt::add,
-        sol::meta_function::subtraction, &LuaFp256Elt::sub,
-        sol::meta_function::multiplication, &LuaFp256Elt::mul,
-        sol::meta_function::division, &LuaFp256Elt::div,
-        sol::meta_function::unary_minus, &LuaFp256Elt::neg,
-        sol::meta_function::equal_to, &LuaFp256Elt::eq,
-        sol::meta_function::to_string, &LuaFp256Elt::to_string,
-        
-        // Methods
-        "add", &LuaFp256Elt::add,
-        "sub", &LuaFp256Elt::sub,
-        "mul", &LuaFp256Elt::mul,
-        "div", &LuaFp256Elt::div,
-        "neg", &LuaFp256Elt::neg,
-        "inv", &LuaFp256Elt::inv,
-        "eq", &LuaFp256Elt::eq,
-        "to_string", &LuaFp256Elt::to_string
-    );
-    
-    // Register LuaGF2128Elt with operators
-    auto gf2128_elt = lua.new_usertype<LuaGF2128Elt>("GF2128Elt",
-        sol::constructors<>(),
-        
-        sol::meta_function::addition, &LuaGF2128Elt::add,
-        sol::meta_function::multiplication, &LuaGF2128Elt::mul,
-        sol::meta_function::bitwise_xor, &LuaGF2128Elt::xor_op,
-        sol::meta_function::equal_to, &LuaGF2128Elt::eq,
-        sol::meta_function::to_string, &LuaGF2128Elt::to_string,
-        
-        "add", &LuaGF2128Elt::add,
-        "mul", &LuaGF2128Elt::mul,
-        "xor", &LuaGF2128Elt::xor_op,
-        "eq", &LuaGF2128Elt::eq,
-        "to_string", &LuaGF2128Elt::to_string
-    );
-    
-    // ========================================================================
-    // Field Instance Types
-    // ========================================================================
-    
-    auto fp256_field = lua.new_usertype<LuaFp256Field>("Fp256Field",
-        sol::constructors<LuaFp256Field()>(),
-        
-        // Constants
-        "zero", &LuaFp256Field::zero,
-        "one", &LuaFp256Field::one,
-        "two", &LuaFp256Field::two,
-        "half", &LuaFp256Field::half,
-        
-        // Scalar conversion
-        "of_scalar", &LuaFp256Field::of_scalar,
-        
-        // Functional arithmetic operations
-        "addf", &LuaFp256Field::addf,
-        "subf", &LuaFp256Field::subf,
-        "mulf", &LuaFp256Field::mulf,
-        "negf", &LuaFp256Field::negf,
-        "invertf", &LuaFp256Field::invertf
-    );
-    
-    auto gf2128_field = lua.new_usertype<LuaGF2128Field>("GF2128Field",
-        sol::constructors<LuaGF2128Field()>(),
-        
-        // Constants
-        "zero", &LuaGF2128Field::zero,
-        "one", &LuaGF2128Field::one,
-        
-        // Functional arithmetic operations
-        "addf", &LuaGF2128Field::addf,
-        "mulf", &LuaGF2128Field::mulf
-    );
     
     // ========================================================================
     // Low-Level Arithmetic Circuit (QuadCircuit)
@@ -533,6 +453,11 @@ void register_zk_bindings(sol::state_view& lua) {
     // Utility Functions (will be added to returned table)
     // ========================================================================
     
+    // P256 elliptic curve instance (for ECDSA circuit constraints)
+    auto p256_curve = lua.new_usertype<P256>("P256",
+        sol::constructors<P256()>()
+    );
+    
     // ========================================================================
     // Version Information (will be added to returned table)
     // ========================================================================
@@ -554,14 +479,6 @@ int luaopen_zkcc(lua_State* L) {
     // Create a table to return (this will be the ZKCC module)
     sol::table zkcc_table = lua.create_table();
     
-    // Add create_* functions to the table
-    zkcc_table.set_function("create_fp256_field", []() -> proofs::lua::LuaFp256Field* {
-        return new proofs::lua::LuaFp256Field();
-    });
-    
-    zkcc_table.set_function("create_gf2128_field", []() -> proofs::lua::LuaGF2128Field* {
-        return new proofs::lua::LuaGF2128Field();
-    });
     
     zkcc_table.set_function("create_quad_circuit", []() -> proofs::lua::LuaQuadCircuit* {
         return new proofs::lua::LuaQuadCircuit();
@@ -574,6 +491,13 @@ int luaopen_zkcc(lua_State* L) {
     zkcc_table.set_function("create_gf2128_logic", []() -> proofs::lua::LuaGF2128Logic* {
         return new proofs::lua::LuaGF2128Logic();
     });
+    
+    
+    // Create P256 instance
+    zkcc_table.set_function("create_p256", []() -> proofs::P256* {
+        return new proofs::P256();
+    });
+    
     
     // Add version information
     zkcc_table["SOL_VERSION"] = SOL_VERSION_STRING;
