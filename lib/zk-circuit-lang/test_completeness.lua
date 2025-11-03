@@ -8,10 +8,10 @@ Date: October 15, 2025
 Purpose: Automated verification of Lua binding completeness
 ]]
 
-ZK = require'longfellow'
+ZK = require'zkcc'
 
 -- Verify module loaded by checking for a known global
-if not create_fp256_field then
+if not ZK.create_fp256_field then
     error("lua_bindings module failed to load - create_fp256_field not found")
 end
 
@@ -93,7 +93,7 @@ print()
 -- ============================================================================
 print(BOLD .. BLUE .. "Testing Field Arithmetic (Fp256Base)..." .. RESET)
 
-local Fp = create_fp256_field()
+local Fp = ZK.create_fp256_field()
 
 test_method("field_arithmetic", "Elt zero()", Fp, "zero", "Zero element")
 test_method("field_arithmetic", "Elt one()", Fp, "one", "One element")
@@ -113,7 +113,7 @@ print()
 -- ============================================================================
 print(BOLD .. BLUE .. "Testing GF128 Field Arithmetic..." .. RESET)
 
-local Gf128 = create_gf2128_field()
+local Gf128 = ZK.create_gf2128_field()
 
 test_method("gf128_field_arithmetic", "Elt zero()", Gf128, "zero", "Zero element")
 test_method("gf128_field_arithmetic", "Elt one()", Gf128, "one", "One element")
@@ -128,7 +128,7 @@ print()
 print(BOLD .. BLUE .. "Testing Logic Class Creation..." .. RESET)
 
 local logic_created = pcall(function()
-    logic = create_logic()
+    logic = ZK.create_logic()
 end)
 
 if not logic_created then
@@ -197,7 +197,7 @@ print()
 print(BOLD .. BLUE .. "Testing GF128 Logic Operations..." .. RESET)
 
 local gf128_logic_created = pcall(function()
-    gf128_logic = create_gf2128_logic()
+    gf128_logic = ZK.create_gf2128_logic()
 end)
 
 if gf128_logic_created then
