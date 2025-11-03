@@ -530,35 +530,12 @@ void register_zk_bindings(sol::state_view& lua) {
     );
     
     // ========================================================================
-    // Utility Functions (global namespace)
+    // Utility Functions (will be added to returned table)
     // ========================================================================
     
-    lua.set_function("create_fp256_field", []() -> LuaFp256Field* {
-        return new LuaFp256Field();
-    });
-    
-    lua.set_function("create_gf2128_field", []() -> LuaGF2128Field* {
-        return new LuaGF2128Field();
-    });
-    
-    lua.set_function("create_quad_circuit", []() -> LuaQuadCircuit* {
-        return new LuaQuadCircuit();
-    });
-    
-    lua.set_function("create_logic", []() -> LuaLogic* {
-        return new LuaLogic();
-    });
-    
-    lua.set_function("create_gf2128_logic", []() -> LuaGF2128Logic* {
-        return new LuaGF2128Logic();
-    });
-    
     // ========================================================================
-    // Version Information
+    // Version Information (will be added to returned table)
     // ========================================================================
-    
-    lua["LONGFELLOW_ZK_VERSION"] = "0.1.0";
-    lua["SOL_VERSION"] = SOL_VERSION_STRING;
 }
 
 }  // namespace lua
@@ -570,10 +547,40 @@ void register_zk_bindings(sol::state_view& lua) {
 
 extern "C" {
 
-int luaopen_zk_bindings(lua_State* L) {
+int luaopen_zkcc(lua_State* L) {
     sol::state_view lua(L);
     proofs::lua::register_zk_bindings(lua);
-    return 0;  // No return values
+    
+    // Create a table to return (this will be the ZKCC module)
+    sol::table zkcc_table = lua.create_table();
+    
+    // Add create_* functions to the table
+    zkcc_table.set_function("create_fp256_field", []() -> proofs::lua::LuaFp256Field* {
+        return new proofs::lua::LuaFp256Field();
+    });
+    
+    zkcc_table.set_function("create_gf2128_field", []() -> proofs::lua::LuaGF2128Field* {
+        return new proofs::lua::LuaGF2128Field();
+    });
+    
+    zkcc_table.set_function("create_quad_circuit", []() -> proofs::lua::LuaQuadCircuit* {
+        return new proofs::lua::LuaQuadCircuit();
+    });
+    
+    zkcc_table.set_function("create_logic", []() -> proofs::lua::LuaLogic* {
+        return new proofs::lua::LuaLogic();
+    });
+    
+    zkcc_table.set_function("create_gf2128_logic", []() -> proofs::lua::LuaGF2128Logic* {
+        return new proofs::lua::LuaGF2128Logic();
+    });
+    
+    // Add version information
+    zkcc_table["SOL_VERSION"] = SOL_VERSION_STRING;
+    zkcc_table["LONGFELLOW_ZK_VERSION"] = "0.1.0";
+    
+    // Return the table
+    return sol::stack::push(L, zkcc_table);
 }
 
 }
