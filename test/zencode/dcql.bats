@@ -881,3 +881,77 @@ EOF
     expected='{"credentials":[{"matching_credential_sets":[{"example_ldp_vc":[{"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3id.org/security/data-integrity/v2"],"credentialSubject":{"address":{"country":"DE","locality":"Musterstadt","postal_code":"123456","street_address":"Sandanger 25"},"birthdate":"1998-01-11","family_name":"Mustermann","given_name":"Max"},"id":"https://example.com/credentials/1872","issuer":"https://example.com/credential_issuer","proof":{"created":"2025-03-19T15:30:15Z","cryptosuite":"eddsa-rdfc-2022","proofPurpose":"assertionMethod","proofValue":"not a real signature proof","type":"DataIntegrityProof","verificationMethod":"did:example:issuer#keys-1"},"type":["VerifiableCredential","IDCredential"],"validUntil":"IGNORED"}],"example_sd_jwt":["eyJhbGciOiAiRVMyNTYiLCAidHlwIjogImRjK3NkLWp3dCJ9.eyJfc2QiOiBbInlvTFZfYmt0dWZtMHBFaGFiSi1Rd1VxYUM5RmNMYkxIMDYwUkNQWjViTzAiXSwgIl9zZF9hbGciOiAic2hhLTI1NiIsICJjbmYiOiB7Imp3ayI6IHsiY3J2IjogIlAtMjU2IiwgImt0eSI6ICJFQyIsICJ4IjogInpKLTR1d0VWVlYxQW9GcW1yZVlzUlh1SjhGbzVHRVVUeTZ0aklBdjdUcFkiLCAieSI6ICJWb1h2YTNUSkdzSjluOVlXNXcwamUwenpTaGZic3dBZ3pIcjVMRkJIM2xnIn19LCAiZXhwIjogMTc5MjE2NzU5OCwgImlhdCI6IDE3NjA2MzE1OTgsICJpc3MiOiAiaHR0cHM6Ly9pc3N1ZXIxLnplbnN3YXJtLmZvcmtib21iLmV1L2NyZWRlbnRpYWxfaXNzdWVyIiwgIm5iZiI6IDE3NjA2MzE1OTgsICJzdWIiOiAiZGlkOmR5bmU6c2FuZGJveC5zaWducm9vbTo0S0V5bVdnTERVZjFMTmNrZXhZOTZkZkt6NXZINzlkaURla2dMTVI5RldwSCIsICJ0eXBlIjogImRpc2NvdW50X2Zyb21fdm91Y2hlciJ9.oREhEn5mspszmYxJOYAyWV8WoAsC4A6ymf-TWEBhXAokFGYmgd0doIJZvbVdYKyRkuvte6dNJnbymhN5xUhdlQ~WyJFSmw3N2lEa1Mzc2tIQURPaTFSN1VBIiwgImhhc19kaXNjb3VudF9mcm9tX3ZvdWNoZXIiLCAxMF0~","eyJhbGciOiAiRVMyNTYiLCAidHlwIjogImRjK3NkLWp3dCJ9.eyJfc2QiOiBbInlvTFZfYmt0dWZtMHBFaGFiSi1Rd1VxYUM5RmNMYkxIMDYwUkNQWjViTzAiXSwgIl9zZF9hbGciOiAic2hhLTI1NiIsICJjbmYiOiB7Imp3ayI6IHsiY3J2IjogIlAtMjU2IiwgImt0eSI6ICJFQyIsICJ4IjogInpKLTR1d0VWVlYxQW9GcW1yZVlzUlh1SjhGbzVHRVVUeTZ0aklBdjdUcFkiLCAieSI6ICJWb1h2YTNUSkdzSjluOVlXNXcwamUwenpTaGZic3dBZ3pIcjVMRkJIM2xnIn19LCAiZXhwIjogMTc5MjE2NzU5OCwgImlhdCI6IDE3NjA2MzE1OTgsICJpc3MiOiAiaHR0cHM6Ly9pc3N1ZXIxLnplbnN3YXJtLmZvcmtib21iLmV1L2NyZWRlbnRpYWxfaXNzdWVyIiwgIm5iZiI6IDE3NjA2MzE1OTgsICJzdWIiOiAiZGlkOmR5bmU6c2FuZGJveC5zaWducm9vbTo0S0V5bVdnTERVZjFMTmNrZXhZOTZkZkt6NXZINzlkaURla2dMTVI5RldwSCIsICJ0eXBlIjogImRpc2NvdW50X2Zyb21fdm91Y2hlciJ9.oREhEn5mspszmYxJOYAyWV8WoAsC4A6ymf-TWEBhXAokFGYmgd0doIJZvbVdYKyRkuvte6dNJnbymhN5xUhdlQ~"]},{"example_ldp_vc_2":[{"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3id.org/security/data-integrity/v2"],"credentialSubject":{"birthdate":"1998-01-11","family_name":"Mustermann","given_name":"Max","locality":"Musterstadt"},"id":"https://example.com/credentials/1872","issuer":"https://example.com/credential_issuer","proof":{"created":"2025-03-19T15:30:15Z","cryptosuite":"eddsa-rdfc-2022","proofPurpose":"assertionMethod","proofValue":"not a real signature proof","type":"DataIntegrityProof","verificationMethod":"did:example:issuer#keys-1"},"type":["VerifiableCredential","IDCredential2"],"validUntil":"IGNORED"}],"example_sd_jwt":["eyJhbGciOiAiRVMyNTYiLCAidHlwIjogImRjK3NkLWp3dCJ9.eyJfc2QiOiBbInlvTFZfYmt0dWZtMHBFaGFiSi1Rd1VxYUM5RmNMYkxIMDYwUkNQWjViTzAiXSwgIl9zZF9hbGciOiAic2hhLTI1NiIsICJjbmYiOiB7Imp3ayI6IHsiY3J2IjogIlAtMjU2IiwgImt0eSI6ICJFQyIsICJ4IjogInpKLTR1d0VWVlYxQW9GcW1yZVlzUlh1SjhGbzVHRVVUeTZ0aklBdjdUcFkiLCAieSI6ICJWb1h2YTNUSkdzSjluOVlXNXcwamUwenpTaGZic3dBZ3pIcjVMRkJIM2xnIn19LCAiZXhwIjogMTc5MjE2NzU5OCwgImlhdCI6IDE3NjA2MzE1OTgsICJpc3MiOiAiaHR0cHM6Ly9pc3N1ZXIxLnplbnN3YXJtLmZvcmtib21iLmV1L2NyZWRlbnRpYWxfaXNzdWVyIiwgIm5iZiI6IDE3NjA2MzE1OTgsICJzdWIiOiAiZGlkOmR5bmU6c2FuZGJveC5zaWducm9vbTo0S0V5bVdnTERVZjFMTmNrZXhZOTZkZkt6NXZINzlkaURla2dMTVI5RldwSCIsICJ0eXBlIjogImRpc2NvdW50X2Zyb21fdm91Y2hlciJ9.oREhEn5mspszmYxJOYAyWV8WoAsC4A6ymf-TWEBhXAokFGYmgd0doIJZvbVdYKyRkuvte6dNJnbymhN5xUhdlQ~WyJFSmw3N2lEa1Mzc2tIQURPaTFSN1VBIiwgImhhc19kaXNjb3VudF9mcm9tX3ZvdWNoZXIiLCAxMF0~","eyJhbGciOiAiRVMyNTYiLCAidHlwIjogImRjK3NkLWp3dCJ9.eyJfc2QiOiBbInlvTFZfYmt0dWZtMHBFaGFiSi1Rd1VxYUM5RmNMYkxIMDYwUkNQWjViTzAiXSwgIl9zZF9hbGciOiAic2hhLTI1NiIsICJjbmYiOiB7Imp3ayI6IHsiY3J2IjogIlAtMjU2IiwgImt0eSI6ICJFQyIsICJ4IjogInpKLTR1d0VWVlYxQW9GcW1yZVlzUlh1SjhGbzVHRVVUeTZ0aklBdjdUcFkiLCAieSI6ICJWb1h2YTNUSkdzSjluOVlXNXcwamUwenpTaGZic3dBZ3pIcjVMRkJIM2xnIn19LCAiZXhwIjogMTc5MjE2NzU5OCwgImlhdCI6IDE3NjA2MzE1OTgsICJpc3MiOiAiaHR0cHM6Ly9pc3N1ZXIxLnplbnN3YXJtLmZvcmtib21iLmV1L2NyZWRlbnRpYWxfaXNzdWVyIiwgIm5iZiI6IDE3NjA2MzE1OTgsICJzdWIiOiAiZGlkOmR5bmU6c2FuZGJveC5zaWducm9vbTo0S0V5bVdnTERVZjFMTmNrZXhZOTZkZkt6NXZINzlkaURla2dMTVI5RldwSCIsICJ0eXBlIjogImRpc2NvdW50X2Zyb21fdm91Y2hlciJ9.oREhEn5mspszmYxJOYAyWV8WoAsC4A6ymf-TWEBhXAokFGYmgd0doIJZvbVdYKyRkuvte6dNJnbymhN5xUhdlQ~"]}],"required":true},{"matching_credential_sets":[{"example_ldp_vc":[{"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3id.org/security/data-integrity/v2"],"credentialSubject":{"address":{"country":"DE","locality":"Musterstadt","postal_code":"123456","street_address":"Sandanger 25"},"birthdate":"1998-01-11","family_name":"Mustermann","given_name":"Max"},"id":"https://example.com/credentials/1872","issuer":"https://example.com/credential_issuer","proof":{"created":"2025-03-19T15:30:15Z","cryptosuite":"eddsa-rdfc-2022","proofPurpose":"assertionMethod","proofValue":"not a real signature proof","type":"DataIntegrityProof","verificationMethod":"did:example:issuer#keys-1"},"type":["VerifiableCredential","IDCredential"],"validUntil":"IGNORED"}]}],"required":true},{"matching_credential_sets":[{"non_existing_credential":[{"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3id.org/security/data-integrity/v2"],"credentialSubject":{"no_claim_again":"claim"},"id":"https://example.com/credentials/1872","issuer":"https://example.com/credential_issuer","proof":{"created":"2025-03-19T15:30:15Z","cryptosuite":"eddsa-rdfc-2022","proofPurpose":"assertionMethod","proofValue":"not a real signature proof","type":"DataIntegrityProof","verificationMethod":"did:example:issuer#keys-1"},"type":["VerifiableCredential","not_existing_again"],"validUntil":"IGNORED"}]}],"required":false}]}'
     assert_equal "$clean_output" "$expected"
 }
+
+@test "DCQL: dc+sd-jwt with claim_sets with multiple claims in disclosure" {
+    cat << EOF | save_asset dc+sd-jwt_claim_sets.data.json
+{
+    "dcql_query": {
+        "credentials": [
+            {
+                "id": "PID_credential",
+                "format": "dc+sd-jwt",
+                "meta": {
+                    "vct_values": [
+                        "VerifiablePIDSDJWT"
+                    ]
+                },
+                "claims": [
+                    {
+                        "id": "a",
+                        "path": [
+                            "given_name"
+                        ]
+                    },
+                    {
+                        "id": "b",
+                        "path": [
+                            "family_name"
+                        ]
+                    },
+                    {
+                        "id": "c",
+                        "path": [
+                            "birth_date"
+                        ]
+                    },
+                    {
+                        "id": "d",
+                        "path": [
+                            "age_over_18"
+                        ]
+                    }
+                ],
+                "claim_sets": [
+                    [
+                        "a",
+                        "b",
+                        "c"
+                    ],
+                    [
+                        "a",
+                        "b",
+                        "d"
+                    ]
+                ]
+            }
+        ]
+    },
+    "vps": {
+        "dc+sd-jwt": [
+            "eyJhbGciOiAiRVMyNTYiLCAidHlwIjogImRjK3NkLWp3dCJ9.eyJfc2QiOiBbIkplT1BLQ0FHYWRzVm85VUJHanNKZ0xnbUtNc3FPYS1EdlhqOFo2eXgtd3ciLCAiRVZXUnAxTmVrcWliOWZNZUNRVmhwYmtidVFMQkdHVUoyMm9oYU1hWnplMCIsICItdHZrRVc3cDVNWDhKckNrTGxrTkJCc1FYNjlZTXF1a3NDRk90U29USG9NIiwgImRia3pRYm9vM3hSVXBPU3RKZllKQ3V4SGlEUFJmNmpUNGxSM2ZyVmZHTzAiLCAiNi15bzRoUnNCY2hMUlpXRW1NZ3VJUTdIX0lyRFVUeEFCbE1JaVc1LVYycyIsICIyRE1lZWJ3X0t3RUdldU1hSWJUVmdCcTZoZ3VuRS1FMTdyXzI5S05qbmc4IiwgImNSR1F1ZjhOYW53UXZOUTdqc3RNTks5T3UwbV9JYzZLYy1EY2lNRk80SWciLCAiRzdFdWIxMTZ0WG5XM3QwQVpuQkdzTHladEY0Umx0REtYNHdoZkhTZlBBMCJdLCAiX3NkX2FsZyI6ICJzaGEtMjU2IiwgImNuZiI6IHsiandrIjogeyJjcnYiOiAiUC0yNTYiLCAia3R5IjogIkVDIiwgIngiOiAiOWNmR1BuT0hTcmtTTTZ3MHFpTlNCV0hubXRXdXptUGVWQ3lxOU92MmJtZyIsICJ5IjogIklobzRsQV9MZ1Y1TXlKc21leWF4VWFBaWNUT0VBVGtLdFJDOGtYbzF1OWMifX0sICJleHAiOiAxNzkzNDYzMDIyLCAiaWF0IjogMTc2MTkyNzAyMiwgImlzcyI6ICJodHRwczovL2NpLnRlc3QuZGlkcm9vbS5jb20vY3JlZGVudGlhbF9pc3N1ZXIiLCAibmJmIjogMTc2MTkyNzAyMiwgInN1YiI6ICJkaWQ6ZHluZTpzYW5kYm94LnNpZ25yb29tOjY3eWdpNHRRcnNrZnNoR253WlNUOHE5MlJac1ZlZ2ozdW1Mb0pyU1FkWUJmIiwgInR5cGUiOiAiVmVyaWZpYWJsZVBJRFNESldUIn0.-IfL6Whzx04A_iLJjBh1v5dWMe_XBrItOSBvRVSAxVtP01AluBOKJh38t7dJn6PUEu5e0PdGLE-2Li9m1mIOoA~WyJvTEVKLXBHWnY4SEtNOVhIYjBBaHNnIiwgImdpdmVuX25hbWUiLCAiQm9iIl0~WyJsaFgxLVhSVGhoNjhiNWJyb0dMcmd3IiwgImZhbWlseV9uYW1lIiwgIkRvZSJd~WyJqRjM4ZDREVnNQdElPUlU3ZGJYYUFRIiwgImJpcnRoX2RhdGUiLCAiMTk5Ny0wNC0wNCJd~WyJ2bWw4d0NCQzRtWGdObERIRGJPVWZnIiwgImJpcnRoX3BsYWNlIiwgIklUIl0~WyJoVm1uZHpiWERjR05ZOHVZR2JJRDdBIiwgIm5hdGlvbmFsaXRpZXMiLCBbIklUIl1d~WyJGaHZBS1VIVmdzYmNHY0tJSzlaazJ3IiwgImFkZHJlc3MiLCB7ImNvdW50cnkiOiAiSVQiLCAiZm9ybWF0dGVkIjogIlZpYSBBbGVzc2FuZHJvIE1hbnpvbmkgMTIsIFR1cmluLCAxMDEyMiwgUGllZG1vbnQsIEl0YWx5IiwgImxvY2FsaXR5IjogIlR1cmluIiwgInBvc3RhbF9jb2RlIjogIjEwMTIyIiwgInJlZ2lvbiI6ICJQaWVkbW9udCIsICJzdHJlZXRfYWRkcmVzcyI6ICJWaWEgQWxlc3NhbmRybyBNYW56b25pIDEyIn1d~WyJHNHQxTUhHYVNXQjJPRUUwWHJrQkNBIiwgImFnZV9vdmVyXzE4IiwgdHJ1ZV0~WyJmQVdLdXdjMUVFSHdkTVZNX2Zpd2ZnIiwgImFnZV9vdmVyXzY1IiwgZmFsc2Vd~"
+        ]
+    }
+}
+EOF
+    cat << EOF | zexe dc+sd-jwt_claim_sets.zen dc+sd-jwt_claim_sets.data.json
+Scenario 'dcql_query': cc
+Given I have a 'dcql_query'
+Given I have a 'string dictionary' named 'vps'
+
+When I create the credentials from 'vps' matching dcql_query 'dcql_query'
+
+Then print the 'credentials'
+EOF
+    save_output dc+sd-jwt_claim_sets.out.json
+    assert_output '{"credentials":[{"matching_credential_sets":[{"PID_credential":["eyJhbGciOiAiRVMyNTYiLCAidHlwIjogImRjK3NkLWp3dCJ9.eyJfc2QiOiBbIkplT1BLQ0FHYWRzVm85VUJHanNKZ0xnbUtNc3FPYS1EdlhqOFo2eXgtd3ciLCAiRVZXUnAxTmVrcWliOWZNZUNRVmhwYmtidVFMQkdHVUoyMm9oYU1hWnplMCIsICItdHZrRVc3cDVNWDhKckNrTGxrTkJCc1FYNjlZTXF1a3NDRk90U29USG9NIiwgImRia3pRYm9vM3hSVXBPU3RKZllKQ3V4SGlEUFJmNmpUNGxSM2ZyVmZHTzAiLCAiNi15bzRoUnNCY2hMUlpXRW1NZ3VJUTdIX0lyRFVUeEFCbE1JaVc1LVYycyIsICIyRE1lZWJ3X0t3RUdldU1hSWJUVmdCcTZoZ3VuRS1FMTdyXzI5S05qbmc4IiwgImNSR1F1ZjhOYW53UXZOUTdqc3RNTks5T3UwbV9JYzZLYy1EY2lNRk80SWciLCAiRzdFdWIxMTZ0WG5XM3QwQVpuQkdzTHladEY0Umx0REtYNHdoZkhTZlBBMCJdLCAiX3NkX2FsZyI6ICJzaGEtMjU2IiwgImNuZiI6IHsiandrIjogeyJjcnYiOiAiUC0yNTYiLCAia3R5IjogIkVDIiwgIngiOiAiOWNmR1BuT0hTcmtTTTZ3MHFpTlNCV0hubXRXdXptUGVWQ3lxOU92MmJtZyIsICJ5IjogIklobzRsQV9MZ1Y1TXlKc21leWF4VWFBaWNUT0VBVGtLdFJDOGtYbzF1OWMifX0sICJleHAiOiAxNzkzNDYzMDIyLCAiaWF0IjogMTc2MTkyNzAyMiwgImlzcyI6ICJodHRwczovL2NpLnRlc3QuZGlkcm9vbS5jb20vY3JlZGVudGlhbF9pc3N1ZXIiLCAibmJmIjogMTc2MTkyNzAyMiwgInN1YiI6ICJkaWQ6ZHluZTpzYW5kYm94LnNpZ25yb29tOjY3eWdpNHRRcnNrZnNoR253WlNUOHE5MlJac1ZlZ2ozdW1Mb0pyU1FkWUJmIiwgInR5cGUiOiAiVmVyaWZpYWJsZVBJRFNESldUIn0.-IfL6Whzx04A_iLJjBh1v5dWMe_XBrItOSBvRVSAxVtP01AluBOKJh38t7dJn6PUEu5e0PdGLE-2Li9m1mIOoA~WyJvTEVKLXBHWnY4SEtNOVhIYjBBaHNnIiwgImdpdmVuX25hbWUiLCAiQm9iIl0~WyJsaFgxLVhSVGhoNjhiNWJyb0dMcmd3IiwgImZhbWlseV9uYW1lIiwgIkRvZSJd~WyJqRjM4ZDREVnNQdElPUlU3ZGJYYUFRIiwgImJpcnRoX2RhdGUiLCAiMTk5Ny0wNC0wNCJd~","eyJhbGciOiAiRVMyNTYiLCAidHlwIjogImRjK3NkLWp3dCJ9.eyJfc2QiOiBbIkplT1BLQ0FHYWRzVm85VUJHanNKZ0xnbUtNc3FPYS1EdlhqOFo2eXgtd3ciLCAiRVZXUnAxTmVrcWliOWZNZUNRVmhwYmtidVFMQkdHVUoyMm9oYU1hWnplMCIsICItdHZrRVc3cDVNWDhKckNrTGxrTkJCc1FYNjlZTXF1a3NDRk90U29USG9NIiwgImRia3pRYm9vM3hSVXBPU3RKZllKQ3V4SGlEUFJmNmpUNGxSM2ZyVmZHTzAiLCAiNi15bzRoUnNCY2hMUlpXRW1NZ3VJUTdIX0lyRFVUeEFCbE1JaVc1LVYycyIsICIyRE1lZWJ3X0t3RUdldU1hSWJUVmdCcTZoZ3VuRS1FMTdyXzI5S05qbmc4IiwgImNSR1F1ZjhOYW53UXZOUTdqc3RNTks5T3UwbV9JYzZLYy1EY2lNRk80SWciLCAiRzdFdWIxMTZ0WG5XM3QwQVpuQkdzTHladEY0Umx0REtYNHdoZkhTZlBBMCJdLCAiX3NkX2FsZyI6ICJzaGEtMjU2IiwgImNuZiI6IHsiandrIjogeyJjcnYiOiAiUC0yNTYiLCAia3R5IjogIkVDIiwgIngiOiAiOWNmR1BuT0hTcmtTTTZ3MHFpTlNCV0hubXRXdXptUGVWQ3lxOU92MmJtZyIsICJ5IjogIklobzRsQV9MZ1Y1TXlKc21leWF4VWFBaWNUT0VBVGtLdFJDOGtYbzF1OWMifX0sICJleHAiOiAxNzkzNDYzMDIyLCAiaWF0IjogMTc2MTkyNzAyMiwgImlzcyI6ICJodHRwczovL2NpLnRlc3QuZGlkcm9vbS5jb20vY3JlZGVudGlhbF9pc3N1ZXIiLCAibmJmIjogMTc2MTkyNzAyMiwgInN1YiI6ICJkaWQ6ZHluZTpzYW5kYm94LnNpZ25yb29tOjY3eWdpNHRRcnNrZnNoR253WlNUOHE5MlJac1ZlZ2ozdW1Mb0pyU1FkWUJmIiwgInR5cGUiOiAiVmVyaWZpYWJsZVBJRFNESldUIn0.-IfL6Whzx04A_iLJjBh1v5dWMe_XBrItOSBvRVSAxVtP01AluBOKJh38t7dJn6PUEu5e0PdGLE-2Li9m1mIOoA~WyJvTEVKLXBHWnY4SEtNOVhIYjBBaHNnIiwgImdpdmVuX25hbWUiLCAiQm9iIl0~WyJsaFgxLVhSVGhoNjhiNWJyb0dMcmd3IiwgImZhbWlseV9uYW1lIiwgIkRvZSJd~WyJHNHQxTUhHYVNXQjJPRUUwWHJrQkNBIiwgImFnZV9vdmVyXzE4IiwgdHJ1ZV0~"]}],"required":true}]}'
+}
