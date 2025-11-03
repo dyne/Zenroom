@@ -448,6 +448,7 @@ DCQL.check_fn['dc+sd-jwt'] = function(cred, string_query, out)
     -- match claims
     if string_query.claim_sets ~= nil then
         for _, sets in ipairs(string_query.claim_sets) do
+            local copy_cred = deepcopy(parsed_cred)
             local claims = {}
             for _, claim_id in ipairs(sets) do
                 local found
@@ -465,13 +466,13 @@ DCQL.check_fn['dc+sd-jwt'] = function(cred, string_query, out)
             end
             local selected_disclosures = {}
             for _, claim in ipairs(claims) do
-                if not _validate_claim_dcsdjwt(parsed_cred, claim, selected_disclosures) then
+                if not _validate_claim_dcsdjwt(copy_cred, claim, selected_disclosures) then
                     warn("Credential does not match required claims")
                     goto continue_set
                 end
             end
-            parsed_cred.disclosures = selected_disclosures
-            table.insert(out[string_query.id], _encode_dcsdjwt(parsed_cred))
+            copy_cred.disclosures = selected_disclosures
+            table.insert(out[string_query.id], _encode_dcsdjwt(copy_cred))
             ::continue_set::
         end
     else
