@@ -538,6 +538,7 @@ jobs:
       - uses: hendrikmuhs/ccache-action@v1.2
       - name: Install build deps
         run: |
+          sudo apt update
           sudo apt install -qy jq libreadline-dev
           # used to cross compile shared library
           case "${{ matrix.arch }}" in
