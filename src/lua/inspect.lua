@@ -375,7 +375,7 @@ function Inspector:putValue(v, exp)
              self:puts("octet[" .. #v .. "] (all zero)")
          elseif self.schema and ( len == 16 or len == 32 or len == 64 ) then
              self:puts("octet[" .. #v .. "] " .. O.to_hex(v))
-         elseif self.schema and len < 31 then
+         elseif self.schema and len < 31 and utf8.len(O.to_string(v)) ~= nil then
              self:puts("octet[" .. #v .. "] " .. O.to_string(v))
          else
              self:puts("octet[" .. #v .. "] " .. exporter(v))
