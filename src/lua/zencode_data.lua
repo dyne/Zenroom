@@ -126,7 +126,7 @@ local function default_input(definition, obj, objtype)
   if expect_table(definition) then
     error("Cannot take object: expected '"..definition.."' but found '"..objtype.."' (not a table)",3)
   end
-  res = input_encoding(definition)
+  local res = input_encoding(definition)
   res.zentype = 'e'
   res.schema = nil
   res.raw = obj
