@@ -60,7 +60,7 @@ local function pick(what, conv)
    local raw <const> = IN[name]
    local err
    if CONF.missing.fatal then err = error else err = warn end
-   if not raw and CONF.missing.fatal then
+   if raw == nil and CONF.missing.fatal then
 	  err("Cannot find '" .. name .. "' anywhere (null value?)", 2) end
    if raw == '' and CONF.missing.fatal then
 	  err("Found empty string in '" .. name) end
