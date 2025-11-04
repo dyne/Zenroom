@@ -298,6 +298,7 @@ void register_zk_bindings(sol::state_view& lua) {
         "voutput8", &LuaLogic::voutput8,
         "vassert0_8", &LuaLogic::vassert0_8,
         "vassert_eq8", &LuaLogic::vassert_eq8,
+        "vmux8", &LuaLogic::vmux8,
         
         // 32-bit vector operations
         "vinput32", &LuaLogic::vinput32,

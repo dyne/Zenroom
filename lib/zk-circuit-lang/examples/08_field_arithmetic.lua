@@ -7,11 +7,11 @@
   This is more efficient for arithmetic-heavy computations.
 --]]
 
-ZK = require'longfellow'
+ZK = require'zkcc'
 
 print("=== Field Arithmetic: 3x + 5y = 100 ===\n")
 
-local L = create_logic()
+local L = ZK.create_logic()
 
 -- Mark boundary before adding inputs
 L:get_circuit():private_input()
@@ -28,15 +28,15 @@ local y = L:eltw_input()
 print("Created field element inputs: x, y")
 
 -- Compute 3x
-local three_x = three * x
+local three_x = L:mul_scalar(three, x)
 print("Computed: 3x")
 
 -- Compute 5y
-local five_y = five * y
+local five_y = L:mul_scalar(five, y)
 print("Computed: 5y")
 
 -- Compute 3x + 5y
-local sum = three_x + five_y
+local sum = L:add(three_x, five_y)
 print("Computed: 3x + 5y")
 
 -- Create constant wire for 100
@@ -44,7 +44,8 @@ local target = L:konst(hundred)
 print("Created constant wire: 100")
 
 -- Assert equality
-L:assert_eq(sum, target)
+local diff = L:sub(sum, target)
+L:assert0(diff)
 print("Added assertion: 3x + 5y == 100")
 
 -- Compile
