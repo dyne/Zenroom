@@ -245,6 +245,17 @@
        return (res)
     end
 
+    if objtype == 'boolean' then
+      if expect_table(definition) then
+	      error("Cannot take object: expected '"..definition.."' but found '"..objtype.."' (not a table)",3)
+      end
+       res = input_encoding(definition)
+       res.zentype = 'e'
+       res.schema = nil
+       res.raw = obj
+       return (res)
+    end
+
 	if objtype == 'nil' then
 	   local tab <const> = expect_table(definition)
 	   if tab then -- double encoding_zentype definition
@@ -357,6 +368,8 @@
        return f_factory_encoder('float', FLOAT.new, FLOAT.is_float)
     elseif what == 'time' then
        return f_factory_encoder('time', TIME.new, nil)
+    elseif what == 'boolean' then
+       return f_factory_encoder('boolean', function(b) return b end, nil)
     end
     warn("Unknown input encoding '"..what.."': using default '"..
          CONF.input.encoding.encoding.."'")
