@@ -845,7 +845,7 @@ function ZEN:codecguard()
    local right <const> = CODEC
    local fatal <const> = CONF.missing.fatal
    for key1, value1 in pairs(left) do
-      if not right[key1] then
+      if right[key1] == nil then
 		 self:debug()
 		 error("Internal memory error: missing CODEC for "..key1)
 		 return false, key1
@@ -854,7 +854,7 @@ function ZEN:codecguard()
    end
    -- check for missing keys in tbl1
    for key2, _ in pairs(right) do
-      if not left[key2] and fatal then
+      if left[key2] == nil and fatal then
 		 self:debug()
 		 error("Internal memory error: unbound CODEC for "..key2)
 		 return false, key2
@@ -954,7 +954,7 @@ function have(obj) -- accepts arrays for depth checks
 
 	local name = uscore(trim(obj))
 	res = ACK[name]
-	if not res then
+	if res == nil then
 	   error('Cannot find object: ' .. name, 2)
 	end
 	local codec = CODEC[name]

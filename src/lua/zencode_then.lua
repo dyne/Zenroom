@@ -65,7 +65,7 @@ end
  -- }
 
 local function then_outcast(val, key, enc)
-   if not val then
+   if val == nil then
       error("Then outcast called on empty variable", 2)
    end
    local fun
