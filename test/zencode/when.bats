@@ -5,18 +5,25 @@ SUBDOC=when
 
 @test "When I copy '' to ''" {
 cat <<EOF >copy_data.data
-{ "my_hex": "0011FFFF" }
+{
+    "my_hex": "0011FFFF",
+    "my_bool": false
+}
 EOF
 cat <<EOF | zexe copy_data.zen copy_data.data
 Given I have a 'hex' named 'my hex'
+Given I have a 'boolean' named 'my_bool'
 
 When I copy 'my hex' to 'dest'
+When I copy 'my bool' to 'bool_dest'
 
 Then print 'my hex'
 Then print 'dest'
+Then print 'my_bool'
+Then print 'bool_dest'
 EOF
     save_output 'copy_data.out'
-    assert_output '{"dest":"0011ffff","my_hex":"0011ffff"}'
+    assert_output '{"bool_dest":false,"dest":"0011ffff","my_bool":false,"my_hex":"0011ffff"}'
 }
 
 @test "When I append the string" {
