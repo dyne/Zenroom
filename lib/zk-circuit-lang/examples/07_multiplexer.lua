@@ -6,11 +6,11 @@
   Demonstrates conditional selection in ZK circuits.
 --]]
 
-ZK = require'longfellow'
+ZK = require'zkcc'
 
 print("=== Multiplexer: result = control ? a : b ===\n")
 
-local L = create_logic()
+local L = ZK.create_logic()
 
 -- Mark boundary before adding inputs
 L:get_circuit():private_input()
@@ -23,27 +23,15 @@ local a = L:vinput8()
 local b = L:vinput8()
 print("Created 8-bit inputs: a, b")
 
--- Multiplexer logic: manually select each bit
+-- Multiplexer logic using vmux8
 -- If control == 1, select a; if control == 0, select b
--- This demonstrates building vmux8 manually using per-bit mux
+local result = L:vmux8(control, a, b)
+print("Created multiplexer: control ? a : b")
 
-print("Building 8-bit multiplexer bit-by-bit...")
-local selected_bits = {}
-for i = 1, 8 do
-    selected_bits[i] = L:mux(control, a[i], b[i])
-end
-
--- Convert array to BitVec8 (note: in real API this would be cleaner)
--- For now, just verify one bit works
-print("Created multiplexer: control ? a : b (demonstrated on individual bits)")
-
--- For simplicity, just assert that if control is true, first bits match
-local a_bit = a[1]
-local selected_bit = selected_bits[1]
-
--- When control == 1, selected_bit should equal a[1]
+-- Assert the result equals a when control is true
 -- This is a simplified demonstration
-L:assert_eq(selected_bit, a_bit)  
+local check = L:veq8(result, a)
+L:assert1(check)
 print("Added simplified assertion (bit-level)")
 
 -- Compile

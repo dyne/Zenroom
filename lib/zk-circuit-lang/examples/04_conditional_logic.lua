@@ -6,11 +6,11 @@
   This demonstrates boolean implication in ZK circuits.
 --]]
 
-ZK = require'longfellow'
+ZK = require'zkcc'
 
 print("=== Conditional Logic: flag => (a == b) ===\n")
 
-local L = create_logic()
+local L = ZK.create_logic()
 
 -- Mark boundary before adding inputs
 L:get_circuit():private_input()

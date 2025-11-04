@@ -14,7 +14,7 @@
     - mdoc_constants.h: CBOR structure definitions
 --]]
 
-ZK = require'longfellow'
+ZK = require'zkcc'
 
 print("╔═══════════════════════════════════════════════════════════╗")
 print("║  mDoc Circuit Structure (ISO 18013-5)                     ║")
@@ -30,7 +30,7 @@ print("PART 1: Signature Circuit (Fp256Base)")
 print("--------------------------------------")
 print("Verifies ECDSA signatures from issuer and device\n")
 
-local logic_sig = create_logic()
+local logic_sig = ZK.create_logic()
 
 -- Public inputs
 print("Public Inputs:")
@@ -98,7 +98,7 @@ print("PART 2: Hash Circuit (GF2_128/Fp256)")
 print("------------------------------------")
 print("Verifies SHA-256 hashes and CBOR structure\n")
 
-local logic_hash = create_logic()
+local logic_hash = ZK.create_logic()
 
 -- Public inputs
 print("Public Inputs:")

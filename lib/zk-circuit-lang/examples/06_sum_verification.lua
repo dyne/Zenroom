@@ -7,11 +7,11 @@
   individual expense amounts.
 --]]
 
-ZK = require'longfellow'
+ZK = require'zkcc'
 
 print("=== Sum Verification: a + b + c + d = 200 ===\n")
 
-local L = create_logic()
+local L = ZK.create_logic()
 
 -- Mark boundary before adding inputs
 L:get_circuit():private_input()
@@ -24,13 +24,13 @@ local d = L:vinput8()
 print("Created four private 8-bit inputs: a, b, c, d")
 
 -- Compute sum incrementally
-local sum_ab = a + b
+local sum_ab = L:vadd8(a, b)
 print("Computed: a + b")
 
-local sum_abc = sum_ab + c
+local sum_abc = L:vadd8(sum_ab, c)
 print("Computed: (a + b) + c")
 
-local sum_abcd = sum_abc + d
+local sum_abcd = L:vadd8(sum_abc, d)
 print("Computed: ((a + b) + c) + d")
 
 -- Target sum (constant)
@@ -38,7 +38,7 @@ local target = L:vbit8(200)
 print("Created constant: target = 200")
 
 -- Assert sum equals target
-local sum_equals_target = sum_abcd == target
+local sum_equals_target = L:veq8(sum_abcd, target)
 L:assert1(sum_equals_target)
 print("Added assertion: sum == 200")
 

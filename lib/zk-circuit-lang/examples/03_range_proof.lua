@@ -6,11 +6,11 @@
   This demonstrates bounding a value from both sides.
 --]]
 
-ZK = require'longfellow'
+ZK = require'zkcc'
 
 print("=== Range Proof: 10 <= x <= 100 ===\n")
 
-local L = create_logic()
+local L = ZK.create_logic()
 
 -- Mark boundary before adding inputs
 L:get_circuit():private_input()
