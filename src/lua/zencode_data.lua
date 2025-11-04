@@ -511,7 +511,7 @@ end
 	   name = cname
 	end
 	local ackn = ACK[name]
-    if not ackn then error("Cannot create codec, object not found: "..name, 2) end
+    if ackn == nil then error("Cannot create codec, object not found: "..name, 2) end
     if CODEC[name] then error("Cannot overwrite CODEC."..name, 2) end
     local res
     if clone then
