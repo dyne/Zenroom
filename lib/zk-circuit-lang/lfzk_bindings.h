@@ -45,6 +45,80 @@ static constexpr size_t kMACPluckerBits = 4;
 
 
 // ============================================================================
+// Field Element Wrappers
+// ============================================================================
+
+// Wrapper for Fp256 field elements
+class LuaFp256Elt {
+public:
+    using Field = Fp256Base;
+    using Elt = Field::Elt;
+    
+    Elt value;
+    const Field* field;
+    
+    LuaFp256Elt(const Elt& v, const Field* f) : value(v), field(f) {}
+    
+    // Arithmetic operations
+    LuaFp256Elt add(const LuaFp256Elt& other) const {
+        return LuaFp256Elt(field->addf(value, other.value), field);
+    }
+    
+    LuaFp256Elt sub(const LuaFp256Elt& other) const {
+        return LuaFp256Elt(field->subf(value, other.value), field);
+    }
+    
+    LuaFp256Elt mul(const LuaFp256Elt& other) const {
+        return LuaFp256Elt(field->mulf(value, other.value), field);
+    }
+    
+    LuaFp256Elt neg() const {
+        return LuaFp256Elt(field->negf(value), field);
+    }
+    
+    // Overloaded operators
+    LuaFp256Elt operator+(const LuaFp256Elt& other) const { return add(other); }
+    LuaFp256Elt operator-(const LuaFp256Elt& other) const { return sub(other); }
+    LuaFp256Elt operator*(const LuaFp256Elt& other) const { return mul(other); }
+    LuaFp256Elt operator-() const { return neg(); }
+    
+    // String representation
+    std::string to_string() const {
+        return "Fp256Elt";
+    }
+};
+
+// Wrapper for GF2_128 field elements
+class LuaGF2128Elt {
+public:
+    using Field = GF2_128<>;
+    using Elt = Field::Elt;
+    
+    Elt value;
+    const Field* field;
+    
+    LuaGF2128Elt(const Elt& v, const Field* f) : value(v), field(f) {}
+    
+    // Arithmetic operations
+    LuaGF2128Elt add(const LuaGF2128Elt& other) const {
+        return LuaGF2128Elt(field->addf(value, other.value), field);
+    }
+    
+    LuaGF2128Elt mul(const LuaGF2128Elt& other) const {
+        return LuaGF2128Elt(field->mulf(value, other.value), field);
+    }
+    
+    // Overloaded operators
+    LuaGF2128Elt operator+(const LuaGF2128Elt& other) const { return add(other); }
+    LuaGF2128Elt operator*(const LuaGF2128Elt& other) const { return mul(other); }
+    
+    // String representation
+    std::string to_string() const {
+        return "GF2128Elt";
+    }
+};
+
+// ============================================================================
 // Low-Level Arithmetic Circuit API (QuadCircuit)
 // ============================================================================
 
@@ -409,8 +483,9 @@ public:
     std::unique_ptr<BitPlucker<LogicType, kSHAPluckerBits>> plucker;
     const LogicType* logic;
     
-    LuaBitPlucker(const LogicType* l) : logic(l), 
-        plucker(std::make_unique<BitPlucker<LogicType, kSHAPluckerBits>>(*l)) {}
+    LuaBitPlucker(const LogicType* l) : 
+        plucker(std::make_unique<BitPlucker<LogicType, kSHAPluckerBits>>(*l)),
+        logic(l) {}
     
     // Extract bits from a field element
     LuaBitVecVar pluck(const LuaEltW& e) {
@@ -456,8 +531,9 @@ public:
     std::unique_ptr<Memcmp<LogicType>> memcmp;
     const LogicType* logic;
     
-    LuaMemcmp(const LogicType* l) : logic(l), 
-        memcmp(std::make_unique<Memcmp<LogicType>>(*l)) {}
+    LuaMemcmp(const LogicType* l) : 
+        memcmp(std::make_unique<Memcmp<LogicType>>(*l)),
+        logic(l) {}
     
     // A < B for byte arrays
     LuaBitW lt(size_t n, sol::table A_table, sol::table B_table) {
@@ -765,6 +841,16 @@ public:
 
     void vassert_eq8(const LuaBitVec<8>& x, const LuaBitVec<8>& y) {
         logic->vassert_eq(&x.vec, y.vec);
+    }
+
+    LuaBitVec<8> vmux8(const LuaBitW& control, const LuaBitVec<8>& iftrue, const LuaBitVec<8>& iffalse) {
+        // Use the regular mux method since vmux doesn't exist
+        // This creates a bitwise mux operation
+        typename LogicType::v8 result;
+        for (size_t i = 0; i < 8; ++i) {
+            result[i] = logic->mux(&control.wire, &iftrue.vec[i], iffalse.vec[i]);
+        }
+        return LuaBitVec<8>(result, logic.get());
     }
     
     // Bit vectors (32-bit)
