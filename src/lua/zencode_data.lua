@@ -122,6 +122,17 @@
    -- schemas may or may be not tables
  end
 
+local function default_input(definition, obj, objtype)
+  if expect_table(definition) then
+    error("Cannot take object: expected '"..definition.."' but found '"..objtype.."' (not a table)",3)
+  end
+  res = input_encoding(definition)
+  res.zentype = 'e'
+  res.schema = nil
+  res.raw = obj
+  return res
+end
+
  --- Given block (IN read-only memory)
  -- @section Given
 
@@ -218,42 +229,8 @@
       return nil
     end
 
-    if objtype == 'number' then
-       if expect_table(definition) then
-	  error("Cannot take object: expected '"..definition.."' but found '"..objtype.."' (not a table)",3)
-	  -- elseif definition ~= 'number' then
-	  --	  error("Cannot take object: expected '"..definition.."' but found '"..objtype.."'",3)
-       end
-       res = input_encoding(definition)
-       res.zentype = 'e'
-       -- if obj > 2147483647 then
-       --	  error('Overflow of number object over 32bit signed size', 3)
-       --	  -- TODO: maybe support unsigned native here
-       -- end
-       res.raw = obj
-       -- any type of additional conversion from a native number
-       -- detected at input can happen here, for instance using a new
-       -- native unsigned integer
-       return (res)
-    end
-
-    if objtype == 'string' then
-       res = input_encoding(definition)
-       res.zentype = 'e'
-       res.schema = nil
-       res.raw = obj
-       return (res)
-    end
-
-    if objtype == 'boolean' then
-      if expect_table(definition) then
-	      error("Cannot take object: expected '"..definition.."' but found '"..objtype.."' (not a table)",3)
-      end
-       res = input_encoding(definition)
-       res.zentype = 'e'
-       res.schema = nil
-       res.raw = obj
-       return (res)
+    if objtype == 'number' or objtype == 'string' or objtype == 'boolean' or iszen(type(obj)) then
+      return default_input(definition, obj, objtype)
     end
 
 	if objtype == 'nil' then
@@ -281,15 +258,6 @@
 	   res.missing = true
 	   return(res)
 	end
-
-    -- objtype is not a luatype
-    if iszen(type(obj)) then
-       res = input_encoding(definition)
-       res.zentype = 'e'
-       res.schema = nil
-       res.raw = obj
-       return(res)
-    end
 
     error('Invalid object: no conversion for type '..objtype..': '..definition, 3)
     return nil
