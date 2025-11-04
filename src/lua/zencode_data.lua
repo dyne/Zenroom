@@ -335,7 +335,7 @@
    if not what then
      error("Call to input_encoding with argument nil",2)
    end
-   if not luatype(what) == 'string' then
+   if luatype(what) ~= 'string' then
      error("Call to input_encoding argument is not a string: "..type(what),2)
    end
     if what == 'u64' or what == 'url64' then
@@ -653,7 +653,7 @@ end
 -- @return the octet/table of octets of the above transformation
 function apply_encoding(src_name, src_enc, dest_enc)
   local src_value, src_codec = have(src_name)
-  f_src_enc = get_encoding_function(src_enc)
+  local f_src_enc = get_encoding_function(src_enc)
   if not f_src_enc then error("Encoding format not found: "..src_enc, 2) end
   local encoded_src
   -- accpet also schemas as encoding
@@ -674,14 +674,14 @@ function apply_encoding(src_name, src_enc, dest_enc)
           encoded_src = f_src_enc(src_value)
       else
           encoded_src = {}
-          for k,v in src_value do
+          for k in src_value do
               encoded_src[k] = f_src_enc(src_value)
           end
       end
   else
       encoded_src = deepmap(f_src_enc, src_value)
   end
-  f_dest_enc = input_encoding(dest_enc)
+  local f_dest_enc = input_encoding(dest_enc)
   if not f_dest_enc then error("Destination encoding format not found: "..dest_enc, 2) end
   return deepmap(f_dest_enc.fun, encoded_src)
 end
