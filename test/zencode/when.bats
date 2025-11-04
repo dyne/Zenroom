@@ -77,7 +77,8 @@ EOF
 	"path": "blocks/",
 	"latest": {
 		"result": {
-			"height": 102
+			"height": 102,
+			"male": false
 		}
 	}
 
@@ -91,10 +92,13 @@ and I have a 'string' named 'path'
 When I pickup from path 'latest.result.height'
 and I append 'height' to 'path'
 
+When I pickup from path 'latest.result.male'
+
+Then print the 'male'
 Then print the 'path'
 EOF
     save_output 'append_number_try.out'
-    assert_output '{"path":"blocks/102"}'
+    assert_output '{"male":false,"path":"blocks/102"}'
 
 }
 
