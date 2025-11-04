@@ -4,11 +4,11 @@
   Demonstrates boolean algebra in ZK circuits.
 --]]
 
-ZK = require'longfellow'
+ZK = require'zkcc'
 
 print("=== Bitwise Operations: (a AND b) XOR c = d ===\n")
 
-local L = create_logic()
+local L = ZK.create_logic()
 
 -- Mark boundary before adding inputs
 L:get_circuit():private_input()
@@ -21,15 +21,15 @@ local d = L:vinput8()
 print("Created four 8-bit inputs: a, b, c, d")
 
 -- Compute (a AND b)
-local a_and_b = a & b
+local a_and_b = L:vand8(a, b)
 print("Computed: a AND b")
 
 -- Compute (a AND b) XOR c
-local result = a_and_b ^ c
+local result = L:vxor8(a_and_b, c)
 print("Computed: (a AND b) XOR c")
 
 -- Assert result equals d
-local equals_d = result == d
+local equals_d = L:veq8(result, d)
 L:assert1(equals_d)
 print("Added assertion: result == d")
 

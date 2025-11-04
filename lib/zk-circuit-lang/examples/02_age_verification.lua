@@ -6,12 +6,12 @@
   This is a simple range proof using 8-bit arithmetic.
 --]]
 
-ZK = require'longfellow'
+ZK = require'zkcc'
 
 print("=== Age Verification Circuit ===\n")
 
 -- Create circuit using high-level Logic API
-local L = create_logic()
+local L = ZK.create_logic()
 
 -- Mark boundary before adding inputs
 L:get_circuit():private_input()
@@ -24,10 +24,8 @@ print("Created private 8-bit input: age")
 local min_age = L:vbit8(18)
 print("Created constant: min_age = 18")
 
--- Check if age >= 18
--- Using vleq8(min_age, age) which checks if min_age <= age
--- With operators, we can use: age >= min_age
--- But since vleq8(a, b) means a <= b, we need to use vleq8(min_age, age)
+-- Check if age >= 18 using vleq8
+-- vleq8(a, b) means a <= b, so we need vleq8(min_age, age)
 local is_adult = L:vleq8(min_age, age)
 print("Created comparison: age >= 18")
 
