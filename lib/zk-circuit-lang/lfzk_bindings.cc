@@ -451,15 +451,6 @@ void register_zk_bindings(sol::state_view& lua) {
     );
     
     // ========================================================================
-    // Utility Functions (will be added to returned table)
-    // ========================================================================
-    
-    // P256 elliptic curve instance (for ECDSA circuit constraints)
-    auto p256_curve = lua.new_usertype<P256>("P256",
-        sol::constructors<P256()>()
-    );
-    
-    // ========================================================================
     // Version Information (will be added to returned table)
     // ========================================================================
 }
@@ -494,10 +485,6 @@ int luaopen_zkcc(lua_State* L) {
     });
     
     
-    // Create P256 instance
-    zkcc_table.set_function("create_p256", []() -> proofs::P256* {
-        return new proofs::P256();
-    });
     
     
     // Add version information
