@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "lfzk_bindings.h"
+#include "witness_bindings.h"
 
 namespace proofs {
 namespace lua {
@@ -484,8 +485,18 @@ int luaopen_zkcc(lua_State* L) {
         return new proofs::lua::LuaGF2128Logic();
     });
     
+    // Register witness bindings in the ZKCC table
+    // Push the zkcc_table to the stack first
+    sol::stack::push(L, zkcc_table);
     
+    // Now call luaopen_zk_witness which pushes witness table
+    proofs::lua::luaopen_zk_witness(L);
     
+    // Set witness table as a field of zkcc_table
+    lua_setfield(L, -2, "witness");  // zkcc_table.witness = witness_module
+
+    // Pop zkcc_table from stack (it's already in the SOL object)
+    lua_pop(L, 1);
     
     // Add version information
     zkcc_table["SOL_VERSION"] = SOL_VERSION_STRING;

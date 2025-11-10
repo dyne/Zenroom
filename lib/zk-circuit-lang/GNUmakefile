@@ -1,6 +1,6 @@
 # Lua bindings Makefile for Longfellow-ZK
 
-SOURCES = lfzk_bindings.cc.o
+SOURCES = lfzk_bindings.cc.o witness_bindings.cc.o
 
 all: libzk-circuit-lang.a
 
