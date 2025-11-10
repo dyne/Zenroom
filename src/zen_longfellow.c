@@ -379,6 +379,6 @@ int luaopen_longfellow(lua_State *L) {
 	};
 
 	zen_add_class(L, "longfellow", longfellow_class, longfellow_methods);
-	luaopen_zkcc(L);
+	luaopen_zkcc(L); // lib/zk-circuit-lang
 	return 1;
 }
