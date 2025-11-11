@@ -126,6 +126,12 @@ static inline void mulq(uint64_t* l, uint64_t* h, uint64_t a, uint64_t b) {
 #else  // defined(__SIZEOF_INT128__)
 #define SYSDEP_MULQ64_NOT_DEFINED
 #endif  // defined(__SIZEOF_INT128__)
+#elif defined(__GNUC__) && defined(__aarch64__)
+#include <algebra/sysdep_aarch64.h>
+#elif defined(__arm__) && defined(__GNUC__)
+#include <algebra/sysdep_arm.h>
+#else
+#error "unimplemented algebra/sysdep.h"
 #endif
 
 static inline void mulq(uint32_t* l, uint32_t* h, uint32_t a, uint32_t b) {
