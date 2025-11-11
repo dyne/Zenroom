@@ -55,13 +55,31 @@ print("Note: The 'two' input must be set to 2 in the witness")
 print("\n=== Compiling Circuit ===\n")
 Q:mkcircuit(1)
 
+print("DEBUG: mkcircuit completed")
+
 -- Display metrics
+-- Note: Properties are accessed as fields (Q.ninput), not methods (Q:ninput())
 print("Circuit compiled successfully!")
-print(string.format("  Total inputs: %d", Q.ninput))
-print(string.format("    Public:  %d", Q.npub_input))
-print(string.format("    Private: %d", Q.ninput - Q.npub_input))
+
+print("DEBUG: About to access ninput")
+local ninput_val = Q.ninput
+print("DEBUG: ninput value:", ninput_val)
+
+print("DEBUG: About to access npub_input")
+local npub_input_val = Q.npub_input
+print("DEBUG: npub_input value:", npub_input_val)
+
+print(string.format("  Total inputs: %d", ninput_val))
+print(string.format("    Public:  %d", npub_input_val))
+print(string.format("    Private: %d", ninput_val - npub_input_val))
+
+print("DEBUG: About to access depth")
 print(string.format("  Circuit depth: %d", Q.depth))
+
+print("DEBUG: About to access nwires")
 print(string.format("  Total wires: %d", Q.nwires))
+
+print("DEBUG: About to access nquad_terms")
 print(string.format("  Quadratic terms: %d", Q.nquad_terms))
 
 print("\n=== Verification ===")

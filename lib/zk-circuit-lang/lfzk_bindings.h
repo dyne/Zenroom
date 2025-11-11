@@ -122,23 +122,67 @@ public:
 // Low-Level Arithmetic Circuit API (QuadCircuit)
 // ============================================================================
 
+// Forward declaration
+class LuaQuadCircuit;
+
+// Wire wrapper to enable operator overloading
+class LuaWire {
+public:
+    size_t wire_id;
+    LuaQuadCircuit* circuit;
+    
+    LuaWire(size_t id, LuaQuadCircuit* c) : wire_id(id), circuit(c) {}
+    
+    // Arithmetic operators
+    LuaWire operator+(const LuaWire& other) const;
+    LuaWire operator-(const LuaWire& other) const;
+    LuaWire operator*(const LuaWire& other) const;
+    
+    // Get the underlying wire ID
+    size_t id() const { return wire_id; }
+    
+    std::string to_string() const {
+        char buffer[64];
+        snprintf(buffer, sizeof(buffer), "Wire(%zu)", wire_id);
+        return std::string(buffer);
+    }
+};
+
 class LuaQuadCircuit {
 public:
     using Field = Fp256Base;
+    using CircuitType = Circuit<Field>;
+    
+    Field field;  // Must be declared BEFORE circuit since circuit uses field
     std::unique_ptr<QuadCircuit<Field>> circuit;
-    Field field;
+    std::unique_ptr<CircuitType> compiled_circuit;  // Store the compiled circuit
     
-    LuaQuadCircuit() : circuit(std::make_unique<QuadCircuit<Field>>(field)), field() {}
+    LuaQuadCircuit() : field(), circuit(std::make_unique<QuadCircuit<Field>>(field)) {}
     
-    // Wire creation
-    size_t input_wire() { return circuit->input_wire(); }
+    // Wire creation - returns LuaWire for operator overloading
+    LuaWire input_wire() { 
+        return LuaWire(circuit->input_wire(), this); 
+    }
+    
     void private_input() { circuit->private_input(); }
     void begin_full_field() { circuit->begin_full_field(); }
     
-    // Arithmetic operations
+    // Arithmetic operations - work with both LuaWire and raw wire IDs
     size_t add(size_t op0, size_t op1) { return circuit->add(op0, op1); }
     size_t sub(size_t op0, size_t op1) { return circuit->sub(op0, op1); }
     size_t mul(size_t op0, size_t op1) { return circuit->mul(op0, op1); }
+    
+    LuaWire add_wire(const LuaWire& w0, const LuaWire& w1) {
+        return LuaWire(circuit->add(w0.wire_id, w1.wire_id), this);
+    }
+    
+    LuaWire sub_wire(const LuaWire& w0, const LuaWire& w1) {
+        return LuaWire(circuit->sub(w0.wire_id, w1.wire_id), this);
+    }
+    
+    LuaWire mul_wire(const LuaWire& w0, const LuaWire& w1) {
+        return LuaWire(circuit->mul(w0.wire_id, w1.wire_id), this);
+    }
     
     size_t mul_scalar(const LuaFp256Elt& k, size_t op) {
         return circuit->mul(k.value, op);
@@ -164,17 +208,18 @@ public:
         return circuit->apy(y, a.value);
     }
     
-    // Constraints
+    // Constraints - accept both LuaWire and raw IDs
     size_t assert0(size_t op) { return circuit->assert0(op); }
+    size_t assert0_wire(const LuaWire& w) { return circuit->assert0(w.wire_id); }
     
     // Output
     void output_wire(size_t n, size_t wire_id) { circuit->output_wire(n, wire_id); }
+    void output_wire_obj(size_t n, const LuaWire& w) { circuit->output_wire(n, w.wire_id); }
     
     // Compilation
     void mkcircuit(size_t nc) {
-        // Note: This returns a Circuit but we don't expose it to Lua yet
-        // In a full implementation, we'd need to wrap Circuit<Field> too
-        circuit->mkcircuit(nc);
+        // Store the compiled circuit - it's needed for circuit_id and other operations
+        compiled_circuit = circuit->mkcircuit(nc);
     }
     
     // Metrics
@@ -1279,6 +1324,22 @@ public:
     QuadCircuit<Field>& get_circuit() { return *circuit; }
 };
 
+
+// ============================================================================
+// LuaWire operator implementations (inline after class definitions)
+// ============================================================================
+
+inline LuaWire LuaWire::operator+(const LuaWire& other) const {
+    return circuit->add_wire(*this, other);
+}
+
+inline LuaWire LuaWire::operator-(const LuaWire& other) const {
+    return circuit->sub_wire(*this, other);
+}
+
+inline LuaWire LuaWire::operator*(const LuaWire& other) const {
+    return circuit->mul_wire(*this, other);
+}
 
 // ============================================================================
 // Registration Functions
