@@ -39,6 +39,14 @@
 #include "octet_conversions.h"
 
 
+extern "C" {
+#include <zenroom.h>
+// declares extern void *ZEN;
+#include <zen_error.h>
+}
+
+#define THROW(error) lerror(((zenroom_t*)ZEN)->lua, "%s", error)
+
 namespace proofs {
 namespace lua {
 
@@ -546,14 +554,14 @@ public:
     // Array-like access (1-indexed for Lua)
     LuaBitW get(size_t i) const {
         if (i < 1 || i > N) {
-            throw std::out_of_range("Index out of range");
+            THROW("Out of range: Index out of range");
         }
         return LuaBitW(vec[i - 1], logic);
     }
     
     void set(size_t i, const LuaBitW& bit) {
         if (i < 1 || i > N) {
-            throw std::out_of_range("Index out of range");
+            THROW("Out of range: Index out of range");
         }
         vec[i - 1] = bit.wire;
     }
@@ -589,14 +597,14 @@ public:
     // Array-like access (1-indexed for Lua)
     LuaBitW get(size_t i) const {
         if (i < 1 || i > size_) {
-            throw std::out_of_range("Index out of range");
+            THROW("Out of range: Index out of range");
         }
         return LuaBitW(bits[i - 1], logic);
     }
     
     void set(size_t i, const LuaBitW& bit) {
         if (i < 1 || i > size_) {
-            throw std::out_of_range("Index out of range");
+            THROW("Out of range: Index out of range");
         }
         bits[i - 1] = bit.wire;
     }
@@ -1281,7 +1289,7 @@ public:
     // Variable-bit vector operations
     LuaBitW vlt_var(const LuaBitVecVar& a, const LuaBitVecVar& b) {
         if (a.size() != b.size()) {
-            throw std::invalid_argument("Bit vectors must have same size");
+            THROW("Invalid Argument: bit vectors must have same size");
         }
         auto result = logic->lt(a.size(), a.bits.data(), b.bits.data());
         return LuaBitW(result, logic.get());
@@ -1289,7 +1297,7 @@ public:
     
     LuaBitW vleq_var(const LuaBitVecVar& a, const LuaBitVecVar& b) {
         if (a.size() != b.size()) {
-            throw std::invalid_argument("Bit vectors must have same size");
+            THROW("Invalid Argument: bit vectors must have same size");
         }
         auto result = logic->leq(a.size(), a.bits.data(), b.bits.data());
         return LuaBitW(result, logic.get());
@@ -1297,7 +1305,7 @@ public:
     
     LuaBitW veq_var(const LuaBitVecVar& a, const LuaBitVecVar& b) {
         if (a.size() != b.size()) {
-            throw std::invalid_argument("Bit vectors must have same size");
+            THROW("Invalid Argument: bit vectors must have same size");
         }
         auto result = logic->eq(a.size(), a.bits.data(), b.bits.data());
         return LuaBitW(result, logic.get());
