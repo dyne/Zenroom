@@ -36,13 +36,13 @@ print("Added assertion: age must be >= 18")
 -- Compile circuit
 print("\n=== Compiling Circuit ===\n")
 local circuit = L:get_circuit()
-circuit:mkcircuit(1)
+local artifact = ZK.build_circuit_artifact(circuit, 1)
 
 -- Display metrics
 print("Circuit compiled successfully!")
-print(string.format("  Total inputs: %d (all private)", circuit.ninput))
-print(string.format("  Circuit depth: %d", circuit.depth))
-print(string.format("  Total wires: %d", circuit.nwires))
+print(string.format("  Total inputs: %d (all private)", artifact.ninput))
+print(string.format("  Circuit depth: %d", artifact.depth))
+print(string.format("  Total wires: %d", artifact.nwires))
 
 print("\n=== Use Case ===")
 print("This circuit allows someone to prove they are an adult")
