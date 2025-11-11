@@ -37,12 +37,12 @@ print("Added assertion: x <= 100")
 -- Compile
 print("\n=== Compiling Circuit ===\n")
 local circuit = L:get_circuit()
-circuit:mkcircuit(1)
+local artifact = ZK.build_circuit_artifact(circuit, 1)
 
 print("Circuit compiled successfully!")
-print(string.format("  Inputs: %d", circuit.ninput))
-print(string.format("  Depth: %d", circuit.depth))
-print(string.format("  Wires: %d", circuit.nwires))
+print(string.format("  Inputs: %d", artifact.ninput))
+print(string.format("  Depth: %d", artifact.depth))
+print(string.format("  Wires: %d", artifact.nwires))
 
 print("\n=== Use Cases ===")
 print("Range proofs are used for:")
