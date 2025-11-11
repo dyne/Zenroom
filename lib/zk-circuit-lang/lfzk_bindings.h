@@ -38,9 +38,6 @@
 
 #include "octet_conversions.h"
 
-extern "C" {
-	void push_buffer_to_octet(lua_State *L, char *p, size_t len);
-}
 
 namespace proofs {
 namespace lua {
@@ -238,13 +235,18 @@ public:
     
     Field field;
     std::unique_ptr<CircuitType> circuit;
+    std::vector<typename Field::Elt> inputs;  // Stores both public and private inputs
     
     LuaCircuitArtifact(std::unique_ptr<CircuitType> compiled) 
-        : field(), circuit(std::move(compiled)) {}
+        : field(), circuit(std::move(compiled)) {
+        if (circuit) {
+            inputs.resize(circuit->ninputs, field.zero());
+        }
+    }
     
     // Move constructor
     LuaCircuitArtifact(LuaCircuitArtifact&& other) noexcept
-        : field(), circuit(std::move(other.circuit)) {}
+        : field(), circuit(std::move(other.circuit)), inputs(std::move(other.inputs)) {}
     
     // Delete copy constructor
     LuaCircuitArtifact(const LuaCircuitArtifact&) = delete;
@@ -285,6 +287,66 @@ public:
 
 		push_buffer_to_octet(L,(char*)self->circuit->id,32);
         
+        return 1;
+    }
+    
+    // Set input from OCTET (index and value)
+    static int lua_set_input(lua_State* L) {
+        LuaCircuitArtifact* self = sol::stack::get<LuaCircuitArtifact*>(L, 1);
+        
+        if (!self->circuit) {
+            return luaL_error(L, "No circuit artifact");
+        }
+        
+        if (!lua_isnumber(L, 2)) {
+            return luaL_error(L, "Second argument must be input index (number)");
+        }
+        size_t idx = lua_tointeger(L, 2);
+        
+        const octet* value_oct = o_arg(L, 3);
+        if (!value_oct) {
+            return luaL_error(L, "Third argument must be an OCTET (32 bytes)");
+        }
+        
+        if (o_len(value_oct) != 32) {
+            o_free(L, value_oct);
+            return luaL_error(L, "Input value must be 32 bytes");
+        }
+        
+        if (idx >= self->inputs.size()) {
+            o_free(L, value_oct);
+            return luaL_error(L, "Input index %zu out of range (max: %zu)", idx, self->inputs.size());
+        }
+        
+        // Convert OCTET to field element
+        self->inputs[idx] = self->field.to_montgomery(nat_from_octet<Fp256Nat>(value_oct));
+        
+        o_free(L, value_oct);
+        return 0;
+    }
+    
+    // Get input as OCTET
+    static int lua_get_input(lua_State* L) {
+        LuaCircuitArtifact* self = sol::stack::get<LuaCircuitArtifact*>(L, 1);
+        
+        if (!self->circuit) {
+            return luaL_error(L, "No circuit artifact");
+        }
+        
+        if (!lua_isnumber(L, 2)) {
+            return luaL_error(L, "Second argument must be input index (number)");
+        }
+        size_t idx = lua_tointeger(L, 2);
+        
+        if (idx >= self->inputs.size()) {
+            return luaL_error(L, "Input index %zu out of range (max: %zu)", idx, self->inputs.size());
+        }
+        
+        // Convert field element to OCTET
+        uint8_t bytes[32];
+        auto nat = self->field.from_montgomery(self->inputs[idx]);
+        nat.to_bytes(bytes);
+		push_buffer_to_octet(L,(char*)bytes,32);
         return 1;
     }
     

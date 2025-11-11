@@ -98,6 +98,10 @@ void register_zk_bindings(sol::state_view& lua) {
         // Get circuit ID
         "circuit_id", &LuaCircuitArtifact::lua_circuit_id,
         
+        // Input management
+        "set_input", &LuaCircuitArtifact::lua_set_input,
+        "get_input", &LuaCircuitArtifact::lua_get_input,
+        
         // Metrics
         "ninput", sol::property(&LuaCircuitArtifact::ninput),
         "npub_input", sol::property(&LuaCircuitArtifact::npub_input),
