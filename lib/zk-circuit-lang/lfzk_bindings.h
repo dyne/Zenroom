@@ -34,6 +34,13 @@
 #include "circuits/logic/routing.h"
 #include "circuits/logic/bit_plucker.h"
 #include "circuits/logic/memcmp.h"
+#include "proto/circuit.h"
+
+#include "octet_conversions.h"
+
+extern "C" {
+	void push_buffer_to_octet(lua_State *L, char *p, size_t len);
+}
 
 namespace proofs {
 namespace lua {
@@ -122,16 +129,16 @@ public:
 // Low-Level Arithmetic Circuit API (QuadCircuit)
 // ============================================================================
 
-// Forward declaration
-class LuaQuadCircuit;
+// Forward declarations
+class LuaCircuitTemplate;
 
 // Wire wrapper to enable operator overloading
 class LuaWire {
 public:
     size_t wire_id;
-    LuaQuadCircuit* circuit;
+    LuaCircuitTemplate* circuit;
     
-    LuaWire(size_t id, LuaQuadCircuit* c) : wire_id(id), circuit(c) {}
+    LuaWire(size_t id, LuaCircuitTemplate* c) : wire_id(id), circuit(c) {}
     
     // Arithmetic operators
     LuaWire operator+(const LuaWire& other) const;
@@ -148,19 +155,20 @@ public:
     }
 };
 
-class LuaQuadCircuit {
+// Circuit Template - for building circuits
+class LuaCircuitTemplate {
 public:
     using Field = Fp256Base;
-    using CircuitType = Circuit<Field>;
     
-    Field field;  // Must be declared BEFORE circuit since circuit uses field
+    Field field;
     std::unique_ptr<QuadCircuit<Field>> circuit;
-    std::unique_ptr<CircuitType> compiled_circuit;  // Store the compiled circuit
     
-    LuaQuadCircuit() : field(), circuit(std::make_unique<QuadCircuit<Field>>(field)) {}
+    LuaCircuitTemplate() 
+        : field(), 
+          circuit(std::make_unique<QuadCircuit<Field>>(field)) {}
     
     // Wire creation - returns LuaWire for operator overloading
-    LuaWire input_wire() { 
+    LuaWire input_wire() {
         return LuaWire(circuit->input_wire(), this); 
     }
     
@@ -216,20 +224,122 @@ public:
     void output_wire(size_t n, size_t wire_id) { circuit->output_wire(n, wire_id); }
     void output_wire_obj(size_t n, const LuaWire& w) { circuit->output_wire(n, w.wire_id); }
     
-    // Compilation
-    void mkcircuit(size_t nc) {
-        // Store the compiled circuit - it's needed for circuit_id and other operations
-        compiled_circuit = circuit->mkcircuit(nc);
-    }
-    
-    // Metrics
+    // Template metrics (before compilation)
     size_t ninput() const { return circuit->ninput_; }
     size_t npub_input() const { return circuit->npub_input_; }
     size_t noutput() const { return circuit->noutput_; }
-    size_t depth() const { return circuit->depth_; }
-    size_t nwires() const { return circuit->nwires_; }
-    size_t nquad_terms() const { return circuit->nquad_terms_; }
 };
+
+// Circuit Artifact - compiled/loaded circuit
+class LuaCircuitArtifact {
+public:
+    using Field = Fp256Base;
+    using CircuitType = Circuit<Field>;
+    
+    Field field;
+    std::unique_ptr<CircuitType> circuit;
+    
+    LuaCircuitArtifact(std::unique_ptr<CircuitType> compiled) 
+        : field(), circuit(std::move(compiled)) {}
+    
+    // Move constructor
+    LuaCircuitArtifact(LuaCircuitArtifact&& other) noexcept
+        : field(), circuit(std::move(other.circuit)) {}
+    
+    // Delete copy constructor
+    LuaCircuitArtifact(const LuaCircuitArtifact&) = delete;
+    LuaCircuitArtifact& operator=(const LuaCircuitArtifact&) = delete;
+    
+    // Metrics
+    size_t ninput() const { return circuit ? circuit->ninputs : 0; }
+    size_t npub_input() const { return circuit ? circuit->npub_in : 0; }
+    size_t depth() const { return circuit ? circuit->l.size() : 0; }
+    size_t nwires() const { return circuit ? circuit->nv : 0; }
+    size_t nquad_terms() const { return circuit ? circuit->nc : 0; }
+    
+    // Export to OCTET
+    static int lua_octet(lua_State* L) {
+        LuaCircuitArtifact* self = sol::stack::get<LuaCircuitArtifact*>(L, 1);
+        
+        if (!self->circuit) {
+            return luaL_error(L, "No circuit artifact");
+        }
+        
+        // Serialize circuit to bytes
+        CircuitRep<Field> rep(self->field, FieldID::P256_ID);
+        std::vector<uint8_t> bytes;
+        rep.to_bytes(*self->circuit, bytes);
+        
+        // Create OCTET and copy data
+		push_buffer_to_octet(L, (char*)bytes.data(), bytes.size());        
+        return 1;
+    }
+    
+    // Get circuit ID
+    static int lua_circuit_id(lua_State* L) {
+        LuaCircuitArtifact* self = sol::stack::get<LuaCircuitArtifact*>(L, 1);
+        
+        if (!self->circuit) {
+            return luaL_error(L, "No circuit artifact");
+        }
+
+		push_buffer_to_octet(L,(char*)self->circuit->id,32);
+        
+        return 1;
+    }
+    
+    // Load from OCTET
+    static int lua_load_from_octet(lua_State* L) {
+        const octet* oct = o_arg(L, 1);
+        if (!oct) {
+            return luaL_error(L, "Argument must be an OCTET");
+        }
+        
+        ReadBuffer buf((const uint8_t*)o_val(oct), o_len(oct));
+        CircuitRep<Field> rep(Fp256Base(), FieldID::P256_ID);
+        auto loaded_circuit = rep.from_bytes(buf, false);
+        
+        o_free(L, oct);
+        
+        if (!loaded_circuit) {
+            return luaL_error(L, "Failed to deserialize circuit from OCTET");
+        }
+        
+        // Create LuaCircuitArtifact using SOL's stack push
+        sol::state_view lua(L);
+        sol::stack::push(L, LuaCircuitArtifact(std::move(loaded_circuit)));
+        
+        return 1;
+    }
+};
+
+// Build circuit artifact from template
+static int lua_build_circuit_artifact(lua_State* L) {
+    // Get template argument
+    LuaCircuitTemplate* templ = sol::stack::get<LuaCircuitTemplate*>(L, 1);
+    if (!templ) {
+        return luaL_error(L, "First argument must be a CircuitTemplate");
+    }
+    
+    // Get nc argument (number of constraints hint)
+    if (!lua_isnumber(L, 2)) {
+        return luaL_error(L, "Second argument must be a number (nc)");
+    }
+    int nc = lua_tointeger(L, 2);
+    
+    // Compile the circuit
+    auto compiled = templ->circuit->mkcircuit(nc);
+    
+    if (!compiled) {
+        return luaL_error(L, "Failed to compile circuit");
+    }
+    
+    // Create LuaCircuitArtifact using SOL's stack push
+    sol::state_view lua(L);
+    sol::stack::push(L, LuaCircuitArtifact(std::move(compiled)));
+    
+    return 1;
+}
 
 // ============================================================================
 // High-Level Boolean Logic API
@@ -614,21 +724,21 @@ public:
     using Backend = CustomCompilerBackend<Field>;
     using LogicType = Logic<Field, Backend>;
     
-    std::unique_ptr<LuaQuadCircuit> quad_circuit;
+    std::unique_ptr<LuaCircuitTemplate> circuit_template;
     std::unique_ptr<Backend> backend;
     std::unique_ptr<LogicType> logic;
     
     LuaLogic() {
-        quad_circuit = std::make_unique<LuaQuadCircuit>();
-        backend = std::make_unique<Backend>(quad_circuit->circuit.get());
-        logic = std::make_unique<LogicType>(backend.get(), quad_circuit->field);
+        circuit_template = std::make_unique<LuaCircuitTemplate>();
+        backend = std::make_unique<Backend>(circuit_template->circuit.get());
+        logic = std::make_unique<LogicType>(backend.get(), circuit_template->field);
     }
     
     // Field operations
-    LuaFp256Elt zero() const { return LuaFp256Elt(logic->zero(), &quad_circuit->field); }
-    LuaFp256Elt one() const { return LuaFp256Elt(logic->one(), &quad_circuit->field); }
-    LuaFp256Elt mone() const { return LuaFp256Elt(logic->mone(), &quad_circuit->field); }
-    LuaFp256Elt elt(uint64_t a) const { return LuaFp256Elt(logic->elt(a), &quad_circuit->field); }
+    LuaFp256Elt zero() const { return LuaFp256Elt(logic->zero(), &circuit_template->field); }
+    LuaFp256Elt one() const { return LuaFp256Elt(logic->one(), &circuit_template->field); }
+    LuaFp256Elt mone() const { return LuaFp256Elt(logic->mone(), &circuit_template->field); }
+    LuaFp256Elt elt(uint64_t a) const { return LuaFp256Elt(logic->elt(a), &circuit_template->field); }
     
     // Wire arithmetic
     LuaEltW add(const LuaEltW& a, const LuaEltW& b) {
@@ -1011,8 +1121,8 @@ public:
         return LuaBitVec<256>(logic->vbit<256>(x), logic.get());
     }
     
-    // Access underlying quad circuit
-    LuaQuadCircuit& get_circuit() { return *quad_circuit; }
+    // Access underlying circuit template
+    LuaCircuitTemplate& get_circuit() { return *circuit_template; }
 
     // Aggregate operations
     LuaEltW add_range(size_t i0, size_t i1, sol::function f) {

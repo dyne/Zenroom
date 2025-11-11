@@ -41,54 +41,69 @@ void register_zk_bindings(sol::state_view& lua) {
     );
     
     // ========================================================================
-    // Low-Level Arithmetic Circuit (QuadCircuit)
+    // Circuit Template (for building circuits)
     // ========================================================================
     
-    auto quad_circuit = lua.new_usertype<LuaQuadCircuit>("QuadCircuit",
-        sol::constructors<LuaQuadCircuit()>(),
+    auto circuit_template = lua.new_usertype<LuaCircuitTemplate>("CircuitTemplate",
+        sol::constructors<LuaCircuitTemplate()>(),
         
         // Wire creation
-        "input_wire", &LuaQuadCircuit::input_wire,
-        "private_input", &LuaQuadCircuit::private_input,
-        "begin_full_field", &LuaQuadCircuit::begin_full_field,
+        "input_wire", &LuaCircuitTemplate::input_wire,
+        "private_input", &LuaCircuitTemplate::private_input,
+        "begin_full_field", &LuaCircuitTemplate::begin_full_field,
         
         // Arithmetic operations
-        "add", &LuaQuadCircuit::add,
-        "sub", &LuaQuadCircuit::sub,
+        "add", &LuaCircuitTemplate::add,
+        "sub", &LuaCircuitTemplate::sub,
         "mul", sol::overload(
-            &LuaQuadCircuit::mul,
-            &LuaQuadCircuit::mul_scalar,
-            &LuaQuadCircuit::mul_scaled
+            &LuaCircuitTemplate::mul,
+            &LuaCircuitTemplate::mul_scalar,
+            &LuaCircuitTemplate::mul_scaled
         ),
         
         "linear", sol::overload(
-            &LuaQuadCircuit::linear,
-            &LuaQuadCircuit::linear_scaled
+            &LuaCircuitTemplate::linear,
+            &LuaCircuitTemplate::linear_scaled
         ),
         
-        "konst", &LuaQuadCircuit::konst,
-        "axpy", &LuaQuadCircuit::axpy,
-        "apy", &LuaQuadCircuit::apy,
+        "konst", &LuaCircuitTemplate::konst,
+        "axpy", &LuaCircuitTemplate::axpy,
+        "apy", &LuaCircuitTemplate::apy,
         
         // Constraints (accept both raw IDs and LuaWire)
         "assert0", sol::overload(
-            &LuaQuadCircuit::assert0,
-            &LuaQuadCircuit::assert0_wire
+            &LuaCircuitTemplate::assert0,
+            &LuaCircuitTemplate::assert0_wire
         ),
         
         // Output
-        "output_wire", &LuaQuadCircuit::output_wire,
+        "output_wire", &LuaCircuitTemplate::output_wire,
         
-        // Compilation
-        "mkcircuit", &LuaQuadCircuit::mkcircuit,
+        // Template metrics (before compilation)
+        "ninput", sol::property(&LuaCircuitTemplate::ninput),
+        "npub_input", sol::property(&LuaCircuitTemplate::npub_input),
+        "noutput", sol::property(&LuaCircuitTemplate::noutput)
+    );
+    
+    // ========================================================================
+    // Circuit Artifact (compiled/loaded circuit)
+    // ========================================================================
+    
+    auto circuit_artifact = lua.new_usertype<LuaCircuitArtifact>("CircuitArtifact",
+        sol::no_constructor,
         
-        // Metrics (both as properties and methods for compatibility)
-        "ninput", sol::property(&LuaQuadCircuit::ninput),
-        "npub_input", sol::property(&LuaQuadCircuit::npub_input),
-        "noutput", sol::property(&LuaQuadCircuit::noutput),
-        "depth", sol::property(&LuaQuadCircuit::depth),
-        "nwires", sol::property(&LuaQuadCircuit::nwires),
-        "nquad_terms", sol::property(&LuaQuadCircuit::nquad_terms)
+        // Export to OCTET
+        "octet", &LuaCircuitArtifact::lua_octet,
+        
+        // Get circuit ID
+        "circuit_id", &LuaCircuitArtifact::lua_circuit_id,
+        
+        // Metrics
+        "ninput", sol::property(&LuaCircuitArtifact::ninput),
+        "npub_input", sol::property(&LuaCircuitArtifact::npub_input),
+        "depth", sol::property(&LuaCircuitArtifact::depth),
+        "nwires", sol::property(&LuaCircuitArtifact::nwires),
+        "nquad_terms", sol::property(&LuaCircuitArtifact::nquad_terms)
     );
     
     // ========================================================================
@@ -494,9 +509,16 @@ int luaopen_zkcc(lua_State* L) {
     sol::table zkcc_table = lua.create_table();
     
     
-    zkcc_table.set_function("create_quad_circuit", []() -> proofs::lua::LuaQuadCircuit* {
-        return new proofs::lua::LuaQuadCircuit();
+    // Factory: create circuit template
+    zkcc_table.set_function("new_circuit_template", []() -> proofs::lua::LuaCircuitTemplate* {
+        return new proofs::lua::LuaCircuitTemplate();
     });
+    
+    // Factory: build circuit artifact from template
+    zkcc_table["build_circuit_artifact"] = &proofs::lua::lua_build_circuit_artifact;
+    
+    // Factory: load circuit artifact from OCTET
+    zkcc_table["load_circuit_artifact"] = &proofs::lua::LuaCircuitArtifact::lua_load_from_octet;
     
     zkcc_table.set_function("create_logic", []() -> proofs::lua::LuaLogic* {
         return new proofs::lua::LuaLogic();
