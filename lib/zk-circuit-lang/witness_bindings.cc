@@ -75,8 +75,7 @@ int sha256_compute_message(lua_State* L) {
     lua_pushinteger(L, numb);
     lua_setfield(L, -2, "num_blocks");
     
-    // result.padded_input = OCTET
-    octet* padded_oct = ::o_push(L, (char*)padded.data(), numb * 64);
+    push_buffer_to_octet(L, (char*)padded.data(), numb*64);
     lua_setfield(L, -2, "padded_input");
     
     // result.witnesses = table of block witnesses

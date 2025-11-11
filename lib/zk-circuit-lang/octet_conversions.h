@@ -27,6 +27,7 @@ extern "C" {
 	const octet* o_arg(lua_State*, int);
 	octet* o_push(lua_State*, const char*, size_t);
 	void o_free(lua_State*, const octet*);
+	void push_buffer_to_octet(lua_State *L, char *p, size_t len);
 }
 
 #include "ec/p256.h"
