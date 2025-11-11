@@ -23,6 +23,24 @@ namespace lua {
 void register_zk_bindings(sol::state_view& lua) {
     
     // ========================================================================
+    // Wire Wrapper (for operator overloading)
+    // ========================================================================
+    
+    auto wire = lua.new_usertype<LuaWire>("Wire",
+        sol::constructors<>(),
+        
+        // Operators
+        sol::meta_function::addition, &LuaWire::operator+,
+        sol::meta_function::subtraction, &LuaWire::operator-,
+        sol::meta_function::multiplication, &LuaWire::operator*,
+        sol::meta_function::to_string, &LuaWire::to_string,
+        
+        // Access wire ID
+        "id", &LuaWire::id,
+        "to_string", &LuaWire::to_string
+    );
+    
+    // ========================================================================
     // Low-Level Arithmetic Circuit (QuadCircuit)
     // ========================================================================
     
@@ -52,8 +70,11 @@ void register_zk_bindings(sol::state_view& lua) {
         "axpy", &LuaQuadCircuit::axpy,
         "apy", &LuaQuadCircuit::apy,
         
-        // Constraints
-        "assert0", &LuaQuadCircuit::assert0,
+        // Constraints (accept both raw IDs and LuaWire)
+        "assert0", sol::overload(
+            &LuaQuadCircuit::assert0,
+            &LuaQuadCircuit::assert0_wire
+        ),
         
         // Output
         "output_wire", &LuaQuadCircuit::output_wire,
@@ -61,7 +82,7 @@ void register_zk_bindings(sol::state_view& lua) {
         // Compilation
         "mkcircuit", &LuaQuadCircuit::mkcircuit,
         
-        // Metrics (read-only properties)
+        // Metrics (both as properties and methods for compatibility)
         "ninput", sol::property(&LuaQuadCircuit::ninput),
         "npub_input", sol::property(&LuaQuadCircuit::npub_input),
         "noutput", sol::property(&LuaQuadCircuit::noutput),
