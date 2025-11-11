@@ -1,0 +1,1 @@
+../../../lib/zk-circuit-lang/examples/05_bitwise_operations.lua

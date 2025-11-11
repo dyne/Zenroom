@@ -1,0 +1,1 @@
+../../../lib/zk-circuit-lang/examples/06_sum_verification.lua

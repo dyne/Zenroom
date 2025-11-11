@@ -36,3 +36,17 @@ load ../bats_setup
     Z fsp.lua
     Z uuid.lua
 }
+
+@test "Lua zk-circuit-lang tests" {
+    Z zk-circuit-lang/01_simple_arithmetic.lua
+    Z zk-circuit-lang/02_age_verification.lua
+    Z zk-circuit-lang/03_range_proof.lua
+    Z zk-circuit-lang/04_circuit_parameters.lua
+    Z zk-circuit-lang/04_conditional_logic.lua
+    Z zk-circuit-lang/05_bitwise_operations.lua
+    Z zk-circuit-lang/06_sum_verification.lua
+    Z zk-circuit-lang/07_multiplexer.lua
+    Z zk-circuit-lang/08_field_arithmetic.lua
+    Z zk-circuit-lang/09_mdoc_circuit.lua
+    Z zk-circuit-lang/10_circuit_save_load.lua
+}
