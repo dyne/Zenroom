@@ -8,8 +8,8 @@
 
 ZK = require'zkcc'
 
--- Create circuit using low-level API
-local Q = ZK.create_quad_circuit()
+-- Create circuit template
+local Q = ZK.new_circuit_template()
 
 print("=== Building Circuit: x^2 + 3x + 2 = 20 ===\n")
 
@@ -51,36 +51,32 @@ Q:assert0(difference)
 print("Added constraint: x^2 + 3x + 2 == result_pub")
 print("Note: The 'two' input must be set to 2 in the witness")
 
--- Compile the circuit
-print("\n=== Compiling Circuit ===\n")
-Q:mkcircuit(1)
+-- Test: try to export before compilation (should fail)
+print("\nTesting error handling...")
+local status, err = pcall(function() return Q:octet() end)
+if not status then
+    print("✓ Correctly rejected octet() before mkcircuit:", err:match("[^:]+$"))
+end
 
-print("DEBUG: mkcircuit completed")
+-- Build circuit artifact
+print("\n=== Building Circuit Artifact ===\n")
+local artifact = ZK.build_circuit_artifact(Q, 1)
+
+print("Circuit artifact built successfully!")
 
 -- Display metrics
--- Note: Properties are accessed as fields (Q.ninput), not methods (Q:ninput())
-print("Circuit compiled successfully!")
+print(string.format("  Total inputs: %d", artifact.ninput))
+print(string.format("    Public:  %d", artifact.npub_input))
+print(string.format("    Private: %d", artifact.ninput - artifact.npub_input))
+print(string.format("  Circuit depth: %d layers", artifact.depth))
+print(string.format("  Total wires: %d", artifact.nwires))
+print(string.format("  Quadratic terms: %d", artifact.nquad_terms))
 
-print("DEBUG: About to access ninput")
-local ninput_val = Q.ninput
-print("DEBUG: ninput value:", ninput_val)
-
-print("DEBUG: About to access npub_input")
-local npub_input_val = Q.npub_input
-print("DEBUG: npub_input value:", npub_input_val)
-
-print(string.format("  Total inputs: %d", ninput_val))
-print(string.format("    Public:  %d", npub_input_val))
-print(string.format("    Private: %d", ninput_val - npub_input_val))
-
-print("DEBUG: About to access depth")
-print(string.format("  Circuit depth: %d", Q.depth))
-
-print("DEBUG: About to access nwires")
-print(string.format("  Total wires: %d", Q.nwires))
-
-print("DEBUG: About to access nquad_terms")
-print(string.format("  Quadratic terms: %d", Q.nquad_terms))
+print("\n=== Circuit Export ===")
+local circuit_bytes = artifact:octet()
+print(string.format("Circuit serialized: %d bytes", #circuit_bytes))
+print("First 32 bytes (hex):", circuit_bytes:sub(1, 32):hex())
+print("Circuit ID:", artifact:circuit_id():hex():sub(1, 16) .. "...")
 
 print("\n=== Verification ===")
 print("This circuit proves:")
