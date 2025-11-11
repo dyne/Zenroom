@@ -482,7 +482,7 @@ int main(int argc, char **argv) {
 		load_file(script, fopen(scriptfile, "rb"));
 	} else if(scriptarg[0]!='\0') {
 		if(verbosity) fprintf(stderr, "executing argument: %s\n",scriptarg);
-		snprintf(script,"%s",scriptarg);
+		snprintf(script,MAX_STRING-1,"%s",scriptarg);
 	} else {
 		////////////////////////
 		// get another argument from stdin
