@@ -1079,21 +1079,28 @@ after checking if the input string is valid mnemonic.
 
 static int from_mnemonic(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	const char *s = lua_tostring(L, 1);
 	if(!s) {
-		zerror(L, "%s :: invalid argument", __func__); // fatal
-		lua_pushboolean(L, 0);
-		END(1); }
+		failed_msg = "invalid argument";
+		goto end;
+	}
 	// From bip39 it can be at most 32bytes
 	octet *o = o_alloc(L, 32);
+	if(!o) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
 	if(!mnemonic_check_and_bits(s, &(o->len), o->val)) {
-		zerror(L, "%s :: words cannot be encoded with bip39 format", __func__);
-		lua_pushboolean(L, 0);
+		failed_msg = "words cannot be encoded with bip39 format";
 		goto end;
 	}
 	o_dup(L, o); // push in lua's stack
 end:
 	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
