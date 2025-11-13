@@ -34,10 +34,19 @@
 // tracing wrappers for all C->Lua functions
 #define BEGIN() trace(L, "vv begin %s",__func__)
 #define END(n) trace(L, "^^ end %s",__func__); return(n)
+#define ENDV() trace(L, "^^ end %s",__func__); return
 
 #define THROW(ERR) \
 	lerror(L, "fatal %s: %s", __func__, (ERR)); \
 	lua_pushnil(L)
+
+// maybe use if(HEDLEY_UNLIKELY(!x))
+#define SAFE_GOTO(x, msg) \
+	if(!x) { failed_msg=msg; goto end; }
+#define SAFE_THROW(x, msg) \
+	if(!x) { THROW(msg); END(1); }
+#define SAFE_THROWV(x, msg) \
+    if(!x) { THROW(msg); ENDV(); }
 
 // same as Android
 typedef enum log_priority {
