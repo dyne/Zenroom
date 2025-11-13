@@ -98,6 +98,10 @@ extern int _octet_to_big(lua_State *L, big *dst, const octet *src);
 
 void push_octet_to_hex_string(lua_State *L, octet *o) {
 	char *s = malloc((o->len<<1)+1); // string len = double +1
+	if(!s) {
+		THROW("Could not allocate memory");
+		return;
+	}
 	buf2hex(s, o->val, o->len);
 	lua_pushstring(L,s);
 	free(s);
@@ -342,6 +346,10 @@ octet *o_push(lua_State *L, const char *buf, size_t len) {
 	
 void push_buffer_to_octet(lua_State *L, char *p, size_t len) {
 	octet* o = o_new(L, len);
+	if(!o) {
+		THROW("Could not create OCTET");
+		return;
+	}
 	// newuserdata already pushes the object in lua's stack
 	// memcpy(o->val, p, len);
 	register uint32_t i;
@@ -353,6 +361,10 @@ void push_buffer_to_octet(lua_State *L, char *p, size_t len) {
 // null-termination
 void push_string_to_octet(lua_State *L, char *p) {
 	octet* o = o_new(L, strlen(p)+1);
+	if(!o) {
+		THROW("Could not create OCTET");
+		return;
+	}
 	strcpy(o->val,p);
 	o->len = o->max-1;
 }
@@ -450,6 +462,10 @@ static int new_random(lua_State *L) {
 	int tn;
 	lua_Number n = lua_tonumberx(L, 1, &tn);
 	octet *o = o_new(L,(int)n);
+	if(!o) {
+		THROW("Could not create OCTET");
+		END(1);
+	}
 	Z(L);
 	OCT_rand(o, Z->random_generator, (int)n);
 	END(1);
@@ -599,10 +615,15 @@ static int from_number(lua_State *L) {
 	int tn;
 	lua_Integer n = lua_tointegerx(L,1,&tn);
 	if(!tn) {
-		lerror(L, "O.from_number input is not a number");
-		return 0; }
+		THROW("Invalid argument, input is not a number");
+		END(1);
+	}
 	const uint64_t v = n;
 	octet *o = o_new(L, 16);
+	if(!o) {
+		THROW("Could not create OCTET");
+		END(1);
+	}
 	// conversion from int64 to binary
 	// TODO: check endian portability issues
 	register uint8_t i = 0;
@@ -630,9 +651,14 @@ static int from_rawlen (lua_State *L) {
 	int tn;
 	lua_Integer n = lua_tointegerx(L,2,&tn);
 	if(!tn) {
-		lerror(L, "O.new 2nd arg is not a number");
-		return 0; }
+		THROW("Invalid argument, len is not a number");
+		END(1);
+	}
 	octet *o = o_new(L, (int)n);
+	if(!o) {
+		THROW("Could not create OCTET");
+		END(1);
+	}
 	register int c;
 	for(c=0;c<n;c++) o->val[c] = s[c];
 	o->len = (int)n;
@@ -653,11 +679,15 @@ static int from_base64(lua_State *L) {
 	luaL_argcheck(L, s != NULL, 1, "base64 string expected");
 	int len = is_base64(s);
 	if(!len) {
-		lerror(L, "base64 string contains invalid characters");
-		return 0; }
+		THROW("Invalid base64 sequence");
+		END(1);
+	}
 	int nlen = B64decoded_len(len);
 	octet *o = o_new(L, nlen); // 4 byte header
-
+	if(!o) {
+		THROW("Could not create OCTET");
+		END(1);
+	}
 	OCT_frombase64(o, (char*)s);
 	END(1);
 }
@@ -676,11 +706,16 @@ static int from_url64(lua_State *L) {
 	luaL_argcheck(L, s != NULL, 1, "url64 string expected");
 	int len = is_url64(s);
 	if(!len) {
-		lerror(L, "url64 string contains invalid characters");
-		return 0; }
+		THROW("Invalid url64 sequence");
+		END(1);
+	}
 	int nlen = B64decoded_len(len);
 	// func(L,"U64 decode len: %u -> %u",len,nlen);
 	octet *o = o_new(L, nlen);
+	if(!o) {
+		THROW("Could not create OCTET");
+		END(1);
+	}
 	o->len = U64decode(o->val, (char*)s);
 	// func(L,"u64 return len: %u",o->len);
 	END(1);
@@ -697,19 +732,26 @@ after checking if the input string is valid base58.
 static int from_base58(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
+	char *tmp = NULL;
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "base58 string expected");
 	int len = is_base58(L, s);
 	if(!len) {
-		lerror(L, "base58 string contains invalid characters");
-		return 0; }
+		failed_msg = "Invalid base58 sequence";
+		goto end;
+	}
 	size_t binmax = B64decoded_len(len); //((len + 3) >> 2) *3;
-	char *tmp = malloc(binmax);
+	tmp = malloc(binmax);
+	if(!tmp) {
+		failed_msg = "Could not allocate memory";
+		goto end;
+	}
 	// size_t binmax = len + len + len;
 	size_t binlen = binmax;
 	if(!b58tobin((void*)tmp, &binlen, s, len)) {
 		failed_msg = "Error in conversion from base58";
-		goto end; }
+		goto end;
+	}
 	octet *o = o_new(L, binlen);
 	if(!o) {
 		failed_msg = "Could not create OCTET";
@@ -745,10 +787,15 @@ static int from_string(lua_State *L) {
 	const int len = strlen(s);
 	// STRING SIZE CHECK before import to OCTET
 	if(len > MAX_OCTET) {
-		zerror(L, "%s: invalid string size: %u", __func__, len);
-		lerror(L, "operation aborted");
-		return 0; }
+		zerror(L, "Invalid string size: %u", len);
+		THROW("Invalid string size, too long");
+		END(1);
+	}
 	octet *o = o_new(L, len+1);
+	if(!o) {
+		THROW("Could not create OCTET");
+		END(1);
+	}
 	register int i = 0;
 	for(i=0;s[i] != 0x0;i++) o->val[i]=s[i];
 	o->len = i;
@@ -769,23 +816,28 @@ static int from_hex(lua_State *L) {
 	BEGIN();
 	char *s = (char*)lua_tostring(L, 1);
 	if(!s) {
-		zerror(L, "%s :: invalid argument", __func__); // fatal
-		lua_pushboolean(L, 0);
-		END(1); }
+		THROW("Invalid argument, string exptected");
+		END(1);
+	}
 	int len;
 	if ( (s[0] == '0') && (s[1] == 'x') )
 		 len = is_hex(L, s+2);
 	else len = is_hex(L, s);
 	if(!len) {
-		zerror(L, "hex sequence invalid"); // fatal
-		lua_pushboolean(L, 0);
-		END(1); }
+		THROW("Invalid hex sequence");
+		END(1);
+	}
 	func(L,"hex string sequence length: %u",len);
 	if(!len || len>MAX_FILE<<1) { // *2 hex tuples
-		zerror(L, "hex sequence too long: %u bytes", len<<1); // fatal
-		lua_pushboolean(L, 0);
-		END(1); }
+		zerror(L, "invalid hex sequence size: %u", len<<1);
+		THROW("Invalid hex sequence, too long");
+		END(1);
+	}
 	octet *o = o_new(L, len>>1);
+	if(!o) {
+		THROW("Could not create OCTET");
+		END(1);
+	}
 	if ( (s[0] == '0') && (s[1] == 'x') ) {
 		// ethereum elides the leftmost 0 char when value <= 0F
 		if((len&1)==1) { // odd length means elision
@@ -798,9 +850,8 @@ static int from_hex(lua_State *L) {
 		o->len = hex2buf(o->val,s);
 	}
 	if(o->len < 0) {
-		zerror(L, "%s :: Invalid octet in hex string", __func__);
-		lerror(L, "operation aborted");
-		lua_pushnil(L);
+		THROW("Invalid octet in hex string");
+		END(1);
 	}
 	END(1);
 }
@@ -820,10 +871,15 @@ static int from_bin(lua_State *L) {
 	luaL_argcheck(L, s != NULL, 1, "binary string sequence expected");
 	const int len = is_bin(L, s);
 	if(!len || len > MAX_FILE) {
-		zerror(L, "invalid binary sequence size: %u", len);
-		lerror(L, "operation aborted");
-		return 0; }
+		zerror(L, "Invalid binary sequence size: %u", len);
+		THROW("Invalid binary sequence, too long");
+		END(1);
+	}
 	octet *o = o_new(L, len+4);
+	if(!o) {
+		THROW("Could not create OCTET");
+		END(1);
+	}
 	register char *S = (char*)s;
 	register int p; // position in whole string
 	register int i; // increased only when 1 or 0 is found
@@ -865,9 +921,9 @@ static int from_segwit_address(lua_State *L) {
 	BEGIN();
 	const char *s = lua_tostring(L, 1);
 	if(!s) {
-		zerror(L, "%s :: invalid argument", __func__); // fatal
-		lua_pushboolean(L, 0);
-		END(1); }
+		THROW("Invalid argument, string exptected");
+		END(1);
+	}
 	int witver;
 	uint8_t witprog[40];
 	size_t witprog_len;
@@ -878,11 +934,14 @@ static int from_segwit_address(lua_State *L) {
 		ret = segwit_addr_decode(&witver, witprog, &witprog_len, hrp, s);
 	}
 	if(!ret) {
-		zerror(L, "%s :: not bech32 address", __func__);
-		lua_pushboolean(L, 0);
+		THROW("Invalid bech32 address");
 		END(1);
 	}
 	octet *o = o_new(L, witprog_len);
+	if(!o) {
+		THROW("Could not create OCTET");
+		END(1);
+	}
 	register size_t i;
 	for(i=0; i<witprog_len; i++) {
 		o->val[i] = (char)witprog[i];
@@ -959,6 +1018,10 @@ static int to_segwit_address(lua_State *L) {
 		goto end;
 	}
 	result = malloc(73+strlen(hrp));
+	if(!result) {
+		failed_msg = "Could not allocate memory";
+		goto end;
+	}
 
 	if (!segwit_addr_encode(result, hrp, witver, (uint8_t*)o->val, o->len)) {
 		failed_msg = "Cannot be encoded to segwit format";
@@ -966,7 +1029,7 @@ static int to_segwit_address(lua_State *L) {
 	}
 	lua_pushstring(L,result);
 end:
-	free(result);
+	if(result) free(result);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -989,14 +1052,18 @@ static int from_base45(lua_State *L) {
 	luaL_argcheck(L, s != NULL, 1, "base45 string expected");
 	int len = is_base45(s);
 	if(len < 0) {
-		lerror(L, "base45 string contains invalid characters");
-		return 0;
+		THROW("Invalid base45 sequence");
+		END(1);
 	}
 	octet *o = o_new(L, len);
+	if(!o) {
+		THROW("Could not create OCTET");
+		END(1);
+	}
 	len = b45decode(o->val, s);
 	if(len < 0) {
-		lerror(L, "base45 invalid string");
-		return 0;
+		THROW("Invalid base45 sequence");
+		END(1);
 	}
 	o->len = len;
 	END(1);
@@ -1018,10 +1085,14 @@ after checking if the input string is valid base32.
     int len_in = is_base32(s);
     int max_len_out = len_in * 5 / 8;
     octet *o = o_new(L, max_len_out);
+	if(!o) {
+		THROW("Could not create OCTET");
+		END(0);
+	}
     int decoded_len = b32decode(o->val, s);
     if (decoded_len < 0) {
-        lerror(L, "base32 invalid string or empty input");
-        return 0;
+		THROW("Invalid base32 sequence");
+        END(0);
     }
     o->len = decoded_len;
     END(1);
@@ -1040,11 +1111,15 @@ Additionally, before decoding, it removes the '-' characters.
  */
 static int from_base32_crockford(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	const char *s_in = lua_tostring(L, 1);
 	luaL_argcheck(L, s_in != NULL, 1, "base32 string expected");
 	int use_checksum = lua_toboolean(L, 2);
 	char *s = malloc(strlen(s_in) + 1);
-	if (!s) lerror(L, "allocation failed");
+	if (!s) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
 	int k = 0;
 	for (int i = 0; s_in[i]; i++) {
 		if (s_in[i] != '-') s[k++] = s_in[i];
@@ -1052,19 +1127,25 @@ static int from_base32_crockford(lua_State *L) {
 	s[k] = '\0';
 	int len_in = is_base32_crockford(s, use_checksum);
 	if (len_in == 0) {
-		free(s);
-		lerror(L, "invalid Crockford base32 string");
-		return 0;
+		failed_msg = "Invalid Crockford base32 sequence";
+		goto end;
 	}
 	int max_len_out = len_in * 5 / 8;
 	octet *o = o_new(L, max_len_out);
+	if(!o) {
+		failed_msg = "Could not create OCTET";
+		goto end;
+	}
 	int decoded_len = b32crockford_decode(o->val, s, use_checksum);
-	free(s);
 	if (decoded_len < 0) {
-		lerror(L, "base32 decoding failed");
-		return 0;
+		failed_msg = "Crockford base32 decoding failed";
 	}
 	o->len = decoded_len;
+end:
+	if (s) free(s);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
@@ -1082,7 +1163,7 @@ static int from_mnemonic(lua_State *L) {
 	char *failed_msg = NULL;
 	const char *s = lua_tostring(L, 1);
 	if(!s) {
-		failed_msg = "invalid argument";
+		failed_msg = "Invalid argument, string exptected";
 		goto end;
 	}
 	// From bip39 it can be at most 32bytes
@@ -1092,10 +1173,13 @@ static int from_mnemonic(lua_State *L) {
 		goto end;
 	}
 	if(!mnemonic_check_and_bits(s, &(o->len), o->val)) {
-		failed_msg = "words cannot be encoded with bip39 format";
+		failed_msg = "Words cannot be encoded with bip39 format";
 		goto end;
 	}
-	o_dup(L, o); // push in lua's stack
+	if(!o_dup(L, o)) {
+		failed_msg = "Could not duplicate OCTET";
+		goto end;
+	}
 end:
 	o_free(L, o);
 	if(failed_msg) {
@@ -1120,12 +1204,12 @@ static int from_uuid(lua_State *L) {
 	char *exs = NULL;
 	char *tmp = NULL;
 	if (strcmp(type, "string") != 0) {
-		failed_msg = "the input is not a string";
+		failed_msg = "Invalid argument, string exptected";
 		goto end;
 	}
 	const char *s = lua_tostring(L, 1);
 	if(!s) {
-		failed_msg = "invalid argument";
+		failed_msg = "Invalid argument, string expected";
 		goto end;
 	}
 	int inlen = strlen(s);
@@ -1134,7 +1218,7 @@ static int from_uuid(lua_State *L) {
 		inlen-=9;
 	}
 	if(inlen!=UUID_STR_LEN) {
-		failed_msg = "invalid uuid argument length";
+		failed_msg = "Invalid uuid argument length";
 		goto end;
 	}
 	// check the right positions of '-'
@@ -1142,7 +1226,7 @@ static int from_uuid(lua_State *L) {
 		int positions[] = {8, 13, 18, 23};
 		int pos = positions[i];
 		if (s[pos] != '-') {
-			failed_msg = "invalid '-' positions!";
+			failed_msg = "Invalid '-' positions!";
 			goto end;
 		}
 	}
@@ -1150,11 +1234,15 @@ static int from_uuid(lua_State *L) {
 	exs = strdup(s);
 	for(char *p = (char*)exs; *p!=0x0; p++) if(*p=='-') *p = 'aa';
 	if(!is_hex(L, exs)) {
-		failed_msg = "hex sequence invalid";
+		failed_msg = "Invalid hex sequence in uuid";
 		goto end;
 	}
 	tmp = strdup(s);
 	octet *o = o_new(L,UUID_STR_LEN+1);
+	if(!o) {
+		failed_msg = "Could not create OCTET";
+		goto end;
+	}
 	// replace all '-' with zero
 	for(char *p = (char*)tmp; *p!=0x0; p++) if(*p=='-') *p = 0x0;
 	if(hex2buf(o->val,tmp) != 4
@@ -1162,7 +1250,7 @@ static int from_uuid(lua_State *L) {
 		|| hex2buf(o->val+6, tmp+14) != 2
 		|| hex2buf(o->val+8, tmp+19) != 2
 		|| hex2buf(o->val+10, tmp+24) != 6) {
-		failed_msg = "invalid uuid parsed";
+		failed_msg = "Invalid uuid parsed";
 		goto end;
 	}
 	o->len = 16;
@@ -1188,7 +1276,7 @@ Encode an octet object of 16 bytes in uuid notation.
 	char *failed_msg = NULL;
 	const octet *o = o_arg(L, 1);
 	if (!o || o->len != 16) {
-        failed_msg = "expected 16 bytes octet";
+        failed_msg = "Invalid argument, 16 bytes octet expected";
         goto end;
     }
 	char tmp[33];
@@ -1204,12 +1292,12 @@ Encode an octet object of 16 bytes in uuid notation.
         }
     }
 	dst[36] = '\0';
+	lua_pushstring(L, dst);
 end:
 	o_free(L,o);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
-	lua_pushstring(L, dst);
 	END(1);
 }
 
@@ -1226,11 +1314,15 @@ static int zero(lua_State *L) {
 	BEGIN();
 	const int len = luaL_optnumber(L, 1, MAX_OCTET);
 	if(len<1) {
-		lerror(L, "Cannot create a zero length octet");
-		return 0;
+		THROW("Cannot create a zero length octet");
+		END(0);
 	}
 	func(L, "Creating a zero filled octet of %u bytes", len);
 	octet *n = o_new(L,len);
+	if(!n) {
+		THROW("Could not create OCTET");
+		END(0);
+	}
 	register int i;
 	for(i=0; i<len; i++) n->val[i]=0x0;
 	n->len = len;
@@ -1247,6 +1339,10 @@ static int zero(lua_State *L) {
 static int is_zero(lua_State *L) {
 	BEGIN();
 	octet *o = o_arg(L,1);
+	if(!o) {
+		THROW("Could not allocate OCTET");
+		END(1);
+	}
 	if(o->len<1) {
 		lua_pushboolean(L, 0);
 		goto endgame;
@@ -1303,17 +1399,21 @@ static int to_base64 (lua_State *L) {
 	}
 	if(!o->len) { lua_pushnil(L); goto end; }
 	if(!o->len || !o->val) {
-		failed_msg = "base64 cannot encode an empty octet";
+		failed_msg = "Invalid argument, base64 cannot encode an empty octet";
 		goto end;
 	}
 	int newlen;
 	newlen = ((3+(4*(o->len/3))) & ~0x03)+0x0f;
 	b = malloc(newlen);
+	if (!b) {
+		failed_msg = "Could not allocate memory";
+		goto end;
+	}
 	OCT_tobase64(b,(octet*)o);
 	lua_pushstring(L,b);
 end:
-	free(b);
-	o_free(L,o);
+	if(b) free(b);
+	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -1337,18 +1437,22 @@ static int to_url64 (lua_State *L) {
 	}
 	if(!o->len) { lua_pushnil(L); goto end; }
 	if(!o->len || !o->val) {
-		failed_msg = "url64 cannot encode an empty octet";
+		failed_msg = "Invalid argument, url64 cannot encode an empty octet";
 		goto end;
 	}
 	int newlen;
 	newlen = B64encoded_len(o->len);
 	b = malloc(newlen);
+	if(!b) {
+		failed_msg = "Could not allocate memory";
+		goto end;
+	}
 	// b[0]='u';b[1]='6';b[2]='4';b[3]=':';
 	U64encode(b,o->val,o->len);
 	lua_pushstring(L,b);
 end:
-	free(b);
-	o_free(L,o);
+	if(b) free(b);
+	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -1387,7 +1491,7 @@ static int to_base58(lua_State *L) {
 	}
 	if(!o->len) { lua_pushnil(L); goto end; }
 	if(!o->len || !o->val) {
-		failed_msg = "base58 cannot encode an empty octet";
+		failed_msg = "Invalid argument, base58 cannot encode an empty octet";
 		goto end;
 	}
 	if(o->len < 3) {
@@ -1395,7 +1499,7 @@ static int to_base58(lua_State *L) {
 		// in bitcoin-core) when encoding strings smaller than 3 bytes
 		// the 'j' counter being unsigned and initialised at size-2 in
 		// the carry inner loop flips to 18446744073709551615
-		failed_msg = "base58 cannot encode octets smaller than 3 bytes";
+		failed_msg = "Invalid argument, base58 cannot encode octets smaller than 3 bytes";
 		goto end;
 	}
 	size_t maxlen = o->len <<1;
@@ -1404,12 +1508,16 @@ static int to_base58(lua_State *L) {
 	// this workaround will break base58 encoding when using memmanager=lw
 	//char *b = malloc(maxlen);
 	b = malloc(maxlen);
+	if(!b) {
+		failed_msg = "Could not allocate memory";
+		goto end;
+	}
 	size_t b58len = maxlen;
 	b58enc(b, &b58len, o->val, o->len);
 	// b[b58len] = '\0'; // already present in libbase58
 	lua_pushstring(L,b);
 end:
-	free(b);
+	if(b) free(b);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -1426,13 +1534,27 @@ end:
 
 static int to_base45 (lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
+	char *b = NULL;
 	const octet *o = o_arg(L, 1);
+	if(!o) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
 	int newlen = b45encode(NULL, o->val, o->len);
-	char *b = malloc(newlen);
+	b = malloc(newlen);
+	if(!b) {
+		failed_msg = "Could not allocate memory";
+		goto end;
+	}
 	b45encode(b, o->val, o->len);
 	lua_pushstring(L, b);
-	free(b);
+end:
+	if(b) free(b);
 	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
@@ -1445,13 +1567,27 @@ static int to_base45 (lua_State *L) {
 
 static int to_base32(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
+	char *b = NULL;
 	const octet *o = o_arg(L, 1);
+	if(!o) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
 	int newlen = ((o->len + 4) / 5) * 8;
-	char *b = malloc(newlen + 1); // +1 per il '\0'
+	b = malloc(newlen + 1); // +1 per il '\0'
+	if(!b) {
+		failed_msg = "Could not allocate memory";
+		goto end;
+	}
 	b32encode(b, o->val, o->len);
 	lua_pushstring(L, b);
-	free(b);
+end:
+	if(b) free(b);
 	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
@@ -1468,25 +1604,39 @@ The other parameter is a natural number that allows inserting a hyphen at that p
 */
 static int to_base32_crockford(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
+	char *tmp = NULL;
 	const octet *o = o_arg(L, 1);
+	if(!o) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
 	int use_checksum = lua_toboolean(L, 2);
 	int hyphen_pos = 0;
 	if (!lua_isnoneornil(L, 3)) {
-		luaL_argcheck(L, lua_isinteger(L, 3), 3, "hyphen position must be an integer");
-		hyphen_pos = lua_tointeger(L, 3);
+		// luaL_argcheck(L, lua_isinteger(L, 3), 3, "hyphen position must be an integer");
+		int tn;
+		hyphen_pos = lua_tointegerx(L,3,&tn);
+		if(!tn) {
+			failed_msg = "Invalid argument, hyphen position must be an integer";
+			goto end;
+		}
 		if (hyphen_pos < 0) hyphen_pos = 0;
 	}
 	int raw_len = ((o->len + 4) / 5) * 8;
 	if (use_checksum) raw_len += 1;
-	char *tmp = malloc(raw_len + 1);
-	if (!tmp) lerror(L, "allocation failed");
+	tmp = malloc(raw_len + 1);
+	if (!tmp) {
+		failed_msg = "Could not allocate memory";
+		goto end;
+	}
 	b32crockford_encode(tmp, o->val, o->len, use_checksum);
 	if (hyphen_pos > 0 && hyphen_pos < strlen(tmp)) {
 		size_t len = strlen(tmp);
 		char *b = malloc(len + 2); 
 		if (!b) {
-			free(tmp);
-			lerror(L, "allocation failed");
+			failed_msg = "Could not allocate memory";
+			goto end;
 		}
 		memcpy(b, tmp, hyphen_pos);
 		b[hyphen_pos] = '-';
@@ -1496,8 +1646,12 @@ static int to_base32_crockford(lua_State *L) {
 	} else {
 		lua_pushstring(L, tmp);
 	}
-	free(tmp);
+end:
+	if(tmp) free(tmp);
 	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
@@ -1510,23 +1664,36 @@ static int to_base32_crockford(lua_State *L) {
 
 static int to_mnemonic(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
+	char *result = NULL;
 	const octet *o = o_arg(L,1);
-	if(!o->len) { lua_pushnil(L); o_free(L,o); return 1; }
+	if(!o) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	if(!o->len) { lua_pushnil(L); goto end; }
 	if(o->len > 32) {
 		zerror(L, "%s :: octet bigger than 32 bytes cannot be encoded to mnemonic",__func__);
-		o_free(L,o);
-		lua_pushboolean(L, 0);
-		END(0);
+		failed_msg = "Invalid octet, too long for mnemonic encoding";
+		goto end;
 	}
-	char *result = malloc(24 * 10);
+	result = malloc(24 * 10);
+	if(!result) {
+		failed_msg = "Could not allocate memory";
+		goto end;
+	}
 	if(mnemonic_from_data(result, o->val, o->len)) {
 		lua_pushstring(L, result);
 	} else {
-		zerror(L, "%s :: cannot be encoded to mnemonic", __func__);
-		lua_pushboolean(L, 0);
+		failed_msg = "Failed to encode to mnemonic";
+		goto end;
 	}
-	o_free(L,o);
-	free(result);
+end:
+	if(result) free(result);
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
@@ -1548,7 +1715,7 @@ static int to_array(lua_State *L) {
 	}
 	if(!o->len) { lua_pushnil(L); goto end; }
 	if(!o->len || !o->val) {
-		failed_msg = "array cannot encode an empty octet";
+		failed_msg = "Invalid argument, array cannot encode an empty octet";
 		goto end;
 	}
 	lua_newtable(L);
@@ -1605,19 +1772,24 @@ end:
 static int to_string(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
+	char *s = NULL;
 	const octet *o = o_arg(L, 1);
 	if(!o) {
 		failed_msg = "Could not allocate OCTET";
 		goto end;
 	}
 	if(!o->len) { lua_pushnil(L); goto end; }
-	char *s = malloc(o->len+2);
+	s = malloc(o->len+2);
+	if(!s) {
+		failed_msg = "Could not allocate memory";
+		goto end;
+	}
 	OCT_toStr((octet*)o, s); // TODO: inverted function signature, see
 					 // https://github.com/milagro-crypto/milagro-crypto-c/issues/291
 	s[o->len] = '\0'; // make sure string is NULL terminated
 	lua_pushlstring(L, s, o->len);
-	free(s);
 end:
+	if(s) free(s);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -1634,11 +1806,19 @@ end:
 */
 int to_hex(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	const octet *o = o_arg(L,1);
+	if(!o) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
 	if(!o->len) { lua_pushnil(L); goto end; }
 	push_octet_to_hex_string(L, (octet*)o);
 end:
-	o_free(L,o);
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
@@ -1650,9 +1830,19 @@ end:
 */
 static int to_bin(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
+	char *s = NULL;
 	const octet *o = o_arg(L,1);
+	if(!o) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
 	if(!o->len) { lua_pushnil(L); goto end; }
-	char *s = malloc(o->len*8+2);
+	s = malloc(o->len*8+2);
+	if(!s) {
+		failed_msg = "Could not allocate memory";
+		goto end;
+	}
 	int i;
 	char oo;
 	char *is = s;
@@ -1672,7 +1862,10 @@ static int to_bin(lua_State *L) {
 	lua_pushstring(L,s);
 	free(s);
 end:
-	o_free(L,o);
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
@@ -1816,7 +2009,6 @@ static int trim(lua_State *L) { // o =
 		failed_msg = "Could not allocate OCTET";
 		goto end;
 	}
-	octet *res;
 	const char* front;
 	const char* end;
 	size_t size = src->len;
@@ -1832,10 +2024,17 @@ static int trim(lua_State *L) { // o =
 	}
 	if(size == (size_t)src->len) {
 		// no changes
-		res = o_dup(L, src);
+		if(!o_dup(L, src)) {
+			failed_msg = "Could not duplicate OCTET";
+			goto end;
+		}
 	} else {
 		// new octet
-		res = o_new(L, size+4);
+		octet * res = o_new(L, size+4);
+		if(!res) {
+			failed_msg = "Could not create OCTET";
+			goto end;
+		}
 		memcpy(res->val,front,size);
 		res->len = size;
 	}
@@ -2042,6 +2241,10 @@ static int octet_size(lua_State *L) {
 static int max(lua_State *L) {
 	BEGIN();
 	const octet *o = o_arg(L, 1);
+	if(!o) {
+		THROW("Could not allocate OCTET");
+		END(1);
+	}
 	lua_pushinteger(L, o->max);
 	o_free(L, o);
 	END(1);
@@ -2177,10 +2380,19 @@ end:
  */
 static int entropy_bytefreq(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	const octet *o = o_arg(L, 1);
+	if(!o) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
 	register int i; // register
 	// byte frequency table
 	char *bfreq = malloc(0xff);
+	if(!bfreq) {
+		failed_msg = "Could not allocate memory";
+		goto end;
+	}
 	memset(bfreq, 0x0, 0xff);
 	// calculate freqency of byte values
 	register char *p = o->val;
@@ -2193,8 +2405,12 @@ static int entropy_bytefreq(lua_State *L) {
 		lua_pushnumber(L,*p);
 		lua_settable(L,-3);
 	}
-	free(bfreq);
+end:
+	if(bfreq) free(bfreq);
 	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
@@ -2225,13 +2441,26 @@ static int entropy_bytefreq(lua_State *L) {
  */
 static int entropy(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	const octet *o = o_arg(L,1);
+	if(!o) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
 	register int i; // register
 	// byte frequency table
 	char *bfreq = malloc(0xff+0x0f);
+	if(!bfreq) {
+		failed_msg = "Could not allocate memory";
+		goto end;
+	}
 	memset(bfreq, 0x0, 0xff+0x0f);
 	// probability of recurring for each byte
 	float *bprob = (float*)malloc(sizeof(float)*(0xff+0x0f));
+	if(!bprob) {
+		failed_msg = "Could not allocate memory";
+		goto end;
+	}
 	memset(bprob, 0x0, sizeof(float)*(0xff+0x0f));
 	// calculate freqency of byte values
 	register char *p = o->val;
@@ -2249,16 +2478,21 @@ static int entropy(lua_State *L) {
 		*f = freq / (float)o->len;
 		entropy += *f * log2(*f);
 	}
-	// free work buffers
-	free(bfreq);
-	free(bprob);
-	o_free(L, o);
 	// return entropy ratio, max and bits
 	float bits = -1.0 * entropy;
 	float entmax = log2(num);
 	lua_pushnumber(L, (lua_Number) (bits / entmax)); // ratio
 	lua_pushnumber(L, (lua_Number) entmax ); // max
 	lua_pushnumber(L, (lua_Number) bits);
+end:
+	if(bfreq) free(bfreq);
+	if(bprob) free(bprob);
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+		lua_pushnil(L);
+		lua_pushnil(L);
+	}
 	END(3);
 }
 
@@ -2409,6 +2643,10 @@ static int charcount(lua_State *L) {
 	const char *s = lua_tostring(L, 2);
 	luaL_argcheck(L, s != NULL, 1, "string expected");
 	const octet *o = o_arg(L,1);
+	if(!o) {
+		THROW("Could not allocate OCTET");
+		END(1);
+	}
 	needle = *s; // single char
 	const char *hay = (const char*)o->val;
 	for(p=hay, c=0; c < o->len; p++, c++) if(needle==*p) count++;
@@ -2496,6 +2734,10 @@ static int elide_at_start(lua_State *L) {
 		lua_pushnil(L);
 	} else {
 		octet* res = o_new(L, o->len - prefix->len);
+		if(!res) {
+			failed_msg = "Could not create OCTET";
+			goto end;
+		}
 		if (i < o->len) {
 			memmove(res->val, o->val + i, o->len - i);
 			res->len = o->len - prefix->len;
@@ -2535,10 +2777,14 @@ static int fillrepeat(lua_State *L) {
 	int tn;
 	lua_Integer size = lua_tointegerx(L,2,&tn);
 	if(!tn || size < 0) {
-		failed_msg = "size is not a positive number";
+		failed_msg = "Invalid argument, size is not a positive number";
 		goto end;
 	}
 	octet* res = o_new(L, size);
+	if(!res) {
+		failed_msg = "Could not create OCTET";
+		goto end;
+	}
 	res->len = size;
 	int i;
 	for(i=0; i<res->len; i++) {
@@ -2575,13 +2821,22 @@ end:
  */
 static int lesser_than(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	const octet *l = o_arg(L,1);
 	const octet *r = o_arg(L,2);
+	if(!l || !r) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
 	size_t minlen = (l->len < r->len) ? l->len : r->len;
 	if( memcmp(l->val,r->val,minlen) < 0 ) lua_pushboolean(L, 1);
 	else lua_pushboolean(L, 0);
+end:
 	o_free(L,l);
 	o_free(L,r);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
@@ -2627,14 +2882,17 @@ static int shift_left(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	const octet *o = o_arg(L,1);
+	if(!o) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
 	int isnum;
 	lua_Integer n = lua_tointegerx(L,2,&isnum);
 	if(!isnum) {
-		failed_msg = "shift input is not a number";
+		failed_msg = "Invalid argument, shift input is not a number";
 		goto end;
 	}
 	octet *out = o_new(L,o->len);
-
 	if(!out) {
 		failed_msg = "Could not create OCTET";
 		goto end;
@@ -2642,14 +2900,12 @@ static int shift_left(lua_State *L) {
 	OCT_copy(out, o);
 
 	OCT_shl_bits(out, n);
-	end:
+end:
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
 	END(1);
-
-
 }
 
 void OCT_shr_bits(octet *x, int n) {
@@ -2693,14 +2949,17 @@ static int shift_right(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	const octet *o = o_arg(L,1);
+	if(!o) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
 	int isnum;
 	lua_Integer n = lua_tointegerx(L,2,&isnum);
 	if(!isnum) {
-		failed_msg = "shift input is not a number";
+		failed_msg = "Invalid argument, shift input is not a number";
 		goto end;
 	}
 	octet *out = o_new(L,o->len);
-
 	if(!out) {
 		failed_msg = "Could not create OCTET";
 		goto end;
@@ -2708,14 +2967,12 @@ static int shift_right(lua_State *L) {
 	OCT_copy(out, o);
 
 	OCT_shr_bits(out, n);
-	end:
+end:
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
 	END(1);
-
-
 }
 
 /***
@@ -2737,6 +2994,10 @@ static int shift_left_circular(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	const octet *o = o_arg(L,1);
+	if(!o) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
 	int isnum;
 	lua_Integer n = lua_tointegerx(L,2,&isnum);
 	if(!isnum) {
@@ -2744,7 +3005,6 @@ static int shift_left_circular(lua_State *L) {
 		goto end;
 	}
 	octet *out = o_new(L,o->len);
-
 	if(!out) {
 		failed_msg = "Could not create OCTET";
 		goto end;
@@ -2752,7 +3012,7 @@ static int shift_left_circular(lua_State *L) {
 	OCT_copy(out, o);
 
 	OCT_circular_shl_bits(out, n);
-	end:
+end:
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -2812,6 +3072,10 @@ static int shift_right_circular(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	const octet *o = o_arg(L,1);
+	if(!o) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
 	int isnum;
 	lua_Integer n = lua_tointegerx(L,2,&isnum);
 	if(!isnum) {
@@ -2819,7 +3083,6 @@ static int shift_right_circular(lua_State *L) {
 		goto end;
 	}
 	octet *out = o_new(L,o->len);
-
 	if(!out) {
 		failed_msg = "Could not create OCTET";
 		goto end;
@@ -2833,8 +3096,6 @@ static int shift_right_circular(lua_State *L) {
 		THROW(failed_msg);
 	}
 	END(1);
-
-
 }
 
 void OCT_and(octet *y, octet *x)
@@ -3081,21 +3342,27 @@ static int xor_grow(lua_State *L) {
 		goto end;
 	}
 	octet *tx = o_alloc(L,max);
+	if(!tx) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
 	memcpy(tx->val,x->val,x->len);
 	tx->len = x->len;
 	OCT_pad(tx, max);
 
 	octet *ty = o_alloc(L,max);
+	if(!ty) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
 	memcpy(ty->val,y->val,y->len);
 	ty->len = y->len;
 	OCT_pad(ty, max);
-
-	o_free(L, x);
-	o_free(L, y);
-
 	OCT_copy(n, tx);
 	OCT_xor(n, ty);
 end:
+	o_free(L, x);
+	o_free(L, y);
 	o_free(L, tx);
 	o_free(L, ty);
 	if(failed_msg) {
@@ -3171,6 +3438,10 @@ static int bit_not(lua_State *L) {
 		goto end;
 	}
 	octet *n = o_new(L,x->len);
+	if(!n) {
+		failed_msg = "Could not create OCTET";
+		goto end;
+	}
 	OCT_copy(n, x);
 	int i;
 	for (i = 0; i < x->len; i++) {
@@ -3230,24 +3501,26 @@ Finds a needle sequence of bytes in a haystack octet and returns the
 */
 static int memfind(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	const octet *haystack = o_arg(L,1);
 	const octet *needle = o_arg(L,2);
+	if(!haystack || !needle) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
 	if(needle->len>=haystack->len) {
-		lua_pushnil(L);
-		zerror(L,"Octet:substr called on a needle bigger than haystack");
+		failed_msg = "Octet:substr called on a needle bigger than haystack";
 		goto end;
 	}
 	const int pos = luaL_optnumber(L, 3, 0);
 	char *start = haystack->val;
 	if(pos>0) {
 		if(pos>=haystack->len) {
-			lua_pushnil(L);
-			zerror(L,"Octet:find position (3rd arg) out of haystack");
+			failed_msg = "Octet:find position (3rd arg) out of haystack";
 			goto end;
 		}
 		if(haystack->len-pos<needle->len) {
-			lua_pushnil(L);
-			zerror(L,"Octet:find position (3rd arg) squeezes out needle");
+			failed_msg = "Octet:find position (3rd arg) squeezes out needle";
 			goto end;
 		}
 		start += pos;
@@ -3263,6 +3536,9 @@ static int memfind(lua_State *L) {
  end:
 	o_free(L,needle);
 	o_free(L,haystack);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
@@ -3367,6 +3643,10 @@ static int mempaste(lua_State *L) {
 		goto end;
 	}
 	octet *res = o_dup(L,hay);
+	if(!res) {
+		failed_msg = "Cannot duplicate octet memory";
+		goto end;
+	}
 	memcpy(res->val+start, src->val, src->len);
 end:
 	o_free(L, src);
