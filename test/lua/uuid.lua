@@ -29,23 +29,23 @@ local invalid_uuids = {
 
 local success, err = pcall(OCTET.from_uuid, invalid_uuids[1])
 assert(not success, "Expected error with nil input, but succeeded")
-assert(err:find("hex sequence invalid"), "Wrong error message for invalid hex input")
+assert(err:find("Invalid hex sequence in uuid"), "Wrong error message for invalid hex input")
 
 local success, err = pcall(OCTET.from_uuid, invalid_uuids[2])
 assert(not success, "Expected error with nil input, but succeeded")
-assert(err:find("invalid uuid argument length"), "Wrong error message for invalid length")
+assert(err:find("Invalid uuid argument length"), "Wrong error message for invalid length")
 
 local success, err = pcall(OCTET.from_uuid, invalid_uuids[3])
 assert(not success, "Expected error with nil input, but succeeded")
-assert(err:find("invalid uuid argument length"), "Wrong error message for invalid length with wrong prefix")
+assert(err:find("Invalid uuid argument length"), "Wrong error message for invalid length with wrong prefix")
 
 local success, err = pcall(OCTET.to_uuid, nil)
 assert(not success, "Expected error with 8-byte octet, but succeeded")
-assert(err:find("expected 16 bytes octet"), "Wrong error message for invalid length")
+assert(err:find("Invalid argument, 16 bytes octet expected"), "Wrong error message for invalid length")
 
 local oct = O.random(10)
 local success, err = pcall(OCTET.to_uuid, oct)
 assert(not success, "Expected error with 8-byte octet, but succeeded")
-assert(err:find("expected 16 bytes octet"), "Wrong error message for invalid length")
+assert(err:find("Invalid argument, 16 bytes octet expected"), "Wrong error message for invalid length")
 
 print("✅ All invalid input tests passed!")
