@@ -2381,6 +2381,7 @@ end:
 static int entropy_bytefreq(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
+	char *bfreq = NULL;
 	const octet *o = o_arg(L, 1);
 	if(!o) {
 		failed_msg = "Could not allocate OCTET";
@@ -2388,7 +2389,7 @@ static int entropy_bytefreq(lua_State *L) {
 	}
 	register int i; // register
 	// byte frequency table
-	char *bfreq = malloc(0xff);
+	bfreq = malloc(0xff);
 	if(!bfreq) {
 		failed_msg = "Could not allocate memory";
 		goto end;
@@ -2442,6 +2443,7 @@ end:
 static int entropy(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
+	char *bfreq = NULL, *bprob =NULL;
 	const octet *o = o_arg(L,1);
 	if(!o) {
 		failed_msg = "Could not allocate OCTET";
@@ -2449,14 +2451,14 @@ static int entropy(lua_State *L) {
 	}
 	register int i; // register
 	// byte frequency table
-	char *bfreq = malloc(0xff+0x0f);
+	bfreq = malloc(0xff+0x0f);
 	if(!bfreq) {
 		failed_msg = "Could not allocate memory";
 		goto end;
 	}
 	memset(bfreq, 0x0, 0xff+0x0f);
 	// probability of recurring for each byte
-	float *bprob = (float*)malloc(sizeof(float)*(0xff+0x0f));
+	bprob = (float*)malloc(sizeof(float)*(0xff+0x0f));
 	if(!bprob) {
 		failed_msg = "Could not allocate memory";
 		goto end;
