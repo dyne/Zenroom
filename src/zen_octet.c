@@ -1161,13 +1161,14 @@ after checking if the input string is valid mnemonic.
 static int from_mnemonic(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
+	octet *o = NULL;
 	const char *s = lua_tostring(L, 1);
 	if(!s) {
 		failed_msg = "Invalid argument, string exptected";
 		goto end;
 	}
 	// From bip39 it can be at most 32bytes
-	octet *o = o_alloc(L, 32);
+	o = o_alloc(L, 32);
 	if(!o) {
 		failed_msg = "Could not allocate OCTET";
 		goto end;
@@ -1282,7 +1283,6 @@ Encode an octet object of 16 bytes in uuid notation.
 	char tmp[33];
 	char dst[UUID_STR_LEN+1];
 	buf2hex(tmp, o->val, 16);
-	static const int dash_positions[] = {8, 13, 18, 23};
     int src_pos = 0;
 	for(int i = 0; i < 36; i++) {
         if((i == 8) || (i == 13) || (i == 18) || (i == 23)) {
@@ -1338,7 +1338,7 @@ static int zero(lua_State *L) {
 */
 static int is_zero(lua_State *L) {
 	BEGIN();
-	octet *o = o_arg(L,1);
+	const octet *o = o_arg(L,1);
 	if(!o) {
 		THROW("Could not allocate OCTET");
 		END(1);
@@ -2443,7 +2443,8 @@ end:
 static int entropy(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	char *bfreq = NULL, *bprob =NULL;
+	char *bfreq = NULL;
+	float *bprob =NULL;
 	const octet *o = o_arg(L,1);
 	if(!o) {
 		failed_msg = "Could not allocate OCTET";
@@ -2883,6 +2884,7 @@ void OCT_shl_bits(octet *x, int n) {
 static int shift_left(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
+	octet *o_copy = NULL;
 	const octet *o = o_arg(L,1);
 	if(!o) {
 		failed_msg = "Could not allocate OCTET";
@@ -2899,10 +2901,18 @@ static int shift_left(lua_State *L) {
 		failed_msg = "Could not create OCTET";
 		goto end;
 	}
-	OCT_copy(out, o);
+	o_copy = o_alloc(L, o->len);
+	if(!o_copy) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	memcpy(o_copy->val,o->val,o->len);
+	o_copy->len = o->len;
 
+	OCT_copy(out, o_copy);
 	OCT_shl_bits(out, n);
 end:
+	o_free(L, o_copy);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -2950,6 +2960,7 @@ void OCT_shr_bits(octet *x, int n) {
 static int shift_right(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
+	octet *o_copy = NULL;
 	const octet *o = o_arg(L,1);
 	if(!o) {
 		failed_msg = "Could not allocate OCTET";
@@ -2966,10 +2977,18 @@ static int shift_right(lua_State *L) {
 		failed_msg = "Could not create OCTET";
 		goto end;
 	}
-	OCT_copy(out, o);
+	o_copy = o_alloc(L, o->len);
+	if(!o_copy) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	memcpy(o_copy->val,o->val,o->len);
+	o_copy->len = o->len;
 
+	OCT_copy(out, o_copy);
 	OCT_shr_bits(out, n);
 end:
+	o_free(L, o_copy);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -2995,6 +3014,7 @@ end:
 static int shift_left_circular(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
+	octet *o_copy = NULL;
 	const octet *o = o_arg(L,1);
 	if(!o) {
 		failed_msg = "Could not allocate OCTET";
@@ -3011,10 +3031,18 @@ static int shift_left_circular(lua_State *L) {
 		failed_msg = "Could not create OCTET";
 		goto end;
 	}
-	OCT_copy(out, o);
+	o_copy = o_alloc(L, o->len);
+	if(!o_copy) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	memcpy(o_copy->val,o->val,o->len);
+	o_copy->len = o->len;
 
+	OCT_copy(out, o_copy);
 	OCT_circular_shl_bits(out, n);
 end:
+	o_free(L, o_copy);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -3073,6 +3101,7 @@ void OCT_circular_shr_bits(octet *x, int n) {
 static int shift_right_circular(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
+	octet *o_copy = NULL;
 	const octet *o = o_arg(L,1);
 	if(!o) {
 		failed_msg = "Could not allocate OCTET";
@@ -3089,10 +3118,18 @@ static int shift_right_circular(lua_State *L) {
 		failed_msg = "Could not create OCTET";
 		goto end;
 	}
-	OCT_copy(out, o);
+	o_copy = o_alloc(L, o->len);
+	if(!o_copy) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	memcpy(o_copy->val,o->val,o->len);
+	o_copy->len = o->len;
 
+	OCT_copy(out, o_copy);
 	OCT_circular_shr_bits(out, n);
-	end:
+end:
+	o_free(L, o_copy);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -3128,8 +3165,9 @@ void OCT_and(octet *y, octet *x)
 static int and_grow(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *x = o_arg(L, 1);
-	octet *y = o_arg(L, 2);
+	octet *x_copy = NULL, *y_copy = NULL;
+	const octet *x = o_arg(L, 1);
+	const octet *y = o_arg(L, 2);
 	if(!x || !y) {
 		failed_msg = "Could not allocate OCTET";
 		goto end;
@@ -3140,22 +3178,39 @@ static int and_grow(lua_State *L) {
 		failed_msg = "Could not create OCTET";
 		goto end;
 	}
+	// copy to remove const
+	x_copy = o_alloc(L, x->len);
+	if(!x_copy) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	memcpy(x_copy->val,x->val,x->len);
+	x_copy->len = x->len;
+	y_copy = o_alloc(L, y->len);
+	if(!y_copy) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	memcpy(y_copy->val,y->val,y->len);
+	y_copy->len = y->len;
 
 	// pad first arg with zeroes
-	if(x->len < max) {
-		x->val = realloc(x->val, max);
-		x->max = max;
-		OCT_pad(x, max);
+	if(x_copy->len < max) {
+		x_copy->val = realloc(x_copy->val, max);
+		x_copy->max = max;
+		OCT_pad(x_copy, max);
 	}
-	if(y->len < max) {
-		y->val = realloc(y->val, max);
-		y->max = max;
-		OCT_pad(y, max);
+	if(y_copy->len < max) {
+		y_copy->val = realloc(y_copy->val, max);
+		y_copy->max = max;
+		OCT_pad(y_copy, max);
 	}
 
-	OCT_copy(n, x);
-	OCT_and(n, y);
+	OCT_copy(n, x_copy);
+	OCT_and(n, y_copy);
 end:
+	o_free(L, x_copy);
+	o_free(L, y_copy);
 	o_free(L, x);
 	o_free(L, y);
 	if(failed_msg) {
@@ -3183,8 +3238,9 @@ end:
 static int and_shrink(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *x = o_arg(L, 1);
-	octet *y = o_arg(L, 2);
+	octet *x_copy = NULL, *y_copy = NULL;
+	const octet *x = o_arg(L, 1);
+	const octet *y = o_arg(L, 2);
 	if(!x || !y) {
 		failed_msg = "Could not allocate OCTET";
 		goto end;
@@ -3195,9 +3251,27 @@ static int and_shrink(lua_State *L) {
 		failed_msg = "Could not create OCTET";
 		goto end;
 	}
-	OCT_copy(n, x);
-	OCT_and(n, y);
+	// copy to remove const
+	x_copy = o_alloc(L, x->len);
+	if(!x_copy) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	memcpy(x_copy->val,x->val,x->len);
+	x_copy->len = x->len;
+	y_copy = o_alloc(L, y->len);
+	if(!y_copy) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	memcpy(y_copy->val,y->val,y->len);
+	y_copy->len = y->len;
+
+	OCT_copy(n, x_copy);
+	OCT_and(n, y_copy);
 end:
+	o_free(L, x_copy);
+	o_free(L, y_copy);
 	o_free(L, x);
 	o_free(L, y);
 	if(failed_msg) {
@@ -3234,8 +3308,9 @@ void OCT_or(octet *y, octet *x)
 static int or_grow(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *x = o_arg(L, 1);
-	octet *y = o_arg(L, 2);
+	octet *x_copy = NULL, *y_copy = NULL;
+	const octet *x = o_arg(L, 1);
+	const octet *y = o_arg(L, 2);
 	if(!x || !y) {
 		failed_msg = "Could not allocate OCTET";
 		goto end;
@@ -3246,22 +3321,39 @@ static int or_grow(lua_State *L) {
 		failed_msg = "Could not create OCTET";
 		goto end;
 	}
+	// copy to remove const
+	x_copy = o_alloc(L, x->len);
+	if(!x_copy) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	memcpy(x_copy->val,x->val,x->len);
+	x_copy->len = x->len;
+	y_copy = o_alloc(L, y->len);
+	if(!y_copy) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	memcpy(y_copy->val,y->val,y->len);
+	y_copy->len = y->len;
 
 	// pad first arg with zeroes
-	if(x->len < max) {
-		x->val = realloc(x->val, max);
-		x->max = max;
-		OCT_pad(x, max);
+	if(x_copy->len < max) {
+		x_copy->val = realloc(x_copy->val, max);
+		x_copy->max = max;
+		OCT_pad(x_copy, max);
 	}
-	if(y->len < max) {
-		y->val = realloc(y->val, max);
-		y->max = max;
-		OCT_pad(y, max);
+	if(y_copy->len < max) {
+		y_copy->val = realloc(y_copy->val, max);
+		y_copy->max = max;
+		OCT_pad(y_copy, max);
 	}
 
-	OCT_copy(n, x);
-	OCT_or(n, y);
+	OCT_copy(n, x_copy);
+	OCT_or(n, y_copy);
 end:
+	o_free(L, x_copy);
+	o_free(L, y_copy);
 	o_free(L, x);
 	o_free(L, y);
 	if(failed_msg) {
@@ -3289,8 +3381,9 @@ end:
 static int or_shrink(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *x = o_arg(L, 1);
-	octet *y = o_arg(L, 2);
+	octet *x_copy = NULL, *y_copy = NULL;
+	const octet *x = o_arg(L, 1);
+	const octet *y = o_arg(L, 2);
 	if(!x || !y) {
 		failed_msg = "Could not allocate OCTET";
 		goto end;
@@ -3301,9 +3394,27 @@ static int or_shrink(lua_State *L) {
 		failed_msg = "Could not create OCTET";
 		goto end;
 	}
-	OCT_copy(n, x);
-	OCT_or(n, y);
+	// copy to remove const
+	x_copy = o_alloc(L, x->len);
+	if(!x_copy) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	memcpy(x_copy->val,x->val,x->len);
+	x_copy->len = x->len;
+	y_copy = o_alloc(L, y->len);
+	if(!y_copy) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	memcpy(y_copy->val,y->val,y->len);
+	y_copy->len = y->len;
+
+	OCT_copy(n, x_copy);
+	OCT_or(n, y_copy);
 end:
+	o_free(L, x_copy);
+	o_free(L, y_copy);
 	o_free(L, x);
 	o_free(L, y);
 	if(failed_msg) {
@@ -3331,8 +3442,10 @@ Bitwise XOR operation on two octets padded to reach the same length, returns a n
 static int xor_grow(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	const octet *x = o_arg(L, 1);
-	const octet *y = o_arg(L, 2);
+	const octet *x = NULL, *y = NULL;
+	octet *tx = NULL, *ty = NULL;
+	x = o_arg(L, 1);
+	y = o_arg(L, 2);
 	if(!x || !y) {
 		failed_msg = "Could not allocate OCTET";
 		goto end;
@@ -3343,7 +3456,7 @@ static int xor_grow(lua_State *L) {
 		failed_msg = "Could not create OCTET";
 		goto end;
 	}
-	octet *tx = o_alloc(L,max);
+	tx = o_alloc(L,max);
 	if(!tx) {
 		failed_msg = "Could not allocate OCTET";
 		goto end;
@@ -3352,7 +3465,7 @@ static int xor_grow(lua_State *L) {
 	tx->len = x->len;
 	OCT_pad(tx, max);
 
-	octet *ty = o_alloc(L,max);
+	ty = o_alloc(L,max);
 	if(!ty) {
 		failed_msg = "Could not allocate OCTET";
 		goto end;
@@ -3395,6 +3508,7 @@ Bitwise XOR operation on two octets truncating at the shortest one length, retur
 static int xor_shrink(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
+	octet *x_copy = NULL, *y_copy = NULL;
 	const octet *x = o_arg(L, 1);
 	const octet *y = o_arg(L, 2);
 	if(HEDLEY_UNLIKELY(!x || !y)) {
@@ -3407,9 +3521,27 @@ static int xor_shrink(lua_State *L) {
 		failed_msg = "Could not create OCTET";
 		goto end;
 	}
-	OCT_copy(n, (octet*)x);
-	OCT_xor(n, (octet*)y);
+	// copy to remove const
+	x_copy = o_alloc(L, x->len);
+	if(!x_copy) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	memcpy(x_copy->val,x->val,x->len);
+	x_copy->len = x->len;
+	y_copy = o_alloc(L, y->len);
+	if(!y_copy) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	memcpy(y_copy->val,y->val,y->len);
+	y_copy->len = y->len;
+
+	OCT_copy(n, x_copy);
+	OCT_xor(n, y_copy);
 end:
+	o_free(L, x_copy);
+	o_free(L, y_copy);
 	o_free(L, x);
 	o_free(L, y);
 	if(failed_msg) {
@@ -3434,7 +3566,8 @@ end:
 static int bit_not(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *x = o_arg(L, 1);
+	octet *x_copy = NULL;
+	const octet *x = o_arg(L, 1);
 	if(!x) {
 		failed_msg = "Could not allocate OCTET";
 		goto end;
@@ -3444,12 +3577,20 @@ static int bit_not(lua_State *L) {
 		failed_msg = "Could not create OCTET";
 		goto end;
 	}
-	OCT_copy(n, x);
+	x_copy = o_alloc(L, x->len);
+	if(!x_copy) {
+		failed_msg = "Could not allocate OCTET";
+		goto end;
+	}
+	memcpy(x_copy->val,x->val,x->len);
+	x_copy->len = x->len;
+	OCT_copy(n, x_copy);
 	int i;
 	for (i = 0; i < x->len; i++) {
 		n->val[i] = ~(x->val[i]);
 	}
 end:
+	o_free(L, x_copy);
 	o_free(L, x);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -3622,12 +3763,13 @@ static int mempaste(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	int start;
-	const octet *hay = o_arg(L, 1);
+	const octet *src = NULL, *hay = NULL;
+	hay = o_arg(L, 1);
 	if(!hay) {
 		failed_msg = "Cannot allocate octet memory";
 		goto end;
 	}
-	const octet *src = o_arg(L,2);
+	src = o_arg(L,2);
 	if(!src) {
 		failed_msg = "Cannot allocate octet memory";
 		goto end;
