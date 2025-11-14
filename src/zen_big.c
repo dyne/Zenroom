@@ -185,7 +185,10 @@ big* big_arg(lua_State *L,int n) {
 // allocates a new big in LUA, duplicating the one in arg
 big *big_dup(lua_State *L, big *s) {
 	big *n = big_new(L);
-	if(!n) { THROW(CREATE_BIG_ERR); END(NULL); }
+	if(!n) {
+		zerror(L, CREATE_BIG_ERR);
+		return NULL;
+	}
 	if(s->doublesize) {
 		dbig_init(L,n);
 		BIG_dcopy(n->dval, s->dval);
@@ -315,7 +318,7 @@ static int newbig(lua_State *L) {
 	const octet *o = o_arg(L, 1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
 	SAFE_GOTO(o->len <= MODBYTES, "Invalid argument, octet too long for BIG encoding");
 	big *c = big_new(L); SAFE_GOTO(c, CREATE_BIG_ERR);
-	_octet_to_big(L, c,o);
+	SAFE_GOTO(_octet_to_big(L, c, o), "Could not create BIG from octet");
 end:
 	o_free(L,o);
 	if(failed_msg) {
