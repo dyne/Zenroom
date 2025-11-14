@@ -67,55 +67,23 @@ static int gcm_encrypt(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	octet *k = NULL, *in = NULL, *iv = NULL, *h = NULL;
-	k =  o_arg(L, 1);
-	if(k == NULL) {
-		failed_msg = "failed to allocate space for the aes key";
-		goto end;
-	}
-        // AES key size nk can be 16, 24 or 32 bytes
-	if(k->len > 32 || k->len < 16) {
-		zerror(L, "ECDH.aead_encrypt accepts only keys of 16, 24, 32, this is %u", k->len);
-		failed_msg = "ECDH encryption aborted";
-		goto end;
-	}
-	in = o_arg(L, 2);
-	if(in == NULL) {
-		failed_msg = "failed to allocate space for the messsage text";
-		goto end;
-	}
-	iv = o_arg(L, 3);
-	if(iv == NULL) {
-		failed_msg = "failed to allocate space for the iv";
-		goto end;
-	}
-        if (iv->len < 12) {
-		zerror(L, "ECDH.aead_encrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
-		failed_msg = "ECDH encryption aborted";
-		goto end;
-	}
-	h =  o_arg(L, 4);
-	if(h == NULL) {
-		failed_msg = "failed to allocate space for the header";
-		goto end;
-	}
+	k =  (octet *)o_arg(L, 1); SAFE_GOTO(k, "Could not allocate aes key");
+	// AES key size nk can be 16, 24 or 32 bytes
+	SAFE_GOTO(k->len == 16 || k->len == 24 || k->len == 32, "Invalid argument, AES-GCM key must be 16, 24 or 32 bytes");
+	in = (octet *)o_arg(L, 2); SAFE_GOTO(in, "Could not allocate message text");
+	iv = (octet *)o_arg(L, 3); SAFE_GOTO(iv, "Could not allocate iv");
+	SAFE_GOTO(iv->len >= 12, "Invalid argument, IV must be at least 12 bytes");
+	h =  (octet *)o_arg(L, 4); SAFE_GOTO(h, "Could not allocate header");
 	// output is padded to next word
-	octet *out = o_new(L, in->len+16);
-	if(out == NULL) {
-		failed_msg = "failed to allocate space for the output";
-		goto end;
-	}
-	octet *t = o_new(L, 16);
-	if(t == NULL) {
-		failed_msg = "failed to allocate space for the checksum";
-		goto end;
-	}
+	octet *out = o_new(L, in->len+16); SAFE_GOTO(out, "Could not create output");
+	octet *t = o_new(L, 16); SAFE_GOTO(t, "Could not create tag");
 	AES_GCM_ENCRYPT(k, iv, h, in, out, t);
 end:
 	o_free(L, h);
 	o_free(L, iv);
 	o_free(L, in);
 	o_free(L, k);
-	if(failed_msg != NULL) {
+	if(failed_msg) {
 		THROW(failed_msg);
 		lua_pushnil(L);
 	}
@@ -140,54 +108,22 @@ static int gcm_decrypt(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	octet *k = NULL, *in = NULL, *iv = NULL, *h = NULL;
-	k = o_arg(L, 1);
-	if(k == NULL) {
-		failed_msg = "failed to allocate space for the aes key";
-		goto end;
-	}
-	if(k->len > 32 || k->len < 16) {
-		zerror(L, "ECDH.aead_decrypt accepts only keys of 16, 24, 32, this is %u", k->len);
-		failed_msg = "ECDH decryption aborted";
-		goto end;
-	}
-	in = o_arg(L, 2);
-	if(in == NULL) {
-		failed_msg = "failed to allocate space for the messsage text";
-		goto end;
-	}
-	iv = o_arg(L, 3);
-	if(iv == NULL) {
-		failed_msg = "failed to allocate space for the iv";
-		goto end;
-	}
-        if (iv->len < 12) {
-		zerror(L, "ECDH.aead_decrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
-		failed_msg = "ECDH decryption aborted";
-		goto end;
-	}
-	h = o_arg(L, 4);
-	if(h == NULL) {
-		failed_msg = "failed to allocate space for the header";
-		goto end;
-	}
+	k = (octet *)o_arg(L, 1); SAFE_GOTO(k, "Could not allocate aes key");
+	SAFE_GOTO(k->len == 16 || k->len == 24 || k->len == 32, "Invalid argument, AES-GCM key must be 16, 24 or 32 bytes");
+	in = (octet *)o_arg(L, 2); SAFE_GOTO(in, "Could not allocate message text");
+	iv = (octet *)o_arg(L, 3); SAFE_GOTO(iv, "Could not allocate iv");
+	SAFE_GOTO(iv->len >= 12, "Invalid argument, IV must be at least 12 bytes");
+	h = (octet *)o_arg(L, 4); SAFE_GOTO(h, "Could not allocate header");
 	// output is padded to next word
-	octet *out = o_new(L, in->len+16);
-	if(out == NULL) {
-		failed_msg = "failed to allocate space for the output";
-		goto end;
-	}
-	octet *t2 = o_new(L, 16);
-	if(t2 == NULL) {
-		failed_msg = "failed to allocate space for the checksum";
-		goto end;
-	}
-	AES_GCM_DECRYPT(k, iv, h, in, out, t2);
+	octet *out = o_new(L, in->len+16); SAFE_GOTO(out, "Could not create output");
+	octet *t = o_new(L, 16); SAFE_GOTO(t, "Could not create tag");
+	AES_GCM_DECRYPT(k, iv, h, in, out, t);
 end:
 	o_free(L, h);
 	o_free(L, iv);
 	o_free(L, in);
 	o_free(L, k);
-	if(failed_msg != NULL) {
+	if(failed_msg) {
 		THROW(failed_msg);
 		lua_pushnil(L);
 	}
@@ -199,44 +135,20 @@ static int ctr_encrypt(lua_State *L) {
 	char *failed_msg = NULL;
 	octet *k = NULL, *in = NULL, *iv = NULL;
 	amcl_aes a;
-	k = o_arg(L, 1);
-	if(k == NULL) {
-		failed_msg = "failed to allocate space for the aes key";
-		goto end;
-	}
-	if(k->len != 16 && k->len != 32) {
-		zerror(L, "AES.ctr_process accepts only keys of 16 or 32 bytes, this is %u", k->len);
-		failed_msg = "AES-CTR process aborted";
-		goto end;
-	}
-	in = o_arg(L, 2);
-	if(in == NULL) {
-		failed_msg = "failed to allocate space for the message text";
-		goto end;
-	}
-	iv = o_arg(L, 3);
-	if(iv == NULL) {
-		failed_msg = "failed to allocate space for the iv";
-		goto end;
-	}
-	if (iv->len < 12) {
-		zerror(L, "AES.ctr_process accepts an iv of 12 bytes minimum, this is %u", iv->len);
-		failed_msg = "AES-CTR process aborted";
-		goto end;
-	}
+	k = (octet *)o_arg(L, 1); SAFE_GOTO(k, "Could not allocate aes key");
+	SAFE_GOTO(k->len == 16 || k->len == 32, "Invalid argument, AES-CTR key must be 16 or 32 bytes");
+	in = (octet *)o_arg(L, 2); SAFE_GOTO(in, "Could not allocate message text");
+	iv = (octet *)o_arg(L, 3); SAFE_GOTO(iv, "Could not allocate iv");
+	SAFE_GOTO(iv->len >= 12, "Invalid argument, IV must be at least 12 bytes");
 	AES_init(&a, CTR16, k->len, k->val, iv->val);
-	octet *out = o_dup(L, in);
-	if(out == NULL) {
-		failed_msg = "failed to allocate space for the output";
-		goto end;
-	}
+	octet *out = o_dup(L, in); SAFE_GOTO(out, "Could not create output");
 	AMCL_(AES_encrypt)(&a, out->val);
 	AES_end(&a);
 end:
 	o_free(L, iv);
 	o_free(L, in);
 	o_free(L, k);
-	if(failed_msg != NULL) {
+	if(failed_msg) {
 		THROW(failed_msg);
 	}
 	END(1);
@@ -247,49 +159,24 @@ static int ctr_decrypt(lua_State *L) {
 	char *failed_msg = NULL;
 	octet *k = NULL, *in = NULL, *iv = NULL;
 	amcl_aes a;
-	k = o_arg(L, 1);
-	if(k == NULL) {
-		failed_msg = "failed to allocate space for the aes key";
-		goto end;
-	}
-	if(k->len != 16 && k->len != 32) {
-		zerror(L, "AES.ctr_process accepts only keys of 16 or 32 bytes, this is %u", k->len);
-		failed_msg = "AES-CTR process aborted";
-		goto end;
-	}
-	in = o_arg(L, 2);
-	if(in == NULL) {
-		failed_msg = "failed to allocate space for the message text";
-		goto end;
-	}
-	iv = o_arg(L, 3);
-	if(iv == NULL) {
-		failed_msg = "failed to allocate space for the iv";
-		goto end;
-	}
-	if (iv->len < 12) {
-		zerror(L, "AES.ctr_process accepts an iv of 12 bytes minimum, this is %u", iv->len);
-		failed_msg = "AES-CTR process aborted";
-		goto end;
-	}
+	k = (octet *)o_arg(L, 1); SAFE_GOTO(k, "Could not allocate aes key");
+	SAFE_GOTO(k->len == 16 || k->len == 32, "Invalid argument, AES-CTR key must be 16 or 32 bytes");
+	in = (octet *)o_arg(L, 2); SAFE_GOTO(in, "Could not allocate message text");
+	iv = (octet *)o_arg(L, 3); SAFE_GOTO(iv, "Could not allocate iv");
+	SAFE_GOTO(iv->len >= 12, "Invalid argument, IV must be at least 12 bytes");
 	AES_init(&a, CTR16, k->len, k->val, iv->val);
-	octet *out = o_dup(L, in);
-	if(out == NULL) {
-		failed_msg = "failed to allocate space for the output";
-		goto end;
-	}
+	octet *out = o_dup(L, in); SAFE_GOTO(out, "Could not create output");
 	AMCL_(AES_decrypt)(&a, out->val);
 	AES_end(&a);
 end:
 	o_free(L, iv);
 	o_free(L, in);
 	o_free(L, k);
-	if(failed_msg != NULL) {
+	if(failed_msg) {
 		THROW(failed_msg);
 	}
 	END(1);
 }
-
 
 int luaopen_aes(lua_State *L) {
 	(void)L;
