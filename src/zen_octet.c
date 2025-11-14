@@ -104,7 +104,7 @@ extern int _octet_to_big(lua_State *L, big *dst, const octet *src);
 
 void push_octet_to_hex_string(lua_State *L, octet *o) {
 	// string len = double +1
-	char *s = malloc((o->len<<1)+1); SAFE_THROWV(s, MALLOC_ERROR);
+	char *s = malloc((o->len<<1)+1); SAFEV(s, MALLOC_ERROR);
 	buf2hex(s, o->val, o->len);
 	lua_pushstring(L,s);
 	free(s);
@@ -348,7 +348,7 @@ octet *o_push(lua_State *L, const char *buf, size_t len) {
 }
 	
 void push_buffer_to_octet(lua_State *L, char *p, size_t len) {
-	octet* o = o_new(L, len); SAFE_THROWV(o, CREATE_ERROR);
+	octet* o = o_new(L, len); SAFEV(o, CREATE_ERROR);
 	// newuserdata already pushes the object in lua's stack
 	// memcpy(o->val, p, len);
 	register uint32_t i;
@@ -359,7 +359,7 @@ void push_buffer_to_octet(lua_State *L, char *p, size_t len) {
 // pushes a null-terminated string to a new octet and keeps its
 // null-termination
 void push_string_to_octet(lua_State *L, char *p) {
-	octet* o = o_new(L, strlen(p)+1); SAFE_THROWV(o, CREATE_ERROR);
+	octet* o = o_new(L, strlen(p)+1); SAFEV(o, CREATE_ERROR);
 	strcpy(o->val,p);
 	o->len = o->max-1;
 }
@@ -441,7 +441,7 @@ static int new_random(lua_State *L) {
 	BEGIN();
 	int tn;
 	lua_Number n = lua_tonumberx(L, 1, &tn);
-	octet *o = o_new(L,(int)n); SAFE_THROW(o, CREATE_ERROR);
+	octet *o = o_new(L,(int)n); SAFE(o, CREATE_ERROR);
 	Z(L);
 	OCT_rand(o, Z->random_generator, (int)n);
 	END(1);
@@ -595,7 +595,7 @@ static int from_number(lua_State *L) {
 		END(1);
 	}
 	const uint64_t v = n;
-	octet *o = o_new(L, 16); SAFE_THROW(o, CREATE_ERROR);
+	octet *o = o_new(L, 16); SAFE(o, CREATE_ERROR);
 	// conversion from int64 to binary
 	// TODO: check endian portability issues
 	register uint8_t i = 0;
@@ -626,7 +626,7 @@ static int from_rawlen (lua_State *L) {
 		THROW("Invalid argument, len is not a number");
 		END(1);
 	}
-	octet *o = o_new(L, (int)n); SAFE_THROW(o, CREATE_ERROR);
+	octet *o = o_new(L, (int)n); SAFE(o, CREATE_ERROR);
 	register int c;
 	for(c=0;c<n;c++) o->val[c] = s[c];
 	o->len = (int)n;
@@ -651,7 +651,7 @@ static int from_base64(lua_State *L) {
 		END(1);
 	}
 	int nlen = B64decoded_len(len);
-	octet *o = o_new(L, nlen); SAFE_THROW(o, CREATE_ERROR);
+	octet *o = o_new(L, nlen); SAFE(o, CREATE_ERROR);
 	OCT_frombase64(o, (char*)s);
 	END(1);
 }
@@ -675,7 +675,7 @@ static int from_url64(lua_State *L) {
 	}
 	int nlen = B64decoded_len(len);
 	// func(L,"U64 decode len: %u -> %u",len,nlen);
-	octet *o = o_new(L, nlen); SAFE_THROW(o, CREATE_ERROR);
+	octet *o = o_new(L, nlen); SAFE(o, CREATE_ERROR);
 	o->len = U64decode(o->val, (char*)s);
 	// func(L,"u64 return len: %u",o->len);
 	END(1);
@@ -743,7 +743,7 @@ static int from_string(lua_State *L) {
 		THROW("Invalid string size, too long");
 		END(1);
 	}
-	octet *o = o_new(L, len+1); SAFE_THROW(o, CREATE_ERROR);
+	octet *o = o_new(L, len+1); SAFE(o, CREATE_ERROR);
 	register int i = 0;
 	for(i=0;s[i] != 0x0;i++) o->val[i]=s[i];
 	o->len = i;
@@ -781,7 +781,7 @@ static int from_hex(lua_State *L) {
 		THROW("Invalid hex sequence, too long");
 		END(1);
 	}
-	octet *o = o_new(L, len>>1); SAFE_THROW(o, CREATE_ERROR);
+	octet *o = o_new(L, len>>1); SAFE(o, CREATE_ERROR);
 	if ( (s[0] == '0') && (s[1] == 'x') ) {
 		// ethereum elides the leftmost 0 char when value <= 0F
 		if((len&1)==1) { // odd length means elision
@@ -819,7 +819,7 @@ static int from_bin(lua_State *L) {
 		THROW("Invalid binary sequence, too long");
 		END(1);
 	}
-	octet *o = o_new(L, len+4); SAFE_THROW(o, CREATE_ERROR);
+	octet *o = o_new(L, len+4); SAFE(o, CREATE_ERROR);
 	register char *S = (char*)s;
 	register int p; // position in whole string
 	register int i; // increased only when 1 or 0 is found
@@ -877,7 +877,7 @@ static int from_segwit_address(lua_State *L) {
 		THROW("Invalid bech32 address");
 		END(1);
 	}
-	octet *o = o_new(L, witprog_len); SAFE_THROW(o, CREATE_ERROR);
+	octet *o = o_new(L, witprog_len); SAFE(o, CREATE_ERROR);
 	register size_t i;
 	for(i=0; i<witprog_len; i++) {
 		o->val[i] = (char)witprog[i];
@@ -983,7 +983,7 @@ static int from_base45(lua_State *L) {
 		THROW("Invalid base45 sequence");
 		END(1);
 	}
-	octet *o = o_new(L, len); SAFE_THROW(o, CREATE_ERROR);
+	octet *o = o_new(L, len); SAFE(o, CREATE_ERROR);
 	len = b45decode(o->val, s);
 	if(len < 0) {
 		THROW("Invalid base45 sequence");
@@ -1008,7 +1008,7 @@ after checking if the input string is valid base32.
     luaL_argcheck(L, s != NULL, 1, "base32 string expected");
     int len_in = is_base32(s);
     int max_len_out = len_in * 5 / 8;
-    octet *o = o_new(L, max_len_out); SAFE_THROW(o, CREATE_ERROR);
+    octet *o = o_new(L, max_len_out); SAFE(o, CREATE_ERROR);
     int decoded_len = b32decode(o->val, s);
     if (decoded_len < 0) {
 		THROW("Invalid base32 sequence");
@@ -1219,7 +1219,7 @@ static int zero(lua_State *L) {
 		END(0);
 	}
 	func(L, "Creating a zero filled octet of %u bytes", len);
-	octet *n = o_new(L,len); SAFE_THROW(n, CREATE_ERROR);
+	octet *n = o_new(L,len); SAFE(n, CREATE_ERROR);
 	register int i;
 	for(i=0; i<len; i++) n->val[i]=0x0;
 	n->len = len;
@@ -1235,7 +1235,7 @@ static int zero(lua_State *L) {
 */
 static int is_zero(lua_State *L) {
 	BEGIN();
-	const octet *o = o_arg(L,1); SAFE_THROW(o, ALLOCATE_ERROR);
+	const octet *o = o_arg(L,1); SAFE(o, ALLOCATE_ERROR);
 	if(o->len<1) {
 		lua_pushboolean(L, 0);
 		goto end;
@@ -1980,7 +1980,7 @@ static int octet_size(lua_State *L) {
  */
 static int max(lua_State *L) {
 	BEGIN();
-	const octet *o = o_arg(L, 1); SAFE_THROW(o, ALLOCATE_ERROR);
+	const octet *o = o_arg(L, 1); SAFE(o, ALLOCATE_ERROR);
 	lua_pushinteger(L, o->max);
 	o_free(L, o);
 	END(1);
@@ -2340,7 +2340,7 @@ static int charcount(lua_State *L) {
 	register int c;
 	const char *s = lua_tostring(L, 2);
 	luaL_argcheck(L, s != NULL, 1, "string expected");
-	const octet *o = o_arg(L,1); SAFE_THROW(o, ALLOCATE_ERROR);
+	const octet *o = o_arg(L,1); SAFE(o, ALLOCATE_ERROR);
 	needle = *s; // single char
 	const char *hay = (const char*)o->val;
 	for(p=hay, c=0; c < o->len; p++, c++) if(needle==*p) count++;
