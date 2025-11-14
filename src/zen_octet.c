@@ -3001,7 +3001,6 @@ static int memcopy(lua_State *L) {
 	char *failed_msg = NULL;
 	const octet *src = NULL;
 	octet *dst = NULL;
-	int start, length;
 	src = o_arg(L, 1); SAFE_GOTO(src, ALLOCATE_ERROR);
 	int isvalid;
 	const int start = optnumber_nullable(L, 2, 0, &isvalid); SAFE_GOTO(isvalid, "Invalid argument, number expected as second argument");
@@ -3041,7 +3040,6 @@ end:
 static int mempaste(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	int start;
 	const octet *hay = o_arg(L, 1);
 	const octet *src = o_arg(L, 2);
 	SAFE_GOTO((hay && src), ALLOCATE_ERROR);
