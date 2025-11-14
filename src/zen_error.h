@@ -43,9 +43,9 @@
 // maybe use if(HEDLEY_UNLIKELY(!x))
 #define SAFE_GOTO(x, msg) \
 	if(!x) { failed_msg=msg; goto end; }
-#define SAFE_THROW(x, msg) \
+#define SAFE(x, msg) \
 	if(!x) { THROW(msg); END(1); }
-#define SAFE_THROWV(x, msg) \
+#define SAFEV(x, msg) \
     if(!x) { THROW(msg); ENDV(); }
 
 // same as Android
