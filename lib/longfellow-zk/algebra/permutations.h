@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,12 +35,43 @@ class Permutations {
     }
   }
 
+  /* X[i] = X[(i+shift) mod N] */
+  /* We now use the notation X{N} to denote that X consists of N
+     elements.  We have X = [A{SHIFT} B{N-SHIFT}].  We want
+     X' = [B A] = rev[rev(A) rev(B)], where rev(A) reverses
+     array A in-place.
+  */
+  static void rotate(Elt* x, size_t n, size_t shift) {
+    if (shift > 0) {
+      reverse(x, 0, shift);
+      reverse(x, shift, n);
+      reverse(x, 0, n);
+    }
+  }
+
+  static void unrotate(Elt* x, size_t n, size_t shift) {
+    if (shift > 0) {
+      reverse(x, 0, n);
+      reverse(x, shift, n);
+      reverse(x, 0, shift);
+    }
+  }
+
  private:
   static void bitrev_increment(size_t* j, size_t bit) {
     do {
       bit >>= 1;
       *j ^= bit;
     } while (!(*j & bit));
+  }
+
+  // reverse x[i,j)
+  static void reverse(Elt* x, size_t i, size_t j) {
+    while (i + 1 < j) {
+      --j;
+      std::swap(x[i], x[j]);
+      i++;
+    }
   }
 };
 }  // namespace proofs

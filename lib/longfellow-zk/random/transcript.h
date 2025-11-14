@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,6 +39,10 @@ class FSPRF  {
   explicit FSPRF(const FSPRF&) = delete;
   FSPRF& operator=(const FSPRF&) = delete;
 
+  // Maximum number of blocks that can be generated using a 128-bit PRF.
+  // The limit is 2^64, but 2^40 suffices for our application.
+  constexpr static uint64_t kMaxBlocks = 0x10000000000;
+
   void bytes(uint8_t buf[/*n*/], size_t n) {
     while (n-- > 0) {
       if (rdptr_ == kPRFOutputSize) {
@@ -50,6 +54,7 @@ class FSPRF  {
 
  private:
   void refill() {
+    check(nblock_ < kMaxBlocks, "too many blocks");
     uint8_t in[kPRFInputSize] = {};
     u64_to_le(in, nblock_++);
     prf_.Eval(saved_, in);
@@ -63,12 +68,13 @@ class FSPRF  {
 };
 
 class Transcript : public RandomEngine {
-  enum { TAG_BSTR = 0, TAG_FIELD_ELEM = 1, TAG_ARRAY = 1 };
+  enum { TAG_BSTR = 0, TAG_FIELD_ELEM = 1, TAG_ARRAY = 2 };
 
  public:
   // A transcript must be explicitly initialized so that each instance of
   // the Random oracle is unique.
-  Transcript(const uint8_t init[], size_t init_len) : sha_(), prf_() {
+  Transcript(const uint8_t init[], size_t init_len, size_t version = 3)
+      : sha_(), prf_(), version_(version) {
     write(init, init_len);
   }
 
@@ -77,7 +83,7 @@ class Transcript : public RandomEngine {
   Transcript& operator=(const Transcript&) = delete;
 
   // Explicit copy to avoid accidental passing by value.
-  Transcript clone() { return Transcript(sha_); }
+  Transcript clone() { return Transcript(sha_, version_); }
 
   // Generate bytes by via the current FSPRF object.
   void bytes(uint8_t buf[/*n*/], size_t n) override {
@@ -137,7 +143,11 @@ class Transcript : public RandomEngine {
   template <class Field>
   void write(const typename Field::Elt e[/*n*/], size_t ince, size_t n,
              const Field& F) {
-    tag(TAG_ARRAY);
+    if (version_ > 3) {
+      tag(TAG_ARRAY);
+    } else {
+      tag(1);  // in version 3, the TAG_ARRAY was 1.
+    }
     length(n);
 
     for (size_t i = 0; i < n; ++i) {
@@ -146,7 +156,8 @@ class Transcript : public RandomEngine {
   }
 
  private:
-  explicit Transcript(const SHA256& sha) : sha_() {
+  explicit Transcript(const SHA256& sha, size_t version)
+      : sha_(), version_(version) {
     sha_.CopyState(sha);
   }
 
@@ -179,6 +190,7 @@ class Transcript : public RandomEngine {
 
   SHA256 sha_;
   std::unique_ptr<FSPRF> prf_;
+  const size_t version_;  // version 4+ fixes the TAG_ARRAY typo.
 };
 }  // namespace proofs
 
