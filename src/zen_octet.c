@@ -102,6 +102,24 @@ static int _min(int x, int y) { if(x < y) return x;	else return y; }
 
 extern int _octet_to_big(lua_State *L, big *dst, const octet *src);
 
+// helper function to take as input optional number without throwing an error
+lua_Number optnumber_nullable(lua_State *L, int idx, lua_Number def, int *isvalid) {
+	if(lua_isnoneornil(L, idx)) {
+		*isvalid = 1;
+		return def;
+	}
+	int isnum;
+	lua_Number n = lua_tonumberx(L, idx, &isnum);
+	if(!isnum) {
+		*isvalid = 0;
+		return 0;
+	}
+	*isvalid = 1;
+	return n;
+}
+
+//
+
 void push_octet_to_hex_string(lua_State *L, octet *o) {
 	// string len = double +1
 	char *s = malloc((o->len<<1)+1); SAFEV(s, MALLOC_ERROR);
@@ -1085,7 +1103,7 @@ static int zero(lua_State *L) {
 	BEGIN();
 	const int len = luaL_optnumber(L, 1, MAX_OCTET); SAFE(len >= 1, "Cannot create a zero length octet");
 	func(L, "Creating a zero filled octet of %u bytes", len);
-	octet *n = o_new(L,len); SAFE(n, CREATE_ERROR);
+	octet *n = o_new(L, len); SAFE(n, CREATE_ERROR);
 	register int i;
 	for(i=0; i<len; i++) n->val[i]=0x0;
 	n->len = len;
@@ -1584,7 +1602,8 @@ static int pad(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	const octet *o = o_arg(L, 1); SAFE_GOTO(o, ALLOCATE_ERROR);
-	const int len = luaL_optinteger(L, 2, o->max);
+	int isvalid;
+	const int len = optnumber_nullable(L, 2, o->max, &isvalid); SAFE_GOTO(isvalid, "Invalid argument, number expected");
 	octet *n = o_new(L, len); SAFE_GOTO(n, CREATE_ERROR);
 	OCT_copy(n, (octet*)o);
 	OCT_pad(n, len);
@@ -1658,7 +1677,8 @@ static int chop(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	const octet *src = o_arg(L, 1); SAFE_GOTO(src, ALLOCATE_ERROR);
-	int len = luaL_optnumber(L, 2, 0);
+	int isvalid;
+	const int len = optnumber_nullable(L, 2, 0, &isvalid); SAFE_GOTO(isvalid, "Invalid argument, number expected");
 	SAFE_GOTO(len <= src->len, "Invalid argument, length too big");
 	SAFE_GOTO(len >= 0, "Invalid argument, length must be positive");
 	octet *l = o_dup(L, src); SAFE_GOTO(l, DUPLICATE_ERROR);
@@ -1714,10 +1734,12 @@ static int sub(lua_State *L) {
 	register int i, c;
 	const octet *src = NULL;
 	octet *dst = NULL;
-	int start, end;
 	src = o_arg(L, 1); SAFE_GOTO(src, ALLOCATE_ERROR);
-	start = luaL_optnumber(L, 2, 0); SAFE_GOTO(start && start <= src->len, "Invalid argument, starting position out of bounds");
-	end = luaL_optnumber(L, 3, 0); SAFE_GOTO(end && end >= start && end <= src->len, "Invalid argument, end position out of bounds");
+	int isvalid;
+	const int start = optnumber_nullable(L, 2, 0, &isvalid); SAFE_GOTO(isvalid, "Invalid argument, number expected as second argument");
+	SAFE_GOTO(start && start <= src->len, "Invalid argument, starting position out of bounds");
+	const int end = optnumber_nullable(L, 3, 0, &isvalid); SAFE_GOTO(isvalid, "Invalid argument, number expected as third argument");
+	SAFE_GOTO(end && end >= start && end <= src->len, "Invalid argument, end position out of bounds");
 	dst = o_new(L, end - start + 1); SAFE_GOTO(dst, CREATE_ERROR);
 	for(i=start-1, c=0; i<=end; i++, c++)
 		dst->val[c] = src->val[i];
@@ -2932,7 +2954,8 @@ static int memfind(lua_State *L) {
 	const octet *needle = o_arg(L,2);
 	SAFE_GOTO((haystack && needle), ALLOCATE_ERROR);
 	SAFE_GOTO(haystack->len > needle->len, "Invalid argument, needle bigger than haystack");
-	const int pos = luaL_optnumber(L, 3, 0);
+	int isvalid;
+	const int pos = optnumber_nullable(L, 3, 0, &isvalid); SAFE_GOTO(isvalid, "Invalid argument, number expected as third argument");
 	char *start = haystack->val;
 	if(pos>0) {
 		SAFE_GOTO(pos<haystack->len, "Octet:find position (3rd arg) out of haystack");
@@ -2980,8 +3003,11 @@ static int memcopy(lua_State *L) {
 	octet *dst = NULL;
 	int start, length;
 	src = o_arg(L, 1); SAFE_GOTO(src, ALLOCATE_ERROR);
-	start = luaL_optnumber(L, 2, 0); SAFE_GOTO(start >= 0 && start <= src->len, "Invalid argument, starting position out of bounds");
-	length = luaL_optnumber(L, 3, 0); SAFE_GOTO(length && start+length <= src->len, "Invalid argument, length too big");
+	int isvalid;
+	const int start = optnumber_nullable(L, 2, 0, &isvalid); SAFE_GOTO(isvalid, "Invalid argument, number expected as second argument");
+	SAFE_GOTO(start >= 0 && start <= src->len, "Invalid argument, starting position out of bounds");
+	const int length = optnumber_nullable(L, 3, 0, &isvalid); SAFE_GOTO(isvalid, "Invalid argument, number expected as third argument");
+	SAFE_GOTO(length && start+length <= src->len, "Invalid argument, length too big");
 	dst = o_new(L, length+1); SAFE_GOTO(dst, CREATE_ERROR);
 	memcpy(dst->val, src->val+start, length);
 	dst->len = length;
@@ -3020,7 +3046,9 @@ static int mempaste(lua_State *L) {
 	const octet *src = o_arg(L, 2);
 	SAFE_GOTO((hay && src), ALLOCATE_ERROR);
 	SAFE_GOTO(hay->len >= src->len, "Invalid argument, needle bigger than haystack");
-	start = luaL_optnumber(L, 3, 0); SAFE_GOTO(start && start < hay->len && start+src->len <= hay->len, "Invalid argument, starting position out of bounds");
+	int isvalid;
+	const int start = optnumber_nullable(L, 3, 0, &isvalid); SAFE_GOTO(isvalid, "Invalid argument, number expected as third argument");
+	SAFE_GOTO(start && start < hay->len && start+src->len <= hay->len, "Invalid argument, starting position out of bounds");
 	octet *res = o_dup(L,hay); SAFE_GOTO(res, DUPLICATE_ERROR);
 	memcpy(res->val+start, src->val, src->len);
 end:
