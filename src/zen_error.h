@@ -56,7 +56,7 @@
 #define CREATE_OCT_ERR    "Could not create OCTET"
 #define ALLOCATE_OCT_ERR  "Could not allocate OCTET"
 #define DUPLICATE_OCT_ERR "Could not duplicate OCTET"
-#define DUPLICATE_ECP_ERR "Could not duplicate OCTET"
+#define DUPLICATE_ECP_ERR "Could not duplicate ECP"
 
 // same as Android
 typedef enum log_priority {
