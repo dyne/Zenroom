@@ -48,6 +48,16 @@
 #define SAFEV(x, msg) \
 	if(!(x)) { THROW(msg); ENDV(); }
 
+// common error messages
+#define MALLOC_ERROR      "Could not allocate memory"
+#define CREATE_BIG_ERR    "Could not create BIG"
+#define ALLOCATE_BIG_ERR  "Could not allocate BIG"
+#define DUPLICATE_BIG_ERR "Could not duplicate BIG"
+#define CREATE_OCT_ERR    "Could not create OCTET"
+#define ALLOCATE_OCT_ERR  "Could not allocate OCTET"
+#define DUPLICATE_OCT_ERR "Could not duplicate OCTET"
+#define DUPLICATE_ECP_ERR "Could not duplicate OCTET"
+
 // same as Android
 typedef enum log_priority {
     LOG_UNKNOWN = 0,
