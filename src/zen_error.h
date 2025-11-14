@@ -42,11 +42,11 @@
 
 // maybe use if(HEDLEY_UNLIKELY(!x))
 #define SAFE_GOTO(x, msg) \
-	if(!x) { failed_msg=msg; goto end; }
+	if(!(x)) { failed_msg=msg; goto end; }
 #define SAFE(x, msg) \
-	if(!x) { THROW(msg); END(1); }
+	if(!(x)) { THROW(msg); END(1); }
 #define SAFEV(x, msg) \
-    if(!x) { THROW(msg); ENDV(); }
+	if(!(x)) { THROW(msg); ENDV(); }
 
 // same as Android
 typedef enum log_priority {
