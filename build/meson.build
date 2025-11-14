@@ -113,7 +113,7 @@ benches = [ 'and', 'array', 'bbs_sha', 'bbs_shake', 'bbs_zkp',
 'generic_eddsa', 'generic_schnorr', 'given', 'hash', 'kyber', 'ntrup',
 'numbers', 'output', 'pack', 'parser', 'planetmint', 'pvss', 'random',
 'reflow', 'sd_jwt', 'secshare', 'table', 'then', 'time', 'w3c', 'w3c_did',
-'when', 'zencode_exec', 'zenswarm', 'zkp', 'zkp_multi_petitions',
+'when', 'zenswarm', 'zkp', 'zkp_multi_petitions',
 'fsp' ]
 foreach test_suite: benches
     benchmark('zencode_'+test_suite.underscorify(),
