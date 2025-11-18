@@ -56,6 +56,8 @@
 #define CREATE_OCT_ERR    "Could not create OCTET"
 #define ALLOCATE_OCT_ERR  "Could not allocate OCTET"
 #define DUPLICATE_OCT_ERR "Could not duplicate OCTET"
+#define CREATE_ECP_ERR    "Could not create ECP"
+#define ALLOCATE_ECP_ERR  "Could not allocate ECP"
 #define DUPLICATE_ECP_ERR "Could not duplicate ECP"
 
 // same as Android
