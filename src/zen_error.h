@@ -65,6 +65,8 @@
 #define CREATE_FP12_ERR    "Could not create FP12"
 #define ALLOCATE_FP12_ERR  "Could not allocate FP12"
 #define DUPLICATE_FP12_ERR "Could not duplicate FP12"
+#define CREATE_FLT_ERR     "Could not create FLOAT"
+#define ALLOCATE_FLT_ERR   "Could not allocate FLOAT"
 
 // same as Android
 typedef enum log_priority {
