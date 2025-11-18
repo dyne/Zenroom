@@ -32,13 +32,10 @@
 
 int fuzz_byte_random(lua_State *L) {
 	BEGIN();
-	const octet *o = o_arg(L, 1);
-	if(o->len >= INT_MAX) {
-		o_free(L,o);
-		THROW("fuzz_byte: octet too big");
-		END(0);
-	}
-	octet *res = o_dup(L,o);
+	char *failed_msg = NULL;
+	const octet *o = o_arg(L, 1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
+	SAFE_GOTO(o->len < INT_MAX, "Invalid argument, octet too big");
+	octet *res = o_dup(L,o); SAFE_GOTO(res, DUPLICATE_OCT_ERR);
 	Z(L);
 	uint8_t rnd = RAND_byte(Z->random_generator);
 	if(res->len < 256) {
@@ -66,20 +63,21 @@ int fuzz_byte_random(lua_State *L) {
 		}
 		res->val[point32%res->len] = rnd;
 	}
+end:
 	o_free(L,o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
 
 int fuzz_byte_xor(lua_State *L) {
 	BEGIN();
-	const octet *o = o_arg(L,1);
-	if(o->len >= INT_MAX) {
-		o_free(L,o);
-		THROW("fuzz_byte: octet too big");
-		END(0);
-	}
-	octet *res = o_dup(L,o);
+	char *failed_msg = NULL;
+	const octet *o = o_arg(L,1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
+	SAFE_GOTO(o->len < INT_MAX, "Invalid argument, octet too big");
+	octet *res = o_dup(L,o); SAFE_GOTO(res, DUPLICATE_OCT_ERR);
 	Z(L);
 	if(res->len < 256) {
 		uint8_t point8 = RAND_byte(Z->random_generator) % res->len;
@@ -99,20 +97,21 @@ int fuzz_byte_xor(lua_State *L) {
 		point32 %= res->len;
 		res->val[point32] ^= 0xff;
 	}
-	o_free(L,o);
+end:
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
 
 int fuzz_bit_random(lua_State *L) {
 	BEGIN();
-	const octet *o = o_arg(L,1);
-	if(o->len >= INT_MAX) {
-		o_free(L,o);
-		THROW("fuzz_byte: octet too big");
-		END(0);
-	}
-	octet *res = o_dup(L,o);
+	char *failed_msg = NULL;
+	const octet *o = o_arg(L,1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
+	SAFE_GOTO(o->len < INT_MAX, "Invalid argument, octet too big");
+	octet *res = o_dup(L,o); SAFE_GOTO(res, DUPLICATE_OCT_ERR);
 	Z(L);
 	if(res->len < 256) {
 		uint8_t point8 = RAND_byte(Z->random_generator);
@@ -134,7 +133,11 @@ int fuzz_bit_random(lua_State *L) {
 		uint8_t bit_position = RAND_byte(Z->random_generator) % 8;
 		res->val[point32%res->len] ^= (1 << bit_position);
 	}
+end:
 	o_free(L,o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
@@ -187,13 +190,10 @@ void OCT_circular_shl_bits(octet *x, int n) {
 
 int fuzz_byte_circular_shift_random(lua_State *L) {
 	BEGIN();
-	const octet *o = o_arg(L,1);
-	if(o->len >= INT_MAX) {
-		o_free(L,o);
-		THROW("fuzz_byte: octet too big");
-		END(0);
-	}
-	octet *res = o_dup(L,o);
+	char *failed_msg = NULL;
+	const octet *o = o_arg(L,1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
+	SAFE_GOTO(o->len < INT_MAX, "Invalid argument, octet too big");
+	octet *res = o_dup(L,o); SAFE_GOTO(res, DUPLICATE_OCT_ERR);
 	Z(L);
 	if(res->len < 256) {
 		uint8_t point8 = RAND_byte(Z->random_generator);
@@ -226,20 +226,20 @@ int fuzz_byte_circular_shift_random(lua_State *L) {
 		}
 		OCT_circular_shl_bytes(res, (point32%res->len));
 	}
-	o_free(L,o);
+end:
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
 int fuzz_bit_circular_shift_random(lua_State *L) {
 	BEGIN();
-	const octet *o = o_arg(L, 1);
-	if (o->len >= INT_MAX) {
-		o_free(L, o);
-		THROW("fuzz_byte: octet too big");
-		END(0);
-	}
-
-	octet *res = o_dup(L, o);
+	char *failed_msg = NULL;
+	const octet *o = o_arg(L, 1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
+	SAFE_GOTO(o->len < INT_MAX, "Invalid argument, octet too big");
+	octet *res = o_dup(L, o); SAFE_GOTO(res, DUPLICATE_OCT_ERR);
 	Z(L);
 
 	uint32_t total_bits = res->len * 8;
@@ -273,8 +273,11 @@ int fuzz_bit_circular_shift_random(lua_State *L) {
 	}
 
 	OCT_circular_shl_bits(res, shift_bits);
-
+end:
 	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
