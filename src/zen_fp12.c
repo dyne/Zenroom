@@ -55,7 +55,7 @@ fp12* fp12_arg(lua_State *L,int n) {
 		*result = *(fp12*)ud;
 		if(result->len != sizeof(FP12)) {
 			fp12_free(result);
-			zerror(L, "%s: fp12 size mismatch (%u != %u)",
+			zerror(L, "%s: fp12 size mismatch (%u != %zu)",
 			       __func__, result->len, sizeof(FP12));
 			return NULL; }
 		if(result->chunk != CHUNK) {
@@ -92,16 +92,8 @@ int fp12_destroy(lua_State *L) {
 static int fp12_from_octet(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	const octet *o = o_arg(L, 1);
-	if(o == NULL) {
-		failed_msg = "Could not allocate input";
-		goto end;
-	}
-	fp12 *f = fp12_new(L);
-	if(f == NULL) {
-		failed_msg = "Could not create FP12";
-		goto end;
-	}
+	const octet *o = o_arg(L, 1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
+	fp12 *f = fp12_new(L); SAFE_GOTO(f, CREATE_FP12_ERR);
 	FP12_fromOctet(&f->val, o);
 end:
 	o_free(L, o);
@@ -114,16 +106,8 @@ end:
 static int fp12_to_octet(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	fp12 *f = fp12_arg(L, 1);
-	if(f == NULL) {
-		failed_msg = "Could not allocate FP12";
-		goto end;
-	}
-	octet *o = o_new(L, sizeof(FP12));
-	if(o == NULL) {
-		failed_msg = "Could not allocate output";
-		goto end;
-	}
+	fp12 *f = fp12_arg(L, 1); SAFE_GOTO(f, ALLOCATE_FP12_ERR);
+	octet *o = o_new(L, sizeof(FP12)); SAFE_GOTO(o, CREATE_OCT_ERR);
 	FP12_toOctet(o, &f->val);
 end:
 	fp12_free(f);
@@ -138,10 +122,7 @@ static int fp12_eq(lua_State *L) {
 	char *failed_msg = NULL;
 	fp12 *l = fp12_arg(L, 1);
 	fp12 *r = fp12_arg(L, 2);
-	if(l == NULL || r == NULL) {
-		failed_msg = "Could not allocate FP12";
-		goto end;
-	}
+	SAFE_GOTO(l && r, ALLOCATE_FP12_ERR);
 	int res = FP12_eq(&l->val, &r->val);
 	lua_pushboolean(L, res);
 end:
@@ -158,15 +139,8 @@ static int fp12_mul(lua_State *L) {
 	char *failed_msg = NULL;
 	fp12 *x = fp12_arg(L, 1);
 	fp12 *y = fp12_arg(L, 2);
-	if(x == NULL || y == NULL) {
-		failed_msg = "Could not allocate FP12";
-		goto end;
-	}
-	fp12 *d = fp12_dup(L, x);
-	if(d == NULL) {
-		failed_msg = "Could not create FP12";
-		goto end;
-	}
+	SAFE_GOTO(x && y, ALLOCATE_FP12_ERR);
+	fp12 *d = fp12_dup(L, x); SAFE_GOTO(d, DUPLICATE_FP12_ERR);
 	FP12_mul(&d->val, &y->val);
 end:
 	fp12_free(y);
@@ -181,24 +155,12 @@ static int fp12_pow(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	big *b = NULL;
-	fp12 *x = fp12_arg(L, 1);
-	if(x == NULL) {
-		failed_msg = "Could not allocate FP12";
-		goto end;
-	}
-	b = big_arg(L, 2);
-	if(b == NULL) {
-		failed_msg = "Could not allocate BIG";
-		goto end;
-	}
-	fp12 *r = fp12_dup(L, x);
-	if(r == NULL) {
-		failed_msg = "Could not create FP12";
-		goto end;
-	}
+	fp12 *x = fp12_arg(L, 1); SAFE_GOTO(x, ALLOCATE_FP12_ERR);
+	b = big_arg(L, 2); SAFE_GOTO(b, ALLOCATE_BIG_ERR);
+	fp12 *r = fp12_dup(L, x); SAFE_GOTO(r, DUPLICATE_FP12_ERR);
 	FP12_GTpow(&r->val, b->val);
 end:
-	big_free(L,b);
+	big_free(L, b);
 	fp12_free(x);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -209,16 +171,8 @@ end:
 static int fp12_sqr(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	fp12 *s = fp12_arg(L, 1);
-	if(s == NULL) {
-		failed_msg = "Could not allocate FP12";
-		goto end;
-	}
-	fp12 *d = fp12_dup(L, s);
-	if(d == NULL) {
-		failed_msg = "Could not create FP12";
-		goto end;
-	}
+	fp12 *s = fp12_arg(L, 1); SAFE_GOTO(s, ALLOCATE_FP12_ERR);
+	fp12 *d = fp12_dup(L, s); SAFE_GOTO(d, DUPLICATE_FP12_ERR);
 	FP12_sqr(&d->val, &s->val);
 end:
 	fp12_free(s);
@@ -230,16 +184,8 @@ end:
 static int fp12_inv(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	fp12 *s = fp12_arg(L, 1);
-	if(s == NULL) {
-		failed_msg = "Could not allocate FP12";
-		goto end;
-	}
-	fp12 *d = fp12_dup(L, s);
-	if(d == NULL) {
-		failed_msg = "Could not create FP12";
-		goto end;
-	}
+	fp12 *s = fp12_arg(L, 1); SAFE_GOTO(s, ALLOCATE_FP12_ERR);
+	fp12 *d = fp12_dup(L, s); SAFE_GOTO(d, DUPLICATE_FP12_ERR);
 	FP12_inv(&d->val, &s->val);
 end:
 	fp12_free(s);
