@@ -333,7 +333,7 @@ static int ecp_mapit(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	const octet *o = o_arg(L, 1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
-	SAFE_GOTO(o->len == 64, "Input octet must be exactly 64 bytes long");
+	SAFE_GOTO(o->len == 64, "Invalid argument, octet must be 64 bytes");
 	ecp *e = ecp_new(L); SAFE_GOTO(e, CREATE_ECP_ERR);
 	func(L, "mapit on o->len %u", o->len);
 	ECP_mapit(&e->val, (octet*)o);
