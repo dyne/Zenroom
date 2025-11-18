@@ -33,18 +33,9 @@
 #define HASH_SIZE 32
 #define SIG_SIZE 64
 
-#define ASSERT_OCT_LEN(OCT, SIZE, MSG) \
-	if ((OCT)->len != SIZE)        \
-	{                              \
-		failed_msg = (MSG);    \
-		lua_pushnil(L);        \
-		goto end;              \
-	}
-
-
 static int allocate_raw_public_key(lua_State *L, int pk_pos, octet **res_pk, char **failed_msg) {
 	const octet* pk = o_arg(L, pk_pos);
-	if (!pk) {
+	if(!pk) {
 		*failed_msg = "Could not allocate public key";
 		return 1;
 	}
@@ -55,12 +46,12 @@ static int allocate_raw_public_key(lua_State *L, int pk_pos, octet **res_pk, cha
 		return 1;
 	}
 	(*res_pk)->len = PK_SIZE;
-	if (pk->len == PK_SIZE) {
+	if(pk->len == PK_SIZE) {
 		for(uint8_t i=0; i<PK_SIZE; i++) (*res_pk)->val[i] = pk->val[i];
 		o_free(L, pk);
 		return 0;
 	}
-	if (pk->len == UNCOMPRESSED_PK_SIZE) {
+	if(pk->len == UNCOMPRESSED_PK_SIZE) {
 		// Check for correct prefix in long public key
 		if (pk->val[0] != 0x04) {
 			*failed_msg = "Invalid long public key prefix: 0x04 expected";
@@ -71,7 +62,7 @@ static int allocate_raw_public_key(lua_State *L, int pk_pos, octet **res_pk, cha
 		o_free(L, pk);
 		return 0;
 	}
-	if (pk->len == COMPRESSED_PK_SIZE) {
+	if(pk->len == COMPRESSED_PK_SIZE) {
 		// Handle compressed public key
 		if (pk->val[0] != 0x02 && pk->val[0] != 0x03) {
 			*failed_msg = "Invalid compressed public key prefix: 0x02 or 0x03 expected";
@@ -117,18 +108,13 @@ static int allocate_raw_public_key(lua_State *L, int pk_pos, octet **res_pk, cha
 	print(P256.keygen():hex())
 	--print for example: a43f787303d65596a708cee586cbad7f3e17c0a2d513ccb653f4c1ad6f37600e 	
  */
-static int p256_keygen(lua_State *L)
-{
+static int p256_keygen(lua_State *L) {
 	BEGIN();
 	Z(L);
 	uint8_t pub[PK_SIZE];
-	octet *sk = o_new(L, SK_SIZE);
+	octet *sk = o_new(L, SK_SIZE); SAFE(sk, "Could not create secret key");
 	sk->len = SK_SIZE;
-	if(!sk) {
-		THROW("Could not allocate secret key");
-	} else {
-		p256_gen_keypair(Z, NULL, (uint8_t*)sk->val, pub);
-	}
+	p256_gen_keypair(Z, NULL, (uint8_t*)sk->val, pub);
 	END(1);
 }
 
@@ -144,46 +130,27 @@ static int p256_keygen(lua_State *L)
 	--the print in hexadecimal will be a random value of 64 bytes, for example
 	--print: 138380d70b0d492b8edf5c10ef9fa0c7c77287cbe92115270f75057a4dae3e86d264a5d0e13d215c3bc630357592f15e629f84de07c11df6663bb9b03d1e1912
  */
-static int p256_pubgen(lua_State *L)
-{
+static int p256_pubgen(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	const octet *sk = NULL;
 	octet *pk = NULL;
-	sk = o_arg(L, 1);
-	if (!sk)
-	{
-		failed_msg = "Could not allocate secret key";
-		goto end;
-	}
+	sk = o_arg(L, 1); SAFE_GOTO(sk, "Could not allocate secret key");
+	SAFE_GOTO(sk->len == SK_SIZE, "Invalid size for P256 secret key");
 
-	ASSERT_OCT_LEN(sk, SK_SIZE, "Invalid size for P256 secret key")
-
-	pk = o_new(L, PK_SIZE);
-	if (!pk)
-	{
-		failed_msg = "Could not allocate public key";
-		goto end;
-	}
+	pk = o_new(L, PK_SIZE); SAFE_GOTO(pk, "Could not create public key");
 	pk->len = PK_SIZE;
 
-	int ret = p256_publickey((uint8_t *)sk->val, (uint8_t *)pk->val);
-	if (ret != 0)
-	{
-		failed_msg = "Could not generate public key";
-		goto end;
-	}
+	SAFE_GOTO(!p256_publickey((uint8_t *)sk->val, (uint8_t *)pk->val), "Could not generate public key");
 end:
 	o_free(L, sk);
-	if (failed_msg != NULL)
-	{
+	if(failed_msg != NULL) {
 		THROW(failed_msg);
 	}
 	END(1);
 }
 
-static int p256_session(lua_State *L)
-{
+static int p256_session(lua_State *L) {
 	BEGIN();
 	// TODO: is there a KEM session function in our p256 lib?
 	END(1);
@@ -210,12 +177,11 @@ static int p256_pubcheck(lua_State *L) {
 	BEGIN();
 	octet *raw_pk = NULL;
 	char *failed_msg = NULL;
-	int ret = allocate_raw_public_key(L, 1, &raw_pk, &failed_msg);
-	if (ret != 0) goto end;
+	int ret = allocate_raw_public_key(L, 1, &raw_pk, &failed_msg); SAFE_GOTO(!ret, failed_msg);
 	lua_pushboolean(L, p256_validate_pubkey((uint8_t*)raw_pk->val)==0);
 end:
 	o_free(L, raw_pk);
-	if (failed_msg != NULL) {
+	if(failed_msg) {
 		THROW(failed_msg);
 	}
 	END(1);
@@ -241,8 +207,7 @@ end:
 	--sign the message 
 	sig = P256.sign(sk,m)
  */
-static int p256_sign(lua_State *L)
-{
+static int p256_sign(lua_State *L){
 	BEGIN();
 	Z(L);
 
@@ -252,57 +217,29 @@ static int p256_sign(lua_State *L)
 	char *failed_msg = NULL;
 	const octet *sk = NULL, *m = NULL, *k = NULL;
 	octet *sig = NULL;
-	sk = o_arg(L, 1);
-	if (!sk)
-	{
-		failed_msg = "Could not allocate secret key";
-		goto end;
-	}
-	m = o_arg(L, 2);
-	if (!m)
-	{
-		failed_msg = "Could not allocate message";
-		goto end;
-	}
-
-	ASSERT_OCT_LEN(sk, SK_SIZE, "Invalid size for ECDSA secret key")
+	sk = o_arg(L, 1); SAFE_GOTO(sk, "Could not allocate secret key");
+	SAFE_GOTO(sk->len == SK_SIZE, "Invalid size for P256 secret key");
+	m = o_arg(L, 2); SAFE_GOTO(m, "Could not allocate message");
 	HASH256_init(&sha256);
-	for (int i = 0; i < m->len; i++)
-	{
+	for(int i = 0; i < m->len; i++) {
 		HASH256_process(&sha256, m->val[i]);
 	}
 	HASH256_hash(&sha256, hash);
 
-	sig = o_new(L, SIG_SIZE);
-	if (!sig)
-	{
-		failed_msg = "Could not allocate signature";
-		goto end;
-	}
+	sig = o_new(L, SIG_SIZE); SAFE_GOTO(sig, "Could not create signature");
 	sig->len = SIG_SIZE;
 
 	if(n_args > 2) {
-		k = o_arg(L, 3);
-		if(k == NULL) {
-			failed_msg = "Could not allocate ephemeral key";
-			goto end;
-		}
+		k = o_arg(L, 3); SAFE_GOTO(k, "Could not allocate ephemeral key");
 	}
 
-	int ret = p256_ecdsa_sign(Z, k, (uint8_t *)sig->val, (uint8_t *)sk->val,
-				  (uint8_t *)hash, HASH_SIZE);
-	if (ret != 0)
-	{
-		failed_msg = "Could not sign message";
-		goto end;
-	}
-
+	SAFE_GOTO(!p256_ecdsa_sign(Z, k, (uint8_t *)sig->val, (uint8_t *)sk->val,
+				  (uint8_t *)hash, HASH_SIZE), "Could not sign message");
 end:
 	o_free(L, m);
 	o_free(L, sk);
 	o_free(L, k);
-	if (failed_msg != NULL)
-	{
+	if(failed_msg) {
 		THROW(failed_msg);
 	}
 	END(1);
@@ -323,34 +260,19 @@ end:
 	end
 	--print: valid signature
  */
-static int p256_verify(lua_State *L)
-{
+static int p256_verify(lua_State *L) {
 	BEGIN();
 	hash256 sha256;
 	char hash[HASH_SIZE];
 	char *failed_msg = NULL;
 	octet *raw_pk = NULL;
 	const octet *sig = NULL, *m = NULL;
-	int ret = allocate_raw_public_key(L, 1, &raw_pk, &failed_msg);
-	if (ret != 0) goto end;
-	m = o_arg(L, 2);
-	if (!m)
-	{
-		failed_msg = "Could not allocate message";
-		goto end;
-	}
-	sig = o_arg(L, 3);
-	if (!sig)
-	{
-		failed_msg = "Could not allocate signature";
-		goto end;
-	}
-
-	ASSERT_OCT_LEN(sig, SIG_SIZE, "Invalid size for P256 signature")
-
+	int ret = allocate_raw_public_key(L, 1, &raw_pk, &failed_msg); SAFE_GOTO(!ret, failed_msg);
+	m = o_arg(L, 2); SAFE_GOTO(m, "Could not allocate message");
+	sig = o_arg(L, 3); SAFE_GOTO(sig, "Could not allocate signature");
+	SAFE_GOTO(sig->len == SIG_SIZE, "Invalid size for P256 signature");
 	HASH256_init(&sha256);
-	for (int i = 0; i < m->len; i++)
-	{
+	for(int i = 0; i < m->len; i++) {
 		HASH256_process(&sha256, m->val[i]);
 	}
 	HASH256_hash(&sha256, hash);
@@ -362,8 +284,7 @@ end:
 	o_free(L, m);
 	o_free(L, sig);
 	o_free(L, raw_pk);
-	if (failed_msg != NULL)
-	{
+	if(failed_msg) {
 		THROW(failed_msg);
 	}
 	END(1);
@@ -389,22 +310,13 @@ static int p256_pub_xy(lua_State *L) {
 	char *failed_msg = NULL;
 	octet *raw_pk = NULL;
 	int i;
-	int ret = allocate_raw_public_key(L, 1, &raw_pk, &failed_msg);
-	if (ret != 0) goto end;
-	octet *x = o_new(L, PK_COORD_SIZE+1);
-	if(x == NULL) {
-		failed_msg = "Could not create x coordinate";
-		goto end;
-	}
+	int ret = allocate_raw_public_key(L, 1, &raw_pk, &failed_msg); SAFE_GOTO(!ret, failed_msg);
+	octet *x = o_new(L, PK_COORD_SIZE+1); SAFE_GOTO(x, "Could not create x coordinate");
 	for(i=0; i < PK_COORD_SIZE; i++)
 		x->val[i] = raw_pk->val[i];
 	x->val[PK_COORD_SIZE+1] = 0x0;
 	x->len = PK_COORD_SIZE;
-	octet *y = o_new(L, PK_COORD_SIZE+1);
-	if(y == NULL) {
-		failed_msg = "Could not create y coordinate";
-		goto end;
-	}
+	octet *y = o_new(L, PK_COORD_SIZE+1); SAFE_GOTO(y, "Could not create y coordinate");
 	for(i=0; i < PK_COORD_SIZE; i++)
 		y->val[i] = raw_pk->val[PK_COORD_SIZE+i];
 	y->val[PK_COORD_SIZE+1] = 0x0;
@@ -446,19 +358,10 @@ static int p256_compress_pub(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	octet *raw_pk = NULL;
-	int ret = allocate_raw_public_key(L, 1, &raw_pk, &failed_msg);
-	if (ret != 0) goto end;
-	octet *compressed_pk = o_new(L, COMPRESSED_PK_SIZE);
-	if(compressed_pk == NULL) {
-		failed_msg = "Could not create compressed public key";
-		goto end;
-	}
+	int ret = allocate_raw_public_key(L, 1, &raw_pk, &failed_msg); SAFE_GOTO(!ret, failed_msg);
+	octet *compressed_pk = o_new(L, COMPRESSED_PK_SIZE); SAFE_GOTO(compressed_pk, "Could not create compressed public key");
 	compressed_pk->len = COMPRESSED_PK_SIZE;
-	ret = p256_compress_publickey((uint8_t*)compressed_pk->val, (uint8_t*)raw_pk->val);
-	if (ret != 0) {
-		failed_msg = "Could not compress public key";
-		goto end;
-	}
+	SAFE_GOTO(!p256_compress_publickey((uint8_t*)compressed_pk->val, (uint8_t*)raw_pk->val), "Could not compress public key");
 end:
 	o_free(L, raw_pk);
 	if(failed_msg) {
@@ -467,8 +370,7 @@ end:
 	END(1);
 }
 
-int luaopen_p256(lua_State *L)
-{
+int luaopen_p256(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg p256_class[] = {
 	    {"keygen", p256_keygen},
