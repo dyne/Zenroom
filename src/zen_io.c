@@ -62,11 +62,7 @@ static int zen_print (lua_State *L) {
   BEGIN();
   Z(L);
   char *failed_msg = NULL;
-  const octet *o = o_arg(L, 1);
-  if(o == NULL) {
-	  failed_msg = "Could not allocate message to show";
-	  goto end;
-  }
+  const octet *o = o_arg(L, 1); SAFE_GOTO(o, "Could not allocate message to show");
   if (Z->stdout_buf) {
 	char *p = Z->stdout_buf+Z->stdout_pos;
 	if(!o) { *p='\n'; Z->stdout_pos++; return 0; }
@@ -134,11 +130,7 @@ static int zen_write (lua_State *L) {
   BEGIN();
   Z(L);
   char *failed_msg = NULL;
-  const octet *o = o_arg(L, 1);
-  if(o == NULL) {
-	  failed_msg = "Could not allocate message to show";
-	  goto end;
-  }
+  const octet *o = o_arg(L, 1); SAFE_GOTO(o, "Could not allocate message to show");
   if (Z->stdout_buf) {
 	char *p = Z->stdout_buf+Z->stdout_pos;
 	if (Z->stdout_pos+o->len > Z->stdout_len)
@@ -156,7 +148,7 @@ static int zen_write (lua_State *L) {
   } else
 	func(L, "write of an empty string");
 end:
-  o_free(L,o);
+  o_free(L, o);
   if(failed_msg != NULL) {
 	  lerror(L, "%s", failed_msg);
   }
@@ -211,13 +203,9 @@ int zen_log(lua_State *L, log_priority prio, const octet *o) {
 #define ZEN_PRINT(FUN_NAME, PRINT_FUN) \
 	static int (FUN_NAME)(lua_State *L) { \
 		BEGIN(); \
-		const octet *o = o_arg(L, 1); \
-		if(o != NULL) { \
-			PRINT_FUN; \
-			o_free(L,o); \
-		} else { \
-			lerror(L, "Could not allocate message to show"); \
-		} \
+		const octet *o = o_arg(L, 1); SAFE(o, "Could not allocate message to show"); \
+		PRINT_FUN; \
+		o_free(L,o); \
 		END(0); \
 	}
 // print to stderr without prefix with newline
