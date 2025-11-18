@@ -83,6 +83,10 @@ octet *new_octet_from_float(lua_State *L, float *f) {
 		return NULL;
 	}
 	o = o_alloc(L, bufsz);
+	if(!o) {
+		zerror(L, "Could not allocate octet for float conversion");
+		return NULL;
+	}
 	register int i;
 	for(i=0; i<bufsz; i++) {
 		o->val[i] = dest[i];
@@ -162,48 +166,26 @@ static int newfloat(lua_State *L) {
 	BEGIN();
 	if(lua_isstring(L, 1)) {
 		const char* arg = lua_tostring(L, 1);
-		float *flt = float_new(L);
-		if(!flt) {
-			lerror(L, "Could not create float number");
-			return 0;
-		}
+		float *flt = float_new(L); SAFE(flt, CREATE_FLT_ERR);
 		char *pEnd;
 		*flt = strtof(arg, &pEnd);
-		if(*pEnd || isnan(*flt) || isinf(*flt)) {
-			lerror(L, "Could not parse float number %s", arg);
-			return 0;
-		}
-		return 1;
+		SAFE(!*pEnd && !isnan(*flt) && !isinf(*flt), "Invalid argument, could not parse float number");
+		END(1);
 	}
 	// number argument, import
 	if(lua_isnumber(L, 1)) {
 		lua_Number number = lua_tonumber(L, 1);
-		float *flt = float_new(L);
-		if(!flt) {
-			lerror(L, "Could not create float number");
-			return 0;
-		}
+		float *flt = float_new(L); SAFE(flt, CREATE_FLT_ERR);
 		*flt = (float)number;
-		return 1;
+		END(1);
 	}
 	// octet argument, import
 	char *failed_msg = NULL;
-	const octet *o = o_arg(L, 1);
-	if(!o) {
-		failed_msg = "Could not allocate octet";
-		goto end;
-	}
+	const octet *o = o_arg(L, 1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
 	char *pEnd = NULL;
-	float* f = float_new(L);
-	if(!f) {
-		failed_msg = "Could not create float number";
-		goto end;
-	}
+	float* f = float_new(L); SAFE_GOTO(f, CREATE_FLT_ERR);
 	*f = strtof(o->val, &pEnd);
-	if(*pEnd) {
-		failed_msg = "Could not parse float number";
-		goto end;
-	}
+	SAFE_GOTO(!*pEnd, "Invalid argument, could not parse float number");
 end:
 	o_free(L, o);
 	if(failed_msg) {
@@ -229,10 +211,7 @@ static int is_float(lua_State *L) {
 		result = 1;
 	} else if(lua_isstring(L, 1)) {
 		const char* arg = lua_tostring(L, 1);
-		float *flt = float_new(L);
-		if(!flt) {
-			THROW("Could not create float number");
-		}
+		float *flt = float_new(L); SAFE(flt, CREATE_FLT_ERR);
 		char *pEnd;
 		*flt = strtof(arg, &pEnd);
 		result = (*pEnd == '\0');
@@ -254,14 +233,14 @@ static int is_float(lua_State *L) {
  */
 static int float_opposite(lua_State *L) {
 	BEGIN();
-	float *a = float_arg(L,1);
-	float *b = float_new(L);
-	if(a && b) {
-		*b = -(*a);
-	}
-	float_free(L,a);
-	if(!a || !b) {
-		THROW("Could not allocate float number");
+	char *failed_msg = NULL;
+	float *a = float_arg(L,1); SAFE_GOTO(a, ALLOCATE_FLT_ERR);
+	float *b = float_new(L); SAFE_GOTO(b, CREATE_FLT_ERR);
+	*b = -(*a);
+end:
+	float_free(L, a);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -285,24 +264,15 @@ static int float_to_octet(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	octet *o = NULL;
-	float *c = float_arg(L,1);
-	if(!c) {
-		failed_msg = "Could not read float input";
-		goto end;
-	}
-	o = new_octet_from_float(L, c);
-	if(o == NULL) {
-		failed_msg = "Could not create octet";
-		goto end;
-	}
-	o_dup(L, o);
+	float *c = float_arg(L,1); SAFE_GOTO(c, ALLOCATE_FLT_ERR);
+	o = new_octet_from_float(L, c); SAFE_GOTO(o, "Could not create OCTET from FLOAT");
+	SAFE_GOTO(o_dup(L, o), DUPLICATE_OCT_ERR);
 end:
-	float_free(L,c);
+	float_free(L, c);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
-
 	END(1);
 }
 /*** Check whether two float numbers are approximately equal within a small tolerance (EPS).
@@ -322,12 +292,12 @@ end:
 */
 static int float_eq(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	float *a,*b;
 	a = float_arg(L,1);
 	b = float_arg(L,2);
-	if(a && b) {
-		lua_pushboolean(L, fabs(*a - *b) < EPS);
-	}
+	SAFE_GOTO(a && b, ALLOCATE_FLT_ERR);
+	lua_pushboolean(L, fabs(*a - *b) < EPS);
 	// ref. https://stackoverflow.com/a/4915891
 	// TODO: try these tests https://floating-point-gui.de/errors/NearlyEqualsTest.java
 	/*const float absA = fabs(*a);
@@ -344,10 +314,11 @@ static int float_eq(lua_State *L) {
 	} else {  // use relative error
 		res = (diff / (absA + absB) < EPS);
 	}*/
-	float_free(L,a);
-	float_free(L,b);
-	if(!a || !b) {
-		THROW("Could not allocate float number");
+end:
+	float_free(L, a);
+	float_free(L, b);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -360,15 +331,16 @@ static int float_eq(lua_State *L) {
  */
 static int float_lt(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	float *a = float_arg(L,1);
 	float *b = float_arg(L,2);
-	if(a && b) {
-		lua_pushboolean(L, *a < *b);
-	}
-	float_free(L,a);
-	float_free(L,b);
-	if(!a || !b) {
-		THROW("Could not allocate float number");
+	SAFE_GOTO(a && b, ALLOCATE_FLT_ERR);
+	lua_pushboolean(L, *a < *b);
+end:
+	float_free(L, a);
+	float_free(L, b);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -391,15 +363,16 @@ static int float_lt(lua_State *L) {
  */
 static int float_lte(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	float *a = float_arg(L,1);
 	float *b = float_arg(L,2);
-	if(a && b) {
-		lua_pushboolean(L, *a <= *b);
-	}
-	float_free(L,a);
-	float_free(L,b);
-	if(!a || !b) {
-		THROW("Could not allocate float number");
+	SAFE_GOTO(a && b, ALLOCATE_FLT_ERR);
+	lua_pushboolean(L, *a <= *b);
+end:
+	float_free(L, a);
+	float_free(L, b);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -419,16 +392,17 @@ static int float_lte(lua_State *L) {
  */
 static int float_add(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	float *a = float_arg(L,1);
 	float *b = float_arg(L,2);
-	float *c = float_new(L);
-	if(a && b && c) {
-		*c = *a + *b;
-	}
-	float_free(L,a);
-	float_free(L,b);
-	if(!a || !b || !c) {
-		THROW("Could not allocate float number");
+	SAFE_GOTO(a && b, ALLOCATE_FLT_ERR);
+	float *c = float_new(L); SAFE_GOTO(c, CREATE_FLT_ERR);
+	*c = *a + *b;
+end:
+	float_free(L, a);
+	float_free(L, b);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -448,16 +422,17 @@ static int float_add(lua_State *L) {
  */
 static int float_sub(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	float *a = float_arg(L,1);
 	float *b = float_arg(L,2);
-	float *c = float_new(L);
-	if(a && b && c) {
-		*c = *a - *b;
-	}
-	float_free(L,a);
-	float_free(L,b);
-	if(!a || !b || !c) {
-		THROW("Could not allocate float number");
+	SAFE_GOTO(a && b, ALLOCATE_FLT_ERR);
+	float *c = float_new(L); SAFE_GOTO(c, CREATE_FLT_ERR);
+	*c = *a - *b;
+end:
+	float_free(L, a);
+	float_free(L, b);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -477,16 +452,17 @@ static int float_sub(lua_State *L) {
  */
 static int float_mul(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	float *a = float_arg(L,1);
 	float *b = float_arg(L,2);
-	float *c = float_new(L);
-	if(a && b && c) {
-		*c = *a * *b;
-	}
-	float_free(L,a);
-	float_free(L,b);
-	if(!a || !b || !c) {
-		THROW("Could not allocate float number");
+	SAFE_GOTO(a && b, ALLOCATE_FLT_ERR);
+	float *c = float_new(L); SAFE_GOTO(c, CREATE_FLT_ERR);
+	*c = *a * *b;
+end:
+	float_free(L, a);
+	float_free(L, b);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -506,17 +482,18 @@ static int float_mul(lua_State *L) {
  */
 static int float_div(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	float *a = float_arg(L,1);
 	float *b = float_arg(L,2);
-	float *c = float_new(L);
-	if(a && b && c) {
-		// TODO: what happen if I divide by 0?
-		*c = *a / *b;
-	}
-	float_free(L,a);
-	float_free(L,b);
-	if(!a || !b || !c) {
-		THROW("Could not allocate float number");
+	SAFE_GOTO(a && b, ALLOCATE_FLT_ERR);
+	float *c = float_new(L); SAFE_GOTO(c, CREATE_FLT_ERR);
+	// TODO: what happen if I divide by 0?
+	*c = *a / *b;
+end:
+	float_free(L, a);
+	float_free(L, b);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -537,17 +514,17 @@ static int float_div(lua_State *L) {
  */
 static int float_mod(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	float *a = float_arg(L,1);
 	float *b = float_arg(L,2);
-	float *c = float_new(L);
-	if(a && b && c) {
-		// TODO: what happen if I divide by 0?
-		*c = fmod(*a, *b);
-	}
-	float_free(L,a);
-	float_free(L,b);
-	if(!a || !b || !c) {
-		THROW("Could not allocate float number");
+	SAFE_GOTO(a && b, ALLOCATE_FLT_ERR);
+	float *c = float_new(L); SAFE_GOTO(c, CREATE_FLT_ERR);
+	*c = fmod(*a, *b);
+end:
+	float_free(L, a);
+	float_free(L, b);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -560,20 +537,12 @@ static int float_mod(lua_State *L) {
 static int float_to_string(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	float* c = float_arg(L,1);
-	if(c == NULL) {
-		failed_msg = "Could not read float";
-		goto end;
-	}
+	float* c = float_arg(L,1); SAFE_GOTO(c, ALLOCATE_FLT_ERR);
 	char dest[1024];
-	int bufsz = _string_from_float(dest, *c);
-	if(bufsz < 0) {
-		failed_msg = "Output size too big";
-		goto end;
-	}
+	int bufsz = _string_from_float(dest, *c); SAFE_GOTO(bufsz >= 0, "Output size too big");
 	lua_pushstring(L, dest);
 end:
-	float_free(L,c);
+	float_free(L, c);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
