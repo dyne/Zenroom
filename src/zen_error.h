@@ -49,16 +49,22 @@
 	if(!(x)) { THROW(msg); ENDV(); }
 
 // common error messages
-#define MALLOC_ERROR      "Could not allocate memory"
-#define CREATE_BIG_ERR    "Could not create BIG"
-#define ALLOCATE_BIG_ERR  "Could not allocate BIG"
-#define DUPLICATE_BIG_ERR "Could not duplicate BIG"
-#define CREATE_OCT_ERR    "Could not create OCTET"
-#define ALLOCATE_OCT_ERR  "Could not allocate OCTET"
-#define DUPLICATE_OCT_ERR "Could not duplicate OCTET"
-#define CREATE_ECP_ERR    "Could not create ECP"
-#define ALLOCATE_ECP_ERR  "Could not allocate ECP"
-#define DUPLICATE_ECP_ERR "Could not duplicate ECP"
+#define MALLOC_ERROR       "Could not allocate memory"
+#define CREATE_BIG_ERR     "Could not create BIG"
+#define ALLOCATE_BIG_ERR   "Could not allocate BIG"
+#define DUPLICATE_BIG_ERR  "Could not duplicate BIG"
+#define CREATE_OCT_ERR     "Could not create OCTET"
+#define ALLOCATE_OCT_ERR   "Could not allocate OCTET"
+#define DUPLICATE_OCT_ERR  "Could not duplicate OCTET"
+#define CREATE_ECP_ERR     "Could not create ECP"
+#define ALLOCATE_ECP_ERR   "Could not allocate ECP"
+#define DUPLICATE_ECP_ERR  "Could not duplicate ECP"
+#define CREATE_ECP2_ERR    "Could not create ECP2"
+#define ALLOCATE_ECP2_ERR  "Could not allocate ECP2"
+#define DUPLICATE_ECP2_ERR "Could not duplicate ECP2"
+#define CREATE_FP12_ERR    "Could not create FP12"
+#define ALLOCATE_FP12_ERR  "Could not allocate FP12"
+#define DUPLICATE_FP12_ERR "Could not duplicate FP12"
 
 // same as Android
 typedef enum log_priority {

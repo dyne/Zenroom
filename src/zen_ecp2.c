@@ -143,6 +143,7 @@ static int lua_new_ecp2(lua_State *L) {
 	// WARNING: each if implement his own try-catch with gotos
 	BEGIN();
 	char *failed_msg = NULL;
+	const octet *o = NULL;
 // TODO: unsafe and only needed when running tests
 #ifdef DEBUG
 	void *tx  = luaL_testudata(L, 1, "zenroom.big");
@@ -197,20 +198,9 @@ end_big_big:
 		goto end;
 	}
 #endif
-	const octet *o = o_arg(L, 1);
-	if(o == NULL) {
-		failed_msg = "Could not allocate OCTET";
-		goto end;
-	}
-	ecp2 *e = ecp2_new(L);
-	if(e == NULL) {
-		failed_msg = "Could not create ECP2 point";
-		goto end;
-	}
-	if(! ECP2_fromOctet(&e->val, (octet*)o) ) {
-		failed_msg = "Octet doesn't contains a valid ECP2";
-		goto end;
-	}
+	o = o_arg(L, 1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
+	ecp2 *e = ecp2_new(L); SAFE_GOTO(e, CREATE_ECP2_ERR);
+	SAFE_GOTO(ECP2_fromOctet(&e->val, (octet*)o), "Octet doesn't contains a valid ECP2");
 end:
 	o_free(L, o);
 	if(failed_msg) {
@@ -228,11 +218,7 @@ end:
 */
 static int ecp2_generator(lua_State *L) {
 	BEGIN();
-	ecp2 *e = ecp2_new(L);
-	if(e == NULL) {
-		THROW("Could not create ECP2 point");
-		return 1;
-	}
+	ecp2 *e = ecp2_new(L); SAFE(e, CREATE_ECP2_ERR);
 	/* 	FP2 x, y;
 	FP2_from_BIGs(&x, (chunk*)CURVE_G2xa, (chunk*)CURVE_G2xb);
 	FP2_from_BIGs(&y, (chunk*)CURVE_G2ya, (chunk*)CURVE_G2yb);
@@ -248,21 +234,11 @@ static int ecp2_generator(lua_State *L) {
 static int ecp2_millerloop(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	const ecp2 *x = ecp2_arg(L, 1);
-	if(x == NULL) {
-		failed_msg = "Could not allocate ECP2 point";
-		goto end;
-	}
-	const ecp *y = ecp_arg(L, 2);
-	if(y == NULL) {
-		failed_msg = "Could not allocate ECP point";
-		goto end;
-	}
-	fp12 *f = fp12_new(L);
-	if(f == NULL) {
-		failed_msg = "Could not create FP12";
-		goto end;
-	}
+	const ecp2 *x = NULL;
+	const ecp *y = NULL;
+	x = ecp2_arg(L, 1); SAFE_GOTO(x, ALLOCATE_ECP2_ERR);
+	y = ecp_arg(L, 2); SAFE_GOTO(y, ALLOCATE_ECP_ERR);
+	fp12 *f = fp12_new(L); SAFE_GOTO(f, CREATE_FP12_ERR);
 	ECP2_affine((ECP2*)&x->val);
 	ECP_affine((ECP*)&y->val);
 	PAIR_ate(&f->val, (ECP2*)&x->val, (ECP*)&y->val);
@@ -287,16 +263,8 @@ end:
 static int ecp2_affine(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	const ecp2 *in = ecp2_arg(L, 1);
-	if(in == NULL) {
-		failed_msg = "Could not allocate ECP2 point";
-		goto end;
-	}
-	ecp2 *out = ecp2_dup(L, in);
-	if(out == NULL) {
-		failed_msg = "Could not duplicate ECP2 point";
-		goto end;
-	}
+	const ecp2 *in = ecp2_arg(L, 1); SAFE_GOTO(in, ALLOCATE_ECP2_ERR);
+	ecp2 *out = ecp2_dup(L, in); SAFE_GOTO(out, DUPLICATE_ECP2_ERR);
 	ECP2_affine(&out->val);
 end:
 	ecp2_free(L, in);
@@ -314,11 +282,7 @@ end:
 */
 static int ecp2_get_infinity(lua_State *L) {
 	BEGIN();
-	ecp2 *e = ecp2_new(L);
-	if(e == NULL) {
-		THROW("Could not create ECP2 point");
-		return 0;
-	}
+	ecp2 *e = ecp2_new(L); SAFE(e, CREATE_ECP2_ERR);
 	ECP2_inf(&e->val);
 	END(1);
 }
@@ -331,11 +295,7 @@ static int ecp2_get_infinity(lua_State *L) {
 */
 static int ecp2_isinf(lua_State *L) {
 	BEGIN();
-	const ecp2 *e = ecp2_arg(L, 1);
-	if(e == NULL) {
-		THROW("Could not allocate ECP2 point");
-		return 0;
-	}
+	const ecp2 *e = ecp2_arg(L, 1); SAFE(e, ALLOCATE_ECP2_ERR);
 	lua_pushboolean(L, ECP2_isinf((ECP2*)&e->val));
 	ecp2_free(L, e);
 	END(1);
@@ -356,15 +316,8 @@ static int ecp2_add(lua_State *L) {
 	char *failed_msg = NULL;
 	const ecp2 *e = ecp2_arg(L, 1);
 	const ecp2 *q = ecp2_arg(L, 2);
-	if(e == NULL || q == NULL) {
-		failed_msg = "Could not allocate ECP2 point";
-		goto end;
-	}
-	ecp2 *p = ecp2_dup(L, e);
-	if(p == NULL) {
-		failed_msg = "Could not duplicate ECP2 point";
-		goto end;
-	}
+	SAFE_GOTO(e && q, ALLOCATE_ECP2_ERR);
+	ecp2 *p = ecp2_dup(L, e); SAFE_GOTO(p, DUPLICATE_ECP2_ERR);
 	ECP2_add(&p->val, (ECP2*)&q->val);
 end:
 	ecp2_free(L, e);
@@ -391,15 +344,8 @@ static int ecp2_sub(lua_State *L) {
 	char *failed_msg = NULL;
 	const ecp2 *e = ecp2_arg(L, 1);
 	const ecp2 *q = ecp2_arg(L, 2);
-	if(e == NULL || q == NULL) {
-		failed_msg = "Could not allocate ECP2 point";
-		goto end;
-	}
-	ecp2 *p = ecp2_dup(L, e);
-	if(p == NULL) {
-		failed_msg = "Could not duplicate ECP2 point";
-		goto end;
-	}
+	SAFE_GOTO(e && q, ALLOCATE_ECP2_ERR);
+	ecp2 *p = ecp2_dup(L, e); SAFE_GOTO(p, DUPLICATE_ECP2_ERR);
 	ECP2_sub(&p->val, (ECP2*)&q->val);
 end:
 	ecp2_free(L, e);
@@ -418,16 +364,8 @@ end:
 static int ecp2_negative(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	const ecp2 *in = ecp2_arg(L, 1);
-	if(in == NULL) {
-		failed_msg = "Could not allocate ECP2 point";
-		goto end;
-	}
-	ecp2 *out = ecp2_dup(L, in);
-	if(out == NULL) {
-		failed_msg = "Could not allocate ECP2 point";
-		goto end;
-	}
+	const ecp2 *in = ecp2_arg(L, 1); SAFE_GOTO(in, ALLOCATE_ECP2_ERR);
+	ecp2 *out = ecp2_dup(L, in); SAFE_GOTO(out, DUPLICATE_ECP2_ERR);
 	ECP2_neg(&out->val);
 end:
 	ecp2_free(L, in);
@@ -453,10 +391,7 @@ static int ecp2_eq(lua_State *L) {
 	char *failed_msg = NULL;
 	const ecp2 *p = ecp2_arg(L, 1);
 	const ecp2 *q = ecp2_arg(L, 2);
-	if(p == NULL || q == NULL) {
-		failed_msg = "Could not allocate ECP2 point";
-		goto end;
-	}
+	SAFE_GOTO(p && q, ALLOCATE_ECP2_ERR);
 // TODO: is affine rly needed?
 	ECP2_affine((ECP2*)&p->val);
 	ECP2_affine((ECP2*)&q->val);
@@ -483,16 +418,8 @@ end:
 static int ecp2_octet(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	const ecp2 *e = ecp2_arg(L, 1);
-	if(e == NULL) {
-		failed_msg = "Could not allocate ECP2 point";
-		goto end;
-	}
-	octet *o = o_new(L, (MODBYTES<<2)+1);
-	if(o == NULL) {
-		failed_msg = "Could not create OCTET";
-		goto end;
-	}
+	const ecp2 *e = ecp2_arg(L, 1); SAFE_GOTO(e, ALLOCATE_ECP2_ERR);
+	octet *o = o_new(L, (MODBYTES<<2)+1); SAFE_GOTO(o, CREATE_OCT_ERR);
 	ECP2_toOctet(o, (ECP2*)&e->val);
 end:
 	ecp2_free(L, e);
@@ -506,21 +433,9 @@ static int ecp2_mul(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	big *b = NULL;
-	const ecp2 *p = ecp2_arg(L, 1);
-	if(p == NULL) {
-		failed_msg = "Could not allocate ECP2 point";
-		goto end;
-	}
-	b = big_arg(L, 2);
-	if(b == NULL) {
-		failed_msg = "Could not allocate BIG";
-		goto end;
-	}
-	ecp2 *r = ecp2_dup(L, p);
-	if(r == NULL) {
-		failed_msg = "Could not duplicate ECP2 point";
-		goto end;
-	}
+	const ecp2 *p = ecp2_arg(L, 1); SAFE_GOTO(p, ALLOCATE_ECP2_ERR);
+	b = big_arg(L, 2); SAFE_GOTO(b, ALLOCATE_BIG_ERR);
+	ecp2 *r = ecp2_dup(L, p); SAFE_GOTO(r, DUPLICATE_ECP2_ERR);
 	PAIR_G2mul(&r->val, b->val);
 end:
 	big_free(L, b);
@@ -542,22 +457,9 @@ end:
 static int ecp2_mapit(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	const octet *o = o_arg(L, 1);
-	if(o == NULL) {
-		failed_msg = "Could not allocate OCTET";
-		goto end;
-	}
-	if(o->len != 64) {
-		zerror(L, "octet length is %u instead of 64 (need to use sha512)",
-		       o->len);
-		failed_msg = "Invalid argument to ECP2.mapit(), not an hash";
-		goto end;
-	}
-	ecp2 *e = ecp2_new(L);
-	if(e == NULL) {
-		failed_msg = "Could not create ECP2 point";
-		goto end;
-	}
+	const octet *o = o_arg(L, 1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
+	SAFE_GOTO(o->len == 64, "Invalid argument, octet must be 64 bytes");
+	ecp2 *e = ecp2_new(L); SAFE_GOTO(e, CREATE_ECP2_ERR);
 	ECP2_mapit(&e->val, (octet*)o);
 end:
 	o_free(L, o);
@@ -571,18 +473,10 @@ end:
 static int ecp2_get_xr(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	const ecp2 *e = ecp2_arg(L, 1);
-	if(e == NULL) {
-		failed_msg = "Could not allocate ECP2 point";
-		goto end;
-	}
-	FP fx;
-	big *xa = big_new(L);
-	if(xa == NULL) {
-		failed_msg = "Could not create BIG";
-		goto end;
-	}
+	const ecp2 *e = ecp2_arg(L, 1); SAFE_GOTO(e, ALLOCATE_ECP2_ERR);
+	big *xa = big_new(L); SAFE_GOTO(xa, CREATE_BIG_ERR);
 	big_init(L,xa);
+	FP fx;
 	FP_copy(&fx, (FP*)&e->val.x.a);
 	FP_reduce(&fx); FP_redc(xa->val, &fx);
 end:
@@ -596,18 +490,10 @@ end:
 static int ecp2_get_xi(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	const ecp2 *e = ecp2_arg(L, 1);
-	if(e == NULL) {
-		failed_msg = "Could not allocate ECP2 point";
-		goto end;
-	}
-	FP fx;
-	big *xb = big_new(L);
-	if(xb == NULL) {
-		failed_msg = "Could not create BIG";
-		goto end;
-	}
+	const ecp2 *e = ecp2_arg(L, 1); SAFE_GOTO(e, ALLOCATE_ECP2_ERR);
+	big *xb = big_new(L); SAFE_GOTO(xb, CREATE_BIG_ERR);
 	big_init(L,xb);
+	FP fx;
 	FP_copy(&fx, (FP*)&e->val.x.b);
 	FP_reduce(&fx); FP_redc(xb->val, &fx);
 end:
@@ -622,18 +508,10 @@ end:
 static int ecp2_get_yr(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	const ecp2 *e = ecp2_arg(L, 1);
-	if(e == NULL) {
-		failed_msg = "Could not allocate ECP2 point";
-		goto end;
-	}
-	FP fy;
-	big *ya = big_new(L);
-	if(ya == NULL) {
-		failed_msg = "Could not create BIG";
-		goto end;
-	}
+	const ecp2 *e = ecp2_arg(L, 1); SAFE_GOTO(e, ALLOCATE_ECP2_ERR);
+	big *ya = big_new(L); SAFE_GOTO(ya, CREATE_BIG_ERR);
 	big_init(L,ya);
+	FP fy;
 	FP_copy(&fy, (FP*)&e->val.y.a);
 	FP_reduce(&fy); FP_redc(ya->val, &fy);
 end:
@@ -646,18 +524,10 @@ end:
 static int ecp2_get_yi(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	const ecp2 *e = ecp2_arg(L, 1);
-	if(e == NULL) {
-		failed_msg = "Could not allocate ECP2 point";
-		goto end;
-	}
-	FP fy;
-	big *yb = big_new(L);
-	if(yb == NULL) {
-		failed_msg = "Could not create BIG";
-		goto end;
-	}
+	const ecp2 *e = ecp2_arg(L, 1); SAFE_GOTO(e, ALLOCATE_ECP2_ERR);
+	big *yb = big_new(L); SAFE_GOTO(yb, CREATE_BIG_ERR);
 	big_init(L,yb);
+	FP fy;
 	FP_copy(&fy, (FP*)&e->val.y.b);
 	FP_reduce(&fy); FP_redc(yb->val, &fy);
 end:
@@ -670,18 +540,10 @@ end:
 static int ecp2_get_zr(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	const ecp2 *e = ecp2_arg(L, 1);
-	if(e == NULL) {
-		failed_msg = "Could not allocate ECP2 point";
-		goto end;
-	}
-	FP fz;
-	big *za = big_new(L);
-	if(za == NULL) {
-		failed_msg = "Could not create BIG";
-		goto end;
-	}
+	const ecp2 *e = ecp2_arg(L, 1); SAFE_GOTO(e, ALLOCATE_ECP2_ERR);
+	big *za = big_new(L); SAFE_GOTO(za, CREATE_BIG_ERR);
 	big_init(L,za);
+	FP fz;
 	FP_copy(&fz, (FP*)&e->val.z.a);
 	FP_reduce(&fz); FP_redc(za->val, &fz);
 end:
@@ -694,18 +556,10 @@ end:
 static int ecp2_get_zi(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	const ecp2 *e = ecp2_arg(L, 1);
-	if(e == NULL) {
-		failed_msg = "Could not allocate ECP2 point";
-		goto end;
-	}
-	FP fz;
-	big *zb = big_new(L);
-	if(zb == NULL) {
-		failed_msg = "Could not create BIG";
-		goto end;
-	}
+	const ecp2 *e = ecp2_arg(L, 1); SAFE_GOTO(e, ALLOCATE_ECP2_ERR);
+	big *zb = big_new(L); SAFE_GOTO(zb, CREATE_BIG_ERR);
 	big_init(L,zb);
+	FP fz;
 	FP_copy(&fz, (FP*)&e->val.z.b);
 	FP_reduce(&fz); FP_redc(zb->val, &fz);
 end:
@@ -719,26 +573,14 @@ end:
 static int ecp2_output(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	const ecp2 *e = ecp2_arg(L, 1);
-	if(e == NULL) {
-		failed_msg = "Could not allocate ECP2 point";
-		goto end;
-	}
+	const ecp2 *e = ecp2_arg(L, 1); SAFE_GOTO(e, ALLOCATE_ECP2_ERR);
 	if (ECP2_isinf((ECP2*)&e->val)) { // Infinity
-		octet *o = o_new(L, 3);
-		if(o == NULL) {
-			failed_msg = "Could not create OCTET";
-			goto end;
-		}
+		octet *o = o_new(L, 3); SAFE_GOTO(o, CREATE_OCT_ERR);
 		o->val[0] = SCHAR_MAX; o->val[1] = SCHAR_MAX;
 		o->val[3] = 0x0; o->len = 2;
 		goto end;
 	}
-	octet *o = o_new(L, e->totlen + 0x0f);
-	if(o == NULL) {
-		failed_msg = "Could not create OCTET";
-		goto end;
-	}
+	octet *o = o_new(L, e->totlen + 0x0f); SAFE_GOTO(o, CREATE_OCT_ERR);
 	_ecp2_to_octet(o, e);
 	push_octet_to_hex_string(L, o);
 end:
@@ -770,18 +612,8 @@ char gf2_sign(BIG y0, BIG y1){
 static int ecp2_zcash_export(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	const ecp2 *e = ecp2_arg(L, 1);
-	if(e == NULL) {
-		THROW("Could not create ECP2 point");
-		return 0;
-	}
-
-	octet *o = o_new(L, 96);
-	if(o == NULL) {
-		failed_msg = "Could not allocate ECP2 point";
-		goto end;
-	}
-
+	const ecp2 *e = ecp2_arg(L, 1); SAFE_GOTO(e, ALLOCATE_ECP2_ERR);
+	octet *o = o_new(L, 96); SAFE_GOTO(o, CREATE_OCT_ERR);
 	if(ECP2_isinf((ECP2*)&e->val)) {
 		o->len = 96;
 		o->val[0] = (char)0xc0;
@@ -834,38 +666,22 @@ end:
 static int ecp2_zcash_import(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	const octet *o = o_arg(L, 1);
-	if(o == NULL) {
-		failed_msg = "Missing first octet argument";
-		goto end;
-	}
-	ecp2 *e = ecp2_new(L);
-	if(e == NULL) {
-		THROW("Could not create ECP2 point");
-		return 0;
-	}
+	octet *x0 = NULL, *x1 = NULL;
+	const octet *o = o_arg(L, 1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
+	ecp2 *e = ecp2_new(L); SAFE_GOTO(e, CREATE_ECP2_ERR);
 	register unsigned char m_byte = o->val[0] & 0xE0;
 	bool c_bit;
 	bool i_bit;
 	bool s_bit;
-	if(m_byte == 0x20 || m_byte == 0x60 || m_byte == 0xE0) {
-		failed_msg = "Invalid octet header";
-		goto end;
-	}
+	SAFE_GOTO(m_byte != 0x20 && m_byte != 0x60 && m_byte != 0xE0, "Invalid octet header");
 	c_bit = ((m_byte & 0x80) == 0x80);
 	i_bit = ((m_byte & 0x40) == 0x40);
 	s_bit = ((m_byte & 0x20) == 0x20);
 
 	if(c_bit) {
-		if(o->len != 96) {
-			failed_msg = "Invalid octet header";
-			goto end;
-		}
+		SAFE_GOTO(o->len == 96, "Invalid octet length for compressed point");
 	} else {
-		if(o->len != 192) {
-			failed_msg = "Invalid octet header";
-			goto end;
-		}
+		SAFE_GOTO(o->len == 192, "Invalid octet length for uncompressed point");
 	}
 
 	if(i_bit) {
@@ -876,25 +692,20 @@ static int ecp2_zcash_import(lua_State *L) {
 
 	if(c_bit) {
 		FP2 fx, fy;
-		octet *x0 = o_alloc(L,48);
+		x0 = o_alloc(L,48); SAFE_GOTO(x0, ALLOCATE_OCT_ERR);
 		memcpy(x0->val,o->val,48);
 		x0->val[0] = x0->val[0] & 0x1F;
 		x0->len = 48;
-		octet *x1 = o_alloc(L,48);
+		x1 = o_alloc(L,48); SAFE_GOTO(x1, ALLOCATE_OCT_ERR);
 		memcpy(x1->val,o->val+48,48);
 		x1->val[0] = x1->val[0] & 0x1F;
 		x1->len = 48;
-		big* bigx0 = big_new(L);
-		big* bigx1 = big_new(L);
-		_octet_to_big(L, bigx0, x0);
-		_octet_to_big(L, bigx1, x1);
-		o_free(L,x0);
-		o_free(L,x1);
+		big* bigx0 = big_new(L); SAFE_GOTO(bigx0, CREATE_BIG_ERR);
+		big* bigx1 = big_new(L); SAFE_GOTO(bigx1, CREATE_BIG_ERR);
+		SAFE_GOTO(_octet_to_big(L, bigx0, x0), "Could not create BIG from OCTET");
+		SAFE_GOTO(_octet_to_big(L, bigx1, x1), "Could not create BIG from OCTET");
 		FP2_from_BIGs(&fx, bigx1->val, bigx0->val);
-		if(!ECP2_setx(&e->val, &fx)) {
-			failed_msg = "Invalid input octet: not a point on the curve";
-			goto end;
-		}
+		SAFE_GOTO(ECP2_setx(&e->val, &fx), "Invalid input octet: not a point on the curve");
 		ECP2_get(&fx, &fy, &e->val);
 
 		BIG by0,by1;
@@ -905,15 +716,16 @@ static int ecp2_zcash_import(lua_State *L) {
 		if(gf2_sign(by0, by1) != s_bit) {
 			ECP2_neg(&e->val);
 		}
-
 		lua_pop(L,1); // bigx0
 		lua_pop(L,1); // bigx1
-
 	} else {
 		failed_msg = "Not yet implemented";
 		goto end;
 	}
+
 end:
+	o_free(L, x0);
+	o_free(L, x1);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
