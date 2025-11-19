@@ -59,10 +59,6 @@
 // #include <ecp_SECP256K1.h>
 #include <zen_big.h>
 
-#define KEYPROT(alg, key)	  \
-	zerror(L, "%s engine has already a %s set:", alg, key); \
-	lerror(L, "Zenroom won't overwrite. Use a .new() instance.");
-
 // from zen_ecdh_factory.h to setup function pointers
 extern void ecdh_init(lua_State *L, ecdh *e);
 
@@ -494,8 +490,8 @@ static int ecdh_dsa_verify(lua_State *L) {
 	if(lua_type(L, 3) == LUA_TUSERDATA) {
 		r = (octet *)o_arg(L, 3); SAFE_GOTO(r, "Could not allocate signature");
 		SAFE_GOTO(r->len >= 62 && r->len <= 64, "Invalid argument, concatenated signature must be 62, 63 or 64 bytes long")
-		octet *left = o_alloc(L, 32); SAFE_GOTO(left, "Could not allocate first part of signautre");
-		octet *right = o_alloc(L, 32); SAFE_GOTO(left, "Could not allocate second part of signautre");
+		left = o_alloc(L, 32); SAFE_GOTO(left, "Could not allocate first part of signautre");
+		right = o_alloc(L, 32); SAFE_GOTO(left, "Could not allocate second part of signautre");
 		int res = verify64_with_partition_attempts(pk, m, r, left, right);
 		if(res) lua_pushboolean(L, 1);
 		else    lua_pushboolean(L, 0);
