@@ -34,7 +34,7 @@
 
 int RSA_sk_to_octet(lua_State *L, rsa_private_key_4096 *sk, octet *o) {
 	octet *x = o_alloc(L,RSA_4096_PRIVATE_KEY_BIG_BYTES);
-	if(!x) return NULL;
+	if(!x) return 0;
 	FF_4096_toOctet(x, sk->p, RSA_4096_PRIVATE_KEY_BIG_SIZE);
 	OCT_copy(o, x);
 	FF_4096_toOctet(x, sk->q, RSA_4096_PRIVATE_KEY_BIG_SIZE);
@@ -57,7 +57,7 @@ void RSA_pk_to_octet(rsa_public_key_4096 *pk, octet *o){
 
 int RSA_octet_to_pk(lua_State *L, octet *o, rsa_public_key_4096 *pk){
 	octet *x = o_alloc(L,o->len);
-	if (!x) return NULL;
+	if (!x) return 0;
 	OCT_copy(x, o);
 	FF_4096_fromOctet(pk->n, x, FFLEN_4096);
 	OCT_shl(x, MODBYTES_512_29 * FFLEN_4096);
@@ -190,7 +190,6 @@ static int rsa_signature_pubcheck(lua_State *L) {
 
 static int rsa_signature_check(lua_State *L){
 	BEGIN();
-	char *failed_msg = NULL;
 	const octet *sign = o_arg(L, 1); SAFE(sign, "Could not allocate signature");
 	if(sign->len == 512)
 		lua_pushboolean(L, 1);
