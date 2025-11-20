@@ -24,49 +24,31 @@
 
 static int read_u64(lua_State *L) {
 	BEGIN();
-	char *failed_msg = NULL;
-	const octet *oct = o_arg(L, 1);
-	if(!oct) {
-		failed_msg = "Cannot allocate octet memory";
-		goto end;
-	}
+	const octet *oct = o_arg(L, 1); SAFE(oct, ALLOCATE_OCT_ERR);
 	uint64_t dst;
 	varint_read_u64(oct->val,oct->len,&dst);
 	o_free(L,oct);
 	lua_pushnumber(L,dst);
-	octet *o = o_new(L,4);
+	octet *o = o_new(L, 4); SAFE(o, CREATE_OCT_ERR);
 	// big endian output: most significant byte first
 	for (int i = 0; i < 4; i++)
 		o->val[i] = (dst >> ((3 - i) * 8)) & 0xFF;
 	o->len = 4;
- end:
-	if (failed_msg)	{
-		THROW(failed_msg);
-	}
 	END(2);
 }
 
 static int read_i64(lua_State *L) {
 	BEGIN();
-	char *failed_msg = NULL;
-	const octet *oct = o_arg(L, 1);
-	if(!oct) {
-		failed_msg = "Cannot allocate octet memory";
-		goto end;
-	}
+	const octet *oct = o_arg(L, 1); SAFE(oct, ALLOCATE_OCT_ERR);
 	int64_t dst;
 	varint_read_i64(oct->val,oct->len,&dst);
 	o_free(L,oct);
 	lua_pushnumber(L,dst);
-	octet *o = o_new(L,4);
+	octet *o = o_new(L, 4); SAFE(o, CREATE_OCT_ERR);
 	// big endian output: most significant byte first
 	for (int i = 0; i < 4; i++)
 		o->val[i] = (dst >> ((3 - i) * 8)) & 0xFF;
 	o->len = 4;
- end:
-	if (failed_msg)	{
-		THROW(failed_msg);
-	}
 	END(2);
 }
 
