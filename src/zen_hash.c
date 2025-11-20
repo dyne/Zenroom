@@ -63,6 +63,7 @@ extern void RMD160_hash(dword *MDbuf, byte *hashcode);
 
 hash* hash_new(lua_State *L, const char *hashtype) {
 	hash *h = lua_newuserdata(L, sizeof(hash));
+	char *failed_msg = NULL;
 	if(HEDLEY_UNLIKELY(h==NULL)) {
 		zerror(L, "Error allocating new hash generator in %s",__func__);
 		return NULL; }
@@ -78,55 +79,60 @@ hash* hash_new(lua_State *L, const char *hashtype) {
 		strncpy(h->name,hashtype,15);
 		h->len = 32;
 		h->algo = _SHA256;
-		h->sha256 = (hash256*)malloc(sizeof(hash256));
+		h->sha256 = (hash256*)malloc(sizeof(hash256)); SAFE_GOTO(h->sha256, MALLOC_ERROR);
 		HASH256_init(h->sha256);
 	} else if(strncasecmp(hashtype,"sha384",6) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 48;
 		h->algo = _SHA384;
-		h->sha384 = (hash384*)malloc(sizeof(hash384));
+		h->sha384 = (hash384*)malloc(sizeof(hash384)); SAFE_GOTO(h->sha384, MALLOC_ERROR);
 		HASH384_init(h->sha384);
 	} else if(strncasecmp(hashtype,"sha512",6) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 64;
 		h->algo = _SHA512;
-		h->sha512 = (hash512*)malloc(sizeof(hash512));
+		h->sha512 = (hash512*)malloc(sizeof(hash512)); SAFE_GOTO(h->sha512, MALLOC_ERROR);
 		HASH512_init(h->sha512);
 	} else if(strncasecmp(hashtype,"sha3_256",8) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 32;
 		h->algo = _SHA3_256;
-		h->sha3_256 = (sha3*)malloc(sizeof(sha3));
+		h->sha3_256 = (sha3*)malloc(sizeof(sha3)); SAFE_GOTO(h->sha3_256, MALLOC_ERROR);
 		SHA3_init(h->sha3_256, h->len);
 	} else if(strncasecmp(hashtype,"sha3_512",8) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 64;
 		h->algo = _SHA3_512;
-		h->sha3_512 = (sha3*)malloc(sizeof(sha3));
+		h->sha3_512 = (sha3*)malloc(sizeof(sha3)); SAFE_GOTO(h->sha3_512, MALLOC_ERROR);
 		SHA3_init(h->sha3_512, h->len);
 	} else if(strncasecmp(hashtype,"shake256",8) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 32;
 		h->algo = _SHAKE256;
-		h->shake256 = (sha3*)malloc(sizeof(sha3));
+		h->shake256 = (sha3*)malloc(sizeof(sha3)); SAFE_GOTO(h->shake256, MALLOC_ERROR);
 		SHA3_init(h->shake256, h->len);
 	} else if(strncasecmp(hashtype,"keccak256",9) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 32;
 		h->algo = _KECCAK256;
-		h->keccak256 = (sha3*)malloc(sizeof(sha3));
+		h->keccak256 = (sha3*)malloc(sizeof(sha3)); SAFE_GOTO(h->keccak256, MALLOC_ERROR);
 		SHA3_init(h->keccak256, h->len);
 	} else if(strncasecmp(hashtype,"ripemd160",9) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 20;
 		h->algo = _RMD160;
-		h->rmd160 = (dword*)malloc((160/32)+0x0f);
+		h->rmd160 = (dword*)malloc((160/32)+0x0f); SAFE_GOTO(h->rmd160, MALLOC_ERROR);
 		RMD160_init(h->rmd160);
 	} // ... TODO: other hashes
 	else {
 		zerror(L, "Hash algorithm not known: %s", hashtype);
 		return NULL; }
 	h->ref = 1;
+end:
+	if(failed_msg) {
+		zerror(L, failed_msg);
+		return NULL;
+	}
 	return(h);
 }
 
