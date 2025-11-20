@@ -69,6 +69,8 @@
 #define ALLOCATE_FLT_ERR   "Could not allocate FLOAT"
 #define CREATE_HASH_ERR    "Could not create HASH"
 #define ALLOCATE_HASH_ERR  "Could not allocate HASH"
+#define CREATE_TIME_ERR    "Could not create TIME"
+#define ALLOCATE_TIME_ERR  "Could not allocate TIME"
 
 // same as Android
 typedef enum log_priority {
