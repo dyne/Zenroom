@@ -33,7 +33,6 @@
 
 static int pem_to_base64(lua_State *L) {
 	BEGIN();
-	char *failed_msg = NULL;
 	const char *begin_marker = "-----BEGIN";
 	const char *end_marker = "-----END";
 	const char *in = lua_tostring(L, 1);
