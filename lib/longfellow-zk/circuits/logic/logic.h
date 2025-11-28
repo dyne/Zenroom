@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@
 
 #include "algebra/fp_generic.h"
 #include "gf2k/gf2_128.h"
+#include "util/panic.h"
 
 namespace proofs {
 /*
@@ -170,6 +171,18 @@ class Logic {
     return r;
   }
 
+  // compute in the circuit what F.of_scalar(sum_i v[i] 2^i) would compute
+  // outside the circuit
+  template <size_t N>
+  EltW as_scalar(const bitvec<N>& v) const {
+    EltW r = konst(zero());
+    for (size_t i = 0; i < N; ++i) {
+      auto vi = eval(v[i]);
+      r = axpy(&r, f_.beta(i), vi);
+    }
+    return r;
+  }
+
   // return an EltW which is 0 iff v is 0
   EltW assert0(const BitW& v) const {
     auto e = eval(v);
@@ -289,7 +302,7 @@ class Logic {
   BitW mux(const BitW* control, const BitW* iftrue, const BitW& iffalse) const {
     auto cif = land(control, *iftrue);
     auto nc = lnot(*control);
-    auto ciff = land(&nc, *iffalse);
+    auto ciff = land(&nc, iffalse);
     return lor_exclusive(&cif, ciff);
   }
 
@@ -469,6 +482,45 @@ class Logic {
     }
   }
 
+  // w x w -> 2w-bit polynomial multiplier over gf2.  c(x) = a(x) * b(x)
+  // via the Karatsuba recurrence.  Only works for w = 2^k.
+  void gf2_polynomial_multiplier_karat(size_t w, BitW c[/*2*w*/],
+                                       const BitW a[/*w*/],
+                                       const BitW b[/*w*/]) const {
+    check(w == 128 || w == 64 || w < 64, "input length is not a power of 2");
+    if (w < 64) {
+      gf2_polynomial_multiplier(w, c, a, b);
+      return;
+    } else {
+      // We only run this look on w=128 bits. To support odd w,
+      std::vector<BitW> a01(w / 2); /* a0 plus a1 */
+      std::vector<BitW> b01(w / 2); /* b0 plus b1 */
+      std::vector<BitW> ab01(w);
+      std::vector<BitW> a0b0(w);
+      std::vector<BitW> a1b1(w);
+
+      for (size_t i = 0; i < w / 2; ++i) {
+        a01[i] = lxor(&a[i], a[i + w / 2]);
+        b01[i] = lxor(&b[i], b[i + w / 2]);
+      }
+
+      gf2_polynomial_multiplier_karat(w / 2, &ab01[0], &a01[0], &b01[0]);
+      gf2_polynomial_multiplier_karat(w / 2, &a0b0[0], a, b);
+      gf2_polynomial_multiplier_karat(w / 2, &a1b1[0], a + w / 2, b + w / 2);
+
+      for (size_t i = 0; i < w; ++i) {
+        ab01[i] = lxor3(&ab01[i], &a0b0[i], a1b1[i]);
+      }
+
+      for (size_t i = 0; i < w / 2; ++i) {
+        c[i] = a0b0[i];
+        c[i + w / 2] = lxor(&a0b0[i + w / 2], ab01[i]);
+        c[i + w] = lxor(&ab01[i + w / 2], a1b1[i]);
+        c[i + 3 * w / 2] = a1b1[i + w / 2];
+      }
+    }
+  }
+
   // Performs field multiplication in GF2^128 defined by the irreducible
   // x^128 + x^7 + x^2 + x + 1. This routine is generated in a sage script that
   // computes a sparse matrix-vector mult via the powers of x^k mod p(x).
@@ -485,7 +537,7 @@ class Logic {
   //       r = r * gen
   //   print(nl)
   void gf2_128_mul(v128& c, const v128 a, const v128 b) const {
-    const std::vector<uint16_t> taps[129] = {
+    const std::vector<uint16_t> taps[128] = {
         {0, 128, 249, 254},
         {1, 128, 129, 249, 250, 254},
         {2, 128, 129, 130, 249, 250, 251, 254},
@@ -622,7 +674,7 @@ class Logic {
   void gf2k_mul(BitW c[/*w*/], const BitW a[/*w*/], const BitW b[/*w*/],
                 const std::vector<uint16_t> M[], size_t w) const {
     std::vector<BitW> t(w * 2);
-    gf2_polynomial_multiplier(w, t.data(), a, b);
+    gf2_polynomial_multiplier_karat(w, t.data(), a, b);
 
     std::vector<BitW> tmp(w);
     for (size_t i = 0; i < w; ++i) {
@@ -720,16 +772,6 @@ class Logic {
       r[i + NA] = b[i];
     }
     return r;
-  }
-
-  template <size_t N>
-  bool vequal(const bitvec<N>* a, const bitvec<N>& b) const {
-    for (size_t i = 0; i < N; ++i) {
-      auto eai = eval((*a)[i]);
-      auto ebi = eval(b[i]);
-      if (eai != ebi) return false;
-    }
-    return true;
   }
 
   template <size_t N>
@@ -880,13 +922,13 @@ class Logic {
   }
 
   template <size_t N>
-  BitW veq(const bitvec<N>& a, const bitvec<N>& b) const {
-    return eq(N, a.data(), b.data());
+  BitW veq(const bitvec<N>* a, const bitvec<N>& b) const {
+    return eq(N, (*a).data(), b.data());
   }
   template <size_t N>
   BitW veq(const bitvec<N>& a, uint64_t val) const {
     auto v = vbit<N>(val);
-    return veq(a, v);
+    return veq(&a, v);
   }
   template <size_t N>
   BitW vlt(const bitvec<N>* a, const bitvec<N>& b) const {
@@ -930,8 +972,14 @@ class Logic {
   // bk_->{input,output}.  Because C++ templates are lazily expanded,
   // this class compiles even with backends that do not support I/O,
   // as long as you don't expand vinput(), voutput().
-  BitW input() const { return BitW(bk_->input(), f_); }
-  void output(const BitW& x, size_t i) const { bk_->output(eval(x), i); }
+  EltW eltw_input() const { return bk_->input_wire(); }
+  BitW input() const {
+    BitW x(bk_->input_wire(), f_);
+    assert_is_bit(x);
+    return x;
+  }
+  void output(const EltW& x, size_t i) const { bk_->output_wire(x, i); }
+  void output(const BitW& x, size_t i) const { output(eval(x), i); }
   size_t wire_id(const BitW& v) const { return bk_->wire_id(v.x); }
   size_t wire_id(const EltW& x) const { return bk_->wire_id(x); }
 
@@ -1029,7 +1077,6 @@ class Logic {
   BitW lxor_aux(const BitW& a, const BitW& b, BinaryFieldTypeTag tt) const {
     return addv(a, b);
   }
-
 
   size_t pack(uint64_t mask, size_t n, BitW a[/*n*/]) const {
     size_t j = 0;

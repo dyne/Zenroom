@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,6 +45,10 @@ static constexpr size_t kDeviceKeyInfoLen = 13;
 static constexpr size_t kValidUntilLen = 10;
 static constexpr size_t kValueDigestsLen = 12;
 static constexpr size_t kOrgLen = 17;
+
+static constexpr uint8_t kTag32[] = {0x58, 0x20};
+static constexpr size_t kIdLen = 32;
+static constexpr size_t kValueLen = 64;
 
 static constexpr uint8_t kValidityInfoID[kValidityInfoLen] = {
     'v', 'a', 'l', 'i', 'd', 'i', 't', 'y', 'I', 'n', 'f', 'o'};
