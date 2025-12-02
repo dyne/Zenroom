@@ -1,1 +1,0 @@
-../../../lib/zk-circuit-lang/examples/03_range_proof.lua

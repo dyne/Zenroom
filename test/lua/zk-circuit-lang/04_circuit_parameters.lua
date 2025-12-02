@@ -1,1 +1,0 @@
-../../../lib/zk-circuit-lang/examples/04_circuit_parameters.lua
