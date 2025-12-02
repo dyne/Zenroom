@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 
 #include <stddef.h>
 
-#include "circuits/compiler/compiler.h"
 #include "circuits/logic/bit_plucker.h"
 
 namespace proofs {
@@ -47,21 +46,21 @@ class VerifyCircuit {
     EltW int_y[kBits - 1];
     EltW int_z[kBits - 1];
 
-    void input(QuadCircuit<Field>& Q) {
-      rx = Q.input();
-      ry = Q.input();
-      rx_inv = Q.input();
-      s_inv = Q.input();
-      pk_inv = Q.input();
+    void input(const LogicCircuit& lc) {
+      rx = lc.eltw_input();
+      ry = lc.eltw_input();
+      rx_inv = lc.eltw_input();
+      s_inv = lc.eltw_input();
+      pk_inv = lc.eltw_input();
       for (size_t i = 0; i < 8; ++i) {
-        pre[i] = Q.input();
+        pre[i] = lc.eltw_input();
       }
       for (size_t i = 0; i < kBits; ++i) {
-        bi[i] = Q.input();
+        bi[i] = lc.eltw_input();
         if (i < kBits - 1) {
-          int_x[i] = Q.input();
-          int_y[i] = Q.input();
-          int_z[i] = Q.input();
+          int_x[i] = lc.eltw_input();
+          int_y[i] = lc.eltw_input();
+          int_z[i] = lc.eltw_input();
         }
       }
     }
@@ -150,15 +149,19 @@ class VerifyCircuit {
     EltW arr_e[] = {zero, one, zero, one, zero, one, zero, one};
     EltW arr_r[] = {zero, zero, one, one, zero, zero, one, one};
     EltW arr_s[] = {zero, zero, zero, zero, one, one, one, one};
-    EltW arr_v[] = {one, one, one, one, one, one, one, one};
 
-    EltMuxer<LogicCircuit, 3> xx(lc_, arr_x);
-    EltMuxer<LogicCircuit, 3> yy(lc_, arr_y);
-    EltMuxer<LogicCircuit, 3> zz(lc_, arr_z);
-    EltMuxer<LogicCircuit, 3> ee(lc_, arr_e);
-    EltMuxer<LogicCircuit, 3> rr(lc_, arr_r);
-    EltMuxer<LogicCircuit, 3> ss(lc_, arr_s);
-    EltMuxer<LogicCircuit, 3> vv(lc_, arr_v);
+    // To verify that the advice bit is in [0,7], we need to mux the point
+    // corresponding to the advice bit using degree 8 (9 points). We use the
+    // EltMuxer<LogicCircuit, 9, 8> to do this. See comments in EltMuxer.
+    EltW arr_v[] = {zero, zero, zero, zero, zero, zero, zero, zero, one};
+
+    EltMuxer<LogicCircuit, 8> xx(lc_, arr_x);
+    EltMuxer<LogicCircuit, 8> yy(lc_, arr_y);
+    EltMuxer<LogicCircuit, 8> zz(lc_, arr_z);
+    EltMuxer<LogicCircuit, 8> ee(lc_, arr_e);
+    EltMuxer<LogicCircuit, 8> rr(lc_, arr_r);
+    EltMuxer<LogicCircuit, 8> ss(lc_, arr_s);
+    EltMuxer<LogicCircuit, 9, 8> vv(lc_, arr_v);
 
     Bitvec r_bits, s_bits;
 
@@ -183,7 +186,7 @@ class VerifyCircuit {
 
       // Verify that the advice bit is in [0,7].
       EltW range = vv.mux(w.bi[i]);
-      lc_.assert_eq(&range, one);
+      lc_.assert0(range);
 
       // Perform the basic add-dbl step in repeated squaring using the
       // muxed point {tx, ty, tz}.

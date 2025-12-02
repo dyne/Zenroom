@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ class ZkCommon {
   using Elt = typename Field::Elt;
   using CPoly = typename LayerProof<Field>::CPoly;
   using WPoly = typename LayerProof<Field>::WPoly;
+  using FWPoly = typename LayerProof<Field>::FWPoly;
 
  public:
   // pi: witness index for first pad element in a larger commitment
@@ -66,7 +67,7 @@ class ZkCommon {
 
     size_t ci = 0;  // Index of the next Ligero constraint.
 
-    const typename WPoly::dot_interpolation dot_wpoly(F);
+    const typename FWPoly::dot_interpolation dot_wpoly(F);
 
     // no copies in this version.
     check(circuit.logc == 0, "assuming that copies=1");
@@ -93,7 +94,7 @@ class ZkCommon {
           size_t r = 2 * round + hand;
           const WPoly& hp = plr->hp[hand][round];
           challenge->hb[hand][round] = tss.round(hp);
-          const WPoly lag = dot_wpoly.coef(challenge->hb[hand][round], F);
+          const FWPoly lag = dot_wpoly.coef(challenge->hb[hand][round], F);
 
           cb.next(r, &lag[0], hp.t_);
           // now cb contains a symbolic representation of claim_{r}
@@ -305,7 +306,7 @@ class ZkCommon {
     //
     // The ZK verifier needs to compute linear combinations (and one
     // quadratic combination) of the X's, but it only has access to
-    // the Xhat's and to a committment to the dX's.  We also want to
+    // the Xhat's and to a commitment to the dX's.  We also want to
     // discuss the verifier algorithm as if the verifier were
     // operating on X, in order to keep the discussion simple.
     //
@@ -440,16 +441,13 @@ class ZkCommon {
 
   static Elt bind_quad(const Layer<Field>* clr, const Claims& cla,
                        const LayerChallenge<Field>* chal, const Field& F) {
-    auto QUAD = clr->quad->clone();
-    QUAD->bind_g(cla.logv, cla.g[0], cla.g[1], chal->alpha, chal->beta, F);
-
-    // bind QUAD[G|r,l] to R, L
-    for (size_t round = 0; round < clr->logw; ++round) {
-      for (size_t hand = 0; hand < 2; ++hand) {
-        QUAD->bind_h(chal->hb[hand][round], hand, F);
-      }
-    }
-    return QUAD->scalar();
+    return clr->quad->bind_gh_all(
+        // G
+        cla.logv, cla.g[0], cla.g[1], chal->alpha, chal->beta,
+        // H
+        clr->logw, chal->hb[0], chal->hb[1],
+        // Field
+        F);
   }
 };
 }  // namespace proofs

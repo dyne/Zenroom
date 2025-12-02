@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -158,6 +158,37 @@ class Quad {
 
     // coalesce any duplicates that we may have created
     coalesce(F);
+  }
+
+  // Optimized combined bind_g + bind_h, nondestructive
+  Elt bind_gh_all(
+      // G bindings
+      size_t logv, const Elt G0[/*logv*/], const Elt G1[/*logv*/],
+      const Elt& alpha, const Elt& beta,
+      // H bindings
+      size_t logw, const Elt H0[/*logw*/], const Elt H1[/*logw*/],
+      // field
+      const Field& F) const {
+    size_t nv = size_t(1) << logv;
+    auto eqg = Eqs<Field>::raw_eq2(logv, nv, G0, G1, alpha, F);
+
+    size_t nw = size_t(1) << logw;
+    Eqs<Field> eqh0(logw, nw, H0, F);
+    Eqs<Field> eqh1(logw, nw, H1, F);
+
+    Elt s{};
+
+    for (index_t i = 0; i < n_; ++i) {
+      Elt q(c_[i].v);
+      if (q == F.zero()) {
+        q = beta;
+      }
+      F.mul(q, eqg[corner_t(c_[i].g)]);
+      F.mul(q, eqh0.at(corner_t(c_[i].h[0])));
+      F.mul(q, eqh1.at(corner_t(c_[i].h[1])));
+      F.add(s, q);
+    }
+    return s;
   }
 
   Elt scalar() {

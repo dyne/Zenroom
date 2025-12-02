@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@
 #include <algorithm>
 #include <cstddef>
 
-#include "circuits/compiler/compiler.h"
 #include "circuits/logic/logic.h"
 #include "gf2k/gf2_128.h"
 
@@ -45,6 +44,15 @@ static constexpr size_t kMACPluckerBits = 2u;
 // the prover's a_p key as well as the bits of the message. This allows
 // the MAC computation and the equality of the purported message to be verified
 // in parallel to reduce depth.
+// As an optimization, the MAC computed here is a.x instead of a.x + b. This
+// MAC is unforgeable with vhp and hiding whenever x is non-zero. The caller
+// must ensure that the MACed values are non-zero with very high probability.
+// For example, in the case of the MAC of a hash of a randomly selected message,
+// the probability of the hash being zero is quite small. This case applies for
+// signatures of messages related to credentials. As another example, the
+// device public key is an honestly-generated ECDSA key, and thus is unlikely
+// to be zero for most curves. These cases add a small error to the
+// zero-knowledge analysis of the scheme.
 template <class Logic, class BitPlucker>
 class MAC {
  public:
@@ -65,19 +73,10 @@ class MAC {
     packed_v128 aa_[2];
     packed_v256 xx_;  // The value to be checked
 
-    template <typename T>
-    static T packed_input(QuadCircuit<typename Logic::Field>& Q) {
-      T r;
-      for (size_t i = 0; i < r.size(); ++i) {
-        r[i] = Q.input();
-      }
-      return r;
-    }
-
-    void input(const Logic& LC, QuadCircuit<typename Logic::Field>& Q) {
-      aa_[0] = packed_input<packed_v128>(Q);
-      aa_[1] = packed_input<packed_v128>(Q);
-      xx_ = packed_input<packed_v256>(Q);
+    void input(const Logic& lc) {
+      aa_[0] = BitPlucker::template packed_input<packed_v128>(lc);
+      aa_[1] = BitPlucker::template packed_input<packed_v128>(lc);
+      xx_ = BitPlucker::template packed_input<packed_v256>(lc);
     }
   };
 
@@ -89,7 +88,7 @@ class MAC {
   // that takes the message in bit-wise form. Additionally, the order parameter
   // is used to ensure that the message does not overflow the field.
   void verify_mac(EltW msg, const v128 mac[/*2*/], const v128& av,
-                     const Witness& vw, Nat order) const {
+                  const Witness& vw, Nat order) const {
     check(Field::kBits >= 256, "Field::kBits < 256");
     v128 msg2[2];
     unpack_msg(msg2, msg, order, vw);
@@ -150,16 +149,14 @@ class MACGF2 {
   using v8 = typename Logic<GF2_128<>, Backend>::v8;
   using v256 = typename Logic<GF2_128<>, Backend>::v256;
 
-  explicit MACGF2(const Logic<GF2_128<>, Backend>& lc)
-      : lc_(lc) {}
+  explicit MACGF2(const Logic<GF2_128<>, Backend>& lc) : lc_(lc) {}
   class Witness {
    public:
     EltW aa_[2];
 
-    void input(const Logic<GF2_128<>, Backend>& lc,
-               QuadCircuit<GF2_128<>>& Q) {
-      aa_[0] = Q.input();
-      aa_[1] = Q.input();
+    void input(const Logic<GF2_128<>, Backend>& lc) {
+      aa_[0] = lc.eltw_input();
+      aa_[1] = lc.eltw_input();
     }
   };
 

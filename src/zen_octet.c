@@ -358,7 +358,12 @@ octet *o_push(lua_State *L, const char *buf, size_t len) {
 	o->ref = 1;
 	return(o);
 }
-	
+
+// extern const char *o_val(const octet*);
+// extern size_t o_len(const octet*);
+const char *o_val(const octet *o) { return((const char*)o->val); }
+size_t o_len(const octet *o) { return(o->len); }
+
 void push_buffer_to_octet(lua_State *L, char *p, size_t len) {
 	octet* o = o_new(L, len); SAFEV(o, CREATE_OCT_ERR);
 	// newuserdata already pushes the object in lua's stack
