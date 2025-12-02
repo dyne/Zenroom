@@ -1,1 +1,0 @@
-../../../lib/zk-circuit-lang/examples/02_age_verification.lua
