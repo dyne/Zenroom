@@ -26,6 +26,10 @@
 #include "ec/p256.h"
 #include "algebra/fp_p256.h"
 
+extern "C" {
+#include <zen_error.h>
+}
+
 namespace proofs {
 namespace lua {
 
@@ -37,19 +41,22 @@ int sha256_compute_message(lua_State* L) {
     // Arg 1: message (OCTET)
     const octet* msg = o_arg(L, 1);
     if (!msg) {
-        return luaL_error(L, "SHA256: first argument must be an OCTET");
+        lerror(L,"SHA256: first argument must be an OCTET");
+        return 0;
     }
     
     // Arg 2: max_blocks (integer)
     if (!lua_isnumber(L, 2)) {
         o_free(L, msg);
-        return luaL_error(L, "SHA256: second argument must be a number");
+        lerror(L,"SHA256: second argument must be a number");
+        return 0;
     }
     int max_blocks = lua_tointeger(L, 2);
     
     if (max_blocks < 1 || max_blocks > 16) {
         o_free(L, msg);
-        return luaL_error(L, "SHA256: max_blocks must be between 1 and 16");
+        lerror(L,"SHA256: max_blocks must be between 1 and 16");
+        return 0;
     }
     
     // Prepare output buffers
@@ -209,11 +216,13 @@ cleanup:
     if (s_oct) o_free(L, s_oct);
     
     if (error_msg) {
-        return luaL_error(L, "ECDSA: %s", error_msg);
+        lerror(L,"ECDSA: %s", error_msg);
+        return 0;
     }
     
     if (!success) {
-        return luaL_error(L, "ECDSA: witness computation failed");
+        lerror(L,"ECDSA: witness computation failed");
+        return 0;
     }
     
     return 1;  // Return witness userdata
@@ -261,11 +270,13 @@ static int ecdsa_gc(lua_State* L) {
 int nat_from_octet_be(lua_State* L) {
     const octet* oct = o_arg(L, 1);
     if (!oct) {
-        return luaL_error(L, "nat_from_octet: argument must be an OCTET");
+        lerror(L,"nat_from_octet: argument must be an OCTET");
+        return 0;
     }
     if (o_len(oct) != 32) {
         o_free(L, oct);
-        return luaL_error(L, "nat_from_octet: OCTET must be 32 bytes");
+        lerror(L,"nat_from_octet: OCTET must be 32 bytes");
+        return 0;
     }
     
     auto nat = nat_from_octet<Fp256Nat>(oct);

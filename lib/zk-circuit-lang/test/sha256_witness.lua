@@ -25,9 +25,9 @@ assert(#result2.padded_input == 64, "Expected 64 bytes")
 
 -- Expected SHA-256("abc") = 
 -- ba7816bf 8f01cfea 414140de 5dae2223 b00361a3 96177a9c b410ff61 f20015ad
-local h1 = result2.witnesses[1].h1
-print(string.format("  Hash: %08x %08x %08x %08x %08x %08x %08x %08x",
-    h1[1], h1[2], h1[3], h1[4], h1[5], h1[6], h1[7], h1[8]))
+local h1 =result2.witnesses[1].h1
+string.format("  Hash: %08x %08x %08x %08x %08x %08x %08x %08x",
+    h1[1], h1[2], h1[3], h1[4], h1[5], h1[6], h1[7], h1[8])
 
 assert(h1[1] == 0xba7816bf, "Hash word 0 mismatch")
 assert(h1[2] == 0x8f01cfea, "Hash word 1 mismatch")
@@ -41,7 +41,7 @@ print("  ✓ Hash matches expected value\n")
 
 -- Test 3: Longer message requiring multiple blocks
 print("Test 3: Long message (100 'a' characters)")
-local long_msg = OCTET.from_string(string.rep("a", 100))
+local long_msg = OCTET.random(100)
 local result3 = zkcc.witness.sha256_compute_message(long_msg, 4)
 print("  num_blocks: ".. result3.num_blocks)
 assert(result3.num_blocks == 2, "Expected 2 blocks for 100 bytes")
@@ -63,8 +63,9 @@ print("  ✓ Witness structure is correct\n")
 -- Test 5: Error handling - invalid max_blocks
 print("Test 5: Error handling")
 local status, err = pcall(function()
-    zkcc.witness.sha256_compute_message(abc, 0)
+	  zkcc.witness.sha256_compute_message(abc, 0)
 end)
+
 assert(not status, "Should fail with max_blocks = 0")
 print("  ✓ Error handling works correctly\n")
 

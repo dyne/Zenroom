@@ -44,8 +44,8 @@ extern "C" {
 // declares extern void *ZEN;
 #include <zen_error.h>
 }
-
-#define THROW(error) lerror(((zenroom_t*)ZEN)->lua, "%s", error)
+// to use when the scope doesn't contains the Lua context
+#define _fatal(L,error) zerror(((zenroom_t*)ZEN)->lua, "%s", error)
 
 namespace proofs {
 namespace lua {
@@ -272,7 +272,8 @@ public:
         LuaCircuitArtifact* self = sol::stack::get<LuaCircuitArtifact*>(L, 1);
         
         if (!self->circuit) {
-            return luaL_error(L, "No circuit artifact");
+            lerror(L,"No circuit artifact");
+            return 0;
         }
         
         // Serialize circuit to bytes
@@ -290,7 +291,8 @@ public:
         LuaCircuitArtifact* self = sol::stack::get<LuaCircuitArtifact*>(L, 1);
         
         if (!self->circuit) {
-            return luaL_error(L, "No circuit artifact");
+            lerror(L,"No circuit artifact");
+            return 0;
         }
 
 		push_buffer_to_octet(L,(char*)self->circuit->id,32);
@@ -303,27 +305,32 @@ public:
         LuaCircuitArtifact* self = sol::stack::get<LuaCircuitArtifact*>(L, 1);
         
         if (!self->circuit) {
-            return luaL_error(L, "No circuit artifact");
+            lerror(L,"No circuit artifact");
+            return 0;
         }
         
         if (!lua_isnumber(L, 2)) {
-            return luaL_error(L, "Second argument must be input index (number)");
+            lerror(L,"Second argument must be input index (number)");
+            return 0;
         }
         size_t idx = lua_tointeger(L, 2);
         
         const octet* value_oct = o_arg(L, 3);
         if (!value_oct) {
-            return luaL_error(L, "Third argument must be an OCTET (32 bytes)");
+            lerror(L,"Third argument must be an OCTET (32 bytes)");
+            return 0;
         }
         
         if (o_len(value_oct) != 32) {
             o_free(L, value_oct);
-            return luaL_error(L, "Input value must be 32 bytes");
+            lerror(L,"Input value must be 32 bytes");
+            return 0;
         }
         
         if (idx >= self->inputs.size()) {
             o_free(L, value_oct);
-            return luaL_error(L, "Input index %zu out of range (max: %zu)", idx, self->inputs.size());
+            lerror(L,"Input index %zu out of range (max: %zu)", idx, self->inputs.size());
+            return 0;
         }
         
         // Convert OCTET to field element
@@ -338,16 +345,19 @@ public:
         LuaCircuitArtifact* self = sol::stack::get<LuaCircuitArtifact*>(L, 1);
         
         if (!self->circuit) {
-            return luaL_error(L, "No circuit artifact");
+            lerror(L,"No circuit artifact");
+            return 0;
         }
         
         if (!lua_isnumber(L, 2)) {
-            return luaL_error(L, "Second argument must be input index (number)");
+            lerror(L,"Second argument must be input index (number)");
+            return 0;
         }
         size_t idx = lua_tointeger(L, 2);
         
         if (idx >= self->inputs.size()) {
-            return luaL_error(L, "Input index %zu out of range (max: %zu)", idx, self->inputs.size());
+            lerror(L,"Input index %zu out of range (max: %zu)", idx, self->inputs.size());
+            return 0;
         }
         
         // Convert field element to OCTET
@@ -362,7 +372,8 @@ public:
     static int lua_load_from_octet(lua_State* L) {
         const octet* oct = o_arg(L, 1);
         if (!oct) {
-            return luaL_error(L, "Argument must be an OCTET");
+            lerror(L,"Argument must be an OCTET");
+            return 0;
         }
         
         ReadBuffer buf((const uint8_t*)o_val(oct), o_len(oct));
@@ -372,7 +383,8 @@ public:
         o_free(L, oct);
         
         if (!loaded_circuit) {
-            return luaL_error(L, "Failed to deserialize circuit from OCTET");
+            lerror(L,"Failed to deserialize circuit from OCTET");
+            return 0;
         }
         
         // Create LuaCircuitArtifact using SOL's stack push
@@ -388,12 +400,14 @@ static int lua_build_circuit_artifact(lua_State* L) {
     // Get template argument
     LuaCircuitTemplate* templ = sol::stack::get<LuaCircuitTemplate*>(L, 1);
     if (!templ) {
-        return luaL_error(L, "First argument must be a CircuitTemplate");
+        lerror(L,"First argument must be a CircuitTemplate");
+        return 0;
     }
     
     // Get nc argument (number of constraints hint)
     if (!lua_isnumber(L, 2)) {
-        return luaL_error(L, "Second argument must be a number (nc)");
+        lerror(L,"Second argument must be a number (nc)");
+        return 0;
     }
     int nc = lua_tointeger(L, 2);
     
@@ -401,7 +415,8 @@ static int lua_build_circuit_artifact(lua_State* L) {
     auto compiled = templ->circuit->mkcircuit(nc);
     
     if (!compiled) {
-        return luaL_error(L, "Failed to compile circuit");
+        lerror(L,"Failed to compile circuit");
+        return 0;
     }
     
     // Create LuaCircuitArtifact using SOL's stack push
@@ -554,14 +569,14 @@ public:
     // Array-like access (1-indexed for Lua)
     LuaBitW get(size_t i) const {
         if (i < 1 || i > N) {
-            THROW("Out of range: Index out of range");
+            _fatal(L,"Out of range: Index out of range");
         }
         return LuaBitW(vec[i - 1], logic);
     }
     
     void set(size_t i, const LuaBitW& bit) {
         if (i < 1 || i > N) {
-            THROW("Out of range: Index out of range");
+            _fatal(L,"Out of range: Index out of range");
         }
         vec[i - 1] = bit.wire;
     }
@@ -597,14 +612,14 @@ public:
     // Array-like access (1-indexed for Lua)
     LuaBitW get(size_t i) const {
         if (i < 1 || i > size_) {
-            THROW("Out of range: Index out of range");
+            _fatal(L,"Out of range: Index out of range");
         }
         return LuaBitW(bits[i - 1], logic);
     }
     
     void set(size_t i, const LuaBitW& bit) {
         if (i < 1 || i > size_) {
-            THROW("Out of range: Index out of range");
+            _fatal(L,"Out of range: Index out of range");
         }
         bits[i - 1] = bit.wire;
     }
@@ -1289,7 +1304,7 @@ public:
     // Variable-bit vector operations
     LuaBitW vlt_var(const LuaBitVecVar& a, const LuaBitVecVar& b) {
         if (a.size() != b.size()) {
-            THROW("Invalid Argument: bit vectors must have same size");
+            _fatal(L,"Invalid Argument: bit vectors must have same size");
         }
         auto result = logic->lt(a.size(), a.bits.data(), b.bits.data());
         return LuaBitW(result, logic.get());
@@ -1297,7 +1312,7 @@ public:
     
     LuaBitW vleq_var(const LuaBitVecVar& a, const LuaBitVecVar& b) {
         if (a.size() != b.size()) {
-            THROW("Invalid Argument: bit vectors must have same size");
+            _fatal(L,"Invalid Argument: bit vectors must have same size");
         }
         auto result = logic->leq(a.size(), a.bits.data(), b.bits.data());
         return LuaBitW(result, logic.get());
@@ -1305,7 +1320,7 @@ public:
     
     LuaBitW veq_var(const LuaBitVecVar& a, const LuaBitVecVar& b) {
         if (a.size() != b.size()) {
-            THROW("Invalid Argument: bit vectors must have same size");
+            _fatal(L,"Invalid Argument: bit vectors must have same size");
         }
         auto result = logic->eq(a.size(), a.bits.data(), b.bits.data());
         return LuaBitW(result, logic.get());

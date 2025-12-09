@@ -20,6 +20,25 @@
 namespace proofs {
 namespace lua {
 
+// Route C++ exceptions into Zenroom's error machinery so Lua sees native
+// diagnostics with stack traces and logging.
+int zk_exception_handler(lua_State* L,
+                         sol::optional<const std::exception&> maybe_ex,
+                         sol::string_view description) {
+    std::string message;
+    if (maybe_ex) {
+        message = maybe_ex->what();
+    }
+    if (message.empty()) {
+        message.assign(description.data(), description.size());
+    }
+    if (message.empty()) {
+        message = "unknown C++ exception";
+    }
+    lerror(L,"%s", message.c_str());  // never returns
+    return 1;
+}
+
 void register_zk_bindings(sol::state_view& lua) {
     
     // ========================================================================
@@ -507,6 +526,7 @@ extern "C" {
 
 int luaopen_zkcc(lua_State* L) {
     sol::state_view lua(L);
+    lua.set_exception_handler(&proofs::lua::zk_exception_handler);
     proofs::lua::register_zk_bindings(lua);
     
     // Create a table to return (this will be the ZKCC module)
