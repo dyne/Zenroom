@@ -35,6 +35,13 @@
 #include "circuits/logic/bit_plucker.h"
 #include "circuits/logic/memcmp.h"
 #include "proto/circuit.h"
+#include "zk/zk_prover.h"
+#include "zk/zk_verifier.h"
+#include "random/transcript.h"
+#include "algebra/convolution.h"
+#include "algebra/reed_solomon.h"
+#include "algebra/fft.h"
+#include "arrays/dense.h"
 
 #include "octet_conversions.h"
 
@@ -54,6 +61,9 @@ namespace lua {
 static constexpr size_t kCborIndexBits = 13;
 static constexpr size_t kSHAPluckerBits = 4;
 static constexpr size_t kMACPluckerBits = 4;
+// Ligero parameters (mirrored from mdoc_zk.h to avoid pulling that header)
+static constexpr size_t kLigeroRate = 4;
+static constexpr size_t kLigeroNreq = 128;  // ~86 bits statistical soundness
 
 
 // ============================================================================
@@ -395,6 +405,26 @@ public:
     }
 };
 
+// Witness bundle: full input vector and public slice
+class LuaWitnessInputs {
+public:
+    using Field = Fp256Base;
+    const Field* field;
+    std::unique_ptr<Dense<Field>> all;
+    std::unique_ptr<Dense<Field>> pub;
+
+    LuaWitnessInputs(size_t ninputs, size_t npub)
+        : field(nullptr),
+          all(std::make_unique<Dense<Field>>(1, ninputs)),
+          pub(std::make_unique<Dense<Field>>(1, npub)) {}
+
+    LuaWitnessInputs(LuaWitnessInputs&&) noexcept = default;
+    LuaWitnessInputs& operator=(LuaWitnessInputs&&) noexcept = default;
+
+    LuaWitnessInputs(const LuaWitnessInputs&) = delete;
+    LuaWitnessInputs& operator=(const LuaWitnessInputs&) = delete;
+};
+
 // Build circuit artifact from template
 static int lua_build_circuit_artifact(lua_State* L) {
     // Get template argument
@@ -425,6 +455,13 @@ static int lua_build_circuit_artifact(lua_State* L) {
     
     return 1;
 }
+
+// Build Dense witness arrays from inputs
+int lua_build_witness_inputs(lua_State* L);
+
+// Prove/verify helpers
+int lua_prove_circuit(lua_State* L);
+int lua_verify_circuit(lua_State* L);
 
 // ============================================================================
 // High-Level Boolean Logic API

@@ -39,6 +39,228 @@ int zk_exception_handler(lua_State* L,
     return 1;
 }
 
+// Deterministic PRF-backed RNG for testable proofs
+class SeededRandomEngine : public RandomEngine {
+public:
+    explicit SeededRandomEngine(const uint8_t* seed, size_t len) {
+        SHA256 sha;
+        sha.Update(seed, len);
+        sha.DigestData(key_);
+        prf_ = std::make_unique<FSPRF>(key_);
+    }
+
+    void bytes(uint8_t* buf, size_t n) override {
+        prf_->bytes(buf, n);
+    }
+
+private:
+    uint8_t key_[kPRFKeySize];
+    std::unique_ptr<FSPRF> prf_;
+};
+
+// Hardcoded root for FFT-based Reed-Solomon (same as mdoc_zk.cc)
+static constexpr char kRootX[] =
+    "112649224146410281873500457609690258373018840430489408729223714171582664"
+    "680802";
+static constexpr char kRootY[] =
+    "317040948518153410669569855215889129699039744181079354462206130544166376"
+    "41043";
+
+// Build Dense witness arrays from Lua table of OCTETs
+int lua_build_witness_inputs(lua_State* L) {
+    sol::state_view lua(L);
+    sol::table opts = sol::stack::get<sol::table>(L, 1);
+
+    LuaCircuitArtifact* art = opts["circuit"];
+    if (!art || !art->circuit) {
+        lerror(L, "build_witness_inputs: missing circuit");
+        return 0;
+    }
+    sol::optional<sol::table> inputs_opt = opts["inputs"];
+    if (!inputs_opt) {
+        lerror(L, "build_witness_inputs: missing inputs table");
+        return 0;
+    }
+    sol::table inputs = inputs_opt.value();
+
+    size_t ninputs = art->circuit->ninputs;
+    size_t npub = art->npub_input();
+
+    LuaWitnessInputs witness(ninputs, npub);
+    witness.field = &art->field;
+    const auto& F = art->field;
+
+    // Default all zeros, then set wire 0 = 1
+    for (auto& v : witness.all->v_) v = F.zero();
+    for (auto& v : witness.pub->v_) v = F.zero();
+    if (ninputs > 0) {
+        witness.all->v_[0] = F.one();
+        if (npub > 0) {
+            witness.pub->v_[0] = F.one();
+        }
+    }
+
+    // Populate provided inputs
+    for (const auto& kv : inputs) {
+        if (!kv.first.is<size_t>()) {
+            lerror(L, "build_witness_inputs: input keys must be numbers");
+            return 0;
+        }
+        size_t idx = kv.first.as<size_t>();
+        if (idx >= ninputs) {
+            lerror(L, "build_witness_inputs: index %zu out of range", idx);
+            return 0;
+        }
+
+        kv.second.push();
+        int val_idx = lua_gettop(L);
+        const octet* o = o_arg(L, val_idx);
+        if (!o) {
+            lua_pop(L, 1);
+            lerror(L, "build_witness_inputs: input %zu must be an OCTET", idx);
+            return 0;
+        }
+        if (o_len(o) != 32) {
+            o_free(L, o);
+            lua_pop(L, 1);
+            lerror(L, "build_witness_inputs: input %zu must be 32 bytes", idx);
+            return 0;
+        }
+
+        auto nat = nat_from_octet<Fp256Nat>(o);
+        witness.all->v_[idx] = F.to_montgomery(nat);
+        if (idx < npub) {
+            witness.pub->v_[idx] = witness.all->v_[idx];
+        }
+
+        o_free(L, o);
+        lua_pop(L, 1);  // pop value
+    }
+
+    return sol::stack::push(L, std::move(witness));
+}
+
+// Prove circuit with provided witness
+int lua_prove_circuit(lua_State* L) {
+    sol::state_view lua(L);
+    sol::table opts = sol::stack::get<sol::table>(L, 1);
+
+    LuaCircuitArtifact* art = opts["circuit"];
+    LuaWitnessInputs* witness = opts["inputs"];
+
+    if (!art || !art->circuit) {
+        lerror(L, "prove_circuit: missing circuit");
+        return 0;
+    }
+    if (!witness || !witness->all) {
+        lerror(L, "prove_circuit: missing inputs");
+        return 0;
+    }
+
+    uint8_t seed_buf[kSHA256DigestSize] = {0};
+    size_t seed_len = sizeof(seed_buf);
+    if (opts["seed"].valid()) {
+        opts["seed"].push();
+        const octet* seed = o_arg(L, -1);
+        if (seed) {
+            size_t copy_len = o_len(seed) < seed_len ? o_len(seed) : seed_len;
+            memcpy(seed_buf, o_val(seed), copy_len);
+            o_free(L, seed);
+        }
+        lua_pop(L, 1);
+    }
+
+    using Field = Fp256Base;
+    const Field& F = witness->field ? *witness->field : art->field;
+    Fp2<Field> F2(F);
+    auto omega = F2.of_string(kRootX, kRootY);
+    FFTExtConvolutionFactory<Field, Fp2<Field>> fft(F, F2, omega, 1ull << 31);
+    ReedSolomonFactory<Field, FFTExtConvolutionFactory<Field, Fp2<Field>>> rsf(fft, F);
+
+    ZkProof<Field> zk(*art->circuit, kLigeroRate, kLigeroNreq);
+    ZkProver<Field, decltype(rsf)> prover(*art->circuit, F, rsf);
+
+    Transcript tp(seed_buf, seed_len, /*version=*/4);
+    SeededRandomEngine rng(seed_buf, seed_len);
+
+    prover.commit(zk, *witness->all, tp, rng);
+    bool ok = prover.prove(zk, *witness->all, tp);
+    if (!ok) {
+        lerror(L, "prove_circuit: proof generation failed");
+        return 0;
+    }
+
+    std::vector<uint8_t> buf;
+    zk.write(buf, F);
+    push_buffer_to_octet(L, reinterpret_cast<char*>(buf.data()), buf.size());
+    return 1;
+}
+
+// Verify proof
+int lua_verify_circuit(lua_State* L) {
+    sol::state_view lua(L);
+    sol::table opts = sol::stack::get<sol::table>(L, 1);
+
+    LuaCircuitArtifact* art = opts["circuit"];
+    LuaWitnessInputs* witness = opts["public_inputs"];
+
+    if (!art || !art->circuit) {
+        lerror(L, "verify_circuit: missing circuit");
+        return 0;
+    }
+    if (!witness || !witness->pub) {
+        lerror(L, "verify_circuit: missing public inputs");
+        return 0;
+    }
+
+    // Seed handling
+    uint8_t seed_buf[kSHA256DigestSize] = {0};
+    size_t seed_len = sizeof(seed_buf);
+    if (opts["seed"].valid()) {
+        opts["seed"].push();
+        const octet* s = o_arg(L, -1);
+        if (s) {
+            size_t copy_len = o_len(s) < seed_len ? o_len(s) : seed_len;
+            memcpy(seed_buf, o_val(s), copy_len);
+            o_free(L, s);
+        }
+        lua_pop(L, 1);
+    }
+
+    using Field = Fp256Base;
+    const Field& F = witness->field ? *witness->field : art->field;
+    Fp2<Field> F2(F);
+    auto omega = F2.of_string(kRootX, kRootY);
+    FFTExtConvolutionFactory<Field, Fp2<Field>> fft(F, F2, omega, 1ull << 31);
+    ReedSolomonFactory<Field, FFTExtConvolutionFactory<Field, Fp2<Field>>> rsf(fft, F);
+
+    // Deserialize proof
+    opts["proof"].push();
+    const octet* proof_oct = o_arg(L, -1);
+    if (!proof_oct) {
+        lua_pop(L, 1);
+        lerror(L, "verify_circuit: missing proof");
+        return 0;
+    }
+    ReadBuffer rb(reinterpret_cast<const uint8_t*>(o_val(proof_oct)), o_len(proof_oct));
+    ZkProof<Field> zk(*art->circuit, kLigeroRate, kLigeroNreq);
+    bool read_ok = zk.read(rb, F);
+    o_free(L, proof_oct);
+    lua_pop(L, 1);
+    if (!read_ok) {
+        lerror(L, "verify_circuit: failed to parse proof");
+        return 0;
+    }
+
+    Transcript tv(seed_buf, seed_len, /*version=*/4);
+    ZkVerifier<Field, decltype(rsf)> verifier(*art->circuit, rsf, kLigeroRate, kLigeroNreq, F);
+    verifier.recv_commitment(zk, tv);
+    bool ok = verifier.verify(zk, *witness->pub, tv);
+
+    lua_pushboolean(L, ok);
+    return 1;
+}
+
 void register_zk_bindings(sol::state_view& lua) {
     
     // ========================================================================
@@ -129,6 +351,13 @@ void register_zk_bindings(sol::state_view& lua) {
         "nquad_terms", sol::property(&LuaCircuitArtifact::nquad_terms)
     );
     
+    // Witness bundle
+    auto witness_inputs = lua.new_usertype<LuaWitnessInputs>("WitnessInputs",
+        sol::constructors<LuaWitnessInputs(size_t, size_t)>(),
+        "ninputs", [](LuaWitnessInputs& w) { return w.all ? w.all->n1_ : 0; },
+        "npub", [](LuaWitnessInputs& w) { return w.pub ? w.pub->n1_ : 0; }
+    );
+
     // ========================================================================
     // High-Level Boolean Logic
     // ========================================================================
@@ -551,6 +780,10 @@ int luaopen_zkcc(lua_State* L) {
     zkcc_table.set_function("create_gf2128_logic", []() -> proofs::lua::LuaGF2128Logic* {
         return new proofs::lua::LuaGF2128Logic();
     });
+
+    zkcc_table["build_witness_inputs"] = &proofs::lua::lua_build_witness_inputs;
+    zkcc_table["prove_circuit"] = &proofs::lua::lua_prove_circuit;
+    zkcc_table["verify_circuit"] = &proofs::lua::lua_verify_circuit;
     
     // Register witness bindings in the ZKCC table
     // Push the zkcc_table to the stack first
