@@ -1,6 +1,3 @@
-#!/usr/bin/env lua
--- Test SHA-256 witness generation with OCTET
-
 print("=== SHA-256 Witness Test ===\n")
 
 -- Load the ZKCC module

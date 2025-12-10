@@ -20,6 +20,7 @@
 
 local native = require'zkcore'
 local M = {}
+local artifact_schema = setmetatable({}, { __mode = "k" })
 
 -- Export native symbols
 for k, v in pairs(native) do
@@ -50,7 +51,14 @@ end
 local function copy_entries(entries)
     local out = {}
     for i, e in ipairs(entries) do
-        out[i] = { name = e.name, kind = e.kind, index = e.index }
+        out[i] = {
+            name = e.name,
+            kind = e.kind,
+            index = e.index,
+            desc = e.desc,
+            type = e.type,
+            decl_order = e.decl_order,
+        }
     end
     return out
 end
@@ -164,6 +172,9 @@ local function is_named_artifact(obj)
 end
 
 local function wrap_artifact(artifact, schema)
+    if schema then
+        artifact_schema[artifact] = schema
+    end
     return setmetatable({
         _artifact = artifact,
         _schema = schema or {},
@@ -194,7 +205,7 @@ local function resolve_placeholder(obj)
     if not obj._wire then
         local entry = obj._entry
         local name = entry.name or "<unnamed>"
-        error("input '" .. name .. "' is not applied yet: call apply()", 3)
+        error("input '" .. name .. "' is not bound yet: call bind_inputs()", 3)
     end
     return obj._wire
 end
@@ -260,10 +271,10 @@ NamedLogic.__index = function(self, key)
     local v = self._logic[key]
     if type(v) == "function" then
         return function(_, ...)
-            if not self._applied then
+            if not self._bound then
                 local pending = #self._state.public + #self._state.private + #self._state.full
                 if pending > 0 then
-                    error("call apply() after declaring inputs before using logic functions (" .. key .. ")", 2)
+                    error("call bind_inputs() after declaring inputs before using logic functions (" .. key .. ")", 2)
                 end
             end
             return v(self._logic, resolve_args(...))
@@ -285,32 +296,40 @@ local function new_state()
 end
 
 local function record_input(self, kind, name)
-    if self._applied then
-        error("cannot declare new inputs after apply()", 2)
+    if self._bound then
+        error("cannot declare new inputs after bind_inputs()", 2)
     end
-    if name and self._state.by_name[name] then
-        error("duplicate input name: " .. name, 2)
+    if type(name) ~= "table" then
+        error("inputs must be declared with a table including name, desc, and type", 2)
+    end
+    if not name.name or not name.desc or not name.type then
+        error("input table must include name, desc, and type fields", 2)
+    end
+    local entry = {
+        kind = kind,
+        name = name.name,
+        desc = name.desc,
+        type = name.type,
+    }
+    if entry.name and self._state.by_name[entry.name] then
+        error("duplicate input name: " .. entry.name, 2)
     end
     self._state.decl_order = self._state.decl_order + 1
-    local entry = {
-        name = name,
-        kind = kind,
-        decl_order = self._state.decl_order,
-    }
+    entry.decl_order = self._state.decl_order
     entry.placeholder = make_placeholder(entry)
     table.insert(self._state[kind], entry)
     table.insert(self._state.order, entry)
-    if name then
-        self._state.by_name[name] = entry
+    if entry.name then
+        self._state.by_name[entry.name] = entry
     end
     return entry.placeholder
 end
 
-function NamedLogic:pub(name)
+function NamedLogic:public_input(name)
     return record_input(self, "public", name)
 end
 
-function NamedLogic:priv(name)
+function NamedLogic:private_input(name)
     return record_input(self, "private", name)
 end
 
@@ -318,8 +337,8 @@ function NamedLogic:full(name)
     return record_input(self, "full", name)
 end
 
-function NamedLogic:apply()
-    if self._applied then
+function NamedLogic:bind_inputs()
+    if self._bound then
         return self
     end
 
@@ -333,7 +352,29 @@ function NamedLogic:apply()
     local function add_entry(entry)
         total = total + 1
         entry.index = total
-        local wire = self._logic:eltw_input()
+        local t = entry.type
+        local wire
+        if t == "field" then
+            wire = self._logic:eltw_input()
+        elseif t == "bit" then
+            wire = self._logic:input()
+        elseif t == "bitvec8" then
+            wire = self._logic:vinput8()
+        elseif t == "bitvec16" then
+            wire = self._logic:vinput16()
+        elseif t == "bitvec32" then
+            wire = self._logic:vinput32()
+        elseif t == "bitvec64" then
+            wire = self._logic:vinput64()
+        elseif t == "bitvec128" then
+            wire = self._logic:vinput128()
+        elseif t == "bitvec256" then
+            wire = self._logic:vinput256()
+        elseif t == "bitvar" then
+            wire = self._logic:vinput_var()
+        else
+            error("unknown input type: " .. tostring(t), 2)
+        end
         entry.wire = wire
         if entry.placeholder then
             entry.placeholder._wire = wire
@@ -359,13 +400,13 @@ function NamedLogic:apply()
 
     state.order = applied_order
     state.inputs = total
-    self._applied = true
+    self._bound = true
     return self
 end
 
 function NamedLogic:compile(...)
-    if not self._applied then
-        self:apply()
+    if not self._bound then
+        self:bind_inputs()
     end
     local artifact = self._logic:compile(...)
     local schema = snapshot_schema(self._state, artifact)
@@ -380,10 +421,9 @@ local function new_named_logic()
     return setmetatable({
         _logic = M.logic(),
         _state = new_state(),
-        _applied = false,
+        _bound = false,
     }, NamedLogic)
 end
-
 -- ===========================================================================
 -- Public helpers and wrappers
 -- ===========================================================================
@@ -403,8 +443,8 @@ local function unwrap_opts(opts, public_only)
         schema = circuit.schema
         out = shallow_copy(opts)
         out.circuit = circuit:raw()
-    elseif circuit.schema then
-        schema = circuit.schema
+    else
+        schema = artifact_schema[circuit] or circuit.schema
     end
     if schema then
         local function convert(field, filter)

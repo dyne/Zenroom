@@ -22,16 +22,18 @@ local zkcc = require'crypto_zkcc'
 
 print('=== Expr Circuit: Horner cubic ===')
 
-local L = zkcc.logic()
+local L = zkcc.named_logic()
 
--- Inputs: public z, private a,b,c,d,x
-local z = L:eltw_input()
-L:PRIV()  -- switch to private inputs
-local a = L:eltw_input()
-local b = L:eltw_input()
-local c = L:eltw_input()
-local d = L:eltw_input()
-local x = L:eltw_input()
+-- Inputs: public z, private a,b,c,d,x (all field elements)
+local z = L:public_input{ name = 'z', desc = 'polynomial result', type = 'field' }
+local a = L:private_input{ name = 'a', desc = 'x^3 coefficient', type = 'field' }
+local b = L:private_input{ name = 'b', desc = 'x^2 coefficient', type = 'field' }
+local c = L:private_input{ name = 'c', desc = 'x coefficient', type = 'field' }
+local d = L:private_input{ name = 'd', desc = 'constant term', type = 'field' }
+local x = L:private_input{ name = 'x', desc = 'evaluation point', type = 'field' }
+
+-- Materialize inputs (public -> private)
+L:bind_inputs()
 
 -- Build constraint with a declarative expression using Horner's method
 local lhs = L:expr(function(e)
@@ -49,12 +51,12 @@ end
 -- Test values: a=3, b=2, c=7, d=11, x=5
 -- Polynomial: 3*x^3 + 2*x^2 + 7*x + 11 at x=5 -> 3*125 + 2*25 + 35 + 11 = 375 + 50 + 35 + 11 = 471
 local inputs = {
-  [1] = oct_u64(471), -- public z
-  [2] = oct_u64(3),   -- a
-  [3] = oct_u64(2),   -- b
-  [4] = oct_u64(7),   -- c
-  [5] = oct_u64(11),  -- d
-  [6] = oct_u64(5),   -- x
+  z = oct_u64(471),
+  a = oct_u64(3),
+  b = oct_u64(2),
+  c = oct_u64(7),
+  d = oct_u64(11),
+  x = oct_u64(5),
 }
 
 local seed = OCTET.from_hex(string.rep('03', 32))
@@ -67,8 +69,8 @@ local witness = zkcc.build_witness_inputs{
 -- Public-only view for verifier
 local public_witness = zkcc.build_witness_inputs{
   circuit = artifact,
-  inputs = {
-    [1] = inputs[1], -- z
+  public_inputs = {
+    z = inputs.z,
   },
 }
 

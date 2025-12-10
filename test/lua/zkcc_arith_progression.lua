@@ -1,9 +1,9 @@
 --[[
-Arithmetic progression sum check using named_logic + apply().
+Arithmetic progression sum check using named_logic + bind_inputs().
 
 Proves: 2 * sum = n * (first + last) where last = first + step * (n - 1)
 without ever touching positional indices. Inputs can be declared in any
-order; apply() sorts them deterministically (alphabetically by name).
+order; bind_inputs() sorts them deterministically (alphabetically by name).
 --]]
 
 local zkcc = require'crypto_zkcc'
@@ -12,13 +12,13 @@ print('=== Arithmetic progression: closed-form sum ===')
 
 -- Declare inputs in a deliberately shuffled order
 local L = zkcc.named_logic()
-local count = L:pub('count')   -- number of terms (public)
-local step  = L:priv('step')   -- common difference (private)
-local sum   = L:pub('sum')     -- claimed total (public)
-local first = L:priv('first')  -- first term (private)
+local count = L:public_input{ name = 'count', desc = 'number of terms', type = 'field' }
+local step  = L:private_input{ name = 'step', desc = 'common difference', type = 'field' }
+local sum   = L:public_input{ name = 'sum', desc = 'claimed total', type = 'field' }
+local first = L:private_input{ name = 'first', desc = 'first term', type = 'field' }
 
--- Materialize wires (sorted by name, public → private → full)
-L:apply()
+-- Materialize inputs (sorted by name, public → private → full)
+L:bind_inputs()
 
 -- Helpers
 local one = L:konst(L:elt(1))   -- constant wire
@@ -86,4 +86,4 @@ local ok = zkcc.verify_circuit{
 }
 assert(ok, 'Proof verification failed')
 
-print('✓ Verified arithmetic progression sum with named inputs + apply()')
+print('✓ Verified arithmetic progression sum with named inputs + bind_inputs()')

@@ -5,15 +5,10 @@
 
 local zkcc = require'crypto_zkcc'
 
-local missing = {}
-if not zkcc.prove_circuit then table.insert(missing, 'zkcc.prove_circuit') end
-if not zkcc.verify_circuit then table.insert(missing, 'zkcc.verify_circuit') end
-if not zkcc.build_witness_inputs then table.insert(missing, 'zkcc.build_witness_inputs') end
-if #missing > 0 then
-  error('Full flow test prerequisites missing: ' .. table.concat(missing, ', '))
-end
+print('=== Full Flow Proof Test (positional inputs) ===')
 
-print('=== Full Flow Proof Test ===')
+-- Note: this uses the low-level positional API intentionally; prefer
+-- named_logic + public/private_input for descriptive schemas.
 
 -- Build a simple circuit: public z, private x,y, assert z = x + y
 local L = zkcc.logic()

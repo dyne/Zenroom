@@ -420,6 +420,12 @@ All library code in `namespace proofs { ... }`
 **✅ Router Primitives**: 9/9 (100%)
 - mDoc/CBOR parsing: `vinput_var`, `vbit_var`, `vlt_var`, `vleq_var`, `veq_var`, `create_routing`, `create_bit_plucker`, `create_memcmp`
 
+**✅ Named Inputs**:
+- Declare with `public_input{ name=..., type=..., desc=... }` or `private_input{ ... }`
+- Bind deterministically with `bind_inputs()` (no positional juggling)
+- Supported `type`: `field`, `bit`, `bitvec{8,16,32,64,128,256}`, `bitvar`
+- Schema is preserved on the compiled artifact (`artifact.schema`) for documentation and tooling
+
 ### Key Features Available
 
 **Field Arithmetic**:
