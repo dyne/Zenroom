@@ -10,7 +10,7 @@ local zkcc = require'crypto_zkcc'
 
 print('=== Arithmetic progression: closed-form sum ===')
 
--- Declare inputs in a deliberately shuffled order
+-- Declare inputs (named, typed, described)
 local L = zkcc.named_logic()
 local count = L:public_input{ name = 'count', desc = 'number of terms', type = 'field' }
 local step  = L:private_input{ name = 'step', desc = 'common difference', type = 'field' }
@@ -25,11 +25,11 @@ local one = L:konst(L:elt(1))   -- constant wire
 local two = L:elt(2)            -- field element (scalar)
 
 -- last = first + step * (count - 1)
-local last = L:add(first, L:mul(step, L:sub(count, one)))
+local last = first + step * (count - one)
 
 -- 2 * sum == n * (first + last)
-local lhs = L:ax(two, sum)
-local rhs = L:mul(count, L:add(first, last))
+local lhs = sum * two
+local rhs = count * (first + last)
 L:assert_eq(lhs, rhs)
 
 -- Compile circuit

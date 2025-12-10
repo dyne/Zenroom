@@ -20,20 +20,25 @@
 
 local native = require'zkcore'
 local M = {}
+
+-- Weak-keyed table to store artifact schemas
 local artifact_schema = setmetatable({}, { __mode = "k" })
 
--- Export native symbols
+-- Export all native symbols to module
 for k, v in pairs(native) do
     M[k] = v
 end
 
--- Utility helpers
+-- ===========================================================================
+-- Utility Functions
+-- ===========================================================================
+
 local function shallow_copy(tbl)
-    local out = {}
+    local copy = {}
     for k, v in pairs(tbl) do
-        out[k] = v
+        copy[k] = v
     end
-    return out
+    return copy
 end
 
 local function has_string_keys(tbl)
@@ -46,35 +51,38 @@ local function has_string_keys(tbl)
 end
 
 -- ===========================================================================
--- Named Artifact Wrapper (schema stays on the Lua side)
+-- Schema Management (stays on Lua side)
 -- ===========================================================================
+
 local function copy_entries(entries)
-    local out = {}
-    for i, e in ipairs(entries) do
-        out[i] = {
-            name = e.name,
-            kind = e.kind,
-            index = e.index,
-            desc = e.desc,
-            type = e.type,
-            decl_order = e.decl_order,
+    local copy = {}
+    for i, entry in ipairs(entries) do
+        copy[i] = {
+            name = entry.name,
+            kind = entry.kind,
+            index = entry.index,
+            desc = entry.desc,
+            type = entry.type,
+            decl_order = entry.decl_order,
         }
     end
-    return out
+    return copy
 end
 
 local function rebuild_indexes(schema)
-    local by_name = {}
-    local by_index = {}
-    local function add(entry)
+    local by_name, by_index = {}, {}
+
+    local function index_entry(entry)
         if entry.name then
             by_name[entry.name] = entry
         end
         by_index[entry.index] = entry
     end
-    for _, e in ipairs(schema.public) do add(e) end
-    for _, e in ipairs(schema.private) do add(e) end
-    for _, e in ipairs(schema.full) do add(e) end
+
+    for _, entry in ipairs(schema.public) do index_entry(entry) end
+    for _, entry in ipairs(schema.private) do index_entry(entry) end
+    for _, entry in ipairs(schema.full) do index_entry(entry) end
+
     schema.by_name = by_name
     schema.by_index = by_index
 end
@@ -85,14 +93,19 @@ local function snapshot_schema(state, artifact)
         private = copy_entries(state.private),
         full = copy_entries(state.full),
         order = copy_entries(state.order),
-        counts = {},
+        counts = {
+            public = #state.public,
+            private = #state.private,
+            full = #state.full,
+        },
     }
+
     rebuild_indexes(schema)
-    schema.counts.public = #schema.public
-    schema.counts.private = #schema.private
-    schema.counts.full = #schema.full
-    schema.total = (artifact and artifact.ninput) and (artifact.ninput - 1) or state.inputs
-    schema.npub = (artifact and artifact.npub_input) and (artifact.npub_input - 1) or schema.counts.public
+
+    -- Calculate totals from artifact if available, otherwise from state
+    schema.total = (artifact and artifact.ninput and (artifact.ninput - 1)) or state.inputs
+    schema.npub = (artifact and artifact.npub_input and (artifact.npub_input - 1)) or schema.counts.public
+
     return schema
 end
 
@@ -100,59 +113,71 @@ local function resolve_named_inputs(schema, values, kind_filter)
     if type(values) ~= "table" then
         error("inputs must be provided as a table", 2)
     end
+
     local resolved = {}
     local numeric_present = {}
-    for k, v in pairs(values) do
-        if type(k) == "number" then
-            resolved[k] = v
-            numeric_present[k] = true
-        elseif type(k) == "string" then
-            local entry = schema.by_name[k]
+
+    -- Resolve numeric and string keys
+    for key, value in pairs(values) do
+        if type(key) == "number" then
+            resolved[key] = value
+            numeric_present[key] = true
+        elseif type(key) == "string" then
+            local entry = schema.by_name[key]
             if not entry then
-                error("unknown input name: " .. k, 2)
+                error("unknown input name: " .. key, 2)
             end
             if kind_filter and entry.kind ~= kind_filter then
-                error(string.format("input '%s' is %s, expected %s", k, entry.kind, kind_filter), 2)
+                error(string.format("input '%s' is %s, expected %s", key, entry.kind, kind_filter), 2)
             end
-            resolved[entry.index] = v
+            resolved[entry.index] = value
         end
     end
 
+    -- Check for missing required inputs
     local missing = {}
     for _, entry in ipairs(schema.order) do
-        if entry.name and (not kind_filter or entry.kind == kind_filter) then
-            if resolved[entry.index] == nil and not numeric_present[entry.index] then
-                table.insert(missing, entry.name)
-            end
+        local is_required = entry.name and (not kind_filter or entry.kind == kind_filter)
+        if is_required and not resolved[entry.index] and not numeric_present[entry.index] then
+            table.insert(missing, entry.name)
         end
     end
+
     if #missing > 0 then
         error("missing inputs: " .. table.concat(missing, ", "), 2)
     end
+
     return resolved
 end
 
+-- ===========================================================================
+-- NamedArtifact: Wraps native artifact with schema-aware input resolution
+-- ===========================================================================
+
 local NamedArtifact = {}
 NamedArtifact.__index = function(self, key)
+    -- Direct accessors
     if key == "raw" or key == "artifact" then
-        return function()
-            return self._artifact
-        end
+        return function() return self._artifact end
     end
     if key == "schema" then
         return self._schema
     end
+
+    -- Check for method in metatable
     local method = NamedArtifact[key]
     if method then
         return method
     end
-    local v = self._artifact[key]
-    if type(v) == "function" then
+
+    -- Proxy to underlying artifact
+    local value = self._artifact[key]
+    if type(value) == "function" then
         return function(_, ...)
-            return v(self._artifact, ...)
+            return value(self._artifact, ...)
         end
     end
-    return v
+    return value
 end
 
 function NamedArtifact:raw()
@@ -182,15 +207,79 @@ local function wrap_artifact(artifact, schema)
 end
 
 -- ===========================================================================
--- Placeholder handling for declared inputs
+-- Input Placeholder: Deferred wire binding with operator overloading
 -- ===========================================================================
+
 local placeholder_mt = {}
 placeholder_mt.__index = placeholder_mt
+
+local resolve_wire_or_value  -- forward declaration
 
 function placeholder_mt:__tostring()
     local entry = self._entry
     local label = entry.name or "<unnamed>"
     return string.format("<%s input %s>", entry.kind, label)
+end
+
+local function try_binary_operation(operator_name, ra, rb)
+    local ok, result
+
+    ok, result = pcall(function()
+        if operator_name == "add" then return ra + rb
+        elseif operator_name == "sub" then return ra - rb
+        elseif operator_name == "mul" then return ra * rb
+        elseif operator_name == "eq" then return ra == rb
+        end
+    end)
+    if ok then return result end
+
+    -- Try commutative operation
+    if operator_name == "add" or operator_name == "mul" then
+        ok, result = pcall(function()
+            if operator_name == "add" then return rb + ra
+            else return rb * ra
+            end
+        end)
+        if ok then return result end
+    end
+
+    error(operator_name .. " operation failed on inputs", 2)
+end
+
+function placeholder_mt:__add(other)
+    local ra = resolve_wire_or_value(self)
+    local rb = resolve_wire_or_value(other)
+    if not ra or not rb then
+        error("operation on unbound input: call bind_inputs()", 2)
+    end
+    return try_binary_operation("add", ra, rb)
+end
+
+function placeholder_mt:__sub(other)
+    local ra = resolve_wire_or_value(self)
+    local rb = resolve_wire_or_value(other)
+    if not ra or not rb then
+        error("operation on unbound input: call bind_inputs()", 2)
+    end
+    return try_binary_operation("sub", ra, rb)
+end
+
+function placeholder_mt:__mul(other)
+    local ra = resolve_wire_or_value(self)
+    local rb = resolve_wire_or_value(other)
+    if not ra or not rb then
+        error("operation on unbound input: call bind_inputs()", 2)
+    end
+    return try_binary_operation("mul", ra, rb)
+end
+
+function placeholder_mt:__eq(other)
+    local ra = resolve_wire_or_value(self)
+    local rb = resolve_wire_or_value(other)
+    if not ra or not rb then
+        error("operation on unbound input: call bind_inputs()", 2)
+    end
+    return try_binary_operation("eq", ra, rb)
 end
 
 local function make_placeholder(entry)
@@ -210,11 +299,18 @@ local function resolve_placeholder(obj)
     return obj._wire
 end
 
+resolve_wire_or_value = function(v)
+    if is_placeholder(v) then
+        return resolve_placeholder(v)
+    end
+    return v
+end
+
 local function resolve_value(val)
     if is_placeholder(val) then
         return resolve_placeholder(val)
     elseif type(val) == "table" then
-        local changed
+        local changed = false
         local out = {}
         for k, v in pairs(val) do
             local resolved = resolve_value(v)
@@ -223,9 +319,7 @@ local function resolve_value(val)
             end
             out[k] = resolved
         end
-        if changed then
-            return out
-        end
+        return changed and out or val
     end
     return val
 end
@@ -242,7 +336,7 @@ local function resolve_args(...)
     return table.unpack(args, 1, n)
 end
 
-local function sort_entries(entries)
+local function sort_entries_by_declaration_order(entries)
     table.sort(entries, function(a, b)
         if a.name and b.name then
             if a.name == b.name then
@@ -260,16 +354,20 @@ local function sort_entries(entries)
 end
 
 -- ===========================================================================
--- Named Logic Wrapper (records schema alongside native logic)
+-- NamedLogic: Circuit builder with named wire support
 -- ===========================================================================
+
 local NamedLogic = {}
 NamedLogic.__index = function(self, key)
+    -- Check for method in metatable
     local method = NamedLogic[key]
     if method then
         return method
     end
-    local v = self._logic[key]
-    if type(v) == "function" then
+
+    -- Proxy to underlying logic with automatic input binding check and argument resolution
+    local value = self._logic[key]
+    if type(value) == "function" then
         return function(_, ...)
             if not self._bound then
                 local pending = #self._state.public + #self._state.private + #self._state.full
@@ -277,10 +375,10 @@ NamedLogic.__index = function(self, key)
                     error("call bind_inputs() after declaring inputs before using logic functions (" .. key .. ")", 2)
                 end
             end
-            return v(self._logic, resolve_args(...))
+            return value(self._logic, resolve_args(...))
         end
     end
-    return v
+    return value
 end
 
 local function new_state()
@@ -295,33 +393,41 @@ local function new_state()
     }
 end
 
-local function record_input(self, kind, name)
+local function record_input(self, kind, input_spec)
     if self._bound then
         error("cannot declare new inputs after bind_inputs()", 2)
     end
-    if type(name) ~= "table" then
+
+    if type(input_spec) ~= "table" then
         error("inputs must be declared with a table including name, desc, and type", 2)
     end
-    if not name.name or not name.desc or not name.type then
+
+    if not input_spec.name or not input_spec.desc or not input_spec.type then
         error("input table must include name, desc, and type fields", 2)
     end
+
     local entry = {
         kind = kind,
-        name = name.name,
-        desc = name.desc,
-        type = name.type,
+        name = input_spec.name,
+        desc = input_spec.desc,
+        type = input_spec.type,
     }
+
     if entry.name and self._state.by_name[entry.name] then
         error("duplicate input name: " .. entry.name, 2)
     end
+
     self._state.decl_order = self._state.decl_order + 1
     entry.decl_order = self._state.decl_order
     entry.placeholder = make_placeholder(entry)
+
     table.insert(self._state[kind], entry)
     table.insert(self._state.order, entry)
+
     if entry.name then
         self._state.by_name[entry.name] = entry
     end
+
     return entry.placeholder
 end
 
@@ -343,63 +449,71 @@ function NamedLogic:bind_inputs()
     end
 
     local state = self._state
-    sort_entries(state.public)
-    sort_entries(state.private)
-    sort_entries(state.full)
+    sort_entries_by_declaration_order(state.public)
+    sort_entries_by_declaration_order(state.private)
+    sort_entries_by_declaration_order(state.full)
 
-    local total = 0
+    local input_count = 0
     local applied_order = {}
-    local function add_entry(entry)
-        total = total + 1
-        entry.index = total
-        local t = entry.type
-        local wire
-        if t == "field" then
-            wire = self._logic:eltw_input()
-        elseif t == "bit" then
-            wire = self._logic:input()
-        elseif t == "bitvec8" then
-            wire = self._logic:vinput8()
-        elseif t == "bitvec16" then
-            wire = self._logic:vinput16()
-        elseif t == "bitvec32" then
-            wire = self._logic:vinput32()
-        elseif t == "bitvec64" then
-            wire = self._logic:vinput64()
-        elseif t == "bitvec128" then
-            wire = self._logic:vinput128()
-        elseif t == "bitvec256" then
-            wire = self._logic:vinput256()
-        elseif t == "bitvar" then
-            wire = self._logic:vinput_var()
-        else
-            error("unknown input type: " .. tostring(t), 2)
+
+    local function create_wire_for_type(input_type)
+        local wire_creators = {
+            field = function() return self._logic:eltw_input() end,
+            bit = function() return self._logic:input() end,
+            bitvec8 = function() return self._logic:vinput8() end,
+            bitvec16 = function() return self._logic:vinput16() end,
+            bitvec32 = function() return self._logic:vinput32() end,
+            bitvec64 = function() return self._logic:vinput64() end,
+            bitvec128 = function() return self._logic:vinput128() end,
+            bitvec256 = function() return self._logic:vinput256() end,
+            bitvar = function() return self._logic:vinput_var() end,
+        }
+
+        local creator = wire_creators[input_type]
+        if not creator then
+            error("unknown input type: " .. tostring(input_type), 2)
         end
-        entry.wire = wire
+        return creator()
+    end
+
+    local function bind_entry(entry)
+        input_count = input_count + 1
+        entry.index = input_count
+        entry.wire = create_wire_for_type(entry.type)
+
         if entry.placeholder then
-            entry.placeholder._wire = wire
+            entry.placeholder._wire = entry.wire
         end
         table.insert(applied_order, entry)
     end
 
-    for _, e in ipairs(state.public) do
-        add_entry(e)
+    -- Bind public inputs first
+    for _, entry in ipairs(state.public) do
+        bind_entry(entry)
     end
+
+    -- Mark private section if needed
     if #state.private > 0 or #state.full > 0 then
         self._logic:private_inputs()
     end
-    for _, e in ipairs(state.private) do
-        add_entry(e)
+
+    -- Bind private inputs
+    for _, entry in ipairs(state.private) do
+        bind_entry(entry)
     end
+
+    -- Mark full field section if needed
     if #state.full > 0 then
         self._logic:begin_full_field()
     end
-    for _, e in ipairs(state.full) do
-        add_entry(e)
+
+    -- Bind full inputs
+    for _, entry in ipairs(state.full) do
+        bind_entry(entry)
     end
 
     state.order = applied_order
-    state.inputs = total
+    state.inputs = input_count
     self._bound = true
     return self
 end
@@ -408,6 +522,7 @@ function NamedLogic:compile(...)
     if not self._bound then
         self:bind_inputs()
     end
+
     local artifact = self._logic:compile(...)
     local schema = snapshot_schema(self._state, artifact)
     return wrap_artifact(artifact, schema)
@@ -424,51 +539,69 @@ local function new_named_logic()
         _bound = false,
     }, NamedLogic)
 end
+
 -- ===========================================================================
--- Public helpers and wrappers
+-- Public API
 -- ===========================================================================
+
 M.named_logic = new_named_logic
 
+-- Unwrap named artifacts and resolve named inputs in options tables
 local function unwrap_opts(opts, public_only)
     if type(opts) ~= "table" then
         return opts
     end
+
     local circuit = opts.circuit
     if not circuit then
         return opts
     end
+
     local schema
-    local out = opts
+    local result = opts
+
+    -- Extract schema from named artifact or schema table
     if is_named_artifact(circuit) then
         schema = circuit.schema
-        out = shallow_copy(opts)
-        out.circuit = circuit:raw()
+        result = shallow_copy(opts)
+        result.circuit = circuit:raw()
     else
         schema = artifact_schema[circuit] or circuit.schema
     end
-    if schema then
-        local function convert(field, filter)
-            local val = out[field]
-            if type(val) == "table" and has_string_keys(val) then
-                if out == opts then
-                    out = shallow_copy(out)
-                end
-                out[field] = resolve_named_inputs(schema, val, filter)
+
+    if not schema then
+        return result
+    end
+
+    -- Convert named inputs to indexed inputs
+    local function convert_field(field_name, kind_filter)
+        local field_value = result[field_name]
+        if type(field_value) == "table" and has_string_keys(field_value) then
+            if result == opts then
+                result = shallow_copy(opts)
             end
-        end
-        convert("inputs", public_only and "public" or nil)
-        convert("public_inputs", "public")
-        if not out.inputs and out.public_inputs then
-            if out == opts then
-                out = shallow_copy(out)
-            end
-            out.inputs = out.public_inputs
+            result[field_name] = resolve_named_inputs(schema, field_value, kind_filter)
         end
     end
-    return out
+
+    convert_field("inputs", public_only and "public" or nil)
+    convert_field("public_inputs", "public")
+
+    -- Fallback: use public_inputs as inputs if inputs not provided
+    if not result.inputs and result.public_inputs then
+        if result == opts then
+            result = shallow_copy(opts)
+        end
+        result.inputs = result.public_inputs
+    end
+
+    return result
 end
 
--- Wrap selected entrypoints to understand named artifacts
+-- ===========================================================================
+-- Wrap Native Functions with Named Artifact Support
+-- ===========================================================================
+
 if M.build_witness_inputs then
     local native_build = M.build_witness_inputs
     M.build_witness_inputs = function(opts)
