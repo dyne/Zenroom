@@ -769,9 +769,8 @@ int luaopen_zkcore(lua_State* L) {
     
     
     // Factory: create circuit template
-    zkcore_table.set_function("new_circuit_template", []() -> proofs::lua::LuaCircuitTemplate* {
-        return new proofs::lua::LuaCircuitTemplate();
-    });
+    zkcore_table.set_function("new_circuit_template",
+        sol::factories([]() { return std::make_unique<proofs::lua::LuaCircuitTemplate>(); }));
     
     // Factory: build circuit artifact from template
     zkcore_table["build_circuit_artifact"] = &proofs::lua::lua_build_circuit_artifact;
@@ -779,15 +778,13 @@ int luaopen_zkcore(lua_State* L) {
     // Factory: load circuit artifact from OCTET
     zkcore_table["load_circuit_artifact"] = &proofs::lua::LuaCircuitArtifact::lua_load_from_octet;
     
-    zkcore_table.set_function("create_logic", []() -> proofs::lua::LuaLogic* {
-        return new proofs::lua::LuaLogic();
-    });
+    zkcore_table.set_function("create_logic",
+        sol::factories([]() { return std::make_unique<proofs::lua::LuaLogic>(); }));
     // Alias: simpler entrypoint
     zkcore_table["logic"] = zkcore_table["create_logic"];
     
-    zkcore_table.set_function("create_gf2128_logic", []() -> proofs::lua::LuaGF2128Logic* {
-        return new proofs::lua::LuaGF2128Logic();
-    });
+    zkcore_table.set_function("create_gf2128_logic",
+        sol::factories([]() { return std::make_unique<proofs::lua::LuaGF2128Logic>(); }));
 
     zkcore_table["build_witness_inputs"] = &proofs::lua::lua_build_witness_inputs;
     zkcore_table["prove_circuit"] = &proofs::lua::lua_prove_circuit;
