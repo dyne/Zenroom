@@ -759,59 +759,59 @@ void register_zk_bindings(sol::state_view& lua) {
 
 extern "C" {
 
-int luaopen_zkcc(lua_State* L) {
+int luaopen_zkcore(lua_State* L) {
     sol::state_view lua(L);
     lua.set_exception_handler(&proofs::lua::zk_exception_handler);
     proofs::lua::register_zk_bindings(lua);
     
-    // Create a table to return (this will be the ZKCC module)
-    sol::table zkcc_table = lua.create_table();
+    // Create a table to return (this will be the ZKCORE module)
+    sol::table zkcore_table = lua.create_table();
     
     
     // Factory: create circuit template
-    zkcc_table.set_function("new_circuit_template", []() -> proofs::lua::LuaCircuitTemplate* {
+    zkcore_table.set_function("new_circuit_template", []() -> proofs::lua::LuaCircuitTemplate* {
         return new proofs::lua::LuaCircuitTemplate();
     });
     
     // Factory: build circuit artifact from template
-    zkcc_table["build_circuit_artifact"] = &proofs::lua::lua_build_circuit_artifact;
+    zkcore_table["build_circuit_artifact"] = &proofs::lua::lua_build_circuit_artifact;
     
     // Factory: load circuit artifact from OCTET
-    zkcc_table["load_circuit_artifact"] = &proofs::lua::LuaCircuitArtifact::lua_load_from_octet;
+    zkcore_table["load_circuit_artifact"] = &proofs::lua::LuaCircuitArtifact::lua_load_from_octet;
     
-    zkcc_table.set_function("create_logic", []() -> proofs::lua::LuaLogic* {
+    zkcore_table.set_function("create_logic", []() -> proofs::lua::LuaLogic* {
         return new proofs::lua::LuaLogic();
     });
     // Alias: simpler entrypoint
-    zkcc_table["logic"] = zkcc_table["create_logic"];
+    zkcore_table["logic"] = zkcore_table["create_logic"];
     
-    zkcc_table.set_function("create_gf2128_logic", []() -> proofs::lua::LuaGF2128Logic* {
+    zkcore_table.set_function("create_gf2128_logic", []() -> proofs::lua::LuaGF2128Logic* {
         return new proofs::lua::LuaGF2128Logic();
     });
 
-    zkcc_table["build_witness_inputs"] = &proofs::lua::lua_build_witness_inputs;
-    zkcc_table["prove_circuit"] = &proofs::lua::lua_prove_circuit;
-    zkcc_table["verify_circuit"] = &proofs::lua::lua_verify_circuit;
+    zkcore_table["build_witness_inputs"] = &proofs::lua::lua_build_witness_inputs;
+    zkcore_table["prove_circuit"] = &proofs::lua::lua_prove_circuit;
+    zkcore_table["verify_circuit"] = &proofs::lua::lua_verify_circuit;
     
-    // Register witness bindings in the ZKCC table
-    // Push the zkcc_table to the stack first
-    sol::stack::push(L, zkcc_table);
+    // Register witness bindings in the ZKCORE table
+    // Push the zkcore_table to the stack first
+    sol::stack::push(L, zkcore_table);
     
     // Now call luaopen_zk_witness which pushes witness table
     proofs::lua::luaopen_zk_witness(L);
     
-    // Set witness table as a field of zkcc_table
-    lua_setfield(L, -2, "witness");  // zkcc_table.witness = witness_module
+    // Set witness table as a field of zkcore_table
+    lua_setfield(L, -2, "witness");  // zkcore_table.witness = witness_module
 
-    // Pop zkcc_table from stack (it's already in the SOL object)
+    // Pop zkcore_table from stack (it's already in the SOL object)
     lua_pop(L, 1);
     
     // Add version information
-    zkcc_table["SOL_VERSION"] = SOL_VERSION_STRING;
-    zkcc_table["LONGFELLOW_ZK_VERSION"] = "0.1.0";
+    zkcore_table["SOL_VERSION"] = SOL_VERSION_STRING;
+    zkcore_table["LONGFELLOW_ZK_VERSION"] = "0.1.0";
     
     // Return the table
-    return sol::stack::push(L, zkcc_table);
+    return sol::stack::push(L, zkcore_table);
 }
 
 }
