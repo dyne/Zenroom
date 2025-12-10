@@ -16,16 +16,15 @@ end
 print('=== Full Flow Proof Test ===')
 
 -- Build a simple circuit: public z, private x,y, assert z = x + y
-local L = zkcc.create_logic()
-local tmpl = L:get_circuit()
+local L = zkcc.logic()
 local z = L:eltw_input() -- public input
-tmpl:private_input()      -- boundary between public/private
-local x = L:eltw_input()  -- private input 0 (index 2)
-local y = L:eltw_input()  -- private input 1 (index 3)
+L:private_inputs()       -- boundary between public/private
+local x = L:eltw_input() -- private input 0 (index 2)
+local y = L:eltw_input() -- private input 1 (index 3)
 local sum = L:add(x, y)
 L:assert_eq(sum, z)
 
-local artifact = zkcc.build_circuit_artifact(tmpl, 1)
+local artifact = L:compile(1)
 -- slot 0 is the reserved constant 1; report user-facing counts excluding it
 local user_inputs = artifact.ninput - 1
 local user_pub = artifact.npub_input - 1

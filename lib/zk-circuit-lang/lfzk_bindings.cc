@@ -541,6 +541,7 @@ void register_zk_bindings(sol::state_view& lua) {
         
         // Conversion operations
         "eval", &LuaLogic::eval,
+        "expr", &LuaLogic::expr,
         "as_scalar8", &LuaLogic::as_scalar8,
         "as_scalar32", &LuaLogic::as_scalar32,
         "as_scalar64", &LuaLogic::as_scalar64,
@@ -561,6 +562,11 @@ void register_zk_bindings(sol::state_view& lua) {
         "eltw_input", &LuaLogic::eltw_input,
         "input", &LuaLogic::input,
         "output", &LuaLogic::output,
+        "private_inputs", &LuaLogic::private_inputs,
+        "begin_full_field", &LuaLogic::begin_full_field,
+        "PRIV", &LuaLogic::PRIV,
+        "FULL", &LuaLogic::FULL,
+        "compile", &LuaLogic::compile,
         
         // 8-bit vector operations
         "vinput8", &LuaLogic::vinput8,
@@ -776,6 +782,8 @@ int luaopen_zkcc(lua_State* L) {
     zkcc_table.set_function("create_logic", []() -> proofs::lua::LuaLogic* {
         return new proofs::lua::LuaLogic();
     });
+    // Alias: simpler entrypoint
+    zkcc_table["logic"] = zkcc_table["create_logic"];
     
     zkcc_table.set_function("create_gf2128_logic", []() -> proofs::lua::LuaGF2128Logic* {
         return new proofs::lua::LuaGF2128Logic();

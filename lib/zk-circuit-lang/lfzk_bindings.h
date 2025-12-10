@@ -855,6 +855,20 @@ public:
         backend = std::make_unique<Backend>(circuit_template->circuit.get());
         logic = std::make_unique<LogicType>(backend.get(), circuit_template->field);
     }
+
+    // Circuit boundaries / compilation helpers
+    void private_inputs() { circuit_template->private_input(); }
+    void begin_full_field() { circuit_template->begin_full_field(); }
+    void PRIV() { private_inputs(); }   // alias
+    void FULL() { begin_full_field(); } // alias
+
+    LuaCircuitArtifact compile(size_t nc = 1) {
+        auto compiled = circuit_template->circuit->mkcircuit(nc);
+        if (!compiled) {
+            lerror(((zenroom_t*)ZEN)->lua, "compile(): failed to build circuit");
+        }
+        return LuaCircuitArtifact(std::move(compiled));
+    }
     
     // Field operations
     LuaFp256Elt zero() const { return LuaFp256Elt(logic->zero(), &circuit_template->field); }
@@ -984,6 +998,25 @@ public:
         return LuaEltW(logic->as_scalar(v.vec), logic.get());
     }
     
+    // Declarative expression helper: call a Lua lambda with named wires
+    LuaEltW expr(sol::protected_function fn, sol::table env) {
+        sol::state_view lua(env.lua_state());
+        sol::table proxy = lua.create_table();
+        for (const auto& kv : env) {
+            proxy[kv.first] = kv.second;
+        }
+        sol::protected_function_result res = fn(proxy);
+        if (!res.valid()) {
+            sol::error err = res;
+            lerror(lua.lua_state(), "expr: %s", err.what());
+        }
+        sol::object obj = res;
+        if (!obj.is<LuaEltW>()) {
+            lerror(lua.lua_state(), "expr: expected EltW result");
+        }
+        return obj.as<LuaEltW>();
+    }
+
     // Assertions
     LuaEltW assert0_elt(const LuaEltW& a) {
         return LuaEltW(logic->assert0(a.wire), logic.get());
