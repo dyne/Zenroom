@@ -38,4 +38,5 @@ load ../bats_setup
     Z zkcc_small.lua
     Z zkcc_horner_expr.lua
     Z zkcc_sha256.lua
+    Z zkcc_arith_progression.lua
 }

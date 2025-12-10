@@ -4,10 +4,14 @@ This is a DSL using Lua as direct-syntax parser for SOL based bindings
 of Lonfellow-ZK's C++ code. This DSL is made to facilitate circuit
 generation leveraging primitives and high-level functions used to
 build circuits in C++. The DSL objective is to become a language for
-circuit generation and only that: not witness generation, nor anything
-related to runtime execution of prover/verifier, which is done in
-C++. We want to just create circuits. The proof and verification
-phases will be operated using longfellow-zk directly in C++.
+circuit generation, witness generation and proof generation and
+verification. We aim to implement all primitives from the C++ code in
+lib/longfellow-zk and also wrap them with a Lua layer
+(src/lua/crypto_zkcc.lua) which facilitates many thanks and adds
+comfortable features like named wires.
+
+Tests for all this implementation reside in test/lua/zkcc_*
+
 
 ### 1. Field Arithmetic & Cryptographic Foundations
 

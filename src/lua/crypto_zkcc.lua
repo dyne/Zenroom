@@ -127,7 +127,9 @@ end
 local NamedArtifact = {}
 NamedArtifact.__index = function(self, key)
     if key == "raw" or key == "artifact" then
-        return self._artifact
+        return function()
+            return self._artifact
+        end
     end
     if key == "schema" then
         return self._schema
@@ -169,6 +171,84 @@ local function wrap_artifact(artifact, schema)
 end
 
 -- ===========================================================================
+-- Placeholder handling for declared inputs
+-- ===========================================================================
+local placeholder_mt = {}
+placeholder_mt.__index = placeholder_mt
+
+function placeholder_mt:__tostring()
+    local entry = self._entry
+    local label = entry.name or "<unnamed>"
+    return string.format("<%s input %s>", entry.kind, label)
+end
+
+local function make_placeholder(entry)
+    return setmetatable({ _entry = entry }, placeholder_mt)
+end
+
+local function is_placeholder(obj)
+    return getmetatable(obj) == placeholder_mt
+end
+
+local function resolve_placeholder(obj)
+    if not obj._wire then
+        local entry = obj._entry
+        local name = entry.name or "<unnamed>"
+        error("input '" .. name .. "' is not applied yet: call apply()", 3)
+    end
+    return obj._wire
+end
+
+local function resolve_value(val)
+    if is_placeholder(val) then
+        return resolve_placeholder(val)
+    elseif type(val) == "table" then
+        local changed
+        local out = {}
+        for k, v in pairs(val) do
+            local resolved = resolve_value(v)
+            if resolved ~= v then
+                changed = true
+            end
+            out[k] = resolved
+        end
+        if changed then
+            return out
+        end
+    end
+    return val
+end
+
+local function resolve_args(...)
+    local n = select("#", ...)
+    if n == 0 then
+        return ...
+    end
+    local args = { ... }
+    for i = 1, n do
+        args[i] = resolve_value(args[i])
+    end
+    return table.unpack(args, 1, n)
+end
+
+local function sort_entries(entries)
+    table.sort(entries, function(a, b)
+        if a.name and b.name then
+            if a.name == b.name then
+                return a.decl_order < b.decl_order
+            end
+            return a.name < b.name
+        elseif a.name then
+            return true
+        elseif b.name then
+            return false
+        else
+            return a.decl_order < b.decl_order
+        end
+    end)
+end
+
+-- ===========================================================================
 -- Named Logic Wrapper (records schema alongside native logic)
 -- ===========================================================================
 local NamedLogic = {}
@@ -180,7 +260,13 @@ NamedLogic.__index = function(self, key)
     local v = self._logic[key]
     if type(v) == "function" then
         return function(_, ...)
-            return v(self._logic, ...)
+            if not self._applied then
+                local pending = #self._state.public + #self._state.private + #self._state.full
+                if pending > 0 then
+                    error("call apply() after declaring inputs before using logic functions (" .. key .. ")", 2)
+                end
+            end
+            return v(self._logic, resolve_args(...))
         end
     end
     return v
@@ -189,6 +275,7 @@ end
 local function new_state()
     return {
         inputs = 0,
+        decl_order = 0,
         public = {},
         private = {},
         full = {},
@@ -198,50 +285,88 @@ local function new_state()
 end
 
 local function record_input(self, kind, name)
-    self._state.inputs = self._state.inputs + 1
-    local entry = { name = name, kind = kind, index = self._state.inputs }
-    if name then
-        if self._state.by_name[name] then
-            error("duplicate input name: " .. name, 3)
-        end
-        self._state.by_name[name] = entry
-        table.insert(self._state[kind], entry)
-        table.insert(self._state.order, entry)
+    if self._applied then
+        error("cannot declare new inputs after apply()", 2)
     end
-    return self._logic:eltw_input()
+    if name and self._state.by_name[name] then
+        error("duplicate input name: " .. name, 2)
+    end
+    self._state.decl_order = self._state.decl_order + 1
+    local entry = {
+        name = name,
+        kind = kind,
+        decl_order = self._state.decl_order,
+    }
+    entry.placeholder = make_placeholder(entry)
+    table.insert(self._state[kind], entry)
+    table.insert(self._state.order, entry)
+    if name then
+        self._state.by_name[name] = entry
+    end
+    return entry.placeholder
 end
 
 function NamedLogic:pub(name)
-    if self._private_started or self._full_started then
-        error("public inputs must be declared before private/full inputs", 2)
-    end
     return record_input(self, "public", name)
 end
 
 function NamedLogic:priv(name)
-    if not self._private_started then
-        self._logic:private_inputs()
-        self._private_started = true
-    end
-    if self._full_started then
-        error("private inputs must come before full-field inputs", 2)
-    end
     return record_input(self, "private", name)
 end
 
 function NamedLogic:full(name)
-    if not self._private_started then
-        self._logic:private_inputs()
-        self._private_started = true
-    end
-    if not self._full_started then
-        self._logic:begin_full_field()
-        self._full_started = true
-    end
     return record_input(self, "full", name)
 end
 
+function NamedLogic:apply()
+    if self._applied then
+        return self
+    end
+
+    local state = self._state
+    sort_entries(state.public)
+    sort_entries(state.private)
+    sort_entries(state.full)
+
+    local total = 0
+    local applied_order = {}
+    local function add_entry(entry)
+        total = total + 1
+        entry.index = total
+        local wire = self._logic:eltw_input()
+        entry.wire = wire
+        if entry.placeholder then
+            entry.placeholder._wire = wire
+        end
+        table.insert(applied_order, entry)
+    end
+
+    for _, e in ipairs(state.public) do
+        add_entry(e)
+    end
+    if #state.private > 0 or #state.full > 0 then
+        self._logic:private_inputs()
+    end
+    for _, e in ipairs(state.private) do
+        add_entry(e)
+    end
+    if #state.full > 0 then
+        self._logic:begin_full_field()
+    end
+    for _, e in ipairs(state.full) do
+        add_entry(e)
+    end
+
+    state.order = applied_order
+    state.inputs = total
+    self._applied = true
+    return self
+end
+
 function NamedLogic:compile(...)
+    if not self._applied then
+        self:apply()
+    end
     local artifact = self._logic:compile(...)
     local schema = snapshot_schema(self._state, artifact)
     return wrap_artifact(artifact, schema)
@@ -255,8 +380,7 @@ local function new_named_logic()
     return setmetatable({
         _logic = M.logic(),
         _state = new_state(),
-        _private_started = false,
-        _full_started = false,
+        _applied = false,
     }, NamedLogic)
 end
 
@@ -292,8 +416,14 @@ local function unwrap_opts(opts, public_only)
                 out[field] = resolve_named_inputs(schema, val, filter)
             end
         end
-        convert("inputs", nil)
-        convert("public_inputs", public_only and "public" or nil)
+        convert("inputs", public_only and "public" or nil)
+        convert("public_inputs", "public")
+        if not out.inputs and out.public_inputs then
+            if out == opts then
+                out = shallow_copy(out)
+            end
+            out.inputs = out.public_inputs
+        end
     end
     return out
 end
@@ -319,15 +449,5 @@ if M.verify_circuit then
         return native_verify(unwrap_opts(opts, true))
     end
 end
-
--- Also set global functions for backward compatibility
-for k, v in pairs(M) do
-    if type(v) == "function" then
-        _G[k] = v
-    end
-end
-
--- Set the module version
-M._VERSION = native.LONGFELLOW_ZK_VERSION or "0.1.0"
 
 return M

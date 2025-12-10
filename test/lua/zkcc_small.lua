@@ -57,7 +57,7 @@ local witness = zkcc.build_witness_inputs{
 local public_witness = zkcc.build_witness_inputs{
   circuit = artifact,
   inputs = {
-    [1] = inputs[1], -- z
+    [1] = oct_u64(10) -- public z
   },
 }
 
