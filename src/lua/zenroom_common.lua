@@ -22,12 +22,29 @@ local _luatype <const> = _G['type']
 _G['luatype'] = _luatype
 
 local _type <const> = function(var)
-    local simple = luatype(var)
-    if simple == "userdata" then
-        local meta = getmetatable(var)
-        if meta then return(meta.__name)
-        else return("unknown") end
-    else return(simple) end
+    local simple <const> = luatype(var)
+    if simple ~= 'userdata' then return simple end 
+    
+    -- Try to access __name directly on the object (for Sol2 properties)
+    -- Use pcall to safely access it without erroring
+    local ok, obj_name = pcall(function() return var.__name end)
+    if ok and obj_name and luatype(obj_name) == "string" then
+        return obj_name
+    end
+    
+    local meta <const> = getmetatable(var)
+    if not meta then return 'unknown' end
+    -- Check meta.__name (used by Zenroom's native types)
+    local name <const> = meta.__name
+    if name and luatype(name) == "string" then
+        return name
+    end
+    -- Then check for __type (standard Lua convention for custom types)
+    local custom_type <const> = meta.__type
+    if custom_type and luatype(custom_type) == "string" then
+        return custom_type
+    end
+    return "unknown"
 end
 _G['type'] = _type
 
