@@ -33,6 +33,7 @@
 #include "custom_backend.h"
 #include "circuits/logic/routing.h"
 #include "circuits/logic/bit_plucker.h"
+#include "circuits/logic/bit_adder.h"
 #include "circuits/logic/memcmp.h"
 #include "proto/circuit.h"
 #include "zk/zk_prover.h"
@@ -886,6 +887,59 @@ public:
 	static const char* __name() { return "zkcc.memcmp"; }
 };
 
+// Wrapper for BitAdder class (32-bit)
+class LuaBitAdder32 {
+public:
+	using Field = Fp256Base;
+	using Backend = CustomCompilerBackend<Field>;
+	using LogicType = Logic<Field, Backend>;
+	using BitAdderType = BitAdder<LogicType, 32>;
+
+	std::unique_ptr<BitAdderType> adder;
+	const LogicType* logic;
+
+	LuaBitAdder32(const LogicType* l) :
+		adder(std::make_unique<BitAdderType>(*l)),
+		logic(l) {}
+
+	// Convert v32 to field element
+	LuaEltW as_field_element(const LuaBitVec<32>& v) {
+		return LuaEltW(adder->as_field_element(v.vec), logic);
+	}
+
+	// Add two EltW (field elements)
+	LuaEltW add_eltw(const LuaEltW& a, const LuaEltW& b) {
+		return LuaEltW(adder->add(&a.wire, b.wire), logic);
+	}
+
+	// Add two v32 vectors
+	LuaEltW add_v32(const LuaBitVec<32>& a, const LuaBitVec<32>& b) {
+		return LuaEltW(adder->add(a.vec, b.vec), logic);
+	}
+
+	// Add multiple v32 vectors (returns field element)
+	LuaEltW add(sol::table terms_table) {
+		std::vector<typename LogicType::v32> terms;
+		// Get table size using Lua's # operator
+		size_t n = terms_table.size();
+		for (size_t i = 1; i <= n; i++) {
+			sol::optional<LuaBitVec<32>> term_opt = terms_table[i];
+			if (term_opt) {
+				terms.push_back(term_opt.value().vec);
+			}
+		}
+		return LuaEltW(adder->add(terms), logic);
+	}
+
+	// Assert result ≡ sum (mod 2^32) with overflow < k
+	void assert_eqmod(const LuaBitVec<32>& result, const LuaEltW& sum, size_t k) {
+		adder->assert_eqmod(result.vec, sum.wire, k);
+	}
+
+	// Type identification for Lua type() function
+	static const char* __name() { return "zkcc.bit_adder32"; }
+};
+
 // Main Logic wrapper
 class LuaLogic {
 public:
@@ -1438,6 +1492,10 @@ public:
 
 	LuaMemcmp create_memcmp() {
 		return LuaMemcmp(logic.get());
+	}
+
+	LuaBitAdder32 create_bit_adder32() {
+		return LuaBitAdder32(logic.get());
 	}
 
 	// Variable-bit vector operations

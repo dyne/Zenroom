@@ -701,6 +701,7 @@ void register_zk_bindings(sol::state_view& lua) {
 		"create_routing", &LuaLogic::create_routing,
 		"create_bit_plucker", &LuaLogic::create_bit_plucker,
 		"create_memcmp", &LuaLogic::create_memcmp,
+		"create_bit_adder32", &LuaLogic::create_bit_adder32,
 		"vlt_var", &LuaLogic::vlt_var,
 		"vleq_var", &LuaLogic::vleq_var,
 		"veq_var", &LuaLogic::veq_var
@@ -761,6 +762,19 @@ void register_zk_bindings(sol::state_view& lua) {
 
 		"lt", &LuaMemcmp::lt,
 		"leq", &LuaMemcmp::leq
+	);
+
+	auto bit_adder32 = lua.new_usertype<LuaBitAdder32>("BitAdder32",
+		sol::constructors<>(),
+
+		// Type identification field
+		"__name", sol::property(&LuaBitAdder32::__name),
+
+		"as_field_element", &LuaBitAdder32::as_field_element,
+		"add", &LuaBitAdder32::add,
+		"add_v32", &LuaBitAdder32::add_v32,
+		"add_eltw", &LuaBitAdder32::add_eltw,
+		"assert_eqmod", &LuaBitAdder32::assert_eqmod
 	);
 
 	// GF2_128 Wire Wrappers

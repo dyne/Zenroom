@@ -679,16 +679,40 @@ function M.Logic_vappend(logic, a, b)
     end
 end
 
--- Add vappend method to Logic instances
+-- Wrap Logic instances to add convenience methods
 if M.create_logic then
     local native_create = M.create_logic
     M.create_logic = function()
-        local logic = native_create()
-        -- Add convenience method
-        logic.vappend = function(self, a, b)
-            return M.Logic_vappend(self, a, b)
-        end
-        return logic
+        local logic_native = native_create()
+        
+        -- Create a Lua table wrapper that delegates to the native usertype
+        local logic_wrapper = {}
+        local mt = {
+            __index = function(t, k)
+                -- First check if it's the vappend convenience method
+                if k == "vappend" then
+                    return function(self, a, b)
+                        return M.Logic_vappend(logic_native, a, b)
+                    end
+                end
+                -- Otherwise delegate to the native logic object
+                local v = logic_native[k]
+                -- If it's a function, wrap it to bind logic_native as self
+                if type(v) == "function" then
+                    return function(self, ...)
+                        return v(logic_native, ...)
+                    end
+                end
+                return v
+            end,
+            __newindex = function(t, k, v)
+                -- Delegate writes to native object if possible
+                logic_native[k] = v
+            end
+        }
+        setmetatable(logic_wrapper, mt)
+        
+        return logic_wrapper
     end
 end
 
