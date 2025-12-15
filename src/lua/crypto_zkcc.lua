@@ -623,4 +623,73 @@ if M.verify_circuit then
     end
 end
 
+-- ===========================================================================
+-- Helper: Generic vappend wrapper
+-- ===========================================================================
+-- Wraps the vappend_N_M methods with a simpler interface that auto-detects sizes
+-- Usage: L:vappend(vec8_a, vec8_b) -> vec16
+--        L:vappend(vec16_a, vec16_b) -> vec32
+function M.Logic_vappend(logic, a, b)
+    -- Get type names using Zenroom's type() which returns __name
+    local type_a = type(a)
+    local type_b = type(b)
+    
+    -- Extract size from type names (e.g., "zkcc.bitvec8" -> 8)
+    local size_a = nil
+    local size_b = nil
+    
+    if type_a == "zkcc.bitvec8" then size_a = 8
+    elseif type_a == "zkcc.bitvec16" then size_a = 16
+    elseif type_a == "zkcc.bitvec32" then size_a = 32
+    elseif type_a == "zkcc.bitvec64" then size_a = 64
+    elseif type_a == "zkcc.bitvec128" then size_a = 128
+    elseif type_a == "zkcc.bitvec256" then size_a = 256
+    else
+        error("vappend: first argument must be a bit vector, got: " .. tostring(type_a))
+    end
+    
+    if type_b == "zkcc.bitvec8" then size_b = 8
+    elseif type_b == "zkcc.bitvec16" then size_b = 16
+    elseif type_b == "zkcc.bitvec32" then size_b = 32
+    elseif type_b == "zkcc.bitvec64" then size_b = 64
+    elseif type_b == "zkcc.bitvec128" then size_b = 128
+    elseif type_b == "zkcc.bitvec256" then size_b = 256
+    else
+        error("vappend: second argument must be a bit vector, got: " .. tostring(type_b))
+    end
+    
+    -- Sizes must match
+    if size_a ~= size_b then
+        error(string.format("vappend: bit vector sizes must match (got %d and %d)", size_a, size_b))
+    end
+    
+    -- Call the appropriate vappend method based on sizes
+    if size_a == 8 then
+        return logic:vappend_8_8(a, b)
+    elseif size_a == 16 then
+        return logic:vappend_16_16(a, b)
+    elseif size_a == 32 then
+        return logic:vappend_32_32(a, b)
+    elseif size_a == 64 then
+        return logic:vappend_64_64(a, b)
+    elseif size_a == 128 then
+        return logic:vappend_128_128(a, b)
+    else
+        error(string.format("vappend: unsupported size: %d", size_a))
+    end
+end
+
+-- Add vappend method to Logic instances
+if M.create_logic then
+    local native_create = M.create_logic
+    M.create_logic = function()
+        local logic = native_create()
+        -- Add convenience method
+        logic.vappend = function(self, a, b)
+            return M.Logic_vappend(self, a, b)
+        end
+        return logic
+    end
+end
+
 return M

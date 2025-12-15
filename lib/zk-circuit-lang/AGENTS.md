@@ -385,7 +385,7 @@ All library code in `namespace proofs { ... }`
 
 ### Implementation Status (Verified by Test Suite)
 
-**Overall: 128/128 methods (100% complete)** - All categories fully implemented
+**Overall: 133/133 methods (100% complete)** - All categories fully implemented
 
 **✅ EltW Operations**: 11/11 (100%)
 - Field element wire operations: `eltw_input`, `add`, `sub`, `mul`, `mul_scalar`, `konst`, `assert0`, `assert_eq`, `eval`, `mux_elt`, linear algebra operations
@@ -410,6 +410,11 @@ All library code in `namespace proofs { ... }`
 
 **✅ Conversion Operations**: 4/4 (100%)
 - Type conversions: `eval` (BitW→EltW), `as_scalar8`, `as_scalar32`, `as_scalar64`
+
+**✅ Vector Concatenation**: 5/5 (100%)
+- Bit vector concatenation (little-endian): `vappend_8_8`, `vappend_16_16`, `vappend_32_32`, `vappend_64_64`, `vappend_128_128`
+- Convenience wrapper: `vappend(a, b)` - Auto-detects sizes
+- Essential for SHA-256: building 32-bit words from bytes
 
 **✅ Aggregate Operations**: 4/4 (100%)
 - Functional programming: `add_range`, `mul_range`, `land_range`, `lor_range`

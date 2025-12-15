@@ -670,6 +670,13 @@ void register_zk_bindings(sol::state_view& lua) {
 		"vinput256", &LuaLogic::vinput256,
 		"vbit256", &LuaLogic::vbit256,
 
+		// Vector concatenation (vappend)
+		"vappend_8_8", &LuaLogic::vappend_8_8,
+		"vappend_16_16", &LuaLogic::vappend_16_16,
+		"vappend_32_32", &LuaLogic::vappend_32_32,
+		"vappend_64_64", &LuaLogic::vappend_64_64,
+		"vappend_128_128", &LuaLogic::vappend_128_128,
+
 		// Access underlying circuit
 		"get_circuit", &LuaLogic::get_circuit,
 

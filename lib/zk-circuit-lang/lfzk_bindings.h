@@ -1323,6 +1323,28 @@ public:
 		return LuaBitVec<256>(logic->vbit<256>(x), logic.get());
 	}
 
+	// Vector concatenation (vappend)
+	// Little-endian append: a[0] is LSB, b starts at position [NA]
+	LuaBitVec<16> vappend_8_8(const LuaBitVec<8>& a, const LuaBitVec<8>& b) {
+		return LuaBitVec<16>(logic->vappend(a.vec, b.vec), logic.get());
+	}
+
+	LuaBitVec<32> vappend_16_16(const LuaBitVec<16>& a, const LuaBitVec<16>& b) {
+		return LuaBitVec<32>(logic->vappend(a.vec, b.vec), logic.get());
+	}
+
+	LuaBitVec<64> vappend_32_32(const LuaBitVec<32>& a, const LuaBitVec<32>& b) {
+		return LuaBitVec<64>(logic->vappend(a.vec, b.vec), logic.get());
+	}
+
+	LuaBitVec<128> vappend_64_64(const LuaBitVec<64>& a, const LuaBitVec<64>& b) {
+		return LuaBitVec<128>(logic->vappend(a.vec, b.vec), logic.get());
+	}
+
+	LuaBitVec<256> vappend_128_128(const LuaBitVec<128>& a, const LuaBitVec<128>& b) {
+		return LuaBitVec<256>(logic->vappend(a.vec, b.vec), logic.get());
+	}
+
 	// Access underlying circuit template
 	LuaCircuitTemplate& get_circuit() { return *circuit_template; }
 
