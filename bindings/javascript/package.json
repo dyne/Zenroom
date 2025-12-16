@@ -9,6 +9,9 @@
     "type": "git",
     "url": "https://github.com/dyne/zenroom"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "homepage": "https://dev.zenroom.org/#/pages/javascript",
   "author": "Puria Nafisi Azizi <puria@dyne.org>",
   "license": "AGPL-3.0-only",
