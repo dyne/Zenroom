@@ -28,6 +28,7 @@ jobs:
   reuse:
     name: 🚨 REUSE Compliance
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v6
       - uses: fsfe/reuse-action@v6
@@ -35,6 +36,7 @@ jobs:
   c-lint:
     name: 🚨 C lint
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v6
       - uses: reviewdog/action-cpplint@master
@@ -61,6 +63,7 @@ jobs:
   lua-lint:
     name: 🚨 Lua lint
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
     - uses: actions/checkout@v6
     - name: Setup luacheck
@@ -86,6 +89,7 @@ jobs:
         cc: [COMPILER=gcc COMPILER_CXX=g++,COMPILER=clang COMPILER_CXX=clang++]
       fail-fast: false
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v6
         with:
@@ -454,7 +458,6 @@ jobs:
 
   semantic-release:
     name: 🤖 Semantic release
-    needs: [linux-test]
     runs-on: ubuntu-latest
     if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
     outputs:
