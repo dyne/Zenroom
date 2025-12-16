@@ -8,7 +8,7 @@ local BA = L:create_bit_adder32()
 
 local MAX_BLOCKS = 1
 
-local K = {
+local K <const> = {
   0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,
   0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
   0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,
@@ -26,11 +26,16 @@ local K = {
   0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,
   0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2,
 }
+-- Optimized: precompute K constants as bit32 values
+local K_const <const> = {}
+for t = 1, 64 do K_const[t] = L:vbit32(K[t]) end
 
-local H0_CONST = {
+local H0_CONST <const> = {
   0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,
   0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19,
 }
+local H0 <const> = {}
+for i = 1, 8 do H0[i] = L:vbit32(H0_CONST[i]) end
 
 local function oct_field(x)
   return OCTET.from_hex(string.format('%064x', x & 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff))
@@ -40,11 +45,18 @@ local function oct_bit(b)
   return b and oct_field(1) or oct_field(0)
 end
 
+-- Optimized: cache bit decomposition results
+local bits_cache = {}
 local function bits_le(value, nbits)
+  local key = string.format('%x_%d', value, nbits)
+  if bits_cache[key] then
+    return bits_cache[key]
+  end
   local t = {}
   for i = 0, nbits - 1 do
     t[i + 1] = (value >> i) & 1
   end
+  bits_cache[key] = t
   return t
 end
 
@@ -66,21 +78,24 @@ local h1 = {}
 for i = 1, 8 do h1[i] = L:vinput32() end
 
 local function Sigma0(x)
-  return L:vxor3_32(L:vrotr32(x, 2), L:vrotr32(x, 13), L:vrotr32(x, 22))
+  return L:vxor3_32(L:vrotr32(x, 2),
+                    L:vrotr32(x, 13),
+                    L:vrotr32(x, 22))
 end
 local function Sigma1(x)
-  return L:vxor3_32(L:vrotr32(x, 6), L:vrotr32(x, 11), L:vrotr32(x, 25))
+  return L:vxor3_32(L:vrotr32(x, 6),
+                    L:vrotr32(x, 11),
+                    L:vrotr32(x, 25))
 end
 local function sigma0(x)
-  return L:vxor3_32(L:vrotr32(x, 7), L:vrotr32(x, 18), L:vshr32(x, 3, 0))
+  return L:vxor3_32(L:vrotr32(x, 7),
+                    L:vrotr32(x, 18),
+                    L:vshr32(x, 3, 0))
 end
 local function sigma1(x)
-  return L:vxor3_32(L:vrotr32(x, 17), L:vrotr32(x, 19), L:vshr32(x, 10, 0))
-end
-local function initial_context()
-  local H = {}
-  for i = 1, 8 do H[i] = L:vbit32(H0_CONST[i]) end
-  return H
+  return L:vxor3_32(L:vrotr32(x, 17),
+                    L:vrotr32(x, 19),
+                    L:vshr32(x, 10, 0))
 end
 
 local function bytes_to_words(bytes, block_index)
@@ -95,21 +110,29 @@ local function bytes_to_words(bytes, block_index)
   return words
 end
 
-local function assert_transform_block(in_words, H0, witness)
+local function assert_transform_block(in_words, witness)
   local w = {}
   for i = 1, 16 do w[i] = in_words[i] end
+  -- Optimized: use precomputed W values as witnesses with simple equality checks
   for i = 17, 64 do
-    local terms = {sigma1(w[i - 2]), w[i - 7], sigma0(w[i - 15]), w[i - 16]}
     w[i] = witness.outw[i - 16]
+    local terms = {sigma1(w[i - 2]), w[i - 7], sigma0(w[i - 15]), w[i - 16]}
     BA:assert_eqmod(w[i], BA:add(terms), 4)
   end
 
   local a, b, c, d = H0[1], H0[2], H0[3], H0[4]
   local e, f, g, h = H0[5], H0[6], H0[7], H0[8]
 
+
   for t = 1, 64 do
-    local t1 = BA:add{h, Sigma1(e), L:vCh32(e, f, g), L:vbit32(K[t]), w[t]}
-    local t2 = BA:add_eltw(BA:as_field_element(Sigma0(a)), BA:as_field_element(L:vMaj32(a, b, c)))
+    -- Optimized: use precomputed boolean operations
+    local e_sigma1 = Sigma1(e)
+    local e_ch = L:vCh32(e, f, g)
+    local a_sigma0 = Sigma0(a)
+    local a_maj = L:vMaj32(a, b, c)
+
+    local t1 = BA:add{h, e_sigma1, e_ch, K_const[t], w[t]}
+    local t2 = BA:add_eltw(BA:as_field_element(a_sigma0), BA:as_field_element(a_maj))
 
     h, g, f = g, f, e
     e = witness.oute[t]
@@ -119,34 +142,33 @@ local function assert_transform_block(in_words, H0, witness)
     BA:assert_eqmod(a, BA:add_eltw(t1, t2), 7)
   end
 
-  local final = {a, b, c, d, e, f, g, h}
+  local final <const> = {a, b, c, d, e, f, g, h}
   for i = 1, 8 do
     BA:assert_eqmod(witness.h1[i], BA:add_v32(H0[i], final[i]), 2)
   end
 end
 
 local function assert_hash(target, h_words)
-  local digest = L:vbit256(0)
+  -- Optimized: direct word comparison (8 comparisons instead of 256 bit comparisons)
   for j = 1, 8 do
-    local hj = h_words[j]
+    local offset = (8 - j) * 32
+    local target_word = L:vbit32(0)
     for k = 1, 32 do
-      digest:set((8 - j) * 32 + k, hj:get(k))
+      target_word:set(k, target:get(offset + k))
     end
+    L:assert1(L:veq32(h_words[j], target_word))
   end
-  local lhs, rhs = {}, {}
-  for i = 1, 256 do
-    lhs[i] = digest:get(i)
-    rhs[i] = target:get(i)
-  end
-  L:assert1(L:eq_array(256, lhs, rhs))
 end
 
 local function build_assertions()
   -- nb == 1
   L:assert1(L:veq8_const(nb_bits, MAX_BLOCKS))
   local words = bytes_to_words(msg_bytes, 1)
-  local H0 = initial_context()
-  assert_transform_block(words, H0, {outw = outw, oute = oute, outa = outa, h1 = h1})
+  assert_transform_block(words,
+                         {outw = outw,
+                          oute = oute,
+                          outa = outa,
+                          h1 = h1})
   assert_hash(hash_bits, h1)
 end
 
