@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <cstring>
 #include <memory>
 #include <optional>
 #include <unordered_map>
@@ -27,9 +28,11 @@
 
 #include "algebra/hash.h"
 #include "sumcheck/circuit.h"
+#include "sumcheck/circuit_id.h"
 #include "sumcheck/quad.h"
 #include "util/ceildiv.h"
 #include "util/panic.h"
+#include "util/readbuffer.h"
 
 namespace proofs {
 
@@ -123,16 +126,16 @@ class CircuitRep {
 
   // Returns a unique_ptr<Circuit> or nullptr if there is an error in
   // deserializing the circuit.
-  std::unique_ptr<Circuit<Field>> from_bytes(
-      std::vector<uint8_t>::const_iterator& buf, size_t sz) {
-    /* invariant: check buf vs end before every read */
-
-    if (sz < 8 * kBytesWritten + 1) {
+  //
+  // If ENFORCE_CIRCUIT_ID is TRUE, check that the circuit id in
+  // the serialization matches the id stored in the circuit.
+  std::unique_ptr<Circuit<Field>> from_bytes(ReadBuffer& buf,
+                                             bool enforce_circuit_id) {
+    if (!buf.have(8 * kBytesWritten + 1)) {
       return nullptr;
     }
-    sz -= 8 * kBytesWritten + 1;
 
-    uint8_t version = *buf++;
+    uint8_t version = *buf.next(1);
     if (version != 1) {
       return nullptr;
     }
@@ -154,19 +157,14 @@ class CircuitRep {
 
     // Ensure there are enough input bytes for the quad constants.
     auto need = checked_mul(numconst, Field::kBytes);
-    if (!need || sz < need.value()) {
+    if (!need || !buf.have(need.value())) {
       return nullptr;
     }
-    sz -= need.value();
 
     std::vector<Elt> constants(numconst);
     for (size_t i = 0; i < numconst; ++i) {
-      uint8_t tmp[Field::kBytes];
-      for (size_t j = 0; j < Field::kBytes; ++j) {
-        tmp[j] = *buf++;
-      }
       // Fail if Elt cannot be parsed.
-      auto vv = f_.of_bytes_field(tmp);
+      auto vv = f_.of_bytes_field(buf.next(Field::kBytes));
       if (!vv.has_value()) {
         return nullptr;
       }
@@ -190,21 +188,19 @@ class CircuitRep {
 
     for (size_t ly = 0; ly < nl; ++ly) {
       // Ensure there are enough input bytes for the layer, 3 values.
-      if (sz < 3 * kBytesWritten) {
+      if (!buf.have(3 * kBytesWritten)) {
         return nullptr;
       }
-      sz -= 3 * kBytesWritten;
 
       size_t lw = read_size(buf);
       size_t nw = read_size(buf);
       size_t nq = read_size(buf);
 
       // Each quad takes 4 values, check for overflow.
-      auto need = checked_mul(4 * kBytesWritten, nq);
-      if (!need || sz < need.value()) {
+      need = checked_mul(4 * kBytesWritten, nq);
+      if (!need || !buf.have(need.value())) {
         return nullptr;
       }
-      sz -= need.value();
 
       auto qq = std::make_unique<Quad<Field>>(nq);
       size_t prevg = 0, prevhl = 0, prevhr = 0;
@@ -236,11 +232,17 @@ class CircuitRep {
       max_g = nw;
     }
     // Read the circuit name from the serialization.
-    if (sz < 32) {
+    if (!buf.have(32)) {
       return nullptr;
     }
-    for (size_t i = 0; i < 32; ++i) {
-      c->id[i] = *buf++;
+    buf.next(32, c->id);
+
+    if (enforce_circuit_id) {
+      uint8_t idtmp[32];
+      circuit_id(idtmp, *c, f_);
+      if (memcmp(idtmp, c->id, 32) != 0) {
+        return nullptr;
+      }
     }
     return c;
   }
@@ -304,16 +306,11 @@ class CircuitRep {
 
   // Do not cast to FieldID, since the input is untrusted and the
   // cast may fail.
-  static size_t read_field_id(std::vector<uint8_t>::const_iterator& buf) {
-    return read_num(buf);
-  }
+  static size_t read_field_id(ReadBuffer& buf) { return read_num(buf); }
 
-  static size_t read_size(std::vector<uint8_t>::const_iterator& buf) {
-    return read_num(buf);
-  }
+  static size_t read_size(ReadBuffer& buf) { return read_num(buf); }
 
-  static size_t read_index(std::vector<uint8_t>::const_iterator& buf,
-                           size_t prev_ind) {
+  static size_t read_index(ReadBuffer& buf, size_t prev_ind) {
     size_t delta = read_num(buf);
     if (delta & 1) {
       return prev_ind - (delta >> 1);
@@ -322,10 +319,11 @@ class CircuitRep {
     }
   }
 
-  static size_t read_num(std::vector<uint8_t>::const_iterator& buf) {
+  static size_t read_num(ReadBuffer& buf) {
     uint64_t r = 0;
+    const uint8_t* p = buf.next(kBytesWritten);
     for (size_t i = 0; i < kBytesWritten; ++i) {
-      r ^= *buf++ << (i * 8);
+      r |= (p[i] << (i * 8));
     }
 
     // SIZE_MAX is system defined as max value for size_t.
@@ -347,7 +345,7 @@ class CircuitRep {
    public:
     std::vector<Elt> constants_;
 
-    explicit EltHash(const Field& f) : f_(f), table_(1000, EHash(f)) {};
+    explicit EltHash(const Field& f) : f_(f), table_(1000, EHash(f)) {}
 
     size_t kstore(const Elt& k) {
       if (auto search = table_.find(k); search != table_.end()) {
