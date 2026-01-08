@@ -791,6 +791,7 @@ function ZEN:run()
 			deepmap(zenguard, ACK)
 			-- check that everythink in HEAP.ACK has a CODEC
 			self:codecguard()
+			self:keyringguard()
 		end
 
 		self.OK = true
@@ -862,6 +863,15 @@ function ZEN:codecguard()
       end
    end
    return true
+end
+function ZEN:keyringguard()
+	local keys <const> = ACK.keyring
+	if not keys then return end
+	for k,v in pairs(keys) do
+		if not v:octet():is_secure() then -- sfpool check
+			error("Key out of secure memory: "..k)
+		end
+	end
 end
 
 ------------------------------------------
