@@ -1,6 +1,6 @@
 /*  Zenroom (DECODE project)
  *
- *  (c) Copyright 2020-2025 Dyne.org foundation
+ *  (c) Copyright 2020-2026 Dyne.org foundation
  *  designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This source code is free software; you can redistribute it and/or

@@ -164,7 +164,7 @@ console.log(introspection); // => an object described as https://dev.zenroom.org
 
 ## 😍 Acknowledgements
 
-Copyright (C) 2018-2025 by [Dyne.org](https://www.dyne.org) foundation, Amsterdam
+Copyright (C) 2018-2026 by [Dyne.org](https://www.dyne.org) foundation, Amsterdam
 
 Designed, written and maintained by Puria Nafisi Azizi.
 
@@ -190,7 +190,7 @@ Please first take a look at the [Dyne.org - Contributor License Agreement](CONTR
 ## 💼 License
 
       Zenroom js - a javascript wrapper of zenroom
-      Copyright (c) 2018-2025 Dyne.org foundation, Amsterdam
+      Copyright (c) 2018-2026 Dyne.org foundation, Amsterdam
 
       This program is free software: you can redistribute it and/or modify
       it under the terms of the GNU Affero General Public License as

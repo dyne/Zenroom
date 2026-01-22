@@ -1,7 +1,7 @@
 --[[
 --This file is part of zenroom
 --
---Copyright (C) 2023-2025 Dyne.org foundation
+--Copyright (C) 2023-2026 Dyne.org foundation
 --
 --designed, written and maintained by:
 --Rebecca Selvaggini, Alberto Lerda and Denis Roio
