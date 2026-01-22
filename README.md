@@ -132,7 +132,7 @@ There are various build targets, just type make to have a list:
 
 ## License
 
-Copyright (C) 2017-2025 Dyne.org foundation
+Copyright (C) 2017-2026 Dyne.org foundation
 
 Designed and written by Denis "[Jaromil](https://jaromil.dyne.org)"
 Roio with the help of [Puria](https://github.com/puria) Nafisi Azizi

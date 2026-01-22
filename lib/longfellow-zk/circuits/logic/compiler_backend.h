@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,8 +51,8 @@ class CompilerBackend {
   }
   V apy(const V& y, const Elt& a) const { return q_->apy(y, a); }
 
-  V input() const { return q_->input(); }
-  void output(size_t n, V wire_id) const { q_->output(n, wire_id); }
+  V input_wire() const { return q_->input_wire(); }
+  void output_wire(size_t n, V wire_id) const { q_->output_wire(n, wire_id); }
   size_t wire_id(const V& a) const { return q_->wire_id(a); }
 
  private:

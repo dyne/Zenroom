@@ -1,6 +1,6 @@
 #!/bin/bash
-# Copyright 2025 Dyne.org foundation
-# SPDX-FileCopyrightText: 2025 Dyne.org foundation
+# Copyright 2026 Dyne.org foundation
+# SPDX-FileCopyrightText: 2026 Dyne.org foundation
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 

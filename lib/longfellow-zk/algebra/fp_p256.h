@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,8 +38,12 @@ struct Fp256Reduce {
       0xFFFFFFFF00000001u,
   };
 
+
   static inline void reduction_step(uint64_t a[], uint64_t mprime,
                                     const Nat<4>& m) {
+    // p = 2^256 - 2^224 + 2^192 + 2^96 - 1
+    // mprime = 1.
+    // This step computes a += (mprime * a0) * p
     uint64_t r = a[0];
     uint64_t l[5] = {r, 0, 0, r << 32, r >> 32};
     negaccum(6, a, 5, l);

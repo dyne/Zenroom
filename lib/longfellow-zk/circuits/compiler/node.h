@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,6 @@ struct term {
   size_t_for_storage op0, op1;
 
   term() = default;
-  term(const term&) = default;
 
   // canonicalized by op0 <= op1
   explicit term(size_t ki, size_t op0, size_t op1)
@@ -101,11 +100,11 @@ struct NodeInfoF {
 
   // we use the desired wire id only at the appropriate depth,
   // and not e.g. for copy wires.
-  quad_corner_t desired_wire_id(size_t depth, size_t depth_ub) const {
-    if (is_input && depth == 0) {
+  quad_corner_t desired_wire_id(size_t depth0, size_t depth_ub) const {
+    if (is_input && depth0 == 0) {
       return desired_wire_id_for_input;
     }
-    if (is_output && depth + 1 == depth_ub) {
+    if (is_output && depth0 + 1 == depth_ub) {
       return desired_wire_id_for_output;
     }
     return kWireIdUndefined;

@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -152,6 +152,7 @@ class Dense {
 template <class Field>
 class DenseFiller {
   using Elt = typename Field::Elt;
+  using CElt = typename Field::CElt;
 
  public:
   // Caller must ensure that W remains valid.
@@ -165,6 +166,8 @@ class DenseFiller {
     w_.v_[pos_++] = x;
     return *this;
   }
+
+  DenseFiller& push_back(const CElt& x) { return push_back(x.e); }
 
   template <size_t N>
   DenseFiller& push_back(const std::array<Elt, N>& a) {

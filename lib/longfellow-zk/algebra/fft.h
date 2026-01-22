@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -65,13 +65,13 @@ class FFT {
  public:
   // Backward FFT.
   // N (the length of A) must be a power of 2
-  static void fftb(Elt A[/*n*/], size_t n, const Elt& omega_m, uint64_t m,
-                   const Field& F) {
+  static void fftb(Elt A[/*n*/], size_t n, const Elt& omega,
+                   uint64_t omega_order, const Field& F) {
     if (n <= 1) {
       return;
     }
 
-    Elt omega_n = Twiddle<Field>::reroot(omega_m, m, n, F);
+    Elt omega_n = Twiddle<Field>::reroot(omega, omega_order, n, F);
     Twiddle<Field> roots(n, omega_n, F);
 
     Permutations<Elt>::bitrev(A, n);
@@ -94,9 +94,9 @@ class FFT {
   }
 
   // forward transform
-  static void fftf(Elt A[/*n*/], size_t n, const Elt& omega_m, uint64_t m,
-                   const Field& F) {
-    fftb(A, n, F.invertf(omega_m), m, F);
+  static void fftf(Elt A[/*n*/], size_t n, const Elt& omega,
+                   uint64_t omega_order, const Field& F) {
+    fftb(A, n, F.invertf(omega), omega_order, F);
   }
 };
 }  // namespace proofs

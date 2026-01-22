@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -108,16 +108,16 @@ class RFFT {
  public:
   // Forward real to half-complex in-place transform.
   // N (the length of A) must be a power of 2
-  static void r2hc(RElt A[/*n*/], size_t n, const CElt& omega_m, uint64_t m,
-                   const FieldExt& C) {
-    validate_root(omega_m, C);
+  static void r2hc(RElt A[/*n*/], size_t n, const CElt& omega,
+                   uint64_t omega_order, const FieldExt& C) {
+    validate_root(omega, C);
 
     if (n <= 1) {
       return;
     }
 
     const Field& R = C.base_field();
-    CElt omega_n = Twiddle<FieldExt>::reroot(omega_m, m, n, C);
+    CElt omega_n = Twiddle<FieldExt>::reroot(omega, omega_order, n, C);
     Twiddle<FieldExt> roots(n, omega_n, C);
 
     Permutations<RElt>::bitrev(A, n);
@@ -144,16 +144,16 @@ class RFFT {
   }
 
   // Backward half-complex to real in-place transform.
-  static void hc2r(RElt A[/*n*/], size_t n, const CElt& omega_m, uint64_t m,
-                   const FieldExt& C) {
-    validate_root(omega_m, C);
+  static void hc2r(RElt A[/*n*/], size_t n, const CElt& omega,
+                   uint64_t omega_order, const FieldExt& C) {
+    validate_root(omega, C);
 
     if (n <= 1) {
       return;
     }
 
     const Field& R = C.base_field();
-    CElt omega_n = Twiddle<FieldExt>::reroot(omega_m, m, n, C);
+    CElt omega_n = Twiddle<FieldExt>::reroot(omega, omega_order, n, C);
     Twiddle<FieldExt> roots(n, omega_n, C);
 
     // m>1 iterations

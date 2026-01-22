@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,6 +47,19 @@ class ZkVerifier {
       : circ_(c),
         n_witness_(c.ninputs - c.npub_in),
         param_(n_witness_ + ZkCommon<Field>::pad_size(c), c.nl, rate, nreq),
+        lqc_(c.nl),
+        rsf_(rsf),
+        f_(F) {
+    ZkCommon<Field>::setup_lqc(c, lqc_, n_witness_);
+  }
+
+  explicit ZkVerifier(const Circuit<Field>& c, const RSFactory& rsf,
+                      size_t rate, size_t nreq, size_t block_enc,
+                      const Field& F)
+      : circ_(c),
+        n_witness_(c.ninputs - c.npub_in),
+        param_(n_witness_ + ZkCommon<Field>::pad_size(c), c.nl, rate, nreq,
+               block_enc),
         lqc_(c.nl),
         rsf_(rsf),
         f_(F) {

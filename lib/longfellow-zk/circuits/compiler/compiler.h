@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,11 +23,11 @@
 #include <vector>
 
 #include "algebra/hash.h"
-#include "circuits/compiler/circuit_id.h"
 #include "circuits/compiler/node.h"
 #include "circuits/compiler/pdqhash.h"
 #include "circuits/compiler/schedule.h"
 #include "sumcheck/circuit.h"
+#include "sumcheck/circuit_id.h"
 #include "sumcheck/quad.h"
 #include "util/panic.h"
 
@@ -94,7 +94,7 @@ class QuadCircuit {
     proofs::check(ki1 == 1, "ki1 == 1");
 
     // make sure node 0 exists, carrying input[0] = F.one()
-    input();
+    input_wire();
   }
 
   // Produce a linear term 1 * op0 that the compiler will not
@@ -194,9 +194,9 @@ class QuadCircuit {
       typename term::assert0_type_hack hack;
       std::vector<term> terms;
       terms.push_back(term(op, hack));
-      size_t n = push_node(node(terms));
-      nodes_[n].info.is_assert0 = true;
-      return n;
+      size_t n1 = push_node(node(terms));
+      nodes_[n1].info.is_assert0 = true;
+      return n1;
     }
   }
 
@@ -216,7 +216,11 @@ class QuadCircuit {
     return add(y, konst(a));
   }
 
-  size_t input() { return push_node(node(quad_corner_t(ninput_++))); }
+  // Create an input wire.
+  //
+  // Most code should never call this function directly.  Call
+  // Logic::eltw_input() instead.
+  size_t input_wire() { return push_node(node(quad_corner_t(ninput_++))); }
 
   // This function demarcates the end of the public inputs and beginning of
   // private inputs. It can only be called once.
@@ -238,7 +242,7 @@ class QuadCircuit {
 
   size_t ninput() const { return ninput_; }
 
-  void output(size_t n, size_t wire_id) {
+  void output_wire(size_t n, size_t wire_id) {
     output_internal(n, quad_corner_t(wire_id));
   }
 
@@ -404,7 +408,7 @@ class QuadCircuit {
       if (n.info.is_output) {
         r = std::max<size_t>(r, 1 + n.info.depth);
       } else if (n.info.is_assert0) {
-        // Assertions of the form 0*(1*OP) contibute n.info.depth and
+        // Assertions of the form 0*(1*OP) contribute n.info.depth and
         // not 1 + n.info.depth.  If the assertion is in the last
         // layer, it will be transformed in an output of OP at
         // n.info.depth.  If the assertion is not in the last layer,

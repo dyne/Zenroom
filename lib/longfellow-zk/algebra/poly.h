@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,8 +18,14 @@
 #include <cstddef>
 
 namespace proofs {
-// Fixed-size N-tuples of field elements, interpreted as polynomial coefficients
-// and/or values and/or newton expansion.
+
+// This file defines templates for fixed-size N-tuples of field elements that
+// can be interpreted as polynomial coefficients and/or values and/or Newton
+// expansion. These polynomials handle the main operations of the sumcheck
+// protocol.
+
+// The Poly template represents a full polynomial stored as N evaluation points.
+// It supports interpolation at an arbitrary point in the Field.
 template <size_t N, class Field>
 class Poly {
  public:
@@ -124,15 +130,6 @@ class Poly {
     return e;
   }
 
-  static T powers_of(const Elt& e, const Field& F) {
-    T r;
-    r[0] = F.one();
-    for (size_t i = 1; i < N; ++i) {
-      r[i] = F.mulf(r[i - 1], e);
-    }
-    return r;
-  }
-
   // Interpolation via explicit dot product.
   //
   // The combination P.newton_of_lagrange().eval_newton(..., R, ...)
@@ -172,6 +169,72 @@ class Poly {
     }
   };
 };
+
+// In SumcheckPoly, the p(1) is not computed in the add, sub, mul, mul_scalar
+// methods because it is implied by context. This optimization is used in the
+// inner-loop of the sumcheck prover. A convenience method is provided to
+// convert to a Poly object for use outside the inner-loop.
+template <size_t N, class Field>
+class SumcheckPoly {
+ public:
+  static const size_t kN = N;
+  using Elt = typename Field::Elt;
+  using T = SumcheckPoly;
+
+  // the N-tuple itself
+  Elt t_[N];
+
+  SumcheckPoly() = default;
+
+  explicit SumcheckPoly(const Poly<N, Field>& p) {
+    for (size_t i = 0; i < N; ++i) {
+      t_[i] = p[i];
+    }
+  }
+
+  Elt& operator[](size_t i) { return t_[i]; }
+  const Elt& operator[](size_t i) const { return t_[i]; }
+
+  T& add(const T& y, const Field& F) {
+    F.add(t_[0], y[0]);
+    for (size_t i = 2; i < N; ++i) {
+      F.add(t_[i], y[i]);
+    }
+    return *this;
+  }
+  T& sub(const T& y, const Field& F) {
+    F.sub(t_[0], y[0]);
+    for (size_t i = 2; i < N; ++i) {
+      F.sub(t_[i], y[i]);
+    }
+    return *this;
+  }
+  T& mul(const T& y, const Field& F) {
+    F.mul(t_[0], y[0]);
+    for (size_t i = 2; i < N; ++i) {
+      F.mul(t_[i], y[i]);
+    }
+    return *this;
+  }
+  T& mul_scalar(const Elt& y, const Field& F) {
+    F.mul(t_[0], y);
+    for (size_t i = 2; i < N; ++i) {
+      F.mul(t_[i], y);
+    }
+    return *this;
+  }
+
+  // Convert to a Poly object by providing the p(1) explicitly.
+  Poly<N, Field> to_poly(const Elt& p1) const {
+    Poly<N, Field> p;
+    for (size_t i = 0; i < N; ++i) {
+      p[i] = t_[i];
+    }
+    p[1] = p1;
+    return p;
+  }
+};
+
 }  // namespace proofs
 
 #endif  // PRIVACY_PROOFS_ZK_LIB_ALGEBRA_POLY_H_

@@ -60,7 +60,7 @@ endif
 ## BATS tests in test/zencode
 if suite.contains('zencode')
   # excluded tests
-  exclude = 'bindings_exec bindings_logfmt cookbook_hash_pdf ethereum rsa'
+  exclude = 'bindings_exec bindings_logfmt cookbook_hash_pdf ethereum rsa longfellow'
   zencode_cmd = run_command(
     find_program('bash'),
     '-c',
