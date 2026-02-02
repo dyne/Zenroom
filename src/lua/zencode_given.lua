@@ -1,20 +1,21 @@
 --[[
 --This file is part of zenroom
 --
---Copyright (C) 2018-2025 Dyne.org foundation
+--Copyright (C) 2018-2026 Dyne.org foundation
 --designed, written and maintained by Denis Roio <jaromil@dyne.org>
 --
 --This program is free software: you can redistribute it and/or modify
---it under the terms of the GNU Affero General Public License v3.0
+--it under the terms of the GNU Affero General Public License as
+--published by the Free Software Foundation, either version 3 of the
+--License, or (at your option) any later version.
 --
 --This program is distributed in the hope that it will be useful,
 --but WITHOUT ANY WARRANTY; without even the implied warranty of
 --MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 --GNU Affero General Public License for more details.
 --
---Along with this program you should have received a copy of the
---GNU Affero General Public License v3.0
---If not, see http://www.gnu.org/licenses/agpl.txt
+--You should have received a copy of the GNU Affero General Public License 
+--along with this program.  If not, see <https://www.gnu.org/licenses/>.
 --
 --]]
 
@@ -60,7 +61,7 @@ local function pick(what, conv)
    local raw <const> = IN[name]
    local err
    if CONF.missing.fatal then err = error else err = warn end
-   if not raw and CONF.missing.fatal then
+   if raw == nil and CONF.missing.fatal then
 	  err("Cannot find '" .. name .. "' anywhere (null value?)", 2) end
    if raw == '' and CONF.missing.fatal then
 	  err("Found empty string in '" .. name) end

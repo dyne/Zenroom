@@ -1,20 +1,21 @@
 --[[
 --This file is part of zenroom
 --
---Copyright (C) 2018-2025 Dyne.org foundation
+--Copyright (C) 2018-2026 Dyne.org foundation
 --designed, written and maintained by Denis Roio <jaromil@dyne.org>
 --
 --This program is free software: you can redistribute it and/or modify
---it under the terms of the GNU Affero General Public License v3.0
+--it under the terms of the GNU Affero General Public License as
+--published by the Free Software Foundation, either version 3 of the
+--License, or (at your option) any later version.
 --
 --This program is distributed in the hope that it will be useful,
 --but WITHOUT ANY WARRANTY; without even the implied warranty of
 --MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 --GNU Affero General Public License for more details.
 --
---Along with this program you should have received a copy of the
---GNU Affero General Public License v3.0
---If not, see http://www.gnu.org/licenses/agpl.txt
+--You should have received a copy of the GNU Affero General Public License 
+--along with this program.  If not, see <https://www.gnu.org/licenses/>.
 --]]
 --
 --- <h1>Zencode language parser</h1>
@@ -845,7 +846,7 @@ function ZEN:codecguard()
    local right <const> = CODEC
    local fatal <const> = CONF.missing.fatal
    for key1, value1 in pairs(left) do
-      if not right[key1] then
+      if right[key1] == nil then
 		 self:debug()
 		 error("Internal memory error: missing CODEC for "..key1)
 		 return false, key1
@@ -854,7 +855,7 @@ function ZEN:codecguard()
    end
    -- check for missing keys in tbl1
    for key2, _ in pairs(right) do
-      if not left[key2] and fatal then
+      if left[key2] == nil and fatal then
 		 self:debug()
 		 error("Internal memory error: unbound CODEC for "..key2)
 		 return false, key2
@@ -954,7 +955,7 @@ function have(obj) -- accepts arrays for depth checks
 
 	local name = uscore(trim(obj))
 	res = ACK[name]
-	if not res then
+	if res == nil then
 	   error('Cannot find object: ' .. name, 2)
 	end
 	local codec = CODEC[name]

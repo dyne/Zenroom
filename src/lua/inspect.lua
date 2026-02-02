@@ -18,7 +18,7 @@ local inspect = {
   --   MIT LICENSE
 
   --   Copyright (c) 2013 Enrique García Cota
-  --   Copyright (c) 2018-2025 Dyne.org foundation
+  --   Copyright (c) 2018-2026 Dyne.org foundation
 
   --   Permission is hereby granted, free of charge, to any person obtaining a
   --   copy of this software and associated documentation files (the
@@ -375,7 +375,7 @@ function Inspector:putValue(v, exp)
              self:puts("octet[" .. #v .. "] (all zero)")
          elseif self.schema and ( len == 16 or len == 32 or len == 64 ) then
              self:puts("octet[" .. #v .. "] " .. O.to_hex(v))
-         elseif self.schema and len < 31 then
+         elseif self.schema and len < 31 and utf8.len(O.to_string(v)) ~= nil then
              self:puts("octet[" .. #v .. "] " .. O.to_string(v))
          else
              self:puts("octet[" .. #v .. "] " .. exporter(v))

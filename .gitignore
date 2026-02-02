@@ -32,6 +32,7 @@ test/**/*.zen
 *.dylib
 zenroom
 zencode-exec
+lua-exec
 build/zenroom
 zenroom.js
 zenroom.web.js

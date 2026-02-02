@@ -20,10 +20,11 @@ local_test() {
     if [ ! -d meson ]; then
         echo "compiling"
         make clean
-        make -s meson-ccache
+        make -s linux-exe CCACHE=1
+        make -s linux-lib CCACHE=1
     fi
     echo "testing local build"
-    make meson-benchmark | tee $tmp
+    meson setup meson/ build/ -D "tests=['benchmark']" && ninja -C meson benchmark | tee $tmp
     cat $tmp | grep -o 'zencode_.*' | tr -d 'OK'> $1
     rm $tmp
 }
@@ -31,9 +32,10 @@ local_test() {
 remote_test() {
     tmp=$(mktemp)
     echo "compiling"
-    make -s meson-ccache
-    echo "testing"
-    make meson-benchmark | tee $tmp
+    make -s linux-exe CCACHE=1
+    make -s linux-lib CCACHE=1
+    echo "testing remote build"
+    meson setup meson/ build/ -D "tests=['benchmark']" && ninja -C meson benchmark | tee $tmp
     cat $tmp | grep -o 'zencode_.*' | tr -d 'OK'> $1
     rm $tmp
 }

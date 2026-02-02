@@ -1,22 +1,23 @@
 --[[
 --This file is part of Zenroom
 --
---Copyright (C) 2023-2025 Dyne.org foundation
+--Copyright (C) 2023-2026 Dyne.org foundation
 --
 --designed, written and maintained by:
 --Rebecca Selvaggini, Alberto Lerda, Denis Roio and Andrea D'Intino
 --
 --This program is free software: you can redistribute it and/or modify
---it under the terms of the GNU Affero General Public License v3.0
+--it under the terms of the GNU Affero General Public License as
+--published by the Free Software Foundation, either version 3 of the
+--License, or (at your option) any later version.
 --
 --This program is distributed in the hope that it will be useful,
 --but WITHOUT ANY WARRANTY; without even the implied warranty of
 --MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 --GNU Affero General Public License for more details.
 --
---Along with this program you should have received a copy of the
---GNU Affero General Public License v3.0
---If not, see http://www.gnu.org/licenses/agpl.txt
+--You should have received a copy of the GNU Affero General Public License 
+--along with this program.  If not, see <https://www.gnu.org/licenses/>.
 --]]
 
 local SD_JWT = require_once'crypto_sd_jwt'
@@ -58,10 +59,10 @@ local function check_display(display)
 end
 
 local function import_supported_selective_disclosure(obj)
-    local check_support = function(obj, what, needed)
-        found = false
-        if(type(obj[what]) == 'table') then
-            for k,v in pairs(obj[what]) do
+    local check_support = function(o, what, needed)
+        local found = false
+        if(type(o[what]) == 'table') then
+            for k,v in pairs(o[what]) do
                if v == needed[k] then
                     found = true
                     break
@@ -70,13 +71,13 @@ local function import_supported_selective_disclosure(obj)
         else
             if (type(needed) == 'table') then
                 for _,v in pairs(needed) do
-                    if obj[what] == v then
+                    if o[what] == v then
                         found = true
                         break
                     end
                 end
             else
-                found = obj[what] == needed
+                found = o[what] == needed
             end
         end
         if(not found) then
@@ -122,7 +123,7 @@ local function export_supported_selective_disclosure(obj)
         res.authorization_servers[k] = v:str()
     end
     res.credential_configurations_supported =
-        deepmap(function(obj) return obj:str() end,
+        deepmap(function(o) return o:str() end,
             obj.credential_configurations_supported)
     return res
 end
@@ -141,8 +142,8 @@ local function import_selective_disclosure_request(obj)
 
     for i=1, #obj.fields do
         zencode_assert(type(obj.fields[i]) == 'string', "The object with key fields must be a string array")
-        found = false
-        for k,v in pairs(obj.object) do
+        local found = false
+        for k in pairs(obj.object) do
             if k == obj.fields[i] then
                 found = true
                 break
@@ -208,7 +209,7 @@ end
 local function import_signed_selective_disclosure(obj)
     zencode_assert(obj:sub(#obj, #obj) == '~', "JWT binding not implemented")
     local toks = strtok(obj, "~")
-    disclosures = {}
+    local disclosures = {}
     for i=2,#toks do
         disclosures[#disclosures+1] = JSON.raw_decode(O.from_url64(toks[i]):str())
     end
@@ -284,13 +285,22 @@ When("create selective disclosure request from '' with id '' for ''", function(s
 
     local credential
     for _,v in pairs(ssd.credential_configurations_supported) do
-        if v.vct == id then credential = v end
+        if v.vct == id then
+            credential = v
+            break
+        end
     end
-    zencode_assert(credential, "Unknown credential id")
+    zencode_assert(credential, "Unknown credential id: " .. id)
     local claims = credential.claims
     local fields = {}
+    local already_included_fields = {}
     for _,v in pairs(claims) do
-        table.insert(fields, v.path[1])
+        local field = v.path[1]
+        local field_string = field:string()
+        if not already_included_fields[field_string] then
+            table.insert(fields, field)
+            already_included_fields[field_string] = true
+        end
     end
     ACK.selective_disclosure_request = {
         fields = fields,
@@ -336,7 +346,7 @@ When("use signed selective disclosure '' only with disclosures ''", function(ssd
     local all_dis <const> = ssd.disclosures
     local new_disclosures = { }
     for _,k in pairs(disclosed_keys) do
-        for ind, arr in pairs(all_dis) do
+        for _, arr in pairs(all_dis) do
             if arr[2] == k then
                 table.insert(new_disclosures, arr)
                 break

@@ -2,17 +2,16 @@
     "name": "Zenroom",
     "version": "3.0.0",
     "license": "AGPL-3.0",
-    "repository": "https://github.com/dyne/zenroom",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/dyne/zenroom"
+    },
     "author": "dyne",
     "description": "Secure VM for smart-contract execution in human-like language",
     "devDependencies": {
-        "@semantic-release/changelog": "^6.0.3",
-        "@semantic-release/commit-analyzer": "^13.0.0",
-        "@semantic-release/release-notes-generator": "^14.0.1",
-        "semantic-release": "^24.1.1"
+        "@semantic-release/changelog": "^6.0.3"
     },
     "dependencies": {
-        "docsify-cli": "^4.4.4",
-        "yarn": "^1.22.22"
+        "docsify-cli": "^4.4.4"
     }
 }

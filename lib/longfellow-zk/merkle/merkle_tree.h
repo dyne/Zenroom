@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,17 @@
 namespace proofs {
 
 // This package computes and verifies Merkle Tree inclusion claims.
-// The standard Merkle tree algorithm has been implemented.
+// The folklore Merkle tree algorithm has been implemented, with the following
+// constraints:
+//   1. A Merkle tree proof must reveal at least one leaf. We do not define
+//      empty proofs.
+//   2. The list of leaves must be a set, i.e., with no duplicates.  All usage
+//      within this library satisfies this requirement because the FS methods
+//      that produce the challenge set of indices includes no duplicates.
+//   3. The generated proof of inclusion for a set of leaves is compressed.
+//      That is, if a node in the Merkle tree can be deduced, it is not included
+//      in the proof. This makes the proof shorter, but the proof length varies
+//      depending on the included leaves.
 
 // A digest of a Merkle tree.
 struct Digest {
@@ -71,6 +81,8 @@ inline std::vector<bool> compressed_merkle_proof_tree(size_t n,
   // leaves are in TREE
   for (size_t ip = 0; ip < np; ++ip) {
     check(pos[ip] < n, "Invalid position for leaf in Merkle tree");
+    check(tree[pos[ip] + n] == false,
+          "duplicate position in merkle tree requested");
     tree[pos[ip] + n] = true;
   }
 
@@ -101,24 +113,12 @@ class MerkleTree {
     return layers_[1];
   }
 
-  // The generate_proof method writes a Merkle tree proof for the leaf
-  // at position pos into the proof array and returns the size of the proof
-  // in number of Digests.
-  size_t generate_proof(Digest proof[/*logn+1*/], size_t pos) const {
-    Digest* begin = proof;
-    *proof++ = layers_[pos + n_];
-    for (pos += n_; pos > 1; pos >>= 1) {
-      *proof++ = layers_[pos ^ 1];
-    }
-    return (proof - begin);
-  }
-
   // Compressed Merkle proofs over a set POS[NP] of leaves.
   //
   // We first compute the set TREE of all nodes that are on the path
   // from the root to any leaf in POS.  Then, for each inner node in
   // TREE, we include in the proof the child that is not in TREE, if
-  // any.
+  // any.  Note, this method requires pos to contain no duplicates.
   size_t generate_compressed_proof(std::vector<Digest>& proof,
                                    const size_t pos[/*np*/], size_t np) {
     std::vector<bool> tree = compressed_merkle_proof_tree(n_, pos, np);
@@ -155,14 +155,8 @@ class MerkleTreeVerifier {
   explicit MerkleTreeVerifier(size_t n, const Digest& root)
       : n_(n), root_(root) {}
 
-  bool verify_proof(const Digest* proof, size_t pos) const {
-    Digest t = *proof++;
-    for (pos += n_; pos > 1; pos >>= 1) {
-      t = (pos & 1) ? Digest::hash2(*proof++, t) : Digest::hash2(t, *proof++);
-    }
-    return t == root_;
-  }
-
+  // Verify a compressed Merkle proof.
+  // As mentioned above, this method assumes that pos contains no duplicates.
   bool verify_compressed_proof(const Digest* proof, size_t proof_len,
                                const Digest leaves[/*np*/],
                                const size_t pos[/*np*/], size_t np) const {

@@ -13,6 +13,7 @@ cflags += -D'ARCH="WIN"' -DARCH_WIN -DLUA_USE_WINDOWS
 ldflags += -L/usr/x86_64-w64-mingw32/lib
 ldadd += -l:libm.a -l:libpthread.a -lssp
 ldadd += -lstdc++
+zk-circuit-lang_cxxflags += -Wa,-mbig-obj
 
 # activate CCACHE etc.
 include build/plugins.mk

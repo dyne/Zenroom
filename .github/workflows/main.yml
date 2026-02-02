@@ -19,19 +19,26 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
   cancel-in-progress: true
 
+permissions:
+  id-token: write
+  packages: write
+  contents: write
+
 jobs:
   reuse:
     name: 🚨 REUSE Compliance
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@v5
-      - uses: fsfe/reuse-action@v5
+      - uses: actions/checkout@v6
+      - uses: fsfe/reuse-action@v6
 
   c-lint:
     name: 🚨 C lint
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: reviewdog/action-cpplint@master
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -52,22 +59,13 @@ jobs:
             ,-whitespace/parens\
             ,-whitespace/tab\
             " # Optional
-        #    - name: Fail fast?!
-        #      if: steps.linter.outputs.checks-failed > 0
-        #      run: |
-        #        echo "😤 Some files failed the C linting checks!"
 
   lua-lint:
     name: 🚨 Lua lint
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
-    # - uses: dorny/paths-filter@v2
-    #   with:
-    #     filters: |
-    #       src:
-    #         - 'src/lua'
-    # - if: steps.changes.outputs.src == 'true'
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Setup luacheck
       run: |
           if ! hash luacheck &>/dev/null; then
@@ -91,11 +89,12 @@ jobs:
         cc: [COMPILER=gcc COMPILER_CXX=g++,COMPILER=clang COMPILER_CXX=clang++]
       fail-fast: false
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
       - uses: hendrikmuhs/ccache-action@v1.2
@@ -121,10 +120,10 @@ jobs:
     runs-on: ubuntu-24.04-arm
     if: github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
       - uses: hendrikmuhs/ccache-action@v1.2
@@ -151,7 +150,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'SKIP_MUSL') && github.event_name == 'pull_request' }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Setup musl toolchain
@@ -162,6 +161,7 @@ jobs:
       - uses: hendrikmuhs/ccache-action@v1.2
       - name: install dependencies
         run: |
+          sudo apt update
           sudo apt install -yq jq libreadline-dev
           # used to cross compile shared library
           case "${{ matrix.arch }}" in
@@ -186,17 +186,18 @@ jobs:
           mkdir -p         zenroom-${{ matrix.arch }}-linux
           cp zenroom       zenroom-${{ matrix.arch }}-linux/
           cp zencode-exec  zenroom-${{ matrix.arch }}-linux/
+          cp lua-exec      zenroom-${{ matrix.arch }}-linux/
           make clean
           make linux-lib ${arch} ${lib_compilers} RELEASE=1 CCACHE=1
           cp libzenroom.so zenroom-${{ matrix.arch }}-linux/
           zip -r           zenroom-${{ matrix.arch }}-linux.zip zenroom-${{ matrix.arch }}-linux
       - name: Upload artifact test-linux-${{ matrix.arch }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: test-linux-${{ matrix.arch }}
           path: |
             zenroom-${{ matrix.arch }}-linux.zip
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         if: matrix.arch == 'x86_64'
         with:
           python-version: '3.13'
@@ -213,22 +214,23 @@ jobs:
     runs-on: ubuntu-24.04-arm
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'SKIP_MUSL') && github.event_name == 'pull_request' }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
       - name: install dependencies
         run: |
           pip3 install --prefer-binary meson ninja
       - name: Download musl build artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: test-linux-arm_64
       - run: |
           unzip zenroom-arm_64-linux.zip
           cp zenroom-arm_64-linux/zencode-exec  ./zencode-exec
+          cp zenroom-arm_64-linux/lua-exec      ./lua-exec
           cp zenroom-arm_64-linux/zenroom       ./zenroom
           cp zenroom-arm_64-linux/libzenroom.so ./libzenroom.so
           # api test need milagro library to be built
@@ -242,7 +244,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: "ubuntu-latest"
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - uses: hendrikmuhs/ccache-action@v1.2
@@ -261,15 +263,16 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
       - name: Install dependencies
         run: |
           pip3 install --prefer-binary meson ninja
+          brew install bash
       - uses: hendrikmuhs/ccache-action@v1.2
       - name: Build ios-arm64
         run: |
@@ -292,7 +295,7 @@ jobs:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'TEST_ARM32') && github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: pguyot/arm-runner-action@v2
         with:
           cpu: cortex-a7
@@ -314,15 +317,15 @@ jobs:
       matrix:
         go: ['stable','oldstable']
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - uses: hendrikmuhs/ccache-action@v1.2
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go }}
           cache: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
       - name: Install dependencies
@@ -332,6 +335,7 @@ jobs:
       - run: |
           make linux-exe CCACHE=1
           cp zencode-exec /usr/local/bin/
+          cp lua-exec     /usr/local/bin/
       - name: 🧪 test bindings go-${{ matrix.go }}
         working-directory: bindings/golang/zenroom
         run: make test
@@ -347,14 +351,14 @@ jobs:
       matrix:
         rust: ['stable', 'nightly']
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - uses: hendrikmuhs/ccache-action@v1.2
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ matrix.rust }}
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
       - name: Install dependencies
@@ -364,6 +368,7 @@ jobs:
       - run: |
           make linux-exe CCACHE=1
           cp zencode-exec /usr/local/bin/
+          cp lua-exec     /usr/local/bin/
       - name: 🧪 test bindings rust-${{ matrix.rust }}
         working-directory: bindings/rust
         run: cargo test
@@ -381,13 +386,13 @@ jobs:
     env:
       EM_VERSION: 4.0.10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
       - uses: mymindstorm/setup-emsdk@v14
@@ -419,10 +424,10 @@ jobs:
         os: [ubuntu-latest, macos-latest]
         python-version: ["3.12"]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies on Linux
@@ -435,12 +440,14 @@ jobs:
           cd ../..
           make linux-exe RELEASE=1
           cp zencode-exec /usr/local/bin/
+          cp lua-exec     /usr/local/bin/
         if: runner.os == 'Linux'
       - name: Build zencode-exec on Apple/OSX
         run: |
           cd ../..
           make osx-exe RELEASE=1
           cp zencode-exec /usr/local/bin/zencode-exec
+          cp lua-exec     /usr/local/bin/lua-exec
         if: runner.os == 'macOS'
       - run: |
           ./prepare.sh
@@ -451,16 +458,15 @@ jobs:
 
   semantic-release:
     name: 🤖 Semantic release
-    needs: [linux-test]
     runs-on: ubuntu-latest
     if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
     outputs:
       release: ${{ steps.tag_release.outputs.release }}
       version: ${{ steps.tag_release.outputs.version }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22.16.0
       - run: yarn
@@ -485,10 +491,10 @@ jobs:
     env:
       EM_VERSION: 4.0.10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22.16.0
       - uses: mymindstorm/setup-emsdk@v14
@@ -499,7 +505,7 @@ jobs:
           make node-wasm RELEASE=1 CCACHE=1
         env:
           EMSCRIPTEN: ${{ env.EMSDK }}/upstream/emscripten
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: javascript-artifact
           path: |
@@ -519,7 +525,7 @@ jobs:
     if: needs.semantic-release.outputs.release == 'True'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Setup musl toolchain
@@ -530,6 +536,7 @@ jobs:
       - uses: hendrikmuhs/ccache-action@v1.2
       - name: Install build deps
         run: |
+          sudo apt update
           sudo apt install -qy jq libreadline-dev
           # used to cross compile shared library
           case "${{ matrix.arch }}" in
@@ -554,6 +561,7 @@ jobs:
           mkdir -p         zenroom-${{ matrix.arch }}-linux
           cp zenroom       zenroom-${{ matrix.arch }}-linux/
           cp zencode-exec  zenroom-${{ matrix.arch }}-linux/
+          cp lua-exec      zenroom-${{ matrix.arch }}-linux/
           make clean
           make linux-lib ${arch} ${lib_compilers} RELEASE=1 CCACHE=1
           cp libzenroom.so zenroom-${{ matrix.arch }}-linux/
@@ -563,19 +571,20 @@ jobs:
             cp zenroom-${{ matrix.arch }}-linux/* .
           fi
       - name: Upload artifact linux-${{ matrix.arch }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: release-linux-${{ matrix.arch }}
           path: |
             zenroom-${{ matrix.arch }}-linux.zip
       - name: Upload artifact linux-x86_64
         if: matrix.arch == 'x86_64'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: release-bin-linux-${{ matrix.arch }}
           path: |
             zenroom
             zencode-exec
+            lua-exec
             zenroom-linux.zip
 
   windows-android-release:
@@ -585,11 +594,11 @@ jobs:
     if: needs.semantic-release.outputs.release == 'True'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Upload release docs artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: documentation
           path: |
@@ -612,7 +621,7 @@ jobs:
           mv zenroom.dll        zenroom-win64/
           zip -r zenroom-win64.zip zenroom-win64
       - name: Upload artifact win x86_64
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: release-win64
           path: |
@@ -633,7 +642,7 @@ jobs:
         run: |
           ./build/android.sh
       - name: Upload artifacts for Android
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: release-android
           path: |
@@ -647,7 +656,7 @@ jobs:
     outputs:
       python3: ${{ steps.filter.outputs.python3 }}
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: dorny/paths-filter@v3
       id: filter
       with:
@@ -664,7 +673,7 @@ jobs:
       run:
         working-directory: bindings/python3
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
         ref: master
         fetch-depth: 0
@@ -673,7 +682,7 @@ jobs:
         ./prepare.sh
     - run: pipx run build --sdist
     - run: twine check dist/*.tar.gz
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v6
       with:
         path: ./bindings/python3/dist/*.tar.gz
 
@@ -683,7 +692,7 @@ jobs:
     runs-on: macos-latest
     if: needs.semantic-release.outputs.release == 'True'
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - uses: hendrikmuhs/ccache-action@v1.2
@@ -696,10 +705,11 @@ jobs:
           mkdir -p zenroom-osx
           cp zenroom      zenroom-osx/
           cp zencode-exec zenroom-osx/
+          cp lua-exec     zenroom-osx/
           mv libzenroom.dylib     zenroom-osx/
           zip -r zenroom-osx.zip zenroom-osx
       - name: Upload artifacts for Apple OSX
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: release-apple-osx
           path: |
@@ -716,7 +726,7 @@ jobs:
           mv zenroom-ios-sim.a   zenroom-ios/
           zip -r zenroom-ios.zip zenroom-ios
       - name: Upload artifacts for Apple iOS
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: release-apple-ios
           path: |
@@ -727,31 +737,31 @@ jobs:
     runs-on: ubuntu-latest
     needs: [js-build-release, apple-release, linux-release, windows-android-release]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: master
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v7
         with:
           name: javascript-artifact
           path: .
       - run: |
           version=$(git describe --tags --abbrev=0)
           yarn version --new-version ${version:1} --no-git-tag-version
-      - run: npm publish . --tag latest
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - run: |
+          npm install -g npm@latest
+          npm publish . --tag latest
 
   pypi-release:
     name: 📦 PyPI release
     needs: [js-build-release, python-sdist, apple-release, linux-release, windows-android-release]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v7
         with:
           name: artifact
           path: dist
@@ -766,7 +776,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: download binary artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           path: |
             zenroom-bin
@@ -798,7 +808,7 @@ jobs:
     if: ${{ (failure() || cancelled()) && needs.semantic-release.outputs.release == 'True' }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Remove tag

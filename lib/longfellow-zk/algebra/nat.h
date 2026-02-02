@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -124,7 +124,7 @@ class Nat : public Limb<W64> {
       base = 16u;
     }
     const char* p = s;
-    for (; (p - s) < kMaxStringLen && *p; p++) {
+    for (size_t len = 0; len < kMaxStringLen && *p; ++len, ++p) {
       auto d = safe_digit(*p, base);
       if (!d.has_value()) {
         return std::nullopt;
@@ -159,6 +159,26 @@ class Nat : public Limb<W64> {
   T& sub(const T& y) {
     (void)sub_limb(kLimbs, limb_, y.limb_);
     return *this;
+  }
+
+  // *this += x * y
+  template <size_t WX, size_t WY>
+  T& mac(const Nat<WX>& x, const Nat<WY>& y) {
+    constexpr size_t kLimbsX = Nat<WX>::kLimbs;
+    constexpr size_t kLimbsY = Nat<WY>::kLimbs;
+    static_assert(kLimbs >= kLimbsX + kLimbsY);
+    if (WX > WY) {
+      return mac(y, x);
+    } else {
+      // WX <= WY, outer loop on WX
+      for (size_t i = 0; i < kLimbsX; ++i) {
+        limb_t l[kLimbsY], h[kLimbsY];
+        mulhl(kLimbsY, l, h, x.limb_[i], y.limb_);
+        accum(kLimbs - i, limb_ + i, kLimbsY, l);
+        accum(kLimbs - i - 1, limb_ + i + 1, kLimbsY, h);
+      }
+      return *this;
+    }
   }
 
  private:

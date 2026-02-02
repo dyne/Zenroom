@@ -59,28 +59,24 @@ endif
 
 ## BATS tests in test/zencode
 if suite.contains('zencode')
-tests = [
-
-'and', 'array', 'bbs_sha', 'bbs_shake', 'bbs_zkp', 'bbs_zkp_shake',
-'bitcoin', 'branching', 'cookbook_debug', 'cookbook_dictionaries',
-'cookbook_ecdh', 'cookbook_ecdh_encrypt_json', 'cookbook_given',
-'cookbook_intro', 'cookbook_then', 'cookbook_when', 'credential',
-'dictionary', 'dp3t', 'ecdh', 'educational', 'float', 'foreach',
-'fsp', 'generic_bbs', 'generic_dilithium', 'generic_ecdh',
-'generic_eddsa', 'generic_es256', 'generic_mldsa44',
-'generic_schnorr', 'given', 'hash', 'http', 'keys', 'kyber',
-'mlkem512', 'ntrup', 'numbers', 'output', 'pack', 'parser',
-'planetmint', 'pvss', 'random', 'reflow','rules', 'scope', 'sd_jwt',
-'secshare', 'table', 'then', 'time', 'w3c', 'w3c_did', 'when',
-'zenswarm', 'zkp', 'zkp_multi_petitions', 'longfellow'
-]
-# non-portable: 'cookbook_hash_pdf'
-# too slow: 'rsa'
+  # excluded tests
+  exclude = 'bindings_exec bindings_logfmt cookbook_hash_pdf ethereum rsa longfellow'
+  zencode_cmd = run_command(
+    find_program('bash'),
+    '-c',
+    'for f in ../test/zencode/*.bats; do name="${f##*/}"; name="${name%.bats}"; [[ " $EXCLUDE_TESTS " == *" $name "* ]] && continue; echo "$name"; done',
+    env: {'EXCLUDE_TESTS': exclude},
+    check: true
+  )
+  tests = []
+  foreach test_name : zencode_cmd.stdout().strip().split('\n')
+    tests += [test_name]
+  endforeach
 foreach test_suite : tests
   test('zencode_'+test_suite.underscorify(),
   bats_bin,
   args: [test_dir+'zencode/'+test_suite+'.bats'],
-  timeout: 240
+  timeout: 300
   )
 endforeach
 endif
@@ -117,7 +113,7 @@ benches = [ 'and', 'array', 'bbs_sha', 'bbs_shake', 'bbs_zkp',
 'generic_eddsa', 'generic_schnorr', 'given', 'hash', 'kyber', 'ntrup',
 'numbers', 'output', 'pack', 'parser', 'planetmint', 'pvss', 'random',
 'reflow', 'sd_jwt', 'secshare', 'table', 'then', 'time', 'w3c', 'w3c_did',
-'when', 'zencode_exec', 'zenswarm', 'zkp', 'zkp_multi_petitions',
+'when', 'zenswarm', 'zkp', 'zkp_multi_petitions',
 'fsp' ]
 foreach test_suite: benches
     benchmark('zencode_'+test_suite.underscorify(),

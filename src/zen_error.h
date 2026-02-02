@@ -1,7 +1,7 @@
 /*
  * This file is part of zenroom
  *
- * Copyright (C) 2017-2025 Dyne.org foundation
+ * Copyright (C) 2017-2026 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -34,10 +34,43 @@
 // tracing wrappers for all C->Lua functions
 #define BEGIN() trace(L, "vv begin %s",__func__)
 #define END(n) trace(L, "^^ end %s",__func__); return(n)
+#define ENDV() trace(L, "^^ end %s",__func__); return
 
 #define THROW(ERR) \
 	lerror(L, "fatal %s: %s", __func__, (ERR)); \
 	lua_pushnil(L)
+
+// maybe use if(HEDLEY_UNLIKELY(!x))
+#define SAFE_GOTO(x, msg) \
+	if(!(x)) { failed_msg=msg; goto end; }
+#define SAFE(x, msg) \
+	if(!(x)) { THROW(msg); END(1); }
+#define SAFEV(x, msg) \
+	if(!(x)) { THROW(msg); ENDV(); }
+
+// common error messages
+#define MALLOC_ERROR       "Could not allocate memory"
+#define CREATE_BIG_ERR     "Could not create BIG"
+#define ALLOCATE_BIG_ERR   "Could not allocate BIG"
+#define DUPLICATE_BIG_ERR  "Could not duplicate BIG"
+#define CREATE_OCT_ERR     "Could not create OCTET"
+#define ALLOCATE_OCT_ERR   "Could not allocate OCTET"
+#define DUPLICATE_OCT_ERR  "Could not duplicate OCTET"
+#define CREATE_ECP_ERR     "Could not create ECP"
+#define ALLOCATE_ECP_ERR   "Could not allocate ECP"
+#define DUPLICATE_ECP_ERR  "Could not duplicate ECP"
+#define CREATE_ECP2_ERR    "Could not create ECP2"
+#define ALLOCATE_ECP2_ERR  "Could not allocate ECP2"
+#define DUPLICATE_ECP2_ERR "Could not duplicate ECP2"
+#define CREATE_FP12_ERR    "Could not create FP12"
+#define ALLOCATE_FP12_ERR  "Could not allocate FP12"
+#define DUPLICATE_FP12_ERR "Could not duplicate FP12"
+#define CREATE_FLT_ERR     "Could not create FLOAT"
+#define ALLOCATE_FLT_ERR   "Could not allocate FLOAT"
+#define CREATE_HASH_ERR    "Could not create HASH"
+#define ALLOCATE_HASH_ERR  "Could not allocate HASH"
+#define CREATE_TIME_ERR    "Could not create TIME"
+#define ALLOCATE_TIME_ERR  "Could not allocate TIME"
 
 // same as Android
 typedef enum log_priority {

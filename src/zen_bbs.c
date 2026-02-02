@@ -1,7 +1,7 @@
 /*
  * This file is part of zenroom
  *
- * Copyright (C) 2024-2025 Dyne.org foundation
+ * Copyright (C) 2024-2026 Dyne.org foundation
  * designed, written and maintained by Filippo Trotter and Denis Roio
  *
  * This program is free software: you can redistribute it and/or modify
@@ -100,8 +100,7 @@ BIG_384_29 ISO11_YDEN_BLS381[16] = {
 	{0x1d634b8f, 0x00aa39d0, 0x0d25e011, 0x05eae1e2, 0x0aa205ca, 0x1e6b1ab6, 0x014cc93b, 0x0cbc4e77, 0x0171c40f, 0x106bc0ce, 0x1ac90957, 0x0dbb807c, 0x00fa1d81, 0x7},
 	{0x00000001, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x0}};
 
-static inline int sgn0_fp(FP_BLS381 a)
-{
+static inline int sgn0_fp(FP_BLS381 a) {
 	BIG b;
 	FP_BLS381_redc(b, &a);
 	return BIG_parity(b);
@@ -109,9 +108,7 @@ static inline int sgn0_fp(FP_BLS381 a)
 
 // draft-irtf-cfrg-hash-to-curve-16 Appendix F.2
 // It returns the (x,y) coordinate of a point over E' (isogenous curve)
-int ECP_sswu(FP_BLS381 *x, FP_BLS381 *y, FP_BLS381 u)
-{
-
+int ECP_sswu(FP_BLS381 *x, FP_BLS381 *y, FP_BLS381 u) {
 	FP_BLS381 a;
 	FP_BLS381 b;
 	FP_BLS381 z;
@@ -139,8 +136,7 @@ int ECP_sswu(FP_BLS381 *x, FP_BLS381 *y, FP_BLS381 u)
 	FP_BLS381_mul(x, x, &gx);
 
 	// if tv1 == 0, set x = B / (Z * A)
-	if (FP_BLS381_iszilch(&tv1))
-	{
+	if (FP_BLS381_iszilch(&tv1)) {
 		FP_BLS381_mul(x, &b, &gx);
 		FP_BLS381_inv(&gx, &z);
 		FP_BLS381_mul(x, x, &gx);
@@ -157,8 +153,7 @@ int ECP_sswu(FP_BLS381 *x, FP_BLS381 *y, FP_BLS381 u)
 	FP_BLS381_sqr(&tv1, y);
 
 	// If !(is_square(gx)), set x = Z * u^2 * x1 and y = sqrt(x2^3 + A * x2 + B)
-	if (!FP_BLS381_equals(&gx, &tv1))
-	{
+	if (!FP_BLS381_equals(&gx, &tv1)) {
 		FP_BLS381_mul(x, x, &tmp);
 		FP_BLS381_sqr(&gx, x);
 		FP_BLS381_add(&gx, &gx, &a);
@@ -175,9 +170,7 @@ int ECP_sswu(FP_BLS381 *x, FP_BLS381 *y, FP_BLS381 u)
 
 // draft-irtf-cfrg-hash-to-curve-16 Appendix E.2
 // It maps a point to BLS12-381 from an isogenous curve.
-static int iso11_to_ecp(ECP *P, FP_BLS381 x_prime, FP_BLS381 y_prime)
-{
-
+static int iso11_to_ecp(ECP *P, FP_BLS381 x_prime, FP_BLS381 y_prime) {
 	BIG x;
 	BIG y;
 	FP_BLS381 k;
@@ -192,8 +185,7 @@ static int iso11_to_ecp(ECP *P, FP_BLS381 x_prime, FP_BLS381 y_prime)
 	FP_BLS381_copy(&yden, &x_prime);
 
 	// x_num = k_(1,11) * x'^11 + k_(1,10) * x'^10 + k_(1,9) * x'^9 + ... + k_(1,0)
-	for (int i = 11; i > 0; i--)
-	{
+	for (int i = 11; i > 0; i--) {
 		FP_BLS381_nres(&k, ISO11_XNUM_BLS381[i]);
 		FP_BLS381_add(&xnum, &xnum, &k);
 		FP_BLS381_mul(&xnum, &xnum, &x_prime);
@@ -202,8 +194,7 @@ static int iso11_to_ecp(ECP *P, FP_BLS381 x_prime, FP_BLS381 y_prime)
 	FP_BLS381_add(&xnum, &xnum, &k);
 
 	// x_den = x'^10 + k_(2,9) * x'^9 + k_(2,8) * x'^8 + ... + k_(2,0)
-	for (int i = 9; i > 0; i--)
-	{
+	for (int i = 9; i > 0; i--) {
 		FP_BLS381_nres(&k, ISO11_XDEN_BLS381[i]);
 		FP_BLS381_add(&xden, &xden, &k);
 		FP_BLS381_mul(&xden, &xden, &x_prime);
@@ -212,8 +203,7 @@ static int iso11_to_ecp(ECP *P, FP_BLS381 x_prime, FP_BLS381 y_prime)
 	FP_BLS381_add(&xden, &xden, &k);
 
 	// y_num = k_(3,15) * x'^15 + k_(3,14) * x'^14 + k_(3,13) * x'^13 + ... + k_(3,0)
-	for (int i = 15; i > 0; i--)
-	{
+	for (int i = 15; i > 0; i--) {
 		FP_BLS381_nres(&k, ISO11_YNUM_BLS381[i]);
 		FP_BLS381_add(&ynum, &ynum, &k);
 		FP_BLS381_mul(&ynum, &ynum, &x_prime);
@@ -222,8 +212,7 @@ static int iso11_to_ecp(ECP *P, FP_BLS381 x_prime, FP_BLS381 y_prime)
 	FP_BLS381_add(&ynum, &ynum, &k);
 
 	// y_den = x'^15 + k_(4,14) * x'^14 + k_(4,13) * x'^13 + ... + k_(4,0)
-	for (int i = 14; i > 0; i--)
-	{
+	for (int i = 14; i > 0; i--) {
 		FP_BLS381_nres(&k, ISO11_YDEN_BLS381[i]);
 		FP_BLS381_add(&yden, &yden, &k);
 		FP_BLS381_mul(&yden, &yden, &x_prime);
@@ -247,16 +236,10 @@ static int iso11_to_ecp(ECP *P, FP_BLS381 x_prime, FP_BLS381 y_prime)
 	return SUCCESS;
 }
 
-static int map_to_curve_G1(lua_State *L)
-{
+static int map_to_curve_G1(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	big *el = big_arg(L, 1);
-	if (el == NULL)
-	{
-		failed_msg = "Could not allocate big element";
-		goto end;
-	}
+	big *el = big_arg(L, 1); SAFE_GOTO(el, "Could not allocate big element");
 	FP_BLS381 u;
 	FP_BLS381 x;
 	FP_BLS381 y;
@@ -266,18 +249,15 @@ static int map_to_curve_G1(lua_State *L)
 	ecp *P = ecp_new(L);
 	// P = (x, y) = iso_map(x, y)
 	iso11_to_ecp(&(P->val), x, y);
-
 end:
 	big_free(L, el);
-	if (failed_msg)
-	{
+	if (failed_msg) {
 		THROW(failed_msg);
 	}
 	END(1);
 }
 
-int luaopen_bbs(lua_State *L)
-{
+int luaopen_bbs(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg bbs_class[] = {
 		{"map_to_curve", map_to_curve_G1},

@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,12 +30,17 @@ extern "C" {
 // for example age_over_18. The circuit generation can be run once, and the
 // result cached for subsequent use in the prover and verifier.
 
+const size_t kLigeroRate = 4;
+const size_t kLigeroNreq = 128;  // 86+ bits statistical security
+
 /* This struct allows a verifier to express which attribute and value the prover
- * must claim. */
+ * must claim.  The value should be passed as the raw bytes of the CBOR value.
+ */
 typedef struct {
+  uint8_t namespace_id[64];
   uint8_t id[32];
-  uint8_t value[64];
-  size_t id_len, value_len;
+  uint8_t cbor_value[64];
+  size_t namespace_len, id_len, cbor_value_len;
 } RequestedAttribute;
 
 // Return codes for the run_mdoc2_prover method.
@@ -91,16 +96,23 @@ typedef struct {
   size_t num_attributes;
   // The version of the ZK specification.
   size_t version;
+  // The block_enc parameter for the ZK proof.
+  size_t block_enc_hash, block_enc_sig;
 } ZkSpecStruct;
 
 static const char kDefaultDocType[] = "org.iso.18013.5.1.mDL";
 
+// An upper-bound on the decompressed circuit size. It is better to make this
+// bound tight to avoid memory failure in the resource restricted Android
+// gmscore environment.
+static const size_t kCircuitSizeMax = 150000000;
+
 // The run_mdoc2_prover method takes byte-oriented inputs that describe a
 // circuit, mdoc, the public key of the issuer for the mdoc, a transcript
-// for the mdoc request operation, an array of OpenedAttribute that represents
-// claims that you want to prove, and a 20-char representation of the current
-// time. It writes the proof and its length into the input parameter prf and
-// proof_len. It is the responsibility of the caller to later free the proof
+// for the mdoc request operation, an array of RequestedAttribute that
+// represents claims that you want to prove, and a 20-char representation of the
+// current time. It writes the proof and its length into the input parameter prf
+// and proof_len. It is the responsibility of the caller to later free the proof
 // memory. If the prover fails to produce a proof, e.g., because the mdoc is
 // invalid, or the now time does not satisfy the validFrom and validUntil
 // constraints, then the prover returns an error code.
@@ -121,7 +133,7 @@ MdocProverErrorCode run_mdoc_prover(
     uint8_t** prf, size_t* proof_len, const ZkSpecStruct* zk_spec_version);
 
 // The run_mdoc2_verifier method accepts a byte representation of the circuit,
-// the public key of the issuer, the transcript, an array of OpenedAttribute
+// the public key of the issuer, the transcript, an array of RequestedAttribute
 // that represents claims that you want to verify, and a 20-char representation
 // of the time, as well as the proof and its length.
 MdocVerifierErrorCode run_mdoc_verifier(
@@ -134,7 +146,9 @@ MdocVerifierErrorCode run_mdoc_verifier(
     const ZkSpecStruct* zk_spec_version);
 
 // Produces a compressed version of the circuit bytes for the specified number
-// of attributes.
+// of attributes. The generator only supports the latest version of the ZKSpec
+// for a number of attributes. Attempt to generate older circuits will result in
+// an error.
 CircuitGenerationErrorCode generate_circuit(const ZkSpecStruct* zk_spec_version,
                                             uint8_t** cb, size_t* clen);
 
@@ -146,7 +160,7 @@ CircuitGenerationErrorCode generate_circuit(const ZkSpecStruct* zk_spec_version,
 int circuit_id(uint8_t id[/*kSHA256DigestSize*/], const uint8_t* bcp,
                size_t bcsz, const ZkSpecStruct* zk_spec);
 
-enum { kNumZkSpecs = 4 };
+enum { kNumZkSpecs = 16 };
 // This is a hardcoded list of all the ZK specifications supported by this
 // library. Every time a new breaking change is introduced in either the circuit
 // format or its interpretation, a new version must be added here.

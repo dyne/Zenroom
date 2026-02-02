@@ -1,20 +1,21 @@
 --[[
 --This file is part of zenroom
 --
---Copyright (C) 2021-2025 Dyne.org foundation
+--Copyright (C) 2021-2026 Dyne.org foundation
 --designed, written and maintained by Denis Roio <jaromil@dyne.org>
 --
 --This program is free software: you can redistribute it and/or modify
---it under the terms of the GNU Affero General Public License v3.0
+--it under the terms of the GNU Affero General Public License as
+--published by the Free Software Foundation, either version 3 of the
+--License, or (at your option) any later version.
 --
 --This program is distributed in the hope that it will be useful,
 --but WITHOUT ANY WARRANTY; without even the implied warranty of
 --MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 --GNU Affero General Public License for more details.
 --
---Along with this program you should have received a copy of the
---GNU Affero General Public License v3.0
---If not, see http://www.gnu.org/licenses/agpl.txt
+--You should have received a copy of the GNU Affero General Public License 
+--along with this program.  If not, see <https://www.gnu.org/licenses/>.
 --
 --Last modified by Matteo Cristino
 --on Thursday, 29th February 2024
@@ -117,18 +118,7 @@ local function _UTC2timestamp(t_name)
     if utc_timestamp_codec.encoding ~= 'string' then
         error('Invalid UTC timestamp encoding: ' .. utc_timestamp_codec.encoding, 2)
     end
-    local year, month, day, hour, min, sec <const> = utc_timestamp:string():match("(%d+)%-(%d+)%-(%d+)T(%d+):(%d+):(%d+)Z")
-    local utc_table <const> = {
-        year = tonumber(year),
-        month = tonumber(month),
-        day = tonumber(day),
-        hour = tonumber(hour),
-        min = tonumber(min),
-        sec = tonumber(sec),
-        isdst = false
-    }
-    local offset <const> = math.floor(os.difftime(os.time(), os.time(os.date("!*t"))))
-    ACK.timestamp = TIME.new(os.time(utc_table) + offset)
+    ACK.timestamp = zulu2timestamp(utc_timestamp)
     new_codec('timestamp', { zentype = 'e', encoding = 'time'})
 end
 

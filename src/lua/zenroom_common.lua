@@ -1,20 +1,21 @@
 --[[
-    --This file is part of zenroom
-    --
-    --Copyright (C) 2018-2025 Dyne.org foundation
-    --designed, written and maintained by Denis Roio <jaromil@dyne.org>
-    --
-    --This program is free software: you can redistribute it and/or modify
-    --it under the terms of the GNU Affero General Public License v3.0
-    --
-    --This program is distributed in the hope that it will be useful,
-    --but WITHOUT ANY WARRANTY; without even the implied warranty of
-    --MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    --GNU Affero General Public License for more details.
-    --
-    --Along with this program you should have received a copy of the
-    --GNU Affero General Public License v3.0
-    --If not, see http://www.gnu.org/licenses/agpl.txt
+--This file is part of zenroom
+--
+--Copyright (C) 2018-2026 Dyne.org foundation
+--designed, written and maintained by Denis Roio <jaromil@dyne.org>
+--
+--This program is free software: you can redistribute it and/or modify
+--it under the terms of the GNU Affero General Public License as
+--published by the Free Software Foundation, either version 3 of the
+--License, or (at your option) any later version.
+--
+--This program is distributed in the hope that it will be useful,
+--but WITHOUT ANY WARRANTY; without even the implied warranty of
+--MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--GNU Affero General Public License for more details.
+--
+--You should have received a copy of the GNU Affero General Public License 
+--along with this program.  If not, see <https://www.gnu.org/licenses/>.
 --]]
 
 -- override type to recognize zenroom's types
@@ -22,12 +23,29 @@ local _luatype <const> = _G['type']
 _G['luatype'] = _luatype
 
 local _type <const> = function(var)
-    local simple = luatype(var)
-    if simple == "userdata" then
-        local meta = getmetatable(var)
-        if meta then return(meta.__name)
-        else return("unknown") end
-    else return(simple) end
+    local simple <const> = luatype(var)
+    if simple ~= 'userdata' then return simple end 
+    
+    -- Try to access __name directly on the object (for Sol2 properties)
+    -- Use pcall to safely access it without erroring
+    local ok, obj_name = pcall(function() return var.__name end)
+    if ok and obj_name and luatype(obj_name) == "string" then
+        return obj_name
+    end
+    
+    local meta <const> = getmetatable(var)
+    if not meta then return 'unknown' end
+    -- Check meta.__name (used by Zenroom's native types)
+    local name <const> = meta.__name
+    if name and luatype(name) == "string" then
+        return name
+    end
+    -- Then check for __type (standard Lua convention for custom types)
+    local custom_type <const> = meta.__type
+    if custom_type and luatype(custom_type) == "string" then
+        return custom_type
+    end
+    return "unknown"
 end
 _G['type'] = _type
 
@@ -506,3 +524,20 @@ function is_zulu_date(input)
     end
     return true
 end
+
+local function _zulu2timestamp(s)
+    local pattern <const> = "(%d+)%-(%d+)%-(%d+)T(%d+):(%d+):(%d+)Z"
+    local year, month, day, hour, min, sec <const> = s:string():match(pattern)
+    local utc_table <const> = {
+        year = tonumber(year),
+        month = tonumber(month),
+        day = tonumber(day),
+        hour = tonumber(hour),
+        min = tonumber(min),
+        sec = tonumber(sec),
+        isdst = false
+    }
+    local offset <const> = math.floor(os.difftime(os.time(), os.time(os.date("!*t"))))
+    return TIME.new(os.time(utc_table) + offset)
+end
+_G['zulu2timestamp'] = _zulu2timestamp

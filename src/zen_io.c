@@ -1,6 +1,6 @@
 /* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Copyright (C) 2017-2025 Dyne.org foundation
+ * Copyright (C) 2017-2026 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -62,35 +62,72 @@ static int zen_print (lua_State *L) {
   BEGIN();
   Z(L);
   char *failed_msg = NULL;
-  const octet *o = o_arg(L, 1);
-  if(o == NULL) {
-	  failed_msg = "Could not allocate message to show";
-	  goto end;
-  }
-  if (Z->stdout_buf) {
-	char *p = Z->stdout_buf+Z->stdout_pos;
-	if(!o) { *p='\n'; Z->stdout_pos++; return 0; }
-	if (Z->stdout_pos+o->len+1 > Z->stdout_len)
-	  zerror(L, "No space left in output buffer");
-	memcpy(p, o->val, o->len);
-	*(p + o->len) = '\n';
-	*(p + o->len+1) = '\0';
-	Z->stdout_pos += o->len + 1;
-  } else if(o) {
-	o->val[o->len] = '\n'; // add newline
-	o->val[o->len+1] = 0x0; // add string termination
-	// octet safety buffer allows this: o->val = malloc(size +0x0f);
+  int n_args = lua_gettop(L);
+  
+  if(n_args == 0) {
+	if (Z->stdout_buf) {
+	  char *p = Z->stdout_buf+Z->stdout_pos;
+	  *p='\n'; Z->stdout_pos++;
+	} else {
 #if defined(__EMSCRIPTEN__)
-	EM_ASM_({Module.print(UTF8ToString($0))}, o->val);
+	  EM_ASM_({Module.print("")});
 #elif defined(ARCH_CORTEX)
-	_zen_io_write(SEMIHOSTING_STDOUT_FILENO, o->val, o->len+1);
+	  _zen_io_write(SEMIHOSTING_STDOUT_FILENO, "\n", 1);
 #else
-	_zen_io_write(STDOUT_FILENO, o->val, o->len+1);
+	  _zen_io_write(STDOUT_FILENO, "\n", 1);
 #endif
-  } else
-	func(L, "print of an empty string");
+	}
+	END(0);
+  }
+  
+  for(int i = 1; i <= n_args; i++) {
+	const octet *o = o_arg(L, i); SAFE_GOTO(o, "Could not allocate message to show");
+	
+	if (Z->stdout_buf) {
+	  char *p = Z->stdout_buf+Z->stdout_pos;
+	  if (Z->stdout_pos+o->len+(i < n_args ? 1 : 1) > Z->stdout_len) {
+		o_free(L,o);
+		zerror(L, "No space left in output buffer");
+	  }
+	  memcpy(p, o->val, o->len);
+	  Z->stdout_pos += o->len;
+	  if(i < n_args) {
+		*(p + o->len) = '\t';
+		Z->stdout_pos++;
+	  } else {
+		*(p + o->len) = '\n';
+		*(p + o->len+1) = '\0';
+		Z->stdout_pos++;
+	  }
+	} else if(o) {
+#if defined(__EMSCRIPTEN__)
+	  if(i < n_args) {
+		o->val[o->len] = '\t';
+		o->val[o->len+1] = 0x0;
+	  } else {
+		o->val[o->len] = '\n';
+		o->val[o->len+1] = 0x0;
+	  }
+	  EM_ASM_({Module.print(UTF8ToString($0))}, o->val);
+#elif defined(ARCH_CORTEX)
+	  _zen_io_write(SEMIHOSTING_STDOUT_FILENO, o->val, o->len);
+	  if(i < n_args) {
+		_zen_io_write(SEMIHOSTING_STDOUT_FILENO, "\t", 1);
+	  } else {
+		_zen_io_write(SEMIHOSTING_STDOUT_FILENO, "\n", 1);
+	  }
+#else
+	  _zen_io_write(STDOUT_FILENO, o->val, o->len);
+	  if(i < n_args) {
+		_zen_io_write(STDOUT_FILENO, "\t", 1);
+	  } else {
+		_zen_io_write(STDOUT_FILENO, "\n", 1);
+	  }
+#endif
+	}
+	o_free(L,o);
+  }
 end:
-  o_free(L,o);
   if(failed_msg != NULL) {
 	  lerror(L, "%s", failed_msg);
   }
@@ -134,11 +171,7 @@ static int zen_write (lua_State *L) {
   BEGIN();
   Z(L);
   char *failed_msg = NULL;
-  const octet *o = o_arg(L, 1);
-  if(o == NULL) {
-	  failed_msg = "Could not allocate message to show";
-	  goto end;
-  }
+  const octet *o = o_arg(L, 1); SAFE_GOTO(o, "Could not allocate message to show");
   if (Z->stdout_buf) {
 	char *p = Z->stdout_buf+Z->stdout_pos;
 	if (Z->stdout_pos+o->len > Z->stdout_len)
@@ -156,7 +189,7 @@ static int zen_write (lua_State *L) {
   } else
 	func(L, "write of an empty string");
 end:
-  o_free(L,o);
+  o_free(L, o);
   if(failed_msg != NULL) {
 	  lerror(L, "%s", failed_msg);
   }
@@ -211,13 +244,9 @@ int zen_log(lua_State *L, log_priority prio, const octet *o) {
 #define ZEN_PRINT(FUN_NAME, PRINT_FUN) \
 	static int (FUN_NAME)(lua_State *L) { \
 		BEGIN(); \
-		const octet *o = o_arg(L, 1); \
-		if(o != NULL) { \
-			PRINT_FUN; \
-			o_free(L,o); \
-		} else { \
-			lerror(L, "Could not allocate message to show"); \
-		} \
+		const octet *o = o_arg(L, 1); SAFE(o, "Could not allocate message to show"); \
+		PRINT_FUN; \
+		o_free(L,o); \
 		END(0); \
 	}
 // print to stderr without prefix with newline

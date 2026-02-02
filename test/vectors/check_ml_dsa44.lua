@@ -15,25 +15,25 @@ for line in newline_iter(DATA) do
 
       if #rule > 0 then
         if rule[1]:lower() == "seed" then
-            test["seed"] = O.from_hex(rule[3])
+            if(rule[3]) then test["seed"] = O.from_hex(rule[3]) end
             curr_fields = curr_fields+1
         elseif rule[1]:lower() == "sk" then
-            test["sk"] = O.from_hex(rule[3])
+            if(rule[3]) then test["sk"] = O.from_hex(rule[3]) end
             curr_fields = curr_fields+1
         elseif rule[1]:lower() == "pk" then
-            test["pk"] = O.from_hex(rule[3])
+            if(rule[3]) then test["pk"] = O.from_hex(rule[3]) end
             curr_fields = curr_fields+1
         elseif rule[1]:lower() == "message" then
-            test["message"] = O.from_hex(rule[3])
+            if(rule[3]) then test["message"] = O.from_hex(rule[3]) end
             curr_fields = curr_fields+1
         elseif rule[1]:lower() == "signature" then
-            test["signature"] = O.from_hex(rule[3])
+            if(rule[3]) then test["signature"] = O.from_hex(rule[3]) end
             curr_fields = curr_fields+1  
         elseif rule[1]:lower() == "context" then
-            test["context"] = O.from_hex(rule[3])
+            if(rule[3]) then test["context"] = O.from_hex(rule[3]) end
             curr_fields = curr_fields+1
         elseif rule[1]:lower() == "testpassed" then
-            test["passed"] = rule[3]
+            if(rule[3]) then test["passed"] = rule[3] end
             curr_fields = curr_fields+1  
         end
       end

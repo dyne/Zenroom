@@ -1,7 +1,7 @@
 /*
  * This file is part of zenroom
  *
- * Copyright (C) 2017-2025 Dyne.org foundation
+ * Copyright (C) 2017-2026 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -32,8 +32,9 @@
 #define RSA_4096_PUBLIC_KEY_BYTES MODBYTES_512_29*FFLEN_4096+4
 #define RSA_4096_PUBLIC_EXPONENT (int32_t) 65537
 
-void RSA_sk_to_octet(lua_State *L, rsa_private_key_4096 *sk, octet *o) {
+int RSA_sk_to_octet(lua_State *L, rsa_private_key_4096 *sk, octet *o) {
 	octet *x = o_alloc(L,RSA_4096_PRIVATE_KEY_BIG_BYTES);
+	if(!x) return 0;
 	FF_4096_toOctet(x, sk->p, RSA_4096_PRIVATE_KEY_BIG_SIZE);
 	OCT_copy(o, x);
 	FF_4096_toOctet(x, sk->q, RSA_4096_PRIVATE_KEY_BIG_SIZE);
@@ -45,6 +46,7 @@ void RSA_sk_to_octet(lua_State *L, rsa_private_key_4096 *sk, octet *o) {
 	FF_4096_toOctet(x, sk->c, RSA_4096_PRIVATE_KEY_BIG_SIZE);
 	OCT_joctet(o, x);
 	o_free(L, x);
+	return 1;
 }
 
 
@@ -53,8 +55,9 @@ void RSA_pk_to_octet(rsa_public_key_4096 *pk, octet *o){
 	OCT_jint(o, pk->e, 4);
 }
 
-void RSA_octet_to_pk(lua_State *L, octet *o, rsa_public_key_4096 *pk){
+int RSA_octet_to_pk(lua_State *L, octet *o, rsa_public_key_4096 *pk){
 	octet *x = o_alloc(L,o->len);
+	if (!x) return 0;
 	OCT_copy(x, o);
 	FF_4096_fromOctet(pk->n, x, FFLEN_4096);
 	OCT_shl(x, MODBYTES_512_29 * FFLEN_4096);
@@ -63,6 +66,7 @@ void RSA_octet_to_pk(lua_State *L, octet *o, rsa_public_key_4096 *pk){
 		((uint32_t)x->val[1] << 16 & 0xFF0000) |
 		((uint32_t)x->val[0] << 24 & 0xFF000000);
 	o_free(L,x);
+	return 1;
 }
 
 void RSA_octet_to_sk(octet *o, rsa_private_key_4096 *sk){
@@ -80,65 +84,37 @@ void RSA_octet_to_sk(octet *o, rsa_private_key_4096 *sk){
 
 static int rsa_keypair(lua_State *L)   {
 	BEGIN();
-
+	char *failed_msg = NULL;
 	rsa_private_key_4096 priv;
 	rsa_public_key_4096 pub;
-
-	char *failed_msg = NULL;
+	octet *P = NULL, *Q = NULL;
 	if (lua_gettop(L)==1){
-		if(!lua_isinteger(L,1)){
-			failed_msg= "Wrong type argument, expected int";
-			goto end;
-		}
+		SAFE_GOTO(lua_isinteger(L,1), "Invalid argument, expected int");
 		Z(L);
 		csprng *RNG = Z->random_generator;
 		sign32 e = (int32_t) lua_tointeger(L, 1);
 		RSA_4096_KEY_PAIR(RNG, e, &priv , &pub ,NULL, NULL);
-
 	} else if (lua_gettop(L)==2){
 		void *p =luaL_testudata(L,1,"zenroom.octet");
 		void* q =luaL_testudata(L,2,"zenroom.octet");
 		if ((p) && (q)){
-			octet *P = o_alloc(L, sizeof(p));
-			P = (octet*) p;
-			if (P->len > RSA_4096_PRIVATE_KEY_BIG_BYTES) {
-				failed_msg = "Wrong prime size";
-				goto end;
-			}
-			octet *Q = o_alloc(L, sizeof(q));
-			Q = (octet*) q;
-			if (Q->len > RSA_4096_PRIVATE_KEY_BIG_BYTES) {
-				failed_msg = "Wrong prime size";
-				goto end;
-			}
+			P = o_alloc(L, sizeof(p)); SAFE_GOTO(P, "Could not allocate prime");
+			P = (octet*) p; SAFE_GOTO(P->len<=RSA_4096_PRIVATE_KEY_BIG_BYTES, "Invalid argument, prime size too big");
+			Q = o_alloc(L, sizeof(q)); SAFE_GOTO(Q, "Could not allocate prime");
+			Q = (octet*) q; SAFE_GOTO(Q->len<=RSA_4096_PRIVATE_KEY_BIG_BYTES, "Invalid argument, prime size too big");
 			RSA_4096_KEY_PAIR(NULL, RSA_4096_PUBLIC_EXPONENT, &priv , &pub ,P, Q);
-			o_free(L,P);
-			o_free(L,Q);
 		}
 	} else if (lua_gettop(L)==3){
-		if(!lua_isinteger(L,1)) {
-			failed_msg= "Wrong first type argument, expected int";
-			goto end;
-		}
+		SAFE_GOTO(lua_isinteger(L,1), "Invalid argument, expected int");
 		sign32 e = (int32_t) lua_tointeger(L, 1);
 		void *p =luaL_testudata(L,2,"zenroom.octet");
 		void* q =luaL_testudata(L,3,"zenroom.octet");
 		if ((p) && (q)){
-			octet *P = o_alloc(L, sizeof(p));
-			P = (octet*) p;
-			if (P->len > RSA_4096_PRIVATE_KEY_BIG_BYTES) {
-				failed_msg = "Wrong prime size";
-				goto end;
-			}
-			octet *Q = o_alloc(L, sizeof(q));
-			Q = (octet*) q;
-			if (Q->len > RSA_4096_PRIVATE_KEY_BIG_BYTES) {
-				failed_msg = "Wrong prime size";
-				goto end;
-			}
+			P = o_alloc(L, sizeof(p)); SAFE_GOTO(P, "Could not allocate prime");
+			P = (octet*) p; SAFE_GOTO(P->len <= RSA_4096_PRIVATE_KEY_BIG_BYTES, "Invalid argument, prime size too big");
+			octet *Q = o_alloc(L, sizeof(q)); SAFE_GOTO(Q, "Could not allocate prime");
+			Q = (octet*) q; SAFE_GOTO(Q->len <= RSA_4096_PRIVATE_KEY_BIG_BYTES, "Invalid argument, prime size too big");
 			RSA_4096_KEY_PAIR(NULL, e, &priv , &pub ,P, Q);
-			o_free(L,P);
-			o_free(L,Q);
 		}
 	} else {
 		Z(L);
@@ -146,24 +122,16 @@ static int rsa_keypair(lua_State *L)   {
 		sign32 e = RSA_4096_PUBLIC_EXPONENT;
 		RSA_4096_KEY_PAIR(RNG, e, &priv , &pub ,NULL, NULL);
 	}
-
 	lua_createtable(L, 0, 2);
-	octet *private = o_new(L, RSA_4096_PRIVATE_KEY_BYTES);
-	
-	if(private == NULL) {
-		failed_msg = "Could not allocate private key";
-		goto end;
-	}
+	octet *private = o_new(L, RSA_4096_PRIVATE_KEY_BYTES); SAFE_GOTO(private, "Could not create private key");
 	lua_setfield(L, -2, "private");
-	octet *public = o_new(L, RSA_4096_PUBLIC_KEY_BYTES);
-	if(public == NULL) {
-		failed_msg = "Could not allocate public key";
-		goto end;
-	}
+	octet *public = o_new(L, RSA_4096_PUBLIC_KEY_BYTES); SAFE_GOTO(public, "Could not create public key");
 	lua_setfield(L, -2, "public");
-	RSA_sk_to_octet(L,&priv, private);
+	SAFE(RSA_sk_to_octet(L,&priv, private), "Could not convert private key to octet");
 	RSA_pk_to_octet(&pub,public);
 end:
+	o_free(L, P);
+	o_free(L, Q);
 	RSA_4096_PRIVATE_KEY_KILL(&priv);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -177,14 +145,8 @@ static int rsa_pubgen(lua_State *L){
 	BIG_512_29 p[HFLEN_4096], e[HFLEN_4096], n[FFLEN_4096];
 	octet *octet_sk = NULL, *e_octet = NULL;
 
-	octet_sk = o_arg(L, 1);
-	if(octet_sk == NULL) {
-		failed_msg = "Could not allocate secret key";
-		goto end;
-	}
-
+	octet_sk = o_arg(L, 1); SAFE_GOTO(octet_sk, "Could not allocate secret key");
 	rsa_private_key_4096 sk;
-
 	RSA_octet_to_sk(octet_sk, &sk);
 
 	FF_4096_mul(n, (&sk)->p ,(&sk)->q, HFLEN_4096);
@@ -197,14 +159,13 @@ static int rsa_pubgen(lua_State *L){
 	if (FF_4096_parity(e)==0) FF_4096_add(e,e,p,HFLEN_4096);
 	FF_4096_norm(e,HFLEN_4096);
 
-	e_octet = o_alloc(L, RFS_4096);
+	e_octet = o_alloc(L, RFS_4096); SAFE_GOTO(e_octet, "Could not allocate exponent");
 	FF_4096_toOctet(e_octet,e, HFLEN_4096);
 	OCT_shl(e_octet,RSA_4096_PRIVATE_KEY_BIG_BYTES-4);
 
-	octet *octet_pk = o_new(L, RSA_4096_PUBLIC_KEY_BYTES);
+	octet *octet_pk = o_new(L, RSA_4096_PUBLIC_KEY_BYTES); SAFE_GOTO(octet_pk, "Could not create public key");
 	FF_4096_toOctet(octet_pk,n ,FFLEN_4096);
 	OCT_joctet(octet_pk,e_octet);
-
 end:
 	o_free(L, octet_sk);
 	o_free(L, e_octet);
@@ -218,73 +179,48 @@ end:
 
 static int rsa_signature_pubcheck(lua_State *L) {
 	BEGIN();
-	const octet *pk = o_arg(L, 1);
-	if(pk == NULL) {
-		THROW("failed to allocate space for public key");
-	} else {
-		if(pk->len == RSA_4096_PUBLIC_KEY_BYTES)
-			lua_pushboolean(L, 1);
-		else
-			lua_pushboolean(L, 0);
-		o_free(L, pk);
-	}
+	const octet *pk = o_arg(L, 1); SAFE(pk, "Could not allocate public key");
+	if(pk->len == RSA_4096_PUBLIC_KEY_BYTES)
+		lua_pushboolean(L, 1);
+	else
+		lua_pushboolean(L, 0);
+	o_free(L, pk);
 	END(1);
 }
 
 static int rsa_signature_check(lua_State *L){
 	BEGIN();
-	char *failed_msg = NULL;
-	const octet *sign = o_arg(L, 1);
-	if(sign == NULL) {
-		failed_msg = "Cuold not allocate signature";
-		goto end;
-	}
+	const octet *sign = o_arg(L, 1); SAFE(sign, "Could not allocate signature");
 	if(sign->len == 512)
 		lua_pushboolean(L, 1);
 	else
 		lua_pushboolean(L, 0);
-end:
 	o_free(L, sign);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
 	END(1);
 }
+
 static int rsa_encrypt(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	octet *octet_pk = NULL, *msg = NULL, *padmsg = NULL;
-	octet_pk =  o_arg(L, 1);
-
-	if(octet_pk == NULL) {
-		failed_msg = "failed to allocate space for the public key";
-		goto end;
-	}
-	if(octet_pk->len != RSA_4096_PUBLIC_KEY_BYTES) {
-		zerror(L, "Public key size should be %u byte, this is %u",RSA_4096_PUBLIC_KEY_BYTES, octet_pk->len);
-		failed_msg = "RSA encryption aborted";
-		goto end;
-	}
-	msg = o_arg(L, 2);
-	if(msg == NULL) {
-		failed_msg = "failed to allocate space for the messsage text";
-		goto end;
-	}
+	octet_pk =  o_arg(L, 1); SAFE_GOTO(octet_pk, "Could not allocate public key");
+	SAFE_GOTO(octet_pk->len == RSA_4096_PUBLIC_KEY_BYTES, "Invalid public key size");
+	msg = o_arg(L, 2); SAFE_GOTO(msg, "Could not allocate message");
 	/* convert octet of public key into struct rsa_public_key_4096 */
 	rsa_public_key_4096 pk;
-	RSA_octet_to_pk(L, octet_pk, &pk);
-	padmsg = o_alloc(L, RFS_4096);
+	SAFE_GOTO(RSA_octet_to_pk(L, octet_pk, &pk), "Could not convert octet to public key");
+	padmsg = o_alloc(L, RFS_4096); SAFE_GOTO(padmsg, "Could not allocate padded message");
 	Z(L);
 	csprng *RNG = Z-> random_generator;
 
 	OAEP_ENCODE(HASH_TYPE_RSA_4096, msg, RNG, NULL, padmsg);
-	octet *c = o_new(L, RFS_4096);
+	octet *c = o_new(L, RFS_4096); SAFE_GOTO(c, "Could not create ciphertext");
 	RSA_4096_ENCRYPT(&pk, padmsg, c);
 end:
 	o_free(L, octet_pk);
 	o_free(L, msg);
 	o_free(L, padmsg);
-	if(failed_msg != NULL) {
+	if(failed_msg) {
 		THROW(failed_msg);
 	}
 	END(1);
@@ -294,32 +230,20 @@ static int rsa_decrypt(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	octet *octet_sk = NULL, *c = NULL;
-	octet_sk =  o_arg(L, 1);
-	if(octet_sk == NULL) {
-		failed_msg = "failed to allocate space for the private key";
-		goto end;
-	}
-	if(octet_sk->len != RSA_4096_PRIVATE_KEY_BYTES) {
-		zerror(L, "Private key size should be %u byte, this is %u",RSA_4096_PRIVATE_KEY_BYTES, octet_sk->len);
-		failed_msg = "RSA encryption aborted";
-		goto end;
-	}
-	c = o_arg(L, 2);
-	if(c == NULL) {
-		failed_msg = "failed to allocate space for the messsage text";
-		goto end;
-	}
+	octet_sk =  o_arg(L, 1); SAFE_GOTO(octet_sk, "Could not allocate private key");
+	SAFE_GOTO(octet_sk->len == RSA_4096_PRIVATE_KEY_BYTES, "Invalid private key size");
+	c = o_arg(L, 2); SAFE_GOTO(c, "Could not allocate ciphertext");
 
 	rsa_private_key_4096 sk; 
 	RSA_octet_to_sk(octet_sk, &sk);
-	octet *p = o_new(L, RFS_4096);
+	octet *p = o_new(L, RFS_4096); SAFE_GOTO(p, "Could not create plaintext");
 	RSA_4096_DECRYPT(&sk, c, p);
 	OAEP_DECODE(HASH_TYPE_RSA_4096,NULL,p);
 end:
 	RSA_4096_PRIVATE_KEY_KILL(&sk);
 	o_free(L, octet_sk);
 	o_free(L, c);
-	if(failed_msg != NULL) {
+	if(failed_msg) {
 		THROW(failed_msg);
 	}
 	END(1);
@@ -328,26 +252,14 @@ static int rsa_sign(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	octet *octet_sk = NULL, *msg = NULL, *p = NULL;
-	octet_sk =  o_arg(L, 1);
-	if(octet_sk == NULL) {
-		failed_msg = "failed to allocate space for the private key";
-		goto end;
-	}
-	if(octet_sk->len != RSA_4096_PRIVATE_KEY_BYTES) {
-		zerror(L, "Private key size should be %u byte, this is %u",RSA_4096_PRIVATE_KEY_BYTES, octet_sk->len);
-		failed_msg = "RSA encryption aborted";
-		goto end;
-	}
-	msg = o_arg(L, 2);
-	if(msg == NULL) {
-		failed_msg = "failed to allocate space for the messsage text";
-		goto end;
-	}
+	octet_sk =  o_arg(L, 1); SAFE_GOTO(octet_sk, "Could not allocate private key");
+	SAFE_GOTO(octet_sk->len == RSA_4096_PRIVATE_KEY_BYTES, "Invalid private key size");
+	msg = o_arg(L, 2); SAFE_GOTO(msg, "Could not allocate message");
 
 	rsa_private_key_4096 sk; 
 	RSA_octet_to_sk(octet_sk, &sk);
-	p = o_alloc(L, RFS_4096);
-	octet *sig = o_new(L,RFS_4096);
+	p = o_alloc(L, RFS_4096); SAFE_GOTO(p, "Could not allocate padded message");
+	octet *sig = o_new(L,RFS_4096); SAFE_GOTO(sig, "Could not create signature");
 	PKCS15(HASH_TYPE_RSA_4096,msg,p);
 	RSA_4096_DECRYPT(&sk, p, sig);
 end:
@@ -355,7 +267,7 @@ end:
 	o_free(L, octet_sk);
 	o_free(L, msg);
 	o_free(L, p);
-	if(failed_msg != NULL) {
+	if(failed_msg) {
 		THROW(failed_msg);
 	}
 	END(1);
@@ -365,35 +277,18 @@ static int rsa_verify(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	octet *octet_pk = NULL, *msg = NULL, *sig = NULL, *p = NULL, *c = NULL;
-	octet_pk =  o_arg(L, 1);
-
-	if(octet_pk == NULL) {
-		failed_msg = "failed to allocate space for the public key";
-		goto end;
-	}
-	if(octet_pk->len != RSA_4096_PUBLIC_KEY_BYTES) {
-		zerror(L, "Public key size should be %u byte, this is %u", RSA_4096_PUBLIC_KEY_BYTES, octet_pk->len);
-		failed_msg = "RSA encryption aborted";
-		goto end;
-	}
-	msg = o_arg(L, 2);
-	if(msg == NULL) {
-		failed_msg = "failed to allocate space for the messsage text";
-		goto end;
-	}
-	sig = o_arg(L, 3);
-	if(sig == NULL) {
-		failed_msg = "failed to allocate space for the signature";
-		goto end;
-	}
+	octet_pk =  o_arg(L, 1); SAFE_GOTO(octet_pk, "Could not allocate public key");
+	SAFE_GOTO(octet_pk->len == RSA_4096_PUBLIC_KEY_BYTES, "Invalid public key size");
+	msg = o_arg(L, 2); SAFE_GOTO(msg, "Could not allocate message");
+	sig = o_arg(L, 3); SAFE_GOTO(sig, "Could not allocate signature");
 
 	rsa_public_key_4096 pk;
-	RSA_octet_to_pk(L, octet_pk, &pk);
-	
-	p = o_alloc(L, RFS_4096);
+	SAFE_GOTO(RSA_octet_to_pk(L, octet_pk, &pk), "Could not convert octet to public key");
+
+	p = o_alloc(L, RFS_4096); SAFE_GOTO(p, "Could not allocate padded message");
 	PKCS15(HASH_TYPE_RSA_4096,msg,p);
 
-	c = o_alloc(L, RFS_4096);
+	c = o_alloc(L, RFS_4096); SAFE_GOTO(c, "Could not allocate ciphertext");
 	RSA_4096_ENCRYPT(&pk, sig, c);
 
 	lua_pushboolean(L, OCT_comp(c,p));
@@ -403,7 +298,7 @@ end:
 	o_free(L, sig);
 	o_free(L, p);
 	o_free(L, c);
-	if(failed_msg != NULL) {
+	if(failed_msg) {
 		THROW(failed_msg);
 	}
 	END(1);

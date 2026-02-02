@@ -1,20 +1,21 @@
 --[[
 --This file is part of zenroom
 --
---Copyright (C) 2021-2025 Dyne.org foundation
+--Copyright (C) 2021-2026 Dyne.org foundation
 --designed, written and maintained by Denis Roio <jaromil@dyne.org>
 --
 --This program is free software: you can redistribute it and/or modify
---it under the terms of the GNU Affero General Public License v3.0
+--it under the terms of the GNU Affero General Public License as
+--published by the Free Software Foundation, either version 3 of the
+--License, or (at your option) any later version.
 --
 --This program is distributed in the hope that it will be useful,
 --but WITHOUT ANY WARRANTY; without even the implied warranty of
 --MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 --GNU Affero General Public License for more details.
 --
---Along with this program you should have received a copy of the
---GNU Affero General Public License v3.0
---If not, see http://www.gnu.org/licenses/agpl.txt
+--You should have received a copy of the GNU Affero General Public License 
+--along with this program.  If not, see <https://www.gnu.org/licenses/>.
 --]]
 
 
@@ -87,9 +88,13 @@ local function debug_heap_schema()
             end
         end
     end
+    local ik <const> = IN.keyring
     local k <const> = ACK.keyring
     if ACK.keyring then
         ACK.keyring = deepmap(zero_all_contents,ACK.keyring)
+    end
+    if IN.keyring then
+        IN.keyring = deepmap(zero_all_contents, IN.keyring)
     end
     local _heap <const> = I.inspect({
         a_CODEC_ack = CODEC,
@@ -98,6 +103,7 @@ local function debug_heap_schema()
         d_THEN_out = OUT
     },{ schema = true })
     ACK.keyring = k
+    IN.keyring = ik
     -- print only keys without values
     if CONF.debug.format == 'compact' and LOGFMT == 'JSON' then
         printerr('"J64 HEAP: '..OCTET.from_string(_heap):base64()..'",')

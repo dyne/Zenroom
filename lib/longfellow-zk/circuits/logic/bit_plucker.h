@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,14 +43,21 @@ bit plucker is sufficient. In some cases, bit pluckers can exploit the field
 structure.
 
 [ RUN      ] BitPlucker.PluckSize
-pluck[1]: depth:  3 wires: 6 in: 2 out:2 use:4 ovh:2 t:6 cse:0 notn:9
-pluck[2]: depth:  4 wires: 14 in: 2 out:4 use:9 ovh:5 t:18 cse:5 notn:19
-pluck[3]: depth:  5 wires: 25 in: 2 out:6 use:17 ovh:8 t:38 cse:23 notn:40
-pluck[4]: depth:  6 wires: 40 in: 2 out:8 use:29 ovh:11 t:74 cse:73 notn:87
-pluck[5]: depth:  7 wires: 61 in: 2 out:10 use:47 ovh:14 t:144 cse:199 notn:194
-pluck[6]: depth:  8 wires: 92 in: 2 out:12 use:75 ovh:17 t:288 cse:501 notn:437
-pluck[7]: depth:  9 wires: 141 in: 2 out:14 use:121 ovh:20 t:594 cse:1203 notn:984
-pluck[8]: depth: 10 wires: 224 in: 2 out:16 use:201 ovh:23 t:1254 cse:2801 notn:2203
+pluck[1]: depth: 3 wires: 6 in: 2 out:2 use:4 ovh:2 t:6 cse:0 notn:9
+pluck[2]: depth: 4 wires: 14 in: 2 out:4 use:9 ovh:5 t:18 cse:5
+notn:19
+pluck[3]: depth: 5 wires: 25 in: 2 out:6 use:17 ovh:8 t:38 cse:23
+notn:40
+pluck[4]: depth: 6 wires: 40 in: 2 out:8 use:29 ovh:11 t:74 cse:73
+notn:87
+pluck[5]: depth: 7 wires: 61 in: 2 out:10 use:47 ovh:14 t:144 cse:199
+notn:194
+pluck[6]: depth: 8 wires: 92 in: 2 out:12 use:75 ovh:17 t:288 cse:501
+notn:437
+pluck[7]: depth: 9 wires: 141 in: 2 out:14 use:121 ovh:20 t:594
+cse:1203 notn:984
+pluck[8]: depth: 10 wires: 224 in: 2 out:16 use:201 ovh:23 t:1254
+cse:2801 notn:2203
 
 Our experiments also considered an O(N)-wires, O(N)-terms bit plucker.
 To pluck a LOGN-bit quantity E, write E = N0*E1 + E0 where E0 is a
@@ -69,17 +76,28 @@ thus removed from the code here. It can be resurrected from experimental if
 needed.
 
 [ RUN      ] BitPlucker.LargePluckSize
-large_pluck[2] depth: 5 wires: 15 in: 2 out:4 use:9 ovh:6 t:19 cse:9 notn:27
-large_pluck[3] depth: 7 wires: 31 in: 2 out:5 use:20 ovh:11 t:43 cse:19 notn:50
-large_pluck[4] depth: 8 wires: 46 in: 2 out:8 use:33 ovh:13 t:70 cse:33 notn:89
-large_pluck[5] depth: 10 wires: 79 in: 2 out:8 use:60 ovh:19 t:128 cse:68 notn:164
-large_pluck[6] depth: 11 wires: 119 in: 2 out:12 use:99 ovh:20 t:209 cse:119 notn:299
-large_pluck[7] depth: 13 wires: 206 in: 2 out:11 use:179 ovh:27 t:381 cse:234 notn:567
-large_pluck[8] depth: 14 wires: 344 in: 2 out:16 use:317 ovh:27 t:668 cse:413 notn:1065
-large_pluck[9] depth: 16 wires: 631 in: 2 out:14 use:596 ovh:35 t:1260 cse:796 notn:2064
-large_pluck[10] depth: 17 wires: 1157 in: 2 out:20 use:1123 ovh:34 t:2347 cse:1435 notn:3967
-large_pluck[11] depth: 19 wires: 2224 in: 2 out:17 use:2181 ovh:43 t:4551 cse:2762 notn:7789
-large_pluck[12] depth: 20 wires: 4294 in: 2 out:24 use:4253 ovh:41 t:8782 cse:5113 notn:15205
+large_pluck[2] depth: 5 wires: 15 in: 2 out:4 use:9 ovh:6 t:19 cse:9
+notn:27
+large_pluck[3] depth: 7 wires: 31 in: 2 out:5 use:20 ovh:11 t:43
+cse:19 notn:50
+large_pluck[4] depth: 8 wires: 46 in: 2 out:8 use:33 ovh:13 t:70
+cse:33 notn:89
+large_pluck[5] depth: 10 wires: 79 in: 2 out:8 use:60 ovh:19 t:128
+cse:68 notn:164
+large_pluck[6] depth: 11 wires: 119 in: 2 out:12 use:99 ovh:20 t:209
+cse:119 notn:299
+large_pluck[7] depth: 13 wires: 206 in: 2 out:11 use:179 ovh:27 t:381
+cse:234 notn:567
+large_pluck[8] depth: 14 wires: 344 in: 2 out:16 use:317 ovh:27 t:668
+cse:413 notn:1065
+large_pluck[9] depth: 16 wires: 631 in: 2 out:14 use:596 ovh:35 t:1260
+cse:796 notn:2064
+large_pluck[10] depth: 17 wires: 1157 in: 2 out:20 use:1123 ovh:34
+t:2347 cse:1435 notn:3967
+large_pluck[11] depth: 19 wires: 2224 in: 2 out:17 use:2181 ovh:43
+t:4551 cse:2762 notn:7789
+large_pluck[12] depth: 20 wires: 4294 in: 2 out:24 use:4253 ovh:41
+t:8782 cse:5113 notn:15205
 
 */
 template <class Logic, size_t LOGN>
@@ -133,19 +151,7 @@ class BitPlucker {
     return r;
   }
 
-  v32 unpack_v32(const packed_v32& v) const {
-    v32 r;
-    for (size_t i = 0; i < v.size(); ++i) {
-      auto b = pluck(v[i]);
-      for (size_t j = 0; j < LOGN; ++j) {
-        if (LOGN * i + j < 32) {
-          r[LOGN * i + j] = b[j];
-        }
-      }
-    }
-    return r;
-  }
-
+  v32 unpack_v32(const packed_v32& v) const { return unpack<v32>(v); }
 
   template <typename T, typename PackedT>
   T unpack(const PackedT& v) const {
@@ -160,6 +166,15 @@ class BitPlucker {
     }
     return r;
   }
+
+  template <typename T>
+  static T packed_input(const Logic& lc) {
+    T r;
+    for (size_t i = 0; i < r.size(); ++i) {
+      r[i] = lc.eltw_input();
+    }
+    return r;
+  }
 };
 
 /*
@@ -167,10 +182,17 @@ On input Elt ind, and Elt arr[], returns arr[ind].
 This muxer is useful when the same array needs to be muxed multiple times
 with different indices.  It differs from the above classes in that it
 precomputes the coefficient array, which can depend on EltW inputs.
+
+The template parameter N indicates the size of the array.
+The template parameter PP defines the set of points used for the interpolation.
+This value defaults to N, which defines the set of points
+    { -N-1, -N-3, -N-5, ..., N-3, N-1}
+but in some cases, one may want to explicitly specify the set of points.
 */
-template <class Logic, size_t LOGN>
+template <class Logic, size_t N, size_t PP = N>
 class EltMuxer {
-  static constexpr size_t kN = 1 << LOGN;
+  static constexpr size_t kN = N;
+  static constexpr size_t kPP = PP;
 
  public:
   using Field = typename Logic::Field;
@@ -214,7 +236,7 @@ class EltMuxer {
   PolyN even_lagrange_basis(size_t k) {
     PolyN X, Y;
     for (size_t i = 0; i < kN; ++i) {
-      X[i] = bit_plucker_point<Field, kN>()(i, l_.f_);
+      X[i] = bit_plucker_point<Field, PP>()(i, l_.f_);
       Y[i] = l_.f_.of_scalar((i == k));
     }
     return InterpolationN::monomial_of_lagrange(Y, X, l_.f_);

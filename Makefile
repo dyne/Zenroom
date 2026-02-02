@@ -46,9 +46,6 @@ quick-asan: # quick debug rebuild skipping deps and embed-lua
 musl: ## Static executable for Musl
 	$(MAKE) -f build/musl.mk
 
-# bindings: ## Language binding for host platform
-# 	$(MAKE) -f build/posix.mk deps zencode-exec
-
 win-exe: ## Executable for Windows x86 64bit
 	$(MAKE) -f build/win-exe.mk
 
@@ -112,6 +109,7 @@ install: destdocs=${DESTDIR}${PREFIX}/share/zenroom
 install:
 	install -p -s zenroom ${destbin}/zenroom
 	install -p -s zencode-exec ${destbin}/zencode-exec
+	install -p -s lua-exec ${destbin}/lua-exec
 	install -d ${destdocs}/docs
 	if [ -d docs/website/site ]; then cd docs/website/site && cp -ra * ${destdocs}/docs/; cd -; fi
 	if [ -d docs/Zencode_Whitepaper.pdf ]; then cp -ra docs/Zencode_Whitepaper.pdf ${destdocs}/; fi
@@ -125,6 +123,7 @@ clean:
 	$(MAKE) clean -C ${pwd}/lib/pqclean
 	$(MAKE) clean -C ${pwd}/lib/mlkem
 	$(MAKE) clean -C ${pwd}/lib/longfellow-zk
+	$(MAKE) clean -C ${pwd}/lib/zk-circuit-lang
 	rm -rf ${pwd}/lib/milagro-crypto-c/build
 	$(MAKE) clean -C ${pwd}/src
 	if [ -d "bindings" ]; then $(MAKE) clean -C ${pwd}/bindings; fi
@@ -140,6 +139,7 @@ clean:
 	rm -f ${pwd}/lib/ed25519-donna/*.o
 	rm -f ${pwd}/zenroom
 	rm -f ${pwd}/zencode-exec
+	rm -f ${pwd}/lua-exec
 	rm -f ${pwd}/luac54
 	rm -f ${pwd}/libzenroom.so
 	rm -f ${pwd}/zenroom.js

@@ -158,7 +158,21 @@ for i,v in pairs(tests) do
 end
 
 print("The following should not be encodable")
-assert(not O.from_mnemonic('come effort suffer camp survey warrior heavy shoot primary clutch crush open amazing screen patrol group space point ten exist slush involve unfold'))
-assert(not O.from_mnemonic('come effort suffer camp survey warrior heavy shoot primary clutch crush open amazing screen patrol group space point ten exist slush involve unfold come effort suffer camp survey warrior heavy shoot primary clutch crush open amazing screen patrol group space point ten exist slush involve unfold come effort suffer camp survey warrior heavy shoot primary clutch crush open amazing screen patrol group space point ten exist slush involve unfold come effort suffer camp survey warrior heavy shoot primary clutch crush open amazing screen patrol group space point ten exist slush involve unfold come effort suffer camp survey warrior heavy shoot primary clutch crush open amazing screen patrol group space point ten exist slush involve unfold come effort suffer camp survey warrior heavy shoot primary clutch crush open amazing screen patrol group space point ten exist slush involve unfold come effort suffer camp survey warrior heavy shoot primary clutch crush open amazing screen patrol group space point ten exist slush involve unfold come effort suffer camp survey warrior heavy shoot primary clutch crush open amazing screen patrol group space point ten exist slush involve unfold'))
-assert(not O.from_mnemonic('alter error federal sibling'))
-assert(not O.from_mnemonic('cat swing flag economy stadium alone churn speed unique patch report math'))
+local invalid_mnemonic = {
+    'come effort suffer camp survey warrior heavy shoot primary clutch crush open amazing screen patrol group space point ten exist slush involve unfold',
+    'come effort suffer camp survey warrior heavy shoot primary clutch crush open amazing screen patrol group space point ten exist slush involve unfold come effort suffer camp survey warrior heavy shoot primary clutch crush open amazing screen patrol group space point ten exist slush involve unfold come effort suffer camp survey warrior heavy shoot primary clutch crush open amazing screen patrol group space point ten exist slush involve unfold come effort suffer camp survey warrior heavy shoot primary clutch crush open amazing screen patrol group space point ten exist slush involve unfold come effort suffer camp survey warrior heavy shoot primary clutch crush open amazing screen patrol group space point ten exist slush involve unfold come effort suffer camp survey warrior heavy shoot primary clutch crush open amazing screen patrol group space point ten exist slush involve unfold come effort suffer camp survey warrior heavy shoot primary clutch crush open amazing screen patrol group space point ten exist slush involve unfold come effort suffer camp survey warrior heavy shoot primary clutch crush open amazing screen patrol group space point ten exist slush involve unfold',
+    'alter error federal sibling',
+    'cat swing flag economy stadium alone churn speed unique patch report math'
+}
+local success, err = pcall(OCTET.from_mnemonic, invalid_mnemonic[1])
+assert(not success, "Expected error with input: "..invalid_mnemonic[1])
+assert(err:find("Words cannot be encoded with bip39 format"), "Wrong error message for invalid input")
+local success, err = pcall(OCTET.from_mnemonic, invalid_mnemonic[2])
+assert(not success, "Expected error with input: "..invalid_mnemonic[2])
+assert(err:find("Words cannot be encoded with bip39 format"), "Wrong error message for invalid input")
+local success, err = pcall(OCTET.from_mnemonic, invalid_mnemonic[3])
+assert(not success, "Expected error with input: "..invalid_mnemonic[3])
+assert(err:find("Words cannot be encoded with bip39 format"), "Wrong error message for invalid input")
+local success, err = pcall(OCTET.from_mnemonic, invalid_mnemonic[4])
+assert(not success, "Expected error with input: "..invalid_mnemonic[4])
+assert(err:find("Words cannot be encoded with bip39 format"), "Wrong error message for invalid input")

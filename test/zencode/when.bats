@@ -5,18 +5,25 @@ SUBDOC=when
 
 @test "When I copy '' to ''" {
 cat <<EOF >copy_data.data
-{ "my_hex": "0011FFFF" }
+{
+    "my_hex": "0011FFFF",
+    "my_bool": false
+}
 EOF
 cat <<EOF | zexe copy_data.zen copy_data.data
 Given I have a 'hex' named 'my hex'
+Given I have a 'boolean' named 'my_bool'
 
 When I copy 'my hex' to 'dest'
+When I copy 'my bool' to 'bool_dest'
 
 Then print 'my hex'
 Then print 'dest'
+Then print 'my_bool'
+Then print 'bool_dest'
 EOF
     save_output 'copy_data.out'
-    assert_output '{"dest":"0011ffff","my_hex":"0011ffff"}'
+    assert_output '{"bool_dest":false,"dest":"0011ffff","my_bool":false,"my_hex":"0011ffff"}'
 }
 
 @test "When I append the string" {
@@ -77,7 +84,8 @@ EOF
 	"path": "blocks/",
 	"latest": {
 		"result": {
-			"height": 102
+			"height": 102,
+			"male": false
 		}
 	}
 
@@ -91,10 +99,13 @@ and I have a 'string' named 'path'
 When I pickup from path 'latest.result.height'
 and I append 'height' to 'path'
 
+When I pickup from path 'latest.result.male'
+
+Then print the 'male'
 Then print the 'path'
 EOF
     save_output 'append_number_try.out'
-    assert_output '{"path":"blocks/102"}'
+    assert_output '{"male":false,"path":"blocks/102"}'
 
 }
 
@@ -182,6 +193,11 @@ EOF
     "myBase64Array": [
       "BPEg2X6/Y+68oolE6ocCPDlLWQZLqdaBV00d/jJ5f0dRNQNBUcIh/JHGgfDotpM4p682MPZ5PKoC3vsjhI88OeE="
     ],
+    "myNumberArray" : [
+        1,
+        2,
+        3
+    ],
     "myStringDictionary" : {
       "first": "hello",
       "second": "world!"
@@ -189,6 +205,15 @@ EOF
     "myBase64Dictionary" : {
       "first": "aGVsbG8=",
       "second": "d29ybGQh"
+    },
+    "myNumberDictionary" : {
+      "first": 1,
+      "second": 2
+    },
+    "myMixedDictionary": {
+      "string": "hello",
+      "number": 1,
+      "boolean": true
     }
 }
 EOF
@@ -196,8 +221,11 @@ EOF
     cat <<EOF | zexe json_encode.zen json_encode.json
 Given I have a 'string array' named 'myStringArray'
 Given I have a 'base64 array' named 'myBase64Array'
+Given I have a 'number array' named 'myNumberArray'
 Given I have a 'string dictionary' named 'myStringDictionary'
 Given I have a 'base64 dictionary' named 'myBase64Dictionary'
+Given I have a 'number dictionary' named 'myNumberDictionary'
+Given I have a 'string dictionary' named 'myMixedDictionary'
 
 When I create the json escaped string of 'myStringArray'
 and I rename the 'json escaped string' to 'json.myStringArray'
@@ -205,27 +233,42 @@ and I rename the 'json escaped string' to 'json.myStringArray'
 When I create the json escaped string of 'myBase64Array'
 and I rename the 'json escaped string' to 'json.myBase64Array'
 
+When I create the json escaped string of 'myNumberArray'
+and I rename the 'json escaped string' to 'json.myNumberArray'
+
 When I create the json escaped string of 'myStringDictionary'
 and I rename the 'json escaped string' to 'json.myStringDictionary'
 
 When I create the json escaped string of 'myBase64Dictionary'
 and I rename the 'json escaped string' to 'json.myBase64Dictionary'
 
+When I create the json escaped string of 'myNumberDictionary'
+and I rename the 'json escaped string' to 'json.myNumberDictionary'
+
+When I create the json escaped string of 'myMixedDictionary'
+and I rename the 'json escaped string' to 'json.myMixedDictionary'
+
 Then print the 'json.myStringArray'
 Then print the 'json.myBase64Array'
+Then print the 'json.myNumberArray'
 Then print the 'json.myStringDictionary'
 Then print the 'json.myBase64Dictionary'
+Then print the 'json.myNumberDictionary'
+Then print the 'json.myMixedDictionary'
 EOF
     save_output 'json_encode.out'
-    assert_output '{"json.myBase64Array":"[\"BPEg2X6/Y+68oolE6ocCPDlLWQZLqdaBV00d/jJ5f0dRNQNBUcIh/JHGgfDotpM4p682MPZ5PKoC3vsjhI88OeE=\"]","json.myBase64Dictionary":"{\"first\":\"aGVsbG8=\",\"second\":\"d29ybGQh\"}","json.myStringArray":"[\"Hello World! myFirstObject, myFirstArray[0]\",\"Hello World! myFirstObject, myFirstArray[1]\",\"Hello World! myFirstObject, myFirstArray[2]\"]","json.myStringDictionary":"{\"first\":\"hello\",\"second\":\"world!\"}"}'
+    assert_output '{"json.myBase64Array":"[\"BPEg2X6/Y+68oolE6ocCPDlLWQZLqdaBV00d/jJ5f0dRNQNBUcIh/JHGgfDotpM4p682MPZ5PKoC3vsjhI88OeE=\"]","json.myBase64Dictionary":"{\"first\":\"aGVsbG8=\",\"second\":\"d29ybGQh\"}","json.myMixedDictionary":"{\"boolean\":true,\"number\":1,\"string\":\"hello\"}","json.myNumberArray":"[1,2,3]","json.myNumberDictionary":"{\"first\":1,\"second\":2}","json.myStringArray":"[\"Hello World! myFirstObject, myFirstArray[0]\",\"Hello World! myFirstObject, myFirstArray[1]\",\"Hello World! myFirstObject, myFirstArray[2]\"]","json.myStringDictionary":"{\"first\":\"hello\",\"second\":\"world!\"}"}'
 }
 
 @test "When I create the json unescaped object of ''" {
     cat <<EOF | zexe json_decode.zen json_encode.out
 Given I have a 'string' named 'json.myStringArray'
 Given I have a 'string' named 'json.myBase64Array'
+Given I have a 'string' named 'json.myNumberArray'
 Given I have a 'string' named 'json.myStringDictionary'
 Given I have a 'string' named 'json.myBase64Dictionary'
+Given I have a 'string' named 'json.myNumberDictionary'
+Given I have a 'string' named 'json.myMixedDictionary'
 
 When I create the json unescaped object of 'json.myStringArray'
 and I rename the 'json unescaped object' to 'myStringArray'
@@ -233,19 +276,31 @@ and I rename the 'json unescaped object' to 'myStringArray'
 When I create the json unescaped object of 'json.myBase64Array'
 and I rename the 'json unescaped object' to 'myBase64Array'
 
+When I create the json unescaped object of 'json.myNumberArray'
+and I rename the 'json unescaped object' to 'myNumberArray'
+
 When I create the json unescaped object of 'json.myStringDictionary'
 and I rename the 'json unescaped object' to 'myStringDictionary'
 
 When I create the json unescaped object of 'json.myBase64Dictionary'
 and I rename the 'json unescaped object' to 'myBase64Dictionary'
 
+When I create the json unescaped object of 'json.myNumberDictionary'
+and I rename the 'json unescaped object' to 'myNumberDictionary'
+
+When I create the json unescaped object of 'json.myMixedDictionary'
+and I rename the 'json unescaped object' to 'myMixedDictionary'
+
 Then print the 'myStringArray'
 Then print the 'myBase64Array'
+Then print the 'myNumberArray'
 Then print the 'myStringDictionary'
 Then print the 'myBase64Dictionary'
+Then print the 'myNumberDictionary'
+Then print the 'myMixedDictionary'
 EOF
     save_output 'json_decode.out'
-    assert_output '{"myBase64Array":["BPEg2X6/Y+68oolE6ocCPDlLWQZLqdaBV00d/jJ5f0dRNQNBUcIh/JHGgfDotpM4p682MPZ5PKoC3vsjhI88OeE="],"myBase64Dictionary":{"first":"aGVsbG8=","second":"d29ybGQh"},"myStringArray":["Hello World! myFirstObject, myFirstArray[0]","Hello World! myFirstObject, myFirstArray[1]","Hello World! myFirstObject, myFirstArray[2]"],"myStringDictionary":{"first":"hello","second":"world!"}}'
+    assert_output '{"myBase64Array":["BPEg2X6/Y+68oolE6ocCPDlLWQZLqdaBV00d/jJ5f0dRNQNBUcIh/JHGgfDotpM4p682MPZ5PKoC3vsjhI88OeE="],"myBase64Dictionary":{"first":"aGVsbG8=","second":"d29ybGQh"},"myMixedDictionary":{"boolean":true,"number":1,"string":"hello"},"myNumberArray":[1,2,3],"myNumberDictionary":{"first":1,"second":2},"myStringArray":["Hello World! myFirstObject, myFirstArray[0]","Hello World! myFirstObject, myFirstArray[1]","Hello World! myFirstObject, myFirstArray[2]"],"myStringDictionary":{"first":"hello","second":"world!"}}'
 }
 
 @test "When create the json unescaped object of '' nested arrays" {

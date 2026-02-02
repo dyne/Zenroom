@@ -1,6 +1,6 @@
 /* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Copyright (C) 2019-2025 Dyne.org foundation
+ * Copyright (C) 2019-2026 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -27,8 +27,10 @@ int hex2buf(char *dst, const char *hex);
 void buf2hex(char *dst, const char *buf, const size_t len);
 
 int is_url64(const char *in);
+int is_base64(const char *in);
 
 int B64decoded_len(int len);
+int B64decode(char *dest, const char *src);
 int U64decode(char *dest, const char *src);
 
 int B64encoded_len(int len);

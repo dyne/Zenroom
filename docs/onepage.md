@@ -8705,7 +8705,7 @@ https://dev.zenroom.org/
 
 ## 😍 Acknowledgements
 
-Copyright (C) 2018-2025 by [Dyne.org](https://www.dyne.org) foundation, Amsterdam
+Copyright (C) 2018-2026 by [Dyne.org](https://www.dyne.org) foundation, Amsterdam
 
 Originally designed and written by Sam Mulube.
 
@@ -8734,7 +8734,7 @@ Please first take a look at the [Dyne.org - Contributor License Agreement](https
 ## 💼 License
 
       Zenroom.py - a python wrapper of zenroom
-      Copyright (c) 2018-2025 Dyne.org foundation, Amsterdam
+      Copyright (c) 2018-2026 Dyne.org foundation, Amsterdam
 
       This program is free software: you can redistribute it and/or modify
       it under the terms of the GNU Affero General Public License as

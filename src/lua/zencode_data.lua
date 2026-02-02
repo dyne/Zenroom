@@ -1,24 +1,25 @@
- --[[
- --This file is part of zenroom
- --
- --Copyright (C) 2018-2025 Dyne.org foundation
- --designed, written and maintained by Denis Roio <jaromil@dyne.org>
- --
- --This program is free software: you can redistribute it and/or modify
- --it under the terms of the GNU Affero General Public License v3.0
- --
- --This program is distributed in the hope that it will be useful,
- --but WITHOUT ANY WARRANTY; without even the implied warranty of
- --MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- --GNU Affero General Public License for more details.
- --
- --Along with this program you should have received a copy of the
- --GNU Affero General Public License v3.0
- --If not, see http://www.gnu.org/licenses/agpl.txt
- --
- --Last modified by Denis Roio
- --on Saturday, 13th November 2021
- --]]
+--[[
+--This file is part of zenroom
+--
+--Copyright (C) 2018-2026 Dyne.org foundation
+--designed, written and maintained by Denis Roio <jaromil@dyne.org>
+--
+--This program is free software: you can redistribute it and/or modify
+--it under the terms of the GNU Affero General Public License as
+--published by the Free Software Foundation, either version 3 of the
+--License, or (at your option) any later version.
+--
+--This program is distributed in the hope that it will be useful,
+--but WITHOUT ANY WARRANTY; without even the implied warranty of
+--MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--GNU Affero General Public License for more details.
+--
+--You should have received a copy of the GNU Affero General Public License 
+--along with this program.  If not, see <https://www.gnu.org/licenses/>.
+--
+--Last modified by Denis Roio
+--on Saturday, 13th November 2021
+--]]
  --- Zencode data internals
 
 -- Spec for number input / output
@@ -122,6 +123,17 @@
    -- schemas may or may be not tables
  end
 
+local function default_input(definition, obj, objtype)
+  if expect_table(definition) then
+    error("Cannot take object: expected '"..definition.."' but found '"..objtype.."' (not a table)",3)
+  end
+  local res = input_encoding(definition)
+  res.zentype = 'e'
+  res.schema = nil
+  res.raw = obj
+  return res
+end
+
  --- Given block (IN read-only memory)
  -- @section Given
 
@@ -218,31 +230,8 @@
       return nil
     end
 
-    if objtype == 'number' then
-       if expect_table(definition) then
-	  error("Cannot take object: expected '"..definition.."' but found '"..objtype.."' (not a table)",3)
-	  -- elseif definition ~= 'number' then
-	  --	  error("Cannot take object: expected '"..definition.."' but found '"..objtype.."'",3)
-       end
-       res = input_encoding(definition)
-       res.zentype = 'e'
-       -- if obj > 2147483647 then
-       --	  error('Overflow of number object over 32bit signed size', 3)
-       --	  -- TODO: maybe support unsigned native here
-       -- end
-       res.raw = obj
-       -- any type of additional conversion from a native number
-       -- detected at input can happen here, for instance using a new
-       -- native unsigned integer
-       return (res)
-    end
-
-    if objtype == 'string' then
-       res = input_encoding(definition)
-       res.zentype = 'e'
-       res.schema = nil
-       res.raw = obj
-       return (res)
+    if objtype == 'number' or objtype == 'string' or objtype == 'boolean' or iszen(type(obj)) then
+      return default_input(definition, obj, objtype)
     end
 
 	if objtype == 'nil' then
@@ -270,15 +259,6 @@
 	   res.missing = true
 	   return(res)
 	end
-
-    -- objtype is not a luatype
-    if iszen(type(obj)) then
-       res = input_encoding(definition)
-       res.zentype = 'e'
-       res.schema = nil
-       res.raw = obj
-       return(res)
-    end
 
     error('Invalid object: no conversion for type '..objtype..': '..definition, 3)
     return nil
@@ -324,7 +304,7 @@
    if not what then
      error("Call to input_encoding with argument nil",2)
    end
-   if not luatype(what) == 'string' then
+   if luatype(what) ~= 'string' then
      error("Call to input_encoding argument is not a string: "..type(what),2)
    end
     if what == 'u64' or what == 'url64' then
@@ -357,6 +337,8 @@
        return f_factory_encoder('float', FLOAT.new, FLOAT.is_float)
     elseif what == 'time' then
        return f_factory_encoder('time', TIME.new, nil)
+    elseif what == 'boolean' then
+       return f_factory_encoder('boolean', function(b) return b end, nil)
     end
     warn("Unknown input encoding '"..what.."': using default '"..
          CONF.input.encoding.encoding.."'")
@@ -511,7 +493,7 @@ end
 	   name = cname
 	end
 	local ackn = ACK[name]
-    if not ackn then error("Cannot create codec, object not found: "..name, 2) end
+    if ackn == nil then error("Cannot create codec, object not found: "..name, 2) end
     if CODEC[name] then error("Cannot overwrite CODEC."..name, 2) end
     local res
     if clone then
@@ -640,7 +622,7 @@ end
 -- @return the octet/table of octets of the above transformation
 function apply_encoding(src_name, src_enc, dest_enc)
   local src_value, src_codec = have(src_name)
-  f_src_enc = get_encoding_function(src_enc)
+  local f_src_enc = get_encoding_function(src_enc)
   if not f_src_enc then error("Encoding format not found: "..src_enc, 2) end
   local encoded_src
   -- accpet also schemas as encoding
@@ -661,14 +643,14 @@ function apply_encoding(src_name, src_enc, dest_enc)
           encoded_src = f_src_enc(src_value)
       else
           encoded_src = {}
-          for k,v in src_value do
+          for k in src_value do
               encoded_src[k] = f_src_enc(src_value)
           end
       end
   else
       encoded_src = deepmap(f_src_enc, src_value)
   end
-  f_dest_enc = input_encoding(dest_enc)
+  local f_dest_enc = input_encoding(dest_enc)
   if not f_dest_enc then error("Destination encoding format not found: "..dest_enc, 2) end
   return deepmap(f_dest_enc.fun, encoded_src)
 end

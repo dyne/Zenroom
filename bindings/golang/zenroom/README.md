@@ -1,13 +1,10 @@
 # Zenroom-Go
 
-[![Build Status](https://travis-ci.org/dyne/zenroom-go.svg?branch=master)](https://travis-ci.org/dyne/zenroom-go)
-[![GoDoc](https://godoc.org/github.com/dyne/zenroom-go?status.svg)](https://godoc.org/github.com/dyne/zenroom-go)
-
 Zenroom Binding for Go
 
 ## Introduction
 
-Zenroom is a brand new virtual machine for fast cryptographic operations on Elliptic Curves. The Zenroom VM has no external dependencies, includes a cutting edge selection of C99 libraries and builds a small executable ready to run on: desktop, embedded, mobile, cloud and browsers (webassembly). This library adds a CGO wrapper for Zenroom, which aims to make the Zenroom VM easy to use from Go.
+Zenroom is a secure virtual machine for fast cryptographic operations. The Zenroom VM has no external dependencies, includes a cutting edge selection of C99 libraries and builds a small executable ready to run on: desktop, embedded, mobile, cloud and browsers (webassembly). This library adds a CGO wrapper for Zenroom, which aims to make the Zenroom VM easy to use from Go.
 
 ## Installation
 
@@ -50,4 +47,4 @@ Then print 'keyring'
  
 ## Contributors
 
-The original Go bindings for Zenroom were created by [@chespinoza](https://github.com/chespinoza), later updates by [@smulube](https://github.com/smulube).
+The original Go bindings for Zenroom were created by [@chespinoza](https://github.com/chespinoza), later updates by [@smulube](https://github.com/smulube) and more people at [Dyne.org](https://dyne.org).

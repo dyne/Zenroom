@@ -1,6 +1,6 @@
 /* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Copyright (C) 2025 Dyne.org foundation
+ * Copyright (C) 2025-2026 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -25,7 +25,7 @@
 #include <encoding.h>
 #include <randombytes.h>
 #include <longfellow-zk/circuits/mdoc/mdoc_zk.h>
-#include <longfellow-zk/circuits/mdoc/mdoc_examples.h>
+// #include <longfellow-zk/circuits/mdoc/mdoc_examples.h>
 
 static ZkSpecStruct *_get_zkspec(lua_State *L, int idx) {
 	ZkSpecStruct *zk_spec;
@@ -50,77 +50,78 @@ static ZkSpecStruct *_get_zkspec(lua_State *L, int idx) {
 	}
 	return(zk_spec);
 }
-static int circuit_gen(lua_State *L) {
-	BEGIN();
-	CircuitGenerationErrorCode res;
-	uint8_t *circuit;
-	size_t circuit_len;
-	ZkSpecStruct *zk_spec = _get_zkspec(L,1);
-	if(!zk_spec) {
-		zerror(L,"Cannot generate ZK circuit");
-		END(0);
-	}
-	// char circuit_hash_hex[129];
-	func(L,"Generating ZK circuit v%lu with %lu attributes",
-		zk_spec->version, zk_spec->num_attributes);
-	// buf2hex(circuit_hash_hex, zk_spec->circuit_hash, 64);
-	// circuit_hash_hex[64] = 0x0;
-	func(L,"%s %s",zk_spec->system, zk_spec->circuit_hash);
-	res = generate_circuit(zk_spec, &circuit, &circuit_len);
-	if(res != CIRCUIT_GENERATION_SUCCESS) {
-		zerror(L,"Internal error generating circuit: %i",res);
-		END(0);
-	}
-	// pushes the buffer in lua's stack
-	o_push(L, circuit, circuit_len);
-	lua_pushstring(L,zk_spec->system);
-	lua_pushnumber(L,zk_spec->version);
-	lua_pushnumber(L,zk_spec->num_attributes);
-	lua_pushstring(L,zk_spec->circuit_hash);
-	END(5);
-}
+
+// static int circuit_gen(lua_State *L) {
+// 	BEGIN();
+// 	CircuitGenerationErrorCode res;
+// 	uint8_t *circuit;
+// 	size_t circuit_len;
+// 	ZkSpecStruct *zk_spec = _get_zkspec(L,1);
+// 	if(!zk_spec) {
+// 		zerror(L,"Cannot generate ZK circuit");
+// 		END(0);
+// 	}
+// 	// char circuit_hash_hex[129];
+// 	func(L,"Generating ZK circuit v%lu with %lu attributes",
+// 		zk_spec->version, zk_spec->num_attributes);
+// 	// buf2hex(circuit_hash_hex, zk_spec->circuit_hash, 64);
+// 	// circuit_hash_hex[64] = 0x0;
+// 	func(L,"%s %s",zk_spec->system, zk_spec->circuit_hash);
+// 	res = generate_circuit(zk_spec, &circuit, &circuit_len);
+// 	if(res != CIRCUIT_GENERATION_SUCCESS) {
+// 		zerror(L,"Internal error generating circuit: %i",res);
+// 		END(0);
+// 	}
+// 	// pushes the buffer in lua's stack
+// 	o_push(L, circuit, circuit_len);
+// 	lua_pushstring(L,zk_spec->system);
+// 	lua_pushnumber(L,zk_spec->version);
+// 	lua_pushnumber(L,zk_spec->num_attributes);
+// 	lua_pushstring(L,zk_spec->circuit_hash);
+// 	END(5);
+// }
 
 // formatted as ZULU string time "2024-01-30T09:00:00Z"
 #define NOW_DATA_SIZE 20
 #define NUM_MDOC_TESTS 6 // instantiated in in mdoc_examples.h
 
-static int mdoc_example(lua_State *L) {
-	BEGIN();
-    int index = luaL_checkinteger(L, 1); // Argument at stack index 1
-    if (index < 1 || index > NUM_MDOC_TESTS) {
-		zerror(L, "Example index out of bounds");
-		END(0);
-	}
-	func(L,"Getting MDOC example %i",index);
-	const struct MdocTests *tests = &mdoc_tests[index-1];
-    lua_newtable(L);
-    lua_pushstring(L, "pkx");
-	octet *pkx = o_new(L,32+4);
-	// test_data->pk* are hex sequences prefixed with 0x. here we
-	// import them into octets from that format. later we'll cast them
-	// back into such strings, so that inside zenroom they are binary
-	hex2buf(pkx->val, &tests->pkx[2]);//->as_pointer[2]);
-	pkx->len = 32;
-    lua_settable(L, -3);
-    lua_pushstring(L, "pky");
-	octet *pky = o_new(L,32+4);
-	hex2buf(pky->val, &tests->pky[2]);//->as_pointer[2]);
-	pky->len = 32;
-    lua_settable(L, -3);
-    lua_pushstring(L, "transcript");
-	push_buffer_to_octet(L,tests->transcript,tests->transcript_size);
-    lua_settable(L, -3);
-	lua_pushstring(L, "now");
-	push_buffer_to_octet(L,tests->now,NOW_DATA_SIZE);
-	lua_settable(L, -3);
-    lua_pushstring(L, "doc_type");
-	push_string_to_octet(L,tests->doc_type);
-    lua_settable(L, -3);
-    lua_pushstring(L, "mdoc");
-	push_buffer_to_octet(L,tests->mdoc,tests->mdoc_size);
-    lua_settable(L, -3);
-    END(1);
-}
+// static int mdoc_example(lua_State *L) {
+// 	BEGIN();
+//     int index = luaL_checkinteger(L, 1); // Argument at stack index 1
+//     if (index < 1 || index > NUM_MDOC_TESTS) {
+// 		zerror(L, "Example index out of bounds");
+// 		END(0);
+// 	}
+// 	func(L,"Getting MDOC example %i",index);
+// 	const struct MdocTests *tests = &mdoc_tests[index-1];
+//     lua_newtable(L);
+//     lua_pushstring(L, "pkx");
+// 	octet *pkx = o_new(L,32+4);
+// 	// test_data->pk* are hex sequences prefixed with 0x. here we
+// 	// import them into octets from that format. later we'll cast them
+// 	// back into such strings, so that inside zenroom they are binary
+// 	hex2buf(pkx->val, &tests->pkx[2]);//->as_pointer[2]);
+// 	pkx->len = 32;
+//     lua_settable(L, -3);
+//     lua_pushstring(L, "pky");
+// 	octet *pky = o_new(L,32+4);
+// 	hex2buf(pky->val, &tests->pky[2]);//->as_pointer[2]);
+// 	pky->len = 32;
+//     lua_settable(L, -3);
+//     lua_pushstring(L, "transcript");
+// 	push_buffer_to_octet(L,tests->transcript,tests->transcript_size);
+//     lua_settable(L, -3);
+// 	lua_pushstring(L, "now");
+// 	push_buffer_to_octet(L,tests->now,NOW_DATA_SIZE);
+// 	lua_settable(L, -3);
+//     lua_pushstring(L, "doc_type");
+// 	push_string_to_octet(L,tests->doc_type);
+//     lua_settable(L, -3);
+//     lua_pushstring(L, "mdoc");
+// 	push_buffer_to_octet(L,tests->mdoc,tests->mdoc_size);
+//     lua_settable(L, -3);
+//     END(1);
+// }
 
 typedef struct {
     const char* id;
@@ -174,7 +175,8 @@ static RequestedAttribute* _get_attributes(lua_State* L, int index, size_t* coun
             continue;
         }
 		entries[i-1].id_len = _get_kv(L, entries[i-1].id, "id", 32);
-		entries[i-1].value_len = _get_kv(L, entries[i-1].value, "value", 64);
+		entries[i-1].cbor_value_len =
+			_get_kv(L, entries[i-1].cbor_value, "value", 64);
         lua_pop(L, 1);
     }
     *count = array_size;
@@ -289,17 +291,17 @@ static int mdoc_prove(lua_State *L) {
 	END(returned);
 }
 
-static int get_circuit_id(lua_State *L) {
-	BEGIN();
-	const octet *circ = o_arg(L,1);
-	const ZkSpecStruct *zkspec = _get_zkspec(L,2);
-	uint8_t id[32];
-	circuit_id(id,(const uint8_t*)circ->val,circ->len,zkspec);
-	octet *res = o_new(L,32);
-	memcpy(res->val,id,32);
-	res->len = 32;
-	END(1);
-}
+// static int get_circuit_id(lua_State *L) {
+// 	BEGIN();
+// 	const octet *circ = o_arg(L,1);
+// 	const ZkSpecStruct *zkspec = _get_zkspec(L,2);
+// 	uint8_t id[32];
+// 	circuit_id(id,(const uint8_t*)circ->val,circ->len,zkspec);
+// 	octet *res = o_new(L,32);
+// 	memcpy(res->val,id,32);
+// 	res->len = 32;
+// 	END(1);
+// }
 
 static int mdoc_verify(lua_State *L) {
 	BEGIN();
@@ -364,9 +366,9 @@ static int mdoc_verify(lua_State *L) {
 int luaopen_longfellow(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg longfellow_class[] = {
-		{"gen_circuit", circuit_gen},
-		{"circuit_id", get_circuit_id},
-		{"mdoc_example", mdoc_example},
+		// {"gen_circuit", circuit_gen},
+		// {"circuit_id", get_circuit_id},
+		// {"mdoc_example", mdoc_example},
 		{"mdoc_prove", mdoc_prove},
 		{"mdoc_verify", mdoc_verify},
 		// {"verify", verify},

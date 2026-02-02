@@ -1,6 +1,6 @@
 /* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Copyright (C) 2017-2025 Dyne.org foundation
+ * Copyright (C) 2017-2026 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -108,75 +108,136 @@ static int lua_trim_quotes(lua_State* L) {
 	return 1;
 }
 
+#include <ctype.h>
+
+#define MAX_JSON_DEPTH 128
+
+// helper: skip whitespace and literal \n \r \t sequences
+#define SKIP_WS_AND_ESCAPES(ptr, end) \
+    while ((ptr) < (end)) { \
+        unsigned char ch__ = (unsigned char)*(ptr); \
+        if (isspace(ch__)) { (ptr)++; continue; } \
+        if (ch__ == '\\' && (ptr)+1 < (end)) { \
+            unsigned char next__ = (unsigned char)*((ptr)+1); \
+            if (next__ == 'n' || next__ == 'r' || next__ == 't') { (ptr)+=2; continue; } \
+        } \
+        break; \
+    }
 
 static int lua_unserialize_json(lua_State* L) {
-	const char *in;
-	register int level = 0;
-	register char *p;
-	register char in_literal_str = 0;
-	size_t size;
-	in = luaL_checklstring(L, 1, &size);
-	size_t orig_size = size;
-	char brakets[MAX_DEPTH];
-	p = (char*)in;
-	while (size && isspace(*p) ) { size--; p++; } // first char
-	while (size && (*p == 0x0) ) { size--; p++; } // first char
-	if(!size) {	lua_pushnil(L);	return 1; }
-	if (*p == '{' || *p == '[') {
-		brakets[level] = *p == '{' ? '}' : ']';
-		size--;
-		level++;
-	} else {
-		func(L, "JSON doesn't starts with '{' nor '[', char found: %c (%02x)", *p, *p);
-		lua_pushnil(L);
-		return 1;
-	} // ok, level is 1
-	for( p++ ; size>0 ; size--, p++ ) {
-		if(in_literal_str) {
-			// a string literal end with a " which is not escaped, i.e. \"
-			// in case a string literal ends with \\", it ends
-			// p-1 and p-2 cannot be outside buffer because a JSON dictionary
-			// starts at least with {"
-			if(*p == '"' && (*(p-1) != '\\' || *(p-2) == '\\')) {
-				in_literal_str = 0;
-			}
-		} else {
-			if(*p=='"') in_literal_str = 1;
-			else {
-				if(*p=='{' || *p=='[') {
-					if(level < MAX_DEPTH){
-						brakets[level] = *p == '{' ? '}' : ']';
-					}
-					level++;
-				}
-				if(*p=='}' || *p==']') {
-					level--;
-					if(level < MAX_DEPTH && brakets[level] != *p){
-						lerror(L, "JSON format error, expected: %c, found %c at position %lu", brakets[level], *p, (p - in)+1);
-						lua_pushnil(L);
-						return 1;
-					}
-				}
-				if(level==0) { // end of first block
-					lua_pushlstring(L, in, (size_t)(p - in)+1);
-					p++;
-					while (size && isspace(*p) ) { size--; p++; } // remove final spaces
-					while (size && (*p == 0x0) ) { size--; p++; } // remove final char
-					lua_pushlstring(L, p, size);
-					return 2;
-				}
-			}
-		}
-	}
-	// should never be here
-	zerror(L, "JSON unknown parser error");
-	zerror(L, "JSON input string size: %lu",orig_size);
-	zerror(L, "JSON parser level: %u", level);
-	for(int i=level; i>0; i--)
-		zerror(L,"JSON parser bracket[%u] = '%c'",i,brakets[i]);
-	lerror(L, "JSON has malformed beginning or end");
-	return 0;
+    size_t size;
+    const char *in = luaL_checklstring(L, 1, &size);
+    const char *p = in;
+    const char *end = in + size;
+
+    int level = 0;
+    char brackets[MAX_JSON_DEPTH];
+    int in_literal_str = 0;
+
+    // strip UTF‑8 BOM if present
+    if ((size_t)(end - p) >= 3 &&
+        (unsigned char)p[0] == 0xEF &&
+        (unsigned char)p[1] == 0xBB &&
+        (unsigned char)p[2] == 0xBF) {
+        p += 3;
+    }
+
+    // skip leading whitespace and literal escapes
+    SKIP_WS_AND_ESCAPES(p, end);
+    if (p >= end) { lua_pushnil(L); return 1; }
+
+    // must start with { or [
+    if (*p != '{' && *p != '[') {
+        // Return nil silently if no valid JSON start found
+        // This allows the caller to gracefully handle trailing non-JSON content
+        lua_pushnil(L);
+        return 1;
+    }
+
+    if (level < MAX_JSON_DEPTH)
+        brackets[level] = (*p == '{') ? '}' : ']';
+    level++;
+    p++;
+
+    // tolerate escapes/whitespace immediately after first brace
+    SKIP_WS_AND_ESCAPES(p, end);
+
+    const char *json_end = NULL;
+
+    for (; p < end; p++) {
+        unsigned char ch = (unsigned char)*p;
+
+        if (in_literal_str) {
+            if (ch == '"') {
+                // count preceding backslashes
+                const char *q = p - 1;
+                int backslashes = 0;
+                while (q >= in && *q == '\\') { backslashes++; q--; }
+                if ((backslashes % 2) == 0) {
+                    in_literal_str = 0;
+                }
+            }
+            continue;
+        }
+
+        // tolerate whitespace and literal escapes outside strings
+        if (isspace(ch)) continue;
+        if (ch == '\\' && p+1 < end) {
+            unsigned char next = (unsigned char)*(p+1);
+            if (next == 'n' || next == 'r' || next == 't') { p++; continue; }
+        }
+
+        switch (ch) {
+        case '"':
+            in_literal_str = 1;
+            break;
+        case '{': case '[':
+            if (level < MAX_JSON_DEPTH)
+                brackets[level] = (ch == '{') ? '}' : ']';
+            level++;
+            break;
+        case '}': case ']':
+            level--;
+            if (level < 0) {
+                lerror(L, "JSON format error: unexpected closing %c at pos %ld", ch, (long)(p - in + 1));
+                lua_pushnil(L);
+                return 1;
+            }
+            if (level < MAX_JSON_DEPTH && brackets[level] != ch) {
+                lerror(L, "JSON format error: expected %c, found %c at pos %ld",
+                       brackets[level], ch, (long)(p - in + 1));
+                lua_pushnil(L);
+                return 1;
+            }
+            if (level == 0) {
+                json_end = p + 1;
+            }
+            break;
+        default:
+            break;
+        }
+
+        if (json_end) break;
+    }
+
+    if (!json_end) {
+        lerror(L, "JSON appears truncated or malformed (size=%lu, level=%d)",
+               (unsigned long)(end - in), level);
+        lua_pushnil(L);
+        return 1;
+    }
+
+    // push the JSON substring
+    lua_pushlstring(L, in, (size_t)(json_end - in));
+
+    // skip trailing whitespace and literal escapes
+    const char *q = json_end;
+    SKIP_WS_AND_ESCAPES(q, end);
+
+    lua_pushlstring(L, q, (size_t)(end - q));
+    return 2;
 }
+
 
 // removed because of unexplained segfault when used inside pcall to
 // parse zencode: set_rule and set_scenario will explode, also seems

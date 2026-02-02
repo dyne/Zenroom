@@ -1,6 +1,6 @@
 /* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Copyright (C) 2025 Dyne.org foundation
+ * Copyright (C) 2025-2026 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -30,16 +30,14 @@
 #include <string.h>
 
 #define BUF_SIZE 8192
-#define SAFE(x) if(!x) { failed_msg="NULL var"; goto end; }
 
 static int pem_to_base64(lua_State *L) {
 	BEGIN();
-	char *failed_msg = NULL;
 	const char *begin_marker = "-----BEGIN";
 	const char *end_marker = "-----END";
 	const char *in = lua_tostring(L, 1);
 	luaL_argcheck(L, in != NULL, 1, "string argument expected");
-	char *dst = calloc(strlen(in)+2,1);
+	char *dst = calloc(strlen(in)+2,1); SAFE(dst, MALLOC_ERROR);
 	char *output = dst;
 	const char *begin = strstr(in, begin_marker);
 	const char *end = strstr(in, end_marker);
@@ -60,24 +58,19 @@ static int pem_to_base64(lua_State *L) {
 			}
 		}
 	}
- end:
 	lua_pushlstring(L, dst, strlen(dst));
 	free(dst);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
 	END(1);
-
 }
 
 static int extract_cert(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	const octet *in = o_arg(L, 1); SAFE(in);
-	octet *c = o_new(L,BUF_SIZE); SAFE(c);
+	const octet *in = o_arg(L, 1); SAFE_GOTO(in, ALLOCATE_OCT_ERR);
+	octet *c = o_new(L, BUF_SIZE); SAFE_GOTO(c, CREATE_OCT_ERR);
 	X509_extract_cert((octet*)in, c);
- end:
-	o_free(L,in);
+end:
+	o_free(L, in);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -88,12 +81,12 @@ static int extract_cert_sig(lua_State *L) {
 	BEGIN();
 	pktype st;
 	char *failed_msg = NULL;
-	const octet *in = o_arg(L, 1); SAFE(in);
-	octet *sig = o_new(L,BUF_SIZE); SAFE(sig);
+	const octet *in = o_arg(L, 1); SAFE_GOTO(in, ALLOCATE_OCT_ERR);
+	octet *sig = o_new(L,BUF_SIZE); SAFE_GOTO(sig, CREATE_OCT_ERR);
 	st = X509_extract_cert_sig((octet*)in, sig);
 	func(L,"SIG type: %u",st.type);
- end:
-	o_free(L,in);
+end:
+	o_free(L, in);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -104,19 +97,20 @@ static int extract_pubkey(lua_State *L) {
 	BEGIN();
 	pktype ca;
 	char *failed_msg = NULL;
-	const octet *in = o_arg(L, 1); SAFE(in);
-	octet *raw = o_alloc(L,BUF_SIZE); SAFE(raw);
+	octet *raw = NULL;
+	const octet *in = o_arg(L, 1); SAFE_GOTO(in, ALLOCATE_OCT_ERR);
+	raw = o_alloc(L,BUF_SIZE); SAFE_GOTO(raw, ALLOCATE_OCT_ERR);
 	ca = X509_extract_public_key((octet*)in, raw);
-	octet *pk = o_new(L,raw->len); SAFE(pk);
+	octet *pk = o_new(L,raw->len); SAFE_GOTO(pk, CREATE_OCT_ERR);
 	// shave the leftmost byte on P256 ( 0x04 )
 	memcpy(pk->val,raw->val+1,raw->len-1);
 	pk->len = raw->len-1;
-	o_free(L,raw);
 	func(L,"CA type: %u",ca.type);
 	// TODO: ca.type switch/case and return string and hash
 	// lua_pushlstring(L, ca.type..., strlen(ca.type));
- end:
-	o_free(L,in);
+end:
+	o_free(L, raw);
+	o_free(L, in);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -127,12 +121,12 @@ static int extract_seckey(lua_State *L) {
 	BEGIN();
 	pktype sk_t;
 	char *failed_msg = NULL;
-	const octet *in = o_arg(L, 1); SAFE(in);
-	octet *sk = o_new(L,in->len); SAFE(sk);
+	const octet *in = o_arg(L, 1); SAFE_GOTO(in, ALLOCATE_OCT_ERR);
+	octet *sk = o_new(L,in->len); SAFE_GOTO(sk, CREATE_OCT_ERR);
 	sk_t = X509_extract_private_key((octet*)in,sk);
 	func(L,"SK type: %u",sk_t.type);
 end:
-	o_free(L,in);
+	o_free(L, in);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -177,12 +171,8 @@ static int extract_issuer(lua_State *L) {
 	BEGIN();
 	int c, ic, len;
 	char *failed_msg = NULL;
-	const octet *H = o_arg(L, 1); SAFE(H);
-    ic = X509_find_issuer((octet*)H,&len);
-	if(!ic) {
-		failed_msg = "Issuer not found in x509 credential";
-		goto end;
-	}
+	const octet *H = o_arg(L, 1); SAFE_GOTO(H, ALLOCATE_OCT_ERR);
+    ic = X509_find_issuer((octet*)H,&len); SAFE_GOTO(ic, "Could not found issuer x509 credential");
 	lua_newtable(L);
 	_extract_property(X509_ON,"owner");
 	_extract_property(X509_CN,"country");
@@ -192,7 +182,7 @@ static int extract_issuer(lua_State *L) {
 	_extract_property(X509_MN,"name");
 	_extract_property(X509_SN,"state");
 end:
-	o_free(L,H);
+	o_free(L, H);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -203,12 +193,8 @@ static int extract_subject(lua_State *L) {
 	BEGIN();
 	int c, ic, len;
 	char *failed_msg = NULL;
-	const octet *H = o_arg(L, 1); SAFE(H);
-    ic = X509_find_subject((octet*)H,&len);
-	if(!ic) {
-		failed_msg = "Issuer not found in x509 credential";
-		goto end;
-	}
+	const octet *H = o_arg(L, 1); SAFE_GOTO(H, ALLOCATE_OCT_ERR);
+    ic = X509_find_subject((octet*)H,&len); SAFE_GOTO(ic, "Could not found sbject x509 credential");
 	lua_newtable(L);
 	_extract_property(X509_ON,"owner");
 	_extract_property(X509_CN,"country");
@@ -218,7 +204,7 @@ static int extract_subject(lua_State *L) {
 	_extract_property(X509_MN,"name");
 	_extract_property(X509_SN,"state");
 end:
-	o_free(L,H);
+	o_free(L, H);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -230,18 +216,14 @@ static int extract_extensions(lua_State *L) {
 	BEGIN();
 	int c, ic, len;
 	char *failed_msg = NULL;
-	const octet *H = o_arg(L, 1); SAFE(H);
-    ic = X509_find_extensions((octet*)H);
-	if(!ic) {
-		failed_msg = "Issuer not found in x509 credential";
-		goto end;
-	}
+	const octet *H = o_arg(L, 1); SAFE_GOTO(H, ALLOCATE_OCT_ERR);
+    ic = X509_find_extensions((octet*)H); SAFE_GOTO(ic, "Could not found extensions in x509 credential");
 	lua_newtable(L);
 	_extract_extension(X509_AN,"SAN");
 	_extract_extension(X509_KU,"key");
 	_extract_extension(X509_BC,"constraints");
 end:
-	o_free(L,H);
+	o_free(L, H);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -275,12 +257,8 @@ static int extract_san(lua_State *L) {
 	int c, ic, len;
 	char *failed_msg = NULL;
 	char *tmp;
-	const octet *H = o_arg(L, 1); SAFE(H);
-    ic = X509_find_extensions((octet*)H);
-	if(!ic) {
-		failed_msg = "Issuer not found in x509 credential";
-		goto end;
-	}
+	const octet *H = o_arg(L, 1); SAFE_GOTO(H, ALLOCATE_OCT_ERR);
+    ic = X509_find_extensions((octet*)H); SAFE_GOTO(ic, "Could not found extensions in x509 credential");
     c = X509_find_extension((octet*)H, &X509_AN, ic, &len);
 	if(c!=0 &&
 	   H->val[c]==0x04 && // ASN.1 octet string
@@ -290,7 +268,7 @@ static int extract_san(lua_State *L) {
 			int seqlen = H->val[c+3];
 			char *p = &H->val[c+4];
 			char *end = p + seqlen;
-			tmp = calloc(seqlen, 1);
+			tmp = calloc(seqlen, 1); SAFE_GOTO(tmp, MALLOC_ERROR);
 			lua_newtable(L);
 			for(int cc=1; p < end; cc++) {
 				uint8_t type = *p++;
@@ -320,8 +298,8 @@ static int extract_san(lua_State *L) {
 			}
 			free(tmp);
 		}
- end:
-	o_free(L,H);
+end:
+	o_free(L, H);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -336,12 +314,8 @@ static int extract_dates(lua_State *L) {
 	BEGIN();
 	int c, ic;
 	char *failed_msg = NULL;
-	const octet *H = o_arg(L, 1); SAFE(H);
-    ic = X509_find_validity((octet*)H);
-	if(!ic) {
-		failed_msg = "Validity not found in x509 credential";
-		goto end;
-	}
+	const octet *H = o_arg(L, 1); SAFE_GOTO(H, ALLOCATE_OCT_ERR);
+    ic = X509_find_validity((octet*)H); SAFE_GOTO(ic, "Could not found validity in x509 credential");
 	lua_newtable(L);
     c = X509_find_start_date((octet*)H, ic);
 	if(c) {
@@ -356,7 +330,7 @@ static int extract_dates(lua_State *L) {
 		lua_settable(L,-3);
 	}
 end:
-	o_free(L,H);
+	o_free(L, H);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}

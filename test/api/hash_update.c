@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <zenroom.h>
 
 int main(int argc, char **argv) {

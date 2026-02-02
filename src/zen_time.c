@@ -1,7 +1,7 @@
 /*
  * This file is part of zenroom
  *
- * Copyright (C) 2017-2025 Dyne.org foundation
+ * Copyright (C) 2017-2026 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -28,6 +28,7 @@
 //@module TIME
 
 
+#include <errno.h>
 #include <stdlib.h>
 #include <math.h>
 #include <float.h>
@@ -77,6 +78,7 @@ ztime_t* time_arg(lua_State *L, int n) {
 	Z(L);
 	ztime_t *result = (ztime_t*)malloc(sizeof(ztime_t));
 	if(result == NULL) {
+		zerror(L, "Could not create time, malloc failure: %s", strerror(errno));
 		return NULL;
 	}
 	void *ud = luaL_testudata(L, n, "zenroom.time");
@@ -113,6 +115,7 @@ ztime_t* time_arg(lua_State *L, int n) {
 	const octet *o = o_arg(L, n);
 	if(o) {
 		if(o->len != sizeof(ztime_t)) {
+			o_free(L, o);
 			free(result);
 			zerror(L, "Wrong size timestamp %s", __func__);
 			return NULL;
@@ -126,8 +129,8 @@ end:
 }
 
 octet *new_octet_from_time(lua_State *L, ztime_t t) {
-	octet *o;
-	o = o_alloc(L, sizeof(ztime_t));
+	octet *o = o_alloc(L, sizeof(ztime_t));
+	if(!o) return NULL;
 	// TODO: check endianness
 	memcpy(o->val, &t, sizeof(ztime_t));
 	o->len = sizeof(ztime_t);
@@ -149,18 +152,15 @@ octet *new_octet_from_time(lua_State *L, ztime_t t) {
 */
 static int newtime(lua_State *L) {
 	BEGIN();
-	ztime_t *tm = time_new(L);
-	if(!tm) {
-		lerror(L, "Could not create time object");
-		return 0;
-	}
-	ztime_t *c = time_arg(L,1);
-	if(!c) {
-		lerror(L, "Could not read time input");
-		return 0;
-	}
+	char *failed_msg = NULL;
+	ztime_t *c = time_arg(L,1); SAFE_GOTO(c, ALLOCATE_TIME_ERR);
+	ztime_t *tm = time_new(L); SAFE_GOTO(tm, CREATE_TIME_ERR);
 	*tm = *c;
+end:
 	time_free(L, c);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
@@ -218,19 +218,11 @@ static int time_to_octet(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	octet *o = NULL;
-	ztime_t *c = time_arg(L,1);
-	if(!c) {
-		failed_msg = "Could not read time input";
-		goto end;
-	}
-	o = new_octet_from_time(L, *c);
-	if(o == NULL) {
-		failed_msg = "Could not create octet";
-		goto end;
-	}
-	o_dup(L, o);
+	ztime_t *c = time_arg(L,1); SAFE_GOTO(c, ALLOCATE_TIME_ERR);
+	o = new_octet_from_time(L, *c); SAFE_GOTO(o, "Could not create octet from time");
+	SAFE_GOTO(o_dup(L, o), DUPLICATE_OCT_ERR);
 end:
-	time_free(L,c);
+	time_free(L, c);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -258,19 +250,11 @@ end:
 	char *failed_msg = NULL;
 	ztime_t *a = time_arg(L, 1);
 	ztime_t *b = time_arg(L, 2);
-	ztime_t *c = time_new(L);
-	if(!a || !b || !c) {
-		failed_msg = "Could not allocate time number";
-		goto end;
-	}
+	SAFE_GOTO(a && b, ALLOCATE_TIME_ERR);
+	ztime_t *c = time_new(L); SAFE_GOTO(c, CREATE_TIME_ERR);
 	// manage possible overflow
-	if(*a > 0 && *b > 0 && *a > INT_MAX - *b) {
-		failed_msg = "Result of addition out of range";
-		goto end;
-	} else if( *a < 0 && *b < 0 && *a < INT_MIN - *b) {
-		failed_msg = "Result of addition out of range";
-		goto end;
-	}
+	SAFE_GOTO(*a <= 0 || *b <= 0 || *a <= INT_MAX - *b, "Result of addition out of range");
+	SAFE_GOTO(*a >= 0 || *b >= 0 || *a >= INT_MIN - *b, "Result of addition out of range");
 	*c = *a + *b;
 end:
 	time_free(L, a);
@@ -294,18 +278,11 @@ static int time_sub(lua_State *L) {
 	char *failed_msg = NULL;
 	ztime_t *a = time_arg(L, 1);
 	ztime_t *b = time_arg(L, 2);
-	ztime_t *c = time_new(L);
-	if(!a || !b || !c) {
-		failed_msg = "Could not allocate time number";
-	}
+	SAFE_GOTO(a && b, ALLOCATE_TIME_ERR);
+	ztime_t *c = time_new(L); SAFE_GOTO(c, CREATE_TIME_ERR);
 	// manage possible overflow
-	if(*a > 0 && *b < 0 && *a > INT_MAX + *b) {
-		failed_msg = "Result of subtraction out of range";
-		goto end;
-	} else if( *a < 0 && *b > 0 && *a < INT_MIN + *b) {
-		failed_msg = "Result of subtraction out of range";
-		goto end;
-	}
+	SAFE_GOTO(*a <= 0 || *b >= 0 || *a <= INT_MAX + *b, "Result of subtraction out of range");
+	SAFE_GOTO(*a >= 0 || *b <= 0 || *a >= INT_MIN + *b, "Result of subtraction out of range");
 	*c = *a - *b;
 end:
 	time_free(L, a);
@@ -328,14 +305,14 @@ end:
 
 static int time_opposite(lua_State *L) {
 	BEGIN();
-	ztime_t *a = time_arg(L,1);
-	ztime_t *b = time_new(L);
-	if(a && b) {
-		*b = -(*a);
-	}
+	char *failed_msg = NULL;
+	ztime_t *a = time_arg(L,1); SAFE_GOTO(a, ALLOCATE_TIME_ERR);
+	ztime_t *b = time_new(L); SAFE_GOTO(b, CREATE_TIME_ERR);
+	*b = -(*a);
+end:
 	time_free(L,a);
-	if(!a || !b) {
-		THROW("Could not allocate time number");
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -356,16 +333,17 @@ static int time_opposite(lua_State *L) {
  */
 static int time_eq(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	ztime_t *a,*b;
 	a = time_arg(L,1);
 	b = time_arg(L,2);
-	if(a && b) {
-		lua_pushboolean(L, *a == *b);
-	}
+	SAFE_GOTO(a && b, ALLOCATE_TIME_ERR);
+	lua_pushboolean(L, *a == *b);
+end:
 	time_free(L,a);
 	time_free(L,b);
-	if(!a || !b) {
-		THROW("Could not allocate float number");
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -380,15 +358,16 @@ static int time_eq(lua_State *L) {
 
 static int time_lt(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	ztime_t *a = time_arg(L,1);
 	ztime_t *b = time_arg(L,2);
-	if(a && b) {
-		lua_pushboolean(L, *a < *b);
-	}
-	time_free(L,a);
-	time_free(L,b);
-	if(!a || !b) {
-		THROW("Could not allocate time number");
+	SAFE_GOTO(a && b, ALLOCATE_TIME_ERR);
+	lua_pushboolean(L, *a < *b);
+end:
+	time_free(L, a);
+	time_free(L, b);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -404,15 +383,16 @@ static int time_lt(lua_State *L) {
  */
 static int time_lte(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	ztime_t *a = time_arg(L,1);
 	ztime_t *b = time_arg(L,2);
-	if(a && b) {
-		lua_pushboolean(L, *a <= *b);
-	}
-	time_free(L,a);
-	time_free(L,b);
-	if(!a || !b) {
-		THROW("Could not allocate time number");
+	SAFE_GOTO(a && b, ALLOCATE_TIME_ERR);
+	lua_pushboolean(L, *a <= *b);
+end:
+	time_free(L, a);
+	time_free(L, b);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -431,20 +411,12 @@ static int time_lte(lua_State *L) {
 static int time_to_string(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	ztime_t* c = time_arg(L,1);
-	if(c == NULL) {
-		failed_msg = "Could not read float";
-		goto end;
-	}
+	ztime_t* c = time_arg(L, 1); SAFE_GOTO(c, ALLOCATE_TIME_ERR);
 	char dest[1024];
-	int bufsz = _string_from_time(dest, *c);
-	if(bufsz < 0) {
-		failed_msg = "Output size too big";
-		goto end;
-	}
+	int bufsz = _string_from_time(dest, *c); SAFE_GOTO(bufsz >= 0, "Could not convert time to string");
 	lua_pushstring(L, dest);
 end:
-	time_free(L,c);
+	time_free(L, c);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}

@@ -32,10 +32,12 @@ build() {
 	local abi=""
 	local ndk_libs_path="toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/"
 	ndk_libs="$1-linux-android"
+	ARCH="$1"
 	[ "$1" == "armv7a" ] && {
 		platform="androideabi21"
 		abi="armeabi-v7a"
 		ndk_libs="arm-linux-androideabi"
+		ARCH="armv7l"
 	}
 	[ "$1" == "aarch64" ] && {
 		cflags="-march=armv8-a+crypto"
@@ -54,6 +56,7 @@ build() {
 	mkdir -p zenroom-android/jni/${abi}
 	make -f build/android.mk all ${BUILD_MODE} \
 		 longfellow_cflags="${cflags}" \
+		 ARCH="${ARCH}" \
 		 ANDROID_ABI="${abi}" ANDROID_TARGET="${target}" \
 		 ANDROID_PLATFORM="${platform}" \
 		 RELEASE=1
