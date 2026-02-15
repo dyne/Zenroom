@@ -203,6 +203,10 @@ local literal_map = {
   [ "null"  ] = nil,
 }
 
+local function is_valid_json_number(s)
+  return s:match("^%-?(0|[1-9]%d*)(%.%d+)?([eE][%+%-]?%d+)?$") ~= nil
+end
+
 
 local function next_char(str, idx, set, negate)
   local len = #str
@@ -336,9 +340,18 @@ end
 local function parse_number(str, i)
   local x = next_char(str, i, delim_chars)
   local s = str:sub(i, x - 1)
+  if not is_valid_json_number(s) then
+    decode_error(str, i, "invalid number '" .. s .. "'")
+  end
   local n = tonumber(s)
   if not n then
     decode_error(str, i, "invalid number '" .. s .. "'")
+  end
+  if n ~= n or n <= -math.huge or n >= math.huge then
+    if type(warn) == "function" then
+      warn("JSON numeric overflow: " .. s)
+    end
+    decode_error(str, i, "number overflow '" .. s .. "'")
   end
   -- -- float detection
   -- if s:find('%.') then return(n), x end
