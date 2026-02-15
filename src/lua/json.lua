@@ -226,8 +226,8 @@ local function get_json_limits()
   return limits
 end
 
-local function is_valid_json_number(s)
-  return s:match("^%-?(0|[1-9]%d*)(%.%d+)?([eE][%+%-]?%d+)?$") ~= nil
+local function is_legacy_compatible_json_number(s)
+  return s:match("^%-?%d+(%.%d+)?([eE][%+%-]?%d+)?$") ~= nil
 end
 
 
@@ -363,23 +363,25 @@ end
 local function parse_number(str, i)
   local x = next_char(str, i, delim_chars)
   local s = str:sub(i, x - 1)
-  if not is_valid_json_number(s) then
+  if not is_legacy_compatible_json_number(s) then
     decode_error(str, i, "invalid number '" .. s .. "'")
+  end
+  local is_integer = (not s:find("%.")) and (not s:find("[eE]"))
+  if is_integer and type(BIG) == "table" and type(BIG.from_decimal) == "function" then
+    local neg = s:sub(1, 1) == "-"
+    local digits = neg and s:sub(2) or s
+    if #digits > 15 then
+      return BIG.from_decimal(s), x
+    end
   end
   local n = tonumber(s)
-  if not n then
+  if not n or n ~= n or n <= -math.huge or n >= math.huge then
+    if type(warn) == "function" and (not n or n ~= n or n <= -math.huge or n >= math.huge) then
+      warn("JSON numeric parse/overflow rejected: " .. s)
+    end
     decode_error(str, i, "invalid number '" .. s .. "'")
   end
-  if n ~= n or n <= -math.huge or n >= math.huge then
-    if type(warn) == "function" then
-      warn("JSON numeric overflow: " .. s)
-    end
-    decode_error(str, i, "number overflow '" .. s .. "'")
-  end
-  -- -- float detection
-  -- if s:find('%.') then return(n), x end
-  -- return BIG.from_decimal(s), x
-   return n, x
+  return n, x
 end
 
 local function parse_literal(str, i)
