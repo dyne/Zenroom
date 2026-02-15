@@ -226,8 +226,54 @@ local function get_json_limits()
   return limits
 end
 
+local function is_digit_byte(b)
+  return b and b >= 48 and b <= 57
+end
+
 local function is_legacy_compatible_json_number(s)
-  return s:match("^%-?%d+(%.%d+)?([eE][%+%-]?%d+)?$") ~= nil
+  local i = 1
+  local len = #s
+  local b = byte(s, i)
+  if b == 45 then -- '-'
+    i = i + 1
+  end
+  if i > len then
+    return false
+  end
+  b = byte(s, i)
+  if not is_digit_byte(b) then
+    return false
+  end
+  while i <= len and is_digit_byte(byte(s, i)) do
+    i = i + 1
+  end
+  if i <= len and byte(s, i) == 46 then -- '.'
+    i = i + 1
+    if i > len or not is_digit_byte(byte(s, i)) then
+      return false
+    end
+    while i <= len and is_digit_byte(byte(s, i)) do
+      i = i + 1
+    end
+  end
+  if i <= len then
+    b = byte(s, i)
+    if b ~= 69 and b ~= 101 then -- 'E' or 'e'
+      return false
+    end
+    i = i + 1
+    b = byte(s, i)
+    if b == 43 or b == 45 then -- '+' or '-'
+      i = i + 1
+    end
+    if i > len or not is_digit_byte(byte(s, i)) then
+      return false
+    end
+    while i <= len and is_digit_byte(byte(s, i)) do
+      i = i + 1
+    end
+  end
+  return i == len + 1
 end
 
 
