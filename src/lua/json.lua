@@ -203,6 +203,29 @@ local literal_map = {
   [ "null"  ] = nil,
 }
 
+local default_limits = {
+  max_input_bytes = 16 * 1024 * 1024,
+  max_depth = 256,
+  max_array_length = 200000,
+  max_object_members = 200000,
+}
+
+local function get_json_limits()
+  local conf = rawget(_G, "CONF")
+  local parser = conf and conf.parser
+  local json = parser and parser.json
+  local limits = {}
+  for k, v in pairs(default_limits) do
+    local cur = json and json[k]
+    if type(cur) == "number" and cur > 0 then
+      limits[k] = math.floor(cur)
+    else
+      limits[k] = v
+    end
+  end
+  return limits
+end
+
 local function is_valid_json_number(s)
   return s:match("^%-?(0|[1-9]%d*)(%.%d+)?([eE][%+%-]?%d+)?$") ~= nil
 end
@@ -369,9 +392,9 @@ local function parse_literal(str, i)
 end
 
 
-local function parse_array(str, i)
+local function parse_array(str, i, state, depth)
   local res = {}
-  local n = 1
+  local n = 0
   i = i + 1
   while 1 do
     local x
@@ -382,9 +405,12 @@ local function parse_array(str, i)
       break
     end
     -- Read token
-    x, i = parse(str, i)
-    res[n] = x
+    x, i = parse(str, i, state, depth + 1)
     n = n + 1
+    if n > state.max_array_length then
+      decode_error(str, i, "max array length exceeded")
+    end
+    res[n] = x
     -- Next token
     i = next_char(str, i, space_chars, true)
     local chr = byte(str, i)
@@ -396,9 +422,10 @@ local function parse_array(str, i)
 end
 
 
-local function parse_object(str, i)
+local function parse_object(str, i, state, depth)
   local res = {}
   local seen = {}
+  local members = 0
   i = i + 1
   while 1 do
     local key, val
@@ -412,7 +439,7 @@ local function parse_object(str, i)
     if byte(str, i) ~= 34 then -- '"'
       decode_error(str, i, "expected string for key")
     end
-    key, i = parse(str, i)
+    key, i = parse(str, i, state, depth + 1)
     if seen[key] then
       decode_error(str, i, "duplicate key '" .. key .. "'")
     end
@@ -424,7 +451,11 @@ local function parse_object(str, i)
     end
     i = next_char(str, i + 1, space_chars, true)
     -- Read value
-    val, i = parse(str, i)
+    val, i = parse(str, i, state, depth + 1)
+    members = members + 1
+    if members > state.max_object_members then
+      decode_error(str, i, "max object members exceeded")
+    end
     -- Set
     res[key] = val
     -- Next token
@@ -459,11 +490,15 @@ local char_func_map = {
 }
 
 
-parse = function(str, idx)
+parse = function(str, idx, state, depth)
+  depth = depth or 0
+  if depth > state.max_depth then
+    decode_error(str, idx, "max depth exceeded")
+  end
   local b = byte(str, idx)
   local f = char_func_map[b]
   if f then
-    return f(str, idx)
+    return f(str, idx, state, depth)
   end
   local chr = str:sub(idx, idx)
   decode_error(str, idx, "unexpected character '" .. chr .. "'")
@@ -474,7 +509,11 @@ function json.raw_decode(str)
   if type(str) ~= "string" then
     error("expected argument of type string, got " .. type(str))
   end
-  local res, idx = parse(str, next_char(str, 1, space_chars, true))
+  local limits = get_json_limits()
+  if #str > limits.max_input_bytes then
+    decode_error(str, 1, "max input size exceeded")
+  end
+  local res, idx = parse(str, next_char(str, 1, space_chars, true), limits, 0)
   idx = next_char(str, idx, space_chars, true)
   if idx <= #str then
     decode_error(str, idx, "trailing garbage")
