@@ -385,6 +385,7 @@ end
 
 local function parse_object(str, i)
   local res = {}
+  local seen = {}
   i = i + 1
   while 1 do
     local key, val
@@ -399,6 +400,10 @@ local function parse_object(str, i)
       decode_error(str, i, "expected string for key")
     end
     key, i = parse(str, i)
+    if seen[key] then
+      decode_error(str, i, "duplicate key '" .. key .. "'")
+    end
+    seen[key] = true
     -- Read ':' delimiter
     i = next_char(str, i, space_chars, true)
     if byte(str, i) ~= 58 then -- ":"
