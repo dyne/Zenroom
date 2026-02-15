@@ -173,18 +173,18 @@ EOF
 		 "PricePerKG":4,
          "TransferredProductAmount":500
       },
-	  "ABC-Transactions3Sum":{
-         "timestamp":1597573340,
-         "TransactionValue":1000,
-		 "PricePerKG":2,
-         "TransferredProductAmount":500
-      },
-	  "ABC-Transactions3Sum":{
-         "timestamp":1597573440,
-         "TransactionValue":2000,
-		 "PricePerKG":4,
-         "TransferredProductAmount":500
-      }
+	  "ABC-Transactions4Sum":{
+	         "timestamp":1597573340,
+	         "TransactionValue":1000,
+			 "PricePerKG":2,
+	         "TransferredProductAmount":500
+	      },
+	  "ABC-Transactions5Sum":{
+	         "timestamp":1597573440,
+	         "TransactionValue":2000,
+			 "PricePerKG":4,
+	         "TransferredProductAmount":500
+	      }
    },
    "timestamp":1597573330
 }
@@ -805,4 +805,3 @@ EOF
     save_output 'copy_from_schema_dictionary.json'
     assert_output '{"copy":{"address":"0x2B8070975AF995Ef7eb949AE28ee7706B9039504","signature":"0xed8f36c71989f8660e8f5d4adbfd8f1c0288cca90d3a5330b7bf735d71ab52fe7ba0a7827dc4ba707431f1c10babd389f658f8e208b89390a9be3c097579a2ff1b"}}'
 }
-
