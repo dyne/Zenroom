@@ -26,12 +26,19 @@ local J = require('json')
 
 J.decode = function(data)
    if not data then error("JSON.decode called without argument", 2) end
-   if #data < 2 then error("JSON.decode argument is empty string", 2) end
    if luatype(data) ~= "string" then error("JSON.decode argument of unsopported type: "..luatype(data), 2) end
-   local res = {}
+   if #data < 2 then error("JSON.decode argument is empty string", 2) end
    local right = tostring(data)
    local left
    local tmp
+   local ok, decoded = pcall(JSON.raw_decode, right)
+   if ok then
+      if luatype(decoded) ~= 'table' then
+         error("JSON decode has not returned a table", 2)
+      end
+      return decoded
+   end
+   local res = {}
    while right and right ~= "" do
       left, right = jsontok(right) -- function in zen_parser.c
       if not left then
@@ -111,11 +118,9 @@ J.deserialize = function(any)
     end
     local u <const> = O.from_url64(O.to_string(any))
     local s <const> = O.to_string(u)
-    if JSON.validate(s) then
-        return JSON.decode(s)
-    else
-        return(u)
-    end
+    local ok, decoded = pcall(JSON.decode, s)
+    if ok then return decoded end
+    return(u)
 end
 
 J.auto = function(obj)
@@ -137,6 +142,8 @@ end
 -- @return status: true if input was valid json, false otherwise
 -- @return value: error in case status is false, table if status is true
 J.validate = function(input)
+    local ok, res = pcall(JSON.raw_decode, input)
+    if ok then return true, res end
     return pcall(JSON.decode, input)
 end
 

@@ -1,35 +1,35 @@
 --
--- json.lua
+-- zenroom's json encoder and decoder
 --
 -- Copyright (c) 2019 rxi
--- Copyright (c) 2020-2021 Dyne.org foundation
+-- Copyright (c) 2020-2026 Dyne.org foundation
 --
--- Permission is hereby granted, free of charge, to any person obtaining a copy of
--- this software and associated documentation files (the "Software"), to deal in
--- the Software without restriction, including without limitation the rights to
--- use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
--- of the Software, and to permit persons to whom the Software is furnished to do
--- so, subject to the following conditions:
+-- Permission is hereby granted, free of charge, to any person
+-- obtaining a copy of this software and associated documentation
+-- files (the "Software"), to deal in the Software without
+-- restriction, including without limitation the rights to use, copy,
+-- modify, merge, publish, distribute, sublicense, and/or sell copies
+-- of the Software, and to permit persons to whom the Software is
+-- furnished to do so, subject to the following conditions:
 --
--- The above copyright notice and this permission notice shall be included in all
--- copies or substantial portions of the Software.
+-- The above copyright notice and this permission notice shall be
+-- included in all copies or substantial portions of the Software.
 --
--- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
--- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
--- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
--- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
--- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
--- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+-- EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+-- MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+-- NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+-- BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+-- ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+-- CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 -- SOFTWARE.
 --
 
-local json = { _version = "0.1.2" }
+local json = { _version = "1.1.0" }
 
--------------------------------------------------------------------------------
--- Encode
--------------------------------------------------------------------------------
-
--- TODO(Alberto): check the weird error in test/lua/json.lua
+------------
+-- Encode --
+------------
 
 local encode
 
@@ -168,11 +168,12 @@ function json.raw_encode(val, whitespaces)
 end
 
 
--------------------------------------------------------------------------------
--- Decode
--------------------------------------------------------------------------------
+------------
+-- Decode --
+------------
 
 local parse
+local byte = string.byte
 
 local function create_set(...)
   local res = {}
@@ -182,9 +183,18 @@ local function create_set(...)
   return res
 end
 
-local space_chars   = create_set(" ", "\t", "\r", "\n")
-local delim_chars   = create_set(" ", "\t", "\r", "\n", "]", "}", ",")
-local escape_chars  = create_set("\\", "/", '"', "b", "f", "n", "r", "t", "u")
+local function create_byte_set(...)
+  local res = {}
+  for i = 1, select("#", ...) do
+    local ch = select(i, ...)
+    res[byte(ch)] = true
+  end
+  return res
+end
+
+local space_chars   = create_byte_set(" ", "\t", "\r", "\n")
+local delim_chars   = create_byte_set(" ", "\t", "\r", "\n", "]", "}", ",")
+local escape_chars  = create_byte_set("\\", "/", '"', "b", "f", "n", "r", "t", "u")
 local literals      = create_set("true", "false", "null")
 
 local literal_map = {
@@ -193,14 +203,88 @@ local literal_map = {
   [ "null"  ] = nil,
 }
 
+local default_limits = {
+  max_input_bytes = 16 * 1024 * 1024,
+  max_depth = 256,
+  max_array_length = 200000,
+  max_object_members = 200000,
+}
+
+local function get_json_limits()
+  local conf = rawget(_G, "CONF")
+  local parser = conf and conf.parser
+  local json = parser and parser.json
+  local limits = {}
+  for k, v in pairs(default_limits) do
+    local cur = json and json[k]
+    if type(cur) == "number" and cur > 0 then
+      limits[k] = math.floor(cur)
+    else
+      limits[k] = v
+    end
+  end
+  return limits
+end
+
+local function is_digit_byte(b)
+  return b and b >= 48 and b <= 57
+end
+
+local function is_legacy_compatible_json_number(s)
+  local i = 1
+  local len = #s
+  local b = byte(s, i)
+  if b == 45 then -- '-'
+    i = i + 1
+  end
+  if i > len then
+    return false
+  end
+  b = byte(s, i)
+  if not is_digit_byte(b) then
+    return false
+  end
+  while i <= len and is_digit_byte(byte(s, i)) do
+    i = i + 1
+  end
+  if i <= len and byte(s, i) == 46 then -- '.'
+    i = i + 1
+    if i > len or not is_digit_byte(byte(s, i)) then
+      return false
+    end
+    while i <= len and is_digit_byte(byte(s, i)) do
+      i = i + 1
+    end
+  end
+  if i <= len then
+    b = byte(s, i)
+    if b ~= 69 and b ~= 101 then -- 'E' or 'e'
+      return false
+    end
+    i = i + 1
+    b = byte(s, i)
+    if b == 43 or b == 45 then -- '+' or '-'
+      i = i + 1
+    end
+    if i > len or not is_digit_byte(byte(s, i)) then
+      return false
+    end
+    while i <= len and is_digit_byte(byte(s, i)) do
+      i = i + 1
+    end
+  end
+  return i == len + 1
+end
+
 
 local function next_char(str, idx, set, negate)
-  for i = idx, #str do
-    if set[str:sub(i, i)] ~= negate then
+  local len = #str
+  for i = idx, len do
+    if set[byte(str, i)] ~= negate then
       return i
     end
   end
-  return #str + 1
+  return len + 1
 end
 
 
@@ -209,7 +293,7 @@ local function decode_error(str, idx, msg)
   local col_count = 1
   for i = 1, idx - 1 do
     col_count = col_count + 1
-    if str:sub(i, i) == "\n" then
+    if byte(str, i) == 10 then -- "\n"
       line_count = line_count + 1
       col_count = 1
     end
@@ -235,15 +319,19 @@ local function codepoint_to_utf8(n)
 end
 
 
+local function parse_surrogate_unicode_escape(s)
+  local n1 = tonumber(s:sub(3, 6), 16)
+  local n2 = tonumber(s:sub(9, 12), 16)
+  return codepoint_to_utf8((n1 - 0xd800) * 0x400 + (n2 - 0xdc00) + 0x10000)
+end
+
+
 local function parse_unicode_escape(s)
-  local n1 = tonumber( s:sub(3, 6),  16 )
-  local n2 = tonumber( s:sub(9, 12), 16 )
-  -- Surrogate pair?
-  if n2 then
-    return codepoint_to_utf8((n1 - 0xd800) * 0x400 + (n2 - 0xdc00) + 0x10000)
-  else
-    return codepoint_to_utf8(n1)
+  local n = tonumber(s:sub(3, 6), 16)
+  if n >= 0xd800 and n <= 0xdfff then
+    error(string.format("invalid unicode surrogate '%x'", n))
   end
+  return codepoint_to_utf8(n)
 end
 
 
@@ -251,9 +339,11 @@ local function parse_string(str, i)
   local has_unicode_escape = false
   local has_surrogate_escape = false
   local has_escape = false
+  local skip_next_low_surrogate = false
   local last
-  for j = i + 1, #str do
-    local x = str:byte(j)
+  local len = #str
+  for j = i + 1, len do
+    local x = byte(str, j)
 
     if x < 32 then
       decode_error(str, j, "control character in string")
@@ -261,18 +351,34 @@ local function parse_string(str, i)
 
     if last == 92 then -- "\\" (escape char)
       if x == 117 then -- "u" (unicode escape sequence)
-        local hex = str:sub(j + 1, j + 5)
-        if not hex:find("%x%x%x%x") then
+        local hex = str:sub(j + 1, j + 4)
+        if not hex:find("^%x%x%x%x$") then
           decode_error(str, j, "invalid unicode escape in string")
         end
-        if hex:find("^[dD][89aAbB]") then
+        local n1 = tonumber(hex, 16)
+        if skip_next_low_surrogate then
+          if n1 < 0xdc00 or n1 > 0xdfff then
+            decode_error(str, j, "invalid unicode surrogate pair in string")
+          end
+          skip_next_low_surrogate = false
+        elseif n1 >= 0xd800 and n1 <= 0xdbff then
+          local b1 = byte(str, j + 5)
+          local b2 = byte(str, j + 6)
+          local hex2 = str:sub(j + 7, j + 10)
+          local n2 = tonumber(hex2, 16)
+          if b1 ~= 92 or b2 ~= 117 or not n2 or n2 < 0xdc00 or n2 > 0xdfff then
+            decode_error(str, j, "invalid unicode surrogate pair in string")
+          end
+          skip_next_low_surrogate = true
           has_surrogate_escape = true
+        elseif n1 >= 0xdc00 and n1 <= 0xdfff then
+          decode_error(str, j, "invalid unicode surrogate pair in string")
         else
           has_unicode_escape = true
         end
       else
-        local c = string.char(x)
-        if not escape_chars[c] then
+        if not escape_chars[x] then
+          local c = string.char(x)
           decode_error(str, j, "invalid escape char '" .. c .. "' in string")
         end
         has_escape = true
@@ -282,10 +388,10 @@ local function parse_string(str, i)
     elseif x == 34 then -- '"' (end of string)
       local s = str:sub(i + 1, j - 1)
       if has_surrogate_escape then
-        s = s:gsub("\\u[dD][89aAbB]..\\u....", parse_unicode_escape)
+        s = s:gsub("\\u[dD][89aAbB]%x%x\\u[dD][cdefCDEF]%x%x", parse_surrogate_unicode_escape)
       end
       if has_unicode_escape then
-        s = s:gsub("\\u....", parse_unicode_escape)
+        s = s:gsub("\\u%x%x%x%x", parse_unicode_escape)
       end
       if has_escape then
         s = s:gsub("\\.", escape_char_map_inv)
@@ -303,14 +409,25 @@ end
 local function parse_number(str, i)
   local x = next_char(str, i, delim_chars)
   local s = str:sub(i, x - 1)
-  local n = tonumber(s)
-  if not n then
+  if not is_legacy_compatible_json_number(s) then
     decode_error(str, i, "invalid number '" .. s .. "'")
   end
-  -- -- float detection
-  -- if s:find('%.') then return(n), x end
-  -- return BIG.from_decimal(s), x
-   return n, x
+  local is_integer = (not s:find("%.")) and (not s:find("[eE]"))
+  if is_integer and type(BIG) == "table" and type(BIG.from_decimal) == "function" then
+    local neg = s:sub(1, 1) == "-"
+    local digits = neg and s:sub(2) or s
+    if #digits > 15 then
+      return BIG.from_decimal(s), x
+    end
+  end
+  local n = tonumber(s)
+  if not n or n ~= n or n <= -math.huge or n >= math.huge then
+    if type(warn) == "function" and (not n or n ~= n or n <= -math.huge or n >= math.huge) then
+      warn("JSON numeric parse/overflow rejected: " .. s)
+    end
+    decode_error(str, i, "invalid number '" .. s .. "'")
+  end
+  return n, x
 end
 
 local function parse_literal(str, i)
@@ -323,97 +440,115 @@ local function parse_literal(str, i)
 end
 
 
-local function parse_array(str, i)
+local function parse_array(str, i, state, depth)
   local res = {}
-  local n = 1
+  local n = 0
   i = i + 1
   while 1 do
     local x
     i = next_char(str, i, space_chars, true)
     -- Empty / end of array?
-    if str:sub(i, i) == "]" then
+    if byte(str, i) == 93 then -- "]"
       i = i + 1
       break
     end
     -- Read token
-    x, i = parse(str, i)
-    res[n] = x
+    x, i = parse(str, i, state, depth + 1)
     n = n + 1
+    if n > state.max_array_length then
+      decode_error(str, i, "max array length exceeded")
+    end
+    res[n] = x
     -- Next token
     i = next_char(str, i, space_chars, true)
-    local chr = str:sub(i, i)
+    local chr = byte(str, i)
     i = i + 1
-    if chr == "]" then break end
-    if chr ~= "," then decode_error(str, i, "expected ']' or ','") end
+    if chr == 93 then break end -- "]"
+    if chr ~= 44 then decode_error(str, i, "expected ']' or ','") end -- ","
   end
   return res, i
 end
 
 
-local function parse_object(str, i)
+local function parse_object(str, i, state, depth)
   local res = {}
+  local seen = {}
+  local members = 0
   i = i + 1
   while 1 do
     local key, val
     i = next_char(str, i, space_chars, true)
     -- Empty / end of object?
-    if str:sub(i, i) == "}" then
+    if byte(str, i) == 125 then -- "}"
       i = i + 1
       break
     end
     -- Read key
-    if str:sub(i, i) ~= '"' then
+    if byte(str, i) ~= 34 then -- '"'
       decode_error(str, i, "expected string for key")
     end
-    key, i = parse(str, i)
+    key, i = parse(str, i, state, depth + 1)
+    if seen[key] then
+      decode_error(str, i, "duplicate key '" .. key .. "'")
+    end
+    seen[key] = true
     -- Read ':' delimiter
     i = next_char(str, i, space_chars, true)
-    if str:sub(i, i) ~= ":" then
+    if byte(str, i) ~= 58 then -- ":"
       decode_error(str, i, "expected ':' after key")
     end
     i = next_char(str, i + 1, space_chars, true)
     -- Read value
-    val, i = parse(str, i)
+    val, i = parse(str, i, state, depth + 1)
+    members = members + 1
+    if members > state.max_object_members then
+      decode_error(str, i, "max object members exceeded")
+    end
     -- Set
     res[key] = val
     -- Next token
     i = next_char(str, i, space_chars, true)
-    local chr = str:sub(i, i)
+    local chr = byte(str, i)
     i = i + 1
-    if chr == "}" then break end
-    if chr ~= "," then decode_error(str, i, "expected '}' or ','") end
+    if chr == 125 then break end -- "}"
+    if chr ~= 44 then decode_error(str, i, "expected '}' or ','") end -- ","
   end
   return res, i
 end
 
 
 local char_func_map = {
-  [ '"' ] = parse_string,
-  [ "0" ] = parse_number,
-  [ "1" ] = parse_number,
-  [ "2" ] = parse_number,
-  [ "3" ] = parse_number,
-  [ "4" ] = parse_number,
-  [ "5" ] = parse_number,
-  [ "6" ] = parse_number,
-  [ "7" ] = parse_number,
-  [ "8" ] = parse_number,
-  [ "9" ] = parse_number,
-  [ "-" ] = parse_number,
-  [ "t" ] = parse_literal,
-  [ "f" ] = parse_literal,
-  [ "n" ] = parse_literal,
-  [ "[" ] = parse_array,
-  [ "{" ] = parse_object,
+  [34] = parse_string,   -- '"'
+  [48] = parse_number,   -- "0"
+  [49] = parse_number,   -- "1"
+  [50] = parse_number,   -- "2"
+  [51] = parse_number,   -- "3"
+  [52] = parse_number,   -- "4"
+  [53] = parse_number,   -- "5"
+  [54] = parse_number,   -- "6"
+  [55] = parse_number,   -- "7"
+  [56] = parse_number,   -- "8"
+  [57] = parse_number,   -- "9"
+  [45] = parse_number,   -- "-"
+  [116] = parse_literal, -- "t"
+  [102] = parse_literal, -- "f"
+  [110] = parse_literal, -- "n"
+  [91] = parse_array,    -- "["
+  [123] = parse_object,  -- "{"
 }
 
 
-parse = function(str, idx)
-  local chr = str:sub(idx, idx)
-  local f = char_func_map[chr]
-  if f then
-    return f(str, idx)
+parse = function(str, idx, state, depth)
+  depth = depth or 0
+  if depth > state.max_depth then
+    decode_error(str, idx, "max depth exceeded")
   end
+  local b = byte(str, idx)
+  local f = char_func_map[b]
+  if f then
+    return f(str, idx, state, depth)
+  end
+  local chr = str:sub(idx, idx)
   decode_error(str, idx, "unexpected character '" .. chr .. "'")
 end
 
@@ -422,7 +557,11 @@ function json.raw_decode(str)
   if type(str) ~= "string" then
     error("expected argument of type string, got " .. type(str))
   end
-  local res, idx = parse(str, next_char(str, 1, space_chars, true))
+  local limits = get_json_limits()
+  if #str > limits.max_input_bytes then
+    decode_error(str, 1, "max input size exceeded")
+  end
+  local res, idx = parse(str, next_char(str, 1, space_chars, true), limits, 0)
   idx = next_char(str, idx, space_chars, true)
   if idx <= #str then
     decode_error(str, idx, "trailing garbage")

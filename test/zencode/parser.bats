@@ -90,3 +90,23 @@ EOF
     run $ZENROOM_EXECUTABLE -z $TMP/error3.zen
     assert_line --partial "Zencode line 10 pattern not found (when): and this should fail or 'rule unknown ignore'"
 }
+
+@test "JSON duplicate keys are rejected" {
+    cat <<EOF > $TMP/duplicate_keys.zen
+rule check version 1.0.0
+Scenario credential: issuer keygen
+Given I have a 'string dictionary' named 'root'
+Then print the 'root'
+EOF
+    cat <<EOF > $TMP/duplicate_keys.json
+{
+  "root": {
+    "k": 1,
+    "k": 2
+  }
+}
+EOF
+    run $ZENROOM_EXECUTABLE -z -a $TMP/duplicate_keys.json $TMP/duplicate_keys.zen
+    assert_failure
+    assert_line --partial "duplicate key 'k'"
+}

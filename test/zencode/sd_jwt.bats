@@ -215,7 +215,6 @@ EOF
             "phone_number_verified","address","birthdate","updated_at"
         ],
         "object": {
-            "iss": "https://issuer.example.com",
             "iat": 1683000000,
             "exp": 1883000000,
             "given_name": "John",
