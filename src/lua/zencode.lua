@@ -434,21 +434,6 @@ end
 local function zencode_newline_iter(text)
 	return text:gmatch("[^\r\n]*")
 end
-local function zencode_isempty(b)
-	if b == nil or b == '' then
-		return true
-	else
-		return false
-	end
-end
-local function zencode_iscomment(b)
-	local x <const> = string.sub(b,1,1) -- string.char(b:byte(1))
-	if x == '#' then
-		return true
-	else
-		return false
-	end
-end
 local function enter_branching_and_looping(type, info, prefixes, ln)
 	local already_prefix = prefixes[1] == type
 	if not already_prefix then
@@ -488,28 +473,29 @@ function ZEN:parse(text)
    local branching = {}
    local looping = {}
    local prefixes = {}
-   local parse_prefix <const> = parse_prefix -- optimization
-   local last_prefix
-   self.linenum = 0
-   local res = fif(CONF.parser.strict_parse, true, { ignored={}, invalid={} })
-   for line in zencode_newline_iter(text) do
-	  self.linenum = self.linenum + 1
-	  local tline = trim(line) -- saves trims in isempty / iscomment
-	  if not zencode_isempty(tline) and not zencode_iscomment(tline) then
-		 --   xxx('Line: '.. text, 3)
-		 -- max length for single zencode line is #define MAX_LINE
-		 -- hard-coded inside zenroom.h
-		 local prefix = parse_prefix(line) -- trim is included
-		 if not prefix then
-			if CONF.parser.strict_parse then
-			   error("Invalid Zencode line "..self.linenum..": "..line)
-			end
-			table.insert(res.invalid, {line, self.linenum, 'Invalid Zencode line'})
-			goto continue_line
-		 end
-		 self.OK = true
-		 exitcode(0)
-		 if CONF.exec.scope == 'given' and
+	   local parse_prefix <const> = parse_prefix -- optimization
+	   local last_prefix
+	   self.linenum = 0
+	   local res = fif(CONF.parser.strict_parse, true, { ignored={}, invalid={} })
+	   for line in zencode_newline_iter(text) do
+		  self.linenum = self.linenum + 1
+		  -- Prefix parsing in C already skips leading whitespace.
+		  local prefix = parse_prefix(line)
+		  --   xxx('Line: '.. text, 3)
+		  -- max length for single zencode line is #define MAX_LINE
+		  -- hard-coded inside zenroom.h
+		  if not prefix then
+			 if CONF.parser.strict_parse then
+				error("Invalid Zencode line "..self.linenum..": "..line)
+			 end
+			 table.insert(res.invalid, {line, self.linenum, 'Invalid Zencode line'})
+			 goto continue_line
+		  elseif prefix == '' or string.sub(prefix,1,1) == '#' then
+			 goto continue_line
+		  end
+			 self.OK = true
+			 exitcode(0)
+			 if CONF.exec.scope == 'given' and
 			(prefix == 'when' or prefix == 'then'
 			 or prefix == 'if' or prefix == 'foreach') then
 			break -- stop parsing after given block
@@ -571,8 +557,8 @@ function ZEN:parse(text)
 				 end
 			end
 		 else
-			local ok, err <const> = pcall(fm, self.machine, { msg = tline, Z = self })
-			if not ok or (ok and not err) then
+				local ok, err <const> = pcall(fm, self.machine, { msg = line, Z = self })
+				if not ok or (ok and not err) then
 			   if CONF.parser.strict_parse then
 				  error(err or "Invalid transition from: "..self.machine.current.." to: "..line)
 			   end
@@ -583,7 +569,6 @@ function ZEN:parse(text)
 			   end
 			end
 			 end
-		  end
 		  ::continue_line::
 		  -- continue
 	   end

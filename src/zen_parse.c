@@ -308,6 +308,8 @@ static int lua_normalize_statement(lua_State* L) {
 	size_t to_len;
 	const char *src = luaL_checklstring(L, 1, &src_len);
 	const char *to = luaL_checklstring(L, 2, &to_len);
+	size_t start = 0;
+	size_t end = src_len;
 	char buf[MAX_LINE];
 	char *out;
 	size_t i = 0, j = 0;
@@ -321,12 +323,15 @@ static int lua_normalize_statement(lua_State* L) {
 			MAX_LINE - 1
 		);
 	}
+	while (start < end && isspace((unsigned char)src[start])) start++;
+	while (end > start && isspace((unsigned char)src[end - 1])) end--;
 	/* Replace quoted chunks with '' similarly to Lua gsub("'(.-)'","''"). */
-	while (i < src_len) {
+	i = start;
+	while (i < end) {
 		if (src[i] == '\'') {
 			size_t k = i + 1;
-			while (k < src_len && src[k] != '\'') k++;
-			if (k < src_len) {
+			while (k < end && src[k] != '\'') k++;
+			if (k < end) {
 				buf[j++] = '\'';
 				buf[j++] = '\'';
 				i = k + 1;
