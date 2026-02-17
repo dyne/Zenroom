@@ -732,6 +732,8 @@ end
 
 function ZEN:run()
    self:crumb()
+   local max_statements = tonumber(CONF.parser.max_statements) or 1000000
+   local executed_statements = 0
    local runtime_trace = function(x)
 	  table.insert(traceback, '+'..x.linenum..'  '..x.source)
    end
@@ -796,7 +798,11 @@ function ZEN:run()
 			self:codecguard()
 		end
 
-		self.OK = true
+			executed_statements = executed_statements + 1
+			if executed_statements > max_statements then
+				error("Zencode execution limit exceeded: "..max_statements.." statements")
+			end
+			self.OK = true
 		exitcode(0)
 		runtime_trace(x)
 		local ok, err <const> = pcall(x.hook, table.unpack(x.args))

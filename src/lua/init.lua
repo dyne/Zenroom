@@ -178,11 +178,12 @@ _G['CONF'] = {
 						  name = 'hex' },
 			 format = 'log' -- or 'compact' for base64 encoded json
 		   },
-	   parser = {strict_match = true,
-	             strict_parse = true,
-                 json = {
-                    max_input_bytes = 16 * 1024 * 1024,
-                    max_depth = 256,
+		   parser = {strict_match = true,
+		             strict_parse = true,
+		             max_statements = 1000000,
+	                 json = {
+	                    max_input_bytes = 16 * 1024 * 1024,
+	                    max_depth = 256,
                     max_array_length = 200000,
                     max_object_members = 200000
                  }},
