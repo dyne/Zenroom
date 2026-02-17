@@ -172,10 +172,13 @@ function ZEN:begin(new_heap)
 	   local func <const> = reg[tt] -- lookup the statement
 	   if func and luatype(func) == 'function' then
 		  local args = {} -- handle multiple arguments in same string
-		  for arg in string.gmatch(sentence, "'(.-)'") do
-			 -- convert all spaces to underscore in argument strings
-			 arg = uscore(arg, ' ', '_')
-			 table.insert(args, arg)
+		  -- Fast-path: most statements have no quoted arguments.
+		  if string.find(sentence, "'", 1, true) then
+			 for arg in string.gmatch(sentence, "'(.-)'") do
+				-- convert all spaces to underscore in argument strings
+				arg = uscore(arg, ' ', '_')
+				table.insert(args, arg)
+			 end
 		  end
 		  ctx.Z.id = ctx.Z.id + 1
 		  -- AST data prototype
