@@ -45,12 +45,12 @@ static int lua_parse_prefix(lua_State* L) {
 	unsigned short fspace = 0;
 	// skip space in front
 	for(c=0; c<size && c<MAX_LINE && c<USHRT_MAX; c++) {
-		if( !isspace(line[c]) ) break;
+		if( !isspace((unsigned char)line[c]) ) break;
 		fspace++; }
 	for(; c<size && c<MAX_LINE && c<USHRT_MAX; c++) {
-		if( isspace(line[c]) ) {
+		if( isspace((unsigned char)line[c]) ) {
 			low[c] = '\0'; break; }
-		low[c] = tolower(line[c]);
+		low[c] = (char)tolower((unsigned char)line[c]);
 	}
 	if(c>size || c==MAX_LINE) lua_pushnil(L);
 	else lua_pushlstring(L,&low[fspace],c-fspace);
