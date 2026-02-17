@@ -160,7 +160,8 @@ function ZEN:begin(new_heap)
 	   local index <const> = translate[current] or current
 	   -- save in reg a pointer to array of statements
 	   local reg <const> = ctx.Z[index .. '_steps']
-	   local sentence <const> = ctx.msg
+	   -- Keep statement source trimmed for stable errors/traceback semantics.
+	   local sentence <const> = trim(ctx.msg)
 	   local linenum <const> = ctx.Z.linenum
 	   ctx.Z.OK = false
 	   xxx('Zencode parser from: ' .. from .. " to: "..to, 3)
