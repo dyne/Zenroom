@@ -263,13 +263,33 @@ static int replace_first(char *s, const char *pat, const char *rep) {
 static void replace_all(char *s, const char *pat, const char *rep) {
 	size_t patlen = strlen(pat);
 	size_t replen = strlen(rep);
-	char *p = strstr(s, pat);
+	char *p;
+	int rep_contains_pat;
+
+	/* avoid undefined behavior / infinite loop on empty pattern */
+	if (patlen == 0) {
+		return;
+	}
+
+	/* detect self-amplifying replacements that can cause unbounded growth */
+	rep_contains_pat = (replen >= patlen && strstr(rep, pat) != NULL);
+
+	p = strstr(s, pat);
 	while (p) {
 		size_t tail = strlen(p + patlen);
 		if (patlen != replen) {
 			memmove(p + replen, p + patlen, tail + 1);
 		}
 		memcpy(p, rep, replen);
+
+		/* 
+		 * If the replacement is longer and contains the pattern,
+		 * repeated replacements could grow without bound in a fixed buffer.
+		 * In that case, perform only a single replacement to avoid overflow.
+		 */
+		if (rep_contains_pat && replen > patlen) {
+			break;
+		}
 		p = strstr(p + replen, pat);
 	}
 }
@@ -332,11 +352,21 @@ static int lua_normalize_statement(lua_State* L) {
 			size_t k = i + 1;
 			while (k < end && src[k] != '\'') k++;
 			if (k < end) {
+				/* Ensure there is room for two apostrophes and the final '\0'. */
+				if (j + 2 >= MAX_LINE) {
+					j = MAX_LINE - 1;
+					break;
+				}
 				buf[j++] = '\'';
 				buf[j++] = '\'';
 				i = k + 1;
 				continue;
 			}
+		}
+		/* Ensure there is room for one character and the final '\0'. */
+		if (j + 1 >= MAX_LINE) {
+			j = MAX_LINE - 1;
+			break;
 		}
 		buf[j++] = src[i++];
 	}
