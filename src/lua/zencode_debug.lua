@@ -151,7 +151,10 @@ end
 zencode_assert = function(condition, errmsg)
     if condition then return true end
     if ZEN.branch_condition then
-        ZEN.branch_valid = ZEN.branch_valid - 1
+        if not ZEN.branch_condition_failed then
+            ZEN.branch_valid = ZEN.branch_valid - 1
+            ZEN.branch_condition_failed = true
+        end
         table.insert(traceback, errmsg)
         return false
     end

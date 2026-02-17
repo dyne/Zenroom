@@ -641,6 +641,7 @@ local function manage_branching(stack, x)
 
 	if x.i then
 		stack.branch_condition = true
+		stack.branch_condition_failed = false
 		stack.branch = b+1
 		if v == b then
 			stack.branch_valid = v+1
