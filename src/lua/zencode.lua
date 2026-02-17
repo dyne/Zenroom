@@ -101,6 +101,25 @@ end
 
 function ZEN:begin(new_heap)
    self:crumb()
+   -- Reset parser/runtime state to avoid cross-run contamination on VM reuse.
+   AST = {}
+   self.branch = 0
+   self.branch_valid = 0
+   self.id = 0
+   self.checks = { version = false }
+   self.OK = true
+   self.jump = nil
+   self.ITER_present = false
+   self.BRANCH_present = false
+   self.ITER = {}
+   self.ITER_parse = {}
+   self.ITER_head = nil
+   self.traceback = {}
+   self.linenum = 0
+   self.last_valid_statement = false
+   self.phase = "g"
+   self.branch_condition = nil
+   self.branch_condition_failed = nil
    if new_heap then
 	  -- TODO: setup with an existing HEAP
    else
