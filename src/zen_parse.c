@@ -25,7 +25,6 @@
 #include <ctype.h>
 #include <strings.h>
 #include <string.h>
-#include <stdlib.h>
 
 #include <zen_error.h>
 
@@ -309,14 +308,18 @@ static int lua_normalize_statement(lua_State* L) {
 	size_t to_len;
 	const char *src = luaL_checklstring(L, 1, &src_len);
 	const char *to = luaL_checklstring(L, 2, &to_len);
-	char *buf = (char *)malloc(src_len + 1);
+	char buf[MAX_LINE];
 	char *out;
 	size_t i = 0, j = 0;
 	int is_given;
 	int is_then;
-	if (!buf) {
-		lua_pushnil(L);
-		return 1;
+	if (src_len >= MAX_LINE) {
+		return luaL_error(
+			L,
+			"Zencode line too long for normalization: %zu bytes (max %d)",
+			src_len,
+			MAX_LINE - 1
+		);
 	}
 	/* Replace quoted chunks with '' similarly to Lua gsub("'(.-)'","''"). */
 	while (i < src_len) {
@@ -373,7 +376,6 @@ static int lua_normalize_statement(lua_State* L) {
 	collapse_and_trim_spaces(buf);
 
 	lua_pushstring(L, buf);
-	free(buf);
 	return 1;
 }
 
