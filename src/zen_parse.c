@@ -76,11 +76,11 @@ static int lua_trim_spaces(lua_State* L) {
 	front = luaL_checklstring(L,1,&size);
 	if (size == 0) end = front;
 	else end = &front[size - 1];
-	while (size && isspace(*front)) {
+	while (size && isspace((unsigned char)*front)) {
 		size--;
 		front++;
 	}
-	while (size && isspace(*end)) {
+	while (size && isspace((unsigned char)*end)) {
 		size--;
 		end--;
 	}
@@ -95,16 +95,21 @@ static int lua_trim_quotes(lua_State* L) {
 	const char* end;
 	size_t size;
 	front = luaL_checklstring(L,1,&size);
+	if (size == 0) {
+		lua_pushliteral(L, "");
+		return 1;
+	}
 	end = &front[size - 1];
-	while (size && (isspace(*front) || *front == '\'')) {
+	while (size && (isspace((unsigned char)*front) || *front == '\'')) {
 		size--;
 		front++;
 	}
-	while (size && (isspace(*end) || *end == '\'')) {
+	while (size && (isspace((unsigned char)*end) || *end == '\'')) {
 		size--;
 		end--;
 	}
-	lua_pushlstring(L,front,(size_t)(end - front) + 1);
+	if (size == 0) lua_pushliteral(L, "");
+	else lua_pushlstring(L,front,(size_t)(end - front) + 1);
 	return 1;
 }
 
