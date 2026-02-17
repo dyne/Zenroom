@@ -522,6 +522,7 @@ function ZEN:parse(text)
 			   error("Invalid Zencode line "..self.linenum..": "..line)
 			end
 			table.insert(res.invalid, {line, self.linenum, 'Invalid Zencode line'})
+			goto continue_line
 		 end
 		 self.OK = true
 		 exitcode(0)
@@ -598,10 +599,11 @@ function ZEN:parse(text)
 				  table.insert(res.invalid, {line, self.linenum, err or 'Invalid transition from '..self.machine.current})
 			   end
 			end
-		 end
-	  end
-	  -- continue
-   end
+			 end
+		  end
+		  ::continue_line::
+		  -- continue
+	   end
 	check_open_branching_or_looping('branching', branching)
 	check_open_branching_or_looping('looping', looping)
 	gc()
