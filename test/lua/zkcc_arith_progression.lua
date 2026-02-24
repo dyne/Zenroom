@@ -32,8 +32,16 @@ local lhs = sum * two
 local rhs = count * (first + last)
 L:assert_eq(lhs, rhs)
 
+-- Metadata
+L:set_version("1.0.0")
+L:set_author("Jhon Doe")
+L:set_source("https://github.com/dyne/Zenroom")
+L:set_copyright("2026 Jhon Doe")
+
 -- Compile circuit
 local artifact = L:compile(1)
+
+-- I.spy(L:info(artifact))
 
 -- Helper to make 32-byte OCTETs from small integers
 local function oct_u64(n)

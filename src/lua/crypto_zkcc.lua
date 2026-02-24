@@ -93,6 +93,10 @@ local function snapshot_schema(state, artifact)
         private = copy_entries(state.private),
         full = copy_entries(state.full),
         order = copy_entries(state.order),
+        version = state.version,
+        author = state.author,
+        source = state.source,
+        copyright = state.copyright,
         counts = {
             public = #state.public,
             private = #state.private,
@@ -530,6 +534,49 @@ end
 
 function NamedLogic:raw()
     return self._logic
+end
+
+function NamedLogic:set_version(version)
+    self._state.version = version
+end
+
+function NamedLogic:set_author(author)
+    self._state.author = author
+end
+
+function NamedLogic:set_source(source)
+    self._state.source = source
+end
+
+function NamedLogic:set_copyright(copyright)
+    self._state.copyright = copyright
+end
+
+local function compact_input_entries(entries)
+    local out = {}
+    for i, entry in ipairs(entries or {}) do
+        out[i] = {
+            name = entry.name,
+            desc = entry.desc,
+            type = entry.type,
+        }
+    end
+    return out
+end
+
+function NamedLogic:info(artifact)
+    local snapshot <const> = snapshot_schema(self._state, artifact)
+    local circuit_id <const> = artifact._artifact:circuit_id()
+
+    return {
+        public_inputs = compact_input_entries(snapshot.public),
+        private_inputs = compact_input_entries(snapshot.private),
+        hash = HASH.sha256(circuit_id),
+        version = snapshot.version,
+        author = snapshot.author,
+        source = snapshot.source,
+        copyright = snapshot.copyright,
+    }
 end
 
 local function new_named_logic()
