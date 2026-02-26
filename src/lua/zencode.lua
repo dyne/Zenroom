@@ -166,9 +166,8 @@ function ZEN:begin(new_heap)
 	   ctx.Z.OK = false
 	   xxx('Zencode parser from: ' .. from .. " to: "..to, 3)
 	   assert(reg,'Callback register not found: ' .. current)
-	   -- assert(#reg,'Callback register empty: '..current)
-		   -- Hot normalization moved to C for performance.
-		   local tt = normalize_stmt(sentence, to)
+	   -- Hot normalization moved to zen_parse.c for performance.
+	   local tt = normalize_zencode_statement(sentence, to)
 	   --
 	   local func <const> = reg[tt] -- lookup the statement
 	   if func and luatype(func) == 'function' then

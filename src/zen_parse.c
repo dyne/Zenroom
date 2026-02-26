@@ -499,7 +499,7 @@ void zen_add_parse(lua_State *L) {
 		{ {"parse_prefix", lua_parse_prefix},
 		  {"trim", lua_trim_spaces},
 		  {"trimq", lua_trim_quotes},
-		  {"normalize_stmt", lua_normalize_statement},
+		  {"normalize_zencode_statement", lua_normalize_statement},
 		  {"jsontok", lua_unserialize_json},
 		  {"zencode_scenarios", lua_list_scenarios},
 		  {NULL, NULL} };
