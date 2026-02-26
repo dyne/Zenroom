@@ -567,7 +567,9 @@ end
 function NamedLogic:info(artifact)
     local snapshot <const> = snapshot_schema(self._state, artifact)
     local circuit_id <const> = artifact._artifact:circuit_id()
-
+    -- A circuit's hash in longfellow-zk is made of the sha256 of a
+    -- concatenation of circuid_ids, which can be more than one when
+    -- linked with sumcheck. This is still TODO: multiple circuit_ids
     return {
         public_inputs = compact_input_entries(snapshot.public),
         private_inputs = compact_input_entries(snapshot.private),
@@ -576,6 +578,9 @@ function NamedLogic:info(artifact)
         author = snapshot.author,
         source = snapshot.source,
         copyright = snapshot.copyright,
+        -- we can add source_hash is future to link the circuit to the
+        -- zkcc lua code before compilation to artifact
+        -- source_hash = HMAC(this.hash, zkcc_code.lua)
     }
 end
 
