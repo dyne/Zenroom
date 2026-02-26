@@ -24,6 +24,7 @@
 // #include <stdio.h>
 #include <ctype.h>
 #include <strings.h>
+#include <string.h>
 
 #include <zen_error.h>
 
@@ -45,12 +46,12 @@ static int lua_parse_prefix(lua_State* L) {
 	unsigned short fspace = 0;
 	// skip space in front
 	for(c=0; c<size && c<MAX_LINE && c<USHRT_MAX; c++) {
-		if( !isspace(line[c]) ) break;
+		if( !isspace((unsigned char)line[c]) ) break;
 		fspace++; }
 	for(; c<size && c<MAX_LINE && c<USHRT_MAX; c++) {
-		if( isspace(line[c]) ) {
+		if( isspace((unsigned char)line[c]) ) {
 			low[c] = '\0'; break; }
-		low[c] = tolower(line[c]);
+		low[c] = (char)tolower((unsigned char)line[c]);
 	}
 	if(c>size || c==MAX_LINE) lua_pushnil(L);
 	else lua_pushlstring(L,&low[fspace],c-fspace);
@@ -76,11 +77,11 @@ static int lua_trim_spaces(lua_State* L) {
 	front = luaL_checklstring(L,1,&size);
 	if (size == 0) end = front;
 	else end = &front[size - 1];
-	while (size && isspace(*front)) {
+	while (size && isspace((unsigned char)*front)) {
 		size--;
 		front++;
 	}
-	while (size && isspace(*end)) {
+	while (size && isspace((unsigned char)*end)) {
 		size--;
 		end--;
 	}
@@ -95,16 +96,21 @@ static int lua_trim_quotes(lua_State* L) {
 	const char* end;
 	size_t size;
 	front = luaL_checklstring(L,1,&size);
+	if (size == 0) {
+		lua_pushliteral(L, "");
+		return 1;
+	}
 	end = &front[size - 1];
-	while (size && (isspace(*front) || *front == '\'')) {
+	while (size && (isspace((unsigned char)*front) || *front == '\'')) {
 		size--;
 		front++;
 	}
-	while (size && (isspace(*end) || *end == '\'')) {
+	while (size && (isspace((unsigned char)*end) || *end == '\'')) {
 		size--;
 		end--;
 	}
-	lua_pushlstring(L,front,(size_t)(end - front) + 1);
+	if (size == 0) lua_pushliteral(L, "");
+	else lua_pushlstring(L,front,(size_t)(end - front) + 1);
 	return 1;
 }
 
@@ -238,6 +244,176 @@ static int lua_unserialize_json(lua_State* L) {
     return 2;
 }
 
+static int replace_first(char *s, const char *pat, const char *rep) {
+	char *p = strstr(s, pat);
+	size_t patlen;
+	size_t replen;
+	size_t tail;
+	if (!p) return 0;
+	patlen = strlen(pat);
+	replen = strlen(rep);
+	tail = strlen(p + patlen);
+	if (patlen != replen) {
+		memmove(p + replen, p + patlen, tail + 1);
+	}
+	memcpy(p, rep, replen);
+	return 1;
+}
+
+static void replace_all(char *s, const char *pat, const char *rep) {
+	size_t patlen = strlen(pat);
+	size_t replen = strlen(rep);
+	char *p;
+	int rep_contains_pat;
+
+	/* avoid undefined behavior / infinite loop on empty pattern */
+	if (patlen == 0) {
+		return;
+	}
+
+	/* detect self-amplifying replacements that can cause unbounded growth */
+	rep_contains_pat = (replen >= patlen && strstr(rep, pat) != NULL);
+
+	p = strstr(s, pat);
+	while (p) {
+		size_t tail = strlen(p + patlen);
+		if (patlen != replen) {
+			memmove(p + replen, p + patlen, tail + 1);
+		}
+		memcpy(p, rep, replen);
+
+		/* 
+		 * If the replacement is longer and contains the pattern,
+		 * repeated replacements could grow without bound in a fixed buffer.
+		 * In that case, perform only a single replacement to avoid overflow.
+		 */
+		if (rep_contains_pat && replen > patlen) {
+			break;
+		}
+		p = strstr(p + replen, pat);
+	}
+}
+
+static void strip_prefix_once(char *s, const char *prefix) {
+	size_t plen = strlen(prefix);
+	size_t len = strlen(s);
+	if (len >= plen && strncmp(s, prefix, plen) == 0) {
+		memmove(s, s + plen, len - plen + 1);
+	}
+}
+
+static void collapse_and_trim_spaces(char *s) {
+	char *r = s;
+	char *w = s;
+	int prev_space = 0;
+	while (*r && isspace((unsigned char)*r)) r++;
+	while (*r) {
+		unsigned char c = (unsigned char)*r++;
+		if (isspace(c)) {
+			if (!prev_space) {
+				*w++ = ' ';
+				prev_space = 1;
+			}
+		} else {
+			*w++ = (char)c;
+			prev_space = 0;
+		}
+	}
+	if (w > s && *(w - 1) == ' ') w--;
+	*w = '\0';
+}
+
+static int lua_normalize_statement(lua_State* L) {
+	size_t src_len;
+	size_t to_len;
+	const char *src = luaL_checklstring(L, 1, &src_len);
+	const char *to = luaL_checklstring(L, 2, &to_len);
+	size_t start = 0;
+	size_t end = src_len;
+	char buf[MAX_LINE];
+	char *out;
+	size_t i = 0, j = 0;
+	int is_given;
+	int is_then;
+	if (src_len >= MAX_LINE) {
+		return luaL_error(
+			L,
+			"Zencode line too long for normalization: %zu bytes (max %d)",
+			src_len,
+			MAX_LINE - 1
+		);
+	}
+	while (start < end && isspace((unsigned char)src[start])) start++;
+	while (end > start && isspace((unsigned char)src[end - 1])) end--;
+	/* Replace quoted chunks with '' similarly to Lua gsub("'(.-)'","''"). */
+	i = start;
+	while (i < end) {
+		if (src[i] == '\'') {
+			size_t k = i + 1;
+			while (k < end && src[k] != '\'') k++;
+			if (k < end) {
+				/* Ensure there is room for two apostrophes and the final '\0'. */
+				if (j + 2 >= MAX_LINE) {
+					j = MAX_LINE - 1;
+					break;
+				}
+				buf[j++] = '\'';
+				buf[j++] = '\'';
+				i = k + 1;
+				continue;
+			}
+		}
+		/* Ensure there is room for one character and the final '\0'. */
+		if (j + 1 >= MAX_LINE) {
+			j = MAX_LINE - 1;
+			break;
+		}
+		buf[j++] = src[i++];
+	}
+	buf[j] = '\0';
+
+	replace_first(buf, " I ", " ");
+	for (out = buf; *out; out++) {
+		*out = (char)tolower((unsigned char)*out);
+	}
+
+	is_then = (to_len == 4 && strncmp(to, "then", 4) == 0) ||
+		(to_len == 6 && strncmp(to, "thenif", 6) == 0);
+	is_given = (to_len == 5 && strncmp(to, "given", 5) == 0);
+
+	if (is_then) {
+		replace_first(buf, " the ", " ");
+	}
+	if (is_given) {
+		replace_first(buf, " the ", " ");
+		replace_first(buf, " a ", " ");
+		replace_first(buf, " an ", " ");
+		replace_first(buf, " have ", " ");
+		replace_first(buf, " known as ", " ");
+		replace_first(buf, " valid ", " ");
+	}
+
+	strip_prefix_once(buf, "when ");
+	strip_prefix_once(buf, "then ");
+	strip_prefix_once(buf, "given ");
+	strip_prefix_once(buf, "if ");
+	strip_prefix_once(buf, "foreach ");
+	strip_prefix_once(buf, "and ");
+
+	strip_prefix_once(buf, "that ");
+	replace_all(buf, " the ", " ");
+	if (strncmp(buf, "an ", 3) == 0) {
+		memmove(buf + 1, buf + 2, strlen(buf + 2) + 1); /* "an " -> "a " */
+	}
+	replace_first(buf, " valid ", " ");
+	replace_first(buf, " all ", " ");
+	replace_first(buf, " inside ", " in ");
+	collapse_and_trim_spaces(buf);
+
+	lua_pushstring(L, buf);
+	return 1;
+}
+
 
 // removed because of unexplained segfault when used inside pcall to
 // parse zencode: set_rule and set_scenario will explode, also seems
@@ -323,6 +499,7 @@ void zen_add_parse(lua_State *L) {
 		{ {"parse_prefix", lua_parse_prefix},
 		  {"trim", lua_trim_spaces},
 		  {"trimq", lua_trim_quotes},
+		  {"normalize_zencode_statement", lua_normalize_statement},
 		  {"jsontok", lua_unserialize_json},
 		  {"zencode_scenarios", lua_list_scenarios},
 		  {NULL, NULL} };

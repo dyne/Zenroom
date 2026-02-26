@@ -101,6 +101,25 @@ end
 
 function ZEN:begin(new_heap)
    self:crumb()
+   -- Reset parser/runtime state to avoid cross-run contamination on VM reuse.
+   AST = {}
+   self.branch = 0
+   self.branch_valid = 0
+   self.id = 0
+   self.checks = { version = false }
+   self.OK = true
+   self.jump = nil
+   self.ITER_present = false
+   self.BRANCH_present = false
+   self.ITER = {}
+   self.ITER_parse = {}
+   self.ITER_head = nil
+   self.traceback = {}
+   self.linenum = 0
+   self.last_valid_statement = false
+   self.phase = "g"
+   self.branch_condition = nil
+   self.branch_condition_failed = nil
    if new_heap then
 	  -- TODO: setup with an existing HEAP
    else
@@ -141,58 +160,25 @@ function ZEN:begin(new_heap)
 	   local index <const> = translate[current] or current
 	   -- save in reg a pointer to array of statements
 	   local reg <const> = ctx.Z[index .. '_steps']
-	   local sentence <const> = ctx.msg
+	   -- Keep statement source trimmed for stable errors/traceback semantics.
+	   local sentence <const> = trim(ctx.msg)
 	   local linenum <const> = ctx.Z.linenum
 	   ctx.Z.OK = false
 	   xxx('Zencode parser from: ' .. from .. " to: "..to, 3)
 	   assert(reg,'Callback register not found: ' .. current)
-	   -- assert(#reg,'Callback register empty: '..current)
-	   local gsub <const> = string.gsub -- optimization
-	   -- TODO: optimize in C
-	   -- remove '' contents, lower everything, expunge prefixes
-	   -- ignore 'the' only in Then statements
-	   local tt = gsub(sentence, "'(.-)'", "''") -- msg trimmed on parse
-	   tt = gsub(tt, ' I ', ' ', 1) -- eliminate first person pronoun
-	   tt = tt:lower() -- lowercase all statement
-	   if to == 'then' or to == 'thenif' then
-		  tt = gsub(tt, ' the ', ' ', 1)
-	   end
-	   if to == 'given' then
-		  tt = gsub(tt, ' the ', ' ', 1)
-		  tt = gsub(tt, ' a ', ' ', 1)
-		  tt = gsub(tt, ' an ', ' ', 1)
-		  tt = gsub(tt, ' have ', ' ', 1)
-		  tt = gsub(tt, ' known as ', ' ', 1)
-		  tt = gsub(tt, ' valid ', ' ', 1)
-	   end
-	   -- prefixes found at beginning of statement
-	   tt = gsub(tt, '^when ', '', 1)
-	   tt = gsub(tt, '^then ', '', 1)
-	   tt = gsub(tt, '^given ', '', 1)
-	   tt = gsub(tt, '^if ', '', 1)
-	   tt = gsub(tt, '^foreach ', '', 1)
-	   tt = gsub(tt, '^and ', '', 1) -- TODO: expunge only first 'and'
-	   -- generic particles
-	   tt = gsub(tt, '^that ', ' ', 1)
-	   tt = gsub(tt, ' the ', ' ')
-	   tt = gsub(tt, '^an ', 'a ', 1) -- equivalence
-	   tt = gsub(tt, ' valid ', ' ', 1) -- backward compat (v1)
-	   tt = gsub(tt, ' all ', ' ', 1)
-	   tt = gsub(tt, ' inside ', ' in ', 1) -- equivalence
-	   -- TODO: expire deprecation then activate equivalence
-	   -- tt = gsub(tt, ' size ', ' length ', 1)
-	   -- trimming
-	   tt = gsub(tt, ' +', ' ') -- eliminate multiple internal spaces
-	   tt = gsub(tt, '^ +', '') -- remove initial spaces
-	   tt = gsub(tt, ' +$', '') -- remove final spaces
+	   -- Hot normalization moved to zen_parse.c for performance.
+	   local tt = normalize_zencode_statement(sentence, to)
 	   --
 	   local func <const> = reg[tt] -- lookup the statement
 	   if func and luatype(func) == 'function' then
 		  local args = {} -- handle multiple arguments in same string
-		  for arg in string.gmatch(sentence, "'(.-)'") do
-			 -- convert all spaces to underscore in argument strings
-			 arg = uscore(arg, ' ', '_')
-			 table.insert(args, arg)
+		  -- Fast-path: most statements have no quoted arguments.
+		  if string.find(sentence, "'", 1, true) then
+			 for arg in string.gmatch(sentence, "'(.-)'") do
+				-- convert all spaces to underscore in argument strings
+				arg = uscore(arg, ' ', '_')
+				table.insert(args, arg)
+			 end
 		  end
 		  ctx.Z.id = ctx.Z.id + 1
 		  -- AST data prototype
@@ -451,21 +437,6 @@ end
 local function zencode_newline_iter(text)
 	return text:gmatch("[^\r\n]*")
 end
-local function zencode_isempty(b)
-	if b == nil or b == '' then
-		return true
-	else
-		return false
-	end
-end
-local function zencode_iscomment(b)
-	local x <const> = string.sub(b,1,1) -- string.char(b:byte(1))
-	if x == '#' then
-		return true
-	else
-		return false
-	end
-end
 local function enter_branching_and_looping(type, info, prefixes, ln)
 	local already_prefix = prefixes[1] == type
 	if not already_prefix then
@@ -505,27 +476,29 @@ function ZEN:parse(text)
    local branching = {}
    local looping = {}
    local prefixes = {}
-   local parse_prefix <const> = parse_prefix -- optimization
-   local last_prefix
-   self.linenum = 0
-   local res = fif(CONF.parser.strict_parse, true, { ignored={}, invalid={} })
-   for line in zencode_newline_iter(text) do
-	  self.linenum = self.linenum + 1
-	  local tline = trim(line) -- saves trims in isempty / iscomment
-	  if not zencode_isempty(tline) and not zencode_iscomment(tline) then
-		 --   xxx('Line: '.. text, 3)
-		 -- max length for single zencode line is #define MAX_LINE
-		 -- hard-coded inside zenroom.h
-		 local prefix = parse_prefix(line) -- trim is included
-		 if not prefix then
-			if CONF.parser.strict_parse then
-			   error("Invalid Zencode line "..self.linenum..": "..line)
-			end
-			table.insert(res.invalid, {line, self.linenum, 'Invalid Zencode line'})
-		 end
-		 self.OK = true
-		 exitcode(0)
-		 if CONF.exec.scope == 'given' and
+	   local parse_prefix <const> = parse_prefix -- optimization
+	   local last_prefix
+	   self.linenum = 0
+	   local res = fif(CONF.parser.strict_parse, true, { ignored={}, invalid={} })
+	   for line in zencode_newline_iter(text) do
+		  self.linenum = self.linenum + 1
+		  -- Prefix parsing in C already skips leading whitespace.
+		  local prefix = parse_prefix(line)
+		  --   xxx('Line: '.. text, 3)
+		  -- max length for single zencode line is #define MAX_LINE
+		  -- hard-coded inside zenroom.h
+		  if not prefix then
+			 if CONF.parser.strict_parse then
+				error("Invalid Zencode line "..self.linenum..": "..line)
+			 end
+			 table.insert(res.invalid, {line, self.linenum, 'Invalid Zencode line'})
+			 goto continue_line
+		  elseif prefix == '' or string.sub(prefix,1,1) == '#' then
+			 goto continue_line
+		  end
+			 self.OK = true
+			 exitcode(0)
+			 if CONF.exec.scope == 'given' and
 			(prefix == 'when' or prefix == 'then'
 			 or prefix == 'if' or prefix == 'foreach') then
 			break -- stop parsing after given block
@@ -587,8 +560,8 @@ function ZEN:parse(text)
 				 end
 			end
 		 else
-			local ok, err <const> = pcall(fm, self.machine, { msg = tline, Z = self })
-			if not ok or (ok and not err) then
+				local ok, err <const> = pcall(fm, self.machine, { msg = line, Z = self })
+				if not ok or (ok and not err) then
 			   if CONF.parser.strict_parse then
 				  error(err or "Invalid transition from: "..self.machine.current.." to: "..line)
 			   end
@@ -598,10 +571,10 @@ function ZEN:parse(text)
 				  table.insert(res.invalid, {line, self.linenum, err or 'Invalid transition from '..self.machine.current})
 			   end
 			end
-		 end
-	  end
-	  -- continue
-   end
+			 end
+		  ::continue_line::
+		  -- continue
+	   end
 	check_open_branching_or_looping('branching', branching)
 	check_open_branching_or_looping('looping', looping)
 	gc()
@@ -639,6 +612,7 @@ local function manage_branching(stack, x)
 
 	if x.i then
 		stack.branch_condition = true
+		stack.branch_condition_failed = false
 		stack.branch = b+1
 		if v == b then
 			stack.branch_valid = v+1
@@ -729,6 +703,8 @@ end
 
 function ZEN:run()
    self:crumb()
+   local max_statements = tonumber(CONF.parser.max_statements) or 1000000
+   local executed_statements = 0
    local runtime_trace = function(x)
 	  table.insert(traceback, '+'..x.linenum..'  '..x.source)
    end
@@ -793,7 +769,11 @@ function ZEN:run()
 			self:codecguard()
 		end
 
-		self.OK = true
+			executed_statements = executed_statements + 1
+			if executed_statements > max_statements then
+				error("Zencode execution limit exceeded: "..max_statements.." statements")
+			end
+			self.OK = true
 		exitcode(0)
 		runtime_trace(x)
 		local ok, err <const> = pcall(x.hook, table.unpack(x.args))
