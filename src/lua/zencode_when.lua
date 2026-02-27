@@ -117,6 +117,13 @@ When("write string '' in ''", function(content, dest)
 			   zentype = 'e' })
 end)
 
+When("write string '' in path ''", function(content, dest_path)
+    local maybe = mayhave(dest_path)
+    local path = maybe and maybe:octet():string() or dest_path
+    have(string.match(path, "^[^%.]+"))
+    write_to_path(path, O.from_string(content))
+end)
+
 -- ... and from a number
 When("write number '' in ''", function(content, dest)
 	empty(dest)

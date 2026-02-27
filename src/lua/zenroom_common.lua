@@ -438,34 +438,6 @@ function zip(...)
     end
 end
 
--- extract an element from deep down
--- works both in IN and ACK memory
--- @param path path to variable separated by points
--- @return element found following the path
--- @return name of the destination
-function pick_from_path(path, no_dest)
-    local path_array = strtok(uscore(path), CONF.path.separator)
-    local root = path_array[1]
-    table.remove(path_array, 1)
-    local dest = path_array[#path_array]
-    if not no_dest then empty(dest) end
-    -- should works both in given and when phase
-    -- IN is checked firstly since in the When phase IN will be empty
-    local res = IN[root] or ACK[root]
-    for _,v in pairs(path_array) do
-        zencode_assert(luatype(res) == 'table', "Object is not a table: "..root)
-        if res[v] == nil then
-            local v_number = tonumber(v)
-            zencode_assert(v_number and res[v_number] ~= nil, "Key "..v.." not found in "..root)
-            res = res[v_number]
-        else
-            res = res[v]
-        end
-        root = v
-    end
-    return res, dest
-end
-
 -- -- MULTIBASE
 
 -- Unicode, character, encoding, description, status
