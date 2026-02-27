@@ -75,6 +75,9 @@
 
 #include <zenroom.h>
 
+// from sfpool.h
+extern int sfpool_contains(void *restrict opaque, const void *ptr);
+
 // from segwit_addr.c
 extern int segwit_addr_encode(char *output, const char *hrp, int witver, const uint8_t *witprog, size_t witprog_len);
 extern int segwit_addr_decode(int* witver, uint8_t* witdata, size_t* witdata_len, const char* hrp, const char* addr);
@@ -220,7 +223,7 @@ octet* o_new(lua_State *L, const int size) {
 		return NULL; }
 	luaL_getmetatable(L, "zenroom.octet");
 	lua_setmetatable(L, -2);
-	o->val = malloc(size +0x0f);
+	o->val = malloc(size+0x0f);
 	if(HEDLEY_UNLIKELY(o->val==NULL)) {
 		zerror(L, "Cannot create octet, malloc failure");
 		zerror(L, "%s: %s",__func__,strerror(errno));
@@ -3057,6 +3060,16 @@ end:
 	END(1);
 }
 
+static int is_secure_memory(lua_State *L) {
+	BEGIN();
+	const octet *arg = o_arg(L,1);
+   	lua_pushboolean
+		(L, sfpool_contains(ZMM,(void*)arg->val));
+	END(1);
+}
+
+
+
 int luaopen_octet(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg octet_class[] = {
@@ -3140,7 +3153,7 @@ int luaopen_octet(lua_State *L) {
 		{"find", memfind},
 		{"copy", memcopy},
 		{"paste", mempaste},
-
+		{"is_secure", is_secure_memory},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg octet_methods[] = {
@@ -3212,6 +3225,7 @@ int luaopen_octet(lua_State *L) {
 		{"find", memfind},
 		{"copy", memcopy},
 		{"paste", mempaste},
+		{"is_secure", is_secure_memory},
 		// {"zcash_topoint", zcash_topoint},
 		// idiomatic operators
 		{"__len",octet_size},
