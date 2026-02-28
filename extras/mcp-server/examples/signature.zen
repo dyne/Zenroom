@@ -1,0 +1,6 @@
+Scenario 'ecdh': Create the signature
+Given that I am 'Alice'
+Given that I have my 'keyring'
+Given that I have a 'string' named 'message'
+When I create the ecdh signature of 'message'
+Then print the 'ecdh signature'
