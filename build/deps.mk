@@ -136,3 +136,12 @@ mlkem:
 			test/build/libmlkem.a \
 			OPT=0 Q="" AUTO=0 MLKEM_K=4 \
 			MLK_MULTILEVEL_BUILD_WITH_SHARED=1
+
+mayo:
+	$(info -- Building MAYO libs)
+	CC="${mayo_cc}" \
+	LD=${ld} \
+	AR=${ar} \
+	RANLIB=${ranlib} \
+	LDFLAGS="${ldflags}" \
+	${MAKE} -C ${pwd}/lib/mayo
