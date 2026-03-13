@@ -121,6 +121,7 @@ clean:
 	rm -rf ${pwd}/meson
 	$(MAKE) clean -C ${pwd}/lib/lua54/src
 	$(MAKE) clean -C ${pwd}/lib/pqclean
+	$(MAKE) clean -C ${pwd}/lib/mayo
 	$(MAKE) clean -C ${pwd}/lib/mlkem
 	$(MAKE) clean -C ${pwd}/lib/longfellow-zk
 	$(MAKE) clean -C ${pwd}/lib/zk-circuit-lang
