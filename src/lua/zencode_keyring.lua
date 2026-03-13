@@ -35,6 +35,12 @@ local function dilithium_f(o)
    end
    return o
 end
+local function mayo_f(o)
+   if #o ~= 40 then
+       error('Mayo key length is not correct: '..#o, 3)
+   end
+   return o
+end
 local function kyber_f(o)
    if #o ~= 1632 then
        error('Kyber key length is not correct: '..#o, 3)
@@ -120,6 +126,10 @@ local keytypes <const> = {
     dilithium = {
         import = function(obj) return schema_get(obj, 'dilithium', dilithium_f, O.from_base64) end,
         export = function(obj) return obj.dilithium:octet():base64() end
+    },
+    mayo = {
+        import = function(obj) return schema_get(obj, 'mayo', mayo_f, O.from_base64) end,
+        export = function(obj) return obj.mayo:octet():base64() end
     },
     mldsa44 = {
         import = function(obj) return schema_get(obj, 'mldsa44', mldsa44_f, O.from_base64) end,
