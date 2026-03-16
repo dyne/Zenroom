@@ -9,7 +9,7 @@ local function mayo_public_key_f(obj)
     return res
 end
 
-local function dilithium_signature_f(obj)
+local function mayo_signature_f(obj)
     local res = schema_get(obj, '.')
     zencode_assert(
         mayo.signature_check(res),
@@ -21,7 +21,7 @@ end
 ZEN:add_schema(
     {
         mayo_public_key = {import=mayo_public_key_f},
-        mayo_signature = {import=dilithium_signature_f}
+        mayo_signature = {import=mayo_signature_f}
     }
 )
 
