@@ -8,30 +8,63 @@
 #define MAYO_BUILD_TYPE_REF 1
 
 #include "api.h"
+#include "mayo.h"
 
-static int zen_mayo_keygen(lua_State *L) {
+static int zen_mayo_secgen(lua_State *L) {
     BEGIN();
-    char *failed_msg = NULL;
-    lua_createtable(L, 0, 2);
-    
-    int sk_len = CRYPTO_SECRETKEYBYTES; 
-    int pk_len = CRYPTO_PUBLICKEYBYTES;
-
-    octet *private = o_new(L, sk_len); SAFE_GOTO(private, "Could not create private key");
-    lua_setfield(L, -2, "private");
-    octet *public = o_new(L, pk_len); SAFE_GOTO(public, "Could not create public key");
-    lua_setfield(L, -2, "public");
-
-    crypto_sign_keypair((unsigned char*)public->val, (unsigned char*)private->val);
-    public->len = pk_len;
-    private->len = sk_len;
-
-end:
-    if(failed_msg) {
-        THROW(failed_msg);
-    }
+    Z(L);
+    register const size_t sksize = CRYPTO_SECRETKEYBYTES; 
+    octet *sk = o_new(L, sksize); SAFE(sk, "Could not create secret key");
+    register size_t i;
+    for(i=0; i < sksize; i++)
+        sk->val[i] = RAND_byte(Z->random_generator);
+    sk->len = sksize;
     END(1);
 }
+
+static int zen_mayo_pubgen(lua_State *L) {
+    BEGIN();
+    char *failed_msg = NULL;
+    octet *pk = NULL, *sk = NULL;
+    sk = o_arg(L, 1); SAFE_GOTO(sk, "Could not allocate secret key");
+    SAFE_GOTO(sk->len == CRYPTO_SECRETKEYBYTES, "Invalid size for MAYO_5 secret key");
+    pk = o_new(L, CRYPTO_PUBLICKEYBYTES); SAFE_GOTO(pk, "Could not create public key");
+	pk->len = CRYPTO_PUBLICKEYBYTES;
+
+    // params = NULL if compiling with ENABLE_PARAMS_DYNAMIC off (static)
+    mayo_derive_cpk(NULL, (unsigned char*)pk->val, (const unsigned char*)sk->val);
+end:
+	o_free(L, sk);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+// For generating directly the keypair (as in Dilithium)
+// static int zen_mayo_keygen(lua_State *L) {
+//     BEGIN();
+//     char *failed_msg = NULL;
+//     lua_createtable(L, 0, 2);
+    
+//     int sk_len = CRYPTO_SECRETKEYBYTES; 
+//     int pk_len = CRYPTO_PUBLICKEYBYTES;
+
+//     octet *private = o_new(L, sk_len); SAFE_GOTO(private, "Could not create private key");
+//     lua_setfield(L, -2, "private");
+//     octet *public = o_new(L, pk_len); SAFE_GOTO(public, "Could not create public key");
+//     lua_setfield(L, -2, "public");
+
+//     crypto_sign_keypair((unsigned char*)public->val, (unsigned char*)private->val);
+//     public->len = pk_len;
+//     private->len = sk_len;
+
+// end:
+//     if(failed_msg) {
+//         THROW(failed_msg);
+//     }
+//     END(1);
+// }
 
 static int zen_mayo_sign(lua_State *L) {
     BEGIN();
@@ -171,8 +204,11 @@ end:
 
 int luaopen_mayo(lua_State *L) {
     const struct luaL_Reg mayo_class[] = {
-        {"sigkeygen", zen_mayo_keygen},
-        {"sigpubcheck", zen_mayo_signature_pubcheck},
+        {"keygen", zen_mayo_secgen},
+        {"secgen", zen_mayo_secgen},
+        {"pubgen", zen_mayo_pubgen},
+        {"pubcheck", zen_mayo_signature_pubcheck},
+        {"checkpub", zen_mayo_signature_pubcheck},
         {"sign", zen_mayo_sign},
         {"verify", zen_mayo_verify},
         {"signed_msg", zen_mayo_signed_message},
