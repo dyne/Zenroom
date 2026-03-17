@@ -26,7 +26,7 @@ for line in newline_iter(DATA) do
       
       if curr_fields == 5 then
 	 -- Here starts the test
-	 assert(mayo.sigpubcheck(test.pk))
+	 assert(mayo.pubcheck(test.pk))
 	 assert(mayo.signature_check(test.sm:sub(1, mayo.signature_len())))
 	 assert(mayo.verify(test.pk, test.sm:sub(1, mayo.signature_len()), test.msg))
 	 assert(test.msg == mayo.verified_msg(test.pk, test.sm))

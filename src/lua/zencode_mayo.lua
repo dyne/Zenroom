@@ -3,7 +3,7 @@ local mayo = require 'mayo'
 local function mayo_public_key_f(obj)  
     local res = schema_get(obj, '.')
     zencode_assert(
-        mayo.sigpubcheck(res),
+        mayo.pubcheck(res),
         'MAYO public key length is not correct'
     )
     return res
@@ -27,14 +27,40 @@ ZEN:add_schema(
 
 --# MAYO #--
 
--- generate the keypair
-When("create mayo key pair",function()
+-- generate the private key
+When("create mayo key",function()
 	initkeyring'mayo'
-    empty'mayo public key'
-    local keys = mayo.sigkeygen()
-    ACK.keyring.mayo = keys.private
-    ACK.mayo_public_key = keys.public
-    new_codec('mayo public key')
+	ACK.keyring.mayo = mayo.secgen()
+end)
+
+-- generate the public key
+When("create mayo public key",function()
+	empty'mayo public key'
+	local sk = havekey'mayo'
+	ACK.mayo_public_key = mayo.pubgen(sk)
+	new_codec('mayo public key')
+end)
+
+local function _pubkey_from_secret(sec)
+   local sk = have(sec)
+   initkeyring'mayo'
+   mayo.pubgen(sk)
+   ACK.keyring.mayo = sk
+end
+
+When("create mayo key with secret key ''",
+     _pubkey_from_secret
+)
+
+When("create mayo key with secret ''",
+     _pubkey_from_secret
+)
+
+When("create mayo public key with secret key ''",function(sec)
+	local sk = have(sec)
+	empty'mayo public key'
+	ACK.mayo_public_key = mayo.pubgen(sk)
+	new_codec('mayo public key')
 end)
 
 -- generate the sign for a msg and verify
