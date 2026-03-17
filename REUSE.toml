@@ -77,3 +77,8 @@ precedence = "aggregate"
 SPDX-FileCopyrightText = "Copyright (c) 2025 Google LLC."
 SPDX-License-Identifier = "Apache-2.0"
 
+[[annotations]]
+path = ["lib/mayo/**"]
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright (c) MAYO-C authors"
+SPDX-License-Identifier = "Apache-2.0 AND MIT"
