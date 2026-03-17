@@ -605,6 +605,68 @@ int mayo_keypair_compact(const mayo_params_t *p, unsigned char *cpk,
     return ret;
 }
 
+//// ADDED FOR ZENROOM INTEGRATION
+
+// To derive the compact public key from the compact private key
+int mayo_derive_cpk(const mayo_params_t *p, unsigned char *cpk,
+                         const unsigned char *csk) {
+    int ret = MAYO_OK;
+    const unsigned char *seed_sk = csk;
+    unsigned char S[PK_SEED_BYTES_MAX + O_BYTES_MAX];
+    uint64_t P[P1_LIMBS_MAX + P2_LIMBS_MAX];
+    uint64_t P3[O_MAX*O_MAX*M_VEC_LIMBS_MAX] = {0};
+
+    unsigned char *seed_pk;
+    unsigned char O[(V_MAX)*O_MAX];
+
+    const int m_vec_limbs = PARAM_m_vec_limbs(p);
+    const int param_m = PARAM_m(p);
+    const int param_v = PARAM_v(p);
+    const int param_o = PARAM_o(p);
+    const int param_O_bytes = PARAM_O_bytes(p);
+    const int param_P1_limbs = PARAM_P1_limbs(p);
+    const int param_P3_limbs = PARAM_P3_limbs(p);
+    const int param_pk_seed_bytes = PARAM_pk_seed_bytes(p);
+    const int param_sk_seed_bytes = PARAM_sk_seed_bytes(p);
+
+    uint64_t *P1 = P;
+    uint64_t *P2 = P + param_P1_limbs;
+
+    // S ← shake256(seedsk, pk seed bytes + O bytes)
+    shake256(S, param_pk_seed_bytes + param_O_bytes, seed_sk,
+             param_sk_seed_bytes);
+    // seed_pk ← s[0 : pk_seed_bytes]
+    seed_pk = S;
+
+    // o ← Decode_o(s[pk_seed_bytes : pk_seed_bytes + o_bytes])
+    decode(S + param_pk_seed_bytes, O, param_v * param_o);
+
+#ifdef ENABLE_CT_TESTING
+    VALGRIND_MAKE_MEM_DEFINED(seed_pk, param_pk_seed_bytes);
+#endif
+
+    expand_P1_P2(p, P, seed_pk);
+
+    // compute P3 (modifies P2 in the process)
+    compute_P3(p, P1, P2, O, P3);
+
+    // store seed_pk in cpk
+    memcpy(cpk, seed_pk, param_pk_seed_bytes);
+
+    uint64_t P3_upper[P3_LIMBS_MAX];
+
+    // compute Upper(P3) and store in cpk
+    m_upper(p, P3, P3_upper, param_o);
+    pack_m_vecs(P3_upper, cpk + param_pk_seed_bytes, param_P3_limbs/m_vec_limbs, param_m);
+
+    mayo_secure_clear(O, sizeof(O));
+    mayo_secure_clear(P2, PARAM_P2_limbs(p)*sizeof(uint64_t));
+    mayo_secure_clear(P3, sizeof(P3));
+    return ret;
+}
+
+////
+
 int mayo_expand_pk(const mayo_params_t *p, const unsigned char *cpk,
                    uint64_t *pk) {
     expand_P1_P2(p, pk, cpk);

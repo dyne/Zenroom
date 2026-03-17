@@ -390,6 +390,25 @@ int mayo_open(const mayo_params_t *p, unsigned char *m,
 int mayo_keypair_compact(const mayo_params_t *p, unsigned char *cpk,
                          unsigned char *csk);
 
+//// ADDED FOR ZENROOM INTEGRATION
+
+/**
+ * Mayo derive compact public key from compact secret key.
+ *
+ * Deterministically generates the compacted public key from an existing
+ * compacted secret key (seed).
+ *
+ * @param[in] p Mayo parameter set
+ * @param[out] cpk Mayo compacted public key
+ * @param[in] csk Mayo compacted secret key (read-only)
+ * @return int status code
+ */
+#define mayo_derive_cpk MAYO_NAMESPACE(mayo_derive_cpk)
+int mayo_derive_cpk(const mayo_params_t *p, unsigned char *cpk, 
+                        const unsigned char *csk);
+
+////
+
 /**
  * Mayo expand public key.
  *

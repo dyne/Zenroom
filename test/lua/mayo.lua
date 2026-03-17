@@ -4,7 +4,7 @@ print()
 
 local mayo = require'mayo'
 
-local kp = mayo.sigkeygen()
+local kp = mayo.keygen()
 
 local msg = [[
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
