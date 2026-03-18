@@ -263,38 +263,38 @@ static const unsigned char f_tail[] = PARAM_NAME(f_tail);
  * Struct defining MAYO parameters
  */
 typedef struct {
-    int m;
-    int n;
-    int o;
-    int k;
-    int q;
-    const unsigned char *f_tail;
-    int m_bytes;
-    int O_bytes;
-    int v_bytes;
-    int r_bytes;
-    int R_bytes;
-    int P1_bytes;
-    int P2_bytes;
-    int P3_bytes;
-    int csk_bytes;
-    int cpk_bytes;
-    int sig_bytes;
-    int salt_bytes;
-    int sk_seed_bytes;
-    int digest_bytes;
-    int pk_seed_bytes;
-    int m_vec_limbs;
-    const char *name;
+	int m;
+	int n;
+	int o;
+	int k;
+	int q;
+	const unsigned char *f_tail;
+	int m_bytes;
+	int O_bytes;
+	int v_bytes;
+	int r_bytes;
+	int R_bytes;
+	int P1_bytes;
+	int P2_bytes;
+	int P3_bytes;
+	int csk_bytes;
+	int cpk_bytes;
+	int sig_bytes;
+	int salt_bytes;
+	int sk_seed_bytes;
+	int digest_bytes;
+	int pk_seed_bytes;
+	int m_vec_limbs;
+	const char *name;
 } mayo_params_t;
 
 typedef struct sk_t {
-    uint64_t p[P1_LIMBS_MAX + P2_LIMBS_MAX];
-    uint8_t O[V_MAX*O_MAX];
+	uint64_t p[P1_LIMBS_MAX + P2_LIMBS_MAX];
+	uint8_t O[V_MAX*O_MAX];
 } sk_t;
 
 typedef struct pk_t {
-    uint64_t p[P1_LIMBS_MAX + P2_LIMBS_MAX + P3_LIMBS_MAX];
+	uint64_t p[P1_LIMBS_MAX + P2_LIMBS_MAX + P3_LIMBS_MAX];
 } pk_t;
 
 /**
@@ -329,8 +329,8 @@ int mayo_keypair(const mayo_params_t *p, unsigned char *pk, unsigned char *sk);
 
 #define mayo_sign_signature MAYO_NAMESPACE(mayo_sign_signature)
 int mayo_sign_signature(const mayo_params_t *p, unsigned char *sig,
-              size_t *siglen, const unsigned char *m,
-              size_t mlen, const unsigned char *csk);
+			  size_t *siglen, const unsigned char *m,
+			  size_t mlen, const unsigned char *csk);
 
 /**
  * MAYO signature generation.
@@ -349,8 +349,8 @@ int mayo_sign_signature(const mayo_params_t *p, unsigned char *sig,
  */
 #define mayo_sign MAYO_NAMESPACE(mayo_sign)
 int mayo_sign(const mayo_params_t *p, unsigned char *sm,
-              size_t *smlen, const unsigned char *m,
-              size_t mlen, const unsigned char *sk);
+			  size_t *smlen, const unsigned char *m,
+			  size_t mlen, const unsigned char *sk);
 
 /**
  * Mayo open signature.
@@ -369,8 +369,8 @@ int mayo_sign(const mayo_params_t *p, unsigned char *sm,
  */
 #define mayo_open MAYO_NAMESPACE(mayo_open)
 int mayo_open(const mayo_params_t *p, unsigned char *m,
-              size_t *mlen, const unsigned char *sm,
-              size_t smlen, const unsigned char *pk);
+			  size_t *mlen, const unsigned char *sm,
+			  size_t smlen, const unsigned char *pk);
 
 /**
  * Mayo compact keypair generation.
@@ -388,7 +388,7 @@ int mayo_open(const mayo_params_t *p, unsigned char *m,
  */
 #define mayo_keypair_compact MAYO_NAMESPACE(mayo_keypair_compact)
 int mayo_keypair_compact(const mayo_params_t *p, unsigned char *cpk,
-                         unsigned char *csk);
+						 unsigned char *csk);
 
 //// ADDED FOR ZENROOM INTEGRATION
 
@@ -405,7 +405,7 @@ int mayo_keypair_compact(const mayo_params_t *p, unsigned char *cpk,
  */
 #define mayo_derive_cpk MAYO_NAMESPACE(mayo_derive_cpk)
 int mayo_derive_cpk(const mayo_params_t *p, unsigned char *cpk, 
-                        const unsigned char *csk);
+						const unsigned char *csk);
 
 ////
 
@@ -422,7 +422,7 @@ int mayo_derive_cpk(const mayo_params_t *p, unsigned char *cpk,
  */
 #define mayo_expand_pk MAYO_NAMESPACE(mayo_expand_pk)
 int mayo_expand_pk(const mayo_params_t *p, const unsigned char *cpk,
-                   uint64_t *epk);
+				   uint64_t *epk);
 
 /**
  * Mayo expand secret key.
@@ -437,7 +437,7 @@ int mayo_expand_pk(const mayo_params_t *p, const unsigned char *cpk,
  */
 #define mayo_expand_sk MAYO_NAMESPACE(mayo_expand_sk)
 int mayo_expand_sk(const mayo_params_t *p, const unsigned char *csk,
-                   sk_t *esk);
+				   sk_t *esk);
 
 /**
  * Mayo verify signature.
@@ -454,8 +454,8 @@ int mayo_expand_sk(const mayo_params_t *p, const unsigned char *csk,
  */
 #define mayo_verify MAYO_NAMESPACE(mayo_verify)
 int mayo_verify(const mayo_params_t *p, const unsigned char *m,
-                size_t mlen, const unsigned char *sig,
-                const unsigned char *pk);
+				size_t mlen, const unsigned char *sig,
+				const unsigned char *pk);
 
 #endif
 
