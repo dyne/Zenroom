@@ -2,7 +2,6 @@
 
 #include <mem.h>
 #include <mayo.h>
-#include <randombytes.h>
 #include <aes_ctr.h>
 #include <arithmetic.h>
 #include <simple_arithmetic.h>
@@ -13,6 +12,9 @@
 #ifdef ENABLE_CT_TESTING
 #include <valgrind/memcheck.h>
 #endif
+
+// Imported from zenroom
+extern int randombytes(void *buf, size_t n);
 
 #define MAYO_MIN(x, y) (((x) < (y)) ? (x) : (y))
 #define PK_PRF AES_128_CTR
