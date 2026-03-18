@@ -1,6 +1,6 @@
 local mayo = require 'mayo'
 
-local function mayo_public_key_f(obj)  
+local function mayo_public_key_f(obj)
     local res = schema_get(obj, '.')
     zencode_assert(
         mayo.pubcheck(res),
@@ -49,11 +49,11 @@ local function _pubkey_from_secret(sec)
 end
 
 When("create mayo key with secret key ''",
-     _pubkey_from_secret
+	 _pubkey_from_secret
 )
 
 When("create mayo key with secret ''",
-     _pubkey_from_secret
+	 _pubkey_from_secret
 )
 
 When("create mayo public key with secret key ''",function(sec)
@@ -77,7 +77,7 @@ IfWhen("verify '' has a mayo signature in '' by ''",function(msg, sig, by)
 	  local m = have(msg)
 	  local s = have(sig)
 	  zencode_assert(
-	     mayo.verify(pk, s, zencode_serialize(m)),
-	     'The mayo signature by '..by..' is not authentic'
+		 mayo.verify(pk, s, zencode_serialize(m)),
+		 'The mayo signature by '..by..' is not authentic'
 	  )
 end)
