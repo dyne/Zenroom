@@ -166,7 +166,7 @@ void zen_teardown(zenroom_t *zenroom);
 #endif
 
 #ifndef MAX_STRING // mostly for cli.c
-#define MAX_STRING 20480 // max 20KiB strings
+#define MAX_STRING 21504 // max 21KiB strings
 #endif
 
 #ifndef MAX_OCTET

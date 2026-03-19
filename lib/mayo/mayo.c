@@ -5,7 +5,8 @@
 #include <aes_ctr.h>
 #include <arithmetic.h>
 #include <simple_arithmetic.h>
-#include <fips202.h>
+// FIPS202 implementation from PQClean
+#include "../pqclean/fips202.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdalign.h>
