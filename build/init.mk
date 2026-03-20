@@ -152,5 +152,6 @@ zstd_cc ?= ${cc}
 #-----------------
 # mayo settings
 mayo_cc ?= ${cc}
+mayo_cflags ?= -I ${pwd}/src -I. -fPIC -DMAYO_BUILD_TYPE_REF=1 -DMAYO_VARIANT=MAYO_5
 
 # }}

@@ -143,6 +143,7 @@ mayo:
 	CC="${mayo_cc}" \
 	LD=${ld} \
 	AR=${ar} \
+	CFLAGS="${mayo_cflags} ${cflags}" \
 	RANLIB=${ranlib} \
 	LDFLAGS="${ldflags}" \
 	${MAKE} -C ${pwd}/lib/mayo
