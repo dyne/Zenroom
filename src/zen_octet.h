@@ -33,6 +33,7 @@
 
 #include <amcl.h>
 #include <hedley.h>
+#include <sfpool.h>
 
 // REMEMBER: o_new and o_dup push a new object in lua's stack
 HEDLEY_NON_NULL(1)
@@ -63,12 +64,8 @@ void push_string_to_octet(lua_State *L, char *p);
 
 // all octet based types are forced to use our internal memory pool
 extern void *ZMM;
-extern void *sfpool_malloc (void *restrict opaque, const size_t size);
-extern void  sfpool_free   (void *restrict opaque, void *ptr);
-extern void *sfpool_realloc(void *restrict opaque, void *ptr, const size_t size);
 #define malloc(size)       (ZMM?sfpool_malloc(ZMM, size):malloc(size))
 #define free(ptr)          (ZMM?sfpool_free(ZMM, ptr):free(ptr))
 #define realloc(ptr, size) (ZMM?sfpool_realloc(ZMM, ptr, size):realloc(ptr,size))
 
 #endif
-
