@@ -136,7 +136,7 @@ static int pem_to_base64(lua_State *L) {
 		}
 	}
 	lua_pushlstring(L, dst, out_len);
-	free(dst);
+	zfree(dst);
 	END(1);
 }
 

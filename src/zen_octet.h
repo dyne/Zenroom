@@ -64,8 +64,21 @@ void push_string_to_octet(lua_State *L, char *p);
 
 // all octet based types are forced to use our internal memory pool
 extern void *ZMM;
-#define malloc(size)       (ZMM?sfpool_malloc(ZMM, size):malloc(size))
-#define free(ptr)          (ZMM?sfpool_free(ZMM, ptr):free(ptr))
-#define realloc(ptr, size) (ZMM?sfpool_realloc(ZMM, ptr, size):realloc(ptr,size))
+
+static inline void *zmalloc(size_t size) {
+	return ZMM ? sfpool_malloc(ZMM, size) : malloc(size);
+}
+
+static inline void zfree(void *ptr) {
+	if(ZMM) {
+		sfpool_free(ZMM, ptr);
+		return;
+	}
+	free(ptr);
+}
+
+static inline void *zrealloc(void *ptr, size_t size) {
+	return ZMM ? sfpool_realloc(ZMM, ptr, size) : realloc(ptr, size);
+}
 
 #endif

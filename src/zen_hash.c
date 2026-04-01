@@ -79,49 +79,49 @@ hash* hash_new(lua_State *L, const char *hashtype) {
 		strncpy(h->name,hashtype,15);
 		h->len = 32;
 		h->algo = _SHA256;
-		h->sha256 = (hash256*)malloc(sizeof(hash256)); SAFE_GOTO(h->sha256, MALLOC_ERROR);
+		h->sha256 = (hash256*)zmalloc(sizeof(hash256)); SAFE_GOTO(h->sha256, MALLOC_ERROR);
 		HASH256_init(h->sha256);
 	} else if(strncasecmp(hashtype,"sha384",6) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 48;
 		h->algo = _SHA384;
-		h->sha384 = (hash384*)malloc(sizeof(hash384)); SAFE_GOTO(h->sha384, MALLOC_ERROR);
+		h->sha384 = (hash384*)zmalloc(sizeof(hash384)); SAFE_GOTO(h->sha384, MALLOC_ERROR);
 		HASH384_init(h->sha384);
 	} else if(strncasecmp(hashtype,"sha512",6) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 64;
 		h->algo = _SHA512;
-		h->sha512 = (hash512*)malloc(sizeof(hash512)); SAFE_GOTO(h->sha512, MALLOC_ERROR);
+		h->sha512 = (hash512*)zmalloc(sizeof(hash512)); SAFE_GOTO(h->sha512, MALLOC_ERROR);
 		HASH512_init(h->sha512);
 	} else if(strncasecmp(hashtype,"sha3_256",8) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 32;
 		h->algo = _SHA3_256;
-		h->sha3_256 = (sha3*)malloc(sizeof(sha3)); SAFE_GOTO(h->sha3_256, MALLOC_ERROR);
+		h->sha3_256 = (sha3*)zmalloc(sizeof(sha3)); SAFE_GOTO(h->sha3_256, MALLOC_ERROR);
 		SHA3_init(h->sha3_256, h->len);
 	} else if(strncasecmp(hashtype,"sha3_512",8) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 64;
 		h->algo = _SHA3_512;
-		h->sha3_512 = (sha3*)malloc(sizeof(sha3)); SAFE_GOTO(h->sha3_512, MALLOC_ERROR);
+		h->sha3_512 = (sha3*)zmalloc(sizeof(sha3)); SAFE_GOTO(h->sha3_512, MALLOC_ERROR);
 		SHA3_init(h->sha3_512, h->len);
 	} else if(strncasecmp(hashtype,"shake256",8) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 32;
 		h->algo = _SHAKE256;
-		h->shake256 = (sha3*)malloc(sizeof(sha3)); SAFE_GOTO(h->shake256, MALLOC_ERROR);
+		h->shake256 = (sha3*)zmalloc(sizeof(sha3)); SAFE_GOTO(h->shake256, MALLOC_ERROR);
 		SHA3_init(h->shake256, h->len);
 	} else if(strncasecmp(hashtype,"keccak256",9) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 32;
 		h->algo = _KECCAK256;
-		h->keccak256 = (sha3*)malloc(sizeof(sha3)); SAFE_GOTO(h->keccak256, MALLOC_ERROR);
+		h->keccak256 = (sha3*)zmalloc(sizeof(sha3)); SAFE_GOTO(h->keccak256, MALLOC_ERROR);
 		SHA3_init(h->keccak256, h->len);
 	} else if(strncasecmp(hashtype,"ripemd160",9) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 20;
 		h->algo = _RMD160;
-		h->rmd160 = (dword*)malloc((160/32)+0x0f); SAFE_GOTO(h->rmd160, MALLOC_ERROR);
+		h->rmd160 = (dword*)zmalloc((160/32)+0x0f); SAFE_GOTO(h->rmd160, MALLOC_ERROR);
 		RMD160_init(h->rmd160);
 	} // ... TODO: other hashes
 	else {
@@ -204,14 +204,14 @@ static int mnemonic_to_seed(lua_State *L) {
 
 	// PBDKF2 inputs have to be octets
 	octet omnemonic, osalt;
-	omnemonic.val = (char*)malloc(mnemoniclen); SAFE_GOTO(omnemonic.val, MALLOC_ERROR);
+	omnemonic.val = (char*)zmalloc(mnemoniclen); SAFE_GOTO(omnemonic.val, MALLOC_ERROR);
 	memcpy(omnemonic.val, mnemonic, mnemoniclen);
 	omnemonic.max = mnemoniclen;
 	omnemonic.len = mnemoniclen;
 
 	// There must be the space to concat a 4 byte integer
 	// (look at the source code of PBKDF2)
-	osalt.val = (char*)malloc(passphraselen+8+4); SAFE_GOTO(osalt.val, MALLOC_ERROR);
+	osalt.val = (char*)zmalloc(passphraselen+8+4); SAFE_GOTO(osalt.val, MALLOC_ERROR);
 	memcpy(osalt.val, salt, passphraselen+8+4);
 	osalt.len = passphraselen+8;
 	osalt.max = passphraselen+8+4;
@@ -223,8 +223,8 @@ static int mnemonic_to_seed(lua_State *L) {
 	PBKDF2(SHA512, &omnemonic, &osalt, BIP39_PBKDF2_ROUNDS, 512 / 8, okey);
 	okey->len = 512 / 8;
 end:
-	free(omnemonic.val);
-	free(osalt.val);
+	zfree(omnemonic.val);
+	zfree(osalt.val);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -248,16 +248,16 @@ int hash_destroy(lua_State *L) {
 	if(HEDLEY_UNLIKELY(h==NULL)) return(0);
 	h->ref--;
 	if(h->ref>0) return(0);
-	if(h->rng) free(h->rng);
+	if(h->rng) zfree(h->rng);
 	switch(h->algo) {
-	case _SHA256: free(h->sha256); break;
-	case _SHA384: free(h->sha384); break;
-	case _SHA512: free(h->sha512); break;
-	case _SHA3_256: free(h->sha3_256); break;
-	case _SHA3_512: free(h->sha3_512); break;
-	case _SHAKE256: free(h->shake256); break;
-	case _KECCAK256: free(h->keccak256); break;
-	case _RMD160: free(h->rmd160); break;
+	case _SHA256: zfree(h->sha256); break;
+	case _SHA384: zfree(h->sha384); break;
+	case _SHA512: zfree(h->sha512); break;
+	case _SHA3_256: zfree(h->sha3_256); break;
+	case _SHA3_512: zfree(h->sha3_512); break;
+	case _SHAKE256: zfree(h->shake256); break;
+	case _KECCAK256: zfree(h->keccak256); break;
+	case _RMD160: zfree(h->rmd160); break;
 	}
 	END(0);
 }
@@ -587,7 +587,7 @@ static int hash_srand(lua_State *L) {
 	const hash *h = hash_arg(L, 1); SAFE_GOTO(h, ALLOCATE_HASH_ERR);
 	seed = o_arg(L, 2); SAFE_GOTO(seed, ALLOCATE_OCT_ERR);
 	if(!h->rng) { // TODO: reuse if same seed is already sown
-		((hash*)h)->rng = (csprng*)malloc(sizeof(csprng)); SAFE_GOTO(h->rng, MALLOC_ERROR);
+		((hash*)h)->rng = (csprng*)zmalloc(sizeof(csprng)); SAFE_GOTO(h->rng, MALLOC_ERROR);
 	}
 	AMCL_(RAND_seed)(h->rng, seed->len, seed->val);
 	// fast-forward to runtime_random (256 bytes) and 4 bytes lua

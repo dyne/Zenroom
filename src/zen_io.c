@@ -181,7 +181,7 @@ int printerr(lua_State *L, const octet *o) {
 	  t[o->len] = '\n';
 	  t[o->len+1] = 0x0;
 #if defined(__EMSCRIPTEN__)
-	// octet safety buffer allows this: o->val = malloc(size +0x0f);
+	// octet safety buffer allows this: o->val = zmalloc(size +0x0f);
 	EM_ASM_({Module.printErr(UTF8ToString($0))}, t);
 #elif defined(__ANDROID__)
 	__android_log_print(ANDROID_LOG_DEFAULT, "ZEN", "%s", t);
@@ -190,7 +190,7 @@ int printerr(lua_State *L, const octet *o) {
 #else
 	_zen_io_write(STDERR_FILENO, t, o->len+1);
 #endif
-	free(t);
+	zfree(t);
   } else
 	func(L, "printerr of an empty string");	
   END(0);
@@ -212,7 +212,7 @@ static int zen_write (lua_State *L) {
   } else if(o) {
 #ifdef __EMSCRIPTEN_
 	o->val[o->len] = 0x0; // add string termination
-	// octet safety buffer allows this: o->val = malloc(size +0x0f);
+	// octet safety buffer allows this: o->val = zmalloc(size +0x0f);
 	EM_ASM_({Module.print(UTF8ToString($0))}, o->val);
 #else
 	_zen_io_write(STDOUT_FILENO, o->val, o->len);
@@ -235,7 +235,7 @@ int zen_log(lua_State *L, log_priority prio, const octet *o) {
   memcpy(t,o->val,o->len);
   t[o->len] = 0x0;
   __android_log_print(prio, "ZEN", "%s", t);
-  free(t);
+  zfree(t);
   return 0;
 #endif
   size_t suffix_len = (Z && Z->logformat == LOG_JSON) ? 3 : 1;
@@ -261,7 +261,7 @@ int zen_log(lua_State *L, log_priority prio, const octet *o) {
   } else {
 #if defined(__EMSCRIPTEN__)
 	size_t msg_len = 5 + o->len + suffix_len;
-	char *msg = malloc(msg_len + 1);
+	char *msg = zmalloc(msg_len + 1);
 	if (!msg) return 1;
 	memcpy(msg, prefix, 5);
 	memcpy(msg + 5, o->val, o->len);
@@ -273,7 +273,7 @@ int zen_log(lua_State *L, log_priority prio, const octet *o) {
 	*p='\n'; p++;
 	*p='\0';
 	EM_ASM_({Module.printErr(UTF8ToString($0))}, msg);
-	free(msg);
+	zfree(msg);
 #elif defined(ARCH_CORTEX)
 	_zen_io_write(SEMIHOSTING_STDOUT_FILENO, prefix, 5);
 	_zen_io_write(SEMIHOSTING_STDOUT_FILENO, o->val, o->len);

@@ -180,7 +180,7 @@ static char *octet_to_cstring(lua_State *L, const octet *src, const char *name,
 		zerror(L, "%s cannot contain NUL bytes", name);
 		return NULL;
 	}
-	dst = malloc(src->len + 1);
+	dst = zmalloc(src->len + 1);
 	if(!dst) {
 		zerror(L, "Memory allocation failed");
 		return NULL;
@@ -218,7 +218,7 @@ static RequestedAttribute* _get_attributes(lua_State* L, int index, size_t* coun
 			    LONGFELLOW_ATTR_VALUE_MAX,
 			    &entries[i-1].cbor_value_len)) {
 			lua_pop(L, 1);
-			free(entries);
+			zfree(entries);
 			return NULL;
 		}
         lua_pop(L, 1);
@@ -304,8 +304,8 @@ static int mdoc_prove(lua_State *L) {
 		goto endgame;
 	}
 	// pks need to be 0x prefixed and zero terminated hex strings
-	pkx = malloc(68);
-	pky = malloc(68);
+	pkx = zmalloc(68);
+	pky = zmalloc(68);
 	if(!pkx || !pky) {
 		zerror(L, "Memory allocation failed");
 		goto endgame;
@@ -348,11 +348,11 @@ static int mdoc_prove(lua_State *L) {
 	o_free(L,circuit);
 	o_free(L,mdoc);
 	o_free(L,trans);
-	if(attrs) free(attrs);
+	if(attrs) zfree(attrs);
 	o_free(L,now);
-	if(pkx) free(pkx);
-	if(pky) free(pky);
-	if(now_str) free(now_str);
+	if(pkx) zfree(pkx);
+	if(pky) zfree(pky);
+	if(now_str) zfree(now_str);
 	END(returned);
 }
 
@@ -441,10 +441,10 @@ static int mdoc_verify(lua_State *L) {
 	o_free(L,proof);
 	o_free(L,trans);
 	o_free(L,doc_type);
-	if(attrs) free(attrs);
+	if(attrs) zfree(attrs);
 	o_free(L,now);
-	if(now_str) free(now_str);
-	if(doc_type_str) free(doc_type_str);
+	if(now_str) zfree(now_str);
+	if(doc_type_str) zfree(doc_type_str);
 	END(1);
 }
 

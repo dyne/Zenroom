@@ -116,10 +116,10 @@ lua_Number optnumber_nullable(lua_State *L, int idx, lua_Number def, int *isvali
 
 void push_octet_to_hex_string(lua_State *L, octet *o) {
 	// string len = double +1
-	char *s = malloc((o->len<<1)+1); SAFEV(s, MALLOC_ERROR);
+	char *s = zmalloc((o->len<<1)+1); SAFEV(s, MALLOC_ERROR);
 	buf2hex(s, o->val, o->len);
 	lua_pushstring(L,s);
-	free(s);
+	zfree(s);
 	return;
 }
 
@@ -177,13 +177,13 @@ octet* o_alloc(lua_State *L, int size) {
 		zerror(L, "Cannot create octet, size too big: %u", size);
 		return NULL; }
 	register int os = sizeof(octet);
-	octet *o = malloc(os);
+	octet *o = zmalloc(os);
 	if(!o) {
 		zerror(L, "Cannot create octet, malloc failure: %s",
 			   strerror(errno));
 		return NULL; }
 	zenroom_t *Z = zen_get_context(L);
-	o->val = malloc(size +0x0f);
+	o->val = zmalloc(size +0x0f);
 	if(!o->val) {
 		zerror(L, "Cannot create octet value, malloc: %s",
 			   strerror(errno));
@@ -201,8 +201,8 @@ void o_free(lua_State *L, const octet *o) {
 	octet *t = (octet*)o; // remove const static check
 	t->ref--;
 	if(t->ref>0) return;
-	if(HEDLEY_LIKELY(t->val!=NULL)) free(t->val);
-	free(t);
+	if(HEDLEY_LIKELY(t->val!=NULL)) zfree(t->val);
+	zfree(t);
 	return;
 }
 
@@ -220,7 +220,7 @@ octet* o_new(lua_State *L, const int size) {
 		return NULL; }
 	luaL_getmetatable(L, "zenroom.octet");
 	lua_setmetatable(L, -2);
-	o->val = malloc(size +0x0f);
+	o->val = zmalloc(size +0x0f);
 	if(HEDLEY_UNLIKELY(o->val==NULL)) {
 		zerror(L, "Cannot create octet, malloc failure");
 		zerror(L, "%s: %s",__func__,strerror(errno));
@@ -387,8 +387,8 @@ int o_destroy(lua_State *L) {
 	octet *o = (octet*)ud;
 	o->ref--;
 	if(o->ref > 0) return 0;
-	if(o->val) free(o->val);
-//	free(o);
+	if(o->val) zfree(o->val);
+//	zfree(o);
 	return 0;
 }
 
@@ -698,7 +698,7 @@ static int from_base58(lua_State *L) {
 	luaL_argcheck(L, s != NULL, 1, "base58 string expected");
 	int len = is_base58(L, s); SAFE(len, "Invalid base58 sequence");
 	size_t binmax = B64decoded_len(len); //((len + 3) >> 2) *3;
-	tmp = malloc(binmax); SAFE_GOTO(tmp, MALLOC_ERROR);
+	tmp = zmalloc(binmax); SAFE_GOTO(tmp, MALLOC_ERROR);
 	// size_t binmax = len + len + len;
 	size_t binlen = binmax;
 	SAFE(b58tobin((void*)tmp, &binlen, s, len), "Error in conversion from base58");
@@ -710,7 +710,7 @@ static int from_base58(lua_State *L) {
 	}
 	o->len = binlen;
 end:
-	free(tmp);
+	zfree(tmp);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -889,11 +889,11 @@ static int to_segwit_address(lua_State *L) {
 	}
 	hrp[i] = '\0';
 	SAFE_GOTO(s[i] == '\0' && (strncmp(hrp, "bc", 2) == 0 || strncmp(hrp, "tb", 2) == 0), "Invalid human readable part");
-	result = malloc(73+strlen(hrp)); SAFE_GOTO(result, MALLOC_ERROR);
+	result = zmalloc(73+strlen(hrp)); SAFE_GOTO(result, MALLOC_ERROR);
 	SAFE_GOTO(segwit_addr_encode(result, hrp, witver, (uint8_t*)o->val, o->len), "Cannot be encoded to segwit format");
 	lua_pushstring(L,result);
 end:
-	if(result) free(result);
+	if(result) zfree(result);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -959,7 +959,7 @@ static int from_base32_crockford(lua_State *L) {
 	const char *s_in = lua_tostring(L, 1);
 	luaL_argcheck(L, s_in != NULL, 1, "base32 string expected");
 	int use_checksum = lua_toboolean(L, 2);
-	char *s = malloc(strlen(s_in) + 1); SAFE_GOTO(s, MALLOC_ERROR);
+	char *s = zmalloc(strlen(s_in) + 1); SAFE_GOTO(s, MALLOC_ERROR);
 	int k = 0;
 	for (int i = 0; s_in[i]; i++) {
 		if (s_in[i] != '-') s[k++] = s_in[i];
@@ -971,7 +971,7 @@ static int from_base32_crockford(lua_State *L) {
 	int decoded_len = b32crockford_decode(o->val, s, use_checksum); SAFE_GOTO(decoded_len, "Crockford base32 decoding failed");
 	o->len = decoded_len;
 end:
-	if (s) free(s);
+	if (s) zfree(s);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -1047,8 +1047,8 @@ static int from_uuid(lua_State *L) {
 		hex2buf(o->val + 10,  tmp + 24) == 6, "Invalid parsed uuid");
 	o->len = 16;
 end:
-	if(tmp) free(tmp);
-	if(exs) free(exs);
+	if(tmp) zfree(tmp);
+	if(exs) zfree(exs);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -1173,11 +1173,11 @@ static int to_base64 (lua_State *L) {
 	SAFE_GOTO(o->val, "Invalid argument, base64 cannot encode an empty octet");
 	int newlen;
 	newlen = ((3+(4*(o->len/3))) & ~0x03)+0x0f;
-	b = malloc(newlen); SAFE_GOTO(b, MALLOC_ERROR);
+	b = zmalloc(newlen); SAFE_GOTO(b, MALLOC_ERROR);
 	OCT_tobase64(b,(octet*)o);
 	lua_pushstring(L,b);
 end:
-	if(b) free(b);
+	if(b) zfree(b);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -1200,12 +1200,12 @@ static int to_url64 (lua_State *L) {
 	SAFE_GOTO(o->val, "Invalid argument, url64 cannot encode an empty octet");
 	int newlen;
 	newlen = B64encoded_len(o->len);
-	b = malloc(newlen); SAFE_GOTO(b, MALLOC_ERROR);
+	b = zmalloc(newlen); SAFE_GOTO(b, MALLOC_ERROR);
 	// b[0]='u';b[1]='6';b[2]='4';b[3]=':';
 	U64encode(b,o->val,o->len);
 	lua_pushstring(L,b);
 end:
-	if(b) free(b);
+	if(b) zfree(b);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -1247,13 +1247,13 @@ static int to_base58(lua_State *L) {
 	// the carry inner loop flips to 18446744073709551615
 	SAFE_GOTO(o-> len >= 3, "Invalid argument, base58 cannot encode octets smaller than 3 bytes");
 	size_t maxlen = o->len <<1;
-	b = malloc(maxlen); SAFE_GOTO(b, MALLOC_ERROR);
+	b = zmalloc(maxlen); SAFE_GOTO(b, MALLOC_ERROR);
 	size_t b58len = maxlen;
 	b58enc(b, &b58len, o->val, o->len);
 	// b[b58len] = '\0'; // already present in libbase58
 	lua_pushstring(L,b);
 end:
-	if(b) free(b);
+	if(b) zfree(b);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -1274,11 +1274,11 @@ static int to_base45 (lua_State *L) {
 	char *b = NULL;
 	const octet *o = o_arg(L, 1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
 	int newlen = b45encode(NULL, o->val, o->len);
-	b = malloc(newlen); SAFE_GOTO(b, MALLOC_ERROR);
+	b = zmalloc(newlen); SAFE_GOTO(b, MALLOC_ERROR);
 	b45encode(b, o->val, o->len);
 	lua_pushstring(L, b);
 end:
-	if(b) free(b);
+	if(b) zfree(b);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -1299,11 +1299,11 @@ static int to_base32(lua_State *L) {
 	char *b = NULL;
 	const octet *o = o_arg(L, 1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
 	int newlen = ((o->len + 4) / 5) * 8;
-	b = malloc(newlen + 1);  SAFE_GOTO(b, MALLOC_ERROR);
+	b = zmalloc(newlen + 1);  SAFE_GOTO(b, MALLOC_ERROR);
 	b32encode(b, o->val, o->len);
 	lua_pushstring(L, b);
 end:
-	if(b) free(b);
+	if(b) zfree(b);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -1337,21 +1337,21 @@ static int to_base32_crockford(lua_State *L) {
 	}
 	int raw_len = ((o->len + 4) / 5) * 8;
 	if (use_checksum) raw_len += 1;
-	tmp = malloc(raw_len + 1); SAFE_GOTO(tmp, MALLOC_ERROR);
+	tmp = zmalloc(raw_len + 1); SAFE_GOTO(tmp, MALLOC_ERROR);
 	b32crockford_encode(tmp, o->val, o->len, use_checksum);
 	if (hyphen_pos > 0 && hyphen_pos < strlen(tmp)) {
 		size_t len = strlen(tmp);
-		char *b = malloc(len + 2); SAFE_GOTO(b, MALLOC_ERROR);
+		char *b = zmalloc(len + 2); SAFE_GOTO(b, MALLOC_ERROR);
 		memcpy(b, tmp, hyphen_pos);
 		b[hyphen_pos] = '-';
 		strcpy(b + hyphen_pos + 1, tmp + hyphen_pos); 
 		lua_pushstring(L, b);
-		free(b);
+		zfree(b);
 	} else {
 		lua_pushstring(L, tmp);
 	}
 end:
-	if(tmp) free(tmp);
+	if(tmp) zfree(tmp);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -1373,11 +1373,11 @@ static int to_mnemonic(lua_State *L) {
 	const octet *o = o_arg(L,1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
 	if(!o->len) { lua_pushnil(L); goto end; }
 	SAFE_GOTO(o->len <= 32, "Invalid argument, octet too long for mnemonic encoding");
-	result = malloc(24 * 10); SAFE_GOTO(result, MALLOC_ERROR);
+	result = zmalloc(24 * 10); SAFE_GOTO(result, MALLOC_ERROR);
 	SAFE_GOTO(mnemonic_from_data(result, o->val, o->len), "Failed to encode to mnemonic");
 	lua_pushstring(L, result);
 end:
-	if(result) free(result);
+	if(result) zfree(result);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -1449,13 +1449,13 @@ static int to_string(lua_State *L) {
 	char *s = NULL;
 	const octet *o = o_arg(L, 1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
 	if(!o->len) { lua_pushnil(L); goto end; }
-	s = malloc(o->len+2); SAFE_GOTO(s, MALLOC_ERROR);
+	s = zmalloc(o->len+2); SAFE_GOTO(s, MALLOC_ERROR);
 	OCT_toStr((octet*)o, s); // TODO: inverted function signature, see
 					 // https://github.com/milagro-crypto/milagro-crypto-c/issues/291
 	s[o->len] = '\0'; // make sure string is NULL terminated
 	lua_pushlstring(L, s, o->len);
 end:
-	if(s) free(s);
+	if(s) zfree(s);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -1496,7 +1496,7 @@ static int to_bin(lua_State *L) {
 	char *s = NULL;
 	const octet *o = o_arg(L,1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
 	if(!o->len) { lua_pushnil(L); goto end; }
-	s = malloc(o->len*8+2); SAFE_GOTO(s, MALLOC_ERROR);
+	s = zmalloc(o->len*8+2); SAFE_GOTO(s, MALLOC_ERROR);
 	int i;
 	char oo;
 	char *is = s;
@@ -1514,7 +1514,7 @@ static int to_bin(lua_State *L) {
 	}
 	s[o->len*8] = 0x0;
 	lua_pushstring(L,s);
-	free(s);
+	zfree(s);
 end:
 	o_free(L, o);
 	if(failed_msg) {
@@ -1929,7 +1929,7 @@ static int entropy_bytefreq(lua_State *L) {
 	const octet *o = o_arg(L, 1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
 	register int i; // register
 	// byte frequency table
-	bfreq = malloc(0xff); SAFE_GOTO(bfreq, MALLOC_ERROR);
+	bfreq = zmalloc(0xff); SAFE_GOTO(bfreq, MALLOC_ERROR);
 	memset(bfreq, 0x0, 0xff);
 	// calculate freqency of byte values
 	register char *p = o->val;
@@ -1943,7 +1943,7 @@ static int entropy_bytefreq(lua_State *L) {
 		lua_settable(L,-3);
 	}
 end:
-	if(bfreq) free(bfreq);
+	if(bfreq) zfree(bfreq);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -1984,10 +1984,10 @@ static int entropy(lua_State *L) {
 	const octet *o = o_arg(L,1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
 	register int i; // register
 	// byte frequency table
-	bfreq = malloc(0xff+0x0f); SAFE_GOTO(bfreq, MALLOC_ERROR);
+	bfreq = zmalloc(0xff+0x0f); SAFE_GOTO(bfreq, MALLOC_ERROR);
 	memset(bfreq, 0x0, 0xff+0x0f);
 	// probability of recurring for each byte
-	bprob = (float*)malloc(sizeof(float)*(0xff+0x0f)); SAFE_GOTO(bprob, MALLOC_ERROR);
+	bprob = (float*)zmalloc(sizeof(float)*(0xff+0x0f)); SAFE_GOTO(bprob, MALLOC_ERROR);
 	memset(bprob, 0x0, sizeof(float)*(0xff+0x0f));
 	// calculate freqency of byte values
 	register char *p = o->val;
@@ -2012,8 +2012,8 @@ static int entropy(lua_State *L) {
 	lua_pushnumber(L, (lua_Number) entmax ); // max
 	lua_pushnumber(L, (lua_Number) bits);
 end:
-	if(bfreq) free(bfreq);
-	if(bprob) free(bprob);
+	if(bfreq) zfree(bfreq);
+	if(bprob) zfree(bprob);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -2586,12 +2586,12 @@ static int and_grow(lua_State *L) {
 
 	// pad first arg with zeroes
 	if(x_copy->len < max) {
-		x_copy->val = realloc(x_copy->val, max);
+		x_copy->val = zrealloc(x_copy->val, max);
 		x_copy->max = max;
 		OCT_pad(x_copy, max);
 	}
 	if(y_copy->len < max) {
-		y_copy->val = realloc(y_copy->val, max);
+		y_copy->val = zrealloc(y_copy->val, max);
 		y_copy->max = max;
 		OCT_pad(y_copy, max);
 	}
@@ -2699,12 +2699,12 @@ static int or_grow(lua_State *L) {
 
 	// pad first arg with zeroes
 	if(x_copy->len < max) {
-		x_copy->val = realloc(x_copy->val, max);
+		x_copy->val = zrealloc(x_copy->val, max);
 		x_copy->max = max;
 		OCT_pad(x_copy, max);
 	}
 	if(y_copy->len < max) {
-		y_copy->val = realloc(y_copy->val, max);
+		y_copy->val = zrealloc(y_copy->val, max);
 		y_copy->max = max;
 		OCT_pad(y_copy, max);
 	}

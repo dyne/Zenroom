@@ -44,13 +44,13 @@ fp12* fp12_new(lua_State *L) {
 }
 
 void fp12_clone_free(fp12 *f) {
-	if(f) free(f);
+	if(f) zfree(f);
 }
 
 fp12* fp12_arg(lua_State *L,int n) {
 	void *ud = luaL_testudata(L, n, "zenroom.fp12");
 	if(ud) {
-		fp12 *result = (fp12*)malloc(sizeof(fp12));
+		fp12 *result = (fp12*)zmalloc(sizeof(fp12));
 		if(result == NULL) return NULL;
 		*result = *(fp12*)ud;
 		if(result->len != sizeof(FP12)) {

@@ -71,12 +71,12 @@ ztime_t *time_new(lua_State *L) {
 
 static void time_clone_free(lua_State *L, ztime_t *f) {
 	(void)L;
-	if(f) free(f);
+	if(f) zfree(f);
 }
 
 ztime_t* time_arg(lua_State *L, int n) {
 	zenroom_t *Z = zen_get_context(L);
-	ztime_t *result = (ztime_t*)malloc(sizeof(ztime_t));
+	ztime_t *result = (ztime_t*)zmalloc(sizeof(ztime_t));
 	if(result == NULL) {
 		zerror(L, "Could not create time, malloc failure: %s", strerror(errno));
 		return NULL;
@@ -91,14 +91,14 @@ ztime_t* time_arg(lua_State *L, int n) {
 		char *pEnd;
 		long l_result = strtol(arg, &pEnd, 10);
 		if(*pEnd) {
-			free(result);
+			zfree(result);
 			lerror(L, "Could not read unix timestamp %s", arg);
 			return NULL;
 		} else {
 			char s_result[1024];
 			snprintf(s_result, 1024, "%ld", l_result);
 			if (l_result < INT_MIN || l_result > INT_MAX || strcmp(s_result, arg) != 0 ) {
-				free(result);
+				zfree(result);
 				lerror(L, "Could not read unix timestamp %s out of range", arg);
 				return NULL;
 			}
@@ -116,7 +116,7 @@ ztime_t* time_arg(lua_State *L, int n) {
 	if(o) {
 		if(o->len != sizeof(ztime_t)) {
 			o_free(L, o);
-			free(result);
+			zfree(result);
 			zerror(L, "Wrong size timestamp %s", __func__);
 			return NULL;
 		}
