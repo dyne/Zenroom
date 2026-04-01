@@ -82,19 +82,18 @@ hash.hkdf_expand = function(prk, info, l)
 	end
 
 	-- local n = math.ceil(l/hash_len)
-
-	-- TODO: optimize using something like table.concat for octets
 	local tprec = HASH.hmac(h, prk, info .. O.from_hex('01'))
 	local i = 2
-	local t = tprec
-	while l > #t do
+	local chunks = { tprec:hex() }
+	local size = #tprec
+	while l > size do
 		tprec = HASH.hmac(h, prk, tprec .. info .. O.from_hex(string.format("%02x", i)))
-		t = t .. tprec
+		chunks[#chunks + 1] = tprec:hex()
+		size = size + #tprec
 		i = i+1
 	end
 
-	-- TODO: check that sub is not creating a copy
-	return t:sub(1,l)
+	return O.from_hex(table.concat(chunks)):sub(1,l)
 end
 
 -- RFC8017 section 4
@@ -147,15 +146,15 @@ hash.expand_message_xmd = function(msg, DST, len_in_bytes)
 
 	local b_0 = sha256(msg_prime)
 	local b_1 = sha256(b_0..i2osp(1,1)..DST_prime)
-	local uniform_bytes = b_1
+	local chunks = { b_1:hex() }
 	-- b_j assumes the value of b_(i-1) inside the for loop, for i between 2 and ell.
 	local b_j = b_1
 	for i = 2,ell do
 		local b_i = sha256(O.xor(b_0, b_j)..i2osp(i,1)..DST_prime)
 		b_j = b_i
-		uniform_bytes = uniform_bytes..b_i
+		chunks[#chunks + 1] = b_i:hex()
 	end
-	return uniform_bytes:sub(1,len_in_bytes), DST_prime, msg_prime
+	return O.from_hex(table.concat(chunks)):sub(1,len_in_bytes), DST_prime, msg_prime
 
 end
 
