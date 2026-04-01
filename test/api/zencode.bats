@@ -26,6 +26,7 @@ save() {
     fi
     cc ${CFLAGS} -ggdb -o zencode_exec $T/zencode.c ${LDADD}
     cc ${CFLAGS} -ggdb -o zencode_exec_tobuf $T/zencode_to_buf.c ${LDADD}
+    cc ${CFLAGS} -ggdb -o zencode_exec_tiny_stdout $T/zencode_tiny_stdout.c ${LDADD}
     cc ${CFLAGS} -ggdb -o zenroom_exec $T/zenroom.c ${LDADD}
     cc ${CFLAGS} -ggdb -o zenroom_exec_tobuf $T/zenroom_to_buf.c ${LDADD}
 }
@@ -120,5 +121,13 @@ EOF
     [ "$status" -ne 0 ]
     assert_line --partial "Error parsing configuration: logfmt=bogus"
     assert_line --partial "Zenroom initialisation failed."
+    assert_line --partial "Abort on error code"
+}
+
+@test "ZENCODE API :: zenroom_exec_tobuf fails cleanly on tiny stdout buffer" {
+    script="print('Hello World')"
+    run env LD_LIBRARY_PATH=$R ./zencode_exec_tiny_stdout "$script" "" "" "" "" ""
+    [ "$status" -ne 0 ]
+    assert_line --partial "No space left in output buffer"
     assert_line --partial "Abort on error code"
 }
