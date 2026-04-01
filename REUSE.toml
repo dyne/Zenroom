@@ -9,6 +9,7 @@ SPDX-PackageDownloadLocation = "https://github.com/dyne/Zenroom"
 
 [[annotations]]
 path = [
+	"*.md",
     "src/**",
     "bindings/**",
     "test/**",
