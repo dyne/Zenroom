@@ -669,11 +669,13 @@ static int ecp2_zcash_import(lua_State *L) {
 	octet *x0 = NULL, *x1 = NULL;
 	const octet *o = o_arg(L, 1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
 	ecp2 *e = ecp2_new(L); SAFE_GOTO(e, CREATE_ECP2_ERR);
-	register unsigned char m_byte = o->val[0] & 0xE0;
+	register unsigned char m_byte = 0;
 	bool c_bit;
 	bool i_bit;
 	bool s_bit;
-	SAFE_GOTO(m_byte != 0x20 && m_byte != 0x60 && m_byte != 0xE0, "Invalid octet header");
+	SAFE_GOTO(o->len > 0, "Invalid octet length");
+	m_byte = o->val[0] & 0xE0;
+	SAFE_GOTO((m_byte & 0x80) == 0x80, "Invalid octet header");
 	c_bit = ((m_byte & 0x80) == 0x80);
 	i_bit = ((m_byte & 0x40) == 0x40);
 	s_bit = ((m_byte & 0x20) == 0x20);
@@ -705,7 +707,7 @@ static int ecp2_zcash_import(lua_State *L) {
 		SAFE_GOTO(_octet_to_big(L, bigx0, x0), "Could not create BIG from OCTET");
 		SAFE_GOTO(_octet_to_big(L, bigx1, x1), "Could not create BIG from OCTET");
 		FP2_from_BIGs(&fx, bigx1->val, bigx0->val);
-		SAFE_GOTO(ECP2_setx(&e->val, &fx), "Invalid input octet: not a point on the curve");
+		SAFE_GOTO(ECP2_setx(&e->val, &fx) == 1, "Invalid input octet: not a point on the curve");
 		ECP2_get(&fx, &fy, &e->val);
 
 		BIG by0,by1;

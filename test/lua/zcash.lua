@@ -1,6 +1,12 @@
 local g = ECP2.generator()
 local g0 = ECP2.inf()
 
+local function expect_failure(fn, expected)
+    local ok, err = pcall(fn)
+    assert(not ok)
+    assert(string.find(err, expected, 1, true))
+end
+
 for i=1,100,1 do
     print(i)
     local g1 = ECP2.from_zcash(g0:to_zcash())
@@ -23,3 +29,23 @@ for i=1,100,1 do
 
     h0 = h0 + h;
 end
+
+expect_failure(function()
+    ECP.from_zcash(O.new())
+end, "Invalid octet length")
+
+expect_failure(function()
+    ECP2.from_zcash(O.new())
+end, "Invalid octet length")
+
+expect_failure(function()
+    local valid = ECP.generator():to_zcash():hex()
+    local invalid = O.from_hex("00" .. valid:sub(3))
+    ECP.from_zcash(invalid)
+end, "Invalid octet header")
+
+expect_failure(function()
+    local valid = ECP2.generator():to_zcash():hex()
+    local invalid = O.from_hex("00" .. valid:sub(3))
+    ECP2.from_zcash(invalid)
+end, "Invalid octet header")

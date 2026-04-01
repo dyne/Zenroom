@@ -410,11 +410,13 @@ static int ecp_zcash_import(lua_State *L){
 	ecp *e = NULL;
 	octet *ot = NULL;
 	const octet *o = o_arg(L, 1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
-	unsigned char m_byte = o->val[0] & 0xE0;
+	unsigned char m_byte = 0;
 	bool c_bit;
 	bool i_bit;
 	bool s_bit;
-	SAFE_GOTO(m_byte != 0x20 && m_byte != 0x60 && m_byte != 0xE0, "Invalid octet header");
+	SAFE_GOTO(o->len > 0, "Invalid octet length");
+	m_byte = o->val[0] & 0xE0;
+	SAFE_GOTO((m_byte & 0x80) == 0x80, "Invalid octet header");
 	c_bit = ((m_byte & 0x80) == 0x80);
 	i_bit = ((m_byte & 0x40) == 0x40);
 	s_bit = ((m_byte & 0x20) == 0x20);
@@ -439,7 +441,7 @@ static int ecp_zcash_import(lua_State *L){
 		ot->val[0] = ot->val[0] & 0x1F;
 		ot->len = 48;
 		SAFE_GOTO(_octet_to_big(L, bigx, ot), "Could not create BIG from OCTET");
-		SAFE_GOTO(ECP_setx(&e->val, bigx->val, 0), "Invalid input octet: not a point on the curve");
+		SAFE_GOTO(ECP_setx(&e->val, bigx->val, 0) == 1, "Invalid input octet: not a point on the curve");
 
 		ECP_get(xpoint, ypoint, &e->val);
 		if(gf_sign(ypoint) != s_bit)
