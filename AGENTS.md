@@ -173,6 +173,10 @@ Use these files as build truth:
 - [`build/posix.mk`](/home/jrml/devel/zenroom/build/posix.mk): normal POSIX build
 - [`build/meson.build`](/home/jrml/devel/zenroom/build/meson.build): test manifest only
 
+Use this command to build:
+
+`make linux-lib linux-exe CCACHE=1`
+
 Critical build facts:
 
 - Meson does not build Zenroom itself; it runs tests against already-built binaries or wrappers
@@ -253,6 +257,12 @@ Preserve:
 7. [`src/lua/zencode_when.lua`](/home/jrml/devel/zenroom/src/lua/zencode_when.lua)
 8. [`src/lua/zencode_then.lua`](/home/jrml/devel/zenroom/src/lua/zencode_then.lua)
 9. then the specific scenario or native module you need
+
+## Maintenance Notes
+
+- `zencode_when.lua` now routes rename statements through shared local helpers to keep `ACK` and `CODEC` updates aligned.
+- vendored Lua modules (`json.lua`, `msgpack.lua`, `inspect.lua`, `semver.lua`) include origin/local-change headers; preserve them when upgrading.
+- for array-like data in hot paths, prefer `ipairs` over deterministic sorted traversal helpers unless order affects serialized or signed output.
 
 
 ## Rule Of Thumb
