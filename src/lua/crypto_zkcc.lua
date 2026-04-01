@@ -341,7 +341,7 @@ local function resolve_args(...)
 end
 
 local function sort_entries_by_declaration_order(entries)
-    table.sort(entries, function(a, b)
+    deterministic_sort(entries, function(a, b)
         if a.name and b.name then
             if a.name == b.name then
                 return a.decl_order < b.decl_order

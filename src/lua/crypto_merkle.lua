@@ -131,7 +131,7 @@ function MT.generate_proof(tree, pos)
     local proof = {}
     local m = #indeces_set
 
-    table.sort(indeces_set)
+    deterministic_sort(indeces_set)
 
     for i = 1, m do
         table.insert(proof, tree[indeces_set[i]])
@@ -170,7 +170,7 @@ function MT.verify_proof(proof, pos, root, n , hashtype)
     local set = {}
     local m = #indeces_set
 
-    table.sort(indeces_set)
+    deterministic_sort(indeces_set)
 
     for i = 1, m do
         table.insert(set, {proof[i], indeces_set[i]} )
@@ -351,7 +351,7 @@ function MT.setup_batch(n, batch_size, hashtype)
         table.remove(set, random_index)
     end
 
-    table.sort(pos)     --ordered set of pos of the leaves to take for the proof
+    deterministic_sort(pos)     --ordered set of pos of the leaves to take for the proof
 
     for i = 1, #pos do
         table.insert(leaves_for_proof, leaves[pos[i]])
