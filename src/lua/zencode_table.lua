@@ -28,13 +28,7 @@ local function move_or_copy_in(src_value, src_name, dest, new, enc)
     if enc then
         src_value = apply_encoding(src_name, enc, cdest.encoding)
     end
-    if cdest.zentype == 'e' and cdest.schema then
-        local sdest <const> = ZEN.schemas[cdest.schema]
-        if luatype(sdest) ~= 'table' then -- old schema types are not open
-            error("Schema is not open to accept extra objects: "..dest, 2)
-        elseif not sdest.schematype or sdest.schematype ~= 'open' then
-            error("Schema is not open to accept extra objects: "..dest, 2)
-        end
+    if schema_accepts_extra_objects(dest, cdest) then
         if d[new_name] then
             error("Cannot overwrite: "..new_name.." in "..dest,2)
         end

@@ -927,6 +927,17 @@ end
 
 ---------------------------
 -- ZENCODE GLOBAL UTILITIES
+function schema_accepts_extra_objects(dest_name, dest_codec)
+	if not (dest_codec.zentype == 'e' and dest_codec.schema) then
+		return false
+	end
+	local schema <const> = ZEN.schemas[dest_codec.schema]
+	if luatype(schema) ~= 'table' or schema.schematype ~= 'open' then
+		error("Schema is not open to accept extra objects: "..dest_name, 2)
+	end
+	return true
+end
+
 function Iam(name)
 	if name then
 		zencode_assert(not WHO, 'Identity already defined in WHO')
