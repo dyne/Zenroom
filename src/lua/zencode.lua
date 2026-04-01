@@ -91,6 +91,27 @@ local function gc()
 	end
 end
 
+local function register_statement(text, fn, steps, error_prefix, alias_steps)
+	local statement <const> = text:lower()
+	if steps[statement] then
+		error(error_prefix .. statement, 2)
+	end
+	if alias_steps and alias_steps[statement] then
+		error(error_prefix .. statement, 2)
+	end
+	steps[statement] = fn
+	if alias_steps then
+		alias_steps[statement] = fn
+	end
+end
+
+local function register_runtime_statement(text, fn, steps, error_prefix, alias_steps)
+	if ZENCODE_SCOPE == 'GIVEN' then
+		return
+	end
+	register_statement(text, fn, steps, error_prefix, alias_steps)
+end
+
 
 function ZEN:add_schema(arr)
 	local _illegal_schemas = {
@@ -863,63 +884,45 @@ end
 ------------------------------------------
 -- ZENCODE STATEMENT DECLARATION FUNCTIONS
 function Given(text, fn)
-   text = text:lower()
-   if ZEN.given_steps[text] then
-	  error('Conflicting GIVEN statement loaded by scenario: ' .. text, 2)
-   end
-   ZEN.given_steps[text] = fn
+   register_statement(
+      text,
+      fn,
+      ZEN.given_steps,
+      'Conflicting GIVEN statement loaded by scenario: '
+   )
 end
 function When(text, fn)
-   if ZENCODE_SCOPE == 'GIVEN' then
-	  text = nil
-	  fn = nil
-   else
-	  text = text:lower()
-	  if ZEN.when_steps[text] then
-		 error('Conflicting WHEN statement loaded by scenario: ' .. text, 2)
-	  end
-	  ZEN.when_steps[text] = fn
-   end
+   register_runtime_statement(
+      text,
+      fn,
+      ZEN.when_steps,
+      'Conflicting WHEN statement loaded by scenario: '
+   )
 end
 function IfWhen(text, fn)
-   if ZENCODE_SCOPE == 'GIVEN' then
-	  text = nil
-	  fn = nil
-   else
-	  text = text:lower()
-	  if ZEN.if_steps[text] then
-		 error('Conflicting IF-WHEN statement loaded by scenario: '..text, 2)
-	  end
-	  if ZEN.when_steps[text] then
-		 error('Conflicting IF-WHEN statement loaded by scenario: '..text, 2)
-	  end
-	  ZEN.if_steps[text]   = fn
-	  ZEN.when_steps[text] = fn
-   end
+   register_runtime_statement(
+      text,
+      fn,
+      ZEN.if_steps,
+      'Conflicting IF-WHEN statement loaded by scenario: ',
+      ZEN.when_steps
+   )
 end
 function Foreach(text, fn)
-   if ZENCODE_SCOPE == 'GIVEN' then
-	  text = nil
-	  fn = nil
-   else
-	  text = text:lower()
-	  if ZEN.foreach_steps[text] then
-			error('Conflicting FOREACH statement loaded by scenario: ' .. text, 2)
-	  end
-	  ZEN.foreach_steps[text] = fn
-   end
+   register_runtime_statement(
+      text,
+      fn,
+      ZEN.foreach_steps,
+      'Conflicting FOREACH statement loaded by scenario: '
+   )
 end
 function Then(text, fn)
-   if ZENCODE_SCOPE == 'GIVEN' then
-	  text = nil
-	  fn = nil
-   else
-	  text = text:lower()
-	  if ZEN.then_steps[text] then
-			error('Conflicting THEN statement loaded by scenario : ' .. text, 2)
-	  end
-	  ZEN.then_steps[text] = fn
-   end
+   register_runtime_statement(
+      text,
+      fn,
+      ZEN.then_steps,
+      'Conflicting THEN statement loaded by scenario : '
+   )
 end
 
 ---------------------------
