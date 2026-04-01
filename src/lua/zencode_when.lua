@@ -202,45 +202,30 @@ end
 When("delete ''", _delete_f)
 When("remove ''", _delete_f)
 
-When("rename '' to ''", function(old,new)
-	have(old)
-	empty(new)
-	ACK[new] = ACK[old]
-	ACK[old] = nil
-	CODEC[new] = CODEC[old]
-	CODEC[old] = nil
+local function _rename_object(old_name, new_name)
+   have(old_name)
+   empty(new_name)
+   ACK[new_name] = ACK[old_name]
+   ACK[old_name] = nil
+   CODEC[new_name] = CODEC[old_name]
+   CODEC[old_name] = nil
+end
+
+local function _name_from_object_name_ref(name_ref)
+   return have(name_ref):octet():string()
+end
+
+When("rename '' to ''", function(old_name, new_name)
+   _rename_object(old_name, new_name)
 end)
-When("rename object named by '' to ''", function(old,new)
-	local oldo = have(old)
-	local olds = oldo:octet():string()
-	have(olds)
-	empty(new)
-	ACK[new] = ACK[olds]
-	ACK[olds] = nil
-	CODEC[new] = CODEC[olds]
-	CODEC[olds] = nil
+When("rename object named by '' to ''", function(old_ref, new_name)
+   _rename_object(_name_from_object_name_ref(old_ref), new_name)
 end)
-When("rename '' to named by ''", function(old,new)
-	have(old)
-	local newo = have(new)
-	local news = newo:octet():string()
-	empty(news)
-	ACK[news] = ACK[old]
-	ACK[old] = nil
-	CODEC[news] = CODEC[old]
-	CODEC[old] = nil
+When("rename '' to named by ''", function(old_name, new_ref)
+   _rename_object(old_name, _name_from_object_name_ref(new_ref))
 end)
-When("rename object named by '' to named by ''", function(old,new)
-	local oldo = have(old)
-	local olds = oldo:octet():string()
-	have(olds)
-	local newo = have(new)
-	local news = newo:octet():string()
-	empty(news)
-	ACK[news] = ACK[olds]
-	ACK[olds] = nil
-	CODEC[news] = CODEC[olds]
-	CODEC[olds] = nil
+When("rename object named by '' to named by ''", function(old_ref, new_ref)
+   _rename_object(_name_from_object_name_ref(old_ref), _name_from_object_name_ref(new_ref))
 end)
 
 -- create '' from '' as ''
