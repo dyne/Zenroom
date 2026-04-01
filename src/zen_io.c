@@ -47,17 +47,6 @@ extern int SEMIHOSTING_STDOUT_FILENO;
 extern int write_to_console(const char* str);
 #endif
 
-// simple inline duplicate function wrapper also in zen_error.c
-static inline void _zen_io_write(int fd, const void *buf, size_t count) {
-  register ssize_t res;
-  res = write(fd, buf, count);
-  if(res<0) {
-	// spit errors hoping there is a stderr
-	fprintf(stderr,"[!] Error on write() %lu bytes\n",count);
-	fprintf(stderr,"[!] %s\n",strerror(errno));
-  }
-}
-
 static int zen_stdout_reserve(lua_State *L, size_t need) {
   zenroom_t *Z = zen_get_context(L);
   if (!Z || !Z->stdout_buf) return 1;
@@ -94,9 +83,9 @@ static int zen_print (lua_State *L) {
 #if defined(__EMSCRIPTEN__)
 	  EM_ASM_({Module.print("")});
 #elif defined(ARCH_CORTEX)
-	  _zen_io_write(SEMIHOSTING_STDOUT_FILENO, "\n", 1);
+	  zen_raw_write(SEMIHOSTING_STDOUT_FILENO, "\n", 1);
 #else
-	  _zen_io_write(STDOUT_FILENO, "\n", 1);
+	  zen_raw_write(STDOUT_FILENO, "\n", 1);
 #endif
 	}
 	END(0);
@@ -133,18 +122,18 @@ static int zen_print (lua_State *L) {
 	  }
 	  EM_ASM_({Module.print(UTF8ToString($0))}, o->val);
 #elif defined(ARCH_CORTEX)
-	  _zen_io_write(SEMIHOSTING_STDOUT_FILENO, o->val, o->len);
+	  zen_raw_write(SEMIHOSTING_STDOUT_FILENO, o->val, o->len);
 	  if(i < n_args) {
-		_zen_io_write(SEMIHOSTING_STDOUT_FILENO, "\t", 1);
+		zen_raw_write(SEMIHOSTING_STDOUT_FILENO, "\t", 1);
 	  } else {
-		_zen_io_write(SEMIHOSTING_STDOUT_FILENO, "\n", 1);
+		zen_raw_write(SEMIHOSTING_STDOUT_FILENO, "\n", 1);
 	  }
 #else
-	  _zen_io_write(STDOUT_FILENO, o->val, o->len);
+	  zen_raw_write(STDOUT_FILENO, o->val, o->len);
 	  if(i < n_args) {
-		_zen_io_write(STDOUT_FILENO, "\t", 1);
+		zen_raw_write(STDOUT_FILENO, "\t", 1);
 	  } else {
-		_zen_io_write(STDOUT_FILENO, "\n", 1);
+		zen_raw_write(STDOUT_FILENO, "\n", 1);
 	  }
 #endif
 	}
@@ -188,7 +177,7 @@ int printerr(lua_State *L, const octet *o) {
 #elif defined(ARCH_CORTEX)
 	write_to_console(t);
 #else
-	_zen_io_write(STDERR_FILENO, t, o->len+1);
+	zen_raw_write(STDERR_FILENO, t, o->len+1);
 #endif
 	zfree(t);
   } else
@@ -215,7 +204,7 @@ static int zen_write (lua_State *L) {
 	// octet safety buffer allows this: o->val = zmalloc(size +0x0f);
 	EM_ASM_({Module.print(UTF8ToString($0))}, o->val);
 #else
-	_zen_io_write(STDOUT_FILENO, o->val, o->len);
+	zen_raw_write(STDOUT_FILENO, o->val, o->len);
 #endif
   } else
 	func(L, "write of an empty string");
@@ -275,19 +264,19 @@ int zen_log(lua_State *L, log_priority prio, const octet *o) {
 	EM_ASM_({Module.printErr(UTF8ToString($0))}, msg);
 	zfree(msg);
 #elif defined(ARCH_CORTEX)
-	_zen_io_write(SEMIHOSTING_STDOUT_FILENO, prefix, 5);
-	_zen_io_write(SEMIHOSTING_STDOUT_FILENO, o->val, o->len);
+	zen_raw_write(SEMIHOSTING_STDOUT_FILENO, prefix, 5);
+	zen_raw_write(SEMIHOSTING_STDOUT_FILENO, o->val, o->len);
 	if(Z && Z->logformat == LOG_JSON) {
-	  _zen_io_write(SEMIHOSTING_STDOUT_FILENO, "\",", 2);
+	  zen_raw_write(SEMIHOSTING_STDOUT_FILENO, "\",", 2);
 	}
-	_zen_io_write(SEMIHOSTING_STDOUT_FILENO, "\n", 1);
+	zen_raw_write(SEMIHOSTING_STDOUT_FILENO, "\n", 1);
 #else
-	_zen_io_write(STDERR_FILENO, prefix, 5);
-	_zen_io_write(STDERR_FILENO, o->val, o->len);
+	zen_raw_write(STDERR_FILENO, prefix, 5);
+	zen_raw_write(STDERR_FILENO, o->val, o->len);
 	if(Z->logformat == LOG_JSON) {
-	  _zen_io_write(STDERR_FILENO, "\",", 2);
+	  zen_raw_write(STDERR_FILENO, "\",", 2);
 	}
-	_zen_io_write(STDERR_FILENO, "\n", 1);
+	zen_raw_write(STDERR_FILENO, "\n", 1);
 #endif
   }
   return 0;
