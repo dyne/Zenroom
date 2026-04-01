@@ -113,9 +113,9 @@ int _octet_to_big(lua_State *L, big *dst, const octet *src) {
 void big_free(lua_State *L, big *b) {
 	zenroom_t *Z = zen_get_context(L);
 	if(b) {
-		if(b->dval) free(b->dval);
-		if(b->val) free(b->val);
-		free(b);
+		if(b->dval) zfree(b->dval);
+		if(b->val) zfree(b->val);
+		zfree(b);
 	}
 }
 
@@ -137,7 +137,7 @@ big* big_new(lua_State *L) {
 
 big* big_arg(lua_State *L,int n) {
 	zenroom_t *Z = zen_get_context(L);
-	big* result = (big*)malloc(sizeof(big));
+	big* result = (big*)zmalloc(sizeof(big));
 	if(!result) {
 		zerror(L, "Cannot create big, malloc failure: %s", strerror(errno));
 		return NULL;
@@ -811,13 +811,13 @@ int big_destroy(lua_State *L) {
 	if(c) {
 		if(c->doublesize) {
 			if(c->dval) {
-				free(c->dval);
+				zfree(c->dval);
 				c->dval = NULL;
 			}
 			if(c->val) warning(L,"found leftover buffer while freeing double big");
 		} else {
 			if(c->val) {
-				free(c->val);
+				zfree(c->val);
 				c->val = NULL;
 			}
 			if(c->dval) warning(L,"found leftover buffer while freeing big");
@@ -882,7 +882,7 @@ int big_init(lua_State *L,big *n) {
 		return 0; }
 	if(!n->val && !n->dval) {
 		size_t size = sizeof(BIG);
-		n->val = (int*)malloc(size);
+		n->val = (int*)zmalloc(size);
 		n->doublesize = 0;
 		n->len = MODBYTES;
 		return(size);
@@ -898,16 +898,16 @@ int dbig_init(lua_State *L,big *n) {
 	size_t size = sizeof(DBIG); //sizeof(DBIG); // modbytes * 2, aka n->len<<1
 	if(n->val && !n->doublesize) {
 		n->doublesize = 1;
-		n->dval = (int*)malloc(size);
+		n->dval = (int*)zmalloc(size);
 		// extend from big to double big
 		BIG_dscopy(n->dval,n->val);
-		free(n->val);
+		zfree(n->val);
 		n->val = NULL;
 		n->len = MODBYTES<<1;
 	}
 	if(!n->val || !n->dval) {
 		n->doublesize = 1;
-		n->dval = (int*)malloc(size);
+		n->dval = (int*)zmalloc(size);
 		n->len = MODBYTES<<1;
 		return(size);
 	}
@@ -1045,7 +1045,7 @@ static int big_to_decimal_string(lua_State *L) {
 		i++;
 		BIG_norm(ten_power);
 	}
-	s = malloc(i+4); SAFE_GOTO(s, MALLOC_ERROR);
+	s = zmalloc(i+4); SAFE_GOTO(s, MALLOC_ERROR);
 	if (i == 0) {
 		s[0] = '0';
 		i++;
@@ -1086,7 +1086,7 @@ static int big_to_decimal_string(lua_State *L) {
 	}
 	lua_pushstring(L,s);
 end:
-	if(s) free(s);
+	if(s) zfree(s);
 	big_free(L, num);
 	if(failed_msg) {
 		THROW(failed_msg);

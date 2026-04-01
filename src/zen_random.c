@@ -59,7 +59,7 @@
 
 
 void* rng_alloc(zenroom_t *ZZ) {
-	RNG *rng = (RNG*)malloc(sizeof(csprng));
+	RNG *rng = (RNG*)zmalloc(sizeof(csprng));
 	if(!rng) {
 		_err( "Error allocating new random number generator");
 		return NULL;

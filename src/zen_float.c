@@ -119,12 +119,12 @@ float *float_new(lua_State *L) {
 
 static void float_clone_free(lua_State *L, float *f) {
 	(void)L;
-	if(f) free(f);
+	if(f) zfree(f);
 }
 
 float* float_arg(lua_State *L, int n) {
 	zenroom_t *Z = zen_get_context(L);
-	float *result = (float*)malloc(sizeof(float));
+	float *result = (float*)zmalloc(sizeof(float));
 	if(result == NULL) {
 		return NULL;
 	}
@@ -138,7 +138,7 @@ float* float_arg(lua_State *L, int n) {
 		char *pEnd = NULL;
 		*result = strtof(o->val, &pEnd);
 		if(*pEnd) {
-			free(result);
+			zfree(result);
 			result = NULL;
 		}
 		o_free(L, o);

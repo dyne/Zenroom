@@ -199,20 +199,20 @@ void json_start(void *L) {
   const char *logstart = "[ \"ZENROOM JSON LOG START\",";
   octet o;
   o.len = o.max = strlen(logstart);
-  o.val = malloc(o.len+0x0f);
+  o.val = zmalloc(o.len+0x0f);
   memcpy(o.val, logstart, o.len);
   printerr(L, &o);
-  free(o.val);
+  zfree(o.val);
 }
 
 void json_end(void *L) {
   const char *logend = "\"ZENROOM JSON LOG END\" ]";
   octet o;
   o.len = o.max = strlen(logend);
-  o.val = malloc(o.len+0x0f);
+  o.val = zmalloc(o.len+0x0f);
   memcpy(o.val, logend, o.len);
   printerr(L, &o);
-  free(o.val);
+  zfree(o.val);
 }
 
 int notice(void *L, const char *format, ...) {
