@@ -27,6 +27,7 @@
 ///////////////////////
 
 #include <strings.h>
+#include <string.h>
 #include <ctype.h>
 
 // Configuration parser, based on STB's C Lexer, see: stb_c_lexer.h
@@ -73,6 +74,75 @@
 
 #include <zenroom.h>
 
+static int parse_prefixed_hex(char *dst, size_t dst_len, const char *value,
+			      const char *name, const char *prefix,
+			      size_t payload_len) {
+	size_t prefix_len = strlen(prefix);
+	size_t value_len = strlen(value);
+	size_t p;
+
+	if(strncasecmp(value, prefix, prefix_len) != 0) {
+		_err("Invalid %s data prefix (must be %s)\n", name, prefix);
+		return 0;
+	}
+	if(value_len < prefix_len) {
+		_err("Invalid length of %s: 0 (must be %u)\n",
+		     name, (unsigned)payload_len);
+		return 0;
+	}
+	if(value_len != prefix_len + payload_len || payload_len + 1 > dst_len) {
+		_err("Invalid length of %s: %u (must be %u)\n",
+		     name, (unsigned)(value_len - prefix_len),
+		     (unsigned)payload_len);
+		return 0;
+	}
+	for(p = prefix_len; p < value_len; p++) {
+		if(!isxdigit((unsigned char)value[p])) {
+			_err("Invalid hex digit in %s: %c\n", name, value[p]);
+			return 0;
+		}
+	}
+
+	memcpy(dst, value + prefix_len, payload_len);
+	dst[payload_len] = 0x0;
+	return 1;
+}
+
+static int parse_prefixed_decimal(char *dst, size_t dst_len, const char *value,
+				  const char *name, size_t max_digits) {
+	static const char prefix[] = "dec:";
+	size_t prefix_len = sizeof(prefix) - 1;
+	size_t value_len = strlen(value);
+	size_t digits_len;
+	size_t p;
+
+	if(strncasecmp(value, prefix, prefix_len) != 0) {
+		_err("Invalid %s data prefix (must be %s)\n", name, prefix);
+		return 0;
+	}
+	if(value_len < prefix_len) {
+		_err("Invalid length of %s, must be less than %u digits",
+		     name, (unsigned)max_digits);
+		return 0;
+	}
+	digits_len = value_len - prefix_len;
+	if(digits_len == 0 || digits_len > max_digits || digits_len + 1 > dst_len) {
+		_err("Invalid length of %s, must be less than %u digits",
+		     name, (unsigned)max_digits);
+		return 0;
+	}
+	for(p = prefix_len; p < value_len; p++) {
+		if(!isdigit((unsigned char)value[p])) {
+			_err("Invalid digit in %s: %c\n", name, value[p]);
+			return 0;
+		}
+	}
+
+	memcpy(dst, value + prefix_len, digits_len);
+	dst[digits_len] = 0x0;
+	return 1;
+}
+
 int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 	(void)stb__strchr;            // avoid compiler warnings
 	(void)stb__clex_parse_string; // for unused functions
@@ -92,13 +162,11 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 	stb_lexer lex;
 	char lexbuf[MAX_CONFIG];
 	zconf curconf = NIL;
-	// ZZ->zconf_rngseed[0] = '\0';
 
 	stb_c_lexer_init(&lex, configuration, configuration+len, lexbuf, MAX_CONFIG);
 	while (stb_c_lexer_get_token(&lex)) {
 		if (lex.token == CLEX_parse_error) {
 			_err( "%s: error parsing configuration: %s\n", __func__, configuration);
-			// free(lexbuf);
 			return 0;
 		}
 
@@ -116,29 +184,12 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 			if(strcasecmp(lex.string,"memblocknum")==0)  { curconf = MEMBLOCKNUM;  break; } // int
 			if(strcasecmp(lex.string,"memblocksize")==0)  { curconf = MEMBLOCKSIZE;  break; } // int
 			if(curconf==RNGSEED) {
-				if(strncasecmp(lex.string, "hex:", 4) != 0) { // hex: prefix needed
-					_err( "Invalid rngseed data prefix (must be hex:)\n");
-					// free(lexbuf);
+				if(!parse_prefixed_hex(ZZ->zconf_rngseed,
+						       sizeof(ZZ->zconf_rngseed),
+						       lex.string, "rngseed", "hex:",
+						       RANDOM_SEED_LEN * 2)) {
 					return 0;
 				}
-				int len = strlen(lex.string)-4;
-				if( len/2 != RANDOM_SEED_LEN) { // hex doubles size
-					_err( "Invalid length of random seed: %u (must be %u)\n",
-					      len/2, RANDOM_SEED_LEN);
-					// free(lexbuf);
-					return 0;
-				}
-				for(p=4; p<len; p++) {
-				  if(! isxdigit(lex.string[p]) ) {
-					_err( "Invalid hex digit in random seed: %c\n",
-						  lex.string[p]);
-					return 0;
-				  }
-				}
-
-				// copy string and null terminate
-				memcpy(ZZ->zconf_rngseed, lex.string+4, len);
-				ZZ->zconf_rngseed[len] = 0x0;
 				break;
 			}
 			if(curconf==LOGFMT) {
@@ -171,58 +222,23 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 			  break;
 			}
 			if(curconf==MAXITER) {
-				int len = strlen(lex.string);
-				if( len-4 > STR_MAXITER_LEN || len < 5) { // hex doubles size
-					_err( "Invalid length of maxiter, must be less than %u digits",
-					      STR_MAXITER_LEN);
-					// free(lexbuf);
+				if(!parse_prefixed_decimal(ZZ->str_maxiter,
+							   sizeof(ZZ->str_maxiter),
+							   lex.string, "maxiter",
+							   STR_MAXITER_LEN)) {
 					return 0;
 				}
-				if(strncasecmp(lex.string, "dec:", 4) != 0) { // dec: prefix needed
-					_err( "Invalid maxiter data prefix (must be dec:)\n");
-					// free(lexbuf);
-					return 0;
-				}
-				for(p=4; p<len; p++) {
-				  if(! isdigit(lex.string[p]) ) {
-					_err( "Invalid digit in maxiter: %c\n",
-						  lex.string[p]);
-					return 0;
-				  }
-				}
-
-				// copy string and null terminate
-				memcpy(ZZ->str_maxiter, lex.string+4, len-4);
-				ZZ->str_maxiter[len-4] = 0x0;
 				break;
 			}
 			if(curconf==MAXMEM) {
-				int len = strlen(lex.string);
-				if( len-4 > STR_MAXITER_LEN || len < 5) {
-					_err( "Invalid length of maxmem, must be less than %u digits",
-						STR_MAXITER_LEN);
-					// free(lexbuf);
+				if(!parse_prefixed_decimal(ZZ->str_maxmem,
+							   sizeof(ZZ->str_maxmem),
+							   lex.string, "maxmem",
+							   STR_MAXMEM_LEN)) {
 					return 0;
 				}
-				if(strncasecmp(lex.string, "dec:", 4) != 0) { // dec: prefix needed
-					_err( "Invalid maxmem data prefix (must be dec:)\n");
-					// free(lexbuf);
-					return 0;
-				}
-				for(p=4; p<len; p++) {
-					if(! isdigit(lex.string[p]) ) {
-						_err( "Invalid digit in maxmem: %c\n",
-							lex.string[p]);
-						return 0;
-					}
-				}
-
-				// copy string and null terminate
-				memcpy(ZZ->str_maxmem, lex.string+4, len-4);
-				ZZ->str_maxmem[len-4] = 0x0;
 				break;
 			}
-			// free(lexbuf);
 			_err( "Invalid configuration: %s\n", lex.string);
 			curconf = NIL;
 			return 0;
@@ -231,22 +247,19 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 			if(curconf==VERBOSE) { ZZ->debuglevel = lex.int_number; break; }
 			if(curconf==MEMBLOCKNUM) { ZZ->sfpool_blocknum = lex.int_number; break; }
 			if(curconf==MEMBLOCKSIZE) { ZZ->sfpool_blocksize = lex.int_number; break; }
-			// free(lexbuf);
 			_err( "Invalid integer configuration\n");
 			curconf = NIL;
 			return 0;
 
 		default:
 			if(lex.token == ',') { curconf = NIL; break; }
-			if(lex.token == '=' && curconf == NIL) {
-				_err( "Undefined config variable\n");
-				break; }
-			if(lex.token == '=' && curconf != NIL) break; // OK
-			_err( "%s: Invalid string in configuration: %lu\n", __func__, lex.token);
-			// free(lexbuf);
-			return 0;
+				if(lex.token == '=' && curconf == NIL) {
+					_err( "Undefined config variable\n");
+					break; }
+				if(lex.token == '=' && curconf != NIL) break; // OK
+				_err( "%s: Invalid string in configuration: %lu\n", __func__, lex.token);
+				return 0;
+			}
 		}
+		return 1;
 	}
-	// free(lexbuf);
-	return 1;
-}

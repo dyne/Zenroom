@@ -40,6 +40,22 @@ EOF
 
 }
 
+@test "Boundary config values still parse in json log mode" {
+	echo "logfmt=json,maxiter=dec:1234567890,maxmem=dec:1234567890,rngseed=hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" > zencode_exec_stdin
+	cat <<EOF | base64 -w0 >> zencode_exec_stdin
+Given nothing
+Then print the string 'ok'
+EOF
+	echo >> zencode_exec_stdin # keys
+	echo >> zencode_exec_stdin # data
+	echo >> zencode_exec_stdin # extra
+	echo >> zencode_exec_stdin # context
+
+	run bash -lc "cat zencode_exec_stdin | ${ZENCODE_EXECUTABLE} > '$TMP/out' 2>'$TMP/err'"
+	[ "$status" -eq 0 ]
+	cat "$TMP/err" | jq .
+}
+
 @test "Parser error json log" {
 	echo "logfmt=json" > zencode_exec_stdin
 	cat <<EOF | base64 -w0 >> zencode_exec_stdin

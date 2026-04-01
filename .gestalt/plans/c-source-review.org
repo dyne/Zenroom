@@ -37,7 +37,7 @@ Change: In `src/zencode-exec.c`, make `line_alloc()` reserve space for a termina
 Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/zencode/bindings_exec.bats` and `bats test/zencode/bindings_logfmt.bats`. Add regressions for: maximum-length valid config input, invalid non-base64 input, and a decoded line whose exact decoded size reaches the current boundary.
 Done when: Every input line is decoded into a correctly sized buffer, config assembly is bounded, and the existing binding executor tests remain green.
 
-** TODO [#A] Correct config parser validation and length handling
+** DONE [#A] Correct config parser validation and length handling
 Why: The config parser’s `rngseed` validation skips part of the payload, and the `maxmem` path reuses `STR_MAXITER_LEN` implicitly. This is small code, but it defines trusted runtime limits and determinism settings.
 Change: In `src/zen_config.c`, rewrite the `rngseed`, `maxiter`, and `maxmem` validation branches so lengths, prefixes, and digit loops are obvious and correct. Introduce a dedicated `STR_MAXMEM_LEN` constant in `src/zenroom.h` if the code benefits from one, but keep the user-visible configuration syntax unchanged. While editing, remove dead commented frees and make the finite-state transitions easier to follow without changing accepted valid configurations.
 Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/zencode/bindings_logfmt.bats`. Add focused negative tests for malformed `rngseed`, malformed `maxiter`, and malformed `maxmem` inputs, plus one valid boundary-length test for each.

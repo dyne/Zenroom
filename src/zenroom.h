@@ -82,6 +82,7 @@ extern void *ZEN;
 
 #define RANDOM_SEED_LEN 64
 #define STR_MAXITER_LEN 10
+#define STR_MAXMEM_LEN 10
 
 // conf switches
 typedef enum { STB, MUTT, LIBC } printftype;
@@ -117,7 +118,7 @@ typedef struct {
   	char zconf_rngseed[(RANDOM_SEED_LEN*2)+4]; // 0x and terminating \0
 
 	char str_maxiter[STR_MAXITER_LEN + 1];
-	char str_maxmem[STR_MAXITER_LEN + 1];
+	char str_maxmem[STR_MAXMEM_LEN + 1];
 
 	int sfpool_blocknum;
 	int sfpool_blocksize;

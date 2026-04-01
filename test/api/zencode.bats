@@ -124,6 +124,38 @@ EOF
     assert_line --partial "Abort on error code"
 }
 
+@test "ZENCODE API :: zenroom_exec rejects malformed rngseed cleanly" {
+    seed="g$(printf '%0127d' 0)"
+    conf="rngseed=hex:${seed}"
+    run env LD_LIBRARY_PATH=$R ./zenroom_exec "print('ok')" "$conf" "" "" "" ""
+    [ "$status" -ne 0 ]
+    assert_line --partial "Invalid hex digit in rngseed: g"
+    assert_line --partial "Error parsing configuration: $conf"
+    assert_line --partial "Zenroom initialisation failed."
+}
+
+@test "ZENCODE API :: zenroom_exec rejects malformed maxiter cleanly" {
+    run env LD_LIBRARY_PATH=$R ./zenroom_exec "print('ok')" "maxiter=dec:12a" "" "" "" ""
+    [ "$status" -ne 0 ]
+    assert_line --partial "Invalid digit in maxiter: a"
+    assert_line --partial "Error parsing configuration: maxiter=dec:12a"
+    assert_line --partial "Zenroom initialisation failed."
+}
+
+@test "ZENCODE API :: zenroom_exec rejects malformed maxmem cleanly" {
+    run env LD_LIBRARY_PATH=$R ./zenroom_exec "print('ok')" "maxmem=dec:12a" "" "" "" ""
+    [ "$status" -ne 0 ]
+    assert_line --partial "Invalid digit in maxmem: a"
+    assert_line --partial "Error parsing configuration: maxmem=dec:12a"
+    assert_line --partial "Zenroom initialisation failed."
+}
+
+@test "ZENCODE API :: zenroom_exec accepts boundary rngseed maxiter and maxmem" {
+    run env LD_LIBRARY_PATH=$R ./zenroom_exec "print('ok')" "rngseed=hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,maxiter=dec:1234567890,maxmem=dec:1234567890" "" "" "" ""
+    [ "$status" -eq 0 ]
+    assert_line "ok"
+}
+
 @test "ZENCODE API :: zenroom_exec_tobuf fails cleanly on tiny stdout buffer" {
     script="print('Hello World')"
     run env LD_LIBRARY_PATH=$R ./zencode_exec_tiny_stdout "$script" "" "" "" "" ""
