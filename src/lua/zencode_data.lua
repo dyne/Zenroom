@@ -562,16 +562,13 @@ end
  end
  function serialize(tab)
     assert(luatype(tab) == 'table', 'Cannot serialize: not a table', 2)
-    local octets = OCTET.zero(1)
+    local octets = { OCTET.zero(1):hex() }
     local strings = { 'K' }
     sort_apply(
        function(v, k)
 	  table.insert(strings, tostring(k))
 	  if iszen(type(v)) then
-	     -- TODO: optimize octet concatenation in C
-	     -- to avoid reallocation of new octets in this loop
-	     -- should count total length allocate one and insert
-	     octets = octets.. v:octet()
+	     octets[#octets + 1] = v:octet():hex()
 	  else -- number
 	     table.insert(strings, tostring(v))
 	  end
@@ -579,7 +576,7 @@ end
        tab
     )
     return {
-       octets = octets,
+       octets = O.from_hex(table.concat(octets)),
        -- string concatenation is optimized
        strings = table.concat(strings)
     }
