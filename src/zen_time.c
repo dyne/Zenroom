@@ -86,8 +86,8 @@ ztime_t* time_arg(lua_State *L, int n) {
 		*result = *(ztime_t*)ud;
 		goto end;
 	}
-	if(lua_isstring(L, 1)) {
-		const char* arg = lua_tostring(L, 1);
+	if(lua_isstring(L, n)) {
+		const char* arg = lua_tostring(L, n);
 		char *pEnd;
 		long l_result = strtol(arg, &pEnd, 10);
 		if(*pEnd) {
@@ -107,8 +107,8 @@ ztime_t* time_arg(lua_State *L, int n) {
 		goto end;
 	}
 	// number argument, import
-	if(lua_isnumber(L, 1)) {
-		lua_Number number = lua_tonumber(L, 1);
+	if(lua_isnumber(L, n)) {
+		lua_Number number = lua_tonumber(L, n);
 		*result = (int)number;
 		goto end;
 	}

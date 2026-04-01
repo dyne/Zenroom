@@ -867,7 +867,8 @@ static int big_bits(lua_State *L) {
 static int big_bytes(lua_State *L) {
 	BEGIN();
 	big *d = big_arg(L, 1); SAFE(d, ALLOCATE_BIG_ERR);
-	lua_pushinteger(L, ceil(_bitsize(d)/8));
+	int bits = _bitsize(d);
+	lua_pushinteger(L, (bits + 7) / 8);
 	big_free(L, d);
 	END(1);
 }

@@ -41,6 +41,7 @@ load ../bats_setup
     Z fsp.lua
     Z uuid.lua
     Z guard_precedence.lua
+    Z time_big_regression.lua
     Z crypto_loader.lua
     Z zkcc_small.lua
     Z zkcc_horner_expr.lua
