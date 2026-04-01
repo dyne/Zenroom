@@ -21,6 +21,10 @@
 
 local HDW = {}
 
+local function fail(message)
+   error(message, 2)
+end
+
 -- an extended key is a table with the fields
 -- secret, chain_code, level, fingerprint_parent, child_number
 -- a private key may have public=nil
@@ -33,15 +37,19 @@ local HDW = {}
 function HDW.parse_extkey(data)
    data = O.from_base58(data)
    -- check checksum
-   assert(#data == 82 and data:sub(#data-3, #data) == HASH.dsha256(data:sub(1, #data-4)):chop(4), "Wrong input key", 2)
+   if #data ~= 82 or data:sub(#data-3, #data) ~= HASH.dsha256(data:sub(1, #data-4)):chop(4) then
+      fail("Wrong input key")
+   end
    local extkey = {}
    local i = 1
 
    local version = data:sub(i,i+3)
    i = i + 4
 
-   assert(version == HDW.MAINPK or version == HDW.MAINSK or
-	  version == HDW.TESTPK or version == HDW.TESTSK, "Unknown version", 2)
+   if not (version == HDW.MAINPK or version == HDW.MAINSK or
+      version == HDW.TESTPK or version == HDW.TESTSK) then
+      fail("Unknown version")
+   end
    local public = HDW.isPublic(version)
 
    extkey.level = tonumber(data:sub(i,i):hex(), 16)
@@ -86,8 +94,10 @@ end
 function HDW.format_extkey(extkey, version)
    local data = O.empty()
 
-   assert(version == HDW.MAINPK or version == HDW.MAINSK or
-	  version == HDW.TESTPK or version == HDW.TESTSKK, "Unknown version", 2)
+   if not (version == HDW.MAINPK or version == HDW.MAINSK or
+      version == HDW.TESTPK or version == HDW.TESTSKK) then
+      fail("Unknown version")
+   end
 
    local public = HDW.isPublic(version)
 
@@ -104,7 +114,9 @@ function HDW.format_extkey(extkey, version)
    if public then
       data = data .. HDW.getPublic(extkey)
    else
-      assert(extkey.secret, "From a public key it is not possible to print a private key")
+      if not extkey.secret then
+         fail("From a public key it is not possible to print a private key")
+      end
       data = data .. O.from_hex('00') .. extkey.secret
    end
 
@@ -125,10 +137,14 @@ function HDW.ckd_priv(parent_key, i)
    local pk
    
    -- check validity of index
-   assert(i <= BIG.new(O.from_hex('ffffffff')), "Invalid index")
+   if not (i <= BIG.new(O.from_hex('ffffffff'))) then
+      fail("Invalid index")
+   end
 
    -- we cannot derive a private key from a public key
-   assert(parent_key.secret, "Cannot derive a private key from a public key")
+   if not parent_key.secret then
+      fail("Cannot derive a private key from a public key")
+   end
    
    newkey.child_number = i
    local i_oct = i:octet()
@@ -190,7 +206,9 @@ function HDW.ckd_pub(parent_key, i)
    -- check validity of index
    --assert(i <= BIG.new(O.from_hex('ffffffff')), "Invalid index")
 
-   assert(i < BIG.new(O.from_hex('80000000')), "Public key derivation is only defined for non-hardened child keys")
+   if not (i < BIG.new(O.from_hex('80000000'))) then
+      fail("Public key derivation is only defined for non-hardened child keys")
+   end
 
    if parent_key.secret then
       newkey = HDW.neutered(HDW.ckd_priv(parent_key, i))
@@ -250,7 +268,9 @@ end
 -- nohardned = nil which is the same as false)
 function HDW.standard_child(parent_key, i, wallet, nohardened)
    local HARDNED = BIG.new(O.from_hex('80000000'))
-   assert(i < HARDNED)
+   if not (i < HARDNED) then
+      fail("Invalid child index")
+   end
 
    if not nohardened then
       i = i + HARDNED
@@ -260,7 +280,9 @@ function HDW.standard_child(parent_key, i, wallet, nohardened)
       wallet = INT.new(0)
    end
 
-   assert(wallet < HARDNED)
+   if not (wallet < HARDNED) then
+      fail("Invalid wallet index")
+   end
 
    local wallet_key = HDW.ckd_priv(parent_key, wallet+HARDNED)
    local external_key = HDW.ckd_priv(wallet_key, INT.new(0))
