@@ -210,12 +210,17 @@ static int randombytes_linux_randombytes_urandom(void *buf, size_t n)
 	int fd;
 	size_t offset = 0, count;
 	ssize_t tmp;
+	int ret = 0;
 	do {
 		fd = open("/dev/urandom", O_RDONLY);
 	} while (fd == -1 && errno == EINTR);
+	if (fd == -1) return -1;
 
 # if defined(SYS_getrandom)
-	if (randombytes_linux_wait_for_entropy(fd) == -1) return -1;
+	if (randombytes_linux_wait_for_entropy(fd) == -1) {
+		ret = -1;
+		goto end;
+	}
 # endif
 
 	while (n > 0) {
@@ -224,13 +229,19 @@ static int randombytes_linux_randombytes_urandom(void *buf, size_t n)
 		if (tmp == -1 && (errno == EAGAIN || errno == EINTR)) {
 			continue;
 		}
-		if (tmp == -1) return -1; /* Unrecoverable IO error */
+		if (tmp == -1) {
+			ret = -1; /* Unrecoverable IO error */
+			goto end;
+		}
 		offset += tmp;
 		n -= tmp;
 	}
+end:
 	close(fd);
-	assert(n == 0);
-	return 0;
+	if (ret == 0) {
+		assert(n == 0);
+	}
+	return ret;
 }
 #endif /* defined(__linux__) */
 
