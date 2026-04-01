@@ -182,7 +182,7 @@ octet* o_alloc(lua_State *L, int size) {
 		zerror(L, "Cannot create octet, malloc failure: %s",
 			   strerror(errno));
 		return NULL; }
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	o->val = malloc(size +0x0f);
 	if(!o->val) {
 		zerror(L, "Cannot create octet value, malloc: %s",
@@ -459,7 +459,7 @@ static int new_random(lua_State *L) {
 	int tn;
 	lua_Number n = lua_tonumberx(L, 1, &tn);
 	octet *o = o_new(L,(int)n); SAFE(o, CREATE_OCT_ERR);
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	OCT_rand(o, Z->random_generator, (int)n);
 	END(1);
 }

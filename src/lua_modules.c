@@ -217,7 +217,7 @@ int zen_require(lua_State *L) {
 int zen_exitcode(lua_State *L) {
 	int tn;
 	lua_Number n = lua_tonumberx(L,1,&tn);
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	if(tn)
 		Z->exitcode = (int)n;
 	else

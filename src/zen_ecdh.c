@@ -86,7 +86,7 @@ static int ecdh_keygen(lua_State *L) {
 	lua_setfield(L, -2, "public");
 	octet *sk = o_new(L,ECDH.fieldsize); SAFE_GOTO(sk, "Could not create secret key");
 	lua_setfield(L, -2, "private");
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	(*ECDH.ECP__KEY_PAIR_GENERATE)(Z->random_generator,sk,pk);
 end:
 	if(failed_msg) {
@@ -266,7 +266,7 @@ static int ecdh_dsa_sign(lua_State *L) {
 		lua_setfield(L, -2, "r");
 		octet *s = o_new(L,max_size); SAFE_GOTO(s, "Could not create signature.s");
 		lua_setfield(L, -2, "s");
-		Z(L);
+		zenroom_t *Z = zen_get_context(L);
 		(*ECDH.ECP__SP_DSA)( max_size, Z->random_generator, NULL,
 							 (octet*)sk, (octet*)m, r, s);
 	} else {
@@ -400,7 +400,7 @@ static int ecdh_dsa_sign_hashed(lua_State *L) {
 		octet *s = o_new(L, (int)n); SAFE_GOTO(s, "Could not create signautre.s");
 		lua_setfield(L, -2, "s");
 		// Size of a big256 used with SECP256k1
-		Z(L);
+		zenroom_t *Z = zen_get_context(L);
 		(*ECDH.ECP__SP_DSA_NOHASH)
 			((int)n, Z->random_generator, NULL,
 			 (octet*)sk, (octet*)m, r, s, &parity);

@@ -101,7 +101,7 @@ void ecp_clone_free(lua_State *L, const ecp* e) {
 }
 
 const ecp* ecp_arg(lua_State *L, int n) {
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	ecp *res;
 	void *ud = luaL_testudata(L, n, "zenroom.ecp");
 	if(ud) {

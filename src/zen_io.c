@@ -59,8 +59,8 @@ static inline void _zen_io_write(int fd, const void *buf, size_t count) {
 }
 
 static int zen_stdout_reserve(lua_State *L, size_t need) {
-  Z(L);
-  if (!Z->stdout_buf) return 1;
+  zenroom_t *Z = zen_get_context(L);
+  if (!Z || !Z->stdout_buf) return 1;
   if (Z->stdout_pos + need > Z->stdout_len) {
     luaL_error(L, "No space left in output buffer");
     return 0;
@@ -69,7 +69,7 @@ static int zen_stdout_reserve(lua_State *L, size_t need) {
 }
 
 static int zen_stderr_reserve(lua_State *L, size_t need, const char *msg) {
-  Z(L);
+  zenroom_t *Z = zen_get_context(L);
   if (!Z || !Z->stderr_buf) return 1;
   if (Z->stderr_pos + need > Z->stderr_len) {
     luaL_error(L, "%s", msg);
@@ -80,12 +80,12 @@ static int zen_stderr_reserve(lua_State *L, size_t need, const char *msg) {
 
 static int zen_print (lua_State *L) {
   BEGIN();
-  Z(L);
+  zenroom_t *Z = zen_get_context(L);
   char *failed_msg = NULL;
   int n_args = lua_gettop(L);
   
   if(n_args == 0) {
-	if (Z->stdout_buf) {
+	if (Z && Z->stdout_buf) {
 	  char *p = Z->stdout_buf+Z->stdout_pos;
 	  if (!zen_stdout_reserve(L, 2)) END(0);
 	  *p='\n'; Z->stdout_pos++;
@@ -105,7 +105,7 @@ static int zen_print (lua_State *L) {
   for(int i = 1; i <= n_args; i++) {
 	const octet *o = o_arg(L, i); SAFE_GOTO(o, "Could not allocate message to show");
 	
-	if (Z->stdout_buf) {
+	if (Z && Z->stdout_buf) {
 	  char *p = Z->stdout_buf+Z->stdout_pos;
 	  size_t required = o->len + (i < n_args ? 1 : 2);
 	  if (!zen_stdout_reserve(L, required)) {
@@ -159,7 +159,7 @@ end:
 
 int printerr(lua_State *L, const octet *o) {
   BEGIN();
-  Z(L);
+  zenroom_t *Z = zen_get_context(L);
   if (Z && Z->stderr_buf) {
 	char *p = Z->stderr_buf+Z->stderr_pos;
 	if(!o) {
@@ -199,10 +199,10 @@ int printerr(lua_State *L, const octet *o) {
 // print without an ending newline
 static int zen_write (lua_State *L) {
   BEGIN();
-  Z(L);
+  zenroom_t *Z = zen_get_context(L);
   char *failed_msg = NULL;
   const octet *o = o_arg(L, 1); SAFE_GOTO(o, "Could not allocate message to show");
-  if (Z->stdout_buf) {
+  if (Z && Z->stdout_buf) {
 	char *p = Z->stdout_buf+Z->stdout_pos;
 	if (!zen_stdout_reserve(L, o->len + 1))
 	  goto end;
@@ -228,7 +228,7 @@ end:
 }
 
 int zen_log(lua_State *L, log_priority prio, const octet *o) {
-  Z(L);
+  zenroom_t *Z = zen_get_context(L);
   if(!o) return 0;
 #ifdef __ANDROID__
   char *t = calloc(o->len+1,sizeof(char));
@@ -238,10 +238,10 @@ int zen_log(lua_State *L, log_priority prio, const octet *o) {
   free(t);
   return 0;
 #endif
-  size_t suffix_len = (Z->logformat == LOG_JSON) ? 3 : 1;
+  size_t suffix_len = (Z && Z->logformat == LOG_JSON) ? 3 : 1;
   char prefix[5] = "     ";
   get_log_prefix(Z,prio,prefix);
-  if (Z->stderr_buf) {
+  if (Z && Z->stderr_buf) {
 	if (!zen_stderr_reserve(L, 5 + o->len + suffix_len + 1,
 						 "No space left in error buffer")) {
 	  return 1;
@@ -250,7 +250,7 @@ int zen_log(lua_State *L, log_priority prio, const octet *o) {
 	strncpy(p, prefix, 5);
 	memcpy(p + 5, o->val, o->len);
 	p += 5 + o->len;
-	if(Z->logformat == LOG_JSON) {
+	if(Z && Z->logformat == LOG_JSON) {
 	  *p='"'; p++;
 	  *p=','; p++;
 	}
@@ -266,7 +266,7 @@ int zen_log(lua_State *L, log_priority prio, const octet *o) {
 	memcpy(msg, prefix, 5);
 	memcpy(msg + 5, o->val, o->len);
 	char *p = msg + 5 + o->len;
-	if(Z->logformat == LOG_JSON) {
+	if(Z && Z->logformat == LOG_JSON) {
 	  *p='"'; p++;
 	  *p=','; p++;
 	}
@@ -277,7 +277,7 @@ int zen_log(lua_State *L, log_priority prio, const octet *o) {
 #elif defined(ARCH_CORTEX)
 	_zen_io_write(SEMIHOSTING_STDOUT_FILENO, prefix, 5);
 	_zen_io_write(SEMIHOSTING_STDOUT_FILENO, o->val, o->len);
-	if(Z->logformat == LOG_JSON) {
+	if(Z && Z->logformat == LOG_JSON) {
 	  _zen_io_write(SEMIHOSTING_STDOUT_FILENO, "\",", 2);
 	}
 	_zen_io_write(SEMIHOSTING_STDOUT_FILENO, "\n", 1);

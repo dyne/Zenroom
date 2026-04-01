@@ -58,7 +58,7 @@ Does not require an input.
 
 static int ed_secgen(lua_State *L) {
 	BEGIN();
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	register const size_t sksize = sizeof(ed25519_secret_key);
 	octet *sk = o_new(L, sksize); SAFE(sk, "Could not create secret key");
 	register size_t i;

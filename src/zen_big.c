@@ -85,7 +85,7 @@ extern ecp* ecp_dup(lua_State *L, ecp* in);
 
 int _octet_to_big(lua_State *L, big *dst, const octet *src) {
 	int i;
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	if(src->len <= MODBYTES) { // big
 		big_init(L,dst);
 		BIG_zero(dst->val);
@@ -111,7 +111,7 @@ int _octet_to_big(lua_State *L, big *dst, const octet *src) {
 }
 
 void big_free(lua_State *L, big *b) {
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	if(b) {
 		if(b->dval) free(b->dval);
 		if(b->val) free(b->val);
@@ -136,7 +136,7 @@ big* big_new(lua_State *L) {
 }
 
 big* big_arg(lua_State *L,int n) {
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	big* result = (big*)malloc(sizeof(big));
 	if(!result) {
 		zerror(L, "Cannot create big, malloc failure: %s", strerror(errno));
@@ -287,7 +287,7 @@ static int newbig(lua_State *L) {
 		big_init(L, res);
 		// random with modulus
 		big *modulus = (big*)ud;
-		Z(L);
+		zenroom_t *Z = zen_get_context(L);
 		BIG_randomnum(res->val,modulus->val,Z->random_generator);
 		END(1);
 	}
@@ -437,7 +437,7 @@ static int big_from_decimal_string(lua_State *L) {
 static int big_modrand(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	big *modulus = big_arg(L,1); SAFE_GOTO(modulus, ALLOCATE_BIG_ERR);
 	big *res = big_new(L); SAFE_GOTO(res, CREATE_BIG_ERR);
 	big_init(L,res);
@@ -460,7 +460,7 @@ static int big_random(lua_State *L) {
 	BEGIN();
 	big *res = big_new(L); SAFE(res, CREATE_BIG_ERR);
 	big_init(L,res);
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	BIG_randomnum(res->val,(chunk*)CURVE_Order,Z->random_generator);
 	END(1);
 }

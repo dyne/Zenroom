@@ -154,7 +154,7 @@ int zen_init_pmain(lua_State *L) { // protected mode init
 		return(LUA_ERRRUN);
 	}
 
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	if(Z->logformat == LOG_JSON)
 	  luaL_dostring(L, "CONF.debug.format='compact'");
 	if(Z->scope == SCOPE_GIVEN) {

@@ -514,7 +514,7 @@ static int mlkem_keygen(lua_State *L) {
 		SAFE(rnd->len == 32, "Wrong seed size");
 		memcpy(randbytes,rnd->val,32);
 	} else {
-		Z(L);
+		zenroom_t *Z = zen_get_context(L);
 		for(uint8_t i=0;i<32;i++) {
 			randbytes[i] = RAND_byte(Z->random_generator);
 		}
@@ -525,7 +525,7 @@ static int mlkem_keygen(lua_State *L) {
 		SAFE(rnd->len == 32, "Wrong seed size");
 		memcpy(&randbytes[32],rnd->val,32);
 	} else {
-		Z(L);
+		zenroom_t *Z = zen_get_context(L);
 		for(uint8_t i=32;i<64;i++) {
 			randbytes[i] = RAND_byte(Z->random_generator);
 		}
@@ -825,7 +825,7 @@ static int mlkem_enc(lua_State *L) {
 		SAFE_GOTO(rnd->len == 32, "Wrong seed size");
 		memcpy(randbytes,rnd->val,32);
 	} else {
-		Z(L);
+		zenroom_t *Z = zen_get_context(L);
 		for(uint8_t i = 0; i < 32; i++) {
 			randbytes[i] = RAND_byte(Z -> random_generator);
 		}
@@ -1166,7 +1166,7 @@ static int ml_dsa_44_keypair(lua_State *L)   {
 		for(uint8_t i=0;i<32;i++) randbytes[i] = rnd->val[i];
 	}
 	else {
-		Z(L);
+		zenroom_t *Z = zen_get_context(L);
 		for(uint8_t i=0;i<32;i++) randbytes[i] = RAND_byte(Z->random_generator);
 	}
 	pqcrystals_ml_dsa_44_zen_keypair((unsigned char*)public->val,
@@ -1255,7 +1255,7 @@ static int ml_dsa_44_signature(lua_State *L) {
 	SAFE_GOTO(sk->len == pqcrystals_ml_dsa_44_SECRETKEYBYTES, "Invalid size for secret key");
 	m = o_arg(L, 2); SAFE_GOTO(m, "Could not allocate message");
 	octet *sig = o_new(L, pqcrystals_ml_dsa_44_BYTES); SAFE_GOTO(sig, "Could not create signature");
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	if(Z->random_external) {
 		int sum = 0;
 		for(int i = 0; i < 64; i++) {

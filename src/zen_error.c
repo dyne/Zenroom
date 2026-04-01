@@ -57,8 +57,6 @@ static inline void _zen_error_write(int fd, const void *buf, size_t count) {
 extern int zen_log(lua_State *L, log_priority prio, octet *oct);
 extern int printerr(lua_State *L, octet *in);
 
-#define Z_FORMAT_ARG(l) zenroom_t *Z=NULL; (void)Z; if (l) { void *_zv; lua_getallocf(l, &_zv); Z = _zv; } else { _err(format, arg); return(0); }
-
 #define MAX_ERRMSG 256 // maximum length of an error message line
 
 #define LOG_DEFAULT " .   "
@@ -74,11 +72,50 @@ const char* log_prefix[] = {
   "[!]  ", // FATAL
   "[!]  " // SIL
 };
+void *zen_get_global_context(void) {
+  return ZEN;
+}
+
+void *zen_get_context(void *L) {
+  if(L) {
+    void *ctx = NULL;
+    lua_getallocf((lua_State*)L, &ctx);
+    if(ctx) return ctx;
+  }
+  return zen_get_global_context();
+}
+
 void get_log_prefix(void *Z, log_priority prio, char dest[5]) {
   zenroom_t *ZZ = (zenroom_t*)Z;
   char *p = dest;
-  if(ZZ->logformat == LOG_JSON) { *p = '"'; p++; }
+  if(ZZ && ZZ->logformat == LOG_JSON) { *p = '"'; p++; }
   strncpy(p, log_prefix[prio], 4);
+}
+
+static int zen_vlog(void *L, log_priority prio, int min_debug,
+                    const char *format, va_list arg) {
+  zenroom_t *Z = zen_get_context(L);
+  if(Z && Z->debuglevel < min_debug) {
+    return 0;
+  }
+  if(!L) {
+    char msg[MAX_ERRMSG + 1];
+    int len = mutt_vsnprintf(msg, MAX_ERRMSG, format, arg);
+    msg[len] = 0x0;
+    _err("%s", msg);
+    return 0;
+  }
+
+  octet *o = o_alloc((lua_State*)L, MAX_ERRMSG);
+  if(!o) {
+    _err("Could not allocate log buffer");
+    return 0;
+  }
+  mutt_vsnprintf(o->val, o->max - 5, format, arg);
+  o->len = strlen(o->val);
+  zen_log((lua_State*)L, prio, o);
+  o_free((lua_State*)L, o);
+  return 0;
 }
 
 // error reported with lua context
@@ -181,79 +218,49 @@ void json_end(void *L) {
 int notice(void *L, const char *format, ...) {
   va_list arg;
   va_start(arg, format);
-  Z_FORMAT_ARG(L);
-  if(Z && Z->debuglevel<1) return 0;
-  octet *o = o_alloc(L, MAX_ERRMSG);
-  mutt_vsnprintf(o->val, o->max-5, format, arg);
-  o->len = strlen(o->val);
-  zen_log(L, LOG_INFO, o);
-  o_free((lua_State*)L,o);
-  return 0;
+  int res = zen_vlog(L, LOG_INFO, 1, format, arg);
+  va_end(arg);
+  return res;
 }
 
 int func(void *L, const char *format, ...) {
   va_list arg;
   va_start(arg, format);
-  Z_FORMAT_ARG(L);
-  if(Z && Z->debuglevel<3) return 0;
-  octet *o = o_alloc(L, MAX_ERRMSG);
-  mutt_vsnprintf(o->val, o->max-5, format, arg);
-  o->len = strlen(o->val);
-  zen_log(L, LOG_VERBOSE, o);
-  o_free((lua_State*)L,o);
-  return 0;
+  int res = zen_vlog(L, LOG_VERBOSE, 3, format, arg);
+  va_end(arg);
+  return res;
 }
 
 int trace(void *L, const char *format, ...) {
   va_list arg;
   va_start(arg, format);
-  Z_FORMAT_ARG(L);
-  if(Z && Z->debuglevel<4) return 0;
-  octet *o = o_alloc(L, MAX_ERRMSG);
-  mutt_vsnprintf(o->val, o->max-5, format, arg);
-  o->len = strlen(o->val);
-  zen_log(L, LOG_VERBOSE, o);
-  o_free((lua_State*)L,o);
-  return 0;
+  int res = zen_vlog(L, LOG_VERBOSE, 4, format, arg);
+  va_end(arg);
+  return res;
 }
 
 int zerror(void *L, const char *format, ...) {
   va_list arg;
   va_start(arg, format);
-  Z_FORMAT_ARG(L);
-  octet *o = o_alloc(L, MAX_ERRMSG);
-  mutt_vsnprintf(o->val, o->max-5, format, arg);
-  o->len = strlen(o->val);
-  zen_log(L, LOG_ERROR, o);
-  o_free((lua_State*)L,o);
-  return 0;
+  int res = zen_vlog(L, LOG_ERROR, 0, format, arg);
+  va_end(arg);
+  return res;
 }
 
 int act(void *L, const char *format, ...) {
   va_list arg;
   va_start(arg, format);
-  Z_FORMAT_ARG(L);
-  if(Z && Z->debuglevel<2) return 0;
-  octet *o = o_alloc(L, MAX_ERRMSG);
-  // new octet is pushed to stack
-  mutt_vsnprintf(o->val, o->max-5, format, arg);
-  o->len = strlen(o->val);
-  zen_log(L, LOG_DEBUG, o);
-  o_free((lua_State*)L,o);
-  return 0;
+  int res = zen_vlog(L, LOG_DEBUG, 2, format, arg);
+  va_end(arg);
+  return res;
 }
 
 int warning(void *L, const char *format, ...) {
   va_list arg;
   va_start(arg, format);
-  Z_FORMAT_ARG(L);
-  if(Z && Z->debuglevel<1) return 0;
-  octet *o = o_alloc(L, MAX_ERRMSG);
-  mutt_vsnprintf(o->val, o->max-5, format, arg);
-  o->len = strlen(o->val);
-  zen_log(L, LOG_WARN, o);
-  o_free((lua_State*)L,o);
-  return 0;
+  int res = zen_vlog(L, LOG_WARN, 1, format, arg);
+  va_end(arg);
+  return res;
 }
 
 int hexdump(void *L, const char *src, size_t len) {

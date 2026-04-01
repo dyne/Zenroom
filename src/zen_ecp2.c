@@ -84,7 +84,7 @@ ecp2* ecp2_new(lua_State *L) {
 }
 
 const ecp2* ecp2_arg(lua_State *L, int n) {
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	ecp2 *res;
 	void *ud = luaL_testudata(L, n, "zenroom.ecp2");
 	if(ud) {

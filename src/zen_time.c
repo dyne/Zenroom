@@ -75,7 +75,7 @@ static void time_clone_free(lua_State *L, ztime_t *f) {
 }
 
 ztime_t* time_arg(lua_State *L, int n) {
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	ztime_t *result = (ztime_t*)malloc(sizeof(ztime_t));
 	if(result == NULL) {
 		zerror(L, "Could not create time, malloc failure: %s", strerror(errno));
