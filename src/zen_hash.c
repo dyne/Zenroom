@@ -138,22 +138,7 @@ end:
 
 void hash_free(lua_State *L, const hash *ch) {
 	(void)L;
-	if(!ch) return;
-	hash *h = (hash*)ch;
-	h->ref--;
-	if(h->ref>0) return;
-	if(h->rng) free(h->rng);
-	switch(h->algo) {
-	case _SHA256: free(h->sha256); break;
-	case _SHA384: free(h->sha384); break;
-	case _SHA512: free(h->sha512); break;
-	case _SHA3_256: free(h->sha3_256); break;
-	case _SHA3_512: free(h->sha3_512); break;
-	case _SHAKE256: free(h->shake256); break;
-	case _KECCAK256: free(h->keccak256); break;
-	case _RMD160: free(h->rmd160); break;
-	}
-	free(h);
+	(void)ch;
 }
 
 const hash* hash_arg(lua_State *L, int n) {
@@ -162,9 +147,7 @@ const hash* hash_arg(lua_State *L, int n) {
 		zerror(L, "invalid hash in argument");
 		return NULL;
 	}
-	hash* res = (hash*)ud;
-	res->ref++;
-	return(res);
+	return (hash*)ud;
 }
 
 /// Global Hash Functions
