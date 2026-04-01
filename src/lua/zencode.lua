@@ -75,6 +75,16 @@ ZEN = {
 }
 
 local __maxmem <const> = _G['MAXMEM']
+local function protected_error(err, fallback)
+	if type(err) == 'string' and #err > 0 then
+		return err
+	end
+	if err ~= nil and err ~= false then
+		return tostring(err)
+	end
+	return fallback
+end
+
 local function gc()
 	if collectgarbage'count' > __maxmem then
 		collectgarbage'collect'
@@ -562,13 +572,17 @@ function ZEN:parse(text)
 		 else
 				local ok, err <const> = pcall(fm, self.machine, { msg = line, Z = self })
 				if not ok or (ok and not err) then
+			   local errmsg <const> = protected_error(
+				  err,
+				  "Invalid transition from: "..self.machine.current.." to: "..line
+			   )
 			   if CONF.parser.strict_parse then
-				  error(err or "Invalid transition from: "..self.machine.current.." to: "..line)
+				  error(errmsg, 2)
 			   end
-			   if type(err) == 'string' and err.find(err, 'pattern ignored') then
+			   if type(errmsg) == 'string' and errmsg.find(errmsg, 'pattern ignored') then
 				  table.insert(res.ignored, {line, self.linenum})
 			   else
-				  table.insert(res.invalid, {line, self.linenum, err or 'Invalid transition from '..self.machine.current})
+				  table.insert(res.invalid, {line, self.linenum, errmsg or 'Invalid transition from '..self.machine.current})
 			   end
 			end
 			 end
@@ -710,7 +724,8 @@ function ZEN:run()
    end
    local runtime_error = function(x, err)
 	  table.insert(traceback, '[!] Error at Zencode line '..x.linenum)
-	  if err then table.insert(traceback, '[!] '..err) end
+	  local msg <const> = protected_error(err)
+	  if msg then table.insert(traceback, '[!] '..msg) end
    end
    -- runtime checks
    if not self.checks.version then
@@ -778,8 +793,9 @@ function ZEN:run()
 		runtime_trace(x)
 		local ok, err <const> = pcall(x.hook, table.unpack(x.args))
 		if not ok or not self.OK then
-			runtime_error(x, err)
-			fatal({msg=x.source, linenum=x.linenum}) -- traceback print inside
+			local msg <const> = protected_error(err, x.source)
+			runtime_error(x, msg)
+			fatal({msg=msg, linenum=x.linenum}) -- traceback print inside
 		end
 		-- give a notice about the CACHE being used
 		-- TODO: print it in debug
