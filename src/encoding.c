@@ -534,8 +534,15 @@ void sha256_raw(const char *data, int len, char *result) {
 
 // Return value: 0 bad input data, 1 bip39 string generated correctly
 // mnemo size has to be 24*10
+#define BIP39_WORD_BITS 11
+#define BIP39_MIN_ENTROPY_BYTES 16
+#define BIP39_MAX_ENTROPY_BYTES 32
+#define BIP39_WORDS_12 12
+#define BIP39_WORDS_18 18
+#define BIP39_WORDS_24 24
+
 int mnemonic_from_data(char *mnemo, const char *data, int len) {
-  if (len % 4 || len < 16 || len > 32) {
+  if (len % 4 || len < BIP39_MIN_ENTROPY_BYTES || len > BIP39_MAX_ENTROPY_BYTES) {
     return 0;
   }
 
@@ -553,9 +560,10 @@ int mnemonic_from_data(char *mnemo, const char *data, int len) {
   char *p = mnemo;
   for (i = 0; i < mlen; i++) {
     idx = 0;
-    for (j = 0; j < 11; j++) {
+    for (j = 0; j < BIP39_WORD_BITS; j++) {
       idx <<= 1;
-      idx += (bits[(i * 11 + j) / 8] & (1 << (7 - ((i * 11 + j) % 8)))) > 0;
+      idx += (bits[(i * BIP39_WORD_BITS + j) / 8] &
+              (1 << (7 - ((i * BIP39_WORD_BITS + j) % 8)))) > 0;
     }
     strcpy(p, wordlist[idx]);
     p += strlen(wordlist[idx]);
@@ -582,7 +590,7 @@ int mnemonic_to_bits(const char *mnemonic, char *bits) {
   n++;
 
   // check number of words
-  if (n != 12 && n != 18 && n != 24) {
+  if (n != BIP39_WORDS_12 && n != BIP39_WORDS_18 && n != BIP39_WORDS_24) {
     return 0;
   }
 
@@ -612,8 +620,8 @@ int mnemonic_to_bits(const char *mnemonic, char *bits) {
         return 0;
       }
       if (strcmp(current_word, wordlist[k]) == 0) {  // word found on index k
-        for (ki = 0; ki < 11; ki++) {
-          if (k & (1 << (10 - ki))) {
+        for (ki = 0; ki < BIP39_WORD_BITS; ki++) {
+          if (k & (1 << ((BIP39_WORD_BITS - 1) - ki))) {
             result[bi / 8] |= 1 << (7 - (bi % 8));
           }
           bi++;
@@ -623,35 +631,36 @@ int mnemonic_to_bits(const char *mnemonic, char *bits) {
       k++;
     }
   }
-  if (bi != n * 11) {
+  if (bi != n * BIP39_WORD_BITS) {
     return 0;
   }
   memcpy(bits, result, sizeof(result));
   memset(result, 0, sizeof(result));
 
   // returns amount of entropy + checksum BITS
-  return n * 11;
+  return n * BIP39_WORD_BITS;
 }
 
 // bits must be 33 bytes long
 int mnemonic_check_and_bits(const char *mnemonic, int *len, char *result) {
   char bits[32+1] = { 0 };
   int mnemonic_bits_len = mnemonic_to_bits(mnemonic, bits);
-  if (mnemonic_bits_len != (12 * 11) && mnemonic_bits_len != (18 * 11) &&
-      mnemonic_bits_len != (24 * 11)) {
+  if (mnemonic_bits_len != (BIP39_WORDS_12 * BIP39_WORD_BITS) &&
+      mnemonic_bits_len != (BIP39_WORDS_18 * BIP39_WORD_BITS) &&
+      mnemonic_bits_len != (BIP39_WORDS_24 * BIP39_WORD_BITS)) {
     return 0;
   }
-  int words = mnemonic_bits_len / 11;
+  int words = mnemonic_bits_len / BIP39_WORD_BITS;
   *len = words * 4 / 3; // remove checksum;
   memcpy(result, bits, *len);
   
   char checksum = bits[words * 4 / 3];
   sha256_raw(bits, words * 4 / 3, bits);
-  if (words == 12) {
+  if (words == BIP39_WORDS_12) {
     return (bits[0] & 0xF0) == (checksum & 0xF0);  // compare first 4 bits
-  } else if (words == 18) {
+  } else if (words == BIP39_WORDS_18) {
     return (bits[0] & 0xFC) == (checksum & 0xFC);  // compare first 6 bits
-  } else if (words == 24) {
+  } else if (words == BIP39_WORDS_24) {
     return bits[0] == checksum;  // compare 8 bits
   }
   return 0;
