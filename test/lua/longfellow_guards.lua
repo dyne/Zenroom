@@ -6,6 +6,12 @@ local function expect_error(fn, needle)
     assert(string.find(err, needle, 1, true), err)
 end
 
+local function expect_native_failure(fn)
+    local ok, res = pcall(fn)
+    assert(ok, res)
+    assert(res == nil, "expected native failure to return nil")
+end
+
 local circuit = {
     compressed = O.zero(1),
     zkspec = BIG.new(1),
@@ -51,5 +57,41 @@ expect_error(function()
         doc_type
     )
 end, 'Invalid proof does not contain a ZK octet')
+
+expect_native_failure(function()
+    return ZK.mdoc_prover(
+        circuit,
+        O.zero(64),
+        pkx,
+        pky,
+        transcript,
+        {{ id = string.rep('a', 33), value = ZK.yes }},
+        now
+    )
+end)
+
+expect_native_failure(function()
+    return ZK.mdoc_prover(
+        circuit,
+        O.zero(64),
+        pkx,
+        pky,
+        transcript,
+        {{ id = 'age_over_18', value = O.zero(65) }},
+        now
+    )
+end)
+
+expect_native_failure(function()
+    return ZK.mdoc_prover(
+        { compressed = O.zero(1), zkspec = BIG.new(0) },
+        O.zero(64),
+        pkx,
+        pky,
+        transcript,
+        attributes,
+        now
+    )
+end)
 
 print('longfellow guard regressions OK')
