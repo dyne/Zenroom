@@ -35,9 +35,11 @@ load ../bats_setup
     Z hkdf.lua
     Z fsp.lua
     Z uuid.lua
+    Z guard_precedence.lua
     Z zkcc_small.lua
     Z zkcc_horner_expr.lua
     Z zkcc_sha256.lua
     Z zkcc_arith_progression.lua
+    Z longfellow_guards.lua
 	Z zkcc_flatsha256_proof.lua
 }

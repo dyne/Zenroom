@@ -77,7 +77,7 @@ local function _mhout(n, obj)
 end
 
 local function _mhin(string_obj,hashtype)
-    if not type(string_obj) == 'string' then
+    if type(string_obj) ~= 'string' then
         error("Multihash invalid input: "..type(string_obj),3)
     end
     local obj <const> = CONF.input.encoding.fun(string_obj)

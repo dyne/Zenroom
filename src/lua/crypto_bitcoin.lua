@@ -35,7 +35,7 @@ end
 -- @param wif Private key in WIF format
 -- @return Private key octet
 function btc.wif_to_sk(wif)
-   if not type(wif) == 'zenroom.octet' then
+   if type(wif) ~= 'zenroom.octet' then
       error("invalid bitcoin key type, not an octet: "..type(wif), 3) end
    local len = #wif
    if not (len == 32+6) then

@@ -62,11 +62,11 @@ end
 longfellow.mdoc_prover = function(circuit, mdoc,
                                   pkx, pky,
                                   trans, attr, now)
-    if not type(circuit)=='table' then
+    if type(circuit) ~= 'table' then
         error("Invalid circuit not a table",2)
     elseif type(circuit.compressed)~='zenroom.octet' then
         error("Invalid compressed circuit not an octet",2)
-    elseif not type(mdoc)=='zenroom.octet' or mdoc < 64 then
+    elseif type(mdoc) ~= 'zenroom.octet' or #mdoc < 64 then
         error("Invalid MDOC either too small or not an octet",2)
     elseif type(trans)~='zenroom.octet' or #trans < 32 then
         error("Invalid transcript not an octet",2)
@@ -111,14 +111,14 @@ end
 longfellow.mdoc_verifier = function(circuit, proof,
                                     pkx, pky, trans,
                                     attr, now, doc_type)
-    if not type(circuit)=='table' then
+    if type(circuit) ~= 'table' then
         error("Invalid circuit not a table",2)
     elseif type(circuit.compressed)~='zenroom.octet' then
         error("Invalid compressed circuit not an octet",2)
     elseif circuit.zkspec ~= proof.zkspec then
         error("Circuit zkspec version does not match proof",2)
-    elseif not type(proof)=='table'
-        and type(proof.zk) == 'zenroom.octet' then
+    elseif type(proof) ~= 'table'
+        or type(proof.zk) ~= 'zenroom.octet' then
         error("Invalid proof does not contain a ZK octet",2)
     elseif type(trans)~='zenroom.octet' or #trans < 32 then
         error("Invalid transcript not an octet",2)
