@@ -83,8 +83,11 @@ const char *zen_lua_findtable (lua_State *L, int idx,
 
 void zen_add_class(lua_State *L, char *name,
                   const luaL_Reg *_class, const luaL_Reg *methods) {
-	char classmeta[512] = "zenroom.";
-	strncat(classmeta, name, 511);
+	char classmeta[512];
+	int meta_len = snprintf(classmeta, sizeof(classmeta), "zenroom.%s", name);
+	if (meta_len < 0 || (size_t)meta_len >= sizeof(classmeta)) {
+		luaL_error(L, "class name too long: %s", name);
+	}
 	luaL_newmetatable(L, classmeta);
 	lua_pushstring(L, "__index");
 	lua_pushvalue(L, -2);  /* pushes the metatable */

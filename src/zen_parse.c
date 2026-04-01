@@ -36,25 +36,30 @@
 
 #define MAX_DEPTH 4096
 
-static char low[MAX_LINE]; // 1KB max for a single zencode line
 // parse the first word until the first space, returns a new string
 static int lua_parse_prefix(lua_State* L) { 
 	const char *line;
 	size_t size;
+	char low[MAX_LINE];
 	line = luaL_checklstring(L,1,&size);
 	register unsigned short int c;
 	unsigned short fspace = 0;
+	size_t out_len = 0;
 	// skip space in front
 	for(c=0; c<size && c<MAX_LINE && c<USHRT_MAX; c++) {
 		if( !isspace((unsigned char)line[c]) ) break;
 		fspace++; }
 	for(; c<size && c<MAX_LINE && c<USHRT_MAX; c++) {
 		if( isspace((unsigned char)line[c]) ) {
-			low[c] = '\0'; break; }
-		low[c] = (char)tolower((unsigned char)line[c]);
+			break;
+		}
+		low[out_len++] = (char)tolower((unsigned char)line[c]);
 	}
-	if(c>size || c==MAX_LINE) lua_pushnil(L);
-	else lua_pushlstring(L,&low[fspace],c-fspace);
+	if(c == MAX_LINE && c < size && !isspace((unsigned char)line[c])) {
+		lua_pushnil(L);
+	} else {
+		lua_pushlstring(L, low, out_len);
+	}
 	return 1;
 }
 
