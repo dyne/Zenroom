@@ -261,6 +261,7 @@ Preserve:
 ## Maintenance Notes
 
 - `zencode_when.lua` now routes rename statements through shared local helpers to keep `ACK` and `CODEC` updates aligned.
+- native context access now goes through `zen_get_context(...)` or `zen_get_global_context()`, pool-backed allocations use explicit `zmalloc(...)`/`zfree(...)`/`zrealloc(...)`, and helper names ending in `_clone_free` or `hash_release` own heap-backed temporary clones rather than borrowed userdata.
 - vendored Lua modules (`json.lua`, `msgpack.lua`, `inspect.lua`, `semver.lua`) include origin/local-change headers; preserve them when upgrading.
 - for array-like data in hot paths, prefer `ipairs` over deterministic sorted traversal helpers unless order affects serialized or signed output.
 
