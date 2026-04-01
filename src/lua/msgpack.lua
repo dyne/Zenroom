@@ -29,6 +29,9 @@
 	For more information, please refer to <http://unlicense.org/>
 
 --]]----------------------------------------------------------------------------
+-- Vendored origin: steinuil/msgpack.lua (pure Lua 5.3/5.4 implementation).
+-- Zenroom local changes: adaptations for zenroom runtime types and
+-- deterministic behavior integration.
 local pack, unpack = string.pack, string.unpack
 local mtype, utf8len = math.type, utf8.len
 local tconcat, tunpack = table.concat, table.unpack

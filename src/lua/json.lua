@@ -24,6 +24,9 @@
 -- CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 -- SOFTWARE.
 --
+-- Vendored origin: rxi/json.lua (1.1.0).
+-- Zenroom local changes: deterministic traversal and integration
+-- with zenroom conversion/encoding conventions.
 
 local json = { _version = "1.1.0" }
 

@@ -1,3 +1,6 @@
+-- Vendored origin: kikito/semver.lua (1.2.2).
+-- Zenroom local changes: small runtime integration adjustments and
+-- local maintenance updates.
 local semver = {
    _VERSION     = '1.2.2',
    _DESCRIPTION = 'semver for Lua',
