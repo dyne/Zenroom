@@ -47,4 +47,5 @@ load ../bats_setup
     Z zkcc_arith_progression.lua
     Z longfellow_guards.lua
 	Z zkcc_flatsha256_proof.lua
+    Z sfpool_regression.lua
 }

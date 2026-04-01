@@ -128,6 +128,7 @@ static inline void *sfutil_memalign(const void* ptr) {
  * @return Pointer to the allocated memory block, or NULL on failure.
  */
 static inline void *sfutil_secalloc(size_t size) {
+	if (size > (SIZE_MAX - ptr_align)) return NULL;
 	// add bytes to every allocation to support alignment
 	size_t alloc_size = size + ptr_align;
 	void *res = NULL;
@@ -140,7 +141,7 @@ static inline void *sfutil_secalloc(size_t size) {
 	int flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE;
 	res = mmap(NULL, alloc_size, PROT_READ | PROT_WRITE, flags, -1, 0);
 	if (res == MAP_FAILED) return NULL;
-	mlock(res, alloc_size);
+	(void)mlock(res, alloc_size);
 #else // assume POSIX
 	int flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE;
 	struct rlimit rl;
@@ -161,6 +162,7 @@ static inline void *sfutil_secalloc(size_t size) {
  * @param size Size of the memory block in bytes.
  */
 static inline void sfutil_secfree(void *ptr, size_t size) {
+	if (ptr == NULL) return;
 	size_t alloc_size = size + ptr_align;
 #if defined(__EMSCRIPTEN__)
 	free(ptr);
@@ -236,8 +238,16 @@ static inline size_t sfpool_init(sfpool_t *pool, size_t nmemb, size_t blocksize)
  * @param pool Pointer to the memory pool structure to tear down.
  */
 static inline void sfpool_teardown(sfpool_t *restrict pool) {
+  if (pool == NULL) return;
   // Free pool memory
   sfutil_secfree(pool->buffer, pool->total_bytes);
+  pool->buffer = NULL;
+  pool->data = NULL;
+  pool->free_list = NULL;
+  pool->free_count = 0;
+  pool->total_blocks = 0;
+  pool->total_bytes = 0;
+  pool->block_size = 0;
 #ifdef PROFILING
   pool->miss_total = pool->miss_bytes = 0;
   pool->hits_total = pool->hits_bytes = 0;
@@ -258,7 +268,9 @@ static inline void sfpool_teardown(sfpool_t *restrict pool) {
 static inline void *sfpool_malloc(void *restrict opaque, const size_t size) {
   sfpool_t *pool = (sfpool_t*)opaque;
   void *ptr;
-  if (size <= pool->block_size
+  if (pool != NULL
+      && pool->buffer != NULL
+      && size <= pool->block_size
       && pool->free_list != NULL) {
 #ifdef PROFILING
     pool->hits_total++;
@@ -295,7 +307,9 @@ static inline void *sfpool_malloc(void *restrict opaque, const size_t size) {
 static inline void sfpool_free(void *restrict opaque, void *ptr) {
   sfpool_t *pool = (sfpool_t*)opaque;
   if (ptr == NULL) return; // Freeing NULL is a no-op
-  if (_is_in_pool(pool,ptr)) {
+  if (pool != NULL
+      && pool->buffer != NULL
+      && _is_in_pool(pool,ptr)) {
 #ifdef SECURE_ZERO
     // Zero the user-visible contents before restoring the free-list link.
     sfutil_zero(ptr, pool->block_size);
@@ -332,7 +346,9 @@ static inline void *sfpool_realloc(void *restrict opaque, void *ptr, const size_
     sfpool_free(pool, ptr);
     return NULL;
   }
-  if (_is_in_pool((sfpool_t*)pool,ptr)) {
+  if (pool != NULL
+      && pool->buffer != NULL
+      && _is_in_pool(pool,ptr)) {
     if (size <= pool->block_size) {
 #ifdef PROFILING
       pool->hits_total++;
@@ -353,20 +369,22 @@ static inline void *sfpool_realloc(void *restrict opaque, void *ptr, const size_
       pool->free_list = (uint8_t *)ptr;
       pool->free_count++ ;
 #ifdef PROFILING
-  pool->miss_total++;
-  pool->miss_bytes+=size;
-  pool->alloc_total+=size;
+      pool->miss_total++;
+      pool->miss_bytes+=size;
+      pool->alloc_total+=size;
 #endif
       return new_ptr;
     }
   } else {
     // Handle large allocations
-    return realloc(ptr, size);
 #ifdef PROFILING
-    pool->miss_total++;
-    pool->miss_bytes+=size;
-    pool->alloc_total+=size;
+    if (pool != NULL) {
+      pool->miss_total++;
+      pool->miss_bytes+=size;
+      pool->alloc_total+=size;
+    }
 #endif
+    return realloc(ptr, size);
   }
 }
 
@@ -382,7 +400,7 @@ static inline void *sfpool_realloc(void *restrict opaque, void *ptr, const size_
 static inline int sfpool_contains(void *restrict opaque, const void *ptr) {
   sfpool_t *pool = (sfpool_t*)opaque;
   int res = 0;
-  if( _is_in_pool(pool,ptr) ) res = 1;
+  if(pool != NULL && pool->buffer != NULL && _is_in_pool(pool,ptr)) res = 1;
   return res;
 }
 

@@ -23,12 +23,10 @@
 
 #include <zen_error.h>
 #include <lua.h>
+#include <sfpool.h>
 #include <zenroom.h>
 
 extern void *ZMM;
-extern void *sfpool_malloc (void *restrict opaque, const size_t size);
-extern void  sfpool_free   (void *restrict opaque, void *ptr);
-extern void *sfpool_realloc(void *restrict opaque, void *ptr, const size_t size);
 
 /**
  * Implementation of the memory allocator for the Lua state.

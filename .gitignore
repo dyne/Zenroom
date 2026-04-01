@@ -77,3 +77,6 @@ emsdk
 
 # lua binary installed during build
 luac54
+
+# gestalt agentic env
+.gestalt
