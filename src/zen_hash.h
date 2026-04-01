@@ -35,7 +35,6 @@
 #define _SHA3_256 3256
 #define _SHA3_384 3384
 #define _SHA3_512 3512
-#define _SHA3_256 3256
 #define _SHAKE256 8
 #define _KECCAK256 7
 #define _RMD160 160

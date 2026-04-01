@@ -905,7 +905,7 @@ static int ecp_zcash_export(lua_State *L) {
 	}
 
 end:
-	ecp_clone_free(L, e); // TODO: this crashes, still unsure why
+	ecp_clone_free(L, e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
