@@ -25,6 +25,10 @@
 
 local schnorr = {}
 
+local function fail(message)
+   error(message, 2)
+end
+
 -- prime modulus of the coordinates of ECP and order of the curve
 local p = ECP.prime()
 local o = ECP.order()
@@ -44,11 +48,19 @@ end
 
 -- given a valid secret key, extracts the related public key not encoded (i.e. as the point P=(P:x(), P:y()))
 local function pubpoint_gen(sk)
-   assert(sk, "no secret key found")
-   assert(#sk == 32, 'invalid secret key: length is not of 32B')
+   if not sk then
+      fail("no secret key found")
+   end
+   if #sk ~= 32 then
+      fail('invalid secret key: length is not of 32B')
+   end
    local d = BIG.new(sk)
-   assert(d ~= BIG.new(0), 'invalid secret key, is zero')
-   assert(d < o, 'invalid secret key, overflow with curve order')
+   if d == BIG.new(0) then
+      fail('invalid secret key, is zero')
+   end
+   if not (d < o) then
+      fail('invalid secret key, overflow with curve order')
+   end
    local P = d*G
    return P
 end
