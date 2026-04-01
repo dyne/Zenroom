@@ -63,69 +63,65 @@ extern void RMD160_hash(dword *MDbuf, byte *hashcode);
 
 hash* hash_new(lua_State *L, const char *hashtype) {
 	hash *h = lua_newuserdata(L, sizeof(hash));
+	const char *algo = hashtype ? hashtype : "sha256";
 	char *failed_msg = NULL;
 	if(HEDLEY_UNLIKELY(h==NULL)) {
 		zerror(L, "Error allocating new hash generator in %s",__func__);
 		return NULL; }
 	luaL_getmetatable(L, "zenroom.hash");
 	lua_setmetatable(L, -2);
-	char ht[16];
 	h->sha256 = NULL; h->sha384 = NULL; h->sha512 = NULL;
 	h->rng = NULL;
-	if(hashtype) strncpy(ht,hashtype,15);
-	// TODO: change default to empty random (waiting for seed)
-	else         strncpy(ht,"sha256",15);
-	if(strncasecmp(hashtype,"sha256",6) == 0) {
-		strncpy(h->name,hashtype,15);
+	if(strncasecmp(algo,"sha256",6) == 0) {
+		snprintf(h->name, sizeof(h->name), "%s", algo);
 		h->len = 32;
 		h->algo = _SHA256;
 		h->sha256 = (hash256*)zmalloc(sizeof(hash256)); SAFE_GOTO(h->sha256, MALLOC_ERROR);
 		HASH256_init(h->sha256);
-	} else if(strncasecmp(hashtype,"sha384",6) == 0) {
-		strncpy(h->name,hashtype,15);
+	} else if(strncasecmp(algo,"sha384",6) == 0) {
+		snprintf(h->name, sizeof(h->name), "%s", algo);
 		h->len = 48;
 		h->algo = _SHA384;
 		h->sha384 = (hash384*)zmalloc(sizeof(hash384)); SAFE_GOTO(h->sha384, MALLOC_ERROR);
 		HASH384_init(h->sha384);
-	} else if(strncasecmp(hashtype,"sha512",6) == 0) {
-		strncpy(h->name,hashtype,15);
+	} else if(strncasecmp(algo,"sha512",6) == 0) {
+		snprintf(h->name, sizeof(h->name), "%s", algo);
 		h->len = 64;
 		h->algo = _SHA512;
 		h->sha512 = (hash512*)zmalloc(sizeof(hash512)); SAFE_GOTO(h->sha512, MALLOC_ERROR);
 		HASH512_init(h->sha512);
-	} else if(strncasecmp(hashtype,"sha3_256",8) == 0) {
-		strncpy(h->name,hashtype,15);
+	} else if(strncasecmp(algo,"sha3_256",8) == 0) {
+		snprintf(h->name, sizeof(h->name), "%s", algo);
 		h->len = 32;
 		h->algo = _SHA3_256;
 		h->sha3_256 = (sha3*)zmalloc(sizeof(sha3)); SAFE_GOTO(h->sha3_256, MALLOC_ERROR);
 		SHA3_init(h->sha3_256, h->len);
-	} else if(strncasecmp(hashtype,"sha3_512",8) == 0) {
-		strncpy(h->name,hashtype,15);
+	} else if(strncasecmp(algo,"sha3_512",8) == 0) {
+		snprintf(h->name, sizeof(h->name), "%s", algo);
 		h->len = 64;
 		h->algo = _SHA3_512;
 		h->sha3_512 = (sha3*)zmalloc(sizeof(sha3)); SAFE_GOTO(h->sha3_512, MALLOC_ERROR);
 		SHA3_init(h->sha3_512, h->len);
-	} else if(strncasecmp(hashtype,"shake256",8) == 0) {
-		strncpy(h->name,hashtype,15);
+	} else if(strncasecmp(algo,"shake256",8) == 0) {
+		snprintf(h->name, sizeof(h->name), "%s", algo);
 		h->len = 32;
 		h->algo = _SHAKE256;
 		h->shake256 = (sha3*)zmalloc(sizeof(sha3)); SAFE_GOTO(h->shake256, MALLOC_ERROR);
 		SHA3_init(h->shake256, h->len);
-	} else if(strncasecmp(hashtype,"keccak256",9) == 0) {
-		strncpy(h->name,hashtype,15);
+	} else if(strncasecmp(algo,"keccak256",9) == 0) {
+		snprintf(h->name, sizeof(h->name), "%s", algo);
 		h->len = 32;
 		h->algo = _KECCAK256;
 		h->keccak256 = (sha3*)zmalloc(sizeof(sha3)); SAFE_GOTO(h->keccak256, MALLOC_ERROR);
 		SHA3_init(h->keccak256, h->len);
-	} else if(strncasecmp(hashtype,"ripemd160",9) == 0) {
-		strncpy(h->name,hashtype,15);
+	} else if(strncasecmp(algo,"ripemd160",9) == 0) {
+		snprintf(h->name, sizeof(h->name), "%s", algo);
 		h->len = 20;
 		h->algo = _RMD160;
 		h->rmd160 = (dword*)zmalloc((160/32)+0x0f); SAFE_GOTO(h->rmd160, MALLOC_ERROR);
 		RMD160_init(h->rmd160);
-	} // ... TODO: other hashes
-	else {
-		zerror(L, "Hash algorithm not known: %s", hashtype);
+	} else {
+		zerror(L, "Hash algorithm not known: %s", algo);
 		return NULL; }
 	h->ref = 1;
 end:
@@ -559,7 +555,6 @@ static int hash_pbkdf2(lua_State *L) {
 	memcpy(ss->val, s->val, s->len);
 	ss->len = s->len;
 	octet *out = o_new(L, keylen); SAFE_GOTO(out, CREATE_OCT_ERR);
-	// TODO: according to RFC2898, s should have a size of 8
 	// c should be a positive integer
 	PBKDF2(h->len, (octet*)k, ss, iter, keylen, out);
 end:
@@ -586,7 +581,7 @@ static int hash_srand(lua_State *L) {
 	const octet *seed = NULL;
 	const hash *h = hash_arg(L, 1); SAFE_GOTO(h, ALLOCATE_HASH_ERR);
 	seed = o_arg(L, 2); SAFE_GOTO(seed, ALLOCATE_OCT_ERR);
-	if(!h->rng) { // TODO: reuse if same seed is already sown
+	if(!h->rng) {
 		((hash*)h)->rng = (csprng*)zmalloc(sizeof(csprng)); SAFE_GOTO(h->rng, MALLOC_ERROR);
 	}
 	AMCL_(RAND_seed)(h->rng, seed->len, seed->val);
