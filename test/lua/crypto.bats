@@ -43,6 +43,7 @@ load ../bats_setup
     Z guard_precedence.lua
     Z time_big_regression.lua
     Z parse_regression.lua
+    Z ownership_regression.lua
     Z crypto_loader.lua
     Z zkcc_small.lua
     Z zkcc_horner_expr.lua

@@ -97,10 +97,7 @@ ecp* ecp_new(lua_State *L) {
 void ecp_free(lua_State *L, const ecp* e) {
 	(void)L;
 	if(HEDLEY_UNLIKELY(e==NULL)) return;
-	ecp *t = (ecp*)e;
-	t->ref--;
-	if(t->ref>0) return;
-	free((void*)t);
+	free((void*)e);
 }
 
 const ecp* ecp_arg(lua_State *L, int n) {
@@ -108,8 +105,12 @@ const ecp* ecp_arg(lua_State *L, int n) {
 	ecp *res;
 	void *ud = luaL_testudata(L, n, "zenroom.ecp");
 	if(ud) {
-		res = (ecp*)ud;
-		res->ref++;
+		res = malloc(sizeof(ecp));
+		if (res == NULL) {
+			zerror(L, "Error allocating ecp clone in %s", __func__);
+			return NULL;
+		}
+		*res = *(ecp*)ud;
 		return(res);
 	}
 	// octet first class citizen
@@ -123,6 +124,11 @@ const ecp* ecp_arg(lua_State *L, int n) {
 			return NULL;
 		}
 		res = malloc(sizeof(ecp));
+		if (res == NULL) {
+			zerror(L, "Error allocating ecp clone in %s", __func__);
+			o_free(L, o);
+			return NULL;
+		}
 		res->totlen = (MODBYTES*2)+1;
 		_ecp_from_octet(res, o);
 		res->ref = 1;

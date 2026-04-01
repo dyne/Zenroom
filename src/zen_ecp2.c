@@ -67,10 +67,7 @@ int _ecp2_to_octet(octet *o, const ecp2 *e) {
 void ecp2_free(lua_State *L, const ecp2 *e) {
 	(void)L;
 	if(HEDLEY_UNLIKELY(e==NULL)) return;
-	ecp2 *t = (ecp2*)e;
-	t->ref--;
-	if(t->ref>0) return;
-	free((void*)t);
+	free((void*)e);
 }
 
 ecp2* ecp2_new(lua_State *L) {
@@ -91,8 +88,12 @@ const ecp2* ecp2_arg(lua_State *L, int n) {
 	ecp2 *res;
 	void *ud = luaL_testudata(L, n, "zenroom.ecp2");
 	if(ud) {
-		res = (ecp2*)ud;
-		res->ref++;
+		res = malloc(sizeof(ecp2));
+		if (res == NULL) {
+			zerror(L, "Cannot clone ECP2 argument in %s", __func__);
+			return NULL;
+		}
+		*res = *(ecp2*)ud;
 		return(res);
 	}
 	const octet *o = o_arg(L,n);
