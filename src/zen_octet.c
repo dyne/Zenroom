@@ -1801,7 +1801,7 @@ static int octet_size(lua_State *L) {
 	@function OCTET:max
 	@return maximum capacity of an octet
  */
-static int max(lua_State *L) {
+static int octet_max(lua_State *L) {
 	BEGIN();
 	const octet *o = o_arg(L, 1); SAFE(o, ALLOCATE_OCT_ERR);
 	lua_pushinteger(L, o->max);
@@ -2041,7 +2041,6 @@ static int popcount64b(uint64_t x) {
 	x += x >> 32;  //put count of each 64 bits into their lowest 8 bits
 	return x & 0x7f;
 }
-#define min(a, b)   ((a) < (b) ? (a) : (b))
 // compare bit by bit two arrays and returns the hamming distance
 
 /***
@@ -2071,7 +2070,7 @@ static int popcount_hamming_distance(lua_State *L) {
 	const octet *left = o_arg(L, 1);
 	const octet *right = o_arg(L, 2);
 	SAFE_GOTO((left && right), ALLOCATE_OCT_ERR);
-	nlen = min(left->len, right->len)>>3; // 64bit chunks of minimum length
+	nlen = _min(left->len, right->len)>>3; // 64bit chunks of minimum length
 	// TODO: support sizes below 8byte length by padding
 	distance = 0;
 	uint64_t *l, *r;
@@ -3184,7 +3183,7 @@ int luaopen_octet(lua_State *L) {
 		{"to_mnemonic", to_mnemonic},
 		{"eq", eq},
 		{"pad", pad},
-		{"max", max},
+		{"max", octet_max},
 		{"entropy", entropy},
 		{"bytefreq", entropy_bytefreq},
 		{"hamming", bitshift_hamming_distance},
