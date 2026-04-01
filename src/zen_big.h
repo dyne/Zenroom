@@ -40,18 +40,21 @@ typedef struct {
 	short doublesize;
 } big;
 
-// new or dup already push the object in LUA's stack
+/* Creates a fresh userdata-backed BIG and pushes it onto the Lua stack. */
 HEDLEY_WARN_UNUSED_RESULT
 HEDLEY_NON_NULL(1)
 big* big_new(lua_State *L);
 
+/* Clones an existing BIG into fresh userdata and pushes the clone. */
 HEDLEY_WARN_UNUSED_RESULT
 HEDLEY_NON_NULL(1,2)
 big* big_dup(lua_State *L, big *c);
 
+/* Releases a heap-owned BIG clone returned by big_arg() or local init helpers. */
 HEDLEY_NON_NULL(1)
 void big_free(lua_State *L, HEDLEY_NO_ESCAPE big *c);
 
+/* Returns a heap-owned BIG clone for userdata, strings, or numbers. */
 HEDLEY_WARN_UNUSED_RESULT
 HEDLEY_NON_NULL(1)
 big* big_arg(lua_State *L, int n);

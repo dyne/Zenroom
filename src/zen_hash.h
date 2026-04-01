@@ -57,9 +57,11 @@ typedef struct {
   // ...
 } hash;
 
+/* Creates a fresh userdata-backed HASH context and pushes it onto the Lua stack. */
 HEDLEY_WARN_UNUSED_RESULT
 hash* hash_new(lua_State *L, const char *hashtype);
 
+/* Returns the borrowed HASH userdata pointer; callers must not free it. */
 HEDLEY_WARN_UNUSED_RESULT
 const hash* hash_arg(lua_State *L, int n);
 

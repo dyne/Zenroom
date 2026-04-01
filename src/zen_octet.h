@@ -35,26 +35,27 @@
 #include <hedley.h>
 #include <sfpool.h>
 
-// REMEMBER: o_new and o_dup push a new object in lua's stack
+/* Creates a fresh userdata-backed OCTET and pushes it onto the Lua stack. */
 HEDLEY_NON_NULL(1)
 octet* o_new(lua_State *L, const int size);
 
+/* Clones an OCTET into fresh userdata and pushes the clone. */
 HEDLEY_NON_NULL(1,2)
 octet *o_dup(lua_State *L, const octet *o);
 
-// REMEMBER: o_arg returns a new allocated octet to be freed with o_free
+/* Returns a heap-owned OCTET clone; callers release it with o_free(). */
 HEDLEY_NON_NULL(1)
 const octet* o_arg(lua_State *L, int n);
 
 HEDLEY_NON_NULL(1,2)
 octet *o_push(lua_State *L, const char *buf, size_t len);
 
-// These functions are internal and not exposed to lua's stack
-// to make an octet visible to lua can be done using o_dup
+/* Internal helper that allocates a heap-owned OCTET outside the Lua stack. */
 HEDLEY_MALLOC
 HEDLEY_NON_NULL(1)
 octet *o_alloc(lua_State *L, int size);
 
+/* Releases a heap-owned OCTET clone or internal buffer allocated via o_alloc(). */
 HEDLEY_NON_NULL(1)
 void o_free(lua_State *L, HEDLEY_NO_ESCAPE const octet *o);
 
@@ -62,7 +63,8 @@ void push_octet_to_hex_string(lua_State *L, octet *o);
 void push_buffer_to_octet(lua_State *L, char *p, size_t len);
 void push_string_to_octet(lua_State *L, char *p);
 
-// all octet based types are forced to use our internal memory pool
+/* Explicit pool-backed wrappers for modules that used to inherit allocator
+ * policy from this header. */
 extern void *ZMM;
 
 static inline void *zmalloc(size_t size) {

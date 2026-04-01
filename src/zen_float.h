@@ -21,15 +21,16 @@
 #ifndef __ZEN_FLOAT_H__
 #define __ZEN_FLOAT_H__
 
-// new or dup already push the object in LUA's stack
+/* Creates a fresh userdata-backed FLOAT and pushes it onto the Lua stack. */
 float* float_new(lua_State *L);
 
+/* Clones an existing FLOAT into fresh userdata and pushes the clone. */
 float* float_dup(lua_State *L, float *c);
 
+/* Returns a heap-owned FLOAT clone for userdata, strings, or numbers. */
 float* float_arg(lua_State *L, int n);
 
 // internal conversion from float to octet
 octet *new_octet_from_float(lua_State *L, float *c);
 
 #endif
-
