@@ -58,6 +58,26 @@ static inline void _zen_io_write(int fd, const void *buf, size_t count) {
   }
 }
 
+static int zen_stdout_reserve(lua_State *L, size_t need) {
+  Z(L);
+  if (!Z->stdout_buf) return 1;
+  if (Z->stdout_pos + need > Z->stdout_len) {
+    luaL_error(L, "No space left in output buffer");
+    return 0;
+  }
+  return 1;
+}
+
+static int zen_stderr_reserve(lua_State *L, size_t need, const char *msg) {
+  Z(L);
+  if (!Z || !Z->stderr_buf) return 1;
+  if (Z->stderr_pos + need > Z->stderr_len) {
+    luaL_error(L, "%s", msg);
+    return 0;
+  }
+  return 1;
+}
+
 static int zen_print (lua_State *L) {
   BEGIN();
   Z(L);
@@ -67,7 +87,9 @@ static int zen_print (lua_State *L) {
   if(n_args == 0) {
 	if (Z->stdout_buf) {
 	  char *p = Z->stdout_buf+Z->stdout_pos;
+	  if (!zen_stdout_reserve(L, 2)) END(0);
 	  *p='\n'; Z->stdout_pos++;
+	  Z->stdout_buf[Z->stdout_pos] = '\0';
 	} else {
 #if defined(__EMSCRIPTEN__)
 	  EM_ASM_({Module.print("")});
@@ -85,9 +107,10 @@ static int zen_print (lua_State *L) {
 	
 	if (Z->stdout_buf) {
 	  char *p = Z->stdout_buf+Z->stdout_pos;
-	  if (Z->stdout_pos+o->len+(i < n_args ? 1 : 1) > Z->stdout_len) {
+	  size_t required = o->len + (i < n_args ? 1 : 2);
+	  if (!zen_stdout_reserve(L, required)) {
 		o_free(L,o);
-		zerror(L, "No space left in output buffer");
+		goto end;
 	  }
 	  memcpy(p, o->val, o->len);
 	  Z->stdout_pos += o->len;
@@ -139,11 +162,18 @@ int printerr(lua_State *L, const octet *o) {
   Z(L);
   if (Z && Z->stderr_buf) {
 	char *p = Z->stderr_buf+Z->stderr_pos;
-	if(!o) { *p='\n'; Z->stderr_pos++; return 0; }
-	if (Z->stderr_pos+o->len+1 > Z->stderr_len)
-	  zerror(L, "No space left in output buffer");
+	if(!o) {
+	  if (!zen_stderr_reserve(L, 2, "No space left in error buffer")) return 0;
+	  *p='\n';
+	  Z->stderr_pos++;
+	  Z->stderr_buf[Z->stderr_pos] = '\0';
+	  return 0;
+	}
+	if (!zen_stderr_reserve(L, o->len + 2, "No space left in error buffer"))
+	  return 0;
 	memcpy(p, o->val, o->len);
 	*(p + o->len) = '\n';
+	*(p + o->len + 1) = '\0';
 	Z->stderr_pos += o->len + 1;
   } else if(o) {
 	  char *t = calloc(o->len +8, sizeof(char));
@@ -174,10 +204,11 @@ static int zen_write (lua_State *L) {
   const octet *o = o_arg(L, 1); SAFE_GOTO(o, "Could not allocate message to show");
   if (Z->stdout_buf) {
 	char *p = Z->stdout_buf+Z->stdout_pos;
-	if (Z->stdout_pos+o->len > Z->stdout_len)
-	  zerror(L, "No space left in output buffer");
+	if (!zen_stdout_reserve(L, o->len + 1))
+	  goto end;
 	memcpy(p, o->val, o->len);
 	Z->stdout_pos += o->len;
+	Z->stdout_buf[Z->stdout_pos] = '\0';
   } else if(o) {
 #ifdef __EMSCRIPTEN_
 	o->val[o->len] = 0x0; // add string termination
@@ -207,35 +238,56 @@ int zen_log(lua_State *L, log_priority prio, const octet *o) {
   free(t);
   return 0;
 #endif
-  if (Z->stderr_buf
-	  && Z->stderr_pos+o->len+5 > Z->stderr_len) {
-	  zerror(L, "No space left in error buffer");
-	  return 1;
-  }
-  char *p = o->val + o->len;
-  int tlen = o->len;
-  if(Z->logformat == LOG_JSON) {
-	// JSON termination
-	*p='"'; p++; *p=','; p++; tlen+=2;
-  } // newline termination
-  *p='\n'; p++; *p=0x0; tlen++;
+  size_t suffix_len = (Z->logformat == LOG_JSON) ? 3 : 1;
   char prefix[5] = "     ";
   get_log_prefix(Z,prio,prefix);
   if (Z->stderr_buf) {
-	p = Z->stderr_buf+Z->stderr_pos;
+	if (!zen_stderr_reserve(L, 5 + o->len + suffix_len + 1,
+						 "No space left in error buffer")) {
+	  return 1;
+	}
+	char *p = Z->stderr_buf+Z->stderr_pos;
 	strncpy(p, prefix, 5);
-	memcpy(p + 5, o->val, tlen);
-	Z->stderr_pos += 5 + tlen;
+	memcpy(p + 5, o->val, o->len);
+	p += 5 + o->len;
+	if(Z->logformat == LOG_JSON) {
+	  *p='"'; p++;
+	  *p=','; p++;
+	}
+	*p='\n'; p++;
+	*p='\0';
+	Z->stderr_pos += 5 + o->len + suffix_len;
 	Z->stderr_buf[Z->stderr_pos] = '\0';
   } else {
 #if defined(__EMSCRIPTEN__)
-	EM_ASM_({Module.printErr(UTF8ToString($0)+UTF8ToString($1))}, prefix, o->val);
+	size_t msg_len = 5 + o->len + suffix_len;
+	char *msg = malloc(msg_len + 1);
+	if (!msg) return 1;
+	memcpy(msg, prefix, 5);
+	memcpy(msg + 5, o->val, o->len);
+	char *p = msg + 5 + o->len;
+	if(Z->logformat == LOG_JSON) {
+	  *p='"'; p++;
+	  *p=','; p++;
+	}
+	*p='\n'; p++;
+	*p='\0';
+	EM_ASM_({Module.printErr(UTF8ToString($0))}, msg);
+	free(msg);
 #elif defined(ARCH_CORTEX)
 	_zen_io_write(SEMIHOSTING_STDOUT_FILENO, prefix, 5);
-	_zen_io_write(SEMIHOSTING_STDOUT_FILENO, o->val, tlen);
+	_zen_io_write(SEMIHOSTING_STDOUT_FILENO, o->val, o->len);
+	if(Z->logformat == LOG_JSON) {
+	  _zen_io_write(SEMIHOSTING_STDOUT_FILENO, "\",", 2);
+	}
+	_zen_io_write(SEMIHOSTING_STDOUT_FILENO, "\n", 1);
 #else
 	_zen_io_write(STDERR_FILENO, prefix, 5);
-	_zen_io_write(STDERR_FILENO, o->val, tlen);
+	_zen_io_write(STDERR_FILENO, o->val, o->len);
+	if(Z->logformat == LOG_JSON) {
+	  _zen_io_write(STDERR_FILENO, "\",", 2);
+	}
+	_zen_io_write(STDERR_FILENO, "\n", 1);
 #endif
   }
   return 0;

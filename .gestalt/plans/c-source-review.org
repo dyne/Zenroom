@@ -20,7 +20,7 @@ Change: In `src/zenroom.c`, make allocation and cleanup order explicit. Check ev
 Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/zencode/bindings_exec.bats` and `bats test/zencode/bindings_logfmt.bats`. Add one focused regression in `test/api` or `test/shell` that forces an init failure through bad config and confirms the process exits cleanly without crashing or double-freeing.
 Done when: Every init failure path returns cleanly without leaks or partial teardown hazards, and the binding executor tests still pass unchanged.
 
-** TODO [#A] Stop buffered stdout and stderr writes from overrunning user buffers
+** DONE [#A] Stop buffered stdout and stderr writes from overrunning user buffers
 Why: The buffered print and log paths detect “no space left” but continue into `memcpy` and terminator writes anyway. That defeats the purpose of bounded host buffers and makes debugging memory damage harder.
 Change: In `src/zen_io.c`, convert the output-buffer checks in `zen_print`, `zen_write`, `printerr`, and `zen_log` into hard early exits on overflow. Preserve the current error reporting text if practical. Audit nearby length arithmetic so newline, tab, JSON quote/comma, and final `'\0'` bytes are all included in the bound checks exactly once.
 Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/zencode/bindings_logfmt.bats` and `bats test/zencode/bindings_exec.bats`. Add one focused regression that installs a deliberately small host output buffer and confirms Zenroom reports the buffer exhaustion without writing past it.
