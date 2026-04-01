@@ -1,0 +1,165 @@
+#+TITLE: src Native Maintenance Plan
+#+SUBTITLE: Behavior-preserving readability, security, maintenance and efficiency improvements from the full C/C++ review of `src/`
+#+DATE: 2026-04-01
+#+KEYWORDS: zenroom native c memory safety maintenance readability performance security runtime
+
+* WIP [#A] Repair allocator and runtime memory safety
+Effort: H
+Goal: Remove the native memory-management defects that can corrupt process state or write past configured buffers, while preserving successful runtime behavior and current interfaces.
+Notes: Start here. Several later cleanups depend on the allocator and buffered IO being trustworthy. Keep public APIs and success-path outputs unchanged. Build first with `make linux-lib linux-exe CCACHE=1`. Prefer adding narrow regressions over broad rewrites.
+
+** DONE [#A] Fix sfpool free-list corruption and platform allocation checks
+Why: The internal pool currently zeroes a block after writing the next-pointer into it, which can destroy the free list. It also treats `mmap()` failures like `NULL`, which is wrong on POSIX and can hide allocator setup failures.
+Change: In `src/sfpool.h`, reorder secure wiping and free-list relinking so zeroing never erases allocator metadata. Audit `sfpool_malloc`, `sfpool_free`, and `sfpool_realloc` together so pool blocks, fallback allocations, and profiling counters remain internally consistent. Replace `NULL` checks for `mmap()` with `MAP_FAILED`, and verify the Apple and POSIX secure-lock bookkeeping reflects the actual lock outcome. Keep the existing pool layout and fallback policy unless a local change is required to preserve correctness.
+Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/lua/crypto.bats` because it exercises octet-heavy allocations. Add a focused regression under `test/lua` or `test/api` that repeatedly allocates and frees octets large enough to hit both pool and fallback paths, then confirm it fails before the fix and passes after it.
+Done when: Pool allocations can be freed and reused repeatedly without corrupting future allocations, `mmap()` setup errors are detected correctly, and the touched regression suite passes.
+
+** DONE [#A] Make zenroom init and teardown own every resource on every error path
+Why: `zen_init()` currently has partial construction branches that leak or skip teardown when config parsing, RNG setup, Lua creation, or pool setup fail. That makes the main runtime harder to maintain and unsafe to refactor.
+Change: In `src/zenroom.c`, make allocation and cleanup order explicit. Check every allocation result, including the initial `zenroom_t`, RNG allocation, and pool allocation. Route every failure through one local cleanup path that releases only the resources already acquired. Preserve all current defaults, globals, and success-path side effects. Do not change script execution behavior or log format selection.
+Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/zencode/bindings_exec.bats` and `bats test/zencode/bindings_logfmt.bats`. Add one focused regression in `test/api` or `test/shell` that forces an init failure through bad config and confirms the process exits cleanly without crashing or double-freeing.
+Done when: Every init failure path returns cleanly without leaks or partial teardown hazards, and the binding executor tests still pass unchanged.
+
+** TODO [#A] Stop buffered stdout and stderr writes from overrunning user buffers
+Why: The buffered print and log paths detect “no space left” but continue into `memcpy` and terminator writes anyway. That defeats the purpose of bounded host buffers and makes debugging memory damage harder.
+Change: In `src/zen_io.c`, convert the output-buffer checks in `zen_print`, `zen_write`, `printerr`, and `zen_log` into hard early exits on overflow. Preserve the current error reporting text if practical. Audit nearby length arithmetic so newline, tab, JSON quote/comma, and final `'\0'` bytes are all included in the bound checks exactly once.
+Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/zencode/bindings_logfmt.bats` and `bats test/zencode/bindings_exec.bats`. Add one focused regression that installs a deliberately small host output buffer and confirms Zenroom reports the buffer exhaustion without writing past it.
+Done when: No buffered output path writes after signaling overflow, length accounting is explicit, and binding-level output tests still pass.
+
+* TODO [#A] Harden external input boundaries and fixed-size buffers
+Effort: H
+Goal: Make native decoding and import paths reject malformed inputs safely and process valid inputs exactly as before.
+Notes: Keep this L1 behavior-preserving. Prefer explicit length-based parsing over C-string assumptions. Use the existing tests first, then add small regressions for the broken edge cases.
+
+** TODO [#A] Fix zencode-exec base64 decoding and configuration append bounds
+Why: The binding executor allocates one byte too few for decoded lines and appends `,logfmt=json` into a fixed config buffer without proving there is space. This is an input-driven overflow risk in a boundary executable.
+Change: In `src/zencode-exec.c`, make `line_alloc()` reserve space for a terminator and validate decode lengths before writing them. Replace the `strcat()` config append with explicit bounded assembly. Also make the line-1 config read detect truncation correctly instead of relying on `strlen(conf) >= MAX_CONFIG`, which `fgets()` cannot produce.
+Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/zencode/bindings_exec.bats` and `bats test/zencode/bindings_logfmt.bats`. Add regressions for: maximum-length valid config input, invalid non-base64 input, and a decoded line whose exact decoded size reaches the current boundary.
+Done when: Every input line is decoded into a correctly sized buffer, config assembly is bounded, and the existing binding executor tests remain green.
+
+** TODO [#A] Correct config parser validation and length handling
+Why: The config parser’s `rngseed` validation skips part of the payload, and the `maxmem` path reuses `STR_MAXITER_LEN` implicitly. This is small code, but it defines trusted runtime limits and determinism settings.
+Change: In `src/zen_config.c`, rewrite the `rngseed`, `maxiter`, and `maxmem` validation branches so lengths, prefixes, and digit loops are obvious and correct. Introduce a dedicated `STR_MAXMEM_LEN` constant in `src/zenroom.h` if the code benefits from one, but keep the user-visible configuration syntax unchanged. While editing, remove dead commented frees and make the finite-state transitions easier to follow without changing accepted valid configurations.
+Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/zencode/bindings_logfmt.bats`. Add focused negative tests for malformed `rngseed`, malformed `maxiter`, and malformed `maxmem` inputs, plus one valid boundary-length test for each.
+Done when: Config validation checks the full payload it copies, length constants match their target fields, and the binding-logfmt suite plus new regressions pass.
+
+** TODO [#A] Replace unsafe DER and PEM string handling in x509 helpers
+Why: Several X.509 helpers treat DER slices as C strings and rely on `%s`/`sprintf()` over binary data. That is unsafe, misreads embedded NULs, and obscures ASN.1 parsing logic.
+Change: In `src/zen_x509.c`, replace string-format extraction with explicit length-based copies and `lua_pushlstring()` where appropriate. Preserve the current returned table shape and field names. Harden SAN parsing so short or malformed extension contents fail safely instead of reading through unchecked lengths. Keep `pem_to_base64()` behavior unchanged for valid PEM input, but make its extraction flow easier to read.
+Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/lua/crypto.bats` because it includes `x509.lua`. Add focused regressions for SAN parsing with embedded NUL-adjacent data, malformed extension lengths, and a standard PEM import/export roundtrip.
+Done when: No X.509 helper formats binary blobs as C strings, malformed certificate slices fail safely, and the existing X.509 Lua tests still pass.
+
+** TODO [#A] Harden Longfellow native string and attribute boundaries
+Why: The Longfellow bridge currently truncates table-derived values silently, mixes octet buffers with APIs that expect C strings, and allocates fixed public-key string buffers without making the contract explicit. That is both a safety risk and a maintenance risk at a boundary to external code.
+Change: In `src/zen_longfellow.c`, make every string boundary explicit. Replace silent truncation in `_get_kv()` and `_get_attributes()` with either validated bounded copies or explicit failures that match current caller expectations. Introduce local staging buffers for values passed as `const char *` to the external prover and verifier APIs so those calls always receive NUL-terminated strings with checked lengths. Keep the current Lua table shape, argument order, and successful proof/verify behavior unchanged.
+Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/lua/crypto.bats`, which includes `longfellow_guards.lua`. Add focused regressions for oversized attribute ids or values, malformed `now` and `doc_type` string inputs, and a valid prove/verify roundtrip using the current fixture path.
+Done when: Longfellow boundary crossings use validated lengths and explicit string staging, oversized values fail predictably instead of truncating silently, and the existing Longfellow tests still pass.
+
+* TODO [#A] Correct native validation and argument-handling bugs
+Effort: M
+Goal: Fix logic bugs where the code clearly intends one validation rule but currently executes another, without broadening accepted inputs.
+Notes: This L1 is for local correctness defects, not structural refactors. Search for similar patterns while touching each file, especially `SAFE_GOTO` guards written as invalid-case predicates.
+
+** TODO [#A] Fix inverted zcash import guards and audit similar boolean guard patterns
+Why: The ECP and ECP2 Zcash import routines currently send valid headers down the failure path because the `SAFE_GOTO` predicate is inverted. Similar guard style appears elsewhere and is easy to misread during future edits.
+Change: In `src/zen_ecp.c` and `src/zen_ecp2.c`, rewrite the header and length checks into explicit positive validation branches. While there, audit the nearby compressed/uncompressed length checks and infinity handling for the same pattern. Use `rg -n "SAFE_GOTO\\(" src` to inspect related guard expressions in `src/zen_aes.c`, `src/zen_ecdh.c`, and `src/zen_octet.c`, and normalize any equally misleading expressions without changing valid behavior.
+Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/lua/crypto.bats`, which includes `ecp_generic.lua` and `zcash.lua`. Add one focused regression each for valid compressed import, valid infinity import, and invalid header rejection for both ECP and ECP2.
+Done when: Valid Zcash headers are accepted, invalid headers are rejected, and the audited guard expressions are unambiguous in the touched files.
+
+** TODO [#A] Fix argument-slot misuse and local arithmetic correctness bugs
+Why: Some helpers ignore their own argument index or compute sizes incorrectly. These are small defects, but they make later maintenance error-prone because the function signatures lie.
+Change: In `src/zen_time.c`, make `time_arg()` read from `n` consistently for string and numeric inputs instead of hard-coding slot 1. In `src/zen_big.c`, correct `big:bytes()` so it returns the true byte count for non-byte-aligned bit lengths. Audit adjacent helpers for the same class of issue, especially functions that mix `lua_tostring(L, 1)` with a variable argument slot or use integer arithmetic where rounding is intended.
+Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/lua/crypto.bats` and `bats test/zencode/then.bats` because they exercise time and float/big output paths. Add focused regressions for `TIME.new` and `TIME` methods called with non-first argument positions where applicable, and for `BIG:bytes()` on values whose bit length is 1 more than a byte boundary.
+Done when: Helper signatures match their actual behavior, local arithmetic results are correct at the documented boundaries, and the touched suites pass.
+
+** TODO [#A] Recheck parser and import helpers that still rely on fixed scratch assumptions
+Why: The parser and import helpers contain static or fixed-size scratch buffers that are mostly safe today but still rely on implicit boundaries and manual length juggling.
+Change: In `src/zen_parse.c`, remove static scratch storage where a stack-local buffer is enough and make the truncation logic explicit. In `src/lua_functions.c`, fix the `classmeta` assembly so it is bounded by the destination size including the existing `"zenroom."` prefix. Preserve all public names and normalized statement outputs.
+Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/lua/crypto.bats` and a parser-oriented zencode suite such as `bats test/zencode/then.bats` or the closest touched scenario suite. Add one regression that registers or looks up a class name near the current maximum supported length.
+Done when: Scratch storage is local where possible, string assembly is bounded, and parser/class registration behavior is unchanged for valid inputs.
+
+* TODO [#B] Make userdata ownership and destruction rules explicit
+Effort: H
+Goal: Untangle which native objects are Lua-owned userdata, which are heap clones, and which helpers may free them, so later work can change code safely without double-free or leak regressions.
+Notes: This is the highest-maintenance part of the native tree. Keep the Lua-visible types, method names, and value semantics unchanged. Favor small local helper splits over sweeping type redesigns.
+
+** TODO [#B] Separate borrowed userdata from heap-owned clones in BIG, ECP, ECP2, FP12, HASH, FLOAT, and TIME
+Why: Several helper pairs mix `lua_newuserdata()` objects with heap-allocated clones that happen to share the same struct type. That makes freeing rules hard to infer and has already produced suspicious patterns such as freeing userdata-shaped values from generic helper functions.
+Change: Audit `src/zen_big.c`, `src/zen_ecp.c`, `src/zen_ecp2.c`, `src/zen_fp12.c`, `src/zen_hash.c`, `src/zen_float.c`, and `src/zen_time.c`. Introduce clear local conventions and helper names for “borrowed Lua userdata”, “retained userdata”, and “heap clone”. Update frees and destructors so they only release memory they truly own. Preserve reference-count behavior where it is already part of the current semantics.
+Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/lua/crypto.bats` and, if needed, add small stress regressions under `test/lua/native` or `test/lua` that repeatedly create, copy, and garbage-collect these userdata types.
+Done when: Ownership is explicit in the touched helpers, userdata destructors no longer depend on ambiguous caller behavior, and repeated create/use/GC cycles pass without crashes.
+
+** TODO [#B] Add missing destructor coverage and align helper names with behavior
+Why: Some userdata types rely on plain value storage, some have `__gc`, and some use `*_free` helpers that mean different things in different files. That inconsistency is a maintenance tax even when behavior happens to be correct.
+Change: Add or clarify `__gc` behavior where internal allocations require it, especially for types like `FLOAT` and `TIME` if their implementation grows internal ownership later. Rename or document helper functions so `*_arg`, `*_dup`, `*_destroy`, and `*_free` convey whether they borrow, clone, decrement refs, or free heap buffers. Keep Lua-level names unchanged.
+Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/lua/crypto.bats`. Add targeted GC regressions only for the types whose destructor behavior changed.
+Done when: Helper names and destructor behavior match their ownership model, and maintainers can tell from the function boundary whether a value must be freed.
+
+** TODO [#B] Document stack and lifetime invariants in native doc-comments
+Why: Much of the current complexity comes from implicit Lua stack effects and ad hoc lifetime assumptions, not from the underlying algorithms.
+Change: Add short native doc-comments to the touched helper families describing stack effects, ownership, and expected cleanup responsibilities. Focus on the constructors, `*_arg`, `*_dup`, and `*_destroy` entry points in the audited files. Keep comments factual and compact.
+Tests: No new behavioral tests are required if this L2 is documentation-only, but rerun the targeted tests from the prior L2s if any code changed while clarifying helper boundaries.
+Done when: A maintainer can read the helper declaration or top comment and understand stack ownership and cleanup without reading every caller.
+
+* TODO [#B] Reduce hidden global coupling and unsafe macro indirection
+Effort: H
+Goal: Make native context access and allocator selection explicit enough that the runtime can be reasoned about without chasing global macros through headers.
+Notes: Do this after ownership cleanup, not before. Keep runtime behavior and the current architecture intact. This is a readability and maintenance pass, not a feature redesign.
+
+** TODO [#B] Replace unsafe context macros with explicit helper accessors
+Why: Global `ZEN` and macro-based `Z(L)` hide where the runtime context really comes from, and the current logging macro path is already unsafe when `L == NULL`.
+Change: In `src/zen_error.h`, `src/zen_error.c`, and the native modules that use `Z(L)`, replace the macro-heavy context fetch path with small inline helpers or functions that either return the current `zenroom_t *` or `NULL` safely. Preserve current log-level behavior and all public APIs. Keep the global singleton if removal would change behavior, but stop hiding access behind unsafe macros.
+Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/lua/crypto.bats`, `bats test/zencode/bindings_logfmt.bats`, and one failing-init regression from the earlier L1 to prove NULL-context logging still behaves correctly.
+Done when: Context lookup is explicit, NULL-context logging is defined behavior, and the touched log-producing suites still pass.
+
+** TODO [#B] Remove malloc/free macro redefinition from octet-facing headers
+Why: `src/zen_octet.h` currently redefines `malloc`, `free`, and `realloc` as macros. That leaks allocator policy across translation units, obscures ownership, and makes local reasoning much harder.
+Change: Replace the macro indirection in `src/zen_octet.h` with explicit wrapper functions or narrowly scoped helper macros that do not shadow libc names globally. Update the touched callers to use the new wrapper names where pool-backed allocation is intended. Keep the pool policy itself unchanged.
+Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/lua/crypto.bats` and `bats test/zencode/bindings_exec.bats`. Add a targeted regression only if changing wrapper names requires touching a path not already covered by those suites.
+Done when: Source files no longer silently inherit allocator behavior by including `zen_octet.h`, and pool-backed allocations still follow the current policy.
+
+** TODO [#B] Eliminate remaining static shared scratch state where local storage is enough
+Why: Static buffers such as the parser scratch line and global context pointers increase hidden coupling and make the runtime harder to reason about under repeated or concurrent use.
+Change: Audit `src/zen_parse.c`, `src/cli-zenroom.c`, and related helpers for file-scope scratch storage that can become local or context-owned without changing outputs. Leave truly process-global state in place if it is part of the current runtime architecture, but document it explicitly rather than relying on implicit reuse.
+Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/zencode/bindings_exec.bats`, `bats test/zencode/bindings_logfmt.bats`, and `bats test/lua/crypto.bats`.
+Done when: Avoidable static scratch buffers are removed or made explicit, and the touched repeated-execution suites remain stable.
+
+* TODO [#C] Normalize logging, error paths, and peripheral native APIs
+Effort: M
+Goal: Remove undefined behavior, dead branches, and repetitive low-level code that make the native runtime harder to maintain even when the main algorithms are correct.
+Notes: Keep this last. Most items here are cleanup and consistency work after the critical bugs are fixed.
+
+** TODO [#C] Replace the unsafe logging macro path and deduplicate raw write helpers
+Why: The `Z_FORMAT_ARG` macro currently abuses variadic arguments on NULL-context calls, and the project keeps duplicate `_write` wrappers in multiple files. This is undefined behavior plus duplicated maintenance.
+Change: In `src/zen_error.c`, `src/zen_error.h`, and `src/zen_io.c`, replace `Z_FORMAT_ARG` with explicit helper logic that always `va_end`s correctly and handles `L == NULL` without undefined behavior. Consolidate duplicate raw-write wrappers into one shared helper if that can be done locally without churn. Preserve current message text and log-level gating where practical.
+Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/zencode/bindings_logfmt.bats` and `bats test/lua/crypto.bats`. Exercise at least one path that logs before Lua is fully initialized.
+Done when: NULL-context logging is defined, varargs are balanced on all paths, duplicated raw-write code is reduced, and the log-format tests still pass.
+
+** TODO [#C] Clean up small native API hazards in api_hash, api_sign, randombytes, and zen_io
+Why: These files contain smaller but real hazards: uninitialized cleanup fields, stale debug writes to fd 3, fd leaks on some error exits, dead preprocessor branches, and legacy platform APIs.
+Change: In `src/api_hash.c`, initialize cleanup-owned pointers before any `goto end`. In `src/api_sign.c`, remove or gate the debug fd-3 writes, tighten allocation/error handling, and keep output formatting unchanged. In `src/randombytes.c`, close fds on all error paths and modernize comments or platform branches where a behavior-preserving improvement is obvious. In `src/zen_io.c`, fix the `__EMSCRIPTEN_` typo and any nearby dead-code branches discovered while testing.
+Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/lua/crypto.bats`. Compile and run the small `test/api/*` drivers for `hash_*` and `sign_*` manually or via a shell helper if one already exists. Add focused regressions only for the branches not already covered.
+Done when: Cleanup paths are initialized and balanced, debug-only writes are no longer accidental runtime behavior, and the small external API drivers still behave the same for valid inputs.
+
+** TODO [#C] Remove duplicate constants, dead code, and misleading comments in touched native files
+Why: Duplicate defines, stale TODO comments that describe known defects, and dead code paths make the codebase look less trustworthy than it needs to be.
+Change: In the touched files, remove duplicate constants such as the repeated `_SHA3_256` define in `src/zen_hash.h`, fix smaller constructor and string-safety cleanup items in `src/zen_hash.c` such as redundant locals and non-obviously terminated hash-name copies, correct misleading comments that no longer match the code, and delete dead commented-out lines that no longer help debugging. Keep comments that explain invariants, ownership, or algorithm choices. Do not churn unrelated files.
+Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run the targeted suites from the earlier L1s for any file changed in this cleanup. No extra regression is required if this is strictly comment and dead-code cleanup.
+Done when: The touched native files read cleanly, duplicate constants are gone, and no stale comment still documents a bug that has already been fixed.
+
+** TODO [#C] Review low-risk encoding cleanup opportunities after safety fixes land
+Why: `src/encoding.c` contains a few low-risk maintenance and efficiency improvements, such as clearer fixed-size handling in mnemonic helpers and opportunities to replace magic sizes or repeated scans with more explicit code. These are not urgent safety defects, but they were part of the review findings and should not be forgotten.
+Change: Revisit the mnemonic and base64 helper code in `src/encoding.c` only after the higher-risk boundary work is done. Improve readability by replacing magic sizes with named constants where they help, document intentional fixed limits, and only apply micro-optimizations such as avoiding repeated linear work if they preserve output byte-for-byte and do not complicate the implementation. Do not change accepted mnemonic lengths, word ordering, checksum behavior, or base64 semantics.
+Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/lua/crypto.bats`, which includes mnemonic and octet conversion coverage. Add a focused regression only if a touched helper lacks direct coverage today.
+Done when: The touched encoding helpers are clearer to read, output-compatible with current tests, and no unnecessary complexity was introduced.
+
+* TODO [#C] Update reviewer-facing maintenance notes after implementation
+Effort: S
+Goal: Leave a short record of the native maintenance changes so future contributors start from the corrected ownership and allocator model.
+Notes: Only do this if the implemented work materially changes how maintainers should reason about native ownership, allocators, or runtime initialization.
+
+** TODO [#C] Summarize native ownership and allocator rules in AGENTS.md if the implementation changes them materially
+Why: If the native refactor changes which helpers clone, borrow, or free values, the project guidance should reflect that so later work does not regress into the same patterns.
+Change: After implementation, update `AGENTS.md` only if the final code materially changes maintenance expectations for `src/*.c` and related headers. Keep the note short, LLM-oriented, and consistent with the final runtime structure.
+Tests: No code tests are required if this is documentation-only. Re-read the updated note against the final touched code before considering it done.
+Done when: `AGENTS.md` either remains unchanged for a clear reason or contains a concise native-maintenance note that matches the implemented code.

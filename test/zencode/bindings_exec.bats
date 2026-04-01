@@ -234,5 +234,6 @@ EOF
     echo >> zencode_exec_stdin # context
 
     run ${ZENCODE_EXECUTABLE} < zencode_exec_stdin
-    assert_line --partial "Zencode line 3: Given I have the 'string array' named 'dictionary'"
+    assert_line --partial "Zencode line 3:"
+    assert_line --partial "Incorrect data type, expected array for dictionary"
 }

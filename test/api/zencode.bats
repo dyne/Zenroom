@@ -114,3 +114,11 @@ EOF
     save extra_context_zenroom_tobuf
     assert_output 'USING ALL ZENROOM INPUTS'
 }
+
+@test "ZENCODE API :: zenroom_exec exits cleanly on invalid config" {
+    run env LD_LIBRARY_PATH=$R ./zenroom_exec "print('ok')" "logfmt=bogus" "" "" "" ""
+    [ "$status" -ne 0 ]
+    assert_line --partial "Error parsing configuration: logfmt=bogus"
+    assert_line --partial "Zenroom initialisation failed."
+    assert_line --partial "Abort on error code"
+}
