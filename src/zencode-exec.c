@@ -46,20 +46,46 @@ static char data_b64    [MAX_FILE];
 static char extra_b64   [MAX_FILE];
 static char context_b64 [MAX_FILE];
 
+static void strip_eol(char *line) {
+	size_t len = strlen(line);
+	while (len > 0 && (line[len - 1] == '\n' || line[len - 1] == '\r')) {
+		line[--len] = 0x0;
+	}
+}
+
+static int line_is_truncated(const char *line) {
+	size_t len = strlen(line);
+	if (len == 0) return 0;
+	if (line[len - 1] == '\n') return 0;
+	return !feof(stdin);
+}
+
 static char *line_alloc(char *in, int max) {
 	if( ! fgets(in, max, stdin) ) return NULL;
+	if(line_is_truncated(in)) {
+		fprintf(stderr,"%s error: base64 input line out of bounds.\n", CMDNAME);
+		exit(EXIT_FAILURE);
+	}
 	if(in[0]=='\n') return NULL; // newline is empty line
 	if(in[0]=='\r') return NULL; // carriage return is empty line
+	strip_eol(in);
 	int len = is_base64(in);
 	if(!len) {
 		fprintf(stderr,"Invalid input base64 encoding\n");
 		exit(EXIT_FAILURE);
 	}
-	in[len]=0x0;
-	if(in[len-2]=='\r') in[len-2]=0x0; // remove ending CRLF
-	if(in[len-1]=='\n') in[len-1]=0x0; // remove ending LF
-	char *line = malloc(B64decoded_len(len));
+	size_t decoded_len = (size_t)B64decoded_len(len);
+	char *line = malloc(decoded_len + 1);
+	if(!line) {
+		fprintf(stderr,"%s error: cannot allocate decoded input line.\n", CMDNAME);
+		exit(EXIT_FAILURE);
+	}
 	int reallen = B64decode(line, in);
+	if(reallen < 0 || (size_t)reallen > decoded_len) {
+		free(line);
+		fprintf(stderr,"%s error: invalid decoded input line length.\n", CMDNAME);
+		exit(EXIT_FAILURE);
+	}
 	line[reallen] = 0x0;
 	return(line);
 }
@@ -111,16 +137,20 @@ int main(int argc, char **argv) {
 #endif
 
   if( fgets(conf, MAX_CONFIG, stdin) ) {
-	  if(strlen(conf)>=MAX_CONFIG) {
+	  if(line_is_truncated(conf)) {
 		  fprintf(stderr,"%s error: conf string out of bounds.\n",CMDNAME);
 		  return EXIT_FAILURE;
 	  }
-	  if(conf[0] != '\n')	{
-		  int cl = strlen(conf);
-		  if( conf[cl-2]=='\r' ) conf[cl-2] = 0x0; // remove ending CRLF
-		  if( conf[cl-1]=='\n' ) conf[cl-1] = 0x0; // remove ending LF
-		  conf[cl] = 0x0;
-		  strcat(conf,",logfmt=json");
+	  strip_eol(conf);
+	  if(conf[0] != '\0')	{
+		  size_t cl = strlen(conf);
+		  static const char logfmt_json[] = ",logfmt=json";
+		  size_t suffix_len = sizeof(logfmt_json) - 1;
+		  if (cl + suffix_len + 1 > MAX_CONFIG) {
+			  fprintf(stderr,"%s error: conf string out of bounds.\n",CMDNAME);
+			  return EXIT_FAILURE;
+		  }
+		  memcpy(conf + cl, logfmt_json, suffix_len + 1);
 	  } else {
 		  snprintf(conf,MAX_CONFIG,"logfmt=json");
 	  }

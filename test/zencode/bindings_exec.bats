@@ -237,3 +237,63 @@ EOF
     assert_line --partial "Zencode line 3:"
     assert_line --partial "Incorrect data type, expected array for dictionary"
 }
+
+@test "zencode-exec rejects invalid non-base64 stdin lines" {
+    echo > zencode_exec_stdin
+    printf '%%%s\n' '%' >> zencode_exec_stdin
+    echo >> zencode_exec_stdin
+    echo >> zencode_exec_stdin
+    echo >> zencode_exec_stdin
+    echo >> zencode_exec_stdin
+
+    run ${ZENCODE_EXECUTABLE} < zencode_exec_stdin
+    [ "$status" -ne 0 ]
+    assert_line --partial "Invalid input base64 encoding"
+}
+
+@test "zencode-exec accepts a max-length valid config line" {
+    python3 - <<'PY' > zencode_exec_stdin
+conf = "verbose=1," * 49 + "verbose=1"
+assert len(conf) == 499, len(conf)
+print(conf)
+print("R2l2ZW4gSSBoYXZlIG5vdGhpbmcKVGhlbiBwcmludCBhbGwgZGF0YQo=")
+print()
+print()
+print()
+print()
+PY
+
+    run ${ZENCODE_EXECUTABLE} < zencode_exec_stdin
+    [ "$status" -eq 0 ]
+}
+
+@test "zencode-exec decodes an exact-boundary script line safely" {
+    python3 - <<'PY' > zencode_exec_stdin
+import base64
+
+target = 12285
+prefix = "Given I have nothing\n"
+suffix = "Then print all data\n"
+parts = [prefix]
+remaining = target - len(prefix) - len(suffix)
+assert remaining >= 2
+while remaining > 2:
+    chunk = min(remaining - 1, 120)
+    parts.append("#" * chunk + "\n")
+    remaining -= chunk + 1
+if remaining > 0:
+    parts.append("#" * remaining)
+parts.append(suffix)
+script = "".join(parts)
+assert len(script) == target, (len(script), target)
+print("")
+print(base64.b64encode(script.encode()).decode())
+print()
+print()
+print()
+print()
+PY
+
+    run ${ZENCODE_EXECUTABLE} < zencode_exec_stdin
+    [ "$status" -eq 0 ]
+}
