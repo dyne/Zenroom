@@ -22,6 +22,11 @@
 
 #ifndef __SFPOOL_H__
 #define __SFPOOL_H__
+
+// This header carries both declarations and implementation.
+// All functions use internal linkage, so it is safe to include it
+// from multiple translation units in the same program.
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -41,12 +46,22 @@
 
 // Configuration
 #define SECURE_ZERO // Enable secure zeroing
-#define FALLBACK   // Enable fallback to system alloc
 #define PROFILING // Profile most used sizes allocated
 
+#if defined(__x86_64__) || defined(_M_X64) || defined(__ppc64__) || defined(__LP64__)
+#define ptr_t uint64_t
+#define ptr_align 8
+#define struct_align 16
+#else
+#define ptr_t uint32_t
+#define ptr_align 4
+#define struct_align 8
+#endif
+
 // Memory pool structure
-typedef struct sfpool_t {
-  uint8_t *data;
+typedef struct __attribute__((aligned(struct_align))) sfpool_t {
+  uint8_t *buffer; // raw
+  uint8_t *data; // aligned
   uint8_t *free_list;
   uint32_t free_count;
   uint32_t total_blocks;
@@ -59,21 +74,10 @@ typedef struct sfpool_t {
   uint32_t miss_total;
   size_t   miss_bytes;
   size_t   alloc_total;
-	bool     secure_lock;
 #endif
 } sfpool_t;
 
-static inline void _secure_zero(void *ptr, uint32_t size) {
-  register uint32_t *p = (uint32_t*)ptr; // use 32bit pointer
-  register uint32_t s = (size>>2); // divide counter by 4
-  while (s--) *p++ = 0x0; // hit the road jack
-}
 
-#if defined(__x86_64__) || defined(_M_X64) || defined(__ppc64__) || defined(__LP64__)
-#define ptr_t uint64_t
-#else
-#define ptr_t uint32_t
-#endif
 #if !defined(__MUSL__)
 static_assert(sizeof(ptr_t) == sizeof(void*), "Unknown memory pointer size detected");
 #endif
@@ -83,37 +87,124 @@ static inline bool _is_in_pool(sfpool_t *pool, const void *ptr) {
          && p < (ptr_t)(pool->data + pool->total_bytes));
 }
 
-// Create memory manager
-size_t sfpool_init(sfpool_t *pool, size_t nmemb, size_t blocksize) {
-  if((blocksize & (blocksize - 1)) != 0) {
-    fprintf(stderr,"SFPool blocksize must be a power of two\n");
-    return 0;
-  }
-	pool->secure_lock = false;
-  size_t totalsize = nmemb * blocksize;
+/**
+ * @defgroup sfutil Internal Utilities
+ * @{
+ */
+
+/**
+ * @brief Zeroes out a block of memory.
+ *
+ * This function sets every byte in a block of memory to zero.
+ *
+ * @param ptr Pointer to the memory block to zero out.
+ * @param size Size of the memory block in bytes.
+ */
+static inline void sfutil_zero(void *ptr, uint32_t size) {
+  volatile uint8_t *p = (volatile uint8_t*)ptr;
+  while (size--) *p++ = 0;
+}
+
+/**
+ * @brief Aligns a pointer to the nearest boundary.
+ *
+ * This function aligns the given pointer to the nearest boundary specified by `ptr_align`.
+ *
+ * @param ptr Pointer to align.
+ * @return Aligned pointer.
+ */
+static inline void *sfutil_memalign(const void* ptr) {
+    register ptr_t mask = ptr_align - 1;
+    ptr_t aligned = ((ptr_t)ptr + mask) & ~mask;
+    return (void*)aligned;
+}
+
+/**
+ * @brief Allocates memory securely.
+ *
+ * This function allocates memory securely, ensuring it is aligned and locked (if supported by the platform).
+ *
+ * @param size Size of the memory block to allocate.
+ * @return Pointer to the allocated memory block, or NULL on failure.
+ */
+static inline void *sfutil_secalloc(size_t size) {
+	// add bytes to every allocation to support alignment
+	size_t alloc_size = size + ptr_align;
+	void *res = NULL;
 #if defined(__EMSCRIPTEN__)
-  pool->data = (uint8_t *)malloc(totalsize);
+	res = (uint8_t *)malloc(alloc_size);
 #elif defined(_WIN32)
-  pool->data = VirtualAlloc(NULL, totalsize,
-                            MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+	res = VirtualAlloc(NULL, alloc_size,
+					   MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 #elif defined(__APPLE__)
 	int flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE;
-  pool->data = mmap(NULL, totalsize, PROT_READ | PROT_WRITE, flags, -1, 0);
-  if( mlock(pool->data, totalsize) !=0) pool->secure_lock = true;
+	res = mmap(NULL, alloc_size, PROT_READ | PROT_WRITE, flags, -1, 0);
+	if (res == MAP_FAILED) return NULL;
+	mlock(res, alloc_size);
 #else // assume POSIX
 	int flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE;
 	struct rlimit rl;
 	if (getrlimit(RLIMIT_MEMLOCK, &rl) == 0)
-		if(totalsize<=rl.rlim_cur) flags |= MAP_LOCKED;
-	pool->data = mmap(NULL, totalsize, PROT_READ | PROT_WRITE, flags, -1, 0);
-	pool->secure_lock = true;
+		if(alloc_size<=rl.rlim_cur) flags |= MAP_LOCKED;
+	res = mmap(NULL, alloc_size, PROT_READ | PROT_WRITE, flags, -1, 0);
+	if (res == MAP_FAILED) return NULL;
 #endif
-  if (pool->data == NULL) {
-    fprintf(stderr, "Failed to allocate pool memory\n");
-    return 0;
-  }
-  // Zero out the entire pool
-  _secure_zero(pool->data, totalsize);
+	return res;
+}
+
+/**
+ * @brief Frees memory allocated securely.
+ *
+ * This function frees memory that was allocated using `sfutil_secalloc`.
+ *
+ * @param ptr Pointer to the memory block to free.
+ * @param size Size of the memory block in bytes.
+ */
+static inline void sfutil_secfree(void *ptr, size_t size) {
+	size_t alloc_size = size + ptr_align;
+#if defined(__EMSCRIPTEN__)
+	free(ptr);
+#elif defined(_WIN32)
+	VirtualFree(ptr, 0, MEM_RELEASE);
+#else // Posix
+	munmap(ptr, alloc_size);
+#endif
+}
+
+/** @} */ // End of sfutil group
+
+
+/**
+ * @defgroup sfpool High-Level API
+ * @{
+ */
+
+/**
+ * @brief Initializes a memory pool.
+ *
+ * This function initializes a memory pool with a specified number of blocks and block size.
+ * The block size must be a power of two.
+ *
+ * @param pool Pointer to the memory pool structure to initialize.
+ * @param nmemb Number of blocks in the pool.
+ * @param blocksize Size of each block in bytes.
+ * @return Total size of the memory pool in bytes, or 0 on failure.
+ */
+static inline size_t sfpool_init(sfpool_t *pool, size_t nmemb, size_t blocksize) {
+  if (pool == NULL) return 0;
+  memset(pool, 0, sizeof(sfpool_t));
+  if (nmemb == 0) return 0;
+  if (blocksize < sizeof(void*)) return 0;
+  if((blocksize & (blocksize - 1)) != 0) return 0;
+  if (nmemb > (SIZE_MAX / blocksize)) return 0;
+  // SFPool blocksize must be a power of two
+  size_t totalsize = nmemb * blocksize;
+  pool->buffer = sfutil_secalloc(totalsize);
+  if (pool->buffer == NULL) return 0;
+  // Failed to allocate pool memory
+  pool->data   = sfutil_memalign(pool->buffer);
+  if (pool->data == NULL) return 0;
+  // Failed to allocate pool memory
   pool->total_bytes  = totalsize;
   pool->total_blocks = nmemb;
   pool->block_size   = blocksize;
@@ -129,7 +220,6 @@ size_t sfpool_init(sfpool_t *pool, size_t nmemb, size_t blocksize) {
   *(uint8_t **)
     (pool->data + (pool->total_blocks - 1) * blocksize) = NULL;
 #ifdef PROFILING
-  pool->hits = calloc(blocksize+4,sizeof(uint32_t));
   pool->miss_total = pool->miss_bytes = 0;
   pool->hits_total = pool->hits_bytes = 0;
   pool->alloc_total = 0;
@@ -137,32 +227,40 @@ size_t sfpool_init(sfpool_t *pool, size_t nmemb, size_t blocksize) {
   return totalsize;
 }
 
-// Destroy memory manager
-void sfpool_teardown(sfpool_t *restrict pool) {
+
+/**
+ * @brief Tears down a memory pool.
+ *
+ * This function releases all resources associated with the memory pool.
+ *
+ * @param pool Pointer to the memory pool structure to tear down.
+ */
+static inline void sfpool_teardown(sfpool_t *restrict pool) {
   // Free pool memory
-#if defined(__EMSCRIPTEN__)
-  free(pool->data);
-#elif defined(_WIN32)
-  VirtualFree(pool->data, 0, MEM_RELEASE);
-#else // Posix
-  munmap(pool->data, pool->total_bytes);
-#endif
+  sfutil_secfree(pool->buffer, pool->total_bytes);
 #ifdef PROFILING
-  free(pool->hits);
   pool->miss_total = pool->miss_bytes = 0;
   pool->hits_total = pool->hits_bytes = 0;
   pool->alloc_total = 0;
 #endif
 }
 
-// Allocate memory
-void *sfpool_malloc(void *restrict opaque, const size_t size) {
+/**
+ * @brief Allocates memory from the pool.
+ *
+ * This function allocates memory from the pool if the requested size is within the block size.
+ * Otherwise, it falls back to system malloc.
+ *
+ * @param opaque Pointer to the memory pool structure.
+ * @param size Size of the memory block to allocate.
+ * @return Pointer to the allocated memory block, or NULL on failure.
+ */
+static inline void *sfpool_malloc(void *restrict opaque, const size_t size) {
   sfpool_t *pool = (sfpool_t*)opaque;
   void *ptr;
   if (size <= pool->block_size
       && pool->free_list != NULL) {
 #ifdef PROFILING
-    pool->hits[size]++;
     pool->hits_total++;
     pool->hits_bytes+=size;
     pool->alloc_total+=size;
@@ -184,29 +282,48 @@ void *sfpool_malloc(void *restrict opaque, const size_t size) {
   return ptr;
 }
 
-// Free memory
-void sfpool_free(void *restrict opaque, void *ptr) {
+
+/**
+ * @brief Frees memory allocated from the pool.
+ *
+ * This function frees memory that was allocated from the pool. If the memory was not allocated
+ * from the pool, it falls back to system free.
+ *
+ * @param opaque Pointer to the memory pool structure.
+ * @param ptr Pointer to the memory block to free.
+ */
+static inline void sfpool_free(void *restrict opaque, void *ptr) {
   sfpool_t *pool = (sfpool_t*)opaque;
   if (ptr == NULL) return; // Freeing NULL is a no-op
   if (_is_in_pool(pool,ptr)) {
+#ifdef SECURE_ZERO
+    // Zero the user-visible contents before restoring the free-list link.
+    sfutil_zero(ptr, pool->block_size);
+#endif
     // Add the block back to the free list
     *(uint8_t **)ptr = pool->free_list;
     pool->free_list = (uint8_t *)ptr;
     pool->free_count++ ;
-#ifdef SECURE_ZERO
-    // Zero out the block for security
-    _secure_zero(ptr, pool->block_size);
-#endif
     return;
   } else {
-#ifdef FALLBACK
     free(ptr);
-#endif
   }
 }
 
-// Reallocate memory
-void *sfpool_realloc(void *restrict opaque, void *ptr, const size_t size) {
+
+/**
+ * @brief Reallocates memory from the pool.
+ *
+ * This function reallocates memory from the pool. If the new size is larger than the block size,
+ * it allocates new memory using system malloc and copies the old data. If that grow allocation
+ * fails, the original pool allocation is left untouched and NULL is returned.
+ *
+ * @param opaque Pointer to the memory pool structure.
+ * @param ptr Pointer to the memory block to reallocate.
+ * @param size New size of the memory block.
+ * @return Pointer to the reallocated memory block, or NULL on failure.
+ */
+static inline void *sfpool_realloc(void *restrict opaque, void *ptr, const size_t size) {
   sfpool_t *pool = (sfpool_t*)opaque;
   if (ptr == NULL) {
     return sfpool_malloc(pool, size);
@@ -218,7 +335,6 @@ void *sfpool_realloc(void *restrict opaque, void *ptr, const size_t size) {
   if (_is_in_pool((sfpool_t*)pool,ptr)) {
     if (size <= pool->block_size) {
 #ifdef PROFILING
-      pool->hits[size]++;
       pool->hits_total++;
       pool->hits_bytes+=size;
       pool->alloc_total+=size;
@@ -226,18 +342,16 @@ void *sfpool_realloc(void *restrict opaque, void *ptr, const size_t size) {
       return ptr; // No need to reallocate
     } else {
       void *new_ptr = malloc(size);
+      if (new_ptr == NULL) return NULL;
       memcpy(new_ptr, ptr, pool->block_size); // Copy only BLOCK_SIZE bytes
 #ifdef SECURE_ZERO
-      _secure_zero(ptr, pool->block_size); // Zero out the old block
+      // Zero the old pool block before relinking it into the free list.
+      sfutil_zero(ptr, pool->block_size);
 #endif
       // Add the block back to the free list
       *(uint8_t **)ptr = pool->free_list;
       pool->free_list = (uint8_t *)ptr;
       pool->free_count++ ;
-#ifdef SECURE_ZERO
-      // Zero out the block for security
-      _secure_zero(ptr, pool->block_size);
-#endif
 #ifdef PROFILING
   pool->miss_total++;
   pool->miss_bytes+=size;
@@ -246,7 +360,6 @@ void *sfpool_realloc(void *restrict opaque, void *ptr, const size_t size) {
       return new_ptr;
     }
   } else {
-#ifdef FALLBACK
     // Handle large allocations
     return realloc(ptr, size);
 #ifdef PROFILING
@@ -254,25 +367,45 @@ void *sfpool_realloc(void *restrict opaque, void *ptr, const size_t size) {
     pool->miss_bytes+=size;
     pool->alloc_total+=size;
 #endif
-#else
-    return NULL;
-#endif
   }
 }
 
-// Debug function to print memory manager state
-void sfpool_status(sfpool_t *restrict p) {
+/**
+ * @brief Checks if a pointer is within the memory pool.
+ *
+ * This function checks if the given pointer is within the memory pool.
+ *
+ * @param opaque Pointer to the memory pool structure.
+ * @param ptr Pointer to check.
+ * @return 1 if the pointer is within the pool, 0 otherwise.
+ */
+static inline int sfpool_contains(void *restrict opaque, const void *ptr) {
+  sfpool_t *pool = (sfpool_t*)opaque;
+  int res = 0;
+  if( _is_in_pool(pool,ptr) ) res = 1;
+  return res;
+}
+
+
+/**
+ * @brief Prints the status of the memory pool.
+ *
+ * This function prints the current status of the memory pool, including the number of blocks,
+ * block size, and profiling information (if enabled).
+ *
+ * @param p Pointer to the memory pool structure.
+ */
+static inline void sfpool_status(sfpool_t *restrict p) {
   fprintf(stderr,"\n🌊 sfpool: %u blocks %u B each\n",
           p->total_blocks, p->block_size);
-	if(p->secure_lock) fprintf(stderr,"🌊 sfpool: secure memory lock activated\n");
 #ifdef PROFILING
   fprintf(stderr,"🌊 Total:  %lu K\n",
           p->alloc_total/1024);
   fprintf(stderr,"🌊 Misses: %lu K (%u calls)\n",p->miss_bytes/1024,p->miss_total);
   fprintf(stderr,"🌊 Hits:   %lu K (%u calls)\n",p->hits_bytes/1024,p->hits_total);
-  // for (uint32_t i = 1; i <= p->block_size; i++) {
-  //   fprintf(stdout,"%u %u\n",i,hits[i]);
-  // }
 #endif
 }
+
+/** @} */ // End of sfpool group
+
 #endif
