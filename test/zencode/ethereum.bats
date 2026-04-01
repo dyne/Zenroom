@@ -181,8 +181,8 @@ and a 'gas price'
 and a 'gas limit'
 and an 'ethereum nonce'
 When I create the ethereum transaction to 'storage contract'
-and I create the random object of '256' bits
-and I use the ethereum transaction to store 'random object'
+and I create random of '256' bits
+and I use ethereum transaction to store 'random'
 Then print the 'ethereum transaction'
 EOF
     save_output 'alice_storage_tx.json'
@@ -874,12 +874,9 @@ Given I have a 'hex' named 'encoded data'
 Given I have a 'string array' named 'typeSpec'
 
 When I create the ethereum abi decoding of 'encoded data' using 'typeSpec'
-When I create the copy of element '1' from array 'ethereum abi decoding'
-When I rename 'copy' to 'request_id'
-When I create the copy of element '2' from array 'ethereum abi decoding'
-When I rename 'copy' to 'data'
-When I create the copy of element '3' from array 'ethereum abi decoding'
-When I rename 'copy' to 'dao_vote_id'
+When I copy '1' from 'ethereum abi decoding' to 'request_id'
+When I copy '2' from 'ethereum abi decoding' to 'data'
+When I copy '3' from 'ethereum abi decoding' to 'dao_vote_id'
 
 Then print the 'request_id' as 'integer'
 Then print the 'data' as 'hex'
