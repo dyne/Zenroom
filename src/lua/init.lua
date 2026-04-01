@@ -29,13 +29,41 @@ function fatal(x)
 end
 
 _G['REQUIRED'] = {}
+
+local function protected_error(err, fallback)
+	if type(err) == 'string' and #err > 0 then
+		return err
+	end
+	if err ~= nil then
+		return tostring(err)
+	end
+	return fallback or 'protected call failed'
+end
+
+local function protected_module(name)
+	local ok, res = pcall(require, name)
+	if ok and res ~= nil then
+		return res
+	end
+	if ok then
+		error('required extension not found: '..name, 2)
+	end
+	error(protected_error(res, 'failed to load module: '..name), 2)
+end
+
+local function protected_scenario(name)
+	local ok, res = pcall(require, name)
+	if ok then
+		return res
+	end
+	error(protected_error(res, 'failed to load scenario: '..name), 2)
+end
+
 -- avoid duplicating requires (internal includes)
 function require_once(ninc)
 	local class = REQUIRED[ninc]
-	local _res
 	if not class then
-		_res, class = pcall( function() return require(ninc) end )
-		assert(_res, class)
+		class = protected_module(ninc)
 		REQUIRED[ninc] = class
 	end
 	return class
@@ -45,9 +73,7 @@ _G['SCENARIOS'] = {}
 function load_scenario(scen)
    local s = SCENARIOS[scen]
    if not s then
-      local _res, _err
-      _res, _err = pcall( function() require(scen) end)
-      assert(_res, _err)
+      protected_scenario(scen)
       SCENARIOS[scen] = true
    end
 end
