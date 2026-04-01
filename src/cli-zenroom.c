@@ -151,60 +151,59 @@ void load_file(char *dst, FILE *fd) {
 	if(firstline) free(firstline);
 }
 
-static char *conffile = NULL;
-static char *keysfile = NULL;
-static char *scriptfile = NULL;
-static char *datafile = NULL;
-static char *extrafile = NULL;
-static char *contextfile = NULL;
-static char *sideload = NULL;
-static char *sidescript = NULL;
-static char *script = NULL;
-static char *keys = NULL;
-static char *data = NULL;
-static char *extra = NULL;
-static char *context = NULL;
-static char *introspect = NULL;
-static char *scriptarg = NULL;
+struct cli_buffers {
+	char *conffile;
+	char *keysfile;
+	char *scriptfile;
+	char *datafile;
+	char *extrafile;
+	char *contextfile;
+	char *sideload;
+	char *sidescript;
+	char *script;
+	char *keys;
+	char *data;
+	char *extra;
+	char *context;
+	char *introspect;
+	char *scriptarg;
+};
 
-// for benchmark, breaks c99 spec
-struct timespec before = {0}, after = {0};
-
-int cli_alloc_buffers() {
-	conffile = malloc(MAX_STRING);
-	scriptfile = malloc(MAX_STRING);
-	sideload = malloc(MAX_STRING);
-	keysfile = malloc(MAX_STRING);
-	datafile = malloc(MAX_STRING);
-	extrafile = malloc(MAX_STRING);
-	contextfile = malloc(MAX_STRING);
-	script = malloc(MAX_FILE);
-	sidescript = malloc(MAX_FILE);
-	keys = malloc(MAX_FILE);
-	data = malloc(MAX_FILE);
-	extra = malloc(MAX_FILE);
-	context = malloc(MAX_FILE);
-	introspect = malloc(MAX_STRING);
-	scriptarg = malloc(MAX_STRING);
+int cli_alloc_buffers(struct cli_buffers *bufs) {
+	bufs->conffile = malloc(MAX_STRING);
+	bufs->scriptfile = malloc(MAX_STRING);
+	bufs->sideload = malloc(MAX_STRING);
+	bufs->keysfile = malloc(MAX_STRING);
+	bufs->datafile = malloc(MAX_STRING);
+	bufs->extrafile = malloc(MAX_STRING);
+	bufs->contextfile = malloc(MAX_STRING);
+	bufs->script = malloc(MAX_FILE);
+	bufs->sidescript = malloc(MAX_FILE);
+	bufs->keys = malloc(MAX_FILE);
+	bufs->data = malloc(MAX_FILE);
+	bufs->extra = malloc(MAX_FILE);
+	bufs->context = malloc(MAX_FILE);
+	bufs->introspect = malloc(MAX_STRING);
+	bufs->scriptarg = malloc(MAX_STRING);
 	return(1);
 }
 
-int cli_free_buffers() {
-	free(conffile);
-	free(scriptfile);
-	free(sideload);
-	free(keysfile);
-	free(datafile);
-	free(extrafile);
-	free(contextfile);
-	free(script);
-	free(sidescript);
-	free(keys);
-	free(data);
-	free(extra);
-	free(context);
-	free(introspect);
-	free(scriptarg);
+int cli_free_buffers(struct cli_buffers *bufs) {
+	free(bufs->conffile);
+	free(bufs->scriptfile);
+	free(bufs->sideload);
+	free(bufs->keysfile);
+	free(bufs->datafile);
+	free(bufs->extrafile);
+	free(bufs->contextfile);
+	free(bufs->script);
+	free(bufs->sidescript);
+	free(bufs->keys);
+	free(bufs->data);
+	free(bufs->extra);
+	free(bufs->context);
+	free(bufs->introspect);
+	free(bufs->scriptarg);
 	return(1);
 }
 
@@ -215,7 +214,24 @@ int main(int argc, char **argv) {
 	int valid_input = 0;
 	int use_seccomp = 0;
 
+	struct cli_buffers bufs = {0};
+	struct timespec before = {0}, after = {0};
 	zenroom_t *Z;
+	char *conffile;
+	char *keysfile;
+	char *scriptfile;
+	char *datafile;
+	char *extrafile;
+	char *contextfile;
+	char *sideload;
+	char *sidescript;
+	char *script;
+	char *keys;
+	char *data;
+	char *extra;
+	char *context;
+	char *introspect;
+	char *scriptarg;
 	const char *short_options = ":hsD:ic:k:a:x:y:e:zvl:";
 	const char *help          =
 		"Zenroom\n"
@@ -257,7 +273,22 @@ int main(int argc, char **argv) {
 		}
 	}
 	int pid, status, retval;
-	cli_alloc_buffers();
+	cli_alloc_buffers(&bufs);
+	conffile = bufs.conffile;
+	keysfile = bufs.keysfile;
+	scriptfile = bufs.scriptfile;
+	datafile = bufs.datafile;
+	extrafile = bufs.extrafile;
+	contextfile = bufs.contextfile;
+	sideload = bufs.sideload;
+	sidescript = bufs.sidescript;
+	script = bufs.script;
+	keys = bufs.keys;
+	data = bufs.data;
+	extra = bufs.extra;
+	context = bufs.context;
+	introspect = bufs.introspect;
+	scriptarg = bufs.scriptarg;
 	conffile    [0] = '\0';
 	scriptfile  [0] = '\0';
 	sideload    [0] = '\0';
@@ -281,7 +312,7 @@ int main(int argc, char **argv) {
 			break;
 		case 'h':
 			fprintf(stdout,"%s",help);
-			cli_free_buffers();
+			cli_free_buffers(&bufs);
 			return EXIT_SUCCESS;
 			break;
 		case 's':
@@ -319,9 +350,9 @@ int main(int argc, char **argv) {
 		  valid_input = 1;
 		  interactive = 0;
 		  break;
-		case ':': fprintf(stderr, "Option '-%c' requires an argument\n\n%s", optopt, please_help); cli_free_buffers(); return EXIT_FAILURE;
-		case '?': fprintf(stderr, "Invalid option: '-%c'\n\n%s", optopt, please_help); cli_free_buffers(); return EXIT_FAILURE;
-		default:  fprintf(stderr, "Error: unknown option '-%c'\n\n%s", optopt, please_help); cli_free_buffers(); return EXIT_FAILURE;
+		case ':': fprintf(stderr, "Option '-%c' requires an argument\n\n%s", optopt, please_help); cli_free_buffers(&bufs); return EXIT_FAILURE;
+		case '?': fprintf(stderr, "Invalid option: '-%c'\n\n%s", optopt, please_help); cli_free_buffers(&bufs); return EXIT_FAILURE;
+		default:  fprintf(stderr, "Error: unknown option '-%c'\n\n%s", optopt, please_help); cli_free_buffers(&bufs); return EXIT_FAILURE;
 		}
 	}
 
@@ -388,7 +419,7 @@ int main(int argc, char **argv) {
 		if(verbosity) fprintf(stderr, "Interactive console, press ctrl-d to quit.\n");
 		res = repl_loop(Z);
 		if(res) zen_teardown(Z); // quits on ctrl-D
-		cli_free_buffers();
+		cli_free_buffers(&bufs);
 		return(res);
 	}
 
@@ -403,7 +434,7 @@ int main(int argc, char **argv) {
 										(data[0])?data:NULL,
 										(extra[0])?extra:NULL);
 		if(exitcode) fprintf(stderr, "Execution failed.\n");
-		cli_free_buffers();
+		cli_free_buffers(&bufs);
 		return(exitcode);
 	} /////////////////
 
@@ -426,7 +457,7 @@ int main(int argc, char **argv) {
 			(context[0])?context:NULL);
 	if(!Z) {
 		fprintf(stderr, "Initialisation failed.\n");
-		cli_free_buffers();
+		cli_free_buffers(&bufs);
 		return EXIT_FAILURE; }
 
 	// print scenario documentation
@@ -464,7 +495,7 @@ int main(int argc, char **argv) {
 			fflush(stderr);
 		}
 		zen_teardown(Z);
-		cli_free_buffers();
+		cli_free_buffers(&bufs);
 		return EXIT_SUCCESS;
 	}
 
@@ -520,7 +551,7 @@ int main(int argc, char **argv) {
 				fprintf(stderr, "Seccomp fail to set no_new_privs: %s\n", strerror(errno));
 				zen_teardown(Z);
 
-				cli_free_buffers();
+				cli_free_buffers(&bufs);
 				return EXIT_FAILURE;
 			}
 			if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &strict)) {
@@ -528,7 +559,7 @@ int main(int argc, char **argv) {
 				fprintf(stderr, "Seccomp fail to install filter: %s\n", strerror(errno));
 				zen_teardown(Z);
 
-				cli_free_buffers();
+				cli_free_buffers(&bufs);
 				return EXIT_FAILURE;
 			}
 #   endif /* ARCH_LINUX */
@@ -540,7 +571,7 @@ int main(int argc, char **argv) {
 				exitcode = zen_exec_lua(Z, script);
 			}
 			zen_teardown(Z);
-			cli_free_buffers();
+			cli_free_buffers(&bufs);
 			return exitcode;
 		}
 		do {
@@ -566,7 +597,7 @@ int main(int argc, char **argv) {
 		fprintf(stderr,"Time used: %lu\n", ( ((after.tv_nsec - before.tv_nsec) / 1000L) + musecs) );
 	}
 
-	cli_free_buffers();
+	cli_free_buffers(&bufs);
 	return exitcode;
 }
 
