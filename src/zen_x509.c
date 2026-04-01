@@ -28,37 +28,114 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
+#include <ctype.h>
 
 #define BUF_SIZE 8192
+
+static const char *find_bytes(const char *buf, size_t buf_len,
+			      const char *needle, size_t needle_len) {
+	size_t i;
+
+	if(needle_len == 0 || needle_len > buf_len) {
+		return NULL;
+	}
+	for(i = 0; i + needle_len <= buf_len; i++) {
+		if(memcmp(buf + i, needle, needle_len) == 0) {
+			return buf + i;
+		}
+	}
+	return NULL;
+}
+
+static int is_pem_base64_char(unsigned char c) {
+	return isalnum(c) || c == '+' || c == '/' || c == '=';
+}
+
+static void push_octet_slice(lua_State *L, const octet *src, int offset, int len) {
+	if(offset < 0 || len < 0 || offset > src->len || len > src->len - offset) {
+		lua_pushliteral(L, "");
+		return;
+	}
+	lua_pushlstring(L, (const char *)src->val + offset, (size_t)len);
+}
+
+static int read_asn1_length(const uint8_t *buf, size_t buf_len,
+			    size_t *value_len, size_t *header_len) {
+	size_t i;
+	size_t count;
+	size_t len;
+
+	if(buf_len == 0) {
+		return 0;
+	}
+	if((buf[0] & 0x80) == 0) {
+		*value_len = buf[0];
+		*header_len = 1;
+		return *value_len <= buf_len - 1;
+	}
+
+	count = buf[0] & 0x7f;
+	if(count == 0 || count > sizeof(size_t) || count >= buf_len) {
+		return 0;
+	}
+	len = 0;
+	for(i = 0; i < count; i++) {
+		len = (len << 8) | buf[i + 1];
+	}
+	if(len > buf_len - count - 1) {
+		return 0;
+	}
+	*value_len = len;
+	*header_len = count + 1;
+	return 1;
+}
+
+static const char *san_type_name(uint8_t type) {
+	switch(type) {
+	case 0x81: return "email";
+	case 0x82: return "dns";
+	case 0x83: return "X400";
+	case 0x85: return "dir";
+	case 0x86: return "url";
+	case 0xA0: return "RFC822";
+	case 0x87: return "ip";
+	case 0x88: return "OID";
+	default: return "unknown";
+	}
+}
 
 static int pem_to_base64(lua_State *L) {
 	BEGIN();
 	const char *begin_marker = "-----BEGIN";
 	const char *end_marker = "-----END";
-	const char *in = lua_tostring(L, 1);
-	luaL_argcheck(L, in != NULL, 1, "string argument expected");
-	char *dst = calloc(strlen(in)+2,1); SAFE(dst, MALLOC_ERROR);
-	char *output = dst;
-	const char *begin = strstr(in, begin_marker);
-	const char *end = strstr(in, end_marker);
+	size_t in_len = 0;
+	size_t begin_len = strlen(begin_marker);
+	size_t end_len = strlen(end_marker);
+	size_t out_len = 0;
+	const char *in = luaL_checklstring(L, 1, &in_len);
+	char *dst = calloc(in_len + 1, 1); SAFE(dst, MALLOC_ERROR);
+	const char *begin = find_bytes(in, in_len, begin_marker, begin_len);
 
-	if (begin && end) {
-		const char *base64_start = strchr(begin, '\n');
-		if (base64_start) {
-			base64_start++;
-			const char *base64_end = strstr(base64_start, end_marker);
-			if (base64_end) {
-				while (base64_start < base64_end) {
-					if (*base64_start != '\n' && *base64_start != '\r') {
-						*output++ = *base64_start;
+	if(begin) {
+		const char *body = memchr(begin, '\n', in_len - (size_t)(begin - in));
+		if(body) {
+			const char *end = find_bytes(body + 1,
+						    in_len - (size_t)(body + 1 - in),
+						    end_marker, end_len);
+			const char *cursor;
+
+			if(end) {
+				for(cursor = body + 1; cursor < end; cursor++) {
+					unsigned char ch = (unsigned char)*cursor;
+					if(is_pem_base64_char(ch)) {
+						dst[out_len++] = (char)ch;
 					}
-					base64_start++;
 				}
-				*output = '\0';  // Null-terminate the output string
 			}
 		}
 	}
-	lua_pushlstring(L, dst, strlen(dst));
+	lua_pushlstring(L, dst, out_len);
 	free(dst);
 	END(1);
 }
@@ -134,9 +211,7 @@ end:
 }
 
 static void push_entity(lua_State *L, const octet *H, int c, int len) {
-	char tmp[2048];
-	snprintf(tmp,len,"%s",&H->val[c]);
-	lua_pushstring(L,tmp);
+	push_octet_slice(L, H, c, len);
 }
 
 static void push_date(lua_State *L, const octet *c, int i) {
@@ -256,48 +331,69 @@ static int extract_san(lua_State *L) {
 	BEGIN();
 	int c, ic, len;
 	char *failed_msg = NULL;
-	char *tmp;
 	const octet *H = o_arg(L, 1); SAFE_GOTO(H, ALLOCATE_OCT_ERR);
-    ic = X509_find_extensions((octet*)H); SAFE_GOTO(ic, "Could not found extensions in x509 credential");
-    c = X509_find_extension((octet*)H, &X509_AN, ic, &len);
-	if(c!=0 &&
-	   H->val[c]==0x04 && // ASN.1 octet string
-	   // H->val[ic+1] // octet length is unused
-	   H->val[c+2]==0x30) // ASN.1 sequence
-		{
-			int seqlen = H->val[c+3];
-			char *p = &H->val[c+4];
-			char *end = p + seqlen;
-			tmp = calloc(seqlen, 1); SAFE_GOTO(tmp, MALLOC_ERROR);
-			lua_newtable(L);
-			for(int cc=1; p < end; cc++) {
-				uint8_t type = *p++;
-				int len = *p++;
-				lua_pushnumber(L,cc);
-				lua_newtable(L);
-				lua_pushstring(L,"data");
-				snprintf(tmp,len,"%s",p);
-				lua_pushstring(L,tmp);
-				lua_settable(L,-3);
-				lua_pushstring(L,"type");
-				sprintf(tmp,"%s",
-						 type==0x81?"email":
-						 type==0x82?"dns":
-						 type==0x83?"X400":
-						 type==0x85?"dir":
-						 type==0x86?"url":
-						 type==0xA0?"RFC822":
-						 type==0x87?"ip":
-						 type==0x88?"OID":
-						 "unknown");
-				lua_pushstring(L,tmp);
-				lua_settable(L,-3);
-				// Set the inner table to the outer table
-				lua_settable(L, -3);
-				p += len;
-			}
-			free(tmp);
+	lua_newtable(L);
+	ic = X509_find_extensions((octet*)H); SAFE_GOTO(ic, "Could not found extensions in x509 credential");
+	c = X509_find_extension((octet*)H, &X509_AN, ic, &len);
+	if(c!=0) {
+		const uint8_t *ext = (const uint8_t *)H->val + c;
+		size_t ext_len = (size_t)len;
+		size_t inner_len = 0;
+		size_t inner_hdr_len = 0;
+		size_t seq_len = 0;
+		size_t seq_hdr_len = 0;
+		const uint8_t *cursor;
+		const uint8_t *end;
+		int index = 1;
+
+		if(ext_len < 2 || ext[0] != 0x04 ||
+		   !read_asn1_length(ext + 1, ext_len - 1, &inner_len, &inner_hdr_len)) {
+			failed_msg = "Malformed SAN extension";
+			goto end;
 		}
+		cursor = ext + 1 + inner_hdr_len;
+		if(inner_len > (size_t)(ext + ext_len - cursor) || inner_len < 2 || cursor[0] != 0x30 ||
+		   !read_asn1_length(cursor + 1, inner_len - 1, &seq_len, &seq_hdr_len)) {
+			failed_msg = "Malformed SAN sequence";
+			goto end;
+		}
+		cursor += 1 + seq_hdr_len;
+		if(seq_len > (size_t)(ext + ext_len - cursor)) {
+			failed_msg = "Malformed SAN sequence length";
+			goto end;
+		}
+		end = cursor + seq_len;
+
+		while(cursor < end) {
+			size_t entry_len = 0;
+			size_t entry_hdr_len = 0;
+			uint8_t type;
+
+			if((size_t)(end - cursor) < 2 ||
+			   !read_asn1_length(cursor + 1, (size_t)(end - cursor - 1),
+					     &entry_len, &entry_hdr_len)) {
+				failed_msg = "Malformed SAN entry";
+				goto end;
+			}
+			type = cursor[0];
+			cursor += 1 + entry_hdr_len;
+			if(entry_len > (size_t)(end - cursor)) {
+				failed_msg = "Malformed SAN entry length";
+				goto end;
+			}
+
+			lua_pushnumber(L,index++);
+			lua_newtable(L);
+			lua_pushstring(L,"data");
+			lua_pushlstring(L, (const char *)cursor, entry_len);
+			lua_settable(L,-3);
+			lua_pushstring(L,"type");
+			lua_pushstring(L, san_type_name(type));
+			lua_settable(L,-3);
+			lua_settable(L,-3);
+			cursor += entry_len;
+		}
+	}
 end:
 	o_free(L, H);
 	if(failed_msg) {

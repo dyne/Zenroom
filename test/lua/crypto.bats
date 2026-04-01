@@ -12,6 +12,7 @@ load ../bats_setup
     Z ecdh.lua
     Z ecdsa_p256.lua
     Z x509.lua
+    Z x509_regression.lua
     Z dh_session.lua
     Z ecp_generic.lua
     Z elgamal.lua
