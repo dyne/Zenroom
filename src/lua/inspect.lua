@@ -9,6 +9,9 @@
 -- @module INSPECT
 -- @author Kikito <a href="http://github.com/kikito/inspect.lua">github.com/kikito/inspect.lua</a>
 -- @license MIT
+-- Vendored origin: kikito/inspect.lua (3.1.0).
+-- Zenroom local changes: formatting/export hooks for zenroom objects
+-- and runtime-specific debug output.
 
 local inspect = {
   _VERSION = 'inspect.lua 3.1.0',
