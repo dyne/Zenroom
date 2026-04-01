@@ -21,6 +21,7 @@
 --on Thursday, 26th September 2024
 --]]
 
+local JOSE = require_once "crypto_jose"
 -- local W3C = require_once "crypto_w3c"
 
 local ETHEREUM_ADDRESS = "ethereum_address"

@@ -31,8 +31,8 @@ local function str_wei_to_big_wei(x)
    return BIG.from_decimal(tostring(x))
 end
 -- TODO: these conversions are slow
-weimult = BIG.new(10):modpower(BIG.new(18), ECP.order())
-gweimult = BIG.new(10):modpower(BIG.new(9), ECP.order())
+local weimult = BIG.new(10):modpower(BIG.new(18), ECP.order())
+local gweimult = BIG.new(10):modpower(BIG.new(9), ECP.order())
 local function str_gwei_to_big_wei(x)
    return ( BIG.from_decimal(tostring(x)) * gweimult )
 end
@@ -138,7 +138,7 @@ local function import_method_f(obj)
 end
 
 local function export_method_f(obj)
-    res = {}
+    local res = {}
     res.name = obj.name:octet():string()
     res.input = deepmap(function(o) return o:octet():string() end, obj.input)
     res.output = deepmap(function(o) return o:octet():string() end, obj.output)
