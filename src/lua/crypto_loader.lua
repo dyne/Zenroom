@@ -105,7 +105,7 @@ function crypto.load(any)
     else
         error('CRYPTO loader wrong argument type: '..t,2)
     end
-    return _lookup(any)
+    return _lookup(id)
 end
 
 return crypto
