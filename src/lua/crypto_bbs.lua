@@ -920,7 +920,7 @@ OUTPUT: proof (output of CoreProofGen)
 function bbs.proof_gen(ciphersuite, pk, signature, header, ph, messages, disclosed_indexes)
     header = header or O.empty()
     ph = ph or O.empty()
-    table.sort(disclosed_indexes) -- make sure indexes are sorted
+    deterministic_sort(disclosed_indexes) -- make sure indexes are sorted
     if disclosed_indexes[1] <= 0 then
         error('Disclosed indexes contains an integer less than or equal to 0', 2)
     end
@@ -1093,7 +1093,7 @@ function bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages
     if #proof < proof_len_floor then
         error("proof_octets is too short", 2)
     end
-    table.sort(disclosed_indexes) -- make sure indexes are sorted
+    deterministic_sort(disclosed_indexes) -- make sure indexes are sorted
     header = header or O.empty()
     ph = ph or O.empty()
     disclosed_messages_octets = disclosed_messages_octets or {}
@@ -1119,4 +1119,3 @@ function bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages
 end
 
 return bbs
-

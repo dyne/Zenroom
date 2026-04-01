@@ -529,7 +529,7 @@ function DCQL.match_credential_sets(dcql_query, filtered_credentials)
                 for query_id in pairs(combination) do
                     table.insert(key_parts, query_id)
                 end
-                table.sort(key_parts)
+                deterministic_sort(key_parts)
                 local key = table.concat(key_parts, "|")
 
                 if not seen_combinations[key] then
