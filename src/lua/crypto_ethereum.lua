@@ -21,6 +21,9 @@
 
 
 local ETH = {}
+local SIGNED_TRANSACTION_FIELDS <const> = {
+   "nonce", "gas_price", "gas_limit", "to", "value", "data"
+}
 
 -- number to octet (n2o), were number is a big integer
 -- in RLP the 0 is reppresented as the empty octet
@@ -220,13 +223,10 @@ function ETH.encodeSignedTransaction(sk, tx)
 end
 
 local function hashFromSignedTransaction(txSigned)
-   local fields, H, tx
-   fields = {"nonce", "gas_price", "gas_limit", "to",
-	     "value", "data"}
-
+   local H, tx
    -- construct the transaction which was signed
    tx = {}
-   for _, v in pairs(fields) do
+   for _, v in pairs(SIGNED_TRANSACTION_FIELDS) do
       tx[v] = txSigned[v]
    end
    tx["v"] = INT.shr(txSigned["v"]-INT.new(35), 1)
