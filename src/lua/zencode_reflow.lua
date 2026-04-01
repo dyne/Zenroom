@@ -23,7 +23,7 @@
 
 load_scenario('zencode_credential')
 
-ABC = require_once('crypto_credential')
+local ABC = require_once('crypto_credential')
 
 local function _export_big_as_octet_f(obj)
     if type(obj) == 'zenroom.big' then
@@ -32,7 +32,7 @@ local function _export_big_as_octet_f(obj)
     return obj
 end
 
-G2 = ECP2.generator()
+local G2 = ECP2.generator()
 
 local function import_reflow_seal_fingerprints_f(o)
     if not o then
