@@ -39,9 +39,9 @@
 local function apply_schema(variable_value, variable_name, schema_name)
     local fun
     local codec = CODEC[uscore(variable_name)]
-    if not codec then error("CODEC not found for object: "..key, 2) end
+    if not codec then error("CODEC not found for object: "..variable_name, 2) end
     local schema = ZEN.schemas[schema_name]
-    if not schema then error("Schema not found: "..variable_name,2) end
+    if not schema then error("Schema not found: "..schema_name, 2) end
     if luatype(schema) == 'function' then fun = default_export_f
     else
         fun = schema.export or default_export_f
@@ -72,12 +72,12 @@ local function then_outcast(val, key, enc)
    local fun
    if enc then
 	  fun = get_encoding_function(enc)
-      if ZEN.schemas[enc] then
+	  if ZEN.schemas[enc] then
         return apply_schema(val, key, enc)
       elseif fun then
         return deepmap(fun, val)
       end
-	  error("Output encoding not found: "..enc)
+	  error("Output encoding not found: "..enc, 2)
    end
    local codec = CODEC[uscore(key)]
    if not codec then error("CODEC not found for object: "..key, 2) end
@@ -85,7 +85,7 @@ local function then_outcast(val, key, enc)
    if codec.mask then return deepmask(OCTET.to_string,val,codec.mask) end
    if codec.encoding then
 	  fun = get_encoding_function(codec.encoding)
-	  if not fun then error("CODEC encoding not found: "..codec.encoding) end
+	  if not fun then error("CODEC encoding not found: "..codec.encoding, 2) end
    else
 	  fun = default_export_f
    end
@@ -124,7 +124,7 @@ local function then_insert(dest, val, key)
 	 table.insert(OUT[dest], val)
       else -- isdictionary
 	 if not key then
-	    error(key, 'Then statement targets dictionary with empty key: '..dest, 2)
+	    error('Then statement targets dictionary with empty key: '..dest, 2)
 	 end
 	 OUT[dest][key] = val
       end
@@ -345,11 +345,11 @@ Then("encode dictionary path '' as ''", function(path, enc)
          local root <const> = path_array[1]
          table.remove(path_array,1)
           if not CODEC[root] then
-              error("Dictionary not found: "..root)
+              error("Dictionary not found: "..root, 2)
           end
           if CODEC[root].zentype ~= 'd' then
               I.warn(CODEC[root])
-              error("Not a dictionary: "..root)
+              error("Not a dictionary: "..root, 2)
           end
           if not CODEC[root].mask then CODEC[root].mask = { } end
           deepmask_set(CODEC[root].mask, path_array, enc)
