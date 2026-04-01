@@ -43,7 +43,7 @@ fp12* fp12_new(lua_State *L) {
 	return(c);
 }
 
-void fp12_free(fp12 *f) {
+void fp12_clone_free(fp12 *f) {
 	if(f) free(f);
 }
 
@@ -54,12 +54,12 @@ fp12* fp12_arg(lua_State *L,int n) {
 		if(result == NULL) return NULL;
 		*result = *(fp12*)ud;
 		if(result->len != sizeof(FP12)) {
-			fp12_free(result);
+			fp12_clone_free(result);
 			zerror(L, "%s: fp12 size mismatch (%u != %zu)",
 			       __func__, result->len, sizeof(FP12));
 			return NULL; }
 		if(result->chunk != CHUNK) {
-			fp12_free(result);
+			fp12_clone_free(result);
 			zerror(L, "%s: fp12 chunk size mismatch (%u != %u)",
 			       __func__, result->chunk, CHUNK);
 			return NULL; }
@@ -110,7 +110,7 @@ static int fp12_to_octet(lua_State *L) {
 	octet *o = o_new(L, sizeof(FP12)); SAFE_GOTO(o, CREATE_OCT_ERR);
 	FP12_toOctet(o, &f->val);
 end:
-	fp12_free(f);
+	fp12_clone_free(f);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -126,8 +126,8 @@ static int fp12_eq(lua_State *L) {
 	int res = FP12_eq(&l->val, &r->val);
 	lua_pushboolean(L, res);
 end:
-	fp12_free(r);
-	fp12_free(l);
+	fp12_clone_free(r);
+	fp12_clone_free(l);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -143,8 +143,8 @@ static int fp12_mul(lua_State *L) {
 	fp12 *d = fp12_dup(L, x); SAFE_GOTO(d, DUPLICATE_FP12_ERR);
 	FP12_mul(&d->val, &y->val);
 end:
-	fp12_free(y);
-	fp12_free(x);
+	fp12_clone_free(y);
+	fp12_clone_free(x);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -161,7 +161,7 @@ static int fp12_pow(lua_State *L) {
 	FP12_GTpow(&r->val, b->val);
 end:
 	big_free(L, b);
-	fp12_free(x);
+	fp12_clone_free(x);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -175,7 +175,7 @@ static int fp12_sqr(lua_State *L) {
 	fp12 *d = fp12_dup(L, s); SAFE_GOTO(d, DUPLICATE_FP12_ERR);
 	FP12_sqr(&d->val, &s->val);
 end:
-	fp12_free(s);
+	fp12_clone_free(s);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -188,7 +188,7 @@ static int fp12_inv(lua_State *L) {
 	fp12 *d = fp12_dup(L, s); SAFE_GOTO(d, DUPLICATE_FP12_ERR);
 	FP12_inv(&d->val, &s->val);
 end:
-	fp12_free(s);
+	fp12_clone_free(s);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}

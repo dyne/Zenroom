@@ -136,7 +136,7 @@ end:
 	return(h);
 }
 
-void hash_free(lua_State *L, const hash *ch) {
+void hash_release(lua_State *L, const hash *ch) {
 	(void)L;
 	(void)ch;
 }
@@ -321,7 +321,7 @@ static int hash_to_octet(lua_State *L) {
 	_yeld(h, res);
 	res->len = h->len;
 end:
-	hash_free(L, h);
+	hash_release(L, h);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -370,7 +370,7 @@ static int hash_process(lua_State *L) {
 	}
 end:
 	o_free(L, o);
-	hash_free(L, h);
+	hash_release(L, h);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -393,7 +393,7 @@ static int hash_feed(lua_State *L) {
 	_feed(h, o);
 end:
 	o_free(L, o);
-	hash_free(L, h);
+	hash_release(L, h);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -416,7 +416,7 @@ static int hash_yeld(lua_State *L) {
 	_yeld(h, res);
 	res->len = h->len;
 end:
-	hash_free(L, h);
+	hash_release(L, h);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -476,7 +476,7 @@ static int hash_hmac(lua_State *L) {
 end:
 	o_free(L, k);
 	o_free(L, in);
-	hash_free(L, h);
+	hash_release(L, h);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -507,7 +507,7 @@ static int hash_kdf2(lua_State *L) {
 	KDF2(h->len, (octet*)in, NULL , h->len, out);
 end:
 	o_free(L, in);
-	hash_free(L, h);
+	hash_release(L, h);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -565,7 +565,7 @@ static int hash_pbkdf2(lua_State *L) {
 end:
 	o_free(L, s);
 	o_free(L, k);
-	hash_free(L, h);
+	hash_release(L, h);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -594,7 +594,7 @@ static int hash_srand(lua_State *L) {
 	for(register int i=0;i<PRNG_PREROLL+4;i++) RAND_byte(h->rng);
  end:
 	o_free(L, seed);
-	hash_free(L, h);
+	hash_release(L, h);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -614,7 +614,7 @@ static int rand_uint8(lua_State *L) {
 	uint8_t res = RAND_byte(h->rng);
 	lua_pushinteger(L, (lua_Integer)res);
  end:
-	hash_free(L, h);
+	hash_release(L, h);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -637,7 +637,7 @@ static int rand_uint16(lua_State *L) {
 		| (uint32_t) RAND_byte(h->rng) << 8;
 	lua_pushinteger(L, (lua_Integer)res);
  end:
-	hash_free(L, h);
+	hash_release(L, h);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -662,7 +662,7 @@ static int rand_uint32(lua_State *L) {
 		| (uint32_t) RAND_byte(h->rng) << 24;
 	lua_pushinteger(L, (lua_Integer)res);
  end:
-	hash_free(L, h);
+	hash_release(L, h);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}

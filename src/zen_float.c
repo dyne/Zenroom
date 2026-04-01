@@ -117,7 +117,7 @@ float *float_new(lua_State *L) {
 	return number;
 }
 
-static void float_free(lua_State *L, float *f) {
+static void float_clone_free(lua_State *L, float *f) {
 	(void)L;
 	if(f) free(f);
 }
@@ -238,7 +238,7 @@ static int float_opposite(lua_State *L) {
 	float *b = float_new(L); SAFE_GOTO(b, CREATE_FLT_ERR);
 	*b = -(*a);
 end:
-	float_free(L, a);
+	float_clone_free(L, a);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -268,7 +268,7 @@ static int float_to_octet(lua_State *L) {
 	o = new_octet_from_float(L, c); SAFE_GOTO(o, "Could not create OCTET from FLOAT");
 	SAFE_GOTO(o_dup(L, o), DUPLICATE_OCT_ERR);
 end:
-	float_free(L, c);
+	float_clone_free(L, c);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -315,8 +315,8 @@ static int float_eq(lua_State *L) {
 		res = (diff / (absA + absB) < EPS);
 	}*/
 end:
-	float_free(L, a);
-	float_free(L, b);
+	float_clone_free(L, a);
+	float_clone_free(L, b);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -337,8 +337,8 @@ static int float_lt(lua_State *L) {
 	SAFE_GOTO(a && b, ALLOCATE_FLT_ERR);
 	lua_pushboolean(L, *a < *b);
 end:
-	float_free(L, a);
-	float_free(L, b);
+	float_clone_free(L, a);
+	float_clone_free(L, b);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -369,8 +369,8 @@ static int float_lte(lua_State *L) {
 	SAFE_GOTO(a && b, ALLOCATE_FLT_ERR);
 	lua_pushboolean(L, *a <= *b);
 end:
-	float_free(L, a);
-	float_free(L, b);
+	float_clone_free(L, a);
+	float_clone_free(L, b);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -399,8 +399,8 @@ static int float_add(lua_State *L) {
 	float *c = float_new(L); SAFE_GOTO(c, CREATE_FLT_ERR);
 	*c = *a + *b;
 end:
-	float_free(L, a);
-	float_free(L, b);
+	float_clone_free(L, a);
+	float_clone_free(L, b);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -429,8 +429,8 @@ static int float_sub(lua_State *L) {
 	float *c = float_new(L); SAFE_GOTO(c, CREATE_FLT_ERR);
 	*c = *a - *b;
 end:
-	float_free(L, a);
-	float_free(L, b);
+	float_clone_free(L, a);
+	float_clone_free(L, b);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -459,8 +459,8 @@ static int float_mul(lua_State *L) {
 	float *c = float_new(L); SAFE_GOTO(c, CREATE_FLT_ERR);
 	*c = *a * *b;
 end:
-	float_free(L, a);
-	float_free(L, b);
+	float_clone_free(L, a);
+	float_clone_free(L, b);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -490,8 +490,8 @@ static int float_div(lua_State *L) {
 	// TODO: what happen if I divide by 0?
 	*c = *a / *b;
 end:
-	float_free(L, a);
-	float_free(L, b);
+	float_clone_free(L, a);
+	float_clone_free(L, b);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -521,8 +521,8 @@ static int float_mod(lua_State *L) {
 	float *c = float_new(L); SAFE_GOTO(c, CREATE_FLT_ERR);
 	*c = fmod(*a, *b);
 end:
-	float_free(L, a);
-	float_free(L, b);
+	float_clone_free(L, a);
+	float_clone_free(L, b);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -542,7 +542,7 @@ static int float_to_string(lua_State *L) {
 	int bufsz = _string_from_float(dest, *c); SAFE_GOTO(bufsz >= 0, "Output size too big");
 	lua_pushstring(L, dest);
 end:
-	float_free(L, c);
+	float_clone_free(L, c);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}

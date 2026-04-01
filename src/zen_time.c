@@ -69,7 +69,7 @@ ztime_t *time_new(lua_State *L) {
 	return number;
 }
 
-static void time_free(lua_State *L, ztime_t *f) {
+static void time_clone_free(lua_State *L, ztime_t *f) {
 	(void)L;
 	if(f) free(f);
 }
@@ -157,7 +157,7 @@ static int newtime(lua_State *L) {
 	ztime_t *tm = time_new(L); SAFE_GOTO(tm, CREATE_TIME_ERR);
 	*tm = *c;
 end:
-	time_free(L, c);
+	time_clone_free(L, c);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -222,7 +222,7 @@ static int time_to_octet(lua_State *L) {
 	o = new_octet_from_time(L, *c); SAFE_GOTO(o, "Could not create octet from time");
 	SAFE_GOTO(o_dup(L, o), DUPLICATE_OCT_ERR);
 end:
-	time_free(L, c);
+	time_clone_free(L, c);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -257,8 +257,8 @@ end:
 	SAFE_GOTO(*a >= 0 || *b >= 0 || *a >= INT_MIN - *b, "Result of addition out of range");
 	*c = *a + *b;
 end:
-	time_free(L, a);
-	time_free(L, b);
+	time_clone_free(L, a);
+	time_clone_free(L, b);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -285,8 +285,8 @@ static int time_sub(lua_State *L) {
 	SAFE_GOTO(*a >= 0 || *b <= 0 || *a >= INT_MIN + *b, "Result of subtraction out of range");
 	*c = *a - *b;
 end:
-	time_free(L, a);
-	time_free(L, b);
+	time_clone_free(L, a);
+	time_clone_free(L, b);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -310,7 +310,7 @@ static int time_opposite(lua_State *L) {
 	ztime_t *b = time_new(L); SAFE_GOTO(b, CREATE_TIME_ERR);
 	*b = -(*a);
 end:
-	time_free(L,a);
+	time_clone_free(L,a);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -340,8 +340,8 @@ static int time_eq(lua_State *L) {
 	SAFE_GOTO(a && b, ALLOCATE_TIME_ERR);
 	lua_pushboolean(L, *a == *b);
 end:
-	time_free(L,a);
-	time_free(L,b);
+	time_clone_free(L,a);
+	time_clone_free(L,b);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -364,8 +364,8 @@ static int time_lt(lua_State *L) {
 	SAFE_GOTO(a && b, ALLOCATE_TIME_ERR);
 	lua_pushboolean(L, *a < *b);
 end:
-	time_free(L, a);
-	time_free(L, b);
+	time_clone_free(L, a);
+	time_clone_free(L, b);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -389,8 +389,8 @@ static int time_lte(lua_State *L) {
 	SAFE_GOTO(a && b, ALLOCATE_TIME_ERR);
 	lua_pushboolean(L, *a <= *b);
 end:
-	time_free(L, a);
-	time_free(L, b);
+	time_clone_free(L, a);
+	time_clone_free(L, b);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -416,7 +416,7 @@ static int time_to_string(lua_State *L) {
 	int bufsz = _string_from_time(dest, *c); SAFE_GOTO(bufsz >= 0, "Could not convert time to string");
 	lua_pushstring(L, dest);
 end:
-	time_free(L, c);
+	time_clone_free(L, c);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}

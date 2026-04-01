@@ -38,7 +38,7 @@ typedef struct {
 } ecp;
 
 HEDLEY_NON_NULL(1)
-void ecp_free(lua_State *L, HEDLEY_NO_ESCAPE const ecp* e);
+void ecp_clone_free(lua_State *L, HEDLEY_NO_ESCAPE const ecp* e);
 
 HEDLEY_NON_NULL(1)
 HEDLEY_WARN_UNUSED_RESULT
@@ -60,7 +60,7 @@ typedef struct {
 	// curves ECP.
 } ecp2;
 
-void ecp2_free(lua_State *L, HEDLEY_NO_ESCAPE const ecp2* e);
+void ecp2_clone_free(lua_State *L, HEDLEY_NO_ESCAPE const ecp2* e);
 
 HEDLEY_NON_NULL(1)
 HEDLEY_WARN_UNUSED_RESULT
