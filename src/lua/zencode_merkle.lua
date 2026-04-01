@@ -32,10 +32,19 @@ local function _zencode_merkle_root(name, hashtype)
     return new_codec('merkle root', {zentype = "string"})
 end
 
+local function _zencode_merkle_root_dictionary_path(name, hashtype)
+    local data = resolve_dictionary_path(name, true)
+    if not data or type(data) ~= 'table' then
+        error("Table not found in path: "..name, 2)
+    end
+    ACK.merkle_root = MT.create_merkle_root(data, hashtype)
+    return new_codec('merkle root', {zentype = "string"})
+end
+
 When("create merkle root of ''", _zencode_merkle_root)
 When("create merkle root of '' using hash ''", _zencode_merkle_root)
-When("create merkle root of dictionary path ''", _zencode_merkle_root)
-When("create merkle root of dictionary path '' using hash ''", _zencode_merkle_root)
+When("create merkle root of dictionary path ''", _zencode_merkle_root_dictionary_path)
+When("create merkle root of dictionary path '' using hash ''", _zencode_merkle_root_dictionary_path)
 
 -- Function to verify the integrity of a Merkle root
 local function _verify_merkle_root(root, name)
@@ -51,5 +60,18 @@ local function _verify_merkle_root(root, name)
     end
 end
 
+local function _verify_merkle_root_dictionary_path(root, name)
+    local merkle_root = have(root)
+    local data_table = resolve_dictionary_path(name, true)
+    if not data_table or type(data_table) ~= 'table' then
+        error("Table not found in path: "..name, 2)
+    end
+
+    local computed_root = MT.create_merkle_root(data_table)
+    if computed_root ~= merkle_root then
+        error('The merkle root in '..root..' does not match '..name, 2)
+    end
+end
+
 IfWhen("verify merkle root '' of ''", _verify_merkle_root)
-IfWhen("verify merkle root '' of dictionary path ''", _verify_merkle_root)
+IfWhen("verify merkle root '' of dictionary path ''", _verify_merkle_root_dictionary_path)

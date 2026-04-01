@@ -938,6 +938,37 @@ function schema_accepts_extra_objects(dest_name, dest_codec)
 	return true
 end
 
+function pick_dictionary_path(path)
+	local path_array <const> = strtok(uscore(path), CONF.path.separator)
+	local root <const> = path_array[1]
+	local codec <const> = CODEC[root]
+	if not codec then
+		error("Dictionary not found: "..root, 2)
+	end
+	if codec.zentype ~= 'd' then
+		I.warn(codec)
+		error("Not a dictionary: "..root, 2)
+	end
+	return root, path_array, codec
+end
+
+function resolve_dictionary_path(path, no_dest)
+	local root, path_array, codec = pick_dictionary_path(path)
+	local value, dest = pick_from_path(path, no_dest)
+	return value, dest, root, path_array, codec
+end
+
+function mask_dictionary_path(path, enc)
+	local root, path_array, codec = pick_dictionary_path(path)
+	local keys = deepcopy(path_array)
+	table.remove(keys, 1)
+	if not codec.mask then
+		codec.mask = { }
+	end
+	deepmask_set(codec.mask, keys, enc)
+	return root, keys
+end
+
 function Iam(name)
 	if name then
 		zencode_assert(not WHO, 'Identity already defined in WHO')

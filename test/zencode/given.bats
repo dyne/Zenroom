@@ -649,6 +649,49 @@ EOF
     assert_output "$test_data"
 }
 
+@test "Given decode dictionary path reports path failures clearly" {
+    cat <<EOF | save_asset decode_dictionary_path_failures.data.json
+{
+    "plain": "hello",
+    "custom": {
+        "encoded": "not-base58"
+    }
+}
+EOF
+
+    cat <<EOF | save_asset decode_dictionary_path_missing_dictionary.zen
+Given I have a 'string dictionary' named 'custom'
+and I decode dictionary path 'missing.encoded' as 'base58'
+EOF
+    run $ZENROOM_EXECUTABLE -z -a decode_dictionary_path_failures.data.json decode_dictionary_path_missing_dictionary.zen
+    assert_failure
+    assert_line --partial 'Dictionary not found: missing'
+
+    cat <<EOF | save_asset decode_dictionary_path_wrong_root.zen
+Given I have a 'string' named 'plain'
+and I decode dictionary path 'plain.encoded' as 'base58'
+EOF
+    run $ZENROOM_EXECUTABLE -z -a decode_dictionary_path_failures.data.json decode_dictionary_path_wrong_root.zen
+    assert_failure
+    assert_line --partial 'Not a dictionary: plain'
+
+    cat <<EOF | save_asset decode_dictionary_path_missing_key.zen
+Given I have a 'string dictionary' named 'custom'
+and I decode dictionary path 'custom.missing' as 'base58'
+EOF
+    run $ZENROOM_EXECUTABLE -z -a decode_dictionary_path_failures.data.json decode_dictionary_path_missing_key.zen
+    assert_failure
+    assert_line --partial 'Final key not found: missing'
+
+    cat <<EOF | save_asset decode_dictionary_path_invalid_encoding.zen
+Given I have a 'string dictionary' named 'custom'
+and I decode dictionary path 'custom.encoded' as 'base58'
+EOF
+    run $ZENROOM_EXECUTABLE -z -a decode_dictionary_path_failures.data.json decode_dictionary_path_invalid_encoding.zen
+    assert_failure
+    assert_line --partial "Incorrect encoding in encoded: key 'encoded' is not a base58"
+}
+
 @test "Given path before prefix or after suffix" {
       cat << EOF | save_asset 'w3c_credential.json'
 {
@@ -682,4 +725,3 @@ EOF
     assert_output '{"verificationMethod":"MYDngYnmXxwdFqGeavB7uuCCWtIqQ0zWMbiSjEN5baU="}'
 
 }
-

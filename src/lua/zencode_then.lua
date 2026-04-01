@@ -341,16 +341,5 @@ Then("print object named by ''", function(name)
 end)
 
 Then("encode dictionary path '' as ''", function(path, enc)
-         local path_array = strtok(uscore(path), CONF.path.separator)
-         local root <const> = path_array[1]
-         table.remove(path_array,1)
-          if not CODEC[root] then
-              error("Dictionary not found: "..root, 2)
-          end
-          if CODEC[root].zentype ~= 'd' then
-              I.warn(CODEC[root])
-              error("Not a dictionary: "..root, 2)
-          end
-          if not CODEC[root].mask then CODEC[root].mask = { } end
-          deepmask_set(CODEC[root].mask, path_array, enc)
+          mask_dictionary_path(path, enc)
 end)
