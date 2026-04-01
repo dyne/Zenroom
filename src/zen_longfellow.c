@@ -32,7 +32,7 @@ static ZkSpecStruct *_get_zkspec(lua_State *L, int idx) {
 	// number argument, import
 	int tn;
 	lua_Integer n = lua_tointegerx(L,idx,&tn);
-	if(n>kNumZkSpecs) {
+	if(n < 1 || n > kNumZkSpecs) {
 		zerror(L, "Wrong circuit spec: %i",n);
 		return NULL;
 	}
@@ -84,6 +84,8 @@ static ZkSpecStruct *_get_zkspec(lua_State *L, int idx) {
 // formatted as ZULU string time "2024-01-30T09:00:00Z"
 #define NOW_DATA_SIZE 20
 #define NUM_MDOC_TESTS 6 // instantiated in in mdoc_examples.h
+#define LONGFELLOW_ATTR_ID_MAX 32
+#define LONGFELLOW_ATTR_VALUE_MAX 64
 
 // static int mdoc_example(lua_State *L) {
 // 	BEGIN();
@@ -130,26 +132,62 @@ typedef struct {
     size_t value_len;
 } LuaTableEntry;
 
-static size_t _get_kv(lua_State* L, uint8_t* dest, const char* field, size_t max_len) {
-    lua_getfield(L, -1, field);
-    size_t out_len = 0;
-	size_t copy_len = 0;
-    void *ud = luaL_testudata(L, -1, "zenroom.octet");
-	if(ud) {
-        const octet* oct = (const octet*)ud;
-        copy_len = oct->len < max_len ? oct->len : max_len;
-        memcpy(dest, oct->val, copy_len);
-        out_len = copy_len;
-    }
-    else if (lua_isstring(L, -1)) {
-        size_t str_len;
-        const char* str = lua_tolstring(L, -1, &str_len);
-		copy_len = str_len < max_len ? str_len : max_len;
-        memcpy(dest, str, copy_len);
-        out_len = copy_len;
-    }
-    lua_pop(L, 1);
-	return(out_len);
+static int _get_kv(lua_State* L, uint8_t* dest, const char* field,
+		   size_t max_len, size_t *out_len) {
+	int ok = 0;
+
+	lua_getfield(L, -1, field);
+	if(luaL_testudata(L, -1, "zenroom.octet")) {
+		const octet* oct = (const octet*)lua_touserdata(L, -1);
+		if(oct->len > max_len) {
+			zerror(L, "%s too long: %u (max %u)",
+			       field, (unsigned)oct->len, (unsigned)max_len);
+			goto end;
+		}
+		memcpy(dest, oct->val, oct->len);
+		*out_len = oct->len;
+		ok = 1;
+		goto end;
+	}
+	if(lua_isstring(L, -1)) {
+		size_t str_len = 0;
+		const char* str = lua_tolstring(L, -1, &str_len);
+		if(str_len > max_len) {
+			zerror(L, "%s too long: %u (max %u)",
+			       field, (unsigned)str_len, (unsigned)max_len);
+			goto end;
+		}
+		memcpy(dest, str, str_len);
+		*out_len = str_len;
+		ok = 1;
+		goto end;
+	}
+	zerror(L, "Invalid %s type", field);
+end:
+	lua_pop(L, 1);
+	return ok;
+}
+
+static char *octet_to_cstring(lua_State *L, const octet *src, const char *name,
+			      size_t exact_len) {
+	char *dst;
+
+	if(exact_len != 0 && src->len != exact_len) {
+		zerror(L, "%s must be %u bytes", name, (unsigned)exact_len);
+		return NULL;
+	}
+	if(memchr(src->val, 0x0, src->len) != NULL) {
+		zerror(L, "%s cannot contain NUL bytes", name);
+		return NULL;
+	}
+	dst = malloc(src->len + 1);
+	if(!dst) {
+		zerror(L, "Memory allocation failed");
+		return NULL;
+	}
+	memcpy(dst, src->val, src->len);
+	dst[src->len] = 0x0;
+	return dst;
 }
 
 static RequestedAttribute* _get_attributes(lua_State* L, int index, size_t* count) {
@@ -174,9 +212,15 @@ static RequestedAttribute* _get_attributes(lua_State* L, int index, size_t* coun
             lua_pop(L, 1); /* skip non-table element */
             continue;
         }
-		entries[i-1].id_len = _get_kv(L, entries[i-1].id, "id", 32);
-		entries[i-1].cbor_value_len =
-			_get_kv(L, entries[i-1].cbor_value, "value", 64);
+		if(!_get_kv(L, entries[i-1].id, "id", LONGFELLOW_ATTR_ID_MAX,
+			    &entries[i-1].id_len) ||
+		   !_get_kv(L, entries[i-1].cbor_value, "value",
+			    LONGFELLOW_ATTR_VALUE_MAX,
+			    &entries[i-1].cbor_value_len)) {
+			lua_pop(L, 1);
+			free(entries);
+			return NULL;
+		}
         lua_pop(L, 1);
     }
     *count = array_size;
@@ -236,17 +280,36 @@ static int mdoc_prove(lua_State *L) {
 	RequestedAttribute* attrs = _get_attributes(L,6,&attrs_len);
 	const octet *now = o_arg(L,7);
 	const ZkSpecStruct *zkspec = _get_zkspec(L,8);
+	char *now_str = NULL;
+	char *pkx = NULL;
+	char *pky = NULL;
+	uint8_t *proof_bytes;
+	size_t proof_bytelen;
+	MdocProverErrorCode res;
+
+	if(!attrs || !zkspec) {
+		goto endgame;
+	}
 	if(zkspec->num_attributes != attrs_len) {
 		zerror(L,"Wrong number of attributes: %li (expected %li)",
 			   attrs_len, zkspec->num_attributes);
 		goto endgame;
 	}
-	uint8_t *proof_bytes;
-	size_t proof_bytelen;
-	MdocProverErrorCode res;
+	if(opkx->len != 32 || opky->len != 32) {
+		zerror(L, "Invalid public keys coordinates x or y");
+		goto endgame;
+	}
+	now_str = octet_to_cstring(L, now, "now", NOW_DATA_SIZE);
+	if(!now_str) {
+		goto endgame;
+	}
 	// pks need to be 0x prefixed and zero terminated hex strings
-	char *pkx = malloc(68);
-	char *pky = malloc(68);
+	pkx = malloc(68);
+	pky = malloc(68);
+	if(!pkx || !pky) {
+		zerror(L, "Memory allocation failed");
+		goto endgame;
+	}
 	pkx[0]='0'; pkx[1]='x';
 	buf2hex(&pkx[2],opkx->val,32);
 	pkx[64+2] = 0x0;
@@ -268,10 +331,9 @@ static int mdoc_prove(lua_State *L) {
 						  pkx, pky,
 						  (const uint8_t *)trans->val, trans->len,
 						  attrs, attrs_len,
-						  now->val,
+						  now_str,
 						  &proof_bytes, &proof_bytelen,
 						  zkspec);
-	free(pkx); free(pky);
 	if(res != MDOC_PROVER_SUCCESS) {
 		warning(L, "MDOC prover error: %s",
 				_prover_error_to_string(res));
@@ -288,6 +350,9 @@ static int mdoc_prove(lua_State *L) {
 	o_free(L,trans);
 	if(attrs) free(attrs);
 	o_free(L,now);
+	if(pkx) free(pkx);
+	if(pky) free(pky);
+	if(now_str) free(now_str);
 	END(returned);
 }
 
@@ -315,12 +380,30 @@ static int mdoc_verify(lua_State *L) {
 	const octet *now = o_arg(L,7);
 	const octet *doc_type = o_arg(L,8);
 	const ZkSpecStruct *zkspec = _get_zkspec(L,9);
+	char *now_str = NULL;
+	char *doc_type_str = NULL;
+	MdocVerifierErrorCode res;
+
+	if(!attrs || !zkspec) {
+		goto endgame;
+	}
 	if(zkspec->num_attributes != attrs_len) {
 		zerror(L,"Wrong number of attributes: %li (expected %li)",
 			   attrs_len, zkspec->num_attributes);
 		goto endgame;
 	}
-	MdocVerifierErrorCode res;
+	if(opkx->len != 32 || opky->len != 32) {
+		zerror(L, "Invalid public keys coordinates x or y");
+		goto endgame;
+	}
+	now_str = octet_to_cstring(L, now, "now", NOW_DATA_SIZE);
+	if(!now_str) {
+		goto endgame;
+	}
+	doc_type_str = octet_to_cstring(L, doc_type, "doc_type", 0);
+	if(!doc_type_str) {
+		goto endgame;
+	}
 	// pks need to be 0x prefixed and zero terminated hex strings
 	char pkx[68]; pkx[0]='0'; pkx[1]='x';
 	buf2hex(&pkx[2],opkx->val,32);
@@ -342,9 +425,9 @@ static int mdoc_verify(lua_State *L) {
 							pkx, pky,
 							(const uint8_t *)trans->val, trans->len,
 							attrs, attrs_len,
-							now->val,
+							now_str,
 							(const uint8_t *)proof->val, proof->len,
-							doc_type->val, zkspec);
+							doc_type_str, zkspec);
 	if(res != MDOC_VERIFIER_SUCCESS) {
 		zerror(L, "MDOC verifier error: %s",
 			   _verifier_error_to_string(res));
@@ -360,6 +443,8 @@ static int mdoc_verify(lua_State *L) {
 	o_free(L,doc_type);
 	if(attrs) free(attrs);
 	o_free(L,now);
+	if(now_str) free(now_str);
+	if(doc_type_str) free(doc_type_str);
 	END(1);
 }
 
