@@ -3,7 +3,7 @@
 #+DATE: 2026-04-01
 #+KEYWORDS: zenroom native c memory safety maintenance readability performance security runtime
 
-* WIP [#A] Repair allocator and runtime memory safety
+* DONE [#A] Repair allocator and runtime memory safety
 Effort: H
 Goal: Remove the native memory-management defects that can corrupt process state or write past configured buffers, while preserving successful runtime behavior and current interfaces.
 Notes: Start here. Several later cleanups depend on the allocator and buffered IO being trustworthy. Keep public APIs and success-path outputs unchanged. Build first with `make linux-lib linux-exe CCACHE=1`. Prefer adding narrow regressions over broad rewrites.
@@ -26,12 +26,12 @@ Change: In `src/zen_io.c`, convert the output-buffer checks in `zen_print`, `zen
 Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/zencode/bindings_logfmt.bats` and `bats test/zencode/bindings_exec.bats`. Add one focused regression that installs a deliberately small host output buffer and confirms Zenroom reports the buffer exhaustion without writing past it.
 Done when: No buffered output path writes after signaling overflow, length accounting is explicit, and binding-level output tests still pass.
 
-* TODO [#A] Harden external input boundaries and fixed-size buffers
+* WIP [#A] Harden external input boundaries and fixed-size buffers
 Effort: H
 Goal: Make native decoding and import paths reject malformed inputs safely and process valid inputs exactly as before.
 Notes: Keep this L1 behavior-preserving. Prefer explicit length-based parsing over C-string assumptions. Use the existing tests first, then add small regressions for the broken edge cases.
 
-** TODO [#A] Fix zencode-exec base64 decoding and configuration append bounds
+** DONE [#A] Fix zencode-exec base64 decoding and configuration append bounds
 Why: The binding executor allocates one byte too few for decoded lines and appends `,logfmt=json` into a fixed config buffer without proving there is space. This is an input-driven overflow risk in a boundary executable.
 Change: In `src/zencode-exec.c`, make `line_alloc()` reserve space for a terminator and validate decode lengths before writing them. Replace the `strcat()` config append with explicit bounded assembly. Also make the line-1 config read detect truncation correctly instead of relying on `strlen(conf) >= MAX_CONFIG`, which `fgets()` cannot produce.
 Tests: Rebuild with `make linux-lib linux-exe CCACHE=1`. Run `bats test/zencode/bindings_exec.bats` and `bats test/zencode/bindings_logfmt.bats`. Add regressions for: maximum-length valid config input, invalid non-base64 input, and a decoded line whose exact decoded size reaches the current boundary.
