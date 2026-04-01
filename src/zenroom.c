@@ -169,29 +169,11 @@ int zen_init_pmain(lua_State *L) { // protected mode init
 }
 
 #include <lstate.h>
-// initializes globals: Z, L (in this order)
-// zen_init_pmain is the Lua routine executed in protected mode
-zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 
-	zenroom_t *ZZ = (zenroom_t*)malloc(sizeof(zenroom_t));
-
-	// create the zenroom_t global context
-	ZZ->stdout_buf = NULL;
-	ZZ->stdout_pos = 0;
-	ZZ->stdout_len = 0;
-	ZZ->stdout_full = 0;
-	ZZ->stderr_buf = NULL;
-	ZZ->stderr_pos = 0;
-	ZZ->stderr_len = 0;
-	ZZ->stderr_full = 0;
-	ZZ->userdata = NULL;
-	ZZ->errorlevel = 0;
+static void zen_init_defaults(zenroom_t *ZZ) {
+	memset(ZZ, 0, sizeof(*ZZ));
 	ZZ->scope = SCOPE_FULL;
 	ZZ->debuglevel = 2;
-	ZZ->random_generator = NULL;
-	ZZ->random_external = 0;
-	// set zero rngseed as config flag
-	ZZ->zconf_rngseed[0] = '\0';
 	ZZ->exitcode = 1; // success
 #if defined(__EMSCRIPTEN__)
 	ZZ->logformat = LOG_JSON;
@@ -213,11 +195,23 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	// default memory pool blocks
 	ZZ->sfpool_blocknum = 64;
 	ZZ->sfpool_blocksize = 256;
+}
+
+// initializes globals: Z, L (in this order)
+// zen_init_pmain is the Lua routine executed in protected mode
+zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
+
+	zenroom_t *ZZ = (zenroom_t*)malloc(sizeof(zenroom_t));
+	if(!ZZ) {
+		_err("%s: zenroom context allocation failed\n", __func__);
+		return NULL;
+	}
+	zen_init_defaults(ZZ);
 
 	if(conf) {
 		if( ! zen_conf_parse(ZZ, conf) ) { // stb parsing
 			_err( "Error parsing configuration: %s\n", conf);
-			return(NULL);
+			goto fail;
 		}
 	}
 
@@ -230,14 +224,16 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 
 	// initialize the random generator
 	ZZ->random_generator = rng_alloc(ZZ);
+	if(!ZZ->random_generator) {
+		_err("%s: random generator allocation failed\n", __func__);
+		goto fail;
+	}
 
 	// initialize Lua's context
 	ZZ->lua = lua_newstate(sys_memory_manager, ZZ);
 	if(!ZZ->lua) {
 	  _err( "%s: Lua newstate creation failed\n", __func__);
-	  free(ZZ->random_generator);
-	  free(ZZ);
-	  return NULL;
+	  goto fail;
 	}
 
 	// use the generative garbage collector
@@ -286,14 +282,15 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 
 	// switch to internal memory manager
 	ZMM = malloc(sizeof(sfpool_t));
+	if(!ZMM) {
+		_err("%s: Sailfish pool context allocation failed\n", __func__);
+		goto fail;
+	}
 	if(sfpool_init((sfpool_t*)ZMM,
 					ZZ->sfpool_blocknum,
 					ZZ->sfpool_blocksize)==0) {
 		_err( "%s: Sailfish pool memory initialization failed\n", __func__);
-		free(ZZ->random_generator);
-		free(ZZ);
-		free(ZMM);
-		return NULL;
+		goto fail;
 	}
 	lua_setallocf(ZZ->lua, sfpool_memory_manager, ZZ);
 
@@ -317,6 +314,10 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	  zen_setenv(ZZ->lua, "LOGFMT",
 				 ZZ->logformat == LOG_JSON ? "JSON" : "TEXT");
 	return(ZZ);
+
+fail:
+	zen_teardown(ZZ);
+	return NULL;
 }
 
 zenroom_t *zen_init_extra(const char *conf, const char *keys, const char *data,
@@ -335,17 +336,21 @@ zenroom_t *zen_init_extra(const char *conf, const char *keys, const char *data,
 }
 
 void zen_teardown(zenroom_t *ZZ) {
-	notice(ZZ->lua,"Zenroom teardown.");
-	act(ZZ->lua,"Memory used: %u KB",
-	    lua_gc(ZZ->lua,LUA_GCCOUNT,0));
+	if(!ZZ) return;
+	lua_State *L = (lua_State*)ZZ->lua;
+	if(L) {
+		notice(L,"Zenroom teardown.");
+		act(L,"Memory used: %u KB",
+		    lua_gc(L,LUA_GCCOUNT,0));
+	}
 #ifdef PROFILING
-	if(ZMM) {
+	if(L && ZMM) {
 		sfpool_t *p = (sfpool_t*)ZMM;
-		func(ZZ->lua,"🌊 sfpool init: %u blocks %u B each",
+		func(L,"🌊 sfpool init: %u blocks %u B each",
 			p->total_blocks, p->block_size);
-		func(ZZ->lua,"🌊 total alloc: %lu K",p->alloc_total/1024);
-		func(ZZ->lua,"🌊 sfpool miss: %u - %lu K",p->miss_total,p->miss_bytes/1024);
-		func(ZZ->lua,"🌊 sfpool hits: %u - %lu K",p->hits_total,p->hits_bytes/1024);
+		func(L,"🌊 total alloc: %lu K",p->alloc_total/1024);
+		func(L,"🌊 sfpool miss: %u - %lu K",p->miss_total,p->miss_bytes/1024);
+		func(L,"🌊 sfpool hits: %u - %lu K",p->hits_total,p->hits_bytes/1024);
 	}
 #endif
 
@@ -355,20 +360,21 @@ void zen_teardown(zenroom_t *ZZ) {
 		ZZ->random_generator = NULL;
 	}
 
-	if(ZZ->logformat == LOG_JSON) json_end(ZZ->lua);
+	if(L && ZZ->logformat == LOG_JSON) json_end(L);
 
-	lua_gc((lua_State*)ZZ->lua, LUA_GCCOLLECT, 0);
-	// this call here frees also Z (lightuserdata)
-	lua_close((lua_State*)ZZ->lua);
+	if(L) {
+		lua_gc(L, LUA_GCCOLLECT, 0);
+		// this call here frees also Z (lightuserdata)
+		lua_close(L);
+	}
 	ZZ->lua = NULL;
 	if(ZMM) {
 		sfpool_teardown((sfpool_t*)ZMM);
 		free(ZMM);
+		ZMM = NULL;
 	}
-	ZMM = NULL;
+	if(ZEN == ZZ) ZEN = NULL;
 	free(ZZ);
-	ZZ = NULL;
-	ZEN = NULL;
 }
 
 HEDLEY_NON_NULL(1,2)

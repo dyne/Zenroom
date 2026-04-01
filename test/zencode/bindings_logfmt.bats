@@ -7,9 +7,9 @@ SUBDOC=logfmt
 	cat <<EOF | base64 -w0 >> zencode_exec_stdin
 Given nothing
 When I create the random array with '32' elements each of '256' bits
-and I pick the random object in 'array'
-and I remove the 'random object' from 'array'
-Then print the 'random object'
+and I create random pick from 'random array'
+and I remove the 'random pick' from 'random array'
+Then print the 'random pick'
 EOF
     echo >> zencode_exec_stdin # keys
     echo >> zencode_exec_stdin # data
@@ -26,9 +26,9 @@ EOF
 	cat <<EOF | base64 -w0 >> zencode_exec_stdin
 Given nothing
 When I create the random array with '32' elements each of '256' bits
-and I pick the random object in 'array'
-and I remove the 'random object' from 'array'
-Then print the 'random object'
+and I create random pick from 'random array'
+and I remove the 'random pick' from 'random array'
+Then print the 'random pick'
 EOF
     echo >> zencode_exec_stdin # keys
     echo >> zencode_exec_stdin # data
@@ -79,9 +79,9 @@ EOF
 	cat <<EOF | base64 -w0 >> zencode_exec_stdin
 Given nothing
 When I create the random array with '32' elements each of '256' bits
-and I create the random pick in 'random array'
-and I remove the 'random pick' from 'array'
-and I verify the 'random pick' is found in 'array'
+and I create random pick from 'random array'
+and I remove the 'random pick' from 'random array'
+and I verify the 'random pick' is not found in 'random array'
 Then print the 'random pick'
 EOF
     echo >> zencode_exec_stdin # keys
@@ -102,10 +102,10 @@ EOF
 	cat <<EOF | base64 -w0 >> zencode_exec_stdin
 Given nothing
 When I create the random array with '32' elements each of '256' bits
-and I create the random pick in 'random array'
-and I remove the 'random pick' from 'array'
-and I verify the 'random pick' is found in 'array'
-Then print the 'random object'
+and I create random pick from 'random array'
+and I remove the 'random pick' from 'random array'
+and I verify the 'random pick' is not found in 'random array'
+Then print the 'random pick'
 EOF
     echo >> zencode_exec_stdin # keys
     echo >> zencode_exec_stdin # data
