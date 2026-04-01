@@ -268,7 +268,7 @@ local function _encode_dcsdjwt(obj_cred)
              O.to_url64(obj_cred.signature),
             }, ".")
     }
-    for _, d in pairs(obj_cred.disclosures) do
+    for _, d in ipairs(obj_cred.disclosures) do
         table.insert(records, O.from_string(JSON.raw_encode(d, true)):url64())
     end
     return O.from_string(table.concat(records, "~") .. "~")
