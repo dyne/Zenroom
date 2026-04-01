@@ -333,7 +333,7 @@ When("copy contents of '' named '' in ''", function(src,name,dst)
         elseif not dest_schema.schematype or dest_schema.schematype ~= 'open' then
             error("Schema is not open to accept extra objects: "..dst)
         end
-        zencode_assert(dest[name], "Cannot overwrite: "..name.." in "..dst)
+        zencode_assert(not dest[name], "Cannot overwrite: "..name.." in "..dst)
         ACK[dst][name] = obj[name]
     end
 end)

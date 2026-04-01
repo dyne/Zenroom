@@ -509,6 +509,57 @@ EOF
     assert_output '{"new_ecdh_siganture_with_string_encoding":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"vUljXtnKkBqle/Ik7y3GfMa1o3wEIi4lRC+b/KmVbaI="},"string_from_base64":"hello my friend"}'
 }
 
+@test "copy named contents into open schema accepts new keys" {
+    cat <<EOF | save_asset open_schema_copy.data.json
+{
+    "document": {
+        "@context": ["https://www.w3.org/ns/did/v1"],
+        "id": "did:example:123"
+    },
+    "updates": {
+        "service": "https://example.com/service"
+    }
+}
+EOF
+
+    cat <<EOF | zexe open_schema_copy.zen open_schema_copy.data.json
+Given I have a 'did_document' named 'document'
+and I have a 'string dictionary' named 'updates'
+
+When I copy contents of 'updates' named 'service' in 'document'
+
+Then print the 'document'
+EOF
+    save_output open_schema_copy.out.json
+    assert_output '{"document":{"@context":["https://www.w3.org/ns/did/v1"],"id":"did:example:123","service":"https://example.com/service"}}'
+}
+
+@test "copy named contents into open schema rejects overwrites" {
+    cat <<EOF | save_asset open_schema_overwrite.data.json
+{
+    "document": {
+        "@context": ["https://www.w3.org/ns/did/v1"],
+        "id": "did:example:123"
+    },
+    "updates": {
+        "id": "did:example:456"
+    }
+}
+EOF
+
+    cat <<EOF | save_asset open_schema_overwrite.zen
+Given I have a 'did_document' named 'document'
+and I have a 'string dictionary' named 'updates'
+
+When I copy contents of 'updates' named 'id' in 'document'
+
+Then print the 'document'
+EOF
+    run $ZENROOM_EXECUTABLE -z -a open_schema_overwrite.data.json open_schema_overwrite.zen
+    assert_failure
+    assert_line --partial 'Cannot overwrite: id in document'
+}
+
 @test "move or copy from a dictiopnary and array" {
     cat <<EOF | save_asset copy_move_from_to.data.json
 {
