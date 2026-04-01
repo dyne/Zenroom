@@ -90,7 +90,7 @@ static int rsa_keypair(lua_State *L)   {
 	octet *P = NULL, *Q = NULL;
 	if (lua_gettop(L)==1){
 		SAFE_GOTO(lua_isinteger(L,1), "Invalid argument, expected int");
-		Z(L);
+		zenroom_t *Z = zen_get_context(L);
 		csprng *RNG = Z->random_generator;
 		sign32 e = (int32_t) lua_tointeger(L, 1);
 		RSA_4096_KEY_PAIR(RNG, e, &priv , &pub ,NULL, NULL);
@@ -117,7 +117,7 @@ static int rsa_keypair(lua_State *L)   {
 			RSA_4096_KEY_PAIR(NULL, e, &priv , &pub ,P, Q);
 		}
 	} else {
-		Z(L);
+		zenroom_t *Z = zen_get_context(L);
 		csprng *RNG = Z->random_generator;
 		sign32 e = RSA_4096_PUBLIC_EXPONENT;
 		RSA_4096_KEY_PAIR(RNG, e, &priv , &pub ,NULL, NULL);
@@ -210,7 +210,7 @@ static int rsa_encrypt(lua_State *L) {
 	rsa_public_key_4096 pk;
 	SAFE_GOTO(RSA_octet_to_pk(L, octet_pk, &pk), "Could not convert octet to public key");
 	padmsg = o_alloc(L, RFS_4096); SAFE_GOTO(padmsg, "Could not allocate padded message");
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	csprng *RNG = Z-> random_generator;
 
 	OAEP_ENCODE(HASH_TYPE_RSA_4096, msg, RNG, NULL, padmsg);

@@ -27,9 +27,10 @@
 #include <stdarg.h>
 #include <hedley.h>
 
-// macro to obtain Z context from a lua_State
-// #define Z(l) zenroom_t *Z; lua_getallocf(l, (void**)&Z)
-#define Z(l) zenroom_t *Z = ZEN
+/* Resolve the current runtime context from a Lua state, or fall back to
+ * the process-global singleton when no state is available yet. */
+void *zen_get_context(void *L);
+void *zen_get_global_context(void);
 
 // tracing wrappers for all C->Lua functions
 #define BEGIN() trace(L, "vv begin %s",__func__)

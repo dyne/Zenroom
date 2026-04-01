@@ -110,7 +110,7 @@ static int allocate_raw_public_key(lua_State *L, int pk_pos, octet **res_pk, cha
  */
 static int p256_keygen(lua_State *L) {
 	BEGIN();
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	uint8_t pub[PK_SIZE];
 	octet *sk = o_new(L, SK_SIZE); SAFE(sk, "Could not create secret key");
 	sk->len = SK_SIZE;
@@ -209,7 +209,7 @@ end:
  */
 static int p256_sign(lua_State *L){
 	BEGIN();
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 
 	int n_args = lua_gettop(L);
 	hash256 sha256;

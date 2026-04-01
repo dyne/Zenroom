@@ -90,7 +90,7 @@ void* rng_alloc(zenroom_t *ZZ) {
 
 static int rng_uint8(lua_State *L) {
 	BEGIN();
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	uint8_t res = RAND_byte(Z->random_generator);
 	lua_pushinteger(L, (lua_Integer)res);
 	END(1);
@@ -98,7 +98,7 @@ static int rng_uint8(lua_State *L) {
 
 static int rng_uint16(lua_State *L) {
 	BEGIN();
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	uint16_t res =
 		RAND_byte(Z->random_generator)
 		| (uint32_t) RAND_byte(Z->random_generator) << 8;
@@ -108,7 +108,7 @@ static int rng_uint16(lua_State *L) {
 
 static int rng_int32(lua_State *L) {
 	BEGIN();
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	uint32_t res =
 		RAND_byte(Z->random_generator)
 		| (uint32_t) RAND_byte(Z->random_generator) << 8
@@ -120,7 +120,7 @@ static int rng_int32(lua_State *L) {
 
 static int rng_seed(lua_State *L) {
 	BEGIN();
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	const octet *in = o_arg(L, 1);
 	if(in->len < 4) {
 		zerror(L, "Random seed error: too small (%u bytes)", in->len);

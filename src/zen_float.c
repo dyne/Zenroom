@@ -123,7 +123,7 @@ static void float_clone_free(lua_State *L, float *f) {
 }
 
 float* float_arg(lua_State *L, int n) {
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	float *result = (float*)malloc(sizeof(float));
 	if(result == NULL) {
 		return NULL;

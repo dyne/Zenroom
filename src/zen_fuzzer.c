@@ -36,7 +36,7 @@ int fuzz_byte_random(lua_State *L) {
 	const octet *o = o_arg(L, 1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
 	SAFE_GOTO(o->len < INT_MAX, "Invalid argument, octet too big");
 	octet *res = o_dup(L,o); SAFE_GOTO(res, DUPLICATE_OCT_ERR);
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	uint8_t rnd = RAND_byte(Z->random_generator);
 	if(res->len < 256) {
 		uint8_t point8 = RAND_byte(Z->random_generator);
@@ -78,7 +78,7 @@ int fuzz_byte_xor(lua_State *L) {
 	const octet *o = o_arg(L,1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
 	SAFE_GOTO(o->len < INT_MAX, "Invalid argument, octet too big");
 	octet *res = o_dup(L,o); SAFE_GOTO(res, DUPLICATE_OCT_ERR);
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	if(res->len < 256) {
 		uint8_t point8 = RAND_byte(Z->random_generator) % res->len;
 		res->val[point8] ^= 0xff;
@@ -112,7 +112,7 @@ int fuzz_bit_random(lua_State *L) {
 	const octet *o = o_arg(L,1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
 	SAFE_GOTO(o->len < INT_MAX, "Invalid argument, octet too big");
 	octet *res = o_dup(L,o); SAFE_GOTO(res, DUPLICATE_OCT_ERR);
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	if(res->len < 256) {
 		uint8_t point8 = RAND_byte(Z->random_generator);
 		uint8_t bit_position = RAND_byte(Z->random_generator) % 8;
@@ -194,7 +194,7 @@ int fuzz_byte_circular_shift_random(lua_State *L) {
 	const octet *o = o_arg(L,1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
 	SAFE_GOTO(o->len < INT_MAX, "Invalid argument, octet too big");
 	octet *res = o_dup(L,o); SAFE_GOTO(res, DUPLICATE_OCT_ERR);
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	if(res->len < 256) {
 		uint8_t point8 = RAND_byte(Z->random_generator);
 		while (point8 % res->len ==  (uint8_t)0) {
@@ -240,7 +240,7 @@ int fuzz_bit_circular_shift_random(lua_State *L) {
 	const octet *o = o_arg(L, 1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
 	SAFE_GOTO(o->len < INT_MAX, "Invalid argument, octet too big");
 	octet *res = o_dup(L, o); SAFE_GOTO(res, DUPLICATE_OCT_ERR);
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 
 	uint32_t total_bits = res->len * 8;
 	uint32_t shift_bits = 0;
