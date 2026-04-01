@@ -64,7 +64,7 @@ int _ecp2_to_octet(octet *o, const ecp2 *e) {
 	return(1);
 }
 
-void ecp2_free(lua_State *L, const ecp2 *e) {
+void ecp2_clone_free(lua_State *L, const ecp2 *e) {
 	(void)L;
 	if(HEDLEY_UNLIKELY(e==NULL)) return;
 	free((void*)e);
@@ -245,8 +245,8 @@ static int ecp2_millerloop(lua_State *L) {
 	PAIR_ate(&f->val, (ECP2*)&x->val, (ECP*)&y->val);
 	PAIR_fexp(&f->val);
 end:
-	ecp_free(L, y);
-	ecp2_free(L, x);
+	ecp_clone_free(L, y);
+	ecp2_clone_free(L, x);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -268,7 +268,7 @@ static int ecp2_affine(lua_State *L) {
 	ecp2 *out = ecp2_dup(L, in); SAFE_GOTO(out, DUPLICATE_ECP2_ERR);
 	ECP2_affine(&out->val);
 end:
-	ecp2_free(L, in);
+	ecp2_clone_free(L, in);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -298,7 +298,7 @@ static int ecp2_isinf(lua_State *L) {
 	BEGIN();
 	const ecp2 *e = ecp2_arg(L, 1); SAFE(e, ALLOCATE_ECP2_ERR);
 	lua_pushboolean(L, ECP2_isinf((ECP2*)&e->val));
-	ecp2_free(L, e);
+	ecp2_clone_free(L, e);
 	END(1);
 }
 
@@ -321,8 +321,8 @@ static int ecp2_add(lua_State *L) {
 	ecp2 *p = ecp2_dup(L, e); SAFE_GOTO(p, DUPLICATE_ECP2_ERR);
 	ECP2_add(&p->val, (ECP2*)&q->val);
 end:
-	ecp2_free(L, e);
-	ecp2_free(L, q);
+	ecp2_clone_free(L, e);
+	ecp2_clone_free(L, q);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -349,8 +349,8 @@ static int ecp2_sub(lua_State *L) {
 	ecp2 *p = ecp2_dup(L, e); SAFE_GOTO(p, DUPLICATE_ECP2_ERR);
 	ECP2_sub(&p->val, (ECP2*)&q->val);
 end:
-	ecp2_free(L, e);
-	ecp2_free(L, q);
+	ecp2_clone_free(L, e);
+	ecp2_clone_free(L, q);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -369,7 +369,7 @@ static int ecp2_negative(lua_State *L) {
 	ecp2 *out = ecp2_dup(L, in); SAFE_GOTO(out, DUPLICATE_ECP2_ERR);
 	ECP2_neg(&out->val);
 end:
-	ecp2_free(L, in);
+	ecp2_clone_free(L, in);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -398,8 +398,8 @@ static int ecp2_eq(lua_State *L) {
 	ECP2_affine((ECP2*)&q->val);
 	lua_pushboolean(L, ECP2_equals((ECP2*)&p->val, (ECP2*)&q->val));
 end:
-	ecp2_free(L, p);
-	ecp2_free(L, q);
+	ecp2_clone_free(L, p);
+	ecp2_clone_free(L, q);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -423,7 +423,7 @@ static int ecp2_octet(lua_State *L) {
 	octet *o = o_new(L, (MODBYTES<<2)+1); SAFE_GOTO(o, CREATE_OCT_ERR);
 	ECP2_toOctet(o, (ECP2*)&e->val);
 end:
-	ecp2_free(L, e);
+	ecp2_clone_free(L, e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -440,7 +440,7 @@ static int ecp2_mul(lua_State *L) {
 	PAIR_G2mul(&r->val, b->val);
 end:
 	big_free(L, b);
-	ecp2_free(L, p);
+	ecp2_clone_free(L, p);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -481,7 +481,7 @@ static int ecp2_get_xr(lua_State *L) {
 	FP_copy(&fx, (FP*)&e->val.x.a);
 	FP_reduce(&fx); FP_redc(xa->val, &fx);
 end:
-	ecp2_free(L, e);
+	ecp2_clone_free(L, e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -498,7 +498,7 @@ static int ecp2_get_xi(lua_State *L) {
 	FP_copy(&fx, (FP*)&e->val.x.b);
 	FP_reduce(&fx); FP_redc(xb->val, &fx);
 end:
-	ecp2_free(L, e);
+	ecp2_clone_free(L, e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -516,7 +516,7 @@ static int ecp2_get_yr(lua_State *L) {
 	FP_copy(&fy, (FP*)&e->val.y.a);
 	FP_reduce(&fy); FP_redc(ya->val, &fy);
 end:
-	ecp2_free(L, e);
+	ecp2_clone_free(L, e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -532,7 +532,7 @@ static int ecp2_get_yi(lua_State *L) {
 	FP_copy(&fy, (FP*)&e->val.y.b);
 	FP_reduce(&fy); FP_redc(yb->val, &fy);
 end:
-	ecp2_free(L, e);
+	ecp2_clone_free(L, e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -548,7 +548,7 @@ static int ecp2_get_zr(lua_State *L) {
 	FP_copy(&fz, (FP*)&e->val.z.a);
 	FP_reduce(&fz); FP_redc(za->val, &fz);
 end:
-	ecp2_free(L, e);
+	ecp2_clone_free(L, e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -564,7 +564,7 @@ static int ecp2_get_zi(lua_State *L) {
 	FP_copy(&fz, (FP*)&e->val.z.b);
 	FP_reduce(&fz); FP_redc(zb->val, &fz);
 end:
-	ecp2_free(L, e);
+	ecp2_clone_free(L, e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -585,7 +585,7 @@ static int ecp2_output(lua_State *L) {
 	_ecp2_to_octet(o, e);
 	push_octet_to_hex_string(L, o);
 end:
-	ecp2_free(L, e);
+	ecp2_clone_free(L, e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -647,7 +647,7 @@ static int ecp2_zcash_export(lua_State *L) {
 	}
 
 end:
-	ecp2_free(L, e);
+	ecp2_clone_free(L, e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
