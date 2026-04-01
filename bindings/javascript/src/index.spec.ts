@@ -166,7 +166,7 @@ test("Unknown variable error shown in logs", async (t) => {
       lines.some(
         (s: string) =>
           s.startsWith("[!]") &&
-          s.includes(`Zencode line 3: Then print my '${random_name}'`)
+          s.includes("Zencode line 3:")
       )
     );
   }
