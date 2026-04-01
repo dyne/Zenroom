@@ -300,13 +300,7 @@ When("copy contents of '' in ''", function(src,dst)
             if ACK[dst][k] then error("Cannot overwrite: "..k.." in "..dst) end
             ACK[dst][k] = v
         end
-    elseif dest_codec.zentype == 'e' and dest_codec.schema then
-        local dest_schema = ZEN.schemas[dest_codec.schema]
-        if luatype(dest_schema) ~= 'table' then -- old schema types are not open
-            error("Schema is not open to accept extra objects: "..dst)
-        elseif not dest_schema.schematype or dest_schema.schematype ~= 'open' then
-            error("Schema is not open to accept extra objects: "..dst)
-        end
+    elseif schema_accepts_extra_objects(dst, dest_codec) then
         for k, v in pairs(obj) do
             if ACK[dst][k] then error("Cannot overwrite: "..k.." in "..dst) end
             ACK[dst][k] = v
@@ -326,13 +320,7 @@ When("copy contents of '' named '' in ''", function(src,name,dst)
     elseif dest_codec.zentype == 'd' then
         zencode_assert(not dest[name], "Cannot overwrite: "..name.." in "..dst)
         ACK[dst][name] = obj[name]
-    elseif dest_codec.zentype == 'e' and dest_codec.schema then
-        local dest_schema = ZEN.schemas[dest_codec.schema]
-        if luatype(dest_schema) ~= 'table' then -- old schema types are not open
-            error("Schema is not open to accept extra objects: "..dst)
-        elseif not dest_schema.schematype or dest_schema.schematype ~= 'open' then
-            error("Schema is not open to accept extra objects: "..dst)
-        end
+    elseif schema_accepts_extra_objects(dst, dest_codec) then
         zencode_assert(not dest[name], "Cannot overwrite: "..name.." in "..dst)
         ACK[dst][name] = obj[name]
     end

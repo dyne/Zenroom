@@ -152,3 +152,25 @@ EOF
     save_output move_and_copy_statements.out.json
     assert_output '{"result_copy":{"base64_string":"hello my friend","ecdh_signature":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"vUljXtnKkBqle/Ik7y3GfMa1o3wEIi4lRC+b/KmVbaI="},"eddsa_signature":"2iSCa9YxtYTQtmcUHHKsYZXVsqnSWSa7E2skWZqN4EdY8wBX9UuBgCYx7Np3hJmDVQ2NiHSebLHmz5BGH3cuZ4um","signed":"some data to be signed","str":"hello"},"result_move":{"base64_string":"hello my friend","ecdh_signature":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"vUljXtnKkBqle/Ik7y3GfMa1o3wEIi4lRC+b/KmVbaI="},"eddsa_signature":"2iSCa9YxtYTQtmcUHHKsYZXVsqnSWSa7E2skWZqN4EdY8wBX9UuBgCYx7Np3hJmDVQ2NiHSebLHmz5BGH3cuZ4um","signed":"some data to be signed","str":"hello"}}'
 }
+
+@test "move element into open schema accepts new keys" {
+    cat <<EOF | save_asset move_into_open_schema.data.json
+{
+    "document": {
+        "@context": ["https://www.w3.org/ns/did/v1"],
+        "id": "did:example:123"
+    },
+    "service": "https://example.com/service"
+}
+EOF
+    cat <<EOF | zexe move_into_open_schema.zen move_into_open_schema.data.json
+Given I have a 'did_document' named 'document'
+and I have a 'string' named 'service'
+
+When I move 'service' in 'document'
+
+Then print the 'document'
+EOF
+    save_output move_into_open_schema.out.json
+    assert_output '{"document":{"@context":["https://www.w3.org/ns/did/v1"],"id":"did:example:123","service":"https://example.com/service"}}'
+}
