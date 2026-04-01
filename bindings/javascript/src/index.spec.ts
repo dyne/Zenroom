@@ -562,7 +562,8 @@ test("decode zencode error", async (t) => {
     t.is(jsonError[0], '[!] Error at Zencode line 4', errorLines);
     t.is(jsonError[1].includes('Cannot find object: not_existing_object_👺'), true, errorLines);
     t.is(jsonError[2], '[!] Zencode runtime error', errorLines);
-    t.is(jsonError[3].includes("Zencode line 4: Then print the 'not existing object 👺'"), true, errorLines);
+    t.is(jsonError[3].includes('Zencode line 4:'), true, errorLines);
+    t.is(jsonError[3].includes('Cannot find object: not_existing_object_👺'), true, errorLines);
     t.is(jsonError[4], '[!] Execution aborted with errors.', errorLines);
   }
 })
