@@ -30,11 +30,13 @@ typedef struct {
 	FP12 val;
 } fp12;
 
-// new or dup already push the object in LUA's stack
+/* Creates a fresh userdata-backed FP12 and pushes it onto the Lua stack. */
 fp12* fp12_new(lua_State *L);
 
+/* Clones an existing FP12 into fresh userdata and pushes the clone. */
 fp12* fp12_dup(lua_State *L, fp12 *c);
 
+/* Returns a heap-owned FP12 clone even when the source is Lua userdata. */
 fp12* fp12_arg(lua_State *L, int n);
 
 #endif

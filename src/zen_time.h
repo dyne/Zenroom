@@ -26,15 +26,16 @@
 
 typedef int ztime_t;
 
-// new or dup already push the object in LUA's stack
+/* Creates a fresh userdata-backed TIME value and pushes it onto the Lua stack. */
 ztime_t* time_new(lua_State *L);
 
+/* Clones an existing TIME value into fresh userdata and pushes the clone. */
 ztime_t* time_dup(lua_State *L, ztime_t *c);
 
-ztime_t* type_arg(lua_State *L, int n);
+/* Returns a heap-owned TIME clone for userdata, strings, or numbers. */
+ztime_t* time_arg(lua_State *L, int n);
 
 // internal conversion from float to octet
 octet *new_octet_from_time(lua_State *L, ztime_t c);
 
 #endif
-
