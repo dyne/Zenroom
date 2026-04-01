@@ -180,3 +180,13 @@ EOF
 	save_output given_with_and.json
 	assert_output '{"CODEC":{"does_not_exists":{"encoding":"string","missing":true,"name":"does_not_exists","zentype":"d"},"missing_public_key":{"encoding":"hex","missing":true,"name":"missing_public_key","zentype":"e"}}}'
 }
+
+@test "Then print codec cannot be printed twice" {
+    cat <<EOF | save_asset codec_twice.zen
+Given nothing
+Then print codec
+Then print codec
+EOF
+    run $ZENROOM_EXECUTABLE -z codec_twice.zen
+    assert_line --partial 'Cannot overwrite printed output codec'
+}

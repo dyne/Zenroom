@@ -199,7 +199,7 @@ Then("config", function() I.warn(_G["CONF"]) end)
 
 Then("print codec", function()
 		if OUT.codec then
-		   error("Cannot overwrite printed output codec")
+		   error("Cannot overwrite printed output codec", 2)
 		end
 		OUT.codec = CODEC
 end)

@@ -7,6 +7,7 @@ load ../bats_setup
     Z varint.lua
     Z big_arithmetics.lua
     Z hash.lua
+    Z json_error_calls.lua
     Z ecdh.lua
     Z ecdsa_p256.lua
     Z x509.lua
