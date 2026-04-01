@@ -199,7 +199,7 @@ static int zen_write (lua_State *L) {
 	Z->stdout_pos += o->len;
 	Z->stdout_buf[Z->stdout_pos] = '\0';
   } else if(o) {
-#ifdef __EMSCRIPTEN_
+#ifdef __EMSCRIPTEN__
 	o->val[o->len] = 0x0; // add string termination
 	// octet safety buffer allows this: o->val = zmalloc(size +0x0f);
 	EM_ASM_({Module.print(UTF8ToString($0))}, o->val);

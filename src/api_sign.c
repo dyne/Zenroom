@@ -76,25 +76,6 @@ static void *api_rng_alloc(const char *hexseed) {
 	return(rng);
 }
 
-#define MAX_ERRMSG 256 // maximum length of an error message line
-
-static int debugf(const char *fmt, ...) {
-	char msg[MAX_ERRMSG+4];
-	int len, res;
-	va_list argp, argp_copy;
-	va_start(argp, fmt);
-	va_copy(argp_copy, argp);
-	len = mutt_vsnprintf(msg, MAX_ERRMSG, fmt, argp);
-	msg[len] = '\n';
-	msg[len+1] = 0x0;
-	res = write(3,"XXX: ",5);
-	res = write(3,msg,len+1);
-	(void)res; // avoid warnings
-	va_end(argp);
-	va_end(argp_copy);
-	return(len);
-}
-
 static int print_buf_hex(const uint8_t *in, const size_t len) {
 	char *out = malloc((len<<1)+2);
 	if(!out) {
@@ -214,6 +195,12 @@ int zenroom_sign_create(const char *algo, const char *key, const char *msg) {
 		if(!msg_b) {free(sk);_err("%s :: invalid arg: msg",__func__);return FAIL();}
 		outlen = sizeof(ed25519_signature); // set output length
 		sig = malloc(outlen);
+		if(!sig) {
+			free(sk);
+			free(msg_b);
+			_err("%s :: cannot allocate signature buffer", __func__);
+			return FAIL();
+		}
 		ed25519_sign((unsigned char*)msg_b, msglen, sk, pk, sig);
 		free(sk);
 		free(msg_b);

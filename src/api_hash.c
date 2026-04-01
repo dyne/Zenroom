@@ -156,7 +156,7 @@ int zenroom_hash_final(const char *hash_ctx) {
 	char *failed_msg = NULL;
 	register char prefix = hash_ctx[0];
 	register int len;
-	octet tmp;
+	octet tmp = {0};
 	char *sh = NULL;
 	char *hash_result = malloc(90);
 	if (!hash_result) {
