@@ -12,7 +12,7 @@
 
 static int zen_mayo_secgen(lua_State *L) {
 	BEGIN();
-	Z(L);
+	zenroom_t *Z = zen_get_context(L);
 	register const size_t sksize = CRYPTO_SECRETKEYBYTES; 
 	octet *sk = o_new(L, sksize); SAFE(sk, "Could not create secret key");
 	register size_t i;
@@ -25,7 +25,8 @@ static int zen_mayo_secgen(lua_State *L) {
 static int zen_mayo_pubgen(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *pk = NULL, *sk = NULL;
+	octet *pk = NULL;
+	const octet *sk = NULL;
 	sk = o_arg(L, 1); SAFE_GOTO(sk, "Could not allocate secret key");
 	SAFE_GOTO(sk->len == CRYPTO_SECRETKEYBYTES, "Invalid size for MAYO_5 secret key");
 	pk = o_new(L, CRYPTO_PUBLICKEYBYTES); SAFE_GOTO(pk, "Could not create public key");
