@@ -1,6 +1,8 @@
 package zenroom
 
 import (
+	"bytes"
+	b64 "encoding/base64"
 	"fmt"
 	"os/exec"
 	"testing"
@@ -67,6 +69,27 @@ func TestZenExecExtraCapturesOutputWithoutPipeRace(t *testing.T) {
 	}
 	if res.Logs != "log\n" {
 		t.Fatalf("expected stderr to be captured, got %q", res.Logs)
+	}
+}
+
+func TestWriteRequestFormatsStreamedInput(t *testing.T) {
+	var stdin bytes.Buffer
+
+	err := writeRequestTo(&stdin, "print('hello')", "debug=1", `{"keys":"k"}`, `{"data":"d"}`, `{"extra":"e"}`, `{"context":"c"}`)
+	if err != nil {
+		t.Fatalf("writeRequestTo failed: %v", err)
+	}
+
+	expected := fmt.Sprintf(
+		"debug=1\n%s\n%s\n%s\n%s\n%s\n",
+		b64.StdEncoding.EncodeToString([]byte("print('hello')")),
+		b64.StdEncoding.EncodeToString([]byte(`{"keys":"k"}`)),
+		b64.StdEncoding.EncodeToString([]byte(`{"data":"d"}`)),
+		b64.StdEncoding.EncodeToString([]byte(`{"extra":"e"}`)),
+		b64.StdEncoding.EncodeToString([]byte(`{"context":"c"}`)),
+	)
+	if stdin.String() != expected {
+		t.Fatalf("unexpected streamed request: got %q want %q", stdin.String(), expected)
 	}
 }
 
