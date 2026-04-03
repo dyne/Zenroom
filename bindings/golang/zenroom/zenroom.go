@@ -1,17 +1,18 @@
 package zenroom
 
 import (
+	"bytes"
 	b64 "encoding/base64"
 	"io"
-	"log"
 	"os/exec"
-	"strings"
 )
 
 type ZenResult struct {
 	Output string
 	Logs   string
 }
+
+var execCommand = exec.Command
 
 func ZencodeExec(script string, conf string, keys string, data string) (ZenResult, bool) {
 	return ZenExecExtra("zencode-exec", script, conf, keys, data, "", "")
@@ -24,65 +25,62 @@ func LuaExec(script string, conf string, keys string, data string, extra string,
 }
 
 func ZenExecExtra(aux string, script string, conf string, keys string, data string, extra string, context string) (ZenResult, bool) {
-	execCmd := exec.Command(aux)
-
-	stdout, err := execCmd.StdoutPipe()
-	if err != nil {
-		return ZenResult{}, false
-	}
-
-	stderr, err := execCmd.StderrPipe()
-	if err != nil {
-		return ZenResult{}, false
-	}
-
-	stdin, err := execCmd.StdinPipe()
-	if err != nil {
-		return ZenResult{}, false
-	}
-
-	// Start first so the child can read from stdin
-	if err := execCmd.Start(); err != nil {
-		stdin.Close()
-		return ZenResult{}, false
-	}
-
-	stdoutCh := make(chan string, 1)
-	stderrCh := make(chan string, 1)
-	go captureOutput(stdout, stdoutCh)
-	go captureOutput(stderr, stderrCh)
-
+	execCmd := execCommand(aux)
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	stdinReader, stdinWriter := io.Pipe()
+	writeErr := make(chan error, 1)
 	go func() {
-		defer stdin.Close()
-		io.WriteString(stdin, conf)
-		io.WriteString(stdin, "\n")
-		io.WriteString(stdin, b64.StdEncoding.EncodeToString([]byte(script)))
-		io.WriteString(stdin, "\n")
-		io.WriteString(stdin, b64.StdEncoding.EncodeToString([]byte(keys)))
-		io.WriteString(stdin, "\n")
-		io.WriteString(stdin, b64.StdEncoding.EncodeToString([]byte(data)))
-		io.WriteString(stdin, "\n")
-		io.WriteString(stdin, b64.StdEncoding.EncodeToString([]byte(extra)))
-		io.WriteString(stdin, "\n")
-		io.WriteString(stdin, b64.StdEncoding.EncodeToString([]byte(context)))
-		io.WriteString(stdin, "\n")
+		defer close(writeErr)
+		err := writeRequestTo(stdinWriter, script, conf, keys, data, extra, context)
+		if err != nil {
+			_ = stdinWriter.CloseWithError(err)
+			writeErr <- err
+			return
+		}
+		writeErr <- stdinWriter.Close()
 	}()
 
-	err = execCmd.Wait()
-	stdoutStr := <-stdoutCh
-	stderrStr := <-stderrCh
+	execCmd.Stdin = stdinReader
+	execCmd.Stdout = &stdout
+	execCmd.Stderr = &stderr
 
-	return ZenResult{Output: stdoutStr, Logs: stderrStr}, err == nil
+	err := execCmd.Run()
+	if closeErr := stdinReader.Close(); err == nil && closeErr != nil {
+		err = closeErr
+	}
+	if requestErr := <-writeErr; err == nil && requestErr != nil {
+		err = requestErr
+	}
+	return ZenResult{Output: stdout.String(), Logs: stderr.String()}, err == nil
 }
 
-func captureOutput(pipe io.ReadCloser, output chan<- string) {
-	defer close(output)
-
-	buf := new(strings.Builder)
-	_, err := io.Copy(buf, pipe)
-	if err != nil {
-		log.Printf("Failed to capture output: %v", err)
-		return
+func writeRequestTo(w io.Writer, script string, conf string, keys string, data string, extra string, context string) error {
+	if _, err := io.WriteString(w, conf); err != nil {
+		return err
 	}
-	output <- buf.String()
+	if _, err := io.WriteString(w, "\n"); err != nil {
+		return err
+	}
+
+	for _, field := range []string{script, keys, data, extra, context} {
+		if err := writeBase64Line(w, field); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func writeBase64Line(w io.Writer, value string) error {
+	encoder := b64.NewEncoder(b64.StdEncoding, w)
+	if _, err := io.WriteString(encoder, value); err != nil {
+		_ = encoder.Close()
+		return err
+	}
+	if err := encoder.Close(); err != nil {
+		return err
+	}
+	_, err := io.WriteString(w, "\n")
+	return err
 }
