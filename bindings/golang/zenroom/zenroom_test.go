@@ -2,6 +2,7 @@ package zenroom
 
 import (
 	"fmt"
+	"os/exec"
 	"testing"
 )
 
@@ -45,6 +46,27 @@ func TestCallStrings(t *testing.T) {
 				t.Errorf("calling [%s] got %s", testcase.script, res.Output)
 			}
 		})
+	}
+}
+
+func TestZenExecExtraCapturesOutputWithoutPipeRace(t *testing.T) {
+	original := execCommand
+	execCommand = func(name string, arg ...string) *exec.Cmd {
+		return exec.Command("sh", "-c", "cat >/dev/null; printf 'hello\\n'; printf 'log\\n' >&2")
+	}
+	defer func() {
+		execCommand = original
+	}()
+
+	res, success := ZenExecExtra("ignored", "print('hello')", "", "", "", "", "")
+	if !success {
+		t.Fatalf("expected success, got logs: %q", res.Logs)
+	}
+	if res.Output != "hello\n" {
+		t.Fatalf("expected stdout to be captured, got %q", res.Output)
+	}
+	if res.Logs != "log\n" {
+		t.Fatalf("expected stderr to be captured, got %q", res.Logs)
 	}
 }
 
