@@ -28,12 +28,26 @@ local function utrim(s)
     return s
 end
 
+local TIMETABLE <const> = require_once'timetable'
+
+local function date_table_from_time(value)
+    local tt <const> = TIMETABLE.from_seconds(tostring(value))
+    return {
+        year = tt.year,
+        month = tt.month,
+        day = tt.day,
+        hour = tt.hour,
+        min = tt.min,
+        sec = math.floor(tt.sec),
+    }
+end
+
 -- datetable operations
 local function date_ops(op)
     return function(l, r)
         local res = {}
-        local lc <const> = type(l) == 'zenroom.time' and os.date("*t", tonumber(l)) or l -- type(table) checked already in math_op
-        local rc <const> = type(r) == 'zenroom.time' and os.date("*t", tonumber(r)) or r
+        local lc <const> = type(l) == 'zenroom.time' and date_table_from_time(l) or l -- type(table) checked already in math_op
+        local rc <const> = type(r) == 'zenroom.time' and date_table_from_time(r) or r
         local fields <const> = { 'year', 'month', 'day', 'hour', 'min', 'sec' }
         for _, v in pairs(fields) do
             res[v] = TIME.new(op(tonumber(lc[v]) or 0, tonumber(rc[v]) or 0))

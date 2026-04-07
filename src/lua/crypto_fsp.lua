@@ -19,7 +19,6 @@
 --]]
 
 local T = { }
-
 -- The length of RSK marks the maximum message length
 -- to make sure that its XOR covers the whole message
 
@@ -58,6 +57,8 @@ end
 
 -- generate a nonce with default format
 function T:makenonce()
+   -- TODO(time-y2038): migrate this formatting path once timetable-based
+   -- UTC rendering is safe in plain-Lua FSP calls without stack overflows.
    return OCTET.from_string(os.date("%Y%m%d%H%M%S", os.time()))
 end
 
