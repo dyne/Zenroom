@@ -8,6 +8,7 @@ load ../bats_setup
     Z big_gregorian_epoch_timestamp.lua
     Z export_float.lua
     Z export_time.lua
+    Z time_now.lua
     Z time_arithmetics.lua
     Z timetable.lua
     Z msgpack.lua
