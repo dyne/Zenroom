@@ -80,6 +80,32 @@ static int parse_ztime_string(const char *arg, ztime_t *out) {
 	return 1;
 }
 
+static int parse_ztime_number(lua_State *L, int idx, ztime_t *out) {
+	int is_integer = 0;
+	lua_Integer integer_value = lua_tointegerx(L, idx, &is_integer);
+	if(is_integer) {
+		*out = (ztime_t)integer_value;
+		return ((lua_Integer)(*out) == integer_value);
+	}
+
+	int is_number = 0;
+	lua_Number number_value = lua_tonumberx(L, idx, &is_number);
+	if(!is_number || !isfinite((double)number_value)) {
+		return 0;
+	}
+
+	double integral = 0.0;
+	if(modf((double)number_value, &integral) != 0.0) {
+		return 0;
+	}
+	if(integral < (double)INT64_MIN || integral > (double)INT64_MAX) {
+		return 0;
+	}
+
+	*out = (ztime_t)integral;
+	return ((double)(*out) == integral);
+}
+
 static int ztime_add_checked(ztime_t a, ztime_t b, ztime_t *out) {
 	if(!out) {
 		return 0;
@@ -132,19 +158,10 @@ ztime_t* time_arg(lua_State *L, int n) {
 		goto end;
 	}
 	if(lua_type(L, n) == LUA_TNUMBER) {
-		int is_integer = 0;
-		lua_Integer integer_value = lua_tointegerx(L, n, &is_integer);
-		if(!is_integer) {
+		if(!parse_ztime_number(L, n, result)) {
 			const char *arg = lua_tostring(L, n);
 			zfree(result);
 			lerror(L, "Could not read unix timestamp %s", arg ? arg : "<number>");
-			return NULL;
-		}
-		*result = (ztime_t)integer_value;
-		if((lua_Integer)(*result) != integer_value) {
-			const char *arg = lua_tostring(L, n);
-			zfree(result);
-			lerror(L, "Could not read unix timestamp %s out of range", arg ? arg : "<number>");
 			return NULL;
 		}
 		goto end;
@@ -263,10 +280,8 @@ static int detect_time_value(lua_State *L) {
 	BEGIN();
 	int result = 0;
 	if(lua_type(L, 1) == LUA_TNUMBER) {
-		int is_integer = 0;
-		lua_Integer integer_value = lua_tointegerx(L, 1, &is_integer);
-		if(is_integer) {
-			ztime_t t = (ztime_t)integer_value;
+		ztime_t t = 0;
+		if(parse_ztime_number(L, 1, &t)) {
 			result = t >= AUTODETECTED_TIME_MIN && t <= AUTODETECTED_TIME_MAX;
 		}
 	} else if(lua_type(L, 1) == LUA_TSTRING) {

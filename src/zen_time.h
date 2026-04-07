@@ -23,7 +23,12 @@
 
 #include <stdint.h>
 
-/* Conservative heuristic window used by TIME.detect_time_value(). */
+/*
+ * Conservative heuristic window used by TIME.detect_time_value().
+ * Keep autodetection narrow on purpose: it should catch modern Unix
+ * timestamps used in credential-expiry style payloads without treating
+ * arbitrary small integers as TIME values.
+ */
 #define AUTODETECTED_TIME_MIN 1500000000LL
 #define AUTODETECTED_TIME_MAX 4102444800LL
 
