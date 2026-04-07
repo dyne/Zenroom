@@ -9,6 +9,7 @@ load ../bats_setup
     Z export_float.lua
     Z export_time.lua
     Z time_arithmetics.lua
+    Z timetable.lua
     Z msgpack.lua
     Z zenroom_msgpack.lua
     Z zenroom_strings.lua

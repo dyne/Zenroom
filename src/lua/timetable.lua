@@ -374,7 +374,17 @@ function timetable_methods:rfc_3339()
 	local year, month, day, hour, min, fsec = self:unpack()
 	local sec, msec = borrow(fsec, 0, 1000)
 	msec = math.floor(msec)
-	return strformat("%04u-%02u-%02uT%02u:%02u:%02d.%03d", year, month, day, hour, min, sec, msec)
+	return strformat("%04u-%02u-%02uT%02u:%02u:%02d.%03dZ", year, month, day, hour, min, sec, msec)
+end
+
+function timetable_methods:to_string()
+	local year, month, day, hour, min, sec = self:unpack()
+	sec = math.floor(sec)
+	return strformat("%04u-%02u-%02uT%02u:%02u:%02dZ", year, month, day, hour, min, sec)
+end
+
+function timetable_methods:to_rfc3339()
+	return self:rfc_3339()
 end
 
 function timetable_methods:strftime(format_string)
@@ -470,7 +480,8 @@ end
 return {
 	-- used in zenroom
 	from_string = rfc_3339;
-	to_string = function(a) return a:normalise():rfc_3339() end;
+	to_string = function(a) return a:normalise():to_string() end;
+	to_rfc3339 = function(a) return a:normalise():to_rfc3339() end;
 	from_seconds = new_from_timestamp;
 	to_seconds = function(a) return a:normalise():timestamp() end;
 	-- original from luatz
