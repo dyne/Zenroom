@@ -21,10 +21,12 @@
 #ifndef __ZEN_TIME_H__
 #define __ZEN_TIME_H__
 
-#define AUTODETECTED_TIME_MIN 1500000000
-#define AUTODETECTED_TIME_MAX 2000000000
+#include <stdint.h>
 
-typedef int ztime_t;
+#define AUTODETECTED_TIME_MIN 1500000000LL
+#define AUTODETECTED_TIME_MAX 4102444800LL
+
+typedef int64_t ztime_t;
 
 /* Creates a fresh userdata-backed TIME value and pushes it onto the Lua stack. */
 ztime_t* time_new(lua_State *L);

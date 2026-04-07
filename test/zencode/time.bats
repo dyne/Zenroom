@@ -34,24 +34,33 @@ EOF
 }
 
 
-@test "import time grater than 2147483647" {
+@test "import time greater than 2147483647" {
     cat <<EOF | save_asset time_too_big.data.json
 {
   "time_string": "1709303629395",
   "time_number": 1709303629395
 }
 EOF
-    cat <<EOF | save_asset time_too_big_string.zen time_too_big.data.json
+    cat <<EOF | save_asset time_too_big_string.zen
 Given I have a 'time' named 'time_string'
 Then print the data
 EOF
-    cat <<EOF | save_asset time_too_big_number.zen time_too_big.data.json
+    cat <<EOF | save_asset time_too_big_number.zen
 Given I have a 'time' named 'time_number'
 Then print the data
 EOF
 
-    run $ZENROOM_EXECUTABLE -z -a time_too_big.data.json time_too_big_string.zen
-    assert_line --partial 'Could not read unix timestamp 1709303629395 out of range'
+    cat <<EOF | zexe time_too_big_string.zen time_too_big.data.json
+Given I have a 'time' named 'time_string'
+Then print all data
+EOF
+    save_output time_too_big_string.out.json
+    assert_output --regexp '\{"time_string":(1709303629395|1\.709304e\+12)\}'
+
+    cat <<EOF | save_asset time_too_big_number.zen
+Given I have a 'time' named 'time_number'
+Then print all data
+EOF
     run $ZENROOM_EXECUTABLE -z -a time_too_big.data.json time_too_big_number.zen
     assert_line --partial 'Could not read unix timestamp 1.709304e+12'
 }
