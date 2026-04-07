@@ -68,12 +68,12 @@
 
 <p>This class allows to work with TIME objects.</p>
 </p>
-<p> All TIME objects are float number.
-Since all TIME objects are 32 bit signed, there are two limitations for values allowed:</p>
+<p>TIME values are signed 64-bit Unix seconds.
+Input accepts exact integers only (userdata, integer number, decimal string, or TIME octet).</p>
 
-<p>-The MAXIMUM TIME value allowed is the number 2147483647 (<code>t_max = TIME.new(2147483647)</code>)</p>
+<p>-The MAXIMUM TIME value allowed is the number 9223372036854775807 (<code>t_max = TIME.new(9223372036854775807)</code>)</p>
 
-<p>-The MINIMUM TIME value allowed is the number -2147483647 (<code>t_min = TIME.new(-2147483647)</code>) </p>
+<p>-The MINIMUM TIME value allowed is the number -9223372036854775808 (<code>t_min = TIME.new(-9223372036854775808)</code>) </p>
 
 
 <h2><a href="#Class_TIME">Class TIME </a></h2>
