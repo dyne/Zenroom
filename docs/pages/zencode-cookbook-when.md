@@ -272,11 +272,11 @@ can produce the following output
 ## Numbers statements
 
 This section will discuss numbers, specifically integers, floats, and time. Floating-point numbers are a fundamental data type in computing used to represent real numbers (numbers with fractional parts). They are designed to handle a wide range of magnitudes, from very small to very large values, by using a scientific notation-like format in binary.
-All TIME objects are float number. Since all TIME objects are 32 bit signed, there are two limitations for values allowed:
+TIME values are signed 64-bit Unix seconds. Input accepts exact integers only, either as a TIME object, an exact integer number, a decimal string, or a TIME octet.
 
--The MAXIMUM TIME value allowed is the number 2147483647 
+-The MAXIMUM TIME value allowed is the number 9223372036854775807
 
--The MINIMUM TIME value allowed is the number -2147483647 
+-The MINIMUM TIME value allowed is the number -9223372036854775808
 
 ### Create a number
 
