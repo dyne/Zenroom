@@ -147,7 +147,7 @@ EOF
     Then print the 'date table'
 EOF
     save_output timestamp_to_date_table.out.json
-    assert_output --regexp '\{"date_table":\{"day":1,"hour":[0-9]+,"isdst":false,"min":0,"month":1,"sec":0,"year":1970\}\}'
+    assert_output '{"date_table":{"day":1,"hour":0,"isdst":false,"min":0,"month":1,"sec":0,"year":1970}}'
 }
 
 @test "date table to timestamp" {
@@ -255,4 +255,24 @@ and print the 'timestamp'
 EOF
     save_output utc_time.out.json
     assert_output --regexp '\{"timestamp":1745568429,"utc_fixed":"2025-04-25T08:07:09Z","utc_now":"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z"\}'
+}
+
+@test "utc time roundtrip after 2038" {
+    cat <<EOF | save_asset utc_time_2050.data.json
+{
+    "utc_2050": "2050-01-01T00:00:00Z"
+}
+EOF
+    cat <<EOF | zexe utc_time_2050.zen utc_time_2050.data.json
+Given I have a 'string' named 'utc_2050'
+
+When I create timestamp of UTC timestamp 'utc_2050'
+and I rename 'timestamp' to 'fixed_timestamp'
+When I create UTC timestamp of 'fixed_timestamp'
+
+    Then print the 'fixed_timestamp'
+and print the 'UTC_timestamp'
+EOF
+    save_output utc_time_2050.out.json
+    assert_output --regexp '\{"UTC_timestamp":"2050-01-01T00:00:00Z","fixed_timestamp":(2524608000|2\.524608e\+09)\}'
 }
