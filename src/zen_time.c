@@ -19,12 +19,17 @@
  */
 
 /// <h1>TIME</h1>
-//This class allows to work with TIME objects. All TIME objects are float number.
-//Since all TIME objects are 64 bit signed, there are two limitations for values allowed:
+//This class allows to work with TIME objects. TIME values are signed 64-bit Unix seconds.
+//Input accepts exact integers only (userdata, integer number, decimal string, or TIME octet).
+//Since all TIME objects are 64-bit signed, there are two limitations for values allowed:
 //
 //-The MAXIMUM TIME value allowed is the number 9223372036854775807 (<code>t_max = TIME.new(9223372036854775807)</code>)
 //
 //-The MINIMUM TIME value allowed is the number -9223372036854775808 (<code>t_min = TIME.new(-9223372036854775808)</code>) 
+//
+//Octet compatibility policy:
+//- input accepts both legacy 4-byte signed native-endian payload and 8-byte native payload
+//- output preserves legacy 4-byte payload for int32-range values, otherwise emits 8-byte payload
 //@module TIME
 
 
@@ -208,8 +213,8 @@ octet *new_octet_from_time(lua_State *L, ztime_t t) {
     Create a new time. If an argument is present,
     *import it as @{OCTET} and initialise it with its value.
 
-    @param[opt] octet value (64 bit)
-    @return a new float number
+    @param[opt] octet value (legacy 32-bit or widened 64-bit payload)
+    @return a new signed 64-bit time value
     @function TIME.new
 */
 static int newtime(lua_State *L) {
