@@ -62,7 +62,8 @@ Given I have a 'time' named 'time_number'
 Then print all data
 EOF
     run $ZENROOM_EXECUTABLE -z -a time_too_big.data.json time_too_big_number.zen
-    assert_line --partial 'Could not read unix timestamp 1.709304e+12'
+    assert_success
+    assert_output --regexp '\{"time_number":1\.709304e\+12\}'
 }
 
 @test "time to integer" {
