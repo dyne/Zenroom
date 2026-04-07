@@ -214,21 +214,25 @@ local function import_signed_selective_disclosure(obj)
         disclosures[#disclosures+1] = JSON.raw_decode(O.from_url64(toks[i]):str())
     end
     return {
+        compact = O.from_string(obj),
         jwt = W3C.import_jwt(toks[1]),
         disclosures = import_str_dict(disclosures),
     }
 end
 
 local function export_signed_selective_disclosure(obj)
+    if obj.compact and (obj.jwt.payload.exp or obj.jwt.payload.iat or obj.jwt.payload.nbf) then
+        return obj.compact:str()
+    end
     local records = {
         table.concat(
-            {O.from_string(JSON.raw_encode(export_str_dict(obj.jwt.header), true)):url64(),
-             O.from_string(JSON.raw_encode(export_str_dict(obj.jwt.payload), true)):url64(),
+            {O.from_string(SD_JWT.encode_prepared_dictionary(obj.jwt.header)):url64(),
+             O.from_string(SD_JWT.encode_prepared_dictionary(obj.jwt.payload)):url64(),
              O.to_url64(obj.jwt.signature),
             }, ".")
     }
-    for _, d in pairs(export_str_dict(obj.disclosures)) do
-        table.insert(records, O.from_string(JSON.raw_encode(d, true)):url64())
+    for _, d in pairs(obj.disclosures) do
+        table.insert(records, O.from_string(SD_JWT.encode_prepared_dictionary(d)):url64())
     end
     return table.concat(records, "~") .. "~"
 end
@@ -247,6 +251,17 @@ local function export_signed_selective_disclosure_wiht_kb(obj)
     local ssd = export_signed_selective_disclosure(obj)
     local kb = W3C.export_jwt(obj.key_binding)
     return ssd .. kb
+end
+
+local function extract_exact_time_claim(payload_json, claim_name)
+    if not payload_json then
+        return nil
+    end
+    local value = payload_json:match('"' .. claim_name .. '"%s*:%s*(-?%d+)')
+    if not value then
+        return nil
+    end
+    return TIME.new(value)
 end
 
 ZEN:add_schema(
@@ -385,10 +400,20 @@ IfWhen("verify signed selective disclosure '' issued by '' is valid", function(o
     local crypto <const> = CRYPTO.load(algo)
     -- if jwt.header.alg == O.from_string("ES256") then
     local iss_pk <const> = load_pubkey_compat(by, algo:lower())
-    local payload_str <const> = SD_JWT.prepare_dictionary(jwt.payload)
-    local b64payload <const> = O.from_string(JSON.raw_encode(payload_str, true)):url64()
-    local header_str <const> = SD_JWT.prepare_dictionary(jwt.header)
-    local b64header <const> = O.from_string(JSON.raw_encode(header_str, true)):url64()
+    local compact = signed_sd.compact and signed_sd.compact:str() or nil
+    local b64header
+    local b64payload
+    local raw_payload
+    if compact then
+        local signed_parts <const> = strtok(compact, "~")
+        local jwt_parts <const> = strtok(signed_parts[1], ".")
+        b64header = jwt_parts[1]
+        b64payload = jwt_parts[2]
+        raw_payload = O.from_url64(b64payload):str()
+    else
+        b64payload = O.from_string(SD_JWT.encode_prepared_dictionary(jwt.payload)):url64()
+        b64header = O.from_string(SD_JWT.encode_prepared_dictionary(jwt.header)):url64()
+    end
 
     -- jwt.payload._sd_alg == O.from_string("sha-256")
 
@@ -407,14 +432,17 @@ IfWhen("verify signed selective disclosure '' issued by '' is valid", function(o
         "The disclosure is not valid") then return end
 
     local time_now = time_now()
-    if(jwt.payload.iat) then
-        if not zencode_assert(jwt.payload.iat < time_now, 'The iat claim is not valid') then return end
+    local exact_iat = extract_exact_time_claim(raw_payload, 'iat') or jwt.payload.iat
+    local exact_exp = extract_exact_time_claim(raw_payload, 'exp') or jwt.payload.exp
+    local exact_nbf = extract_exact_time_claim(raw_payload, 'nbf') or jwt.payload.nbf
+    if(exact_iat) then
+        if not zencode_assert(exact_iat < time_now, 'The iat claim is not valid') then return end
     end
-    if(jwt.payload.exp) then
-        if not zencode_assert(jwt.payload.exp > time_now, 'The exp claim is not valid') then return end
+    if(exact_exp) then
+        if not zencode_assert(exact_exp > time_now, 'The exp claim is not valid') then return end
     end
-    if(jwt.payload.nbf) then
-        if not zencode_assert(jwt.payload.nbf < time_now, 'The nbf claim is not valid') then return end
+    if(exact_nbf) then
+        if not zencode_assert(exact_nbf < time_now, 'The nbf claim is not valid') then return end
     end
 
     if not zencode_assert(

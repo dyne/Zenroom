@@ -596,6 +596,83 @@ EOF
     assert_equal "$clean_output" '{"credentials":[{"matching_credential_sets":[{"example_ldpvc":[{"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3id.org/security/data-integrity/v2"],"credentialSubject":{"address":{"country":"DE","locality":"Musterstadt","postal_code":"123456","street_address":"Sandanger 25"},"birthdate":"1998-01-11","family_name":"Mustermann","given_name":"Max"},"id":"https://example.com/credentials/1872","issuer":"https://example.com/credential_issuer","proof":{"created":"2025-03-19T15:30:15Z","cryptosuite":"eddsa-rdfc-2022","proofPurpose":"assertionMethod","proofValue":"not a real signature proof","type":"DataIntegrityProof","verificationMethod":"did:example:issuer#keys-1"},"type":["VerifiableCredential","IDCredential"],"validUntil":"IGNORED"}]}],"required":true}]}'
 }
 
+@test "DCQL: ldp_vc validUntil remains deterministic after 2038" {
+    cat << EOF | save_asset ldpvc_future_dcql_query.zen
+Scenario 'dcql_query': test
+Given I have a 'dcql_query' named 'my_query'
+Given I have a 'string dictionary' named 'credentials_list'
+When create the credentials from 'credentials_list' matching the dcql_query 'my_query'
+Then print the 'credentials'
+EOF
+    cat << EOF | save_asset ldpvc_future_dcql_query.keys.json
+{
+    "my_query": {
+        "credentials": [
+            {
+                "id": "example_ldpvc",
+                "format": "ldp_vc",
+                "meta": {
+                    "type_values": [["IDCredential"]]
+                },
+                "claims": [
+                    {"path": ["credentialSubject", "given_name"]}
+                ]
+            }
+        ]
+    }
+}
+EOF
+    cat << EOF | save_asset ldpvc_future_dcql_query.data.json
+{
+    "credentials_list": {
+        "ldp_vc": [
+            {
+                "@context": [
+                    "https://www.w3.org/2018/credentials/v1",
+                    "https://www.w3.org/2018/credentials/examples/v1",
+                    "https://w3id.org/security/data-integrity/v2"
+                ],
+                "id": "https://example.com/credentials/2050",
+                "type": [
+                    "VerifiableCredential",
+                    "IDCredential"
+                ],
+                "issuer": "https://example.com/credential_issuer",
+                "validUntil": "2050-01-01T00:04:16Z",
+                "credentialSubject": {
+                    "given_name": "Max"
+                },
+                "proof": {
+                    "type": "DataIntegrityProof",
+                    "cryptosuite": "eddsa-rdfc-2022",
+                    "created": "2025-03-19T15:30:15Z",
+                    "proofValue": "not a real signature proof",
+                    "proofPurpose": "assertionMethod",
+                    "verificationMethod": "did:example:issuer#keys-1"
+                }
+            }
+        ]
+    }
+}
+EOF
+    cat << EOF | save_asset time_now_future_valid.lua
+TIME_NOW_OVERRIDE = '2524608128'
+EOF
+    cat << EOF | save_asset time_now_future_expired.lua
+TIME_NOW_OVERRIDE = '2524608512'
+EOF
+
+    run $ZENROOM_EXECUTABLE -z -l time_now_future_valid.lua -a ldpvc_future_dcql_query.data.json -k ldpvc_future_dcql_query.keys.json ldpvc_future_dcql_query.zen
+    assert_success
+    assert_output --partial '"example_ldpvc":[{"@context"'
+    assert_output --partial '"validUntil":"2050-01-01T00:04:16Z"'
+
+    run $ZENROOM_EXECUTABLE -z -l time_now_future_expired.lua -a ldpvc_future_dcql_query.data.json -k ldpvc_future_dcql_query.keys.json ldpvc_future_dcql_query.zen
+    assert_success
+    assert_output --partial '"example_ldpvc":[]'
+    assert_output --partial 'Credential is expired'
+}
+
 @test "DCQL: select credentials matching a DCQL query (complex)" {
     cat << EOF | save_asset dcql_query.keys.json
 {
