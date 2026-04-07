@@ -20,8 +20,13 @@
 --]]
 
 local c_zk = require_once'longfellow'
+local TIMETABLE <const> = require_once'timetable'
 
 local longfellow = { }
+
+local function default_now_zulu()
+    return O.from_string(TIMETABLE.to_string(TIMETABLE.from_seconds(tostring(time_now()))))
+end
 
 -- values used as true and false in mdoc
 longfellow['yes'] = O.from_hex'f5'
@@ -88,11 +93,7 @@ longfellow.mdoc_prover = function(circuit, mdoc,
             error("Invalid table id in attributes",2)
         end
     end
-    -- get UTC time (ZULU) using '!*t' to avoid timezone conversion
-    -- then format as "YYYY-MM-DDTHH:MM:SSZ" (20 chars)
-    local nownow <const> = now
-        or O.from_string(os.date("!%Y-%m-%dT%H:%M:%SZ",
-                                 os.time(os.date("!*t"))))
+    local nownow <const> = now or default_now_zulu()
     if not is_zulu_date(nownow) then
         error("Timestamp is not in ISO 8601 format",2)
     end
@@ -142,11 +143,7 @@ longfellow.mdoc_verifier = function(circuit, proof,
             error("Invalid table id in attributes",2)
         end
     end
-    -- get UTC time (ZULU) using '!*t' to avoid timezone conversion
-    -- then format as "YYYY-MM-DDTHH:MM:SSZ" (20 chars)
-    local nownow <const> = now
-        or O.from_string(os.date("!%Y-%m-%dT%H:%M:%SZ",
-                                 os.time(os.date("!*t"))))
+    local nownow <const> = now or default_now_zulu()
     if not is_zulu_date(nownow) then
         error("Timestamp is not in ISO 8601 format",2)
     end
