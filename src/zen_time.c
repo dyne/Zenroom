@@ -156,12 +156,9 @@ ztime_t* time_arg(lua_State *L, int n) {
 	const octet *o = o_arg(L, n);
 	if(o) {
 		if(o->len == 8) {
-			uint64_t raw = 0;
-			size_t i;
-			for(i = 0; i < 8; i++) {
-				raw = (raw << 8) | (unsigned char)o->val[i];
-			}
-			*result = (ztime_t)raw;
+			ztime_t native = 0;
+			memcpy(&native, o->val, 8);
+			*result = native;
 			o_free(L, o);
 			goto end;
 		}
@@ -185,15 +182,20 @@ end:
 }
 
 octet *new_octet_from_time(lua_State *L, ztime_t t) {
-	octet *o = o_alloc(L, 8);
-	uint64_t raw = (uint64_t)t;
-	int i;
-	if(!o) return NULL;
-	for(i = 7; i >= 0; i--) {
-		o->val[i] = (char)(raw & 0xffU);
-		raw >>= 8;
+	octet *o = NULL;
+	/* Keep backward compatibility for existing signatures and fixtures. */
+	if(t >= INT32_MIN && t <= INT32_MAX) {
+		int32_t legacy = (int32_t)t;
+		o = o_alloc(L, 4);
+		if(!o) return NULL;
+		memcpy(o->val, &legacy, 4);
+		o->len = 4;
+		return o;
 	}
-	o->len = 8;
+	o = o_alloc(L, sizeof(ztime_t));
+	if(!o) return NULL;
+	memcpy(o->val, &t, sizeof(ztime_t));
+	o->len = sizeof(ztime_t);
 	return o;
 }
 
