@@ -32,6 +32,40 @@
 -- string    int      int             string
 -- string    float    float           float
 
+local AUTODETECTED_TIME_MIN <const> = "1500000000"
+local AUTODETECTED_TIME_MAX <const> = "4102444800"
+
+local function representable_integer_string(data)
+  if type(data) ~= 'number' then
+    return nil
+  end
+  if math.type(data) == 'integer' then
+    return tostring(data)
+  end
+  if data ~= data or data == math.huge or data == -math.huge then
+    return nil
+  end
+  local integer, fractional = math.modf(data)
+  if fractional ~= 0.0 then
+    return nil
+  end
+  return string.format('%.0f', integer)
+end
+
+local function decimal_lte(left, right)
+  if #left ~= #right then
+    return #left < #right
+  end
+  return left <= right
+end
+
+local function is_autodetected_time_string(value)
+  if not value or value:sub(1, 1) == '-' then
+    return false
+  end
+  return decimal_lte(AUTODETECTED_TIME_MIN, value)
+     and decimal_lte(value, AUTODETECTED_TIME_MAX)
+end
 
  -- Used in scenario's schema declarations to cast to zenroom. type
  function schema_get(obj, key, conversion, encoding)
@@ -283,9 +317,10 @@ end
 	  -- wrap all conversion functions nested in deepmaps
 	  -- TODO: optimize
 	  if dt == 'number' and encoder_n ~= 'float' and encoder_n ~= 'time' then
-       if TIME.detect_time_value(data) and not CONF.input.number_strict then
-          warn("Number value imported as timestamp: "..data)
-          return TIME.new(data)
+       local exact = representable_integer_string(data)
+       if exact and is_autodetected_time_string(exact) and not CONF.input.number_strict then
+          warn("Number value imported as timestamp: "..exact)
+          return TIME.new(exact)
        else
           return FLOAT.new(data)
        end
