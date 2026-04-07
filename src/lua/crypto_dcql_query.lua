@@ -342,7 +342,7 @@ DCQL.check_fn.ldp_vc = function(cred, string_query, out)
     end
     -- not expired
     local cred_validUntil <const> = zulu2timestamp(cred.validUntil)
-    local now <const> = TIME.new(os.time())
+    local now <const> = time_now()
     if (now > cred_validUntil) then
         warn("Credential is expired")
         return false
@@ -441,7 +441,7 @@ DCQL.check_fn['dc+sd-jwt'] = function(cred, string_query, out)
     end
     -- not expired
     local cred_exp <const> = TIME.new(parsed_cred.payload.exp)
-    local now <const> = TIME.new(os.time())
+    local now <const> = time_now()
     if (now > cred_exp) then
         warn("Credential is expired")
         return false

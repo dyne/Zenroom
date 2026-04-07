@@ -406,8 +406,7 @@ IfWhen("verify signed selective disclosure '' issued by '' is valid", function(o
         SD_JWT.verify_sd_fields(jwt.payload, disclosures),
         "The disclosure is not valid") then return end
 
-    if not zencode_assert(os, 'Could not find os to check timestamps') then return end
-    local time_now = TIME.new(os.time())
+    local time_now = time_now()
     if(jwt.payload.iat) then
         if not zencode_assert(jwt.payload.iat < time_now, 'The iat claim is not valid') then return end
     end

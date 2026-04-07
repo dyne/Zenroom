@@ -534,3 +534,17 @@ local function _zulu2timestamp(s)
     return TIME.new(TIMETABLE.to_seconds(tt))
 end
 _G['zulu2timestamp'] = _zulu2timestamp
+
+local function _time_now()
+    if _G['TIME_NOW_OVERRIDE'] ~= nil then
+        return TIME.new(_G['TIME_NOW_OVERRIDE'])
+    end
+    if CONTEXT and CONTEXT.time_now ~= nil then
+        return TIME.new(CONTEXT.time_now)
+    end
+    if not os then
+        error('Could not find os to read current time', 2)
+    end
+    return TIME.new(os.time())
+end
+_G['time_now'] = _time_now
