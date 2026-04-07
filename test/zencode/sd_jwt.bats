@@ -445,6 +445,79 @@ EOF
     assert_output '{"es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg==","signed_selective_disclosure":{"disclosures":[["XdjAYj-RY95-uyYMI8fR3w","given_name","John"],["vIXGZmzovnpG7Q_4mUJsOw","phone_number","+1-202-555-0101"]],"jwt":{"header":{"alg":"ES256","typ":"dc+sd-jwt"},"payload":{"_sd":["t0Chup62fiaD6Swz_ZYHu4vbhIEOTigVg7z2lyNBKgY","W_VxVKGf1_ncWfAjRoJUGx7YeHRhKzb_ucVhCLU69Dc","PteND5DdwH6yBuxUKD3kpSTWUNZiDNICxMw3l9LXJQ8","wpyUw7kDDETJfMnnbB74VnolcTIw1acFDpQiAnGUwqQ","qdN_67i12h1IuvARQq67rCWxd-uPIA98HRjaiq2HywM","mFtFOS4Z2ciGRZpsAfsSR7GLi_qb3IFbiQShE9DwRUY","nBZt3hAqBI5CPUJREzMlXdZh6triTkWs2dsSXTfLzlo","GRAVzz7ZmE5-g1siHKrMLibaQQKdgkJGitjrx1D0JBs"],"_sd_alg":"sha-256","exp":1883000000,"iat":1683000000,"iss":"http://example.org","sub":"user 42"},"signature":"bRd93MYGuiVye_3QVLtvyxGmyGejx_HXQcC-z3m_PtgCkMnKA7dtPR_T_CXQyXfNlK-HQFaAFTbS3ftOLjvi9Q"}}}'
 }
 
+@test "Verify signed selective disclosure with future exp after 2038" {
+    cat <<EOF | save_asset sd_payload_future.data.json
+{
+    "The Issuer": {
+        "es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg==",
+        "keyring":{"es256":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="}
+    },
+    "selective_disclosure_request": {
+        "fields":["given_name"],
+        "object": {
+            "iat": 2524608000,
+            "nbf": 2524608000,
+            "exp": 2524608256,
+            "given_name": "John",
+            "iss":"http://example.org",
+            "sub":"user 42"
+        }
+    }
+}
+EOF
+    cat <<EOF | save_asset sd_payload_future.keys.json
+{
+    "The Issuer": {
+        "es256_public_key":"gyvKONZZiFmTUbQseoJ6KdAYJPyFixv0rMXL2T39sawziR3I49jMp/6ChAupQYqZhYPVC/RtxBI+tUcULh1SCg=="
+    }
+}
+EOF
+    cat <<EOF | save_asset sd_payload_future.zen
+Scenario 'sd_jwt'
+Scenario 'es256'
+
+Given I am known as 'The Issuer'
+and I have my 'keyring'
+and I have my 'es256 public key'
+
+Given I have 'selective_disclosure_request'
+
+When I create the selective disclosure of 'selective_disclosure_request'
+and I create the signed selective disclosure of 'selective disclosure'
+
+Then print the 'signed selective disclosure'
+EOF
+    cat <<EOF | save_asset sd_verification_future.zen
+Scenario 'sd_jwt'
+Scenario 'es256'
+
+Given I am known as 'The Issuer'
+Given I have my 'es256 public key'
+Given I have a 'signed selective disclosure'
+
+When I verify signed selective disclosure 'signed_selective_disclosure' issued by 'The Issuer' is valid
+
+Then print data
+EOF
+    cat <<EOF | save_asset time_now_2050_valid.lua
+TIME_NOW_OVERRIDE = '2524608128'
+EOF
+    cat <<EOF | save_asset time_now_2050_expired.lua
+TIME_NOW_OVERRIDE = '2524608512'
+EOF
+
+    run $ZENROOM_EXECUTABLE -z -a sd_payload_future.data.json sd_payload_future.zen
+    assert_success
+    printf '%s\n' "$output" | grep -E '^\{' | tail -n 1 > sd_payload_future.out.json
+
+    run $ZENROOM_EXECUTABLE -z -l time_now_2050_valid.lua -a sd_payload_future.out.json -k sd_payload_future.keys.json sd_verification_future.zen
+    assert_success
+
+    run $ZENROOM_EXECUTABLE -z -l time_now_2050_expired.lua -a sd_payload_future.out.json -k sd_payload_future.keys.json sd_verification_future.zen
+    assert_failure
+    assert_output --partial 'The exp claim is not valid'
+}
+
 @test "Fail verify on invalid sd-jwt: wrong signature" {
     cat <<EOF | save_asset wrong_sig.json
 {
@@ -713,7 +786,12 @@ When I rename 'payload' to 'kb.payload'
 Then print the data
 EOF
     save_output import_sd-jwt+kb.out.json
-    assert_output '{"disclosures":[["eluV5Og3gSNII8EYnsxA_A","family_name","Doe"],["AJx-095VPrpTtN4QMOqROA","address",{"country":"US","locality":"Anytown","region":"Anystate","street_address":"123 Main St"}],["2GLC42sKQveCfGfryNRN9w","given_name","John"],["lklxF5jMYlGTPUovMNIvCA","US"]],"kb.header":{"alg":"ES256","typ":"kb+jwt"},"kb.payload":{"aud":"https://verifier.example.org","iat":1748537244,"nonce":"1234567890","sd_hash":"0_Af-2B-EhLWX5ydh_w2xzwmO6iM66B_2QCEanI4fUY"},"sd-jet.header":{"alg":"ES256","typ":"example+sd-jwt"},"sd-jet.payload":{"_sd":["CrQe7S5kqBAHt-nMYXgc6bdt2SH5aTY1sU_M-PgkjPI","JzYjH4svliH0R3PyEMfeZu6Jt69u5qehZo7F7EPYlSE","PorFbpKuVu6xymJagvkFsFXAbRoc2JGlAUA2BA4o7cI","TGf4oLbgwd5JQaHyKVQZU9UdGE0w5rtDsrZzfUaomLo","XQ_3kPKt1XyX7KANkqVR6yZ2Va5NrPIvPYbyMvRKBMM","XzFrzwscM6Gn6CJDc6vVK8BkMnfG8vOSKfpPIZdAfdE","gbOsI4Edq2x2Kw-w5wPEzakob9hV1cRD0ATN3oQL9JM","jsu9yVulwQQlhFlM_3JlzMaSFzglhQG0DpfayQwLUK4"],"_sd_alg":"sha-256","cnf":{"jwk":{"crv":"P-256","kty":"EC","x":"TCAER19Zvu3OHF4j4W4vfSVoHIP1ILilDls7vCeGemc","y":"ZxjiWWbZMQGHVWKVQ4hbSIirsVfuecCE6t4jT9F2HZQ"}},"exp":1883000000,"iat":1683000000,"iss":"https://issuer.example.com","nationalities":[{"...":"pFndjkZ_VCzmyTa6UjlZo3dh-ko8aIKQc9DlGzhaVYo"},{"...":"7Cf6JkPudry3lcbwHgeZ8khAv1U1OSlerP0VkBJrWZ0"}],"sub":"user_42"},"sd-jwt+kb":"eyJhbGciOiAiRVMyNTYiLCAidHlwIjogImV4YW1wbGUrc2Qtand0In0.eyJfc2QiOiBbIkNyUWU3UzVrcUJBSHQtbk1ZWGdjNmJkdDJTSDVhVFkxc1VfTS1QZ2tqUEkiLCAiSnpZakg0c3ZsaUgwUjNQeUVNZmVadTZKdDY5dTVxZWhabzdGN0VQWWxTRSIsICJQb3JGYnBLdVZ1Nnh5bUphZ3ZrRnNGWEFiUm9jMkpHbEFVQTJCQTRvN2NJIiwgIlRHZjRvTGJnd2Q1SlFhSHlLVlFaVTlVZEdFMHc1cnREc3JaemZVYW9tTG8iLCAiWFFfM2tQS3QxWHlYN0tBTmtxVlI2eVoyVmE1TnJQSXZQWWJ5TXZSS0JNTSIsICJYekZyendzY002R242Q0pEYzZ2Vks4QmtNbmZHOHZPU0tmcFBJWmRBZmRFIiwgImdiT3NJNEVkcTJ4Mkt3LXc1d1BFemFrb2I5aFYxY1JEMEFUTjNvUUw5Sk0iLCAianN1OXlWdWx3UVFsaEZsTV8zSmx6TWFTRnpnbGhRRzBEcGZheVF3TFVLNCJdLCAiX3NkX2FsZyI6ICJzaGEtMjU2IiwgImNuZiI6IHsiandrIjogeyJjcnYiOiAiUC0yNTYiLCAia3R5IjogIkVDIiwgIngiOiAiVENBRVIxOVp2dTNPSEY0ajRXNHZmU1ZvSElQMUlMaWxEbHM3dkNlR2VtYyIsICJ5IjogIlp4amlXV2JaTVFHSFZXS1ZRNGhiU0lpcnNWZnVlY0NFNnQ0alQ5RjJIWlEifX0sICJleHAiOiAxODgzMDAwMDAwLCAiaWF0IjogMTY4MzAwMDAwMCwgImlzcyI6ICJodHRwczovL2lzc3Vlci5leGFtcGxlLmNvbSIsICJuYXRpb25hbGl0aWVzIjogW3siLi4uIjogInBGbmRqa1pfVkN6bXlUYTZVamxabzNkaC1rbzhhSUtRYzlEbEd6aGFWWW8ifSwgeyIuLi4iOiAiN0NmNkprUHVkcnkzbGNid0hnZVo4a2hBdjFVMU9TbGVyUDBWa0JKcldaMCJ9XSwgInN1YiI6ICJ1c2VyXzQyIn0.MczwjBFGtzf-6WMT-hIvYbkb11NrV1WMO-jTijpMPNbswNzZ87wY2uHz-CXo6R04b7jYrpj9mNRAvVssXou1iw~WyJlbHVWNU9nM2dTTklJOEVZbnN4QV9BIiwgImZhbWlseV9uYW1lIiwgIkRvZSJd~WyJBSngtMDk1VlBycFR0TjRRTU9xUk9BIiwgImFkZHJlc3MiLCB7ImNvdW50cnkiOiAiVVMiLCAibG9jYWxpdHkiOiAiQW55dG93biIsICJyZWdpb24iOiAiQW55c3RhdGUiLCAic3RyZWV0X2FkZHJlc3MiOiAiMTIzIE1haW4gU3QifV0~WyIyR0xDNDJzS1F2ZUNmR2ZyeU5STjl3IiwgImdpdmVuX25hbWUiLCAiSm9obiJd~WyJsa2x4RjVqTVlsR1RQVW92TU5JdkNBIiwgIlVTIl0~eyJhbGciOiJFUzI1NiIsInR5cCI6ImtiK2p3dCJ9.eyJhdWQiOiJodHRwczovL3ZlcmlmaWVyLmV4YW1wbGUub3JnIiwiaWF0IjoxNzQ4NTM3MjQ0LCJub25jZSI6IjEyMzQ1Njc4OTAiLCJzZF9oYXNoIjoiMF9BZi0yQi1FaExXWDV5ZGhfdzJ4endtTzZpTTY2Ql8yUUNFYW5JNGZVWSJ9.T3SIus2OidNl41nmVkTZVCKKhOAX97aOldMyHFiYjHm261eLiJ1YiuONFiMN8QlCmYzDlBLAdPvrXh52KaLgUQ"}'
+    assert_output --partial '"kb.header":{"alg":"ES256","typ":"kb+jwt"}'
+    assert_output --partial '"kb.payload":{"aud":"https://verifier.example.org","iat":1748537244,"nonce":"1234567890","sd_hash":"0_Af-2B-EhLWX5ydh_w2xzwmO6iM66B_2QCEanI4fUY"}'
+    assert_output --partial '"sd-jet.header":{"alg":"ES256","typ":"example+sd-jwt"}'
+    assert_output --partial '"exp":1883000000'
+    assert_output --partial '"sub":"user_42"'
+    assert_output --partial '"sd-jwt+kb":"eyJhbGciOiAiRVMyNTYi'
 }
 
 @test "create signed selective disclosuer with nested objects" {
