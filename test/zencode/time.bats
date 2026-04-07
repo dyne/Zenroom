@@ -196,7 +196,7 @@ EOF
         "sec": 200
     },
     "timestamp": 0,
-    "another_timestamp": 1712324515
+    "another_timestamp": "2524608000"
 }
 EOF
     cat <<EOF | zexe sum_of_date_table.zen sum_of_date_table.data.json
@@ -229,7 +229,7 @@ EOF
     Then print the 'sum_of_date_tables'
 EOF
     save_output sum_of_date_table.out.json
-    assert_output --regexp '\{"sum_of_date_table_and_timestamp":\{"day":6,"hour":[0-9]+,"min":0,"month":2,"sec":0,"year":1971\},"sum_of_date_tables":\{"day":25,"hour":0,"min":0,"month":1,"sec":200,"year":25001\},"sum_of_timestamp":1712324515,"sum_of_timestamp_and_another_date_table":\{"day":25,"hour":[0-9]+,"min":41,"month":4,"sec":255,"year":27024\},"sum_of_timestamp_and_date_table":\{"day":6,"hour":[0-9]+,"min":0,"month":2,"sec":0,"year":1971\}\}'
+    assert_output --regexp '\{"sum_of_date_table_and_timestamp":\{"day":6,"hour":0,"min":0,"month":2,"sec":0,"year":1971\},"sum_of_date_tables":\{"day":25,"hour":0,"min":0,"month":1,"sec":200,"year":25001\},"sum_of_timestamp":(2524608000|2\.524608e\+09),"sum_of_timestamp_and_another_date_table":\{"day":21,"hour":0,"min":0,"month":1,"sec":200,"year":27050\},"sum_of_timestamp_and_date_table":\{"day":6,"hour":0,"min":0,"month":2,"sec":0,"year":1971\}\}'
 }
 
 @test "utc time" {

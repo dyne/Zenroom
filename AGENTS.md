@@ -265,7 +265,7 @@ Preserve:
 - vendored Lua modules (`json.lua`, `msgpack.lua`, `inspect.lua`, `semver.lua`) include origin/local-change headers; preserve them when upgrading.
 - for array-like data in hot paths, prefer `ipairs` over deterministic sorted traversal helpers unless order affects serialized or signed output.
 - TIME values are now stored and parsed as signed 64-bit (`ztime_t = int64_t`); keep parser inputs integer-only and preserve legacy native-endian 4-byte TIME octets for int32-range compatibility while accepting 8-byte octets for widened values.
-- Y2038 audit map for remaining Lua-side time assumptions: calendar conversion (`src/lua/zencode_time.lua`, `src/lua/zenroom_common.lua`), expiry comparison (`src/lua/crypto_dcql_query.lua`, `src/lua/zencode_sd_jwt.lua`), utility conversions (`src/lua/zencode_math.lua`, `src/lua/crypto_fsp.lua`, `src/lua/crypto_ulid.lua`), and UTC string generation (`src/lua/crypto_longfellow.lua`, `src/lua/zencode_longfellow.lua`).
+- Lua-side Y2038 follow-up is mostly migrated: `zencode_math.lua`, `crypto_ulid.lua`, `crypto_dcql_query.lua`, `zencode_sd_jwt.lua`, `crypto_longfellow.lua`, and `zencode_longfellow.lua` now avoid libc calendar conversions; `crypto_fsp.lua` still carries a tracked `time-y2038` TODO because the timetable-based UTC formatter currently overflows in plain-Lua FSP calls.
 
 
 ## Rule Of Thumb
