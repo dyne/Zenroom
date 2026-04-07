@@ -21,7 +21,12 @@
 
 local LF <const> = require_once'crypto_longfellow'
 local P256 <const> = require_once'es256'
+local TIMETABLE <const> = require_once'timetable'
 local OUTCONV <const> = CONF.output.encoding.fun
+
+local function default_now_zulu()
+    return O.from_string(TIMETABLE.to_string(TIMETABLE.from_seconds(tostring(time_now()))))
+end
 
 local function import_longfellow_circuit_f(circ)
     if not isdictionary(circ) then
@@ -130,9 +135,7 @@ When("create proof of attributes '' in mdoc ''",
          empty'longfellow proof'
          local circ <const> = have'circuit'
          local trans <const> = have'transcript'
-         local now <const> = mayhave'now' or
-             O.from_string(os.date("!%Y-%m-%dT%H:%M:%SZ",
-                                   os.time(os.date("!*t"))))
+         local now <const> = mayhave'now' or default_now_zulu()
          local pk <const> = have'public key'
          zencode_assert(#pk==64, "public key length is not 64 bytes (P256)")
          zencode_assert(P256.pubcheck(pk), "invalid P256 public key")
@@ -153,9 +156,7 @@ When("verify proof of attributes '' in proof ''",
      function(attributes, proof)
          local circ <const> = have'circuit'
          local trans <const> = have'transcript'
-         local now <const> = mayhave'now' or
-             O.from_string(os.date("!%Y-%m-%dT%H:%M:%SZ",
-                                   os.time(os.date("!*t"))))
+         local now <const> = mayhave'now' or default_now_zulu()
          local pk <const> = have'public key'
          zencode_assert(#pk==64, "public key length is not 64 bytes (P256)")
          zencode_assert(P256.pubcheck(pk), "invalid P256 public key")
