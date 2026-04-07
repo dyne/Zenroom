@@ -21,6 +21,8 @@
 --on Thursday, 29th February 2024
 --]]
 
+local TIMETABLE <const> = require_once('timetable')
+
 local function import_date_table(obj)
     local res = {}
     res.year = TIME.new(obj.year or 0)
@@ -35,7 +37,16 @@ end
 
 local function export_date_table(obj)
     if type(obj) == 'zenroom.time' then
-        return os.date("*t", tonumber(obj))
+        local tt = TIMETABLE.from_seconds(obj)
+        return {
+            year = tt.year,
+            month = tt.month,
+            day = tt.day,
+            hour = tt.hour,
+            min = tt.min,
+            sec = tt.sec,
+            isdst = false
+        }
     end
     local res = {}
     res.year = tonumber(obj.year)
@@ -74,24 +85,29 @@ When("create integer '' cast of timestamp ''", function(dest, source)
 end)
 
 When("create timestamp of date table ''", function(dt)
-    zencode_assert(os, 'Could not find os')
     local date_table, date_table_codec = have(dt)
     zencode_assert(
         date_table_codec.encoding == 'complex' and date_table_codec.schema == 'date_table',
         'Invalid date table encoding: ' .. date_table_codec.schema)
     zencode_assert(date_table.year >= TIME.new(1970),
         'Date table ' .. dt .. ' can not be converted to timestamp, ' .. tostring(date_table.year) .. ' < 1970')
-    local t = os.time(export_date_table(date_table))
-    ACK.timestamp = TIME.new(t)
+    local tt = TIMETABLE.new(
+        tonumber(date_table.year),
+        tonumber(date_table.month),
+        tonumber(date_table.day),
+        tonumber(date_table.hour),
+        tonumber(date_table.min),
+        tonumber(date_table.sec)
+    )
+    ACK.timestamp = TIME.new(TIMETABLE.to_seconds(tt))
     new_codec('timestamp', { zentype = 'e', encoding = 'time'})
 end)
 
 When("create date table of timestamp ''", function(t)
-    zencode_assert(os, 'Could not find os')
     local timestamp, timestamp_codec = have(t)
     zencode_assert(timestamp_codec.encoding == 'time',
         'Invalid time encoding: ' .. timestamp_codec.encoding)
-    ACK.date_table = import_date_table(os.date("*t", tonumber(timestamp)))
+    ACK.date_table = import_date_table(export_date_table(timestamp))
     new_codec('date_table', { zentype = 'e', encoding = 'complex', schema = 'date_table'})
 end)
 
@@ -99,11 +115,11 @@ local function _timestamp2UTC(t_name, dest)
     zencode_assert(os, 'Could not find os')
     local d <const> = dest or 'UTC_timestamp'
     empty(d)
-    local t <const> = tonumber((t_name and have(t_name)) or os.time(os.date("!*t")))
+    local t <const> = (t_name and have(t_name)) or TIME.new(os.time())
     if t_name and CODEC[t_name] and CODEC[t_name].encoding ~= 'time' then
-        error('Invalid time encoding: ' .. timestamp_codec.encoding, 2)
+        error('Invalid time encoding: ' .. CODEC[t_name].encoding, 2)
     end
-    ACK[d] = O.from_string(os.date("!%Y-%m-%dT%H:%M:%SZ", t))
+    ACK[d] = O.from_string(TIMETABLE.to_string(TIMETABLE.from_seconds(t)))
     new_codec(d, { zentype = 'e', encoding = 'string'})
 end
 
@@ -113,7 +129,6 @@ When("create ZULU timestamp of now", function() _timestamp2UTC(nil, 'ZULU_timest
 When("create ZULU timestamp of ''", function(t_name) _timestamp2UTC(t_name, 'ZULU_timestamp') end)
 
 local function _UTC2timestamp(t_name)
-    if not os then error('Could not find os', 2) end
     local utc_timestamp, utc_timestamp_codec <const> = have(t_name)
     if utc_timestamp_codec.encoding ~= 'string' then
         error('Invalid UTC timestamp encoding: ' .. utc_timestamp_codec.encoding, 2)
