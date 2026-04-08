@@ -5,11 +5,12 @@
 
 conf=${conf:-"logfmt=text,debug=0"}
 
-while getopts "zc:k:a:" arg; do
+while getopts "zc:k:a:l:" arg; do
   case $arg in
     z) ;; # autodetected from script name
 	k) keys="${OPTARG}" ;;
 	a) data="${OPTARG}" ;;
+	l) sideload="${OPTARG}" ;;
 	c) conf="${OPTARG},logfmt=text,debug=0" ;;
   esac
 done
@@ -17,10 +18,10 @@ shift $((OPTIND-1))
 
 if [[ $1 == *.lua ]]; then
 	node =ROOT=/test/zenroom_exec.js \
-		 =ROOT=/bindings/javascript/dist/main/zenroom.js $1 $conf $keys $data
+		 =ROOT=/bindings/javascript/dist/main/zenroom.js "$1" "$conf" "$keys" "$data" "$sideload"
 elif [[ $1 == *.zen ]]; then
 	node =ROOT=/test/zencode_exec.js \
-		 =ROOT=/bindings/javascript/dist/main/zenroom.js $1 $conf $keys $data
+		 =ROOT=/bindings/javascript/dist/main/zenroom.js "$1" "$conf" "$keys" "$data" "$sideload"
 else
 	echo "Unsupported script: $1"
 fi
