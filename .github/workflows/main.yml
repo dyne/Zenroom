@@ -305,7 +305,7 @@ jobs:
             apt-get clean
             rm -rf /var/lib/apt/lists/*
             apt-get update -yq
-            apt-get install -yq --no-install-recommends make cmake gcc jq libreadline-dev xxd git
+            apt-get install -yq --no-install-recommends make cmake gcc g++ jq libreadline-dev xxd git
             make linux-exe
             # Testing on ARM32 in Qemu takes too long. This should be tested on-site
             # python3 -m venv .venv
