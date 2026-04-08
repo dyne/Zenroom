@@ -39,6 +39,7 @@ load ../bats_setup
     Z zcash.lua
     Z hkdf.lua
     Z fsp.lua
+    Z ulid_time.lua
     Z uuid.lua
     Z guard_precedence.lua
     Z time_big_regression.lua

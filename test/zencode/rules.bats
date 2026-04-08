@@ -308,7 +308,6 @@ EOF
     assert_output '{"string_dict_with_number":{"bool":true,"num":1978468946,"string":"hello"}}'
 }
 
-
 # --- Rule path separator --- #
 @test "Rule path separator" {
     cat << EOF | save_asset rule_path_separator.data
