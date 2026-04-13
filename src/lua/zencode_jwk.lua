@@ -30,6 +30,31 @@ local function import_jwk(obj)
     -- zencode_assert(obj.kty == "EC", "kty must be EC, given is "..obj.kty)
     -- zencode_assert(obj.crv, "The input is not a valid JSON Web Key, missing crv")
     -- zencode_assert(obj.crv == "P-256", "crv must be P-256, given is "..obj.crv)
+    
+    if obj.kty == 'RSA' then
+        zencode_assert(obj.n, "RSA JWK missing modulus n")
+        zencode_assert(obj.e, "RSA JWK missing exponent e")
+        local res = {
+            kty = O.from_string(obj.kty),
+            n = O.from_url64(obj.n),
+            e = O.from_url64(obj.e)
+        }
+        if obj.d then
+            res.d = O.from_url64(obj.d)
+        end
+        if obj.alg then
+            res.alg = O.from_string(obj.alg)
+        end
+        if obj.use then
+            zencode_assert(obj.use == "sig", "use must be sig, given is "..obj.use)
+            res.use = O.from_string(obj.use)
+        end
+        if obj.kid then
+            res.kid = O.from_url64(obj.kid)
+        end
+        return res
+    end
+    
     zencode_assert(obj.x, "The input is not a valid JSON Web Key, missing x")
     zencode_assert(#O.from_url64(obj.x) == 32, "Wrong length in field 'x', expected 32 given is ".. #O.from_url64(obj.x))
     zencode_assert(obj.y, "The input is not a valid JSON Web Key, missing y")
@@ -65,6 +90,14 @@ local function export_jwk(obj)
     if obj.use then key.use = O.to_string(obj.use) end
     if obj.alg then key.alg = O.to_string(obj.alg) end
     if obj.kid then key.kid = O.to_string(obj.kid) end
+    -- RSA specific fields
+    if obj.n   then key.n =   O.to_string(obj.n) end
+    if obj.e   then key.e =   O.to_string(obj.e) end
+    if obj.p   then key.p =   O.to_string(obj.p) end
+    if obj.q   then key.q =   O.to_string(obj.q) end
+    if obj.dp  then key.dp =  O.to_string(obj.dp) end
+    if obj.dq  then key.dq =  O.to_string(obj.dq) end
+    if obj.qi  then key.qi =  O.to_string(obj.qi) end
     return key
 end
 
@@ -103,3 +136,10 @@ When("create jwk of secp256k1 public key with private key", function() _create_j
 When("create jwk of ecdh public key ''", function(pk) _create_jwk('ES256K', false, pk) end)
 When("create jwk of es256k public key ''", function(pk) _create_jwk('ES256K', false, pk) end)
 When("create jwk of secp256k1 public key ''", function(pk) _create_jwk('ES256K', false, pk) end)
+
+When("create jwk of rsa public key", function() _create_jwk('RS256') end)
+When("create jwk of rsa public key with private key", function() _create_jwk('RS256', true) end)
+When("create jwk of rsa public key ''", function(pk) _create_jwk('RS256', false, pk) end)
+When("create jwk of rs256 public key", function() _create_jwk('RS256') end)
+When("create jwk of rs256 public key with private key", function() _create_jwk('RS256', true) end)
+When("create jwk of rs256 public key ''", function(pk) _create_jwk('RS256', false, pk) end)

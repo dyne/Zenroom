@@ -38,12 +38,13 @@ function jose.create_jwk(alg, sk_flag, pk)
     if sk_flag then
         sk = havekey(crypto.keyname)
     end
-    local pub = pk or mayhave'es256 public key'
+    local pub = pk or mayhave(crypto.keyname..' public key')
     if not pub and crypto.pubgen then
         if not sk then
             sk = havekey(crypto.keyname)
         end
-        pub = crypto.pubgen(sk)
+        -- need to create a copy of the sk octet since rsa causes it to be consumed by the pubgen function and not available for the sign call
+        pub = crypto.pubgen(O.copy(sk, 0, #sk))
     end
     if crypto.IANA == 'ES256' then
         local key_ops = { }
@@ -105,6 +106,23 @@ function jose.create_jwk(alg, sk_flag, pk)
         jwk.alg = O.from_string(crypto.IANA)
         jwk.kty = O.from_string'AKP'
         jwk.param = O.from_string'44'
+        jwk.key_ops = key_ops
+        return jwk
+    end
+    if crypto.IANA == 'RS256' then
+        local key_ops = { }
+        jwk.kty = O.from_string'RSA'
+        if pub then
+            table.insert(key_ops,O.from_string'verify')
+            jwk.n, jwk.e = crypto.class.public_ne(pub)
+            -- removing leading zeros for jwk export
+            jwk.n = O.trim(jwk.n)
+            jwk.e = O.trim(jwk.e)
+        end
+        if sk_flag then
+            table.insert(key_ops,O.from_string'sign')
+            jwk.d = sk
+        end
         jwk.key_ops = key_ops
         return jwk
     end
@@ -214,26 +232,52 @@ function jose.jwk_to_pk(header, crypto)
         warn("JWS header doesn't contains a jwk")
         return nil
     end
+    -- TODO: remove this check when we will support RSA or other key types in jwk
     if header.jwk.kty ~= 'EC' then
         warn('JWK public key type is not EC', 2)
-        return nil
+        -- return nil
     end
-    if not header.jwk.crv then
-        warn('JWK curve type undefined', 2)
-        return nil
-    end
-    local jwk_crypto <const> =
-        CRYPTO.load(header.jwk.crv)
-    if crypto and jwk_crypto.keyname ~= crypto.keyname then
-        warn('JWK crypto algo is different from JWS: '..jwk_crypto.keyname)
-        return nil
-    end
+
+    local kty = header.jwk.kty
     local res
-    if header.jwk.x and header.jwk.y then
-        res = O.from_url64(header.jwk.x):pad(32)
-            ..O.from_url64(header.jwk.y):pad(32)
+    local jwk_crypto
+
+    if kty == 'EC' then
+        if not header.jwk.crv then
+            warn('JWK curve type undefined', 2)
+            return nil
+        end
+        jwk_crypto = CRYPTO.load(header.jwk.crv)
+        if crypto and jwk_crypto.keyname ~= crypto.keyname then
+            warn('JWK crypto algo is different from JWS: '..jwk_crypto.keyname)
+            return nil
+        end
+        
+        if header.jwk.x and header.jwk.y then
+            res = O.from_url64(header.jwk.x):pad(32)
+                ..O.from_url64(header.jwk.y):pad(32)
+        else
+            warn("JWK misses public key coordinates x/y", 2)
+            return nil
+        end
+    
+    elseif kty == 'RSA' then
+        jwk_crypto = CRYPTO.load('RS256')
+        if crypto and jwk_crypto.keyname ~= crypto.keyname then
+            warn('JWK crypto algo is different from JWS: '..jwk_crypto.keyname)
+            return nil
+        end
+        if not header.jwk.n or not header.jwk.e then
+            warn("JWK misses modulus n or exponent e", 2)
+            return nil
+        end
+        local n = O.from_url64(header.jwk.n)
+        local e = O.from_url64(header.jwk.e)
+        local rsa = require_once('rsa')
+        res = rsa.pk_from_ne(n, e)
+    
     else
-        warn("JWK misses public key coordinates x/y", 2)
+        warn('Unsupported JWK key type: '..kty, 2)
         return nil
     end
     return res, jwk_crypto
