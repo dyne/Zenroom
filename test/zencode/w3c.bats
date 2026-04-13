@@ -967,3 +967,195 @@ EOF
     save_output jws_timestamp.out.json
     assert_output '{"jws_signature":"eyJhbGciOiJFUzI1NiIsImp3ayI6eyJhbGciOiJFUzI1NiIsImNydiI6IlAtMjU2Iiwia2V5X29wcyI6WyJ2ZXJpZnkiXSwia3R5IjoiRUMiLCJ4IjoiZ3l2S09OWlppRm1UVWJRc2VvSjZLZEFZSlB5Rml4djByTVhMMlQzOXNhdyIsInkiOiJNNGtkeU9QWXpLZi1nb1FMcVVHS21ZV0QxUXYwYmNRU1ByVkhGQzRkVWdvIn0sInR5cCI6ImRwb3Arand0In0.eyJpYXQiOjE3NTA3NzExNjB9.F8sdx5dB7P5vBU-VsHp2UNh2bF0nRq2b81iwThzCBRwKQOk3ULUU_R41y1V19tMCvAjFObPKs-bqdD4xF_zizQ"}'
 }
+
+@test "RSA: Create the keypair" {
+    cat <<EOF | save_asset RSA-keypair.json
+{"Alice":{"keyring":{"rsa":"iZLFrTu7CX8HtAkIO5Ad+aoKAxbQOQITmQcLC/pyAZi2lpmEF79rvgQSPOpudKLrGNIXK5hWOTLQdZDKgFBqsrD4bqqEbukOzCu1fvSkcetOJqsH8lkXhry8sXY5YkGTvTL5KsMwuGpY3IOsnoAw0PmuQNAj2b9Aj95ryeBySpyn3kiEnlmm7Z9RIgSMpGKxdn0GWfg5ksgCfeFQUAbAC5diNc4sUlnmPRKnDF6qV9t0ut1xPMjHNLtL9N0s5prAuhsDRvyJxnt+3WQwxOOL++dn/ElPgsWeRz/JskqN5gTqRB63hV9fODVo14aASfIfPaFjZjYXfV5it/AfmUJBQ/fTDS9jMsqOZoTLTkQPfT6fN94m4mB2GuSQzljcFBR3GsZDO7D/Ae9G45RhN7cHPaHaWo2K4BV5sr/TSX7X0Td3vLsYxsfJtXH/cU4JbllSVGMul5lfO3Tojhhrg13FaifpsMFt2ZDWZpIp8b/YFSpcm1fkKOd8fsA/A1bPs39kQdEmhyHUpzH4KUqwhbueMfmIh3H9aXCRaGqoLKWevbDf0wRnBNBVRb1ErTem/K6DXBS54V8w6h1nfcae+gIICMCP2afCQUXi2NHSQBfWudWNc1FJfX0O4QDX+KQDGD49SSB6WIIQynMlIYg+fyQQQkDXvh394O4Mm/6/Am3OVtMYP+bYQk8VvW5+LZll5mFiQLbDFKJfah5KOxOXaO3vmhuVMDo4dWVoeQ897ZTKumz2UxICfTe1nV9hWcRYGdS06rzfxO7THgGdu5aiaj0SV4fPCRa9gTbEaUBZh51V1HlWQEXrY7ySxSwkspEa3z27mEc+5XFsUGnw8iPN0eJThImShPXbc7IY8Jw8gtDHqR3e5OrZsQd0+Ax4Y97kPExdvrFxCoaFfZM38LHBXG5qTiSlS6NKM5npkZox70qa22xdYaWSPbGLavlRzPdLvVBPdtq9fa6mPm9H39aNttaMVRF2MHPo7oa6Qa/ZTbwPTL50/p2mxqIdVyXPhmQLf8JBSG78VJRm3QM//aI6jvQEBFCfEKRG2DDM7W9RkHFKwSyKu9Yc1T/Dff83N0Au+6T3I55hhytHEZ/PWffUbGmB8fdiR0EXoH9ZNCeYI1noUd0ZYx/UGXTXOPVbytFpxPeVbnMEQZTs2UOBGUl/KjZrAUWt9cNvHTGrDl+chzwP17Ui85GSP5YbBCTnVLhBbjPvoWKBTBToQ4mMflgHLKU4BkF1OL0vkADMcGRpSHHbOtqUCE7IC32Nf+imv23p3rwgar/guwKw9081ViZgq1cMW9mLEgAr2GiH5So6tx1ccZySChcYVXO46Gy630p8+Lpz0uX74GI64vj2gz+q4xNDF2vAgxg5xPk3idzIriLUkEbDchyPDsvEooQeyMYZeeQ+HRG+N57xS2DsY4vXJBrUmOQB0RTAxZwZ+PxRinPEXcnjFNr5JkXiYVa8WLAXSTDPWa50cChg5ErsuYdQWl6tIDUESZd+oi12PAcK1qv+dTNun+fIS6Z0pa/b+ZIgxU2vd4S7PdF+B8pGKT0cUgfNLWmrGi/xSyhkyWWHy4cfcXobSEH49D5Tej4VjrKUiSgCQU7mbdkOSLSVQDNprnSd0ThtRG52SH+w0MvFsnx0wUgzG+COJChQ+IM9PSigZZ8qe/SKO/yz+fRm5pWO3uy5KeQCKwG9EdVd956B+fl7loo="}}}
+EOF
+}
+
+@test "RSA: Create the issuer keypair" {
+    cat <<EOF | save_asset RSA-issuerKeypair.json
+{"Authority":{"keyring":{"rsa":"iZLFrTu7CX8HtAkIO5Ad+aoKAxbQOQITmQcLC/pyAZi2lpmEF79rvgQSPOpudKLrGNIXK5hWOTLQdZDKgFBqsrD4bqqEbukOzCu1fvSkcetOJqsH8lkXhry8sXY5YkGTvTL5KsMwuGpY3IOsnoAw0PmuQNAj2b9Aj95ryeBySpyn3kiEnlmm7Z9RIgSMpGKxdn0GWfg5ksgCfeFQUAbAC5diNc4sUlnmPRKnDF6qV9t0ut1xPMjHNLtL9N0s5prAuhsDRvyJxnt+3WQwxOOL++dn/ElPgsWeRz/JskqN5gTqRB63hV9fODVo14aASfIfPaFjZjYXfV5it/AfmUJBQ/fTDS9jMsqOZoTLTkQPfT6fN94m4mB2GuSQzljcFBR3GsZDO7D/Ae9G45RhN7cHPaHaWo2K4BV5sr/TSX7X0Td3vLsYxsfJtXH/cU4JbllSVGMul5lfO3Tojhhrg13FaifpsMFt2ZDWZpIp8b/YFSpcm1fkKOd8fsA/A1bPs39kQdEmhyHUpzH4KUqwhbueMfmIh3H9aXCRaGqoLKWevbDf0wRnBNBVRb1ErTem/K6DXBS54V8w6h1nfcae+gIICMCP2afCQUXi2NHSQBfWudWNc1FJfX0O4QDX+KQDGD49SSB6WIIQynMlIYg+fyQQQkDXvh394O4Mm/6/Am3OVtMYP+bYQk8VvW5+LZll5mFiQLbDFKJfah5KOxOXaO3vmhuVMDo4dWVoeQ897ZTKumz2UxICfTe1nV9hWcRYGdS06rzfxO7THgGdu5aiaj0SV4fPCRa9gTbEaUBZh51V1HlWQEXrY7ySxSwkspEa3z27mEc+5XFsUGnw8iPN0eJThImShPXbc7IY8Jw8gtDHqR3e5OrZsQd0+Ax4Y97kPExdvrFxCoaFfZM38LHBXG5qTiSlS6NKM5npkZox70qa22xdYaWSPbGLavlRzPdLvVBPdtq9fa6mPm9H39aNttaMVRF2MHPo7oa6Qa/ZTbwPTL50/p2mxqIdVyXPhmQLf8JBSG78VJRm3QM//aI6jvQEBFCfEKRG2DDM7W9RkHFKwSyKu9Yc1T/Dff83N0Au+6T3I55hhytHEZ/PWffUbGmB8fdiR0EXoH9ZNCeYI1noUd0ZYx/UGXTXOPVbytFpxPeVbnMEQZTs2UOBGUl/KjZrAUWt9cNvHTGrDl+chzwP17Ui85GSP5YbBCTnVLhBbjPvoWKBTBToQ4mMflgHLKU4BkF1OL0vkADMcGRpSHHbOtqUCE7IC32Nf+imv23p3rwgar/guwKw9081ViZgq1cMW9mLEgAr2GiH5So6tx1ccZySChcYVXO46Gy630p8+Lpz0uX74GI64vj2gz+q4xNDF2vAgxg5xPk3idzIriLUkEbDchyPDsvEooQeyMYZeeQ+HRG+N57xS2DsY4vXJBrUmOQB0RTAxZwZ+PxRinPEXcnjFNr5JkXiYVa8WLAXSTDPWa50cChg5ErsuYdQWl6tIDUESZd+oi12PAcK1qv+dTNun+fIS6Z0pa/b+ZIgxU2vd4S7PdF+B8pGKT0cUgfNLWmrGi/xSyhkyWWHy4cfcXobSEH49D5Tej4VjrKUiSgCQU7mbdkOSLSVQDNprnSd0ThtRG52SH+w0MvFsnx0wUgzG+COJChQ+IM9PSigZZ8qe/SKO/yz+fRm5pWO3uy5KeQCKwG9EdVd956B+fl7loo="}}}
+EOF
+}
+
+@test "RSA: Publish the public key" {
+    cat <<EOF | zexe RSA-pubkey.zen RSA-issuerKeypair.json
+Scenario 'rsa': Publish the public key
+Given that I am known as 'Authority'
+and I have my 'keyring'
+When I create the rsa public key
+Then print my 'rsa public key'
+EOF
+    save_output 'RSA-pubkey.json'
+    assert_output '{"Authority":{"rsa_public_key":"hS4HyP201h/LX23wCPcUOREwBIvSaQ2kZ3GBfIXBw+SMdvZkvgcsQnfd+pruy9WrPt9R80wSkEaZLBRuoiSbRBQ5w5dyMpGzNXOh3c08Q0sGw/O8ffg54vkH8eKKyj8hGszIsFXC7pXcFJJTjOED8Kv62LCP1mv2RQv9k15g2p1NdNM7/biKsNNLM0oVNc6GsXfMl9zaTJpKXsh+5Gcl9WEr0xP3aTmqnms2x5E9gKYL2Yzpp5imjqJ0K9OvcFkTCnOcuKqI0a/oihw2WrgqC5u9iTbhfqM3y5Pnu1U64hIfPrmAl0gu+hGhyFA8Pn+d/dM7nXLMdzZ52ClgkPkg/aW0eT62jmWt47T7TM27omBpN/ngKCA+86+mEaju1ib6Z1m5vYqaiO5Ye9B1iHMqo/9iHW+YywC7gfmGFCT5JB/KFsdj1pX+1WrsBB+8S5aE/HcmbGT460f+4Dh7K3atPU1+hhrbE6xyohezkVXwdJnZgSW/O6iwU0oE2scbNq5dQ+B+K1jjtRrEq6vucxMqFldoyH00c4+cAnK/dnbKuLofFHusarmugQX6vCoCh55xtj7G1mKZ511s2zvEcLXJRkZPttsuF+R3bzYyEd63fow98FPD9/KRnZPsryICyywCsDa6xvd2H8Zs/K67zIsGBxED1wAHmcUxyKOQJ55yTDkAAQAB"}}'
+}
+
+@test "RSA: When I create jws detached signature of header '' and payload ''" {
+    cat <<EOF | zexe RSA-jws_sign.zen simple_string.json RSA-issuerKeypair.json
+Scenario 'w3c': sign JSON
+Scenario 'rsa': (required)
+Given that I am 'Authority'
+Given I have my 'keyring'
+Given I have a 'string dictionary' named 'simple'
+When I create the jws header for 'rs256' signature
+When I create jws detached signature of header 'jws header' and payload 'simple'
+Then print the 'jws detached signature'
+and print the 'simple'
+EOF
+    save_output 'RSA-jws_signed.json'
+    assert_output '{"jws_detached_signature":"eyJhbGciOiJSUzI1NiJ9..TgCEKDNzKg3c0Nacm1bRwAdR-hOH6qHfI_Y47CuGayXNUmCMm08cYOINUPiKKiq4Rho5fqseDS98YUcKFBzIqnEFKqDFeEz5YAbDmMw82bX-jDfZZWmk0RH3ZU9s1MwSoBDU8ft9Pf_TIp053GS32JVrXSJIr6ihNAnrF6RlEUB5_X1BvVpn2dQXuJGkejx-2qcMkkA2aHnafmUQBIa9-4lbkUDdmhDVpKZqWtJJIX3I0Sbgp4kQquXYjOpBsfdsaGkN_8WPGD9v6rpjddbogv12t3abdhzhIyebPzrbTihu68SqhVC0frF6EqaQ1v_brGFZa3KFujPQVRCH9Gaf2lIzSznnnFl6Plya4-1BOMlYOyjTGPI_Z5tg9vhgP_fQHwGujazdT7FiQyn2Fe1FPBZTuNQNo6gERxP5oSvl7Pg6n0OhcO0fm3JtovHFK_ZXMExs-vf1gu0lzQRikNttXbkpxVOxfRQ7CuDP2tsNyUubIggkCD02xC9bX_TJ_uzGF-SOnXE6tguSquYC6iActCf7DtAHs2VEqIkuEEs5ggkww2eAJFGvqDD9f1I3Jor2yvHoQFCExXs-wBbr3idW9xjrN3AxiJmccUgfM5WYYN4Yx2ji3SZ7Z5YJAeaL3X9cHz0zdsnEx2phFwQL4cPyAy0gId0iTNoQ5-eS_gYurSY","simple":{"simple":"once upon a time... there was a wolf"}}'
+}
+
+@test "RSA: When I verify '' has a jws signature in ''" {
+    cat <<EOF | zexe RSA-jws_verify.zen RSA-jws_signed.json RSA-pubkey.json
+Scenario 'w3c': verify signature
+Scenario 'rsa': (required)
+Given I have a 'rsa public key' inside 'Authority'
+and I have a 'string' named 'jws detached signature'
+and I have a 'string dictionary' named 'simple'
+When I verify 'simple' has a jws signature in 'jws detached signature'
+Then print the string 'W3C JWS RS256 IS VALID'
+EOF
+    save_output 'RSA-jws_verify.out'
+    assert_output '{"output":["W3C_JWS_RS256_IS_VALID"]}'
+}
+
+@test "JWS rs256" {
+    cat <<EOF | save_asset jws_rs256.data
+{
+    "header": {
+              "alg": "RS256",
+              "b64": true,
+              "crit": ["b64"]
+    },
+    "payload": {
+               "iss": "joe",
+               "http://example.com/is_root": true
+    }
+}
+EOF
+    cat <<EOF | zexe jws_rs256.zen jws_rs256.data RSA-issuerKeypair.json
+Scenario 'w3c': jws
+Scenario 'rsa': (required)
+Given that I am 'Authority'
+Given I have my 'keyring'
+Given I have a 'string dictionary' named 'header'
+Given I have a 'string dictionary' named 'payload'
+When I create jws signature of header 'header' and payload 'payload'
+Then print the 'jws signature'
+EOF
+    save_output jws_rs256.json
+    assert_output '{"jws_signature":"eyJhbGciOiJSUzI1NiIsImI2NCI6dHJ1ZSwiY3JpdCI6WyJiNjQiXX0.eyJodHRwOi8vZXhhbXBsZS5jb20vaXNfcm9vdCI6dHJ1ZSwiaXNzIjoiam9lIn0.MIK6uUUrQ5o3qJdtUmlC0LBswLO1gubrk4Ct7rgqShjkdHhethRq_Xa0pNzyjgyo_50Tsrk0t0WKWEuKA5MFgEjFKPlpNNJTgMPtjLEvGliYw_4woz_NKpj3uSZRw2Q6GK9qYzBrEw50DliXIPyj_eO1mHIU-6CIgd1RZFIkredpzI1DGU_AmRjVH5maLbegcNJeRebwcstXaymxUL_bdUauLchEBRWAwIG1g_UTZ2QNU-MCxDna1fanx9DN8OWOAyJz4UVaQ6slIqGipxs2qfBukFADiqQK5NVWHnhPxC2SsdfZdMwpLe49vNOdovqNQmusZ_138ZhVgnaqhYk_XIs3iuEPCOU7frvWaqWJeXhrOgEaKK6k8rlaoVU3RKG3whCmcgEfgQvN_CQnDUMZ1VC9SZNTlytVygjJ48pu5WRPq0LChtqfnh0sEIEOMIdW_4JnW7mYCmrk8udPFEG3Sz44E7_iCRcukg5_hY3Dv90Xu5nf2VagT6J-UNkufq5rjZ8ojT-crBDpcL763JWmYO7wWdukGoXeijeBPkab9-5PcmauxspZLExIJeH3ItmijnPXOpUEqaPvMmDqTP0lU4OXBMjPTaCMaTrXRQGUzQthhXTDGC4thNMN-Qkj3_7pbzoMoEGrUOfW9_brgisUr2UVVQSsM6OIIZ3t_wFtMcY"}'
+}
+
+@test "verify JWS rs256" {
+    cat <<EOF | save_asset verify_jws_rs256.data
+{   
+    "rsa_public_key": "hS4HyP201h/LX23wCPcUOREwBIvSaQ2kZ3GBfIXBw+SMdvZkvgcsQnfd+pruy9WrPt9R80wSkEaZLBRuoiSbRBQ5w5dyMpGzNXOh3c08Q0sGw/O8ffg54vkH8eKKyj8hGszIsFXC7pXcFJJTjOED8Kv62LCP1mv2RQv9k15g2p1NdNM7/biKsNNLM0oVNc6GsXfMl9zaTJpKXsh+5Gcl9WEr0xP3aTmqnms2x5E9gKYL2Yzpp5imjqJ0K9OvcFkTCnOcuKqI0a/oihw2WrgqC5u9iTbhfqM3y5Pnu1U64hIfPrmAl0gu+hGhyFA8Pn+d/dM7nXLMdzZ52ClgkPkg/aW0eT62jmWt47T7TM27omBpN/ngKCA+86+mEaju1ib6Z1m5vYqaiO5Ye9B1iHMqo/9iHW+YywC7gfmGFCT5JB/KFsdj1pX+1WrsBB+8S5aE/HcmbGT460f+4Dh7K3atPU1+hhrbE6xyohezkVXwdJnZgSW/O6iwU0oE2scbNq5dQ+B+K1jjtRrEq6vucxMqFldoyH00c4+cAnK/dnbKuLofFHusarmugQX6vCoCh55xtj7G1mKZ511s2zvEcLXJRkZPttsuF+R3bzYyEd63fow98FPD9/KRnZPsryICyywCsDa6xvd2H8Zs/K67zIsGBxED1wAHmcUxyKOQJ55yTDkAAQAB",
+    "payload": {
+               "iss": "joe",
+               "http://example.com/is_root": true
+    }
+}
+EOF
+    cat <<EOF | zexe verify_jws_rs256.zen jws_rs256.json verify_jws_rs256.data RSA-pubkey.json
+Scenario 'rsa': (required)
+Scenario 'w3c': jws
+Given I have a 'rsa public key'
+and I have a 'string' named 'jws signature'
+and I have a 'dictionary' named 'payload'
+When I verify 'payload' has a jws signature in 'jws signature'
+When I verify the jws signature in 'jws signature'
+Then print the string 'rs256 signature verified'
+EOF
+    save_output verify_jws_rs256.json
+    assert_output '{"output":["rs256_signature_verified"]}'
+}
+
+@test "verify JWS rs256 without external public key" {
+    cat <<EOF | save_asset verify_jws_rs256_alone.data
+{
+    "payload": {
+               "iss": "joe",
+               "http://example.com/is_root": true
+    }
+}
+EOF
+    cat <<EOF | zexe jws_rs256_with_pk.zen verify_jws_rs256_alone.data RSA-issuerKeypair.json
+Scenario 'w3c': jws
+Scenario 'rsa': (required)
+Given that I am 'Authority'
+Given I have my 'keyring'
+Given I have a 'string dictionary' named 'payload'
+When I create jws header for 'rs256' signature with public key
+When I create jws signature of header 'jws header' and payload 'payload'
+Then print the 'jws signature'
+EOF
+    save_output jws_rs256_with_pk.json
+    assert_output '{"jws_signature":"eyJhbGciOiJSUzI1NiIsImp3ayI6eyJhbGciOiJSUzI1NiIsImUiOiJBUUFCIiwia2V5X29wcyI6WyJ2ZXJpZnkiXSwia3R5IjoiUlNBIiwibiI6ImhTNEh5UDIwMWhfTFgyM3dDUGNVT1JFd0JJdlNhUTJrWjNHQmZJWEJ3LVNNZHZaa3ZnY3NRbmZkLXBydXk5V3JQdDlSODB3U2tFYVpMQlJ1b2lTYlJCUTV3NWR5TXBHek5YT2gzYzA4UTBzR3dfTzhmZmc1NHZrSDhlS0t5ajhoR3N6SXNGWEM3cFhjRkpKVGpPRUQ4S3Y2MkxDUDFtdjJSUXY5azE1ZzJwMU5kTk03X2JpS3NOTkxNMG9WTmM2R3NYZk1sOXphVEpwS1hzaC01R2NsOVdFcjB4UDNhVG1xbm1zMng1RTlnS1lMMll6cHA1aW1qcUowSzlPdmNGa1RDbk9jdUtxSTBhX29paHcyV3JncUM1dTlpVGJoZnFNM3k1UG51MVU2NGhJZlBybUFsMGd1LWhHaHlGQThQbi1kX2RNN25YTE1kelo1MkNsZ2tQa2dfYVcwZVQ2MmptV3Q0N1Q3VE0yN29tQnBOX25nS0NBLTg2LW1FYWp1MWliNloxbTV2WXFhaU81WWU5QjFpSE1xb185aUhXLVl5d0M3Z2ZtR0ZDVDVKQl9LRnNkajFwWC0xV3JzQkItOFM1YUVfSGNtYkdUNDYwZi00RGg3SzNhdFBVMS1oaHJiRTZ4eW9oZXprVlh3ZEpuWmdTV19PNml3VTBvRTJzY2JOcTVkUS1CLUsxamp0UnJFcTZ2dWN4TXFGbGRveUgwMGM0LWNBbktfZG5iS3VMb2ZGSHVzYXJtdWdRWDZ2Q29DaDU1eHRqN0cxbUtaNTExczJ6dkVjTFhKUmtaUHR0c3VGLVIzYnpZeUVkNjNmb3c5OEZQRDlfS1JuWlBzcnlJQ3l5d0NzRGE2eHZkMkg4WnNfSzY3eklzR0J4RUQxd0FIbWNVeHlLT1FKNTV5VERrIn19.eyJodHRwOi8vZXhhbXBsZS5jb20vaXNfcm9vdCI6dHJ1ZSwiaXNzIjoiam9lIn0.TKNUlw-VGxQJJK_KmeVF9h6VvVAwoR8XNk5fNBwLVKX2Cwaogoru4JdvlziXpsSWU_EQxkl3HvITuMl7qHviqAY3CY0glxGUB2BF81N6rRLMLuHjKofw34eT3psfXiS43fFslQc7SV0oJhOoooXw2-_mBf1DH5BRaO436L4cJhpTprAoyglKRuT071WvY7yOsWsy_Lm1u-uMAiVS2HoEBvPJqeEWKeQhvVCbqWGNAQPpcyaclMw5llwsniEeDpCUP7mI8SS2Dqgn9QkilYn3Yk-IdMKloRu4dJZfRqH2cC89GXGZsrHYMxXsB-EhFHl58EvXxnXo94qWxwYMOY_KE6PZ7XpXdypx7gbulWXDBNLi1KEdIQ8V2Yh7_mx1ag0Awk_uRZ4JTVt-P38rlhqcYFJHIlKZa0z5GLv7UPlaTge8hdjHhRWucS2xeNDDwNEzJqeJlFUdhkjR1VZtpMDirE1if9ygTsAhS-rbD3CpBNut5ICmKeI-NedU-wnkRgWaShxvVhb37HOGM_VyDVj_qT9Dey-tcLV_b0-w4a7m4E2AFc6hSu1unu6Y18MT5yDeCuT9FRzTMMNnFEDrp6-HSSAmS7_2i3aP4jgEe2K3adFhgNxQFtlfosH7p5J_ndIY08gusK2NCaBOPLU5hKgjUDGsdL4weYAgi2qKytFpjn8"}'
+
+    cat <<EOF | zexe verify_jws_rs256_alone.zen jws_rs256_with_pk.json
+Scenario 'w3c': jws
+Given I have a 'string' named 'jws signature'
+When I verify the jws signature in 'jws signature'
+Then print the string 'rs256 signature verified'
+EOF
+    save_output verify_jws_rs256_alone.json
+    assert_output '{"output":["rs256_signature_verified"]}'
+}
+
+@test "create jws header for rs256 signature with public key" {
+    cat <<EOF | zexe jws_rs256_header_with_pk.zen jws_rs256.data RSA-issuerKeypair.json
+Scenario 'w3c': jws
+Scenario 'rsa': (required)
+Given that I am 'Authority'
+Given I have my 'keyring'
+Given I have a 'string dictionary' named 'payload'
+When I create jws header for 'rs256' signature with public key
+When I create jws signature of header 'jws header' and payload 'payload'
+Then print the 'jws signature'
+and print the 'jws header'
+EOF
+    save_output jws_rs256_header_with_pk.json
+    assert_output '{"jws_header":{"alg":"RS256","jwk":{"alg":"RS256","e":"AQAB","key_ops":["verify"],"kty":"RSA","n":"hS4HyP201h_LX23wCPcUOREwBIvSaQ2kZ3GBfIXBw-SMdvZkvgcsQnfd-pruy9WrPt9R80wSkEaZLBRuoiSbRBQ5w5dyMpGzNXOh3c08Q0sGw_O8ffg54vkH8eKKyj8hGszIsFXC7pXcFJJTjOED8Kv62LCP1mv2RQv9k15g2p1NdNM7_biKsNNLM0oVNc6GsXfMl9zaTJpKXsh-5Gcl9WEr0xP3aTmqnms2x5E9gKYL2Yzpp5imjqJ0K9OvcFkTCnOcuKqI0a_oihw2WrgqC5u9iTbhfqM3y5Pnu1U64hIfPrmAl0gu-hGhyFA8Pn-d_dM7nXLMdzZ52ClgkPkg_aW0eT62jmWt47T7TM27omBpN_ngKCA-86-mEaju1ib6Z1m5vYqaiO5Ye9B1iHMqo_9iHW-YywC7gfmGFCT5JB_KFsdj1pX-1WrsBB-8S5aE_HcmbGT460f-4Dh7K3atPU1-hhrbE6xyohezkVXwdJnZgSW_O6iwU0oE2scbNq5dQ-B-K1jjtRrEq6vucxMqFldoyH00c4-cAnK_dnbKuLofFHusarmugQX6vCoCh55xtj7G1mKZ511s2zvEcLXJRkZPttsuF-R3bzYyEd63fow98FPD9_KRnZPsryICyywCsDa6xvd2H8Zs_K67zIsGBxED1wAHmcUxyKOQJ55yTDk"}},"jws_signature":"eyJhbGciOiJSUzI1NiIsImp3ayI6eyJhbGciOiJSUzI1NiIsImUiOiJBUUFCIiwia2V5X29wcyI6WyJ2ZXJpZnkiXSwia3R5IjoiUlNBIiwibiI6ImhTNEh5UDIwMWhfTFgyM3dDUGNVT1JFd0JJdlNhUTJrWjNHQmZJWEJ3LVNNZHZaa3ZnY3NRbmZkLXBydXk5V3JQdDlSODB3U2tFYVpMQlJ1b2lTYlJCUTV3NWR5TXBHek5YT2gzYzA4UTBzR3dfTzhmZmc1NHZrSDhlS0t5ajhoR3N6SXNGWEM3cFhjRkpKVGpPRUQ4S3Y2MkxDUDFtdjJSUXY5azE1ZzJwMU5kTk03X2JpS3NOTkxNMG9WTmM2R3NYZk1sOXphVEpwS1hzaC01R2NsOVdFcjB4UDNhVG1xbm1zMng1RTlnS1lMMll6cHA1aW1qcUowSzlPdmNGa1RDbk9jdUtxSTBhX29paHcyV3JncUM1dTlpVGJoZnFNM3k1UG51MVU2NGhJZlBybUFsMGd1LWhHaHlGQThQbi1kX2RNN25YTE1kelo1MkNsZ2tQa2dfYVcwZVQ2MmptV3Q0N1Q3VE0yN29tQnBOX25nS0NBLTg2LW1FYWp1MWliNloxbTV2WXFhaU81WWU5QjFpSE1xb185aUhXLVl5d0M3Z2ZtR0ZDVDVKQl9LRnNkajFwWC0xV3JzQkItOFM1YUVfSGNtYkdUNDYwZi00RGg3SzNhdFBVMS1oaHJiRTZ4eW9oZXprVlh3ZEpuWmdTV19PNml3VTBvRTJzY2JOcTVkUS1CLUsxamp0UnJFcTZ2dWN4TXFGbGRveUgwMGM0LWNBbktfZG5iS3VMb2ZGSHVzYXJtdWdRWDZ2Q29DaDU1eHRqN0cxbUtaNTExczJ6dkVjTFhKUmtaUHR0c3VGLVIzYnpZeUVkNjNmb3c5OEZQRDlfS1JuWlBzcnlJQ3l5d0NzRGE2eHZkMkg4WnNfSzY3eklzR0J4RUQxd0FIbWNVeHlLT1FKNTV5VERrIn19.eyJodHRwOi8vZXhhbXBsZS5jb20vaXNfcm9vdCI6dHJ1ZSwiaXNzIjoiam9lIn0.TKNUlw-VGxQJJK_KmeVF9h6VvVAwoR8XNk5fNBwLVKX2Cwaogoru4JdvlziXpsSWU_EQxkl3HvITuMl7qHviqAY3CY0glxGUB2BF81N6rRLMLuHjKofw34eT3psfXiS43fFslQc7SV0oJhOoooXw2-_mBf1DH5BRaO436L4cJhpTprAoyglKRuT071WvY7yOsWsy_Lm1u-uMAiVS2HoEBvPJqeEWKeQhvVCbqWGNAQPpcyaclMw5llwsniEeDpCUP7mI8SS2Dqgn9QkilYn3Yk-IdMKloRu4dJZfRqH2cC89GXGZsrHYMxXsB-EhFHl58EvXxnXo94qWxwYMOY_KE6PZ7XpXdypx7gbulWXDBNLi1KEdIQ8V2Yh7_mx1ag0Awk_uRZ4JTVt-P38rlhqcYFJHIlKZa0z5GLv7UPlaTge8hdjHhRWucS2xeNDDwNEzJqeJlFUdhkjR1VZtpMDirE1if9ygTsAhS-rbD3CpBNut5ICmKeI-NedU-wnkRgWaShxvVhb37HOGM_VyDVj_qT9Dey-tcLV_b0-w4a7m4E2AFc6hSu1unu6Y18MT5yDeCuT9FRzTMMNnFEDrp6-HSSAmS7_2i3aP4jgEe2K3adFhgNxQFtlfosH7p5J_ndIY08gusK2NCaBOPLU5hKgjUDGsdL4weYAgi2qKytFpjn8"}'
+
+    cat <<EOF | zexe verify_jws_rs256_header_with_pk.zen jws_rs256_header_with_pk.json
+Scenario 'w3c': jws
+Given I have a 'string' named 'jws signature'
+When I verify the jws signature in 'jws signature'
+Then print the string 'rs256 signature verified'
+EOF
+    save_output verify_jws_rs256_header_with_pk.json
+    assert_output '{"output":["rs256_signature_verified"]}'
+}
+
+@test "RSA: create jwk from keyring" {
+    cat <<EOF | zexe jwk_from_rsa_keyring.zen RSA-keypair.json
+Scenario 'w3c': jwk
+Scenario 'rsa': (required)
+Given that I am known as 'Alice'
+and I have my 'keyring'
+When I create the jwk of rsa public key
+and I rename the 'jwk' to 'jwk_pk_from_sk_rsa'
+When I create the jwk of rsa public key with private key
+and I rename the 'jwk' to 'jwk_keypair_from_sk_rsa'
+Then print the data
+EOF
+    save_output jwk_from_rsa_keyring.json
+    assert_output '{"jwk_keypair_from_sk_rsa":{"d":"iZLFrTu7CX8HtAkIO5Ad-aoKAxbQOQITmQcLC_pyAZi2lpmEF79rvgQSPOpudKLrGNIXK5hWOTLQdZDKgFBqsrD4bqqEbukOzCu1fvSkcetOJqsH8lkXhry8sXY5YkGTvTL5KsMwuGpY3IOsnoAw0PmuQNAj2b9Aj95ryeBySpyn3kiEnlmm7Z9RIgSMpGKxdn0GWfg5ksgCfeFQUAbAC5diNc4sUlnmPRKnDF6qV9t0ut1xPMjHNLtL9N0s5prAuhsDRvyJxnt-3WQwxOOL--dn_ElPgsWeRz_JskqN5gTqRB63hV9fODVo14aASfIfPaFjZjYXfV5it_AfmUJBQ_fTDS9jMsqOZoTLTkQPfT6fN94m4mB2GuSQzljcFBR3GsZDO7D_Ae9G45RhN7cHPaHaWo2K4BV5sr_TSX7X0Td3vLsYxsfJtXH_cU4JbllSVGMul5lfO3Tojhhrg13FaifpsMFt2ZDWZpIp8b_YFSpcm1fkKOd8fsA_A1bPs39kQdEmhyHUpzH4KUqwhbueMfmIh3H9aXCRaGqoLKWevbDf0wRnBNBVRb1ErTem_K6DXBS54V8w6h1nfcae-gIICMCP2afCQUXi2NHSQBfWudWNc1FJfX0O4QDX-KQDGD49SSB6WIIQynMlIYg-fyQQQkDXvh394O4Mm_6_Am3OVtMYP-bYQk8VvW5-LZll5mFiQLbDFKJfah5KOxOXaO3vmhuVMDo4dWVoeQ897ZTKumz2UxICfTe1nV9hWcRYGdS06rzfxO7THgGdu5aiaj0SV4fPCRa9gTbEaUBZh51V1HlWQEXrY7ySxSwkspEa3z27mEc-5XFsUGnw8iPN0eJThImShPXbc7IY8Jw8gtDHqR3e5OrZsQd0-Ax4Y97kPExdvrFxCoaFfZM38LHBXG5qTiSlS6NKM5npkZox70qa22xdYaWSPbGLavlRzPdLvVBPdtq9fa6mPm9H39aNttaMVRF2MHPo7oa6Qa_ZTbwPTL50_p2mxqIdVyXPhmQLf8JBSG78VJRm3QM__aI6jvQEBFCfEKRG2DDM7W9RkHFKwSyKu9Yc1T_Dff83N0Au-6T3I55hhytHEZ_PWffUbGmB8fdiR0EXoH9ZNCeYI1noUd0ZYx_UGXTXOPVbytFpxPeVbnMEQZTs2UOBGUl_KjZrAUWt9cNvHTGrDl-chzwP17Ui85GSP5YbBCTnVLhBbjPvoWKBTBToQ4mMflgHLKU4BkF1OL0vkADMcGRpSHHbOtqUCE7IC32Nf-imv23p3rwgar_guwKw9081ViZgq1cMW9mLEgAr2GiH5So6tx1ccZySChcYVXO46Gy630p8-Lpz0uX74GI64vj2gz-q4xNDF2vAgxg5xPk3idzIriLUkEbDchyPDsvEooQeyMYZeeQ-HRG-N57xS2DsY4vXJBrUmOQB0RTAxZwZ-PxRinPEXcnjFNr5JkXiYVa8WLAXSTDPWa50cChg5ErsuYdQWl6tIDUESZd-oi12PAcK1qv-dTNun-fIS6Z0pa_b-ZIgxU2vd4S7PdF-B8pGKT0cUgfNLWmrGi_xSyhkyWWHy4cfcXobSEH49D5Tej4VjrKUiSgCQU7mbdkOSLSVQDNprnSd0ThtRG52SH-w0MvFsnx0wUgzG-COJChQ-IM9PSigZZ8qe_SKO_yz-fRm5pWO3uy5KeQCKwG9EdVd956B-fl7loo","e":"AQAB","kty":"RSA","n":"hS4HyP201h_LX23wCPcUOREwBIvSaQ2kZ3GBfIXBw-SMdvZkvgcsQnfd-pruy9WrPt9R80wSkEaZLBRuoiSbRBQ5w5dyMpGzNXOh3c08Q0sGw_O8ffg54vkH8eKKyj8hGszIsFXC7pXcFJJTjOED8Kv62LCP1mv2RQv9k15g2p1NdNM7_biKsNNLM0oVNc6GsXfMl9zaTJpKXsh-5Gcl9WEr0xP3aTmqnms2x5E9gKYL2Yzpp5imjqJ0K9OvcFkTCnOcuKqI0a_oihw2WrgqC5u9iTbhfqM3y5Pnu1U64hIfPrmAl0gu-hGhyFA8Pn-d_dM7nXLMdzZ52ClgkPkg_aW0eT62jmWt47T7TM27omBpN_ngKCA-86-mEaju1ib6Z1m5vYqaiO5Ye9B1iHMqo_9iHW-YywC7gfmGFCT5JB_KFsdj1pX-1WrsBB-8S5aE_HcmbGT460f-4Dh7K3atPU1-hhrbE6xyohezkVXwdJnZgSW_O6iwU0oE2scbNq5dQ-B-K1jjtRrEq6vucxMqFldoyH00c4-cAnK_dnbKuLofFHusarmugQX6vCoCh55xtj7G1mKZ511s2zvEcLXJRkZPttsuF-R3bzYyEd63fow98FPD9_KRnZPsryICyywCsDa6xvd2H8Zs_K67zIsGBxED1wAHmcUxyKOQJ55yTDk"},"jwk_pk_from_sk_rsa":{"e":"AQAB","kty":"RSA","n":"hS4HyP201h_LX23wCPcUOREwBIvSaQ2kZ3GBfIXBw-SMdvZkvgcsQnfd-pruy9WrPt9R80wSkEaZLBRuoiSbRBQ5w5dyMpGzNXOh3c08Q0sGw_O8ffg54vkH8eKKyj8hGszIsFXC7pXcFJJTjOED8Kv62LCP1mv2RQv9k15g2p1NdNM7_biKsNNLM0oVNc6GsXfMl9zaTJpKXsh-5Gcl9WEr0xP3aTmqnms2x5E9gKYL2Yzpp5imjqJ0K9OvcFkTCnOcuKqI0a_oihw2WrgqC5u9iTbhfqM3y5Pnu1U64hIfPrmAl0gu-hGhyFA8Pn-d_dM7nXLMdzZ52ClgkPkg_aW0eT62jmWt47T7TM27omBpN_ngKCA-86-mEaju1ib6Z1m5vYqaiO5Ye9B1iHMqo_9iHW-YywC7gfmGFCT5JB_KFsdj1pX-1WrsBB-8S5aE_HcmbGT460f-4Dh7K3atPU1-hhrbE6xyohezkVXwdJnZgSW_O6iwU0oE2scbNq5dQ-B-K1jjtRrEq6vucxMqFldoyH00c4-cAnK_dnbKuLofFHusarmugQX6vCoCh55xtj7G1mKZ511s2zvEcLXJRkZPttsuF-R3bzYyEd63fow98FPD9_KRnZPsryICyywCsDa6xvd2H8Zs_K67zIsGBxED1wAHmcUxyKOQJ55yTDk"}}'
+}
+
+@test "RSA: create jwk from public key" {
+    cat <<EOF | zexe jwk_from_rsa_pk.zen RSA-pubkey.json
+Scenario 'w3c': jwk
+Scenario 'rsa': (required)
+Given I have a 'rsa public key' inside 'Authority'
+When I create the jwk of rsa public key 'rsa public key'
+and I rename the 'jwk' to 'jwk_pk_from_pk_rsa'
+Then print the 'jwk_pk_from_pk_rsa'
+EOF
+    save_output jwk_from_rsa_pk.json
+    assert_output '{"jwk_pk_from_pk_rsa":{"e":"AQAB","kty":"RSA","n":"hS4HyP201h_LX23wCPcUOREwBIvSaQ2kZ3GBfIXBw-SMdvZkvgcsQnfd-pruy9WrPt9R80wSkEaZLBRuoiSbRBQ5w5dyMpGzNXOh3c08Q0sGw_O8ffg54vkH8eKKyj8hGszIsFXC7pXcFJJTjOED8Kv62LCP1mv2RQv9k15g2p1NdNM7_biKsNNLM0oVNc6GsXfMl9zaTJpKXsh-5Gcl9WEr0xP3aTmqnms2x5E9gKYL2Yzpp5imjqJ0K9OvcFkTCnOcuKqI0a_oihw2WrgqC5u9iTbhfqM3y5Pnu1U64hIfPrmAl0gu-hGhyFA8Pn-d_dM7nXLMdzZ52ClgkPkg_aW0eT62jmWt47T7TM27omBpN_ngKCA-86-mEaju1ib6Z1m5vYqaiO5Ye9B1iHMqo_9iHW-YywC7gfmGFCT5JB_KFsdj1pX-1WrsBB-8S5aE_HcmbGT460f-4Dh7K3atPU1-hhrbE6xyohezkVXwdJnZgSW_O6iwU0oE2scbNq5dQ-B-K1jjtRrEq6vucxMqFldoyH00c4-cAnK_dnbKuLofFHusarmugQX6vCoCh55xtj7G1mKZ511s2zvEcLXJRkZPttsuF-R3bzYyEd63fow98FPD9_KRnZPsryICyywCsDa6xvd2H8Zs_K67zIsGBxED1wAHmcUxyKOQJ55yTDk"}}'
+}
