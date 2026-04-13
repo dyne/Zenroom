@@ -72,20 +72,31 @@ function W3C.jws_octet_to_signature(o_jws, o_payload)
     if not alg then error('JWS header is missing alg specification', 2) end
     if header.jwk then
         -- kty MUST be present
-        if header.jwk.kty ~= 'EC' then
-            error('JWS public key type supported by zenroom is only EC', 2)
+        if header.jwk.kty == 'EC' then
+            -- if kty == EC, crv MUST be present
+            local alg_table = {['P-256'] = 'ES256', ['secp256k1'] = 'ES256K'}
+            local alg_from_crv = alg_table[header.jwk.crv]
+            if not alg_from_crv then
+                error('JWS public key curve supported by zenroom are only P-256 or secp256k1, found: '..header.jwk.crv, 2)
+            elseif alg ~= alg_from_crv then
+                error('JWS public key curve '..header.jwk.crv..' does not match the alg '..alg, 2)
+            end
+            if header.jwk.x and header.jwk.y then
+                pk = O.from_url64(header.jwk.x) .. O.from_url64(header.jwk.y)
+            end
+        
+        elseif header.jwk.kty == 'RSA' then
+            if alg ~= 'RS256' then
+                error('JWS header alg '..alg..' does not match RSA key type', 2)
+            end
+            if header.jwk.n and header.jwk.e then
+                local rsa_pk_from_ne = require_once_fun('rsa', 'pk_from_ne')
+                pk = rsa_pk_from_ne(O.from_url64(header.jwk.n), O.from_url64(header.jwk.e))
+            end
+        else
+            error('JWS public key type supported by zenroom are only EC or RSA, found: '..header.jwk.kty, 2)
         end
-        -- if kty == EC, crv MUST be present
-        local alg_table = {['P-256'] = 'ES256', ['secp256k1'] = 'ES256K'}
-        local alg_from_crv = alg_table[header.jwk.crv]
-        if not alg_from_crv then
-            error('JWS public key curve supported by zenroom are only P-256 or secp256k1, found: '..header.jwk.crv, 2)
-        elseif alg ~= alg_from_crv then
-            error('JWS public key curve '..header.jwk.crv..' does not match the alg '..alg, 2)
-        end
-        if header.jwk.x and header.jwk.y then
-            pk = O.from_url64(header.jwk.x) .. O.from_url64(header.jwk.y)
-        end
+        
     end
     -- header.payload is what should be signed
     if not o_payload and toks[2] == "" then
@@ -108,6 +119,10 @@ function W3C.jws_octet_to_signature(o_jws, o_payload)
         signature = OCTET.from_url64(toks[3])
         verify_f = require_once_fun('es256', 'verify')
         pk = pk or ACK.es256_public_key
+    elseif alg == 'RS256' then
+        signature = OCTET.from_url64(toks[3])
+        verify_f = require_once_fun('rsa', 'verify')
+        pk = pk or ACK.rsa_public_key
     else
         error(alg .. ' algorithm not yet supported by zenroom jws verification', 2)
     end
@@ -147,9 +162,40 @@ end
 -- @return jwk as a string dictionary (need to be transformed in octet before store in ACK)
 function W3C.create_string_jwk(alg, sk_flag, pk)
     if sk_flag and pk then error('JWK can not be created with zenroom sk and custom pk', 2) end
-    if alg ~= 'ES256K' and alg ~= 'ES256' then error(alg.. ' not yet supported by zenroom jwk', 2) end
-    local alg_to_pk = {['ES256K']= 'ecdh_public_key', ['ES256']= 'es256_public_key'}
+    if alg ~= 'ES256K' and alg ~= 'ES256' and alg ~= 'RS256' then error(alg.. ' not yet supported by zenroom jwk', 2) end
+    
     local jwk = {}
+
+    if alg == 'RS256' then
+        jwk.kty = 'RSA'
+        local rsa = require_once('rsa')
+        local pub
+        local sk = ACK.keyring and ACK.keyring.rsa
+        -- explicit pk
+        if pk then
+            pub = have(pk)
+        -- sk found
+        elseif sk then
+            if sk_flag then
+                -- rsa pubgen consumes the sk octet, so we need to create a copy of it for the jwk export
+                jwk.d = O.to_url64(O.copy(sk, 0, #sk))
+            end
+            pub = rsa.pubgen(O.copy(sk, 0, #sk))
+        -- sk not found search for default public key
+        else
+            if sk_flag then
+                error('Private key for RS256 not found in the keyring', 2)
+            end
+            pub = have('rsa_public_key')
+        end
+        local n, e = rsa.public_ne(pub)
+        -- removing leading zeros for jwk export
+        jwk.n = O.to_url64(O.trim(n))
+        jwk.e = O.to_url64(O.trim(e))
+        return jwk
+    end
+    
+    local alg_to_pk = {['ES256K']= 'ecdh_public_key', ['ES256']= 'es256_public_key'}
     jwk.kty = 'EC'
     jwk.crv = fif(alg == 'ES256K', 'secp256k1', 'P-256')
     local pub_xy_f
