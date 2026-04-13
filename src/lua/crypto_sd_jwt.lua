@@ -22,6 +22,108 @@
 
 local sd_jwt = {}
 
+local function is_wide_decimal_string(value)
+   if type(value) ~= 'string' or value == '' then
+      return false
+   end
+   local negative = value:sub(1, 1) == '-'
+   local digits = negative and value:sub(2) or value
+   digits = digits:gsub('^0+', '')
+   if digits == '' then
+      digits = '0'
+   end
+   local limit = negative and '2147483648' or '2147483647'
+   if #digits ~= #limit then
+      return #digits > #limit
+   end
+   return digits > limit
+end
+
+local function needs_precise_number_encoding(value)
+   local tv <const> = type(value)
+   if tv == 'number' then
+      local integral, fractional = math.modf(value)
+      return fractional == 0.0 and is_wide_decimal_string(string.format('%.0f', integral))
+   elseif tv == 'zenroom.float' then
+      local numeric = tonumber(tostring(value))
+      if not numeric then
+         return false
+      end
+      local integral, fractional = math.modf(numeric)
+      return fractional == 0.0 and is_wide_decimal_string(string.format('%.0f', integral))
+   elseif tv == 'zenroom.time' then
+      return is_wide_decimal_string(tostring(value))
+   elseif tv == 'zenroom.big' then
+      return true
+   elseif tv == 'table' then
+      for _, item in pairs(value) do
+         if needs_precise_number_encoding(item) then
+            return true
+         end
+      end
+   end
+   return false
+end
+
+local function encode_sd_jwt_number(v)
+   local integral, fractional = math.modf(v)
+   if fractional == 0.0 then
+      return string.format("%.0f", integral)
+   end
+   local s = tostring(v)
+   local n = tonumber(s)
+   if not n then
+      error("Not a number: "..s, 2)
+   end
+   return tostring(n)
+end
+
+local function encode_sd_jwt_value(v)
+   local tv <const> = type(v)
+   if tv == 'string' then
+      return JSON.raw_encode(v, true)
+   elseif tv == 'number' then
+      return encode_sd_jwt_number(v)
+   elseif tv == 'zenroom.time' then
+      return tostring(v)
+   elseif tv == 'zenroom.big' then
+      return v:decimal()
+   elseif tv == 'zenroom.float' then
+      local numeric = tonumber(tostring(v))
+      if numeric then
+         local integral, fractional = math.modf(numeric)
+         if fractional == 0.0 then
+            return string.format("%.0f", integral)
+         end
+      end
+      return tostring(v)
+   elseif tv == 'zenroom.octet' then
+      return JSON.raw_encode(v:str(), true)
+   elseif tv == 'boolean' or tv == 'nil' then
+      return JSON.raw_encode(v, true)
+   elseif tv == 'table' then
+      local res = {}
+      local separator = ", "
+      if rawget(v, 1) ~= nil or next(v) == nil then
+         local _ipairs <const> = fif(CONF.output.sorting, sort_ipairs, ipairs)
+         for _, item in _ipairs(v) do
+            res[#res + 1] = encode_sd_jwt_value(item)
+         end
+         return "[" .. table.concat(res, separator) .. "]"
+      end
+      local _pairs <const> = fif(CONF.output.sorting, sort_pairs, pairs)
+      for key, value in _pairs(v) do
+         table.insert(res, JSON.raw_encode(key, true) .. ": " .. encode_sd_jwt_value(value))
+      end
+      return "{" .. table.concat(res, separator) .. "}"
+   end
+   error("Invalid value found in SD-JWT array: "..tv)
+end
+
+function sd_jwt.encode_dictionary(obj)
+   return encode_sd_jwt_value(obj)
+end
+
 function sd_jwt.prepare_dictionary(obj)
    -- values in input may be string, number or bool
    local fun = function(v)
@@ -56,6 +158,28 @@ function sd_jwt.prepare_dictionary(obj)
    return deepmap(fun, obj)
 end
 
+local function prepare_dictionary_precise(obj)
+   local fun = function(v)
+	  local tv <const> = type(v)
+	  if tv == 'string' or tv == 'number' or tv == 'boolean'
+         or tv == 'zenroom.time' or tv == 'zenroom.big'
+         or tv == 'zenroom.float' then
+		 return v
+	  elseif tv == 'zenroom.octet' then
+		 return v:str()
+	  end
+	  error("Invalid value found in SD-JWT array: "..tv)
+   end
+   return deepmap(fun, obj)
+end
+
+function sd_jwt.encode_prepared_dictionary(obj)
+   if needs_precise_number_encoding(obj) then
+      return sd_jwt.encode_dictionary(prepare_dictionary_precise(obj))
+   end
+   return JSON.raw_encode(sd_jwt.prepare_dictionary(obj), true)
+end
+
 -- Given as input a "disclosure array" of the form {salt, key, value}
 -- Return: disclosure = the array in octet form
 --         hashed = the sha256 digest of the encoded array (for _sd)
@@ -65,8 +189,7 @@ function sd_jwt.create_disclosure(dis_arr)
 
     local encoded_dis <const> =
         O.from_string(
-            JSON.raw_encode(
-                sd_jwt.prepare_dictionary(dis_arr), true)):url64()
+            sd_jwt.encode_prepared_dictionary(dis_arr)):url64()
     local disclosure = {}
     for i = 1, #dis_arr do
         if type(dis_arr[i]) == 'table' then
@@ -148,10 +271,8 @@ function sd_jwt.create_jwt(payload, sk, algo)
         alg=O.from_string(algo.IANA), -- TODO: does JWT contains .alg ?!
         typ=O.from_string("dc+sd-jwt")
     }
-    local payload_str <const> = sd_jwt.prepare_dictionary(payload)
-    local b64payload <const> = O.from_string(JSON.raw_encode(payload_str, true)):url64()
-    local header_str <const> = sd_jwt.prepare_dictionary(header)
-    local b64header <const> = O.from_string(JSON.raw_encode(header_str, true)):url64()
+    local b64payload <const> = O.from_string(sd_jwt.encode_prepared_dictionary(payload)):url64()
+    local b64header <const> = O.from_string(sd_jwt.encode_prepared_dictionary(header)):url64()
 
     local signature = algo.sign(sk, O.from_string(b64header .. "." .. b64payload))
     return {

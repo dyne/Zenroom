@@ -33,7 +33,7 @@ local ENCODING = {
 }
 
 local function encode_time()
-    time = big.new(os.time())*big.new(1000)
+    local time = big.from_decimal(tostring(time_now())) * big.new(1000)
     len = 10
     local result = {}
     for i = len, 1, -1 do 
@@ -59,7 +59,8 @@ end
 
 
 function uu.uuid_v1()
-    time = big.new(os.time())*big.from_decimal(10000000)+big.from_decimal("122192928000000000")
+    local time = big.from_decimal(tostring(time_now())) * big.from_decimal(10000000)
+        + big.from_decimal("122192928000000000")
     local time_low = time:octet():sub(5,8):hex()
     local time_mid = time:octet():sub(3,4):hex()
     local time_high = time:octet():sub(1,2):__shl(4)

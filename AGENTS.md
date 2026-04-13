@@ -264,6 +264,9 @@ Preserve:
 - native context access now goes through `zen_get_context(...)` or `zen_get_global_context()`, pool-backed allocations use explicit `zmalloc(...)`/`zfree(...)`/`zrealloc(...)`, and helper names ending in `_clone_free` or `hash_release` own heap-backed temporary clones rather than borrowed userdata.
 - vendored Lua modules (`json.lua`, `msgpack.lua`, `inspect.lua`, `semver.lua`) include origin/local-change headers; preserve them when upgrading.
 - for array-like data in hot paths, prefer `ipairs` over deterministic sorted traversal helpers unless order affects serialized or signed output.
+- TIME values are now stored and parsed as signed 64-bit (`ztime_t = int64_t`); keep parser inputs integer-only and preserve legacy native-endian 4-byte TIME octets for int32-range compatibility while accepting 8-byte octets for widened values.
+- Lua-side Y2038 follow-up is mostly migrated: `zencode_math.lua`, `crypto_ulid.lua`, `crypto_dcql_query.lua`, `zencode_sd_jwt.lua`, `crypto_longfellow.lua`, and `zencode_longfellow.lua` now avoid libc calendar conversions; `crypto_fsp.lua` still carries a tracked `time-y2038` TODO because the timetable-based UTC formatter currently overflows in plain-Lua FSP calls.
+- TIME now has an explicit signed 64-bit contract end-to-end. For calendar conversion in Lua, prefer `timetable.lua` and exact integer/TIME values over host `os.time` or float-backed timestamp math.
 
 
 ## Rule Of Thumb

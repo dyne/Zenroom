@@ -8,7 +8,10 @@ load ../bats_setup
     Z big_gregorian_epoch_timestamp.lua
     Z export_float.lua
     Z export_time.lua
+    Z time_autodetect.lua
+    Z time_now.lua
     Z time_arithmetics.lua
+    Z timetable.lua
     Z msgpack.lua
     Z zenroom_msgpack.lua
     Z zenroom_strings.lua

@@ -60,6 +60,23 @@ static int line_is_truncated(const char *line) {
 	return !feof(stdin);
 }
 
+static void resolve_context_mode(const char *context, const char **runtime_context, const char **sideload_lua) {
+	if (context) {
+		const char *nl = strchr(context, '\n');
+		if (nl) {
+			size_t first_line_len = (size_t)(nl - context);
+			if ((first_line_len == 3 && strncmp(context, "lua", 3) == 0) ||
+				(first_line_len == 4 && strncmp(context, "lua\r", 4) == 0)) {
+				*runtime_context = NULL;
+				*sideload_lua = nl + 1;
+				return;
+			}
+		}
+	}
+	*runtime_context = context;
+	*sideload_lua = NULL;
+}
+
 static char *line_alloc(char *in, int max) {
 	if( ! fgets(in, max, stdin) ) return NULL;
 	if(line_is_truncated(in)) {
@@ -164,14 +181,17 @@ int main(int argc, char **argv) {
   char *data =    line_alloc(data_b64,    MAX_FILE);
   char *extra =   line_alloc(extra_b64,   MAX_FILE);
   char *context = line_alloc(context_b64, MAX_FILE);
+  const char *runtime_context = context;
+  const char *sideload_lua = NULL;
+  resolve_context_mode(context, &runtime_context, &sideload_lua);
   // call zenroom init with all arguments
-  Z = zen_init_extra(conf,keys,data,extra,context);
+  Z = zen_init_extra(conf,keys,data,extra,runtime_context);
   free(keys);
   free(data);
   free(extra);
-  free(context);
 
   if(!Z) {
+	free(context);
 	fprintf(stderr, "\"[!] Initialisation failed\",\n");
 	fprintf(stderr,"\"ZENROOM JSON LOG END\" ]\n");
 	return EXIT_FAILURE;
@@ -181,11 +201,22 @@ int main(int argc, char **argv) {
 #if defined(LUA_EXEC)
   zen_exec_lua(Z, script);
 #else
+  if(sideload_lua) {
+	zen_exec_lua(Z, sideload_lua);
+	if(Z->exitcode != 0) {
+	  free(script);
+	  free(context);
+	  int exitcode = Z->exitcode;
+	  zen_teardown(Z);
+	  return exitcode;
+	}
+  }
   // heap and trace dumps in base64 encoded json (J64)
   zen_exec_lua(Z, "CONF.debug.format='compact'");
   zen_exec_zencode(Z, script);
 #endif
   free(script);
+  free(context);
   int exitcode = Z->exitcode;
   zen_teardown(Z);
   return exitcode;

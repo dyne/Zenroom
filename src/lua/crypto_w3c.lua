@@ -242,11 +242,47 @@ function W3C.create_string_jwk(alg, sk_flag, pk)
 end
 
 function W3C.import_jwt(obj)
+    local function representable_integer_string(value)
+        if type(value) ~= 'number' then
+            return nil
+        end
+        if math.type(value) == 'integer' then
+            return tostring(value)
+        end
+        if value ~= value or value == math.huge or value == -math.huge then
+            return nil
+        end
+        local integer, fractional = math.modf(value)
+        if fractional ~= 0.0 then
+            return nil
+        end
+        return string.format('%.0f', integer)
+    end
+
+    local function decimal_lte(left, right)
+        if #left ~= #right then
+            return #left < #right
+        end
+        return left <= right
+    end
+
+    local function is_autodetected_time_string(value)
+        if not value or value:sub(1, 1) == '-' then
+            return false
+        end
+        return decimal_lte('1500000000', value)
+           and decimal_lte(value, '4102444800')
+    end
+
     local function decode_jwt_parts(s)
         if type(s) == 'string' then
             return O.from_string(s)
         elseif type(s) == 'number' then
-            return fif(TIME.detect_time_value(s), TIME.new, FLOAT.new)(s)
+            local exact = representable_integer_string(s)
+            if exact and is_autodetected_time_string(exact) then
+                return TIME.new(exact)
+            end
+            return FLOAT.new(s)
         else
             return s
         end

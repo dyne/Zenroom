@@ -21,10 +21,19 @@
 #ifndef __ZEN_TIME_H__
 #define __ZEN_TIME_H__
 
-#define AUTODETECTED_TIME_MIN 1500000000
-#define AUTODETECTED_TIME_MAX 2000000000
+#include <stdint.h>
 
-typedef int ztime_t;
+/*
+ * Conservative heuristic window used by TIME.detect_time_value().
+ * Keep autodetection narrow on purpose: it should catch modern Unix
+ * timestamps used in credential-expiry style payloads without treating
+ * arbitrary small integers as TIME values.
+ */
+#define AUTODETECTED_TIME_MIN 1500000000LL
+#define AUTODETECTED_TIME_MAX 4102444800LL
+
+/* Canonical TIME domain: signed 64-bit Unix seconds. */
+typedef int64_t ztime_t;
 
 /* Creates a fresh userdata-backed TIME value and pushes it onto the Lua stack. */
 ztime_t* time_new(lua_State *L);
@@ -35,7 +44,7 @@ ztime_t* time_dup(lua_State *L, ztime_t *c);
 /* Returns a heap-owned TIME clone for userdata, strings, or numbers. */
 ztime_t* time_arg(lua_State *L, int n);
 
-// internal conversion from float to octet
+/* Converts TIME to octet using the compatibility policy in zen_time.c. */
 octet *new_octet_from_time(lua_State *L, ztime_t c);
 
 #endif

@@ -507,19 +507,42 @@ int _check_zenroom_result(zenroom_t *zz) {
   return(exitcode);
 }
 
+static void _resolve_context_mode(const char *context, const char **runtime_context, const char **sideload_lua) {
+  if (context) {
+    const char *nl = strchr(context, '\n');
+    if (nl) {
+      size_t first_line_len = (size_t)(nl - context);
+      if ((first_line_len == 3 && strncmp(context, "lua", 3) == 0) ||
+          (first_line_len == 4 && strncmp(context, "lua\r", 4) == 0)) {
+        *runtime_context = NULL;
+        *sideload_lua = nl + 1;
+        return;
+      }
+    }
+  }
+  *runtime_context = context;
+  *sideload_lua = NULL;
+}
+
 int zencode_exec(const char *script, const char *conf, const char *keys, const char *data,
 	const char *extra, const char *context) {
 
-	const char *c, *k, *d, *e, *x;
+	const char *c, *k, *d, *e, *x, *side;
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
 	e = extra ? (extra[0] == '\0') ? NULL : extra : NULL;
 	x = context ? (context[0] == '\0') ? NULL : context : NULL;
+	_resolve_context_mode(x, &x, &side);
 
 	zenroom_t *Z = zen_init_extra(c, k, d, e, x);
 	if (_check_zenroom_init(Z) != SUCCESS) return ERR_INIT;
 	if (_check_script_arg(Z, script) != SUCCESS) return ERR_INIT;
+	if (side) {
+		if (_check_script_arg(Z, side) != SUCCESS) return ERR_INIT;
+		zen_exec_lua(Z, side);
+		if (Z->exitcode != SUCCESS) return _check_zenroom_result(Z);
+	}
 
 	zen_exec_zencode(Z, script);
 	return( _check_zenroom_result(Z) );
@@ -548,12 +571,13 @@ int zencode_exec_tobuf(const char *script, const char *conf, const char *keys, c
 	char *stdout_buf, size_t stdout_len,
 	char *stderr_buf, size_t stderr_len) {
 
-	const char *c, *k, *d, *e, *x;
+	const char *c, *k, *d, *e, *x, *side;
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
 	e = extra ? (extra[0] == '\0') ? NULL : extra : NULL;
 	x = context ? (context[0] == '\0') ? NULL : context : NULL;
+	_resolve_context_mode(x, &x, &side);
 
 	zenroom_t *Z = zen_init_extra(c, k, d, e, x);
 	if (_check_zenroom_init(Z) != SUCCESS) return ERR_INIT;
@@ -564,6 +588,11 @@ int zencode_exec_tobuf(const char *script, const char *conf, const char *keys, c
 	Z->stdout_len = stdout_len;
 	Z->stderr_buf = stderr_buf;
 	Z->stderr_len = stderr_len;
+	if (side) {
+		if (_check_script_arg(Z, side) != SUCCESS) return ERR_INIT;
+		zen_exec_lua(Z, side);
+		if (Z->exitcode != SUCCESS) return _check_zenroom_result(Z);
+	}
 	zen_exec_zencode(Z, script);
 	return( _check_zenroom_result(Z));
 }

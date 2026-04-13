@@ -34,26 +34,36 @@ EOF
 }
 
 
-@test "import time grater than 2147483647" {
+@test "import time greater than 2147483647" {
     cat <<EOF | save_asset time_too_big.data.json
 {
   "time_string": "1709303629395",
   "time_number": 1709303629395
 }
 EOF
-    cat <<EOF | save_asset time_too_big_string.zen time_too_big.data.json
+    cat <<EOF | save_asset time_too_big_string.zen
 Given I have a 'time' named 'time_string'
 Then print the data
 EOF
-    cat <<EOF | save_asset time_too_big_number.zen time_too_big.data.json
+    cat <<EOF | save_asset time_too_big_number.zen
 Given I have a 'time' named 'time_number'
 Then print the data
 EOF
 
-    run $ZENROOM_EXECUTABLE -z -a time_too_big.data.json time_too_big_string.zen
-    assert_line --partial 'Could not read unix timestamp 1709303629395 out of range'
+    cat <<EOF | zexe time_too_big_string.zen time_too_big.data.json
+Given I have a 'time' named 'time_string'
+Then print all data
+EOF
+    save_output time_too_big_string.out.json
+    assert_output --regexp '\{"time_string":(1709303629395|1\.709304e\+12)\}'
+
+    cat <<EOF | save_asset time_too_big_number.zen
+Given I have a 'time' named 'time_number'
+Then print all data
+EOF
     run $ZENROOM_EXECUTABLE -z -a time_too_big.data.json time_too_big_number.zen
-    assert_line --partial 'Could not read unix timestamp 1.709304e+12'
+    assert_success
+    assert_output --regexp '\{"time_number":1\.709304e\+12\}'
 }
 
 @test "time to integer" {
@@ -138,7 +148,7 @@ EOF
     Then print the 'date table'
 EOF
     save_output timestamp_to_date_table.out.json
-    assert_output --regexp '\{"date_table":\{"day":1,"hour":[0-9]+,"isdst":false,"min":0,"month":1,"sec":0,"year":1970\}\}'
+    assert_output '{"date_table":{"day":1,"hour":0,"isdst":false,"min":0,"month":1,"sec":0,"year":1970}}'
 }
 
 @test "date table to timestamp" {
@@ -187,7 +197,7 @@ EOF
         "sec": 200
     },
     "timestamp": 0,
-    "another_timestamp": 1712324515
+    "another_timestamp": "2524608000"
 }
 EOF
     cat <<EOF | zexe sum_of_date_table.zen sum_of_date_table.data.json
@@ -220,7 +230,7 @@ EOF
     Then print the 'sum_of_date_tables'
 EOF
     save_output sum_of_date_table.out.json
-    assert_output --regexp '\{"sum_of_date_table_and_timestamp":\{"day":6,"hour":[0-9]+,"min":0,"month":2,"sec":0,"year":1971\},"sum_of_date_tables":\{"day":25,"hour":0,"min":0,"month":1,"sec":200,"year":25001\},"sum_of_timestamp":1712324515,"sum_of_timestamp_and_another_date_table":\{"day":25,"hour":[0-9]+,"min":41,"month":4,"sec":255,"year":27024\},"sum_of_timestamp_and_date_table":\{"day":6,"hour":[0-9]+,"min":0,"month":2,"sec":0,"year":1971\}\}'
+    assert_output --regexp '\{"sum_of_date_table_and_timestamp":\{"day":6,"hour":0,"min":0,"month":2,"sec":0,"year":1971\},"sum_of_date_tables":\{"day":25,"hour":0,"min":0,"month":1,"sec":200,"year":25001\},"sum_of_timestamp":(2524608000|2\.524608e\+09),"sum_of_timestamp_and_another_date_table":\{"day":21,"hour":0,"min":0,"month":1,"sec":200,"year":27050\},"sum_of_timestamp_and_date_table":\{"day":6,"hour":0,"min":0,"month":2,"sec":0,"year":1971\}\}'
 }
 
 @test "utc time" {
@@ -246,4 +256,24 @@ and print the 'timestamp'
 EOF
     save_output utc_time.out.json
     assert_output --regexp '\{"timestamp":1745568429,"utc_fixed":"2025-04-25T08:07:09Z","utc_now":"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z"\}'
+}
+
+@test "utc time roundtrip after 2038" {
+    cat <<EOF | save_asset utc_time_2050.data.json
+{
+    "utc_2050": "2050-01-01T00:00:00Z"
+}
+EOF
+    cat <<EOF | zexe utc_time_2050.zen utc_time_2050.data.json
+Given I have a 'string' named 'utc_2050'
+
+When I create timestamp of UTC timestamp 'utc_2050'
+and I rename 'timestamp' to 'fixed_timestamp'
+When I create UTC timestamp of 'fixed_timestamp'
+
+    Then print the 'fixed_timestamp'
+and print the 'UTC_timestamp'
+EOF
+    save_output utc_time_2050.out.json
+    assert_output --regexp '\{"UTC_timestamp":"2050-01-01T00:00:00Z","fixed_timestamp":(2524608000|2\.524608e\+09)\}'
 }

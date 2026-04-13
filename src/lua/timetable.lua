@@ -1,7 +1,40 @@
 local strformat = string.format
 local floor = math.floor
+local BIG = BIG or require('zenroom_big')
+
 local function idiv(n, d)
 	return floor(n / d)
+end
+
+local BIG_ZERO <const> = BIG.new(0)
+local BIG_ONE <const> = BIG.new(1)
+local BIG_DAY_SECONDS <const> = BIG.new(86400)
+
+local function exact_big(arg)
+	local kind = type(arg)
+	if kind == "zenroom.big" then
+		return arg
+	end
+	if kind == "zenroom.time" then
+		return BIG.from_decimal(tostring(arg))
+	end
+	if kind == "string" then
+		return BIG.from_decimal(arg)
+	end
+	if kind == "number" then
+		return BIG.from_decimal(strformat("%.0f", arg))
+	end
+	error("bad argument #1 (expected exact integer-compatible seconds, got " .. kind .. ")", 3)
+end
+
+local function split_epoch_seconds(seconds)
+	local days = seconds / BIG_DAY_SECONDS
+	local rem = seconds % BIG_DAY_SECONDS
+	if rem < BIG_ZERO then
+		days = days - BIG_ONE
+		rem = rem + BIG_DAY_SECONDS
+	end
+	return days, tonumber(rem:decimal())
 end
 
 local c_locale = {
@@ -327,15 +360,19 @@ local leap_years_since_1970 = leap_years_since(1970)
 local function timestamp(year, month, day, hour, min, sec)
 	year, month, day, hour, min, sec = normalise(year, month, day, hour, min, sec)
 
-	local days_since_epoch = day_of_year(day, month, year)
-		+ 365 * (year - 1970)
-		-- Each leap year adds one day
-		+ (leap_years_since(year - 1) - leap_years_since_1970) - 1
+	local days_since_epoch = BIG.new(day_of_year(day, month, year) - 1)
+	if year >= 1970 then
+		for y = 1970, year - 1 do
+			days_since_epoch = days_since_epoch + BIG.new(is_leap(y) and 366 or 365)
+		end
+	else
+		for y = 1969, year, -1 do
+			days_since_epoch = days_since_epoch - BIG.new(is_leap(y) and 366 or 365)
+		end
+	end
 
-	return days_since_epoch * (60*60*24)
-		+ hour * (60*60)
-		+ min  * 60
-		+ sec
+	local seconds = BIG.new(hour * 3600 + min * 60 + floor(sec))
+	return (days_since_epoch * BIG_DAY_SECONDS + seconds):decimal()
 end
 
 
@@ -374,7 +411,17 @@ function timetable_methods:rfc_3339()
 	local year, month, day, hour, min, fsec = self:unpack()
 	local sec, msec = borrow(fsec, 0, 1000)
 	msec = math.floor(msec)
-	return strformat("%04u-%02u-%02uT%02u:%02u:%02d.%03d", year, month, day, hour, min, sec, msec)
+	return strformat("%04u-%02u-%02uT%02u:%02u:%02d.%03dZ", year, month, day, hour, min, sec, msec)
+end
+
+function timetable_methods:to_string()
+	local year, month, day, hour, min, sec = self:unpack()
+	sec = math.floor(sec)
+	return strformat("%04u-%02u-%02uT%02u:%02u:%02dZ", year, month, day, hour, min, sec)
+end
+
+function timetable_methods:to_rfc3339()
+	return self:rfc_3339()
 end
 
 function timetable_methods:strftime(format_string)
@@ -385,22 +432,22 @@ local timetable_mt
 
 local function coerce_arg(t)
 	if getmetatable(t) == timetable_mt then
-		return t:timestamp()
+		return exact_big(t:timestamp())
 	end
-	return t
+	return exact_big(t)
 end
 
 timetable_mt = {
 	__index    = timetable_methods;
 	__tostring = timetable_methods.rfc_3339;
 	__eq = function(a, b)
-		return a:timestamp() == b:timestamp()
+		return exact_big(a:timestamp()) == exact_big(coerce_arg(b))
 	end;
 	__lt = function(a, b)
-		return a:timestamp() < b:timestamp()
+		return exact_big(a:timestamp()) < exact_big(coerce_arg(b))
 	end;
 	__sub = function(a, b)
-		return coerce_arg(a) - coerce_arg(b)
+		return (coerce_arg(a) - coerce_arg(b)):decimal()
 	end;
 }
 
@@ -426,10 +473,45 @@ function timetable_methods:clone()
 end
 
 local function new_from_timestamp(ts)
-	if type(ts) ~= "number" then
-		error("bad argument #1 to 'new_from_timestamp' (number expected, got " .. type(ts) .. ")", 2)
+	local days, rem = split_epoch_seconds(exact_big(ts))
+	local year = 1970
+
+	if days >= BIG_ZERO then
+		while true do
+			local year_days = BIG.new(is_leap(year) and 366 or 365)
+			if days < year_days then
+				break
+			end
+			days = days - year_days
+			year = year + 1
+		end
+	else
+		year = 1969
+		while days < BIG_ZERO do
+			days = days + BIG.new(is_leap(year) and 366 or 365)
+			if days >= BIG_ZERO then
+				break
+			end
+			year = year - 1
+		end
 	end
-	return new_timetable(1970, 1, 1, 0, 0, ts):normalise()
+
+	local month = 1
+	while true do
+		local month_days = BIG.new(month_length(month, year))
+		if days < month_days then
+			break
+		end
+		days = days - month_days
+		month = month + 1
+	end
+
+	local day = tonumber(days:decimal()) + 1
+	local hour = floor(rem / 3600)
+	local min = floor((rem % 3600) / 60)
+	local sec = rem % 60
+
+	return new_timetable(year, month, day, hour, min, sec):normalise()
 end
 
 --- Parse an RFC 3339 datetime at the given position
@@ -438,7 +520,7 @@ end
 -- If the timestamp is only partial (i.e. missing "Z" or time offset) then `tz_offset` will be nil
 -- TODO: Validate components are within their boundarys (e.g. 1 <= month <= 12)
 local function rfc_3339(str, init)
-	local year, month, day, hour, min, sec, patt_end = str:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)[Tt](%d%d%.?%d*):(%d%d):(%d%d)()", init) -- luacheck: ignore 631
+	local year, month, day, hour, min, sec, patt_end = str:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)[Tt](%d%d):(%d%d):(%d%d%.?%d*)()", init) -- luacheck: ignore 631
 	if not year then
 		return nil, "Invalid RFC 3339 timestamp"
 	end
@@ -470,7 +552,8 @@ end
 return {
 	-- used in zenroom
 	from_string = rfc_3339;
-	to_string = function(a) return a:normalise():rfc_3339() end;
+	to_string = function(a) return a:normalise():to_string() end;
+	to_rfc3339 = function(a) return a:normalise():to_rfc3339() end;
 	from_seconds = new_from_timestamp;
 	to_seconds = function(a) return a:normalise():timestamp() end;
 	-- original from luatz

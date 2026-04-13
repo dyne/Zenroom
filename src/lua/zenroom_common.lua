@@ -526,18 +526,25 @@ function is_zulu_date(input)
 end
 
 local function _zulu2timestamp(s)
-    local pattern <const> = "(%d+)%-(%d+)%-(%d+)T(%d+):(%d+):(%d+)Z"
-    local year, month, day, hour, min, sec <const> = s:string():match(pattern)
-    local utc_table <const> = {
-        year = tonumber(year),
-        month = tonumber(month),
-        day = tonumber(day),
-        hour = tonumber(hour),
-        min = tonumber(min),
-        sec = tonumber(sec),
-        isdst = false
-    }
-    local offset <const> = math.floor(os.difftime(os.time(), os.time(os.date("!*t"))))
-    return TIME.new(os.time(utc_table) + offset)
+    local TIMETABLE <const> = require('timetable')
+    local tt, tz_offset = TIMETABLE.from_string(s:string())
+    if not tt or tz_offset ~= 0 then
+        error('Invalid ZULU timestamp: ' .. s:string(), 2)
+    end
+    return TIME.new(TIMETABLE.to_seconds(tt))
 end
 _G['zulu2timestamp'] = _zulu2timestamp
+
+local function _time_now()
+    if _G['TIME_NOW_OVERRIDE'] ~= nil then
+        return TIME.new(_G['TIME_NOW_OVERRIDE'])
+    end
+    if CONTEXT and CONTEXT.time_now ~= nil then
+        return TIME.new(CONTEXT.time_now)
+    end
+    if not os then
+        error('Could not find os to read current time', 2)
+    end
+    return TIME.new(os.time())
+end
+_G['time_now'] = _time_now

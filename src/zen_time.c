@@ -19,12 +19,17 @@
  */
 
 /// <h1>TIME</h1>
-//This class allows to work with TIME objects. All TIME objects are float number.
-//Since all TIME objects are 32 bit signed, there are two limitations for values allowed:
+//This class allows to work with TIME objects. TIME values are signed 64-bit Unix seconds.
+//Input accepts exact integers only (userdata, integer number, decimal string, or TIME octet).
+//Since all TIME objects are 64-bit signed, there are two limitations for values allowed:
 //
-//-The MAXIMUM TIME value allowed is the number 2147483647 (<code>t_max = TIME.new(2147483647)</code>)
+//-The MAXIMUM TIME value allowed is the number 9223372036854775807 (<code>t_max = TIME.new(9223372036854775807)</code>)
 //
-//-The MINIMUM TIME value allowed is the number -2147483647 (<code>t_min = TIME.new(-2147483647)</code>) 
+//-The MINIMUM TIME value allowed is the number -9223372036854775808 (<code>t_min = TIME.new(-9223372036854775808)</code>) 
+//
+//Octet compatibility policy:
+//- input accepts both legacy 4-byte signed native-endian payload and 8-byte native payload
+//- output preserves legacy 4-byte payload for int32-range values, otherwise emits 8-byte payload
 //@module TIME
 
 
@@ -32,6 +37,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include <float.h>
+#include <stdint.h>
+#include <inttypes.h>
+#include <limits.h>
+#include <string.h>
 
 #include <zen_error.h>
 #include <lua_functions.h>
@@ -45,15 +54,78 @@
 #include <zenroom.h>
 
 int _string_from_time(char dest[1024], ztime_t src) {
-	char *format = "%d";
+	const char *format = "%" PRId64;
 
-	size_t ubufsz = snprintf(dest, 1024, format, src);
+	size_t ubufsz = snprintf(dest, 1024, format, (int64_t)src);
 	if(ubufsz >= 1024) {
 		return -1;
 	}
 	register int bufsz = (int)ubufsz;
 
 	return bufsz;
+}
+
+static int parse_ztime_string(const char *arg, ztime_t *out) {
+	char *pEnd = NULL;
+	long long ll_result;
+	if(!arg || !out) {
+		return 0;
+	}
+	errno = 0;
+	ll_result = strtoll(arg, &pEnd, 10);
+	if(errno == ERANGE || !pEnd || *pEnd != '\0') {
+		return 0;
+	}
+	*out = (ztime_t)ll_result;
+	return 1;
+}
+
+static int parse_ztime_number(lua_State *L, int idx, ztime_t *out) {
+	int is_integer = 0;
+	lua_Integer integer_value = lua_tointegerx(L, idx, &is_integer);
+	if(is_integer) {
+		*out = (ztime_t)integer_value;
+		return ((lua_Integer)(*out) == integer_value);
+	}
+
+	int is_number = 0;
+	lua_Number number_value = lua_tonumberx(L, idx, &is_number);
+	if(!is_number || !isfinite((double)number_value)) {
+		return 0;
+	}
+
+	double integral = 0.0;
+	if(modf((double)number_value, &integral) != 0.0) {
+		return 0;
+	}
+	if(integral < (double)INT64_MIN || integral > (double)INT64_MAX) {
+		return 0;
+	}
+
+	*out = (ztime_t)integral;
+	return ((double)(*out) == integral);
+}
+
+static int ztime_add_checked(ztime_t a, ztime_t b, ztime_t *out) {
+	if(!out) {
+		return 0;
+	}
+	if((b > 0 && a > INT64_MAX - b) || (b < 0 && a < INT64_MIN - b)) {
+		return 0;
+	}
+	*out = a + b;
+	return 1;
+}
+
+static int ztime_sub_checked(ztime_t a, ztime_t b, ztime_t *out) {
+	if(!out) {
+		return 0;
+	}
+	if((b > 0 && a < INT64_MIN + b) || (b < 0 && a > INT64_MAX + b)) {
+		return 0;
+	}
+	*out = a - b;
+	return 1;
 }
 
 
@@ -75,7 +147,6 @@ static void time_clone_free(lua_State *L, ztime_t *f) {
 }
 
 ztime_t* time_arg(lua_State *L, int n) {
-	zenroom_t *Z = zen_get_context(L);
 	ztime_t *result = (ztime_t*)zmalloc(sizeof(ztime_t));
 	if(result == NULL) {
 		zerror(L, "Could not create time, malloc failure: %s", strerror(errno));
@@ -86,52 +157,65 @@ ztime_t* time_arg(lua_State *L, int n) {
 		*result = *(ztime_t*)ud;
 		goto end;
 	}
-	if(lua_isstring(L, n)) {
-		const char* arg = lua_tostring(L, n);
-		char *pEnd;
-		long l_result = strtol(arg, &pEnd, 10);
-		if(*pEnd) {
+	if(lua_type(L, n) == LUA_TNUMBER) {
+		if(!parse_ztime_number(L, n, result)) {
+			const char *arg = lua_tostring(L, n);
+			zfree(result);
+			lerror(L, "Could not read unix timestamp %s", arg ? arg : "<number>");
+			return NULL;
+		}
+		goto end;
+	}
+	if(lua_type(L, n) == LUA_TSTRING) {
+		const char *arg = lua_tostring(L, n);
+		if(!parse_ztime_string(arg, result)) {
 			zfree(result);
 			lerror(L, "Could not read unix timestamp %s", arg);
 			return NULL;
-		} else {
-			char s_result[1024];
-			snprintf(s_result, 1024, "%ld", l_result);
-			if (l_result < INT_MIN || l_result > INT_MAX || strcmp(s_result, arg) != 0 ) {
-				zfree(result);
-				lerror(L, "Could not read unix timestamp %s out of range", arg);
-				return NULL;
-			}
 		}
-		*result = (ztime_t)l_result;
-		goto end;
-	}
-	// number argument, import
-	if(lua_isnumber(L, n)) {
-		lua_Number number = lua_tonumber(L, n);
-		*result = (int)number;
 		goto end;
 	}
 	const octet *o = o_arg(L, n);
 	if(o) {
-		if(o->len != sizeof(ztime_t)) {
+		if(o->len == 8) {
+			ztime_t native = 0;
+			memcpy(&native, o->val, 8);
+			*result = native;
+			o_free(L, o);
+			goto end;
+		}
+		/* Legacy input support: native-endian signed 32-bit payload. */
+		if(o->len == 4) {
+			int32_t legacy = 0;
+			memcpy(&legacy, o->val, 4);
+			*result = (ztime_t)legacy;
+			o_free(L, o);
+			goto end;
+		}
+		if(o->len != 8 && o->len != 4) {
 			o_free(L, o);
 			zfree(result);
 			zerror(L, "Wrong size timestamp %s", __func__);
 			return NULL;
 		}
-		memcpy(result, o->val, sizeof(ztime_t));
-		o_free(L, o);
-		goto end;
 	}
 end:
 	return result;
 }
 
 octet *new_octet_from_time(lua_State *L, ztime_t t) {
-	octet *o = o_alloc(L, sizeof(ztime_t));
+	octet *o = NULL;
+	/* Keep backward compatibility for existing signatures and fixtures. */
+	if(t >= INT32_MIN && t <= INT32_MAX) {
+		int32_t legacy = (int32_t)t;
+		o = o_alloc(L, 4);
+		if(!o) return NULL;
+		memcpy(o->val, &legacy, 4);
+		o->len = 4;
+		return o;
+	}
+	o = o_alloc(L, sizeof(ztime_t));
 	if(!o) return NULL;
-	// TODO: check endianness
 	memcpy(o->val, &t, sizeof(ztime_t));
 	o->len = sizeof(ztime_t);
 	return o;
@@ -146,8 +230,8 @@ octet *new_octet_from_time(lua_State *L, ztime_t t) {
     Create a new time. If an argument is present,
     *import it as @{OCTET} and initialise it with its value.
 
-    @param[opt] octet value (32 bit)
-    @return a new float number
+    @param[opt] octet value (legacy 32-bit or widened 64-bit payload)
+    @return a new signed 64-bit time value
     @function TIME.new
 */
 static int newtime(lua_State *L) {
@@ -169,7 +253,7 @@ end:
 /*static int is_time(lua_State *L) {
 	BEGIN();
 	int result = 0;
-	if(lua_isnumber(L, 1)) {
+	if(lua_type(L, 1) == LUA_TNUMBER) {
 		result = 1;
 	} else if(lua_isstring(L, 1)) {
 		const char* arg = lua_tostring(L, 1);
@@ -195,16 +279,17 @@ end:
 static int detect_time_value(lua_State *L) {
 	BEGIN();
 	int result = 0;
-	if(lua_isnumber(L, 1)) {
-		lua_Number n = lua_tonumber(L, 1);
-		if (n >= INT_MIN && n <= INT_MAX) {
-			result = n >= AUTODETECTED_TIME_MIN && n <= AUTODETECTED_TIME_MAX;
+	if(lua_type(L, 1) == LUA_TNUMBER) {
+		ztime_t t = 0;
+		if(parse_ztime_number(L, 1, &t)) {
+			result = t >= AUTODETECTED_TIME_MIN && t <= AUTODETECTED_TIME_MAX;
 		}
-	} else if(lua_isstring(L, 1)) {
+	} else if(lua_type(L, 1) == LUA_TSTRING) {
 		const char* arg = lua_tostring(L, 1);
-		char *pEnd;
-		long l_result = strtol(arg, &pEnd, 10);
-		result = (*pEnd == '\0' && l_result >= AUTODETECTED_TIME_MIN && l_result <= AUTODETECTED_TIME_MAX);
+		ztime_t parsed = 0;
+		result = parse_ztime_string(arg, &parsed) &&
+		         parsed >= AUTODETECTED_TIME_MIN &&
+		         parsed <= AUTODETECTED_TIME_MAX;
 	}
 	lua_pushboolean(L, result);
 	END(1);
@@ -252,10 +337,7 @@ end:
 	ztime_t *b = time_arg(L, 2);
 	SAFE_GOTO(a && b, ALLOCATE_TIME_ERR);
 	ztime_t *c = time_new(L); SAFE_GOTO(c, CREATE_TIME_ERR);
-	// manage possible overflow
-	SAFE_GOTO(*a <= 0 || *b <= 0 || *a <= INT_MAX - *b, "Result of addition out of range");
-	SAFE_GOTO(*a >= 0 || *b >= 0 || *a >= INT_MIN - *b, "Result of addition out of range");
-	*c = *a + *b;
+	SAFE_GOTO(ztime_add_checked(*a, *b, c), "Result of addition out of range");
 end:
 	time_clone_free(L, a);
 	time_clone_free(L, b);
@@ -280,10 +362,7 @@ static int time_sub(lua_State *L) {
 	ztime_t *b = time_arg(L, 2);
 	SAFE_GOTO(a && b, ALLOCATE_TIME_ERR);
 	ztime_t *c = time_new(L); SAFE_GOTO(c, CREATE_TIME_ERR);
-	// manage possible overflow
-	SAFE_GOTO(*a <= 0 || *b >= 0 || *a <= INT_MAX + *b, "Result of subtraction out of range");
-	SAFE_GOTO(*a >= 0 || *b <= 0 || *a >= INT_MIN + *b, "Result of subtraction out of range");
-	*c = *a - *b;
+	SAFE_GOTO(ztime_sub_checked(*a, *b, c), "Result of subtraction out of range");
 end:
 	time_clone_free(L, a);
 	time_clone_free(L, b);
@@ -308,6 +387,7 @@ static int time_opposite(lua_State *L) {
 	char *failed_msg = NULL;
 	ztime_t *a = time_arg(L,1); SAFE_GOTO(a, ALLOCATE_TIME_ERR);
 	ztime_t *b = time_new(L); SAFE_GOTO(b, CREATE_TIME_ERR);
+	SAFE_GOTO(*a != INT64_MIN, "Result of opposite out of range");
 	*b = -(*a);
 end:
 	time_clone_free(L,a);
