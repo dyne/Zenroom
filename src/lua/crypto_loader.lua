@@ -49,6 +49,12 @@ local crypto = {
           methods = { sign   = 'mldsa44_signature',
                       verify = 'mldsa44_verify',
                       pubgen = 'mldsa44_pubgen'  }
+        },
+        { IANA = 'RS256',
+          keyring = 'rsa',
+          lib = 'rsa',
+          alias = { 'rsa', 'rs256' },
+          methods = { }
         }
     }
 }
