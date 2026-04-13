@@ -62,8 +62,13 @@ local function _create_jws_header(alg, pk)
     ACK.jws_header = {['alg'] = O.from_string(crypto.IANA)}
     if pk then
         local jwk = JOSE.create_jwk(crypto.IANA)
-        jwk.x = O.from_string(jwk.x:to_url64())
-        jwk.y = O.from_string(jwk.y:to_url64())
+        if crypto.IANA == 'RS256' then
+            jwk.n = O.from_string(jwk.n:to_url64())
+            jwk.e = O.from_string(jwk.e:to_url64())
+        else
+            jwk.x = O.from_string(jwk.x:to_url64())
+            jwk.y = O.from_string(jwk.y:to_url64())
+        end
         ACK.jws_header.jwk = jwk
     end
     new_codec('jws_header', { zentype = 'd', encoding = 'string' })
@@ -82,8 +87,13 @@ When("create jws header for '' signature with public key", function(algo_name)
          empty'jws_header'
          ACK.jws_header = { alg = O.from_string(crypto.IANA) }
          local jwk = JOSE.create_jwk(crypto.IANA)
-         jwk.x = O.from_string(jwk.x:to_url64())
-         jwk.y = O.from_string(jwk.y:to_url64())
+         if crypto.IANA == 'RS256' then
+            jwk.n = O.from_string(jwk.n:to_url64())
+            jwk.e = O.from_string(jwk.e:to_url64())
+        else
+            jwk.x = O.from_string(jwk.x:to_url64())
+            jwk.y = O.from_string(jwk.y:to_url64())
+        end
          ACK.jws_header.jwk = jwk
          -- TODO: generate UID
          new_codec('jws_header', { zentype = 'd', encoding = 'string' })

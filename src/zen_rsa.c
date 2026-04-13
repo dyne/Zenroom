@@ -304,6 +304,67 @@ end:
 	END(1);
 }
 
+// Returns the modulus and exponent of a public key as octets, given the public key as octet. Useful for JWK export
+static int rsa_public_ne(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *octet_pk = NULL;
+	octet_pk = o_arg(L, 1); SAFE_GOTO(octet_pk, "Could not allocate public key");
+	SAFE_GOTO(octet_pk->len == RSA_4096_PUBLIC_KEY_BYTES, "Invalid public key size");
+
+	const int n_len = MODBYTES_512_29*FFLEN_4096;
+	octet *n = o_new(L, n_len); SAFE_GOTO(n, "Could not allocate modulus");
+	memcpy(n->val, octet_pk->val, n_len);
+	n->len = n_len;
+
+	octet *e = o_new(L, 4); SAFE_GOTO(e, "Could not allocate exponent");
+	memcpy(e->val, octet_pk->val + n_len, 4);
+	e->len = 4;
+
+end:
+	o_free(L, octet_pk);
+	if (failed_msg) {
+		THROW(failed_msg);
+	}
+	END(2);
+
+}
+
+// Returns the public key as octet, given the modulus and exponent as octets. Useful for JWK import
+static int rsa_pk_from_ne(lua_State *L) {
+    BEGIN();
+    char *failed_msg = NULL;
+    octet *n_oct = NULL, *e_oct = NULL;
+
+    n_oct = o_arg(L, 1); SAFE_GOTO(n_oct, "Could not allocate modulus");
+    e_oct = o_arg(L, 2); SAFE_GOTO(e_oct, "Could not allocate exponent");
+
+    const int n_len = MODBYTES_512_29 * FFLEN_4096;
+    SAFE_GOTO(n_oct->len == n_len,
+              "Invalid modulus size: expected RSA-4096 modulus");
+    SAFE_GOTO(e_oct->len >= 1 && e_oct->len <= 4,
+              "Invalid exponent size: expected 1-4 bytes"); // check len == 4 is too strict since JWK uses base64url encoding which can lead to leading zeros being stripped
+
+    octet *pk = o_new(L, RSA_4096_PUBLIC_KEY_BYTES);
+    SAFE_GOTO(pk, "Could not allocate public key octet");
+
+    memcpy(pk->val, n_oct->val, n_len);
+	
+	// pad the exponent with leading zeros if necessary to ensure it is 4 bytes long
+    memset(pk->val + n_len, 0, 4);
+    memcpy(pk->val + n_len + (4 - e_oct->len), e_oct->val, e_oct->len);
+
+    pk->len = RSA_4096_PUBLIC_KEY_BYTES;
+
+end:
+    o_free(L, n_oct);
+    o_free(L, e_oct);
+    if (failed_msg) { 
+		THROW(failed_msg); 
+	}
+    END(1);
+}
+
 int luaopen_rsa(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg rsa_class[] = {
@@ -315,6 +376,8 @@ int luaopen_rsa(lua_State *L) {
 		{"pubgen", rsa_pubgen},
 		{"pubcheck", rsa_signature_pubcheck},
 		{"signature_check", rsa_signature_check},
+		{"public_ne", rsa_public_ne},
+		{"pk_from_ne", rsa_pk_from_ne},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg rsa_methods[] = {
