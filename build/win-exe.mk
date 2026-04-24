@@ -18,7 +18,11 @@ zk-circuit-lang_cxxflags += -Wa,-mbig-obj
 # activate CCACHE etc.
 include build/plugins.mk
 
-all: ${BUILD_DEPS} stamp-exe-windres zenroom.exe zencode-exec.exe
+TARGET_BUILD_DEPS := ${BUILD_DEPS} ${ZKCC_BUILD_DEPS}
+TARGET_LDADD := ${ldadd} ${ZKCC_LDADD}
+cflags += -DZEN_ENABLE_ZKCC=1
+
+all: ${TARGET_BUILD_DEPS} stamp-exe-windres zenroom.exe zencode-exec.exe
 
 stamp-exe-windres:
 	sh build/stamp-exe.sh
@@ -27,11 +31,11 @@ cli_sources := src/cli-zenroom.o src/repl.o
 zenroom.exe: ${ZEN_SOURCES} ${cli_sources}
 	$(info === Linking Windows zenroom.exe)
 	${ld} ${cflags} ${ZEN_SOURCES} ${cli_sources} \
-		-o $@ zenroom.res ${ldflags} ${ldadd}
+		-o $@ zenroom.res ${ldflags} ${TARGET_LDADD}
 
 zencode-exec.exe: ${ZEN_SOURCES} src/zencode-exec.o
 	$(info === Linking Windows zencode-exec.exe)
 	${ld} ${cflags} ${ZEN_SOURCES} src/zencode-exec.o \
-		-o $@ zenroom.res ${ldflags} ${ldadd}
+		-o $@ zenroom.res ${ldflags} ${TARGET_LDADD}
 
 include build/deps.mk

@@ -15,6 +15,9 @@ ifdef RELEASE
 	cflags += -O3 ${ZEN_INCLUDES}
 endif
 include build/plugins.mk
+
+LUA_EMBED_EXCLUDES += crypto_zkcc.lua
+
 include build/deps.mk
 
 all: deps libzenroom.so

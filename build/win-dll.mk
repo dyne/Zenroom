@@ -17,6 +17,8 @@ ldadd += -lstdc++
 # activate CCACHE etc.
 include build/plugins.mk
 
+LUA_EMBED_EXCLUDES += crypto_zkcc.lua
+
 all: ${BUILD_DEPS} stamp-exe-windres zenroom.dll
 
 stamp-exe-windres:

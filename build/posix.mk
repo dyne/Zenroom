@@ -29,9 +29,20 @@ endif
 # activate CCACHE etc.
 include build/plugins.mk
 
+TARGET_BUILD_DEPS := ${BUILD_DEPS}
+TARGET_LDADD := ${ldadd}
+
+ifndef LIBRARY
+TARGET_BUILD_DEPS += ${ZKCC_BUILD_DEPS}
+TARGET_LDADD += ${ZKCC_LDADD}
+cflags += -DZEN_ENABLE_ZKCC=1
+else
+LUA_EMBED_EXCLUDES += crypto_zkcc.lua
+endif
+
 all: deps zenroom lua-exec zencode-exec
 
-deps: ${BUILD_DEPS}
+deps: ${TARGET_BUILD_DEPS}
 
 # main() for zencode-exec and lua-exec
 aux_source  := src/zencode-exec
@@ -39,7 +50,7 @@ cli_sources := src/cli-zenroom.o src/repl.o
 zenroom: ${ZEN_SOURCES} ${cli_sources}
 	$(info === Building the zenroom CLI)
 	${cxx} ${cflags} ${ZEN_SOURCES} ${cli_sources} \
-		-o $@ ${ldflags} ${ldadd} -lreadline
+		-o $@ ${ldflags} ${TARGET_LDADD} -lreadline
 
 lua-exec: cflags += -DLUA_EXEC
 lua-exec: ${ZEN_SOURCES}
@@ -47,23 +58,23 @@ lua-exec: ${ZEN_SOURCES}
 	${zenroom_cc} ${cflags} -DLUA_EXEC \
 		-c ${aux_source}.c -o ${aux_source}.o
 	${cxx} ${cflags} ${ZEN_SOURCES} ${aux_source}.o \
-		-o $@ ${ldflags} ${ldadd}
+		-o $@ ${ldflags} ${TARGET_LDADD}
 
 zencode-exec: ${ZEN_SOURCES}
 	$(info === Building the zencode-exec utility)
 	${zenroom_cc} ${cflags} -c ${aux_source}.c -o ${aux_source}.o
 	${cxx} ${cflags} ${ZEN_SOURCES} ${aux_source}.o \
-		-o $@ ${ldflags} ${ldadd}
+		-o $@ ${ldflags} ${TARGET_LDADD}
 
 libzenroom.so: deps ${ZEN_SOURCES}
 	$(info === Building the zenroom shared library)
 	${cxx} ${cflags} -shared ${ZEN_SOURCES} \
-		-o $@ ${ldflags} ${ldadd}
+		-o $@ ${ldflags} ${TARGET_LDADD}
 
 # OSX specific target
 libzenroom.dylib: deps ${ZEN_SOURCES}
 	$(info === Building the zenroom shared dynamic library)
 	${cxx} ${cflags} -shared ${ZEN_SOURCES} -dynamiclib \
-		-o $@ ${ldflags} ${ldadd}
+		-o $@ ${ldflags} ${TARGET_LDADD}
 
 include build/deps.mk

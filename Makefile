@@ -77,7 +77,7 @@ node-wasm: ## WebAssembly (WASM) for Javascript in-browser (Emscripten)
 
 check: ## Run tests using the current binary executable build
 	meson setup meson/ build/ -D \
-	"tests=['determinism','vectors','lua','zencode','blockchain','bindings','api']"
+	"tests=['determinism','vectors','lua','zkcc','zencode','blockchain','bindings','api']"
 	ninja -C meson test
 
 wrap-js: # Generate the ./zenroom exec wrapper on node-wasm builds
@@ -101,7 +101,7 @@ check-rs:
 
 check-osx: ## Run tests using the OSX binary executable build
 	meson setup meson/ build/ -D \
-	"tests=['determinism','vectors','lua','zencode','bindings']"
+	"tests=['determinism','vectors','lua','zkcc','zencode','bindings']"
 	ninja -C meson test
 
 install: destbin=${DESTDIR}${PREFIX}/bin
