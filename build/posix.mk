@@ -38,6 +38,8 @@ TARGET_LDADD += ${ZKCC_LDADD}
 cflags += -DZEN_ENABLE_ZKCC=1
 else
 LUA_EMBED_EXCLUDES += crypto_zkcc.lua
+ZEN_SOURCES := $(filter-out src/lua_modules.o,${ZEN_SOURCES}) \
+	src/lua_modules_library.o
 endif
 
 all: deps zenroom lua-exec zencode-exec
@@ -65,6 +67,14 @@ zencode-exec: ${ZEN_SOURCES}
 	${zenroom_cc} ${cflags} -c ${aux_source}.c -o ${aux_source}.o
 	${cxx} ${cflags} ${ZEN_SOURCES} ${aux_source}.o \
 		-o $@ ${ldflags} ${TARGET_LDADD}
+
+src/lua_modules_library.o: src/lua_modules.c
+	${zenroom_cc} ${cflags} -c $< -o $@ \
+		-DVERSION=\"${VERSION}\" \
+		-DCURRENT_YEAR=\"${CURRENT_YEAR}\" \
+		-DCOMMIT=\"${COMMIT}\" \
+		-DBRANCH=\"${BRANCH}\" \
+		-DCFLAGS="${cflags}"
 
 libzenroom.so: deps ${ZEN_SOURCES}
 	$(info === Building the zenroom shared library)
