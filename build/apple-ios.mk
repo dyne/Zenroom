@@ -17,6 +17,8 @@ platform := ios
 # activate CCACHE etc.
 include build/plugins.mk
 
+LUA_EMBED_EXCLUDES += crypto_zkcc.lua
+
 # TODO: from some error output in recent XCode we get a list of archs:
 # i386,x86_64,x86_64h,arm64,arm64e
 # we haven't met yet the need to activate all, contact us if you do.

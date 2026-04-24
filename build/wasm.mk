@@ -27,6 +27,7 @@ longfellow_cflags := -I ${pwd}/src -I. -I../zstd -fPIC -DLIBRARY -msimd128
 zk-circuit-lang_cxxflags := -I ${pwd}/src -I. -I../zstd -fPIC -DLIBRARY -msimd128 -I ../lua54/src -I../longfellow-zk
 
 system := Javascript
+LUA_EMBED_EXCLUDES += crypto_zkcc.lua
 ld_emsdk_settings := -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
 ld_emsdk_settings += -sMODULARIZE=1	-sSINGLE_FILE=1 --embed-file 'src/lua@/'
 ld_emsdk_settings += -sMALLOC=dlmalloc --no-heap-copy -sALLOW_MEMORY_GROWTH=1

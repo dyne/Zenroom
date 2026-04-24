@@ -1,4 +1,4 @@
 option('tests', type : 'array',
 				 choices : ['determinism', 'vectors', 'lua', 'zencode',
-				            'blockchain', 'bindings', 'api', 'benchmark'],
+				            'zkcc', 'blockchain', 'bindings', 'api', 'benchmark'],
 				 value : ['lua', 'zencode'])

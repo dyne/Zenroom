@@ -31,6 +31,7 @@ const unsigned int fakelen = 0;
 #else
 EOF
 libs=$(find src/lua -type f -name '*.lua')
+embed_excludes="${LUA_EMBED_EXCLUDES}"
 
 # emscripten doesn't supports embedding this way
 # will use --preload-file instead
@@ -44,6 +45,9 @@ scenarios=""
 
 for i in ${libs}; do
     p=$(basename $i)
+    case " ${embed_excludes} " in
+        *" ${p} "*) continue ;;
+    esac
     n=$(echo "$p" | cut -d'.' -f1)
     f="lualib_${n}.c"
     echo "+ $i $opts"

@@ -15,7 +15,10 @@ bats_file = @test/bats/bin/bats $(1).bats
 # temporary target for testing the tests
 check-bats: prepare-executables
 	@cp -v src/zenroom test/zenroom
-	$(call bats, test/lua)
+	$(call bats, test/lua/native.bats)
+	$(call bats, test/lua/primitives.bats)
+	$(call bats, test/lua/crypto.bats)
+	$(call bats, test/lua/zkcc.bats)
 	$(call bats, test/determinism)
 	$(call bats, test/zencode)
 
@@ -38,7 +41,10 @@ luacheck:
 check-osx: test-exec := ./src/zenroom
 check-osx: prepare-executables
 	@cp -v ${test-exec} test/zenroom
-	$(call bats, test/lua)
+	$(call bats, test/lua/native.bats)
+	$(call bats, test/lua/primitives.bats)
+	$(call bats, test/lua/crypto.bats)
+	$(call bats, test/lua/zkcc.bats)
 	$(call bats, test/determinism)
 	rm -f /tmp/zenroom-test-summary.txt
 	$(call crypto-integration,${test-exec})
@@ -51,7 +57,10 @@ check-linux: test-exec := ./src/zenroom
 check-linux: prepare-executables
 	@cp -v ${test-exec} test/zenroom
 	rm -f /tmp/zenroom-test-summary.txt
-	$(call bats, test/lua)
+	$(call bats, test/lua/native.bats)
+	$(call bats, test/lua/primitives.bats)
+	$(call bats, test/lua/crypto.bats)
+	$(call bats, test/lua/zkcc.bats)
 	$(call bats, test/determinism)
 	$(call crypto-integration,${test-exec})
 	$(call zencode-integration,${test-exec})

@@ -57,6 +57,14 @@ foreach test_suite : tests
 endforeach
 endif
 
+if suite.contains('zkcc')
+  test('lua_zkcc',
+       bats_bin,
+       args: [test_dir+'lua/zkcc.bats'],
+       timeout: 240
+      )
+endif
+
 ## BATS tests in test/zencode
 if suite.contains('zencode')
   # excluded tests

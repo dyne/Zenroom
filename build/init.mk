@@ -21,8 +21,8 @@ ZEN_INCLUDES += -Isrc -Ilib/lua54/src -Ilib -I/usr/local/include	\
 -Ilib/ed25519-donna -Ilib/longfellow-zk -Wall -Wextra
 
 BUILD_DEPS ?= apply-patches milagro lua54 embed-lua mlkem	\
-				quantum-proof ed25519-donna longfellow-zk	\
-				zk-circuit-lang zstd
+				quantum-proof ed25519-donna longfellow-zk zstd
+ZKCC_BUILD_DEPS := zk-circuit-lang
 
 pwd := $(shell pwd)
 mil := ${pwd}/build/milagro
@@ -47,8 +47,8 @@ ldadd += ${pwd}/lib/mlkem/test/build/libmlkem.a
 # ldadd += /usr/local/lib/libmdoc.a
 ldadd += ${pwd}/lib/longfellow-zk/liblongfellow-zk.a
 ldadd += ${pwd}/lib/zstd/libzstd.a
-ldadd += ${pwd}/lib/zk-circuit-lang/libzk-circuit-lang.a
 ldadd += -lstdc++
+ZKCC_LDADD := ${pwd}/lib/zk-circuit-lang/libzk-circuit-lang.a
 
 # ----------------
 # zenroom defaults

@@ -12,6 +12,7 @@
 embed-lua: lua_embed_opts := $(if ${COMPILE_LUA}, compile)
 embed-lua:
 	@echo "Embedding all files in src/lua"
+	LUA_EMBED_EXCLUDES="${LUA_EMBED_EXCLUDES}" \
 	./build/embed-lualibs ${lua_embed_opts}
 	@echo "File generated: src/lualibs_detected.c"
 
