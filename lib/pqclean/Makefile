@@ -7,7 +7,7 @@ CC ?= gcc
 COMMON=sha2.o fips202.o
 
 # LIB=libkyber512_clean.a
-KIBER512=kyber512/cbd.o kyber512/indcpa.o kyber512/kem.o kyber512/ntt.o kyber512/poly.o kyber512/polyvec.o kyber512/reduce.o kyber512/symmetric-shake.o kyber512/verify.o
+KIBER512=kyber512/cbd.o kyber512/indcpa.o kyber512/kem.o kyber512/ntt.o kyber512/poly.o kyber512/polyvec.o kyber512/reduce.o kyber512/symmetric-shake.o kyber512/verify.o kyber512/skem.o kyber512/kyber_larkg.o
 
 # LIB=libdilithium2_clean.a
 DILITHIUM2=dilithium2/ntt.o dilithium2/packing.o dilithium2/poly.o dilithium2/polyvec.o dilithium2/reduce.o dilithium2/rounding.o dilithium2/sign.o dilithium2/symmetric-shake.o
