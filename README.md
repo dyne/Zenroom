@@ -191,9 +191,9 @@ License along with this program.  If not, see
 * Zenroom developer website: https://dev.zenroom.org/
 * Zencode whitepaper: https://files.dyne.org/zenroom/Zencode_Whitepaper.pdf
 * Tutorials:
-  * [Bitcoin secure off-line wallet](https://medium.com/think-do-tank/bitcoin-secure-off-line-wallet-be50a57a8474)
-  * [Easy Ethereum (and ERC20) transactions](https://medium.com/think-do-tank/easy-ethereum-transactions-with-zenroom-ac911a0bfdc0)
-  * [Quantum Proof Crypto](https://medium.com/think-do-tank/quantum-proof-cryptography-e23b165b3bbd)
+  * [Bitcoin secure off-line wallet](https://news.dyne.org/bitcoin-secure-off-line-wallet/)
+  * [Easy Ethereum (and ERC20) transactions](https://news.dyne.org/easy-ethereum-transactions-with-zenroom/)
+  * [Quantum Proof Crypto](https://news.dyne.org/quantum-proof-cryptography-made-easy-with-zenroom/)
 
 **[🔝 back to top](#toc)**
 
