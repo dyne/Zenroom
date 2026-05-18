@@ -12,104 +12,63 @@
 // Imported from zenroom
 extern int randombytes(void *buf, size_t n);
 
-// --- Helpers for rejection sampling in LARKG ---
+// --- Rejection sampling for LARKG ---
 
-// Parameters for LARKG
-#define LARKG_ETA KYBER_ETA1
-#define KYBER_MONT_R_INV 169 // Montgomery constant R^-1 mod q, where R = 2^16 and q = 3329. Used for converting to/from Montgomery form.
-
-// Function to convert from Montgomery form to standard representation and center around 0
-static inline int16_t demont_center(int16_t coeff) {
-	int32_t v = ((int32_t)coeff % KYBER_Q + KYBER_Q) % KYBER_Q; // Ensure coeff is in [0, q-1]
-	v = (v * KYBER_MONT_R_INV) % KYBER_Q; // Convert from Montgomery form to standard representation
-	if (v >= KYBER_Q - 2 * KYBER_ETA1) {
-		v -= KYBER_Q; // Center around 0
-	}
-	return (int16_t)v;
+// Portable count of trailing zero bits, used to sample G ~ Geom(1/2).
+static int count_trailing_zeros(uint64_t x) {
+    if (x == 0) return 64;
+    int n = 0;
+    while ((x & 1) == 0) { n++; x >>= 1; }
+    return n;
 }
 
-// Function to compute gcd, to reduce numerator and denominator in the rejection sampling step
-static uint64_t gcd64(uint64_t a, uint64_t b) {
-	while (b != 0) {
-		uint64_t t = b;
-		b = a % b;
-		a = t;
-	}
-	return a;
-}
+// Rejection sampling for LARKG (Lyubashevsky-style).
+// Accepts candidate key S'' with probability chi(K) / (M * chi_max),
+// where K = S'' - S and chi = CBD(eta=3) for Kyber512.
+// Equivalent log-domain condition: centred_log_ratio + exp_sample > ln(M)*stddev
+// Constants derived analytically from CBD(eta=3) over KYBER_K*KYBER_N = 512 coefficients:
+//   MEAN     = 512 * E[log_cbd_rel] = 512 * (-29910) = -15240843
+//   PER_ZERO = ln(2) * stddev(log_ratio) ~ 637553
+//   LN_M     = ln(3) * stddev(log_ratio) ~ 1010498  (M=3, acceptance rate ~0.33)
+// Returns 0 (accept) or 1 (reject).
+static int larkg_rej_sampling(const polyvec *K_raw) {
 
-// Function to generate a 64-bit number
-static uint64_t random64(void) {
-    uint8_t buf[8];
-    
-    randombytes(buf, 8);
-    
-    return ((uint64_t)buf[0] << 56) | 
-           ((uint64_t)buf[1] << 48) | 
-           ((uint64_t)buf[2] << 40) | 
-           ((uint64_t)buf[3] << 32) | 
-           ((uint64_t)buf[4] << 24) | 
-           ((uint64_t)buf[5] << 16) | 
-           ((uint64_t)buf[6] << 8)  | 
-           ((uint64_t)buf[7]);
-}
+    // log P(|k|) - log P(0), scaled by 2^16, for CBD(eta=3)
+    static const int64_t log_cbd_rel[4] = {
+              0,   // |k|=0: ln(20/64) - ln(20/64)
+         -18854,   // |k|=1: ln(15/20) * 65536
+         -78904,   // |k|=2: ln(6/20)  * 65536
+        -196328    // |k|=3: ln(1/20)  * 65536
+    };
 
-// LARKG rejection sampling in integer-only arithmetic
-// Returns 0 on success, 1 on rejection
-static int larkg_rej_sampling(const polyvec *S_flat,
-                               const polyvec *S_pp_flat) {
-    static const int64_t LOG2_RSP[4] = {283261, 321617, 234953, 65536};
-    static const int64_t LOG2_M_Q16  = 1182310LL;
+    static const int64_t MEAN = -15240843;
+    static const int64_t PER_ZERO = 637553;
+    static const int64_t LN_M = 1010498;
 
-    int64_t log2_num = LOG2_M_Q16;
-
+    int64_t log_ratio = 0;
     for (int i = 0; i < KYBER_K; i++) {
         for (int j = 0; j < KYBER_N; j++) {
-            int16_t s_ij    = demont_center(S_flat->vec[i].coeffs[j]);
-            int16_t s_pp_ij = demont_center(S_pp_flat->vec[i].coeffs[j]);
-
-            if (abs(s_ij) > LARKG_ETA || abs(s_pp_ij - s_ij) > 2 * LARKG_ETA)
-                return 1;
-            if (abs(s_ij) > 3 || abs(s_pp_ij - s_ij) > 3)
-                return 1;
-
-            log2_num += LOG2_RSP[abs(s_pp_ij - s_ij)] - LOG2_RSP[abs(s_ij)];
+            int32_t k = (int32_t)K_raw->vec[i].coeffs[j];
+            if (k < 0) k = -k;
+            if (k > 3) return 1;
+            log_ratio += log_cbd_rel[k];
         }
     }
 
-    static int debug_count = 0;
-    debug_count++;
-    if (debug_count <= 10) {
-        printf("  [SAMPLE %d] log2_num=%.4f neg=%lld int_part=%lld\n",
-               debug_count,
-               (double)log2_num / 65536.0,
-               (long long)(-log2_num),
-               (long long)((-log2_num) >> 16));
-    }
+    // Sample exp_sample ~ Exp(1) * stddev via geometric bit counting
+    int64_t exp_sample = 0;
+    uint64_t bits;
+    randombytes(&bits, sizeof(bits));
+    do {
+        int z = count_trailing_zeros(bits);
+        exp_sample += (int64_t)z * PER_ZERO;
+        if (bits != 0) break;
+        randombytes(&bits, sizeof(bits));
+    } while (1);
 
-    // Reject if reject_prob >= 1
-    if (log2_num >= 0)
-        return 1;
-
-    // threshold = 2^(64 + log2_num/65536), with log2_num < 0
-    int64_t neg      = -log2_num;
-    int64_t int_part = neg >> 16;
-    int64_t frac_part = neg & 0xFFFF;
-
-    if (int_part >= 64)
-        return 1;
-
-    // base = 2^(64 - int_part) as uint64_t
-    uint64_t base = (int_part == 0) ? UINT64_MAX : (UINT64_MAX >> int_part);
-
-    // Correct for fractional part using ln2 approximation:
-    // 2^(-frac/65536) ≈ 1 - frac/65536 * ln2
-    // ln2 * 65536 = 45426 */
-    uint64_t threshold = base - ((__uint128_t)base * frac_part * 45426ULL >> 32);
-
-    uint64_t u64 = random64();
-    return (u64 < threshold) ? 1 : 0;
+    return ((log_ratio - MEAN) > LN_M - exp_sample) ? 0 : 1;
 }
+
 // -------------------------------------------------
 
 /*************************************************
@@ -191,49 +150,48 @@ int PQCLEAN_KYBER512_CLEAN_larkg_derive_pk(uint8_t next_pk[KYBER_INDCPA_PUBLICKE
 * Returns:    0 on success, -1 on rejection, -2 on failed authentication
 **************************************************/
 int PQCLEAN_KYBER512_CLEAN_larkg_derive_sk(uint8_t next_sk[KYBER_INDCPA_SECRETKEYBYTES],
-										   const uint8_t current_sk[KYBER_INDCPA_SECRETKEYBYTES],
-										   const larkg_cred_t *cred_in) {
-	uint8_t k_seed[KYBER_SSBYTES];
-	uint8_t mu_star[32];
-	polyvec S_poly, K_poly, S_prime_prime;
+                                           const uint8_t current_sk[KYBER_INDCPA_SECRETKEYBYTES],
+                                           const larkg_cred_t *cred_in) {
+    uint8_t k_seed[KYBER_SSBYTES];
+    uint8_t mu_star[32];
+    polyvec S_poly, K_poly, K_raw, S_prime_prime;
 
-	// Ln 1
-	PQCLEAN_KYBER512_CLEAN_polyvec_frombytes(&S_poly, current_sk);
+    // Ln 1
+    PQCLEAN_KYBER512_CLEAN_polyvec_frombytes(&S_poly, current_sk);
 
-	// Ln 2
-	PQCLEAN_KYBER512_CLEAN_skem_decaps(k_seed, current_sk, cred_in->c, cred_in->B_prime);
+    // Ln 2
+    PQCLEAN_KYBER512_CLEAN_skem_decaps(k_seed, current_sk, cred_in->c, cred_in->B_prime);
 
-	// Ln 3
-	for (int i = 0; i < KYBER_K; i++) {
-		PQCLEAN_KYBER512_CLEAN_poly_getnoise_eta1(&K_poly.vec[i], k_seed, (uint8_t)i);
-		PQCLEAN_KYBER512_CLEAN_poly_ntt(&K_poly.vec[i]);
-	}
+    // Ln 3
+    for (int i = 0; i < KYBER_K; i++) {
+        PQCLEAN_KYBER512_CLEAN_poly_getnoise_eta1(&K_raw.vec[i], k_seed, (uint8_t)i);
+        K_poly.vec[i] = K_raw.vec[i];
+        PQCLEAN_KYBER512_CLEAN_poly_ntt(&K_poly.vec[i]);
+    }
 
-	// Ln 4
-	hash_h(mu_star, k_seed, KYBER_SSBYTES);
+    // Ln 4
+    hash_h(mu_star, k_seed, KYBER_SSBYTES);
 
-	// Ln 5
-	if (memcmp(mu_star, cred_in->mu, 32) != 0) {
-		return -2;	// Authentication failed (mu_star != mu)
-	}
+    // Ln 5
+    if (memcmp(mu_star, cred_in->mu, 32) != 0) {
+        return -2;
+    }
 
-	// Ln 6
-	for (int i = 0; i < KYBER_K; i++) {
-		PQCLEAN_KYBER512_CLEAN_poly_add(&S_prime_prime.vec[i], &S_poly.vec[i], &K_poly.vec[i]);
-		PQCLEAN_KYBER512_CLEAN_poly_reduce(&S_prime_prime.vec[i]);
-	}
+    // Ln 6
+    for (int i = 0; i < KYBER_K; i++) {
+        PQCLEAN_KYBER512_CLEAN_poly_add(&S_prime_prime.vec[i],
+                                        &S_poly.vec[i],
+                                        &K_poly.vec[i]);
+        PQCLEAN_KYBER512_CLEAN_poly_reduce(&S_prime_prime.vec[i]);
+    }
 
-	// Ln 7 and 8 (rejection sampling)
-	polyvec S_flat = S_poly;
-	polyvec S_pp_flat = S_prime_prime;
-	PQCLEAN_KYBER512_CLEAN_polyvec_invntt_tomont(&S_flat);
-	PQCLEAN_KYBER512_CLEAN_polyvec_invntt_tomont(&S_pp_flat);
+    // Ln 7-8: rejection sampling on K in normal domain
+    if (larkg_rej_sampling(&K_raw) != 0) {
+        return -1;
+    }
 
-	int rej = larkg_rej_sampling(&S_flat, &S_pp_flat);
-	if (rej != 0) return -1;	// Rejection
+    // Ln 9
+    PQCLEAN_KYBER512_CLEAN_polyvec_tobytes(next_sk, &S_prime_prime);
 
-	// Ln 9
-	PQCLEAN_KYBER512_CLEAN_polyvec_tobytes(next_sk, &S_prime_prime);
-
-	return 0;
+    return 0;
 }
