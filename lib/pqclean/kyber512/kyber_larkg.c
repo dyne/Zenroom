@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h> // REMOVE AFTER TESTING
+#include <math.h>   // REMOVE AFTER TESTING
 
 // Imported from zenroom
 extern int randombytes(void *buf, size_t n);
@@ -23,39 +24,62 @@ static int count_trailing_zeros(uint64_t x) {
 }
 
 // Rejection sampling for LARKG (Lyubashevsky-style).
-// Accepts candidate key S'' with probability chi(K) / (M * chi_max),
-// where K = S'' - S and chi = CBD(eta=3) for Kyber512.
-// Equivalent log-domain condition: centred_log_ratio + exp_sample > ln(M)*stddev
-// Constants derived analytically from CBD(eta=3) over KYBER_K*KYBER_N = 512 coefficients:
-//   MEAN     = 512 * E[log_cbd_rel] = 512 * (-29910) = -15240843
-//   PER_ZERO = ln(2) * stddev(log_ratio) ~ 637553
-//   LN_M     = ln(3) * stddev(log_ratio) ~ 1010498  (M=3, acceptance rate ~0.33)
+//
+// Implements lines 7-8 of DeriveSK (Figure 5 of the paper):
+//   u <- U[0,1]
+//   accept if u < chi_a(K) / (M * chi_a(S))
+//
+// where chi_a = CBD(eta=3), K = S'' - S is the update vector,
+// and S is the current secret key. Both K and S have coefficients
+// in [-3, 3] (K from getnoise_eta1 before NTT, S from the appended seed).
+//
+// In log domain the condition becomes:
+//   log_chi_K - log_chi_S > ln(M) - exp_sample
+//
+// where:
+//   log_chi_K = sum_i log P(k_i)   (absolute log-prob under CBD(eta=3))
+//   log_chi_S = sum_i log P(s_i)
+//   log_ratio = log_chi_K - log_chi_S has mean 0 (K and S i.i.d.)
+//     and stddev = sqrt(2 * N * Var[log P(single coeff)])
+//   exp_sample ~ Exp(1) * stddev, sampled via geometric bit counting
+//
+// log_cbd[|k|] = log P(k) * 2^16, for CBD(eta=3):
+//   P(0)=20/64, P(1)=P(-1)=15/64, P(2)=P(-2)=6/64, P(3)=P(-3)=1/64
+//
+// Constants
+//   MEAN     = 0         (exact by symmetry)
+//   PER_ZERO = ln(2) * stddev
+//   LN_M     = ln(3) * stddev   (M=3, acceptance rate ~1/3)
+//
 // Returns 0 (accept) or 1 (reject).
-static int larkg_rej_sampling(const polyvec *K_raw) {
-
-    // log P(|k|) - log P(0), scaled by 2^16, for CBD(eta=3)
-    static const int64_t log_cbd_rel[4] = {
-              0,   // |k|=0: ln(20/64) - ln(20/64)
-         -18854,   // |k|=1: ln(15/20) * 65536
-         -78904,   // |k|=2: ln(6/20)  * 65536
-        -196328    // |k|=3: ln(1/20)  * 65536
+static int larkg_rej_sampling(const polyvec *S_raw,
+                               const polyvec *K_raw) {
+    // log P(|k|) * 2^16 for CBD(eta=3), absolute log-probabilities
+    static const int64_t log_cbd[4] = {
+        -76228,		// |k|=0: log(20/64) * 65536
+        -95082,		// |k|=1: log(15/64) * 65536
+        -155132,	// |k|=2: log(6/64)  * 65536
+        -272557		// |k|=3: log(1/64)  * 65536
     };
 
-    static const int64_t MEAN = -15240843;
-    static const int64_t PER_ZERO = 637553;
-    static const int64_t LN_M = 1010498;
+    static const int64_t PER_ZERO = 901636;
+    static const int64_t LN_M = 1429059;
 
-    int64_t log_ratio = 0;
+    int64_t log_chi_K = 0;
+    int64_t log_chi_S = 0;
+
     for (int i = 0; i < KYBER_K; i++) {
         for (int j = 0; j < KYBER_N; j++) {
-            int32_t k = (int32_t)K_raw->vec[i].coeffs[j];
-            if (k < 0) k = -k;
-            if (k > 3) return 1;
-            log_ratio += log_cbd_rel[k];
+            int32_t k = abs((int32_t)K_raw->vec[i].coeffs[j]);
+            int32_t s = abs((int32_t)S_raw->vec[i].coeffs[j]);
+            if (k > 3 || s > 3) return 1;
+            log_chi_K += log_cbd[k];
+            log_chi_S += log_cbd[s];
         }
     }
 
-    // Sample exp_sample ~ Exp(1) * stddev via geometric bit counting
+    // Sample exp_sample ~ Exp(1) * stddev via geometric bit counting.
+    // Each trailing zero bit of a random uint64_t contributes PER_ZERO.
     int64_t exp_sample = 0;
     uint64_t bits;
     randombytes(&bits, sizeof(bits));
@@ -66,7 +90,9 @@ static int larkg_rej_sampling(const polyvec *K_raw) {
         randombytes(&bits, sizeof(bits));
     } while (1);
 
-    return ((log_ratio - MEAN) > LN_M - exp_sample) ? 0 : 1;
+    // Accept if log_chi_K - log_chi_S > LN_M - exp_sample.
+    // MEAN = 0 by symmetry, so no centring needed.
+    return ((log_chi_K - log_chi_S) > LN_M - exp_sample) ? 0 : 1;
 }
 
 // -------------------------------------------------
@@ -149,8 +175,8 @@ int PQCLEAN_KYBER512_CLEAN_larkg_derive_pk(uint8_t next_pk[KYBER_INDCPA_PUBLICKE
 *
 * Returns:    0 on success, -1 on rejection, -2 on failed authentication
 **************************************************/
-int PQCLEAN_KYBER512_CLEAN_larkg_derive_sk(uint8_t next_sk[KYBER_INDCPA_SECRETKEYBYTES],
-                                           const uint8_t current_sk[KYBER_INDCPA_SECRETKEYBYTES],
+int PQCLEAN_KYBER512_CLEAN_larkg_derive_sk(uint8_t next_sk[KYBER_LARKG_SECRETKEYBYTES],
+                                           const uint8_t current_sk[KYBER_LARKG_SECRETKEYBYTES],
                                            const larkg_cred_t *cred_in) {
     uint8_t k_seed[KYBER_SSBYTES];
     uint8_t mu_star[32];
@@ -185,13 +211,20 @@ int PQCLEAN_KYBER512_CLEAN_larkg_derive_sk(uint8_t next_sk[KYBER_INDCPA_SECRETKE
         PQCLEAN_KYBER512_CLEAN_poly_reduce(&S_prime_prime.vec[i]);
     }
 
-    // Ln 7-8: rejection sampling on K in normal domain
-    if (larkg_rej_sampling(&K_raw) != 0) {
+    // Ln 7-8: rejection sampling
+	// Recover S in normal domain from appended seed in the secret key, and use it for rejection sampling
+	const uint8_t *s_seed = current_sk + KYBER_POLYVECBYTES;
+	polyvec S_raw;
+	for (int i = 0; i < KYBER_K; i++) {
+		PQCLEAN_KYBER512_CLEAN_poly_getnoise_eta1(&S_raw.vec[i], s_seed, (uint8_t)i);
+	}
+    if (larkg_rej_sampling(&S_raw, &K_raw) != 0) {
         return -1;
     }
 
     // Ln 9
     PQCLEAN_KYBER512_CLEAN_polyvec_tobytes(next_sk, &S_prime_prime);
+	memcpy(next_sk + KYBER_POLYVECBYTES, k_seed, KYBER_SYMBYTES); // Append seed to the secret key for the next round of rejection sampling
 
     return 0;
 }
