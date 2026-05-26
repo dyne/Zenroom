@@ -7,7 +7,7 @@
 #include "../lib/pqclean/kyber512/skem.h"
 #include "../lib/pqclean/kyber512/params.h"
 
-#define LARKG_SK_BYTES KYBER_INDCPA_SECRETKEYBYTES
+#define LARKG_SK_BYTES KYBER_LARKG_SECRETKEYBYTES
 #define LARKG_PK_BYTES KYBER_INDCPA_PUBLICKEYBYTES
 #define LARKG_CRED_BYTES (sizeof(larkg_cred_t))
 

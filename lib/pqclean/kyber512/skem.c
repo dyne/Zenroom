@@ -105,7 +105,7 @@ void PQCLEAN_KYBER512_CLEAN_skem_init(skem_context *ctx,
 * 			   const skem_context *ctx: pointer to the global context
 **************************************************/
 void PQCLEAN_KYBER512_CLEAN_skem_keygen(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES], 
-											uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES], 
+											uint8_t sk[KYBER_LARKG_SECRETKEYBYTES], 
 											const skem_context *ctx) {
 	uint8_t buf[2 * KYBER_SYMBYTES];
 	uint8_t nonce = 0;
@@ -137,6 +137,7 @@ void PQCLEAN_KYBER512_CLEAN_skem_keygen(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
 
 	// Encode pk and sk to byte arrays
 	skem_pack_sk(sk, &skpv);
+	memcpy(sk + KYBER_POLYVECBYTES, buf, KYBER_SYMBYTES); // Append s_seed to the secret key for rejection sampling
 	skem_pack_pk(pk, &pkpv, ctx->rho);
 }
 
@@ -237,7 +238,7 @@ void PQCLEAN_KYBER512_CLEAN_skem_encaps(uint8_t c_out[KYBER_POLYCOMPRESSEDBYTES]
 * 			   const uint8_t *pkp: pointer to input public key for encapsulation
 **************************************************/
 void PQCLEAN_KYBER512_CLEAN_skem_decaps(uint8_t m[KYBER_INDCPA_MSGBYTES], 
-										const uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES], 
+										const uint8_t sk[KYBER_LARKG_SECRETKEYBYTES], 
 										const uint8_t c_in[KYBER_POLYCOMPRESSEDBYTES], 
 										const uint8_t pkp[KYBER_POLYVECBYTES]) {
 	polyvec u, skpv;

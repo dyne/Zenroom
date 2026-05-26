@@ -16,8 +16,8 @@ int PQCLEAN_KYBER512_CLEAN_larkg_derive_pk(uint8_t next_pk[KYBER_INDCPA_PUBLICKE
 					const uint8_t current_pk[KYBER_INDCPA_PUBLICKEYBYTES],
 					const skem_context *ctx);
 
-int PQCLEAN_KYBER512_CLEAN_larkg_derive_sk(uint8_t next_sk[KYBER_INDCPA_SECRETKEYBYTES],
-					const uint8_t current_sk[KYBER_INDCPA_SECRETKEYBYTES],
+int PQCLEAN_KYBER512_CLEAN_larkg_derive_sk(uint8_t next_sk[KYBER_LARKG_SECRETKEYBYTES],
+					const uint8_t current_sk[KYBER_LARKG_SECRETKEYBYTES],
 					const larkg_cred_t *cred_in);
 
 #endif
