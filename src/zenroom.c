@@ -668,7 +668,7 @@ int zencode_valid_code(const char *script, const char *conf, const int strict) {
 			Z->exitcode = ERR_GENERIC;
 		} else {
 			const char * res = lua_tostring(Z->lua, -1);
-			_out("%s", res);
+			zen_out_string(res);
 			Z->exitcode = SUCCESS;
 		}
 	}
@@ -719,7 +719,7 @@ int zencode_get_statements(const char *scenario) {
 	} else {
 		lua_getglobal(Z->lua, "STATEMENTS");
 		const char * res = lua_tostring(Z->lua, -1);
-		_out("%s", res);
+		zen_out_string(res);
 		Z->exitcode = SUCCESS;
 	}
 	return( _check_zenroom_result(Z));
