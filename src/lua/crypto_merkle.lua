@@ -104,6 +104,176 @@ function MT.create_merkle_tree_from_table_of_hashes(data_table_hashed, hashtype)
     return tree
 end
 
+local function _openzeppelin_node_hash(a, b)
+    if a:hex() > b:hex() then
+        a, b = b, a
+    end
+    return _hash(a .. b, 'keccak256')
+end
+
+--- Create a tree compatible with OpenZeppelin makeMerkleTree.
+-- Leaves must be 32-byte hashes. By default they are sorted like
+-- StandardMerkleTree and SimpleMerkleTree.
+-- @param leaves table of OCTET leaves
+-- @param sort_leaves optional boolean, defaults to true
+-- @return tree and original-leaf-index to tree-index mapping
+function MT.create_openzeppelin_merkle_tree(leaves, sort_leaves)
+    if #leaves == 0 then
+        error("Expected non-zero number of leaves", 2)
+    end
+
+    local indexed_leaves = {}
+    for i, leaf in ipairs(leaves) do
+        if #leaf ~= 32 then
+            error("OpenZeppelin Merkle tree leaves must be 32 bytes", 2)
+        end
+        indexed_leaves[i] = { leaf = leaf, index = i }
+    end
+
+    if sort_leaves ~= false then
+        deterministic_sort(indexed_leaves, function(a, b)
+            return a.leaf:hex() < b.leaf:hex()
+        end)
+    end
+
+    local n = #indexed_leaves
+    local tree = {}
+    local tree_indices = {}
+    for i, item in ipairs(indexed_leaves) do
+        local tree_index = 2 * n - i
+        tree[tree_index] = item.leaf
+        tree_indices[item.index] = tree_index
+    end
+    for i = n - 1, 1, -1 do
+        tree[i] = _openzeppelin_node_hash(tree[2 * i], tree[2 * i + 1])
+    end
+
+    return tree, tree_indices
+end
+
+--- Generate an OpenZeppelin proof for a leaf at its tree index.
+-- @param tree tree returned by create_openzeppelin_merkle_tree
+-- @param tree_index index from the returned tree-index mapping
+-- @return proof ordered from leaf to root
+function MT.generate_openzeppelin_proof(tree, tree_index)
+    local n = (#tree + 1) / 2
+    if tree_index < n or tree_index > #tree then
+        error("Index is not a leaf", 2)
+    end
+
+    local proof = {}
+    while tree_index > 1 do
+        local sibling = tree_index % 2 == 0
+            and tree_index + 1
+            or tree_index - 1
+        proof[#proof + 1] = tree[sibling]
+        tree_index = math.floor(tree_index / 2)
+    end
+    return proof
+end
+
+--- Process an OpenZeppelin proof using sorted Keccak-256 node hashing.
+-- @param leaf 32-byte OCTET leaf
+-- @param proof table of 32-byte OCTET siblings
+-- @return computed root
+function MT.process_openzeppelin_proof(leaf, proof)
+    local root = leaf
+    for _, sibling in ipairs(proof) do
+        root = _openzeppelin_node_hash(root, sibling)
+    end
+    return root
+end
+
+--- Generate an OpenZeppelin multiproof for leaf tree indices.
+-- @param tree tree returned by create_openzeppelin_merkle_tree
+-- @param tree_indices table of leaf tree indices
+-- @return table with leaves, proof, and proof_flags
+function MT.generate_openzeppelin_multiproof(tree, tree_indices)
+    local n = (#tree + 1) / 2
+    local stack = {}
+    local seen = {}
+    for i, tree_index in ipairs(tree_indices) do
+        if tree_index < n or tree_index > #tree then
+            error("Index is not a leaf", 2)
+        end
+        if seen[tree_index] then
+            error("Cannot prove duplicated index", 2)
+        end
+        seen[tree_index] = true
+        stack[i] = tree_index
+    end
+    deterministic_sort(stack, function(a, b) return a > b end)
+
+    local leaf_indices = {}
+    for i, tree_index in ipairs(stack) do
+        leaf_indices[i] = tree_index
+    end
+
+    local proof = {}
+    local proof_flags = {}
+    if #stack == 0 then
+        proof[1] = tree[1]
+    end
+    while #stack > 0 and stack[1] > 1 do
+        local tree_index = table.remove(stack, 1)
+        local sibling = tree_index % 2 == 0
+            and tree_index + 1
+            or tree_index - 1
+        local parent = math.floor(tree_index / 2)
+
+        if sibling == stack[1] then
+            proof_flags[#proof_flags + 1] = true
+            table.remove(stack, 1)
+        else
+            proof_flags[#proof_flags + 1] = false
+            proof[#proof + 1] = tree[sibling]
+        end
+        stack[#stack + 1] = parent
+    end
+
+    local multiproof = {
+        leaves = {},
+        proof = proof,
+        proof_flags = proof_flags,
+    }
+    for i, tree_index in ipairs(leaf_indices) do
+        multiproof.leaves[i] = tree[tree_index]
+    end
+    return multiproof
+end
+
+--- Process an OpenZeppelin multiproof.
+-- @param multiproof table with leaves, proof, and proof_flags
+-- @return computed root
+function MT.process_openzeppelin_multiproof(multiproof)
+    local leaves = {}
+    local proof = {}
+    for i, leaf in ipairs(multiproof.leaves) do leaves[i] = leaf end
+    for i, node in ipairs(multiproof.proof) do proof[i] = node end
+
+    local false_flags = 0
+    for _, flag in ipairs(multiproof.proof_flags) do
+        if not flag then false_flags = false_flags + 1 end
+    end
+    if #proof < false_flags
+        or #leaves + #proof ~= #multiproof.proof_flags + 1 then
+        error("Invalid multiproof format", 2)
+    end
+
+    for _, flag in ipairs(multiproof.proof_flags) do
+        local a = table.remove(leaves, 1)
+        local b = flag
+            and table.remove(leaves, 1)
+            or table.remove(proof, 1)
+        leaves[#leaves + 1] = _openzeppelin_node_hash(a, b)
+    end
+
+    if #leaves + #proof ~= 1 then
+        error("Invalid multiproof result", 2)
+    end
+    return leaves[1] or proof[1]
+end
+
 
 
 function MT.generate_proof(tree, pos)

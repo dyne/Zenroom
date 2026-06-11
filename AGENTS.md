@@ -267,6 +267,7 @@ Preserve:
 - TIME values are now stored and parsed as signed 64-bit (`ztime_t = int64_t`); keep parser inputs integer-only and preserve legacy native-endian 4-byte TIME octets for int32-range compatibility while accepting 8-byte octets for widened values.
 - Lua-side Y2038 follow-up is mostly migrated: `zencode_math.lua`, `crypto_ulid.lua`, `crypto_dcql_query.lua`, `zencode_sd_jwt.lua`, `crypto_longfellow.lua`, and `zencode_longfellow.lua` now avoid libc calendar conversions; `crypto_fsp.lua` still carries a tracked `time-y2038` TODO because the timetable-based UTC formatter currently overflows in plain-Lua FSP calls.
 - TIME now has an explicit signed 64-bit contract end-to-end. For calendar conversion in Lua, prefer `timetable.lua` and exact integer/TIME values over host `os.time` or float-backed timestamp math.
+- `crypto_merkle.lua` keeps the original Frigo tree functions unchanged and exposes separate OpenZeppelin-compatible helpers for 32-byte leaves, sorted Keccak-256 node hashing, single proofs, and multiproofs; StandardMerkleTree callers must ABI-encode and double-hash leaves first.
 
 
 ## Rule Of Thumb
