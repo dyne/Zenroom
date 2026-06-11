@@ -52,6 +52,19 @@ void zen_raw_write(int fd, const void *buf, size_t count) {
   }
 }
 
+void zen_out_string(const char *msg) {
+	if (!msg) return;
+#if defined(__EMSCRIPTEN__)
+	EM_ASM_({Module.print(UTF8ToString($0))}, msg);
+#elif defined(ARCH_CORTEX)
+	zen_raw_write(SEMIHOSTING_STDOUT_FILENO, msg, strlen(msg));
+	zen_raw_write(SEMIHOSTING_STDOUT_FILENO, "\n", 1);
+#else
+	zen_raw_write(STDOUT_FILENO, msg, strlen(msg));
+	zen_raw_write(STDOUT_FILENO, "\n", 1);
+#endif
+}
+
 // from zen_io.c
 extern int zen_log(lua_State *L, log_priority prio, octet *oct);
 extern int printerr(lua_State *L, octet *in);

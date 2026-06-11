@@ -89,6 +89,7 @@ typedef enum log_priority {
 
 void get_log_prefix(void *Z, log_priority prio, char dest[5]);
 void zen_raw_write(int fd, const void *buf, size_t count);
+void zen_out_string(const char *msg);
 
 // context free print and error messages
 HEDLEY_PRINTF_FORMAT(1,2)
