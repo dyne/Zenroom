@@ -152,6 +152,10 @@ local keytypes <const> = {
     fsp = {
         import = function(obj) return schema_get(obj, 'fsp', nop, O.from_base64) end,
         export = function(obj) return obj.fsp:octet():base64() end
+    },
+    larkg = {
+        import = function(obj) return schema_get(obj, 'larkg', nop, O.from_base64) end,
+        export = function(obj) return obj.larkg:octet():base64() end
     }
 }
 
