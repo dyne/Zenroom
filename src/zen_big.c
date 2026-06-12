@@ -1856,6 +1856,11 @@ static int big_modinv(lua_State *L) {
 	big *y = big_arg(L, 1);
 	big *m = big_arg(L, 2);
 	SAFE_GOTO(y && m, ALLOCATE_BIG_ERR);
+	SAFE_GOTO(BIG_parity(m->val) != 0, "modinv modulo must be and odd number");
+	BIG gcd, one;
+	BIG_one(one);
+	BIG_gcd(gcd, y->val, m->val);
+	SAFE_GOTO(BIG_comp(gcd, one) == 0, "modinv can not be computed, gcd(y,m) != 1");
 	big *x = big_new(L); SAFE_GOTO(x, CREATE_BIG_ERR);
 	big_init(L,x);
 	BIG_invmodp(x->val, y->val, m->val);

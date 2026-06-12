@@ -173,6 +173,7 @@ extern void PAIR_${CN}_GTpow(FP12_${CN} *x,BIG_${BS} b);
 #define BIG_jacobi(x,y) BIG_${BS}_jacobi(x,y)
 #define BIG_random(m,r) BIG_${BS}_random(m,r)
 #define BIG_randomnum(m,q,r) BIG_${BS}_randomnum(m,q,r)
+#define BIG_gcd(r,a,b) BIG_${BS}_gcd(r,a,b)
 
 #define BIG_sqr(x,y) BIG_${BS}_sqr(x,y);
 #define BIG_dcopy(d,s) BIG_${BS}_dcopy(d,s)
