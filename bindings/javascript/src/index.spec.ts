@@ -332,6 +332,42 @@ test("sign hex helpers produce deterministic eddsa outputs", async (t) => {
   t.is(ok.result, "1");
 });
 
+test("sign hex helpers p256 round-trip keygen pubgen sign verify", async (t) => {
+  const sk = await signKeygenHex("p256", null);
+  t.is(sk.result.length, 64);
+
+  const pk = await signPubgenHex("p256", sk.result);
+  t.is(pk.result.length, 128);
+
+  const msg = "010203";
+  const sig = await signCreateHex("p256", sk.result, msg);
+  t.is(sig.result.length, 128);
+
+  const ok = await signVerifyHex("p256", pk.result, msg, sig.result);
+  t.is(ok.result, "1");
+
+  const bad = await signVerifyHex("p256", pk.result, msg, msg.padEnd(128, "0"));
+  t.is(bad.result, "0");
+});
+
+test("sign hex helpers mldsa44 round-trip keygen pubgen sign verify", async (t) => {
+  const sk = await signKeygenHex("mldsa44", null);
+  t.is(sk.result.length, 5120);
+
+  const pk = await signPubgenHex("mldsa44", sk.result);
+  t.is(pk.result.length, 2624);
+
+  const msg = "010203";
+  const sig = await signCreateHex("mldsa44", sk.result, msg);
+  t.is(sig.result.length, 4840);
+
+  const ok = await signVerifyHex("mldsa44", pk.result, msg, sig.result);
+  t.is(ok.result, "1");
+
+  const bad = await signVerifyHex("mldsa44", pk.result, msg, msg.padEnd(128, "0"));
+  t.is(bad.result, "0");
+});
+
 test("merkleRootHex stays Lua-backed and returns hex", async (t) => {
   const root = await merkleRootHex(["616263"]);
   t.is(root.result, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
