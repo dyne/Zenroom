@@ -36,52 +36,6 @@ const readCString = (heap: Uint8Array, ptr: number, maxBytes: number): string =>
   return new TextDecoder().decode(heap.subarray(ptr, end));
 };
 
-const callApi = async (
-  name: string,
-  argTypes: string[],
-  args: Array<string | number | null>
-): Promise<ZenroomResult> => {
-  const Module = await getModule();
-  return new Promise((resolve, reject) => {
-    let result = "";
-    let logs = "";
-    const exec = Module.cwrap(name, "number", argTypes);
-    Module.print = (t: string) => (result += t);
-    Module.printErr = (t: string) => (logs += t);
-    Module.exec_ok = () => {
-      resolve({ result, logs });
-    };
-    Module.exec_error = () => {
-      reject({ result, logs });
-    };
-    Module.onAbort = () => {
-      reject({ result, logs });
-    };
-    exec(...args);
-  });
-};
-
-const callSyncApi = async (
-  name: string,
-  argTypes: string[],
-  args: Array<string | number | null>
-): Promise<ZenroomResult> => {
-  const Module = await getModule();
-  let result = "";
-  let logs = "";
-  const exec = Module.cwrap(name, "number", argTypes);
-  Module.print = (t: string) => (result += t);
-  Module.printErr = (t: string) => (logs += t);
-  Module.exec_ok = () => {};
-  Module.exec_error = () => {};
-  Module.onAbort = () => {};
-  const status = exec(...args);
-  if (status === 0) {
-    return { result, logs };
-  }
-  throw { result, logs };
-};
-
 const callBufferApi = async (
   name: string,
   argTypes: string[],
