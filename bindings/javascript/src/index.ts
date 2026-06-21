@@ -541,3 +541,17 @@ export const zencode_get_statements = async (
     _exec(scenario);
   });
 }
+
+export const recipeExec = async (
+  name: string,
+  data: string | null = null
+): Promise<ZenroomResult> => {
+  if (!/^[A-Za-z0-9._]+$/.test(name)) {
+    throw new Error("Invalid recipe name");
+  }
+  return callBufferApi(
+    "zenroom_recipe_exec_tobuf",
+    ["string", "string", "string", "string", "string", "string"],
+    [name, null, "{}", data, null, null]
+  );
+};

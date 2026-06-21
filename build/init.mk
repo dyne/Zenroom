@@ -12,7 +12,7 @@ ZEN_SOURCES := src/zenroom.o src/zen_error.o src/lua_functions.o		\
     src/zen_random.o src/zen_hash.o src/zen_ecdh_factory.o				\
     src/zen_ecdh.o src/zen_x509.o src/zen_aes.o src/zen_qp.o			\
     src/zen_ed.o src/zen_float.o src/zen_time.o src/api_hash.o			\
-    src/api_sign.o src/randombytes.o src/zen_fuzzer.o src/cortex_m.o	\
+    src/api_sign.o src/api_recipe.o src/randombytes.o src/zen_fuzzer.o src/cortex_m.o	\
     src/p256-m.o src/zen_p256.o src/zen_rsa.o src/zen_bbs.o				\
     src/zen_longfellow.o src/zen_mayo.o
 

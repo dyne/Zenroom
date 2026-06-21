@@ -100,6 +100,17 @@ int zenroom_sign_verify_tobuf(const char *algo, const char *pk, const char *msg,
                               char *stdout_buf, size_t stdout_len,
                               char *stderr_buf, size_t stderr_len);
 
+// recipe execution: named Lua/Zencode workflows triggered by a
+// short name and JSON input.  Every byte value inside the JSON
+// must be lowercase hex.  Output is always JSON.
+// recipe names: "merkle.root", "merkle.verify_proof"
+int zenroom_recipe_exec(const char *name, const char *conf, const char *keys,
+                        const char *data, const char *extra, const char *context);
+int zenroom_recipe_exec_tobuf(const char *name, const char *conf, const char *keys,
+                              const char *data, const char *extra, const char *context,
+                              char *stdout_buf, size_t stdout_len,
+                              char *stderr_buf, size_t stderr_len);
+
 ////////////////////////////////////////
 
 
