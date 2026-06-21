@@ -162,6 +162,112 @@ const introspection = await introspection(
 console.log(introspection); // => an object described as https://dev.zenroom.org/#/pages/how-to-embed?id=input-validation
 ```
 
+## 🔐 Direct primitives (hex API)
+
+Zenroom also exports direct cryptographic primitives that work
+without writing Lua or Zencode scripts.  All binary inputs and
+outputs use lowercase hex strings.
+
+### One-shot hash
+
+```js
+import { hashHex, utf8ToHex } from "zenroom";
+
+const { result: sha256 } = await hashHex("sha256", utf8ToHex("hello"));
+console.log(sha256);
+// => 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+```
+
+Supported algorithms: `sha256`, `sha384`, `sha512`, `sha3_256`,
+`sha3_512`, `shake256`, `keccak256`, `ripemd160`.
+
+### PBKDF2 key derivation
+
+```js
+import { pbkdf2Hex } from "zenroom";
+
+const { result: key } = await pbkdf2Hex(
+  "sha256",
+  utf8ToHex("password"),
+  utf8ToHex("salt"),
+  4096,
+  32
+);
+// key is a 64-char hex string (32 bytes)
+```
+
+### EdDSA signatures
+
+```js
+import { signKeygenHex, signPubgenHex, signCreateHex, signVerifyHex } from "zenroom";
+
+// Generate a secret key (optionally pass a hex rngseed)
+const { result: sk } = await signKeygenHex("eddsa");
+
+// Derive the public key
+const { result: pk } = await signPubgenHex("eddsa", sk);
+
+// Sign a hex-encoded message
+const { result: sig } = await signCreateHex("eddsa", sk, utf8ToHex("hello"));
+
+// Verify the signature
+const { result: ok } = await signVerifyHex("eddsa", pk, utf8ToHex("hello"), sig);
+console.log(ok); // => 1
+```
+
+### Merkle tree recipes (Lua-backed)
+
+```js
+import { merkleRootHex } from "zenroom";
+
+const { result: root } = await merkleRootHex(
+  ["0101010101010101010101010101010101010101010101010101010101010101",
+   "0202020202020202020202020202020202020202020202020202020202020202"],
+  "sha256"
+);
+console.log(root); // hex-encoded merkle root
+```
+
+### Named recipes
+
+```js
+import { recipeExec } from "zenroom";
+
+const { result } = await recipeExec("merkle.root", JSON.stringify({
+  hash: "sha256",
+  leaves: [
+    "0101010101010101010101010101010101010101010101010101010101010101",
+    "0202020202020202020202020202020202020202020202020202020202020202",
+  ],
+}));
+const { root } = JSON.parse(result);
+```
+
+### Encoding helpers
+
+```js
+import { bytesToHex, hexToBytes, utf8ToHex, hexToUtf8 } from "zenroom";
+
+const hex = utf8ToHex("hello");          // "68656c6c6f"
+const str = hexToUtf8("68656c6c6f");     // "hello"
+
+const bytes = hexToBytes("deadbeef");    // Uint8Array [0xde, 0xad, 0xbe, 0xef]
+const back  = bytesToHex(bytes);         // "deadbeef"
+```
+
+### Streaming hash (legacy API)
+
+```js
+import { zenroom_hash } from "zenroom";
+
+const { result: digest } = await zenroom_hash("sha256", "hello world");
+// digest is base64-encoded (legacy format)
+```
+
+For large inputs or one-shot hashing with hex output, prefer
+`hashHex` which handles chunking internally and returns lowercase hex.
+```
+
 ## 😍 Acknowledgements
 
 Copyright (C) 2018-2026 by [Dyne.org](https://www.dyne.org) foundation, Amsterdam
