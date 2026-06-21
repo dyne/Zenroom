@@ -101,31 +101,12 @@ and its name will be used as key.
 
 ### API direct calls (skip VM init)
 
-Zenroom offers direct API calls to certain cryptographic primitives, executing very fast when there is no need to initialize the whole VM. These calls may be just simplier to use for expert developers doing simple things.
+For direct cryptographic primitives callable from JavaScript without
+writing Lua or Zencode scripts, see the dedicated page:
+[JavaScript API – Direct Calls](javascript-api.md)
 
-All direct API calls return 0 on success, anything else is an error.
-
-All their input arguments and output are encoded string values, their encoding may vary: it is almost everywhere HEX (base 16), but Base64 is used for hashes.
-
-The output is an encoded string printed to stdout, easy to collect from Javascript.
-
-#### Zenroom_hash* API
-
-The encoding of of all arguments is:
-- `hash_type` ASCII
-- `hash_ctx` HEX
-- `buffer` Base64
-
-The `zennrom_hash*` functions:
-```c
-// hash_type may be one of these two strings: 'sha256' or 'sha512'
-int zenroom_hash_init(const char *hash_type);
-
-// hash_ctx is the string returned by init
-// buffer is an hex encoded string of the value to be hashed
-// buffer_size is the size in bytes of the value to be hashed
-int zenroom_hash_update(const char *hash_ctx, const char *buffer, const int buffer_size);
-
-// the final call will print the base64 encoded hash of the input data
-int zenroom_hash_final(const char *hash_ctx);
-```
+The page covers `hashHex`, `pbkdf2Hex`, `signKeygenHex`,
+`signCreateHex`, `signVerifyHex`, `merkleRootHex`,
+`merkleProofVerifyHex`, `recipeExec`, and encoding helpers —
+all importable from `"zenroom"` after `npm install zenroom`.  Every
+binary input and output uses lowercase hex.
