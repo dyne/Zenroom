@@ -20,6 +20,7 @@
 
 // external API function for streaming hash
 #include <stdio.h>
+#include <string.h>
 #include <strings.h>
 
 #if defined(_WIN32)
@@ -33,6 +34,7 @@
 
 #include <zen_error.h>
 #include <encoding.h> // zenroom
+#include <zenroom.h>
 
 // first byte is type
 #define ZEN_SHA512 '4'
@@ -50,6 +52,173 @@ int print_ctx_hex(char prefix, void *sh, int len) {
 	_out("%s", hash_ctx);
 	free(hash_ctx);
 	return 0;
+}
+
+static int api_hash_type_is_safe(const char *hash_type) {
+	size_t i;
+	if (!hash_type || !hash_type[0]) {
+		return 0;
+	}
+	for (i = 0; hash_type[i] != 0x0; i++) {
+		const char c = hash_type[i];
+		if (!((c >= 'a' && c <= 'z') ||
+			  (c >= 'A' && c <= 'Z') ||
+			  (c >= '0' && c <= '9') ||
+			  c == '_')) {
+			return 0;
+		}
+	}
+	return 1;
+}
+
+static int api_run_hash_script(const char *script,
+							   const char *data,
+							   const char *keys,
+							   char *stdout_buf, size_t stdout_len,
+							   char *stderr_buf, size_t stderr_len) {
+	if (stderr_buf && stderr_len > 0) {
+		stderr_buf[0] = 0x0;
+	}
+	return zenroom_exec_tobuf(script, NULL, keys, data, NULL, NULL,
+							  stdout_buf, stdout_len, stderr_buf, stderr_len);
+}
+
+/**
+   Hash a hex-encoded message using the named algorithm and write the hex digest
+   into the caller-provided output buffer.
+ */
+int zenroom_hash_hex_tobuf(const char *hash_type, const char *msg_hex,
+						   char *stdout_buf, size_t stdout_len,
+						   char *stderr_buf, size_t stderr_len) {
+	char script[160];
+	if (!hash_type) {
+		if (stderr_buf && stderr_len > 0) {
+			snprintf(stderr_buf, stderr_len, "%s :: missing arg: hash_type", __func__);
+		}
+		if (stdout_buf && stdout_len > 0) {
+			stdout_buf[0] = 0x0;
+		}
+		return FAIL();
+	}
+	if (!msg_hex) {
+		if (stderr_buf && stderr_len > 0) {
+			snprintf(stderr_buf, stderr_len, "%s :: missing arg: msg_hex", __func__);
+		}
+		if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+		return FAIL();
+	}
+	if (!api_hash_type_is_safe(hash_type)) {
+		if (stderr_buf && stderr_len > 0) {
+			snprintf(stderr_buf, stderr_len, "%s :: invalid hash type: %s", __func__, hash_type);
+		}
+		if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+		return FAIL();
+	}
+	snprintf(script, sizeof(script),
+			 "local h = HASH.new('%s')\n"
+			 "print(h:process(O.from_hex(DATA)):hex())",
+			 hash_type);
+	return api_run_hash_script(script, msg_hex, NULL,
+							   stdout_buf, stdout_len, stderr_buf, stderr_len);
+}
+
+int zenroom_hash_hex(const char *hash_type, const char *msg_hex) {
+	char stdout_buf[1024] = {0};
+	char stderr_buf[512] = {0};
+	int res = zenroom_hash_hex_tobuf(hash_type, msg_hex,
+									 stdout_buf, sizeof(stdout_buf),
+									 stderr_buf, sizeof(stderr_buf));
+	if (res == OK()) {
+		_out("%s", stdout_buf);
+	} else if (stderr_buf[0] != 0x0) {
+		_err("%s", stderr_buf);
+	}
+	return res;
+}
+
+/**
+   Derive a hex-encoded key using PBKDF2 with the named hash algorithm.
+ */
+int zenroom_pbkdf2_hex_tobuf(const char *hash_type,
+							 const char *password_hex,
+							 const char *salt_hex,
+							 int iterations,
+							 int keylen,
+							 char *stdout_buf, size_t stdout_len,
+							 char *stderr_buf, size_t stderr_len) {
+	char script[256];
+	if (!hash_type) {
+		if (stderr_buf && stderr_len > 0) {
+			snprintf(stderr_buf, stderr_len, "%s :: missing arg: hash_type", __func__);
+		}
+		if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+		return FAIL();
+	}
+	if (!password_hex) {
+		if (stderr_buf && stderr_len > 0) {
+			snprintf(stderr_buf, stderr_len, "%s :: missing arg: password_hex", __func__);
+		}
+		if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+		return FAIL();
+	}
+	if (!salt_hex) {
+		if (stderr_buf && stderr_len > 0) {
+			snprintf(stderr_buf, stderr_len, "%s :: missing arg: salt_hex", __func__);
+		}
+		if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+		return FAIL();
+	}
+	if (iterations <= 0) {
+		if (stderr_buf && stderr_len > 0) {
+			snprintf(stderr_buf, stderr_len, "%s :: iterations must be positive", __func__);
+		}
+		if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+		return FAIL();
+	}
+	if (keylen <= 0) {
+		if (stderr_buf && stderr_len > 0) {
+			snprintf(stderr_buf, stderr_len, "%s :: keylen must be positive", __func__);
+		}
+		if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+		return FAIL();
+	}
+	if (!api_hash_type_is_safe(hash_type)) {
+		if (stderr_buf && stderr_len > 0) {
+			snprintf(stderr_buf, stderr_len, "%s :: invalid hash type: %s", __func__, hash_type);
+		}
+		if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+		return FAIL();
+	}
+	snprintf(script, sizeof(script),
+			 "local h = HASH.new('%s')\n"
+			 "local out = h:pbkdf2(O.from_hex(DATA), {\n"
+			 "  salt = O.from_hex(KEYS),\n"
+			 "  iterations = %d,\n"
+			 "  length = %d\n"
+			 "})\n"
+			 "print(out:hex())",
+			 hash_type, iterations, keylen);
+	return api_run_hash_script(script, password_hex, salt_hex,
+							   stdout_buf, stdout_len, stderr_buf, stderr_len);
+}
+
+int zenroom_pbkdf2_hex(const char *hash_type,
+					   const char *password_hex,
+					   const char *salt_hex,
+					   int iterations,
+					   int keylen) {
+	char stdout_buf[1024] = {0};
+	char stderr_buf[512] = {0};
+	int res = zenroom_pbkdf2_hex_tobuf(hash_type, password_hex, salt_hex,
+									   iterations, keylen,
+									   stdout_buf, sizeof(stdout_buf),
+									   stderr_buf, sizeof(stderr_buf));
+	if (res == OK()) {
+		_out("%s", stdout_buf);
+	} else if (stderr_buf[0] != 0x0) {
+		_err("%s", stderr_buf);
+	}
+	return res;
 }
 
 // returns a fills hash_ctx, which must be pre-allocated externally

@@ -7,6 +7,17 @@ import {
   zenroom_hash_update,
   zenroom_hash_final,
   zenroom_hash,
+  hashHex,
+  pbkdf2Hex,
+  signKeygenHex,
+  signPubgenHex,
+  signCreateHex,
+  signVerifyHex,
+  bytesToHex,
+  hexToBytes,
+  utf8ToHex,
+  hexToUtf8,
+  merkleRootHex,
   introspect,
   zencode_valid_code,
   safe_zencode_valid_code,
@@ -274,6 +285,55 @@ test("Use zenroom_hash with big input", async (t) => {
     hash1.result,
     "HM5Pm1A/V/FqShY8sm6x4AU5O5B44Gs9+uXjDn6PhjSg9cSzlPa2MHXriPSZS4wuRYn0UgN2g9L3A+P7rOJRdA=="
   );
+});
+
+test("hashHex returns hex digests for multiple algorithms", async (t) => {
+  const sha256 = await hashHex("sha256", utf8ToHex("abc"));
+  t.is(sha256.result, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+
+  const ripemd160 = await hashHex("ripemd160", utf8ToHex("abc"));
+  t.is(ripemd160.result, "8eb208f7e05d987a9b044a8e98c6b087f15a0bfc");
+});
+
+test("pbkdf2Hex derives the expected key", async (t) => {
+  const derived = await pbkdf2Hex(
+    "sha256",
+    utf8ToHex("password"),
+    utf8ToHex("salt"),
+    4096,
+    32
+  );
+  t.is(derived.result, "c5e478d59288c841aa530db6845c4c8d962893a001ce4e11a4963873aa98134a");
+});
+
+test("hex conversion helpers round-trip utf8 and bytes", (t) => {
+  const bytes = new Uint8Array([0, 1, 2, 254, 255]);
+  const hex = bytesToHex(bytes);
+  t.is(hex, "000102feff");
+  t.deepEqual(Array.from(hexToBytes(hex)), Array.from(bytes));
+  t.is(utf8ToHex("hello"), "68656c6c6f");
+  t.is(hexToUtf8("68656c6c6f"), "hello");
+});
+
+test("sign hex helpers produce deterministic eddsa outputs", async (t) => {
+  const seed = "0".repeat(128);
+  const sk = await signKeygenHex("eddsa", seed);
+  t.is(sk.result, "06b4c6f4caf4234be9dedc6983412aaf50773e788e144e3e2cd09b56f21f744d");
+
+  const pk = await signPubgenHex("eddsa", sk.result);
+  t.is(pk.result, "e78735703bf56140a00a6f867ca926fa0945e8b5752325e6593ea680d55d41bc");
+
+  const msgHex = "6162636462636465636465666465666765666768666768696768696A68696A6B696A6B6C6A6B6C6D6B6C6D6E6C6D6E6F6D6E6F706E6F7071";
+  const sig = await signCreateHex("eddsa", sk.result, msgHex);
+  t.is(sig.result, "b2efa19f6c51a929e4155a8ee1df57abeef8e1b9556366551f9e1ec3ea2476b6c3bbcb93e8a23d5cfffa50f968cb84aa5e1e06bf1b884509ae35603b20999a01");
+
+  const ok = await signVerifyHex("eddsa", pk.result, msgHex, sig.result);
+  t.is(ok.result, "1");
+});
+
+test("merkleRootHex stays Lua-backed and returns hex", async (t) => {
+  const root = await merkleRootHex(["616263"]);
+  t.is(root.result, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
 });
 
 test("Check the introspection", async (t) => {
