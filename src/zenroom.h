@@ -29,15 +29,19 @@
 // WASM_EXPORT array in build/wasm.mk
 
 /////////////////////////////////////////
-// high level api: one simple call
+// High-level API: execute Lua or Zencode scripts
 
+// Execute a Lua script and return 0 on success.
+// Output is printed to stdout; error diagnostics to stderr.
+// In WASM, capture via Module.print / Module.printErr.
 int zenroom_exec(const char *script, const char *conf, const char *keys, const char *data, const char *extra, const char *context);
 
 int zencode_exec(const char *script, const char *conf, const char *keys, const char *data, const char *extra, const char *context);
 
-// in case buffers should be used instead of stdout/err file
-// descriptors, this call defines where to print out the output and
-// the maximum sizes allowed for it. Output is NULL terminated.
+// Buffer variants: write output to caller-provided buffers instead of
+// stdout/stderr.  Buffers are NULL-terminated on success.  All length
+// arguments are buffer sizes in bytes.  Preferred ABI for embedders
+// and WASM (avoids global print handler races).
 int zenroom_exec_tobuf(const char *script, const char *conf, const char *keys, const char *data, const char *extra, const char *context,
                        char *stdout_buf, size_t stdout_len,
                        char *stderr_buf, size_t stderr_len);
@@ -45,48 +49,96 @@ int zencode_exec_tobuf(const char *script, const char *conf, const char *keys, c
                        char *stdout_buf, size_t stdout_len,
                        char *stderr_buf, size_t stderr_len);
 
-// validate the input data processing only Given scope and print the CODEC
+/////////////////////////////////////////
+// Validation and introspection
+
+// Validate input data by processing the Given scope only.
+// Prints the CODEC as JSON on success.  Return 0 on success.
 int zencode_valid_input(const char *script, const char *conf, const char *keys, const char *data, const char *extra);
 
-// parse the contract failing on wrong syntax when strict is set to 1
-// otherwise return an array of ignored and invalid statements when strict is set to 0
+// Parse a Zencode contract.  If strict=1, fail on any wrong syntax.
+// If strict=0, return a JSON array of ignored and invalid statements.
+// Return 0 when the contract is valid (strict=1) or the parse result
+// could be produced (strict=0).
 int zencode_valid_code(const char *script, const char *conf, const int strict);
 
-// get all zencode statements when input is NULL otherwise
-// the ones in the scenario specified in input
+// Return all registered Zencode statements as JSON (when scenario is
+// NULL) or only those belonging to the named scenario.
 int zencode_get_statements(const char *scenario);
 
-// direct access hash calls
-// hash_type may be a string of: 'sha256' or 'sha512'
-// all functions return 0 on success, anything else signals an error
-// the output is always a string printed to stdout, i.e:
-// zenroom_hash_init('sha256') will print the hex encoded hash_ctx string
+/////////////////////////////////////////
+// Direct hash primitives
+
+// Legacy streaming hash API.  Returns serialised hash state as hex.
+// hash_type: "sha256" or "sha512".  Return 0 on success.
 int zenroom_hash_init(const char *hash_type);
-// zenroom_hash_update(hash_ctx, bytes, size) will print the updated hash_ctx in hex
+
+// Update a streaming hash context with raw bytes.
+// hash_ctx: hex state from hash_init / hash_update.
+// buffer: raw bytes to hash.  buffer_size: length in bytes.
+// Return 0 on success.
 int zenroom_hash_update(const char *hash_ctx, const char *buffer, const int buffer_size);
-// zenroom_hash_final(hash_ctx) will print the base64 encoded hash of the dazta so far
+
+// Finalise a streaming hash and print the base64 digest.
+// hash_ctx: hex state from the last hash_update.
+// Return 0 on success.
 int zenroom_hash_final(const char *hash_ctx);
-// zenroom_hash_hex(hash_type, msg_hex) will print the hex encoded digest
+
+/////////////////////////////////////////
+// One-shot hex hash and PBKDF2 (new ABI – prefer these for new code)
+
+// Hash a hex-encoded message using the named algorithm.
+// hash_type: lowercase string.  Supported: sha256, sha384, sha512,
+//   sha3_256, sha3_512, shake256, keccak256, ripemd160.
+// msg_hex: lowercase hex string (length must be even).
+// Prints the lowercase hex digest to stdout.  Return 0 on success.
 int zenroom_hash_hex(const char *hash_type, const char *msg_hex);
-// zenroom_hash_hex_tobuf(...) writes the hex encoded digest into stdout_buf
+
+// Buffer variant: writes the hex digest into stdout_buf.
 int zenroom_hash_hex_tobuf(const char *hash_type, const char *msg_hex,
                            char *stdout_buf, size_t stdout_len,
                            char *stderr_buf, size_t stderr_len);
-// zenroom_pbkdf2_hex(...) will print the hex encoded derived key
+
+// Derive a key using PBKDF2 with the named hash PRF.
+// hash_type: lowercase string (supported: sha256, sha512).
+// password_hex, salt_hex: lowercase hex strings.
+// iterations: number of PBKDF2 rounds (>0).
+// keylen: desired output length in bytes (>0).
+// Prints the lowercase hex derived key to stdout.  Return 0 on success.
 int zenroom_pbkdf2_hex(const char *hash_type, const char *password_hex,
                        const char *salt_hex, int iterations, int keylen);
-// zenroom_pbkdf2_hex_tobuf(...) writes the hex encoded derived key into stdout_buf
+
+// Buffer variant: writes the hex derived key into stdout_buf.
 int zenroom_pbkdf2_hex_tobuf(const char *hash_type, const char *password_hex,
                              const char *salt_hex, int iterations, int keylen,
                              char *stdout_buf, size_t stdout_len,
                              char *stderr_buf, size_t stderr_len);
 
+/////////////////////////////////////////
+// Digital signature primitives (hex ABI)
 
-// zenroom_eddsa_keygen(rngseed) will print a new hex encoded secret key, optionally takes an external random seed
+// algo: lowercase string.  Supported: "eddsa", "ecdsa", "schnorr".
+// All binary inputs/outputs are lowercase hex strings.
+// verify functions print "1" on success, "0" on failure.
+// All functions return OK (0) on success, FAIL (1) on error.
+
+// Generate a new secret key.  rngseed: optional 64-byte hex seed,
+// NULL to use the internal PRNG.  Prints hex secret key.
 int zenroom_sign_keygen(const char *algo, const char *rngseed);
+
+// Derive the public key from a hex-encoded secret key.
 int zenroom_sign_pubgen(const char *algo, const char *key);
+
+// Sign a hex-encoded message with a hex-encoded secret key.
+// Prints the hex signature.
 int zenroom_sign_create(const char *algo, const char *key, const char *msg);
+
+// Verify a hex signature against a message and public key.
+// pk: hex-encoded public key.  msg: hex-encoded message.
+// sig: hex-encoded signature.  Prints "1" or "0".
 int zenroom_sign_verify(const char *algo, const char *pk, const char *msg, const char *sig);
+
+// Buffer variants of the above.
 int zenroom_sign_keygen_tobuf(const char *algo, const char *rngseed,
                               char *stdout_buf, size_t stdout_len,
                               char *stderr_buf, size_t stderr_len);
@@ -100,12 +152,19 @@ int zenroom_sign_verify_tobuf(const char *algo, const char *pk, const char *msg,
                               char *stdout_buf, size_t stdout_len,
                               char *stderr_buf, size_t stderr_len);
 
-// recipe execution: named Lua/Zencode workflows triggered by a
-// short name and JSON input.  Every byte value inside the JSON
-// must be lowercase hex.  Output is always JSON.
-// recipe names: "merkle.root", "merkle.verify_proof"
+/////////////////////////////////////////
+// Recipe execution (Lua-backed higher-level workflows)
+
+// Execute a named recipe backed by embedded Lua/Zencode scripts.
+// name: recipe identifier (e.g. "merkle.root", "merkle.verify_proof").
+// conf, keys, data, extra, context: strings as in zenroom_exec_tobuf.
+// data is a JSON string; every binary value inside MUST be lowercase hex.
+// Output is always a JSON string printed to stdout.
+// Return OK (0) on success, FAIL (1) on error.
 int zenroom_recipe_exec(const char *name, const char *conf, const char *keys,
                         const char *data, const char *extra, const char *context);
+
+// Buffer variant: writes the JSON result into stdout_buf.
 int zenroom_recipe_exec_tobuf(const char *name, const char *conf, const char *keys,
                               const char *data, const char *extra, const char *context,
                               char *stdout_buf, size_t stdout_len,
