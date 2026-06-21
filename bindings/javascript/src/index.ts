@@ -19,7 +19,10 @@ const cache = {
 
 const getModule = async () => {
   if (cache.module === null) {
-    cache.module = await Zenroom();
+    cache.module = await Zenroom({
+      print: () => {},
+      printErr: () => {},
+    });
   }
   return cache.module;
 };
@@ -86,6 +89,18 @@ const zenroomExecToBuf = async (
   );
 };
 
+const zencodeExecToBuf = async (
+  zencode: string,
+  props?: ZenroomProps
+): Promise<ZenroomResult> => {
+  const { data = null, keys = null, extra = null, context = null, conf = null } = { ...props };
+  return await callBufferApi(
+    "zencode_exec_tobuf",
+    ["string", "string", "string", "string", "string", "string"],
+    [zencode, conf, keys, data, extra, context]
+  );
+};
+
 const isSafeIdentifier = (value: string): boolean => /^[A-Za-z0-9_]+$/.test(value);
 
 const isHex = (value: string): boolean =>
@@ -114,66 +129,12 @@ export const hexToUtf8 = (hex: string): string =>
 export const zencode_exec = async (
   zencode: string,
   props?: ZenroomProps
-): Promise<ZenroomResult> => {
-  const Module = await getModule();
-  return new Promise((resolve, reject) => {
-    let result = "";
-    let logs = "";
-    const _exec = Module.cwrap("zencode_exec", "number", [
-      "string",
-      "string",
-      "string",
-      "string",
-      "string",
-      "string",
-    ]);
-    Module.print = (t: string) => (result += t);
-    Module.printErr = (t: string) => (logs += t);
-    Module.exec_ok = () => {
-      resolve({ result, logs });
-    };
-    Module.exec_error = () => {
-      reject({ result, logs });
-    };
-    Module.onAbort = () => {
-      reject({ result, logs });
-    };
-    const { data = null, keys = null, extra = null, context = null, conf = null } = { ...props };
-    _exec(zencode, conf, keys, data, extra, context);
-  });
-};
+): Promise<ZenroomResult> => await zencodeExecToBuf(zencode, props);
 
 export const zenroom_exec = async (
   lua: string,
   props?: ZenroomProps
-): Promise<ZenroomResult> => {
-  const Module = await getModule();
-  return new Promise((resolve, reject) => {
-    let result = "";
-    let logs = "";
-    const _exec = Module.cwrap("zenroom_exec", "number", [
-      "string",
-      "string",
-      "string",
-      "string",
-      "string",
-      "string",
-    ]);
-    Module.print = (t: string) => (result += t);
-    Module.printErr = (t: string) => (logs += t);
-    Module.exec_ok = () => {
-      resolve({ result, logs });
-    };
-    Module.exec_error = () => {
-      reject({ result, logs });
-    };
-    Module.onAbort = () => {
-      reject({ result, logs });
-    };
-    const { data = null, keys = null, extra = null, context = null, conf = null } = { ...props };
-    _exec(lua, conf, keys, data, extra, context);
-  });
-};
+): Promise<ZenroomResult> => await zenroomExecToBuf(lua, props);
 
 export const zenroom_hash_init = async (
   hash_type: string
