@@ -44,13 +44,13 @@ scenarios=""
 }
 
 for i in ${libs}; do
-    p=$(basename $i)
-    case " ${embed_excludes} " in
-        *" ${p} "*) continue ;;
-    esac
-    n=$(echo "$p" | cut -d'.' -f1)
-    f="lualib_${n}.c"
-    echo "+ $i $opts"
+	p=$(basename $i)
+	case " ${embed_excludes} " in
+		*" ${p} "*) continue ;;
+	esac
+	n=$(echo "$p" | cut -d'.' -f1)
+	f="lualib_${n}.c"
+	echo "+ $i $opts"
 	tmp=$(mktemp -d)
 	if [ "$opts" = "compile" ]; then
 		./luac54 -o ${tmp}/${n} $i
@@ -58,14 +58,14 @@ for i in ${libs}; do
 		cp $i ${tmp}/${n}
 	fi
 	cd $tmp
-	echo "// $i" >>  ${dst}
-	xxd -i ${n}   >>  ${dst}
+	echo "// $i" >> ${dst}
+	xxd -i ${n} >> ${dst}
 	if [ "$(uname -s)" = "Linux" ]; then
 		sed -i 's/^unsigned/const unsigned/' ${dst}
 	else
 		sed -e 's/^unsigned/const unsigned/' -i '' "${dst}"
 	fi
-	echo "" >>  ${dst}
+	echo "" >> ${dst}
 	cd - > /dev/null
 	rm -rf $tmp
 	ext_nes="\t{\"${n}\", &${n}_len, (const char *)${n}},"
