@@ -72,6 +72,46 @@ const callBufferApi = async (
   }
 };
 
+const callPrintApi = async (
+  name: string,
+  argTypes: string[],
+  args: Array<string | number | null>
+): Promise<ZenroomResult> => {
+  const Module = await getModule();
+  return new Promise((resolve, reject) => {
+    let result = "";
+    let logs = "";
+    const exec = Module.cwrap(name, "number", argTypes);
+    const prevPrint = Module.print;
+    const prevPrintErr = Module.printErr;
+    const prevExecOk = Module.exec_ok;
+    const prevExecError = Module.exec_error;
+    const prevOnAbort = Module.onAbort;
+    const restore = () => {
+      Module.print = prevPrint;
+      Module.printErr = prevPrintErr;
+      Module.exec_ok = prevExecOk;
+      Module.exec_error = prevExecError;
+      Module.onAbort = prevOnAbort;
+    };
+    Module.print = (t: string) => (result += t);
+    Module.printErr = (t: string) => (logs += t);
+    Module.exec_ok = () => {
+      restore();
+      resolve({ result, logs });
+    };
+    Module.exec_error = () => {
+      restore();
+      reject({ result, logs });
+    };
+    Module.onAbort = () => {
+      restore();
+      reject({ result, logs });
+    };
+    exec(...args);
+  });
+};
+
 const trimTrailingNewline = ({ result, logs }: ZenroomResult): ZenroomResult => ({
   result: result.replace(/\n$/, ""),
   logs,
@@ -86,18 +126,6 @@ const zenroomExecToBuf = async (
     "zenroom_exec_tobuf",
     ["string", "string", "string", "string", "string", "string"],
     [lua, conf, keys, data, extra, context]
-  );
-};
-
-const zencodeExecToBuf = async (
-  zencode: string,
-  props?: ZenroomProps
-): Promise<ZenroomResult> => {
-  const { data = null, keys = null, extra = null, context = null, conf = null } = { ...props };
-  return await callBufferApi(
-    "zencode_exec_tobuf",
-    ["string", "string", "string", "string", "string", "string"],
-    [zencode, conf, keys, data, extra, context]
   );
 };
 
@@ -129,12 +157,26 @@ export const hexToUtf8 = (hex: string): string =>
 export const zencode_exec = async (
   zencode: string,
   props?: ZenroomProps
-): Promise<ZenroomResult> => await zencodeExecToBuf(zencode, props);
+): Promise<ZenroomResult> => {
+  const { data = null, keys = null, extra = null, context = null, conf = null } = { ...props };
+  return await callPrintApi(
+    "zencode_exec",
+    ["string", "string", "string", "string", "string", "string"],
+    [zencode, conf, keys, data, extra, context]
+  );
+};
 
 export const zenroom_exec = async (
   lua: string,
   props?: ZenroomProps
-): Promise<ZenroomResult> => await zenroomExecToBuf(lua, props);
+): Promise<ZenroomResult> => {
+  const { data = null, keys = null, extra = null, context = null, conf = null } = { ...props };
+  return await callPrintApi(
+    "zenroom_exec",
+    ["string", "string", "string", "string", "string", "string"],
+    [lua, conf, keys, data, extra, context]
+  );
+};
 
 export const zenroom_hash_init = async (
   hash_type: string
