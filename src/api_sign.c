@@ -20,7 +20,9 @@
 
 // external API function for signatures
 #include <stdio.h>
+#include <stdarg.h>
 #include <unistd.h>
+#include <string.h>
 #include <strings.h>
 #include <inttypes.h>
 
@@ -31,6 +33,7 @@
 #endif
 
 #include <zen_error.h>
+#include <zenroom.h>
 #include <encoding.h> // zenroom
 #include <mutt_sprintf.h>
 
@@ -48,9 +51,9 @@
 // result is an opaque struct to be used with RAND_byte()
 // it should be free'd before exiting
 static void *api_rng_alloc(const char *hexseed) {
-	csprng *rng = (csprng*)malloc(sizeof(csprng));
+		csprng *rng = (csprng*)malloc(sizeof(csprng));
 	if(!rng) {
-		_err( "%s : cannot allocate the random generator");
+		_err("%s : cannot allocate the random generator", __func__);
 		return NULL;
 	}
 	char tseed[RANDOM_SEED_LEN];
@@ -76,17 +79,69 @@ static void *api_rng_alloc(const char *hexseed) {
 	return(rng);
 }
 
-static int print_buf_hex(const uint8_t *in, const size_t len) {
-	char *out = malloc((len<<1)+2);
-	if(!out) {
-		_err("%s :: cannot allocate output buffer",__func__);
-		return -1;
+static int api_write_error(char *stderr_buf, size_t stderr_len,
+						   const char *fmt, ...) {
+	va_list args;
+	char msg[256];
+	int len;
+	va_start(args, fmt);
+	len = mutt_vsnprintf(msg, sizeof(msg) - 1, fmt, args);
+	va_end(args);
+	msg[len] = 0x0;
+	if (stderr_buf && stderr_len > 0) {
+		snprintf(stderr_buf, stderr_len, "%s", msg);
+	} else {
+		_err("%s", msg);
 	}
-	buf2hex(out, (const char*)in, len);
-	out[(len<<1)+1] = 0x0;
-	_out("%s",out);
-	free(out);
-	return(1);
+	return FAIL();
+}
+
+static int api_write_hex_to_buf(const uint8_t *in, size_t len,
+								char *stdout_buf, size_t stdout_len,
+								char *stderr_buf, size_t stderr_len,
+								const char *caller) {
+	const size_t needed = (len << 1) + 1;
+	if (!stdout_buf || stdout_len == 0) {
+		return api_write_error(stderr_buf, stderr_len,
+							   "%s :: missing output buffer", caller);
+	}
+	if (needed > stdout_len) {
+		stdout_buf[0] = 0x0;
+		return api_write_error(stderr_buf, stderr_len,
+							   "%s :: output buffer too small", caller);
+	}
+	buf2hex(stdout_buf, (const char *)in, len);
+	stdout_buf[len << 1] = 0x0;
+	if (stderr_buf && stderr_len > 0) {
+		stderr_buf[0] = 0x0;
+	}
+	return OK();
+}
+
+static int api_write_text_to_buf(const char *text,
+								 char *stdout_buf, size_t stdout_len,
+								 char *stderr_buf, size_t stderr_len,
+								 const char *caller) {
+	size_t needed;
+	if (!text) {
+		return api_write_error(stderr_buf, stderr_len,
+							   "%s :: missing output value", caller);
+	}
+	needed = strlen(text) + 1;
+	if (!stdout_buf || stdout_len == 0) {
+		return api_write_error(stderr_buf, stderr_len,
+							   "%s :: missing output buffer", caller);
+	}
+	if (needed > stdout_len) {
+		stdout_buf[0] = 0x0;
+		return api_write_error(stderr_buf, stderr_len,
+							   "%s :: output buffer too small", caller);
+	}
+	memcpy(stdout_buf, text, needed);
+	if (stderr_buf && stderr_len > 0) {
+		stderr_buf[0] = 0x0;
+	}
+	return OK();
 }
 
 // allocate a binary buffer (pointer returned) from a hex value
@@ -102,12 +157,12 @@ static char* hex2buf_alloc(const char *name, const char *hex, size_t *size) {
 	const size_t hexlen = strlen(hex) >>1;
 	char *out = NULL;
 	if(*size>0 && *size!=hexlen) {
-		_err("api_sign %s :: wrong size, found %u instead of %u",name,hexlen,*size);
+		_err("api_sign %s :: wrong size, found %lu instead of %lu",name,(unsigned long)hexlen,(unsigned long)*size);
 		return NULL;
 	}
 	out = malloc(hexlen);
 	if(!out) {
-		_err("api_sign %s :: cannot allocate %u bytes",name,hexlen);
+		_err("api_sign %s :: cannot allocate %lu bytes",name,(unsigned long)hexlen);
 		return NULL;
 	}
 	if(hex2buf(out,hex) < 0) {
@@ -120,118 +175,253 @@ static char* hex2buf_alloc(const char *name, const char *hex, size_t *size) {
 }
 
 int zenroom_sign_keygen(const char *algo, const char *rngseed) {
-	if(!algo) {_err("%s :: missing arg: algo",__func__);return FAIL();}
+	char stdout_buf[(sizeof(ed25519_secret_key) << 1) + 1] = {0};
+	char stderr_buf[256] = {0};
+	int res = zenroom_sign_keygen_tobuf(algo, rngseed,
+										stdout_buf, sizeof(stdout_buf),
+										stderr_buf, sizeof(stderr_buf));
+	if (res == OK()) {
+		_out("%s", stdout_buf);
+	} else if (stderr_buf[0] != 0x0) {
+		_err("%s", stderr_buf);
+	}
+	return res;
+}
+
+int zenroom_sign_keygen_tobuf(const char *algo, const char *rngseed,
+							  char *stdout_buf, size_t stdout_len,
+							  char *stderr_buf, size_t stderr_len) {
+	if(!algo) {
+		if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+		return api_write_error(stderr_buf, stderr_len, "%s :: missing arg: algo", __func__);
+	}
 	if(strcmp(algo,"eddsa")==0) {
 		register const size_t sksize = sizeof(ed25519_secret_key);
 		uint8_t *sk = malloc(sksize);
+		csprng *rng = NULL;
+		register size_t i;
+		int res;
 		if(!sk) {
-			_err("%s :: cannot allocate output buffer",__func__);
-			return FAIL();
+			if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+			return api_write_error(stderr_buf, stderr_len,
+								   "%s :: cannot allocate output buffer", __func__);
 		}
-		csprng *rng = api_rng_alloc(rngseed);
+		rng = api_rng_alloc(rngseed);
 		if(!rng) {
 			free(sk);
-			_err("%s :: error initializing the random generator",__func__);
-			return FAIL();
+			if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+			return api_write_error(stderr_buf, stderr_len,
+								   "%s :: error initializing the random generator", __func__);
 		}
-		register size_t i;
-		for(i=0; i < sksize; i++)
+		for(i=0; i < sksize; i++) {
 			sk[i] = RAND_byte(rng);
-		if( print_buf_hex(sk, sksize) < 1 ) {
-			_err("%s :: cannot print hex result",__func__);
-			free(sk); free(rng);
-			return FAIL();
 		}
+		res = api_write_hex_to_buf(sk, sksize, stdout_buf, stdout_len,
+								   stderr_buf, stderr_len, __func__);
 		free(sk);
 		free(rng);
-	} else {
-		_err("%s :: unknown sign algo: %s",__func__,algo);
-		return FAIL();
+		return res;
 	}
-	return OK();
+	if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+	return api_write_error(stderr_buf, stderr_len,
+						   "%s :: unknown sign algo: %s", __func__, algo);
 }
-
 
 int zenroom_sign_pubgen(const char *algo, const char *key) {
-	if(!algo) {_err("%s :: missing arg: algo",__func__);return FAIL();}
-	if(!key) {_err("%s :: missing arg: key",__func__);return FAIL();}
-	unsigned char *pk = NULL;
-	size_t outlen;
-	// EDDSA
-	if(strcmp(algo,"eddsa")==0) {
-		const size_t sksize = sizeof(ed25519_secret_key);
-		char *sk = hex2buf_alloc("ed25519_secret_key",key,&sksize);
-		if(!sk) {_err("%s :: invalid arg",__func__);return FAIL();}
-
-		outlen = sizeof(ed25519_public_key); // set output length
-		pk = malloc(outlen);
-		if(!pk) { free(sk);_err("%s :: cannot allocate pk",__func__); return FAIL(); }
-		ed25519_publickey((const unsigned char*)sk,pk);
-		free(sk);
+	char stdout_buf[(sizeof(ed25519_public_key) << 1) + 1] = {0};
+	char stderr_buf[256] = {0};
+	int res = zenroom_sign_pubgen_tobuf(algo, key,
+										stdout_buf, sizeof(stdout_buf),
+										stderr_buf, sizeof(stderr_buf));
+	if (res == OK()) {
+		_out("%s", stdout_buf);
+	} else if (stderr_buf[0] != 0x0) {
+		_err("%s", stderr_buf);
 	}
-	else {_err("%s :: unknown algo: %s",__func__,algo);return FAIL();}
-	print_buf_hex(pk,outlen);
-	free(pk);
-	return OK();
+	return res;
 }
 
+int zenroom_sign_pubgen_tobuf(const char *algo, const char *key,
+							  char *stdout_buf, size_t stdout_len,
+							  char *stderr_buf, size_t stderr_len) {
+	unsigned char *pk = NULL;
+	size_t outlen;
+	int res;
+	if(!algo) {
+		if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+		return api_write_error(stderr_buf, stderr_len, "%s :: missing arg: algo", __func__);
+	}
+	if(!key) {
+		if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+		return api_write_error(stderr_buf, stderr_len, "%s :: missing arg: key", __func__);
+	}
+	if(strcmp(algo,"eddsa")==0) {
+		size_t sksize = sizeof(ed25519_secret_key);
+		char *sk = hex2buf_alloc("ed25519_secret_key",key,&sksize);
+		if(!sk) {
+			if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+			return api_write_error(stderr_buf, stderr_len, "%s :: invalid arg", __func__);
+		}
+		outlen = sizeof(ed25519_public_key);
+		pk = malloc(outlen);
+		if(!pk) {
+			free(sk);
+			if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+			return api_write_error(stderr_buf, stderr_len, "%s :: cannot allocate pk", __func__);
+		}
+		ed25519_publickey((const unsigned char*)sk,pk);
+		free(sk);
+		res = api_write_hex_to_buf(pk, outlen, stdout_buf, stdout_len,
+								   stderr_buf, stderr_len, __func__);
+		free(pk);
+		return res;
+	}
+	if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+	return api_write_error(stderr_buf, stderr_len,
+						   "%s :: unknown algo: %s", __func__, algo);
+}
 
 int zenroom_sign_create(const char *algo, const char *key, const char *msg) {
-	if(!algo) {_err("%s :: missing arg: algo",__func__);return FAIL();}
-	if(!key) {_err("%s :: missing arg: key",__func__);return FAIL();}
-	if(!msg) {_err("%s :: missing arg: msg",__func__);return FAIL();}
-	size_t outlen;
-	unsigned char *sig;
+	char stdout_buf[(sizeof(ed25519_signature) << 1) + 1] = {0};
+	char stderr_buf[256] = {0};
+	int res = zenroom_sign_create_tobuf(algo, key, msg,
+										stdout_buf, sizeof(stdout_buf),
+										stderr_buf, sizeof(stderr_buf));
+	if (res == OK()) {
+		_out("%s", stdout_buf);
+	} else if (stderr_buf[0] != 0x0) {
+		_err("%s", stderr_buf);
+	}
+	return res;
+}
 
-	// EDDSA
+int zenroom_sign_create_tobuf(const char *algo, const char *key, const char *msg,
+							  char *stdout_buf, size_t stdout_len,
+							  char *stderr_buf, size_t stderr_len) {
+	size_t outlen;
+	unsigned char *sig = NULL;
+	if(!algo) {
+		if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+		return api_write_error(stderr_buf, stderr_len, "%s :: missing arg: algo", __func__);
+	}
+	if(!key) {
+		if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+		return api_write_error(stderr_buf, stderr_len, "%s :: missing arg: key", __func__);
+	}
+	if(!msg) {
+		if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+		return api_write_error(stderr_buf, stderr_len, "%s :: missing arg: msg", __func__);
+	}
 	if(strcmp(algo,"eddsa")==0) {
 		ed25519_public_key pk;
 		size_t keysize = sizeof(ed25519_secret_key);
 		char *sk = hex2buf_alloc("ed25519_secret_key",key,&keysize);
-		if(!sk) {_err("%s :: invalid arg: sk",__func__);return FAIL();}
-		ed25519_publickey(sk, pk); // calculate public key
 		size_t msglen = 0;
-		char *msg_b = hex2buf_alloc("message",msg,&msglen);
-		if(!msg_b) {free(sk);_err("%s :: invalid arg: msg",__func__);return FAIL();}
-		outlen = sizeof(ed25519_signature); // set output length
+		char *msg_b = NULL;
+		int res;
+		if(!sk) {
+			if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+			return api_write_error(stderr_buf, stderr_len, "%s :: invalid arg: sk", __func__);
+		}
+		ed25519_publickey((const unsigned char*)sk, pk);
+		msg_b = hex2buf_alloc("message",msg,&msglen);
+		if(!msg_b) {
+			free(sk);
+			if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+			return api_write_error(stderr_buf, stderr_len, "%s :: invalid arg: msg", __func__);
+		}
+		outlen = sizeof(ed25519_signature);
 		sig = malloc(outlen);
 		if(!sig) {
 			free(sk);
 			free(msg_b);
-			_err("%s :: cannot allocate signature buffer", __func__);
-			return FAIL();
+			if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+			return api_write_error(stderr_buf, stderr_len,
+								   "%s :: cannot allocate signature buffer", __func__);
 		}
-		ed25519_sign((unsigned char*)msg_b, msglen, sk, pk, sig);
+		ed25519_sign((unsigned char*)msg_b, msglen,
+					 (const unsigned char*)sk, pk, sig);
 		free(sk);
 		free(msg_b);
-	} else { _err("%s :: unknown sign algo: %s",__func__,algo); return FAIL(); }
-	print_buf_hex(sig,outlen);
-	free(sig);
-	return OK();
+		res = api_write_hex_to_buf(sig, outlen, stdout_buf, stdout_len,
+								   stderr_buf, stderr_len, __func__);
+		free(sig);
+		return res;
+	}
+	if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+	return api_write_error(stderr_buf, stderr_len,
+						   "%s :: unknown sign algo: %s", __func__, algo);
 }
 
 int zenroom_sign_verify(const char *algo, const char *pk, const char *msg, const char *sig) {
-	if(!algo) {_err("%s :: missing argument: algo",__func__); return FAIL(); }
-	if(!pk) {_err("%s :: missing argument: pk", __func__);return FAIL();}
-	if(!msg){_err("%s :: missing argument: msg", __func__);return FAIL();}
-	if(!sig){_err("%s :: missing argument: sig", __func__);return FAIL();}
+	char stdout_buf[4] = {0};
+	char stderr_buf[256] = {0};
+	int res = zenroom_sign_verify_tobuf(algo, pk, msg, sig,
+										stdout_buf, sizeof(stdout_buf),
+										stderr_buf, sizeof(stderr_buf));
+	if (res == OK()) {
+		_out("%s", stdout_buf);
+	} else if (stderr_buf[0] != 0x0) {
+		_err("%s", stderr_buf);
+	}
+	return res;
+}
+
+int zenroom_sign_verify_tobuf(const char *algo, const char *pk, const char *msg, const char *sig,
+							  char *stdout_buf, size_t stdout_len,
+							  char *stderr_buf, size_t stderr_len) {
 	bool res = false;
-	// EDDSA
+	if(!algo) {
+		if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+		return api_write_error(stderr_buf, stderr_len, "%s :: missing argument: algo", __func__);
+	}
+	if(!pk) {
+		if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+		return api_write_error(stderr_buf, stderr_len, "%s :: missing argument: pk", __func__);
+	}
+	if(!msg) {
+		if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+		return api_write_error(stderr_buf, stderr_len, "%s :: missing argument: msg", __func__);
+	}
+	if(!sig) {
+		if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+		return api_write_error(stderr_buf, stderr_len, "%s :: missing argument: sig", __func__);
+	}
 	if(strcmp(algo,"eddsa")==0) {
 		size_t pksize = sizeof(ed25519_public_key);
 		const char *pk_b = hex2buf_alloc("ed25519_public_key",pk,&pksize);
-		if(!pk_b){_err("%s :: invalid arg pk",__func__);return FAIL();}
 		size_t sigsize = sizeof(ed25519_signature);
-		const char *sig_b = hex2buf_alloc("ed25519_signature",sig,&sigsize);
-		if(!sig_b){ free(pk_b);_err("%s :: invalid arg sig",__func__);return FAIL();}
+		const char *sig_b = NULL;
 		size_t msglen = 0;
-		const char *msg_b = hex2buf_alloc("message",msg,&msglen);
-		if(!msg_b) { free(pk_b);free(sig_b);_err("%s :: invalid arg: msg",__func__); return FAIL(); }
-		res = 0==ed25519_sign_open(msg_b, msglen, pk_b, sig_b);
-		free(pk_b);
-		free(sig_b);
-		free(msg_b);
-	} else { _err("%s :: unknown sign algo: %s",__func__,algo); return FAIL(); }
-	_out("%u",res?1:0);
-	return OK();
+		const char *msg_b = NULL;
+		if(!pk_b) {
+			if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+			return api_write_error(stderr_buf, stderr_len, "%s :: invalid arg pk", __func__);
+		}
+		sig_b = hex2buf_alloc("ed25519_signature",sig,&sigsize);
+		if(!sig_b) {
+			free((void *)pk_b);
+			if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+			return api_write_error(stderr_buf, stderr_len, "%s :: invalid arg sig", __func__);
+		}
+		msg_b = hex2buf_alloc("message",msg,&msglen);
+		if(!msg_b) {
+			free((void *)pk_b);
+			free((void *)sig_b);
+			if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+			return api_write_error(stderr_buf, stderr_len, "%s :: invalid arg: msg", __func__);
+		}
+		res = 0==ed25519_sign_open((const unsigned char*)msg_b, msglen,
+								   (const unsigned char*)pk_b,
+								   (const unsigned char*)sig_b);
+		free((void *)pk_b);
+		free((void *)sig_b);
+		free((void *)msg_b);
+		return api_write_text_to_buf(res ? "1" : "0",
+									 stdout_buf, stdout_len,
+									 stderr_buf, stderr_len, __func__);
+	}
+	if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+	return api_write_error(stderr_buf, stderr_len,
+						   "%s :: unknown sign algo: %s", __func__, algo);
 }

@@ -35,6 +35,8 @@ save() {
     cc ${CFLAGS} -ggdb -o hash_init   $T/hash_init.c ${LDADD}
     cc ${CFLAGS} -ggdb -o hash_update $T/hash_update.c ${LDADD}
     cc ${CFLAGS} -ggdb -o hash_final  $T/hash_final.c ${LDADD}
+    cc ${CFLAGS} -ggdb -o hash_hex    $T/hash_hex.c ${LDADD}
+    cc ${CFLAGS} -ggdb -o pbkdf2_hex  $T/pbkdf2_hex.c ${LDADD}
 }
 
 @test "HASH API :: Init SHA512" {
@@ -81,4 +83,22 @@ save() {
     LD_LIBRARY_PATH=$R ./hash_final `cat ctx_sha256_448` > hash_sha256_448
     save hash_sha256_448
     assert_output 'z7iNb68t46adNhlazsLiVeKvK32TOZfzSOCfbOV1g2A='
+}
+
+@test "HASH API :: One-shot SHA3-256 hex digest" {
+    LD_LIBRARY_PATH=$R ./hash_hex sha3_256 616263 > hash_sha3_256
+    save hash_sha3_256
+    assert_output '3a985da74fe225b2045c172d6bd390bd855f086e3e9d525b46bfe24511431532'
+}
+
+@test "HASH API :: One-shot RIPEMD160 hex digest" {
+    LD_LIBRARY_PATH=$R ./hash_hex ripemd160 616263 > hash_rmd160
+    save hash_rmd160
+    assert_output '8eb208f7e05d987a9b044a8e98c6b087f15a0bfc'
+}
+
+@test "HASH API :: PBKDF2 SHA256 hex digest" {
+    LD_LIBRARY_PATH=$R ./pbkdf2_hex sha256 70617373776f7264 73616c74 4096 32 > pbkdf2_sha256
+    save pbkdf2_sha256
+    assert_output 'c5e478d59288c841aa530db6845c4c8d962893a001ce4e11a4963873aa98134a'
 }

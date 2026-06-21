@@ -24,6 +24,56 @@ const getModule = async () => {
   return cache.module;
 };
 
+const callApi = async (
+  name: string,
+  argTypes: string[],
+  args: Array<string | number | null>
+): Promise<ZenroomResult> => {
+  const Module = await getModule();
+  return new Promise((resolve, reject) => {
+    let result = "";
+    let logs = "";
+    const exec = Module.cwrap(name, "number", argTypes);
+    Module.print = (t: string) => (result += t);
+    Module.printErr = (t: string) => (logs += t);
+    Module.exec_ok = () => {
+      resolve({ result, logs });
+    };
+    Module.exec_error = () => {
+      reject({ result, logs });
+    };
+    Module.onAbort = () => {
+      reject({ result, logs });
+    };
+    exec(...args);
+  });
+};
+
+const isSafeIdentifier = (value: string): boolean => /^[A-Za-z0-9_]+$/.test(value);
+
+const isHex = (value: string): boolean =>
+  value.length % 2 === 0 && /^[0-9a-fA-F]*$/.test(value);
+
+export const bytesToHex = (bytes: Uint8Array): string =>
+  Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+
+export const hexToBytes = (hex: string): Uint8Array => {
+  if (!isHex(hex)) {
+    throw new Error("Invalid hex string");
+  }
+  const out = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    out[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+  }
+  return out;
+};
+
+export const utf8ToHex = (value: string): string =>
+  bytesToHex(new TextEncoder().encode(value));
+
+export const hexToUtf8 = (hex: string): string =>
+  new TextDecoder().decode(hexToBytes(hex));
+
 export const zencode_exec = async (
   zencode: string,
   props?: ZenroomProps
@@ -176,6 +226,117 @@ export const zenroom_hash = async (
     ctx = await zenroom_hash_update(ctx.result, i8a);
   }
   return await zenroom_hash_final(ctx.result);
+};
+
+export const hashHex = async (
+  hashType: string,
+  msgHex: string
+): Promise<ZenroomResult> => {
+  if (!isHex(msgHex)) {
+    throw new Error("Invalid hex string");
+  }
+  return callApi("zenroom_hash_hex", ["string", "string"], [hashType, msgHex]);
+};
+
+export const pbkdf2Hex = async (
+  hashType: string,
+  passwordHex: string,
+  saltHex: string,
+  iterations: number,
+  keylen: number
+): Promise<ZenroomResult> => {
+  if (!isHex(passwordHex) || !isHex(saltHex)) {
+    throw new Error("Invalid hex string");
+  }
+  return callApi(
+    "zenroom_pbkdf2_hex",
+    ["string", "string", "string", "number", "number"],
+    [hashType, passwordHex, saltHex, iterations, keylen]
+  );
+};
+
+export const signKeygenHex = async (
+  algo: string,
+  rngseed: string | null = null
+): Promise<ZenroomResult> =>
+  callApi("zenroom_sign_keygen", ["string", "string"], [algo, rngseed]);
+
+export const signPubgenHex = async (
+  algo: string,
+  keyHex: string
+): Promise<ZenroomResult> => {
+  if (!isHex(keyHex)) {
+    throw new Error("Invalid hex string");
+  }
+  return callApi("zenroom_sign_pubgen", ["string", "string"], [algo, keyHex]);
+};
+
+export const signCreateHex = async (
+  algo: string,
+  keyHex: string,
+  msgHex: string
+): Promise<ZenroomResult> => {
+  if (!isHex(keyHex) || !isHex(msgHex)) {
+    throw new Error("Invalid hex string");
+  }
+  return callApi("zenroom_sign_create", ["string", "string", "string"], [algo, keyHex, msgHex]);
+};
+
+export const signVerifyHex = async (
+  algo: string,
+  pubkeyHex: string,
+  msgHex: string,
+  sigHex: string
+): Promise<ZenroomResult> => {
+  if (!isHex(pubkeyHex) || !isHex(msgHex) || !isHex(sigHex)) {
+    throw new Error("Invalid hex string");
+  }
+  return callApi(
+    "zenroom_sign_verify",
+    ["string", "string", "string", "string"],
+    [algo, pubkeyHex, msgHex, sigHex]
+  );
+};
+
+export const merkleRootHex = async (
+  leavesHex: string[],
+  hashType: string = "sha256"
+): Promise<ZenroomResult> => {
+  if (!isSafeIdentifier(hashType)) {
+    throw new Error("Invalid hash type");
+  }
+  if (!Array.isArray(leavesHex) || leavesHex.length === 0) {
+    throw new Error("Expected at least one leaf");
+  }
+  if (leavesHex.some((leaf) => !isHex(leaf))) {
+    throw new Error("Invalid hex string");
+  }
+  const leavesLua = leavesHex.map((leaf) => `O.from_hex('${leaf}')`).join(", ");
+  const script = `local MT = require'crypto_merkle'
+local leaves = {${leavesLua}}
+print(MT.create_merkle_root(leaves, '${hashType}'):hex())`;
+  return zenroom_exec(script);
+};
+
+export const merkleProofVerifyHex = async (
+  proofHex: string[],
+  position: number,
+  rootHex: string,
+  leafCount: number,
+  hashType: string = "sha256"
+): Promise<ZenroomResult> => {
+  if (!isSafeIdentifier(hashType)) {
+    throw new Error("Invalid hash type");
+  }
+  if (!isHex(rootHex) || proofHex.some((leaf) => !isHex(leaf))) {
+    throw new Error("Invalid hex string");
+  }
+  const proofLua = proofHex.map((leaf) => `O.from_hex('${leaf}')`).join(", ");
+  const script = `local MT = require'crypto_merkle'
+local proof = {${proofLua}}
+local ok = MT.verify_proof(proof, ${position}, O.from_hex('${rootHex}'), ${leafCount}, '${hashType}')
+print(ok and '1' or '0')`;
+  return zenroom_exec(script);
 };
 
 export const zencode_valid_input = async (

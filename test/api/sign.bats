@@ -31,6 +31,10 @@ save() {
     cc ${CFLAGS} -ggdb -o sign_pubgen   $T/sign_pubgen.c ${LDADD}
     cc ${CFLAGS} -ggdb -o sign_create   $T/sign_create.c ${LDADD}
     cc ${CFLAGS} -ggdb -o sign_verify   $T/sign_verify.c ${LDADD}
+    cc ${CFLAGS} -ggdb -o sign_keygen_tobuf $T/sign_keygen_tobuf.c ${LDADD}
+    cc ${CFLAGS} -ggdb -o sign_pubgen_tobuf $T/sign_pubgen_tobuf.c ${LDADD}
+    cc ${CFLAGS} -ggdb -o sign_create_tobuf $T/sign_create_tobuf.c ${LDADD}
+    cc ${CFLAGS} -ggdb -o sign_verify_tobuf $T/sign_verify_tobuf.c ${LDADD}
 }
 
 @test "SIGN API :: eddsa keygen" {
@@ -73,4 +77,30 @@ save() {
     LD_LIBRARY_PATH=$R ./sign_verify eddsa `cat eddsa_pk` "$STR448" "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"> eddsa_verification
     save eddsa_verification
     assert_output '0'
+}
+
+@test "SIGN API :: eddsa keygen tobuf" {
+    LD_LIBRARY_PATH=$R ./sign_keygen_tobuf eddsa \
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 \
+    > eddsa_sk_seed_tobuf
+    save eddsa_sk_seed_tobuf
+    assert_output '06b4c6f4caf4234be9dedc6983412aaf50773e788e144e3e2cd09b56f21f744d'
+}
+
+@test "SIGN API :: eddsa pubgen tobuf" {
+    LD_LIBRARY_PATH=$R ./sign_pubgen_tobuf eddsa `cat eddsa_sk_seed_tobuf` > eddsa_pk_tobuf
+    save eddsa_pk_tobuf
+    assert_output 'e78735703bf56140a00a6f867ca926fa0945e8b5752325e6593ea680d55d41bc'
+}
+
+@test "SIGN API :: eddsa create tobuf" {
+    LD_LIBRARY_PATH=$R ./sign_create_tobuf eddsa `cat eddsa_sk_seed_tobuf` "$STR448" > eddsa_signature_tobuf
+    save eddsa_signature_tobuf
+    assert_output 'b2efa19f6c51a929e4155a8ee1df57abeef8e1b9556366551f9e1ec3ea2476b6c3bbcb93e8a23d5cfffa50f968cb84aa5e1e06bf1b884509ae35603b20999a01'
+}
+
+@test "SIGN API :: eddsa verify tobuf" {
+    LD_LIBRARY_PATH=$R ./sign_verify_tobuf eddsa `cat eddsa_pk_tobuf` "$STR448" `cat eddsa_signature_tobuf` > eddsa_verification_tobuf
+    save eddsa_verification_tobuf
+    assert_output '1'
 }

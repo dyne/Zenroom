@@ -66,6 +66,20 @@ int zenroom_hash_init(const char *hash_type);
 int zenroom_hash_update(const char *hash_ctx, const char *buffer, const int buffer_size);
 // zenroom_hash_final(hash_ctx) will print the base64 encoded hash of the dazta so far
 int zenroom_hash_final(const char *hash_ctx);
+// zenroom_hash_hex(hash_type, msg_hex) will print the hex encoded digest
+int zenroom_hash_hex(const char *hash_type, const char *msg_hex);
+// zenroom_hash_hex_tobuf(...) writes the hex encoded digest into stdout_buf
+int zenroom_hash_hex_tobuf(const char *hash_type, const char *msg_hex,
+                           char *stdout_buf, size_t stdout_len,
+                           char *stderr_buf, size_t stderr_len);
+// zenroom_pbkdf2_hex(...) will print the hex encoded derived key
+int zenroom_pbkdf2_hex(const char *hash_type, const char *password_hex,
+                       const char *salt_hex, int iterations, int keylen);
+// zenroom_pbkdf2_hex_tobuf(...) writes the hex encoded derived key into stdout_buf
+int zenroom_pbkdf2_hex_tobuf(const char *hash_type, const char *password_hex,
+                             const char *salt_hex, int iterations, int keylen,
+                             char *stdout_buf, size_t stdout_len,
+                             char *stderr_buf, size_t stderr_len);
 
 
 // zenroom_eddsa_keygen(rngseed) will print a new hex encoded secret key, optionally takes an external random seed
@@ -73,6 +87,18 @@ int zenroom_sign_keygen(const char *algo, const char *rngseed);
 int zenroom_sign_pubgen(const char *algo, const char *key);
 int zenroom_sign_create(const char *algo, const char *key, const char *msg);
 int zenroom_sign_verify(const char *algo, const char *pk, const char *msg, const char *sig);
+int zenroom_sign_keygen_tobuf(const char *algo, const char *rngseed,
+                              char *stdout_buf, size_t stdout_len,
+                              char *stderr_buf, size_t stderr_len);
+int zenroom_sign_pubgen_tobuf(const char *algo, const char *key,
+                              char *stdout_buf, size_t stdout_len,
+                              char *stderr_buf, size_t stderr_len);
+int zenroom_sign_create_tobuf(const char *algo, const char *key, const char *msg,
+                              char *stdout_buf, size_t stdout_len,
+                              char *stderr_buf, size_t stderr_len);
+int zenroom_sign_verify_tobuf(const char *algo, const char *pk, const char *msg, const char *sig,
+                              char *stdout_buf, size_t stdout_len,
+                              char *stderr_buf, size_t stderr_len);
 
 ////////////////////////////////////////
 
