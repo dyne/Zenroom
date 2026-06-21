@@ -18,7 +18,6 @@
  *
  */
 
-// external API function for signatures
 #include <stdio.h>
 #include <stdarg.h>
 #include <unistd.h>
@@ -34,24 +33,20 @@
 
 #include <zen_error.h>
 #include <zenroom.h>
-#include <encoding.h> // zenroom
+#include <encoding.h>
 #include <mutt_sprintf.h>
 
 #include <ed25519.h>
 #include <randombytes.h>
 
-// RNG
 #include <time.h>
 #include <amcl.h>
 
-// defined also in zenroom.h
 #define RANDOM_SEED_LEN 64
+#define MAX_KEY_BUF 12288
 
-// hexseed is an optional hex input sequence
-// result is an opaque struct to be used with RAND_byte()
-// it should be free'd before exiting
 static void *api_rng_alloc(const char *hexseed) {
-		csprng *rng = (csprng*)malloc(sizeof(csprng));
+	csprng *rng = (csprng*)malloc(sizeof(csprng));
 	if(!rng) {
 		_err("%s : cannot allocate the random generator", __func__);
 		return NULL;
@@ -66,9 +61,7 @@ static void *api_rng_alloc(const char *hexseed) {
 		}
 		hex2buf(tseed, hexseed);
 	} else {
-		// gather system random using randombytes()
 		randombytes(tseed,RANDOM_SEED_LEN-4);
-		// using time() from milagro
 		unsign32 ttmp = (unsign32)time(NULL);
 		tseed[60] = (ttmp >> 24) & 0xff;
 		tseed[61] = (ttmp >> 16) & 0xff;
@@ -144,16 +137,7 @@ static int api_write_text_to_buf(const char *text,
 	return OK();
 }
 
-// allocate a binary buffer (pointer returned) from a hex value
-// args:
-// name is needed for correct debugging
-// hex is the input hexadecimal to be converted in binary output
-// size is a pointer to size_t value, if 0 then is filled with length
-//   of result, else it indicates the desired size to be enforced on
-//   input
-// REMEMBER TO FREE THE OUTPUT AFTER USE
 static char* hex2buf_alloc(const char *name, const char *hex, size_t *size) {
-	// check that size is desired
 	const size_t hexlen = strlen(hex) >>1;
 	char *out = NULL;
 	if(*size>0 && *size!=hexlen) {
@@ -174,18 +158,234 @@ static char* hex2buf_alloc(const char *name, const char *hex, size_t *size) {
 	return(out);
 }
 
+static int api_is_valid_hex(const char *hex, const char *label,
+							char *stderr_buf, size_t stderr_len,
+							const char *caller) {
+	size_t i;
+	if (!hex || !hex[0]) {
+		return api_write_error(stderr_buf, stderr_len,
+							   "%s :: missing %s", caller, label);
+	}
+	const size_t len = strlen(hex);
+	if (len & 1) {
+		return api_write_error(stderr_buf, stderr_len,
+							   "%s :: %s has odd hex length", caller, label);
+	}
+	for (i = 0; i < len; i++) {
+		char c = hex[i];
+		if (!((c >= '0' && c <= '9') ||
+			  (c >= 'a' && c <= 'f') ||
+			  (c >= 'A' && c <= 'F'))) {
+			return api_write_error(stderr_buf, stderr_len,
+								   "%s :: %s is not valid hex", caller, label);
+		}
+	}
+	return 0;
+}
+
+static int api_run_sign_script(const char *script,
+							   char *stdout_buf, size_t stdout_len,
+							   char *stderr_buf, size_t stderr_len) {
+	if (stderr_buf && stderr_len > 0) {
+		stderr_buf[0] = 0x0;
+	}
+	return zenroom_exec_tobuf(script, NULL, "{}", NULL, NULL, NULL,
+							  stdout_buf, stdout_len, stderr_buf, stderr_len);
+}
+
+static int api_sign_print_result(int res,
+								 const char *stdout_buf,
+								 const char *stderr_buf) {
+	if (res == OK()) {
+		if (stdout_buf[0]) {
+			_out("%s", stdout_buf);
+		}
+	} else {
+		if (stderr_buf && stderr_buf[0]) {
+			_err("%s", stderr_buf);
+		}
+	}
+	return res;
+}
+
+// ---- p256 (P-256 ECDSA) via Lua VM ----
+
+static int api_sign_keygen_p256_tobuf(const char *seed_hex,
+									  char *stdout_buf, size_t stdout_len,
+									  char *stderr_buf, size_t stderr_len) {
+	char script[256];
+	if (seed_hex) {
+		snprintf(script, sizeof(script),
+				 "local P256 = require'es256'\n"
+				 "local sk = P256.keygen()\n"
+				 "print(sk:hex())");
+	} else {
+		snprintf(script, sizeof(script),
+				 "local P256 = require'es256'\n"
+				 "local sk = P256.keygen()\n"
+				 "print(sk:hex())");
+	}
+	return api_run_sign_script(script, stdout_buf, stdout_len,
+							   stderr_buf, stderr_len);
+}
+
+static int api_sign_pubgen_p256_tobuf(const char *key_hex,
+									  char *stdout_buf, size_t stdout_len,
+									  char *stderr_buf, size_t stderr_len) {
+	char script[320];
+	if (api_is_valid_hex(key_hex, "key", stderr_buf, stderr_len, __func__)) {
+		return FAIL();
+	}
+	snprintf(script, sizeof(script),
+			 "local P256 = require'es256'\n"
+			 "local sk = O.from_hex('%s')\n"
+			 "local pk = P256.pubgen(sk)\n"
+			 "print(pk:hex())", key_hex);
+	return api_run_sign_script(script, stdout_buf, stdout_len,
+							   stderr_buf, stderr_len);
+}
+
+static int api_sign_create_p256_tobuf(const char *key_hex, const char *msg_hex,
+									  char *stdout_buf, size_t stdout_len,
+									  char *stderr_buf, size_t stderr_len) {
+	char script[640];
+	if (api_is_valid_hex(key_hex, "key", stderr_buf, stderr_len, __func__)) {
+		return FAIL();
+	}
+	if (api_is_valid_hex(msg_hex, "msg", stderr_buf, stderr_len, __func__)) {
+		return FAIL();
+	}
+	snprintf(script, sizeof(script),
+			 "local P256 = require'es256'\n"
+			 "local sk = O.from_hex('%s')\n"
+			 "local msg = O.from_hex('%s')\n"
+			 "local sig = P256.sign(sk, msg)\n"
+			 "print(sig:hex())", key_hex, msg_hex);
+	return api_run_sign_script(script, stdout_buf, stdout_len,
+							   stderr_buf, stderr_len);
+}
+
+static int api_sign_verify_p256_tobuf(const char *pk_hex, const char *msg_hex,
+									  const char *sig_hex,
+									  char *stdout_buf, size_t stdout_len,
+									  char *stderr_buf, size_t stderr_len) {
+	char script[1024];
+	if (api_is_valid_hex(pk_hex, "pk", stderr_buf, stderr_len, __func__)) {
+		return FAIL();
+	}
+	if (api_is_valid_hex(msg_hex, "msg", stderr_buf, stderr_len, __func__)) {
+		return FAIL();
+	}
+	if (api_is_valid_hex(sig_hex, "sig", stderr_buf, stderr_len, __func__)) {
+		return FAIL();
+	}
+	snprintf(script, sizeof(script),
+			 "local P256 = require'es256'\n"
+			 "local pk = O.from_hex('%s')\n"
+			 "local msg = O.from_hex('%s')\n"
+			 "local sig = O.from_hex('%s')\n"
+			 "local ok = P256.verify(pk, msg, sig)\n"
+			 "print(ok and '1' or '0')", pk_hex, msg_hex, sig_hex);
+	return api_run_sign_script(script, stdout_buf, stdout_len,
+							   stderr_buf, stderr_len);
+}
+
+// ---- mldsa44 (ML-DSA-44 FIPS 204) via Lua VM ----
+
+static int api_sign_keygen_mldsa44_tobuf(const char *seed_hex,
+										 char *stdout_buf, size_t stdout_len,
+										 char *stderr_buf, size_t stderr_len) {
+	char script[512];
+	if (seed_hex) {
+		if (api_is_valid_hex(seed_hex, "rngseed", stderr_buf, stderr_len,
+							 __func__)) {
+			return FAIL();
+		}
+		snprintf(script, sizeof(script),
+				 "local QP = require'qp'\n"
+				 "local kp = QP.mldsa44_keypair(O.from_hex('%s'))\n"
+				 "print(kp.private:hex())", seed_hex);
+	} else {
+		snprintf(script, sizeof(script),
+				 "local QP = require'qp'\n"
+				 "local kp = QP.mldsa44_keypair()\n"
+				 "print(kp.private:hex())");
+	}
+	return api_run_sign_script(script, stdout_buf, stdout_len,
+							   stderr_buf, stderr_len);
+}
+
+static int api_sign_pubgen_mldsa44_tobuf(const char *key_hex,
+										 char *stdout_buf, size_t stdout_len,
+										 char *stderr_buf, size_t stderr_len) {
+	char script[8000];
+	if (api_is_valid_hex(key_hex, "key", stderr_buf, stderr_len, __func__)) {
+		return FAIL();
+	}
+	snprintf(script, sizeof(script),
+			 "local QP = require'qp'\n"
+			 "local sk = O.from_hex('%s')\n"
+			 "local pk = QP.mldsa44_pubgen(sk)\n"
+			 "print(pk:hex())", key_hex);
+	return api_run_sign_script(script, stdout_buf, stdout_len,
+							   stderr_buf, stderr_len);
+}
+
+static int api_sign_create_mldsa44_tobuf(const char *key_hex,
+										 const char *msg_hex,
+										 char *stdout_buf, size_t stdout_len,
+										 char *stderr_buf, size_t stderr_len) {
+	char script[12000];
+	if (api_is_valid_hex(key_hex, "key", stderr_buf, stderr_len, __func__)) {
+		return FAIL();
+	}
+	if (api_is_valid_hex(msg_hex, "msg", stderr_buf, stderr_len, __func__)) {
+		return FAIL();
+	}
+	snprintf(script, sizeof(script),
+			 "local QP = require'qp'\n"
+			 "local sk = O.from_hex('%s')\n"
+			 "local msg = O.from_hex('%s')\n"
+			 "local sig = QP.mldsa44_signature(sk, msg)\n"
+			 "print(sig:hex())", key_hex, msg_hex);
+	return api_run_sign_script(script, stdout_buf, stdout_len,
+							   stderr_buf, stderr_len);
+}
+
+static int api_sign_verify_mldsa44_tobuf(const char *pk_hex, const char *msg_hex,
+										 const char *sig_hex,
+										 char *stdout_buf, size_t stdout_len,
+										 char *stderr_buf, size_t stderr_len) {
+	char script[22000];
+	if (api_is_valid_hex(pk_hex, "pk", stderr_buf, stderr_len, __func__)) {
+		return FAIL();
+	}
+	if (api_is_valid_hex(msg_hex, "msg", stderr_buf, stderr_len, __func__)) {
+		return FAIL();
+	}
+	if (api_is_valid_hex(sig_hex, "sig", stderr_buf, stderr_len, __func__)) {
+		return FAIL();
+	}
+	snprintf(script, sizeof(script),
+			 "local QP = require'qp'\n"
+			 "local pk = O.from_hex('%s')\n"
+			 "local msg = O.from_hex('%s')\n"
+			 "local sig = O.from_hex('%s')\n"
+			 "local ok = QP.mldsa44_verify(pk, sig, msg)\n"
+			 "print(ok and '1' or '0')", pk_hex, msg_hex, sig_hex);
+	return api_run_sign_script(script, stdout_buf, stdout_len,
+							   stderr_buf, stderr_len);
+}
+
+// ---- Public API ----
+
 int zenroom_sign_keygen(const char *algo, const char *rngseed) {
-	char stdout_buf[(sizeof(ed25519_secret_key) << 1) + 1] = {0};
-	char stderr_buf[256] = {0};
+	char stdout_buf[MAX_KEY_BUF] = {0};
+	char stderr_buf[512] = {0};
 	int res = zenroom_sign_keygen_tobuf(algo, rngseed,
 										stdout_buf, sizeof(stdout_buf),
 										stderr_buf, sizeof(stderr_buf));
-	if (res == OK()) {
-		_out("%s", stdout_buf);
-	} else if (stderr_buf[0] != 0x0) {
-		_err("%s", stderr_buf);
-	}
-	return res;
+	return api_sign_print_result(res, stdout_buf, stderr_buf);
 }
 
 int zenroom_sign_keygen_tobuf(const char *algo, const char *rngseed,
@@ -222,23 +422,26 @@ int zenroom_sign_keygen_tobuf(const char *algo, const char *rngseed,
 		free(rng);
 		return res;
 	}
+	if(strcmp(algo,"p256")==0) {
+		return api_sign_keygen_p256_tobuf(rngseed, stdout_buf, stdout_len,
+										  stderr_buf, stderr_len);
+	}
+	if(strcmp(algo,"mldsa44")==0) {
+		return api_sign_keygen_mldsa44_tobuf(rngseed, stdout_buf, stdout_len,
+											 stderr_buf, stderr_len);
+	}
 	if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
 	return api_write_error(stderr_buf, stderr_len,
 						   "%s :: unknown sign algo: %s", __func__, algo);
 }
 
 int zenroom_sign_pubgen(const char *algo, const char *key) {
-	char stdout_buf[(sizeof(ed25519_public_key) << 1) + 1] = {0};
-	char stderr_buf[256] = {0};
+	char stdout_buf[MAX_KEY_BUF] = {0};
+	char stderr_buf[512] = {0};
 	int res = zenroom_sign_pubgen_tobuf(algo, key,
 										stdout_buf, sizeof(stdout_buf),
 										stderr_buf, sizeof(stderr_buf));
-	if (res == OK()) {
-		_out("%s", stdout_buf);
-	} else if (stderr_buf[0] != 0x0) {
-		_err("%s", stderr_buf);
-	}
-	return res;
+	return api_sign_print_result(res, stdout_buf, stderr_buf);
 }
 
 int zenroom_sign_pubgen_tobuf(const char *algo, const char *key,
@@ -276,23 +479,26 @@ int zenroom_sign_pubgen_tobuf(const char *algo, const char *key,
 		free(pk);
 		return res;
 	}
+	if(strcmp(algo,"p256")==0) {
+		return api_sign_pubgen_p256_tobuf(key, stdout_buf, stdout_len,
+										  stderr_buf, stderr_len);
+	}
+	if(strcmp(algo,"mldsa44")==0) {
+		return api_sign_pubgen_mldsa44_tobuf(key, stdout_buf, stdout_len,
+											 stderr_buf, stderr_len);
+	}
 	if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
 	return api_write_error(stderr_buf, stderr_len,
-						   "%s :: unknown algo: %s", __func__, algo);
+						   "%s :: unknown sign algo: %s", __func__, algo);
 }
 
 int zenroom_sign_create(const char *algo, const char *key, const char *msg) {
-	char stdout_buf[(sizeof(ed25519_signature) << 1) + 1] = {0};
-	char stderr_buf[256] = {0};
+	char stdout_buf[MAX_KEY_BUF] = {0};
+	char stderr_buf[512] = {0};
 	int res = zenroom_sign_create_tobuf(algo, key, msg,
 										stdout_buf, sizeof(stdout_buf),
 										stderr_buf, sizeof(stderr_buf));
-	if (res == OK()) {
-		_out("%s", stdout_buf);
-	} else if (stderr_buf[0] != 0x0) {
-		_err("%s", stderr_buf);
-	}
-	return res;
+	return api_sign_print_result(res, stdout_buf, stderr_buf);
 }
 
 int zenroom_sign_create_tobuf(const char *algo, const char *key, const char *msg,
@@ -348,6 +554,14 @@ int zenroom_sign_create_tobuf(const char *algo, const char *key, const char *msg
 		free(sig);
 		return res;
 	}
+	if(strcmp(algo,"p256")==0) {
+		return api_sign_create_p256_tobuf(key, msg, stdout_buf, stdout_len,
+										  stderr_buf, stderr_len);
+	}
+	if(strcmp(algo,"mldsa44")==0) {
+		return api_sign_create_mldsa44_tobuf(key, msg, stdout_buf, stdout_len,
+											 stderr_buf, stderr_len);
+	}
 	if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
 	return api_write_error(stderr_buf, stderr_len,
 						   "%s :: unknown sign algo: %s", __func__, algo);
@@ -355,16 +569,11 @@ int zenroom_sign_create_tobuf(const char *algo, const char *key, const char *msg
 
 int zenroom_sign_verify(const char *algo, const char *pk, const char *msg, const char *sig) {
 	char stdout_buf[4] = {0};
-	char stderr_buf[256] = {0};
+	char stderr_buf[512] = {0};
 	int res = zenroom_sign_verify_tobuf(algo, pk, msg, sig,
 										stdout_buf, sizeof(stdout_buf),
 										stderr_buf, sizeof(stderr_buf));
-	if (res == OK()) {
-		_out("%s", stdout_buf);
-	} else if (stderr_buf[0] != 0x0) {
-		_err("%s", stderr_buf);
-	}
-	return res;
+	return api_sign_print_result(res, stdout_buf, stderr_buf);
 }
 
 int zenroom_sign_verify_tobuf(const char *algo, const char *pk, const char *msg, const char *sig,
@@ -420,6 +629,16 @@ int zenroom_sign_verify_tobuf(const char *algo, const char *pk, const char *msg,
 		return api_write_text_to_buf(res ? "1" : "0",
 									 stdout_buf, stdout_len,
 									 stderr_buf, stderr_len, __func__);
+	}
+	if(strcmp(algo,"p256")==0) {
+		return api_sign_verify_p256_tobuf(pk, msg, sig,
+										  stdout_buf, stdout_len,
+										  stderr_buf, stderr_len);
+	}
+	if(strcmp(algo,"mldsa44")==0) {
+		return api_sign_verify_mldsa44_tobuf(pk, msg, sig,
+											 stdout_buf, stdout_len,
+											 stderr_buf, stderr_len);
 	}
 	if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
 	return api_write_error(stderr_buf, stderr_len,
