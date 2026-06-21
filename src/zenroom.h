@@ -117,7 +117,8 @@ int zenroom_pbkdf2_hex_tobuf(const char *hash_type, const char *password_hex,
 /////////////////////////////////////////
 // Digital signature primitives (hex ABI)
 
-// algo: lowercase string.  Supported: "eddsa", "ecdsa", "schnorr".
+// algo: lowercase string.  Supported: "eddsa".
+// EdDSA uses the Ed25519 curve.
 // All binary inputs/outputs are lowercase hex strings.
 // verify functions print "1" on success, "0" on failure.
 // All functions return OK (0) on success, FAIL (1) on error.
