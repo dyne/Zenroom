@@ -23,6 +23,9 @@ const getModule = async () => {
       print: () => {},
       printErr: () => {},
     });
+    cache.module.exec_ok = () => {};
+    cache.module.exec_error = () => {};
+    cache.module.onAbort = () => {};
   }
   return cache.module;
 };
