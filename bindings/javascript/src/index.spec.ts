@@ -24,6 +24,7 @@ import {
   decode_error,
   zencode_get_statements,
 } from "./index";
+import { recipeExec } from "./index";
 //import { TextEncoder } from "util";
 //var enc = new TextEncoder();
 
@@ -660,4 +661,50 @@ test("does run zencode with extra and context", async (t) => {
 test("does run zenroom_exec with extra and context", async (t) => {
   const { result } = await zenroom_exec(`print(DATA..KEYS..EXTRA..CONTEXT)`, { data: "USING ", keys: "ALL ", extra: "ZENROOM ", context: "INPUTS" });
   t.is(result, "USING ALL ZENROOM INPUTS\n");
+});
+
+test("recipeExec merkle.root returns JSON root hex", async (t) => {
+  const data = JSON.stringify({
+    hash: "sha256",
+    leaves: [
+      "0101010101010101010101010101010101010101010101010101010101010101",
+      "0202020202020202020202020202020202020202020202020202020202020202",
+      "0303030303030303030303030303030303030303030303030303030303030303",
+    ],
+  });
+  const { result } = await recipeExec("merkle.root", data);
+  const out = JSON.parse(result);
+  t.truthy(out.root);
+  t.is(out.root.length, 64);
+  t.regex(out.root, /^[0-9a-f]+$/);
+});
+
+test("recipeExec merkle.root fails with invalid JSON data", async (t) => {
+  try {
+    await recipeExec("merkle.root", "not json");
+    t.fail("should have thrown");
+  } catch (error: any) {
+    t.truthy(error.logs, "error should contain logs");
+  }
+});
+
+test("recipeExec rejects unknown name", async (t) => {
+  try {
+    await recipeExec("nonexistent.recipe", "{}");
+    t.fail("should have thrown");
+  } catch (error: any) {
+    t.truthy(error.logs, "error should contain logs");
+  }
+});
+
+test("recipeExec output matches merkleRootHex", async (t) => {
+  const leaves = [
+    "0101010101010101010101010101010101010101010101010101010101010101",
+    "0202020202020202020202020202020202020202020202020202020202020202",
+  ];
+  const [direct, recipe] = await Promise.all([
+    merkleRootHex(leaves, "sha256"),
+    recipeExec("merkle.root", JSON.stringify({ hash: "sha256", leaves })),
+  ]);
+  t.is(direct.result, JSON.parse(recipe.result).root);
 });
