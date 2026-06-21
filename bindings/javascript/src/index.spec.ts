@@ -679,13 +679,40 @@ test("recipeExec merkle.root returns JSON root hex", async (t) => {
   t.regex(out.root, /^[0-9a-f]+$/);
 });
 
-test("recipeExec merkle.root fails with invalid JSON data", async (t) => {
-  try {
-    await recipeExec("merkle.root", "not json");
-    t.fail("should have thrown");
-  } catch (error: any) {
-    t.truthy(error.logs, "error should contain logs");
-  }
+test("recipeExec merkle.verify_proof with generated proof", async (t) => {
+  const leaves = [
+    "0101010101010101010101010101010101010101010101010101010101010101",
+    "0202020202020202020202020202020202020202020202020202020202020202",
+    "0303030303030303030303030303030303030303030303030303030303030303",
+    "0404040404040404040404040404040404040404040404040404040404040404",
+  ];
+  const script =
+    `local MT = require'crypto_merkle'\n` +
+    `local leaves = {}\n` +
+    leaves.map((h) => `table.insert(leaves, O.from_hex('${h}'))`).join("\n") + `\n` +
+    `local tree = MT.create_merkle_tree(leaves, 'sha256')\n` +
+    `local proof = MT.generate_proof(tree, 0)\n` +
+    `local proof_hex = {}\n` +
+    `for _, p in ipairs(proof) do table.insert(proof_hex, p:hex()) end\n` +
+    `print(require'json'.raw_encode(proof_hex))\n`;
+
+  const { result: proofJson } = await zenroom_exec(script);
+  const proofHex: string[] = JSON.parse(proofJson);
+
+  const rt = await recipeExec("merkle.root", JSON.stringify({
+    hash: "sha256",
+    leaves,
+  }));
+  const root = JSON.parse(rt.result).root;
+
+  const vf = await recipeExec("merkle.verify_proof", JSON.stringify({
+    hash: "sha256",
+    proof: proofHex,
+    position: 0,
+    root,
+    leaf_count: leaves.length,
+  }));
+  t.is(JSON.parse(vf.result).valid, true);
 });
 
 test("recipeExec rejects unknown name", async (t) => {
@@ -707,4 +734,13 @@ test("recipeExec output matches merkleRootHex", async (t) => {
     recipeExec("merkle.root", JSON.stringify({ hash: "sha256", leaves })),
   ]);
   t.is(direct.result, JSON.parse(recipe.result).root);
+});
+
+test("recipeExec merkle.root fails with invalid JSON", async (t) => {
+  try {
+    await recipeExec("merkle.root", "not json");
+    t.fail("should have thrown");
+  } catch (error: any) {
+    t.truthy(error.logs, "error should contain logs");
+  }
 });
