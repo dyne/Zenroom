@@ -49,6 +49,32 @@ const callApi = async (
   });
 };
 
+const callSyncApi = async (
+  name: string,
+  argTypes: string[],
+  args: Array<string | number | null>
+): Promise<ZenroomResult> => {
+  const Module = await getModule();
+  let result = "";
+  let logs = "";
+  const exec = Module.cwrap(name, "number", argTypes);
+  Module.print = (t: string) => (result += t);
+  Module.printErr = (t: string) => (logs += t);
+  Module.exec_ok = () => {};
+  Module.exec_error = () => {};
+  Module.onAbort = () => {};
+  const status = exec(...args);
+  if (status === 0) {
+    return { result, logs };
+  }
+  throw { result, logs };
+};
+
+const trimTrailingNewline = ({ result, logs }: ZenroomResult): ZenroomResult => ({
+  result: result.replace(/\n$/, ""),
+  logs,
+});
+
 const isSafeIdentifier = (value: string): boolean => /^[A-Za-z0-9_]+$/.test(value);
 
 const isHex = (value: string): boolean =>
@@ -235,7 +261,9 @@ export const hashHex = async (
   if (!isHex(msgHex)) {
     throw new Error("Invalid hex string");
   }
-  return callApi("zenroom_hash_hex", ["string", "string"], [hashType, msgHex]);
+  return trimTrailingNewline(
+    await callSyncApi("zenroom_hash_hex", ["string", "string"], [hashType, msgHex])
+  );
 };
 
 export const pbkdf2Hex = async (
@@ -248,10 +276,12 @@ export const pbkdf2Hex = async (
   if (!isHex(passwordHex) || !isHex(saltHex)) {
     throw new Error("Invalid hex string");
   }
-  return callApi(
-    "zenroom_pbkdf2_hex",
-    ["string", "string", "string", "number", "number"],
-    [hashType, passwordHex, saltHex, iterations, keylen]
+  return trimTrailingNewline(
+    await callSyncApi(
+      "zenroom_pbkdf2_hex",
+      ["string", "string", "string", "number", "number"],
+      [hashType, passwordHex, saltHex, iterations, keylen]
+    )
   );
 };
 
@@ -259,7 +289,9 @@ export const signKeygenHex = async (
   algo: string,
   rngseed: string | null = null
 ): Promise<ZenroomResult> =>
-  callApi("zenroom_sign_keygen", ["string", "string"], [algo, rngseed]);
+  trimTrailingNewline(
+    await callSyncApi("zenroom_sign_keygen", ["string", "string"], [algo, rngseed])
+  );
 
 export const signPubgenHex = async (
   algo: string,
@@ -268,7 +300,9 @@ export const signPubgenHex = async (
   if (!isHex(keyHex)) {
     throw new Error("Invalid hex string");
   }
-  return callApi("zenroom_sign_pubgen", ["string", "string"], [algo, keyHex]);
+  return trimTrailingNewline(
+    await callSyncApi("zenroom_sign_pubgen", ["string", "string"], [algo, keyHex])
+  );
 };
 
 export const signCreateHex = async (
@@ -279,7 +313,9 @@ export const signCreateHex = async (
   if (!isHex(keyHex) || !isHex(msgHex)) {
     throw new Error("Invalid hex string");
   }
-  return callApi("zenroom_sign_create", ["string", "string", "string"], [algo, keyHex, msgHex]);
+  return trimTrailingNewline(
+    await callSyncApi("zenroom_sign_create", ["string", "string", "string"], [algo, keyHex, msgHex])
+  );
 };
 
 export const signVerifyHex = async (
@@ -291,10 +327,12 @@ export const signVerifyHex = async (
   if (!isHex(pubkeyHex) || !isHex(msgHex) || !isHex(sigHex)) {
     throw new Error("Invalid hex string");
   }
-  return callApi(
-    "zenroom_sign_verify",
-    ["string", "string", "string", "string"],
-    [algo, pubkeyHex, msgHex, sigHex]
+  return trimTrailingNewline(
+    await callSyncApi(
+      "zenroom_sign_verify",
+      ["string", "string", "string", "string"],
+      [algo, pubkeyHex, msgHex, sigHex]
+    )
   );
 };
 
@@ -315,7 +353,7 @@ export const merkleRootHex = async (
   const script = `local MT = require'crypto_merkle'
 local leaves = {${leavesLua}}
 print(MT.create_merkle_root(leaves, '${hashType}'):hex())`;
-  return zenroom_exec(script);
+  return trimTrailingNewline(await zenroom_exec(script));
 };
 
 export const merkleProofVerifyHex = async (
@@ -336,7 +374,7 @@ export const merkleProofVerifyHex = async (
 local proof = {${proofLua}}
 local ok = MT.verify_proof(proof, ${position}, O.from_hex('${rootHex}'), ${leafCount}, '${hashType}')
 print(ok and '1' or '0')`;
-  return zenroom_exec(script);
+  return trimTrailingNewline(await zenroom_exec(script));
 };
 
 export const zencode_valid_input = async (
