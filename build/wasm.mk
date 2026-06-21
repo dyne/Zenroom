@@ -29,7 +29,7 @@ zk-circuit-lang_cxxflags := -I ${pwd}/src -I. -I../zstd -fPIC -DLIBRARY -msimd12
 system := Javascript
 LUA_EMBED_EXCLUDES += crypto_zkcc.lua
 ld_emsdk_settings := -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
-ld_emsdk_settings += -sMODULARIZE=1	-sSINGLE_FILE=1 --embed-file 'src/lua@/'
+ld_emsdk_settings += -sMODULARIZE=1	-sSINGLE_FILE=1 --embed-file 'src/lua@/' --embed-file 'src/api_recipes@/api_recipes/'
 ld_emsdk_settings += -sMALLOC=dlmalloc --no-heap-copy -sALLOW_MEMORY_GROWTH=1
 ld_emsdk_settings += -sINITIAL_MEMORY=${JS_INIT_MEM} -sMAXIMUM_MEMORY=${JS_MAX_MEM} -sSTACK_SIZE=${JS_STACK_SIZE} -sASSERTIONS
 ld_emsdk_settings += -sINCOMING_MODULE_JS_API=print,printErr -s EXPORTED_FUNCTIONS=${WASM_EXPORTS} -s EXPORTED_RUNTIME_METHODS='["ccall","cwrap","HEAPU8"]'

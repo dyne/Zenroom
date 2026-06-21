@@ -31,6 +31,8 @@
 #include <zen_error.h>
 #include <zenroom.h>
 
+#define RECIPE_MAX_SIZE 8192
+
 static int api_recipe_name_is_safe(const char *name) {
 	size_t i;
 	if (!name || !name[0]) {
@@ -46,6 +48,29 @@ static int api_recipe_name_is_safe(const char *name) {
 		}
 	}
 	return 1;
+}
+
+static int api_recipe_read_file(const char *name,
+								char *script, size_t script_size) {
+	char path[256];
+	FILE *fp;
+	size_t n;
+#ifdef __EMSCRIPTEN__
+	snprintf(path, sizeof(path), "/api_recipes/%s.lua", name);
+#else
+	snprintf(path, sizeof(path), "src/api_recipes/%s.lua", name);
+#endif
+	fp = fopen(path, "r");
+	if (!fp) {
+		return -1;
+	}
+	n = fread(script, 1, script_size - 1, fp);
+	fclose(fp);
+	if (n == 0) {
+		return -1;
+	}
+	script[n] = 0x0;
+	return 0;
 }
 
 int zenroom_recipe_exec(const char *name,
@@ -69,33 +94,13 @@ int zenroom_recipe_exec(const char *name,
 	return res;
 }
 
-static const char *recipe_merkle_root_script =
-	"local J = require'json'\n"
-	"local data = DATA and J.raw_decode(DATA) or {}\n"
-	"local MT = require'crypto_merkle'\n"
-	"local leaves = {}\n"
-	"for _, h in ipairs(data.leaves or {}) do table.insert(leaves, O.from_hex(h)) end\n"
-	"local root = MT.create_merkle_root(leaves, data.hash or 'sha256')\n"
-	"local out = J.raw_encode({root = root:hex()})\n"
-	"print(out)\n";
-
-static const char *recipe_merkle_verify_proof_script =
-	"local J = require'json'\n"
-	"local data = DATA and J.raw_decode(DATA) or {}\n"
-	"local MT = require'crypto_merkle'\n"
-	"local proof = {}\n"
-	"for _, p in ipairs(data.proof or {}) do table.insert(proof, O.from_hex(p)) end\n"
-	"local ok = MT.verify_proof(proof, data.position or 0, O.from_hex(data.root or ''), data.leaf_count or 0, data.hash or 'sha256')\n"
-	"local out = J.raw_encode({valid = ok})\n"
-	"print(out)\n";
-
 int zenroom_recipe_exec_tobuf(const char *name,
 							  const char *conf, const char *keys,
 							  const char *data, const char *extra,
 							  const char *context,
 							  char *stdout_buf, size_t stdout_len,
 							  char *stderr_buf, size_t stderr_len) {
-	const char *script = NULL;
+	char script[RECIPE_MAX_SIZE];
 
 	if (!name) {
 		if (stderr_buf && stderr_len > 0) {
@@ -116,13 +121,9 @@ int zenroom_recipe_exec_tobuf(const char *name,
 		return FAIL();
 	}
 
-	if (!strcmp(name, "merkle.root")) {
-		script = recipe_merkle_root_script;
-	} else if (!strcmp(name, "merkle.verify_proof")) {
-		script = recipe_merkle_verify_proof_script;
-	} else {
+	if (api_recipe_read_file(name, script, sizeof(script)) != 0) {
 		if (stderr_buf && stderr_len > 0) {
-			snprintf(stderr_buf, stderr_len, "%s :: unknown recipe: %s", __func__, name);
+			snprintf(stderr_buf, stderr_len, "%s :: recipe not found: %s", __func__, name);
 		}
 		if (stdout_buf && stdout_len > 0) {
 			stdout_buf[0] = 0x0;
