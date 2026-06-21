@@ -138,7 +138,40 @@ Preserve:
 - stable userdata names and octet conversion behavior
 
 
-## Scenario Layer
+## Public Native API Layer
+
+`src/api_*.c` files expose direct C functions for embedders and
+WASM callers without requiring Lua/Zencode scripts.
+
+- [`src/api_hash.c`](/home/jrml/devel/zenroom/src/api_hash.c): one-shot
+  hash and PBKDF2 primitives
+- [`src/api_sign.c`](/home/jrml/devel/zenroom/src/api_sign.c): EdDSA
+  keygen, pubgen, create, verify (print + tobuf variants)
+- [`src/api_recipe.c`](/home/jrml/devel/zenroom/src/api_recipe.c):
+  named recipe dispatcher that maps short names to embedded Lua scripts
+  and calls `zenroom_exec_tobuf`; the C analog of the JS
+  `zenroomExecToBuf` + inline script pattern
+
+API conventions for new primitives:
+
+- All binary input/output: lowercase hex strings
+- Algorithm selection: lowercase string (e.g. `"sha256"`, `"eddsa"`)
+- Boolean results: `"1"` / `"0"` chars in C, `number` in JS
+- `_tobuf` suffix: writes into caller-provided output/error buffers
+- No suffix: prints to stdout (CLI convenience)
+- Every new function needs: declaration in `src/zenroom.h`, export
+  in `build/wasm.mk`, C test in `test/api/`, and JS wrapper + test
+
+JS layer (`bindings/javascript/src/index.ts`):
+
+- `callBufferApi` wraps `_tobuf` functions with `Module._malloc`/`_free`
+  and reads C strings from `Module.HEAPU8`
+- `callPrintApi` wraps print-variant functions with
+  save/restore of `Module.print`/`Module.printErr` for
+  `zencode_exec` and `zenroom_exec` only
+- `recipeExec` wraps `zenroom_recipe_exec_tobuf` for named recipes
+
+
 
 `src/lua/zencode_*.lua` files are scenario modules. They:
 
@@ -154,6 +187,9 @@ Typical edit choice:
 - new import/export encoding or schema: `zencode_data.lua` or scenario schema
 - new generic data primitive: base `zencode_*` file
 - new native crypto primitive: `src/zen_*.c`
+- new public API (hex-first, no Lua/Zencode dependency): `src/api_*.c`
+- new Lua-backed recipe: add recipe name + script in `src/api_recipe.c`
+  and a typed JS wrapper in `index.ts`
 - parser/state-machine change: only if syntax must actually change
 
 
