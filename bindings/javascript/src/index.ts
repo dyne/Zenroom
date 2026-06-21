@@ -24,6 +24,18 @@ const getModule = async () => {
   return cache.module;
 };
 
+const DEFAULT_STDOUT_BYTES = 64 * 1024;
+const DEFAULT_STDERR_BYTES = 64 * 1024;
+
+const readCString = (heap: Uint8Array, ptr: number, maxBytes: number): string => {
+  let end = ptr;
+  const limit = ptr + maxBytes;
+  while (end < limit && heap[end] !== 0) {
+    end += 1;
+  }
+  return new TextDecoder().decode(heap.subarray(ptr, end));
+};
+
 const callApi = async (
   name: string,
   argTypes: string[],
@@ -70,10 +82,55 @@ const callSyncApi = async (
   throw { result, logs };
 };
 
+const callBufferApi = async (
+  name: string,
+  argTypes: string[],
+  args: Array<string | number | null>,
+  stdoutBytes: number = DEFAULT_STDOUT_BYTES,
+  stderrBytes: number = DEFAULT_STDERR_BYTES
+): Promise<ZenroomResult> => {
+  const Module = await getModule();
+  const exec = Module.cwrap(name, "number", [
+    ...argTypes,
+    "number",
+    "number",
+    "number",
+    "number",
+  ]);
+  const stdoutPtr = Module._malloc(stdoutBytes);
+  const stderrPtr = Module._malloc(stderrBytes);
+  try {
+    Module.HEAPU8.fill(0, stdoutPtr, stdoutPtr + stdoutBytes);
+    Module.HEAPU8.fill(0, stderrPtr, stderrPtr + stderrBytes);
+    const status = exec(...args, stdoutPtr, stdoutBytes, stderrPtr, stderrBytes);
+    const result = readCString(Module.HEAPU8, stdoutPtr, stdoutBytes);
+    const logs = readCString(Module.HEAPU8, stderrPtr, stderrBytes);
+    if (status === 0) {
+      return { result, logs };
+    }
+    throw { result, logs };
+  } finally {
+    Module._free(stdoutPtr);
+    Module._free(stderrPtr);
+  }
+};
+
 const trimTrailingNewline = ({ result, logs }: ZenroomResult): ZenroomResult => ({
   result: result.replace(/\n$/, ""),
   logs,
 });
+
+const zenroomExecToBuf = async (
+  lua: string,
+  props?: ZenroomProps
+): Promise<ZenroomResult> => {
+  const { data = null, keys = null, extra = null, context = null, conf = null } = { ...props };
+  return await callBufferApi(
+    "zenroom_exec_tobuf",
+    ["string", "string", "string", "string", "string", "string"],
+    [lua, conf, keys, data, extra, context]
+  );
+};
 
 const isSafeIdentifier = (value: string): boolean => /^[A-Za-z0-9_]+$/.test(value);
 
@@ -262,7 +319,7 @@ export const hashHex = async (
     throw new Error("Invalid hex string");
   }
   return trimTrailingNewline(
-    await callSyncApi("zenroom_hash_hex", ["string", "string"], [hashType, msgHex])
+    await callBufferApi("zenroom_hash_hex_tobuf", ["string", "string"], [hashType, msgHex])
   );
 };
 
@@ -277,8 +334,8 @@ export const pbkdf2Hex = async (
     throw new Error("Invalid hex string");
   }
   return trimTrailingNewline(
-    await callSyncApi(
-      "zenroom_pbkdf2_hex",
+    await callBufferApi(
+      "zenroom_pbkdf2_hex_tobuf",
       ["string", "string", "string", "number", "number"],
       [hashType, passwordHex, saltHex, iterations, keylen]
     )
@@ -290,7 +347,7 @@ export const signKeygenHex = async (
   rngseed: string | null = null
 ): Promise<ZenroomResult> =>
   trimTrailingNewline(
-    await callSyncApi("zenroom_sign_keygen", ["string", "string"], [algo, rngseed])
+    await callBufferApi("zenroom_sign_keygen_tobuf", ["string", "string"], [algo, rngseed])
   );
 
 export const signPubgenHex = async (
@@ -301,7 +358,7 @@ export const signPubgenHex = async (
     throw new Error("Invalid hex string");
   }
   return trimTrailingNewline(
-    await callSyncApi("zenroom_sign_pubgen", ["string", "string"], [algo, keyHex])
+    await callBufferApi("zenroom_sign_pubgen_tobuf", ["string", "string"], [algo, keyHex])
   );
 };
 
@@ -314,7 +371,7 @@ export const signCreateHex = async (
     throw new Error("Invalid hex string");
   }
   return trimTrailingNewline(
-    await callSyncApi("zenroom_sign_create", ["string", "string", "string"], [algo, keyHex, msgHex])
+    await callBufferApi("zenroom_sign_create_tobuf", ["string", "string", "string"], [algo, keyHex, msgHex])
   );
 };
 
@@ -328,8 +385,8 @@ export const signVerifyHex = async (
     throw new Error("Invalid hex string");
   }
   return trimTrailingNewline(
-    await callSyncApi(
-      "zenroom_sign_verify",
+    await callBufferApi(
+      "zenroom_sign_verify_tobuf",
       ["string", "string", "string", "string"],
       [algo, pubkeyHex, msgHex, sigHex]
     )
@@ -353,7 +410,7 @@ export const merkleRootHex = async (
   const script = `local MT = require'crypto_merkle'
 local leaves = {${leavesLua}}
 print(MT.create_merkle_root(leaves, '${hashType}'):hex())`;
-  return trimTrailingNewline(await zenroom_exec(script));
+  return trimTrailingNewline(await zenroomExecToBuf(script));
 };
 
 export const merkleProofVerifyHex = async (
@@ -374,7 +431,7 @@ export const merkleProofVerifyHex = async (
 local proof = {${proofLua}}
 local ok = MT.verify_proof(proof, ${position}, O.from_hex('${rootHex}'), ${leafCount}, '${hashType}')
 print(ok and '1' or '0')`;
-  return trimTrailingNewline(await zenroom_exec(script));
+  return trimTrailingNewline(await zenroomExecToBuf(script));
 };
 
 export const zencode_valid_input = async (
