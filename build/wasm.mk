@@ -6,7 +6,7 @@ JS_MAX_MEM := 1024MB
 JS_STACK_SIZE := 7MB
 
 # Add here any function used from JS
-WASM_EXPORTS := '["_malloc","_free","_calloc","_realloc","_zenroom_exec","_zencode_exec","_zenroom_hash_init","_zenroom_hash_update","_zenroom_hash_final","_zenroom_hash_hex","_zenroom_pbkdf2_hex","_zenroom_sign_keygen","_zenroom_sign_pubgen","_zenroom_sign_create","_zenroom_sign_verify","_zencode_valid_input","_zencode_valid_code","_zencode_get_statements"]'
+WASM_EXPORTS := '["_malloc","_free","_calloc","_realloc","_zenroom_exec","_zenroom_exec_tobuf","_zencode_exec","_zencode_exec_tobuf","_zenroom_hash_init","_zenroom_hash_update","_zenroom_hash_final","_zenroom_hash_hex","_zenroom_hash_hex_tobuf","_zenroom_pbkdf2_hex","_zenroom_pbkdf2_hex_tobuf","_zenroom_sign_keygen","_zenroom_sign_keygen_tobuf","_zenroom_sign_pubgen","_zenroom_sign_pubgen_tobuf","_zenroom_sign_create","_zenroom_sign_create_tobuf","_zenroom_sign_verify","_zenroom_sign_verify_tobuf","_zencode_valid_input","_zencode_valid_code","_zencode_get_statements"]'
 
 # EMSDK should point to installation of EMSDK i.e.: /opt/emsdk
 EMSCRIPTEN ?= ${EMSDK}/upstream/emscripten
