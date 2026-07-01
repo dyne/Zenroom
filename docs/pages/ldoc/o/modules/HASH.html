@@ -43,6 +43,7 @@
   <li><a href="../modules/OCTET.html">OCTET</a></li>
   <li><strong>HASH</strong></li>
   <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><a href="../modules/SECP.html">SECP</a></li>
   <li><a href="../modules/BIG.html">BIG</a></li>
   <li><a href="../modules/FLOAT.html">FLOAT</a></li>
   <li><a href="../modules/TIME.html">TIME</a></li>
@@ -63,24 +64,20 @@
 <div id="content">
 
 <h1>Module <code>HASH</code></h1>
-<p>
-
-<h1>Cryptographic hash functions</h1>
-
-
+<p><h1>Cryptographic hash functions</h1>
 <p> An hash is also known as 'message digest', 'digital fingerprint',
  'digest' or 'checksum'.</p>
-</p>
+<p>
 <p> HASH objects can be generated from a number of implemented
  algorithms: <code>sha256</code> and <code>sha512</code> are stable and pass NIST vector
  tests. There are also <code>sha384</code>, <code>sha3_256</code> and <code>sha3_512</code> with
- experimental implementations that aren't passing NIST vector tests.</p>
-
+ experimental implementations that aren't passing NIST vector tests.
 <p> Objects are instantiated using <a href="../modules/HASH.html#new">HASH.new</a> and then provide the
  method <a href="../modules/HASH.html#hash:process">HASH:process</a> that takes an input <a href="../modules/OCTET.html#">OCTET</a> and then
  returns another fixed-size octet that is uniquely matched to the
  original data. The process is not reversible (the original data
- cannot be retrieved from an hash).</p>
+ cannot be retrieved from an hash).
+</p>
     <h3>Info:</h3>
     <ul>
         <li><strong>Copyright</strong>: Dyne.org foundation 2017-2019</li>
@@ -171,6 +168,7 @@ algorithm with HMAC-SHA512.</td>
    its hashed equivalent. It is a C function.
 
 
+
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">string</span>
@@ -199,6 +197,7 @@ algorithm with HMAC-SHA512.</td>
     <dd>
     Convert a mnemonic phrase (used in cryptocurrency wallets) into a seed using the PBKDF2 (Password-Based Key Derivation Function 2)
 algorithm with HMAC-SHA512.  This is commonly used in standards like BIP-39.
+
 
 
     <h3>Parameters:</h3>
@@ -237,6 +236,7 @@ algorithm with HMAC-SHA512.  This is commonly used in standards like BIP-39.
 It ensures proper memory management to prevent leaks.
 
 
+
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">hash</span>
@@ -261,6 +261,7 @@ It ensures proper memory management to prevent leaks.
     <dd>
     Convert an hash object into an octet object.  It retrieves the hash object from the Lua stack, creates a new octet object of the same length, copies the hash data into the octet, and returns the octet object to Lua.
 If any step fails, it throws an error.
+
 
 
 
@@ -289,6 +290,7 @@ If any step fails, it throws an error.
     <dd>
     Hash an octet into a new octet.  Use the configured hash function to
 hash an octet string and return a new one containing its hash.
+
 
 
     <h3>Parameters:</h3>
@@ -327,6 +329,7 @@ hash an octet string and return a new one containing its hash.
    hash multiple chunks until <a href="../modules/HASH.html#hash:yeld">yeld</a> is called.
 
 
+
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">data</span>
@@ -349,6 +352,7 @@ hash an octet string and return a new one containing its hash.
 
 
 
+
     <h3>Returns:</h3>
     <ol>
 
@@ -368,6 +372,7 @@ hash an octet string and return a new one containing its hash.
    data and any key material to compute an HMAC of the same length of
    the hash bytes of the keyring. This function works in accordance with
    RFC2104.
+
 
 
     <h3>Parameters:</h3>
@@ -414,6 +419,7 @@ hash an octet string and return a new one containing its hash.
    derivation parameters.
 
 
+
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">key</span>
@@ -439,6 +445,7 @@ hash an octet string and return a new one containing its hash.
     Password Based Key Derivation Function (PBKDF2).  This function
    generates a new key from an existing key applying a salt and number
    of iterations.
+
 
 
     <h3>Parameters:</h3>
@@ -476,11 +483,8 @@ hash an octet string and return a new one containing its hash.
     <strong>hash:random_seed (seed)</strong>
     </dt>
     <dd>
-
-<p>Seed a cryptographically secure pseudo-random number generator (CSPRNG) associated with a hash object. <br/>
-It uses an octet object as the seed and optionally "fast-forwards" the CSPRNG to improve randomness.</p>
-<pre><code>
-</code></pre>
+    Seed a cryptographically secure pseudo-random number generator (CSPRNG) associated with a hash object.
+It uses an octet object as the seed and optionally "fast-forwards" the CSPRNG to improve randomness.
 
 
 
@@ -501,8 +505,9 @@ It uses an octet object as the seed and optionally "fast-forwards" the CSPRNG to
     <strong>hash:random_int8 ()</strong>
     </dt>
     <dd>
-    Generate a random 8-bit unsigned integer using a cryptographically secure pseudo-random number generator (CSPRNG) associated with a hash object. <br/>
+    Generate a random 8-bit unsigned integer using a cryptographically secure pseudo-random number generator (CSPRNG) associated with a hash object.
 It ensures that the CSPRNG has been seeded before generating the random number.
+
 
 
 
@@ -521,8 +526,9 @@ It ensures that the CSPRNG has been seeded before generating the random number.
     <strong>hash:random_int16 ()</strong>
     </dt>
     <dd>
-    Generate a random 16-bit unsigned integer using a cryptographically secure pseudo-random number generator (CSPRNG) associated with a hash object. <br/>
+    Generate a random 16-bit unsigned integer using a cryptographically secure pseudo-random number generator (CSPRNG) associated with a hash object.
 It ensures that the CSPRNG has been seeded before generating the random number.
+
 
 
 
@@ -541,8 +547,9 @@ It ensures that the CSPRNG has been seeded before generating the random number.
     <strong>hash:random_int32 ()</strong>
     </dt>
     <dd>
-    Generate a random 32-bit unsigned integer using a cryptographically secure pseudo-random number generator (CSPRNG) associated with a hash object. <br/>
+    Generate a random 32-bit unsigned integer using a cryptographically secure pseudo-random number generator (CSPRNG) associated with a hash object.
 It ensures that the CSPRNG has been seeded before generating the random number.
+
 
 
 
@@ -563,7 +570,7 @@ It ensures that the CSPRNG has been seeded before generating the random number.
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2025-03-25 10:43:18 </i>
+<i style="float:right;">Last updated 2026-07-01 23:01:21 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

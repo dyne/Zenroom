@@ -42,6 +42,7 @@
   <li><a href="../modules/OCTET.html">OCTET</a></li>
   <li><a href="../modules/HASH.html">HASH</a></li>
   <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><a href="../modules/SECP.html">SECP</a></li>
   <li><a href="../modules/BIG.html">BIG</a></li>
   <li><a href="../modules/FLOAT.html">FLOAT</a></li>
   <li><a href="../modules/TIME.html">TIME</a></li>
@@ -62,29 +63,24 @@
 <div id="content">
 
 <h1>Module <code>ECDH</code></h1>
-<p>
-
-<h1>Elliptic Curve Diffie-Hellman encryption (ECDH)</h1>
-
-
+<p><h1>Elliptic Curve Diffie-Hellman encryption (ECDH)</h1>
 <p>  Asymmetric public/private key encryption technologies.</p>
-</p>
+<p>
 <p>  ECDH encryption and ECDSA signing functionalities are provided by
   this module. New keyring instances are instantiated by calling the
-  new() method, keys can be imported using the</p>
-
+  new() method, keys can be imported using the
 <p>  <code>
   Alice = ECDH.new()
   Bob = ECDH.new()
-  </code></p>
-
+  </code>
 <p>  One can create more keyrings in the same script and call them with
   meaningful variable names to help making code more
   understandable. Each keyring instance offers methods prefixed with
   a double-colon that operate on arguments as well keys contained by
   the keyring: this way scripting can focus on the identities
   represented by each keyring, giving them names as 'Alice' or
-  'Bob'.</p>
+  'Bob'.
+</p>
     <h3>Info:</h3>
     <ul>
         <li><strong>Copyright</strong>: Dyne.org foundation 2017-2020</li>
@@ -167,7 +163,7 @@
     <dd>
     Generate an ECDH public/private key pair for a keyring    Keys generated are both returned and stored inside the keyring
    table as public and private properties.
-()
+
 
 
 
@@ -191,7 +187,7 @@
     </dt>
     <dd>
     Generate an ECDH public key from a secret key    Public key is returned.
-()
+
 
 
 
@@ -210,7 +206,7 @@
     <strong>keyring:xy ()</strong>
     </dt>
     <dd>
-    Returns X and Y coordinates of a public key (public_key)
+    Returns X and Y coordinates of a public key
 
 
 
@@ -236,7 +232,7 @@
     Elliptic Curve Digital Signature Algorithm (ECDSA) signing
    function.  This method uses the private key inside a keyring to sign
    a message, returning a signature to be used in <a href="../modules/ECDH.html#keyring:verify">keyring:verify</a>.
-(kp.private, message)
+
 
 
     <h3>Parameters:</h3>
@@ -272,7 +268,7 @@ signature = ECDH.<span class="function-name">sign</span>(kp.private, m)
    function with deterministic generation of k (see RFC6979 https://www.rfc-editor.org/rfc/rfc6979).
    This method uses the private key inside a keyring to sign
    a message, returning a signature to be used in <a href="../modules/ECDH.html#keyring:verify_deterministic">keyring:verify_deterministic</a>.
-(kp.private, message, sha)
+
 
 
     <h3>Parameters:</h3>
@@ -341,7 +337,7 @@ sha = <span class="number">32</span> <span class="comment">-- This is SHA256. Al
    function.  This method uses the public key inside a keyring to verify
    a message, returning true or false. The signature parameters are
    returned as 'r' and 's' in this same order by <a href="../modules/ECDH.html#keyring:sign">keyring:sign</a>.
-(kp.public, message,signature)
+
 
 
     <h3>Parameters:</h3>
@@ -374,12 +370,12 @@ sha = <span class="number">32</span> <span class="comment">-- This is SHA256. Al
     </dt>
     <dd>
     Elliptic Curve Digital Signature Algorithm (ECDSA) verification
-   function.  The main difference between ecdh<em>dsa</em>verify and this function
+   function.  The main difference between ecdh_dsa_verify and this function
    is that here we also consider the input parameter sha int.
    This method uses the public key inside a keyring to verify
    a message, returning true or false. The signature parameters are
    returned as 'r' and 's' in this same order by <a href="../modules/ECDH.html#keyring:sign_deterministic">keyring:sign_deterministic</a>.
-(kp.public, message, signature, sha)
+
 
 
     <h3>Parameters:</h3>
@@ -414,7 +410,7 @@ sha = <span class="number">32</span> <span class="comment">-- This is SHA256. Al
     <strong>keyring:order ()</strong>
     </dt>
     <dd>
-    Order of the curve underlying the ECDH implementation ()
+    Order of the curve underlying the ECDH implementation
 
 
 
@@ -433,7 +429,7 @@ sha = <span class="number">32</span> <span class="comment">-- This is SHA256. Al
     <strong>keyring:prime ()</strong>
     </dt>
     <dd>
-    Modulus of the curve underlying the ECDH implementation ()
+    Modulus of the curve underlying the ECDH implementation
 
 
 
@@ -452,7 +448,7 @@ sha = <span class="number">32</span> <span class="comment">-- This is SHA256. Al
     <strong>keyring:cofactor ()</strong>
     </dt>
     <dd>
-    Cofactor of the curve underlying the ECDH implementation ()
+    Cofactor of the curve underlying the ECDH implementation
 
 
 
@@ -479,6 +475,7 @@ sha = <span class="number">32</span> <span class="comment">-- This is SHA256. Al
    While y is uniquely identified by its parity.
    This method, if it exists, will output a public key Q for which (r, s)
    is a valid signature on the hashed message m.
+
 
 
     <ul>
@@ -508,7 +505,7 @@ sha = <span class="number">32</span> <span class="comment">-- This is SHA256. Al
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2025-03-25 10:43:18 </i>
+<i style="float:right;">Last updated 2026-07-01 23:01:21 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

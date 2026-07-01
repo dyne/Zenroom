@@ -42,6 +42,7 @@
   <li><a href="../modules/OCTET.html">OCTET</a></li>
   <li><a href="../modules/HASH.html">HASH</a></li>
   <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><a href="../modules/SECP.html">SECP</a></li>
   <li><a href="../modules/BIG.html">BIG</a></li>
   <li><a href="../modules/FLOAT.html">FLOAT</a></li>
   <li><a href="../modules/TIME.html">TIME</a></li>
@@ -62,20 +63,12 @@
 <div id="content">
 
 <h1>Module <code>P256</code></h1>
-<p>
-
-<h1>P256 </h1>
-
-<p>P-256 (also known as secp256r1 or prime256v1) is one of the most widely used elliptic curves in modern cryptography.</p>
-</p>
-<p> It is defined by the National Institute of Standards and Technology (NIST) and is part of the Suite B cryptographic standards. P-256 is based on elliptic curve cryptography (ECC), which provides strong security with relatively small key sizes, making it efficient for a wide range of applications. It operates over a finite field of 256 bits, providing a balance between security and performance.</p>
-
-<p>ES256 is a cryptographic algorithm used for digital signatures. It is part of the Elliptic Curve Digital Signature Algorithm (ECDSA) and is based on the P-256 elliptic curve (also known as secp256r1 or prime256v1). ES256 is widely used in modern cryptography, particularly in JSON Web Tokens (JWTs) and secure communication protocols.</p>
-
-<p>To work with this module, we define P256 by loading the es256 library using the require function:</p>
-
-<p><code> P256 = require('es256'). </code></p>
-
+<p><h1>P256 </h1>
+P-256 (also known as secp256r1 or prime256v1) is one of the most widely used elliptic curves in modern cryptography.</p>
+<p> It is defined by the National Institute of Standards and Technology (NIST) and is part of the Suite B cryptographic standards. P-256 is based on elliptic curve cryptography (ECC), which provides strong security with relatively small key sizes, making it efficient for a wide range of applications. It operates over a finite field of 256 bits, providing a balance between security and performance.
+<p>ES256 is a cryptographic algorithm used for digital signatures. It is part of the Elliptic Curve Digital Signature Algorithm (ECDSA) and is based on the P-256 elliptic curve (also known as secp256r1 or prime256v1). ES256 is widely used in modern cryptography, particularly in JSON Web Tokens (JWTs) and secure communication protocols.
+<p>To work with this module, we define P256 by loading the es256 library using the require function:
+<p><code> P256 = require('es256'). </code>
 <p>Once the module is loaded, you can access its functions using the <code>P256.function()</code> syntax.</p>
 
 
@@ -123,14 +116,11 @@
     <strong>keygen ()</strong>
     </dt>
     <dd>
-
-<p>Generate a P-256 elliptic curve key pair (a private key and a public key). <br/>
+    Generate a P-256 elliptic curve key pair (a private key and a public key).
 However it only returns the private key.
-A key pair consists of:</p>
-<pre><code>-a private key (secret scalar, a large random number).
--a public key (a point on the elliptic curve derived from the private key).
-</code></pre>
-
+A key pair consists of:
+	-a private key (secret scalar, a large random number).
+	-a public key (a point on the elliptic curve derived from the private key).
 
 
 
@@ -190,8 +180,9 @@ A key pair consists of:</p>
     <strong>pubcheck (pk)</strong>
     </dt>
     <dd>
-    Validate whether a given P-256 public key is valid.  It takes a public key as input, checks its validity using the <code>p256_validate_pubkey</code> function.
+    Validate whether a given P-256 public key is valid.  It takes a public key as input, checks its validity using the <code>p256\_validate_pubkey</code> function.
 It takes a 64-byte uncompressed public key as input (the public key is represented as a concatenation of the x and y coordinates of the elliptic curve point), decodes it into elliptic curve coordinates, and checks if the coordinates represent a valid point on the P-256 curve.
+
 
 
     <h3>Parameters:</h3>
@@ -229,7 +220,8 @@ It takes a 64-byte uncompressed public key as input (the public key is represent
     </dt>
     <dd>
     Sign a message using the P-256 elliptic curve digital signature algorithm (ECDSA).  It takes a private key, a message, and an optional ephemeral key as inputs,
-computes the signature, and returns the signature to Lua. It computes the signature using the <code>p256_ecdsa_sign</code> function.
+computes the signature, and returns the signature to Lua. It computes the signature using the <code>p256\_ecdsa_sign</code> function.
+
 
 
     <h3>Parameters:</h3>
@@ -275,7 +267,7 @@ eiusmod tempor incididunt ut labore et dolore magna aliqua.]]</span>)
     <dd>
     Verify an ECDSA signature using the P-256 elliptic curve.  It takes a public key, a message, and a signature as inputs,
 hashes the message, and verifies the signature against the public key and message hash.
-It uses the  <code>p256_ecdsa_verify</code> function.
+It uses the  <code>p256\_ecdsa_verify</code> function.
 
 
     <h3>Parameters:</h3>
@@ -314,8 +306,9 @@ It uses the  <code>p256_ecdsa_verify</code> function.
     <strong>public_xy (pk)</strong>
     </dt>
     <dd>
-    Extract the x and y coordinates from a P-256 public key. <br/>
+    Extract the x and y coordinates from a P-256 public key.
 It takes a 64-byte uncompressed public key as input, splits it into its x and y coordinates, and returns them to Lua.
+
 
 
     <h3>Parameters:</h3>
@@ -351,9 +344,10 @@ pk = P256.<span class="function-name">pubgen</span>(sk)
     <strong>compress_public_key (pk)</strong>
     </dt>
     <dd>
-    Compress a P-256 public key. <br/>
+    Compress a P-256 public key.
 It takes a 64-byte uncompressed public key as input, compresses it into a 33-byte compressed format, and returns the compressed key to Lua.
-It uses the <code>p256_compress_publickey</code> function.
+It uses the <code>p256\_compress_publickey</code> function.
+
 
 
     <h3>Parameters:</h3>
@@ -392,7 +386,7 @@ pk = P256.<span class="function-name">pubgen</span>(sk)
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2025-03-25 10:43:18 </i>
+<i style="float:right;">Last updated 2026-07-01 23:01:21 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

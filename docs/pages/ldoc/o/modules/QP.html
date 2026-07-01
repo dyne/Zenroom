@@ -43,6 +43,7 @@
   <li><a href="../modules/OCTET.html">OCTET</a></li>
   <li><a href="../modules/HASH.html">HASH</a></li>
   <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><a href="../modules/SECP.html">SECP</a></li>
   <li><a href="../modules/BIG.html">BIG</a></li>
   <li><a href="../modules/FLOAT.html">FLOAT</a></li>
   <li><a href="../modules/TIME.html">TIME</a></li>
@@ -63,20 +64,13 @@
 <div id="content">
 
 <h1>Module <code>QP</code></h1>
-<p>
-
-<h1> POST QUANTUM (QP) </h1>
-
-
+<p><h1> POST QUANTUM (QP) </h1>
 <p> Post-quantum cryptography (PQC) refers to cryptographic algorithms that are designed to be secure against attacks by quantum computers.</p>
-</p>
 <p>
  Traditional cryptographic systems, such as RSA and ECC (Elliptic Curve Cryptography), rely on mathematical problems (e.g., integer factorization and discrete logarithms)
  that are hard for classical computers but can be efficiently solved by quantum computers using algorithms like Shor's algorithm.
- Post-quantum cryptography aims to address this vulnerability by developing new algorithms based on mathematical problems that are believed to be resistant to quantum attacks.</p>
-
-<p> In this section two post-quantum schemes are described: ML-KEM and ML-DSA. The first one deals with key encapsulation and the second one is a signature scheme.</p>
-
+ Post-quantum cryptography aims to address this vulnerability by developing new algorithms based on mathematical problems that are believed to be resistant to quantum attacks.
+<p> In this section two post-quantum schemes are described: ML-KEM and ML-DSA. The first one deals with key encapsulation and the second one is a signature scheme.
 <p> All function inputs (secret key, public key, message, ciphertext, signature, seed and context) are octets and some of them have a fixed length. Only the version for ML-KEM is passed to the functions as a string.</p>
 
 
@@ -141,28 +135,8 @@ ML-DSA-44 cryptographic scheme.</td>
 <br/>
 
 
-    <h2 class="section-header has-description"><a name="Global_ML_KEM_Functions"></a>Global ML-KEM Functions </h2>
+    <h2 class="section-header "><a name="Global_ML_KEM_Functions"></a>Global ML-KEM Functions </h2>
 
-          <div class="section-description">
-           </p>
-
-<p> ML-KEM (Kyber Key Encapsulation Mechanism) is a post-quantum cryptographic key encapsulation mechanism (KEM) designed for secure key exchange. It is part of the NIST
- Post-Quantum Cryptography Standardization process and has been selected as a standard for public-key encryption and KEMs.
- ML-KEM is based on Module Learning With Errors (MLWE), making it resistant to attacks from quantum computers.</p>
-
-<p> It provides different security levels (Kyber-512, Kyber-768, Kyber-1024) that correspond to classical and quantum security estimates.
- In particular, for each of the below functions, it is possible define in input which version of ML-KEM to use. The three possibilities are:</p>
-
-<ul>
-    <li><p>MLKEM512: size pk = 800 byte, size sk = 1632 byte</p></li>
-    <li><p>MLKEM768: size pk = 1184 byte, size sk = 2400 byte</p></li>
-    <li><p>MLKEM1024: size pk = 1568 byte, size sk = 3168 byte </p></li>
-</ul>
-
-<p> Unlike traditional encryption schemes, ML-KEM encapsulates a symmetric key, which is then used for further encrypted communication.</p>
-
-<p> At the beginning of each function you require <code> QP = require("qp") </code>. In this way you load the QP module and assign it to the variable QP.
-          </div>
     <dl class="function">
     <dt>
     <a name = "mlkem_keygen"></a>
@@ -174,6 +148,7 @@ The length of the public and secret keys generated depends on the version of MLK
 is passed as third argument of the function. If the third argument is NULL, the function applies MLKEM512.
 The function generates 64 bytes of random data: the first 32 bytes can be provided as the first argument (seed 1);
 the next 32 bytes can be provided as the second argument (seed 2). If either seed is not provided, the function generates random bytes.
+
 
 
     <h3>Parameters:</h3>
@@ -214,6 +189,7 @@ sk768 = QP.<span class="function-name">mlkem_keygen</span>(oct1, oct2, <span cla
     <dd>
     Generate a public key starting from an octet (the secret key).  The number of bytes
  should coincide with the number of bytes of the secret key of the asscociated MLKEM version used.
+
 
 
     <h3>Parameters:</h3>
@@ -418,33 +394,18 @@ dec = QP.<span class="function-name">mlkem_dec</span>(sk768, ct, <span class="st
 
 </dd>
 </dl>
-    <h2 class="section-header has-description"><a name="Global_ML_DSA_Functions"></a>Global ML-DSA Functions </h2>
+    <h2 class="section-header "><a name="Global_ML_DSA_Functions"></a>Global ML-DSA Functions </h2>
 
-          <div class="section-description">
-           ML-DSA-44 (Module Lattice-based Digital Signature Algorithm with a security level of 44)
- is a post-quantum cryptographic scheme designed to provide secure digital signatures in a world where quantum
- computers could potentially break traditional cryptographic algorithms like RSA and ECC (Elliptic Curve Cryptography).
- It is part of the NIST Post-Quantum Cryptography Standardization Project, which aims to identify and standardize quantum-resistant cryptographic algorithms.</p>
-
-<p> The "44" in ML-DSA-44 refers to its security level, which corresponds to approximately 128 bits of classical security and 44 bits of quantum security.
- This makes it suitable for applications requiring strong security guarantees.</p>
-
-<p> ML-DSA-44 is designed to have relatively small key and signature sizes compared to other post-quantum signature schemes, making it efficient for storage and transmission.
- The key generation, signing, and verification algorithms are optimized for performance, making ML-DSA-44 practical for use in resource-constrained environments.</p>
-
-<p> ML-DSA-44 can be used in a wide range of applications, including: secure communication, digital identity, blockchain and cryptocurrencies, IoT device.</p>
-
-<p> At the beginning of each function you require <code> QP = require("qp") </code>. In this way you load the QP module and assign it to the variable QP.
-          </div>
     <dl class="function">
     <dt>
     <a name = "ml_dsa_44_keypair"></a>
     <strong>ml_dsa_44_keypair (seed)</strong>
     </dt>
     <dd>
-    Generate a key pair for the ML-DSA-44 cryptographic scheme. <br/>
+    Generate a key pair for the ML-DSA-44 cryptographic scheme.
 It creates a public and a private key, optionally using a provided seed, and returns them in a Lua table.
 If the seed is not provided, the function generates random bytes using a random number generator.
+
 
 
     <h3>Parameters:</h3>
@@ -524,6 +485,7 @@ It provides additional flexibility and customization for the signature scheme, a
 The context is passed as an octet and can be up to 255 bytes in length.
 
 
+
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">sk</span>
@@ -598,6 +560,7 @@ m = OCTET.<span class="function-name">random</span>(<span class="number">32</spa
 The function checks if the public key has the correct length in bytes.
 
 
+
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">pk</span>
@@ -632,8 +595,9 @@ keys = QP.<span class="function-name">mldsa44_keypair</span>(seed)
     <strong>mldsa44_signature_check (sig)</strong>
     </dt>
     <dd>
-    Check whether a given signature is valid for the ML-DSA-44 cryptographic scheme. <br/>
+    Check whether a given signature is valid for the ML-DSA-44 cryptographic scheme.
 Specifically, it verifies if the signature has the correct length.
+
 
 
     <h3>Parameters:</h3>
@@ -675,7 +639,7 @@ m = OCTET.<span class="function-name">random</span>(<span class="number">32</spa
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2025-03-25 10:43:18 </i>
+<i style="float:right;">Last updated 2026-07-01 23:01:21 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

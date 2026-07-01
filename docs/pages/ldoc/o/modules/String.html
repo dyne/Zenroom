@@ -42,6 +42,7 @@
   <li><a href="../modules/OCTET.html">OCTET</a></li>
   <li><a href="../modules/HASH.html">HASH</a></li>
   <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><a href="../modules/SECP.html">SECP</a></li>
   <li><a href="../modules/BIG.html">BIG</a></li>
   <li><a href="../modules/FLOAT.html">FLOAT</a></li>
   <li><a href="../modules/TIME.html">TIME</a></li>
@@ -62,15 +63,9 @@
 <div id="content">
 
 <h1>Module <code>String</code></h1>
-<p>
-
-<h1>String operations</h1>
-
-<p> Standard Lua string manipulation like searching and matching.</p>
-</p>
-<p>
-
-</p>
+<p><h1>String operations</h1>
+ Standard Lua string manipulation like searching and matching.</p>
+<p></p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
@@ -87,7 +82,7 @@
 	<tr>
 	<td class="name" nowrap><a href="#string.dump">string.dump (function)</a></td>
 	<td class="summary">Returns a string containing a binary representation of the given
- function, so that a later <a href="https://www.lua.org/manual/5.1/manual.html#pdf-loadstring">loadstring</a> on this string returns a copy of
+ function, so that a later <a href="https://www.lua.org/manual/5.2/manual.html#pdf-loadstring">loadstring</a> on this string returns a copy of
  the function.</td>
 	</tr>
 	<tr>
@@ -121,7 +116,7 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#string.match">string.match (s, pattern, init)</a></td>
-	<td class="summary">Looks for the first <em>match</em> of <code>pattern</code> in the string <code>s</code>.</td>
+	<td class="summary">Looks for the first *match* of <code>pattern</code> in the string <code>s</code>.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#string.rep">string.rep (s, n)</a></td>
@@ -166,17 +161,11 @@
     <ul>
         <li><span class="parameter">s</span>
 
-
-
         </li>
         <li><span class="parameter">i</span>
 
-
-
         </li>
         <li><span class="parameter">j</span>
-
-
 
         </li>
     </ul>
@@ -201,8 +190,6 @@
     <ul>
         <li><span class="parameter">...</span>
 
-
-
         </li>
     </ul>
 
@@ -217,15 +204,13 @@
     </dt>
     <dd>
     Returns a string containing a binary representation of the given
- function, so that a later <a href="https://www.lua.org/manual/5.1/manual.html#pdf-loadstring">loadstring</a> on this string returns a copy of
+ function, so that a later <a href="https://www.lua.org/manual/5.2/manual.html#pdf-loadstring">loadstring</a> on this string returns a copy of
  the function.  <code>function</code> must be a Lua function without upvalues.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">function</span>
-
-
 
         </li>
     </ul>
@@ -256,22 +241,14 @@
     <ul>
         <li><span class="parameter">s</span>
 
-
-
         </li>
         <li><span class="parameter">pattern</span>
-
-
 
         </li>
         <li><span class="parameter">init</span>
 
-
-
         </li>
         <li><span class="parameter">plain</span>
-
-
 
         </li>
     </ul>
@@ -294,17 +271,11 @@
  <code>q</code>. The <code>q</code> option formats a string in a form suitable to be safely read
  back by the Lua interpreter: the string is written between double quotes,
  and all double quotes, newlines, embedded zeros, and backslashes in the
- string are correctly escaped when written. For instance, the call</p>
-
-<pre><code> string.format('%q', 'a string with "quotes" and \n new line')
-</code></pre>
-
-<p> will produce the string:</p>
-
-<pre><code> "a string with \"quotes\" and \
-     new line"
-</code></pre>
-
+ string are correctly escaped when written. For instance, the call
+<p>     string.format('%q', 'a string with "quotes" and \n new line')
+<p> will produce the string:
+<p>     "a string with \"quotes\" and \
+         new line"
 <p> The options <code>c</code>, <code>d</code>, <code>E</code>, <code>e</code>, <code>f</code>, <code>g</code>, <code>G</code>, <code>i</code>, <code>o</code>, <code>u</code>, <code>X</code>, and
  <code>x</code> all expect a number as argument, whereas <code>q</code> and <code>s</code> expect a string.
  This function does not accept string values containing embedded zeros,
@@ -315,12 +286,8 @@
     <ul>
         <li><span class="parameter">formatstring</span>
 
-
-
         </li>
         <li><span class="parameter">...</span>
-
-
 
         </li>
     </ul>
@@ -338,25 +305,19 @@
     Returns an iterator function that, each time it is called, returns the
  next captures from <code>pattern</code> over string <code>s</code>.  If <code>pattern</code> specifies no
  captures, then the whole match is produced in each call.
- As an example, the following loop</p>
-
-<pre><code> s = "hello world from Lua"
- for w in string.gmatch(s, "%a+") do
-   print(w)
- end
-</code></pre>
-
+ As an example, the following loop
+<p>     s = "hello world from Lua"
+     for w in string.gmatch(s, "%a+") do
+       print(w)
+     end
 <p> will iterate over all the words from string <code>s</code>, printing one per line. The
  next example collects all pairs <code>key=value</code> from the given string into
- a table:</p>
-
-<pre><code> t = {}
- s = "from=world, to=Lua"
- for k, v in string.gmatch(s, "(%w+)=(%w+)") do
-   t[k] = v
- end
-</code></pre>
-
+ a table:
+<p>     t = {}
+     s = "from=world, to=Lua"
+     for k, v in string.gmatch(s, "(%w+)=(%w+)") do
+       t[k] = v
+     end
 <p> For this function, a '<code>^</code>' at the start of a pattern does not work as an
  anchor, as this would prevent the iteration.
 
@@ -365,12 +326,8 @@
     <ul>
         <li><span class="parameter">s</span>
 
-
-
         </li>
         <li><span class="parameter">pattern</span>
-
-
 
         </li>
     </ul>
@@ -385,72 +342,56 @@
     <strong>string.gsub (s, pattern, repl, n)</strong>
     </dt>
     <dd>
-
-<p>Returns a copy of <code>s</code> in which all (or the first <code>n</code>, if given)
+    Returns a copy of <code>s</code> in which all (or the first <code>n</code>, if given)
  occurrences of the <code>pattern</code> have been replaced by a replacement string
  specified by <code>repl</code>, which can be a string, a table, or a function.  <a href="../modules/String.html#string.gsub">gsub</a>
- also returns, as its second value, the total number of matches that occurred.</p>
-
+ also returns, as its second value, the total number of matches that occurred.
 <p> If <code>repl</code> is a string, then its value is used for replacement. The character
  <code>%</code> works as an escape character: any sequence in <code>repl</code> of the form <code>%n</code>,
- with <em>n</em> between 1 and 9, stands for the value of the <em>n</em>-th captured
+ with *n* between 1 and 9, stands for the value of the *n*-th captured
  substring (see below). The sequence <code>%0</code> stands for the whole match. The
- sequence <code>%%</code> stands for a single <code>%</code>.</p>
-
+ sequence <code>%%</code> stands for a single <code>%</code>.
 <p> If <code>repl</code> is a table, then the table is queried for every match, using
  the first capture as the key; if the pattern specifies no captures, then
- the whole match is used as the key.</p>
-
+ the whole match is used as the key.
 <p> If <code>repl</code> is a function, then this function is called every time a match
  occurs, with all captured substrings passed as arguments, in order; if
  the pattern specifies no captures, then the whole match is passed as a
- sole argument.</p>
-
+ sole argument.
 <p> If the value returned by the table query or by the function call is a
  string or a number, then it is used as the replacement string; otherwise,
  if it is false or nil, then there is no replacement (that is, the original
- match is kept in the string).</p>
-
-<p> Here are some examples:</p>
-<pre><code> x = string.gsub("hello world", "(%w+)", "%1 %1")
- --&gt; x="hello hello world world"
- x = string.gsub("hello world", "%w+", "%0 %0", 1)
- --&gt; x="hello hello world"
- x = string.gsub("hello world from Lua", "(%w+)%s*(%w+)", "%2 %1")
- --&gt; x="world hello Lua from"
- x = string.gsub("home = $HOME, user = $USER", "%$(%w+)", os.getenv)
- --&gt; x="home = /home/roberto, user = roberto"
- x = string.gsub("4+5 = $return 4+5$", "%$(.-)%$", function (s)
-       return loadstring(s)()
-     end)
- --&gt; x="4+5 = 9"
- local t = {name="lua", version="5.1"}
- x = string.gsub("$name-$version.tar.gz", "%$(%w+)", t)
- --&gt; x="lua-5.1.tar.gz"
-</code></pre>
-
+ match is kept in the string).
+<p> Here are some examples:
+     x = string.gsub("hello world", "(%w+)", "%1 %1")
+     --> x="hello hello world world"
+     x = string.gsub("hello world", "%w+", "%0 %0", 1)
+     --> x="hello hello world"
+     x = string.gsub("hello world from Lua", "(%w+)%s*(%w+)", "%2 %1")
+     --> x="world hello Lua from"
+     x = string.gsub("home = $HOME, user = $USER", "%$(%w+)", os.getenv)
+     --> x="home = /home/roberto, user = roberto"
+     x = string.gsub("4+5 = $return 4+5$", "%$(.-)%$", function (s)
+           return loadstring(s)()
+         end)
+     --> x="4+5 = 9"
+     local t = {name="lua", version="5.1"}
+     x = string.gsub("$name-$version.tar.gz", "%$(%w+)", t)
+     --> x="lua-5.1.tar.gz"
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">s</span>
 
-
-
         </li>
         <li><span class="parameter">pattern</span>
-
-
 
         </li>
         <li><span class="parameter">repl</span>
 
-
-
         </li>
         <li><span class="parameter">n</span>
-
-
 
         </li>
     </ul>
@@ -472,8 +413,6 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">s</span>
-
-
 
         </li>
     </ul>
@@ -497,8 +436,6 @@
     <ul>
         <li><span class="parameter">s</span>
 
-
-
         </li>
     </ul>
 
@@ -512,7 +449,7 @@
     <strong>string.match (s, pattern, init)</strong>
     </dt>
     <dd>
-    Looks for the first <em>match</em> of <code>pattern</code> in the string <code>s</code>.  If it
+    Looks for the first *match* of <code>pattern</code> in the string <code>s</code>.  If it
  finds one, then <a href="../modules/String.html#string.match">match</a> returns the captures from the pattern; otherwise
  it returns nil. If <code>pattern</code> specifies no captures, then the whole match
  is returned. A third, optional numerical argument <code>init</code> specifies where
@@ -523,17 +460,11 @@
     <ul>
         <li><span class="parameter">s</span>
 
-
-
         </li>
         <li><span class="parameter">pattern</span>
 
-
-
         </li>
         <li><span class="parameter">init</span>
-
-
 
         </li>
     </ul>
@@ -556,12 +487,8 @@
     <ul>
         <li><span class="parameter">s</span>
 
-
-
         </li>
         <li><span class="parameter">n</span>
-
-
 
         </li>
     </ul>
@@ -582,8 +509,6 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">s</span>
-
-
 
         </li>
     </ul>
@@ -609,17 +534,11 @@
     <ul>
         <li><span class="parameter">s</span>
 
-
-
         </li>
         <li><span class="parameter">i</span>
 
-
-
         </li>
         <li><span class="parameter">j</span>
-
-
 
         </li>
     </ul>
@@ -643,8 +562,6 @@
     <ul>
         <li><span class="parameter">s</span>
 
-
-
         </li>
     </ul>
 
@@ -660,7 +577,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2025-03-25 10:43:18 </i>
+<i style="float:right;">Last updated 2026-07-01 23:01:21 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
