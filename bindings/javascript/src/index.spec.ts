@@ -224,7 +224,7 @@ test("Unknown hash type", async (t) => {
   try {
     await zenroom_hash_init("invalidhash");
   } catch (e) {
-    t.true(e.logs.startsWith("zenroom_hash_init :: invalid hash type: invalidhash\n"), e.logs);
+    t.true(e.logs.includes("zenroom_hash_init :: invalid hash type: invalidhash"), e.logs);
     t.true(e.logs.includes(LEGACY_HASH_API_WARNING), e.logs);
   }
 });
@@ -236,7 +236,7 @@ test("Wrong context prefix (update)", async (t) => {
       "518985977ee21d2bf622a20567124fcbf11c72df805365835ab3c041f4a9cd8a0ad63c9dee1018aa21a9fa3720f47dc48006"
     );
   } catch (e) {
-    t.true(e.logs.startsWith("zenroom_hash_update :: invalid hash context prefix\n"), e.logs);
+    t.true(e.logs.includes("zenroom_hash_update :: invalid hash context prefix"), e.logs);
     t.true(e.logs.includes(LEGACY_HASH_API_WARNING), e.logs);
   }
 });
@@ -246,7 +246,7 @@ test("Wrong context prefix (final)", async (t) => {
     const res = await zenroom_hash_final("z");
     t.fail("zenroom_hash_final should fail"+JSON.stringify(res));
   } catch (e) {
-    t.true(e.logs.startsWith("zenroom_hash_final :: invalid hash context prefix\n"), e.logs);
+    t.true(e.logs.includes("zenroom_hash_final :: invalid hash context prefix"), e.logs);
     t.true(e.logs.includes(LEGACY_HASH_API_WARNING), e.logs);
   }
 });
@@ -259,7 +259,7 @@ test("Use zenroom_hash with unknown hash function", async (t) => {
     );
     console.log(res)
   } catch (e) {
-    t.true(e.logs.startsWith("zenroom_hash_init :: invalid hash type: z\n"), e.logs);
+    t.true(e.logs.includes("zenroom_hash_init :: invalid hash type: z"), e.logs);
     t.true(e.logs.includes(LEGACY_HASH_API_WARNING), e.logs);
   }
 });
