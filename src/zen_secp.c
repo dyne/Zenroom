@@ -830,6 +830,118 @@ end:
 }
 
 
+/***
+    Add two 32-byte scalars modulo n. Returns 32-byte OCTET.
+
+    @function bip340_scalar_add
+    @param a 32-byte OCTET
+    @param b 32-byte OCTET
+    @return 32-byte OCTET (a + b) mod n
+*/
+static int lua_bip340_scalar_add(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const octet *oa = o_arg(L, 1); SAFE_GOTO(oa, ALLOCATE_OCT_ERR);
+	const octet *ob = o_arg(L, 2); SAFE_GOTO(ob, ALLOCATE_OCT_ERR);
+	SAFE_GOTO(oa->len == SECP_BYTES && ob->len == SECP_BYTES, "scalars must be 32 bytes");
+	BIG_256_28 a, b, n, s;
+	BIG_256_28_fromBytesLen(a, (char *)oa->val, SECP_BYTES);
+	BIG_256_28_fromBytesLen(b, (char *)ob->val, SECP_BYTES);
+	BIG_256_28_copy(n, (chunk *)CURVE_Order_SECP256K1);
+	BIG_256_28_add(s, a, b);
+	BIG_256_28_norm(s);
+	if (BIG_256_28_comp(s, n) >= 0) {
+		BIG_256_28_sub(s, s, n);
+		BIG_256_28_norm(s);
+	}
+	secp_big_to_oct(L, s);
+end:
+	o_free(L, oa);
+	o_free(L, ob);
+	if (failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/***
+    Multiply two 32-byte scalars modulo n. Returns 32-byte OCTET.
+
+    @function bip340_scalar_mul
+    @param a 32-byte OCTET
+    @param b 32-byte OCTET
+    @return 32-byte OCTET (a * b) mod n
+*/
+static int lua_bip340_scalar_mul(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const octet *oa = o_arg(L, 1); SAFE_GOTO(oa, ALLOCATE_OCT_ERR);
+	const octet *ob = o_arg(L, 2); SAFE_GOTO(ob, ALLOCATE_OCT_ERR);
+	SAFE_GOTO(oa->len == SECP_BYTES && ob->len == SECP_BYTES, "scalars must be 32 bytes");
+	BIG_256_28 a, b, n, p;
+	DBIG_256_28 dp;
+	BIG_256_28_fromBytesLen(a, (char *)oa->val, SECP_BYTES);
+	BIG_256_28_fromBytesLen(b, (char *)ob->val, SECP_BYTES);
+	BIG_256_28_copy(n, (chunk *)CURVE_Order_SECP256K1);
+	BIG_256_28_mul(dp, a, b);
+	BIG_256_28_dmod(p, dp, n);
+	secp_big_to_oct(L, p);
+end:
+	o_free(L, oa);
+	o_free(L, ob);
+	if (failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/***
+    Negate a 32-byte scalar modulo n. Returns 32-byte OCTET.
+
+    @function bip340_scalar_negate
+    @param x 32-byte OCTET
+    @return 32-byte OCTET n - x mod n
+*/
+static int lua_bip340_scalar_negate(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const octet *ox = o_arg(L, 1); SAFE_GOTO(ox, ALLOCATE_OCT_ERR);
+	SAFE_GOTO(ox->len == SECP_BYTES, "scalar must be 32 bytes");
+	BIG_256_28 x;
+	BIG_256_28_fromBytesLen(x, (char *)ox->val, SECP_BYTES);
+	secp_bip340_scalar_negate(x);
+	secp_big_to_oct(L, x);
+end:
+	o_free(L, ox);
+	if (failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/***
+    Reduce a 32-byte hash value modulo the curve order.
+
+    @function bip340_challenge_reduce
+    @param hash32 32-byte OCTET (SHA-256 output)
+    @return 32-byte OCTET hash32 mod n
+*/
+static int lua_bip340_challenge_reduce(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const octet *oh = o_arg(L, 1); SAFE_GOTO(oh, ALLOCATE_OCT_ERR);
+	SAFE_GOTO(oh->len == SECP_BYTES, "hash must be 32 bytes");
+	BIG_256_28 e;
+	secp_bip340_challenge(e, oh);
+	secp_big_to_oct(L, e);
+end:
+	o_free(L, oh);
+	if (failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
 /* --- module registration --- */
 
 int luaopen_secp(lua_State *L) {
@@ -849,6 +961,10 @@ int luaopen_secp(lua_State *L) {
 		{"bip340_seckey_valid", lua_bip340_seckey_valid},
 		{"bip340_tagged_hash", lua_bip340_tagged_hash},
 		{"bip340_lift_x", lua_bip340_lift_x},
+		{"bip340_scalar_add", lua_bip340_scalar_add},
+		{"bip340_scalar_mul", lua_bip340_scalar_mul},
+		{"bip340_scalar_negate", lua_bip340_scalar_negate},
+		{"bip340_challenge_reduce", lua_bip340_challenge_reduce},
 		{NULL, NULL}};
 	const struct luaL_Reg secp_methods[] = {
 		{"affine", secp_affine},
