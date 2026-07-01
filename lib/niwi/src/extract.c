@@ -28,6 +28,7 @@
 #include "hash.h"
 #include "npro.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
