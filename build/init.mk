@@ -14,11 +14,11 @@ ZEN_SOURCES := src/zenroom.o src/zen_error.o src/lua_functions.o		\
     src/zen_ed.o src/zen_float.o src/zen_time.o src/api_hash.o			\
     src/api_sign.o src/api_recipe.o src/randombytes.o src/zen_fuzzer.o src/cortex_m.o	\
     src/p256-m.o src/zen_p256.o src/zen_rsa.o src/zen_bbs.o				\
-    src/zen_longfellow.o src/zen_mayo.o src/zen_secp.o
+    src/zen_longfellow.o src/zen_mayo.o src/zen_secp.o lib/niwi/src/niwi_lua_bindings.o
 
 ZEN_INCLUDES += -Isrc -Ilib/lua54/src -Ilib -I/usr/local/include	\
 -Ilib/milagro-crypto-c/build/include -Ilib/milagro-crypto-c/include	\
--Ilib/ed25519-donna -Ilib/longfellow-zk -Ilib/mayo -Ilib/niwi/include -Wall -Wextra
+-Ilib/ed25519-donna -Ilib/longfellow-zk -Ilib/mayo -Ilib/niwi/include -Ilib/niwi/src -Wall -Wextra
 
 BUILD_DEPS ?= apply-patches milagro lua54 embed-lua mlkem	\
 			quantum-proof ed25519-donna longfellow-zk libniwi zstd mayo
