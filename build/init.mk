@@ -18,10 +18,10 @@ ZEN_SOURCES := src/zenroom.o src/zen_error.o src/lua_functions.o		\
 
 ZEN_INCLUDES += -Isrc -Ilib/lua54/src -Ilib -I/usr/local/include	\
 -Ilib/milagro-crypto-c/build/include -Ilib/milagro-crypto-c/include	\
--Ilib/ed25519-donna -Ilib/longfellow-zk -Ilib/mayo -Wall -Wextra
+-Ilib/ed25519-donna -Ilib/longfellow-zk -Ilib/mayo -Ilib/niwi/include -Wall -Wextra
 
 BUILD_DEPS ?= apply-patches milagro lua54 embed-lua mlkem	\
-			quantum-proof ed25519-donna longfellow-zk zstd mayo
+			quantum-proof ed25519-donna longfellow-zk libniwi zstd mayo
 ZKCC_BUILD_DEPS := zk-circuit-lang
 
 pwd := $(shell pwd)
@@ -48,6 +48,7 @@ ldadd += ${pwd}/lib/mlkem/test/build/libmlkem.a
 ldadd += ${pwd}/lib/longfellow-zk/liblongfellow-zk.a
 ldadd += ${pwd}/lib/zstd/libzstd.a
 ldadd += $(pwd)/lib/mayo/libmayo.a
+ldadd += ${pwd}/lib/niwi/libniwi.a
 ldadd += -lstdc++
 ZKCC_LDADD := ${pwd}/lib/zk-circuit-lang/libzk-circuit-lang.a
 ZKCC_LDADD += ${pwd}/lib/longfellow-zk/liblongfellow-zk.a

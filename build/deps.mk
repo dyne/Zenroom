@@ -90,6 +90,16 @@ ed25519-donna:
 	LDFLAGS="${ldflags}" \
 	$(MAKE) -C ${pwd}/lib/ed25519-donna
 
+libniwi:
+	$(info -- Building NIWI library)
+	CC="${cc}" \
+	CXX="${cxx}" \
+	NIWI_CC="${cc}" \
+	NIWI_CXX="${cxx}" \
+	NIWI_CFLAGS="-I${pwd}/lib/niwi/include -I${pwd}/lib/longfellow-zk -I${pwd}/src ${cflags}" \
+	AR=${ar} \
+	$(MAKE) -C ${pwd}/lib/niwi
+
 zstd:
 	echo "-- Building ZSTD compression lib"
 	CC="${zstd_cc}" \
