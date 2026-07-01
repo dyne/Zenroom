@@ -18,7 +18,7 @@ libniwi.a: $(NIWI_SOURCES)
 
 clean:
 	rm -f src/*.c.o tests/*.o
-	rm -f *.a test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof_serde test_extract
+	rm -f *.a test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof_serde test_extract test_bench
 
 %.c.o: %.c
 	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -c -o $@ $<
@@ -58,3 +58,11 @@ test_niwi_proof_serde: tests/test_niwi_proof_serde.c.o libniwi.a
 
 test_extract: tests/test_extract.c.o libniwi.a
 	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_extract.c.o -L. -lniwi $(NIWI_AMCL)
+
+# ---- Benchmarks ----
+
+bench: test_bench
+	./test_bench
+
+test_bench: tests/test_bench.c.o libniwi.a
+	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -O2 -o $@ tests/test_bench.c.o -L. -lniwi $(NIWI_AMCL) -lrt
