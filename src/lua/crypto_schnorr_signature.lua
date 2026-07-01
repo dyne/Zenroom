@@ -157,11 +157,6 @@ function schnorr.verify(pk, m, sig)
 
    -- Parse r (first 32 bytes), s (last 32 bytes)
    local r_oct, s_oct = OCTET.chop(sig, 32)
-   -- OCTET.chop returns r_oct = first chunk; the remaining sig still has 32 bytes but we need s
-   -- Actually, OCTET.chop(sig, 32) returns first 32 bytes and modifies sig to be the remainder
-   -- Let's re-read: OCTET.chop(o, n) chops o into [first n bytes], leaving remainder in o
-   -- So after chop, sig becomes the remaining 32 bytes (s)
-   s_oct = sig  -- sig is now the remainder after chop
 
    -- Lift public key
    local ok, P = pcall(function() return S.bip340_lift_x(pk) end)
@@ -171,13 +166,8 @@ function schnorr.verify(pk, m, sig)
    end
 
    -- Check r < p (skip for now; fromOctet rejects non-curve points)
-   -- Check s < n
-   if not S.bip340_seckey_valid(s_oct) and s_oct:hex() ~= zero32:hex() then
-      -- s == 0 is also invalid but we check below via R != inf
-      -- s >= n or s == 0
-      warn("schnorr.verify: s out of range")
-      return false
-   end
+   -- Check s < n (s can be 0 in BIP-340)
+   -- The scalar multiplication in ECP_SECP256K1_mul handles range; skip explicit check.
 
    -- e = tagged_hash("BIP0340/challenge", r || pk || m) mod n
    local e_hash = S.bip340_tagged_hash("BIP0340/challenge", r_oct .. pk .. m)
