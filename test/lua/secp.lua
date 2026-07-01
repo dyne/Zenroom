@@ -93,4 +93,24 @@ assert(G + negG == inf, "G + (-G) = inf")
 assert(negG ~= G, "negG != G")
 io.write("PASS: negative\n")
 
+-- Serialization round trips
+local Gc = G:compressed()
+assert(#Gc == 33, "compressed length")
+local Gr = s.new(Gc)
+assert(Gr:eq(G), "compressed round trip")
+io.write("PASS: compressed round trip\n")
+
+local Gu = G:uncompressed()
+assert(#Gu == 65, "uncompressed length")
+local Gr2 = s.new(Gu)
+assert(Gr2:eq(G), "uncompressed round trip")
+io.write("PASS: uncompressed round trip\n")
+
+-- xonly round trip: SECP.new rejects xonly (32-byte), as per BIP-340
+local xo = G:xonly()
+assert(#xo == 32, "xonly length")
+local ok, err = pcall(s.new, xo)
+assert(not ok, "SECP.new rejects xonly input")
+io.write("PASS: xonly rejection\n")
+
 io.write("ALL SECP TESTS PASSED\n")
