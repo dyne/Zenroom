@@ -109,6 +109,7 @@ CRYPTO = require('crypto_loader')
 -- ECDH public keys cannot function as ECP because of IANA 7303
 AES = require('aes')
 ECP = require('zenroom_ecp')
+SECP = require('zenroom_secp')
 ECP2 = require('zenroom_ecp2')
 HASH = require('zenroom_hash')
 -- BTC = require('crypto_bitcoin') -- Bitcoin primitives imported by default
