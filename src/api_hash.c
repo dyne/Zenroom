@@ -83,6 +83,13 @@ static int api_run_hash_script(const char *script,
 							  stdout_buf, stdout_len, stderr_buf, stderr_len);
 }
 
+static void api_warn_legacy_stream_hash(void) {
+	_err("[DEPRECATED] The legacy direct hash API "
+		 "(`zenroom_hash_init`, `zenroom_hash_update`, `zenroom_hash_final`, `zenroom_hash`) "
+		 "is deprecated. Use the new direct hex API (`zenroom_hash_hex_tobuf` / `zenroom_hash_hex`, "
+		 "or `hashHex` in JavaScript).");
+}
+
 /**
    Hash a hex-encoded message using the named algorithm and write the hex digest
    into the caller-provided output buffer.
@@ -227,6 +234,7 @@ int zenroom_hash_init(const char *hash_type) {
 	// size tests
 	register int len = 0;
 	void *sh = NULL;
+	api_warn_legacy_stream_hash();
 	if (strcasecmp(hash_type, "sha512") == 0) {
 		prefix = ZEN_SHA512;
 		len = sizeof(hash512); // amcl struct
@@ -261,6 +269,7 @@ int zenroom_hash_init(const char *hash_type) {
 int zenroom_hash_update(const char *hash_ctx,
 						const char *buffer, const int buffer_size) {
 	char *failed_msg = NULL;
+	api_warn_legacy_stream_hash();
 	register char prefix = hash_ctx[0];
 	register int len, c;
 	char *sh = NULL;
@@ -323,6 +332,7 @@ end:
 // returns the hash string base64 encoded
 int zenroom_hash_final(const char *hash_ctx) {
 	char *failed_msg = NULL;
+	api_warn_legacy_stream_hash();
 	register char prefix = hash_ctx[0];
 	register int len;
 	octet tmp = {0};

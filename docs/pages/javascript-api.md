@@ -71,6 +71,8 @@ const { result: b64 } = await zenroom_hash("sha256", "hello world");
 // result is base64-encoded (legacy format)
 ```
 
+This legacy API now emits a deprecation warning on stderr (`logs`).
+
 ---
 
 ## Signatures

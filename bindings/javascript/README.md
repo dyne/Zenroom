@@ -264,6 +264,8 @@ const { result: digest } = await zenroom_hash("sha256", "hello world");
 // digest is base64-encoded (legacy format)
 ```
 
+This legacy API now emits a deprecation warning on stderr (`logs`).
+
 For large inputs or one-shot hashing with hex output, prefer
 `hashHex` which handles chunking internally and returns lowercase hex.
 ```
