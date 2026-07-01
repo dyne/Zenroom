@@ -22,6 +22,8 @@
 -- Uses SECP point arithmetic and native scalar helpers.
 --
 -- Sizes: secret key = 32B, x-only public key = 32B, signature = 64B (r||s)
+--
+-- @module crypto_schnorr_signature
 
 local schnorr = {}
 local S = SECP
@@ -48,7 +50,10 @@ local function pubpoint_from_sk(sk)
    return P, d
 end
 
--- BIP-340 key generation: random 32-byte secret key
+-- BIP-340 key generation: random 32-byte secret key.
+--
+-- @function schnorr.keygen
+-- @return 32-byte OCTET secret key
 function schnorr.keygen()
    local sk
    repeat
@@ -57,7 +62,11 @@ function schnorr.keygen()
    return sk
 end
 
--- BIP-340 public key derivation: returns 32-byte x-only public key
+-- BIP-340 public key derivation: returns 32-byte x-only public key.
+--
+-- @function schnorr.pubgen
+-- @param sk 32-byte OCTET secret key
+-- @return 32-byte OCTET x-only public key
 function schnorr.pubgen(sk)
    if iszen(type(sk)) then sk = sk:octet() end
    if #sk ~= 32 then fail("secret key must be 32 bytes") end
@@ -68,7 +77,11 @@ function schnorr.pubgen(sk)
    return P:xonly()
 end
 
--- BIP-340 public key validation: x-only value is on curve
+-- BIP-340 public key validation: x-only value is on curve.
+--
+-- @function schnorr.pubcheck
+-- @param pk 32-byte OCTET
+-- @return true if the public key is valid
 function schnorr.pubcheck(pk)
    if iszen(type(pk)) then pk = pk:octet() end
    if #pk ~= 32 then return false end
@@ -76,22 +89,33 @@ function schnorr.pubcheck(pk)
    return ok and P ~= nil
 end
 
--- BIP-340 secret key validation: 32 bytes, 1 <= d < n
+-- BIP-340 secret key validation: 32 bytes, 1 <= d < n.
+--
+-- @function schnorr.seccheck
+-- @param sk 32-byte OCTET
+-- @return true if the secret key is valid
 function schnorr.seccheck(sk)
    if iszen(type(sk)) then sk = sk:octet() end
    return S.bip340_seckey_valid(sk)
 end
 
--- BIP-340 signature validation: 64 bytes
+-- BIP-340 signature validation: checks length.
+--
+-- @function schnorr.sigcheck
+-- @param sig 64-byte OCTET
+-- @return true if the signature length is correct
 function schnorr.sigcheck(sig)
    if iszen(type(sig)) then sig = sig:octet() end
    return sig and #sig == 64
 end
 
--- BIP-340 signing: returns 64-byte signature (r || s)
--- sk: 32-byte secret key OCTET
--- m:  message OCTET
--- aux_rand: optional 32-byte auxiliary randomness (default: zeros)
+-- BIP-340 signing: returns 64-byte signature (r || s).
+--
+-- @function schnorr.sign
+-- @param sk 32-byte OCTET secret key
+-- @param m message OCTET (arbitrary bytes)
+-- @param aux_rand optional 32-byte OCTET auxiliary randomness (default: zeros)
+-- @return 64-byte OCTET signature
 function schnorr.sign(sk, m, aux_rand)
    if iszen(type(sk)) then sk = sk:octet() end
    if iszen(type(m)) then m = m:octet() end
@@ -144,7 +168,13 @@ function schnorr.sign(sk, m, aux_rand)
    return rx .. s
 end
 
--- BIP-340 verification: pk (32B), m (message OCTET), sig (64B)
+-- BIP-340 verification.
+--
+-- @function schnorr.verify
+-- @param pk 32-byte OCTET x-only public key
+-- @param m message OCTET (arbitrary bytes)
+-- @param sig 64-byte OCTET signature
+-- @return true if the signature is valid
 function schnorr.verify(pk, m, sig)
    if iszen(type(pk)) then pk = pk:octet() end
    if iszen(type(m)) then m = m:octet() end

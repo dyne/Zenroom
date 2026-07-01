@@ -43,6 +43,7 @@
   <li><a href="../modules/OCTET.html">OCTET</a></li>
   <li><a href="../modules/HASH.html">HASH</a></li>
   <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><a href="../modules/SECP.html">SECP</a></li>
   <li><strong>BIG</strong></li>
   <li><a href="../modules/FLOAT.html">FLOAT</a></li>
   <li><a href="../modules/TIME.html">TIME</a></li>
@@ -63,16 +64,12 @@
 <div id="content">
 
 <h1>Module <code>BIG</code></h1>
-<p>
-
-<h1>Big Number Arithmetic (BIG)</h1>
-
-
+<p><h1>Big Number Arithmetic (BIG)</h1>
 <p> Base arithmetical operations on big numbers.</p>
+<p>
+<p> Most operators are overloaded and can be used on BIG numbers as if they would be natural. Multiplications by <a href="../modules/ECP.html#">ECP</a> curve points are also possible using ECP as first argument.
+<p> For explanations and example usage see <a href="https://dev.zenroom.org/crypto">dev.zenroom.org/crypto</a>.
 </p>
-<p> Most operators are overloaded and can be used on BIG numbers as if they would be natural. Multiplications by <a href="../modules/ECP.html#">ECP</a> curve points are also possible using ECP as first argument.</p>
-
-<p> For explanations and example usage see <a href="https://dev.zenroom.org/crypto">dev.zenroom.org/crypto</a>.</p>
     <h3>Info:</h3>
     <ul>
         <li><strong>Copyright</strong>: Dyne.org foundation 2017-2018</li>
@@ -274,6 +271,7 @@ supporting both scalar multiplication with ECP points and modular multiplication
     Create a new Big number.  If an argument is present, import it as <a href="../modules/OCTET.html#">OCTET</a> and initialise it with its value.
 
 
+
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">octet</span>
@@ -297,8 +295,9 @@ supporting both scalar multiplication with ECP points and modular multiplication
     <strong>from_decimal (string)</strong>
     </dt>
     <dd>
-    Convert a decimal string into a big integer object. <br/>
+    Convert a decimal string into a big integer object.
 It works only for positive numbers.
+
 
 
     <h3>Parameters:</h3>
@@ -376,6 +375,7 @@ It works only for positive numbers.
 where p is an odd prime and n is a square modulo p.
 
 
+
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">n</span>
@@ -401,8 +401,9 @@ where p is an odd prime and n is a square modulo p.
     <strong>zenadd (a, b)</strong>
     </dt>
     <dd>
-    Perform algebraic sum of two Big numbers, taking under account their zencode signs. <br/>
+    Perform algebraic sum of two Big numbers, taking under account their zencode signs.
 The result is stored in a new Big number and pushed onto the Lua stack.
+
 
 
     <h3>Parameters:</h3>
@@ -430,8 +431,9 @@ The result is stored in a new Big number and pushed onto the Lua stack.
     <strong>zensub (a, b)</strong>
     </dt>
     <dd>
-    Perform algebraic subtraction of two Big numbers, taking under account their zencode signs. <br/>
+    Perform algebraic subtraction of two Big numbers, taking under account their zencode signs.
 The result is stored in a new Big number and pushed onto the Lua stack.
+
 
 
     <h3>Parameters:</h3>
@@ -459,8 +461,9 @@ The result is stored in a new Big number and pushed onto the Lua stack.
     <strong>zenmul (a, b)</strong>
     </dt>
     <dd>
-    Perform algebraic multiplication of two Big numbers, taking under account their zencode signs. <br/>
+    Perform algebraic multiplication of two Big numbers, taking under account their zencode signs.
 The result is stored in a new Big number and pushed onto the Lua stack.
+
 
 
     <h3>Parameters:</h3>
@@ -488,8 +491,9 @@ The result is stored in a new Big number and pushed onto the Lua stack.
     <strong>zendiv (a, b)</strong>
     </dt>
     <dd>
-    Perform algebraic division of two Big numbers, taking under account their zencode signs. <br/>
+    Perform algebraic division of two Big numbers, taking under account their zencode signs.
 The result is stored in a new Big number and pushed onto the Lua stack.
+
 
 
     <h3>Parameters:</h3>
@@ -519,6 +523,7 @@ The result is stored in a new Big number and pushed onto the Lua stack.
     <dd>
     Check whether a given Big number is positive.
 If it is positive the output is true, otherwise false.
+
 
 
     <h3>Parameters:</h3>
@@ -646,6 +651,7 @@ ensuring that both numbers are positive.
 
 
 
+
 </dd>
     <dt>
     <a name = "big:bits"></a>
@@ -653,6 +659,7 @@ ensuring that both numbers are positive.
     </dt>
     <dd>
     Calculate the number of bits required to represent a Big number.
+
 
 
 
@@ -683,6 +690,7 @@ ensuring that both numbers are positive.
 
 
 
+
     <h3>Returns:</h3>
     <ol>
 
@@ -708,6 +716,7 @@ ensuring that both numbers are positive.
     <dd>
     Fixed size encoding for integer with big endian order.
 If the second parameter is 'false' it uses little endian order.
+
 
 
     <h3>Parameters:</h3>
@@ -846,8 +855,9 @@ b2 = BIG.<span class="function-name">from_decimal</span>(<span class="string">"2
     <strong>big:int ()</strong>
     </dt>
     <dd>
-    Convert a Big number into a Lua integer. <br/>
+    Convert a Big number into a Lua integer.
 The function handles big integers that fit within 32 bits and truncates larger integers to 32 bits with a warning.
+
 
 
 
@@ -989,6 +999,7 @@ b2 = BIG.<span class="function-name">from_decimal</span>(<span class="string">"1
     Subtract two Big numbers and return the result as a new Big number.
 If the second argument is bigger than the first argument,
 the behavior depends on whether the big integers are in regular size or double size mode.
+
 
 
     <h3>Parameters:</h3>
@@ -1143,6 +1154,7 @@ Montgomery reduction is an efficient algorithm used in modular arithmetic to avo
 often used in cryptographic computations.
 
 
+
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">mod</span>
@@ -1233,9 +1245,10 @@ b2 = big.<span class="function-name">from_decimal</span>(<span class="string">"1
     <strong>big:modmul (coefficient, modulo)</strong>
     </dt>
     <dd>
-    Multiply a Big number by another Big while ceiling the operation to a modulo to avoid excessive results. <br/>
+    Multiply a Big number by another Big while ceiling the operation to a modulo to avoid excessive results.
 This operation is to be preferred to the simple overladed operator * in most cases where such a multiplication takes place.
 It may replace * in the future as a simplification.
+
 
 
     <h3>Parameters:</h3>
@@ -1265,6 +1278,7 @@ It may replace * in the future as a simplification.
     <dd>
     Perform modular division using Big numbers arithmetic.
 It computes (y/d) mod m.
+
 
 
     <h3>Parameters:</h3>
@@ -1305,6 +1319,7 @@ m = big.<span class="function-name">from_decimal</span>(<span class="string">"16
     Perform modular squaring on Big numbers.
 Compute the modular square of a Big number y modulo another Big number m, i.e.,
 y^2 mod m.
+
 
 
     <h3>Parameters:</h3>
@@ -1377,6 +1392,7 @@ m = big.<span class="function-name">from_decimal</span>(<span class="string">"16
 particularly in primality testing and quadratic residue calculations.
 
 
+
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">y</span>
@@ -1408,8 +1424,9 @@ y = big.<span class="function-name">from_decimal</span>(<span class="string">"16
     <strong>big:modinv (m)</strong>
     </dt>
     <dd>
-    Compute the modular inverse of a large integer y modulo another large integer m. <br/>
+    Compute the modular inverse of a large integer y modulo another large integer m.
 The modular inverse of y modulo m is a value x such that: x*y = 1 mod m
+
 
 
     <h3>Parameters:</h3>
@@ -1489,7 +1506,7 @@ m = big.<span class="function-name">from_decimal</span>(<span class="string">"16
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2025-03-25 10:43:18 </i>
+<i style="float:right;">Last updated 2026-07-01 23:01:21 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

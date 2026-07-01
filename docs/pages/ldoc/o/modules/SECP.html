@@ -1,0 +1,940 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Zenroom LUA</title>
+    <link rel="stylesheet" href="" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Zenroom</h1>
+
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/OCTET.html">OCTET</a></li>
+  <li><a href="../modules/HASH.html">HASH</a></li>
+  <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><strong>SECP</strong></li>
+  <li><a href="../modules/BIG.html">BIG</a></li>
+  <li><a href="../modules/FLOAT.html">FLOAT</a></li>
+  <li><a href="../modules/TIME.html">TIME</a></li>
+  <li><a href="../modules/AES.html">AES</a></li>
+  <li><a href="../modules/ECDH.html">ECDH</a></li>
+  <li><a href="../modules/ED.html">ED</a></li>
+  <li><a href="../modules/P256.html">P256</a></li>
+  <li><a href="../modules/QP.html">QP</a></li>
+  <li><a href="../modules/String.html">String</a></li>
+  <li><a href="../modules/Table.html">Table</a></li>
+  <li><a href="../modules/INSPECT.html">INSPECT</a></li>
+  <li><a href="../modules/lua.zencode.html">lua.zencode</a></li>
+  <li><a href="../modules/BBS.html">BBS</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>SECP</code></h1>
+<p><h1>Elliptic Curve Point Arithmetic for secp256k1 (SECP)</h1>
+<p>  Point arithmetic over the secp256k1 curve used by Bitcoin and BIP-340
+  Schnorr.</p>
+<p>  This module is independent of the global <a href="../modules/ECP.html#">ECP</a> class (which
+  remains BLS381).  Scalars and coordinates are exchanged as 32-byte
+  <a href="../modules/OCTET.html#">OCTET</a> values; zenroom.BIG is not accepted for SECP operations
+  because the global BIG factory is sized for BLS381.
+<p>  Serialization:
+  - compressed:   33 bytes (0x02/0x03 + x)
+  - uncompressed: 65 bytes (0x04 + x + y)
+  - SECP:octet()  returns compressed (the common secp256k1 wire format)
+</p>
+    <h3>Info:</h3>
+    <ul>
+        <li><strong>Copyright</strong>: Dyne.org foundation 2024-2026</li>
+        <li><strong>License</strong>: AGPLv3</li>
+    </ul>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#new">new (OCTET)</a></td>
+	<td class="summary">Create a new SECP point from an OCTET containing compressed (33-byte) or
+    uncompressed (65-byte) serialized point coordinates.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#from_xy">from_xy (x, y)</a></td>
+	<td class="summary">Create a SECP point from affine x and y coordinates (32-byte OCTET each).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#generator">generator ()</a></td>
+	<td class="summary">Return the generator of the secp256k1 curve.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#infinity">infinity ()</a></td>
+	<td class="summary">Return the point at infinity.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#order">order ()</a></td>
+	<td class="summary">Give the order of the secp256k1 curve as a 32-byte OCTET.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#prime">prime ()</a></td>
+	<td class="summary">Give the field prime p of secp256k1 as a 32-byte OCTET.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#rhs">rhs (x)</a></td>
+	<td class="summary">Compute the right-hand side y^2 of the curve equation for a given x.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#validate">validate (OCTET)</a></td>
+	<td class="summary">Validate an OCTET as a secp256k1 point.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#affine">affine ()</a></td>
+	<td class="summary">Make an existing SECP point affine.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isinf">isinf ()</a></td>
+	<td class="summary">Check if a point is the point at infinity.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#add">add (other)</a></td>
+	<td class="summary">Add two SECP points.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#sub">sub (other)</a></td>
+	<td class="summary">Subtract one SECP point from another.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#negative">negative ()</a></td>
+	<td class="summary">Return the negation of a SECP point.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#double">double ()</a></td>
+	<td class="summary">Double a SECP point.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mul">mul (scalar)</a></td>
+	<td class="summary">Multiply a SECP point by a scalar (32-byte OCTET).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#eq">eq (other)</a></td>
+	<td class="summary">Compare two SECP points for equality.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#octet">octet ()</a></td>
+	<td class="summary">Return the compressed (33-byte) serialization of the SECP point.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#compressed">compressed ()</a></td>
+	<td class="summary">Return the compressed (33-byte) serialization.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#uncompressed">uncompressed ()</a></td>
+	<td class="summary">Return the uncompressed (65-byte) serialization (0x04 + x + y).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#xonly">xonly ()</a></td>
+	<td class="summary">Return the x-only (32-byte) serialization of the point.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#x">x ()</a></td>
+	<td class="summary">Return the x coordinate as a 32-byte OCTET.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#y">y ()</a></td>
+	<td class="summary">Return the y coordinate as a 32-byte OCTET.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#__tostring">__tostring ()</a></td>
+	<td class="summary">String representation: hex-encoded compressed point.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bip340_seckey_valid">bip340_seckey_valid (sk)</a></td>
+	<td class="summary">Validate a BIP-340 secret key: exactly 32 bytes, 1 <= d < n.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bip340_tagged_hash">bip340_tagged_hash (tag, data)</a></td>
+	<td class="summary">Compute BIP-0340 tagged hash: sha256(sha256(tag) || sha256(tag) || data).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bip340_lift_x">bip340_lift_x (x)</a></td>
+	<td class="summary">Lift an x-only (32-byte) octet to a SECP point with even y.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bip340_scalar_add">bip340_scalar_add (a, b)</a></td>
+	<td class="summary">Add two 32-byte scalars modulo n.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bip340_scalar_mul">bip340_scalar_mul (a, b)</a></td>
+	<td class="summary">Multiply two 32-byte scalars modulo n.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bip340_scalar_negate">bip340_scalar_negate (x)</a></td>
+	<td class="summary">Negate a 32-byte scalar modulo n.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bip340_challenge_reduce">bip340_challenge_reduce (hash32)</a></td>
+	<td class="summary">Reduce a 32-byte hash value modulo the curve order.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mapit">mapit (OCTET)</a></td>
+	<td class="summary">Map an OCTET of exactly 64 bytes to a point on the secp256k1 curve.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "new"></a>
+    <strong>new (OCTET)</strong>
+    </dt>
+    <dd>
+    Create a new SECP point from an OCTET containing compressed (33-byte) or
+    uncompressed (65-byte) serialized point coordinates.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">OCTET</span>
+         33-byte compressed or 65-byte uncompressed point
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new SECP point on secp256k1
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/SECP.html#octet">SECP:octet</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "from_xy"></a>
+    <strong>from_xy (x, y)</strong>
+    </dt>
+    <dd>
+    Create a SECP point from affine x and y coordinates (32-byte OCTET each).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         32-byte OCTET x coordinate
+        </li>
+        <li><span class="parameter">y</span>
+         32-byte OCTET y coordinate
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new SECP point, or nil if coordinates are not on the curve
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "generator"></a>
+    <strong>generator ()</strong>
+    </dt>
+    <dd>
+    Return the generator of the secp256k1 curve.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the generator point G
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "infinity"></a>
+    <strong>infinity ()</strong>
+    </dt>
+    <dd>
+    Return the point at infinity.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        SECP point at infinity
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "order"></a>
+    <strong>order ()</strong>
+    </dt>
+    <dd>
+    Give the order of the secp256k1 curve as a 32-byte OCTET.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        32-byte OCTET containing the curve order
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "prime"></a>
+    <strong>prime ()</strong>
+    </dt>
+    <dd>
+    Give the field prime p of secp256k1 as a 32-byte OCTET.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        32-byte OCTET containing the field prime
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "rhs"></a>
+    <strong>rhs (x)</strong>
+    </dt>
+    <dd>
+    Compute the right-hand side y^2 of the curve equation for a given x.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         32-byte OCTET x coordinate
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        32-byte OCTET containing rhs = x^3 + 7 (mod p)
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "validate"></a>
+    <strong>validate (OCTET)</strong>
+    </dt>
+    <dd>
+    Validate an OCTET as a secp256k1 point.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">OCTET</span>
+         point bytes (33 or 65 bytes)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true if valid, false otherwise
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "affine"></a>
+    <strong>affine ()</strong>
+    </dt>
+    <dd>
+    Make an existing SECP point affine.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new affine SECP point
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "isinf"></a>
+    <strong>isinf ()</strong>
+    </dt>
+    <dd>
+    Check if a point is the point at infinity.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true if infinity, false otherwise
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "add"></a>
+    <strong>add (other)</strong>
+    </dt>
+    <dd>
+    Add two SECP points.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">other</span>
+         another SECP point
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        sum P + Q
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "sub"></a>
+    <strong>sub (other)</strong>
+    </dt>
+    <dd>
+    Subtract one SECP point from another.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">other</span>
+         SECP point to subtract
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        difference P - Q
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "negative"></a>
+    <strong>negative ()</strong>
+    </dt>
+    <dd>
+    Return the negation of a SECP point.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        -P
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "double"></a>
+    <strong>double ()</strong>
+    </dt>
+    <dd>
+    Double a SECP point.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        2*P
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mul"></a>
+    <strong>mul (scalar)</strong>
+    </dt>
+    <dd>
+    Multiply a SECP point by a scalar (32-byte OCTET).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">scalar</span>
+         32-byte OCTET scalar (0 <= k < order)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        k * P
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "eq"></a>
+    <strong>eq (other)</strong>
+    </dt>
+    <dd>
+    Compare two SECP points for equality.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">other</span>
+         another SECP point
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true if equal, false otherwise
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "octet"></a>
+    <strong>octet ()</strong>
+    </dt>
+    <dd>
+    Return the compressed (33-byte) serialization of the SECP point.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        33-byte compressed OCTET (0x02 for even y, 0x03 for odd y)
+    This is the default serialization (alias for compressed).
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "compressed"></a>
+    <strong>compressed ()</strong>
+    </dt>
+    <dd>
+    Return the compressed (33-byte) serialization.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        33-byte compressed OCTET
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "uncompressed"></a>
+    <strong>uncompressed ()</strong>
+    </dt>
+    <dd>
+    Return the uncompressed (65-byte) serialization (0x04 + x + y).
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        65-byte uncompressed OCTET
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "xonly"></a>
+    <strong>xonly ()</strong>
+    </dt>
+    <dd>
+    Return the x-only (32-byte) serialization of the point.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        32-byte OCTET containing the x coordinate
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "x"></a>
+    <strong>x ()</strong>
+    </dt>
+    <dd>
+    Return the x coordinate as a 32-byte OCTET.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        32-byte OCTET containing the x coordinate
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "y"></a>
+    <strong>y ()</strong>
+    </dt>
+    <dd>
+    Return the y coordinate as a 32-byte OCTET.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        32-byte OCTET containing the y coordinate
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "__tostring"></a>
+    <strong>__tostring ()</strong>
+    </dt>
+    <dd>
+    String representation: hex-encoded compressed point.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        hex string of compressed serialization
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "bip340_seckey_valid"></a>
+    <strong>bip340_seckey_valid (sk)</strong>
+    </dt>
+    <dd>
+    Validate a BIP-340 secret key: exactly 32 bytes, 1 <= d < n.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">sk</span>
+         32-byte OCTET secret key
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true if valid, false otherwise
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "bip340_tagged_hash"></a>
+    <strong>bip340_tagged_hash (tag, data)</strong>
+    </dt>
+    <dd>
+    Compute BIP-0340 tagged hash: sha256(sha256(tag) || sha256(tag) || data).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tag</span>
+         a string (e.g. "BIP0340/challenge")
+        </li>
+        <li><span class="parameter">data</span>
+         an OCTET to hash
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        32-byte OCTET hash digest
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "bip340_lift_x"></a>
+    <strong>bip340_lift_x (x)</strong>
+    </dt>
+    <dd>
+    Lift an x-only (32-byte) octet to a SECP point with even y.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         32-byte OCTET x coordinate
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        SECP point with even y, or nil if x is not on the curve
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "bip340_scalar_add"></a>
+    <strong>bip340_scalar_add (a, b)</strong>
+    </dt>
+    <dd>
+    Add two 32-byte scalars modulo n.  Returns 32-byte OCTET.
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">a</span>
+         32-byte OCTET
+        </li>
+        <li><span class="parameter">b</span>
+         32-byte OCTET
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        32-byte OCTET (a + b) mod n
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "bip340_scalar_mul"></a>
+    <strong>bip340_scalar_mul (a, b)</strong>
+    </dt>
+    <dd>
+    Multiply two 32-byte scalars modulo n.  Returns 32-byte OCTET.
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">a</span>
+         32-byte OCTET
+        </li>
+        <li><span class="parameter">b</span>
+         32-byte OCTET
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        32-byte OCTET (a * b) mod n
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "bip340_scalar_negate"></a>
+    <strong>bip340_scalar_negate (x)</strong>
+    </dt>
+    <dd>
+    Negate a 32-byte scalar modulo n.  Returns 32-byte OCTET.
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         32-byte OCTET
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        32-byte OCTET n - x mod n
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "bip340_challenge_reduce"></a>
+    <strong>bip340_challenge_reduce (hash32)</strong>
+    </dt>
+    <dd>
+    Reduce a 32-byte hash value modulo the curve order.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">hash32</span>
+         32-byte OCTET (SHA-256 output)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        32-byte OCTET hash32 mod n
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mapit"></a>
+    <strong>mapit (OCTET)</strong>
+    </dt>
+    <dd>
+    Map an OCTET of exactly 64 bytes to a point on the secp256k1 curve.
+    Uses Milagro's hash-to-point mapping.
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">OCTET</span>
+         64-byte hash output
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        SECP point on secp256k1
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2026-07-01 23:01:21 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

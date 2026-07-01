@@ -24,6 +24,8 @@
 -- This is NOT an extractable commitment scheme by itself; it provides
 -- statistical hiding and computational binding assuming discrete log
 -- is hard on secp256k1.
+--
+-- @module crypto_pedersen
 
 local pedersen = {}
 local S = SECP
@@ -43,10 +45,13 @@ local function get_H()
    return _H
 end
 
--- Commit to a scalar message m with randomness r.
--- m: 32-byte OCTET scalar (the value to commit to)
--- r: 32-byte OCTET scalar (random blinding factor)
--- Returns: SECP point C = m*G + r*H
+-- Commit to a message m with blinding factor r.
+-- C = m*G + r*H
+--
+-- @function pedersen.commit
+-- @param m 32-byte OCTET scalar (the value to commit to)
+-- @param r 32-byte OCTET scalar (random blinding factor)
+-- @return SECP point C = m*G + r*H
 function pedersen.commit(m, r)
    if iszen(type(m)) then m = m:octet() end
    if iszen(type(r)) then r = r:octet() end
@@ -59,10 +64,12 @@ function pedersen.commit(m, r)
 end
 
 -- Open a commitment: verify that C = m*G + r*H.
--- C: SECP point (the commitment)
--- m: 32-byte OCTET scalar
--- r: 32-byte OCTET scalar
--- Returns: true if C = m*G + r*H
+--
+-- @function pedersen.open
+-- @param C SECP point (the commitment)
+-- @param m 32-byte OCTET scalar
+-- @param r 32-byte OCTET scalar
+-- @return true if C = m*G + r*H
 function pedersen.open(C, m, r)
    if iszen(type(m)) then m = m:octet() end
    if iszen(type(r)) then r = r:octet() end
@@ -71,12 +78,20 @@ function pedersen.open(C, m, r)
 end
 
 -- Return the second generator H (for protocols that need it explicitly).
+--
+-- @function pedersen.H
+-- @return SECP point H (the second generator)
 function pedersen.H()
    return get_H()
 end
 
--- Homomorphic addition of two commitments: C = C1 + C2
--- (equivalent to commit(m1+m2, r1+r2))
+-- Homomorphic addition of two commitments.
+-- C = C1 + C2 (equivalent to commit(m1+m2, r1+r2))
+--
+-- @function pedersen.add
+-- @param C1 SECP point
+-- @param C2 SECP point
+-- @return SECP point C1 + C2
 function pedersen.add(C1, C2)
    return C1 + C2
 end
