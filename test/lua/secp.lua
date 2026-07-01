@@ -58,10 +58,39 @@ local Gx = G:xonly()
 assert(Gx:hex() == "79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798", "xonly mismatch")
 io.write("PASS: xonly\n")
 
--- Equality operator
+-- Equality and group law
 assert(G == G, "eq self")
 assert(G ~= inf, "eq vs inf")
 assert(G + inf == G, "add infinity")
+assert(G - G == inf, "G - G = inf")
+assert(G:double() == G + G, "G:double() = G + G")
 io.write("PASS: equality\n")
+
+-- Scalar multiplication
+local zero = OCTET.from_hex("0000000000000000000000000000000000000000000000000000000000000000")
+local one  = OCTET.from_hex("0000000000000000000000000000000000000000000000000000000000000001")
+local n1   = OCTET.from_hex(ORDER_HEX)
+-- one less than order
+local nm1  = OCTET.from_hex("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140")
+
+assert(G * zero == inf, "G * 0 = inf")
+assert(G * one == G, "G * 1 = G")
+-- G * (order - 1) + G == inf
+local Gnm1 = G * nm1
+assert(Gnm1 + G == inf, "G * (n-1) + G = inf")
+io.write("PASS: scalar multiplication\n")
+
+-- Operator overloads (__add, __sub, __mul)
+local P = G * one
+local Q = P:double()
+assert(P + Q == Q + P, "add commutative")
+assert((G:double() * OCTET.from_hex("0000000000000000000000000000000000000000000000000000000000000001")) == G + G, "double by add")
+io.write("PASS: operator overloads\n")
+
+-- Negative
+local negG = G:negative()
+assert(G + negG == inf, "G + (-G) = inf")
+assert(negG ~= G, "negG != G")
+io.write("PASS: negative\n")
 
 io.write("ALL SECP TESTS PASSED\n")
