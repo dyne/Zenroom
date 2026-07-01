@@ -96,7 +96,7 @@ libniwi:
 	CXX="${cxx}" \
 	NIWI_CC="${cc}" \
 	NIWI_CXX="${cxx}" \
-	NIWI_CFLAGS="-I${pwd}/lib/niwi/include -I${pwd}/lib/longfellow-zk -I${pwd}/src ${cflags}" \
+	NIWI_CFLAGS="-I${pwd}/lib/niwi/include -I${pwd}/lib/niwi/src -I${pwd}/lib/longfellow-zk -I${pwd}/lib/milagro-crypto-c/build/include -I${pwd}/lib/lua54/src -I${pwd}/src ${cflags}" \
 	AR=${ar} \
 	$(MAKE) -C ${pwd}/lib/niwi
 
