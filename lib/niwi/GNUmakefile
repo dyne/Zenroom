@@ -18,7 +18,7 @@ libniwi.a: $(NIWI_SOURCES)
 
 clean:
 	rm -f src/*.c.o tests/*.o
-	rm -f *.a test_abi test_encoding test_hash test_npro test_commitment
+	rm -f *.a test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof_serde
 
 %.c.o: %.c
 	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -c -o $@ $<
@@ -28,12 +28,13 @@ clean:
 
 # ---- Tests ----
 
-test: test_abi test_encoding test_hash test_npro test_commitment
+test: test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof_serde
 	./test_abi
 	./test_encoding
 	./test_hash
 	./test_npro
 	./test_commitment
+	./test_niwi_proof_serde
 	@echo "=== All lib/niwi tests passed ==="
 
 test_abi: tests/test_abi.c.o libniwi.a
@@ -50,3 +51,6 @@ test_npro: tests/test_npro.c.o libniwi.a
 
 test_commitment: tests/test_commitment.c.o libniwi.a
 	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_commitment.c.o -L. -lniwi $(NIWI_AMCL)
+
+test_niwi_proof_serde: tests/test_niwi_proof_serde.c.o libniwi.a
+	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_niwi_proof_serde.c.o -L. -lniwi $(NIWI_AMCL)
