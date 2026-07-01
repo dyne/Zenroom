@@ -156,18 +156,33 @@ function schnorr.verify(pk, m, sig)
    end
 
    -- Parse r (first 32 bytes), s (last 32 bytes)
-   local r_oct, s_oct = OCTET.chop(sig, 32)
+   -- Avoid OCTET.chop which can truncate; manually extract
+   local r_oct = OCTET.from_hex(sig:hex():sub(1,64))
+   local s_oct = OCTET.from_hex(sig:hex():sub(65,128))
 
-   -- Lift public key
-   local ok, P = pcall(function() return S.bip340_lift_x(pk) end)
-   if not ok or not P then
-      warn("schnorr.verify: public key not on curve")
+   -- Check r < p: r must be a valid x-coordinate on the curve.
+   -- Per BIP-340, the x-only point for r is not explicitly lifted,
+   -- but r must be the x-coordinate of a point (no parity check).
+   -- We check r < p by ensuring SECP.bip340_lift_x(r) succeeds.
+   local ok, Rp = pcall(function() return S.bip340_lift_x(r_oct) end)
+   if not ok or not Rp then
+      warn("schnorr.verify: r is not a valid x coordinate")
       return false
    end
 
-   -- Check r < p (skip for now; fromOctet rejects non-curve points)
-   -- Check s < n (s can be 0 in BIP-340)
-   -- The scalar multiplication in ECP_SECP256K1_mul handles range; skip explicit check.
+   -- Check s < n: reject s >= n (but s = 0 is valid)
+   if not S.bip340_seckey_valid(s_oct) and s_oct:hex() ~= "0000000000000000000000000000000000000000000000000000000000000000" then
+      warn("schnorr.verify: s >= n")
+      return false
+   end
+
+   -- Lift public key
+   local P
+   local ok_pk, P = pcall(function() return S.bip340_lift_x(pk) end)
+   if not ok_pk or not P then
+      warn("schnorr.verify: public key not on curve")
+      return false
+   end
 
    -- e = tagged_hash("BIP0340/challenge", r || pk || m) mod n
    local e_hash = S.bip340_tagged_hash("BIP0340/challenge", r_oct .. pk .. m)

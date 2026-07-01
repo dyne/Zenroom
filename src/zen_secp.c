@@ -55,7 +55,16 @@ int secp_oct_to_big(BIG_256_28 b, const octet *o) {
 octet *secp_big_to_oct(lua_State *L, const BIG_256_28 b) {
 	octet *o = o_new(L, SECP_BYTES);
 	if (!o) return NULL;
-	BIG_256_28_toBytes((char *)o->val, b);
+	char tmp[MODBYTES_256_28];
+	int i, n;
+	BIG_256_28_norm((chunk *)b);
+	BIG_256_28_toBytes(tmp, (chunk *)b);
+	/* Left-zero-pad: toBytes may produce fewer than 32 bytes */
+	memset((char *)o->val, 0, SECP_BYTES);
+	/* Copy bytes to the end of the buffer (right-aligned) */
+	n = MODBYTES_256_28;
+	for (i = 0; i < n; i++)
+		((char *)o->val)[SECP_BYTES - n + i] = tmp[i];
 	o->len = SECP_BYTES;
 	return o;
 }
@@ -749,13 +758,18 @@ int secp_bip340_lift_x(ECP_SECP256K1 *P, const octet *xo) {
 	BIG_256_28 p;
 	BIG_256_28_rcopy(p, Modulus_SECP256K1);
 	if (BIG_256_28_comp(x, p) >= 0) return 0;
-	/* ECP_SECP256K1_setx sets P to (x, y) with y selected by LSB */
-	/* We want even y: always set s=0 then check parity */
+	/* setx with s=0 gives y with parity matching s */
 	if (!ECP_SECP256K1_setx(P, x, 0)) return 0;
-	/* If y is odd, negate P so it has even y */
+	/* Check if y is even (LSB = 0).  setx(s, 0) selects y where
+	 * the LSB matches s. If LSB != 0, we need to negate. */
 	BIG_256_28 bx, by;
+	ECP_SECP256K1_affine(P);
 	ECP_SECP256K1_get(bx, by, P);
-	if (secp_sign(by)) {
+	/* Check LSB of y: BIG_256_28 is stored in base 2^28, check byte 31 LSB */
+	char ybytes[MODBYTES_256_28];
+	BIG_256_28_toBytes(ybytes, by);
+	int y_lsb = ybytes[MODBYTES_256_28 - 1] & 1;
+	if (y_lsb) {
 		ECP_SECP256K1_neg(P);
 	}
 	return 1;
