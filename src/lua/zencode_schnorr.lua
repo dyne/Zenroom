@@ -3,6 +3,7 @@
 --
 --Copyright (C) 2022-2026 Dyne.org foundation
 --designed, written and maintained by Alberto Lerda and Denis Roio
+--BIP-340 secp256k1 migration
 --
 --This program is free software: you can redistribute it and/or modify
 --it under the terms of the GNU Affero General Public License as
@@ -14,10 +15,14 @@
 --MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 --GNU Affero General Public License for more details.
 --
---You should have received a copy of the GNU Affero General Public License 
+--You should have received a copy of the GNU Affero General Public License
 --along with this program.  If not, see <https://www.gnu.org/licenses/>.
---
 --]]
+
+-- Zencode Schnorr scenario: BIP-340 secp256k1 Schnorr signatures.
+-- Sizes: schnorr_public_key = 32B (x-only), schnorr_signature = 64B (r||s).
+-- Messages are preprocessed with a Zenroom domain tag before signing:
+-- tagged_hash("Zenroom/Schnorr/BIP340", zencode_serialize(obj))
 
 local SCH = require'crypto_schnorr_signature'
 
@@ -27,6 +32,11 @@ local function schnorr_public_key_f(obj)
       SCH.pubcheck(res),
       'Schnorr public key is not valid'
    )
+   zencode_assert(
+      #res == 32,
+      'Schnorr public key must be 32 bytes (BIP-340 x-only).' ..
+      ' Old 48-byte BLS381 keys are not supported.'
+   )
    return res
 end
 
@@ -35,6 +45,11 @@ local function schnorr_signature_f(obj)
    zencode_assert(
       SCH.sigcheck(res),
       'Schnorr signature is not valid'
+   )
+   zencode_assert(
+      #res == 64,
+      'Schnorr signature must be 64 bytes (BIP-340).' ..
+      ' Old 80-byte BLS381 signatures are not supported.'
    )
    return res
 end
@@ -46,6 +61,17 @@ ZEN:add_schema(
    }
 )
 
+-- Domain-separated message preprocessing for Zencode objects.
+-- Uses the Zenroom domain tag to prevent cross-context reuse.
+-- This is NOT Bitcoin Taproot transaction signing.
+-- For BIP-341 TapSighash, hash the message externally and pass it as a raw OCTET.
+local function zenroom_message(obj)
+   -- BIP-340 signs arbitrary bytes, so zencode_serialize
+   -- encodes the object deterministically.
+   -- Domain separation: tagged_hash("Zenroom/Schnorr/BIP340", msg)
+   return SECP.bip340_tagged_hash("Zenroom/Schnorr/BIP340",
+                                   zencode_serialize(obj))
+end
 
 -- generate the private key
 When("create schnorr key",function()
@@ -70,11 +96,9 @@ end)
 
 local function _schnorr_key_from_secret(sec)
    local sk = have(sec)
-   local o = ECP.order()
-   local d = BIG.new(sk) % o
-   zencode_assert(d ~= BIG.new(0), 'invalid secret key, is zero')
+   zencode_assert(#sk == 32, 'Secret key must be 32 bytes')
    initkeyring'schnorr'
-   ACK.keyring.schnorr = d:octet():pad(32)
+   ACK.keyring.schnorr = sk
 end
 
 When("create schnorr key with secret key ''",
@@ -89,7 +113,7 @@ When("create schnorr signature of ''",function(doc)
 	local sk = havekey'schnorr'
 	local obj = have(doc)
 	empty'schnorr signature'
-	ACK.schnorr_signature = SCH.sign(sk, zencode_serialize(obj))
+	ACK.schnorr_signature = SCH.sign(sk, zenroom_message(obj))
 	new_codec('schnorr signature')
 end)
 
@@ -98,7 +122,7 @@ IfWhen("verify '' has a schnorr signature in '' by ''",function(doc, sig, by)
 	  local obj = have(doc)
 	  local s = have(sig)
 	  zencode_assert(
-	     SCH.verify(pk, zencode_serialize(obj), s),
+	     SCH.verify(pk, zenroom_message(obj), s),
 	     'The schnorr signature by '..by..' is not authentic'
 	  )
 end)

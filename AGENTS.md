@@ -296,6 +296,7 @@ Preserve:
 
 ## Maintenance Notes
 
+- Schnorr has been migrated from BLS381 ECP to BIP-340 secp256k1 (SECP).  Old 48-byte public keys and 80-byte signatures are rejected with clear errors in schema validation.  New sizes: 32-byte x-only public keys, 64-byte BIP-340 signatures.  Zencode object signing uses domain-tagged preprocessing: tagged_hash("Zenroom/Schnorr/BIP340", zencode_serialize(obj)).  Use `require("secp")` for direct secp256k1 point arithmetic; `ECP` remains BLS381.
 - `zencode_when.lua` now routes rename statements through shared local helpers to keep `ACK` and `CODEC` updates aligned.
 - native context access now goes through `zen_get_context(...)` or `zen_get_global_context()`, pool-backed allocations use explicit `zmalloc(...)`/`zfree(...)`/`zrealloc(...)`, and helper names ending in `_clone_free` or `hash_release` own heap-backed temporary clones rather than borrowed userdata.
 - vendored Lua modules (`json.lua`, `msgpack.lua`, `inspect.lua`, `semver.lua`) include origin/local-change headers; preserve them when upgrading.
