@@ -1,16 +1,21 @@
-/* lib/niwi/src/niwi_lua_bindings.c
+/* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Lua bindings for lib/niwi using the plain Lua C API (no sol++).
- * Follows the pattern in lib/zk-circuit-lang/witness_bindings.cc.
+ * Copyright (C) 2026 Dyne.org foundation
+ * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
- * Production bindings:
- *   zkcore.prove_circuit_niwi(table opts)  → OCTET proof
- *   zkcore.verify_circuit_niwi(table opts) → boolean
- *   zkcore.niwi_profile()                  → table { version, protocol_id }
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
- * Test-only bindings:
- *   zkcore.prove_with_observation_test(table opts) → OCTET proof, OCTET gamma
- *   zkcore.extract_from_gamma_test(table opts)     → OCTET witness
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 #include "niwi.h"
