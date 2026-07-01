@@ -1,23 +1,22 @@
-// lib/niwi/ligero/niwi_ligero_adapt.cc
-//
-// Copied core logic from lib/longfellow-zk/ligero/ligero_prover.h
-// and lib/longfellow-zk/zk/zk_prover.h at commit 5dff932b.
-// Adapted for NIWI KLP22 phase boundaries.
-// Do not edit the original Longfellow files.
-//
-// This adapter wraps Longfellow's Ligero prover/verifier to:
-// 1. Split the monolithic prove() into KLP22 phases (commit, challenge,
-//    respond, query, open).
-// 2. Interpose NPRO queries between phases for extraction.
-// 3. Produce NiwiProof wire format instead of LigeroProof.
-//
-// For milestone 1, this file serves as the design scaffold: it defines
-// the phase boundaries and data flow, with thin wrappers around the
-// existing Longfellow LigeroProver/LigeroVerifier classes.
-//
-// The actual KLP22 challenge injection (replacing Longfellow's
-// transcript-derived challenges with externally-scheduled ones)
-// will be completed once the challenge schedule L2 is implemented.
+/* This file is part of Zenroom (https://zenroom.dyne.org)
+ *
+ * Copyright (C) 2026 Dyne.org foundation
+ * designed, written and maintained by Denis Roio <jaromil@dyne.org>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
 
 #include "niwi_ligero_adapt.h"
 

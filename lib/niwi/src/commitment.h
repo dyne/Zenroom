@@ -1,14 +1,21 @@
-/* lib/niwi/src/commitment.h — KLP22 and Pass/NPRO commitment API.
+/* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Currently uses SHA-256-based scaffolding for test and development.
- * Production Pedersen commitments over BLS381 will replace this in the
- * Ligero adaptation phase.  See docs/klp22-commitment-profile.md.
+ * Copyright (C) 2026 Dyne.org foundation
+ * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
- * KLP22 challenge-share commitments: statistically hiding (scaffold is
- * computational only; Pedersen upgrade tracked in the profile doc).
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
- * Pass/NPRO leaf commitments: domain-separated NPRO queries over leaf
- * data with Merkle aggregation.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 #ifndef NIWI_COMMITMENT_H

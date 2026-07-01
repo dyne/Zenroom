@@ -1,26 +1,21 @@
-/* lib/niwi/src/extract.c — Straight-line extraction from Gamma.
+/* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Implements the extractor from 2025-1992 Definition 13.
+ * Copyright (C) 2026 Dyne.org foundation
+ * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
- * Architecture:
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
- *   1. Parse NiwiProof header (magic, version, circuit_digest, etc.)
- *   2. Parse the Ligero proof body to extract:
- *      - Merkle root
- *      - Merkle proof (paths + nonces)
- *      - Query indices (the opened column indices)
- *      - y_ldt, y_dot, y_quad_0, y_quad_2 (algebraic responses)
- *   3. For each opened column index, look up the leaf digest in Gamma
- *      using the domain tag NIWI_TAG_MLEAF ("NM06")
- *   4. Recover the nonce + column data from the leaf preimage
- *   5. Rebuild the Merkle root from recovered leaves
- *   6. Build a partial tableau from recovered columns
- *   7. Extract witness elements from witness rows
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * For milestone 1, the extraction is partial: we implement the Gamma
- * lookup and Merkle rebuild with the existing C primitives. Full
- * tableau reconstruction and witness validation require the C++ Ligero
- * types and will be completed in the Ligero adaptation follow-up.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 #include "extract.h"

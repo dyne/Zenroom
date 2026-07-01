@@ -1,19 +1,21 @@
-/* lib/niwi/src/extract.h — Straight-line extraction from Gamma.
+/* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Implements 2025-1992 Definition 13: given a NiwiProof and a Gamma
- * (NPRO query log recorded during proving), recover the witness
- * without rewinding the prover.
+ * Copyright (C) 2026 Dyne.org foundation
+ * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
- * The extractor works by:
- *  1. Parsing the NiwiProof to extract Merkle paths and column indices
- *  2. Looking up each Merkle leaf digest in Gamma to recover the leaf
- *     preimage (nonce + encoded column data)
- *  3. Rebuilding the Merkle root from recovered leaves
- *  4. Decoding column data back into tableau rows
- *  5. Extracting witness elements from the witness rows
- *  6. Validating the recovered witness against the circuit
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
- * All lookups are domain-tagged and respect the before-proof cutoff.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 #ifndef NIWI_EXTRACT_H

@@ -1,8 +1,21 @@
-/* lib/niwi/src/encoding.h — Canonical length-prefixed encoders.
+/* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Every encoder produces deterministic, byte-exact output suitable for
- * domain-separated hashing.  All multi-byte integers are big-endian.
- * Lengths are encoded as fixed-width fields whose size depends on context.
+ * Copyright (C) 2026 Dyne.org foundation
+ * designed, written and maintained by Denis Roio <jaromil@dyne.org>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 #ifndef NIWI_ENCODING_H

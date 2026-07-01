@@ -1,13 +1,21 @@
-/* lib/niwi/tests/test_npro.c — Observable NPRO vector tests.
+/* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Tests:
- *  - Production mode (no observation)
- *  - Observation mode with query recording
- *  - Deterministic replay
- *  - Cutoff enforcement
- *  - Gamma serialization round-trip
- *  - Lookup by domain + digest
- *  - Malformed Gamma rejection
+ * Copyright (C) 2026 Dyne.org foundation
+ * designed, written and maintained by Denis Roio <jaromil@dyne.org>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 #include "npro.h"
