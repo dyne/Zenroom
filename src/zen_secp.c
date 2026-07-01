@@ -956,6 +956,30 @@ end:
 	END(1);
 }
 
+/***
+    Map an OCTET of exactly 64 bytes to a point on the secp256k1 curve.
+    Uses Milagro's hash-to-point mapping.
+
+    @function mapit
+    @param OCTET 64-byte hash output
+    @return SECP point on secp256k1
+*/
+static int secp_mapit(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const octet *o = o_arg(L, 1); SAFE_GOTO(o, ALLOCATE_OCT_ERR);
+	SAFE_GOTO(o->len == 64, "Invalid argument, octet must be 64 bytes");
+	secp *e = secp_new(L); SAFE_GOTO(e, CREATE_ECP_ERR);
+	func(L, "mapit on o->len %u", o->len);
+	ECP_SECP256K1_mapit(&e->val, (octet *)o);
+end:
+	o_free(L, o);
+	if (failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
 /* --- module registration --- */
 
 int luaopen_secp(lua_State *L) {
@@ -970,6 +994,7 @@ int luaopen_secp(lua_State *L) {
 		{"prime", secp_prime},
 		{"rhs", secp_rhs},
 		{"validate", secp_validate},
+		{"mapit", secp_mapit},
 		{"generator", secp_generator},
 		{"G", secp_generator},
 		{"bip340_seckey_valid", lua_bip340_seckey_valid},
