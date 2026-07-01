@@ -70,4 +70,27 @@ octet *secp_big_to_oct(lua_State *L, const BIG_256_28 b);
 /* Signed-even-y helper (0 if even, 1 if odd). */
 int secp_sign(BIG_256_28 y);
 
+/* --- BIP-340 Schnorr helpers --- */
+
+/* Validate a 32-byte secret scalar: 1 <= d < n. Returns 1 if valid. */
+int secp_bip340_seckey_valid(const octet *o);
+
+/* Negate scalar k modulo n in place. */
+void secp_bip340_scalar_negate(BIG_256_28 k);
+
+/* Compute s = (k + e * d) mod n. d, e, k, and s are BIG_256_28. */
+void secp_bip340_sign_response(BIG_256_28 s, const BIG_256_28 k,
+                               const BIG_256_28 e, const BIG_256_28 d);
+
+/* Reduce a 32-byte octet modulo n into a BIG_256_28. */
+void secp_bip340_challenge(BIG_256_28 e, const octet *hash32);
+
+/* Compute BIP-0340 tagged hash: sha256(sha256(tag) || sha256(tag) || data).
+ * The result is a 32-byte stack-allocated octet. */
+octet *secp_bip340_tagged_hash(lua_State *L, const char *tag, const octet *data);
+
+/* Lift an x-only (32-byte) octet to a SECP point with even y.
+ * Returns 1 on success, 0 on failure. */
+int secp_bip340_lift_x(ECP_SECP256K1 *P, const octet *xo);
+
 #endif

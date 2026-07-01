@@ -672,6 +672,164 @@ static int secp_destroy(lua_State *L) {
 	return 0;
 }
 
+/* --- BIP-340 Schnorr helpers --- */
+
+int secp_bip340_seckey_valid(const octet *o) {
+	if (!o || o->len != SECP_BYTES) return 0;
+	BIG_256_28 d, order, zero;
+	BIG_256_28_fromBytesLen(d, (char *)o->val, SECP_BYTES);
+	BIG_256_28_copy(order, (chunk *)CURVE_Order_SECP256K1);
+	BIG_256_28_zero(zero);
+	if (BIG_256_28_comp(d, zero) == 0) return 0;
+	if (BIG_256_28_comp(d, order) >= 0) return 0;
+	return 1;
+}
+
+void secp_bip340_scalar_negate(BIG_256_28 k) {
+	BIG_256_28 n;
+	BIG_256_28_copy(n, (chunk *)CURVE_Order_SECP256K1);
+	BIG_256_28_sub(k, n, k);
+	BIG_256_28_norm(k);
+}
+
+void secp_bip340_sign_response(BIG_256_28 s, const BIG_256_28 k,
+                               const BIG_256_28 e, const BIG_256_28 d) {
+	BIG_256_28 ed, n;
+	BIG_256_28_copy(n, (chunk *)CURVE_Order_SECP256K1);
+	/* s = (k + e*d) mod n */
+	/* compute ed = e * d (with double-precision intermediate) */
+	DBIG_256_28 ded;
+	BIG_256_28_mul(ded, (chunk *)e, (chunk *)d);  /* cast away const for Milagro API */
+	BIG_256_28_dmod(ed, ded, n);
+	BIG_256_28_add(s, k, ed);
+	BIG_256_28_norm(s);
+	if (BIG_256_28_comp(s, n) >= 0) {
+		BIG_256_28_sub(s, s, n);
+		BIG_256_28_norm(s);
+	}
+}
+
+void secp_bip340_challenge(BIG_256_28 e, const octet *hash32) {
+	BIG_256_28 n;
+	BIG_256_28_fromBytesLen(e, (char *)hash32->val, SECP_BYTES);
+	BIG_256_28_copy(n, (chunk *)CURVE_Order_SECP256K1);
+	BIG_256_28_mod(e, n);
+}
+
+octet *secp_bip340_tagged_hash(lua_State *L, const char *tag, const octet *data) {
+	/* tagged_hash(tag, data) = sha256(sha256(tag) || sha256(tag) || data) */
+	hash256 H;
+	char taghash[32], result[32];
+	size_t i;
+
+	/* sha256(tag) */
+	HASH256_init(&H);
+	for (i = 0; tag[i]; i++) HASH256_process(&H, (unsigned char)tag[i]);
+	HASH256_hash(&H, taghash);
+
+	/* sha256(sha256(tag) || sha256(tag) || data) */
+	HASH256_init(&H);
+	for (i = 0; i < 32; i++) HASH256_process(&H, (unsigned char)taghash[i]);
+	for (i = 0; i < 32; i++) HASH256_process(&H, (unsigned char)taghash[i]);
+	for (i = 0; i < data->len; i++) HASH256_process(&H, data->val[i]);
+	HASH256_hash(&H, result);
+
+	octet *o = o_new(L, SECP_BYTES);
+	if (!o) return NULL;
+	memcpy((char *)o->val, result, SECP_BYTES);
+	o->len = SECP_BYTES;
+	return o;
+}
+
+int secp_bip340_lift_x(ECP_SECP256K1 *P, const octet *xo) {
+	if (!xo || xo->len != SECP_BYTES) return 0;
+	BIG_256_28 x;
+	BIG_256_28_fromBytesLen(x, (char *)xo->val, SECP_BYTES);
+	/* check x < p */
+	BIG_256_28 p;
+	BIG_256_28_rcopy(p, Modulus_SECP256K1);
+	if (BIG_256_28_comp(x, p) >= 0) return 0;
+	/* ECP_SECP256K1_setx sets P to (x, y) with y selected by LSB */
+	/* We want even y: always set s=0 then check parity */
+	if (!ECP_SECP256K1_setx(P, x, 0)) return 0;
+	/* If y is odd, negate P so it has even y */
+	BIG_256_28 bx, by;
+	ECP_SECP256K1_get(bx, by, P);
+	if (secp_sign(by)) {
+		ECP_SECP256K1_neg(P);
+	}
+	return 1;
+}
+
+/* --- Lua-callable BIP-340 helpers --- */
+
+/***
+    Validate a BIP-340 secret key: exactly 32 bytes, 1 <= d < n.
+
+    @function bip340_seckey_valid
+    @param sk 32-byte OCTET secret key
+    @return true if valid, false otherwise
+*/
+static int lua_bip340_seckey_valid(lua_State *L) {
+	BEGIN();
+	const octet *o = o_arg(L, 1); SAFE(o, ALLOCATE_OCT_ERR);
+	lua_pushboolean(L, secp_bip340_seckey_valid(o));
+	o_free(L, o);
+	END(1);
+}
+
+/***
+    Compute BIP-0340 tagged hash: sha256(sha256(tag) || sha256(tag) || data).
+
+    @function bip340_tagged_hash
+    @param tag a string (e.g. "BIP0340/challenge")
+    @param data an OCTET to hash
+    @return 32-byte OCTET hash digest
+*/
+static int lua_bip340_tagged_hash(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	size_t taglen;
+	const char *tag = lua_tolstring(L, 1, &taglen);
+	const octet *data = o_arg(L, 2);
+	SAFE_GOTO(tag && data, "bip340_tagged_hash: tag and data required");
+	octet *o = secp_bip340_tagged_hash(L, tag, data);
+	SAFE_GOTO(o, "bip340_tagged_hash: allocation failed");
+end:
+	o_free(L, data);
+	if (failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/***
+    Lift an x-only (32-byte) octet to a SECP point with even y.
+
+    @function bip340_lift_x
+    @param x 32-byte OCTET x coordinate
+    @return SECP point with even y, or nil if x is not on the curve
+*/
+static int lua_bip340_lift_x(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const octet *xo = o_arg(L, 1); SAFE_GOTO(xo, ALLOCATE_OCT_ERR);
+	SAFE_GOTO(xo->len == SECP_BYTES, "lift_x: x must be 32 bytes");
+	secp *e = secp_new(L); SAFE_GOTO(e, CREATE_ECP_ERR);
+	if (!secp_bip340_lift_x(&e->val, xo)) {
+		lua_pop(L, 1);
+		failed_msg = "lift_x: no point on curve for this x";
+		goto end;
+	}
+end:
+	o_free(L, xo);
+	if (failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+
 /* --- module registration --- */
 
 int luaopen_secp(lua_State *L) {
@@ -688,6 +846,9 @@ int luaopen_secp(lua_State *L) {
 		{"validate", secp_validate},
 		{"generator", secp_generator},
 		{"G", secp_generator},
+		{"bip340_seckey_valid", lua_bip340_seckey_valid},
+		{"bip340_tagged_hash", lua_bip340_tagged_hash},
+		{"bip340_lift_x", lua_bip340_lift_x},
 		{NULL, NULL}};
 	const struct luaL_Reg secp_methods[] = {
 		{"affine", secp_affine},
