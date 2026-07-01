@@ -9,7 +9,7 @@ NIWI_AR ?= ar
 
 NIWI_AMCL := ../../lib/milagro-crypto-c/build/lib/libamcl_core.a
 
-NIWI_SOURCES := src/niwi.c.o src/encoding.c.o src/hash.c.o
+NIWI_SOURCES := src/niwi.c.o src/encoding.c.o src/hash.c.o src/npro.c.o
 
 all: libniwi.a
 
@@ -18,7 +18,7 @@ libniwi.a: $(NIWI_SOURCES)
 
 clean:
 	rm -f src/*.c.o tests/*.o
-	rm -f *.a test_abi test_encoding test_hash
+	rm -f *.a test_abi test_encoding test_hash test_npro
 
 %.c.o: %.c
 	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -c -o $@ $<
@@ -28,10 +28,11 @@ clean:
 
 # ---- Tests ----
 
-test: test_abi test_encoding test_hash
+test: test_abi test_encoding test_hash test_npro
 	./test_abi
 	./test_encoding
 	./test_hash
+	./test_npro
 	@echo "=== All lib/niwi tests passed ==="
 
 test_abi: tests/test_abi.c.o libniwi.a
@@ -42,3 +43,6 @@ test_encoding: tests/test_encoding.c.o libniwi.a
 
 test_hash: tests/test_hash.c.o libniwi.a
 	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_hash.c.o -L. -lniwi $(NIWI_AMCL)
+
+test_npro: tests/test_npro.c.o libniwi.a
+	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_npro.c.o -L. -lniwi $(NIWI_AMCL)
