@@ -60,7 +60,7 @@ end
 -- BIP-340 public key derivation: returns 32-byte x-only public key
 function schnorr.pubgen(sk)
    if iszen(type(sk)) then sk = sk:octet() end
-   if #sk ~= 32 then fail("public key must be 32 bytes") end
+   if #sk ~= 32 then fail("secret key must be 32 bytes") end
    if not S.bip340_seckey_valid(sk) then
       fail("invalid secret key for pubgen")
    end
