@@ -1,4 +1,10 @@
 # hard-code build information
+.PHONY: FORCE
+
+lib/niwi/src/pbsch_commitment.o lib/niwi/src/niwi_lua_bindings.o: FORCE
+
+FORCE:
+
 .c.o:
 	$(zenroom_cc) \
 	$(cflags) \
