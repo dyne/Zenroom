@@ -25,6 +25,7 @@
 #include <cstdint>
 
 #include "circuits/secp256k1_circuit.h"
+#include "circuits/bip340_circuit.h"
 
 namespace niwi {
 
@@ -126,35 +127,39 @@ class RpbschCircuit {
 
   struct Branch2Witness {
     EltW nu_u, nu_u_prime, nu_s;   /* scalars */
+    EltW nu_inv;                    /* witness inverse of (nu_u - nu_u') */
     EltW r_S;                      /* Pedersen blinding for S */
-    EltW msg0[32], msg1[32];       /* 32-byte message digests (as bits) */
     EltW S_y, H_x, H_y;            /* S_y, independent generator */
+
+    /* BIP-340 signatures: σ₀ = (R0_x, s0), σ₁ = (R1_x, s1) */
+    EltW sig0_R_x, sig0_s, sig1_R_x, sig1_s;
+
+    /* Full BIP-340 witnesses for both signatures */
+    typename Bip340Circuit<LogicCircuit, EC, ScalarField>::Witness bip0_wit;
+    typename Bip340Circuit<LogicCircuit, EC, ScalarField>::Witness bip1_wit;
 
     /* Pedersen witness for S */
     typename Secp256k1Circuit<LogicCircuit>::ScalarMultWitness ped_wit_S;
 
-    /* Two BIP-340 verification witnesses (reuse the full circuit) */
-    /* Each provides: pk_y, R_y, s_inv, pk_inv, pre[8], bi[256],
-     * int_xyz[255], e_circuit, e_neg, bit decs, SHA witness, message bits */
-    /* For now, accept the full witness structures. */
-    /* We'll reference the Bip340Circuit witness layout for each. */
-
-    /* n_u != n_u' check */
-    EltW nu_inv;                /* witness inverse of (nu_u - nu_u') */
     v256 nu_u_bits, nu_up_bits;
+    v256 msg0_bits, msg1_bits;
 
     void input(const LogicCircuit& lc) {
       nu_u = lc.eltw_input(); nu_u_prime = lc.eltw_input();
       nu_inv = lc.eltw_input();
       nu_s   = lc.eltw_input();
       r_S    = lc.eltw_input();
-      for (size_t i = 0; i < 32; ++i) msg0[i] = lc.eltw_input();
-      for (size_t i = 0; i < 32; ++i) msg1[i] = lc.eltw_input();
       S_y = lc.eltw_input();
       H_x = lc.eltw_input(); H_y = lc.eltw_input();
+      sig0_R_x = lc.eltw_input(); sig0_s = lc.eltw_input();
+      sig1_R_x = lc.eltw_input(); sig1_s = lc.eltw_input();
+      bip0_wit.input(lc);
+      bip1_wit.input(lc);
       ped_wit_S.input(lc);
       nu_u_bits  = lc.template vinput<256>();
       nu_up_bits = lc.template vinput<256>();
+      msg0_bits  = lc.template vinput<256>();
+      msg1_bits  = lc.template vinput<256>();
     }
   };
 
@@ -162,7 +167,8 @@ class RpbschCircuit {
 
   RpbschCircuit(const LogicCircuit& lc, const EC& ec,
                 const ScalarField& Fn)
-      : lc_(lc), secp_(lc, ec), fn_(Fn) {}
+      : lc_(lc), secp_(lc, ec), fn_(Fn),
+        bip0_(lc, ec, Fn), bip1_(lc, ec, Fn) {}
 
   /* ---- Verification ---- */
 
@@ -193,6 +199,8 @@ class RpbschCircuit {
   const LogicCircuit& lc_;
   Secp256k1Circuit<LogicCircuit> secp_;
   const ScalarField& fn_;
+  Bip340Circuit<LogicCircuit, EC, ScalarField> bip0_;
+  Bip340Circuit<LogicCircuit, EC, ScalarField> bip1_;
 
   /* ---- Gated assertion helpers -----------------------------------------
    *
@@ -255,8 +263,13 @@ class RpbschCircuit {
     secp_.verify_pedersen(w.nu_s, w.r_S, stmt.S_x, w.S_y,
                           w.H_x, w.H_y, w.ped_wit_S);
 
-    /* ---- 4. BIP-340 verifications (deferred) ---- */
-    (void)w.msg0; (void)w.msg1;
+    /* ---- 4. BIP-340 verifications ---- */
+    /* σ₀ verifies under X' on msg₀ */
+    bip0_.verify(stmt.Xp_x, w.sig0_R_x, w.sig0_s, w.bip0_wit);
+    /* σ₁ verifies under X' on msg₁ */
+    bip1_.verify(stmt.Xp_x, w.sig1_R_x, w.sig1_s, w.bip1_wit);
+
+    (void)w.msg0_bits; (void)w.msg1_bits; /* consumed by bip0/bip1 internally */
   }
 };
 
