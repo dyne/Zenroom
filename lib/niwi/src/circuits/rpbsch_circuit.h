@@ -26,6 +26,7 @@
 
 #include "circuits/secp256k1_circuit.h"
 #include "circuits/bip340_circuit.h"
+#include "circuits/sha/flatsha256_circuit.h"
 
 namespace niwi {
 
@@ -69,6 +70,30 @@ class RpbschCircuit {
   using v8     = typename LogicCircuit::v8;
 
   static constexpr size_t kBits = EC::kBits;
+  using Bp = proofs::BitPlucker<LogicCircuit, 5>;
+  using packed_v32 = typename Bp::packed_v32;
+
+  /* SHA-256 2-block witness for msg = SHA-256(a || b) where a,b are
+   * 32-byte field elements (ν_s, ν_u / ν_u'). */
+  struct Sha2BlockWitness {
+    packed_v32 outw[2][48];
+    packed_v32 oute[2][64];
+    packed_v32 outa[2][64];
+    packed_v32 h1[2][8];       /* h1[1] = final hash */
+
+    void input(const LogicCircuit& lc) {
+      for (size_t b = 0; b < 2; ++b) {
+        for (size_t i = 0; i < 48; ++i)
+          outw[b][i] = Bp::template packed_input<packed_v32>(lc);
+        for (size_t i = 0; i < 64; ++i)
+          oute[b][i] = Bp::template packed_input<packed_v32>(lc);
+        for (size_t i = 0; i < 64; ++i)
+          outa[b][i] = Bp::template packed_input<packed_v32>(lc);
+        for (size_t i = 0; i < 8; ++i)
+          h1[b][i] = Bp::template packed_input<packed_v32>(lc);
+      }
+    }
+  };
 
   /* ---- OR selector constraint ---- */
 
@@ -145,6 +170,11 @@ class RpbschCircuit {
     typename Bip340Circuit<LogicCircuit, EC, ScalarField>::Witness bip1_wit;
 
     /* Pedersen witness for S */
+
+    /* SHA-256 preimage witnesses: msg0 = SHA-256(ν_s || ν_u),
+     * msg1 = SHA-256(ν_s || ν_u') */
+    Sha2BlockWitness sha0_wit;
+    Sha2BlockWitness sha1_wit;
     typename Secp256k1Circuit<LogicCircuit>::ScalarMultWitness ped_wit_S;
 
     v256 nu_u_bits, nu_up_bits, nu_s_bits;
@@ -162,6 +192,8 @@ class RpbschCircuit {
       bip0_wit.input(lc);
       bip1_wit.input(lc);
       ped_wit_S.input(lc);
+      sha0_wit.input(lc);
+      sha1_wit.input(lc);
       nu_u_bits  = lc.template vinput<256>();
       nu_up_bits = lc.template vinput<256>();
       nu_s_bits  = lc.template vinput<256>();
@@ -175,7 +207,20 @@ class RpbschCircuit {
   RpbschCircuit(const LogicCircuit& lc, const EC& ec,
                 const ScalarField& Fn)
       : lc_(lc), secp_(lc, ec), fn_(Fn),
-        bip0_(lc, ec, Fn), bip1_(lc, ec, Fn) {}
+        bip0_(lc, ec, Fn), bip1_(lc, ec, Fn),
+        bp_(lc_), sha_(lc_) {
+    /* Standard SHA-256 IV */
+    uint32_t iv[8] = {
+      0x6a09e667u, 0xbb67ae85u, 0x3c6ef372u, 0xa54ff53au,
+      0x510e527fu, 0x9b05688cu, 0x1f83d9abu, 0x5be0cd19u
+    };
+    for (size_t i = 0; i < 8; ++i) sha_iv_[i] = lc_.vbit32(iv[i]);
+    /* Padding for 64-byte message: length = 512 bits = 0x200.
+     * Block 1 layout: 0x80 || zeros... || 0x00000000 || 0x00000200 */
+    sha_pad1_[0] = lc_.vbit32(0x80000000u);
+    for (size_t i = 1; i < 7; ++i) sha_pad1_[i] = lc_.vbit32(0);
+    sha_pad1_[7] = lc_.vbit32(0x00000200u);
+  }
 
   /* ---- Verification ---- */
 
@@ -200,6 +245,10 @@ class RpbschCircuit {
   const ScalarField& fn_;
   Bip340Circuit<LogicCircuit, EC, ScalarField> bip0_;
   Bip340Circuit<LogicCircuit, EC, ScalarField> bip1_;
+  Bp bp_;
+  proofs::FlatSHA256Circuit<LogicCircuit, Bp> sha_;
+  v32 sha_iv_[8];    /* standard SHA-256 IV */
+  v32 sha_pad1_[8];  /* block-1 padding for 64-byte input (0x80, zeros, 0x200) */
 
   /* ---- Gated assertion helpers -----------------------------------------
    *
@@ -215,6 +264,61 @@ class RpbschCircuit {
   void gate_assert_eq(EltW gate, EltW a, EltW b) const {
     EltW diff = lc_.sub(&a, b);
     gate_assert0(gate, diff);
+  }
+
+  /* ---- SHA-256 preimage: msg = SHA-256(a || b) (64 bytes total) --------
+   *
+   * Constrains: hash_output_bits == SHA-256(a_bits || b_bits)
+   * where a_bits and b_bits are 256-bit decompositions of two
+   * 32-byte scalar values (ν_s, ν_u / ν_u').
+   *
+   * Uses 2 SHA-256 blocks:
+   *   Block 0: a[0..31] || b[0..31] (64 bytes of data)
+   *   Block 1: padding (constant)
+   */
+  void verify_sha256_preimage(const v256& a_bits, const v256& b_bits,
+                              const v256& hash_output_bits,
+                              const Sha2BlockWitness& sha_w) const {
+    /* Build block 0 input: 16 v32 words from a_bits and b_bits */
+    v32 in0[16];
+    for (size_t i = 0; i < 8; ++i) {
+      in0[i]     = slice32(a_bits, i * 32);
+      in0[i + 8] = slice32(b_bits, i * 32);
+    }
+
+    /* Block 0: standard IV, data input, witness */
+    sha_.assert_transform_block(in0, sha_iv_,
+                                sha_w.outw[0], sha_w.oute[0],
+                                sha_w.outa[0], sha_w.h1[0]);
+
+    /* Block 0 H1 → block 1 H0 */
+    v32 h0_b1[8];
+    for (size_t i = 0; i < 8; ++i)
+      h0_b1[i] = bp_.unpack_v32(sha_w.h1[0][i]);
+
+    /* Block 1: padding constant, witness */
+    sha_.assert_transform_block(sha_pad1_, h0_b1,
+                                sha_w.outw[1], sha_w.oute[1],
+                                sha_w.outa[1], sha_w.h1[1]);
+
+    /* Final hash → 256 bits → compare with expected */
+    v256 computed;
+    for (size_t i = 0; i < 8; ++i) {
+      v32 word = bp_.unpack_v32(sha_w.h1[1][i]);
+      for (size_t j = 0; j < 32; ++j)
+        computed[i * 32 + j] = word[j];
+    }
+
+    /* Compare with expected hash output (bitwise) */
+    for (size_t i = 0; i < 256; ++i)
+      lc_.assert_eq(&computed[i], hash_output_bits[i]);
+  }
+
+  /* Extract 32 consecutive bits from a v256. */
+  v32 slice32(const v256& bits, size_t offset) const {
+    v32 r;
+    for (size_t i = 0; i < 32; ++i) r[i] = bits[offset + i];
+    return r;
   }
 
   void assert_msg_bits_equal(
@@ -274,13 +378,11 @@ class RpbschCircuit {
     secp_.verify_pedersen(w.nu_s, w.r_S, stmt.S_x, w.S_y,
                           w.H_x, w.H_y, w.ped_wit_S);
 
-    /* ---- 4. BIP-340 message binding and verifications ---- */
+    /* ---- 4. SHA-256 preimage and BIP-340 verifications ---- */
+    verify_sha256_preimage(w.nu_s_bits, w.nu_u_bits,  w.msg0_bits, w.sha0_wit);
+    verify_sha256_preimage(w.nu_s_bits, w.nu_up_bits, w.msg1_bits, w.sha1_wit);
     assert_msg_bits_equal(w.msg0_bits, w.bip0_wit);
     assert_msg_bits_equal(w.msg1_bits, w.bip1_wit);
-    /* TODO: constrain msg0_bits = SHA-256(ν_s || ν_u) and
-     * msg1_bits = SHA-256(ν_s || ν_u') once the RPBSch SHA preimage gadget is
-     * added. For now the public message wires are at least bound to the
-     * messages consumed by the BIP-340 verifier. */
 
     /* σ₀ verifies under X' on msg₀ */
     bip0_.verify(stmt.Xp_x, w.sig0_R_x, w.sig0_s, w.bip0_wit);
