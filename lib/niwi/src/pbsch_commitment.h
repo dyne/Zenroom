@@ -30,83 +30,80 @@ extern "C" {
 
 /* ---- PBSch prototype Pedersen commitment --------------------------------
  *
- * In the 2025-1992 paper, Cmt is a straight-line extractable commitment
- * (Pedersen + Fischlin-style opening proof). This prototype implements:
+ * 2025-1992 requires a straight-line extractable Cmt (Pedersen + Fischlin).
+ * This prototype implements only the Pedersen commitment:
  *
- *   1. A Pedersen commitment C = m*G + r*H over secp256k1
- *   2. A simple hash-based opening proof (SHA-256)
+ *   C = m·G + rho·H   over secp256k1
  *
- * This is NOT paper-level Cmt. The upgrade path is replacing the hash
- * opening proof with a Fischlin-style Sigma protocol in a future version.
+ * where:
+ *   G  = secp256k1 base point
+ *   H  = independent generator (derived from domain-separated hash)
+ *   m  = message scalar
+ *   rho = hiding randomness
  *
- * Commitment format (65 bytes):
- *   C_x (32 bytes) — x-coordinate of the Pedersen point (compressed)
- *   parity (1 byte) — 0x02 for even y, 0x03 for odd y
- *   pi (32 bytes)   — SHA-256 opening proof
- *       pi = SHA-256("PBSch/Cmt/v1" || C_x || parity ||
- *                     msg[0..31] || alpha[0..31] || beta[0..31] || rho[0..31])
+ * The Fischlin-style opening proof is DEFERRED. This prototype Cmt does
+ * not claim extractability. The commitment IS the Pedersen point.
  *
- * The generator H is derived deterministically:
- *   H = lift_x(SHA-256("Zenroom/PBSch/PedersenH/v1"))
- * with fallback: if lift_x fails, hash the previous hash until a valid
- * x-coordinate is found.
+ * Cmt format (33 bytes):
+ *   0x02 or 0x03 || C_x (32 bytes)   — secp256k1 compressed point
+ *
+ * No auxiliary hash proof is embedded; the Pedersen point is the commitment.
+ * Opening verification is simple: recompute C and compare.
+ *
+ * Tuple binding for S-cmt:
+ *   S commits to (sig0, sig1, nu_u, nu_u', nu_s) by first serializing the
+ *   tuple as a canonical byte string and lifting it to a scalar via
+ *   SHA-256, then using that scalar as m in the Pedersen equation.
  */
 
-#define NIWI_PBSCH_C_SIZE         65
-#define NIWI_PBSCH_S_SIZE         65
-#define NIWI_PBSCH_RAND_SIZE      32
-#define NIWI_PBSCH_MSG_SIZE       32
+#define NIWI_PBSCH_C_CMP_SIZE    33   /* compressed Pedersen point */
+#define NIWI_PBSCH_S_CMP_SIZE    33
+#define NIWI_PBSCH_RAND_SIZE     32
+#define NIWI_PBSCH_MSG_SIZE      32
 
-/* Compute a PBSch C commitment.
+/* Compute a PBSch C commitment: C = msg·G + rho·H.
  *
- * msg:    32-byte message
- * alpha:  32-byte scalar (blinding factor)
- * beta:   32-byte scalar (blinding factor)
- * rho:    32-byte randomness for the opening proof
- * c_out:  65-byte output commitment
+ * msg:   32-byte message (interpreted as scalar)
+ * rho:   32-byte hiding randomness (Pedersen blinding factor)
+ * c_out: 33-byte output commitment (0x02/0x03 || x)
  *
  * Returns 0 on success, -1 on error. */
 int niwi_pbsch_cmt_commit(const uint8_t msg[NIWI_PBSCH_MSG_SIZE],
-                          const uint8_t alpha[NIWI_PBSCH_RAND_SIZE],
-                          const uint8_t beta[NIWI_PBSCH_RAND_SIZE],
                           const uint8_t rho[NIWI_PBSCH_RAND_SIZE],
-                          uint8_t c_out[NIWI_PBSCH_C_SIZE]);
+                          uint8_t c_out[NIWI_PBSCH_C_CMP_SIZE]);
 
 /* Verify a PBSch C commitment opening.
  *
- * c:       65-byte commitment
- * msg:     32-byte purported message
- * alpha:   32-byte purported alpha
- * beta:    32-byte purported beta
- * rho:     32-byte randomness used for the opening proof
+ * c:     33-byte commitment
+ * msg:   32-byte purported message
+ * rho:   32-byte purported randomness
  *
  * Returns 0 if valid, -1 if invalid. */
-int niwi_pbsch_cmt_verify(const uint8_t c[NIWI_PBSCH_C_SIZE],
+int niwi_pbsch_cmt_verify(const uint8_t c[NIWI_PBSCH_C_CMP_SIZE],
                           const uint8_t msg[NIWI_PBSCH_MSG_SIZE],
-                          const uint8_t alpha[NIWI_PBSCH_RAND_SIZE],
-                          const uint8_t beta[NIWI_PBSCH_RAND_SIZE],
                           const uint8_t rho[NIWI_PBSCH_RAND_SIZE]);
 
-/* Compute a PBSch S commitment (same format as C, different tuple).
+/* Compute a PBSch S commitment.
  *
- * sig0:   64-byte BIP-340 signature (Rx || s)
- * sig1:   64-byte BIP-340 signature (Rx || s)
- * nu_u:   32-byte scalar
- * nu_u':  32-byte scalar (must differ from nu_u)
- * nu_s:   32-byte message
- * rho:    32-byte randomness for the opening proof
- * s_out:  65-byte output commitment
+ * sig0:     64-byte BIP-340 signature (Rx || s)
+ * sig1:     64-byte BIP-340 signature (Rx || s)
+ * nu_u:     32-byte scalar
+ * nu_u':    32-byte scalar (must differ from nu_u)
+ * nu_s:     32-byte message
+ * rho:      32-byte hiding randomness
+ * s_out:    33-byte output commitment
  *
- * Returns 0 on success, -1 on error. */
+ * The tuple (sig0, sig1, nu_u, nu_u', nu_s) is serialized and hashed to a
+ * 32-byte scalar m, then C = m·G + rho·H. */
 int niwi_pbsch_cmt_s_commit(const uint8_t sig0[64], const uint8_t sig1[64],
                             const uint8_t nu_u[NIWI_PBSCH_RAND_SIZE],
                             const uint8_t nu_u_prime[NIWI_PBSCH_RAND_SIZE],
                             const uint8_t nu_s[NIWI_PBSCH_MSG_SIZE],
                             const uint8_t rho[NIWI_PBSCH_RAND_SIZE],
-                            uint8_t s_out[NIWI_PBSCH_S_SIZE]);
+                            uint8_t s_out[NIWI_PBSCH_S_CMP_SIZE]);
 
 /* Verify a PBSch S commitment opening. */
-int niwi_pbsch_cmt_s_verify(const uint8_t s[NIWI_PBSCH_S_SIZE],
+int niwi_pbsch_cmt_s_verify(const uint8_t s[NIWI_PBSCH_S_CMP_SIZE],
                             const uint8_t sig0[64], const uint8_t sig1[64],
                             const uint8_t nu_u[NIWI_PBSCH_RAND_SIZE],
                             const uint8_t nu_u_prime[NIWI_PBSCH_RAND_SIZE],
@@ -116,7 +113,8 @@ int niwi_pbsch_cmt_s_verify(const uint8_t s[NIWI_PBSCH_S_SIZE],
 /* ---- H generator ------------------------------------------------------- */
 
 /* Returns the x-coordinate (32 bytes) of the independent generator H.
- * H = lift_x(SHA-256("Zenroom/PBSch/PedersenH/v1")) with fallback. */
+ * H = lift_x(SHA-256("Zenroom/PBSch/PedersenH/v1") || iteration)
+ * with iterative fallback until a valid even-y point is found. */
 const uint8_t *niwi_pbsch_pedersen_h_x(void);
 
 #ifdef __cplusplus

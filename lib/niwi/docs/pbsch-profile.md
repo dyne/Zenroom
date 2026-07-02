@@ -74,12 +74,12 @@ The RPBSch public statement consists of:
 |-----------|-------|------------------------------------------------|
 | X         | 32    | Signer public key (x-only, even-y)             |
 | X'        | 32    | Auxiliary signer public key (x-only, even-y)   |
-| C         | 65    | Prototype Cmt commitment to (m, α, β, ρ)       |
-| S         | 65    | Prototype Cmt commitment to (σ₀, σ₁, νᵤ, νᵤ', νₛ) |
+| C         | 33    | Pedersen commitment to (m, ρ)                  |
+| S         | 33    | Pedersen commitment to (σ₀, σ₁, νᵤ, νᵤ', νₛ)  |
 
 ### Statement serialization
 
-The 194-byte statement is the concatenation:
+The 130-byte statement is the concatenation:
 
 ```
 statement = X || X' || C || S
@@ -93,32 +93,38 @@ is rejected before circuit evaluation.
 **X' (32 bytes)**: x-only BIP-340 public key for the auxiliary key
 pair. Same validity rules as X.
 
-**C (65 bytes)**: Prototype Pedersen commitment. Format:
-```
-C = C_x (32 bytes) || parity_byte (1 byte) || pi_c (32 bytes)
-```
-Where `C_x` is the x-coordinate of the Pedersen commitment point,
-`parity_byte` is 0x02 for even y or 0x03 for odd y, and `pi_c` is a
-SHA-256 commitment-opening proof (prototype: H(C_x || parity || m || α || β || ρ)).
+**C (33 bytes)**: Pedersen commitment `C = m·G + ρ·H` as a compressed
+secp256k1 point (0x02/0x03 || x). No auxiliary hash proof is embedded;
+the Pedersen point IS the commitment. Opening verification is
+recomputing C from the claimed `(m, ρ)`.
 
-**S (65 bytes)**: Same format as C, committing to (σ₀, σ₁, νᵤ, νᵤ', νₛ).
+**S (33 bytes)**: Same format as C. The tuple `(sig0, sig1, νᵤ, νᵤ', νₛ)`
+is serialized and hashed to a 32-byte scalar `m'`, then S commits to
+`m'` under randomness `ρ`.
+
+### Cmt prototype limitations
+
+This prototype Cmt is NOT paper-level extractable Cmt. The Fischlin-style
+opening proof is deferred. The Pedersen point alone does not provide
+straight-line extractability. See `pbsch-verification-matrix.md` for the
+security implications.
 
 ### Cmt proof-equivalence boundary
 
-The paper states `C = Cmt.Com(pp, (m, φ, α, β); ρ)` where `Cmt` is
+The paper states `C = Cmt.Com(pp, (m, α, β); ρ)` where `Cmt` is
 straight-line extractable. In this prototype:
 
-1. **Outside the circuit**: The protocol parser verifies that `C` has a
-   valid opening proof `pi_c` under the commitment key. This prevents
-   trivial forgeries (C with invalid structure).
+1. **Outside the circuit**: The protocol parser verifies that `C` is a
+   valid compressed secp256k1 point. If `C_x >= p` or the point is not
+   on the curve, the statement is rejected.
 2. **Inside the circuit**: The RPBSch circuit checks the Pedersen
-   equation `C = m·G + r·H` for the claimed opening `(m, r)`.
+   equation `C = m·G + ρ·H` for the claimed opening `(m, ρ)`.
 
 This decomposition is **weaker** than paper-level `Cmt`. An adversary
-who can create a Pedersen commitment that passes parsing but has a
-different opening structure could potentially break extractability. The
-upgrade path is replacing the hash-based `pi_c` with a Fischlin-style
-opening proof.
+who can create a Pedersen commitment that passes point-validity checks
+but has a different opening structure could potentially break
+extractability. The upgrade path is replacing the point-only
+verification with a Fischlin-style opening proof.
 
 ## Witness encoding
 
