@@ -60,7 +60,7 @@ class Bip340Witness {
   Elt c_val_;        /* n - 1, used for bit-table witness generation */
 
   /* Bit decompositions for range/parity checks */
-  Elt s_bits_[kBits], e_bits_[kBits];
+  Elt s_bits_[kBits], e_bits_[kBits], e_neg_bits_[kBits];
   Elt pk_x_bits_[kBits], R_x_bits_[kBits];
   Elt ry_lsb_[8], py_lsb_[8];
 
@@ -144,6 +144,7 @@ class Bip340Witness {
 
     nat_to_bits(s_nat, s_bits_);
     elt_to_bits(e_challenge_, e_bits_);
+    elt_to_bits(e_neg_, e_neg_bits_);
     elt_to_bits(pk_x, pk_x_bits_);
     elt_to_bits(rx, R_x_bits_);
     low8(ry_, ry_lsb_);
@@ -169,6 +170,7 @@ class Bip340Witness {
     /* Bit decompositions for range checks */
     for (size_t i = 0; i < kBits; ++i) filler.push_back(s_bits_[i]);
     for (size_t i = 0; i < kBits; ++i) filler.push_back(e_bits_[i]);
+    for (size_t i = 0; i < kBits; ++i) filler.push_back(e_neg_bits_[i]);
     for (size_t i = 0; i < kBits; ++i) filler.push_back(pk_x_bits_[i]);
     for (size_t i = 0; i < kBits; ++i) filler.push_back(R_x_bits_[i]);
     /* Parity LSB bits */

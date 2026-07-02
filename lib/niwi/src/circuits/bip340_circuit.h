@@ -83,11 +83,12 @@ class Bip340Circuit {
     EltW int_y[kBits - 1];
     EltW int_z[kBits - 1];
     EltW e_circuit;   /* challenge, constrained to equal tagged hash output */
-    EltW e_neg_wire;  /* TODO: constrain this to n - e_circuit */
+    EltW e_neg_wire;  /* n - e_circuit, bound via e_circuit + e_neg = n */
 
     /* Bit decompositions for range checks and parity enforcement */
     v256 s_bits;           /* 256 bits of s */
     v256 e_bits;           /* 256 bits of e_circuit */
+    v256 e_neg_bits;       /* 256 bits of e_neg_wire */
     v256 pk_x_bits;        /* 256 bits of pk_x */
     v256 R_x_bits;         /* 256 bits of R_x */
 
@@ -129,10 +130,11 @@ class Bip340Circuit {
       e_circuit = lc.eltw_input();
       e_neg_wire = lc.eltw_input();
       /* Bit decompositions for range checks */
-      s_bits    = lc.template vinput<256>();
-      e_bits    = lc.template vinput<256>();
-      pk_x_bits = lc.template vinput<256>();
-      R_x_bits  = lc.template vinput<256>();
+      s_bits     = lc.template vinput<256>();
+      e_bits     = lc.template vinput<256>();
+      e_neg_bits = lc.template vinput<256>();
+      pk_x_bits  = lc.template vinput<256>();
+      R_x_bits   = lc.template vinput<256>();
       /* Parity bits */
       ry_lsb = lc.template vinput<8>();
       py_lsb = lc.template vinput<8>();
@@ -213,8 +215,13 @@ class Bip340Circuit {
       }
     }
 
-    /* s·G + e_neg·P + c·R = O  where c = n-1.
-     * TODO: bind e_neg to n-e_circuit once scalar-order constraints land. */
+    /* s·G + e_neg·P + c·R = O  where e_neg = n - e_circuit, c = n - 1.
+     * Constrain: e_circuit + e_neg_wire == n (scalar binding). */
+    EltW n_wire = lc_.konst(lc_.elt(
+        "0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"));
+    lc_.assert_eq(&lc_.add(&w.e_circuit, w.e_neg_wire), n_wire);
+    secp_.range_check_lt_n(w.e_neg_wire, w.e_neg_bits);
+
     EltW c_wire = lc_.konst(lc_.elt(
         "0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140"));
     secp_.verify_double_scalar(s_val, w.e_neg_wire, c_wire,
