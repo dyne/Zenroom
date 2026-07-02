@@ -79,8 +79,12 @@ int main() {
     /* Bip340Circuit */
     niwi::Bip340Circuit<Logic, EC, Scalar> bip(lc, niwi::secp256k1,
                                                 niwi::secp256k1_scalar);
-    (void)bip;
-    (void)&instantiate_bip340_verify;
+    instantiate_bip340_verify(lc, bip);
+    auto compiled = qc.mkcircuit(1);
+    if (!compiled) {
+        fprintf(stderr, "failed to compile BIP-340 circuit\n");
+        return 1;
+    }
 
     return 0;
 }

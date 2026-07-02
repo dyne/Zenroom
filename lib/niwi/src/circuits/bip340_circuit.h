@@ -156,10 +156,9 @@ class Bip340Circuit {
     secp_.assert_nonzero(pk_x, w.pk_inv);
     secp_.assert_nonzero(s_val, w.s_inv);
 
-    /* ---- Parity (placeholder) ---- */
-    for (size_t i = 0; i < 8; ++i) {
-      lc_.assert0(w.ry_lsb[i]); lc_.assert0(w.py_lsb[i]);
-    }
+    /* ---- Parity: lifted x-only points must use even y. ---- */
+    lc_.assert0(w.ry_lsb[0]);
+    lc_.assert0(w.py_lsb[0]);
 
     /* ---- Range checks ---- */
     secp_.range_check_lt_n(s_val, w.s_bits);
@@ -247,15 +246,16 @@ class Bip340Circuit {
                                 w.sha_outw[2], w.sha_oute[2],
                                 w.sha_outa[2], w.sha_h1[2]);
 
-    /* Final H1 (8 packed_v32) → unpack to 8 v32 → concatenate bits → EltW */
+    /* Final H1 (8 packed_v32) → unpack to digest bits.
+     * SHA words are big-endian; field bit vectors are little-endian. */
     v256 hash_bits;
     for (size_t i = 0; i < 8; ++i) {
-      v32 word = bp_.unpack_v32(w.sha_h1[2][i]);
+      v32 word = bp_.unpack_v32(w.sha_h1[2][7 - i]);
       for (size_t j = 0; j < 32; ++j)
         hash_bits[i * 32 + j] = word[j];
     }
 
-    return lc_.as_scalar(hash_bits);
+    return bits_to_field_le(hash_bits);
   }
 
   /* Extract 32 consecutive bits from a v256. */
@@ -263,6 +263,18 @@ class Bip340Circuit {
     v32 r;
     for (size_t i = 0; i < 32; ++i) r[i] = bits[offset + i];
     return r;
+  }
+
+  EltW bits_to_field_le(const v256& bits) const {
+    EltW acc = lc_.konst(lc_.zero());
+    EltW two = lc_.konst(lc_.elt(2));
+    for (size_t off = 0; off < kBits; ++off) {
+      size_t i = kBits - 1 - off;
+      EltW bit = lc_.eval(bits[i]);
+      EltW doubled = lc_.mul(&two, acc);
+      acc = lc_.add(&doubled, bit);
+    }
+    return acc;
   }
 };
 
