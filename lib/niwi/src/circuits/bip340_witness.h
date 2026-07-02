@@ -63,6 +63,7 @@ class Bip340Witness {
   Elt s_bits_[kBits], e_bits_[kBits], e_neg_bits_[kBits];
   Elt pk_x_bits_[kBits], R_x_bits_[kBits];
   Elt ry_lsb_[8], py_lsb_[8];
+  Elt msg_bits_[256];     /* message bits for circuit SHA input */
 
   Bip340Witness(const Field& F, const EC& ec, const ScalarField& Fn)
       : f_(F), ec_(ec), fn_(Fn) {}
@@ -150,6 +151,11 @@ class Bip340Witness {
     low8(ry_, ry_lsb_);
     low8(pk_y, py_lsb_);
 
+    /* Message bits: 32 bytes = 256 field elements (0 or 1) */
+    for (size_t i = 0; i < 32; ++i)
+      for (size_t b = 0; b < 8; ++b)
+        msg_bits_[i * 8 + b] = f_.of_scalar((msg[i] >> (7 - b)) & 1);
+
     return build_scalar_mul(pk_x, pk_y, rx_, ry_, e_neg_, c_val_, s_nat);
   }
     filler.push_back(rx_);
@@ -176,11 +182,35 @@ class Bip340Witness {
     /* Parity LSB bits */
     for (size_t i = 0; i < 8; ++i) filler.push_back(ry_lsb_[i]);
     for (size_t i = 0; i < 8; ++i) filler.push_back(py_lsb_[i]);
+
+    /* SHA-256 witnesses: 3 blocks, packed_v32 encoding (7 field elements per uint32_t word) */
+    {
+      auto pack32 = [&](uint32_t val) {
+        for (size_t g = 0; g < 6; ++g) {
+          uint32_t bits = (val >> (5 * g)) & 0x1F;
+          filler.push_back(f_.subf(f_.of_scalar(2 * bits), f_.of_scalar(31)));
+        }
+        uint32_t bits = (val >> 30) & 0x3;
+        filler.push_back(f_.subf(f_.of_scalar(2 * bits), f_.of_scalar(3)));
+      };
+      for (size_t b = 0; b < 3; ++b) {
+        for (size_t i = 0; i < 48; ++i) pack32(sha_outw[b][i]);
+        for (size_t i = 0; i < 64; ++i) pack32(sha_oute[b][i]);
+        for (size_t i = 0; i < 64; ++i) pack32(sha_outa[b][i]);
+        for (size_t i = 0; i < 8;  ++i) pack32(sha_h1[b][i]);
+      }
+    }
+
+    /* Message as 8 v32 = 256 field elements (one per bit) */
+    for (size_t i = 0; i < 8; ++i)
+      for (size_t j = 0; j < 32; ++j)
+        filler.push_back(msg_bits_[i * 32 + j]);
   }
 
   /* SHA-256 witness data (for circuit integration) */
   uint8_t  sha_padded[192];
   uint32_t sha_outw[3][48], sha_oute[3][64], sha_outa[3][64], sha_h1[3][8];
+  uint8_t  sha_num_blocks;
   uint8_t  sha_num_blocks;
 
  private:
