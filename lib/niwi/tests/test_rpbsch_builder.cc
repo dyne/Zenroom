@@ -36,6 +36,19 @@ using S  = niwi::FpSecp256k1Scalar;
 using B  = niwi::RpbschWitnessBuilder<EC, S>;
 using Elt = F::Elt;
 
+static constexpr size_t kScalarMultWitnessSize = 8 + 256 + 3 * 255;
+static constexpr size_t kPackedV32Size = 7;
+static constexpr size_t kSha2WitnessSize = 2 * (48 + 64 + 64 + 8) * kPackedV32Size;
+static constexpr size_t kSha3WitnessSize = 3 * (48 + 64 + 64 + 8) * kPackedV32Size;
+static constexpr size_t kBip340WitnessSize =
+    4 + kScalarMultWitnessSize + 2 + 5 * 256 + 2 * 8 +
+    kSha3WitnessSize + 8 * 32;
+static constexpr size_t kBranch1WitnessSize =
+    17 + 2 * kScalarMultWitnessSize + kSha3WitnessSize + 11 * 256;
+static constexpr size_t kBranch2WitnessSize =
+    12 + 2 * kBip340WitnessSize + kScalarMultWitnessSize +
+    2 * kSha2WitnessSize + 8 * 256;
+
 static int failures = 0;
 static void check(bool cond, const char *msg) {
     if (!cond) { fprintf(stderr, "FAIL: %s\n", msg); failures++; }
@@ -124,6 +137,11 @@ static void test_b1_complete() {
     add_overflow_n_33(c_bytes, b1.overflow, lhs);
     add_be32_33(b1.e_hash, b, rhs);
     check(memcmp(lhs, rhs, 33) == 0, "c + overflow*n == e + beta");
+
+    std::vector<Elt> witness;
+    size_t n = builder.fill_witness_branch1(stmt, b1, witness);
+    check(n == kBranch1WitnessSize, "branch 1 witness size");
+    check(witness.size() == kBranch1WitnessSize, "branch 1 vector size");
 }
 
 static void test_b1_overflow() {
@@ -182,6 +200,11 @@ static void test_b2_complete() {
           "nu_inv*(nu_u-nu_u') == 1");
     check(niwi_pbsch_pedersen_verify(stmt.S, nu_s, rho) == 0, "S verifies");
     check(memcmp(b2.msg0, b2.msg1, 32) != 0, "msg0 != msg1");
+
+    std::vector<Elt> witness;
+    size_t n = builder.fill_witness_branch2(stmt, b2, witness);
+    check(n == kBranch2WitnessSize, "branch 2 witness size");
+    check(witness.size() == kBranch2WitnessSize, "branch 2 vector size");
 }
 
 int main() {

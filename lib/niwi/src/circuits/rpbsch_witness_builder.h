@@ -277,7 +277,7 @@ class RpbschWitnessBuilder {
    * Returns total field element count pushed. */
   size_t fill_witness_branch1(const Statement& stmt, const Branch1& b1,
                                std::vector<Elt>& out) const {
-    auto z = f_.zero();
+    (void)stmt;
     out.push_back(elt_from_be32(b1.X_y));
     out.push_back(elt_from_be32(b1.R));  out.push_back(elt_from_be32(b1.R_y));
     out.push_back(elt_from_be32(b1.Rp)); out.push_back(elt_from_be32(b1.Rp_y));
@@ -308,6 +308,7 @@ class RpbschWitnessBuilder {
   /* Fill circuit witness vector in exact Branch2Witness::input() order. */
   size_t fill_witness_branch2(const Statement& stmt, const Branch2& b2,
                                std::vector<Elt>& out) const {
+    (void)stmt;
     out.push_back(b2.nu_u); out.push_back(b2.nu_u_prime);
     out.push_back(b2.nu_inv);
     out.push_back(b2.nu_s); out.push_back(b2.r_S);
@@ -376,14 +377,19 @@ class RpbschWitnessBuilder {
     for (int b=0; b<2; ++b) for (int i=0; i<184; ++i) for (int j=0; j<7; ++j) out.push_back(z);
   }
 
-  /* Placeholder: Bip340Circuit::Witness (approx the same as Sha3BlockWitness
-   * plus scalar-mul witness). Total fields ≈ scalar_mul + sha3 = 1029+3864=4893. */
+  /* Placeholder in exact Bip340Circuit::Witness::input() order:
+   * rx, ry, s_inv, pk_inv,
+   * scalar-mul witness,
+   * e_circuit, e_neg_wire,
+   * range/parity bit vectors,
+   * 3-block SHA witness,
+   * message words.
+   * Total: 4 + 1029 + 2 + 5*256 + 2*8 + 3864 + 8*32 = 6451 fields. */
   void fill_bip340_witness_placeholder(std::vector<Elt>& out) const {
-    fill_scalar_mul_placeholder(out);
-    fill_sha3_placeholder(out);
-    /* plus extra fields (msg_bits[256], etc.) */
     auto z = f_.zero();
-    for (int i=0; i<256; ++i) out.push_back(z); /* msg bits */
+    for (int i=0; i<4; ++i) out.push_back(z);
+    fill_scalar_mul_placeholder(out);
+    for (int i=0; i<2; ++i) out.push_back(z);
     for (int i=0; i<256; ++i) out.push_back(z); /* s_bits */
     for (int i=0; i<256; ++i) out.push_back(z); /* e_bits */
     for (int i=0; i<256; ++i) out.push_back(z); /* e_neg_bits */
@@ -391,6 +397,8 @@ class RpbschWitnessBuilder {
     for (int i=0; i<256; ++i) out.push_back(z); /* R_x_bits */
     for (int i=0; i<8; ++i) out.push_back(z);   /* ry_lsb */
     for (int i=0; i<8; ++i) out.push_back(z);   /* py_lsb */
+    fill_sha3_placeholder(out);
+    for (int i=0; i<256; ++i) out.push_back(z); /* msg_bits */
   }
 
   /* ---- Internal helpers ---- */
