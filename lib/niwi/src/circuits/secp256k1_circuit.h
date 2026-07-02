@@ -38,9 +38,12 @@ namespace niwi {
  *   - is_on_curve, point_equality, addE, doubleE
  *   - nonzero check (witness inverse)
  *   - x-only lift constraint (even y, x < p, on-curve)
- *   - Double-scalar multiplication verification:
- *       s·G + e·P + R = O    (BIP-340: s·G == R + e·P)
- *     using repeated squaring with 3-bit window precomputation.
+ *   - Triple-scalar multiplication skeleton:
+ *       s·G + e·P + R = O
+ *     using the Longfellow ECDSA 3-bit table pattern.
+ *
+ * BIP-340 needs s·G - e·P - R = O. That requires order-n scalar helpers
+ * for n-e and n-1 before this helper can be used as final verification.
  */
 
 template <class LogicCircuit>
@@ -85,12 +88,13 @@ class Secp256k1Circuit {
   template <class EC>
   Secp256k1Circuit(const LogicCircuit& lc, const EC& ec)
       : lc_(lc) {
-    a_  = lc_.konst(ec.a_);
-    b_  = lc_.konst(ec.b_);
-    gx_ = lc_.konst(ec.gx_);
-    gy_ = lc_.konst(ec.gy_);
+    a_  = ec.a_;
+    b_  = ec.b_;
+    gx_ = ec.gx_;
+    gy_ = ec.gy_;
+    k2_ = lc_.elt(2);
     k3_ = lc_.elt(3);
-    k3b_ = lc_.konst(ec.k3b);
+    k3b_ = ec.k3b;
   }
 
   /* ---- Point arithmetic gates ---------------------------------------- */
@@ -101,7 +105,8 @@ class Secp256k1Circuit {
     auto xx  = lc_.mul(&x, x);  /* x*x */
     auto xxx = lc_.mul(&x, xx); /* x^3 */
     auto ax  = lc_.mul(a_, x);
-    auto axb = lc_.add(&ax, b_);
+    auto b = lc_.konst(b_);
+    auto axb = lc_.add(&ax, b);
     auto rhs = lc_.add(&axb, xxx);
     lc_.assert_eq(&yy, rhs);
   }
@@ -233,7 +238,9 @@ class Secp256k1Circuit {
    *
    * Verifies:  s·G + e·P + R = O
    *
-   * This is exactly the BIP-340 equation s·G == R + e·P rearranged.
+   * This is the positive-coefficient table skeleton. The final BIP-340
+   * verifier must feed order-n negative scalar bits for e and R, then bind
+   * those bits to the public challenge with scalar/range constraints.
    * We use repeated squaring with a 3-bit window table (8 entries).
    *
    * The public inputs are:
@@ -253,6 +260,8 @@ class Secp256k1Circuit {
                             const ScalarMultWitness& w) const {
     EltW zero = lc_.konst(lc_.zero());
     EltW one  = lc_.konst(lc_.one());
+    EltW gx = lc_.konst(gx_);
+    EltW gy = lc_.konst(gy_);
 
     /* ---- Precomputed table verification ----
      * The 8 precomputed affine points are: { O, G, P, G+P, R, G+R, P+R, G+P+R }.
@@ -265,11 +274,11 @@ class Secp256k1Circuit {
     EltW cr_pk_x, cr_pk_y, cr_pk_z;
     EltW cr_g_pk_x, cr_g_pk_y, cr_g_pk_z;
 
-    addE(cg_pk_x, cg_pk_y, cg_pk_z,  gx_, gy_, one, P_x, P_y, one);
-    addE(cr_g_x,  cr_g_y,  cr_g_z,   R_x, R_y, one, gx_, gy_, one);
+    addE(cg_pk_x, cg_pk_y, cg_pk_z,  gx, gy, one, P_x, P_y, one);
+    addE(cr_g_x,  cr_g_y,  cr_g_z,   R_x, R_y, one, gx, gy, one);
     addE(cr_pk_x, cr_pk_y, cr_pk_z,  R_x, R_y, one, P_x, P_y, one);
     addE(cr_g_pk_x, cr_g_pk_y, cr_g_pk_z,
-         gx_, gy_, one, w.pre[PR_X], w.pre[PR_Y], one);
+         gx, gy, one, w.pre[PR_X], w.pre[PR_Y], one);
 
     point_equality(cg_pk_x, cg_pk_y, cg_pk_z, w.pre[GP_X], w.pre[GP_Y]);
     point_equality(cr_g_x, cr_g_y, cr_g_z, w.pre[GR_X], w.pre[GR_Y]);
@@ -280,9 +289,9 @@ class Secp256k1Circuit {
      * Window meaning per entry: (has_G, has_P, has_R)
      * 0:(0,0,0)→O, 1:(1,0,0)→G, 2:(0,1,0)→P, 3:(1,1,0)→G+P,
      * 4:(0,0,1)→R, 5:(1,0,1)→G+R, 6:(0,1,1)→P+R, 7:(1,1,1)→G+P+R */
-    EltW arr_x[] = {zero, gx_, P_x,  w.pre[GP_X],
+    EltW arr_x[] = {zero, gx,  P_x,  w.pre[GP_X],
                     R_x,  w.pre[GR_X], w.pre[PR_X], w.pre[GPR_X]};
-    EltW arr_y[] = {one,  gy_, P_y,  w.pre[GP_Y],
+    EltW arr_y[] = {one,  gy,  P_y,  w.pre[GP_Y],
                     R_y,  w.pre[GR_Y], w.pre[PR_Y], w.pre[GPR_Y]};
     EltW arr_z[] = {zero, one, one, one, one, one, one, one};
 
@@ -313,17 +322,10 @@ class Secp256k1Circuit {
 
       EltW s_bit = mg.mux(w.bi[i]);
       EltW e_bit = mp.mux(w.bi[i]);
-      /* The third scalar is -1 for all bits (we verify that the
-       * window includes the R term for every bit where R is in the table).
-       * Since we always add R for every bit, the window for R is always 1.
-       * We verify this by checking that has_R = 1 for every window value. */
-      EltW r_bit = mr.mux(w.bi[i]);
-      auto k2 = lc_.konst(k3_); /* k3_ is actually Elt(3), use lc.elt(2) */
-      (void)r_bit; /* placeholder — will verify window covers R */
+      (void)mr.mux(w.bi[i]);
 
-      auto k2const = lc_.elt(2);
-      s_sum = lc_.add(&s_bit, lc_.mul(k2const, s_sum));
-      e_sum = lc_.add(&e_bit, lc_.mul(k2const, e_sum));
+      s_sum = lc_.add(&s_bit, lc_.mul(k2_, s_sum));
+      e_sum = lc_.add(&e_bit, lc_.mul(k2_, e_sum));
 
       /* Verify bi[i] ∈ [0, 7] */
       EltW range = vv.mux(w.bi[i]);
@@ -359,7 +361,7 @@ class Secp256k1Circuit {
  private:
   const LogicCircuit& lc_;
   Elt a_, b_, gx_, gy_;
-  Elt k3_, k3b_;  /* Field constants: 3 and 3*b */
+  Elt k2_, k3_, k3b_;  /* Field constants: 2, 3, and 3*b */
 };
 
 }  // namespace niwi

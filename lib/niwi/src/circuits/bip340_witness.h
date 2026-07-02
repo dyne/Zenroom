@@ -211,12 +211,17 @@ class Bip340Witness {
 
     for (size_t i = 0; i < kBits; ++i) {
         size_t rev_i = kBits - 1 - i;
-        /* s*G + (-e)*P + (-1)*R = O */
-        uint8_t bi = s_b[rev_i] + 2 * (1 - e_b[rev_i]) + 4 * 1;
+        /* Positive table skeleton: s*G + e*P + R = O.
+         * Final BIP-340 needs n-e and n-1 scalar witnesses. */
+        uint8_t bi = s_b[rev_i] + 2 * e_b[rev_i] + 4 * 1;
         bi_[i] = f_.of_scalar(2 * bi - 7);
 
         Point mux;
         switch (bi) {
+            case 0: mux = ec_.zero(); break;
+            case 1: mux = G;   break;
+            case 2: mux = P;   break;
+            case 3: mux = GP;  break;
             case 4: mux = R;   break;
             case 5: mux = GR;  break;
             case 6: mux = PR;  break;

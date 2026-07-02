@@ -129,7 +129,7 @@ class Bip340Circuit {
       }
       /* Message: 8 v32 words */
       for (size_t i = 0; i < 8; ++i)
-        msg_bits[i] = lc.vinput();
+        msg_bits[i] = lc.template vinput<32>();
     }
   };
 
@@ -137,10 +137,7 @@ class Bip340Circuit {
                 const ScalarField& Fn)
       : lc_(lc), secp_(lc, ec), bp_(lc_),
         sha_(lc_), fn_(Fn) {
-    /* Precompute sha_tag = SHA-256("BIP0340/challenge") as v32 words.
-     * This is done natively, then embedded as circuit constants. */
-    /* sha_tag = 0x... (constant, computed at constructor time) */
-    sha_tag_words_ = compute_sha_tag();
+    compute_sha_tag(sha_tag_words_);
   }
 
   /* Public inputs (from statement):
@@ -209,7 +206,9 @@ class Bip340Circuit {
       }
     }
 
-    /* Verify: s·G + (-e)·P + (-1)·R = O */
+    /* FIXME: this currently wires the positive table skeleton
+     * s·G + e·P + R = O. Final BIP-340 needs order-n scalar helpers for
+     * s·G - e·P - R = O and must bind the negative scalar witnesses to e. */
     secp_.verify_double_scalar(s_val, w.e_circuit, pk_x, w.ry, R_x, w.rx, smw);
 
     /* ---- 5. Finalize ---- */
@@ -227,10 +226,11 @@ class Bip340Circuit {
   /* Precomputed sha_tag = SHA-256("BIP0340/challenge") as v32 words. */
   packed_v32 sha_tag_words_[16];
 
-  packed_v32* compute_sha_tag() {
+  void compute_sha_tag(packed_v32 out[16]) {
     /* Placeholder — will be filled with actual SHA-256 constant words. */
-    static packed_v32 result[16];
-    return result;
+    for (size_t i = 0; i < 16; ++i)
+      for (size_t j = 0; j < out[i].size(); ++j)
+        out[i][j] = lc_.konst(lc_.zero());
   }
 };
 

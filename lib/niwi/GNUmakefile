@@ -27,7 +27,7 @@ NIWI_AR ?= ar
 NIWI_AMCL := ../../lib/milagro-crypto-c/build/lib/libamcl_core.a
 
 NIWI_SOURCES := src/niwi.c.o src/encoding.c.o src/hash.c.o src/npro.c.o src/commitment.c.o src/extract.c.o \
-                src/pbsch_commitment.c.o src/circuits/bip340_witness_bridge.c.o \
+                src/circuits/bip340_witness_bridge.c.o \
                 src/secp256k1/secp256k1_curve.cc.o src/secp256k1/secp256k1_witness.cc.o
 
 all: libniwi.a
