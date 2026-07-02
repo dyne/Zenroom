@@ -14,6 +14,7 @@
 #include "secp256k1/secp256k1_field.h"
 #include "secp256k1/secp256k1_curve.h"
 #include "secp256k1/secp256k1_scalar.h"
+#include "secp256k1/secp256k1_witness.h"
 #include "pbsch_commitment.h"
 #include "circuits/bip340_witness_bridge.h"
 #include "circuits/rpbsch_ec_bridge.h"
@@ -26,6 +27,24 @@ class RpbschWitnessBuilder {
   using Elt   = typename Field::Elt;
   using Nat   = typename Field::N;
   static constexpr size_t kBits = EC::kBits;
+  static constexpr uint8_t kScalarN[32] = {
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe,
+    0xba, 0xae, 0xdc, 0xe6, 0xaf, 0x48, 0xa0, 0x3b,
+    0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41, 0x41
+  };
+  static constexpr uint8_t kGeneratorX[32] = {
+    0x79, 0xbe, 0x66, 0x7e, 0xf9, 0xdc, 0xbb, 0xac,
+    0x55, 0xa0, 0x62, 0x95, 0xce, 0x87, 0x0b, 0x07,
+    0x02, 0x9b, 0xfc, 0xdb, 0x2d, 0xce, 0x28, 0xd9,
+    0x59, 0xf2, 0x81, 0x5b, 0x16, 0xf8, 0x17, 0x98
+  };
+  static constexpr uint8_t kGeneratorY[32] = {
+    0x48, 0x3a, 0xda, 0x77, 0x26, 0xa3, 0xc4, 0x65,
+    0x5d, 0xa4, 0xfb, 0xfc, 0x0e, 0x11, 0x08, 0xa8,
+    0xfd, 0x17, 0xb4, 0x48, 0xa6, 0x85, 0x54, 0x19,
+    0x9c, 0x47, 0xd0, 0x8f, 0xfb, 0x10, 0xd4, 0xb8
+  };
 
  public:
   struct Statement {
@@ -83,16 +102,17 @@ class RpbschWitnessBuilder {
     if (niwi_bip340_lift_x(R_x, b1.R_y) != 0) return false;
 
     /* ---- H generator ---- */
-    const uint8_t *hx = niwi_pbsch_pedersen_h_x();
-    if (!hx) return false;
-    memcpy(b1.H_x, hx, 32);
-    if (niwi_bip340_lift_x(hx, b1.H_y) != 0) return false;
+    if (niwi_pbsch_pedersen_h(b1.H_x) != 0) return false;
+    if (niwi_bip340_lift_x(b1.H_x, b1.H_y) != 0) return false;
 
     /* ---- Scalars ---- */
-    b1.m     = elt_from_be32(m_bytes);
-    b1.alpha = elt_from_be32(alpha_bytes);
-    b1.beta  = elt_from_be32(beta_bytes);
-    b1.r_C   = elt_from_be32(rho_bytes);
+    if (!scalar_bytes_valid(m_bytes) || !scalar_bytes_valid(alpha_bytes) ||
+        !scalar_bytes_valid(beta_bytes) || !scalar_bytes_valid(rho_bytes))
+      return false;
+    b1.m     = scalar_bytes_to_base_elt(m_bytes);
+    b1.alpha = scalar_bytes_to_base_elt(alpha_bytes);
+    b1.beta  = scalar_bytes_to_base_elt(beta_bytes);
+    b1.r_C   = scalar_bytes_to_base_elt(rho_bytes);
 
     /* ---- C = m·G + r_C·H ---- */
     if (niwi_pbsch_pedersen_commit(m_bytes, rho_bytes, stmt.C) != 0)
@@ -102,19 +122,8 @@ class RpbschWitnessBuilder {
 
     /* ---- T = α·G + β·X ---- */
     {
-        uint8_t G[32] = {0}, Gy[32] = {0};
-        G[31] = 0x79; /* hacked — use generator */
-        /* Use EC mul bridge: α·G, β·X, then add */
-        /* α·G: scalar-mul generator */
         uint8_t aGx[32], aGy[32];
-        /* Generator: use secp256k1 G */
-        const uint8_t *g_hex = (const uint8_t *)
-            "\x79\xbe\x66\x7e\xf9\xdc\xbb\xac\x55\xa0\x62\x95\xce\x87\x0b\x07"
-            "\x02\x9b\xfc\xdb\x2d\xce\x28\xd9\x59\xf2\x81\x5b\x16\xf8\x17\x98";
-        const uint8_t *gy_hex = (const uint8_t *)
-            "\x48\x3a\xda\x77\x26\xa3\xc4\x65\x5d\xa4\xfb\xfc\x0e\x11\x08\xa8"
-            "\xfd\x17\xb4\x48\xa6\x85\x54\x19\x9c\x47\xd0\x8f\xfb\x10\xd4\xb8";
-        if (niwi_rpbsch_ec_mul(g_hex, gy_hex, alpha_bytes, aGx, aGy) != 0)
+        if (niwi_rpbsch_ec_mul(kGeneratorX, kGeneratorY, alpha_bytes, aGx, aGy) != 0)
             return false;
         uint8_t bXx[32], bXy[32];
         if (niwi_rpbsch_ec_mul(X, b1.X_y, beta_bytes, bXx, bXy) != 0)
@@ -150,33 +159,19 @@ class RpbschWitnessBuilder {
 
     /* ---- c = e + β mod n ---- */
     {
-        Elt e_elt = elt_from_be32(b1.e_hash);
-        Elt beta_elt = b1.beta;
-        /* sum = e + β (as field elements) */
-        auto n_val = fn_.of_string(
-            "0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141");
-        auto e_n = fn_.to_montgomery(f_.from_montgomery(e_elt));
-        auto b_n = fn_.to_montgomery(f_.from_montgomery(beta_elt));
-        auto sum_n = fn_.addf(e_n, b_n);
-        auto n_n = fn_.to_montgomery(fn_.from_montgomery(n_val));
-        if (fn_.from_montgomery(sum_n) >= fn_.from_montgomery(n_val)) {
-            /* e + β < 2n, but if e_elt is already close to n, handle overflow.
-             * Actually we need integer comparison. Use Nat for this. */
-            Nat e_nat = f_.from_montgomery(e_elt);
-            Nat b_nat = f_.from_montgomery(beta_elt);
-            Nat n_nat = f_.from_montgomery(n_val);
-            /* Since we can't easily add Nats, use field arithmetic:
-             * sum_n is (e+β) mod n in the scalar field.
-             * Integer e+β < 2n, so sum_n = e+β or e+β-n.
-             * If e+β >= n, sum_n = e+β-n. Otherwise sum_n = e+β.
-             * overflow = (e+β >= n) */
-            /* For now: just use sum_n directly as c_scalar.
-             * This means c = (e+β) mod n, which is correct.
-             * The overflow flag is 0 when e+β < n, 1 otherwise. */
-            (void)n_nat; (void)b_nat; (void)e_nat;
+        if (!base_bytes_valid(b1.e_hash)) return false;
+        uint8_t sum[33], c_bytes[32];
+        add_be32_33(b1.e_hash, beta_bytes, sum);
+        uint8_t two_n[33];
+        double_n(two_n);
+        if (cmp_be33(sum, two_n) >= 0) return false;  /* not representable by boolean overflow */
+        b1.overflow = cmp_be33_n(sum) >= 0 ? 1 : 0;
+        if (b1.overflow) {
+            sub_n_from_be33(sum);
         }
-        b1.c_scalar = f_.to_montgomery(fn_.from_montgomery(sum_n));
-        b1.overflow = 0; /* FIXME: proper overflow detection */
+        if (sum[0] != 0 || !scalar_bytes_valid(sum + 1)) return false;
+        memcpy(c_bytes, sum + 1, 32);
+        b1.c_scalar = scalar_bytes_to_base_elt(c_bytes);
     }
 
     /* ---- Bit decompositions ---- */
@@ -185,8 +180,8 @@ class RpbschWitnessBuilder {
     compute_bits_le(b1.alpha, b1.alpha_bits);
     compute_bits_le(b1.beta,  b1.beta_bits);
     compute_bits_le(b1.c_scalar, b1.c_bits);
-    compute_bits_le(elt_from_be32(b1.Rp), b1.Rp_bits);
-    compute_bits_le(elt_from_be32(X), b1.X_bits);
+    compute_bits_le(base_bytes_to_elt(b1.Rp), b1.Rp_bits);
+    compute_bits_le(base_bytes_to_elt(X), b1.X_bits);
     /* BE reversals */
     le_to_be(b1.m_bits,    b1.m_sha);
     le_to_be(b1.Rp_bits,   b1.Rp_sha);
@@ -210,29 +205,28 @@ class RpbschWitnessBuilder {
     memcpy(stmt.X, X, 32); memcpy(stmt.Xp, Xp, 32);
 
     /* ν scalars */
-    b2.nu_u       = elt_from_be32(nu_u_bytes);
-    b2.nu_u_prime = elt_from_be32(nu_up_bytes);
-    b2.nu_s       = elt_from_be32(nu_s_bytes);
-    b2.r_S        = elt_from_be32(rho_bytes);
+    if (!scalar_bytes_valid(nu_u_bytes) || !scalar_bytes_valid(nu_up_bytes) ||
+        !scalar_bytes_valid(nu_s_bytes) || !scalar_bytes_valid(rho_bytes))
+      return false;
+    b2.nu_u       = scalar_bytes_to_base_elt(nu_u_bytes);
+    b2.nu_u_prime = scalar_bytes_to_base_elt(nu_up_bytes);
+    b2.nu_s       = scalar_bytes_to_base_elt(nu_s_bytes);
+    b2.r_S        = scalar_bytes_to_base_elt(rho_bytes);
 
     /* ν_u ≠ ν_u': compute inverse in scalar field */
     {
-        auto n_val = fn_.of_string(
-            "0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141");
         auto u  = fn_.to_montgomery(f_.from_montgomery(b2.nu_u));
         auto up = fn_.to_montgomery(f_.from_montgomery(b2.nu_u_prime));
         auto diff = fn_.subf(u, up);
         /* If diff == 0, these are equal — reject */
-        if (fn_.from_montgomery(diff) == f_.zero()) return false;
+        if (diff == fn_.zero()) return false;
         auto inv = diff; fn_.invert(inv);
         b2.nu_inv = f_.to_montgomery(fn_.from_montgomery(inv));
     }
 
     /* H generator */
-    const uint8_t *hx = niwi_pbsch_pedersen_h_x();
-    if (!hx) return false;
-    memcpy(b2.H_x, hx, 32);
-    if (niwi_bip340_lift_x(hx, b2.H_y) != 0) return false;
+    if (niwi_pbsch_pedersen_h(b2.H_x) != 0) return false;
+    if (niwi_bip340_lift_x(b2.H_x, b2.H_y) != 0) return false;
 
     /* S = ν_s·G + r_S·H */
     if (niwi_pbsch_pedersen_commit(nu_s_bytes, rho_bytes, stmt.S) != 0)
@@ -274,15 +268,82 @@ class RpbschWitnessBuilder {
 
   /* Public helper for tests */
   Elt elt_from_be32(const uint8_t b[32]) const {
-      uint8_t le[32];
-      for (int i = 0; i < 32; ++i) le[i] = b[31 - i];
-      return f_.to_montgomery(Nat::of_bytes(le));
+      return base_bytes_to_elt(b);
   }
 
  private:
   const Field& f_;
   const EC& ec_;
   const ScalarField& fn_;
+
+  static bool bytes_less_be32(const uint8_t a[32], const uint8_t b[32]) {
+      return memcmp(a, b, 32) < 0;
+  }
+
+  static bool scalar_bytes_valid(const uint8_t b[32]) {
+      return bytes_less_be32(b, kScalarN);
+  }
+
+  bool base_bytes_valid(const uint8_t b[32]) const {
+      return octet_to_secp256k1_base(b).has_value();
+  }
+
+  Elt base_bytes_to_elt(const uint8_t b[32]) const {
+      auto v = octet_to_secp256k1_base(b);
+      return v.value();
+  }
+
+  Elt scalar_bytes_to_base_elt(const uint8_t b[32]) const {
+      uint8_t le[32];
+      for (int i = 0; i < 32; ++i) le[i] = b[31 - i];
+      return f_.to_montgomery(Nat::of_bytes(le));
+  }
+
+  static void add_be32_33(const uint8_t a[32], const uint8_t b[32],
+                          uint8_t out[33]) {
+      unsigned carry = 0;
+      for (int i = 31; i >= 0; --i) {
+          unsigned s = (unsigned)a[i] + (unsigned)b[i] + carry;
+          out[i + 1] = (uint8_t)(s & 0xffu);
+          carry = s >> 8;
+      }
+      out[0] = (uint8_t)carry;
+  }
+
+  static int cmp_be33(const uint8_t a[33], const uint8_t b[33]) {
+      return memcmp(a, b, 33);
+  }
+
+  static int cmp_be33_n(const uint8_t a[33]) {
+      uint8_t n33[33] = {0};
+      memcpy(n33 + 1, kScalarN, 32);
+      return cmp_be33(a, n33);
+  }
+
+  static void sub_n_from_be33(uint8_t a[33]) {
+      unsigned borrow = 0;
+      for (int i = 32; i >= 1; --i) {
+          unsigned sub = (unsigned)kScalarN[i - 1] + borrow;
+          if ((unsigned)a[i] >= sub) {
+              a[i] = (uint8_t)((unsigned)a[i] - sub);
+              borrow = 0;
+          } else {
+              a[i] = (uint8_t)(256u + (unsigned)a[i] - sub);
+              borrow = 1;
+          }
+      }
+      a[0] = (uint8_t)((unsigned)a[0] - borrow);
+  }
+
+  static void double_n(uint8_t out[33]) {
+      unsigned carry = 0;
+      for (int i = 31; i >= 0; --i) {
+          unsigned v = ((unsigned)kScalarN[i] << 1) | carry;
+          out[i + 1] = (uint8_t)(v & 0xffu);
+          carry = v >> 8;
+      }
+      out[0] = (uint8_t)carry;
+  }
 
   void compute_bits_le(const Elt& e, Elt* out) const {
       Nat n = f_.from_montgomery(e);
