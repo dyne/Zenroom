@@ -91,6 +91,12 @@ test_secp256k1: tests/test_secp256k1.cc.o libniwi.a
 		../../lib/zk-circuit-lang/libzk-circuit-lang.a \
 		../../lib/zstd/libzstd.a
 
+test_pbsch_circuits: tests/test_pbsch_circuits.cc.o libniwi.a
+	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_pbsch_circuits.cc.o -L. -lniwi \
+		../../lib/longfellow-zk/liblongfellow-zk.a \
+		../../lib/zk-circuit-lang/libzk-circuit-lang.a \
+		../../lib/zstd/libzstd.a
+
 # ---- Benchmarks ----
 
 bench: test_bench
