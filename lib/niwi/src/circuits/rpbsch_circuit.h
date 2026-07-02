@@ -27,6 +27,7 @@
 #include "circuits/secp256k1_circuit.h"
 #include "circuits/bip340_circuit.h"
 #include "circuits/sha/flatsha256_circuit.h"
+#include "bip340_witness_bridge.h"
 
 namespace niwi {
 
@@ -73,9 +74,28 @@ class RpbschCircuit {
   using Bp = proofs::BitPlucker<LogicCircuit, 5>;
   using packed_v32 = typename Bp::packed_v32;
 
-  /* SHA-256 2-block witness for msg = SHA-256(a || b) where a,b are
-   * 32-byte field elements (ν_s, ν_u / ν_u'). */
-  struct Sha2BlockWitness {
+  /* SHA-256 3-block witness for BIP-340 tagged hash:
+   * Hq(x) = tagged_hash("BIP0340/challenge", R'||X||m).
+   * Same structure as Bip340Circuit::Witness SHA fields. */
+  struct Sha3BlockWitness {
+    packed_v32 outw[3][48];
+    packed_v32 oute[3][64];
+    packed_v32 outa[3][64];
+    packed_v32 h1[3][8];
+
+    void input(const LogicCircuit& lc) {
+      for (size_t b = 0; b < 3; ++b) {
+        for (size_t i = 0; i < 48; ++i)
+          outw[b][i] = Bp::template packed_input<packed_v32>(lc);
+        for (size_t i = 0; i < 64; ++i)
+          oute[b][i] = Bp::template packed_input<packed_v32>(lc);
+        for (size_t i = 0; i < 64; ++i)
+          outa[b][i] = Bp::template packed_input<packed_v32>(lc);
+        for (size_t i = 0; i < 8; ++i)
+          h1[b][i] = Bp::template packed_input<packed_v32>(lc);
+      }
+    }
+  };
     packed_v32 outw[2][48];
     packed_v32 oute[2][64];
     packed_v32 outa[2][64];
@@ -99,7 +119,7 @@ class RpbschCircuit {
 
   /* Assert sel ∈ {0,1}: sel * (1 - sel) = 0.
    * Returns the complement (1 - sel) for gating branch 1. */
-  static EltW make_selector(const LogicCircuit& lc, EltW sel) {
+  EltW make_selector(const LogicCircuit& lc, EltW sel) {
     EltW one  = lc.konst(lc.one());
     EltW comp = lc.sub(&one, sel);  /* 1 - sel */
     /* sel * (1 - sel) = 0  →  sel ∈ {0, 1} */
@@ -125,18 +145,22 @@ class RpbschCircuit {
     EltW alpha, beta, rho;             /* blinding scalars */
     EltW m, r_C;                       /* message + Pedersen blinding */
     EltW C_y, H_x, H_y;               /* C_y, independent generator H */
-    EltW c_scalar;                     /* challenge c (range-checked only) */
+    EltW c_scalar;                     /* challenge c */
+    EltW overflow;                      /* ∈ {0,1}, carry for c = e+β mod n */
 
     /* Scalar-mul witness for Pedersen C = m·G + r_C·H */
     typename Secp256k1Circuit<LogicCircuit>::ScalarMultWitness ped_wit_C;
 
-    /* Scalar-mul witness for T = α·G + β·X.
-     * verify_double_scalar(α, β, n-1, X_x, X_y, T_x, T_y, wit)
-     * uses table {O, G, X, G+X, T, G+T, X+T, G+X+T}. */
+    /* Scalar-mul witness for T = α·G + β·X */
     typename Secp256k1Circuit<LogicCircuit>::ScalarMultWitness ped_wit_T;
 
+    /* SHA witness for tagged hash: c = Hq(R'_x, X_x, m) + β */
+    Sha3BlockWitness sha_c_wit;
+    v256 Rp_bits, m_sha_bits;    /* R'_x and m in big-endian for SHA */
+    v32  m_msg_bits[8];          /* m as 8 v32 words for block 2 */
+
     /* Range checks */
-    v256 m_bits, r_C_bits, alpha_bits, beta_bits;
+    v256 m_bits, r_C_bits, alpha_bits, beta_bits, c_bits;
 
     void input(const LogicCircuit& lc) {
       X_y = lc.eltw_input();
@@ -149,12 +173,18 @@ class RpbschCircuit {
       C_y   = lc.eltw_input();
       H_x   = lc.eltw_input(); H_y = lc.eltw_input();
       c_scalar = lc.eltw_input();
+      overflow = lc.eltw_input();
       ped_wit_C.input(lc);
       ped_wit_T.input(lc);
+      sha_c_wit.input(lc);
+      Rp_bits    = lc.template vinput<256>();
+      m_sha_bits = lc.template vinput<256>();
+      for (size_t i = 0; i < 8; ++i) m_msg_bits[i] = lc.template vinput<32>();
       m_bits     = lc.template vinput<256>();
       r_C_bits   = lc.template vinput<256>();
       alpha_bits = lc.template vinput<256>();
       beta_bits  = lc.template vinput<256>();
+      c_bits     = lc.template vinput<256>();
     }
   };
 
@@ -221,6 +251,18 @@ class RpbschCircuit {
       : lc_(lc), secp_(lc, ec), fn_(Fn),
         bip0_(lc, ec, Fn), bip1_(lc, ec, Fn),
         bp_(lc_), sha_(lc_) {
+    /* Precompute sha_tag = SHA-256("BIP0340/challenge") */
+    {
+      uint8_t sha_tag[32];
+      niwi_bip340_sha256((const uint8_t *)"BIP0340/challenge", 17, sha_tag);
+      for (size_t w = 0; w < 16; ++w) {
+        uint32_t val = ((uint32_t)sha_tag[(w % 8) * 4]     << 24) |
+                       ((uint32_t)sha_tag[(w % 8) * 4 + 1] << 16) |
+                       ((uint32_t)sha_tag[(w % 8) * 4 + 2] << 8)  |
+                        (uint32_t)sha_tag[(w % 8) * 4 + 3];
+        sha_tag_in_[w] = lc_.vbit32(val);
+      }
+    }
     /* Standard SHA-256 IV */
     uint32_t iv[8] = {
       0x6a09e667u, 0xbb67ae85u, 0x3c6ef372u, 0xa54ff53au,
@@ -234,6 +276,12 @@ class RpbschCircuit {
     sha_pad1_[0] = lc_.vbit32(0x80000000u);
     for (size_t i = 1; i < 15; ++i) sha_pad1_[i] = lc_.vbit32(0);
     sha_pad1_[15] = lc_.vbit32(0x00000200u);
+
+    /* Block-2 padding for 160-byte (3-block) message: 1280 bits.
+     * 8-word pad: 0x80, zeros, 0x00000500 */
+    sha_pad_tag_[0] = lc_.vbit32(0x80000000u);
+    for (size_t i = 1; i < 7; ++i) sha_pad_tag_[i] = lc_.vbit32(0);
+    sha_pad_tag_[7] = lc_.vbit32(0x00000500u);
   }
 
   /* ---- Verification ---- */
@@ -261,8 +309,10 @@ class RpbschCircuit {
   Bip340Circuit<LogicCircuit, EC, ScalarField> bip1_;
   Bp bp_;
   proofs::FlatSHA256Circuit<LogicCircuit, Bp> sha_;
-  v32 sha_iv_[8];    /* standard SHA-256 IV */
-  v32 sha_pad1_[16];  /* block-1 padding for 64-byte input */
+  v32 sha_iv_[8];      /* standard SHA-256 IV */
+  v32 sha_pad1_[16];    /* block-1 padding for 64-byte input */
+  v32 sha_pad_tag_[8];  /* block-2 padding for 160-byte (3-block) input */
+  v32 sha_tag_in_[16];  /* sha_tag || sha_tag (constant block 0 input) */
 
   /* ---- Gated assertion helpers -----------------------------------------
    *
@@ -328,6 +378,56 @@ class RpbschCircuit {
       lc_.assert_eq(&computed[i], hash_output_bits[i]);
   }
 
+  /* Compute tagged_hash("BIP0340/challenge", a||b||c) where
+   * a, b, c are 32-byte values (256-bit field elements).
+   * 3 SHA-256 blocks: block 0 = sha_tag||sha_tag (constant),
+   * block 1 = a||b, block 2 = c||padding.
+   * Returns e_hash as a v256 (256-bit bit vector). */
+  void verify_bip340_tagged_hash(const v256& a_bits, const v256& b_bits,
+                                 const v32 msg_bits[8],
+                                 const Sha3BlockWitness& sha_w,
+                                 v256& hash_out) const {
+    /* Block 0: constant sha_tag input, standard IV, witness */
+    sha_.assert_transform_block(sha_tag_in_, sha_iv_,
+                                sha_w.outw[0], sha_w.oute[0],
+                                sha_w.outa[0], sha_w.h1[0]);
+
+    /* Block 0 H1 → block 1 H0 */
+    v32 h0_b1[8];
+    for (size_t i = 0; i < 8; ++i)
+      h0_b1[i] = bp_.unpack_v32(sha_w.h1[0][i]);
+
+    /* Block 1 input: a||b (16 v32) */
+    v32 in1[16];
+    for (size_t i = 0; i < 8; ++i) {
+      in1[i]     = slice32(a_bits, i * 32);
+      in1[i + 8] = slice32(b_bits, i * 32);
+    }
+    sha_.assert_transform_block(in1, h0_b1,
+                                sha_w.outw[1], sha_w.oute[1],
+                                sha_w.outa[1], sha_w.h1[1]);
+
+    /* Block 1 H1 → block 2 H0 */
+    v32 h0_b2[8];
+    for (size_t i = 0; i < 8; ++i)
+      h0_b2[i] = bp_.unpack_v32(sha_w.h1[1][i]);
+
+    /* Block 2 input: msg[0..7] || sha_pad_tag_[0..7] */
+    v32 in2[16];
+    for (size_t i = 0; i < 8; ++i) in2[i]     = msg_bits[i];
+    for (size_t i = 0; i < 8; ++i) in2[i + 8] = sha_pad_tag_[i];
+    sha_.assert_transform_block(in2, h0_b2,
+                                sha_w.outw[2], sha_w.oute[2],
+                                sha_w.outa[2], sha_w.h1[2]);
+
+    /* Final H1 → v256 */
+    for (size_t i = 0; i < 8; ++i) {
+      v32 word = bp_.unpack_v32(sha_w.h1[2][i]);
+      for (size_t j = 0; j < 32; ++j)
+        hash_out[i * 32 + j] = word[j];
+    }
+  }
+
   /* Extract 32 consecutive bits from a v256. */
   v32 slice32(const v256& bits, size_t offset) const {
     v32 r;
@@ -378,14 +478,37 @@ class RpbschCircuit {
       secp_.point_equality(S_x, S_y, S_z, w.Rp_x, w.Rp_y);
     }
 
-    /* ---- 4. Range checks ---- */
+    /* ---- 4. c = Hq(R'_x, X_x, m) + β mod n ---- */
+
+    /* 4a: e = tagged_hash("BIP0340/challenge", R'_x || X_x || m) */
+    v256 e_bits;
+    verify_bip340_tagged_hash(w.Rp_bits, stmt.X_x, /* a=R' */ /* b=X */
+                               w.m_msg_bits, w.sha_c_wit, e_bits);
+    /* Reconstruct e from bits */
+    EltW e_wire = secp_.bits_to_field_le(e_bits);
+    secp_.range_check_lt_n(e_wire, e_bits);
+
+    /* 4b: c = e + β mod n.
+     * overflow ∈ {0,1}, c + overflow·n = e + β.
+     * Since e,β < n, e+β < 2n, so overflow is 0 or 1. */
+    EltW zero  = lc_.konst(lc_.zero());
+    EltW sum_eb = lc_.add(&e_wire, w.beta);
+    EltW c_plus_ofn = lc_.add(&w.c_scalar,
+        lc_.mul(w.overflow,
+            lc_.konst(lc_.elt(
+                "0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"))));
+    lc_.assert_eq(&sum_eb, c_plus_ofn);
+
+    /* overflow boolean check */
+    lc_.assert0(lc_.mul(&w.overflow, lc_.sub(&lc_.konst(lc_.one()), w.overflow)));
+
+    /* ---- 5. Range checks ---- */
     secp_.range_check_lt_n(w.m, w.m_bits);
     secp_.range_check_lt_n(w.r_C, w.r_C_bits);
     secp_.range_check_lt_n(w.alpha, w.alpha_bits);
     secp_.range_check_lt_n(w.beta, w.beta_bits);
-
-    (void)stmt; (void)w.c_scalar;
-  }
+    secp_.range_check_lt_n(w.c_scalar, w.c_bits);
+    secp_.range_check_lt_p(w.Rp_x, w.Rp_bits);
 
   void verify_branch2(const Statement& stmt, const Branch2Witness& w,
                       EltW gate) const {

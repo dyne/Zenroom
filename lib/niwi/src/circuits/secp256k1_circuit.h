@@ -337,6 +337,19 @@ class Secp256k1Circuit {
 
   const LogicCircuit& lc() const { return lc_; }
 
+  /* Reconstruct a field element from little-endian bits. */
+  EltW bits_to_field_le(const v256& bits) const {
+    EltW acc = lc_.konst(lc_.zero());
+    EltW two = lc_.konst(k2_);
+    for (size_t off = 0; off < kBits; ++off) {
+      size_t i = kBits - 1 - off;
+      EltW bit = lc_.eval(bits[i]);
+      EltW doubled = lc_.mul(&two, acc);
+      acc = lc_.add(&doubled, bit);
+    }
+    return acc;
+  }
+
  private:
   const LogicCircuit& lc_;
   Elt a_, b_, gx_, gy_;
@@ -353,18 +366,6 @@ class Secp256k1Circuit {
     /* 2. x_bits come from vinput(), which already asserts bitness.
      * 3. x < limit via vector less-than. */
     lc_.assert1(lc_.vlt(&x_bits, limit));
-  }
-
-  EltW bits_to_field_le(const v256& bits) const {
-    EltW acc = lc_.konst(lc_.zero());
-    EltW two = lc_.konst(k2_);
-    for (size_t off = 0; off < kBits; ++off) {
-      size_t i = kBits - 1 - off;
-      EltW bit = lc_.eval(bits[i]);
-      EltW doubled = lc_.mul(&two, acc);
-      acc = lc_.add(&doubled, bit);
-    }
-    return acc;
   }
 };
 
