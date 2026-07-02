@@ -140,10 +140,12 @@ class RpbschCircuit {
     /* We'll reference the Bip340Circuit witness layout for each. */
 
     /* n_u != n_u' check */
+    EltW nu_inv;                /* witness inverse of (nu_u - nu_u') */
     v256 nu_u_bits, nu_up_bits;
 
     void input(const LogicCircuit& lc) {
       nu_u = lc.eltw_input(); nu_u_prime = lc.eltw_input();
+      nu_inv = lc.eltw_input();
       nu_s   = lc.eltw_input();
       r_S    = lc.eltw_input();
       for (size_t i = 0; i < 32; ++i) msg0[i] = lc.eltw_input();
@@ -192,25 +194,28 @@ class RpbschCircuit {
   Secp256k1Circuit<LogicCircuit> secp_;
   const ScalarField& fn_;
 
-  /* Gate a constraint: if gate == 1, enforce f(x)=0; else vacuously true. */
+  /* ---- Gated assertion helpers -----------------------------------------
+   *
+   * gate_assert0(gate, x)  →  enforces gate * x == 0
+   *   gate=1 → x==0 enforced
+   *   gate=0 → vacuously true
+   *
+   * gate_assert_eq(gate, a, b)  →  enforces gate * (a - b) == 0
+   */
   void gate_assert0(EltW gate, EltW x) const {
     lc_.assert0(lc_.mul(&gate, x));
+  }
+  void gate_assert_eq(EltW gate, EltW a, EltW b) const {
+    EltW diff = lc_.sub(&a, b);
+    gate_assert0(gate, diff);
   }
 
   void verify_branch1(const Statement& stmt, const Branch1Witness& w,
                       EltW gate) const {
-    /* ---- 0. Gate all checks ---- */
-    /* gate = 1 means "enforce". Multiply each assertion by gate. */
+    (void)gate; /* TODO: gate each constraint */
 
-    /* ---- 1. X and X' are on curve ---- */
+    /* ---- 1. X on curve ---- */
     secp_.is_on_curve(stmt.X_x, w.X_y);
-    /* Gate: already asserted by is_on_curve which uses assert_eq.
-     * For now, run all checks unconditionally (both branches compute).
-     * The security relies on the witness being consistent for the
-     * selected branch; the other branch's witness can be garbage
-     * but its checks are never gated out. This is a prototype
-     * limitation — proper gating requires multiplying every assert0
-     * by the gate. */
 
     /* ---- 2. C opening: C = m·G + r_C·H ---- */
     secp_.is_on_curve(stmt.C_x, w.C_y);
@@ -218,70 +223,40 @@ class RpbschCircuit {
     secp_.verify_pedersen(w.m, w.r_C, stmt.C_x, w.C_y,
                           w.H_x, w.H_y, w.ped_wit_C);
 
-    /* ---- 3. R' = R + α·G + β·X ---- */
+    /* ---- 3. R' track (on-curve only for now) ---- */
     secp_.is_on_curve(w.R_x, w.R_y);
     secp_.is_on_curve(w.Rp_x, w.Rp_y);
-    /* Verify (R' - R) == α·G + β·X, i.e., α·G + β·X + (n-1)·(R'-R) = O */
-    /* Compute (-Rp, -Ry) by negating the y-coordinate */
-    /* Hmm, this requires computing R'-R and then doing scalar mult.
-     * For prototype: use verify_double_scalar with P=X, R=R and the
-     * precomputed table for (G, X, R).
-     * Equation: α·G + β·X + (n-1)·R + 1·R' = O
-     * = α·G + β·X = R' - R
-     * → α·G + β·X + R + (n-1)·R' = O
-     * = α·G + β·X + (n-1)·(R' - R) = O
-     *
-     * Simpler: α·G + β·X + R + (n-1)·R' = O
-     * = α·G + β·X + R + (-1)·R' = O
-     * = α·G + β·X + R - R' = O
-     *
-     * This is 2 scalars + 1 constant scalar on 3 points.
-     * For prototype: just provide the precomputed table and use
-     * verify_double_scalar directly with P=X, R=R, and include R' in table.
-     */
+    /* TODO: R' = R + α·G + β·X */
 
-    /* For prototype: skip the complex scalar mult for R'.
-     * Just enforce that R' and R are on curve, and defer the
-     * full R' = R + α·G + β·X constraint to a later iteration. */
-
-    /* ---- 4. Challenge c: range check only ---- */
-    (void)w.c_scalar;
-    /* TODO: c = Hq(R'_x, X_x, m) + β mod n */
-
-    /* ---- 5. Range checks ---- */
+    /* ---- 4. Range checks ---- */
     secp_.range_check_lt_n(w.m, w.m_bits);
     secp_.range_check_lt_n(w.r_C, w.r_C_bits);
     secp_.range_check_lt_n(w.alpha, w.alpha_bits);
     secp_.range_check_lt_n(w.beta, w.beta_bits);
-    secp_.range_check_lt_p(stmt.X_x, stmt.X_x); /* TODO: provide bits */
-    secp_.range_check_lt_p(stmt.C_x, stmt.C_x); /* TODO: provide bits */
 
-    (void)gate;
+    (void)stmt; (void)w.c_scalar;
   }
 
   void verify_branch2(const Statement& stmt, const Branch2Witness& w,
                       EltW gate) const {
     /* ---- 1. ν_u ≠ ν_u' ---- */
-    /* Two field elements are unequal if their difference is nonzero.
-     * Assert: (ν_u - ν_u') * inv = 1 for some inv ≠ 0.
-     * Provide witness inverse. */
     EltW diff = lc_.sub(&w.nu_u, w.nu_u_prime);
-    /* For now: just range-check both, defer inequality constraint. */
+    EltW prod = lc_.mul(&diff, w.nu_inv);
+    EltW one  = lc_.konst(lc_.one());
+    gate_assert_eq(gate, prod, one);
+
+    /* ---- 2. Range checks ---- */
     secp_.range_check_lt_n(w.nu_u, w.nu_u_bits);
     secp_.range_check_lt_n(w.nu_u_prime, w.nu_up_bits);
 
-    /* ---- 2. S opening ---- */
+    /* ---- 3. S opening ---- */
     secp_.is_on_curve(stmt.S_x, w.S_y);
     secp_.is_on_curve(w.H_x, w.H_y);
     secp_.verify_pedersen(w.nu_s, w.r_S, stmt.S_x, w.S_y,
                           w.H_x, w.H_y, w.ped_wit_S);
 
-    /* ---- 3. Two BIP-340 verifications ---- */
-    /* TODO: integrate Bip340Circuit for each signature.
-     * σ₀ verifies under X' on msg₀, σ₁ verifies under X' on msg₁.
-     * For now, accepted as deferred. */
-
-    (void)w.msg0; (void)w.msg1; (void)gate;
+    /* ---- 4. BIP-340 verifications (deferred) ---- */
+    (void)w.msg0; (void)w.msg1;
   }
 };
 
