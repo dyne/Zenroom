@@ -26,7 +26,8 @@ NIWI_AR ?= ar
 
 NIWI_AMCL := ../../lib/milagro-crypto-c/build/lib/libamcl_core.a
 
-NIWI_SOURCES := src/niwi.c.o src/encoding.c.o src/hash.c.o src/npro.c.o src/commitment.c.o src/extract.c.o
+NIWI_SOURCES := src/niwi.c.o src/encoding.c.o src/hash.c.o src/npro.c.o src/commitment.c.o src/extract.c.o \
+                src/secp256k1/secp256k1_curve.cc.o src/secp256k1/secp256k1_witness.cc.o
 
 all: libniwi.a
 
@@ -34,8 +35,8 @@ libniwi.a: $(NIWI_SOURCES)
 	$(NIWI_AR) -r $@ $(NIWI_SOURCES)
 
 clean:
-	rm -f src/*.c.o tests/*.o
-	rm -f *.a test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof_serde test_extract test_bench
+	rm -f src/*.c.o tests/*.o src/secp256k1/*.cc.o
+	rm -f *.a test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof_serde test_extract test_bench test_secp256k1
 
 %.c.o: %.c
 	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -c -o $@ $<
@@ -45,7 +46,7 @@ clean:
 
 # ---- Tests ----
 
-test: test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof_serde test_extract
+test: test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof_serde test_extract test_secp256k1
 	./test_abi
 	./test_encoding
 	./test_hash
@@ -53,6 +54,7 @@ test: test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof
 	./test_commitment
 	./test_niwi_proof_serde
 	./test_extract
+	./test_secp256k1
 	@echo "=== All lib/niwi tests passed ==="
 
 test_abi: tests/test_abi.c.o libniwi.a
@@ -75,6 +77,17 @@ test_niwi_proof_serde: tests/test_niwi_proof_serde.c.o libniwi.a
 
 test_extract: tests/test_extract.c.o libniwi.a
 	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_extract.c.o -L. -lniwi $(NIWI_AMCL)
+
+# SECP256K1 tests require C++ and the liblongfellow-zk dependency.
+# We link against the archive but this test is standalone — it does not
+# depend on the Longfellow archive at link time since SECP headers
+# are template-only; the only link requirement is libniwi.a for the
+# field/curve/scalar/witness object files.
+test_secp256k1: tests/test_secp256k1.cc.o libniwi.a
+	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_secp256k1.cc.o -L. -lniwi \
+		../../lib/longfellow-zk/liblongfellow-zk.a \
+		../../lib/zk-circuit-lang/libzk-circuit-lang.a \
+		../../lib/zstd/libzstd.a
 
 # ---- Benchmarks ----
 
