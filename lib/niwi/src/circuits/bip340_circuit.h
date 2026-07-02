@@ -83,6 +83,8 @@ class Bip340Circuit {
     EltW int_y[kBits - 1];
     EltW int_z[kBits - 1];
     EltW e_circuit;  /* challenge, constrained to equal tagged hash output */
+    EltW e_neg_wire;  /* n - e, positive scalar < n */
+    EltW c_wire;      /* n - 1, constant negated scalar for R */
 
     /* SHA-256 block witnesses for blocks 1 and 2 (block 0 is constant).
      * Each block: outw[48], oute[64], outa[64], h1[8].
@@ -116,6 +118,8 @@ class Bip340Circuit {
         }
       }
       e_circuit = lc.eltw_input();
+      e_neg_wire = lc.eltw_input();
+      c_wire     = lc.eltw_input();
       /* SHA witnesses */
       for (size_t b = 0; b < 2; ++b) {
         for (size_t i = 0; i < 48; ++i)
@@ -206,10 +210,9 @@ class Bip340Circuit {
       }
     }
 
-    /* FIXME: this currently wires the positive table skeleton
-     * s·G + e·P + R = O. Final BIP-340 needs order-n scalar helpers for
-     * s·G - e·P - R = O and must bind the negative scalar witnesses to e. */
-    secp_.verify_double_scalar(s_val, w.e_circuit, pk_x, w.ry, R_x, w.rx, smw);
+    /* s·G + e_neg·P + c·R = O  where e_neg = n-e, c = n-1 */
+    secp_.verify_double_scalar(s_val, w.e_neg_wire, w.c_wire,
+                               pk_x, w.ry, R_x, w.rx, smw);
 
     /* ---- 5. Finalize ---- */
     /* All constraints are already asserted by verify_double_scalar. */
