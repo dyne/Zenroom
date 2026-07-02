@@ -30,44 +30,34 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
+#include "zen_octet.h"
+
 #include <string.h>
 #include <stdlib.h>
 
 /* ---- OCTET helpers (from Zenroom's octet.h) -------------------------- */
 
-/* These are the Zenroom OCTET API functions used by witness_bindings.
- * They are declared in octet_conversions.h. */
-struct octet;
-extern const char *o_val(const struct octet*);
-extern size_t      o_len(const struct octet*);
-extern struct octet* o_new(lua_State*, int);
-extern const struct octet* o_arg(lua_State*, int);
-extern struct octet* o_push(lua_State*, const char*, size_t);
-extern void        o_free(lua_State*, const struct octet*);
+extern const char *o_val(const octet*);
+extern size_t      o_len(const octet*);
 extern void        lerror(lua_State*, const char*, ...);
+
+static void push_octet_copy(lua_State *L, const uint8_t *buf, size_t len) {
+    push_buffer_to_octet(L, (char *)buf, len);
+}
 
 /* ---- Helper: get an OCTET from a table field ------------------------- */
 
-static const struct octet *table_get_octet(lua_State *L, int table_idx,
-                                            const char *key) {
+static const octet *table_get_octet(lua_State *L, int table_idx,
+                                    const char *key) {
     /* Stack: ... table ... */
     lua_getfield(L, table_idx, key);
-    const struct octet *o = o_arg(L, -1);
+    if (lua_isnil(L, -1)) {
+        lua_pop(L, 1);
+        return NULL;
+    }
+    const octet *o = o_arg(L, -1);
     lua_pop(L, 1);
     return o;
-}
-
-/* Helper: get an integer from a table field */
-static int table_get_int(lua_State *L, int table_idx, const char *key,
-                          int *val) {
-    lua_getfield(L, table_idx, key);
-    if (!lua_isnumber(L, -1)) {
-        lua_pop(L, 1);
-        return 0;
-    }
-    *val = (int)lua_tointeger(L, -1);
-    lua_pop(L, 1);
-    return 1;
 }
 
 /* ---- prove_circuit_niwi ---------------------------------------------- */
@@ -88,26 +78,30 @@ static int lua_prove_circuit_niwi(lua_State *L) {
     }
 
     /* Extract circuit artifact. */
-    const struct octet *circuit_oct = table_get_octet(L, 1, "circuit");
+    const octet *circuit_oct = table_get_octet(L, 1, "circuit");
     if (!circuit_oct) {
         lerror(L, "prove_circuit_niwi: missing 'circuit' field");
         return 0;
     }
 
     /* Extract inputs. */
-    const struct octet *inputs_oct = table_get_octet(L, 1, "inputs");
+    const octet *inputs_oct = table_get_octet(L, 1, "inputs");
     if (!inputs_oct) {
+        o_free(L, circuit_oct);
         lerror(L, "prove_circuit_niwi: missing 'inputs' field");
         return 0;
     }
 
     /* Extract optional seed. */
-    const struct octet *seed_oct = table_get_octet(L, 1, "seed");
+    const octet *seed_oct = table_get_octet(L, 1, "seed");
 
     /* Create NIWI context. */
     niwi_ctx_t *ctx = niwi_ctx_create(
         (const uint8_t *)o_val(circuit_oct), o_len(circuit_oct));
     if (!ctx) {
+        o_free(L, seed_oct);
+        o_free(L, inputs_oct);
+        o_free(L, circuit_oct);
         lerror(L, "prove_circuit_niwi: failed to create context");
         return 0;
     }
@@ -126,18 +120,24 @@ static int lua_prove_circuit_niwi(lua_State *L) {
     const char *err = niwi_last_error(ctx);
 
     if (rc != 0) {
+        niwi_ctx_free(ctx);
+        o_free(L, seed_oct);
+        o_free(L, inputs_oct);
+        o_free(L, circuit_oct);
         if (err)
             lerror(L, "prove_circuit_niwi: %s", err);
         else
             lerror(L, "prove_circuit_niwi: unknown error");
-        niwi_ctx_free(ctx);
         return 0;
     }
 
     /* Return proof as OCTET. */
-    struct octet *out = o_push(L, (const char *)proof_out, proof_len);
+    push_octet_copy(L, proof_out, proof_len);
     niwi_free_buffer(proof_out);
     niwi_ctx_free(ctx);
+    o_free(L, seed_oct);
+    o_free(L, inputs_oct);
+    o_free(L, circuit_oct);
 
     /* The octet is on the stack; return it. */
     return 1;
@@ -160,19 +160,22 @@ static int lua_verify_circuit_niwi(lua_State *L) {
         return 0;
     }
 
-    const struct octet *circuit_oct = table_get_octet(L, 1, "circuit");
-    const struct octet *proof_oct    = table_get_octet(L, 1, "proof");
-    const struct octet *pub_oct      = table_get_octet(L, 1, "public_inputs");
+    const octet *circuit_oct = table_get_octet(L, 1, "circuit");
+    const octet *proof_oct    = table_get_octet(L, 1, "proof");
+    const octet *pub_oct      = table_get_octet(L, 1, "public_inputs");
 
     if (!circuit_oct) {
         lerror(L, "verify_circuit_niwi: missing 'circuit' field");
         return 0;
     }
     if (!proof_oct) {
+        o_free(L, circuit_oct);
         lerror(L, "verify_circuit_niwi: missing 'proof' field");
         return 0;
     }
     if (!pub_oct) {
+        o_free(L, proof_oct);
+        o_free(L, circuit_oct);
         lerror(L, "verify_circuit_niwi: missing 'public_inputs' field");
         return 0;
     }
@@ -180,6 +183,9 @@ static int lua_verify_circuit_niwi(lua_State *L) {
     niwi_ctx_t *ctx = niwi_ctx_create(
         (const uint8_t *)o_val(circuit_oct), o_len(circuit_oct));
     if (!ctx) {
+        o_free(L, pub_oct);
+        o_free(L, proof_oct);
+        o_free(L, circuit_oct);
         lerror(L, "verify_circuit_niwi: failed to create context");
         return 0;
     }
@@ -189,6 +195,9 @@ static int lua_verify_circuit_niwi(lua_State *L) {
                           (const uint8_t *)o_val(pub_oct), o_len(pub_oct));
 
     niwi_ctx_free(ctx);
+    o_free(L, pub_oct);
+    o_free(L, proof_oct);
+    o_free(L, circuit_oct);
 
     lua_pushboolean(L, rc == 0);
     return 1;
@@ -229,10 +238,12 @@ static int lua_prove_with_observation_test(lua_State *L) {
         return 0;
     }
 
-    const struct octet *circuit_oct = table_get_octet(L, 1, "circuit");
-    const struct octet *inputs_oct  = table_get_octet(L, 1, "inputs");
+    const octet *circuit_oct = table_get_octet(L, 1, "circuit");
+    const octet *inputs_oct  = table_get_octet(L, 1, "inputs");
 
     if (!circuit_oct || !inputs_oct) {
+        o_free(L, inputs_oct);
+        o_free(L, circuit_oct);
         lerror(L, "prove_with_observation_test: missing required fields");
         return 0;
     }
@@ -240,6 +251,8 @@ static int lua_prove_with_observation_test(lua_State *L) {
     niwi_ctx_t *ctx = niwi_ctx_create(
         (const uint8_t *)o_val(circuit_oct), o_len(circuit_oct));
     if (!ctx) {
+        o_free(L, inputs_oct);
+        o_free(L, circuit_oct);
         lerror(L, "prove_with_observation_test: failed to create context");
         return 0;
     }
@@ -255,19 +268,23 @@ static int lua_prove_with_observation_test(lua_State *L) {
 
     if (rc != 0) {
         const char *err = niwi_last_error(ctx);
+        niwi_ctx_free(ctx);
+        o_free(L, inputs_oct);
+        o_free(L, circuit_oct);
         lerror(L, "prove_with_observation_test: %s",
                err ? err : "unknown error");
-        niwi_ctx_free(ctx);
         return 0;
     }
 
     /* Return proof and gamma as two OCTETs. */
-    struct octet *p = o_push(L, (const char *)proof_out, proof_len);
-    struct octet *g = o_push(L, (const char *)gamma_out, gamma_len);
+    push_octet_copy(L, proof_out, proof_len);
+    push_octet_copy(L, gamma_out, gamma_len);
 
     niwi_free_buffer(proof_out);
     niwi_free_buffer(gamma_out);
     niwi_ctx_free(ctx);
+    o_free(L, inputs_oct);
+    o_free(L, circuit_oct);
 
     return 2;
 }
@@ -289,11 +306,14 @@ static int lua_extract_from_gamma_test(lua_State *L) {
         return 0;
     }
 
-    const struct octet *proof_oct = table_get_octet(L, 1, "proof");
-    const struct octet *gamma_oct = table_get_octet(L, 1, "gamma");
-    const struct octet *pub_oct   = table_get_octet(L, 1, "public_inputs");
+    const octet *proof_oct = table_get_octet(L, 1, "proof");
+    const octet *gamma_oct = table_get_octet(L, 1, "gamma");
+    const octet *pub_oct   = table_get_octet(L, 1, "public_inputs");
 
     if (!proof_oct || !gamma_oct || !pub_oct) {
+        o_free(L, pub_oct);
+        o_free(L, gamma_oct);
+        o_free(L, proof_oct);
         lerror(L, "extract_from_gamma_test: missing required fields");
         return 0;
     }
@@ -304,14 +324,20 @@ static int lua_extract_from_gamma_test(lua_State *L) {
         (const uint8_t *)o_val(pub_oct), o_len(pub_oct));
 
     if (!ex) {
+        o_free(L, pub_oct);
+        o_free(L, gamma_oct);
+        o_free(L, proof_oct);
         lerror(L, "extract_from_gamma_test: failed to create extractor");
         return 0;
     }
 
     const char *err = niwi_extract_error(ex);
     if (err) {
-        lerror(L, "extract_from_gamma_test: %s", err);
         niwi_extract_free(ex);
+        o_free(L, pub_oct);
+        o_free(L, gamma_oct);
+        o_free(L, proof_oct);
+        lerror(L, "extract_from_gamma_test: %s", err);
         return 0;
     }
 
@@ -320,13 +346,16 @@ static int lua_extract_from_gamma_test(lua_State *L) {
     int rc = niwi_extract_witness(ex, witness_buf, &wlen);
 
     niwi_extract_free(ex);
+    o_free(L, pub_oct);
+    o_free(L, gamma_oct);
+    o_free(L, proof_oct);
 
     if (rc != NIWI_EXTRACT_OK) {
         lerror(L, "extract_from_gamma_test: extraction failed");
         return 0;
     }
 
-    struct octet *out = o_push(L, (const char *)witness_buf, wlen);
+    push_octet_copy(L, witness_buf, wlen);
     return 1;
 }
 
@@ -339,39 +368,74 @@ static int lua_pbsch_pedersen_h(lua_State *L) {
         lerror(L, "pbsch_pedersen_h: H derivation failed");
         return 0;
     }
-    o_push(L, (const char *)h_x, 32);
+    push_octet_copy(L, h_x, 32);
     return 1;
 }
 
 /* niwi_pbsch_pedersen_commit(msg: OCTET(32), rho: OCTET(32)) -> OCTET(33) */
 static int lua_pbsch_pedersen_commit(lua_State *L) {
-    const struct octet *msg = o_arg(L, 1);
-    const struct octet *rho = o_arg(L, 2);
-    if (!msg || o_len(msg) != 32) { lerror(L, "pbsch_pedersen_commit: msg must be 32 bytes"); return 0; }
-    if (!rho || o_len(rho) != 32) { lerror(L, "pbsch_pedersen_commit: rho must be 32 bytes"); return 0; }
+    const octet *msg = o_arg(L, 1);
+    const octet *rho = o_arg(L, 2);
+    if (!msg || o_len(msg) != 32) {
+        o_free(L, rho);
+        o_free(L, msg);
+        lerror(L, "pbsch_pedersen_commit: msg must be 32 bytes");
+        return 0;
+    }
+    if (!rho || o_len(rho) != 32) {
+        o_free(L, rho);
+        o_free(L, msg);
+        lerror(L, "pbsch_pedersen_commit: rho must be 32 bytes");
+        return 0;
+    }
 
     uint8_t c[33];
     if (niwi_pbsch_pedersen_commit((const uint8_t *)o_val(msg),
                                     (const uint8_t *)o_val(rho), c) != 0) {
+        o_free(L, rho);
+        o_free(L, msg);
         lerror(L, "pbsch_pedersen_commit: failed");
         return 0;
     }
-    o_push(L, (const char *)c, 33);
+    push_octet_copy(L, c, 33);
+    o_free(L, rho);
+    o_free(L, msg);
     return 1;
 }
 
 /* niwi_pbsch_pedersen_verify(c: OCTET(33), msg: OCTET(32), rho: OCTET(32)) -> bool */
 static int lua_pbsch_pedersen_verify(lua_State *L) {
-    const struct octet *c   = o_arg(L, 1);
-    const struct octet *msg = o_arg(L, 2);
-    const struct octet *rho = o_arg(L, 3);
-    if (!c || o_len(c) != 33)     { lerror(L, "pbsch_pedersen_verify: c must be 33 bytes"); return 0; }
-    if (!msg || o_len(msg) != 32) { lerror(L, "pbsch_pedersen_verify: msg must be 32 bytes"); return 0; }
-    if (!rho || o_len(rho) != 32) { lerror(L, "pbsch_pedersen_verify: rho must be 32 bytes"); return 0; }
+    const octet *c   = o_arg(L, 1);
+    const octet *msg = o_arg(L, 2);
+    const octet *rho = o_arg(L, 3);
+    if (!c || o_len(c) != 33) {
+        o_free(L, rho);
+        o_free(L, msg);
+        o_free(L, c);
+        lerror(L, "pbsch_pedersen_verify: c must be 33 bytes");
+        return 0;
+    }
+    if (!msg || o_len(msg) != 32) {
+        o_free(L, rho);
+        o_free(L, msg);
+        o_free(L, c);
+        lerror(L, "pbsch_pedersen_verify: msg must be 32 bytes");
+        return 0;
+    }
+    if (!rho || o_len(rho) != 32) {
+        o_free(L, rho);
+        o_free(L, msg);
+        o_free(L, c);
+        lerror(L, "pbsch_pedersen_verify: rho must be 32 bytes");
+        return 0;
+    }
 
     int ok = niwi_pbsch_pedersen_verify((const uint8_t *)o_val(c),
                                          (const uint8_t *)o_val(msg),
                                          (const uint8_t *)o_val(rho));
+    o_free(L, rho);
+    o_free(L, msg);
+    o_free(L, c);
     lua_pushboolean(L, ok == 0);
     return 1;
 }
