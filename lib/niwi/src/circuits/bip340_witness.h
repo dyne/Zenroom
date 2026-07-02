@@ -59,6 +59,11 @@ class Bip340Witness {
   Elt e_neg_;        /* n - e */
   Elt c_val_;        /* n - 1, used for bit-table witness generation */
 
+  /* Bit decompositions for range/parity checks */
+  Elt s_bits_[kBits], e_bits_[kBits];
+  Elt pk_x_bits_[kBits], R_x_bits_[kBits];
+  Elt ry_lsb_[8], py_lsb_[8];
+
   Bip340Witness(const Field& F, const EC& ec, const ScalarField& Fn)
       : f_(F), ec_(ec), fn_(Fn) {}
 
@@ -118,10 +123,34 @@ class Bip340Witness {
         c_val_ = f_.to_montgomery(fn_.from_montgomery(c_n));
     }
 
+    /* ---- Bit decompositions for range checks and parity ---- */
+
+    /* Helper: decompose a Nat into Elt bits */
+    auto nat_to_bits = [&](const Nat& n, Elt* out) {
+      for (size_t i = 0; i < kBits; ++i)
+        out[i] = f_.of_scalar(n.bit(i) ? 1 : 0);
+    };
+    /* Helper: decompose an Elt (in Montgomery form) into Elt bits */
+    auto elt_to_bits = [&](const Elt& e, Elt* out) {
+      Nat n = f_.from_montgomery(e);
+      nat_to_bits(n, out);
+    };
+    /* Helper: low 8 bits of an Elt */
+    auto low8 = [&](const Elt& e, Elt* out) {
+      Nat n = f_.from_montgomery(e);
+      for (size_t i = 0; i < 8; ++i)
+        out[i] = f_.of_scalar(n.bit(i) ? 1 : 0);
+    };
+
+    nat_to_bits(s_nat, s_bits_);
+    elt_to_bits(e_challenge_, e_bits_);
+    elt_to_bits(pk_x, pk_x_bits_);
+    elt_to_bits(rx, R_x_bits_);
+    low8(ry_, ry_lsb_);
+    low8(pk_y, py_lsb_);
+
     return build_scalar_mul(pk_x, pk_y, rx_, ry_, e_neg_, c_val_, s_nat);
   }
-
-  void fill_witness(proofs::DenseFiller<Field>& filler) const {
     filler.push_back(rx_);
     filler.push_back(ry_);
     filler.push_back(s_inv_);
@@ -137,6 +166,14 @@ class Bip340Witness {
     }
     filler.push_back(e_challenge_);
     filler.push_back(e_neg_);
+    /* Bit decompositions for range checks */
+    for (size_t i = 0; i < kBits; ++i) filler.push_back(s_bits_[i]);
+    for (size_t i = 0; i < kBits; ++i) filler.push_back(e_bits_[i]);
+    for (size_t i = 0; i < kBits; ++i) filler.push_back(pk_x_bits_[i]);
+    for (size_t i = 0; i < kBits; ++i) filler.push_back(R_x_bits_[i]);
+    /* Parity LSB bits */
+    for (size_t i = 0; i < 8; ++i) filler.push_back(ry_lsb_[i]);
+    for (size_t i = 0; i < 8; ++i) filler.push_back(py_lsb_[i]);
   }
 
   /* SHA-256 witness data (for circuit integration) */

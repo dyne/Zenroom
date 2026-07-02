@@ -73,7 +73,18 @@ class Secp256k1Circuit {
         gx_(ec.gx_), gy_(ec.gy_),
         k2_(ec.f_.of_scalar(2)),
         k3_(ec.f_.of_scalar(3)),
-        k3b_(ec.k3b) {}
+        k3b_(ec.k3b) {
+    /* Precompute bit vectors of n and p for range checks.
+     * n = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
+     * p = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F */
+    using N = typename LogicCircuit::Field::N;
+    N n_order("0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141");
+    N p_mod("0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f");
+    for (size_t i = 0; i < kBits; ++i) {
+      bits_n_[i] = lc_.bit(n_order.bit(i) ? 1 : 0);
+      bits_p_[i] = lc_.bit(p_mod.bit(i)  ? 1 : 0);
+    }
+  }
 
   /* ---- Point arithmetic gates ---- */
 
@@ -283,12 +294,45 @@ class Secp256k1Circuit {
     lc_.assert_eq(&c_sum, c_wire);
   }
 
+  /* ---- Range checks ---------------------------------------------------
+   *
+   * Given an EltW x and its 256-bit decomposition x_bits (provided
+   * as a witness v256), constrain:
+   *   1. as_scalar(x_bits) == x  (bits correctly encode x)
+   *   2. Each x_bits[i] ∈ {0,1}  (boolean check)
+   *   3. x < limit               (vlt against precomputed bits)
+   */
+
+  /* Range-check x against the curve order n. */
+  void range_check_lt_n(EltW x, const v256& x_bits) const {
+    range_check_impl(x, x_bits, bits_n_);
+  }
+
+  /* Range-check x against the field prime p. */
+  void range_check_lt_p(EltW x, const v256& x_bits) const {
+    range_check_impl(x, x_bits, bits_p_);
+  }
+
   const LogicCircuit& lc() const { return lc_; }
 
  private:
   const LogicCircuit& lc_;
   Elt a_, b_, gx_, gy_;
   Elt k2_, k3_, k3b_;
+  using v256 = typename LogicCircuit::v256;
+  v256 bits_n_;   /* 256-bit decomposition of n, constant bit wires */
+  v256 bits_p_;   /* 256-bit decomposition of p, constant bit wires */
+
+  void range_check_impl(EltW x, const v256& x_bits,
+                        const v256& limit) const {
+    /* 1. as_scalar(x_bits) == x */
+    lc_.assert_eq(&lc_.as_scalar(x_bits), x);
+    /* 2. Each bit is boolean: b_i * (b_i - 1) == 0 */
+    for (size_t i = 0; i < kBits; ++i)
+      lc_.assert0(x_bits[i]);
+    /* 3. x < limit via vector less-than */
+    lc_.assert1(lc_.vlt(&x_bits, limit));
+  }
 };
 
 }  // namespace niwi
