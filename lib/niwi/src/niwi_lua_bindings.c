@@ -24,6 +24,7 @@
 #include "npro.h"
 #include "extract.h"
 #include "commitment.h"
+#include "pbsch_commitment.h"
 
 #include <lua.h>
 #include <lualib.h>
@@ -329,6 +330,52 @@ static int lua_extract_from_gamma_test(lua_State *L) {
     return 1;
 }
 
+/* ---- PBSch Pedersen primitives --------------------------------------- */
+
+/* niwi_pbsch_pedersen_h() -> OCTET (32 bytes) */
+static int lua_pbsch_pedersen_h(lua_State *L) {
+    uint8_t h_x[32];
+    if (niwi_pbsch_pedersen_h(h_x) != 0) {
+        lerror(L, "pbsch_pedersen_h: H derivation failed");
+        return 0;
+    }
+    o_push(L, (const char *)h_x, 32);
+    return 1;
+}
+
+/* niwi_pbsch_pedersen_commit(msg: OCTET(32), rho: OCTET(32)) -> OCTET(33) */
+static int lua_pbsch_pedersen_commit(lua_State *L) {
+    const struct octet *msg = o_arg(L, 1);
+    const struct octet *rho = o_arg(L, 2);
+    if (!msg || o_len(msg) != 32) { lerror(L, "pbsch_pedersen_commit: msg must be 32 bytes"); return 0; }
+    if (!rho || o_len(rho) != 32) { lerror(L, "pbsch_pedersen_commit: rho must be 32 bytes"); return 0; }
+
+    uint8_t c[33];
+    if (niwi_pbsch_pedersen_commit((const uint8_t *)o_val(msg),
+                                    (const uint8_t *)o_val(rho), c) != 0) {
+        lerror(L, "pbsch_pedersen_commit: failed");
+        return 0;
+    }
+    o_push(L, (const char *)c, 33);
+    return 1;
+}
+
+/* niwi_pbsch_pedersen_verify(c: OCTET(33), msg: OCTET(32), rho: OCTET(32)) -> bool */
+static int lua_pbsch_pedersen_verify(lua_State *L) {
+    const struct octet *c   = o_arg(L, 1);
+    const struct octet *msg = o_arg(L, 2);
+    const struct octet *rho = o_arg(L, 3);
+    if (!c || o_len(c) != 33)     { lerror(L, "pbsch_pedersen_verify: c must be 33 bytes"); return 0; }
+    if (!msg || o_len(msg) != 32) { lerror(L, "pbsch_pedersen_verify: msg must be 32 bytes"); return 0; }
+    if (!rho || o_len(rho) != 32) { lerror(L, "pbsch_pedersen_verify: rho must be 32 bytes"); return 0; }
+
+    int ok = niwi_pbsch_pedersen_verify((const uint8_t *)o_val(c),
+                                         (const uint8_t *)o_val(msg),
+                                         (const uint8_t *)o_val(rho));
+    lua_pushboolean(L, ok == 0);
+    return 1;
+}
+
 /* ---- Module registration --------------------------------------------- */
 
 static const luaL_Reg niwi_functions[] = {
@@ -337,6 +384,9 @@ static const luaL_Reg niwi_functions[] = {
     {"niwi_profile",                lua_niwi_profile},
     {"prove_with_observation_test", lua_prove_with_observation_test},
     {"extract_from_gamma_test",     lua_extract_from_gamma_test},
+    {"pbsch_pedersen_h",            lua_pbsch_pedersen_h},
+    {"pbsch_pedersen_commit",       lua_pbsch_pedersen_commit},
+    {"pbsch_pedersen_verify",       lua_pbsch_pedersen_verify},
     {NULL, NULL}
 };
 
