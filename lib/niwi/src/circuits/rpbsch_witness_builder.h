@@ -289,7 +289,30 @@ class RpbschWitnessBuilder {
     out.push_back(elt_from_be32(b1.H_x)); out.push_back(elt_from_be32(b1.H_y));
     out.push_back(b1.c_scalar);
     out.push_back(f_.of_scalar(b1.overflow));
-    fill_scalar_mul_placeholder(out); fill_scalar_mul_placeholder(out);
+    /* ped_wit_C: m·G + r_C·H + (n-1)·C = O */
+    {
+      const uint8_t *gx = (const uint8_t *)
+        "\x79\xbe\x66\x7e\xf9\xdc\xbb\xac\x55\xa0\x62\x95\xce\x87\x0b\x07"
+        "\x02\x9b\xfc\xdb\x2d\xce\x28\xd9\x59\xf2\x81\x5b\x16\xf8\x17\x98";
+      const uint8_t *gy = (const uint8_t *)
+        "\x48\x3a\xda\x77\x26\xa3\xc4\x65\x5d\xa4\xfb\xfc\x0e\x11\x08\xa8"
+        "\xfd\x17\xb4\x48\xa6\x85\x54\x19\x9c\x47\xd0\x8f\xfb\x10\xd4\xb8";
+      fill_scalar_mul_witness(b1.m, b1.r_C, gx, gy,
+                               b1.H_x, b1.H_y,
+                               stmt.C+1, b1.C_y, out);
+    }
+    /* ped_wit_T: α·G + β·X + (n-1)·T = O */
+    {
+      const uint8_t *gx = (const uint8_t *)
+        "\x79\xbe\x66\x7e\xf9\xdc\xbb\xac\x55\xa0\x62\x95\xce\x87\x0b\x07"
+        "\x02\x9b\xfc\xdb\x2d\xce\x28\xd9\x59\xf2\x81\x5b\x16\xf8\x17\x98";
+      const uint8_t *gy = (const uint8_t *)
+        "\x48\x3a\xda\x77\x26\xa3\xc4\x65\x5d\xa4\xfb\xfc\x0e\x11\x08\xa8"
+        "\xfd\x17\xb4\x48\xa6\x85\x54\x19\x9c\x47\xd0\x8f\xfb\x10\xd4\xb8";
+      fill_scalar_mul_witness(b1.alpha, b1.beta, gx, gy,
+                               stmt.X, b1.X_y,
+                               b1.T+1, b1.T_y, out);
+    }
     fill_sha3_placeholder(out);
     for (size_t i=0; i<256; ++i) out.push_back(b1.Rp_bits[i]);
     for (size_t i=0; i<256; ++i) out.push_back(b1.Rp_sha[i]);
@@ -320,7 +343,18 @@ class RpbschWitnessBuilder {
     out.push_back(elt_from_be32(b2.sig1+32));
     fill_bip340_witness_placeholder(out);
     fill_bip340_witness_placeholder(out);
-    fill_scalar_mul_placeholder(out);
+    /* ped_wit_S: ν_s·G + r_S·H + (n-1)·S = O */
+    {
+      const uint8_t *gx = (const uint8_t *)
+        "\x79\xbe\x66\x7e\xf9\xdc\xbb\xac\x55\xa0\x62\x95\xce\x87\x0b\x07"
+        "\x02\x9b\xfc\xdb\x2d\xce\x28\xd9\x59\xf2\x81\x5b\x16\xf8\x17\x98";
+      const uint8_t *gy = (const uint8_t *)
+        "\x48\x3a\xda\x77\x26\xa3\xc4\x65\x5d\xa4\xfb\xfc\x0e\x11\x08\xa8"
+        "\xfd\x17\xb4\x48\xa6\x85\x54\x19\x9c\x47\xd0\x8f\xfb\x10\xd4\xb8";
+      fill_scalar_mul_witness(b2.nu_s, b2.r_S, gx, gy,
+                               b2.H_x, b2.H_y,
+                               stmt.S+1, b2.S_y, out);
+    }
     fill_sha2_placeholder(out);
     fill_sha2_placeholder(out);
     for (size_t i=0; i<256; ++i) out.push_back(b2.nu_s_bits[i]);
@@ -363,6 +397,68 @@ class RpbschWitnessBuilder {
     for (size_t i=0; i<8; ++i) out.push_back(z);
     for (size_t i=0; i<256; ++i) out.push_back(z);
     for (size_t i=0; i<255; ++i) { out.push_back(z); out.push_back(z); out.push_back(z); }
+  }
+
+  /* Real scalar-mul witness for pedersen-style triple-scalar.
+   * Uses Longfellow EC for the projective trace (same approach as
+   * Bip340Witness::build_scalar_mul). */
+  void fill_scalar_mul_witness(const Elt& s1, const Elt& s2,
+                                const uint8_t p1_x[32], const uint8_t p1_y[32],
+                                const uint8_t p2_x[32], const uint8_t p2_y[32],
+                                const uint8_t p3_x[32], const uint8_t p3_y[32],
+                                std::vector<Elt>& out) const {
+    using Point = typename EC::ECPoint;
+    const Elt one = f_.one();
+    Point P1(elt_from_be32(p1_x), elt_from_be32(p1_y), one);
+    Point P2(elt_from_be32(p2_x), elt_from_be32(p2_y), one);
+    Point P3(elt_from_be32(p3_x), elt_from_be32(p3_y), one);
+
+    /* Precomputed table: P1+P2, P1+P3, P2+P3, P1+P2+P3 */
+    Point P12  = ec_.addEf(P1, P2);  ec_.normalize(P12);
+    Point P13  = ec_.addEf(P1, P3);  ec_.normalize(P13);
+    Point P23  = ec_.addEf(P2, P3);  ec_.normalize(P23);
+    Point P123 = ec_.addEf(P12, P3); ec_.normalize(P123);
+
+    /* pre[0..1]=P1+P2, pre[2..3]=P1+P3, pre[4..5]=P2+P3, pre[6..7]=P1+P2+P3 */
+    out.push_back(P12.x);  out.push_back(P12.y);
+    out.push_back(P13.x);  out.push_back(P13.y);
+    out.push_back(P23.x);  out.push_back(P23.y);
+    out.push_back(P123.x); out.push_back(P123.y);
+
+    /* Bit decompositions and trace */
+    Nat n1 = f_.from_montgomery(s1);
+    Nat n2 = f_.from_montgomery(s2);
+    Nat n_minus_1("0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140");
+
+    /* Trace: compute s1·P1 + s2·P2 + (n-1)·P3 via repeated squaring */
+    Elt ax = f_.zero(), ay = one, az = f_.zero();
+    for (size_t i = 0; i < kBits; ++i) {
+      size_t rev = kBits - 1 - i;
+      uint8_t bi = (n1.bit(rev) ? 1 : 0)
+                 + 2 * (n2.bit(rev) ? 1 : 0)
+                 + 4 * (n_minus_1.bit(rev) ? 1 : 0);
+      out.push_back(f_.subf(f_.of_scalar(2 * bi), f_.of_scalar(7)));
+
+      /* Mux point */
+      Point mux;
+      switch (bi) {
+        case 0: mux = ec_.zero(); break;
+        case 1: mux = P1;  break; case 2: mux = P2;  break;
+        case 3: mux = P12; break; case 4: mux = P3;  break;
+        case 5: mux = P13; break; case 6: mux = P23; break;
+        case 7: mux = P123; break;
+        default: return;
+      }
+
+      if (i > 0) ec_.doubleE(ax, ay, az, ax, ay, az);
+      ec_.addE(ax, ay, az, ax, ay, az, mux.x, mux.y, mux.z);
+
+      if (i < kBits - 1) {
+        out.push_back(ax); /* int_x */
+        out.push_back(ay); /* int_y */
+        out.push_back(az); /* int_z */
+      }
+    }
   }
 
   /* Placeholder: Sha3BlockWitness (3 blocks × 184 packed_v32 × 7 = 3864 fields). */
