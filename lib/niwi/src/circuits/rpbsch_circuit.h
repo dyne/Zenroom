@@ -177,7 +177,12 @@ class RpbschCircuit {
     Sha2BlockWitness sha1_wit;
     typename Secp256k1Circuit<LogicCircuit>::ScalarMultWitness ped_wit_S;
 
+    /* Bit vectors come in two encodings:
+     *   _bits  = little-endian (bit 0 = LSB of scalar, for range-check vlt)
+     *   _sha   = big-endian (MSB-first within each byte, for SHA-256 input)
+     * The witness provides both; the circuit uses each for its purpose. */
     v256 nu_u_bits, nu_up_bits, nu_s_bits;
+    v256 nu_s_sha, nu_u_sha, nu_up_sha;
     v256 msg0_bits, msg1_bits;
 
     void input(const LogicCircuit& lc) {
@@ -194,9 +199,12 @@ class RpbschCircuit {
       ped_wit_S.input(lc);
       sha0_wit.input(lc);
       sha1_wit.input(lc);
+      nu_s_bits  = lc.template vinput<256>();
       nu_u_bits  = lc.template vinput<256>();
       nu_up_bits = lc.template vinput<256>();
-      nu_s_bits  = lc.template vinput<256>();
+      nu_s_sha   = lc.template vinput<256>();
+      nu_u_sha   = lc.template vinput<256>();
+      nu_up_sha  = lc.template vinput<256>();
       msg0_bits  = lc.template vinput<256>();
       msg1_bits  = lc.template vinput<256>();
     }
@@ -215,11 +223,13 @@ class RpbschCircuit {
       0x510e527fu, 0x9b05688cu, 0x1f83d9abu, 0x5be0cd19u
     };
     for (size_t i = 0; i < 8; ++i) sha_iv_[i] = lc_.vbit32(iv[i]);
-    /* Padding for 64-byte message: length = 512 bits = 0x200.
-     * Block 1 layout: 0x80 || zeros... || 0x00000000 || 0x00000200 */
+    /* Padding block for 64-byte message: 0x80 || 55 zero bytes ||
+     * 8-byte big-endian length (512 bits = 0x200).
+     * 16 v32 words: word 0 = 0x80000000, words 1-14 = 0,
+     * word 15 = 0x00000200. */
     sha_pad1_[0] = lc_.vbit32(0x80000000u);
-    for (size_t i = 1; i < 7; ++i) sha_pad1_[i] = lc_.vbit32(0);
-    sha_pad1_[7] = lc_.vbit32(0x00000200u);
+    for (size_t i = 1; i < 15; ++i) sha_pad1_[i] = lc_.vbit32(0);
+    sha_pad1_[15] = lc_.vbit32(0x00000200u);
   }
 
   /* ---- Verification ---- */
@@ -248,7 +258,7 @@ class RpbschCircuit {
   Bp bp_;
   proofs::FlatSHA256Circuit<LogicCircuit, Bp> sha_;
   v32 sha_iv_[8];    /* standard SHA-256 IV */
-  v32 sha_pad1_[8];  /* block-1 padding for 64-byte input (0x80, zeros, 0x200) */
+  v32 sha_pad1_[16];  /* block-1 padding for 64-byte input */
 
   /* ---- Gated assertion helpers -----------------------------------------
    *
@@ -379,8 +389,8 @@ class RpbschCircuit {
                           w.H_x, w.H_y, w.ped_wit_S);
 
     /* ---- 4. SHA-256 preimage and BIP-340 verifications ---- */
-    verify_sha256_preimage(w.nu_s_bits, w.nu_u_bits,  w.msg0_bits, w.sha0_wit);
-    verify_sha256_preimage(w.nu_s_bits, w.nu_up_bits, w.msg1_bits, w.sha1_wit);
+    verify_sha256_preimage(w.nu_s_sha, w.nu_u_sha,  w.msg0_bits, w.sha0_wit);
+    verify_sha256_preimage(w.nu_s_sha, w.nu_up_sha, w.msg1_bits, w.sha1_wit);
     assert_msg_bits_equal(w.msg0_bits, w.bip0_wit);
     assert_msg_bits_equal(w.msg1_bits, w.bip1_wit);
 
