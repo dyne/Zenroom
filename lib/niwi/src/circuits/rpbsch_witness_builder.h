@@ -18,7 +18,9 @@
 #include "secp256k1/secp256k1_witness.h"
 #include "pbsch_commitment.h"
 #include "circuits/bip340_witness_bridge.h"
+#include "circuits/bip340_witness.h"
 #include "circuits/rpbsch_ec_bridge.h"
+#include "circuits/sha/flatsha256_witness.h"
 
 namespace niwi {
 
@@ -59,6 +61,7 @@ class RpbschWitnessBuilder {
     uint8_t  T[33], T_y[32];        /* T = αG + βX */
     Elt alpha, beta, m, r_C;
     Elt c_scalar;
+    uint8_t  m_bytes[32];           /* original message for SHA */
     uint8_t  e_hash[32];            /* Hq(R'_x, X_x, m) before β */
     int      overflow;              /* 0 or 1 for mod n */
     uint8_t  C_y[32], H_x[32], H_y[32];
@@ -74,6 +77,7 @@ class RpbschWitnessBuilder {
 
   struct Branch2 {
     Elt nu_u, nu_u_prime, nu_s, nu_inv, r_S;
+    uint8_t nu_u_bytes[32], nu_up_bytes[32], nu_s_bytes[32]; /* original bytes */
     uint8_t S_y[32], H_x[32], H_y[32];
     uint8_t sig0[64], sig1[64];
     uint8_t msg0[32], msg1[32];
@@ -111,6 +115,7 @@ class RpbschWitnessBuilder {
         !scalar_bytes_valid(beta_bytes) || !scalar_bytes_valid(rho_bytes))
       return false;
     b1.m     = scalar_bytes_to_base_elt(m_bytes);
+    memcpy(b1.m_bytes, m_bytes, 32);
     b1.alpha = scalar_bytes_to_base_elt(alpha_bytes);
     b1.beta  = scalar_bytes_to_base_elt(beta_bytes);
     b1.r_C   = scalar_bytes_to_base_elt(rho_bytes);
@@ -209,6 +214,9 @@ class RpbschWitnessBuilder {
     if (!scalar_bytes_valid(nu_u_bytes) || !scalar_bytes_valid(nu_up_bytes) ||
         !scalar_bytes_valid(nu_s_bytes) || !scalar_bytes_valid(rho_bytes))
       return false;
+    memcpy(b2.nu_u_bytes,  nu_u_bytes,  32);
+    memcpy(b2.nu_up_bytes, nu_up_bytes, 32);
+    memcpy(b2.nu_s_bytes,  nu_s_bytes,  32);
     b2.nu_u       = scalar_bytes_to_base_elt(nu_u_bytes);
     b2.nu_u_prime = scalar_bytes_to_base_elt(nu_up_bytes);
     b2.nu_s       = scalar_bytes_to_base_elt(nu_s_bytes);
@@ -313,7 +321,17 @@ class RpbschWitnessBuilder {
                                stmt.X, b1.X_y,
                                b1.T+1, b1.T_y, out);
     }
-    fill_sha3_placeholder(out);
+    /* sha_c_wit: 3-block tagged hash of (R'_x, X_x, m) */
+    {
+      uint8_t sha_tag[32];
+      niwi_bip340_sha256((const uint8_t *)"BIP0340/challenge", 17, sha_tag);
+      uint8_t pre[160];
+      memcpy(pre, sha_tag, 32); memcpy(pre+32, sha_tag, 32);
+      memcpy(pre+64, b1.Rp, 32);
+      memcpy(pre+96, stmt.X, 32);
+      memcpy(pre+128, b1.m_bytes, 32);
+      fill_sha_witness(pre, 160, 3, out);
+    }
     for (size_t i=0; i<256; ++i) out.push_back(b1.Rp_bits[i]);
     for (size_t i=0; i<256; ++i) out.push_back(b1.Rp_sha[i]);
     for (size_t i=0; i<256; ++i) out.push_back(b1.X_bits[i]);
@@ -341,8 +359,8 @@ class RpbschWitnessBuilder {
     out.push_back(elt_from_be32(b2.sig0+32));
     out.push_back(elt_from_be32(b2.sig1));
     out.push_back(elt_from_be32(b2.sig1+32));
-    fill_bip340_witness_placeholder(out);
-    fill_bip340_witness_placeholder(out);
+    fill_bip340_witness(stmt.Xp, b2.sig0, b2.sig0 + 32, b2.msg0, out);
+    fill_bip340_witness(stmt.Xp, b2.sig1, b2.sig1 + 32, b2.msg1, out);
     /* ped_wit_S: ν_s·G + r_S·H + (n-1)·S = O */
     {
       const uint8_t *gx = (const uint8_t *)
@@ -355,8 +373,20 @@ class RpbschWitnessBuilder {
                                b2.H_x, b2.H_y,
                                stmt.S+1, b2.S_y, out);
     }
-    fill_sha2_placeholder(out);
-    fill_sha2_placeholder(out);
+    /* sha0_wit: SHA-256(ν_s || ν_u) */
+    {
+      uint8_t pre[64];
+      memcpy(pre,      b2.nu_s_bytes, 32);
+      memcpy(pre + 32, b2.nu_u_bytes, 32);
+      fill_sha_witness(pre, 64, 2, out);
+    }
+    /* sha1_wit: SHA-256(ν_s || ν_u') */
+    {
+      uint8_t pre[64];
+      memcpy(pre,      b2.nu_s_bytes,  32);
+      memcpy(pre + 32, b2.nu_up_bytes, 32);
+      fill_sha_witness(pre, 64, 2, out);
+    }
     for (size_t i=0; i<256; ++i) out.push_back(b2.nu_s_bits[i]);
     for (size_t i=0; i<256; ++i) out.push_back(b2.nu_u_bits[i]);
     for (size_t i=0; i<256; ++i) out.push_back(b2.nu_up_bits[i]);
@@ -467,34 +497,79 @@ class RpbschWitnessBuilder {
     for (int b=0; b<3; ++b) for (int i=0; i<184; ++i) for (int j=0; j<7; ++j) out.push_back(z);
   }
 
+  /* Real SHA witness using FlatSHA256Witness natively, encoded as packed_v32.
+   * msg and msg_len are the preimage; max_blocks is the number of SHA blocks.
+   * Outputs: per block [outw[48], oute[64], outa[64], h1[8]] = 184 packed_v32,
+   * each packed_v32 = 7 field elements. Total = max_blocks * 184 * 7. */
+  void fill_sha_witness(const uint8_t* msg, size_t msg_len,
+                         size_t max_blocks, std::vector<Elt>& out) const {
+    proofs::FlatSHA256Witness::BlockWitness bw[3];
+    std::vector<uint8_t> in(max_blocks * 64);
+    uint8_t nb;
+    proofs::FlatSHA256Witness::transform_and_witness_message(
+        msg_len, msg, max_blocks, nb, in.data(), bw);
+    auto pack32 = [&](uint32_t val) {
+      for (size_t g=0; g<6; ++g) {
+        uint32_t bits = (val >> (5*g)) & 0x1F;
+        out.push_back(f_.subf(f_.of_scalar(2*bits), f_.of_scalar(31)));
+      }
+      uint32_t bits = (val >> 30) & 0x3;
+      out.push_back(f_.subf(f_.of_scalar(2*bits), f_.of_scalar(3)));
+    };
+    for (size_t b=0; b<max_blocks; ++b) {
+      for (size_t i=0; i<48; ++i) pack32(bw[b].outw[i]);
+      for (size_t i=0; i<64; ++i) pack32(bw[b].oute[i]);
+      for (size_t i=0; i<64; ++i) pack32(bw[b].outa[i]);
+      for (size_t i=0; i<8;  ++i) pack32(bw[b].h1[i]);
+    }
+  }
+
   /* Placeholder: Sha2BlockWitness (2 blocks × 184 packed_v32 × 7 = 2576 fields). */
   void fill_sha2_placeholder(std::vector<Elt>& out) const {
     auto z = f_.zero();
     for (int b=0; b<2; ++b) for (int i=0; i<184; ++i) for (int j=0; j<7; ++j) out.push_back(z);
   }
 
-  /* Placeholder in exact Bip340Circuit::Witness::input() order:
-   * rx, ry, s_inv, pk_inv,
-   * scalar-mul witness,
-   * e_circuit, e_neg_wire,
-   * range/parity bit vectors,
-   * 3-block SHA witness,
-   * message words.
-   * Total: 4 + 1029 + 2 + 5*256 + 2*8 + 3864 + 8*32 = 6451 fields. */
-  void fill_bip340_witness_placeholder(std::vector<Elt>& out) const {
-    auto z = f_.zero();
-    for (int i=0; i<4; ++i) out.push_back(z);
-    fill_scalar_mul_placeholder(out);
-    for (int i=0; i<2; ++i) out.push_back(z);
-    for (int i=0; i<256; ++i) out.push_back(z); /* s_bits */
-    for (int i=0; i<256; ++i) out.push_back(z); /* e_bits */
-    for (int i=0; i<256; ++i) out.push_back(z); /* e_neg_bits */
-    for (int i=0; i<256; ++i) out.push_back(z); /* pk_x_bits */
-    for (int i=0; i<256; ++i) out.push_back(z); /* R_x_bits */
-    for (int i=0; i<8; ++i) out.push_back(z);   /* ry_lsb */
-    for (int i=0; i<8; ++i) out.push_back(z);   /* py_lsb */
-    fill_sha3_placeholder(out);
-    for (int i=0; i<256; ++i) out.push_back(z); /* msg_bits */
+  /* Real BIP-340 witness using Bip340Witness, in exact
+   * Bip340Circuit::Witness::input() order. */
+  void fill_bip340_witness(const uint8_t pk_x[32], const uint8_t R_x[32],
+                            const uint8_t s_bytes[32], const uint8_t msg[32],
+                            std::vector<Elt>& out) const {
+    niwi::Bip340Witness<EC, ScalarField> w(f_, ec_, fn_);
+    w.compute(pk_x, R_x, s_bytes, msg);
+
+    out.push_back(w.rx_); out.push_back(w.ry_);
+    out.push_back(w.s_inv_); out.push_back(w.pk_inv_);
+    for (size_t i=0; i<8; ++i) out.push_back(w.pre_[i]);
+    for (size_t i=0; i<kBits; ++i) out.push_back(w.bi_[i]);
+    for (size_t i=0; i<kBits-1; ++i) {
+      out.push_back(w.int_x_[i]); out.push_back(w.int_y_[i]);
+      out.push_back(w.int_z_[i]);
+    }
+    out.push_back(w.e_challenge_); out.push_back(w.e_neg_);
+    for (size_t i=0; i<kBits; ++i) out.push_back(w.s_bits_[i]);
+    for (size_t i=0; i<kBits; ++i) out.push_back(w.e_bits_[i]);
+    for (size_t i=0; i<kBits; ++i) out.push_back(w.e_neg_bits_[i]);
+    for (size_t i=0; i<kBits; ++i) out.push_back(w.pk_x_bits_[i]);
+    for (size_t i=0; i<kBits; ++i) out.push_back(w.R_x_bits_[i]);
+    for (size_t i=0; i<8; ++i) out.push_back(w.ry_lsb_[i]);
+    for (size_t i=0; i<8; ++i) out.push_back(w.py_lsb_[i]);
+    /* SHA packed witness: 3 blocks */
+    auto pack32 = [&](uint32_t val) {
+      for (size_t g=0; g<6; ++g) {
+        uint32_t bits = (val >> (5*g)) & 0x1F;
+        out.push_back(f_.subf(f_.of_scalar(2*bits), f_.of_scalar(31)));
+      }
+      uint32_t bits = (val >> 30) & 0x3;
+      out.push_back(f_.subf(f_.of_scalar(2*bits), f_.of_scalar(3)));
+    };
+    for (size_t b=0; b<3; ++b) {
+      for (size_t i=0; i<48; ++i) pack32(w.sha_outw[b][i]);
+      for (size_t i=0; i<64; ++i) pack32(w.sha_oute[b][i]);
+      for (size_t i=0; i<64; ++i) pack32(w.sha_outa[b][i]);
+      for (size_t i=0; i<8;  ++i) pack32(w.sha_h1[b][i]);
+    }
+    for (size_t i=0; i<256; ++i) out.push_back(w.msg_bits_[i]);
   }
 
   /* ---- Internal helpers ---- */
