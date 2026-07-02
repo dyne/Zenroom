@@ -116,18 +116,6 @@ class RpbschCircuit {
     }
   };
 
-  /* ---- OR selector constraint ---- */
-
-  /* Assert sel ∈ {0,1}: sel * (1 - sel) = 0.
-   * Returns the complement (1 - sel) for gating branch 1. */
-  EltW make_selector(const LogicCircuit& lc, EltW sel) {
-    EltW one  = lc.konst(lc.one());
-    EltW comp = lc.sub(&one, sel);  /* 1 - sel */
-    /* sel * (1 - sel) = 0  →  sel ∈ {0, 1} */
-    lc.assert0(lc.mul(&sel, comp));
-    return comp; /* 1 - sel */
-  }
-
   /* ---- Statement (public inputs) ----------------------------------- */
 
   struct Statement {
@@ -296,8 +284,11 @@ class RpbschCircuit {
               EltW selector,
               const Branch1Witness& b1,
               const Branch2Witness& b2) const {
-    /* Boolean selector */
-    EltW not_sel = make_selector(lc_, selector);
+    EltW one = lc_.konst(lc_.one());
+
+    /* Boolean selector: sel * (1 - sel) = 0 */
+    EltW not_sel = lc_.sub(&one, selector);
+    lc_.assert0(lc_.mul(&selector, not_sel));
 
     /* Strict skeleton: both branches are instantiated. Only constraints that
      * use gate_assert* are currently selector-gated. */
@@ -493,6 +484,11 @@ class RpbschCircuit {
       lc_.assert_eq(&w.X_sha_bits[i], w.X_bits[255 - i]);
       lc_.assert_eq(&w.m_sha_bits[i], w.m_bits[255 - i]);
     }
+
+    /* Bind m_msg_bits (8 v32 words) to m_sha_bits (256-bit vector) */
+    for (size_t w = 0; w < 8; ++w)
+      for (size_t b = 0; b < 32; ++b)
+        lc_.assert_eq(&w.m_msg_bits[w][b], w.m_sha_bits[w * 32 + b]);
 
     /* 4a: e = tagged_hash("BIP0340/challenge", R'_x || X_x || m) */
     v256 e_bits;
