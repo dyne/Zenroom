@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <vector>
 
 #include "secp256k1/secp256k1_field.h"
 #include "secp256k1/secp256k1_curve.h"
@@ -271,6 +272,67 @@ class RpbschWitnessBuilder {
       return base_bytes_to_elt(b);
   }
 
+  /* Fill circuit witness vector in exact Branch1Witness::input() order.
+   * Scalar-mul and SHA witnesses use placeholder zeros (TODO).
+   * Returns total field element count pushed. */
+  size_t fill_witness_branch1(const Statement& stmt, const Branch1& b1,
+                               std::vector<Elt>& out) const {
+    auto z = f_.zero();
+    out.push_back(elt_from_be32(b1.X_y));
+    out.push_back(elt_from_be32(b1.R));  out.push_back(elt_from_be32(b1.R_y));
+    out.push_back(elt_from_be32(b1.Rp)); out.push_back(elt_from_be32(b1.Rp_y));
+    out.push_back(elt_from_be32(b1.T+1)); out.push_back(elt_from_be32(b1.T_y));
+    out.push_back(b1.alpha); out.push_back(b1.beta);
+    out.push_back(b1.r_C);
+    out.push_back(b1.m);   out.push_back(b1.r_C);
+    out.push_back(elt_from_be32(b1.C_y));
+    out.push_back(elt_from_be32(b1.H_x)); out.push_back(elt_from_be32(b1.H_y));
+    out.push_back(b1.c_scalar);
+    out.push_back(f_.of_scalar(b1.overflow));
+    fill_scalar_mul_placeholder(out); fill_scalar_mul_placeholder(out);
+    fill_sha3_placeholder(out);
+    for (size_t i=0; i<256; ++i) out.push_back(b1.Rp_bits[i]);
+    for (size_t i=0; i<256; ++i) out.push_back(b1.Rp_sha[i]);
+    for (size_t i=0; i<256; ++i) out.push_back(b1.X_bits[i]);
+    for (size_t i=0; i<256; ++i) out.push_back(b1.X_sha[i]);
+    for (size_t i=0; i<256; ++i) out.push_back(b1.m_sha[i]);
+    for (size_t i=0; i<256; ++i) out.push_back(b1.m_msg[i]);
+    for (size_t i=0; i<256; ++i) out.push_back(b1.m_bits[i]);
+    for (size_t i=0; i<256; ++i) out.push_back(b1.r_C_bits[i]);
+    for (size_t i=0; i<256; ++i) out.push_back(b1.alpha_bits[i]);
+    for (size_t i=0; i<256; ++i) out.push_back(b1.beta_bits[i]);
+    for (size_t i=0; i<256; ++i) out.push_back(b1.c_bits[i]);
+    return out.size();
+  }
+
+  /* Fill circuit witness vector in exact Branch2Witness::input() order. */
+  size_t fill_witness_branch2(const Statement& stmt, const Branch2& b2,
+                               std::vector<Elt>& out) const {
+    out.push_back(b2.nu_u); out.push_back(b2.nu_u_prime);
+    out.push_back(b2.nu_inv);
+    out.push_back(b2.nu_s); out.push_back(b2.r_S);
+    out.push_back(elt_from_be32(b2.S_y));
+    out.push_back(elt_from_be32(b2.H_x)); out.push_back(elt_from_be32(b2.H_y));
+    out.push_back(elt_from_be32(b2.sig0));
+    out.push_back(elt_from_be32(b2.sig0+32));
+    out.push_back(elt_from_be32(b2.sig1));
+    out.push_back(elt_from_be32(b2.sig1+32));
+    fill_bip340_witness_placeholder(out);
+    fill_bip340_witness_placeholder(out);
+    fill_scalar_mul_placeholder(out);
+    fill_sha2_placeholder(out);
+    fill_sha2_placeholder(out);
+    for (size_t i=0; i<256; ++i) out.push_back(b2.nu_s_bits[i]);
+    for (size_t i=0; i<256; ++i) out.push_back(b2.nu_u_bits[i]);
+    for (size_t i=0; i<256; ++i) out.push_back(b2.nu_up_bits[i]);
+    for (size_t i=0; i<256; ++i) out.push_back(b2.nu_s_sha[i]);
+    for (size_t i=0; i<256; ++i) out.push_back(b2.nu_u_sha[i]);
+    for (size_t i=0; i<256; ++i) out.push_back(b2.nu_up_sha[i]);
+    for (size_t i=0; i<256; ++i) out.push_back(b2.msg0_bits[i]);
+    for (size_t i=0; i<256; ++i) out.push_back(b2.msg1_bits[i]);
+    return out.size();
+  }
+
  private:
   const Field& f_;
   const EC& ec_;
@@ -292,6 +354,46 @@ class RpbschWitnessBuilder {
       auto v = octet_to_secp256k1_base(b);
       return v.value();
   }
+
+  /* Placeholder: ScalarMultWitness with zero values (pre[8], bi[256],
+   * int_x[255], int_y[255], int_z[255]). Total: 8+256+3*255 = 1029 fields. */
+  void fill_scalar_mul_placeholder(std::vector<Elt>& out) const {
+    auto z = f_.zero();
+    for (size_t i=0; i<8; ++i) out.push_back(z);
+    for (size_t i=0; i<256; ++i) out.push_back(z);
+    for (size_t i=0; i<255; ++i) { out.push_back(z); out.push_back(z); out.push_back(z); }
+  }
+
+  /* Placeholder: Sha3BlockWitness (3 blocks × 184 packed_v32 × 7 = 3864 fields). */
+  void fill_sha3_placeholder(std::vector<Elt>& out) const {
+    auto z = f_.zero();
+    for (int b=0; b<3; ++b) for (int i=0; i<184; ++i) for (int j=0; j<7; ++j) out.push_back(z);
+  }
+
+  /* Placeholder: Sha2BlockWitness (2 blocks × 184 packed_v32 × 7 = 2576 fields). */
+  void fill_sha2_placeholder(std::vector<Elt>& out) const {
+    auto z = f_.zero();
+    for (int b=0; b<2; ++b) for (int i=0; i<184; ++i) for (int j=0; j<7; ++j) out.push_back(z);
+  }
+
+  /* Placeholder: Bip340Circuit::Witness (approx the same as Sha3BlockWitness
+   * plus scalar-mul witness). Total fields ≈ scalar_mul + sha3 = 1029+3864=4893. */
+  void fill_bip340_witness_placeholder(std::vector<Elt>& out) const {
+    fill_scalar_mul_placeholder(out);
+    fill_sha3_placeholder(out);
+    /* plus extra fields (msg_bits[256], etc.) */
+    auto z = f_.zero();
+    for (int i=0; i<256; ++i) out.push_back(z); /* msg bits */
+    for (int i=0; i<256; ++i) out.push_back(z); /* s_bits */
+    for (int i=0; i<256; ++i) out.push_back(z); /* e_bits */
+    for (int i=0; i<256; ++i) out.push_back(z); /* e_neg_bits */
+    for (int i=0; i<256; ++i) out.push_back(z); /* pk_x_bits */
+    for (int i=0; i<256; ++i) out.push_back(z); /* R_x_bits */
+    for (int i=0; i<8; ++i) out.push_back(z);   /* ry_lsb */
+    for (int i=0; i<8; ++i) out.push_back(z);   /* py_lsb */
+  }
+
+  /* ---- Internal helpers ---- */
 
   Elt scalar_bytes_to_base_elt(const uint8_t b[32]) const {
       uint8_t le[32];
