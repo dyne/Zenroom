@@ -47,6 +47,16 @@ using Scalar = niwi::FpSecp256k1Scalar;
 using Backend = proofs::CustomCompilerBackend<Field>;
 using Logic  = proofs::Logic<Field, Backend>;
 
+static void instantiate_bip340_verify(Logic& lc,
+                                      niwi::Bip340Circuit<Logic, EC, Scalar>& bip) {
+    auto pk_x = lc.eltw_input();
+    auto R_x = lc.eltw_input();
+    auto s = lc.eltw_input();
+    niwi::Bip340Circuit<Logic, EC, Scalar>::Witness witness;
+    witness.input(lc);
+    bip.verify(pk_x, R_x, s, witness);
+}
+
 int main() {
     (void)niwi::secp256k1_base;
     (void)niwi::secp256k1;
@@ -70,6 +80,7 @@ int main() {
     niwi::Bip340Circuit<Logic, EC, Scalar> bip(lc, niwi::secp256k1,
                                                 niwi::secp256k1_scalar);
     (void)bip;
+    (void)&instantiate_bip340_verify;
 
     return 0;
 }

@@ -96,7 +96,7 @@ class Secp256k1Circuit {
     /* a·x + b (a=0 for secp256k1, kept for generality) */
     auto a_w = lc_.konst(a_);
     auto b_w = lc_.konst(b_);
-    auto ax  = lc_.mul(a_w, x);
+    auto ax  = lc_.mul(&a_w, x);
     auto axb = lc_.add(&ax, b_w);
     auto rhs = lc_.add(&axb, xxx);
     lc_.assert_eq(&yy, rhs);
@@ -130,18 +130,18 @@ class Secp256k1Circuit {
     X3t = lc_.add(&t1, t2);
     t5 = lc_.sub(&t5, X3t);
     auto k3b_w = lc_.konst(k3b_);
-    EltW Z3t = lc_.mul(k3b_w, t2);
+    EltW Z3t = lc_.mul(&k3b_w, t2);
     X3t = lc_.sub(&t1, Z3t);
     Z3t = lc_.add(&t1, Z3t);
     EltW Y3t = lc_.mul(&X3t, Z3t);
     t1 = lc_.add(&t0, t0);
     t1 = lc_.add(&t1, t0);
-    t4 = lc_.mul(k3b_w, t4);
+    t4 = lc_.mul(&k3b_w, t4);
     t2 = lc_.konst(a_); (void)t2; /* a=0 → a*t2 = 0 */
     t1 = lc_.add(&t1, t2);
     t2 = lc_.sub(&t0, t2);
     auto a_w = lc_.konst(a_);
-    t2 = lc_.mul(a_w, t2);
+    t2 = lc_.mul(&a_w, t2);
     t4 = lc_.add(&t4, t2);
     t0 = lc_.mul(&t1, t4);
     Y3t = lc_.add(&Y3t, t0);
@@ -164,12 +164,12 @@ class Secp256k1Circuit {
     EltW Z3t = lc_.mul(&X, Z);
     Z3t = lc_.add(&Z3t, Z3t);
     auto k3b_w = lc_.konst(k3b_);
-    EltW Y3t = lc_.mul(k3b_w, t2);
+    EltW Y3t = lc_.mul(&k3b_w, t2);
     EltW X3t = lc_.sub(&t1, Y3t);
     Y3t = lc_.add(&t1, Y3t);
     Y3t = lc_.mul(&X3t, Y3t);
     X3t = lc_.mul(&t3, X3t);
-    Z3t = lc_.mul(k3b_w, Z3t);
+    Z3t = lc_.mul(&k3b_w, Z3t);
     t3 = lc_.sub(&t0, t2);
     t3 = lc_.add(&t3, Z3t);
     Z3t = lc_.add(&t0, t0);
@@ -270,9 +270,9 @@ class Secp256k1Circuit {
       EltW b_ec = mp.mux(w.bi[i]);
       EltW b_c  = mr.mux(w.bi[i]);
 
-      s_sum = lc_.add(&b_s,  lc_.mul(k2_w, s_sum));
-      e_sum = lc_.add(&b_ec, lc_.mul(k2_w, e_sum));
-      c_sum = lc_.add(&b_c,  lc_.mul(k2_w, c_sum));
+      s_sum = lc_.add(&b_s,  lc_.mul(&k2_w, s_sum));
+      e_sum = lc_.add(&b_ec, lc_.mul(&k2_w, e_sum));
+      c_sum = lc_.add(&b_c,  lc_.mul(&k2_w, c_sum));
 
       EltW range = vv.mux(w.bi[i]);
       lc_.assert0(range);

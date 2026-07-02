@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
+#include <map>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -77,6 +78,28 @@ static bool hex_to_bytes(const std::string& hex, uint8_t *out, size_t out_len) {
         out[i] = (uint8_t)((hi << 4) | lo);
     }
     return true;
+}
+
+static std::string bytes_to_hex(const uint8_t *bytes, size_t len) {
+    static const char hex[] = "0123456789abcdef";
+    std::string out;
+    out.reserve(len * 2);
+    for (size_t i = 0; i < len; ++i) {
+        out.push_back(hex[bytes[i] >> 4]);
+        out.push_back(hex[bytes[i] & 0x0f]);
+    }
+    return out;
+}
+
+static std::string final_challenge_hex(const niwi::Bip340Witness<EC, Scalar>& w) {
+    uint8_t out[32];
+    for (size_t i = 0; i < 8; ++i) {
+        out[4 * i]     = (uint8_t)((w.sha_h1[2][i] >> 24) & 0xff);
+        out[4 * i + 1] = (uint8_t)((w.sha_h1[2][i] >> 16) & 0xff);
+        out[4 * i + 2] = (uint8_t)((w.sha_h1[2][i] >> 8) & 0xff);
+        out[4 * i + 3] = (uint8_t)(w.sha_h1[2][i] & 0xff);
+    }
+    return bytes_to_hex(out, sizeof(out));
 }
 
 static std::vector<std::string> split_csv_line(const std::string& line) {
@@ -172,7 +195,7 @@ static void check_bits_and_parity(const niwi::Bip340Witness<EC, Scalar>& w) {
     check(w.py_lsb_[0] == niwi::secp256k1_base.zero(), "pk_y is even");
 }
 
-static void test_valid_vector(const Vector& v) {
+static void expect_compute(const Vector& v, bool want_ok, const char *label) {
     uint8_t pk[32], msg[32], sig[64], R[32], s[32], y[32];
     check(hex_to_bytes(v.pk, pk, sizeof(pk)), "public key hex parses");
     check(hex_to_bytes(v.msg, msg, sizeof(msg)), "message hex parses");
@@ -180,17 +203,31 @@ static void test_valid_vector(const Vector& v) {
     memcpy(R, sig, 32);
     memcpy(s, sig + 32, 32);
 
-    check(niwi_bip340_lift_x(pk, y) == 0, "lift_x succeeds for valid pk");
-    check((y[31] & 1) == 0, "lift_x returns even y");
-
     niwi::Bip340Witness<EC, Scalar> w(niwi::secp256k1_base,
                                        niwi::secp256k1,
                                        niwi::secp256k1_scalar);
-    check(w.compute(pk, R, s, msg), "valid vector computes witness");
+    bool ok = w.compute(pk, R, s, msg);
+    if (ok != want_ok) {
+        fprintf(stderr, "FAIL: vector %s %s compute=%d want=%d\n",
+                v.index.c_str(), label, ok ? 1 : 0, want_ok ? 1 : 0);
+        failures++;
+    }
+    if (!ok) return;
+
+    check(niwi_bip340_lift_x(pk, y) == 0, "lift_x succeeds for valid pk");
+    check((y[31] & 1) == 0, "lift_x returns even y");
     check(w.sha_num_blocks == 3, "tagged hash uses three SHA blocks");
     check_scalar_binding(w);
     check_nontrivial_witness(w);
     check_bits_and_parity(w);
+}
+
+static void test_valid_vector(const Vector& v) {
+    expect_compute(v, true, "valid vector");
+}
+
+static void test_invalid_vector(const Vector& v) {
+    expect_compute(v, false, "invalid vector");
 }
 
 static void test_invalid_wrong_message(const Vector& v) {
@@ -208,16 +245,93 @@ static void test_invalid_wrong_message(const Vector& v) {
     check(!w.compute(pk, R, s, msg), "wrong message rejects witness");
 }
 
+static void test_mutations(const Vector& v) {
+    uint8_t pk[32], msg[32], sig[64], R[32], s[32];
+    check(hex_to_bytes(v.pk, pk, sizeof(pk)), "public key hex parses");
+    check(hex_to_bytes(v.msg, msg, sizeof(msg)), "message hex parses");
+    check(hex_to_bytes(v.sig, sig, sizeof(sig)), "signature hex parses");
+    memcpy(R, sig, 32);
+    memcpy(s, sig + 32, 32);
+
+    auto rejects = [&](const char *label,
+                       const uint8_t pk_in[32],
+                       const uint8_t R_in[32],
+                       const uint8_t s_in[32],
+                       const uint8_t msg_in[32]) {
+        niwi::Bip340Witness<EC, Scalar> w(niwi::secp256k1_base,
+                                           niwi::secp256k1,
+                                           niwi::secp256k1_scalar);
+        if (w.compute(pk_in, R_in, s_in, msg_in)) {
+            fprintf(stderr, "FAIL: mutation accepted: %s\n", label);
+            failures++;
+        }
+    };
+
+    uint8_t pk_bad[32], R_bad[32], s_bad[32], msg_bad[32];
+    memcpy(pk_bad, pk, 32); pk_bad[31] ^= 1;
+    memcpy(R_bad, R, 32); R_bad[31] ^= 1;
+    memcpy(s_bad, s, 32); s_bad[31] ^= 1;
+    memcpy(msg_bad, msg, 32); msg_bad[31] ^= 1;
+
+    rejects("pk bit flip", pk_bad, R, s, msg);
+    rejects("R bit flip", pk, R_bad, s, msg);
+    rejects("s bit flip", pk, R, s_bad, msg);
+    rejects("message bit flip", pk, R, s, msg_bad);
+}
+
+static void test_expected_challenges(const std::vector<Vector>& vectors) {
+    const std::map<std::string, std::string> expected = {
+        {"0", "6bb6b93a91f2ecc0cd924f4f9baabb5e6eb21745bb00f2cebdaac908bb5d86ce"},
+        {"1", "cfb58e748d9648b71fdc909fb7432fc0c954da5bd75cdc9d4804d32648f9839a"},
+    };
+
+    for (const auto& v : vectors) {
+        auto it = expected.find(v.index);
+        if (it == expected.end()) continue;
+
+        uint8_t pk[32], msg[32], sig[64], R[32], s[32];
+        check(hex_to_bytes(v.pk, pk, sizeof(pk)), "public key hex parses");
+        check(hex_to_bytes(v.msg, msg, sizeof(msg)), "message hex parses");
+        check(hex_to_bytes(v.sig, sig, sizeof(sig)), "signature hex parses");
+        memcpy(R, sig, 32);
+        memcpy(s, sig + 32, 32);
+
+        niwi::Bip340Witness<EC, Scalar> w(niwi::secp256k1_base,
+                                           niwi::secp256k1,
+                                           niwi::secp256k1_scalar);
+        check(w.compute(pk, R, s, msg), "expected challenge vector computes");
+        std::string got = final_challenge_hex(w);
+        if (got != it->second) {
+            fprintf(stderr, "FAIL: vector %s challenge %s != %s\n",
+                    v.index.c_str(), got.c_str(), it->second.c_str());
+            failures++;
+        }
+    }
+}
+
 int main(int argc, char **argv) {
     (void)argc;
     auto vectors = load_vectors(argv[0]);
     check(vectors.size() >= 2, "loaded at least two BIP-340 vectors");
-    if (vectors.size() >= 2) {
-        check(vectors[0].result == "TRUE", "vector 0 is valid");
-        check(vectors[1].result == "TRUE", "vector 1 is valid");
-        test_valid_vector(vectors[0]);
-        test_valid_vector(vectors[1]);
+
+    size_t valid = 0, invalid = 0;
+    for (const auto& v : vectors) {
+        if (v.result == "TRUE") {
+            valid++;
+            test_valid_vector(v);
+        } else if (v.result == "FALSE") {
+            invalid++;
+            test_invalid_vector(v);
+        }
+    }
+    check(valid > 0, "loaded valid BIP-340 vectors");
+    check(invalid > 0, "loaded invalid BIP-340 vectors");
+
+    test_expected_challenges(vectors);
+
+    if (!vectors.empty()) {
         test_invalid_wrong_message(vectors[0]);
+        test_mutations(vectors[0]);
     }
 
     if (failures) {

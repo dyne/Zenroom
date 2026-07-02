@@ -176,7 +176,8 @@ class Bip340Circuit {
     /* ---- 3. Scalar binding: e_circuit + e_neg = n ---- */
     EltW n_wire = lc_.konst(lc_.elt(
         "0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"));
-    lc_.assert_eq(&lc_.add(&w.e_circuit, w.e_neg_wire), n_wire);
+    EltW e_sum = lc_.add(&w.e_circuit, w.e_neg_wire);
+    lc_.assert_eq(&e_sum, n_wire);
     secp_.range_check_lt_n(w.e_neg_wire, w.e_neg_bits);
 
     /* ---- 4. Double-scalar: s·G + e_neg·P + c·R = O ---- */
