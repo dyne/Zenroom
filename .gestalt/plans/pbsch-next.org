@@ -1,0 +1,331 @@
+#+TITLE: PBSch Next Step
+#+SUBTITLE: Feasibility profile and minimal RPBSch target after lib/niwi
+#+DATE: 2026-07-02
+#+KEYWORDS: pbsch rpbsch bip340 secp256k1 longfellow zkcc circuit feasibility
+
+* TODO [#A] Freeze the post-NIWI implementation target
+:PROPERTIES:
+:Effort: 2d
+:Goal: Decide the smallest PBSch/RPBSch profile worth implementing after generic lib/niwi is available.
+:Notes: RPBSch is a mathematical relation. To prove it with lib/niwi/zkcc, it must be compiled into an arithmetic circuit plus witness-generation code. Longfellow can provide the circuit compiler, SHA-256 circuit, proof machinery, and examples. It also has a serialization FieldID stub named SECP_ID, but no complete secp256k1 field/curve/circuit implementation is present in this checkout. Keep lib/longfellow-zk untouched by default; implement missing SECP support under lib/niwi using Longfellow templates.
+:END:
+
+** TODO [#A] Write the RPBSch implementation profile
+:PROPERTIES:
+:Why: The paper is generic over Schnorr parameters, while Zenroom wants BIP-340/secp256k1; the exact translation affects every circuit and message.
+:Change: Add lib/niwi/docs/pbsch-profile.md defining the supported first profile: secp256k1, BIP-340 challenge hash, fixed 32-byte messages, full-blindness predicate P(phi, m)=1, one fixed commitment key profile, and no Bitcoin transaction serialization. Define the exact encoding of X, X', R, R', signatures, c, alpha, beta, nu_s, nu_u, commitments C/S, and NIWI statement/witness fields. State how paper notation (R,s) maps to BIP-340 x-only signatures, including even-y normalization for public keys and nonce points.
+:Tests: No executable tests; this is profile documentation.
+:Done when: A developer can derive every byte of the RPBSch statement and witness without consulting ambiguous paper notation.
+:END:
+
+** TODO [#A] Complete the Longfellow SECP feasibility audit
+:PROPERTIES:
+:Why: lib/longfellow-zk/proto/circuit.h already reserves SECP_ID, suggesting intended secp256k1 circuit serialization support, but the actual field, curve, and circuit wiring are absent.
+:Change: Add lib/niwi/docs/rpbsch-circuit-feasibility.md documenting exactly what the SECP_ID stub covers and what must be completed outside upstream Longfellow: FpSecp256k1 base field, secp256k1 scalar/order constants, Secp256k1 EllipticCurve instance, CircuitRep<SecpField> use with SECP_ID, Reed-Solomon root/profile for the new field, witness conversion helpers, and build/source registration. Compare this lib/niwi-native-SECP path against non-native arithmetic over P256 and a toy/P-256 Schnorr profile. Prefer the lib/niwi-native-SECP path if the proof-system field profile can be completed without changing lib/longfellow-zk or destabilizing legacy P256/GF2_128 circuits.
+:Tests: Prototype field arithmetic, circuit serialization with SECP_ID, and one tiny proof over the SECP field. Compare native field arithmetic against Milagro SECP constants for p, n, Gx, Gy, and simple scalar multiplication.
+:Done when: The project has a documented answer to whether the SECP_ID stub can be used cleanly from lib/niwi as the first BIP-340 RPBSch circuit field.
+:END:
+
+** TODO [#A] Define what Longfellow can and cannot reuse
+:PROPERTIES:
+:Why: Overestimating reuse will cause wrong designs; underestimating reuse wastes working code.
+:Change: Document reusable pieces: SECP_ID serialization stub, generic Fp/FpGeneric machinery, generic EllipticCurve template, zkcc circuit compiler, proof artifact flow, SHA-256 block circuit and witness generator, bit/adder/memcmp/routing helpers, circuits/ecdsa/verify_circuit.h as the existing gate-based EC arithmetic pattern, and lib/niwi proof backend. Document missing pieces to implement under lib/niwi: FpSecp256k1 reduction/profile, secp256k1 scalar/order helper field, secp256k1 curve instance, reusable SECP circuit point helpers, BIP-340 x-only verification circuit, Pedersen tuple commitment constraints, Fischlin proof/check profile, and RPBSch witness generator. If a missing piece appears to require editing lib/longfellow-zk, record that as an escalation before changing upstream code.
+:Tests: No executable tests; this is implementation inventory.
+:Done when: Each RPBSch subcomponent is classified as reuse, adapt, new, or deferred.
+:END:
+
+* TODO [#A] Add SECP field and curve support under lib/niwi
+:PROPERTIES:
+:Effort: 5d
+:Goal: Use Longfellow's generic templates and SECP_ID stub from lib/niwi without modifying vendored Longfellow sources.
+:Notes: This is not the Zenroom Lua SECP class. This is Longfellow/zkcc circuit-field support needed to build RPBSch. Keep legacy P256_ID behavior unchanged. Do not edit lib/longfellow-zk unless this L1 explicitly records a blocker and a reviewer accepts a vendored patch.
+:END:
+
+** TODO [#A] Add secp256k1 field and curve constants
+:PROPERTIES:
+:Why: The generic Longfellow EC circuit templates need a Field type and EllipticCurve instance, like p256.h/p256.cc provide for P-256.
+:Change: Add lib/niwi/src/secp256k1_field.* or equivalent defining a secp256k1 field profile using Longfellow's generic Fp<4> path first, or an optimized reduction for p = 2^256 - 2^32 - 977 if profiling requires it. Add secp256k1 base field constant, group order n, scalar helper field, curve a=0, b=7, generator Gx/Gy, and a Secp256k1 typedef/instance in a lib/niwi namespace. Keep this separate from Milagro SECP runtime types and do not add ec/secp256k1.* to lib/longfellow-zk.
+:Tests: Add native tests for p, n, G on-curve, point addition, doubling, scalar multiplication by 0, 1, 2, n-1, and n, comparing against Milagro SECP outputs where available.
+:Done when: Native Longfellow secp256k1 arithmetic matches the existing Zenroom SECP/BIP-340 primitive layer.
+:END:
+
+** TODO [#A] Wire SECP_ID circuit serialization and proof profile
+:PROPERTIES:
+:Why: The stub only reserves an id; zkcc must be able to serialize, deserialize, prove, and verify circuits over the secp256k1 field.
+:Change: Add CircuitRep<SecpField> use with FieldID::SECP_ID in the lib/niwi PBSch/RPBSch path. Define the Reed-Solomon/convolution setup and root constants needed by ZkProver/ZkVerifier over the SECP field or document why a different proof field is required. Specifically check whether the required FFT/RS root exists in the base field or in an Fp2-style extension and record the root derivation/constant. Keep Lua generic zkcc defaulting to P256_ID unless an explicit SECP circuit path is introduced. Do this from lib/niwi adapters instead of modifying CircuitRep or existing zkcc bindings where possible.
+:Tests: Build and verify a tiny arithmetic proof over the SECP field, then deserialize it and reject it under P256_ID. Add a test proving the selected Reed-Solomon profile is stable and verifier/prover agree on the root constants.
+:Done when: SECP_ID is not only serialized but actually usable for a small proof.
+:END:
+
+** TODO [#B] Add SECP witness conversion helpers
+:PROPERTIES:
+:Why: RPBSch witnesses are 32-byte secp256k1 scalars and coordinates; unsafe reuse of P256 conversion helpers would silently use the wrong modulus.
+:Change: Add lib/niwi witness helpers for OCTET/byte-to-SecpField and byte-to-secp-scalar conversion with strict range checks, leading-zero preservation, and clear error messages. Keep helper names explicit so P256 and SECP conversions cannot be confused. Do not reuse zk-circuit-lang P256 conversion helpers for SECP data.
+:Tests: Add vectors for zero, one, p-1, p, n-1, n, short inputs, long inputs, and leading-zero values.
+:Done when: RPBSch witness generation can populate SECP-field circuits without P256 conversions.
+:END:
+
+* TODO [#A] Implement the outer PBSch commitment profile
+:PROPERTIES:
+:Effort: 5d
+:Goal: Provide the Cmt required by Figure 4 and RPBSch, separate from NIWI leaf commitments.
+:Notes: First implementation uses a Pedersen-only prototype Cmt to unblock RPBSch and PBSch plumbing. This is explicitly weaker than the paper claim. The paper-level Cmt requires Pedersen plus a straight-line extractable WI proof of opening via a Fischlin/Ks-style transform.
+:END:
+
+** TODO [#A] Resolve the Cmt/RPBSch circuit boundary
+:PROPERTIES:
+:Why: In the paper Cmt.Com returns a full commitment object, while the practical instantiation is a Pedersen commitment c' plus a proof pi_c' of opening. The RPBSch circuit must not accidentally ignore fields required for extractability or try to recompute an infeasible proof object inside the circuit.
+:Change: Specify the exact C and S statement objects for the prototype profile: version tag, commitment type, Pedersen point(s), generator profile, and digest of the full encoded object. Do not add a fake "hash proof of opening"; the NIWI/RPBSch circuit checks the Pedersen opening relation for the secret witness, and documentation states that this is not straight-line extractable Cmt. Also reserve a future pi_c' field/version for the paper-level profile so serialization can evolve without ambiguity.
+:Tests: Add negative tests where the Pedersen point is changed, generator profile is changed, full commitment digest changes, tuple type changes, and the RPBSch opening matches only part of C/S. Add one parser test that rejects a paper-level pi_c' version until implemented.
+:Done when: Reviewers can see exactly which prototype Cmt fields are bound into RPBSch and where the profile differs from paper-level Cmt.Com.
+:END:
+
+** TODO [#A] Specify tuple encoding for Cmt messages
+:PROPERTIES:
+:Why: Cmt must commit to both (m, alpha, beta) and (sig0, sig1, nu_u, nu_u', nu_s), not only one scalar.
+:Change: Define a canonical map from these tuples to one or more secp256k1 scalars. Prefer explicit length-tagged hashing-to-scalars if direct packing is too narrow. Bind the tuple type, field order, protocol version, and commitment key into the encoding.
+:Tests: Add encoding vectors for both tuple types, boundary values, changed field order, changed tuple type, and malformed lengths.
+:Done when: Cmt.Com inputs have one canonical scalar/vector representation.
+:END:
+
+** TODO [#A] Implement Pedersen commitment helpers
+:PROPERTIES:
+:Why: The standard-model commitment part c' must be circuit-representable and statistically hiding.
+:Change: Implement C = mG + rH or vector Pedersen commitments over secp256k1, with a reviewed independent-generator derivation for H and any additional generators. Expose this to native PBSch code, not as a general Lua primitive unless later requested.
+:Tests: Add open/verify vectors, invalid scalar rejection, generator determinism tests, wrong-opening failures, and homomorphism sanity tests.
+:Done when: Cmt.Dec accepts exactly valid openings for the chosen tuple encoding.
+:END:
+
+** TODO [#B] Specify the Fischlin-style opening proof
+:PROPERTIES:
+:Why: Straight-line extractability of Cmt depends on the proof of knowledge of the Pedersen opening.
+:Change: Write the exact Sigma protocol transcript for Pedersen opening and the selected non-interactive Fischlin/Ks transform profile: challenge derivation, repetition count, soundness target, domain tags, proof serialization, and extractor inputs. This is not required for the first Pedersen-only prototype, but it is required before claiming the full 2025-1992 Cmt security.
+:Tests: Add transcript vectors and mutation tests for challenge, response, commitment point, message, randomness, and generator profile.
+:Done when: The implementation can upgrade from prototype Cmt to paper-level extractable Cmt with reviewed proof semantics and vectors.
+:END:
+
+* TODO [#A] Build the minimal RPBSch circuit
+:PROPERTIES:
+:Effort: 10d
+:Goal: Compile the first useful RPBSch relation into zkcc/Longfellow so lib/niwi can prove it.
+:Notes: Start with P(phi,m)=1 and fixed 32-byte messages. Add predicates later. Prefer the completed SECP_ID/native-SECP field path if the feasibility audit passes.
+
+**** Circuit file layout (confirmed 2026-07-02)
+:PROPERTIES:
+:Why: Avoid duplication, keep surface minimal.
+:END:
+
+- lib/niwi/src/circuits/secp256k1_circuit.h — reusable gate-based point ops
+  Adapted from Longfellow's circuits/ecdsa/verify_circuit.h:
+  - addE, doubleE, is_on_curve, point_equality
+  - Scalar multiplication: repeated squaring + 3-bit window table
+    (matching the ECDSA triple-scalar pattern, but parameterized for
+    double-scalar s·G == R + e·P for BIP-340)
+  - x-only lift constraint: even y, x < p, on-curve
+  - Range checks (vlt against n), nonzero checks (witness inverse)
+
+- lib/niwi/src/circuits/bip340_circuit.h — BIP-340 verification circuit
+  verify_bip340(pk_x, R_x, s, msg[32]):
+  - lift both x-only points with even-y constraint
+  - e = int(tagged_hash("BIP0340/challenge", R_x || pk_x || msg)) mod n
+    computed INSIDE the circuit (tagged hash uses FlatSHA256; messages
+    are witness data, the verifier cannot supply e as trusted public input)
+  - s·G == R + e·P via double-scalar mult from secp256k1_circuit.h
+  - Range: R_x < p, s < n, e < n
+
+- lib/niwi/src/circuits/bip340_witness.* — native witness generation
+  fill_witness() producing pre[8], bi[256], int_xyz[255] for the
+  scalar-mul loop, plus SHA witness data for tagged_hash
+
+- lib/niwi/src/circuits/rpbsch_circuit.h — RPBSch relation
+  - Branch 1 (honest): R' = R + α·G + β·X, even-y R', c = Hq(R'_x, X_x, m) + β mod n,
+    C opening (inline Pedersen: C == m·G + r·H)
+  - Branch 2 (trapdoor): νᵤ ≠ νᵤ', S opening, two BIP-340 verifications
+    under X' on (νₛ, νᵤ) and (νₛ, νᵤ')
+  - OR composition with private boolean selector 0=branch1, 1=branch2
+    Constraints for inactive branch are gated (not computed-then-chosen)
+    Selector asserted boolean
+
+**** Layer boundaries (confirmed 2026-07-02)
+:PROPERTIES:
+:Why: Keep hard crypto in C++, orchestratation in Lua.
+:END:
+
+- C++ owns: secp256k1 field gates, EC point gates, BIP-340 tagged hash circuit,
+  mod-n reduction constraints, Pedersen point equation constraints,
+  RPBSch branch constraints, NIWI proof generation
+- Lua owns: PBSch/RPBSch state machine orchestration, input validation,
+  tuple encoding, statement assembly, calling native builders/provers/verifiers,
+  deterministic test vector drivers, negative/mutation tests
+
+**** Circuit profile (first implementation)
+:PROPERTIES:
+:END:
+
+- Field: FpSecp256k1Base (native secp256k1, not P-256 emulation)
+- Message: fixed 32 bytes
+- Predicate: P=1 (always true)
+- Selector: 0 = branch1, 1 = branch2 (private, boolean-asserted)
+
+**** Public/private boundary
+:PROPERTIES:
+:END:
+
+- Public: X, X', C, S, R (from statement), R', claimed signatures
+- Private: branch selector, α, β, ρ, νᵤ, νᵤ', νₛ, y-coordinates for lifts,
+  SHA witness data, scalar-mul intermediate tables
+
+**** Native API entrypoints (C++ → Lua accessible)
+:PROPERTIES:
+:END:
+
+- niwi_build_bip340_circuit(profile) → circuit artifact
+- niwi_build_rpbsch_circuit(profile) → circuit artifact
+- niwi_build_bip340_witness(pk_x, r, s, msg, ...) → witness
+- niwi_build_rpbsch_witness(stmt, branch, ...) → witness
+
+**** Test order
+:PROPERTIES:
+:END:
+
+1. secp256k1 circuit helpers vs native/Milagro
+2. BIP340 circuit against vendored BIP340 vectors
+3. RPBSch branch 1 only
+4. RPBSch branch 2 only
+5. OR composition and selector-hiding checks
+6. Benchmarks/constraint counts
+
+**** Implementation order
+:PROPERTIES:
+:END:
+
+1. secp256k1_circuit.h (this L2 — WIP)
+2. bip340_circuit.h + bip340_witness.*
+3. rpbsch_circuit.h
+:END:
+
+** TODO [#A] Add reusable SECP circuit point helpers
+:PROPERTIES:
+:Why: BIP-340 verification, blinded R' computation, and Pedersen opening checks all need the same gate-based secp256k1 point operations.
+:Change: Add lib/niwi/src/circuits/secp256k1_circuit.* or equivalent with circuit-level helpers adapted from Longfellow's circuits/ecdsa/verify_circuit.h: is_on_curve, point_equality, addE, doubleE, fixed-base scalar multiplication, variable-base scalar multiplication with witness tables, parity checks, and non-infinity checks. Keep these helpers under lib/niwi; do not modify the upstream ECDSA circuit. Pedersen-specific code may stay inline in rpbsch_circuit if it is just C == mG + rH, but it must use these shared point helpers.
+:Tests: Add circuit fixtures comparing point addition, doubling, scalar multiplication, on-curve checks, infinity rejection, and parity checks against native SECP outputs.
+:Done when: BIP-340 and RPBSch can reuse one reviewed SECP circuit arithmetic layer.
+:END:
+
+** TODO [#A] Implement scalar/range/byte helpers for RPBSch
+:PROPERTIES:
+:Why: BIP-340 and Pedersen checks require strict 32-byte scalar and field encodings with range checks.
+:Change: Add circuit helpers for 256-bit byte input, less-than checks against secp256k1 p and n, modular addition/subtraction modulo n for scalar values, and conditional equality. If the SECP field path is used, base-field point arithmetic can use native circuit field operations; scalar arithmetic still needs order-n handling. Reuse Longfellow bit_plucker, bit_adder, memcmp, and routing helpers where practical.
+:Tests: Compare circuit witnesses against native SECP scalar arithmetic for zero, one, n-1, n, p-1, p, overflow, underflow, and random fixed vectors.
+:Done when: The circuit can enforce canonical secp256k1 scalar and field values.
+:END:
+
+** TODO [#A] Implement BIP-340 verification inside the circuit
+:PROPERTIES:
+:Why: RPBSch branch 2 must prove two auxiliary Schnorr signatures verify under X'.
+:Change: Implement or adapt a BIP-340 verification circuit using the equation sG = R + eP, where P is the x-only public key lifted to the even-y point, R is witnessed with x(sig)=r and even y, and e = int(tagged_hash("BIP0340/challenge", r || pk || msg)) mod n. Compute the tagged hash and reduction inside the circuit because RPBSch messages are witness data and the verifier cannot safely supply e as a trusted public input. It is acceptable to pass e as a witness only if the circuit also constrains it to equal the in-circuit hash reduction. Enforce x < p, r < p, s < n, lifted points on curve, non-infinity where relevant, even-y parity through bit decomposition, and scalar arithmetic modulo n. Use existing SHA-256 circuit code for the hash portion and native SECP/BIP-340 code only for witness generation and vector comparison.
+:Tests: Use the vendored BIP-340 CSV for witness/vector checks where the circuit profile accepts the row shape. Add negative circuit fixtures for wrong message, wrong public key, wrong r, wrong s, odd-y public key witness, odd-y R witness, non-canonical x/r/s, infinity, and challenge-reduction errors.
+:Done when: A zkcc circuit verifies at least one positive and several negative BIP-340 signatures against native vector expectations.
+:END:
+
+** TODO [#A] Implement RPBSch branch 1
+:PROPERTIES:
+:Why: Branch 1 is the honest user witness: the challenge c is correctly computed from the blinded nonce, message, and commitment opening.
+:Change: Build constraints for R' = R + alpha*G + beta*X, BIP-340-compatible even-y R' selection, c = Hq(R'_x, X_x, m) + beta mod n, P(phi,m)=1 for the fixed true predicate, and Cmt opening consistency for C and (m, alpha, beta, rho) according to the resolved Cmt boundary. Keep all public statement fields bound exactly as specified in pbsch-profile.md.
+:Tests: Add valid branch-1 proof fixture and mutations for alpha, beta, R, X, R' parity, m, c, C, rho, commitment digest, and predicate flag.
+:Done when: Branch 1 accepts the honest PBSch.User2 witness and rejects inconsistent challenge/commitment data.
+:END:
+
+** TODO [#A] Implement RPBSch branch 2 and OR composition
+:PROPERTIES:
+:Why: Branch 2 gives the deniability/trapdoor witness required by the paper's blindness proof.
+:Change: Build constraints for nu_u != nu_u', S opening to (sig0, sig1, nu_u, nu_u', nu_s), and two BIP-340 verifications under X' for messages (nu_s, nu_u) and (nu_s, nu_u'). Combine branch 1 and branch 2 with a private selector without leaking which branch is used.
+:Tests: Add valid branch-2 proof fixture, mixed-witness rejection, selector mutation tests, equal-nu rejection, bad S opening, and bad signature mutations.
+:Done when: The same public statement can be proven with either valid branch witness and rejected for invalid mixed witnesses.
+:END:
+
+* TODO [#A] Implement the PBSch state machine
+:PROPERTIES:
+:Effort: 5d
+:Goal: Turn Figure 4 into callable APIs around the RPBSch circuit and lib/niwi.
+:Notes: Keep protocol/session orchestration in Lua where it only assembles states, messages, and deterministic vectors over native primitives. Keep raw cryptographic correctness, scalar/point arithmetic, BIP-340, RPBSch constraints, and NIWI proof plumbing native.
+:END:
+
+** TODO [#A] Add Setup, KeyGen, User, Sign, and Verify APIs
+:PROPERTIES:
+:Why: The paper objective is an interactive blind signature protocol, not only a relation proof.
+:Change: Implement PBSch.Setup, KeyGen, User0, Sign0, User1, User2, User3, Sign1, Sign2, and Verify with strict message/state types. Store enough state to prevent replaying steps out of order. Use secure randomness for x, x', r, alpha, beta, rho, nu_s, nu_u, and any commitment proof randomness. Define a retry strategy when sampled alpha/beta produce an R' that is not BIP-340 even-y compatible, and bind the retry behavior into deterministic tests. Prefer Lua for the Figure 4 state machine and transcript assembly, calling native primitives for BIP-340, scalar, point, Pedersen, RPBSch, and NIWI operations.
+:Tests: Add happy-path end-to-end tests producing a final BIP-340-compatible signature and verifying it with native Schnorr verification. Add tests for out-of-order calls, replayed messages, invalid R' parity handling, changed session ids, and reused nonce/state rejection.
+:Done when: A complete Figure 4 session runs from setup to final signature.
+:END:
+
+** TODO [#B] Add Lua/Zencode wrappers
+:PROPERTIES:
+:Why: Zenroom users need an ergonomic API, but raw RPBSch witness internals must stay hidden.
+:Change: Expose a minimal Lua module for PBSch session steps after native primitives stabilize. Do not expose raw RPBSch witness internals. Document fixed-message and predicate limitations.
+:Tests: Add one Lua integration test for the full session and one for each out-of-order or malformed message case.
+:Done when: Lua can execute the full restricted PBSch profile without constructing raw proof internals.
+:END:
+
+* TODO [#A] Validate security scope and performance
+:PROPERTIES:
+:Effort: 4d
+:Goal: Make clear what the implemented PBSch profile claims and whether it is practical.
+:Notes: The paper benchmarks relation complexity; this implementation should measure actual zkcc/lib/niwi proving and verification.
+:END:
+
+** TODO [#A] Add a blocker-focused verification matrix
+:PROPERTIES:
+:Why: The plan has three known doubts that must be closed by tests, not by informal confidence: SECP proof-field viability, Cmt proof equivalence, and BIP-340 circuit correctness/cost.
+:Change: Add lib/niwi/docs/pbsch-verification-matrix.md with one row per blocker, the required tests, expected pass/fail behavior, owner module, and release decision. The matrix must classify each result as pass, blocker, or accepted weaker prototype. Include exact commands for native tests, Lua tests, vector regeneration, and benchmarks once those commands exist.
+:Tests: Documentation-only at first. The matrix is complete only when every blocker row points to executable tests or to a written cryptographic review item.
+:Done when: No known doubt remains without a named test, benchmark, or explicit review gate.
+:END:
+
+** TODO [#A] Test SECP proof-field viability
+:PROPERTIES:
+:Why: SECP_ID being present is not enough; proving over the secp256k1 field must work with Longfellow's ZkProver/ZkVerifier and Reed-Solomon profile.
+:Change: Add tests for field constants, Montgomery conversion, add/sub/mul/invert, curve generator on-curve, scalar multiplication against Milagro, CircuitRep<SecpField> round trip with SECP_ID, rejection under P256_ID, prover/verifier agreement on a tiny arithmetic circuit, and failure when RS/FFT root constants are changed.
+:Tests: Native lib/niwi test binary plus one minimal Zenroom/zkcc integration test if the SECP circuit path is exposed. Include deterministic vectors for p, n, G, 2G, nG=infinity, and tiny proof bytes.
+:Done when: A clean build proves and verifies at least one SECP-field circuit and all mutation tests fail as expected.
+:END:
+
+** TODO [#A] Test Cmt/RPBSch proof-equivalence boundary
+:PROPERTIES:
+:Why: The paper relation says C = Cmt.Com(...); if implementation splits parsing/proof checks outside the circuit and Pedersen opening inside the circuit, tests must show no component can be swapped or omitted.
+:Change: Add fixtures for valid prototype C and S commitments, changed Pedersen point, changed generator profile, changed full commitment digest, changed tuple type, changed tuple field order, wrong randomness, wrong message, and unexpected pi_c' proof bytes. Add a review note stating that these tests support only the weaker Pedersen-only prototype until the Fischlin proof profile is implemented.
+:Tests: Native Cmt tests, RPBSch branch tests, and full PBSch session mutation tests. Each mutation must either fail pre-NIWI protocol parsing, fail RPBSch proof generation, or fail NIWI verification.
+:Done when: No test accepts a commitment where only part of C/S matches the witness.
+:END:
+
+** TODO [#A] Test BIP-340 circuit correctness and cost
+:PROPERTIES:
+:Why: RPBSch depends on in-circuit BIP-340 verification, and this is likely the largest correctness and performance risk.
+:Change: Run the circuit against the vendored BIP-340 vector CSV where applicable. Add dedicated tests for x-only lift, even-y public key witness, even-y R witness, r >= p, s >= n, x >= p, infinity, challenge tagged-hash mismatch, challenge modulo-n reduction, wrong message, wrong key, wrong signature, and branch-2 double-signature verification. Record constraint count, witness-generation time, proof time, verification time, and proof size for one signature and for the two-signature branch-2 path.
+:Tests: Native circuit tests, vector-driven tests using test/vectors/bip340_test_vectors.csv, RPBSch branch-2 tests, and benchmark artifacts committed or documented under test/vectors/pbsch/ or docs.
+:Done when: Positive BIP-340 vectors accepted by native code are accepted by the circuit profile, negative vectors fail for the expected reason, and performance is measured before PBSch release.
+:END:
+
+** TODO [#A] Add deterministic end-to-end vectors
+:PROPERTIES:
+:Why: The paper does not provide byte-level vectors for PBSch.
+:Change: Generate deterministic PBSch vectors for setup, keygen, every protocol message, RPBSch statement/witness digest, NIWI proof, final signature, and verification result. Store them under test/vectors/pbsch/ with generator provenance.
+:Tests: Regenerate vectors byte-for-byte and run mutation tests for each serialized field.
+:Done when: Reviewers can run a deterministic PBSch session without network access or hidden randomness.
+:END:
+
+** TODO [#A] Benchmark RPBSch and PBSch
+:PROPERTIES:
+:Why: The paper's practicality claim depends on the RPBSch proof cost.
+:Change: Measure circuit size, witness-generation time, NIWI proof size, proving time, verification time, and memory for branch 1 and branch 2. Compare against the paper's reported constraint counts where meaningful, noting that Longfellow/zkcc is not circom.
+:Tests: Benchmarks are recorded artifacts, not timing gates.
+:Done when: The implementation has concrete performance data and known bottlenecks.
+:END:
+
+** TODO [#A] Review claims before release
+:PROPERTIES:
+:Why: A restricted implementation can be useful without satisfying every paper claim.
+:Change: Write a review document separating implemented facts, tested behavior, assumptions, and non-goals. State that first implementation Cmt is Pedersen-only/prototype unless the Fischlin L2 is completed. State whether BIP-340 normalization exactly matches Bitcoin vectors. State whether predicates beyond P=true are supported.
+:Tests: Re-run full PBSch, BIP-340, lib/niwi, and legacy zkcc regression tests.
+:Done when: The project can say precisely which subset of 2025-1992 is implemented.
+:END:
