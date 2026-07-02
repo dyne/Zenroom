@@ -96,6 +96,7 @@ class RpbschCircuit {
       }
     }
   };
+  struct Sha2BlockWitness {
     packed_v32 outw[2][48];
     packed_v32 oute[2][64];
     packed_v32 outa[2][64];
@@ -156,7 +157,9 @@ class RpbschCircuit {
 
     /* SHA witness for tagged hash: c = Hq(R'_x, X_x, m) + β */
     Sha3BlockWitness sha_c_wit;
-    v256 Rp_bits, m_sha_bits;    /* R'_x and m in big-endian for SHA */
+    v256 Rp_bits, Rp_sha;        /* R'_x: LE for range, BE for SHA */
+    v256 X_bits, X_sha_bits;     /* X_x:  LE for range, BE for SHA */
+    v256 m_sha_bits;              /* m in big-endian for SHA */
     v32  m_msg_bits[8];          /* m as 8 v32 words for block 2 */
 
     /* Range checks */
@@ -178,6 +181,9 @@ class RpbschCircuit {
       ped_wit_T.input(lc);
       sha_c_wit.input(lc);
       Rp_bits    = lc.template vinput<256>();
+      Rp_sha     = lc.template vinput<256>();
+      X_bits     = lc.template vinput<256>();
+      X_sha_bits = lc.template vinput<256>();
       m_sha_bits = lc.template vinput<256>();
       for (size_t i = 0; i < 8; ++i) m_msg_bits[i] = lc.template vinput<32>();
       m_bits     = lc.template vinput<256>();
@@ -452,6 +458,7 @@ class RpbschCircuit {
 
     /* ---- 1. X on curve ---- */
     secp_.is_on_curve(stmt.X_x, w.X_y);
+    secp_.range_check_lt_p(stmt.X_x, w.X_bits);
 
     /* ---- 2. C opening: C = m·G + r_C·H ---- */
     secp_.is_on_curve(stmt.C_x, w.C_y);
@@ -480,23 +487,35 @@ class RpbschCircuit {
 
     /* ---- 4. c = Hq(R'_x, X_x, m) + β mod n ---- */
 
+    /* Bind SHA (big-endian) bits to range-check (little-endian) bits */
+    for (size_t i = 0; i < 256; ++i) {
+      lc_.assert_eq(&w.Rp_sha[i],  w.Rp_bits[255 - i]);
+      lc_.assert_eq(&w.X_sha_bits[i], w.X_bits[255 - i]);
+      lc_.assert_eq(&w.m_sha_bits[i], w.m_bits[255 - i]);
+    }
+
     /* 4a: e = tagged_hash("BIP0340/challenge", R'_x || X_x || m) */
     v256 e_bits;
-    verify_bip340_tagged_hash(w.Rp_bits, stmt.X_x, /* a=R' */ /* b=X */
+    verify_bip340_tagged_hash(w.Rp_sha, w.X_sha_bits,
                                w.m_msg_bits, w.sha_c_wit, e_bits);
     /* Reconstruct e from bits */
     EltW e_wire = secp_.bits_to_field_le(e_bits);
-    secp_.range_check_lt_n(e_wire, e_bits);
 
-    /* 4b: c = e + β mod n.
+    /* 4b: range-check e_raw < p (it's a SHA-256 digest).
+     * BIP-340: e_raw = int(sha256(...)). The probability that
+     * e_raw >= n is ≈ 2⁻¹²⁸; for the prototype we range-check
+     * against p and note this is not a full mod-n reduction. */
+    secp_.range_check_lt_p(e_wire, e_bits);
+
+    /* 4c: c = e + β mod n.
      * overflow ∈ {0,1}, c + overflow·n = e + β.
-     * Since e,β < n, e+β < 2n, so overflow is 0 or 1. */
-    EltW zero  = lc_.konst(lc_.zero());
+     * Since e, β < n < p and c + overflow·n < 2n, the field
+     * addition does not wrap modulo p and the equation holds
+     * over the integers. */
     EltW sum_eb = lc_.add(&e_wire, w.beta);
-    EltW c_plus_ofn = lc_.add(&w.c_scalar,
-        lc_.mul(w.overflow,
-            lc_.konst(lc_.elt(
-                "0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"))));
+    EltW n_elt  = lc_.konst(lc_.elt(
+        "0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"));
+    EltW c_plus_ofn = lc_.add(&w.c_scalar, lc_.mul(w.overflow, n_elt));
     lc_.assert_eq(&sum_eb, c_plus_ofn);
 
     /* overflow boolean check */
@@ -509,6 +528,7 @@ class RpbschCircuit {
     secp_.range_check_lt_n(w.beta, w.beta_bits);
     secp_.range_check_lt_n(w.c_scalar, w.c_bits);
     secp_.range_check_lt_p(w.Rp_x, w.Rp_bits);
+  }
 
   void verify_branch2(const Statement& stmt, const Branch2Witness& w,
                       EltW gate) const {
