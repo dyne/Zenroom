@@ -314,6 +314,27 @@ class Secp256k1Circuit {
     range_check_impl(x, x_bits, bits_p_);
   }
 
+  /* ---- Pedersen commitment verification --------------------------------
+   *
+   * Verifies: m·G + r·H = C   (equivalently: m·G + r·H + (n-1)·C = O)
+   *
+   * Reuses verify_double_scalar with:
+   *   s = m, e_neg = r, c = n-1, P = H, R = C
+   *
+   * The 8-entry table is: {O, G, H, G+H, C, G+C, H+C, G+H+C}.
+   * The witness generator provides pre[GP]=G+H, pre[GR]=G+C,
+   * pre[PR]=H+C, pre[GPR]=G+H+C (the combined points).
+   */
+  void verify_pedersen(EltW m_wire, EltW r_wire,
+                       EltW C_x, EltW C_y,
+                       EltW H_x, EltW H_y,
+                       const ScalarMultWitness& w) const {
+    EltW n_minus_1 = lc_.konst(lc_.elt(
+        "0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140"));
+    verify_double_scalar(m_wire, r_wire, n_minus_1,
+                         H_x, H_y, C_x, C_y, w);
+  }
+
   const LogicCircuit& lc() const { return lc_; }
 
  private:
