@@ -122,7 +122,7 @@ class Bip340Circuit {
     /* Precompute sha_tag = SHA-256("BIP0340/challenge") as 16 v32 values.
      * sha_tag (32 bytes) → sha_tag || sha_tag (64 bytes = 16 v32). */
     uint8_t sha_tag[32];
-    niwi_bip340_sha256((const uint8_t *)"BIP0340/challenge", 18, sha_tag);
+    niwi_bip340_sha256((const uint8_t *)"BIP0340/challenge", 17, sha_tag);
     for (size_t w = 0; w < 16; ++w) {
       /* Construct v32 from 4 bytes of sha_tag */
       uint32_t val = ((uint32_t)sha_tag[(w % 8) * 4]     << 24) |

@@ -42,6 +42,7 @@ template <class LogicCircuit>
 class Secp256k1Circuit {
   using EltW = typename LogicCircuit::EltW;
   using Elt  = typename LogicCircuit::Elt;
+  using v256 = typename LogicCircuit::v256;
 
   static constexpr size_t kBits = 256;
 
@@ -319,18 +320,16 @@ class Secp256k1Circuit {
   const LogicCircuit& lc_;
   Elt a_, b_, gx_, gy_;
   Elt k2_, k3_, k3b_;
-  using v256 = typename LogicCircuit::v256;
   v256 bits_n_;   /* 256-bit decomposition of n, constant bit wires */
   v256 bits_p_;   /* 256-bit decomposition of p, constant bit wires */
 
   void range_check_impl(EltW x, const v256& x_bits,
                         const v256& limit) const {
     /* 1. as_scalar(x_bits) == x */
-    lc_.assert_eq(&lc_.as_scalar(x_bits), x);
-    /* 2. Each bit is boolean: b_i * (b_i - 1) == 0 */
-    for (size_t i = 0; i < kBits; ++i)
-      lc_.assert0(x_bits[i]);
-    /* 3. x < limit via vector less-than */
+    EltW scalar = lc_.as_scalar(x_bits);
+    lc_.assert_eq(&scalar, x);
+    /* 2. x_bits come from vinput(), which already asserts bitness.
+     * 3. x < limit via vector less-than. */
     lc_.assert1(lc_.vlt(&x_bits, limit));
   }
 };
