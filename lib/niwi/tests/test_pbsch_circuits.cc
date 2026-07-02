@@ -1,8 +1,38 @@
 /* Compilation smoke test: all PBSch circuit templates instantiating
  * with FpSecp256k1Base. Catches regressions only; no proofs. */
 
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+
+#include "util/log.h"
+
+extern "C" {
+    void *ZEN = nullptr;
+    void lerror(void *L, const char *fmt, ...) {
+        (void)L;
+        va_list ap;
+        va_start(ap, fmt);
+        vfprintf(stderr, fmt, ap);
+        va_end(ap);
+        fprintf(stderr, "\n");
+        exit(1);
+    }
+}
+
+namespace proofs {
+void log(enum proofs::LogLevel /*level*/, const char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    fprintf(stderr, "\n");
+}
+}  // namespace proofs
+
 #include "circuits/compiler/compiler.h"
 #include "circuits/logic/logic.h"
+#include "custom_backend.h"
 
 #include "secp256k1/secp256k1_field.h"
 #include "secp256k1/secp256k1_curve.h"
@@ -14,7 +44,8 @@
 using Field  = niwi::FpSecp256k1Base;
 using EC     = niwi::Secp256k1;
 using Scalar = niwi::FpSecp256k1Scalar;
-using Logic  = proofs::Logic<proofs::QuadCircuit<Field>, Field>;
+using Backend = proofs::CustomCompilerBackend<Field>;
+using Logic  = proofs::Logic<Field, Backend>;
 
 int main() {
     (void)niwi::secp256k1_base;
@@ -22,7 +53,8 @@ int main() {
     (void)niwi::secp256k1_scalar;
 
     proofs::QuadCircuit<Field> qc(niwi::secp256k1_base);
-    Logic lc(&qc, niwi::secp256k1_base);
+    Backend backend(&qc);
+    Logic lc(&backend, niwi::secp256k1_base);
 
     /* Secp256k1Circuit */
     niwi::Secp256k1Circuit<Logic> secp(lc, niwi::secp256k1);

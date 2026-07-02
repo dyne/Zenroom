@@ -57,7 +57,7 @@ class Bip340Witness {
   Elt int_x_[kBits - 1], int_y_[kBits - 1], int_z_[kBits - 1];
   Elt e_challenge_;
   Elt e_neg_;        /* n - e */
-  Elt c_val_;        /* n - 1, the constant negated scalar for R */
+  Elt c_val_;        /* n - 1, used for bit-table witness generation */
 
   Bip340Witness(const Field& F, const EC& ec, const ScalarField& Fn)
       : f_(F), ec_(ec), fn_(Fn) {}
@@ -137,7 +137,6 @@ class Bip340Witness {
     }
     filler.push_back(e_challenge_);
     filler.push_back(e_neg_);
-    filler.push_back(c_val_);
   }
 
   /* SHA-256 witness data (for circuit integration) */

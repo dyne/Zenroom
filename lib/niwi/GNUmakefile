@@ -20,6 +20,7 @@
 NIWI_CC ?= gcc
 NIWI_CXX ?= g++
 NIWI_CFLAGS ?= -O2 -I../../src -I. -Isrc -Iinclude -I../../lib/longfellow-zk \
+               -I../../lib/zk-circuit-lang \
                -I../../lib/milagro-crypto-c/build/include \
                -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
 NIWI_AR ?= ar

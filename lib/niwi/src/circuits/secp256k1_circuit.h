@@ -78,7 +78,7 @@ class Secp256k1Circuit {
   /* ---- Point arithmetic gates ---- */
 
   void is_on_curve(EltW x, EltW y) const {
-    auto yy  = lc_.mul(&y, x);    /* y*y */
+    auto yy  = lc_.mul(&y, y);    /* y*y */
     auto xx  = lc_.mul(&x, x);    /* x*x */
     auto xxx = lc_.mul(&x, xx);   /* x^3 */
     /* a·x + b (a=0 for secp256k1, kept for generality) */
