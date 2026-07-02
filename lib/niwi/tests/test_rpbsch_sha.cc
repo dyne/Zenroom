@@ -70,22 +70,29 @@ static void test_sha256_preimage() {
     /* The test just verifies the computation runs and produces non-zero output */
     uint8_t zero[32] = {0};
     check(memcmp(hash, zero, 32) != 0, "SHA-256 preimage produces non-zero hash");
+}
 
-    /* Test iteratively with known scalars */
-    /* ν_s = 1, ν_u = 2 */
+static void test_known_digest() {
+    /* SHA-256(enc(1) || enc(2)) where enc(x) = 32-byte big-endian.
+     * Precomputed: sha256(0x00..01 || 0x00..02). */
     uint8_t one[32] = {0}, two[32] = {0};
     one[31] = 1; two[31] = 2;
+    uint8_t input[64];
     memcpy(input, one, 32);
     memcpy(input + 32, two, 32);
+    uint8_t hash[32];
     niwi_bip340_sha256(input, 64, hash);
 
-    /* Expected: SHA-256 of 0x00...01 || 0x00...02 = 64 bytes */
-    /* We just check it's deterministic */
-    uint8_t hash2[32];
-    niwi_bip340_sha256(input, 64, hash2);
-    check(memcmp(hash, hash2, 32) == 0, "SHA-256 deterministic");
+    /* Expected: SHA-256 of 0x00...01 0x00...02 (64 bytes). */
+    const uint8_t expected[32] = {
+        0xd6, 0xba, 0x93, 0x29, 0xf8, 0x93, 0x2c, 0x12,
+        0x19, 0x2b, 0x37, 0x84, 0x9f, 0x77, 0x21, 0x04,
+        0xd2, 0x00, 0x48, 0xf7, 0x64, 0x34, 0xa3, 0x29,
+        0x05, 0x12, 0xd9, 0xd8, 0x14, 0xe4, 0x11, 0x6f
+    };
+    check(memcmp(hash, expected, 32) == 0, "SHA-256(enc(1)||enc(2)) matches known digest");
 
-    /* Different input produces different hash */
+    /* Negative: different input produces different hash */
     two[31] = 3;
     memcpy(input + 32, two, 32);
     uint8_t hash3[32];
@@ -122,6 +129,7 @@ int main() {
     printf("=== lib/niwi RPBSch SHA preimage tests ===\n");
 
     test_sha256_preimage();
+    test_known_digest();
     test_bit_encoding();
 
     if (failures == 0) {

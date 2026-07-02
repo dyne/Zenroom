@@ -389,6 +389,17 @@ class RpbschCircuit {
                           w.H_x, w.H_y, w.ped_wit_S);
 
     /* ---- 4. SHA-256 preimage and BIP-340 verifications ---- */
+
+    /* Bind big-endian SHA bits to little-endian range-check bits.
+     * nu_*_sha[i] == nu_*_bits[255-i]  (full bit reversal).
+     * This ensures the SHA preimage uses the same scalars that
+     * are range-checked and committed to in the Pedersen opening. */
+    for (size_t i = 0; i < 256; ++i) {
+      lc_.assert_eq(&w.nu_s_sha[i],  w.nu_s_bits[255 - i]);
+      lc_.assert_eq(&w.nu_u_sha[i],  w.nu_u_bits[255 - i]);
+      lc_.assert_eq(&w.nu_up_sha[i], w.nu_up_bits[255 - i]);
+    }
+
     verify_sha256_preimage(w.nu_s_sha, w.nu_u_sha,  w.msg0_bits, w.sha0_wit);
     verify_sha256_preimage(w.nu_s_sha, w.nu_up_sha, w.msg1_bits, w.sha1_wit);
     assert_msg_bits_equal(w.msg0_bits, w.bip0_wit);
