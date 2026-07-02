@@ -486,9 +486,9 @@ class RpbschCircuit {
     }
 
     /* Bind m_msg_bits (8 v32 words) to m_sha_bits (256-bit vector) */
-    for (size_t w = 0; w < 8; ++w)
-      for (size_t b = 0; b < 32; ++b)
-        lc_.assert_eq(&w.m_msg_bits[w][b], w.m_sha_bits[w * 32 + b]);
+    for (size_t word = 0; word < 8; ++word)
+      for (size_t bit = 0; bit < 32; ++bit)
+        lc_.assert_eq(&w.m_msg_bits[word][bit], w.m_sha_bits[word * 32 + bit]);
 
     /* 4a: e = tagged_hash("BIP0340/challenge", R'_x || X_x || m) */
     v256 e_bits;
@@ -511,11 +511,13 @@ class RpbschCircuit {
     EltW sum_eb = lc_.add(&e_wire, w.beta);
     EltW n_elt  = lc_.konst(lc_.elt(
         "0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"));
-    EltW c_plus_ofn = lc_.add(&w.c_scalar, lc_.mul(w.overflow, n_elt));
+    EltW c_plus_ofn = lc_.add(&w.c_scalar, lc_.mul(&w.overflow, n_elt));
     lc_.assert_eq(&sum_eb, c_plus_ofn);
 
     /* overflow boolean check */
-    lc_.assert0(lc_.mul(&w.overflow, lc_.sub(&lc_.konst(lc_.one()), w.overflow)));
+    EltW one_c  = lc_.konst(lc_.one());
+    EltW over_c = lc_.sub(&one_c, w.overflow);
+    lc_.assert0(lc_.mul(&w.overflow, over_c));
 
     /* ---- 5. Range checks ---- */
     secp_.range_check_lt_n(w.m, w.m_bits);
