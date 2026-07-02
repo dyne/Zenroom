@@ -48,8 +48,14 @@ namespace niwi {
  *   - σ₀ verifies under X' on msg_0 = SHA-256(ν_s||ν_u)
  *   - σ₁ verifies under X' on msg_1 = SHA-256(ν_s||ν_u')
  *
- * OR composition: private selector b ∈ {0,1}.
- * Constraints for the unselected branch are gated.
+ * Current implementation status:
+ *   This is a strict validation skeleton, not the final WI-OR circuit.
+ *   The embedded secp256k1 and BIP-340 subcircuits assert internally, so both
+ *   branch witnesses are part of the circuit and must be valid. The selector is
+ *   kept private and gates only local constraints that are written with
+ *   gate_assert* helpers. A final WI-OR implementation must either add gated
+ *   variants of those subcircuits or require valid dummy witnesses for the
+ *   inactive branch as an explicit protocol rule.
  */
 
 template <class LogicCircuit, class EC, class ScalarField>
@@ -141,7 +147,7 @@ class RpbschCircuit {
     /* Pedersen witness for S */
     typename Secp256k1Circuit<LogicCircuit>::ScalarMultWitness ped_wit_S;
 
-    v256 nu_u_bits, nu_up_bits;
+    v256 nu_u_bits, nu_up_bits, nu_s_bits;
     v256 msg0_bits, msg1_bits;
 
     void input(const LogicCircuit& lc) {
@@ -158,6 +164,7 @@ class RpbschCircuit {
       ped_wit_S.input(lc);
       nu_u_bits  = lc.template vinput<256>();
       nu_up_bits = lc.template vinput<256>();
+      nu_s_bits  = lc.template vinput<256>();
       msg0_bits  = lc.template vinput<256>();
       msg1_bits  = lc.template vinput<256>();
     }
@@ -174,23 +181,15 @@ class RpbschCircuit {
 
   void verify(const Statement& stmt,
               EltW selector,
-              const Branch1Witness* b1,
-              const Branch2Witness* b2) const {
-    EltW one  = lc_.konst(lc_.one());
-
+              const Branch1Witness& b1,
+              const Branch2Witness& b2) const {
     /* Boolean selector */
     EltW not_sel = make_selector(lc_, selector);
 
-    /* ---- Branch 1 active when b=0 (not_sel=1) ---- */
-    if (b1) {
-      verify_branch1(stmt, *b1, not_sel);
-    }
-
-    /* ---- Branch 2 active when b=1 (sel=1) ---- */
-    if (b2) {
-      verify_branch2(stmt, *b2, selector);
-    }
-    (void)one;
+    /* Strict skeleton: both branches are instantiated. Only constraints that
+     * use gate_assert* are currently selector-gated. */
+    verify_branch1(stmt, b1, not_sel);
+    verify_branch2(stmt, b2, selector);
   }
 
   const LogicCircuit& lc() const { return lc_; }
@@ -218,9 +217,20 @@ class RpbschCircuit {
     gate_assert0(gate, diff);
   }
 
+  void assert_msg_bits_equal(
+      const v256& bits,
+      const typename Bip340Circuit<LogicCircuit, EC, ScalarField>::Witness& w)
+      const {
+    for (size_t word = 0; word < 8; ++word) {
+      for (size_t bit = 0; bit < 32; ++bit) {
+        lc_.assert_eq(&bits[word * 32 + bit], w.msg_bits[word][bit]);
+      }
+    }
+  }
+
   void verify_branch1(const Statement& stmt, const Branch1Witness& w,
                       EltW gate) const {
-    (void)gate; /* TODO: gate each constraint */
+    (void)gate; /* Strict skeleton: subcircuit assertions are unconditional. */
 
     /* ---- 1. X on curve ---- */
     secp_.is_on_curve(stmt.X_x, w.X_y);
@@ -256,6 +266,7 @@ class RpbschCircuit {
     /* ---- 2. Range checks ---- */
     secp_.range_check_lt_n(w.nu_u, w.nu_u_bits);
     secp_.range_check_lt_n(w.nu_u_prime, w.nu_up_bits);
+    secp_.range_check_lt_n(w.nu_s, w.nu_s_bits);
 
     /* ---- 3. S opening ---- */
     secp_.is_on_curve(stmt.S_x, w.S_y);
@@ -263,13 +274,18 @@ class RpbschCircuit {
     secp_.verify_pedersen(w.nu_s, w.r_S, stmt.S_x, w.S_y,
                           w.H_x, w.H_y, w.ped_wit_S);
 
-    /* ---- 4. BIP-340 verifications ---- */
+    /* ---- 4. BIP-340 message binding and verifications ---- */
+    assert_msg_bits_equal(w.msg0_bits, w.bip0_wit);
+    assert_msg_bits_equal(w.msg1_bits, w.bip1_wit);
+    /* TODO: constrain msg0_bits = SHA-256(ν_s || ν_u) and
+     * msg1_bits = SHA-256(ν_s || ν_u') once the RPBSch SHA preimage gadget is
+     * added. For now the public message wires are at least bound to the
+     * messages consumed by the BIP-340 verifier. */
+
     /* σ₀ verifies under X' on msg₀ */
     bip0_.verify(stmt.Xp_x, w.sig0_R_x, w.sig0_s, w.bip0_wit);
     /* σ₁ verifies under X' on msg₁ */
     bip1_.verify(stmt.Xp_x, w.sig1_R_x, w.sig1_s, w.bip1_wit);
-
-    (void)w.msg0_bits; (void)w.msg1_bits; /* consumed by bip0/bip1 internally */
   }
 };
 

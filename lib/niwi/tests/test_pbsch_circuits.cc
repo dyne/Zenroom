@@ -40,6 +40,7 @@ void log(enum proofs::LogLevel /*level*/, const char *fmt, ...) {
 #include "circuits/secp256k1_circuit.h"
 #include "circuits/bip340_circuit.h"
 #include "circuits/bip340_witness.h"
+#include "circuits/rpbsch_circuit.h"
 
 using Field  = niwi::FpSecp256k1Base;
 using EC     = niwi::Secp256k1;
@@ -55,6 +56,23 @@ static void instantiate_bip340_verify(Logic& lc,
     niwi::Bip340Circuit<Logic, EC, Scalar>::Witness witness;
     witness.input(lc);
     bip.verify(pk_x, R_x, s, witness);
+}
+
+[[maybe_unused]] static void instantiate_rpbsch_verify(
+        Logic& lc,
+        niwi::RpbschCircuit<Logic, EC, Scalar>& rpbsch) {
+    niwi::RpbschCircuit<Logic, EC, Scalar>::Statement stmt;
+    stmt.X_x = lc.eltw_input();
+    stmt.Xp_x = lc.eltw_input();
+    stmt.C_x = lc.eltw_input();
+    stmt.S_x = lc.eltw_input();
+
+    auto selector = lc.eltw_input();
+    niwi::RpbschCircuit<Logic, EC, Scalar>::Branch1Witness branch1;
+    niwi::RpbschCircuit<Logic, EC, Scalar>::Branch2Witness branch2;
+    branch1.input(lc);
+    branch2.input(lc);
+    rpbsch.verify(stmt, selector, branch1, branch2);
 }
 
 int main() {
@@ -85,6 +103,13 @@ int main() {
         fprintf(stderr, "failed to compile BIP-340 circuit\n");
         return 1;
     }
+
+    /* RPBSchCircuit: instantiate the type. The verify body is compiled by
+     * instantiate_rpbsch_verify above without adding its full circuit to this
+     * smoke test. */
+    niwi::RpbschCircuit<Logic, EC, Scalar> rpbsch(lc, niwi::secp256k1,
+                                                  niwi::secp256k1_scalar);
+    (void)rpbsch;
 
     return 0;
 }
