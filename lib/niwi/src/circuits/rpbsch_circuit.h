@@ -121,6 +121,7 @@ class RpbschCircuit {
   struct Branch1Witness {
     /* Point witnesses */
     EltW X_y, R_x, R_y, Rp_x, Rp_y;   /* X_y, R=(R_x,R_y), R'=(Rp_x,Rp_y) */
+    EltW T_x, T_y;                     /* T = α·G + β·X (intermediate) */
     EltW alpha, beta, rho;             /* blinding scalars */
     EltW m, r_C;                       /* message + Pedersen blinding */
     EltW C_y, H_x, H_y;               /* C_y, independent generator H */
@@ -129,8 +130,10 @@ class RpbschCircuit {
     /* Scalar-mul witness for Pedersen C = m·G + r_C·H */
     typename Secp256k1Circuit<LogicCircuit>::ScalarMultWitness ped_wit_C;
 
-    /* Scalar-mul witness for R' = R + α·G + β·X (triple-scalar) */
-    typename Secp256k1Circuit<LogicCircuit>::ScalarMultWitness ped_wit_R;
+    /* Scalar-mul witness for T = α·G + β·X.
+     * verify_double_scalar(α, β, n-1, X_x, X_y, T_x, T_y, wit)
+     * uses table {O, G, X, G+X, T, G+T, X+T, G+X+T}. */
+    typename Secp256k1Circuit<LogicCircuit>::ScalarMultWitness ped_wit_T;
 
     /* Range checks */
     v256 m_bits, r_C_bits, alpha_bits, beta_bits;
@@ -139,6 +142,7 @@ class RpbschCircuit {
       X_y = lc.eltw_input();
       R_x = lc.eltw_input(); R_y = lc.eltw_input();
       Rp_x = lc.eltw_input(); Rp_y = lc.eltw_input();
+      T_x  = lc.eltw_input(); T_y  = lc.eltw_input();
       alpha = lc.eltw_input(); beta = lc.eltw_input();
       rho   = lc.eltw_input();
       m     = lc.eltw_input(); r_C = lc.eltw_input();
@@ -146,7 +150,7 @@ class RpbschCircuit {
       H_x   = lc.eltw_input(); H_y = lc.eltw_input();
       c_scalar = lc.eltw_input();
       ped_wit_C.input(lc);
-      ped_wit_R.input(lc);
+      ped_wit_T.input(lc);
       m_bits     = lc.template vinput<256>();
       r_C_bits   = lc.template vinput<256>();
       alpha_bits = lc.template vinput<256>();
@@ -355,10 +359,24 @@ class RpbschCircuit {
     secp_.verify_pedersen(w.m, w.r_C, stmt.C_x, w.C_y,
                           w.H_x, w.H_y, w.ped_wit_C);
 
-    /* ---- 3. R' track (on-curve only for now) ---- */
+    /* ---- 3. R' = R + α·G + β·X ---- */
     secp_.is_on_curve(w.R_x, w.R_y);
     secp_.is_on_curve(w.Rp_x, w.Rp_y);
-    /* TODO: R' = R + α·G + β·X */
+
+    /* Step 3a: T = α·G + β·X, verified via verify_double_scalar */
+    secp_.is_on_curve(w.T_x, w.T_y);
+    secp_.verify_double_scalar(w.alpha, w.beta,
+        lc_.konst(lc_.elt(
+            "0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140")),
+        stmt.X_x, w.X_y, w.T_x, w.T_y, w.ped_wit_T);
+
+    /* Step 3b: R + T = R', verified via gate-based addE + point equality */
+    {
+      EltW S_x, S_y, S_z;
+      EltW one = lc_.konst(lc_.one());
+      secp_.addE(S_x, S_y, S_z, w.R_x, w.R_y, one, w.T_x, w.T_y, one);
+      secp_.point_equality(S_x, S_y, S_z, w.Rp_x, w.Rp_y);
+    }
 
     /* ---- 4. Range checks ---- */
     secp_.range_check_lt_n(w.m, w.m_bits);
