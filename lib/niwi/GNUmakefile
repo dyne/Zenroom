@@ -40,7 +40,7 @@ libniwi.a: $(NIWI_SOURCES)
 
 clean:
 	rm -f src/*.c.o tests/*.o src/secp256k1/*.cc.o
-	rm -f *.a test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof_serde test_extract test_bench test_secp256k1 test_rpbsch_sha test_rpbsch_witness test_rpbsch_builder test_rpbsch_build test_bip340_witness test_pbsch_circuits
+	rm -f *.a test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof_serde test_extract test_bench test_secp256k1 test_secp256k1_feasibility test_rpbsch_sha test_rpbsch_witness test_rpbsch_builder test_rpbsch_build test_bip340_witness test_pbsch_circuits
 
 %.c.o: %.c
 	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -c -o $@ $<
@@ -50,7 +50,7 @@ clean:
 
 # ---- Tests ----
 
-test: test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof_serde test_extract test_secp256k1 test_rpbsch_sha test_rpbsch_witness test_rpbsch_builder test_rpbsch_build test_bip340_witness
+test: test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof_serde test_extract test_secp256k1 test_secp256k1_feasibility test_rpbsch_sha test_rpbsch_witness test_rpbsch_builder test_rpbsch_build test_bip340_witness
 	./test_abi
 	./test_encoding
 	./test_hash
@@ -59,6 +59,7 @@ test: test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof
 	./test_niwi_proof_serde
 	./test_extract
 	./test_secp256k1
+	./test_secp256k1_feasibility
 	./test_rpbsch_sha
 	./test_rpbsch_witness
 	./test_rpbsch_builder
@@ -153,6 +154,9 @@ test_secp256k1: tests/test_secp256k1.cc.o libniwi.a
 		../../lib/longfellow-zk/liblongfellow-zk.a \
 		../../lib/zk-circuit-lang/libzk-circuit-lang.a \
 		../../lib/zstd/libzstd.a
+
+test_secp256k1_feasibility: tests/test_secp256k1_feasibility.cc.o
+	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_secp256k1_feasibility.cc.o
 
 test_pbsch_circuits: tests/test_pbsch_circuits.cc.o libniwi.a
 	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_pbsch_circuits.cc.o -L. -lniwi \

@@ -32,6 +32,7 @@ void log(enum proofs::LogLevel, const char *fmt, ...) {
 #include "secp256k1/secp256k1_field.h"
 #include "secp256k1/secp256k1_curve.h"
 #include "secp256k1/secp256k1_scalar.h"
+#include "secp256k1/feasibility.h"
 #include "circuits/rpbsch_circuit.h"
 #include "circuits/rpbsch_witness_builder.h"
 #include "proto/circuit.h"
@@ -55,6 +56,15 @@ static void hex_to_bytes(const char *h, uint8_t *o, size_t n) {
 
 int main() {
     printf("=== lib/niwi RPBSch circuit build test ===\n");
+
+    /* FFT feasibility guard */
+    printf("FFT root capacity: v2(p^2-1)=%zu, max domain 2^%zu\n",
+           niwi::secp256k1_fft_max_bits(),
+           niwi::secp256k1_fft_max_bits());
+    if (!niwi::secp256k1_fft_feasible(20)) {
+        printf("WARNING: %s\n", niwi::secp256k1_fft_explain());
+        printf("Circuit compilation works, but PROOF GENERATION is infeasible.\n");
+    }
 
     proofs::QuadCircuit<Field> qc(niwi::secp256k1_base);
     Backend backend(&qc);
