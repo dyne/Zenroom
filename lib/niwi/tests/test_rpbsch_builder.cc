@@ -178,6 +178,58 @@ static void test_b2_complete() {
     B::Branch2 b2;
 
     const char *pk_h  = "F9308A019258C31049344F85F89D5229B531C845836F99B08601F113BCE036F9";
+    const char *sig0_h = "890D0BEF80FC0B3B46A0B6EC12AE5B88998F64E30C962DBCDE6D0C028BB79C57FE1590B84BB8DE8663582E61C1D2758EB0F2EEEB11B555027AB1BC0CE3F94253";
+    const char *sig1_h = "8D46A2C7B20ADF3269FC6E4A838572AA377129C8F230FAE8F357C2F2F016B12C70BDBCD2A2CD78045B8BB8525671536D0AB0B6831142E8801DCD013EE75EDD6A";
+    const char *msg0_h = "CEDB30CDD98D66965E4B456C2884CD1E41729F18BF75C195E815A2A782CDE618";
+    const char *msg1_h = "57A18858846DECA09C487E98C2DB925466814046FCCE830500C780C3C470686F";
+    uint8_t X[32], Xp[32], sig0[64], sig1[64], msg0[32], msg1[32];
+    hex_to_bytes(pk_h,  X,  32);
+    hex_to_bytes(pk_h,  Xp, 32);
+    hex_to_bytes(sig0_h, sig0, 64);
+    hex_to_bytes(sig1_h, sig1, 64);
+    hex_to_bytes(msg0_h, msg0, 32);
+    hex_to_bytes(msg1_h, msg1, 32);
+
+    uint8_t nu_u[32]  = {0}; nu_u[31]  = 0x01;
+    uint8_t nu_up[32] = {0}; nu_up[31] = 0x02;
+    uint8_t nu_s[32]  = {0}; nu_s[31]  = 0x42;
+    uint8_t rho[32]   = {0}; rho[31]   = 0x17;
+
+    bool ok = builder.build_branch2(X, Xp, sig0, sig1, nu_u, nu_up, nu_s, rho,
+                                     stmt, b2);
+    check(ok, "branch 2 build succeeds");
+    auto u = niwi::secp256k1_scalar.to_montgomery(niwi::secp256k1_base.from_montgomery(b2.nu_u));
+    auto up = niwi::secp256k1_scalar.to_montgomery(niwi::secp256k1_base.from_montgomery(b2.nu_u_prime));
+    auto inv = niwi::secp256k1_scalar.to_montgomery(niwi::secp256k1_base.from_montgomery(b2.nu_inv));
+    auto diff = niwi::secp256k1_scalar.subf(u, up);
+    check(niwi::secp256k1_scalar.mulf(diff, inv) == niwi::secp256k1_scalar.one(),
+          "nu_inv*(nu_u-nu_u') == 1");
+    check(niwi_pbsch_pedersen_verify(stmt.S, nu_s, rho) == 0, "S verifies");
+    check(memcmp(b2.msg0, b2.msg1, 32) != 0, "msg0 != msg1");
+    check(memcmp(b2.msg0, msg0, 32) == 0, "msg0 fixture matches");
+    check(memcmp(b2.msg1, msg1, 32) == 0, "msg1 fixture matches");
+
+    niwi::Bip340Witness<EC, S> bip0(niwi::secp256k1_base,
+                                     niwi::secp256k1,
+                                     niwi::secp256k1_scalar);
+    niwi::Bip340Witness<EC, S> bip1(niwi::secp256k1_base,
+                                     niwi::secp256k1,
+                                     niwi::secp256k1_scalar);
+    check(bip0.compute(Xp, sig0, sig0 + 32, b2.msg0), "sig0 signs msg0");
+    check(bip1.compute(Xp, sig1, sig1 + 32, b2.msg1), "sig1 signs msg1");
+
+    std::vector<Elt> witness;
+    size_t n = builder.fill_witness_branch2(stmt, b2, witness);
+    check(n == kBranch2WitnessSize, "branch 2 witness size");
+    check(witness.size() == kBranch2WitnessSize, "branch 2 vector size");
+}
+
+static void test_b2_invalid_signature_rejected() {
+    B builder(niwi::secp256k1_base, niwi::secp256k1, niwi::secp256k1_scalar);
+    B::Statement stmt;
+    B::Branch2 b2;
+
+    const char *pk_h  = "F9308A019258C31049344F85F89D5229B531C845836F99B08601F113BCE036F9";
     const char *sig_h = "E907831F80848D1069A5371B402410364BDF1C5F8307B0084C55F1CE2DCA821525F66A4A85EA8B71E482A74F382D2CE5EBEEE8FDB2172F477DF4900D310536C0";
     uint8_t X[32], Xp[32], sig[64];
     hex_to_bytes(pk_h,  X,  32);
@@ -191,20 +243,12 @@ static void test_b2_complete() {
 
     bool ok = builder.build_branch2(X, Xp, sig, sig, nu_u, nu_up, nu_s, rho,
                                      stmt, b2);
-    check(ok, "branch 2 build succeeds");
-    auto u = niwi::secp256k1_scalar.to_montgomery(niwi::secp256k1_base.from_montgomery(b2.nu_u));
-    auto up = niwi::secp256k1_scalar.to_montgomery(niwi::secp256k1_base.from_montgomery(b2.nu_u_prime));
-    auto inv = niwi::secp256k1_scalar.to_montgomery(niwi::secp256k1_base.from_montgomery(b2.nu_inv));
-    auto diff = niwi::secp256k1_scalar.subf(u, up);
-    check(niwi::secp256k1_scalar.mulf(diff, inv) == niwi::secp256k1_scalar.one(),
-          "nu_inv*(nu_u-nu_u') == 1");
-    check(niwi_pbsch_pedersen_verify(stmt.S, nu_s, rho) == 0, "S verifies");
-    check(memcmp(b2.msg0, b2.msg1, 32) != 0, "msg0 != msg1");
+    check(ok, "branch 2 native build allows later signature validation");
 
     std::vector<Elt> witness;
     size_t n = builder.fill_witness_branch2(stmt, b2, witness);
-    check(n == kBranch2WitnessSize, "branch 2 witness size");
-    check(witness.size() == kBranch2WitnessSize, "branch 2 vector size");
+    check(n == 0, "invalid BIP-340 signatures reject branch 2 witness fill");
+    check(witness.empty(), "invalid branch 2 fill leaves witness unchanged");
 }
 
 int main() {
@@ -212,6 +256,7 @@ int main() {
     test_b1_complete();
     test_b1_overflow();
     test_b2_complete();
+    test_b2_invalid_signature_rejected();
     if (failures == 0) {
         printf("All tests passed.\n");
     } else {

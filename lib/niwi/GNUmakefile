@@ -50,7 +50,7 @@ clean:
 
 # ---- Tests ----
 
-test: test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof_serde test_extract test_secp256k1 test_rpbsch_sha test_rpbsch_witness test_rpbsch_builder test_bip340_witness
+test: test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof_serde test_extract test_secp256k1 test_rpbsch_sha test_rpbsch_witness test_rpbsch_builder test_rpbsch_build test_bip340_witness
 	./test_abi
 	./test_encoding
 	./test_hash
@@ -62,6 +62,7 @@ test: test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof
 	./test_rpbsch_sha
 	./test_rpbsch_witness
 	./test_rpbsch_builder
+	./test_rpbsch_build
 	./test_bip340_witness
 	@echo "=== All lib/niwi tests passed ==="
 
@@ -133,12 +134,14 @@ test_rpbsch_builder: tests/test_rpbsch_builder.cc.o libniwi.a
 		-Wl,--end-group
 
 test_rpbsch_build: tests/test_rpbsch_build.cc.o libniwi.a
-	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_rpbsch_build.cc.o -L. -lniwi \
+	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_rpbsch_build.cc.o \
+		src/pbsch_commitment.o -L. -lniwi \
 		../../lib/milagro-crypto-c/build/lib/libamcl_curve_SECP256K1.a \
 		$(NIWI_AMCL) \
 		../../lib/longfellow-zk/liblongfellow-zk.a \
 		../../lib/zk-circuit-lang/libzk-circuit-lang.a \
-		../../lib/zstd/libzstd.a
+		../../lib/zstd/libzstd.a \
+		../../src/randombytes.o
 
 # SECP256K1 tests require C++ and the liblongfellow-zk dependency.
 # We link against the archive but this test is standalone — it does not

@@ -281,11 +281,9 @@ class RpbschWitnessBuilder {
   }
 
   /* Fill circuit witness vector in exact Branch1Witness::input() order.
-   * Scalar-mul and SHA witnesses use placeholder zeros (TODO).
-   * Returns total field element count pushed. */
+   * Returns the total field element count in out after appending. */
   size_t fill_witness_branch1(const Statement& stmt, const Branch1& b1,
                                std::vector<Elt>& out) const {
-    (void)stmt;
     out.push_back(elt_from_be32(b1.X_y));
     out.push_back(elt_from_be32(b1.R));  out.push_back(elt_from_be32(b1.R_y));
     out.push_back(elt_from_be32(b1.Rp)); out.push_back(elt_from_be32(b1.Rp_y));
@@ -346,10 +344,11 @@ class RpbschWitnessBuilder {
     return out.size();
   }
 
-  /* Fill circuit witness vector in exact Branch2Witness::input() order. */
+  /* Fill circuit witness vector in exact Branch2Witness::input() order.
+   * Returns 0 and leaves out unchanged if a BIP-340 witness is invalid. */
   size_t fill_witness_branch2(const Statement& stmt, const Branch2& b2,
                                std::vector<Elt>& out) const {
-    (void)stmt;
+    const size_t start = out.size();
     out.push_back(b2.nu_u); out.push_back(b2.nu_u_prime);
     out.push_back(b2.nu_inv);
     out.push_back(b2.nu_s); out.push_back(b2.r_S);
@@ -359,8 +358,11 @@ class RpbschWitnessBuilder {
     out.push_back(elt_from_be32(b2.sig0+32));
     out.push_back(elt_from_be32(b2.sig1));
     out.push_back(elt_from_be32(b2.sig1+32));
-    fill_bip340_witness(stmt.Xp, b2.sig0, b2.sig0 + 32, b2.msg0, out);
-    fill_bip340_witness(stmt.Xp, b2.sig1, b2.sig1 + 32, b2.msg1, out);
+    if (!fill_bip340_witness(stmt.Xp, b2.sig0, b2.sig0 + 32, b2.msg0, out) ||
+        !fill_bip340_witness(stmt.Xp, b2.sig1, b2.sig1 + 32, b2.msg1, out)) {
+      out.resize(start);
+      return 0;
+    }
     /* ped_wit_S: ν_s·G + r_S·H + (n-1)·S = O */
     {
       const uint8_t *gx = (const uint8_t *)
@@ -418,15 +420,6 @@ class RpbschWitnessBuilder {
   Elt base_bytes_to_elt(const uint8_t b[32]) const {
       auto v = octet_to_secp256k1_base(b);
       return v.value();
-  }
-
-  /* Placeholder: ScalarMultWitness with zero values (pre[8], bi[256],
-   * int_x[255], int_y[255], int_z[255]). Total: 8+256+3*255 = 1029 fields. */
-  void fill_scalar_mul_placeholder(std::vector<Elt>& out) const {
-    auto z = f_.zero();
-    for (size_t i=0; i<8; ++i) out.push_back(z);
-    for (size_t i=0; i<256; ++i) out.push_back(z);
-    for (size_t i=0; i<255; ++i) { out.push_back(z); out.push_back(z); out.push_back(z); }
   }
 
   /* Real scalar-mul witness for pedersen-style triple-scalar.
@@ -491,12 +484,6 @@ class RpbschWitnessBuilder {
     }
   }
 
-  /* Placeholder: Sha3BlockWitness (3 blocks × 184 packed_v32 × 7 = 3864 fields). */
-  void fill_sha3_placeholder(std::vector<Elt>& out) const {
-    auto z = f_.zero();
-    for (int b=0; b<3; ++b) for (int i=0; i<184; ++i) for (int j=0; j<7; ++j) out.push_back(z);
-  }
-
   /* Real SHA witness using FlatSHA256Witness natively, encoded as packed_v32.
    * msg and msg_len are the preimage; max_blocks is the number of SHA blocks.
    * Outputs: per block [outw[48], oute[64], outa[64], h1[8]] = 184 packed_v32,
@@ -524,19 +511,13 @@ class RpbschWitnessBuilder {
     }
   }
 
-  /* Placeholder: Sha2BlockWitness (2 blocks × 184 packed_v32 × 7 = 2576 fields). */
-  void fill_sha2_placeholder(std::vector<Elt>& out) const {
-    auto z = f_.zero();
-    for (int b=0; b<2; ++b) for (int i=0; i<184; ++i) for (int j=0; j<7; ++j) out.push_back(z);
-  }
-
   /* Real BIP-340 witness using Bip340Witness, in exact
    * Bip340Circuit::Witness::input() order. */
-  void fill_bip340_witness(const uint8_t pk_x[32], const uint8_t R_x[32],
+  bool fill_bip340_witness(const uint8_t pk_x[32], const uint8_t R_x[32],
                             const uint8_t s_bytes[32], const uint8_t msg[32],
                             std::vector<Elt>& out) const {
     niwi::Bip340Witness<EC, ScalarField> w(f_, ec_, fn_);
-    w.compute(pk_x, R_x, s_bytes, msg);
+    if (!w.compute(pk_x, R_x, s_bytes, msg)) return false;
 
     out.push_back(w.rx_); out.push_back(w.ry_);
     out.push_back(w.s_inv_); out.push_back(w.pk_inv_);
@@ -570,6 +551,7 @@ class RpbschWitnessBuilder {
       for (size_t i=0; i<8;  ++i) pack32(w.sha_h1[b][i]);
     }
     for (size_t i=0; i<256; ++i) out.push_back(w.msg_bits_[i]);
+    return true;
   }
 
   /* ---- Internal helpers ---- */
