@@ -39,7 +39,8 @@ struct Fp256k1Reduce {
       0xFFFFFFFFFFFFFFFFu,
   };
 
-#ifndef SYSDEP_MULQ64_NOT_DEFINED
+#if defined(__x86_64__) || defined(_M_X64) || defined(__aarch64__) || \
+    defined(_WIN64) || defined(__wasm_simd128__)
   static inline void reduction_step(uint64_t a[], uint64_t mprime,
                                     const Nat<4>& m) {
     // This step computes a += (mprime * a0) * p
