@@ -1,4 +1,4 @@
-// Copyright 2026 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -126,6 +126,12 @@ static inline void mulq(uint64_t* l, uint64_t* h, uint64_t a, uint64_t b) {
 #else  // defined(__SIZEOF_INT128__)
 #define SYSDEP_MULQ64_NOT_DEFINED
 #endif  // defined(__SIZEOF_INT128__)
+#elif defined(__GNUC__) && defined(__aarch64__)
+#include <algebra/sysdep_aarch64.h>
+#elif defined(__arm__) && defined(__GNUC__)
+#include <algebra/sysdep_arm.h>
+#else
+#error "unimplemented algebra/sysdep.h"
 #endif
 
 static inline void mulq(uint32_t* l, uint32_t* h, uint32_t a, uint32_t b) {
@@ -249,23 +255,20 @@ static inline void cmovnz(size_t W, uint64_t a[/*W*/], uint64_t nz,
     asm("testq %[nz], %[nz]\n\t"
         "cmovneq %[b0], %[a0]\n\t"
         : [a0] "+r"(a[0])
-        : [nz] "r"(nz), [b0] "r"(b[0])
-        : "cc");
+        : [nz] "r"(nz), [b0] "r"(b[0]));
   } else if (W == 2) {
     asm("testq %[nz], %[nz]\n\t"
         "cmovneq %[b0], %[a0]\n\t"
         "cmovneq %[b1], %[a1]\n\t"
         : [a0] "+r"(a[0]), [a1] "+r"(a[1])
-        : [nz] "r"(nz), [b0] "r"(b[0]), [b1] "r"(b[1])
-        : "cc");
+        : [nz] "r"(nz), [b0] "r"(b[0]), [b1] "r"(b[1]));
   } else if (W == 3) {
     asm("testq %[nz], %[nz]\n\t"
         "cmovneq %[b0], %[a0]\n\t"
         "cmovneq %[b1], %[a1]\n\t"
         "cmovneq %[b2], %[a2]\n\t"
         : [a0] "+r"(a[0]), [a1] "+r"(a[1]), [a2] "+r"(a[2])
-        : [nz] "r"(nz), [b0] "r"(b[0]), [b1] "r"(b[1]), [b2] "r"(b[2])
-        : "cc");
+        : [nz] "r"(nz), [b0] "r"(b[0]), [b1] "r"(b[1]), [b2] "r"(b[2]));
   } else if (W == 4) {
     asm("testq %[nz], %[nz]\n\t"
         "cmovneq %[b0], %[a0]\n\t"
@@ -274,8 +277,7 @@ static inline void cmovnz(size_t W, uint64_t a[/*W*/], uint64_t nz,
         "cmovneq %[b3], %[a3]\n\t"
         : [a0] "+r"(a[0]), [a1] "+r"(a[1]), [a2] "+r"(a[2]), [a3] "+r"(a[3])
         : [nz] "r"(nz), [b0] "r"(b[0]), [b1] "r"(b[1]), [b2] "r"(b[2]),
-          [b3] "r"(b[3])
-        : "cc");
+          [b3] "r"(b[3]));
   } else {
     for (size_t i = 0; i < W; ++i) {
       a[i] = (nz != 0) ? b[i] : a[i];
@@ -340,32 +342,6 @@ static inline uint64_t sub_sysdep(uint64_t a, uint64_t y, uint64_t m) {
       : [y] "r"(y), [m] "r"(m)
       : "cc");
   return a + z;
-}
-
-// For x86_64 only, define 32-bit variants for testing 32-bit arithmetic
-// without cross-compilation.
-
-static inline void cmovne(size_t W, uint32_t a[/*W*/], uint32_t x, uint32_t y,
-                          const uint32_t b[/*W*/]) {
-  for (size_t i = 0; i < W; ++i) {
-    a[i] = (x != y) ? b[i] : a[i];
-  }
-}
-
-static inline void cmovnz(size_t W, uint32_t a[/*W*/], uint32_t nz,
-                          const uint32_t b[/*W*/]) {
-  constexpr uint32_t z = 0;
-  cmovne(W, a, nz, z, b);
-}
-
-static inline uint32_t addcmovc(uint32_t a, uint32_t b, uint32_t c) {
-  uint32_t t = a + b;
-  return (a > t) ? t : c;
-}
-
-static inline uint32_t sub_sysdep(uint32_t a, uint32_t y, uint32_t m) {
-  uint32_t t0 = a - y;
-  return (y > a) ? (t0 + m) : t0;
 }
 
 #elif defined(__aarch64__)
@@ -482,17 +458,6 @@ static inline limb_t sub_sysdep(limb_t a, limb_t y, limb_t m) {
 }
 
 #endif
-
-// special cases for fp24
-static inline uint32_t addcmovc_32(uint32_t a, uint32_t b, uint32_t c) {
-  uint32_t t = a + b;
-  return (a > t) ? t : c;
-}
-
-static inline uint32_t sub_sysdep_32(uint32_t a, uint32_t y, uint32_t m) {
-  uint32_t t0 = a - y;
-  return (y > a) ? (t0 + m) : t0;
-}
 
 }  // namespace proofs
 
