@@ -500,20 +500,20 @@ public:
 	// Get underlying wire index
 	size_t wire_id() const {
 		// For BitW, the wire ID is stored in the x field
-		return logic->wire_id(wire);
+		return wire.x;
 	}
 
 	// Logical operations
 	LuaBitW land(const LuaBitW& other) const {
-		return LuaBitW(logic->land(&wire, other.wire), logic);
+		return LuaBitW(logic->land(wire, other.wire), logic);
 	}
 
 	LuaBitW lor(const LuaBitW& other) const {
-		return LuaBitW(logic->lor(&wire, other.wire), logic);
+		return LuaBitW(logic->lor(wire, other.wire), logic);
 	}
 
 	LuaBitW lxor(const LuaBitW& other) const {
-		return LuaBitW(logic->lxor(&wire, other.wire), logic);
+		return LuaBitW(logic->lxor(wire, other.wire), logic);
 	}
 
 	LuaBitW lnot() const {
@@ -524,7 +524,7 @@ public:
 		// Create a wire that checks if the two bits are equal
 		// a == b is equivalent to: (a AND b) OR ((NOT a) AND (NOT b))
 		// Which simplifies to: NOT (a XOR b)
-		auto xor_result = logic->lxor(&wire, other.wire);
+		auto xor_result = logic->lxor(wire, other.wire);
 		// Note: We can't evaluate the circuit at binding time, so we'll use a placeholder
 		// The actual equality is enforced by circuit constraints
 		(void)xor_result; // Suppress unused variable warning
@@ -563,20 +563,20 @@ public:
 	LuaEltW(const EltW& w, const LogicType* l) : wire(w), logic(l) {}
 
 	size_t wire_id() const {
-		return logic->wire_id(wire);
+		return wire;
 	}
 
 	// Arithmetic operations
 	LuaEltW add(const LuaEltW& other) const {
-		return LuaEltW(logic->add(&wire, other.wire), logic);
+		return LuaEltW(logic->add(wire, other.wire), logic);
 	}
 
 	LuaEltW sub(const LuaEltW& other) const {
-		return LuaEltW(logic->sub(&wire, other.wire), logic);
+		return LuaEltW(logic->sub(wire, other.wire), logic);
 	}
 
 	LuaEltW mul(const LuaEltW& other) const {
-		return LuaEltW(logic->mul(&wire, other.wire), logic);
+		return LuaEltW(logic->mul(wire, other.wire), logic);
 	}
 
 	LuaEltW mul_scalar(const LuaFp256Elt& k) const {
@@ -587,7 +587,7 @@ public:
 		// Create a wire that checks if the two field elements are equal
 		// We can't evaluate this at binding time, so we'll add a constraint
 		// that the difference is zero and return a placeholder value
-		auto diff = logic->sub(&wire, other.wire);
+		auto diff = logic->sub(wire, other.wire);
 		logic->assert0(diff);
 		// Return a placeholder - actual equality is enforced by the circuit constraint
 		return false;
@@ -909,7 +909,7 @@ public:
 
 	// Add two EltW (field elements)
 	LuaEltW add_eltw(const LuaEltW& a, const LuaEltW& b) {
-		return LuaEltW(adder->add(&a.wire, b.wire), logic);
+		return LuaEltW(adder->add(a.wire, b.wire), logic);
 	}
 
 	// Add two v32 vectors
@@ -928,7 +928,9 @@ public:
 				terms.push_back(term_opt.value().vec);
 			}
 		}
-		return LuaEltW(adder->add(terms), logic);
+		return LuaEltW(adder->l_.add(0, terms.size(), [&](size_t i) {
+			return adder->as_field_element(terms[i]);
+		}), logic);
 	}
 
 	// Assert result ≡ sum (mod 2^32) with overflow < k
@@ -979,15 +981,15 @@ public:
 
 	// Wire arithmetic
 	LuaEltW add(const LuaEltW& a, const LuaEltW& b) {
-		return LuaEltW(logic->add(&a.wire, b.wire), logic.get());
+		return LuaEltW(logic->add(a.wire, b.wire), logic.get());
 	}
 
 	LuaEltW sub(const LuaEltW& a, const LuaEltW& b) {
-		return LuaEltW(logic->sub(&a.wire, b.wire), logic.get());
+		return LuaEltW(logic->sub(a.wire, b.wire), logic.get());
 	}
 
 	LuaEltW mul(const LuaEltW& a, const LuaEltW& b) {
-		return LuaEltW(logic->mul(&a.wire, b.wire), logic.get());
+		return LuaEltW(logic->mul(a.wire, b.wire), logic.get());
 	}
 
 	LuaEltW mul_scalar(const LuaFp256Elt& k, const LuaEltW& b) {
@@ -999,7 +1001,7 @@ public:
 	}
 
 	LuaEltW mux_elt(const LuaBitW& control, const LuaEltW& iftrue, const LuaEltW& iffalse) {
-		return LuaEltW(logic->mux(&control.wire, &iftrue.wire, iffalse.wire), logic.get());
+		return LuaEltW(logic->mux(control.wire, iftrue.wire, iffalse.wire), logic.get());
 	}
 
 	LuaEltW konst(const LuaFp256Elt& a) {
@@ -1016,11 +1018,11 @@ public:
 	}
 
 	LuaEltW axy(const LuaFp256Elt& a, const LuaEltW& x, const LuaEltW& y) {
-		return LuaEltW(logic->axy(a.value, &x.wire, y.wire), logic.get());
+		return LuaEltW(logic->axy(a.value, x.wire, y.wire), logic.get());
 	}
 
 	LuaEltW axpy(const LuaEltW& y, const LuaFp256Elt& a, const LuaEltW& x) {
-		return LuaEltW(logic->axpy(&y.wire, a.value, x.wire), logic.get());
+		return LuaEltW(logic->axpy(y.wire, a.value, x.wire), logic.get());
 	}
 
 	LuaEltW apy(const LuaEltW& y, const LuaFp256Elt& a) {
@@ -1037,37 +1039,37 @@ public:
 	}
 
 	LuaBitW land(const LuaBitW& a, const LuaBitW& b) {
-		return LuaBitW(logic->land(&a.wire, b.wire), logic.get());
+		return LuaBitW(logic->land(a.wire, b.wire), logic.get());
 	}
 
 	LuaBitW lor(const LuaBitW& a, const LuaBitW& b) {
-		return LuaBitW(logic->lor(&a.wire, b.wire), logic.get());
+		return LuaBitW(logic->lor(a.wire, b.wire), logic.get());
 	}
 
 	LuaBitW lxor(const LuaBitW& a, const LuaBitW& b) {
-		return LuaBitW(logic->lxor(&a.wire, b.wire), logic.get());
+		return LuaBitW(logic->lxor(a.wire, b.wire), logic.get());
 	}
 
 	LuaBitW limplies(const LuaBitW& a, const LuaBitW& b) {
-		return LuaBitW(logic->limplies(&a.wire, b.wire), logic.get());
+		return LuaBitW(logic->limplies(a.wire, b.wire), logic.get());
 	}
 
 	LuaBitW mux(const LuaBitW& control, const LuaBitW& iftrue, const LuaBitW& iffalse) {
 		// Note: mux signature is (BitW*, BitW*, BitW&)
-		return LuaBitW(logic->mux(&control.wire, &iftrue.wire, iffalse.wire), logic.get());
+		return LuaBitW(logic->mux(control.wire, iftrue.wire, iffalse.wire), logic.get());
 	}
 
 	// SHA-256 specific operations
 	LuaBitW lCh(const LuaBitW& x, const LuaBitW& y, const LuaBitW& z) {
-		return LuaBitW(logic->lCh(&x.wire, &y.wire, z.wire), logic.get());
+		return LuaBitW(logic->lCh(x.wire, y.wire, z.wire), logic.get());
 	}
 
 	LuaBitW lMaj(const LuaBitW& x, const LuaBitW& y, const LuaBitW& z) {
-		return LuaBitW(logic->lMaj(&x.wire, &y.wire, z.wire), logic.get());
+		return LuaBitW(logic->lMaj(x.wire, y.wire, z.wire), logic.get());
 	}
 
 	LuaBitW lxor3(const LuaBitW& a, const LuaBitW& b, const LuaBitW& c) {
-		return LuaBitW(logic->lxor3(&a.wire, &b.wire, c.wire), logic.get());
+		return LuaBitW(logic->lxor3(a.wire, b.wire, c.wire), logic.get());
 	}
 
 	LuaBitW rebase(const LuaFp256Elt& d0, const LuaFp256Elt& d1, const LuaBitW& v) {
@@ -1075,11 +1077,11 @@ public:
 	}
 
 	LuaEltW lmul(const LuaBitW& a, const LuaEltW& b) {
-		return LuaEltW(logic->lmul(&a.wire, b.wire), logic.get());
+		return LuaEltW(logic->lmul(a.wire, b.wire), logic.get());
 	}
 
 	LuaBitW lor_exclusive(const LuaBitW& a, const LuaBitW& b) {
-		return LuaBitW(logic->lor_exclusive(&a.wire, b.wire), logic.get());
+		return LuaBitW(logic->lor_exclusive(a.wire, b.wire), logic.get());
 	}
 
 	// Conversion operations
@@ -1132,11 +1134,11 @@ public:
 	}
 
 	LuaEltW assert_eq_elt(const LuaEltW& a, const LuaEltW& b) {
-		return LuaEltW(logic->assert_eq(&a.wire, b.wire), logic.get());
+		return LuaEltW(logic->assert_eq(a.wire, b.wire), logic.get());
 	}
 
 	LuaEltW assert_eq_bit(const LuaBitW& a, const LuaBitW& b) {
-		return LuaEltW(logic->assert_eq(&a.wire, b.wire), logic.get());
+		return LuaEltW(logic->assert_eq(a.wire, b.wire), logic.get());
 	}
 
 	LuaEltW assert_is_bit(const LuaBitW& b) {
@@ -1170,15 +1172,15 @@ public:
 	}
 
 	LuaBitVec<8> vand8(const LuaBitVec<8>& a, const LuaBitVec<8>& b) {
-		return LuaBitVec<8>(logic->vand(&a.vec, b.vec), logic.get());
+		return LuaBitVec<8>(logic->vand(a.vec, b.vec), logic.get());
 	}
 
 	LuaBitVec<8> vor8(const LuaBitVec<8>& a, const LuaBitVec<8>& b) {
-		return LuaBitVec<8>(logic->vor(&a.vec, b.vec), logic.get());
+		return LuaBitVec<8>(logic->vor(a.vec, b.vec), logic.get());
 	}
 
 	LuaBitVec<8> vxor8(const LuaBitVec<8>& a, const LuaBitVec<8>& b) {
-		return LuaBitVec<8>(logic->vxor(&a.vec, b.vec), logic.get());
+		return LuaBitVec<8>(logic->vxor(a.vec, b.vec), logic.get());
 	}
 
 	LuaBitVec<8> vadd8(const LuaBitVec<8>& a, const LuaBitVec<8>& b) {
@@ -1186,27 +1188,27 @@ public:
 	}
 
 	LuaBitW veq8(const LuaBitVec<8>& a, const LuaBitVec<8>& b) {
-		return LuaBitW(logic->veq(&a.vec, b.vec), logic.get());
+		return LuaBitW(logic->veq(a.vec, b.vec), logic.get());
 	}
 
 	LuaBitW vlt8(const LuaBitVec<8>& a, const LuaBitVec<8>& b) {
-		return LuaBitW(logic->vlt(&a.vec, b.vec), logic.get());
+		return LuaBitW(logic->vlt(a.vec, b.vec), logic.get());
 	}
 
 	LuaBitW vleq8(const LuaBitVec<8>& a, const LuaBitVec<8>& b) {
-		return LuaBitW(logic->vleq(&a.vec, b.vec), logic.get());
+		return LuaBitW(logic->vleq(a.vec, b.vec), logic.get());
 	}
 
 	LuaBitVec<8> vCh8(const LuaBitVec<8>& x, const LuaBitVec<8>& y, const LuaBitVec<8>& z) {
-		return LuaBitVec<8>(logic->vCh(&x.vec, &y.vec, z.vec), logic.get());
+		return LuaBitVec<8>(logic->vCh(x.vec, y.vec, z.vec), logic.get());
 	}
 
 	LuaBitVec<8> vMaj8(const LuaBitVec<8>& x, const LuaBitVec<8>& y, const LuaBitVec<8>& z) {
-		return LuaBitVec<8>(logic->vMaj(&x.vec, &y.vec, z.vec), logic.get());
+		return LuaBitVec<8>(logic->vMaj(x.vec, y.vec, z.vec), logic.get());
 	}
 
 	LuaBitVec<8> vxor3_8(const LuaBitVec<8>& a, const LuaBitVec<8>& b, const LuaBitVec<8>& c) {
-		return LuaBitVec<8>(logic->vxor3(&a.vec, &b.vec, c.vec), logic.get());
+		return LuaBitVec<8>(logic->vxor3(a.vec, b.vec, c.vec), logic.get());
 	}
 
 	LuaBitVec<8> vshr8(const LuaBitVec<8>& a, size_t shift, size_t b = 0) {
@@ -1239,7 +1241,7 @@ public:
 
 	// Missing 8-bit vector operations
 	LuaBitVec<8> vor_exclusive8(const LuaBitVec<8>& a, const LuaBitVec<8>& b) {
-		return LuaBitVec<8>(logic->vor_exclusive(&a.vec, b.vec), logic.get());
+		return LuaBitVec<8>(logic->vor_exclusive(a.vec, b.vec), logic.get());
 	}
 
 	void voutput8(const LuaBitVec<8>& x, size_t i0) {
@@ -1251,7 +1253,7 @@ public:
 	}
 
 	void vassert_eq8(const LuaBitVec<8>& x, const LuaBitVec<8>& y) {
-		logic->vassert_eq(&x.vec, y.vec);
+		logic->vassert_eq(x.vec, y.vec);
 	}
 
 	LuaBitVec<8> vmux8(const LuaBitW& control, const LuaBitVec<8>& iftrue, const LuaBitVec<8>& iffalse) {
@@ -1259,7 +1261,7 @@ public:
 		// This creates a bitwise mux operation
 		typename LogicType::v8 result;
 		for (size_t i = 0; i < 8; ++i) {
-			result[i] = logic->mux(&control.wire, &iftrue.vec[i], iffalse.vec[i]);
+			result[i] = logic->mux(control.wire, iftrue.vec[i], iffalse.vec[i]);
 		}
 		return LuaBitVec<8>(result, logic.get());
 	}
@@ -1278,7 +1280,7 @@ public:
 	}
 
 	LuaBitW veq32(const LuaBitVec<32>& a, const LuaBitVec<32>& b) {
-		return LuaBitW(logic->veq(&a.vec, b.vec), logic.get());
+		return LuaBitW(logic->veq(a.vec, b.vec), logic.get());
 	}
 
 	LuaBitVec<32> vnot32(const LuaBitVec<32>& x) {
@@ -1286,35 +1288,35 @@ public:
 	}
 
 	LuaBitVec<32> vand32(const LuaBitVec<32>& a, const LuaBitVec<32>& b) {
-		return LuaBitVec<32>(logic->vand(&a.vec, b.vec), logic.get());
+		return LuaBitVec<32>(logic->vand(a.vec, b.vec), logic.get());
 	}
 
 	LuaBitVec<32> vor32(const LuaBitVec<32>& a, const LuaBitVec<32>& b) {
-		return LuaBitVec<32>(logic->vor(&a.vec, b.vec), logic.get());
+		return LuaBitVec<32>(logic->vor(a.vec, b.vec), logic.get());
 	}
 
 	LuaBitVec<32> vxor32(const LuaBitVec<32>& a, const LuaBitVec<32>& b) {
-		return LuaBitVec<32>(logic->vxor(&a.vec, b.vec), logic.get());
+		return LuaBitVec<32>(logic->vxor(a.vec, b.vec), logic.get());
 	}
 
 	LuaBitW vlt32(const LuaBitVec<32>& a, const LuaBitVec<32>& b) {
-		return LuaBitW(logic->vlt(&a.vec, b.vec), logic.get());
+		return LuaBitW(logic->vlt(a.vec, b.vec), logic.get());
 	}
 
 	LuaBitW vleq32(const LuaBitVec<32>& a, const LuaBitVec<32>& b) {
-		return LuaBitW(logic->vleq(&a.vec, b.vec), logic.get());
+		return LuaBitW(logic->vleq(a.vec, b.vec), logic.get());
 	}
 
 	LuaBitVec<32> vCh32(const LuaBitVec<32>& x, const LuaBitVec<32>& y, const LuaBitVec<32>& z) {
-		return LuaBitVec<32>(logic->vCh(&x.vec, &y.vec, z.vec), logic.get());
+		return LuaBitVec<32>(logic->vCh(x.vec, y.vec, z.vec), logic.get());
 	}
 
 	LuaBitVec<32> vMaj32(const LuaBitVec<32>& x, const LuaBitVec<32>& y, const LuaBitVec<32>& z) {
-		return LuaBitVec<32>(logic->vMaj(&x.vec, &y.vec, z.vec), logic.get());
+		return LuaBitVec<32>(logic->vMaj(x.vec, y.vec, z.vec), logic.get());
 	}
 
 	LuaBitVec<32> vxor3_32(const LuaBitVec<32>& a, const LuaBitVec<32>& b, const LuaBitVec<32>& c) {
-		return LuaBitVec<32>(logic->vxor3(&a.vec, &b.vec, c.vec), logic.get());
+		return LuaBitVec<32>(logic->vxor3(a.vec, b.vec, c.vec), logic.get());
 	}
 
 	LuaBitVec<32> vshr32(const LuaBitVec<32>& a, size_t shift, size_t b = 0) {
@@ -1347,7 +1349,7 @@ public:
 	}
 
 	LuaBitW veq64(const LuaBitVec<64>& a, const LuaBitVec<64>& b) {
-		return LuaBitW(logic->veq(&a.vec, b.vec), logic.get());
+		return LuaBitW(logic->veq(a.vec, b.vec), logic.get());
 	}
 
 	// Bit vectors (16-bit)
@@ -1634,7 +1636,7 @@ public:
 	// Get underlying wire index
 	size_t wire_id() const {
 		// For BitW, the wire ID is stored in the x field
-		return logic->wire_id(wire);
+		return wire.x;
 	}
 
 
@@ -1656,7 +1658,7 @@ public:
 	LuaGF2128EltW(const EltW& w, const LogicType* l) : wire(w), logic(l) {}
 
 	size_t wire_id() const {
-		return logic->wire_id(wire);
+		return wire;
 	}
 
 
@@ -1690,11 +1692,11 @@ public:
 
 	// Wire arithmetic
 	LuaGF2128EltW add(const LuaGF2128EltW& a, const LuaGF2128EltW& b) {
-		return LuaGF2128EltW(logic->add(&a.wire, b.wire), logic.get());
+		return LuaGF2128EltW(logic->add(a.wire, b.wire), logic.get());
 	}
 
 	LuaGF2128EltW mul(const LuaGF2128EltW& a, const LuaGF2128EltW& b) {
-		return LuaGF2128EltW(logic->mul(&a.wire, b.wire), logic.get());
+		return LuaGF2128EltW(logic->mul(a.wire, b.wire), logic.get());
 	}
 
 	LuaGF2128EltW mul_scalar(const LuaGF2128Elt& k, const LuaGF2128EltW& b) {
@@ -1720,7 +1722,7 @@ public:
 
 	// Assertions
 	LuaGF2128EltW assert_eq_elt(const LuaGF2128EltW& a, const LuaGF2128EltW& b) {
-		return LuaGF2128EltW(logic->assert_eq(&a.wire, b.wire), logic.get());
+		return LuaGF2128EltW(logic->assert_eq(a.wire, b.wire), logic.get());
 	}
 
 	// Access underlying circuit
