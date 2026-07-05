@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 #include <stddef.h>
 
 #include <cstdint>
+#include <initializer_list>
 #include <vector>
 
 // Circuit element that maps bitvec<N> V to a field element E
@@ -46,36 +47,32 @@ class BitAdderAux<Logic, N, /*kCharacteristicTwo=*/false> {
   explicit BitAdderAux(const Logic& l) : l_(l) {}
 
   EltW as_field_element(const BV& v) const {
-    const Logic& L = l_;  // shorthand
     constexpr uint64_t uno = 1;
-    EltW r = L.konst(L.zero());
+    EltW r = l_.konst(l_.zero());
     for (size_t i = 0; i < N; ++i) {
-      auto vi = L.eval(v[i]);
-      r = L.axpy(&r, L.elt(uno << i), vi);
+      r = l_.axpy(r, l_.elt(uno << i), l_.eval(v[i]));
     }
     return r;
   }
 
-  EltW add(const EltW* a, const EltW& b) const { return l_.add(a, b); }
+  EltW add(const EltW& a, const EltW& b) const { return l_.add(a, b); }
   EltW add(const BV& a, const BV& b) const {
-    auto a_fe = as_field_element(a);
-    auto b_fe = as_field_element(b);
-    return add(&a_fe, b_fe);
+    return add(as_field_element(a), as_field_element(b));
   }
-  EltW add(const std::vector<BV>& a) const {
-    return l_.add(0, a.size(),
-                  [&](size_t i) { return as_field_element(a[i]); });
+  EltW add(
+      std::initializer_list<typename Logic::template bitvec_view<N>> a) const {
+    return l_.add(0, a.size(), [&](size_t i) {
+      return as_field_element(*(a.begin()[i].ptr));
+    });
   }
 
   // assert that B = A + i*2^N for 0 <= i < k
   void assert_eqmod(const BV& a, const EltW& b, size_t k) const {
-    const Logic& L = l_;  // shorthand
     constexpr uint64_t uno = 1;
-    EltW z = L.sub(&b, as_field_element(a));
-    EltW zz = L.mul(0, k, [&](size_t i) {
-      return L.sub(&z, L.konst((uno << N) * i));
-    });
-    L.assert0(zz);
+    EltW z = l_.sub(b, as_field_element(a));
+    EltW zz = l_.mul(
+        0, k, [&](size_t i) { return l_.sub(z, l_.konst((uno << N) * i)); });
+    l_.assert0(zz);
   }
 };
 
@@ -91,59 +88,49 @@ class BitAdderAux<Logic, N, /*kCharacteristicTwo=*/true> {
   const Logic& l_;
 
   explicit BitAdderAux(const Logic& l) : l_(l) {
-    const Logic& L = l_;     // shorthand
-    const Field& F = l_.f_;  // shorthand
-
     // assume that X is a root of unity of order large enough.
-    Elt alpha = F.x();
+    Elt alpha = l_.f_.x();
 
     for (size_t i = 0; i < N; ++i) {
       alpha_2_i_[i] = alpha;
-      alpha = L.mulf(alpha, alpha);
+      alpha = l_.mulf(alpha, alpha);
     }
-    alpha_2_N_ = alpha;
+    alpha_2_n_ = alpha;
   }
 
   EltW as_field_element(const BV& v) const {
-    const Logic& L = l_;  // shorthand
-    return L.mul(0, N, [&](size_t i) {
-      auto a2i = L.konst(alpha_2_i_[i]);
-      return L.mux(&v[i], &a2i, L.konst(L.one()));
+    return l_.mul(0, N, [&](size_t i) {
+      return l_.mux(v[i], l_.konst(alpha_2_i_[i]), l_.konst(l_.one()));
     });
   }
 
-  EltW add(const EltW* a, const EltW& b) const { return l_.mul(a, b); }
+  EltW add(const EltW& a, const EltW& b) const { return l_.mul(a, b); }
   EltW add(const BV& a, const BV& b) const {
-    auto a_fe = as_field_element(a);
-    auto b_fe = as_field_element(b);
-    return add(&a_fe, b_fe);
+    return add(as_field_element(a), as_field_element(b));
   }
-  EltW add(const std::vector<BV>& a) const {
-    return l_.mul(0, a.size(),
-                  [&](size_t i) { return as_field_element(a[i]); });
+  EltW add(
+      std::initializer_list<typename Logic::template bitvec_view<N>> a) const {
+    return l_.mul(0, a.size(), [&](size_t i) {
+      return as_field_element(*(a.begin()[i].ptr));
+    });
   }
 
   // assert that B = A + alpha^(i*2^N) for 0 <= i < k
   void assert_eqmod(const BV& a, const EltW& b, size_t k) const {
-    const Logic& L = l_;     // shorthand
-    const Field& F = l_.f_;  // shorthand
-
     std::vector<Elt> p(k);
-    p[0] = F.one();
+    p[0] = l_.f_.one();
     for (size_t i = 1; i < k; ++i) {
-      p[i] = F.mulf(alpha_2_N_, p[i - 1]);
+      p[i] = l_.f_.mulf(alpha_2_n_, p[i - 1]);
     }
     EltW aa = as_field_element(a);
-    EltW prod = L.mul(0, k, [&](size_t i) {
-      auto pi = L.konst(p[i]);
-      return L.sub(&b, L.mul(&pi, aa));
-    });
-    L.assert0(prod);
+    EltW prod = l_.mul(
+        0, k, [&](size_t i) { return l_.sub(b, l_.mul(l_.konst(p[i]), aa)); });
+    l_.assert0(prod);
   }
 
  private:
   Elt alpha_2_i_[N + 1];
-  Elt alpha_2_N_;
+  Elt alpha_2_n_;
 };
 
 template <class Logic, size_t N>

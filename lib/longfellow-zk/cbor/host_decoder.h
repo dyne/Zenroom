@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,40 +46,74 @@ enum CborPrimitive { CFALSE, CTRUE, CNULL };
 // methods return const pointers to attempt to maintain this property.
 class CborDoc {
  public:
-  size_t header_pos_;
-  enum CborTag t_;
+  struct CborString {
+    size_t pos;
+    size_t len;
+  };
 
-  // A union is used to store the attributes for either singleton objects (i.e.,
-  // UNSIGNED, NEGATIVE, PRIMITIVE), the start position and len of TEXT and
-  // BYTES array, and the children information for ARRAY or MAP objects.
-  // len of strings and byte arrays
-  union U {
-    uint64_t u64;         /* UNSIGNED */
-    int64_t i64;          /* NEGATIVE */
-    enum CborPrimitive p; /* PRIMITIVE */
+  struct CborItems {
+    size_t n;
+    size_t nchildren;
+  };
 
-    // BYTES + TEXT, represented as offset in input + length
-    struct {
-      size_t pos;
-      size_t len;
-    } string;
+  struct LookupResult {
+    const CborDoc* key;
+    const CborDoc* val;
+  };
 
-    // arrays, maps, and tags: an array of children nodes.
-    struct {
-      // The original count in the source document.  For tags,
-      // the tag itself.
-      size_t n;
+  size_t header_pos() const { return header_pos_; }
+  CborTag variant() const { return t_; }
+  bool is_variant(CborTag target) const { return t_ == target; }
 
-      // The actual number of children (e.g. 2*n for maps).
-      size_t nchildren;
-    } items;
-  } u_;
+  uint64_t as_unsigned() const {
+    check(t_ == UNSIGNED, "as_unsigned called on non-UNSIGNED type");
+    return u_.u64;
+  }
 
-  // This field only applies to ARRAY, MAP nodes, but it has been moved
-  // out of the union to avoid including components with non-default
-  // constructors. It holds the children objects of an array or map. For a map,
-  // even positions are the keys, and the odd positions are the values.
-  std::vector<CborDoc> children_;
+  int64_t as_negative() const {
+    check(t_ == NEGATIVE, "as_negative called on non-NEGATIVE type");
+    return u_.i64;
+  }
+
+  CborPrimitive as_primitive() const {
+    check(t_ == PRIMITIVE, "as_primitive called on non-PRIMITIVE type");
+    return u_.p;
+  }
+
+  CborString as_bytes() const {
+    check(t_ == BYTES, "as_bytes called on non-BYTES type");
+    return u_.string;
+  }
+
+  CborString as_text() const {
+    check(t_ == TEXT, "as_text called on non-TEXT type");
+    return u_.string;
+  }
+
+  CborItems as_array() const {
+    check(t_ == ARRAY, "as_array called on non-ARRAY type");
+    return u_.items;
+  }
+
+  CborItems as_map() const {
+    check(t_ == MAP, "as_map called on non-MAP type");
+    return u_.items;
+  }
+
+  size_t as_tag() const {
+    check(t_ == TAG, "as_tag called on non-TAG type");
+    return u_.items.n;
+  }
+
+  const std::vector<CborDoc>& children() const {
+    check(t_ == MAP || t_ == ARRAY, "children called on non-container type");
+    return children_;
+  }
+
+  const CborDoc& tagged_value() const {
+    check(t_ == TAG, "tagged_value called on non-TAG type");
+    return children_[0];
+  }
 
   // Parse a byte sequence into a CborDoc structure.
   //
@@ -90,7 +124,7 @@ class CborDoc {
   //
   // This function can handle adversarial inputs, and returns false when the
   // input cannot be parsed.
-  bool decode(const uint8_t in[], size_t len, size_t &pos, size_t offset) {
+  bool decode(const uint8_t in[], size_t len, size_t& pos, size_t offset) {
     /* invariant: pos is always compared with len before it is referenced. */
     header_pos_ = pos + offset;
 
@@ -164,7 +198,7 @@ class CborDoc {
 
       case 6: /* TAG */
         // Special cases for TAG
-        if (count == 1004) {  // date in the form YYYY-MM-DD
+        if (count == 1004) {         // date in the form YYYY-MM-DD
           if (pos + 1 + 10 > len) {  // 0xDA for str length + 10 characters
             return false;
           }
@@ -192,12 +226,11 @@ class CborDoc {
     return true;
   }
 
-  // Lookup a child node in an array. Returns null if the query is invalid.
-  const CborDoc *index(size_t index) const {
-    if (t_ == ARRAY && index < u_.items.nchildren) {
-      return &children_[index];
-    }
-    return nullptr;
+  // Lookup a child node in an array. Expects index to be within bounds.
+  const CborDoc* aref(size_t index) const {
+    CborItems arr = as_array();
+    check(index < arr.nchildren, "aref index out of bounds");
+    return &children_[index];
   }
 
   // Lookup a key in a map of type {bytes->elements}.
@@ -206,63 +239,70 @@ class CborDoc {
   // ndx is set to the child index of the located key.
   // The return pointer references the key, and the next object refers to
   // the value and is guaranteed to exist.
-  const CborDoc *lookup(const uint8_t *const in, size_t len,
-                        const uint8_t bytes[/*len*/], size_t &ndx) const {
+  LookupResult lookup(const uint8_t* const in, size_t len,
+                      const uint8_t bytes[/*len*/], size_t& ndx) const {
     if (t_ == MAP) {
       for (size_t i = 0; i < u_.items.n; ++i) {
-        if (children_[2 * i].eq(in, len, bytes)) {
+        const CborDoc* key = &children_[2 * i];
+        if (key->eq(in, len, bytes)) {
           ndx = i;
-          return &children_[2 * i];
+          return LookupResult{key, &children_[2 * i + 1]};
         }
       }
     }
-    return nullptr;
+    return LookupResult{nullptr, nullptr};
   }
 
   // Lookup a key in a map of type {unsigned->object}.
   // Returns null if the query is invalid.
-  const CborDoc *lookup_unsigned(uint64_t k, size_t &ndx) const {
+  LookupResult lookup_unsigned(uint64_t k, size_t& ndx) const {
     if (t_ == MAP) {
       for (size_t i = 0; i < u_.items.n; ++i) {
-        const CborDoc *key = &children_[2 * i];
+        const CborDoc* key = &children_[2 * i];
         if (key->t_ == UNSIGNED && key->u_.u64 == k) {
           ndx = i;
-          return key;
+          return LookupResult{key, &children_[2 * i + 1]};
         }
       }
     }
-    return nullptr;
+    return LookupResult{nullptr, nullptr};
   }
 
   // Lookup a key in a map of type {negative->object}.
   // Returns null if the query is invalid.
-  const CborDoc *lookup_negative(int64_t k, size_t &ndx) const {
+  LookupResult lookup_negative(int64_t k, size_t& ndx) const {
     if (t_ == MAP) {
       for (size_t i = 0; i < u_.items.n; ++i) {
-        const CborDoc *key = &children_[2 * i];
+        const CborDoc* key = &children_[2 * i];
         if (key->t_ == NEGATIVE && key->u_.i64 == k) {
           ndx = i;
-          return key;
+          return LookupResult{key, &children_[2 * i + 1]};
         }
       }
     }
-    return nullptr;
+    return LookupResult{nullptr, nullptr};
   }
 
   // Returns the index of the item with respect to the document bytes.
+  // This function is only called once the input bytes are successfully
+  // parsed; the check condition asserts this invariant.
   size_t position() const {
     switch (t_) {
       case UNSIGNED:
         return header_pos_;
       case BYTES:
+        return as_bytes().pos;
       case TEXT:
-        return u_.string.pos;
-      case TAG:
-        return children_[0].u_.string.pos;
+        return as_text().pos;
+      case TAG: {
+        auto child = tagged_value();
+        return child.is_variant(BYTES) ? child.as_bytes().pos
+                                       : child.as_text().pos;
+      }
       case PRIMITIVE:
         return header_pos_;
       default:
-        check(false, "valueIndex called on non-value type");
+        check(false, "position() called on unknown type");
     }
     return 0;
   }
@@ -270,35 +310,58 @@ class CborDoc {
   // Returns the length of the item's value in bytes.
   // According to ISO 18013-5 7.2.1, the mDL data elements shall be encoded
   // as tstr, uint, bstr, bool, or tdate, so this function only handles those
-  // cases.
+  // cases. This function is only called after the source bytes have been
+  // successfully parsed.
   size_t length() const {
     switch (t_) {
-      case UNSIGNED:
-        if (u_.u64 < 24) {
+      case UNSIGNED: {
+        uint64_t val = as_unsigned();
+        if (val < 24) {
           return 1;
-        } else if (u_.u64 < 256) {
+        } else if (val < 256) {
           return 2;
-        } else if (u_.u64 < 65536) {
+        } else if (val < 65536) {
           return 3;
         }
         return 5;
+      }
       case BYTES:
+        return as_bytes().len;
       case TEXT:
-        return u_.string.len;
-      case TAG:
-        return children_[0].u_.string.len;  //  full-date #6.1004(tstr) format
+        return as_text().len;
+      case TAG: {
+        auto child = tagged_value();
+        return child.is_variant(BYTES) ? child.as_bytes().len
+                                       : child.as_text().len;
+      }
       case PRIMITIVE:
         return 1;
       default:
-        check(false, "valueLength called on non-value type");
+        check(false, "length() called on non-value type");
     }
     return 0;
   }
 
  private:
+  // A union is used to store the attributes for either singleton objects (i.e.,
+  // UNSIGNED, NEGATIVE, PRIMITIVE), the start position and len of TEXT and
+  // BYTES array, and the children information for ARRAY or MAP objects.
+  // len of strings and byte arrays
+  union U {
+    uint64_t u64;         /* UNSIGNED */
+    int64_t i64;          /* NEGATIVE */
+    enum CborPrimitive p; /* PRIMITIVE */
+
+    // BYTES + TEXT, represented as offset in input + length
+    CborString string;
+
+    // arrays, maps, and tags: an array of children nodes.
+    CborItems items;
+  };
+
   // Decodes a sequence of children nodes.
   bool decode_items(CborTag t, size_t nchildren, size_t items_n,
-                    const uint8_t in[], size_t len, size_t &pos,
+                    const uint8_t in[], size_t len, size_t& pos,
                     size_t offset) {
     t_ = t;
     u_.items.n = items_n;
@@ -311,11 +374,19 @@ class CborDoc {
   }
 
   // Compares a text node to a given string of bytes.
-  bool eq(const uint8_t *const in, size_t len,
+  bool eq(const uint8_t* const in, size_t len,
           const uint8_t bytes[/*len*/]) const {
-    return t_ == TEXT && u_.string.len == len &&
-           memcmp(bytes, &in[u_.string.pos], len) == 0;
+    if (t_ == TEXT) {
+      auto s = as_text();
+      return s.len == len && memcmp(bytes, &in[s.pos], len) == 0;
+    }
+    return false;
   }
+
+  size_t header_pos_;
+  CborTag t_;
+  union U u_;
+  std::vector<CborDoc> children_;
 };
 
 }  // namespace proofs

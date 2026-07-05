@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -139,9 +139,10 @@ struct NodeF {
 
   bool operator==(const NodeF& y) const {
     if (info.is_input != y.info.is_input) return false;
+    if (info.is_output != y.info.is_output) return false;
+    if (info.is_assert0 != y.info.is_assert0) return false;
     if (info.desired_wire_id_for_input != y.info.desired_wire_id_for_input)
       return false;
-    if (info.is_output != y.info.is_output) return false;
     if (info.desired_wire_id_for_output != y.info.desired_wire_id_for_output)
       return false;
     if (info.is_input != y.info.is_input) return false;
@@ -160,6 +161,7 @@ struct NodeF {
                         static_cast<uint64_t>(info.desired_wire_id_for_output));
     crc = crc64::update(crc, info.is_input);
     crc = crc64::update(crc, info.is_output);
+    crc = crc64::update(crc, info.is_assert0);
     size_t l = terms.size();
     crc = crc64::update(crc, l);
     for (size_t i = 0; i < l; ++i) {

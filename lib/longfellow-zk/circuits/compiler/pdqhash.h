@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -109,6 +109,7 @@ class PdqHash {
     ++bits_;
     std::vector<kv> table1(capacity());
     table_.swap(table1);
+    sz_ = 0;
     for (const auto &p : table1) {
       if (p.v != kNil) {
         insert0(p.k, p.v);

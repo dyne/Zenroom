@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ class Polynomial {
         // invariant: xi[i] = x**i for i < k.
         // Extend inductively to k = n.
         for (size_t k = 2; k < n; ++k) {
-          xi[k] = L.mul(&xi[k - k / 2], xi[k / 2]);
+          xi[k] = L.mul(xi[k - k / 2], xi[k / 2]);
         }
       }
     }
@@ -61,7 +61,7 @@ class Polynomial {
     EltW r = L.konst(0);
     for (size_t i = 0; i < N; ++i) {
       auto cxi = L.mul(coef[i], xi[i]);
-      r = L.add(&r, cxi);
+      r = L.add(r, cxi);
     }
     return r;
   }
@@ -80,11 +80,11 @@ class Polynomial {
       for (size_t i = 0; 2 * i < n; ++i) {
         c[i] = c[2 * i];
         if (2 * i + 1 < n) {
-          auto cxi = L.mul(&x, c[2 * i + 1]);
-          c[i] = L.add(&c[i], cxi);
+          auto cxi = L.mul(x, c[2 * i + 1]);
+          c[i] = L.add(c[i], cxi);
         }
       }
-      x = L.mul(&x, x);
+      x = L.mul(x, x);
     }
     return c[0];
   }

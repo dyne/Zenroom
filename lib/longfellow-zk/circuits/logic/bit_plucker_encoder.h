@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ class BitPluckerEncoder {
       size_t v = 0;
       for (size_t j = 0; j < LOGN; ++j) {
         if (i * LOGN + j < n) {
-          v += (bits[i * LOGN + j] & 0x1) << j;
+          v += (bits[i * LOGN + j] & 0x1u) << j;
         }
       }
       r[i] = encode(v);

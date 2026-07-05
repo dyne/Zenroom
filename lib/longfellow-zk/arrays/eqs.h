@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,11 +15,9 @@
 #ifndef PRIVACY_PROOFS_ZK_LIB_ARRAYS_EQS_H_
 #define PRIVACY_PROOFS_ZK_LIB_ARRAYS_EQS_H_
 
-#include <stddef.h>
-
+#include <cstddef>
 #include <vector>
 
-#include "algebra/blas.h"
 #include "arrays/affine.h"
 #include "arrays/dense.h"
 #include "util/panic.h"
@@ -42,21 +40,42 @@ class Eqs : public Dense<Field> {
 
   corner_t n() const { return n0_; }
 
-  // Optimization for a special case: return a raw vector EQ[G0|.] + alpha *
-  // EQ[G1|.]  Return std::vector<> because we don't need the full
-  // dense<> machinery.
+  // Optimization for a special case: return a raw vector
+  //   eq[i] = EQ(G0, i) + alpha * EQ(G1, i)
+  // for all 0 <= i < n.
   static std::vector<Elt> raw_eq2(size_t logn, corner_t n, const Elt* G0,
                                   const Elt* G1, const Elt& alpha,
                                   const Field& F) {
-    std::vector<Elt> eq0(n);
-    std::vector<Elt> eq1(n);
-    filleq(&eq0[0], logn, n, G0, F);
-    filleq(&eq1[0], logn, n, G1, F);
-    Blas<Field>::axpy(n, &eq0[0], 1, alpha, &eq1[0], 1, F);
-    return eq0;
+    std::vector<Elt> eq(n);
+    fill_recursive(&eq[0], logn, n, G0, G1, F.one(), alpha, F);
+    return eq;
   }
 
  private:
+  // fill_recursive(eq, l, n, G0, G1, w0, w1, F) populates eq[0, n) with
+  //   eq[i] = w0 * EQ[G0, i] + w1 * EQ[G1, i]
+  static void fill_recursive(Elt* eq, size_t l, corner_t n, const Elt* G0,
+                             const Elt* G1, const Elt& w0, const Elt& w1,
+                             const Field& F) {
+    if (l > 0) {
+      const size_t nl = l - 1;
+      const corner_t s = corner_t(1) << nl;
+
+      Elt w0hi = F.mulf(w0, G0[nl]);
+      Elt w1hi = F.mulf(w1, G1[nl]);
+      Elt w0lo = F.subf(w0, w0hi);
+      Elt w1lo = F.subf(w1, w1hi);
+      if (n <= s) {
+        fill_recursive(eq, nl, n, G0, G1, w0lo, w1lo, F);
+      } else {
+        fill_recursive(eq, nl, s, G0, G1, w0lo, w1lo, F);
+        fill_recursive(eq + s, nl, n - s, G0, G1, w0hi, w1hi, F);
+      }
+    } else {
+      eq[0] = F.addf(w0, w1);
+    }
+  }
+
   // Return ceil(a / 2^{n}) for a != 0.
   //
   // Several ways exist to compute ceil(a/b) given a primitive that

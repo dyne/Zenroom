@@ -1,6 +1,6 @@
 /* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Copyright (C) 2025-2026 Dyne.org foundation
+ * Copyright (C) 2025 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -112,6 +112,17 @@ static inline v128_t gf2_128_mul(v128_t a, v128_t b) {
   uint64_t r3 = z3_hi;
 
   return reduce(r3, r2, r1, r0);
+}
+
+using gf2_128_accum_t = std::array<gf2_128_elt_t, 1>;
+
+static inline void gf2_128_mac(gf2_128_accum_t& acc, gf2_128_elt_t x,
+                               gf2_128_elt_t y) {
+  acc[0] = gf2_128_add(acc[0], gf2_128_mul(x, y));
+}
+
+static inline gf2_128_elt_t gf2_128_accum_reduce(const gf2_128_accum_t& acc) {
+  return acc[0];
 }
 
 }  // namespace proofs

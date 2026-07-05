@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ class EllipticCurve {
   Elt a_;
   Elt b_;
   Elt gx_, gy_, gz_;  // generator of the group
-  const Elt k2, k3, k8, k3b, k9b, k24b;
+  const Elt k3b;
 
   struct ECPoint {
     Elt x;
@@ -62,14 +62,30 @@ class EllipticCurve {
         gx_(gX),
         gy_(gY),
         gz_(F.one()),
-        k2(F.of_scalar(2)),
-        k3(F.of_scalar(3)),
-        k8(F.of_scalar(8)),
-        k3b(F.mulf(k3, b_)),
-        k9b(F.mulf(F.of_scalar(9), b_)),
-        k24b(F.mulf(F.of_scalar(24), b_)) {
-    is_minus_3_a_ = (a_ == F.negf(k3));
-    is_zero_a_ = (a_ == F.zero());
+        k3b(F.mulf(F.of_scalar(3), b_)) {}
+
+  bool zerop(const Elt& x) const { return x == f_.zero(); }
+
+  ECPoint zero() const { return ECPoint(f_.zero(), f_.one(), f_.zero()); }
+
+  bool zerop(const ECPoint& p) const {
+    return zerop(p.x) && !zerop(p.y) && zerop(p.z);
+  }
+
+  bool is_on_curve(const ECPoint& p) const {
+    if (zerop(p.z)) {
+      return zerop(p);
+    } else {
+      // (y/z)^2 == (x/z)^3 + a(x/z) + b
+      // y^2 z == x^3 + a x z^2 + b z^3
+      Elt z = p.z;
+      Elt z2 = f_.mulf(z, z);
+      Elt z3 = f_.mulf(z, z2);
+      Elt y2z = f_.mulf(f_.mulf(p.y, p.y), z);
+      Elt x3 = f_.mulf(f_.mulf(p.x, p.x), p.x);
+      Elt xz2 = f_.mulf(p.x, z2);
+      return y2z == f_.addf(x3, f_.addf(f_.mulf(a_, xz2), f_.mulf(b_, z3)));
+    }
   }
 
   // This equality method makes no assumptions about whether the inputs
@@ -77,39 +93,13 @@ class EllipticCurve {
   // enough if one of the points is invalid. This method is not constant
   // time and can return early if any point is infinity.
   bool equal(const ECPoint& p, const ECPoint& q) const {
-    // handle inf point, then point equality, and finally projective eq
-    if (q.x == f_.zero() && q.z == f_.zero() && q.y != f_.zero() &&
-        p.x == f_.zero() && p.z == f_.zero() && p.y != f_.zero()) {
-      return true;
+    if (zerop(p.z) || zerop(q.z)) {
+      return zerop(p) && zerop(q);
+    } else {
+      return f_.mulf(p.x, q.z) == f_.mulf(q.x, p.z) &&
+             f_.mulf(p.y, q.z) == f_.mulf(q.y, p.z) &&
+             is_on_curve(p);  // is_on_curve(q) is implied
     }
-    if (q.x == p.x && q.z == p.z && q.y == p.y) {
-      return true;
-    }
-
-    return (f_.mulf(p.x, q.z) == f_.mulf(q.x, p.z) &&
-            f_.mulf(p.y, q.z) == f_.mulf(q.y, p.z));
-  }
-
-  // This method assumes a point is either zero or has z=1 coordinate,
-  // so it does not implement the full mathematical notion of Jacobian-form
-  // ec point.
-  bool is_on_curve(const ECPoint& p) const {
-    if (equal(p, zero())) {
-      return true;
-    }
-    // Do not support Jacobian coordinate with z != 1"
-    if (p.z != f_.one()) {
-      return false;
-    }
-    return is_on_curve(p.x, p.y);
-  }
-
-  // This caller of the constructor must first verify that (x,y) is on the
-  // curve using the isOnCurve() method.
-  ECPoint point(const Elt& x, const Elt& y) const {
-    ECPoint p(x, y, f_.one());
-    check(is_on_curve(p), "Invalid curve point");
-    return p;
   }
 
   void normalize(ECPoint& p) const {
@@ -172,168 +162,15 @@ class EllipticCurve {
     }
   }
 
-  ECPoint zero() const { return ECPoint(f_.zero(), f_.one(), f_.zero()); }
   ECPoint generator() const { return ECPoint(gx_, gy_, gz_); }
 
-  // Check whether Y^2 = X^3 + aX + b.
-  bool is_on_curve(const Elt& X, const Elt& Y) const {
-    Elt left = f_.mulf(Y, Y);
-    Elt X3 = f_.mulf(X, f_.mulf(X, X));
-    Elt right = f_.addf(f_.addf(X3, f_.mulf(a_, X)), b_);
-    return left == right;
-  }
+  // SeeComplete Joost Renes, Craig Costello, and Lejla Batina,
+  // "Addition formulas for prime order elliptic curves"
+  // https://eprint.iacr.org/2015/1060.pdf.
 
-  void addE(Elt& X3o, Elt& Y3o, Elt& Z3o, const Elt& X1, const Elt& Y1,
-            const Elt& Z1, const Elt& X2, const Elt& Y2, const Elt& Z2) const {
-    // Optimized special cases.
-    if (is_zero_a_) return addEZeroA(X3o, Y3o, Z3o, X1, Y1, Z1, X2, Y2, Z2);
-    if (is_minus_3_a_)
-      return addEMinus3A(X3o, Y3o, Z3o, X1, Y1, Z1, X2, Y2, Z2);
-
-    /*
-    Source: 1998 Cohen–Miyaji–Ono "Efficient elliptic curve exponentiation using
-    mixed coordinates", formula (3), plus common-subexpression elimination.
-    These equations are taken from the Hyperelliptic curve formula database.
-    This could have special short-cuts for addition with inf and self-addition,
-    which speeds up all multi-exponentiation computations that involve a lot of
-    small exponents.
-    */
-    if (X1 == f_.zero() && Z1 == f_.zero()) {
-      X3o = X2;
-      Y3o = Y2;
-      Z3o = Z2;
-      return;
-    }
-
-    if (X2 == f_.zero() && Z2 == f_.zero()) {
-      X3o = X1;
-      Y3o = Y1;
-      Z3o = Z1;
-      return;
-    }
-
-    Elt Y1Z2 = f_.mulf(Y1, Z2);
-    Elt X1Z2 = f_.mulf(X1, Z2);
-    Elt u = f_.subf(f_.mulf(Y2, Z1), Y1Z2);
-    Elt v = f_.subf(f_.mulf(X2, Z1), X1Z2);
-    if (u == f_.zero()) {
-      doubleE(X3o, Y3o, Z3o, X1, Y1, Z1);
-      return;
-      // Self addition, invoke Double method.
-    }
-    /* This check occurs after the u check.
-    If u!=0, but v=0, then the points are inverses.
-    */
-    if (v == f_.zero()) {
-      X3o = f_.zero();
-      Y3o = f_.one();
-      Z3o = f_.zero();
-      return;
-    }
-
-    Elt Z1Z2 = f_.mulf(Z1, Z2);
-    Elt uu = f_.mulf(u, u);
-    Elt vv = f_.mulf(v, v);
-    Elt vvv = f_.mulf(v, vv);
-    Elt R = f_.mulf(vv, X1Z2);
-    Elt A = f_.subf(f_.subf(f_.mulf(uu, Z1Z2), vvv), f_.mulf(k2, R));
-    Elt X3 = f_.mulf(v, A);
-    Elt Y3 = f_.subf(f_.mulf(u, f_.subf(R, A)), f_.mulf(vvv, Y1Z2));
-    Elt Z3 = f_.mulf(vvv, Z1Z2);
-
-    X3o = X3;
-    Y3o = Y3;
-    Z3o = Z3;
-  }
-
-  void doubleE(Elt& X3o, Elt& Y3o, Elt& Z3o, const Elt& X, const Elt& Y,
-               const Elt& Z) const {
-    // Optimized special cases.
-    if (is_zero_a_) return doubleEZeroA(X3o, Y3o, Z3o, X, Y, Z);
-    if (is_minus_3_a_) return doubleEMinus3A(X3o, Y3o, Z3o, X, Y, Z);
-
-    /*
-    // 1998 Cohen–Miyaji–Ono "Efficient elliptic curve exponentiation using
-    mixed coordinates", formula (4), This version of the double formula trades
-    general mults for mults by 2,4,8 which can be implemented with additions.
-    This results in savings of 200ns on double.
-    */
-    if (X == f_.zero() && Z == f_.zero()) {
-      X3o = X;
-      Y3o = f_.one();
-      Z3o = Z;
-      return;
-    }
-
-    Elt Z2 = f_.mulf(Z, Z);
-    Elt X2 = f_.mulf(X, X);
-    Elt X2_3 = f_.addf(f_.addf(X2, X2), X2);
-    Elt s = f_.mulf(Y, Z);
-    Elt ss = f_.mulf(s, s);
-    Elt sss = f_.mulf(s, ss);
-    Elt sss_2 = f_.addf(sss, sss);
-    Elt w = f_.addf(f_.mulf(a_, Z2), X2_3);
-    Elt R = f_.mulf(Y, s);
-    Elt sss_4 = f_.addf(sss_2, sss_2);
-    Elt B = f_.mulf(X, R);
-    Elt sss_8 = f_.addf(sss_4, sss_4);
-    Elt B_2 = f_.addf(B, B);
-    Elt R2 = f_.mulf(R, R);
-    Elt B_4 = f_.addf(B_2, B_2);
-    Elt B_8 = f_.addf(B_4, B_4);
-    Elt w2 = f_.mulf(w, w);
-    Elt h = f_.subf(w2, B_8);
-    Elt s_2 = f_.addf(s, s);
-    Elt X3 = f_.mulf(h, s_2);
-    Elt R2_2 = f_.addf(R2, R2);
-    Elt R2_4 = f_.addf(R2_2, R2_2);
-    Elt R2_8 = f_.addf(R2_4, R2_4);
-    Elt Y3 = f_.subf(f_.mulf(w, f_.subf(B_4, h)), R2_8);
-    Elt Z3 = sss_8;
-
-    X3o = X3;
-    Y3o = Y3;
-    Z3o = Z3;
-  }
-
- private:
-  /* From Algorithm 7: Complete, projective point addition for prime order
-    j-invariant 0 short Weierstrass curves E/Fq : y^2 = x^3 + b.
-
-    X3 = (X1 Y2 + X2 Y1)(Y1 Y2 - 3b Z1 Z2) - 3b(Y1 Z2 + Y2 Z1)(X1 Z2 + X2 Z1)
-    Y3 = (Y1 Y2 + 3b Z1 Z2)(Y1 Y2 - 3b Z1 Z2) + 9b X1 X2 (X1 Z2 + X2 Z1)
-    Z3 = (Y1 Z2 + Y2 Z1)(Y1 Y2 + 3b Z1 Z2) + 3 X1 X2(X1 Y2 + X2 Y1)
-   */
-  void addEZeroA(Elt& X3o, Elt& Y3o, Elt& Z3o, const Elt& X1, const Elt& Y1,
-                 const Elt& Z1, const Elt& X2, const Elt& Y2,
-                 const Elt& Z2) const {
-    Elt t0 = f_.mulf(X2, Y1);
-    Elt t1 = f_.mulf(X1, Y2);
-    Elt t2 = f_.addf(t1, t0);
-    Elt t3 = f_.mulf(Y1, Y2);
-    Elt t4 = f_.mulf(Z1, Z2);
-    Elt t5 = f_.mulf(Y1, Z2);
-    Elt t6 = f_.mulf(Y2, Z1);
-    Elt t7 = f_.addf(t5, t6);
-    Elt t8 = f_.mulf(X1, Z2);
-    Elt t9 = f_.mulf(X2, Z1);
-    Elt t10 = f_.addf(t8, t9);
-    Elt t11 = f_.mulf(X1, X2);
-    Elt t12 = f_.mulf(k3b, t4);
-    Elt t13 = f_.addf(t3, t12);
-    Elt t14 = f_.subf(t3, t12);
-
-    X3o = f_.subf(f_.mulf(t2, t14), f_.mulf(k3b, f_.mulf(t7, t10)));
-    Y3o = f_.addf(f_.mulf(t13, t14), f_.mulf(k9b, f_.mulf(t11, t10)));
-    Z3o = f_.addf(f_.mulf(t7, t13), f_.mulf(k3, f_.mulf(t11, t2)));
-  }
-
-  /*Algorithm 4: Complete, projective point addition for prime order short
-   * Weierstrass curves E/Fq : y^2 = x^33 + ax + b with a = −3.
-   */
-  void addEMinus3A(Elt& X3o, Elt& Y3o, Elt& Z3o, const Elt& X1, const Elt& Y1,
-                   const Elt& Z1, const Elt& X2, const Elt& Y2,
-                   const Elt& Z2) const {
+  // https://eprint.iacr.org/2015/1060.pdf Algorithm 1
+  void addE(Elt& X3, Elt& Y3, Elt& Z3, Elt X1, Elt Y1, Elt Z1, Elt X2, Elt Y2,
+            Elt Z2) const {
     Elt t0 = f_.mulf(X1, X2);
     Elt t1 = f_.mulf(Y1, Y2);
     Elt t2 = f_.mulf(Z1, Z2);
@@ -342,114 +179,95 @@ class EllipticCurve {
     t3 = f_.mulf(t3, t4);
     t4 = f_.addf(t0, t1);
     t3 = f_.subf(t3, t4);
-    t4 = f_.addf(Y1, Z1);
-    Elt X3 = f_.addf(Y2, Z2);
-    t4 = f_.mulf(t4, X3);
-    X3 = f_.addf(t1, t2);
-    t4 = f_.subf(t4, X3);
-    X3 = f_.addf(X1, Z1);
-    Elt Y3 = f_.addf(X2, Z2);
-    X3 = f_.mulf(X3, Y3);
-    Y3 = f_.addf(t0, t2);
-    Y3 = f_.subf(X3, Y3);
-    Elt Z3 = f_.mulf(b_, t2);
-    X3 = f_.subf(Y3, Z3);
-    Z3 = f_.addf(X3, X3);
-    X3 = f_.addf(X3, Z3);
-    Z3 = f_.subf(t1, X3);
-    X3 = f_.addf(t1, X3);
-    Y3 = f_.mulf(b_, Y3);
-    t1 = f_.addf(t2, t2);
-    t2 = f_.addf(t1, t2);
-    Y3 = f_.subf(Y3, t2);
-    Y3 = f_.subf(Y3, t0);
-    t1 = f_.addf(Y3, Y3);
-    Y3 = f_.addf(t1, Y3);
+    t4 = f_.addf(X1, Z1);
+    Elt t5 = f_.addf(X2, Z2);
+    t4 = f_.mulf(t4, t5);
+    t5 = f_.addf(t0, t2);
+    t4 = f_.subf(t4, t5);
+    t5 = f_.addf(Y1, Z1);
+    Elt X3t = f_.addf(Y2, Z2);
+    t5 = f_.mulf(t5, X3t);
+    X3t = f_.addf(t1, t2);
+    t5 = f_.subf(t5, X3t);
+    Elt Z3t = f_.mulf(a_, t4);
+    X3t = f_.mulf(k3b, t2);
+    Z3t = f_.addf(X3t, Z3t);
+    X3t = f_.subf(t1, Z3t);
+    Z3t = f_.addf(t1, Z3t);
+    Elt Y3t = f_.mulf(X3t, Z3t);
     t1 = f_.addf(t0, t0);
-    t0 = f_.addf(t1, t0);
-    t0 = f_.subf(t0, t2);
-    t1 = f_.mulf(t4, Y3);
-    t2 = f_.mulf(t0, Y3);
-    Y3 = f_.mulf(X3, Z3);
-    Y3 = f_.addf(Y3, t2);
-    X3 = f_.mulf(t3, X3);
-    X3 = f_.subf(X3, t1);
-    Z3 = f_.mulf(t4, Z3);
-    t1 = f_.mulf(t3, t0);
-    Z3 = f_.addf(Z3, t1);
+    t1 = f_.addf(t1, t0);
+    t2 = f_.mulf(a_, t2);
+    t4 = f_.mulf(k3b, t4);
+    t1 = f_.addf(t1, t2);
+    t2 = f_.subf(t0, t2);
+    t2 = f_.mulf(a_, t2);
+    t4 = f_.addf(t4, t2);
+    t0 = f_.mulf(t1, t4);
+    Y3t = f_.addf(Y3t, t0);
+    t0 = f_.mulf(t5, t4);
+    X3t = f_.mulf(t3, X3t);
+    X3t = f_.subf(X3t, t0);
+    t0 = f_.mulf(t3, t1);
+    Z3t = f_.mulf(t5, Z3t);
+    Z3t = f_.addf(Z3t, t0);
 
-    X3o = X3;
-    Y3o = Y3;
-    Z3o = Z3;
+    X3 = X3t;
+    Y3 = Y3t;
+    Z3 = Z3t;
   }
 
-  /* From Algorithm 6: Exception-free point doubling for prime order short
-   * Weierstrass curves E/Fq : y^2 = x^3 + ax + b with a = −3.
-   */
-  void doubleEMinus3A(Elt& X3o, Elt& Y3o, Elt& Z3o, const Elt& X, const Elt& Y,
-                      const Elt& Z) const {
+  // https://eprint.iacr.org/2015/1060.pdf Algorithm 3
+  void doubleE(Elt& X3, Elt& Y3, Elt& Z3, Elt X, Elt Y, Elt Z) const {
     Elt t0 = f_.mulf(X, X);
     Elt t1 = f_.mulf(Y, Y);
     Elt t2 = f_.mulf(Z, Z);
     Elt t3 = f_.mulf(X, Y);
     t3 = f_.addf(t3, t3);
-    Elt Z3 = f_.mulf(X, Z);
-    Z3 = f_.addf(Z3, Z3);
-    Elt Y3 = f_.mulf(b_, t2);
-    Y3 = f_.subf(Y3, Z3);
-    Elt X3 = f_.addf(Y3, Y3);
-    Y3 = f_.addf(X3, Y3);
-    X3 = f_.subf(t1, Y3);
-    Y3 = f_.addf(t1, Y3);
-    Y3 = f_.mulf(X3, Y3);
-    X3 = f_.mulf(X3, t3);
-    t3 = f_.addf(t2, t2);
-    t2 = f_.addf(t2, t3);
-    Z3 = f_.mulf(b_, Z3);
-    Z3 = f_.subf(Z3, t2);
-    Z3 = f_.subf(Z3, t0);
-    t3 = f_.addf(Z3, Z3);
-    Z3 = f_.addf(Z3, t3);
-    t3 = f_.addf(t0, t0);
-    t0 = f_.addf(t3, t0);
-    t0 = f_.subf(t0, t2);
-    t0 = f_.mulf(t0, Z3);
-    Y3 = f_.addf(Y3, t0);
-    t0 = f_.mulf(Y, Z);
-    t0 = f_.addf(t0, t0);
-    Z3 = f_.mulf(t0, Z3);
-    X3 = f_.subf(X3, Z3);
-    Z3 = f_.mulf(t0, t1);
-    Z3 = f_.addf(Z3, Z3);
-    Z3 = f_.addf(Z3, Z3);
+    Elt Z3t = f_.mulf(X, Z);
+    Z3t = f_.addf(Z3t, Z3t);
+    Elt X3t = f_.mulf(a_, Z3t);
+    Elt Y3t = f_.mulf(k3b, t2);
+    Y3t = f_.addf(X3t, Y3t);
+    X3t = f_.subf(t1, Y3t);
+    Y3t = f_.addf(t1, Y3t);
+    Y3t = f_.mulf(X3t, Y3t);
+    X3t = f_.mulf(t3, X3t);
+    Z3t = f_.mulf(k3b, Z3t);
+    t2 = f_.mulf(a_, t2);
+    t3 = f_.subf(t0, t2);
+    t3 = f_.mulf(a_, t3);
+    t3 = f_.addf(t3, Z3t);
+    Z3t = f_.addf(t0, t0);
+    t0 = f_.addf(Z3t, t0);
+    t0 = f_.addf(t0, t2);
+    t0 = f_.mulf(t0, t3);
+    Y3t = f_.addf(Y3t, t0);
+    t2 = f_.mulf(Y, Z);
+    t2 = f_.addf(t2, t2);
+    t0 = f_.mulf(t2, t3);
+    X3t = f_.subf(X3t, t0);
+    Z3t = f_.mulf(t2, t1);
+    Z3t = f_.addf(Z3t, Z3t);
+    Z3t = f_.addf(Z3t, Z3t);
 
-    X3o = X3;
-    Y3o = Y3;
-    Z3o = Z3;
+    X3 = X3t;
+    Y3 = Y3t;
+    Z3 = Z3t;
   }
 
-  /* From  Algorithm 9: Exception-free point doubling for prime order
-    j-invariant 0 short Weierstrass curves E/Fq y^2 = x^3 + b
-
-    X3 = 2XY (YY − 9bZZ)
-    Y3 = (YY − 9bZZ)(YY + 3bZZ) + 24bYYZZ
-    Z3 = 8YYYZ.
-  */
-  void doubleEZeroA(Elt& X3o, Elt& Y3o, Elt& Z3o, const Elt& X, const Elt& Y,
-                    const Elt& Z) const {
-    Elt t0 = f_.mulf(X, Y);
-    Elt t1 = f_.mulf(Y, Y);
-    Elt t2 = f_.mulf(Z, Z);
-    Elt t4 = f_.mulf(Y, Z);
-    Elt t5 = f_.mulf(k9b, t2);  // 9bZZ
-    Elt t6 = f_.subf(t1, t5);   // YY - 9bZZ
-    Elt t7 = f_.mulf(k3b, t2);  // 3bZZ
-    Elt t8 = f_.addf(t1, t7);   // YY + 3bZZ
-    X3o = f_.mulf(k2, f_.mulf(t0, t6));
-    Y3o = f_.addf(f_.mulf(t6, t8), f_.mulf(k24b, f_.mulf(t1, t2)));
-    Z3o = f_.mulf(k8, f_.mulf(t1, t4));
+  // Testing support
+  ECPoint point(const Elt& x, const Elt& y) const {
+    ECPoint p(x, y, f_.one());
+    check(is_on_curve(p), "Invalid curve point");
+    return p;
+  }
+  bool is_on_curve(const Elt& x, const Elt& y) const {
+    ECPoint p(x, y, f_.one());
+    return is_on_curve(p);
   }
 
+ private:
   //------------------------------------------------------------
   // Multi-exponentiation SUM_i scalarMult(p[i], s[i])
 
@@ -587,9 +405,6 @@ class EllipticCurve {
     }
     return res;
   }
-
-  bool is_zero_a_;
-  bool is_minus_3_a_;
 };
 }  // namespace proofs
 

@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -87,7 +87,7 @@ class MdocSignature {
   //    4. The MAC of the device public key (dpkX, dpky) under the secret MAC
   //       key (a_v + apdk) is mac_dkpX and mac_dpkY respectively.
   void assert_signatures(EltW pkX, EltW pkY, EltW hash_tr, v128 mac_e[2],
-                         v128 mac_dpkX[2], v128 mac_dpkY[2], v128 a_v,
+                         v128 mac_dpkX[2], v128 mac_dpkY[2], const v128& a_v,
                          Witness& vw) const {
     Ecdsa ecc(lc_, ec_, order_);
     mac macc(lc_);
@@ -109,9 +109,9 @@ class MdocSignature {
   // ensuring that issuer_pkY[i] != -issuer_pkY[j] for i != j.
   // However, it is OK for the caller to repeat the same key in the list.
   void assert_signatures_with_issuer_list(
-      EltW hash_tr, v128 mac_e[2], v128 mac_dpkX[2], v128 mac_dpkY[2], v128 a_v,
-      EltW issuer_pkX[/*max_issuers*/], EltW issuer_pkY[/*max_issuers*/],
-      size_t max_issuers,
+      EltW hash_tr, v128 mac_e[2], v128 mac_dpkX[2], v128 mac_dpkY[2],
+      const v128& a_v, EltW issuer_pkX[/*max_issuers*/],
+      EltW issuer_pkY[/*max_issuers*/], size_t max_issuers,
       // private inputs begin here
       EltW pkX, EltW pkY, Witness& vw) const {
     assert_signatures(pkX, pkY, hash_tr, mac_e, mac_dpkX, mac_dpkY, a_v, vw);
@@ -129,14 +129,12 @@ class MdocSignature {
     // imposed on issuer_pkY, we know that issuer_pkY[j] is on the curve, and
     // that -issuer_pkY[j] does not occur in the issuer_pkY list.  Thus, it is
     // not possible for a witness to pass all checks and for k != j.
-    EltW goodXKey = lc_.mul(0, max_issuers, [&](size_t i) {
-      return lc_.sub(&issuer_pkX[i], pkX);
-    });
+    EltW goodXKey = lc_.mul(
+        0, max_issuers, [&](size_t i) { return lc_.sub(issuer_pkX[i], pkX); });
     lc_.assert0(goodXKey);
 
-    EltW goodYKey = lc_.mul(0, max_issuers, [&](size_t i) {
-      return lc_.sub(&issuer_pkY[i], pkY);
-    });
+    EltW goodYKey = lc_.mul(
+        0, max_issuers, [&](size_t i) { return lc_.sub(issuer_pkY[i], pkY); });
     lc_.assert0(goodYKey);
   }
 };

@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,6 +43,19 @@ extern "C" {
 // }
 
 const ZkSpecStruct kZkSpecs[kNumZkSpecs] = {
+    // Circuits produced 2026-01-09
+    {"longfellow-libzk-v1",
+     "8d079211715200ff06c5109639245502bfe94aa869908d31176aae4016182121", 1, 7,
+     4151, 4096},
+    {"longfellow-libzk-v1",
+     "6a5810683e62b6d7766ebd0d7ca72518a2b8325418142adcadb10d51dbbcd5ad", 2, 7,
+     4265, 4096},
+    {"longfellow-libzk-v1",
+     "8ee4849ae1293ae6fe5f9082ce3e5e15c4f198f2998c682fa1b727237d6d252f", 3, 7,
+     4307, 4096},
+    {"longfellow-libzk-v1",
+     "5aebdaaafe17296a3ef3ca6c80c6e7505e09291897c39700410a365fb278e460", 4, 7,
+     4415, 4096},
     // Circuits produced on 2025-10-10
     {"longfellow-libzk-v1",
      "137e5a75ce72735a37c8a72da1a8a0a5df8d13365c2ae3d2c2bd6a0e7197c7c6", 1, 6,
@@ -70,39 +83,15 @@ const ZkSpecStruct kZkSpecs[kNumZkSpecs] = {
      "fa5fadfb2a916d3b71144e9b412eff78f71fd6a6d4607eac10de66b195868b7a", 4, 5,
      4283, 2945},
 
-    // Circuits produced on 2025-07-22.
-    {"longfellow-libzk-v1",
-     "89288b9aa69d2120d211618fcca8345deb4f85d2e710c220cc9c059bbee4c91f", 1, 4,
-     4096, 4096},
-    {"longfellow-libzk-v1",
-     "d260f7ef1bc82a25ad174d61a9611ba4a6e0c8f2f8520d2b6ea1549c79abcd55", 2, 4,
-     4096, 4096},
-    {"longfellow-libzk-v1",
-     "77aa19bdb547b68a30deb37b94d3a506222a455806afcddda88d591493e9a689", 3, 4,
-     4096, 4096},
-    {"longfellow-libzk-v1",
-     "31bc7c86c71871dad73619e7da7c5a379221602a3f28ea991b05da1ef656d13c", 4, 4,
-     4096, 4096},
-
-    // Circuits produced on 2025-06-13
-    {"longfellow-libzk-v1",
-     "bd3168ea0a9096b4f7b9b61d1c210dac1b7126a9ec40b8bc770d4d485efce4e9", 1, 3,
-     4096, 4096},
-    {"longfellow-libzk-v1",
-     "40b2b68088f1d4c93a42edf01330fed8cac471cdae2b192b198b4d4fc41c9083", 2, 3,
-     4096, 4096},
-    {"longfellow-libzk-v1",
-     "99a5da3739df68c87c7a380cc904bb275dbd4f1b916c3d297ba9d15ee86dd585", 3, 3,
-     4096, 4096},
-    {"longfellow-libzk-v1",
-     "5249dac202b61e03361a2857867297ee7b1d96a8a4c477d15a4560bde29f704f", 4, 3,
-     4096, 4096},
 };
 
-const ZkSpecStruct *find_zk_spec(const char *system_name,
-                                 const char *circuit_hash) {
+const ZkSpecStruct* find_zk_spec(const char* system_name,
+                                 const char* circuit_hash) {
+  if (system_name == nullptr || circuit_hash == nullptr) {
+    return nullptr;
+  }
   for (size_t i = 0; i < kNumZkSpecs; ++i) {
-    const ZkSpecStruct &zk_spec = kZkSpecs[i];
+    const ZkSpecStruct& zk_spec = kZkSpecs[i];
     if (strcmp(zk_spec.system, system_name) == 0 &&
         strcmp(zk_spec.circuit_hash, circuit_hash) == 0) {
       return &zk_spec;

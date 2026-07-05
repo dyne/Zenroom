@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,9 @@
 #include "arrays/affine.h"
 #include "circuits/compiler/node.h"
 #include "sumcheck/circuit.h"
+#include "sumcheck/equad.h"
 #include "sumcheck/quad.h"
+#include "sumcheck/quad_builder.h"
 #include "util/ceildiv.h"
 #include "util/panic.h"
 
@@ -412,11 +414,11 @@ class Scheduler {
     }
     nquad_terms_ += nterms0;
 
-    auto S = std::make_unique<Quad<Field>>(nterms0);
+    auto S = std::make_unique<EQuad<Field>>(nterms0);
     size_t i = 0;
     for (const auto& ln0 : lnodes0) {
       for (const auto& lt : ln0.lterms) {
-        S->c_[i++] = typename Quad<Field>::corner{
+        S->ec_[i++] = typename EQuad<Field>::ecorner{
             .g = ln0.desired_wire_id,
             .h = {lnodes1.at(static_cast<size_t>(lt.lop0)).desired_wire_id,
                   lnodes1.at(static_cast<size_t>(lt.lop1)).desired_wire_id},
@@ -424,7 +426,7 @@ class Scheduler {
       }
     }
     S->canonicalize(f_);
-    return S;
+    return QuadBuilder<Field>::compress(S.get(), f_);
   }
 };
 

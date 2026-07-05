@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -100,43 +100,40 @@ class FlatSHA256Circuit {
     }
 
     for (size_t i = 16; i < 64; ++i) {
-      auto sw2 = sigma1(w[i - 2]);
-      auto sw15 = sigma0(w[i - 15]);
-      std::vector<v32> terms = {sw2, w[i - 7], sw15, w[i - 16]};
       w[i] = outw[i - 16];
-      BA.assert_eqmod(w[i], BA.add(terms), 4);
+      BA.assert_eqmod(
+          w[i],
+          BA.add({sigma1(w[i - 2]), w[i - 7], sigma0(w[i - 15]), w[i - 16]}),
+          4);
     }
 
-    v32 a = H0[0];
-    v32 b = H0[1];
-    v32 c = H0[2];
-    v32 d = H0[3];
-    v32 e = H0[4];
-    v32 f = H0[5];
-    v32 g = H0[6];
-    v32 h = H0[7];
+    v32 a(H0[0]);
+    v32 b(H0[1]);
+    v32 c(H0[2]);
+    v32 d(H0[3]);
+    v32 e(H0[4]);
+    v32 f(H0[5]);
+    v32 g(H0[6]);
+    v32 h(H0[7]);
 
     for (size_t t = 0; t < 64; ++t) {
-      auto s1e = Sigma1(e);
-      auto ch = L.vCh(&e, &f, g);
-      auto rt = L.vbit32(kSha256Round[t]);
-      std::vector<v32> t1_terms = {h, s1e, ch, rt, w[t]};
-      EltW t1 = BA.add(t1_terms);
+      EltW t1 = BA.add(
+          {h, Sigma1(e), L.vCh(e, f, g), L.vbit32(kSha256Round[t]), w[t]});
       EltW sigma0 = BA.as_field_element(Sigma0(a));
-      EltW vmaj = BA.as_field_element(L.vMaj(&a, &b, c));
-      EltW t2 = BA.add(&sigma0, vmaj);
+      EltW vmaj = BA.as_field_element(L.vMaj(a, b, c));
+      EltW t2 = BA.add(sigma0, vmaj);
 
       h = g;
       g = f;
       f = e;
       e = oute[t];
       EltW ed = BA.as_field_element(d);
-      BA.assert_eqmod(e, BA.add(&t1, ed), 6);
+      BA.assert_eqmod(e, BA.add(t1, ed), 6);
       d = c;
       c = b;
       b = a;
       a = outa[t];
-      BA.assert_eqmod(a, BA.add(&t1, t2), 7);
+      BA.assert_eqmod(a, BA.add(t1, t2), 7);
     }
 
     BA.assert_eqmod(H1[0], BA.add(H0[0], a), 2);
@@ -242,10 +239,10 @@ class FlatSHA256Circuit {
       for (size_t i = 0; i < 8; ++i) {
         for (size_t k = 0; k < bp_.kNv32Elts; ++k) {
           if (b == 0) {
-            x[i][k] = l_.mul(&ebt, bw[b].h1[i][k]);
+            x[i][k] = l_.mul(ebt, bw[b].h1[i][k]);
           } else {
-            auto maybe_sha = l_.mul(&ebt, bw[b].h1[i][k]);
-            x[i][k] = l_.add(&x[i][k], maybe_sha);
+            auto maybe_sha = l_.mul(ebt, bw[b].h1[i][k]);
+            x[i][k] = l_.add(x[i][k], maybe_sha);
           }
         }
       }
@@ -259,19 +256,19 @@ class FlatSHA256Circuit {
         mm[((7 - j) * 32 + k)] = hj[k];
       }
     }
-    l_.vassert_eq(&mm, e);
+    l_.vassert_eq(mm, e);
   }
 
   // Checks that the padding bytes of the input, i.e., any bytes that are
   // not part of the SHA blocks that contain the mdoc, are zero.
-  void assert_zero_padding(size_t max, const v8 nb,
+  void assert_zero_padding(size_t max, const v8& nb,
                            const v8 in[/*64 * max*/]) const {
     for (size_t i = 0; i < max; ++i) {
       auto wantzero = l_.vleq(nb, i);  // If nb <= i, block should be 0.
       for (size_t j = 0; j < 64; ++j) {
         size_t ind = i * 64 + j;
         auto zero = l_.veq(in[ind], 0);
-        l_.assert_implies(&wantzero, zero);
+        l_.assert_implies(wantzero, zero);
       }
     }
   }
@@ -279,14 +276,14 @@ class FlatSHA256Circuit {
   // This function extracts the length of the message in bytes from the SHA
   // block that is verified and also performs other sanity checks on the length.
   // The length in bits is stored in the last 8 bytes of the nb_th SHA block.
-  v64 find_len(size_t max, const v8 in[/*64*max*/], const v8 nb) const {
+  v64 find_len(size_t max, const v8 in[/*64*max*/], const v8& nb) const {
     v64 len = l_.template vbit<64>(0);
     for (size_t i = 0; i < max; ++i) {
       auto isblk = l_.veq(nb, i + 1);  // If nb == i, i is zero-indexed.
       size_t ind = i * 64 + 63;
       for (size_t j = 0; j < 64; ++j) { /* this loop is over bits */
         len[j] =
-            l_.lor_exclusive(&len[j], l_.land(&isblk, in[ind - j / 8][j % 8]));
+            l_.lor_exclusive(len[j], l_.land(isblk, in[ind - j / 8][j % 8]));
       }
     }
     l_.vassert_is_bit(len);
@@ -306,25 +303,25 @@ class FlatSHA256Circuit {
   v32 Sigma0(const v32& x) const {
     auto x2 = l_.vrotr(x, 2);
     auto x13 = l_.vrotr(x, 13);
-    return l_.vxor3(&x2, &x13, l_.vrotr(x, 22));
+    return l_.vxor3(x2, x13, l_.vrotr(x, 22));
   }
 
   v32 Sigma1(const v32& x) const {
     auto x6 = l_.vrotr(x, 6);
     auto x11 = l_.vrotr(x, 11);
-    return l_.vxor3(&x6, &x11, l_.vrotr(x, 25));
+    return l_.vxor3(x6, x11, l_.vrotr(x, 25));
   }
 
   v32 sigma0(const v32& x) const {
     auto x7 = l_.vrotr(x, 7);
     auto x18 = l_.vrotr(x, 18);
-    return l_.vxor3(&x7, &x18, l_.vshr(x, 3));
+    return l_.vxor3(x7, x18, l_.vshr(x, 3));
   }
 
   v32 sigma1(const v32& x) const {
     auto x17 = l_.vrotr(x, 17);
     auto x19 = l_.vrotr(x, 19);
-    return l_.vxor3(&x17, &x19, l_.vshr(x, 10));
+    return l_.vxor3(x17, x19, l_.vshr(x, 10));
   }
 };
 

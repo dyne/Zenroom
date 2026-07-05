@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "circuits/cbor_parser/cbor_byte_decoder.h"
 #include "circuits/logic/bit_plucker.h"
 #include "circuits/logic/memcmp.h"
 #include "circuits/logic/routing.h"
@@ -41,6 +42,7 @@ static constexpr size_t kSHAPluckerBits = 4u;
 //       and the preimage includes the expected attribute id and value.
 template <class LogicCircuit, class Field>
 class MdocHash {
+  using BitW = typename LogicCircuit::BitW;
   using v8 = typename LogicCircuit::v8;
   using v32 = typename LogicCircuit::v32;
   using v64 = typename LogicCircuit::v64;
@@ -59,7 +61,12 @@ class MdocHash {
   struct OpenedAttribute {
     v8 attr[32]; /* 32b representing attribute name in be. */
     v8 v1[64];   /* 64b of attribute value */
-    v8 len;      /* public length of the encoded attribute id and value */
+    // NOTE: although these arrays are sized {32,64}, other aspects of the
+    // system constrain the sum of the elementIdentifier and elementValue to be
+    // at most 56 bytes for a proof to succeed.  We will maintain this API, but
+    // publish the constraint about the sum in the documentation.
+    v8 len;      /* public length of the encoded attribute id */
+    v8 vlen;     /* public length of the encoded attribute value */
     void input(const LogicCircuit& lc) {
       for (size_t j = 0; j < 32; ++j) {
         attr[j] = lc.template vinput<8>();
@@ -68,6 +75,7 @@ class MdocHash {
         v1[j] = lc.template vinput<8>();
       }
       len = lc.template vinput<8>();
+      vlen = lc.template vinput<8>();
     }
   };
   struct CborIndex {
@@ -83,6 +91,21 @@ class MdocHash {
     void input(const LogicCircuit& lc) {
       offset = lc.template vinput<kCborIndexBits>();
       len = lc.template vinput<kCborIndexBits>();
+    }
+  };
+
+  struct SaltedHash {
+    vind i1, i2, i3;
+    vind l[4];
+    v8 perm;
+    void input(const LogicCircuit& lc) {
+      i1 = lc.template vinput<kCborIndexBits>();
+      i2 = lc.template vinput<kCborIndexBits>();
+      i3 = lc.template vinput<kCborIndexBits>();
+      for (size_t j = 0; j < 4; ++j) {
+        l[j] = lc.template vinput<kCborIndexBits>();
+      }
+      perm = lc.template vinput<8>();
     }
   };
 
@@ -102,6 +125,7 @@ class MdocHash {
     std::vector<CborIndex> attr_mso_;
     std::vector<AttrShift> attr_ei_;
     std::vector<AttrShift> attr_ev_;
+    std::vector<SaltedHash> salted_hashes_;
     size_t num_attr_;
 
     explicit Witness(size_t num_attr) {
@@ -110,6 +134,7 @@ class MdocHash {
       attr_ei_.resize(num_attr);
       attr_ev_.resize(num_attr);
       attr_sha_.resize(num_attr);
+      salted_hashes_.resize(num_attr);
       for (size_t i = 0; i < num_attr; ++i) {
         attr_sha_[i].resize(2);
       }
@@ -144,11 +169,13 @@ class MdocHash {
         attr_mso_[ai].input(lc);
         attr_ei_[ai].input(lc);
         attr_ev_[ai].input(lc);
+        salted_hashes_[ai].input(lc);
       }
     }
   };
 
-  explicit MdocHash(const LogicCircuit& lc) : lc_(lc), sha_(lc), r_(lc) {}
+  explicit MdocHash(const LogicCircuit& lc)
+      : lc_(lc), sha_(lc), r_(lc), cb_(lc) {}
 
   void assert_valid_hash_mdoc(OpenedAttribute oa[/* NUM_ATTR */],
                               const v8 now[/*20*/], const v256& e,
@@ -206,15 +233,33 @@ class MdocHash {
              vw.in_ + 5 + 2, zz, /*unroll=*/3);
     assert_bytes_at(13, &cmp_buf[0], kValueDigestsCheck);
 
-    // Attributes: Equality of hash with MSO value
+    // Attributes: Equality of hash with MSO value.
+
     for (size_t ai = 0; ai < vw.num_attr_; ++ai) {
-      v8 B[96];
-      // Check the hash matches the value in the signed MSO.
+      // Recall that the MSO contains a hash value e2 where
+      //   e2 = hash( cbor.bstr( IssuerSignedItem ))
+      // and IssuerSignedItem is a CBOR structure defined as:
+      // IssuerSignedItem = {
+      //     "digestID" : uint,
+      //     "random" : bstr,
+      //     "elementIdentifier" : DataElementIdentifier,
+      //     "elementValue" : DataElementValue };
+      // The order of the elements in the IssuerSignedItem is not specified.
+      //
+      // The constraints below verify the following:
+      //     1. the index attr_mso_[ai].k < len(mso)
+      //     2. a 32-byte cbor array e2 occurs at index attr_mso_[ai].k in mso
+      //     -- attrb_[ai] is a SHA-256 length-padded 128-byte witness array
+      //     3. e2 = hash(attrb_[ai].data())
+      //     4. sl is the length of attrb_[ai] as per the SHA-256 padding rule
+      //     5. The attrb_[ai] array is well-formed cbor that includes the
+      //        expected elementIdentifier, and elementValue fields as per the
+      //        public oa[ai] argument.
       check_index(vw.attr_mso_[ai].k, len);
       r_.shift(vw.attr_mso_[ai].k, 2 + 32, &cmp_buf[0], kMaxMsoLen,
                vw.in_ + 5 + 2, zz, /*unroll=*/3);
 
-      // Basic CBOR check of the Tag
+      // 2. Basic CBOR check of the Tag
       assert_bytes_at(2, &cmp_buf[0], kTag32);
 
       v256 mm;
@@ -224,16 +269,17 @@ class MdocHash {
       }
       lc_.vassert_is_bit(mm);
 
+      // 3. Check the hash matches the value in the witness.
       auto two = lc_.template vbit<8>(2);
       sha_.assert_message_hash(2, two, vw.attrb_[ai].data(), mm,
                                vw.attr_sha_[ai].data());
 
+      // 4. Check the length of the witness.
       v64 salted_len = sha_.find_len(2, vw.attrb_[ai].data(), two);
 
-      // Check that the attribute_id and value occur in the hashed text.
-      check_index(vw.attr_ei_[ai].offset, salted_len);
-      r_.shift(vw.attr_ei_[ai].offset, 96, B, 128, vw.attrb_[ai].data(), zz, 3);
-      assert_attribute(96, oa[ai].len, B, oa[ai]);
+      // 5. Check the attribute is well-formed and matches the public argument.
+      assert_attribute(128, vw.attrb_[ai].data(), vw.salted_hashes_[ai], oa[ai],
+                       salted_len);
     }
   }
 
@@ -250,15 +296,10 @@ class MdocHash {
     return bbuf;
   }
 
-  // Checks that the index is less than the length. The len is given as bits
-  // in a v64 in big endian order, and the index is given as a byte index.
-  void check_index(vind index, v64 len) const {
-    lc_.vassert_is_bit(index);
+  vind extract_vind(const v64& len) const {
     auto low = lc_.template slice<0, 3>(len);
     auto mid = lc_.template slice<3, 3 + kCborIndexBits>(len);
     auto hi = lc_.template slice<3 + kCborIndexBits, 64>(len);
-    lc_.assert1(lc_.vlt(&index, mid));
-
     // Because check_index is called on several indices, the following two
     // checks will be called several times. However, the compiler removes
     // redundant checks, and it is convenient to verify the ranges in one
@@ -267,44 +308,196 @@ class MdocHash {
     // this method, but that separates the logic, and this is easier to audit.
     lc_.vassert0(low);
     lc_.vassert0(hi);
+    return mid;
+  }
+
+  // Checks that the index is less than the length. The len is given as bits
+  // in a v64 in big endian order, and the index is given as a byte index.
+  void check_index(const vind& index, const v64& len) const {
+    lc_.vassert_is_bit(index);
+    auto mid = extract_vind(len);
+    lc_.assert1(lc_.vlt(index, mid));
   }
 
   void assert_bytes_at(size_t len, const v8 buf[/*>=len*/],
                        const uint8_t want[/*len*/]) const {
     for (size_t i = 0; i < len; ++i) {
       auto want_i = lc_.template vbit<8>(want[i]);
-      lc_.vassert_eq(&buf[i], want_i);
+      lc_.vassert_eq(buf[i], want_i);
     }
   }
 
-  // Checks that an attribute id or attribute value is as expected.
-  // The len parameter holds the byte length of the expected id or value.
-  void assert_attribute(size_t max, const v8& len, const v8 got[/*max*/],
-                        const OpenedAttribute& oa) const {
-    // Copy the attribute id and value into a single array.
-    v8 want[96];
-    for (size_t j = 0; j < 32; ++j) {
-      want[j] = oa.attr[j];
+  void format_element(v8 buf[/*max*/], size_t max,
+                      const uint8_t prefix[/*prefix_len*/], size_t prefix_len,
+                      const v8 str[/*str_len*/], size_t str_len) const {
+    for (size_t i = 0; i < max; ++i) {
+      buf[i] = lc_.template vbit<8>(0);
     }
-    for (size_t j = 0; j < 64; ++j) {
-      want[32 + j] = oa.v1[j];
+    for (size_t i = 0; i < prefix_len; ++i) {
+      buf[i] = lc_.template vbit<8>(prefix[i]);
+    }
+    for (size_t i = 0; i < str_len && prefix_len + i < max; ++i) {
+      buf[prefix_len + i] = str[i];
+    }
+  }
+
+  // This function verifies that the length of a cbor key-value pair in an array
+  // matches the claimed length.
+  //    key_len: the length of the key with its header byte included.
+  //    val_hdr_index: the index of the value's cbor header
+  //                   byte in the buffer.
+  //    atom:  true if the value is an atom, e.g., the digestID.
+  //           false it is a string or array.
+  void check_cbor_length(const v8 buf[/*max*/], size_t max,
+                         const vind& expected_len, size_t val_hdr_index,
+                         bool atom = false) const {
+    // The length of a key-value field for a known key will be:
+    // len(encoding of key) + len(key) + len(header of value) + len(value)
+
+    auto cbor = cb_.decode_one_v8(buf[val_hdr_index]);
+    lc_.assert0(cbor.invalid);
+
+    vind l1 = lc_.template vbit<kCborIndexBits>(0),  // len of value
+        l2 = lc_.template vbit<kCborIndexBits>(0);   // len of header of value
+    vind one = lc_.template vbit<kCborIndexBits>(1),
+         two = lc_.template vbit<kCborIndexBits>(2);
+    if (!atom) {
+      // Mux the length of the value into l1.
+      // In this case, the value is either encoded in the last 5 bits of the
+      // header byte, or in the next byte.  The array length is < 256 by
+      // external constraints, and thus its length is in 1 or 2 bytes.
+      for (size_t j = 0; j < 8; ++j) {
+        l1[j] = lc_.mux(cbor.length_plus_next_v8, buf[val_hdr_index + 1][j],
+                        j < 5 ? buf[val_hdr_index][j] : lc_.bit(0));
+      }
+      lc_.vmux(cbor.length_plus_next_v8, l2, two, one);
+    } else {
+      // For atoms, the value length is zero. The header length is 1,2,3, or 5
+      // because the digestID is constrained to be < 2^31 [18013-5, 9.1.2.4].
+      lc_.assert0(cbor.count27);
+      l2[2] = cbor.count26;
+      l2[1] = lc_.lor(cbor.count24, cbor.count25);
+      l2[0] = lc_.lnot(cbor.count24);
     }
 
-    // Perform an equality check on the first len bytes.
-    for (size_t j = 0; j < max; ++j) {
-      auto ll = lc_.vlt(j, len);
-      auto same = lc_.eq(8, got[j].data(), want[j].data());
-      lc_.assert_implies(&ll, same);
+    // Compute the read length.
+    vind k_len = lc_.template vbit<kCborIndexBits>(val_hdr_index);
+    vind v_len = lc_.template vadd<kCborIndexBits>(l1, l2);
+    lc_.assert_sum(kCborIndexBits, expected_len.data(), k_len.data(),
+                   v_len.data());
+  }
+
+  // assert_attribute checks that the bytes in buf correspond to a valid
+  // cbor structure that encodes the OpenedAttribute oa.
+  void assert_attribute(size_t max, const v8 buf[/*max*/], const SaltedHash& sh,
+                        const OpenedAttribute& oa,
+                        const v64& salted_len) const {
+    // Perform a cbor parsing of the buffer, which is expected to be
+    // a 4-element key-value array consisting of keys digestId, random,
+    // elementIdentifier, and elementValue. Then perform a check on the
+    // last two.  The complexity of check stems from the fact that the 4 pairs
+    // can occur in any order.
+    // The prover provides the following witnesses in SaltedHash:
+    // -- (5, l0), (i1, l1), (i2, l2), (i3, l3)
+    //    where li is the length of the i-th element in bytes.
+    // -- j7j6 j5j4 j3j2 j1j0 where ji \in {0,1}, and
+    //    j1j0: specifies the index in the previous array of digestId
+    //    j3j2: specifies the index in the previous array of random
+    //    j5j4: specifies the index in the previous array of elementIdentifier
+    //    j7j6: specifies the index in the previous array of elementValue
+
+    // Verify the cbor prefix for IssuerSignedItem.
+    static const uint8_t cbor_tag[] = {0xD8, 0x18, 0x58};
+    static const uint8_t cbor_array[] = {0xA4};
+    assert_bytes_at(3, buf, cbor_tag);
+    assert_bytes_at(1, &buf[4], cbor_array);
+
+    // Verify all of the indices and lengths are contiguous and consistent.
+    vind five = lc_.template vbit<kCborIndexBits>(5);
+    vind tot = extract_vind(salted_len);
+    lc_.assert_sum(kCborIndexBits, sh.i1.data(), five.data(), sh.l[0].data());
+    lc_.assert_sum(kCborIndexBits, sh.i2.data(), sh.i1.data(), sh.l[1].data());
+    lc_.assert_sum(kCborIndexBits, sh.i3.data(), sh.i2.data(), sh.l[2].data());
+    lc_.assert_sum(kCborIndexBits, tot.data(), sh.i3.data(), sh.l[3].data());
+
+    // Verify expected structure of the salted hash cbor array.
+    vind shift, len;
+    const size_t MAX_BUF = 119;
+    v8 got[MAX_BUF];  // Max buffer length for a 2-block SHA hash.
+    const v8 zz = lc_.template vbit<8>(0);  // cannot appear in strings
+
+    // Shift each of the 4 fields into place, and perform consistency checks.
+    // "digestID" checks the cbor key and consistency with the total length.
+    mux_offset(0, shift, len, sh);
+    r_.shift(shift, MAX_BUF, got, max, buf, zz, 3);
+    assert_bytes_at(kDigestLen, &got[0], kDigestID);
+    check_cbor_length(got, MAX_BUF, len, 9, true);
+
+    // "random" checks the cbor key and consistency with the total length.
+    mux_offset(1, shift, len, sh);
+    r_.shift(shift, MAX_BUF, got, max, buf, zz, 3);
+    assert_bytes_at(kRandomLen, &got[0], kRandomID);
+    check_cbor_length(got, MAX_BUF, len, 7);
+
+    const size_t MAX_EI =
+        1 + 17 + 32;  // The 32/64 includes len of any headers.
+    const size_t MAX_EV = 1 + 12 + 64;
+    v8 want_ei[MAX_EI], want_ev[MAX_EV];
+    uint8_t ei_bytes[] = {0x60 + 17, 'e', 'l', 'e', 'm', 'e', 'n', 't', 'I',
+                          'd',       'e', 'n', 't', 'i', 'f', 'i', 'e', 'r'};
+    uint8_t ev_bytes[] = {0x60 + 12, 'e', 'l', 'e', 'm', 'e', 'n',
+                          't',       'V', 'a', 'l', 'u', 'e'};
+    format_element(want_ei, MAX_EI, ei_bytes, sizeof(ei_bytes), oa.attr, 32);
+    format_element(want_ev, MAX_EV, ev_bytes, sizeof(ev_bytes), oa.v1, 64);
+
+    // "elementIdentifier" checks the full cbor key-value, because it is public.
+    mux_offset(2, shift, len, sh);
+    r_.shift(shift, MAX_BUF, got, max, buf, zz, 3);
+    for (size_t j = 0; j < MAX_EI; ++j) {
+      auto ll = lc_.vlt(j, oa.len);
+      for (size_t i = 0; i < 8; ++i) {
+        auto same = lc_.eq(1, &got[j][i], &want_ei[j][i]);
+        lc_.assert_implies(ll, same);
+      }
     }
+    v8 tmp;
+    std::copy(len.begin(), len.begin() + 8, tmp.begin());  // cast vind into v8.
+    lc_.vassert_eq(tmp, oa.len);
+
+    // "elementValue" checks the full cbor key-value, because it is public.
+    mux_offset(3, shift, len, sh);
+    r_.shift(shift, MAX_BUF, got, max, buf, zz, 3);
+    for (size_t j = 0; j < MAX_EV; ++j) {
+      auto ll = lc_.vlt(j, oa.vlen);
+      for (size_t i = 0; i < 8; ++i) {
+        auto same = lc_.eq(1, &got[j][i], &want_ev[j][i]);
+        lc_.assert_implies(ll, same);
+      }
+    }
+    std::copy(len.begin(), len.begin() + 8, tmp.begin());  // cast vind into v8.
+    lc_.vassert_eq(tmp, oa.vlen);
+  }
+
+  void mux_offset(size_t slot, vind& shift, vind& len,
+                  const SaltedHash& sh) const {
+    vind t[2];
+    vind five = lc_.template vbit<kCborIndexBits>(5);
+    lc_.vmux(sh.perm[2 * slot + 1], t[0], sh.i2, five);
+    lc_.vmux(sh.perm[2 * slot + 1], t[1], sh.i3, sh.i1);
+    lc_.vmux(sh.perm[2 * slot], shift, t[1], t[0]);
+
+    lc_.vmux(sh.perm[2 * slot + 1], t[0], sh.l[2], sh.l[0]);
+    lc_.vmux(sh.perm[2 * slot + 1], t[1], sh.l[3], sh.l[1]);
+    lc_.vmux(sh.perm[2 * slot], len, t[1], t[0]);
   }
 
   // Asserts that the key is equal to the value in big-endian order in buf_be.
-  void assert_key(v256 key, const v8 buf_be[/*32*/]) const {
+  void assert_key(const v256& key, const v8 buf_be[/*32*/]) const {
     v256 m;
     for (size_t i = 0; i < 256; ++i) {
       m[i] = buf_be[31 - (i / 8)][i % 8];
     }
-    lc_.vassert_eq(&m, key);
+    lc_.vassert_eq(m, key);
   }
 
   // The constants below define the prefix of each field that is verified
@@ -354,8 +547,8 @@ class MdocHash {
   const LogicCircuit& lc_;
   Flatsha sha_;
   Routing<LogicCircuit> r_;
+  CborByteDecoder<LogicCircuit> cb_;
 };
-
 }  // namespace proofs
 
 #endif  // PRIVACY_PROOFS_ZK_LIB_CIRCUITS_MDOC_MDOC_HASH_H_

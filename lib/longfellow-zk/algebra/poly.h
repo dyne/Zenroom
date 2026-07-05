@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -64,28 +64,7 @@ class Poly {
     return *this;
   }
 
-  static T extend(const Poly<2, Field>& f, const Field& F) {
-    T g;
-    g[0] = f[0];
-    g[1] = f[1];
-    Elt df = F.subf(f[1], f[0]);
 
-    if (Field::kCharacteristicTwo) {
-      // Assume poly_evaluation_point[0] = 0, poly_evaluation_point[1] = 1,
-      // and the rest are arbitrary.
-      for (size_t i = 2; i < N; ++i) {
-        g[i] = F.addf(g[0], F.mulf(F.poly_evaluation_point(i), df));
-      }
-    } else {
-      // Assume that poly_evaluation_point[] form an arithmetic
-      // progression.
-      for (size_t i = 2; i < N; ++i) {
-        g[i] = F.addf(g[i - 1], df);
-      }
-    }
-
-    return g;
-  }
 
   // convert Lagrange basis -> Newton forward differences for the
   // special case of evaluation points 0, 1, 2, ..., N-1.
@@ -170,70 +149,7 @@ class Poly {
   };
 };
 
-// In SumcheckPoly, the p(1) is not computed in the add, sub, mul, mul_scalar
-// methods because it is implied by context. This optimization is used in the
-// inner-loop of the sumcheck prover. A convenience method is provided to
-// convert to a Poly object for use outside the inner-loop.
-template <size_t N, class Field>
-class SumcheckPoly {
- public:
-  static const size_t kN = N;
-  using Elt = typename Field::Elt;
-  using T = SumcheckPoly;
 
-  // the N-tuple itself
-  Elt t_[N];
-
-  SumcheckPoly() = default;
-
-  explicit SumcheckPoly(const Poly<N, Field>& p) {
-    for (size_t i = 0; i < N; ++i) {
-      t_[i] = p[i];
-    }
-  }
-
-  Elt& operator[](size_t i) { return t_[i]; }
-  const Elt& operator[](size_t i) const { return t_[i]; }
-
-  T& add(const T& y, const Field& F) {
-    F.add(t_[0], y[0]);
-    for (size_t i = 2; i < N; ++i) {
-      F.add(t_[i], y[i]);
-    }
-    return *this;
-  }
-  T& sub(const T& y, const Field& F) {
-    F.sub(t_[0], y[0]);
-    for (size_t i = 2; i < N; ++i) {
-      F.sub(t_[i], y[i]);
-    }
-    return *this;
-  }
-  T& mul(const T& y, const Field& F) {
-    F.mul(t_[0], y[0]);
-    for (size_t i = 2; i < N; ++i) {
-      F.mul(t_[i], y[i]);
-    }
-    return *this;
-  }
-  T& mul_scalar(const Elt& y, const Field& F) {
-    F.mul(t_[0], y);
-    for (size_t i = 2; i < N; ++i) {
-      F.mul(t_[i], y);
-    }
-    return *this;
-  }
-
-  // Convert to a Poly object by providing the p(1) explicitly.
-  Poly<N, Field> to_poly(const Elt& p1) const {
-    Poly<N, Field> p;
-    for (size_t i = 0; i < N; ++i) {
-      p[i] = t_[i];
-    }
-    p[1] = p1;
-    return p;
-  }
-};
 
 }  // namespace proofs
 
