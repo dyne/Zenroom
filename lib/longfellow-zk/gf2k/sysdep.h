@@ -361,30 +361,15 @@ static inline gf2_128_elt_t gf2_128_mul(gf2_128_elt_t x, gf2_128_elt_t y) {
   return t0;
 }
 
-using gf2_128_accum_t = std::array<gf2_128_elt_t, 3>;
+using gf2_128_accum_t = std::array<gf2_128_elt_t, 1>;
 
 static inline void gf2_128_mac(gf2_128_accum_t& acc, gf2_128_elt_t x,
                                gf2_128_elt_t y) {
-  poly8x8_t xl = vget_low_p8(x);
-  poly8x8_t xh = vget_high_p8(x);
-  poly8x8_t yl = vget_low_p8(y);
-  poly8x8_t yh = vget_high_p8(y);
-  gf2_128_elt_t t0 = pmul64x64(xl, yl);
-  gf2_128_elt_t t2 = pmul64x64(xh, yh);
-  gf2_128_elt_t t1 = pmul64x64(vadd_p8(xl, xh), vadd_p8(yl, yh));
-
-  acc[0] = gf2_128_add(acc[0], t0);
-  acc[1] = gf2_128_add(acc[1], t1);
-  acc[2] = gf2_128_add(acc[2], t2);
+  acc[0] = gf2_128_add(acc[0], gf2_128_mul(x, y));
 }
 
 static inline gf2_128_elt_t gf2_128_accum_reduce(const gf2_128_accum_t& acc) {
-  gf2_128_elt_t t0 = acc[0];
-  gf2_128_elt_t t1 = gf2_128_add(acc[1], gf2_128_add(acc[0], acc[2]));
-  gf2_128_elt_t t2 = acc[2];
-  t1 = gf2_128_reduce(t1, t2);
-  t0 = gf2_128_reduce(t0, t1);
-  return t0;
+  return acc[0];
 }
 
 }  // namespace proofs
