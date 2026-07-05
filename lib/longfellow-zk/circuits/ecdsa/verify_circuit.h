@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -178,9 +178,9 @@ class VerifyCircuit {
       EltW r_bi = rr.mux(w.bi[i]);
       EltW s_bi = ss.mux(w.bi[i]);
       auto k2 = lc_.konst(k2_);
-      est = lc_.add(&e_bi, lc_.mul(&k2, est));
-      rst = lc_.add(&r_bi, lc_.mul(&k2, rst));
-      sst = lc_.add(&s_bi, lc_.mul(&k2, sst));
+      est = lc_.add(e_bi, lc_.mul(k2, est));
+      rst = lc_.add(r_bi, lc_.mul(k2, rst));
+      sst = lc_.add(s_bi, lc_.mul(k2, sst));
       r_bits[kBits - i - 1] = BitW(r_bi, ec_.f_);
       s_bits[kBits - i - 1] = BitW(s_bi, ec_.f_);
 
@@ -202,9 +202,9 @@ class VerifyCircuit {
         // This follows by induction. The first (ax,ay,az) is on the curve.
         // The addition formula ensures that the i-th (ax,ay,az) is on the
         // curve; equality ensures that the i-th witness is on the curve.
-        lc_.assert_eq(&ax, w.int_x[i]);
-        lc_.assert_eq(&ay, w.int_y[i]);
-        lc_.assert_eq(&az, w.int_z[i]);
+        lc_.assert_eq(ax, w.int_x[i]);
+        lc_.assert_eq(ay, w.int_y[i]);
+        lc_.assert_eq(az, w.int_z[i]);
 
         // Use the intermediate (x,y,z) point as the next input.
         ax = w.int_x[i];
@@ -218,8 +218,8 @@ class VerifyCircuit {
     lc_.assert0(az);
 
     // Check that the bits used for {e,rx} correspond to the input {e, rx}.
-    lc_.assert_eq(&est, e);
-    lc_.assert_eq(&rst, w.rx);
+    lc_.assert_eq(est, e);
+    lc_.assert_eq(rst, w.rx);
 
     // Check that (pk,py), (rx,ry) satisfy the curve equation.
     is_on_curve(pk_x, pk_y);
@@ -231,34 +231,34 @@ class VerifyCircuit {
     assert_nonzero(w.rx, w.rx_inv);
     assert_nonzero(sst, w.s_inv);
     assert_nonzero(pk_x, w.pk_inv);
-    auto r_range = lc_.vlt(&r_bits, bits_n_);
-    auto s_range = lc_.vlt(&s_bits, bits_n_);
+    auto r_range = lc_.vlt(r_bits, bits_n_);
+    auto s_range = lc_.vlt(s_bits, bits_n_);
     lc_.assert1(r_range);
     lc_.assert1(s_range);
   }
 
  private:
   void assert_nonzero(EltW x, EltW witness) const {
-    auto maybe_one = lc_.mul(&x, witness);
+    auto maybe_one = lc_.mul(x, witness);
     auto one = lc_.konst(lc_.one());
-    lc_.assert_eq(&maybe_one, one);
+    lc_.assert_eq(maybe_one, one);
   }
 
   void point_equality(EltW x, EltW y, EltW z, EltW p_x, EltW p_y) const {
-    lc_.assert_eq(&x, lc_.mul(&z, p_x));
-    lc_.assert_eq(&y, lc_.mul(&z, p_y));
+    lc_.assert_eq(x, lc_.mul(z, p_x));
+    lc_.assert_eq(y, lc_.mul(z, p_y));
   }
 
   void is_on_curve(EltW x, EltW y) const {
     // Check that y^2 = x^3 + ax + b
-    auto yy = lc_.mul(&y, y);
-    auto xx = lc_.mul(&x, x);
-    auto xxx = lc_.mul(&x, xx);
+    auto yy = lc_.mul(y, y);
+    auto xx = lc_.mul(x, x);
+    auto xxx = lc_.mul(x, xx);
     auto ax = lc_.mul(ec_.a_, x);
     auto b = lc_.konst(ec_.b_);
-    auto axb = lc_.add(&ax, b);
-    auto rhs = lc_.add(&axb, xxx);
-    lc_.assert_eq(&yy, rhs);
+    auto axb = lc_.add(ax, b);
+    auto rhs = lc_.add(axb, xxx);
+    lc_.assert_eq(yy, rhs);
   }
 
   void addE(EltW& X3, EltW& Y3, EltW& Z3, EltW X1, EltW Y1, EltW Z1, EltW X2,
@@ -267,48 +267,48 @@ class VerifyCircuit {
     // Algorithm 1: Complete, projective point addition for arbitrary prime
     // order short Weierstrass curves E/Fq : y^2 = x^3 + ax + b
     // The compiler seems to optimize the cases when Z1,Z2=1.
-    EltW t0 = lc_.mul(&X1, X2);
-    EltW t1 = lc_.mul(&Y1, Y2);
-    EltW t2 = lc_.mul(&Z1, Z2);
-    EltW t3 = lc_.add(&X1, Y1);
-    EltW t4 = lc_.add(&X2, Y2);
-    t3 = lc_.mul(&t3, t4);
-    t4 = lc_.add(&t0, t1);
-    t3 = lc_.sub(&t3, t4);
-    t4 = lc_.add(&X1, Z1);
-    EltW t5 = lc_.add(&X2, Z2);
-    t4 = lc_.mul(&t4, t5);
-    t5 = lc_.add(&t0, t2);
-    t4 = lc_.sub(&t4, t5);
-    t5 = lc_.add(&Y1, Z1);
-    EltW X3t = lc_.add(&Y2, Z2);
-    t5 = lc_.mul(&t5, X3t);
-    X3t = lc_.add(&t1, t2);
-    t5 = lc_.sub(&t5, X3t);
+    EltW t0 = lc_.mul(X1, X2);
+    EltW t1 = lc_.mul(Y1, Y2);
+    EltW t2 = lc_.mul(Z1, Z2);
+    EltW t3 = lc_.add(X1, Y1);
+    EltW t4 = lc_.add(X2, Y2);
+    t3 = lc_.mul(t3, t4);
+    t4 = lc_.add(t0, t1);
+    t3 = lc_.sub(t3, t4);
+    t4 = lc_.add(X1, Z1);
+    EltW t5 = lc_.add(X2, Z2);
+    t4 = lc_.mul(t4, t5);
+    t5 = lc_.add(t0, t2);
+    t4 = lc_.sub(t4, t5);
+    t5 = lc_.add(Y1, Z1);
+    EltW X3t = lc_.add(Y2, Z2);
+    t5 = lc_.mul(t5, X3t);
+    X3t = lc_.add(t1, t2);
+    t5 = lc_.sub(t5, X3t);
     auto a = lc_.konst(ec_.a_);
-    EltW Z3t = lc_.mul(&a, t4);
+    EltW Z3t = lc_.mul(a, t4);
     auto k3b = lc_.konst(ec_.k3b);
-    X3t = lc_.mul(&k3b, t2);
-    Z3t = lc_.add(&X3t, Z3t);
-    X3t = lc_.sub(&t1, Z3t);
-    Z3t = lc_.add(&t1, Z3t);
-    EltW Y3t = lc_.mul(&X3t, Z3t);
-    t1 = lc_.add(&t0, t0);
-    t1 = lc_.add(&t1, t0);
-    t2 = lc_.mul(&a, t2);
-    t4 = lc_.mul(&k3b, t4);
-    t1 = lc_.add(&t1, t2);
-    t2 = lc_.sub(&t0, t2);
-    t2 = lc_.mul(&a, t2);
-    t4 = lc_.add(&t4, t2);
-    t0 = lc_.mul(&t1, t4);
-    Y3t = lc_.add(&Y3t, t0);
-    t0 = lc_.mul(&t5, t4);
-    X3t = lc_.mul(&t3, X3t);
-    X3t = lc_.sub(&X3t, t0);
-    t0 = lc_.mul(&t3, t1);
-    Z3t = lc_.mul(&t5, Z3t);
-    Z3t = lc_.add(&Z3t, t0);
+    X3t = lc_.mul(k3b, t2);
+    Z3t = lc_.add(X3t, Z3t);
+    X3t = lc_.sub(t1, Z3t);
+    Z3t = lc_.add(t1, Z3t);
+    EltW Y3t = lc_.mul(X3t, Z3t);
+    t1 = lc_.add(t0, t0);
+    t1 = lc_.add(t1, t0);
+    t2 = lc_.mul(a, t2);
+    t4 = lc_.mul(k3b, t4);
+    t1 = lc_.add(t1, t2);
+    t2 = lc_.sub(t0, t2);
+    t2 = lc_.mul(a, t2);
+    t4 = lc_.add(t4, t2);
+    t0 = lc_.mul(t1, t4);
+    Y3t = lc_.add(Y3t, t0);
+    t0 = lc_.mul(t5, t4);
+    X3t = lc_.mul(t3, X3t);
+    X3t = lc_.sub(X3t, t0);
+    t0 = lc_.mul(t3, t1);
+    Z3t = lc_.mul(t5, Z3t);
+    Z3t = lc_.add(Z3t, t0);
 
     X3 = X3t;
     Y3 = Y3t;
@@ -321,39 +321,39 @@ class VerifyCircuit {
     // short Weierstrass curves E/Fq : y^2 = x^3 + ax + b.
     // The compiler will presumably optimize away 0 mults when a=0 and 1
     // mults when Z = 1.
-    EltW t0 = lc_.mul(&X, X);
-    EltW t1 = lc_.mul(&Y, Y);
-    EltW t2 = lc_.mul(&Z, Z);
-    EltW t3 = lc_.mul(&X, Y);
-    t3 = lc_.add(&t3, t3);
-    EltW Z3t = lc_.mul(&X, Z);
-    Z3t = lc_.add(&Z3t, Z3t);
+    EltW t0 = lc_.mul(X, X);
+    EltW t1 = lc_.mul(Y, Y);
+    EltW t2 = lc_.mul(Z, Z);
+    EltW t3 = lc_.mul(X, Y);
+    t3 = lc_.add(t3, t3);
+    EltW Z3t = lc_.mul(X, Z);
+    Z3t = lc_.add(Z3t, Z3t);
     auto a = lc_.konst(ec_.a_);
     auto k3b = lc_.konst(ec_.k3b);
-    EltW X3t = lc_.mul(&a, Z3t);
-    EltW Y3t = lc_.mul(&k3b, t2);
-    Y3t = lc_.add(&X3t, Y3t);
-    X3t = lc_.sub(&t1, Y3t);
-    Y3t = lc_.add(&t1, Y3t);
-    Y3t = lc_.mul(&X3t, Y3t);
-    X3t = lc_.mul(&t3, X3t);
-    Z3t = lc_.mul(&k3b, Z3t);
-    t2 = lc_.mul(&a, t2);
-    t3 = lc_.sub(&t0, t2);
-    t3 = lc_.mul(&a, t3);
-    t3 = lc_.add(&t3, Z3t);
-    Z3t = lc_.add(&t0, t0);
-    t0 = lc_.add(&Z3t, t0);
-    t0 = lc_.add(&t0, t2);
-    t0 = lc_.mul(&t0, t3);
-    Y3t = lc_.add(&Y3t, t0);
-    t2 = lc_.mul(&Y, Z);
-    t2 = lc_.add(&t2, t2);
-    t0 = lc_.mul(&t2, t3);
-    X3t = lc_.sub(&X3t, t0);
-    Z3t = lc_.mul(&t2, t1);
-    Z3t = lc_.add(&Z3t, Z3t);
-    Z3t = lc_.add(&Z3t, Z3t);
+    EltW X3t = lc_.mul(a, Z3t);
+    EltW Y3t = lc_.mul(k3b, t2);
+    Y3t = lc_.add(X3t, Y3t);
+    X3t = lc_.sub(t1, Y3t);
+    Y3t = lc_.add(t1, Y3t);
+    Y3t = lc_.mul(X3t, Y3t);
+    X3t = lc_.mul(t3, X3t);
+    Z3t = lc_.mul(k3b, Z3t);
+    t2 = lc_.mul(a, t2);
+    t3 = lc_.sub(t0, t2);
+    t3 = lc_.mul(a, t3);
+    t3 = lc_.add(t3, Z3t);
+    Z3t = lc_.add(t0, t0);
+    t0 = lc_.add(Z3t, t0);
+    t0 = lc_.add(t0, t2);
+    t0 = lc_.mul(t0, t3);
+    Y3t = lc_.add(Y3t, t0);
+    t2 = lc_.mul(Y, Z);
+    t2 = lc_.add(t2, t2);
+    t0 = lc_.mul(t2, t3);
+    X3t = lc_.sub(X3t, t0);
+    Z3t = lc_.mul(t2, t1);
+    Z3t = lc_.add(Z3t, Z3t);
+    Z3t = lc_.add(Z3t, Z3t);
 
     X3 = X3t;
     Y3 = Y3t;

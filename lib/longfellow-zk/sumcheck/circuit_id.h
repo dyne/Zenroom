@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -54,12 +54,12 @@ void circuit_id(uint8_t id[/*32*/], const Circuit<Field>& c, const Field& F) {
   for (const auto& layer : c.l) {
     sha.Update8(layer.nw);
     sha.Update8(layer.logw);
-    sha.Update8(layer.quad->n_);
-    for (size_t i = 0; i < layer.quad->n_; ++i) {
-      sha.Update8(static_cast<uint64_t>(layer.quad->c_[i].g));
-      sha.Update8(static_cast<uint64_t>(layer.quad->c_[i].h[0]));
-      sha.Update8(static_cast<uint64_t>(layer.quad->c_[i].h[1]));
-      F.to_bytes_field(tmp, layer.quad->c_[i].v);
+    sha.Update8(layer.quad->size());
+    for (const auto& ec : *layer.quad) {
+      sha.Update8(static_cast<uint64_t>(ec.g));
+      sha.Update8(static_cast<uint64_t>(ec.h[0]));
+      sha.Update8(static_cast<uint64_t>(ec.h[1]));
+      F.to_bytes_field(tmp, ec.v);
       sha.Update(tmp, sizeof(tmp));
     }
   }

@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -102,9 +102,9 @@ class MAC {
     v128 mv;
     for (size_t i = 0; i < 2; ++i) {
       v128 ap = bp_.template unpack<v128, packed_v128>(vw.aa_[i]);
-      v128 key = lc_.vxor(&av, ap);
+      v128 key = lc_.vxor(av, ap);
       lc_.gf2_128_mul(mv, key, xi[i]);
-      lc_.vassert_eq(&mac[i], mv);
+      lc_.vassert_eq(mac[i], mv);
     }
   }
 
@@ -119,16 +119,16 @@ class MAC {
     for (size_t i = 0; i < 256; ++i) {
       bits_n[i] = lc_.bit(order.bit(i));
     }
-    lc_.assert1(lc_.vlt(&x, bits_n));
+    lc_.assert1(lc_.vlt(x, bits_n));
 
     // Verify that the message bits in the witness correspond to msg.
     EltW te = lc_.konst(lc_.zero());
     Elt twok = lc_.one();
     for (size_t i = 0; i < 256; ++i) {
-      te = lc_.axpy(&te, twok, lc_.eval(x[i]));
+      te = lc_.axpy(te, twok, lc_.eval(x[i]));
       lc_.f_.add(twok, twok);
     }
-    lc_.assert_eq(&te, msgw);
+    lc_.assert_eq(te, msgw);
   }
 
   const Logic& lc_;
@@ -166,9 +166,9 @@ class MACGF2 {
     // Check that mac[i] = (a_p + a_v)*mm[i] for i=0..1.
     for (size_t i = 0; i < 2; ++i) {
       EltW mm = pack(&msg[i * 128]);
-      EltW key = lc_.add(&av, vw.aa_[i]);
-      EltW got = lc_.mul(&key, mm);
-      lc_.assert_eq(&mac[i], got);
+      EltW key = lc_.add(av, vw.aa_[i]);
+      EltW got = lc_.mul(key, mm);
+      lc_.assert_eq(mac[i], got);
     }
   }
 
@@ -179,7 +179,7 @@ class MACGF2 {
     Elt xi = lc_.f_.one();
     EltW m = lc_.konst(0);
     for (size_t i = 0; i < 128; ++i) {
-      m = lc_.axpy(&m, xi, lc_.eval(msg[i]));
+      m = lc_.axpy(m, xi, lc_.eval(msg[i]));
       xi = lc_.mulf(xi, alpha);
     }
     return m;

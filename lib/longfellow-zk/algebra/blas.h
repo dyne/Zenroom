@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,15 +23,16 @@ template <class Field>
 class Blas {
  public:
   using Elt = typename Field::Elt;
+  using Accum = typename Field::Accum;
 
   // SUM_{i} x[i * incx].y[i * incy]
   static Elt dot(size_t n, const Elt x[/*n:incx*/], size_t incx,
                  const Elt y[/*n:incy*/], size_t incy, const Field& F) {
-    Elt r = F.zero();
+    Accum r{};
     for (size_t i = 0; i < n; i++) {
-      F.add(r, F.mulf(x[i * incx], y[i * incy]));
+      F.mac(r, x[i * incx], y[i * incy]);
     }
-    return r;
+    return F.reduce(r);
   }
 
   // SUM_{i} x[i * incx], or the dot product x^T * 1

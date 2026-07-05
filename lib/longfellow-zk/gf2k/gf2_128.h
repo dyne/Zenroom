@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <utility>
 
@@ -86,6 +87,12 @@ class GF2_128 {
 
     N1 unpack() const { return N1(uint64x2_of_gf2_128(n)); }
   };
+
+  struct Accum {
+    gf2_128_accum_t acc;
+  };
+
+  Elt reduce(const Accum& a) const { return Elt{gf2_128_accum_reduce(a.acc)}; }
 
   explicit GF2_128() {
     kone_ = of_scalar_field(0b1);
@@ -172,6 +179,25 @@ class GF2_128 {
     x.unpack().to_bytes(ab);
   }
 
+  Elt sample(
+      const std::function<void(size_t n, uint8_t buf[])>& fill_bytes) const {
+    // Every 128-bit sequence is a valid field element.
+    uint8_t buf[kBytes];
+    fill_bytes(sizeof(buf), buf);
+    std::optional<Elt> maybe = of_bytes_field(buf);
+    check(maybe.has_value(), "of_bytes_field failed unexpectedly");
+    return maybe.value();
+  }
+
+  Elt sample_subfield(
+      const std::function<void(size_t n, uint8_t buf[])>& fill_bytes) const {
+    uint8_t buf[kSubFieldBytes];
+    fill_bytes(sizeof(buf), buf);
+    std::optional<Elt> maybe = of_bytes_subfield(buf);
+    check(maybe.has_value(), "of_bytes_subfield failed unexpectedly");
+    return maybe.value();
+  }
+
   bool in_subfield(Elt e) const {
     auto eu = solve(e);
     return eu.first == N1{};
@@ -215,6 +241,9 @@ class GF2_128 {
   void mul(Elt& a, const Elt& y) const { a = mulf(a, y); }
   void neg(Elt& a) const { /* noop */ }
   void invert(Elt& a) const { a = invertf(a); }
+  void mac(Accum& a, const Elt& x, const Elt& y) const {
+    gf2_128_mac(a.acc, x.n, y.n);
+  }
 
   Elt zero() const { return Elt{}; }
   Elt one() const { return kone_; }

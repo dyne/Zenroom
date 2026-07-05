@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,19 +14,24 @@
 
 #include "algebra/nat.h"
 
+#include <cstddef>
+
 #include "util/panic.h"
 
 namespace proofs {
-unsigned digit(char c) {
+unsigned digit(char c, size_t base) {
   if (c >= '0' && c <= '9') {
     return c - '0';
-  } else if (c >= 'a' && c <= 'f') {
-    return c - 'a' + 10;
-  } else if (c >= 'A' && c <= 'F') {
-    return c - 'A' + 10;
-  } else {
-    check(false, "malformed numeral in digit()");
-    return 0;  // silence compiler warning
   }
+  if (base == 16) {
+    if (c >= 'a' && c <= 'f') {
+      return c - 'a' + 10;
+    }
+    if (c >= 'A' && c <= 'F') {
+      return c - 'A' + 10;
+    }
+  }
+  check(false, "malformed numeral in digit()");
+  return 0;  // silence compiler warning
 }
 }  // namespace proofs

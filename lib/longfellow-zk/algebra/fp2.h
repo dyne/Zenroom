@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 #include <stddef.h>
 
 #include <cstdint>
+#include <functional>
 #include <optional>
 
 #include "util/panic.h"
@@ -151,6 +152,16 @@ class Fp2 {
     return a;
   }
 
+  struct Accum {
+    Elt acc;
+  };
+
+  Elt reduce(const Accum& a) const { return a.acc; }
+
+  void mac(Accum& a, const Elt& x, const Elt& y) const {
+    add(a.acc, mulf(x, y));
+  }
+
   Elt of_scalar(uint64_t a) const { return of_scalar_field(a); }
   Elt of_scalar(const Scalar& e) const { return of_scalar_field(e); }
 
@@ -179,6 +190,19 @@ class Fp2 {
       }
     }
     return std::nullopt;
+  }
+
+  Elt sample(
+      const std::function<void(size_t n, uint8_t buf[])>& fill_bytes) const {
+    auto re = f_.sample(fill_bytes);
+    auto im = f_.sample(fill_bytes);
+    return Elt{re, im};
+  }
+
+  Elt sample_subfield(
+      const std::function<void(size_t n, uint8_t buf[])>& fill_bytes) const {
+    auto re = f_.sample(fill_bytes);
+    return of_scalar_field(re);
   }
 
   void to_bytes_field(uint8_t ab[/* kBytes */], const Elt& x) const {

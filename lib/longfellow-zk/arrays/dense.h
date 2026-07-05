@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -72,24 +72,29 @@ class Dense {
   void clear(const Field& F) { Blas<Field>::clear(n0_ * n1_, &v_[0], 1, F); }
 
   // For a given random number r, the binding operation computes
-  //   v[i] = (1 - r) * v[2 * i] + r * v[2 * i + 1]
-  //        = v[2 * i] + r * (v[2 * i + 1] - v[2 * i])
-  // and shrinks the array v by half.
-  void bind(const Elt& r, const Field& F) {
+  //   this[i] = (1 - r) * in[2 * i] + r * in[2 * i + 1]
+  //           = in[2 * i] + r * (in[2 * i + 1] - in[2 * i])
+  // This method works even in-place, i.e., if &in == this.
+  void bind(const Elt& r, const Dense& in, const Field& F) {
+    const corner_t n0_out = (in.n0_ + 1u) / 2u;
+    check(n1_ == in.n1_, "n1_ == in.n1_");
+    check(n0_ >= n0_out, "n0_ >= n0_out");
     corner_t rd = 0, wr = 0;
     for (corner_t i1 = 0; i1 < n1_; ++i1) {
       corner_t i0 = 0;
-      while (2 * i0 + 1 < n0_) {
-        v_[wr] = affine_interpolation(r, v_[rd], v_[rd + 1], F);
+      while (2 * i0 + 1 < in.n0_) {
+        v_[wr] = affine_interpolation(r, in.v_[rd], in.v_[rd + 1], F);
         i0++, rd += 2, wr += 1;
       }
-      if (2 * i0 < n0_) {
-        v_[wr] = affine_interpolation(r, v_[rd], F.zero(), F);
+      if (2 * i0 < in.n0_) {
+        v_[wr] = affine_interpolation_nz_z(r, in.v_[rd], F);
         i0++, rd++, wr++;
       }
     }
-    n0_ = (n0_ + 1u) / 2u;
+    n0_ = n0_out;
   }
+
+  void bind(const Elt& r, const Field& F) { bind(r, *this, F); }
 
   void bind_all(size_t logv, const Elt r[/*logv*/], const Field& F) {
     for (size_t v = 0; v < logv; ++v) {

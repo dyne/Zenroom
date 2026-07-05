@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -57,7 +57,39 @@ class Permutations {
     }
   }
 
+  static void transpose(Elt A[/*n*/], size_t lda, size_t n) {
+    if (n <= kTransposeBasecase) {
+      for (size_t i = 0; i < n; ++i) {
+        for (size_t j = i + 1; j < n; ++j) {
+          std::swap(A[i * lda + j], A[j * lda + i]);
+        }
+      }
+    } else {
+      transpose(A, lda, n / 2);
+      transpose_and_swap(A + n / 2, A + lda * (n / 2), lda, n / 2);
+      transpose(A + (lda + 1) * (n / 2), lda, n / 2);
+    }
+  }
+
  private:
+  static constexpr size_t kTransposeBasecase = 8;
+
+  static void transpose_and_swap(Elt* A, Elt* B, size_t lda, size_t n) {
+    if (n <= kTransposeBasecase) {
+      for (size_t i = 0; i < n; ++i) {
+        for (size_t j = 0; j < n; ++j) {
+          std::swap(A[i * lda + j], B[j * lda + i]);
+        }
+      }
+    } else {
+      transpose_and_swap(A, B, lda, n / 2);
+      transpose_and_swap(A + n / 2, B + lda * (n / 2), lda, n / 2);
+      transpose_and_swap(A + lda * (n / 2), B + (n / 2), lda, n / 2);
+      transpose_and_swap(A + (lda + 1) * (n / 2), B + (lda + 1) * (n / 2), lda,
+                         n / 2);
+    }
+  }
+
   static void bitrev_increment(size_t* j, size_t bit) {
     do {
       bit >>= 1;

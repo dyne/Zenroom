@@ -1,4 +1,0 @@
-**/*.cc.o
-*.o
-*.a
-sources.mk

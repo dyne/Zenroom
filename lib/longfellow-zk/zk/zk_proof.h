@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -100,7 +100,7 @@ struct ZkProof {
         "rows]: %zub",
         s1 - s0, s2 - s1, s3 - s2, 2 * com_proof.block,
         com_proof.nreq * com_proof.nrow, com_proof.merkle.path.size(),
-        com_proof.nrow, s3);
+        com_proof.nrow, s3 - s0);
   }
 
   // The read function returns false on error or underflow.

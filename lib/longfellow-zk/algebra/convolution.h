@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -163,8 +163,7 @@ class FFTExtConvolution {
       size_t i;
       f_.mul(x_fft[0], y_fft_[0]);  // DC is real
       for (i = 1; i + i < padding_; ++i) {
-        RFFT<FieldExt>::cmul(&x_fft[i], &x_fft[padding_ - i], x_fft[i],
-                             x_fft[padding_ - i], y_fft_[i],
+        RFFT<FieldExt>::cmul(&x_fft[i], &x_fft[padding_ - i], y_fft_[i],
                              y_fft_[padding_ - i], f_);
       }
       f_.mul(x_fft[i], y_fft_[i]);  // Nyquist is real

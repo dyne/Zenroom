@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,13 +32,7 @@ struct Layer {
   size_t logw;  // number of binding rounds for the hand variables
   std::unique_ptr<const Quad<Field>> quad;
 
-  bool operator==(const Layer& y) const {
-    // This operator relies on the layer being properly constructed, so that
-    // the quad reference is never a nullptr.
-    return nw == y.nw && logw == y.logw && *quad == *y.quad;
-  }
-
-  size_t nterms() const { return quad->n_; }
+  size_t nterms() const { return quad->size(); }
 };
 
 template <class Field>
@@ -58,10 +52,6 @@ struct Circuit {
 
   uint8_t id[32];  // unique id for the circuit, created by the compiler
 
-  bool operator==(const Circuit& y) const {
-    return nv == y.nv && logv == y.logv && nc == y.nc && logc == y.logc &&
-           nl == y.nl && l == y.l;
-  }
   size_t nterms() const {
     size_t n = 0;
     for (const auto& layer : l) {
@@ -77,10 +67,8 @@ struct LayerProof {
   // For efficiency, we distinguish polynomials needed to bind copy
   // variables (CPoly, degree 3) from polynomials needed to bind
   // wire variables (WPoly, degree 2).
-  using CPoly = SumcheckPoly<4, Field>;
-  using WPoly = SumcheckPoly<3, Field>;
-  using FWPoly = Poly<3, Field>;
-  using FCPoly = Poly<4, Field>;
+  using CPoly = Poly<4, Field>;
+  using WPoly = Poly<3, Field>;
 
   // Maximum 2^40 gates/wires/copies per layer.
   static constexpr size_t kMaxBindings = 40;

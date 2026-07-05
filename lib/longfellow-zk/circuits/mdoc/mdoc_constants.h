@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,8 @@
 namespace proofs {
 
 /* Max number of SHA blocks to process. */
-constexpr static const size_t kMaxSHABlocks = 35;
+// v7 circuits use 40, earlier ones use 35.
+constexpr static const size_t kMaxSHABlocks = 40;
 
 /* Number of bits in CBOR index. Must be large enough to index into MDOC.*/
 constexpr static const size_t kCborIndexBits = 12;
@@ -49,6 +50,8 @@ static constexpr size_t kOrgLen = 17;
 static constexpr uint8_t kTag32[] = {0x58, 0x20};
 static constexpr size_t kIdLen = 32;
 static constexpr size_t kValueLen = 64;
+static constexpr size_t kDigestLen = 8 + 1;
+static constexpr size_t kRandomLen = 6 + 1;
 
 static constexpr uint8_t kValidityInfoID[kValidityInfoLen] = {
     'v', 'a', 'l', 'i', 'd', 'i', 't', 'y', 'I', 'n', 'f', 'o'};
@@ -72,6 +75,11 @@ static constexpr uint8_t kOrgID[kOrgLen] = {'o', 'r', 'g', '.', 'i', 's',
                                             'o', '.', '1', '8', '0', '1',
                                             '3', '.', '5', '.', '1'};
 
+static constexpr uint8_t kDigestID[kDigestLen] = {0x68, 'd', 'i', 'g', 'e',
+                                                  's',  't', 'I', 'D'};
+
+static constexpr uint8_t kRandomID[kRandomLen] = {0x66, 'r', 'a', 'n',
+                                                  'd',  'o', 'm'};
 }  // namespace proofs
 
 #endif  // PRIVACY_PROOFS_ZK_LIB_CIRCUITS_MDOC_MDOC_CONSTANTS_H_

@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -341,9 +341,9 @@ class Routing {
     for (size_t i = 0; i < n && i < k + shift; ++i) {
       auto f = [&](size_t j) {
         if (i + j * shift < n) {
-          return L.lmul(&amount_is[j], tmp[i + j * shift]);
+          return L.lmul(amount_is[j], tmp[i + j * shift]);
         } else {
-          return L.lmul(&amount_is[j], defaultA);
+          return L.lmul(amount_is[j], defaultA);
         }
       };
 
@@ -357,9 +357,9 @@ class Routing {
     for (size_t i = std::min(n, k + c * shift); i-- > 0;) {
       auto f = [&](size_t j) {
         if (i >= j * shift) {
-          return L.lmul(&amount_is[j], A[i - j * shift]);
+          return L.lmul(amount_is[j], A[i - j * shift]);
         } else {
-          return L.lmul(&amount_is[j], defaultB);
+          return L.lmul(amount_is[j], defaultB);
         }
       };
 
@@ -374,9 +374,9 @@ class Routing {
       bitW r = L.bit(0);
       for (size_t j = 0; j < c; ++j) {
         if (i + j * shift < n) {
-          r = L.lor_exclusive(&r, L.land(&amount_is[j], tmp[i + j * shift]));
+          r = L.lor_exclusive(r, L.land(amount_is[j], tmp[i + j * shift]));
         } else {
-          r = L.lor_exclusive(&r, L.land(&amount_is[j], defaultA));
+          r = L.lor_exclusive(r, L.land(amount_is[j], defaultA));
         }
       }
       tmp[i] = r;
@@ -390,9 +390,9 @@ class Routing {
       bitW r = L.bit(0);
       for (size_t j = 0; j < c; ++j) {
         if (i >= j * shift) {
-          r = L.lor_exclusive(&r, L.land(&amount_is[j], A[i - j * shift]));
+          r = L.lor_exclusive(r, L.land(amount_is[j], A[i - j * shift]));
         } else {
-          r = L.lor_exclusive(&r, L.land(&amount_is[j], defaultB));
+          r = L.lor_exclusive(r, L.land(amount_is[j], defaultB));
         }
       }
       A[i] = r;
@@ -409,10 +409,9 @@ class Routing {
         bitW r = L.bit(0);
         for (size_t j = 0; j < c; ++j) {
           if (i + j * shift < n) {
-            r = L.lor_exclusive(&r,
-                                L.land(&amount_is[j], tmp[i + j * shift][w]));
+            r = L.lor_exclusive(r, L.land(amount_is[j], tmp[i + j * shift][w]));
           } else {
-            r = L.lor_exclusive(&r, L.land(&amount_is[j], defaultA[w]));
+            r = L.lor_exclusive(r, L.land(amount_is[j], defaultA[w]));
           }
         }
         tmp[i][w] = r;
@@ -431,9 +430,9 @@ class Routing {
         bitW r = L.bit(0);
         for (size_t j = 0; j < c; ++j) {
           if (i >= j * shift) {
-            r = L.lor_exclusive(&r, L.land(&amount_is[j], A[i - j * shift][w]));
+            r = L.lor_exclusive(r, L.land(amount_is[j], A[i - j * shift][w]));
           } else {
-            r = L.lor_exclusive(&r, L.land(&amount_is[j], defaultB[w]));
+            r = L.lor_exclusive(r, L.land(amount_is[j], defaultB[w]));
           }
         }
         A[i][w] = r;

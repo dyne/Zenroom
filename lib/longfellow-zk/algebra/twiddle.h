@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include <vector>
 
@@ -32,12 +33,12 @@ class Twiddle {
   // powers of omega_n
   std::vector<Elt> w_;
 
-  explicit Twiddle(size_t n, const Elt& omega_n, const Field& F)
-      : order_(n), w_(n / 2) {
+  explicit Twiddle(size_t order, const Elt& omega_order, const Field& F)
+      : order_(order), w_(order / 2) {
     auto w = F.one();
-    for (size_t i = 0; 2 * i < n; ++i) {
+    for (size_t i = 0; 2 * i < order; ++i) {
       w_[i] = w;
-      F.mul(w, omega_n);
+      F.mul(w, omega_order);
     }
   }
 

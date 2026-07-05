@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,8 +18,10 @@
 #include <stddef.h>
 #include <string.h>
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
+#include <cstdlib>
 #include <iterator>
 #include <vector>
 
@@ -49,6 +51,18 @@ struct AttrShift {
   size_t offset, len;
 };
 
+struct SaltedHash {
+  size_t i1;
+  size_t i2;
+  size_t i3;
+  size_t l[4];
+  size_t perm;
+};
+
+struct pos {
+  size_t i, l, p, ord;
+};
+
 // This class represents an attribute that is parsed out of the deviceResponse
 // data structure. It includes offsets into the original mdoc which can be used
 // to construct SHA witnesses for disclosing the value of an attribute.
@@ -58,6 +72,10 @@ struct FullAttribute {
   size_t id_len;
   size_t val_ind;
   size_t val_len;
+
+  // For version 7+ circuits.
+  size_t dig_ind, dig_len;
+  size_t rand_ind, rand_len;
 
   const uint8_t* mdl_ns;  // mdl namespace for the attribute
 
@@ -107,7 +125,8 @@ class ParsedMdoc {
 
     This method produces indices into doc as state.
   */
-  bool parse_device_response(size_t len, const uint8_t resp[/* len */]) {
+  MdocProverErrorCode parse_device_response(size_t len,
+                                            const uint8_t resp[/* len */]) {
     size_t np = 0;
     // When this object falls out of scope, all parsing objects will be
     // garbage collected.
@@ -115,144 +134,175 @@ class ParsedMdoc {
     bool ok = root.decode(resp, len, np, 0);
     if (!ok) {
       log(ERROR, "Failed to decode root");
-      return false;
+      return MDOC_PROVER_ROOT_DECODING_FAILURE;
     }
 
     size_t di;
     auto docs = root.lookup(resp, 9, (uint8_t*)"documents", di);
-    if (docs == nullptr) return false;
+    if (docs.key == nullptr) return MDOC_PROVER_DOCUMENTS_MISSING;
     // Fields of Document are "docType", "issuerSigned", "deviceSigned", ?errors
 
-    auto docs0 = docs[1].index(0);
-    if (docs0 == nullptr) return false;
+    auto docs0 = docs.val->aref(0);
+    if (docs0 == nullptr) return MDOC_PROVER_DOCUMENT_0_MISSING;
 
-    auto dt = docs0[0].lookup(resp, 7, (uint8_t*)"docType", di);
-    if (dt == nullptr) return false;
-    doc_type_.insert(doc_type_.begin(), resp + dt[1].u_.string.pos,
-                     resp + dt[1].u_.string.pos + dt[1].u_.string.len);
+    auto dt = docs0->lookup(resp, 7, (uint8_t*)"docType", di);
+    if (dt.key == nullptr || !dt.val->is_variant(TEXT))
+      return MDOC_PROVER_DOCTYPE_MISSING;
+    CborDoc::CborString dt_str = dt.val->as_text();
+    doc_type_.insert(doc_type_.begin(), resp + dt_str.pos,
+                     resp + dt_str.pos + dt_str.len);
 
     // The returned docs0 is the map, so index at [0].
-    auto is = docs0[0].lookup(resp, 12, (uint8_t*)"issuerSigned", di);
-    if (is == nullptr) return false;
+    auto is = docs0->lookup(resp, 12, (uint8_t*)"issuerSigned", di);
+    if (is.key == nullptr) return MDOC_PROVER_ISSUER_SIGNED_MISSING;
 
-    auto ia = is[1].lookup(resp, 10, (uint8_t*)"issuerAuth", di);
-    if (ia == nullptr) return false;
+    auto ia = is.val->lookup(resp, 10, (uint8_t*)"issuerAuth", di);
+    if (ia.key == nullptr) return MDOC_PROVER_ISSUER_AUTH_MISSING;
 
-    auto tmso = ia[1].index(2);
-    if (tmso == nullptr) return false;
+    auto tmso = ia.val->aref(2);
+    if (tmso == nullptr) return MDOC_PROVER_MSO_MISSING;
     copy_header(t_mso_, tmso);
-    auto nsig = ia[1].index(3);
-    if (nsig == nullptr) return false;
+    auto nsig = ia.val->aref(3);
+    if (nsig == nullptr) return MDOC_PROVER_NSIG_MISSING;
     copy_header(sig_, nsig);
 
-    auto ns = is[1].lookup(resp, 10, (uint8_t*)"nameSpaces", di);
-    if (ns == nullptr) return false;
+    auto ns = is.val->lookup(resp, 10, (uint8_t*)"nameSpaces", di);
+    if (ns.key == nullptr) return MDOC_PROVER_NAMESPACES_MISSING;
 
     // Find the attribute witness we need from here.
     for (const char* sn : kSupportedNamespaces) {
-      auto mldns = ns[1].lookup(resp, strlen(sn), (const uint8_t*)sn, di);
-      if (mldns == nullptr) continue;
-      size_t ai = 0;
-      auto tattr = mldns[1].index(ai++);
-      while (tattr != nullptr) {
-        CborDoc er;
+      auto mldns = ns.val->lookup(resp, strlen(sn), (const uint8_t*)sn, di);
+      if (mldns.key == nullptr) continue;
+      if (!mldns.val->is_variant(ARRAY)) {
+        return MDOC_PROVER_NAMESPACES_MISSING;
+      }
+      auto mldns_arr = mldns.val->as_array();
+      for (size_t ai = 0; ai < mldns_arr.nchildren; ++ai) {
+        auto tattr = mldns.val->aref(ai);
+        if (tattr == nullptr) continue;
+        if (!tattr->is_variant(TAG)) {
+          return MDOC_PROVER_ATTRIBUTE_DECODE_FAILURE;
+        }
+        const CborDoc& tagged_val = tattr->tagged_value();
         // Decode the map in this tagged attribute.
-        size_t pos = tattr->children_[0].u_.string.pos;
-        size_t end = pos + tattr->children_[0].u_.string.len;
+        if (!tagged_val.is_variant(BYTES)) {
+          return MDOC_PROVER_ATTRIBUTE_DECODE_FAILURE;
+        }
+        CborDoc::CborString tattr_str = tagged_val.as_bytes();
+        size_t pos = tattr_str.pos;
+        size_t end = pos + tattr_str.len;
+        CborDoc er;
         if (!er.decode(resp, end, pos, 0)) {
-          return false;
+          return MDOC_PROVER_ATTRIBUTE_DECODE_FAILURE;
         }
 
         auto ei = er.lookup(resp, 17, (uint8_t*)"elementIdentifier", di);
-        if (ei == nullptr) return false;
+        if (ei.key == nullptr) return MDOC_PROVER_ATTRIBUTE_EI_MISSING;
         auto ev = er.lookup(resp, 12, (uint8_t*)"elementValue", di);
-        if (ev == nullptr) return false;
+        if (ev.key == nullptr) return MDOC_PROVER_ATTRIBUTE_EV_MISSING;
         auto digid = er.lookup(resp, 8, (uint8_t*)"digestID", di);
-        if (digid == nullptr) return false;
+        if (digid.key == nullptr || !digid.val->is_variant(UNSIGNED))
+          return MDOC_PROVER_ATTRIBUTE_DID_MISSING;
+        auto rand = er.lookup(resp, 6, (uint8_t*)"random", di);
+        if (rand.key == nullptr) return MDOC_PROVER_ATTRIBUTE_RANDOM_MISSING;
 
         attributes_.push_back((FullAttribute){
-            ei[1].position(),
-            ei[1].length(),
-            ev[1].position(),
-            ev[1].length(),
+            //  For the elementIdentifier, the [1] index is the position and
+            //  length of the value.
+            ei.val->position(),
+            ei.val->length(),
+            // For version 7, record the index of the elementValue key, i.e.,
+            // ev[0], instead of the value. This makes it easier to handle
+            // different orderings of the elementIdentifier and elementValue
+            // keys in the CBOR encoding. Previous versions of the circuit did
+            // not use the ev[1] index, because they assumed canonical order.
+            ev.key->position(),
+            ev.val->length(),
+            digid.key->position(),
+            digid.key->length() + digid.val->length() + 1,
+            rand.key->position(),
+            rand.key->length() + rand.val->length() + 1 +
+                (rand.val->length() < 24 ? 1 : 2),
             (const uint8_t*)sn,
-            static_cast<size_t>(digid[1].u_.u64), /* digest_id */
-            {0, 0, 0},                            /* default mso_ind */
-            tattr->header_pos_,                   /* tag_ind */
-            tattr->children_[0].u_.string.len +
-                4, /* +4 for the D8 18 58 <> prefix */
+            static_cast<size_t>(digid.val->as_unsigned()), /* digest_id */
+            {0, 0, 0},                                     /* default mso_ind */
+            tattr->header_pos(),                           /* tag_ind */
+            tattr_str.len + 4, /* +4 for the D8 18 58 <> prefix */
             resp});
-
-        tattr = mldns[1].index(ai++);
       }
     }
 
-    auto ds = docs0[0].lookup(resp, 12, (uint8_t*)"deviceSigned", di);
-    if (ds == nullptr) return false;
-    auto da = ds[1].lookup(resp, 10, (uint8_t*)"deviceAuth", di);
-    if (da == nullptr) return false;
-    auto dsi = da[1].lookup(resp, 15, (uint8_t*)"deviceSignature", di);
-    if (dsi == nullptr) return false;
-    auto ndksig = dsi[1].index(3);
-    if (ndksig == nullptr) return false;
+    auto ds = docs0->lookup(resp, 12, (uint8_t*)"deviceSigned", di);
+    if (ds.key == nullptr) return MDOC_PROVER_DEVICE_SIGNED_MISSING;
+    auto da = ds.val->lookup(resp, 10, (uint8_t*)"deviceAuth", di);
+    if (da.key == nullptr) return MDOC_PROVER_DEVICE_AUTH_MISSING;
+    auto dsi = da.val->lookup(resp, 15, (uint8_t*)"deviceSignature", di);
+    if (dsi.key == nullptr) return MDOC_PROVER_DEVICE_SIGNATURE_MISSING;
+    auto ndksig = dsi.val->aref(3);
+    if (ndksig == nullptr) return MDOC_PROVER_DEVICE_SIGNATURE_MISSING;
     copy_header(dksig_, ndksig);
 
     // Then parse tagged mso. Skip 5 bytes to skip the D8 18 59 <len2>.
-    const uint8_t* pmso = resp + tmso->u_.string.pos + 5;
+    if (!tmso->is_variant(BYTES)) return MDOC_PROVER_MSO_MISSING;
+    CborDoc::CborString tmso_str = tmso->as_bytes();
+    const uint8_t* pmso = resp + tmso_str.pos + 5;
     size_t pos = 0;
     CborDoc mso;
-    if (!mso.decode(pmso, tmso->u_.string.len - 5, pos, 0)) return false;
+    if (!mso.decode(pmso, tmso_str.len - 5, pos, 0))
+      return MDOC_PROVER_MSO_DECODING_FAILURE;
     auto nv = mso.lookup(pmso, kValidityInfoLen, kValidityInfoID, valid_.ndx);
-    if (nv == nullptr) return false;
+    if (nv.key == nullptr) return MDOC_PROVER_VALIDITY_INFO_MISSING;
     copy_kv_header(valid_, nv);
 
-    auto nvf = nv[1].lookup(pmso, kValidFromLen, kValidFromID, valid_from_.ndx);
-    if (nvf == nullptr) return false;
+    auto nvf =
+        nv.val->lookup(pmso, kValidFromLen, kValidFromID, valid_from_.ndx);
+    if (nvf.key == nullptr) return MDOC_PROVER_VALIDITY_INFO_MISSING;
     copy_kv_header(valid_from_, nvf);
 
     auto nvu =
-        nv[1].lookup(pmso, kValidUntilLen, kValidUntilID, valid_until_.ndx);
-    if (nvu == nullptr) return false;
+        nv.val->lookup(pmso, kValidUntilLen, kValidUntilID, valid_until_.ndx);
+    if (nvu.key == nullptr) return MDOC_PROVER_VALIDITY_INFO_MISSING;
     copy_kv_header(valid_until_, nvu);
 
     auto ndki = mso.lookup(pmso, kDeviceKeyInfoLen, kDeviceKeyInfoID,
                            dev_key_info_.ndx);
-    if (ndki == nullptr) return false;
+    if (ndki.key == nullptr) return MDOC_PROVER_DEVICE_KEY_INFO_MISSING;
     copy_kv_header(dev_key_info_, ndki);
 
-    auto ndk = ndki[1].lookup(pmso, kDeviceKeyLen, kDeviceKeyID, dev_key_.ndx);
-    if (ndk == nullptr) return false;
+    auto ndk =
+        ndki.val->lookup(pmso, kDeviceKeyLen, kDeviceKeyID, dev_key_.ndx);
+    if (ndk.key == nullptr) return MDOC_PROVER_DEVICE_KEY_MISSING;
     copy_kv_header(dev_key_, ndk);
 
-    auto npkx = ndk[1].lookup_negative(-1, dev_key_pkx_.ndx);
-    if (npkx == nullptr) return false;
+    auto npkx = ndk.val->lookup_negative(-1, dev_key_pkx_.ndx);
+    if (npkx.key == nullptr) return MDOC_PROVER_DEVICE_KEY_MISSING;
     copy_kv_header(dev_key_pkx_, npkx);
 
-    auto npky = ndk[1].lookup_negative(-2, dev_key_pky_.ndx);
-    if (npky == nullptr) return false;
+    auto npky = ndk.val->lookup_negative(-2, dev_key_pky_.ndx);
+    if (npky.key == nullptr) return MDOC_PROVER_DEVICE_KEY_MISSING;
     copy_kv_header(dev_key_pky_, npky);
 
     auto nvd =
         mso.lookup(pmso, kValueDigestsLen, kValueDigestsID, value_digests_.ndx);
-    if (nvd == nullptr) return false;
+    if (nvd.key == nullptr) return MDOC_PROVER_MSO_DECODING_FAILURE;
     copy_kv_header(value_digests_, nvd);
 
     // For backwards compatibility with 1f circuits, copy the hard-coded org_ if
     // it is present. TODO(shelat): Remove this once all 1f circuits have
     // been updated.
-    auto norg = nvd[1].lookup(pmso, kOrgLen, kOrgID, org_.ndx);
-    if (norg != nullptr) {
+    auto norg = nvd.val->lookup(pmso, kOrgLen, kOrgID, org_.ndx);
+    if (norg.key != nullptr) {
       copy_kv_header(org_, norg);
     }
 
     for (auto& attr : attributes_) {
       size_t index;
-      auto nss = nvd[1].lookup(pmso, strlen((const char*)attr.mdl_ns),
-                               attr.mdl_ns, index);
-      if (nss == nullptr) return false;
+      auto nss = nvd.val->lookup(pmso, strlen((const char*)attr.mdl_ns),
+                                 attr.mdl_ns, index);
+      if (nss.key == nullptr) return MDOC_PROVER_MSO_DECODING_FAILURE;
       uint64_t hi = (uint64_t)attr.digest_id;
-      auto hattr = nss[1].lookup_unsigned(hi, attr.mso.ndx);
-      if (hattr == nullptr) return false;
+      auto hattr = nss.val->lookup_unsigned(hi, attr.mso.ndx);
+      if (hattr.key == nullptr) return MDOC_PROVER_MSO_DECODING_FAILURE;
       copy_kv_header(attr.mso, hattr);
     }
 
@@ -264,26 +314,52 @@ class ParsedMdoc {
       tagged_mso_bytes_.push_back(resp[t_mso_.pos + i]);
     }
 
-    return true;
+    return MDOC_PROVER_SUCCESS;
   }
 
  private:
   // Used to copy the results of a map lookup.
-  static void copy_kv_header(CborIndex& ind, const CborDoc* n) {
-    ind.k = n[0].header_pos_;
-    ind.v = n[1].header_pos_;
+  static void copy_kv_header(CborIndex& ind, CborDoc::LookupResult n) {
+    ind.k = n.key->header_pos();
+    ind.v = n.val->header_pos();
 
-    if (n[1].t_ == TEXT || n[1].t_ == BYTES) {
-      ind.pos = n[1].u_.string.pos;
-      ind.len = n[1].u_.string.len;
+    switch (n.val->variant()) {
+      case TEXT: {
+        CborDoc::CborString s = n.val->as_text();
+        ind.pos = s.pos;
+        ind.len = s.len;
+        break;
+      }
+      case BYTES: {
+        CborDoc::CborString s = n.val->as_bytes();
+        ind.pos = s.pos;
+        ind.len = s.len;
+        break;
+      }
+      default:
+        break;
     }
   }
 
   // Used to copy the results of an index lookup.
   static void copy_header(CborIndex& ind, const CborDoc* n) {
-    ind.k = n->header_pos_;
-    ind.pos = n->u_.string.pos;
-    ind.len = n->u_.string.len;
+    ind.k = n->header_pos();
+    switch (n->variant()) {
+      case TEXT: {
+        CborDoc::CborString s = n->as_text();
+        ind.pos = s.pos;
+        ind.len = s.len;
+        break;
+      }
+      case BYTES: {
+        CborDoc::CborString s = n->as_bytes();
+        ind.pos = s.pos;
+        ind.len = s.len;
+        break;
+      }
+      default:
+        break;
+    }
   }
 };
 
@@ -430,47 +506,72 @@ void fill_byte(std::vector<typename Field::Elt>& v, uint8_t b, size_t i,
 }
 
 template <class Field>
-bool fill_attribute(DenseFiller<Field>& filler, const RequestedAttribute& attr,
-                    const Field& F, size_t version) {
-  // In version 3, the attribute is encoded as the raw cbor string that
-  // included <name of identifier> <elementValue> <attributeValue>.
-  // In version 4, the attribute is encoded as
+MdocProverErrorCode fill_attribute(DenseFiller<Field>& filler,
+                                   const RequestedAttribute& attr,
+                                   const Field& F, size_t version) {
+  // In version >= 4, the attribute is encoded as
   // <len(identifier)> <name of identifier> <elementValue> <attributeValue>.
   // This extra length field distinguishes the two attributes:
   //   "aamva/domestic_driving_privileges" from "iso/driving_privileges." No
   // other valid attribute name is a proper suffix of another.  See the
   // mdoc_attribute_ids.h file for the full list of attribute names and our
   // restrictions.
+  // In version >= 7, the attribute is encoded in two parts:
+  // The first 32 bytes of the ei are "<len> <ei value>" padded to 32
+  // The next 64 bytes of the ev are "<ev value>"
 
-  std::vector<uint8_t> vbuf;
+  // Both cases rely on the zero-padding of v.
   std::vector<typename Field::Elt> v(96 * 8, F.zero());
 
-  if (version >= 4) {
-    // Append the length of the elementIdentifier.
+  if (version >= 7) {
+    std::vector<uint8_t> vbuf;
     append_text_len(vbuf, attr.id_len);
-  }
-  vbuf.insert(vbuf.end(), attr.id, attr.id + attr.id_len);
-  append_text_len(vbuf, 12);  // len of "elementValue"
-  const char* ev = "elementValue";
-  vbuf.insert(vbuf.end(), ev, ev + 12);
+    vbuf.insert(vbuf.end(), attr.id, attr.id + attr.id_len);
+    for (size_t j = 0; j < vbuf.size() && j < 32; ++j) {
+      fill_byte(v, vbuf[j], j, F);
+    }
 
-  vbuf.insert(vbuf.end(), attr.cbor_value,
-              attr.cbor_value + attr.cbor_value_len);
+    // Now fill the value
+    for (size_t j = 0; j < 64 && j < attr.cbor_value_len; ++j) {
+      fill_byte(v, attr.cbor_value[j], 32 + j, F);
+    }
 
-  if (vbuf.size() > 96) {
-    log(ERROR, "Attribute %s is too long: %zu", attr.id, vbuf.size());
-    return false;
-  }
-  size_t len = 0;
-  for (size_t j = 0; j < vbuf.size() && len < 96; ++j, ++len) {
-    fill_byte(v, vbuf[j], len, F);
-  }
-  filler.push_back(v);
-  if (version >= 4) {
-    // In version 4, add the OpenedAttribute.len field.
+    filler.push_back(v);
+
+    // The v7 circuit use "<17> elementIdentifier <32 b of above>"
+    // to form the string that it compares against.
+    filler.push_back(1 + 17 + 1 + attr.id_len, 8, F);
+
+    // For the value, the v7 circuit uses "<12> elementValue <cbor_value>"
+    // as the comparison string.
+    size_t vlen = attr.cbor_value_len + 12 + 1;
+
+    filler.push_back(vlen, 8, F);
+  } else {
+    // version < 7
+    // Append the length of the elementIdentifier.
+    std::vector<uint8_t> vbuf;
+    append_text_len(vbuf, attr.id_len);
+    vbuf.insert(vbuf.end(), attr.id, attr.id + attr.id_len);
+    append_text_len(vbuf, 12);  // len of "elementValue"
+    const char* ev = "elementValue";
+    vbuf.insert(vbuf.end(), ev, ev + 12);
+
+    vbuf.insert(vbuf.end(), attr.cbor_value,
+                attr.cbor_value + attr.cbor_value_len);
+
+    if (vbuf.size() > 96) {
+      log(ERROR, "Attribute %s is too long: %zu", attr.id, vbuf.size());
+      return MDOC_PROVER_ATTRIBUTE_TOO_LONG;
+    }
+    size_t len = 0;
+    for (size_t j = 0; j < vbuf.size() && len < 96; ++j, ++len) {
+      fill_byte(v, vbuf[j], len, F);
+    }
+    filler.push_back(v);
     filler.push_back(len, 8, F);
   }
-  return true;
+  return MDOC_PROVER_SUCCESS;
 }
 
 template <class EC, class ScalarField>
@@ -511,13 +612,15 @@ class MdocSignatureWitness {
     }
   }
 
-  bool compute_witness(Elt pkX, Elt pkY, const uint8_t mdoc[/* len */],
-                       size_t len, const uint8_t transcript[/* tlen */],
-                       size_t tlen) {
+  MdocProverErrorCode compute_witness(Elt pkX, Elt pkY,
+                                      const uint8_t mdoc[/* len */], size_t len,
+                                      const uint8_t transcript[/* tlen */],
+                                      size_t tlen) {
     ParsedMdoc pm;
 
-    if (!pm.parse_device_response(len, mdoc)) {
-      return false;
+    MdocProverErrorCode err = pm.parse_device_response(len, mdoc);
+    if (err != MDOC_PROVER_SUCCESS) {
+      return err;
     }
 
     Nat ne = nat_from_hash<Nat>(pm.tagged_mso_bytes_.data(),
@@ -528,7 +631,10 @@ class MdocSignatureWitness {
     const size_t l = pm.sig_.len;
     Nat nr = nat_from_be<Nat>(&mdoc[pm.sig_.pos]);
     Nat ns = nat_from_be<Nat>(&mdoc[pm.sig_.pos + l / 2]);
-    ew_.compute_witness(pkX, pkY, ne, nr, ns);
+    bool sig_ok = ew_.compute_witness(pkX, pkY, ne, nr, ns);
+    if (!sig_ok) {
+      return MDOC_PROVER_SIGNATURE_FAILURE;
+    }
 
     Nat ne2 = compute_transcript_hash<Nat>(transcript, tlen, &pm.doc_type_);
     const size_t l2 = pm.dksig_.len;
@@ -540,8 +646,11 @@ class MdocSignatureWitness {
     dpky_ = ec_.f_.to_montgomery(
         nat_from_be<Nat>(&mdoc[pmso + pm.dev_key_pky_.pos]));
     e2_ = ec_.f_.to_montgomery(ne2);
-    dkw_.compute_witness(dpkx_, dpky_, ne2, nr2, ns2);
-    return true;
+    bool dksig_ok = dkw_.compute_witness(dpkx_, dpky_, ne2, nr2, ns2);
+    if (!dksig_ok) {
+      return MDOC_PROVER_DEVICE_SIGNATURE_FAILURE;
+    }
+    return MDOC_PROVER_SUCCESS;
   }
 };
 
@@ -573,12 +682,11 @@ class MdocHashWitness {
   std::vector<CborIndex> attr_mso_; /* The cbor indices of the attributes. */
   std::vector<AttrShift> attr_ei_;
   std::vector<AttrShift> attr_ev_;
+  std::vector<SaltedHash> attr_sh_;
 
   FlatSHA256Witness::BlockWitness bw_[kMaxSHABlocks];
 
   ParsedMdoc pm_;
-
-  uint8_t now_[20]; /* CBOR-formatted time used for expiry comparison. */
 
   explicit MdocHashWitness(size_t num_attr, const EC& ec, const Field& Fn)
       : ec_(ec), fn_(Fn), num_attr_(num_attr) {}
@@ -590,6 +698,17 @@ class MdocHashWitness {
   void fill_attr_shift(DenseFiller<Field>& df, const AttrShift& attr) const {
     df.push_back(attr.offset, kCborIndexBits, fn_);
     df.push_back(attr.len, kCborIndexBits, fn_);
+  }
+
+  void fill_salted_attr(DenseFiller<Field>& df, const SaltedHash& sh) const {
+    df.push_back(sh.i1, kCborIndexBits, fn_);
+    df.push_back(sh.i2, kCborIndexBits, fn_);
+    df.push_back(sh.i3, kCborIndexBits, fn_);
+    df.push_back(sh.l[0], kCborIndexBits, fn_);
+    df.push_back(sh.l[1], kCborIndexBits, fn_);
+    df.push_back(sh.l[2], kCborIndexBits, fn_);
+    df.push_back(sh.l[3], kCborIndexBits, fn_);
+    df.push_back(sh.perm, 8, fn_);
   }
 
   void fill_sha(DenseFiller<Field>& filler,
@@ -607,14 +726,14 @@ class MdocHashWitness {
     }
   }
 
-  void fill_witness(DenseFiller<Field>& filler) const {
+  void fill_witness(DenseFiller<Field>& filler, size_t version = 7) const {
     // Fill sha of main mso.
     filler.push_back(numb_, 8, fn_);
-    // Don't push the prefix.
-    for (size_t i = kCose1PrefixLen; i < kMaxSHABlocks * 64; ++i) {
+    // Don't push the prefix.  Version <=7 has a 35-block limit.
+    for (size_t i = kCose1PrefixLen; i < max_shablocks(version) * 64; ++i) {
       filler.push_back(signed_bytes_[i], 8, fn_);
     }
-    for (size_t j = 0; j < kMaxSHABlocks; j++) {
+    for (size_t j = 0; j < max_shablocks(version); j++) {
       fill_sha(filler, bw_[j]);
     }
     // === done with sha
@@ -638,22 +757,35 @@ class MdocHashWitness {
       filler.push_back(attr_mso_[ai].v, kCborIndexBits, fn_);
       fill_attr_shift(filler, attr_ei_[ai]);
       fill_attr_shift(filler, attr_ev_[ai]);
+
+      if (version >= 7) {
+        fill_salted_attr(filler, attr_sh_[ai]);
+      }
     }
   }
 
-  bool compute_witness(const uint8_t mdoc[/* len */], size_t len,
-                       const uint8_t transcript[/* tlen */], size_t tlen,
-                       const RequestedAttribute attrs[], size_t attrs_len,
-                       const uint8_t tnow[/*20*/], size_t version) {
-    if (!pm_.parse_device_response(len, mdoc)) {
+  size_t max_shablocks(size_t version) const {
+    if (version <= 6) return 35;
+    return kMaxSHABlocks;
+  }
+
+  MdocProverErrorCode compute_witness(const uint8_t mdoc[/* len */], size_t len,
+                                      const uint8_t transcript[/* tlen */],
+                                      size_t tlen,
+                                      const RequestedAttribute attrs[],
+                                      size_t attrs_len, size_t version) {
+    MdocProverErrorCode err = pm_.parse_device_response(len, mdoc);
+    if (err != MDOC_PROVER_SUCCESS) {
       log(ERROR, "Failed to parse device response");
-      return false;
+      return err;
     }
 
+    if (version < 4) return MDOC_PROVER_VERSION_NOT_SUPPORTED;
+
     std::vector<uint8_t> buf;
-    if (pm_.t_mso_.len >= kMaxSHABlocks * 64 - 9 - kCose1PrefixLen) {
+    if (pm_.t_mso_.len >= max_shablocks(version) * 64 - 9 - kCose1PrefixLen) {
       log(ERROR, "tagged mso is too big: %zu", pm_.t_mso_.len);
-      return false;
+      return MDOC_PROVER_TAGGED_MSO_TOO_BIG;
     }
 
     buf.assign(std::begin(kCose1Prefix), std::end(kCose1Prefix));
@@ -664,13 +796,12 @@ class MdocHashWitness {
       buf.push_back(mdoc[pm_.t_mso_.pos + i]);
     }
 
-    FlatSHA256Witness::transform_and_witness_message(
-        buf.size(), buf.data(), kMaxSHABlocks, numb_, signed_bytes_, bw_);
+    FlatSHA256Witness::transform_and_witness_message(buf.size(), buf.data(),
+                                                     max_shablocks(version),
+                                                     numb_, signed_bytes_, bw_);
 
     ECNat ne = nat_from_u32<ECNat>(bw_[numb_ - 1].h1);
     e_ = ec_.f_.to_montgomery(ne);
-
-    memcpy(now_, tnow, 20);
 
     size_t pmso = pm_.t_mso_.pos + 5; /* +5 to skip the tag */
     dpkx_ = ec_.f_.to_montgomery(
@@ -685,6 +816,7 @@ class MdocHashWitness {
     attr_ei_.resize(attrs_len);
     attr_bytes_.resize(attrs_len);
     atw_.resize(attrs_len);
+    attr_sh_.resize(attrs_len);
 
     // Match the attributes with the witnesses from the deviceResponse.
     for (size_t i = 0; i < attrs_len; ++i) {
@@ -697,19 +829,64 @@ class MdocHashWitness {
               fa.tag_len, &fa.doc[fa.tag_ind], 2, attr_n_[i],
               &attr_bytes_[i][0], &atw_[i][0]);
           attr_mso_[i] = fa.mso;
-          attr_ei_[i].offset = fa.id_ind - fa.tag_ind;
-          if (version >= 4) {
-            // In version 4, the attribute id is encoded as the length of the
-            // id followed by the id.  The witness starts at the id, so we
-            // subtract 1 or 2 to get the offset, depending on the id length.
+          // In version >= 4, the attribute id is encoded as the length of the
+          // id followed by the id.  The witness starts at the id, so we
+          // subtract 1 or 2 to get the offset, depending on the id length.
+          attr_ei_[i].offset = fa.id_ind - fa.tag_ind - 1;
+          if (fa.id_len > 23) {
             attr_ei_[i].offset -= 1;
-            if (fa.id_len > 23) {
-              attr_ei_[i].offset -= 1;
-            }
           }
           attr_ei_[i].len = fa.witness_length(attrs[i]);
+
           attr_ev_[i].offset = fa.val_ind - fa.tag_ind;
           attr_ev_[i].len = fa.val_len;
+
+          // Version 7+ circuits support salted hashes in which ev may occur
+          // before ei. In this case, we provide two separate indices for the ev
+          // and ei. The circuit augments the check buffer with the
+          // "elementValue" and "elementIdentifier" prefixes respectively.
+          if (version >= 7) {
+            attr_ei_[i].offset =
+                fa.id_ind - fa.tag_ind;  // points to name of attribute
+            attr_ei_[i].offset -=
+                fa.id_len < 24 ? 1 : 2;  // subtract length of name
+            attr_ei_[i].offset -=
+                (17 + 1);  // subtract "elementIdentifier" & length
+            attr_ei_[i].len = 17 + 1 + fa.id_len + (fa.id_len < 24 ? 1 : 2);
+
+            // -1 for len of elementValue
+            attr_ev_[i].offset = fa.val_ind - fa.tag_ind - 1;
+            attr_ev_[i].len = attrs[i].cbor_value_len + 12 + 1;
+
+            pos triples[4] = {
+                {fa.dig_ind - fa.tag_ind - 1, fa.dig_len, 0},
+                {fa.rand_ind - fa.tag_ind - 1, fa.rand_len, 1},
+                {attr_ei_[i].offset, attr_ei_[i].len, 2},
+                {attr_ev_[i].offset, attr_ev_[i].len, 3},
+            };
+            std::sort(triples, triples + 4,
+                      [](const pos& a, const pos& b) { return a.i < b.i; });
+
+            attr_sh_[i].l[0] = triples[0].l;
+            attr_sh_[i].i1 = triples[1].i;
+            attr_sh_[i].l[1] = triples[1].l;
+            attr_sh_[i].i2 = triples[2].i;
+            attr_sh_[i].l[2] = triples[2].l;
+            attr_sh_[i].i3 = triples[3].i;
+            attr_sh_[i].l[3] = triples[3].l;
+            triples[0].ord = 0;
+            triples[1].ord = 1;
+            triples[2].ord = 2;
+            triples[3].ord = 3;
+
+            std::sort(triples, triples + 4,
+                      [](const pos& a, const pos& b) { return a.p < b.p; });
+            attr_sh_[i].perm = triples[0].ord;
+            attr_sh_[i].perm |= triples[1].ord << 2;
+            attr_sh_[i].perm |= triples[2].ord << 4;
+            attr_sh_[i].perm |= triples[3].ord << 6;
+          }
+
           found = true;
           break;
         }
@@ -717,10 +894,10 @@ class MdocHashWitness {
       if (!found) {
         log(ERROR, "Could not find attribute %.*s", attrs[i].id_len,
             attrs[i].id);
-        return false;
+        return MDOC_PROVER_ATTRIBUTE_NOT_FOUND;
       }
     }
-    return true;
+    return MDOC_PROVER_SUCCESS;
   }
 };
 }  // namespace proofs

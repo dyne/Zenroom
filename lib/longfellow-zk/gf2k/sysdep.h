@@ -11,6 +11,33 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//
+// Some parts of this file are covered by a different license. To find
+// out which ones its best to diff this file with the one distributed
+// by longfellow-zk:
+// $ diff src/gf2k/sysdep.h vendor/longfellow-zk/lib/gf2k/sysdep.h
+//
+// See below the additional licensing information:
+
+/* This file is part of Zenroom (https://zenroom.dyne.org)
+ *
+ * Copyright (C) 2025 Dyne.org foundation
+ * designed, written and maintained by Denis Roio and Matteo Cristino
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
 
 #ifndef PRIVACY_PROOFS_ZK_LIB_GF2K_SYSDEP_H_
 #define PRIVACY_PROOFS_ZK_LIB_GF2K_SYSDEP_H_
@@ -64,6 +91,31 @@ static inline gf2_128_elt_t gf2_128_mul(gf2_128_elt_t x, gf2_128_elt_t y) {
   t0 = gf2_128_reduce(t0, t1);
   return t0;
 }
+
+using gf2_128_accum_t = std::array<gf2_128_elt_t, 3>;
+
+static inline void gf2_128_mac(gf2_128_accum_t& acc, gf2_128_elt_t x,
+                               gf2_128_elt_t y) {
+  gf2_128_elt_t t0 = _mm_clmulepi64_si128(x, y, 0x00);
+  gf2_128_elt_t t1a = _mm_clmulepi64_si128(x, y, 0x01);
+  gf2_128_elt_t t1b = _mm_clmulepi64_si128(x, y, 0x10);
+  gf2_128_elt_t t1 = gf2_128_add(t1a, t1b);
+  gf2_128_elt_t t2 = _mm_clmulepi64_si128(x, y, 0x11);
+
+  acc[0] = gf2_128_add(acc[0], t0);
+  acc[1] = gf2_128_add(acc[1], t1);
+  acc[2] = gf2_128_add(acc[2], t2);
+}
+
+static inline gf2_128_elt_t gf2_128_accum_reduce(const gf2_128_accum_t& acc) {
+  gf2_128_elt_t t0 = acc[0];
+  gf2_128_elt_t t1 = acc[1];
+  gf2_128_elt_t t2 = acc[2];
+  t1 = gf2_128_reduce(t1, t2);
+  t0 = gf2_128_reduce(t0, t1);
+  return t0;
+}
+
 }  // namespace proofs
 #elif defined(__aarch64__)
 //
@@ -120,6 +172,32 @@ static inline gf2_128_elt_t gf2_128_mul(gf2_128_elt_t x, gf2_128_elt_t y) {
   t0 = gf2_128_reduce(t0, t1);
   return t0;
 }
+
+using gf2_128_accum_t = std::array<gf2_128_elt_t, 3>;
+
+static inline void gf2_128_mac(gf2_128_accum_t& acc, gf2_128_elt_t x,
+                               gf2_128_elt_t y) {
+  gf2_128_elt_t t0 = vmull_low(x, y);
+  gf2_128_elt_t swx = vextq_p64(x, x, 1);
+  gf2_128_elt_t t1a = vmull_low(swx, y);
+  gf2_128_elt_t t1b = vmull_high(swx, y);
+  gf2_128_elt_t t1 = gf2_128_add(t1a, t1b);
+  gf2_128_elt_t t2 = vmull_high(x, y);
+
+  acc[0] = gf2_128_add(acc[0], t0);
+  acc[1] = gf2_128_add(acc[1], t1);
+  acc[2] = gf2_128_add(acc[2], t2);
+}
+
+static inline gf2_128_elt_t gf2_128_accum_reduce(const gf2_128_accum_t& acc) {
+  gf2_128_elt_t t0 = acc[0];
+  gf2_128_elt_t t1 = acc[1];
+  gf2_128_elt_t t2 = acc[2];
+  t1 = gf2_128_reduce(t1, t2);
+  t0 = gf2_128_reduce(t0, t1);
+  return t0;
+}
+
 }  // namespace proofs
 
 #elif defined(__arm__)
@@ -279,6 +357,32 @@ static inline gf2_128_elt_t gf2_128_mul(gf2_128_elt_t x, gf2_128_elt_t y) {
   gf2_128_elt_t t2 = vmull_high(x, y);
   t1 = gf2_128_reduce(t1, t2);
   gf2_128_elt_t t0 = vmull_low(x, y);
+  t0 = gf2_128_reduce(t0, t1);
+  return t0;
+}
+
+using gf2_128_accum_t = std::array<gf2_128_elt_t, 3>;
+
+static inline void gf2_128_mac(gf2_128_accum_t& acc, gf2_128_elt_t x,
+                               gf2_128_elt_t y) {
+  poly8x8_t xl = vget_low_p8(x);
+  poly8x8_t xh = vget_high_p8(x);
+  poly8x8_t yl = vget_low_p8(y);
+  poly8x8_t yh = vget_high_p8(y);
+  gf2_128_elt_t t0 = pmul64x64(xl, yl);
+  gf2_128_elt_t t2 = pmul64x64(xh, yh);
+  gf2_128_elt_t t1 = pmul64x64(vadd_p8(xl, xh), vadd_p8(yl, yh));
+
+  acc[0] = gf2_128_add(acc[0], t0);
+  acc[1] = gf2_128_add(acc[1], t1);
+  acc[2] = gf2_128_add(acc[2], t2);
+}
+
+static inline gf2_128_elt_t gf2_128_accum_reduce(const gf2_128_accum_t& acc) {
+  gf2_128_elt_t t0 = acc[0];
+  gf2_128_elt_t t1 = gf2_128_add(acc[1], gf2_128_add(acc[0], acc[2]));
+  gf2_128_elt_t t2 = acc[2];
+  t1 = gf2_128_reduce(t1, t2);
   t0 = gf2_128_reduce(t0, t1);
   return t0;
 }

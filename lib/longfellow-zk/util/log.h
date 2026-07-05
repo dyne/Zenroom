@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2025 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,6 @@ enum LogLevel {
 void set_log_level(enum LogLevel l);
 
 void log(enum LogLevel l, const char* format, ...);
-};  // namespace proofs
+}  // namespace proofs
 
 #endif  // PRIVACY_PROOFS_ZK_LIB_UTIL_LOG_H_

@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,8 +15,7 @@
 #ifndef PRIVACY_PROOFS_ZK_LIB_SUMCHECK_PROVER_LAYERS_H_
 #define PRIVACY_PROOFS_ZK_LIB_SUMCHECK_PROVER_LAYERS_H_
 
-#include <stddef.h>
-
+#include <cstddef>
 #include <memory>
 #include <vector>
 
@@ -24,6 +23,8 @@
 #include "arrays/dense.h"
 #include "arrays/eqs.h"
 #include "sumcheck/circuit.h"
+#include "sumcheck/equad.h"
+#include "sumcheck/hquad.h"
 #include "sumcheck/quad.h"
 #include "sumcheck/transcript_sumcheck.h"
 #include "util/panic.h"
@@ -36,6 +37,7 @@ namespace proofs {
 template <class Field>
 class ProverLayers {
   using Elt = typename Field::Elt;
+  using Accum = typename Field::Accum;
 
  public:
   using inputs = std::vector<std::unique_ptr<Dense<Field>>>;
@@ -132,34 +134,36 @@ class ProverLayers {
       bnd.g[1][i] = bnd.g[0][i];
     }
 
+    // Unpadded claims on the two hands, initially zero and updated in
+    // layer()
+    Elt WC[2] = {F.zero(), F.zero()};
+
     for (size_t ly = 0; ly < circ->nl; ++ly) {
       auto clr = &circ->l.at(ly);
       Elt alpha, beta;
       ts.begin_layer(alpha, beta, ly);
       Eqs<Field> EQ(logc, nc, bnd.q, F);
-      auto QUAD = clr->quad->clone();
-      QUAD->bind_g(bnd.logv, bnd.g[0], bnd.g[1], alpha, beta, F);
+      auto HQUAD =
+          clr->quad->bind_g(bnd.logv, bnd.g[0], bnd.g[1], alpha, beta, F);
 
-      layer(pr, pad, ts, bnd, ly, logc, clr->logw, &EQ, QUAD.get(),
-            in.at(ly).get(), F);
+      layer(pr, pad, ts, bnd, ly, logc, clr->logw, &EQ, HQUAD.get(),
+            in.at(ly).get(), alpha, WC, F);
 
       if (aux != nullptr) {
-        aux->bound_quad[ly] = QUAD->scalar();
+        aux->bound_quad[ly] = HQUAD->scalar();
       }
     }
   }
 
  private:
-  using index_t = typename Quad<Field>::index_t;
+  using index_t = typename EQuad<Field>::index_t;
   using CPoly = typename LayerProof<Field>::CPoly;
   using WPoly = typename LayerProof<Field>::WPoly;
-  using FCPoly = typename LayerProof<Field>::FCPoly;
-  using FWPoly = typename LayerProof<Field>::FWPoly;
 
   /*
   Engage in single-layer sumcheck on
 
-          EQ[|c] QUAD[|r,l] W[r,c] W[l,c]
+          EQ[c] QUAD[r,l] W[r,c] W[l,c]
 
   Bind c to C, r to R, and l to L (in that order).  Store claims
   W[R,C] and W[L,C] in the proof, and set BND to the new bindings for
@@ -170,47 +174,31 @@ class ProverLayers {
   */
   void layer(Proof<Field>* pr, const Proof<Field>* pad,
              TranscriptSumcheck<Field>& ts, bindings& bnd, size_t layer,
-             size_t logc, size_t logw, Eqs<Field>* EQ, Quad<Field>* QUAD,
-             Dense<Field>* W, const Field& F) {
+             size_t logc, size_t logw, Eqs<Field>* EQ, HQuad<Field>* HQUAD,
+             Dense<Field>* W, const Elt& alpha, Elt WC[2], const Field& F) {
     check(EQ->n() == W->n0_, "EQ->n() == W->n0_");
 
     check(logw <= Proof<Field>::kMaxBindings, "logw <= kMaxBindings");
+    check(logc <= Proof<Field>::kMaxBindings, "logc <= kMaxBindings");
     bnd.logv = logw;
 
-    // Bind the C variables to Q.
-    // Note that binding C variables takes O(number_of_copies * circuit_size)
-    // while binding R, L takes O(circuit_size * log(circuit_size)). In most
-    // cases number_of_copies > log(circuit_size), so we don't have to
-    // optimize binding R, L.
+    // Reconstruct the sum from the claims of the previous
+    // layer.
+    Elt sum = F.addf(WC[0], F.mulf(alpha, WC[1]));
+
+    // Now  SUM = \sum_{c,l,r} EQ[c] Q[l,r] W[l,c] W[r,c]
+    //
+    // Bind the C variables
     for (size_t round = 0; round < logc; ++round) {
-      CPoly sum{};
+      CPoly evals = evaluations_c(EQ, W, HQUAD, sum, F);
 
-      // sum over r,l: QUAD[|r,l] EQ[|c] W[r,c] W[l,c]
-      for (index_t i = 0; i < QUAD->n_; i++) {
-        corner_t r(QUAD->c_[i].h[0]);
-        corner_t l(QUAD->c_[i].h[1]);
-
-        // sum over c: EQ[|c] W[r,c] W[l,c]
-        CPoly sumc{};
-
-        // n0_ is the copy dimension, n1_ is the wire dimension.
-        for (corner_t c = 0; c < W->n0_; c += 2) {
-          CPoly poly = cpoly_at_dense(EQ, c, 0, F)
-                           .mul(cpoly_at_dense(W, c, r, F), F)
-                           .mul(cpoly_at_dense(W, c, l, F), F);
-          sumc.add(poly, F);
-        }
-
-        sumc.mul_scalar(QUAD->c_[i].v, F);
-        sum.add(sumc, F);
-      }
-
-      Elt rnd = round_c(pr, pad, ts, layer, round, sum, F);
+      Elt rnd = round_c(pr, pad, ts, layer, round, evals, F);
       bnd.q[round] = rnd;
 
-      // bind the c variable in both EQ and W
+      // bind the C variable in both EQ and W
       EQ->bind(rnd, F);
       W->bind(rnd, F);
+      sum = evals.eval_lagrange(rnd, F);
     }
 
     Elt eq0 = EQ->scalar();
@@ -218,45 +206,57 @@ class ProverLayers {
     W->reshape(W->n1_);
     check(W->n1_ == 1, "W->n1_ == 1");
 
-    auto Wclone = W->clone();                 // keep alive until function end
-    Dense<Field>* WH[2] = {W, Wclone.get()};  // reuse W
+    // To save memory, we avoid cloning W. Instead, we use a single temporary
+    // buffer Wtmp of size N/2 and start with both hand-pointers WH[0,1]
+    // pointing to W. In the first round of the loop, hand 0 is bound
+    // out-of-place from W into Wtmp, and we then update WH[0] to point to Wtmp.
+    // Hand 1 is then bound in-place in W. This strategy uses 1.5N space instead
+    // of 2N.
+    auto Wtmp = std::make_unique<Dense<Field>>((W->n0_ + 1) / 2, 1);
+    Dense<Field>* WH[2] = {W, W};
 
+    // Now  SUM = \sum_{l,r} eq0 Q[l,r] Wl[l] Wr[r].  Bind l and
+    // r in alternating "hands".
     for (size_t round = 0; round < logw; ++round) {
       for (size_t hand = 0; hand < 2; hand++) {
-        // In SUM_{l,r} Q[l,r] W[l] W[r], first precompute QW[l] =
-        // SUM_{r} Q[l,r] W[r] as a dense array, and then compute
-        // SUM_{l} QW[l] W[l].
-        Dense<Field> QW(WH[hand]->n0_, 1);
-        QW.clear(F);
+        // In \sum_{l,r} eq0 Q[l,r] Wl[l] Wl[r], first precompute
+        // QW[l] = \sum_{r} Q[l,r] W[r] as a dense array, and then do
+        // a round on  \sum_{l} eq0 QW[l] W[l].
+        std::vector<Elt> QW(WH[hand]->n0_, Elt{});
         size_t ohand = 1 - hand;
 
-        // QW[l] = SUM_{r} Q[l,r] W[r]
-        for (index_t i = 0; i < QUAD->n_; ++i) {
-          corner_t p0(QUAD->c_[i].h[hand]);
-          corner_t p1(QUAD->c_[i].h[ohand]);
-          F.add(QW.v_[p0], F.mulf(QUAD->c_[i].v, WH[ohand]->v_[p1]));
+        // QW[l] = \sum_{r} Q[l,r] W[r]
+        for (index_t i = 0; i < HQUAD->n_; ++i) {
+          const corner_t p0(HQUAD->hc_[i].h[hand]);
+          const corner_t p1(HQUAD->hc_[i].h[ohand]);
+          F.add(QW[p0], F.mulf(HQUAD->vc_[i].v, WH[ohand]->v_[p1]));
         }
 
-        // SUM_{l} QW[l] W[l].
-        WPoly sum{};
-        for (corner_t l = 0; l < QW.n0_; l += 2) {
-          WPoly poly = wpoly_at_dense(WH[hand], l, 0, F)
-                           .mul(wpoly_at_dense(&QW, l, 0, F), F);
-          sum.add(poly, F);
-        }
+        // Compute the binding of \sum_{l} eq0 QW[l] W[l] as
+        // a quadratic polynomial.
+        WPoly evals = evaluations(WH[hand]->n0_, eq0, QW.data(),
+                                  &WH[hand]->v_[0], sum, F);
 
-        sum.mul_scalar(eq0, F);
-        Elt rnd = round_h(pr, pad, ts, layer, hand, round, sum, F);
+        Elt rnd = round_h(pr, pad, ts, layer, hand, round, evals, F);
         bnd.g[hand][round] = rnd;
+        sum = evals.eval_lagrange(rnd, F);
 
         // bind the r variable in W[hand] and QUAD
-        WH[hand]->bind(rnd, F);
-        QUAD->bind_h(rnd, hand, F);
+        if (round == 0 && hand == 0) {
+          WH[0] = Wtmp.get();
+          WH[0]->bind(rnd, *W, F);
+        } else {
+          WH[hand]->bind(rnd, F);
+        }
+        HQUAD->bind_h(rnd, hand, F);
       }
     }
 
-    QUAD->scalar();  // for the side effect of assertions
-    Elt WC[2] = {WH[0]->scalar(), WH[1]->scalar()};
+    Elt hquad = HQUAD->scalar();
+    WC[0] = WH[0]->scalar();
+    WC[1] = WH[1]->scalar();
+    Elt expected_sum = F.mulf(eq0, F.mulf(hquad, F.mulf(WC[0], WC[1])));
+    check(sum == expected_sum, "reconstructed sum == eq0 * quad * wl * wr");
     end_layer(pr, pad, ts, layer, WC, F);
   }
 
@@ -271,20 +271,20 @@ class ProverLayers {
     corner_t n0 = V->n0_;
 
     V->clear(F);
-    for (index_t i = 0; i < quad->n_; i++) {
-      corner_t g(quad->c_[i].g);
-      corner_t r(quad->c_[i].h[0]);
-      corner_t l(quad->c_[i].h[1]);
+    for (const auto& ec : *quad) {
+      const corner_t g(ec.g);
+      const corner_t r(ec.h[0]);
+      const corner_t l(ec.h[1]);
       for (corner_t c = 0; c < n0; ++c) {
-        auto x = quad->c_[i].v;
-        if (x == F.zero()) {
+        if (ec.v == F.zero()) {
           // assert that the computed W[l]W[r] is zero.
-          auto y = W->v_[n0 * l + c];
+          Elt y = W->v_[n0 * l + c];
           F.mul(y, W->v_[n0 * r + c]);
           if (y != F.zero()) {
             return false;
           }
         } else {
+          Elt x = ec.v;
           F.mul(x, W->v_[n0 * l + c]);
           F.mul(x, W->v_[n0 * r + c]);
           F.add(V->v_[n0 * g + c], x);
@@ -297,7 +297,7 @@ class ProverLayers {
   Elt /*R*/ round_c(Proof<Field>* pr, const Proof<Field>* pad,
                     TranscriptSumcheck<Field>& ts, size_t layer, size_t round,
                     CPoly poly, const Field& F) {
-    check(round <= Proof<Field>::kMaxBindings, "round <= kMaxBindings");
+    check(round < Proof<Field>::kMaxBindings, "round < kMaxBindings");
 
     if (pad) {
       poly.sub(pad->l[layer].cp[round], F);
@@ -310,7 +310,7 @@ class ProverLayers {
   Elt /*R*/ round_h(Proof<Field>* pr, const Proof<Field>* pad,
                     TranscriptSumcheck<Field>& ts, size_t layer, size_t hand,
                     size_t round, WPoly poly, const Field& F) {
-    check(round <= Proof<Field>::kMaxBindings, "round <= kMaxBindings");
+    check(round < Proof<Field>::kMaxBindings, "round < kMaxBindings");
     if (pad) {
       poly.sub(pad->l[layer].hp[hand][round], F);
     }
@@ -333,16 +333,156 @@ class ProverLayers {
     ts.write(tt, 1, 2);
   }
 
-  CPoly cpoly_at_dense(const Dense<Field>* D, corner_t p0, corner_t p1,
-                       const Field& F) {
-    auto tmp = FCPoly::extend(D->t2_at_corners(p0, p1, F), F);
-    return CPoly(tmp);
+  // now
+  //
+  //   SUM = \sum_{l,r} eq0 Q[l,r] Wl[l] Wr[r]
+  //       = \sum_{l} eq0 QW[l] W[l]
+  //
+  // having precomputed QW[l] = \sum_r Q[l, r] Wl[l], and renaming
+  // Wr to W.
+  //
+  // Return the quadratic polynomial p(t) that represents what SUM
+  // will be after binding l to t in Q and Wl.
+  //
+  WPoly evaluations(size_t n, const Elt& eq0, const Elt* QW, const Elt* W,
+                    const Elt& sum, const Field& F) {
+    // Compute the polynomial coefficients, and multiply the coefficients.
+    size_t nodd = n / 2;
+
+    // Compute the coefficients of p(t) = a0 + a1*t + a2*t^2, but we
+    // don't need to compute a1 since we reconstruct it at the end
+    // from sum.
+    Accum a0{}, a2{};
+    for (size_t i = 0; i < nodd; i++) {
+      Elt qw0 = QW[2 * i];
+      Elt qw1 = QW[2 * i + 1];
+      Elt w0 = W[2 * i];
+      Elt w1 = W[2 * i + 1];
+
+      F.mac(a0, qw0, w0);
+      Elt dqw = F.subf(qw1, qw0);
+      Elt dw = F.subf(w1, w0);
+      F.mac(a2, dqw, dw);
+    }
+    if (2 * nodd < n) {
+      size_t i = nodd;
+      Elt qw0 = QW[2 * i];
+      Elt w0 = W[2 * i];
+
+      F.mac(a0, qw0, w0);
+      F.mac(a2, qw0, w0);
+    }
+
+    WPoly coef;
+    coef[0] = F.mulf(eq0, F.reduce(a0));
+    coef[2] = F.mulf(eq0, F.reduce(a2));
+    // SUM = P(0) + P(1) = 2*C0 + C1 + C2. Reconstruct C1.
+    coef[1] = sum;
+    F.sub(coef[1], coef[0]);
+    F.sub(coef[1], coef[0]);
+    F.sub(coef[1], coef[2]);
+
+    // evaluate at the standard points
+    WPoly evals{};
+    for (int k = 0; k < 3; ++k) {
+      evals[k] = coef.eval_monomial(F.poly_evaluation_point(k), F);
+    }
+
+    return evals;
   }
 
-  WPoly wpoly_at_dense(const Dense<Field>* D, corner_t p0, corner_t p1,
-                       const Field& F) {
-    auto tmp = FWPoly::extend(D->t2_at_corners(p0, p1, F), F);
-    return WPoly(tmp);
+  // Now  SUM = \sum_{c,l,r} EQ[c] Q[l,r] W[l,c] W[r,c]
+  //
+  // Return the polynomial p(t) that represents what SUM
+  // will be after binding c to t in Q and W.  Since p(t) is cubic
+  // we return its values at four points.
+  //
+  // Compute the polynomial in the monomial basis, but since
+  // we know that sum = p(0) + p(1), we can skip the computation
+  // of coef[1], which we reconstruct at the end.  coef[2] would
+  // work as well.
+  //
+  CPoly evaluations_c(const Eqs<Field>* EQ, const Dense<Field>* W,
+                      const HQuad<Field>* HQUAD, const Elt& sum,
+                      const Field& F) {
+    Accum acc[4]{};
+    for (index_t i = 0; i < HQUAD->n_; i++) {
+      const corner_t r(HQUAD->hc_[i].h[0]);
+      const corner_t l(HQUAD->hc_[i].h[1]);
+      const Elt& vc = HQUAD->vc_[i].v;
+
+      const Elt* wr_v = &W->v_[r * W->n0_];
+      const Elt* wl_v = &W->v_[l * W->n0_];
+
+      Accum l0{}, l2{}, l3{};
+
+      size_t nodd = W->n0_ / 2;
+      for (corner_t c = 0; c < nodd; ++c) {
+        Elt eq0 = EQ->at(2 * c);
+        Elt eq1 = EQ->at(2 * c + 1);
+        Elt wr0 = wr_v[2 * c];
+        Elt wr1 = wr_v[2 * c + 1];
+        Elt wl0 = wl_v[2 * c];
+        Elt wl1 = wl_v[2 * c + 1];
+
+        Elt a0 = eq0, a1 = F.subf(eq1, eq0);
+        Elt b0 = wr0, b1 = F.subf(wr1, wr0);
+        Elt c0 = wl0, c1 = F.subf(wl1, wl0);
+
+        // Letting a(t) = a0 + a1 t, and similarly for b(t) and d(t),
+        // compute d0, d1, and d2 via Karatsuba convolution.
+        // This is simlper than usual because a0 + a1 = eq1 and
+        // b0 + b1 = wr1.
+        Elt d0 = F.mulf(a0, b0);
+        Elt d2 = F.mulf(a1, b1);
+        Elt d1 = F.mulf(eq1, wr1);
+        F.sub(d1, d0);
+        F.sub(d1, d2);
+
+        // 2x3 convolution into the accumulators, but skip the
+        // [1] output.
+        F.mac(l0, d0, c0);
+        F.mac(l2, d1, c1);
+        F.mac(l2, d2, c0);
+        F.mac(l3, d2, c1);
+      }
+
+      if (2 * nodd < W->n0_) {
+        size_t c = nodd;
+        Elt eq0 = EQ->at(2 * c);
+        Elt wr0 = wr_v[2 * c];
+        Elt wl0 = wl_v[2 * c];
+
+        Elt d0 = F.mulf(eq0, wr0);
+        Elt three_wl0 = F.addf(wl0, F.addf(wl0, wl0));
+
+        F.mac(l0, d0, wl0);
+        F.mac(l2, d0, three_wl0);
+        F.mac(l3, d0, F.negf(wl0));
+      }
+
+      F.mac(acc[0], F.reduce(l0), vc);
+      F.mac(acc[2], F.reduce(l2), vc);
+      F.mac(acc[3], F.reduce(l3), vc);
+    }
+
+    CPoly coefs;
+    coefs[0] = F.reduce(acc[0]);
+    coefs[2] = F.reduce(acc[2]);
+    coefs[3] = F.reduce(acc[3]);
+    // SUM = P(0) + P(1) = 2*C0 + C1 + C2 + C3.  Reconstruct C1.
+    coefs[1] = sum;
+    F.sub(coefs[1], coefs[0]);
+    F.sub(coefs[1], coefs[0]);
+    F.sub(coefs[1], coefs[2]);
+    F.sub(coefs[1], coefs[3]);
+
+    // evaluate at the standard points
+    CPoly evals_c{};
+    for (int k = 0; k < 4; ++k) {
+      evals_c[k] = coefs.eval_monomial(F.poly_evaluation_point(k), F);
+    }
+    return evals_c;
   }
 };
 }  // namespace proofs

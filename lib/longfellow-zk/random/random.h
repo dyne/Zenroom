@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,47 +35,22 @@ class RandomEngine {
   virtual void bytes(uint8_t* buf, size_t n) = 0;  // pure virtual
 
   // Sample a random field element.
-  // TODO [matteof 2025-02-07] Per RFC, we must mask off the high
-  // bits, but this requires changes to the field interface.
-  // Punt for now since the mask is all ones anyway.
   template <class Field>
   typename Field::Elt elt(const Field& F) {
-    // Expected constant time.
-    uint8_t buf[Field::kBytes];
-    for (;;) {
-      bytes(buf, sizeof(buf));
-      if (std::optional<typename Field::Elt> maybe = F.of_bytes_field(buf)) {
-        return maybe.value();
-      }
-    }
+    return F.sample([this](size_t n, uint8_t* buf) { bytes(buf, n); });
   }
 
   template <class Field>
   typename Field::Elt subfield_elt(const Field& F) {
-    // Expected constant time.
-    uint8_t buf[Field::kSubFieldBytes];
-    for (;;) {
-      bytes(buf, sizeof(buf));
-      if (std::optional<typename Field::Elt> maybe = F.of_bytes_subfield(buf)) {
-        return maybe.value();
-      }
-    }
+    return F.sample_subfield([this](size_t n, uint8_t* buf) {
+      bytes(buf, n);
+    });
   }
 
   // Convenience method to sample an array of random field elements.
   template <class Field>
   void elt(typename Field::Elt e[/*n*/], size_t n, const Field& F) {
     for (size_t i = 0; i < n; ++i) e[i] = elt(F);
-  }
-
-  // the minimal bitmask such that (n & mask) == n
-  size_t mask(size_t n) {
-    size_t mask = 0;
-    while ((n & mask) != n) {
-      mask <<= 1;
-      mask |= 1u;
-    }
-    return mask;
   }
 
   // random size_t < n
@@ -127,6 +102,16 @@ class RandomEngine {
       std::swap(A[i], A[j]);
       res[i] = A[i];
     }
+  }
+
+  // the minimal bitmask such that (n & mask) == n
+  size_t mask(size_t n) {
+    size_t mask = 0;
+    while ((n & mask) != n) {
+      mask <<= 1;
+      mask |= 1u;
+    }
+    return mask;
   }
 };
 }  // namespace proofs

@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -65,34 +65,36 @@ class Logic {
     return f_.of_string(s);
   }
 
-  // To ensure deterministic behavior, the order of function calls that produce
-  // circuit wires must be well-defined at compile time.
-  // The C spec leaves certain order of operations unspecified in expressions.
-  // One such ambiguity arises in the order of function calls in an argument
-  // list. For example, the expression f(creates_wire(x), creates_wire(y))
-  // results in an ambiguous order.
-  // To help prevent this, all function calls that create wires can have at most
-  // one argument that is itself a function. To enforce this property, we
-  // require that all but the last argument to a function be a const pointer.
+  // Historical note: All functions in this file were defined so that the last
+  // argument was a const reference and all other arguments were by const
+  // pointer, as in add(const EltW* a, const EltW& b).  This funny convention
+  // forced the caller to create explicit temporaries for subexpressions, which
+  // in turn forced the wire ids to be deterministic. For example add(add(a,b),
+  // add(c,d)) may assign nondeterministic wire ids to the two subexpressions
+  // depending on the order of function calls.  We have since modified the
+  // compiler to renumber wires in a deterministic way independent of the
+  // original wire numbering, and in fact this feature has been present in all
+  // open source versions of longfellow-zk. We have now removed this funny
+  // calling convention, and changed the code to use standard C++ idioms.
 
   // Re-export backend operations
   EltW assert0(const EltW& a) const { return bk_->assert0(a); }
-  EltW add(const EltW* a, const EltW& b) const { return bk_->add(*a, b); }
+  EltW add(const EltW& a, const EltW& b) const { return bk_->add(a, b); }
 
-  EltW sub(const EltW* a, const EltW& b) const { return bk_->sub(*a, b); }
+  EltW sub(const EltW& a, const EltW& b) const { return bk_->sub(a, b); }
 
-  EltW mul(const EltW* a, const EltW& b) const { return bk_->mul(*a, b); }
+  EltW mul(const EltW& a, const EltW& b) const { return bk_->mul(a, b); }
   EltW mul(const Elt& k, const EltW& b) const { return bk_->mul(k, b); }
-  EltW mul(const Elt& k, const EltW* a, const EltW& b) const {
+  EltW mul(const Elt& k, const EltW& a, const EltW& b) const {
     return bk_->mul(k, a, b);
   }
 
   EltW ax(const Elt& a, const EltW& x) const { return bk_->ax(a, x); }
-  EltW axy(const Elt& a, const EltW* x, const EltW& y) const {
-    return bk_->axy(a, *x, y);
+  EltW axy(const Elt& a, const EltW& x, const EltW& y) const {
+    return bk_->axy(a, x, y);
   }
-  EltW axpy(const EltW* y, const Elt& a, const EltW& x) const {
-    return bk_->axpy(*y, a, x);
+  EltW axpy(const EltW& y, const Elt& a, const EltW& x) const {
+    return bk_->axpy(y, a, x);
   }
   EltW apy(const EltW& y, const Elt& a) const { return bk_->apy(y, a); }
 
@@ -141,7 +143,39 @@ class Logic {
 
   // vectors of N bits
   template <size_t N>
-  class bitvec : public std::array<BitW, N> {};
+  class bitvec : public std::array<BitW, N> {
+   public:
+    bitvec() = default;
+
+    // Allow explicit copies only.
+    //
+    // There is nothing wrong with copying bitvecs, but it seems
+    // like clang on armv7 (at least) generates incorrect code at
+    // least in some cases when passing bitvecs by value.  Thus, the
+    // goal is to force us to write const bv & in all function
+    // arguments, unless we explicitly opt-in to a copy via v32(x).
+    //
+    // bitvecs are only used by the compiler, and we don't ship
+    // 32-bit compilers.  We do however care about the ability of
+    // running 32 bit tests that compile a circuit and run it,
+    // so this nuisance is still worth it.
+    //
+    // The Google3 style guide says that copy constructors SHOULD NOT be
+    // explicit, which defeats the whole point of this exercise.  Oh well.
+    explicit bitvec(const bitvec&) = default;
+    bitvec& operator=(const bitvec&) = default;
+    bitvec(bitvec&&) = default;
+    bitvec& operator=(bitvec&&) = default;
+  };
+
+  // View for bitvec, used for clean initialization syntax.
+  template <size_t N>
+  struct bitvec_view {
+    const bitvec<N>* ptr;
+    // The Google3 style guide says that one-argument constructors MUST be
+    // explicit, which again defeats the whole point of this exercise.
+    bitvec_view(const bitvec<N>& v) : ptr(&v) {}
+  };
 
   // Common sizes, publicly exported for convenience. The type names are
   // intentionally lower-case to capture the spirit of basic "intx_t" types.
@@ -165,8 +199,7 @@ class Logic {
   EltW eval(const BitW& v) const {
     EltW r = ax(v.c1, v.x);
     if (v.c0 != zero()) {
-      auto c0 = konst(v.c0);
-      r = add(&c0, r);
+      r = add(konst(v.c0), r);
     }
     return r;
   }
@@ -175,33 +208,32 @@ class Logic {
   // outside the circuit
   template <size_t N>
   EltW as_scalar(const bitvec<N>& v) const {
+    check(N <= 64, "N <= 64");
     EltW r = konst(zero());
+    uint64_t s = 0;
     for (size_t i = 0; i < N; ++i) {
-      auto vi = eval(v[i]);
-      r = axpy(&r, f_.beta(i), vi);
+      r = axpy(r, f_.beta(i), eval(v[i]));
+      s += static_cast<uint64_t>(1) << i;
     }
+    // Check that the worst case all-1 bitvec can be represented
+    // in the field.
+    (void)f_.of_scalar(s);
     return r;
   }
 
   // return an EltW which is 0 iff v is 0
-  EltW assert0(const BitW& v) const {
-    auto e = eval(v);
-    return assert0(e);
-  }
+  EltW assert0(const BitW& v) const { return assert0(eval(v)); }
   // return an EltW which is 0 iff v is 1
-  EltW assert1(const BitW& v) const {
-    auto e = lnot(v);
-    return assert0(e);
-  }
+  EltW assert1(const BitW& v) const { return assert0(lnot(v)); }
 
   // 0 iff a==b
-  EltW assert_eq(const EltW* a, const EltW& b) const {
+  EltW assert_eq(const EltW& a, const EltW& b) const {
     return assert0(sub(a, b));
   }
-  EltW assert_eq(const BitW* a, const BitW& b) const {
+  EltW assert_eq(const BitW& a, const BitW& b) const {
     return assert0(lxor(a, b));
   }
-  EltW assert_implies(const BitW* a, const BitW& b) const {
+  EltW assert_implies(const BitW& a, const BitW& b) const {
     return assert1(limplies(a, b));
   }
 
@@ -212,11 +244,10 @@ class Logic {
     // Seems to work better than b*(1-b)
     // Equivalent to land(b,lnot(b)) but does not rely
     // on the specific arithmetization.
-    auto eb = eval(b);
-    return assert_is_bit(eb);
+    return assert_is_bit(eval(b));
   }
   EltW assert_is_bit(const EltW& v) const {
-    auto vvmv = sub(&v, mul(&v, v));
+    auto vvmv = sub(v, mul(v, v));
     return assert0(vvmv);
   }
 
@@ -227,6 +258,7 @@ class Logic {
   }
 
   void bits(size_t n, BitW a[/*n*/], uint64_t x) const {
+    check(n <= 64, "n <= 64");
     for (size_t i = 0; i < n; ++i) {
       a[i] = bit((x >> i) & 1u);
     }
@@ -241,77 +273,57 @@ class Logic {
     return rebase(one(), mone(), x);
   }
 
-  BitW land(const BitW* a, const BitW& b) const {
+  BitW land(const BitW& a, const BitW& b) const {
     // a * b in the standard basis
     return mulv(a, b);
   }
 
   // special case of product of a logic value by a field
   // element
-  EltW lmul(const BitW* a, const EltW& b) const {
+  EltW lmul(const BitW& a, const EltW& b) const {
     // a * b in the standard basis
-    auto ab = mulv(a, BitW(b, f_));
-    return eval(ab);
+    return eval(mulv(a, BitW(b, f_)));
   }
-  EltW lmul(const EltW* b, const BitW& a) const { return lmul(&a, *b); }
+  EltW lmul(const EltW& b, const BitW& a) const { return lmul(a, b); }
 
-  BitW lxor(const BitW* a, const BitW& b) const {
-    return lxor_aux(*a, b, typename Field::TypeTag());
-  }
-  BitW lxor(const BitW* a, const BitW* b) const {
-    return lxor_aux(*a, *b, typename Field::TypeTag());
+  BitW lxor(const BitW& a, const BitW& b) const {
+    return lxor_aux(a, b, typename Field::TypeTag());
   }
 
-  BitW lor(const BitW* a, const BitW& b) const {
-    auto na = lnot(*a);
-    auto nab = land(&na, lnot(b));
-    return lnot(nab);
+  BitW lor(const BitW& a, const BitW& b) const {
+    return lnot(land(lnot(a), lnot(b)));
   }
 
   // a => b
-  BitW limplies(const BitW* a, const BitW& b) const {
-    auto na = lnot(*a);
-    return lor(&na, b);
-  }
+  BitW limplies(const BitW& a, const BitW& b) const { return lor(lnot(a), b); }
 
   // OR of two quantities known to be mutually exclusive
-  BitW lor_exclusive(const BitW* a, const BitW& b) const { return addv(*a, b); }
+  BitW lor_exclusive(const BitW& a, const BitW& b) const { return addv(a, b); }
 
-  BitW lxor3(const BitW* a, const BitW* b, const BitW& c) const {
-    BitW p = lxor(a, b);
-    return lxor(&p, c);
+  BitW lxor3(const BitW& a, const BitW& b, const BitW& c) const {
+    return lxor(lxor(a, b), c);
   }
 
   // sha256 Ch(): (x & y) ^ (~x & z);
-  BitW lCh(const BitW* x, const BitW* y, const BitW& z) const {
-    auto xy = land(x, *y);
-    auto nx = lnot(*x);
-    return lor_exclusive(&xy, land(&nx, z));
+  BitW lCh(const BitW& x, const BitW& y, const BitW& z) const {
+    return lor_exclusive(land(x, y), land(lnot(x), z));
   }
 
   // sha256 Maj(): (x & y) ^ (x & z) ^ (y & z);
-  BitW lMaj(const BitW* x, const BitW* y, const BitW& z) const {
+  BitW lMaj(const BitW& x, const BitW& y, const BitW& z) const {
     // Interpret as x + y + z >= 2 and compute the carry
     // for an adder in the (p, g) basis
-    BitW p = lxor(x, *y);
-    BitW g = land(x, *y);
-    return lor_exclusive(&g, land(&p, z));
+    return lor_exclusive(land(x, y), land(lxor(x, y), z));
   }
 
   // mux over logic values
-  BitW mux(const BitW* control, const BitW* iftrue, const BitW& iffalse) const {
-    auto cif = land(control, *iftrue);
-    auto nc = lnot(*control);
-    auto ciff = land(&nc, iffalse);
-    return lor_exclusive(&cif, ciff);
+  BitW mux(const BitW& control, const BitW& iftrue, const BitW& iffalse) const {
+    return lor_exclusive(land(control, iftrue), land(lnot(control), iffalse));
   }
 
   // mux over backend values
-  EltW mux(const BitW* control, const EltW* iftrue, const EltW& iffalse) const {
-    auto cif = lmul(control, *iftrue);
-    auto nc = lnot(*control);
-    auto ciff = lmul(&nc, iffalse);
-    return add(&cif, ciff);
+  EltW mux(const BitW& control, const EltW& iftrue, const EltW& iffalse) const {
+    return add(lmul(control, iftrue), lmul(lnot(control), iffalse));
   }
 
   // sum_{i0 <= i < i1} f(i)
@@ -322,9 +334,7 @@ class Logic {
       return f(i0);
     } else {
       size_t im = i0 + (i1 - i0) / 2;
-      auto lh = add(i0, im, f);
-      auto rh = add(im, i1, f);
-      return add(&lh, rh);
+      return add(add(i0, im, f), add(im, i1, f));
     }
   }
 
@@ -337,9 +347,7 @@ class Logic {
       return f(i0);
     } else {
       size_t im = i0 + (i1 - i0) / 2;
-      auto lh = lor_exclusive(i0, im, f);
-      auto rh = lor_exclusive(im, i1, f);
-      return lor_exclusive(&lh, rh);
+      return lor_exclusive(lor_exclusive(i0, im, f), lor_exclusive(im, i1, f));
     }
   }
 
@@ -351,9 +359,7 @@ class Logic {
       return f(i0);
     } else {
       size_t im = i0 + (i1 - i0) / 2;
-      auto lh = land(i0, im, f);
-      auto rh = land(im, i1, f);
-      return land(&lh, rh);
+      return land(land(i0, im, f), land(im, i1, f));
     }
   }
 
@@ -365,9 +371,7 @@ class Logic {
       return f(i0);
     } else {
       size_t im = i0 + (i1 - i0) / 2;
-      auto lh = lor(i0, im, f);
-      auto rh = lor(im, i1, f);
-      return lor(&lh, rh);
+      return lor(lor(i0, im, f), lor(im, i1, f));
     }
   }
 
@@ -389,9 +393,7 @@ class Logic {
       return f(i0);
     } else {
       size_t im = i0 + (i1 - i0) / 2;
-      auto lh = mul(i0, im, f);
-      auto rh = mul(im, i1, f);
-      return mul(&lh, rh);
+      return mul(mul(i0, im, f), mul(im, i1, f));
     }
   }
 
@@ -402,26 +404,24 @@ class Logic {
     // (a, b) to (g, p):
     std::vector<BitW> g(w), p(w), cy(w);
     for (size_t i = 0; i < w; ++i) {
-      g[i] = land(&a[i], b[i]);
-      p[i] = lxor(&a[i], &b[i]);
+      g[i] = land(a[i], b[i]);
+      p[i] = lxor(a[i], b[i]);
     }
 
     // invert the last step of generic_gp_add(): derive
     // cy[i - 1] (called g[i - 1] there) from
     // c[i] and p[i].
-    assert_eq(&c[0], p[0]);
+    assert_eq(c[0], p[0]);
     for (size_t i = 1; i < w; ++i) {
-      cy[i - 1] = lxor(&c[i], p[i]);
+      cy[i - 1] = lxor(c[i], p[i]);
     }
 
     // Verify that applying ripple_scan to g[] produces cy[].
     // Note that ripple_scan() operates in-place on g[].  Here, however, g[] is
     // the input to ripple_scan(), and cy[] is the output.
-    assert_eq(&cy[0], g[0]);
+    assert_eq(cy[0], g[0]);
     for (size_t i = 1; i + 1 < w; ++i) {
-      auto cyp = land(&cy[i - 1], p[i]);
-      auto g_cyp = lor_exclusive(&g[i], cyp);
-      assert_eq(&cy[i], g_cyp);
+      assert_eq(cy[i], lor_exclusive(g[i], land(cy[i - 1], p[i])));
     }
   }
 
@@ -454,12 +454,12 @@ class Logic {
     for (size_t i = 0; i < w; ++i) {
       if (i == 0) {
         for (size_t j = 0; j < w; ++j) {
-          c[j] = land(&a[0], b[j]);
+          c[j] = land(a[0], b[j]);
         }
         c[w] = bit(0);
       } else {
         for (size_t j = 0; j < w; ++j) {
-          t[j] = land(&a[i], b[j]);
+          t[j] = land(a[i], b[j]);
         }
         BitW carry = ripple_carry_add(w, c + i, t.data(), c + i);
         c[i + w] = carry;
@@ -475,7 +475,7 @@ class Logic {
       size_t n = 0;
       for (size_t i = 0; i < w; ++i) {
         if (k >= i && k - i < w) {
-          t[n++] = land(&a[i], b[k - i]);
+          t[n++] = land(a[i], b[k - i]);
         }
       }
       c[k] = parity(0, n, t.data());
@@ -500,8 +500,8 @@ class Logic {
       std::vector<BitW> a1b1(w);
 
       for (size_t i = 0; i < w / 2; ++i) {
-        a01[i] = lxor(&a[i], a[i + w / 2]);
-        b01[i] = lxor(&b[i], b[i + w / 2]);
+        a01[i] = lxor(a[i], a[i + w / 2]);
+        b01[i] = lxor(b[i], b[i + w / 2]);
       }
 
       gf2_polynomial_multiplier_karat(w / 2, &ab01[0], &a01[0], &b01[0]);
@@ -509,13 +509,13 @@ class Logic {
       gf2_polynomial_multiplier_karat(w / 2, &a1b1[0], a + w / 2, b + w / 2);
 
       for (size_t i = 0; i < w; ++i) {
-        ab01[i] = lxor3(&ab01[i], &a0b0[i], a1b1[i]);
+        ab01[i] = lxor3(ab01[i], a0b0[i], a1b1[i]);
       }
 
       for (size_t i = 0; i < w / 2; ++i) {
         c[i] = a0b0[i];
-        c[i + w / 2] = lxor(&a0b0[i + w / 2], ab01[i]);
-        c[i + w] = lxor(&ab01[i + w / 2], a1b1[i]);
+        c[i + w / 2] = lxor(a0b0[i + w / 2], ab01[i]);
+        c[i + w] = lxor(ab01[i + w / 2], a1b1[i]);
         c[i + 3 * w / 2] = a1b1[i + w / 2];
       }
     }
@@ -536,7 +536,7 @@ class Logic {
   //               nl[j].append(i)
   //       r = r * gen
   //   print(nl)
-  void gf2_128_mul(v128& c, const v128 a, const v128 b) const {
+  void gf2_128_mul(v128& c, const v128& a, const v128& b) const {
     const std::vector<uint16_t> taps[128] = {
         {0, 128, 249, 254},
         {1, 128, 129, 249, 250, 254},
@@ -735,19 +735,19 @@ class Logic {
 
   void scan_and(BitW x[], size_t i0, size_t i1, bool backward = false) const {
     scan<BitW>(
-        [&](BitW* out, const BitW& l, const BitW& r) { *out = land(&l, r); }, x,
+        [&](BitW* out, const BitW& l, const BitW& r) { *out = land(l, r); }, x,
         i0, i1, backward);
   }
 
   void scan_or(BitW x[], size_t i0, size_t i1, bool backward = false) const {
     scan<BitW>(
-        [&](BitW* out, const BitW& l, const BitW& r) { *out = lor(&l, r); }, x,
+        [&](BitW* out, const BitW& l, const BitW& r) { *out = lor(l, r); }, x,
         i0, i1, backward);
   }
 
   void scan_xor(BitW x[], size_t i0, size_t i1, bool backward = false) const {
     scan<BitW>(
-        [&](BitW* out, const BitW& l, const BitW& r) { *out = lxor(&l, r); }, x,
+        [&](BitW* out, const BitW& l, const BitW& r) { *out = lxor(l, r); }, x,
         i0, i1, backward);
   }
 
@@ -795,16 +795,16 @@ class Logic {
   }
 
   template <size_t N>
-  bitvec<N> vand(const bitvec<N>* a, const bitvec<N>& b) const {
+  bitvec<N> vand(const bitvec<N>& a, const bitvec<N>& b) const {
     bitvec<N> r;
     for (size_t i = 0; i < N; ++i) {
-      r[i] = land(&(*a)[i], b[i]);
+      r[i] = land(a[i], b[i]);
     }
     return r;
   }
 
   template <size_t N>
-  bitvec<N> vand(const BitW* a, const bitvec<N>& b) const {
+  bitvec<N> vand(const BitW& a, const bitvec<N>& b) const {
     bitvec<N> r;
     for (size_t i = 0; i < N; ++i) {
       r[i] = land(a, b[i]);
@@ -813,55 +813,55 @@ class Logic {
   }
 
   template <size_t N>
-  bitvec<N> vor(const bitvec<N>* a, const bitvec<N>& b) const {
+  bitvec<N> vor(const bitvec<N>& a, const bitvec<N>& b) const {
     bitvec<N> r;
     for (size_t i = 0; i < N; ++i) {
-      r[i] = lor(&(*a)[i], b[i]);
+      r[i] = lor(a[i], b[i]);
     }
     return r;
   }
   template <size_t N>
-  bitvec<N> vor_exclusive(const bitvec<N>* a, const bitvec<N>& b) const {
+  bitvec<N> vor_exclusive(const bitvec<N>& a, const bitvec<N>& b) const {
     bitvec<N> r;
     for (size_t i = 0; i < N; ++i) {
-      r[i] = lor_exclusive(&(*a)[i], b[i]);
+      r[i] = lor_exclusive(a[i], b[i]);
     }
     return r;
   }
   template <size_t N>
-  bitvec<N> vxor(const bitvec<N>* a, const bitvec<N>& b) const {
+  bitvec<N> vxor(const bitvec<N>& a, const bitvec<N>& b) const {
     bitvec<N> r;
     for (size_t i = 0; i < N; ++i) {
-      r[i] = lxor(&(*a)[i], b[i]);
+      r[i] = lxor(a[i], b[i]);
     }
     return r;
   }
 
   template <size_t N>
-  bitvec<N> vCh(const bitvec<N>* x, const bitvec<N>* y,
+  bitvec<N> vCh(const bitvec<N>& x, const bitvec<N>& y,
                 const bitvec<N>& z) const {
     bitvec<N> r;
     for (size_t i = 0; i < N; ++i) {
-      r[i] = lCh(&(*x)[i], &(*y)[i], z[i]);
+      r[i] = lCh(x[i], y[i], z[i]);
     }
     return r;
   }
   template <size_t N>
-  bitvec<N> vMaj(const bitvec<N>* x, const bitvec<N>* y,
+  bitvec<N> vMaj(const bitvec<N>& x, const bitvec<N>& y,
                  const bitvec<N>& z) const {
     bitvec<N> r;
     for (size_t i = 0; i < N; ++i) {
-      r[i] = lMaj(&(*x)[i], &(*y)[i], z[i]);
+      r[i] = lMaj(x[i], y[i], z[i]);
     }
     return r;
   }
 
   template <size_t N>
-  bitvec<N> vxor3(const bitvec<N>* x, const bitvec<N>* y,
+  bitvec<N> vxor3(const bitvec<N>& x, const bitvec<N>& y,
                   const bitvec<N>& z) const {
     bitvec<N> r;
     for (size_t i = 0; i < N; ++i) {
-      r[i] = lxor3(&(*x)[i], &(*y)[i], z[i]);
+      r[i] = lxor3(x[i], y[i], z[i]);
     }
     return r;
   }
@@ -922,41 +922,41 @@ class Logic {
   }
 
   template <size_t N>
-  BitW veq(const bitvec<N>* a, const bitvec<N>& b) const {
-    return eq(N, (*a).data(), b.data());
+  BitW veq(const bitvec<N>& a, const bitvec<N>& b) const {
+    return eq(N, a.data(), b.data());
   }
   template <size_t N>
   BitW veq(const bitvec<N>& a, uint64_t val) const {
     auto v = vbit<N>(val);
-    return veq(&a, v);
+    return veq(a, v);
   }
   template <size_t N>
-  BitW vlt(const bitvec<N>* a, const bitvec<N>& b) const {
-    return lt(N, (*a).data(), b.data());
+  BitW vlt(const bitvec<N>& a, const bitvec<N>& b) const {
+    return lt(N, a.data(), b.data());
   }
   template <size_t N>
   BitW vlt(const bitvec<N>& a, uint64_t val) const {
     auto v = vbit<N>(val);
-    return vlt(&a, v);
+    return vlt(a, v);
   }
   template <size_t N>
   BitW vlt(uint64_t a, const bitvec<N>& b) const {
     auto va = vbit<N>(a);
-    return vlt(&va, b);
+    return vlt(va, b);
   }
   template <size_t N>
-  BitW vleq(const bitvec<N>* a, const bitvec<N>& b) const {
-    return leq(N, (*a).data(), b.data());
+  BitW vleq(const bitvec<N>& a, const bitvec<N>& b) const {
+    return leq(N, a.data(), b.data());
   }
   template <size_t N>
   BitW vleq(const bitvec<N>& a, uint64_t val) const {
     auto v = vbit<N>(val);
-    return vleq(&a, v);
+    return vleq(a, v);
   }
 
   // (a ^ val) & mask == 0
   template <size_t N>
-  BitW veqmask(const bitvec<N>* a, uint64_t mask, const bitvec<N>& val) const {
+  BitW veqmask(const bitvec<N>& a, uint64_t mask, const bitvec<N>& val) const {
     auto r = vxor(a, val);
     size_t n = pack(mask, N, &r[0]);
     return eq0(0, n, &r[0]);
@@ -965,7 +965,7 @@ class Logic {
   template <size_t N>
   BitW veqmask(const bitvec<N>& a, uint64_t mask, uint64_t val) const {
     auto v = vbit<N>(val);
-    return veqmask(&a, mask, v);
+    return veqmask(a, mask, v);
   }
 
   // I/O.  This is a hack which only works if the backend supports
@@ -980,8 +980,6 @@ class Logic {
   }
   void output(const EltW& x, size_t i) const { bk_->output_wire(x, i); }
   void output(const BitW& x, size_t i) const { output(eval(x), i); }
-  size_t wire_id(const BitW& v) const { return bk_->wire_id(v.x); }
-  size_t wire_id(const EltW& x) const { return bk_->wire_id(x); }
 
   template <size_t N>
   bitvec<N> vinput() const {
@@ -1007,16 +1005,16 @@ class Logic {
   }
 
   template <size_t N>
-  void vassert_eq(const bitvec<N>* x, const bitvec<N>& y) const {
+  void vassert_eq(const bitvec<N>& x, const bitvec<N>& y) const {
     for (size_t i = 0; i < N; ++i) {
-      (void)assert_eq(&(*x)[i], y[i]);
+      (void)assert_eq(x[i], y[i]);
     }
   }
 
   template <size_t N>
   void vassert_eq(const bitvec<N>& x, uint64_t y) const {
     auto v = vbit<N>(y);
-    vassert_eq(&x, v);
+    vassert_eq(x, v);
   }
 
   template <size_t N>
@@ -1026,24 +1024,32 @@ class Logic {
     }
   }
 
+  template <size_t N>
+  void vmux(const BitW& sel, bitvec<N>& dst, const bitvec<N>& v1,
+            const bitvec<N>& v0) const {
+    for (size_t i = 0; i < N; ++i) {
+      dst[i] = mux(sel, v1[i], v0[i]);
+    }
+  }
+
  private:
   // return one quad gate for the product eval(a)*eval(b),
   // optimizing some "obvious" cases.
-  BitW mulv(const BitW* a, const BitW& b) const {
-    if (a->c1 == zero()) {
-      return rebase(zero(), a->c0, b);
+  BitW mulv(const BitW& a, const BitW& b) const {
+    if (a.c1 == zero()) {
+      return rebase(zero(), a.c0, b);
     } else if (b.c1 == zero()) {
-      return mulv(&b, *a);
+      return mulv(b, a);
     } else {
       // Avoid creating the intermediate term 1 * a.x * b.x which is
       // likely a useless node.  Moreover, two nodes (k1 * a.x * b.x)
       // and (k2 * a.x * b.x) will detect the common subexpression
       // (a.x * b.x), which will confusingly increment the
       // common-subexpression counter.
-      EltW x = axy(mulf(a->c1, b.c1), &a->x, b.x);
-      x = axpy(&x, mulf(a->c0, b.c1), b.x);
-      x = axpy(&x, mulf(a->c1, b.c0), a->x);
-      x = apy(x, mulf(a->c0, b.c0));
+      EltW x = axy(mulf(a.c1, b.c1), a.x, b.x);
+      x = axpy(x, mulf(a.c0, b.c1), b.x);
+      x = axpy(x, mulf(a.c1, b.c0), a.x);
+      x = apy(x, mulf(a.c0, b.c0));
       return BitW(x, f_);
     }
   }
@@ -1056,7 +1062,7 @@ class Logic {
     } else {
       EltW x = ax(a.c1, a.x);
       auto axb = ax(b.c1, b.x);
-      x = add(&x, axb);
+      x = add(x, axb);
       x = apy(x, addf(a.c0, b.c0));
       return BitW(x, f_);
     }
@@ -1071,7 +1077,7 @@ class Logic {
 
     BitW a1 = rebase(one(), mtwo, a);
     BitW b1 = rebase(one(), mtwo, b);
-    BitW p = mulv(&a1, b1);
+    BitW p = mulv(a1, b1);
     return rebase(half, mhalf, p);
   }
   BitW lxor_aux(const BitW& a, const BitW& b, BinaryFieldTypeTag tt) const {
@@ -1097,9 +1103,8 @@ class Logic {
   // is false), and therefore g1 and (g0 & p1) are also mutually
   // exclusive.
   void gp_reduce(const BitW& g0, const BitW& p0, BitW* g1, BitW* p1) const {
-    auto g0p1 = land(&g0, *p1);
-    *g1 = lor_exclusive(g1, g0p1);
-    *p1 = land(&p0, *p1);
+    *g1 = lor_exclusive(*g1, land(g0, *p1));
+    *p1 = land(p0, *p1);
   }
 
   // ripple carry propagation
@@ -1138,13 +1143,13 @@ class Logic {
     } else {
       std::vector<BitW> g(w), p(w);
       for (size_t i = 0; i < w; ++i) {
-        g[i] = land(&a[i], b[i]);
-        p[i] = lxor(&a[i], b[i]);
+        g[i] = land(a[i], b[i]);
+        p[i] = lxor(a[i], b[i]);
         c[i] = p[i];
       }
       (this->*scan)(g, p, 0, w);
       for (size_t i = 1; i < w; ++i) {
-        c[i] = lxor(&c[i], g[i - 1]);
+        c[i] = lxor(c[i], g[i - 1]);
       }
       return g[w - 1];
     }
@@ -1180,14 +1185,11 @@ class Logic {
       size_t im = i0 + (i1 - i0) / 2;
       lt_reduce(i0, im, &eq0, &lt0, a, b);
       lt_reduce(im, i1, &eq1, &lt1, a, b);
-      *xeq = land(&eq1, eq0);
-      auto lt0_and_eq1 = land(&eq1, lt0);
-      *xlt = lor_exclusive(&lt1, lt0_and_eq1);
+      *xeq = land(eq1, eq0);
+      *xlt = lor_exclusive(lt1, land(eq1, lt0));
     } else {
-      auto axb = lxor(&a[i0], b[i0]);
-      *xeq = lnot(axb);
-      auto na = lnot(a[i0]);
-      *xlt = land(&na, b[i0]);
+      *xeq = lnot(lxor(a[i0], b[i0]));
+      *xlt = land(lnot(a[i0]), b[i0]);
     }
   }
 
@@ -1198,9 +1200,7 @@ class Logic {
       return a[i0];
     } else {
       size_t im = i0 + (i1 - i0) / 2;
-      auto lp = parity(i0, im, a);
-      auto rp = parity(im, i1, a);
-      return lxor(&lp, rp);
+      return lxor(parity(i0, im, a), parity(im, i1, a));
     }
   }
 
@@ -1211,9 +1211,7 @@ class Logic {
       return lnot(a[i0]);
     } else {
       size_t im = i0 + (i1 - i0) / 2;
-      auto le = eq0(i0, im, a);
-      auto re = eq0(im, i1, a);
-      return land(&le, re);
+      return land(eq0(i0, im, a), eq0(im, i1, a));
     }
   }
 
@@ -1221,12 +1219,10 @@ class Logic {
     if (i1 <= i0) {
       return bit(1);
     } else if (i1 == i0 + 1) {
-      return lnot(lxor(&a[i0], b[i0]));
+      return lnot(lxor(a[i0], b[i0]));
     } else {
       size_t im = i0 + (i1 - i0) / 2;
-      auto le = eq_reduce(i0, im, a, b);
-      auto re = eq_reduce(im, i1, a, b);
-      return land(&le, re);
+      return land(eq_reduce(i0, im, a, b), eq_reduce(im, i1, a, b));
     }
   }
 
