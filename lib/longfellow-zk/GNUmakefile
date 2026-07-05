@@ -14,22 +14,19 @@
 
 CXX ?= g++
 AR ?= ar
+CFLAGS ?= -O2 -I../../src -I. -I../zstd -fPIC -DLIBRARY -mpclmul
 
 include sources.mk
-SOURCES += util/aes_ecb.cc.o util/log.cc.o util/sha256.cc.o	\
-						util/crypto.cc.o util/randombytes.cc.o
 
-all: x86
-
-x86: liblongfellow-zk.a
+all: liblongfellow-zk.a
 
 liblongfellow-zk.a: $(SOURCES)
 	$(AR) -rcs $@ $(SOURCES)
 
 clean:
-	find . -name "*.o" -type f -delete
+	find . -name "*.cc.o" -type f -delete
 	rm -f *.a
 
 # hard-code build information
 %.cc.o: %.cc
-	$(CXX) -std=c++17 $(CXXFLAGS) -c -o $@ $<
+	$(CXX) -std=c++17 $(CFLAGS) -c -o $@ $<
