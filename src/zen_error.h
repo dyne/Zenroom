@@ -41,13 +41,12 @@ void *zen_get_global_context(void);
 	lerror(L, "fatal %s: %s", __func__, (ERR)); \
 	lua_pushnil(L)
 
-// maybe use if(HEDLEY_UNLIKELY(!x))
 #define SAFE_GOTO(x, msg) \
-	if(!(x)) { failed_msg=msg; goto end; }
+	if(HEDLEY_UNLIKELY(!(x))) { failed_msg=msg; goto end; }
 #define SAFE(x, msg) \
-	if(!(x)) { THROW(msg); END(1); }
+	if(HEDLEY_UNLIKELY(!(x))) { THROW(msg); END(1); }
 #define SAFEV(x, msg) \
-	if(!(x)) { THROW(msg); ENDV(); }
+	if(HEDLEY_UNLIKELY(!(x))) { THROW(msg); ENDV(); }
 
 // common error messages
 #define MALLOC_ERROR       "Could not allocate memory"
