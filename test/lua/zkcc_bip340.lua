@@ -146,6 +146,81 @@ local loaded = zkcc.load_circuit_artifact_bip340(circuit_bytes)
 print(string.format("Circuit size: %d bytes, inputs=%d, public=%d",
     #circuit_bytes, circuit.ninput - 1, circuit.npub_input - 1))
 
+-- ===========================================================================
+-- Regression: prove vector 0 via build_witness_inputs with named keys.
+-- This exercises the interleaved schema mapping path (fix for named-input
+-- ordering: schema must match Bip340Verify::Witness::input() in
+-- lfzk_bindings.cc).
+-- ===========================================================================
+print("=== Named-input regression test (vector 0) ===")
+
+local sig0 = OCTET.from_hex("E907831F80848D1069A5371B402410364BDF1C5F8307B0084C55F1CE2DCA821525F66A4A85EA8B71E482A74F382D2CE5EBEEE8FDB2172F477DF4900D310536C0")
+local pk0  = OCTET.from_hex("F9308A019258C31049344F85F89D5229B531C845836F99B08601F113BCE036F9")
+local msg0 = OCTET.from_hex("0000000000000000000000000000000000000000000000000000000000000000")
+local seed0 = OCTET.from_hex("0000000000000000000000000000000000000000000000000000000000000001")
+
+-- Obtain field-element OCTETs from bip340_compute (direct call, no pcall)
+local w = zkcc.witness.bip340_compute(sig0, pk0, msg0)
+
+-- Build a named-inputs table matching the interleaved schema order
+local named = {
+    rx = w.rx,
+    px = w.px,
+    e  = w.e,
+}
+for i = 1, 256 do
+    named[string.format("bits_s_%03d", i)] = w.bits_s[i]
+    if i < 256 then
+        named[string.format("int_sx_%03d", i)] = w.int_sx[i]
+        named[string.format("int_sy_%03d", i)] = w.int_sy[i]
+        named[string.format("int_sz_%03d", i)] = w.int_sz[i]
+    end
+end
+for i = 1, 256 do
+    named[string.format("bits_e_%03d", i)] = w.bits_e[i]
+    if i < 256 then
+        named[string.format("int_ex_%03d", i)] = w.int_ex[i]
+        named[string.format("int_ey_%03d", i)] = w.int_ey[i]
+        named[string.format("int_ez_%03d", i)] = w.int_ez[i]
+    end
+end
+named.py = w.py
+named.ry = w.ry
+named.rz_inv = w.rz_inv
+for i = 1, 256 do
+    named[string.format("bits_ry_%03d", i)] = w.bits_ry[i]
+end
+
+-- Build witness inputs from named keys
+local named_inputs = zkcc.build_witness_inputs{
+    circuit = loaded,
+    inputs = named,
+}
+local named_public = zkcc.build_witness_inputs{
+    circuit = loaded,
+    public_inputs = { rx = w.rx, px = w.px, e = w.e },
+}
+
+-- Prove and verify through the named path
+local named_proof = zkcc.prove_circuit{
+    circuit = loaded,
+    inputs = named_inputs,
+    seed = seed0,
+}
+assert(named_proof and #named_proof > 0, "named-input proof generation failed")
+
+local named_ok = zkcc.verify_circuit{
+    circuit = loaded,
+    proof = named_proof,
+    public_inputs = named_public,
+    seed = seed0,
+}
+assert(named_ok, "named-input verification failed")
+print("  named-input prove+verify: ok")
+
+-- ===========================================================================
+-- Main BIP340 vector sweep
+-- ===========================================================================
 local vectors = load_vectors()
 assert(#vectors > 0, "missing BIP340 test vectors")
 

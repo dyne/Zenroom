@@ -631,51 +631,63 @@ end
 
 M.named_logic = new_named_logic
 
-local function repeat_named_entries(entries, prefix, count, kind, input_type)
-    for i = 1, count do
-        entries[#entries + 1] = {
-            kind = kind,
-            name = string.format("%s_%03d", prefix, i),
-            type = input_type,
-            desc = prefix,
-            index = #entries + 1,
-            decl_order = #entries + 1,
-        }
-    end
-end
-
-local function append_named_entry(entries, name, kind, input_type)
-    entries[#entries + 1] = {
-        kind = kind,
-        name = name,
-        type = input_type,
-        desc = name,
-        index = #entries + 1,
-        decl_order = #entries + 1,
-    }
-end
-
 local function make_bip340_schema(artifact)
+    -- Builds the schema for the native BIP340 verification circuit.
+    -- Entries are ordered and indexed to match Bip340Verify::Witness::input()
+    -- in lfzk_bindings.cc: interleaved bits_s[i], int_sx[i], int_sy[i],
+    -- int_sz[i] (one iteration per i), then e·P trace (also interleaved),
+    -- then py, ry, rz_inv, bits_ry.
+    -- Indices are 1-based absolute positions in the dense witness array.
+
     local public = {}
     local private = {}
     local full = {}
+    local seq = 1 -- 1-based absolute index; v_[0] is the constant-1
 
-    append_named_entry(public, "rx", "public", "field")
-    append_named_entry(public, "px", "public", "field")
-    append_named_entry(public, "e", "public", "field")
+    local function add(list, name, kind, input_type)
+        list[#list + 1] = {
+            kind = kind,
+            name = name,
+            type = input_type,
+            desc = name,
+            index = seq,
+            decl_order = seq,
+        }
+        seq = seq + 1
+    end
 
-    repeat_named_entries(private, "bits_s", 256, "private", "field")
-    repeat_named_entries(private, "int_sx", 255, "private", "field")
-    repeat_named_entries(private, "int_sy", 255, "private", "field")
-    repeat_named_entries(private, "int_sz", 255, "private", "field")
-    repeat_named_entries(private, "bits_e", 256, "private", "field")
-    repeat_named_entries(private, "int_ex", 255, "private", "field")
-    repeat_named_entries(private, "int_ey", 255, "private", "field")
-    repeat_named_entries(private, "int_ez", 255, "private", "field")
-    append_named_entry(private, "py", "private", "field")
-    append_named_entry(private, "ry", "private", "field")
-    append_named_entry(private, "rz_inv", "private", "field")
-    repeat_named_entries(private, "bits_ry", 256, "private", "field")
+    -- Public inputs: v_[1..3]
+    add(public, "rx", "public", "field")
+    add(public, "px", "public", "field")
+    add(public, "e", "public", "field")
+
+    -- Private: s·G trace (interleaved)
+    for i = 1, 256 do
+        add(private, string.format("bits_s_%03d", i), "private", "field")
+        if i < 256 then
+            add(private, string.format("int_sx_%03d", i), "private", "field")
+            add(private, string.format("int_sy_%03d", i), "private", "field")
+            add(private, string.format("int_sz_%03d", i), "private", "field")
+        end
+    end
+
+    -- Private: e·P trace (interleaved)
+    for i = 1, 256 do
+        add(private, string.format("bits_e_%03d", i), "private", "field")
+        if i < 256 then
+            add(private, string.format("int_ex_%03d", i), "private", "field")
+            add(private, string.format("int_ey_%03d", i), "private", "field")
+            add(private, string.format("int_ez_%03d", i), "private", "field")
+        end
+    end
+
+    add(private, "py", "private", "field")
+    add(private, "ry", "private", "field")
+    add(private, "rz_inv", "private", "field")
+
+    for i = 1, 256 do
+        add(private, string.format("bits_ry_%03d", i), "private", "field")
+    end
 
     local schema = {
         public = public,
