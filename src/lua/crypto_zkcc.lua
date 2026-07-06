@@ -1184,9 +1184,8 @@ function M.bip340_lua_circuit_compile()
     -- 8. Check R.y == ry (projective equality)
     L:assert_eq(R_y, L:mul(w.ry, R_z))
 
-    -- 9. Verify ry bitness and even parity
-    L:bip340_assert_field_from_bits_msb(w.bits_ry, w.ry)
-    L:bip340_assert_even_from_bits_msb(w.bits_ry)
+    -- 9. Verify ry bitness, reconstruction, and even parity
+    L:bip340_assert_ry_bitness_and_even(w.bits_ry, w.ry)
 
     return L:compile()
 end

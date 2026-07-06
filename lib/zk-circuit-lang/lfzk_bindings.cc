@@ -1112,7 +1112,9 @@ void register_zk_bindings(sol::state_view& lua) {
 		"bip340_assert_even_from_bits_msb",
 			&LuaLogicBip340::bip340_assert_even_from_bits_msb,
 		"bip340_gx", &LuaLogicBip340::bip340_gx,
-		"bip340_gy", &LuaLogicBip340::bip340_gy
+		"bip340_gy", &LuaLogicBip340::bip340_gy,
+		"bip340_assert_ry_bitness_and_even",
+			&LuaLogicBip340::bip340_assert_ry_bitness_and_even
 	);
 
 	// ========================================================================

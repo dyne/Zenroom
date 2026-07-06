@@ -179,6 +179,7 @@ local tamper_rx_checked = false
 local tamper_px_checked = false
 local tamper_e_checked = false
 local witness_tamper_checked = false
+local bits_ry_tamper_checked = false
 
 for _, vec in ipairs(vectors) do
     local sig = octet_from_hex(vec.signature)
@@ -306,6 +307,37 @@ for _, vec in ipairs(vectors) do
             end
             -- If bad_proof is nil, that's also a pass (proof generation rejected)
             witness_tamper_checked = true
+        elseif not bits_ry_tamper_checked then
+            -- Mutate bits_ry[254] and bits_ry[255] to non-Boolean values
+            -- while preserving the reconstruction and even parity.
+            -- Exact values from review: bits_ry[254]=1, bits_ry[255]=p-2
+            -- keeps Σ bits[i]*2^(255-i) unchanged, LSB=0, but
+            -- p-2 is not ∈ {0,1} so bitness constraints should reject.
+            local tampered_w = zkcc.witness.bip340_compute(sig, pk, msg)
+            tampered_w.bits_ry[254] =
+                OCTET.from_hex("0000000000000000000000000000000000000000000000000000000000000001")
+            tampered_w.bits_ry[255] =
+                OCTET.from_hex("fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2d")
+            tampered_w.bits_ry[256] =
+                OCTET.from_hex("0000000000000000000000000000000000000000000000000000000000000000")
+            local tampered_named = zkcc.bip340_witness_named(tampered_w)
+            local tampered_inputs = zkcc.build_witness_inputs{
+                circuit = lua_circuit,
+                inputs = tampered_named,
+            }
+            local tampered_public = zkcc.build_witness_inputs{
+                circuit = lua_circuit,
+                public_inputs = { rx = witness.rx, px = witness.px, e = witness.e },
+            }
+            local ok_bad2, bad_proof2 = pcall(zkcc.prove_circuit, {
+                circuit = lua_circuit,
+                inputs = tampered_inputs,
+                seed = OCTET.from_hex("0000000000000000000000000000000000000000000000000000000000000002"),
+            })
+            -- With non-Boolean bits_ry, proof generation must fail
+            assert(not ok_bad2,
+                "non-Boolean bits_ry mutation should fail proof generation")
+            bits_ry_tamper_checked = true
         end
     else
         assert(not is_valid, string.format("vector %d should be rejected: %s", vec.index, vec.comment))
@@ -320,6 +352,7 @@ assert(tamper_rx_checked, "expected rx tamper verification check")
 assert(tamper_px_checked, "expected px tamper verification check")
 assert(tamper_e_checked, "expected e tamper verification check")
 assert(witness_tamper_checked, "expected witness tamper verification check")
+assert(bits_ry_tamper_checked, "expected bits_ry bitness tamper check")
 
 print(string.format("  Lua-authored circuit: valid=%d proved=%d invalid=%d  ✓",
     valid_count, proof_count, invalid_count))
