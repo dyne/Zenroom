@@ -549,7 +549,10 @@ function NamedLogic:compile(...)
         self:bind_inputs()
     end
 
-    local artifact = self._logic:compile(...)
+    -- Pass 1 as default nc; the native C++ default argument is not
+    -- forwarded through the Sol binding.
+    local nc = select("#", ...) > 0 and ... or 1
+    local artifact = self._logic:compile(nc)
     local schema = snapshot_schema(self._state, artifact)
     return wrap_artifact(artifact, schema)
 end
@@ -936,6 +939,256 @@ if M.witness and native.bip340_compute_inputs_native then
             public_inputs = public_inputs,
         }
     end
+end
+
+-- ===========================================================================
+-- BIP340 Lua-Authored Circuit Helpers
+-- ===========================================================================
+-- These helpers allow Lua to author the BIP340 verification sequence using
+-- granular gadget primitives while C++ emits the production-tested
+-- constraint formulas.
+
+--- Convert multi-return (x, y, z) from gadget calls into a point table.
+-- Usage:  local sG = M.bip340_point(L:bip340_scalar_mult(...))
+function M.bip340_point(x, y, z)
+    return { x = x, y = y, z = z }
+end
+
+--- Declare all BIP340 witness wires on a named logic and return a
+--- structured table of named wire references for use in gadget calls.
+---
+--- Layout matches Bip340Verify::Witness::input():
+---   Public:  rx, px, e
+---   Private: bits_s[256], int_s.{x,y,z}[255],
+---            bits_e[256], int_e.{x,y,z}[255],
+---            py, ry, rz_inv, bits_ry[256]
+---
+--- Returns:
+--- {
+---   rx = <EltW>, px = <EltW>, e = <EltW>,
+---   bits_s = { [1..256] = <EltW> },
+---   int_s = { x = { [1..256] }, y = { [1..256] }, z = { [1..256] } },
+---   bits_e = { [1..256] = <EltW> },
+---   int_e = { x = { [1..256] }, y = { [1..256] }, z = { [1..256] } },
+---   py = <EltW>, ry = <EltW>, rz_inv = <EltW>,
+---   bits_ry = { [1..256] = <EltW> },
+--- }
+function M.declare_bip340_witness(L)
+    -- Public inputs
+    local rx = L:public_input{ name = "rx", desc = "R.x (x-only)", type = "field" }
+    local px = L:public_input{ name = "px", desc = "P.x (x-only public key)", type = "field" }
+    local e  = L:public_input{ name = "e",  desc = "Fiat-Shamir challenge", type = "field" }
+
+    -- s·G trace: bits + intermediates (interleaved)
+    local bits_s = {}
+    local int_sx, int_sy, int_sz = {}, {}, {}
+    for i = 1, 256 do
+        bits_s[i] = L:private_input{
+            name = string.format("bits_s_%03d", i),
+            desc = string.format("s bit %d (MSB-first)", i),
+            type = "field",
+        }
+        if i < 256 then
+            int_sx[i] = L:private_input{
+                name = string.format("int_sx_%03d", i),
+                desc = string.format("s·G intermediate x %d", i),
+                type = "field",
+            }
+            int_sy[i] = L:private_input{
+                name = string.format("int_sy_%03d", i),
+                desc = string.format("s·G intermediate y %d", i),
+                type = "field",
+            }
+            int_sz[i] = L:private_input{
+                name = string.format("int_sz_%03d", i),
+                desc = string.format("s·G intermediate z %d", i),
+                type = "field",
+            }
+        end
+    end
+
+    -- e·P trace: bits + intermediates (interleaved)
+    -- int_e arrays are padded to 256 elements for API compatibility.
+    local bits_e = {}
+    local int_ex, int_ey, int_ez = {}, {}, {}
+    for i = 1, 256 do
+        bits_e[i] = L:private_input{
+            name = string.format("bits_e_%03d", i),
+            desc = string.format("e bit %d (MSB-first)", i),
+            type = "field",
+        }
+        if i < 256 then
+            int_ex[i] = L:private_input{
+                name = string.format("int_ex_%03d", i),
+                desc = string.format("e·P intermediate x %d", i),
+                type = "field",
+            }
+            int_ey[i] = L:private_input{
+                name = string.format("int_ey_%03d", i),
+                desc = string.format("e·P intermediate y %d", i),
+                type = "field",
+            }
+            int_ez[i] = L:private_input{
+                name = string.format("int_ez_%03d", i),
+                desc = string.format("e·P intermediate z %d", i),
+                type = "field",
+            }
+        else
+            int_ex[i] = bits_e[i]
+            int_ey[i] = bits_e[i]
+            int_ez[i] = bits_e[i]
+        end
+    end
+
+    -- P.y (the even square root)
+    local py = L:private_input{
+        name = "py", desc = "P.y (even square root)", type = "field",
+    }
+
+    -- R.y (affine, the canonical even y), rz_inv, and ry bits
+    local ry = L:private_input{
+        name = "ry", desc = "R.y (affine, even)", type = "field",
+    }
+    local rz_inv = L:private_input{
+        name = "rz_inv", desc = "R.z inverse", type = "field",
+    }
+
+    local bits_ry = {}
+    for i = 1, 256 do
+        bits_ry[i] = L:private_input{
+            name = string.format("bits_ry_%03d", i),
+            desc = string.format("ry bit %d (MSB-first)", i),
+            type = "field",
+        }
+    end
+
+    return {
+        rx = rx, px = px, e = e,
+        bits_s = bits_s,
+        int_s = { x = int_sx, y = int_sy, z = int_sz },
+        bits_e = bits_e,
+        int_e = { x = int_ex, y = int_ey, z = int_ez },
+        py = py, ry = ry, rz_inv = rz_inv,
+        bits_ry = bits_ry,
+    }
+end
+
+--- Build a named witness inputs table from a native bip340_compute result.
+--- This maps the native witness OCTET values to named keys matching
+--- declare_bip340_witness output.
+--- Returns { inputs = {...}, public_inputs = {...} } with string keys.
+function M.bip340_witness_named(witness_result)
+    local named = {
+        rx = witness_result.rx,
+        px = witness_result.px,
+        e  = witness_result.e,
+    }
+
+    -- s·G trace (bits: 256, ints: 255)
+    for i = 1, 256 do
+        named[string.format("bits_s_%03d", i)] = witness_result.bits_s[i]
+        if i < 256 then
+            named[string.format("int_sx_%03d", i)] = witness_result.int_sx[i]
+            named[string.format("int_sy_%03d", i)] = witness_result.int_sy[i]
+            named[string.format("int_sz_%03d", i)] = witness_result.int_sz[i]
+        end
+    end
+
+    -- e·P trace (bits: 256, ints: 255)
+    for i = 1, 256 do
+        named[string.format("bits_e_%03d", i)] = witness_result.bits_e[i]
+        if i < 256 then
+            named[string.format("int_ex_%03d", i)] = witness_result.int_ex[i]
+            named[string.format("int_ey_%03d", i)] = witness_result.int_ey[i]
+            named[string.format("int_ez_%03d", i)] = witness_result.int_ez[i]
+        end
+    end
+
+    named.py = witness_result.py
+    named.ry = witness_result.ry
+    named.rz_inv = witness_result.rz_inv
+
+    for i = 1, 256 do
+        named[string.format("bits_ry_%03d", i)] = witness_result.bits_ry[i]
+    end
+
+    return named
+end
+
+--- Compile a Lua-authored BIP340 circuit, build witness inputs from a
+--- valid signature, prove, and verify.
+---
+--- Design: Lua authors the verification sequence using granular gadget
+--- primitives (bip340_addE, bip340_doubleE, bip340_scalar_mult, etc.).
+--- C++ gadgets emit the production-tested constraint formulas — there is
+--- exactly one C++ implementation of each EC formula, shared by the
+--- native monolithic Bip340Verify and this Lua-authored path.
+---
+--- BIP-340 tagged SHA-256 and input parsing (r < p, s < n, pk lift)
+--- are deliberately NOT proven in-circuit.  The circuit proves the
+--- algebraic relation given a public challenge e; the binding between e
+--- and the message/public-key is established by the verifier's own hash
+--- computation outside the proof system (matching Bip340Witness).
+---
+--- This is the recommended entry point for the Lua-authored BIP340 flow.
+--- Usage:
+---   local compiled = M.bip340_lua_circuit_compile()
+---   local result = M.bip340_lua_prove_verify(compiled, sig, pk, msg, seed)
+function M.bip340_lua_circuit_compile()
+    local L = M.named_logic("bip340")
+    L:set_version("1.0.0")
+    L:set_author("Lua-authored BIP340 gadget circuit")
+
+    -- Declare witness wires
+    local w = M.declare_bip340_witness(L)
+    L:bind_inputs()
+
+    -- Generator point (constant)
+    local Gx = L:bip340_gx()
+    local Gy = L:bip340_gy()
+    local one = L:konst(L:one())
+    local zero = L:konst(L:zero())
+
+    -- 0. Verify e matches bits_e decomposition (MSB-first)
+    L:bip340_assert_field_from_bits_msb(w.bits_e, w.e)
+
+    -- 1. Verify s is a canonical secp256k1 scalar (0 <= s < n)
+    L:bip340_assert_scalar_lt_order(w.bits_s)
+
+    -- 2. Verify P is on the curve (py² = px³ + 7)
+    L:bip340_assert_point_on_curve(w.px, w.py)
+
+    -- 3. Compute s·G
+    local sG_x, sG_y, sG_z = L:bip340_scalar_mult(
+        Gx, Gy, one,
+        w.bits_s, w.int_s.x, w.int_s.y, w.int_s.z)
+
+    -- 4. Compute e·P
+    local eP_x, eP_y, eP_z = L:bip340_scalar_mult(
+        w.px, w.py, one,
+        w.bits_e, w.int_e.x, w.int_e.y, w.int_e.z)
+
+    local neg_eP_y = L:sub(zero, eP_y)
+    local R_x, R_y, R_z = L:bip340_addE(
+        sG_x, sG_y, sG_z,
+        eP_x, neg_eP_y, eP_z)
+
+    -- 6. Verify R is on the curve and finite
+    L:bip340_assert_point_on_curve(w.rx, w.ry)
+    -- Use L:mul to ensure placeholder resolution (R_z is EltW, w.rz_inv is placeholder)
+    L:assert_eq(L:mul(R_z, w.rz_inv), one)
+
+    -- 7. Check R.x == rx (projective equality)
+    L:assert_eq(R_x, L:mul(w.rx, R_z))
+
+    -- 8. Check R.y == ry (projective equality)
+    L:assert_eq(R_y, L:mul(w.ry, R_z))
+
+    -- 9. Verify ry bitness and even parity
+    L:bip340_assert_field_from_bits_msb(w.bits_ry, w.ry)
+    L:bip340_assert_even_from_bits_msb(w.bits_ry)
+
+    return L:compile()
 end
 
 return M
