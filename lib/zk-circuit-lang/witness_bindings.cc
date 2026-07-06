@@ -22,8 +22,10 @@
 #include <cstring>
 
 #include "circuits/sha/flatsha256_witness.h"
+#include "circuits/bip340/bip340_witness.h"
 #include "circuits/ecdsa/verify_witness.h"
 #include "ec/p256.h"
+#include "ec/p256k1.h"
 #include "algebra/fp_p256.h"
 
 extern "C" {
@@ -264,6 +266,105 @@ static int ecdsa_gc(lua_State* L) {
 }
 
 // ============================================================================
+// BIP340 Witness Generation
+// ============================================================================
+
+int bip340_compute_witness(lua_State* L) {
+    const octet* sig_oct = o_arg(L, 1);
+    const octet* pk_oct = o_arg(L, 2);
+    const octet* msg_oct = o_arg(L, 3);
+
+    if (!sig_oct) {
+        lerror(L, "BIP340: signature must be an OCTET");
+        return 0;
+    }
+    if (!pk_oct) {
+        o_free(L, sig_oct);
+        lerror(L, "BIP340: public key must be an OCTET");
+        return 0;
+    }
+    if (!msg_oct) {
+        o_free(L, sig_oct);
+        o_free(L, pk_oct);
+        lerror(L, "BIP340: message must be an OCTET");
+        return 0;
+    }
+    if (o_len(sig_oct) != 64) {
+        o_free(L, sig_oct);
+        o_free(L, pk_oct);
+        o_free(L, msg_oct);
+        lerror(L, "BIP340: signature must be 64 bytes");
+        return 0;
+    }
+    if (o_len(pk_oct) != 32) {
+        o_free(L, sig_oct);
+        o_free(L, pk_oct);
+        o_free(L, msg_oct);
+        lerror(L, "BIP340: public key must be 32 bytes");
+        return 0;
+    }
+
+    Bip340Witness witness(p256k1);
+    bool ok = witness.compute(reinterpret_cast<const uint8_t*>(o_val(sig_oct)),
+                              reinterpret_cast<const uint8_t*>(o_val(pk_oct)),
+                              reinterpret_cast<const uint8_t*>(o_val(msg_oct)),
+                              o_len(msg_oct));
+    if (!ok) {
+        o_free(L, sig_oct);
+        o_free(L, pk_oct);
+        o_free(L, msg_oct);
+        lerror(L, "BIP340: witness computation failed");
+        return 0;
+    }
+
+    auto rx_nat = Bip340Witness::nat_from_be_bytes(
+        reinterpret_cast<const uint8_t*>(o_val(sig_oct)));
+    auto px_nat = Bip340Witness::nat_from_be_bytes(
+        reinterpret_cast<const uint8_t*>(o_val(pk_oct)));
+    auto rx = p256k1_base.to_montgomery(rx_nat);
+    auto px = p256k1_base.to_montgomery(px_nat);
+
+    o_free(L, sig_oct);
+    o_free(L, pk_oct);
+    o_free(L, msg_oct);
+
+    auto push_field_array = [&](const auto& values, size_t n, const char* key) {
+        lua_newtable(L);
+        for (size_t i = 0; i < n; ++i) {
+            field_elt_to_octet(L, values[i], p256k1_base);
+            lua_rawseti(L, -2, i + 1);
+        }
+        lua_setfield(L, -2, key);
+    };
+
+    lua_newtable(L);
+    field_elt_to_octet(L, rx, p256k1_base);
+    lua_setfield(L, -2, "rx");
+    field_elt_to_octet(L, px, p256k1_base);
+    lua_setfield(L, -2, "px");
+    field_elt_to_octet(L, witness.e_, p256k1_base);
+    lua_setfield(L, -2, "e");
+    field_elt_to_octet(L, witness.py_, p256k1_base);
+    lua_setfield(L, -2, "py");
+    field_elt_to_octet(L, witness.ry_, p256k1_base);
+    lua_setfield(L, -2, "ry");
+    field_elt_to_octet(L, witness.rz_inv_, p256k1_base);
+    lua_setfield(L, -2, "rz_inv");
+
+    push_field_array(witness.bits_s_, Bip340Witness::kBits, "bits_s");
+    push_field_array(witness.int_sx_, Bip340Witness::kBits - 1, "int_sx");
+    push_field_array(witness.int_sy_, Bip340Witness::kBits - 1, "int_sy");
+    push_field_array(witness.int_sz_, Bip340Witness::kBits - 1, "int_sz");
+    push_field_array(witness.bits_e_, Bip340Witness::kBits, "bits_e");
+    push_field_array(witness.int_ex_, Bip340Witness::kBits - 1, "int_ex");
+    push_field_array(witness.int_ey_, Bip340Witness::kBits - 1, "int_ey");
+    push_field_array(witness.int_ez_, Bip340Witness::kBits - 1, "int_ez");
+    push_field_array(witness.bits_ry_, Bip340Witness::kBits, "bits_ry");
+
+    return 1;
+}
+
+// ============================================================================
 // Type Conversion Utilities
 // ============================================================================
 
@@ -308,6 +409,7 @@ static const luaL_Reg ecdsa_witness_methods[] = {
 static const luaL_Reg zk_witness_functions[] = {
     {"sha256_compute_message", sha256_compute_message},
     {"ecdsa_create_witness", ecdsa_create_witness},
+    {"bip340_compute", bip340_compute_witness},
     {"nat_from_octet", nat_from_octet_be},
     {NULL, NULL}
 };
