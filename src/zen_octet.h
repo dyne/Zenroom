@@ -36,6 +36,7 @@
 #include <sfpool.h>
 
 /* Creates a fresh userdata-backed OCTET and pushes it onto the Lua stack. */
+HEDLEY_RETURNS_NON_NULL
 HEDLEY_NON_NULL(1)
 octet* o_new(lua_State *L, const int size);
 

@@ -31,6 +31,7 @@ typedef struct {
 } fp12;
 
 /* Creates a fresh userdata-backed FP12 and pushes it onto the Lua stack. */
+HEDLEY_RETURNS_NON_NULL
 fp12* fp12_new(lua_State *L);
 
 /* Clones an existing FP12 into fresh userdata and pushes the clone. */

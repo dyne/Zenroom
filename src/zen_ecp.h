@@ -42,6 +42,7 @@ HEDLEY_NON_NULL(1)
 void ecp_clone_free(lua_State *L, HEDLEY_NO_ESCAPE const ecp* e);
 
 /* Creates a fresh userdata-backed ECP and pushes it onto the Lua stack. */
+HEDLEY_RETURNS_NON_NULL
 HEDLEY_NON_NULL(1)
 HEDLEY_WARN_UNUSED_RESULT
 ecp* ecp_new(lua_State *L);
@@ -67,6 +68,7 @@ typedef struct {
 void ecp2_clone_free(lua_State *L, HEDLEY_NO_ESCAPE const ecp2* e);
 
 /* Creates a fresh userdata-backed ECP2 and pushes it onto the Lua stack. */
+HEDLEY_RETURNS_NON_NULL
 HEDLEY_NON_NULL(1)
 HEDLEY_WARN_UNUSED_RESULT
 ecp2* ecp2_new(lua_State *L);

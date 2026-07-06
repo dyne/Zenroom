@@ -36,6 +36,7 @@
 typedef int64_t ztime_t;
 
 /* Creates a fresh userdata-backed TIME value and pushes it onto the Lua stack. */
+HEDLEY_RETURNS_NON_NULL
 ztime_t* time_new(lua_State *L);
 
 /* Clones an existing TIME value into fresh userdata and pushes the clone. */
