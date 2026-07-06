@@ -18,6 +18,7 @@
 #define LONGFELLOW_ZK_LUA_BINDINGS_H_
 
 #include <memory>
+#include <tuple>
 #include <vector>
 #include <string>
 
@@ -46,7 +47,7 @@
 #include "arrays/dense.h"
 
 #include "octet_conversions.h"
-
+#include "circuits/bip340/bip340_gadgets.h"
 
 extern "C" {
 #include <zenroom.h>
@@ -1749,6 +1750,113 @@ public:
 
 	LuaEltWBip340 eltw_input() {
 		return LuaEltWBip340(logic->eltw_input(), logic.get());
+	}
+
+	// -- BIP340 gadget primitives (granular constraint emission) ---------
+	// Each method constructs a temporary Bip340Gadgets instance that emits
+	// the same production-tested constraints used by the native Bip340Verify
+	// circuit.  Lua authors the verification sequence by calling these
+	// gadgets; C++ owns the formulas.
+
+	void bip340_assert_point_on_curve(const LuaEltWBip340& x,
+	                                  const LuaEltWBip340& y) {
+		Bip340Gadgets<LogicType, Field, P256k1> g(*logic, p256k1);
+		g.assert_point_on_curve(x.wire, y.wire);
+	}
+
+	std::tuple<LuaEltWBip340, LuaEltWBip340, LuaEltWBip340>
+	bip340_addE(const LuaEltWBip340& x1, const LuaEltWBip340& y1,
+	            const LuaEltWBip340& z1,
+	            const LuaEltWBip340& x2, const LuaEltWBip340& y2,
+	            const LuaEltWBip340& z2) {
+		Bip340Gadgets<LogicType, Field, P256k1> g(*logic, p256k1);
+		auto r = g.addE(x1.wire, y1.wire, z1.wire,
+		                x2.wire, y2.wire, z2.wire);
+		return {LuaEltWBip340(r.x, logic.get()),
+		        LuaEltWBip340(r.y, logic.get()),
+		        LuaEltWBip340(r.z, logic.get())};
+	}
+
+	std::tuple<LuaEltWBip340, LuaEltWBip340, LuaEltWBip340>
+	bip340_doubleE(const LuaEltWBip340& x, const LuaEltWBip340& y,
+	               const LuaEltWBip340& z) {
+		Bip340Gadgets<LogicType, Field, P256k1> g(*logic, p256k1);
+		auto r = g.doubleE(x.wire, y.wire, z.wire);
+		return {LuaEltWBip340(r.x, logic.get()),
+		        LuaEltWBip340(r.y, logic.get()),
+		        LuaEltWBip340(r.z, logic.get())};
+	}
+
+	/// scalar_mult: px, py, pz (base point), bits[256] (MSB-first scalar),
+	/// int_{x,y,z}[255] (intermediate point trace, one less than kBits).
+	/// The last (256th) slot of each intermediate array is auto-padded
+	/// with a zero wire to match the native C++ API contract.
+	/// Returns final point (x, y, z) as multi-return.
+	std::tuple<LuaEltWBip340, LuaEltWBip340, LuaEltWBip340>
+	bip340_scalar_mult(const LuaEltWBip340& px, const LuaEltWBip340& py,
+	                   const LuaEltWBip340& pz,
+	                   sol::table bits, sol::table int_x,
+	                   sol::table int_y, sol::table int_z) {
+		typename LogicType::EltW bits_arr[256];
+		typename LogicType::EltW int_x_arr[256];
+		typename LogicType::EltW int_y_arr[256];
+		typename LogicType::EltW int_z_arr[256];
+		for (size_t i = 0; i < 256; ++i) {
+			bits_arr[i] = bits[i + 1].get<LuaEltWBip340>().wire;
+		}
+		// Intermediates: only 255 elements in Lua; pad 256th with zero.
+		for (size_t i = 0; i < 255; ++i) {
+			int_x_arr[i] = int_x[i + 1].get<LuaEltWBip340>().wire;
+			int_y_arr[i] = int_y[i + 1].get<LuaEltWBip340>().wire;
+			int_z_arr[i] = int_z[i + 1].get<LuaEltWBip340>().wire;
+		}
+		int_x_arr[255] = logic->konst(p256k1.f_.zero());
+		int_y_arr[255] = logic->konst(p256k1.f_.zero());
+		int_z_arr[255] = logic->konst(p256k1.f_.zero());
+		Bip340Gadgets<LogicType, Field, P256k1> g(*logic, p256k1);
+		auto r = g.scalar_mult(px.wire, py.wire, pz.wire,
+		                       bits_arr, int_x_arr, int_y_arr, int_z_arr);
+		return {LuaEltWBip340(r.x, logic.get()),
+		        LuaEltWBip340(r.y, logic.get()),
+		        LuaEltWBip340(r.z, logic.get())};
+	}
+
+	void bip340_assert_scalar_lt_order(sol::table bits) {
+		typename LogicType::EltW bits_arr[256];
+		for (size_t i = 0; i < 256; ++i) {
+			bits_arr[i] = bits[i + 1].get<LuaEltWBip340>().wire;
+		}
+		Bip340Gadgets<LogicType, Field, P256k1> g(*logic, p256k1);
+		g.assert_scalar_lt_order(bits_arr);
+	}
+
+	void bip340_assert_field_from_bits_msb(sol::table bits,
+	                                       const LuaEltWBip340& value) {
+		typename LogicType::EltW bits_arr[256];
+		for (size_t i = 0; i < 256; ++i) {
+			bits_arr[i] = bits[i + 1].get<LuaEltWBip340>().wire;
+		}
+		Bip340Gadgets<LogicType, Field, P256k1> g(*logic, p256k1);
+		g.assert_field_from_bits_msb(bits_arr, value.wire);
+	}
+
+	void bip340_assert_even_from_bits_msb(sol::table bits) {
+		typename LogicType::EltW bits_arr[256];
+		for (size_t i = 0; i < 256; ++i) {
+			bits_arr[i] = bits[i + 1].get<LuaEltWBip340>().wire;
+		}
+		Bip340Gadgets<LogicType, Field, P256k1> g(*logic, p256k1);
+		g.assert_even_from_bits_msb(bits_arr);
+	}
+
+	// -- BIP340 convenience constants ------------------------------------
+
+	LuaEltWBip340 bip340_gx() const {
+		return LuaEltWBip340(logic->konst(p256k1.gx_), logic.get());
+	}
+
+	LuaEltWBip340 bip340_gy() const {
+		return LuaEltWBip340(logic->konst(p256k1.gy_), logic.get());
 	}
 
 	static const char* __name() { return "zkcc.logic_bip340"; }
