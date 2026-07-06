@@ -1859,6 +1859,19 @@ public:
 		return LuaEltWBip340(logic->konst(p256k1.gy_), logic.get());
 	}
 
+	/// Assert every bits_ry[i] ∈ {0,1}, that they reconstruct to ry,
+	/// and that ry is even (LSB = 0).  Combines bitness, reconstruction,
+	/// and parity in one constraint emission.
+	void bip340_assert_ry_bitness_and_even(sol::table bits_ry,
+	                                       const LuaEltWBip340& ry) {
+		typename LogicType::EltW bits_arr[256];
+		for (size_t i = 0; i < 256; ++i) {
+			bits_arr[i] = bits_ry[i + 1].get<LuaEltWBip340>().wire;
+		}
+		Bip340Gadgets<LogicType, Field, P256k1> g(*logic, p256k1);
+		g.assert_ry_bitness_and_even(bits_arr, ry.wire);
+	}
+
 	static const char* __name() { return "zkcc.logic_bip340"; }
 };
 
