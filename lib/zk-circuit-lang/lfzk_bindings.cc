@@ -16,6 +16,12 @@
 
 #include "lfzk_bindings.h"
 #include "witness_bindings.h"
+#include "circuits/bip340/bip340_guard.h"
+#include "circuits/bip340/bip340_verify.h"
+#include "circuits/bip340/bip340_witness.h"
+#include "ec/p256k1.h"
+#include "algebra/crt.h"
+#include "algebra/crt_convolution.h"
 
 namespace proofs {
 namespace lua {
@@ -66,12 +72,12 @@ static constexpr char kRootY[] =
 	"84087994358540907695740461427818660560182168997182378749313018254450460212"
 	"908";
 
-// Build Dense witness arrays from Lua table of OCTETs
-int lua_build_witness_inputs(lua_State* L) {
+template <class Artifact, class Witness>
+static int lua_build_witness_inputs_impl(lua_State* L) {
 	sol::state_view lua(L);
 	sol::table opts = sol::stack::get<sol::table>(L, 1);
 
-	LuaCircuitArtifact* art = opts["circuit"];
+	Artifact* art = opts["circuit"];
 	if (!art || !art->circuit) {
 		lerror(L, "build_witness_inputs: missing circuit");
 		return 0;
@@ -86,11 +92,10 @@ int lua_build_witness_inputs(lua_State* L) {
 	size_t ninputs = art->circuit->ninputs;
 	size_t npub = art->npub_input();
 
-	LuaWitnessInputs witness(ninputs, npub);
+	Witness witness(ninputs, npub);
 	witness.field = &art->field;
 	const auto& F = art->field;
 
-	// Default all zeros, then set wire 0 = 1
 	for (auto& v : witness.all->v_) v = F.zero();
 	for (auto& v : witness.pub->v_) v = F.zero();
 	if (ninputs > 0) {
@@ -100,7 +105,6 @@ int lua_build_witness_inputs(lua_State* L) {
 		}
 	}
 
-	// Populate provided inputs
 	for (const auto& kv : inputs) {
 		if (!kv.first.is<size_t>()) {
 			lerror(L, "build_witness_inputs: input keys must be numbers");
@@ -127,17 +131,27 @@ int lua_build_witness_inputs(lua_State* L) {
 			return 0;
 		}
 
-		auto nat = nat_from_octet<Fp256Nat>(o);
+		auto nat = nat_from_octet<typename Artifact::Field::N>(o);
 		witness.all->v_[idx] = F.to_montgomery(nat);
 		if (idx < npub) {
 			witness.pub->v_[idx] = witness.all->v_[idx];
 		}
 
 		o_free(L, o);
-		lua_pop(L, 1);  // pop value
+		lua_pop(L, 1);
 	}
 
 	return sol::stack::push(L, std::move(witness));
+}
+
+// Build Dense witness arrays from Lua table of OCTETs
+int lua_build_witness_inputs(lua_State* L) {
+	return lua_build_witness_inputs_impl<LuaCircuitArtifact, LuaWitnessInputs>(L);
+}
+
+int lua_build_witness_inputs_bip340(lua_State* L) {
+	return lua_build_witness_inputs_impl<LuaCircuitArtifactBip340,
+										 LuaWitnessInputsBip340>(L);
 }
 
 // Prove circuit with provided witness
@@ -179,6 +193,71 @@ int lua_prove_circuit(lua_State* L) {
 
 	ZkProof<Field> zk(*art->circuit, kLigeroRate, kLigeroNreq);
 	ZkProver<Field, decltype(rsf)> prover(*art->circuit, F, rsf);
+
+	Transcript tp(seed_buf, seed_len, /*version=*/4);
+	SeededRandomEngine rng(seed_buf, seed_len);
+
+	prover.commit(zk, *witness->all, tp, rng);
+	bool ok = prover.prove(zk, *witness->all, tp);
+	if (!ok) {
+		lerror(L, "prove_circuit: proof generation failed");
+		return 0;
+	}
+
+	std::vector<uint8_t> buf;
+	zk.write(buf, F);
+	push_buffer_to_octet(L, reinterpret_cast<char*>(buf.data()), buf.size());
+	return 1;
+}
+
+int lua_prove_circuit_bip340(lua_State* L) {
+	sol::state_view lua(L);
+	sol::table opts = sol::stack::get<sol::table>(L, 1);
+
+	LuaCircuitArtifactBip340* art = opts["circuit"];
+	LuaWitnessInputsBip340* witness = opts["inputs"];
+
+	if (!art || !art->circuit) {
+		lerror(L, "prove_circuit: missing circuit");
+		return 0;
+	}
+	if (!witness || !witness->all) {
+		lerror(L, "prove_circuit: missing inputs");
+		return 0;
+	}
+
+	uint8_t seed_buf[kSHA256DigestSize] = {0};
+	size_t seed_len = sizeof(seed_buf);
+	if (opts["seed"].valid()) {
+		opts["seed"].push();
+		const octet* seed = o_arg(L, -1);
+		if (seed) {
+			size_t copy_len = o_len(seed) < seed_len ? o_len(seed) : seed_len;
+			memcpy(seed_buf, o_val(seed), copy_len);
+			o_free(L, seed);
+		}
+		lua_pop(L, 1);
+	}
+
+	using Field = Fp256k1Base;
+	using Crt = CRT256<Field>;
+	using ConvolutionFactory = CrtConvolutionFactory<Crt, Field>;
+	using RSFactory = ReedSolomonFactory<Field, ConvolutionFactory>;
+
+	const Field& F = witness->field ? *witness->field : art->field;
+	size_t block_enc = art->circuit->ninputs - art->circuit->npub_in +
+					   art->circuit->nc + 1;
+	auto err = check_crt_block_enc<Crt>(block_enc);
+	if (!err.empty()) {
+		lerror(L, "prove_circuit: %s", err.c_str());
+		return 0;
+	}
+
+	ConvolutionFactory factory(F);
+	RSFactory rsf(factory, F);
+
+	ZkProof<Field> zk(*art->circuit, kLigeroRate, kLigeroNreq, block_enc);
+	ZkProver<Field, RSFactory> prover(*art->circuit, F, rsf);
 
 	Transcript tp(seed_buf, seed_len, /*version=*/4);
 	SeededRandomEngine rng(seed_buf, seed_len);
@@ -259,6 +338,237 @@ int lua_verify_circuit(lua_State* L) {
 
 	lua_pushboolean(L, ok);
 	return 1;
+}
+
+int lua_verify_circuit_bip340(lua_State* L) {
+	sol::state_view lua(L);
+	sol::table opts = sol::stack::get<sol::table>(L, 1);
+
+	LuaCircuitArtifactBip340* art = opts["circuit"];
+	LuaWitnessInputsBip340* witness = opts["public_inputs"];
+
+	if (!art || !art->circuit) {
+		lerror(L, "verify_circuit: missing circuit");
+		return 0;
+	}
+	if (!witness || !witness->pub) {
+		lerror(L, "verify_circuit: missing public inputs");
+		return 0;
+	}
+
+	uint8_t seed_buf[kSHA256DigestSize] = {0};
+	size_t seed_len = sizeof(seed_buf);
+	if (opts["seed"].valid()) {
+		opts["seed"].push();
+		const octet* s = o_arg(L, -1);
+		if (s) {
+			size_t copy_len = o_len(s) < seed_len ? o_len(s) : seed_len;
+			memcpy(seed_buf, o_val(s), copy_len);
+			o_free(L, s);
+		}
+		lua_pop(L, 1);
+	}
+
+	using Field = Fp256k1Base;
+	using Crt = CRT256<Field>;
+	using ConvolutionFactory = CrtConvolutionFactory<Crt, Field>;
+	using RSFactory = ReedSolomonFactory<Field, ConvolutionFactory>;
+
+	const Field& F = witness->field ? *witness->field : art->field;
+	size_t block_enc = art->circuit->ninputs - art->circuit->npub_in +
+					   art->circuit->nc + 1;
+	auto err = check_crt_block_enc<Crt>(block_enc);
+	if (!err.empty()) {
+		lerror(L, "verify_circuit: %s", err.c_str());
+		return 0;
+	}
+
+	ConvolutionFactory factory(F);
+	RSFactory rsf(factory, F);
+
+	opts["proof"].push();
+	const octet* proof_oct = o_arg(L, -1);
+	if (!proof_oct) {
+		lua_pop(L, 1);
+		lerror(L, "verify_circuit: missing proof");
+		return 0;
+	}
+	ReadBuffer rb(reinterpret_cast<const uint8_t*>(o_val(proof_oct)), o_len(proof_oct));
+	ZkProof<Field> zk(*art->circuit, kLigeroRate, kLigeroNreq, block_enc);
+	bool read_ok = zk.read(rb, F);
+	o_free(L, proof_oct);
+	lua_pop(L, 1);
+	if (!read_ok) {
+		lerror(L, "verify_circuit: failed to parse proof");
+		return 0;
+	}
+
+	Transcript tv(seed_buf, seed_len, /*version=*/4);
+	ZkVerifier<Field, RSFactory> verifier(*art->circuit, rsf, kLigeroRate,
+										  kLigeroNreq, block_enc, F);
+	verifier.recv_commitment(zk, tv);
+	bool ok = verifier.verify(zk, *witness->pub, tv);
+
+	lua_pushboolean(L, ok);
+	return 1;
+}
+
+int lua_bip340_circuit(lua_State* L) {
+	using Field = Fp256k1Base;
+	using Backend = CompilerBackend<Field>;
+	using LogicCircuit = Logic<Field, Backend>;
+	using Verify = Bip340Verify<LogicCircuit, Field, P256k1>;
+
+	QuadCircuit<Field> q(p256k1_base);
+	std::unique_ptr<Circuit<Field>> circuit;
+	{
+		const Backend backend(&q);
+		const LogicCircuit logic(&backend, p256k1_base);
+		Verify verify(logic, p256k1);
+
+		auto rx = logic.eltw_input();
+		auto px = logic.eltw_input();
+		auto e = logic.eltw_input();
+
+		typename Verify::Witness witness;
+		q.private_input();
+		witness.input(logic);
+		verify.assert_verify(rx, px, e, witness);
+		circuit = q.mkcircuit(1);
+	}
+
+	if (!circuit) {
+		lerror(L, "bip340_circuit: failed to build circuit");
+		return 0;
+	}
+
+	sol::stack::push(L, LuaCircuitArtifactBip340(std::move(circuit)));
+	return 1;
+}
+
+int lua_bip340_compute_inputs(lua_State* L) {
+	sol::state_view lua(L);
+	LuaCircuitArtifactBip340* art =
+		sol::stack::get<LuaCircuitArtifactBip340*>(L, 1);
+	if (!art || !art->circuit) {
+		lerror(L, "bip340_compute_inputs: missing circuit");
+		return 0;
+	}
+
+	const octet* sig_oct = o_arg(L, 2);
+	const octet* pk_oct = o_arg(L, 3);
+	const octet* msg_oct = o_arg(L, 4);
+	if (!sig_oct || !pk_oct || !msg_oct) {
+		if (sig_oct) o_free(L, sig_oct);
+		if (pk_oct) o_free(L, pk_oct);
+		if (msg_oct) o_free(L, msg_oct);
+		lerror(L, "bip340_compute_inputs: expected circuit, signature, public key, message");
+		return 0;
+	}
+	if (o_len(sig_oct) != 64) {
+		o_free(L, sig_oct);
+		o_free(L, pk_oct);
+		o_free(L, msg_oct);
+		lerror(L, "bip340_compute_inputs: signature must be 64 bytes");
+		return 0;
+	}
+	if (o_len(pk_oct) != 32) {
+		o_free(L, sig_oct);
+		o_free(L, pk_oct);
+		o_free(L, msg_oct);
+		lerror(L, "bip340_compute_inputs: public key must be 32 bytes");
+		return 0;
+	}
+
+	Bip340Witness bip340(p256k1);
+	bool ok = bip340.compute(reinterpret_cast<const uint8_t*>(o_val(sig_oct)),
+							 reinterpret_cast<const uint8_t*>(o_val(pk_oct)),
+							 reinterpret_cast<const uint8_t*>(o_val(msg_oct)),
+							 o_len(msg_oct));
+	if (!ok) {
+		o_free(L, sig_oct);
+		o_free(L, pk_oct);
+		o_free(L, msg_oct);
+		lerror(L, "bip340_compute_inputs: witness computation failed");
+		return 0;
+	}
+
+	auto rx_nat = Bip340Witness::nat_from_be_bytes(
+		reinterpret_cast<const uint8_t*>(o_val(sig_oct)));
+	auto px_nat = Bip340Witness::nat_from_be_bytes(
+		reinterpret_cast<const uint8_t*>(o_val(pk_oct)));
+	auto rx = art->field.to_montgomery(rx_nat);
+	auto px = art->field.to_montgomery(px_nat);
+
+	o_free(L, sig_oct);
+	o_free(L, pk_oct);
+	o_free(L, msg_oct);
+
+	LuaWitnessInputsBip340 prover(art->circuit->ninputs, art->npub_input());
+	LuaWitnessInputsBip340 verifier(art->circuit->ninputs, art->npub_input());
+	prover.field = &art->field;
+	verifier.field = &art->field;
+
+	for (auto& v : prover.all->v_) v = art->field.zero();
+	for (auto& v : prover.pub->v_) v = art->field.zero();
+	for (auto& v : verifier.all->v_) v = art->field.zero();
+	for (auto& v : verifier.pub->v_) v = art->field.zero();
+
+	prover.all->v_[0] = art->field.one();
+	prover.pub->v_[0] = art->field.one();
+	verifier.all->v_[0] = art->field.one();
+	verifier.pub->v_[0] = art->field.one();
+
+	prover.all->v_[1] = rx;
+	prover.all->v_[2] = px;
+	prover.all->v_[3] = bip340.e_;
+	prover.pub->v_[1] = rx;
+	prover.pub->v_[2] = px;
+	prover.pub->v_[3] = bip340.e_;
+	verifier.all->v_[1] = rx;
+	verifier.all->v_[2] = px;
+	verifier.all->v_[3] = bip340.e_;
+	verifier.pub->v_[1] = rx;
+	verifier.pub->v_[2] = px;
+	verifier.pub->v_[3] = bip340.e_;
+
+	size_t idx = art->circuit->npub_in;
+	auto push_private = [&](const auto& elt) {
+		check(idx < prover.all->v_.size(), "bip340 witness index in range");
+		prover.all->v_[idx++] = elt;
+	};
+
+	for (size_t i = 0; i < Bip340Witness::kBits; ++i) {
+		push_private(bip340.bits_s_[i]);
+		if (i < Bip340Witness::kBits - 1) {
+			push_private(bip340.int_sx_[i]);
+			push_private(bip340.int_sy_[i]);
+			push_private(bip340.int_sz_[i]);
+		}
+	}
+	for (size_t i = 0; i < Bip340Witness::kBits; ++i) {
+		push_private(bip340.bits_e_[i]);
+		if (i < Bip340Witness::kBits - 1) {
+			push_private(bip340.int_ex_[i]);
+			push_private(bip340.int_ey_[i]);
+			push_private(bip340.int_ez_[i]);
+		}
+	}
+	push_private(bip340.py_);
+	push_private(bip340.ry_);
+	push_private(bip340.rz_inv_);
+	for (size_t i = 0; i < Bip340Witness::kBits; ++i) {
+		push_private(bip340.bits_ry_[i]);
+	}
+
+	if (idx != art->circuit->ninputs) {
+		lerror(L, "bip340_compute_inputs: witness size mismatch");
+		return 0;
+	}
+
+	sol::stack::push(L, std::move(prover));
+	sol::stack::push(L, std::move(verifier));
+	return 2;
 }
 
 void register_zk_bindings(sol::state_view& lua) {
@@ -369,6 +679,31 @@ void register_zk_bindings(sol::state_view& lua) {
 		"npub", [](LuaWitnessInputs& w) { return w.pub ? w.pub->n1_ : 0; }
 	);
 
+	auto circuit_artifact_bip340 =
+		lua.new_usertype<LuaCircuitArtifactBip340>("CircuitArtifactBip340",
+			sol::no_constructor,
+
+			"__name", sol::property(&LuaCircuitArtifactBip340::__name),
+			"octet", &LuaCircuitArtifactBip340::lua_octet,
+			"circuit_id", &LuaCircuitArtifactBip340::lua_circuit_id,
+			"set_input", &LuaCircuitArtifactBip340::lua_set_input,
+			"get_input", &LuaCircuitArtifactBip340::lua_get_input,
+			"ninput", sol::property(&LuaCircuitArtifactBip340::ninput),
+			"npub_input", sol::property(&LuaCircuitArtifactBip340::npub_input),
+			"depth", sol::property(&LuaCircuitArtifactBip340::depth),
+			"nwires", sol::property(&LuaCircuitArtifactBip340::nwires),
+			"nquad_terms", sol::property(&LuaCircuitArtifactBip340::nquad_terms)
+		);
+
+	auto witness_inputs_bip340 =
+		lua.new_usertype<LuaWitnessInputsBip340>("WitnessInputsBip340",
+			sol::constructors<LuaWitnessInputsBip340(size_t, size_t)>(),
+
+			"__name", sol::property(&LuaWitnessInputsBip340::__name),
+			"ninputs", [](LuaWitnessInputsBip340& w) { return w.all ? w.all->n1_ : 0; },
+			"npub", [](LuaWitnessInputsBip340& w) { return w.pub ? w.pub->n1_ : 0; }
+		);
+
 	// ========================================================================
 	// High-Level Boolean Logic
 	// ========================================================================
@@ -419,6 +754,30 @@ void register_zk_bindings(sol::state_view& lua) {
 		"eq", &LuaEltW::eq,
 		"wire_id", &LuaEltW::wire_id,
 		"to_string", &LuaEltW::to_string
+	);
+
+	auto eltw_bip340 = lua.new_usertype<LuaEltWBip340>("EltWBip340",
+		sol::constructors<>(),
+
+		"__name", sol::property(&LuaEltWBip340::__name),
+		sol::meta_function::addition, &LuaEltWBip340::add,
+		sol::meta_function::subtraction, &LuaEltWBip340::sub,
+		sol::meta_function::multiplication, sol::overload(
+			static_cast<LuaEltWBip340(LuaEltWBip340::*)(const LuaEltWBip340&) const>(
+				&LuaEltWBip340::mul),
+			static_cast<LuaEltWBip340(LuaEltWBip340::*)(const LuaFp256k1Elt&) const>(
+				&LuaEltWBip340::mul_scalar)
+		),
+		sol::meta_function::equal_to, &LuaEltWBip340::eq,
+		sol::meta_function::to_string, &LuaEltWBip340::to_string,
+
+		"add", &LuaEltWBip340::add,
+		"sub", &LuaEltWBip340::sub,
+		"mul", &LuaEltWBip340::mul,
+		"mul_scalar", &LuaEltWBip340::mul_scalar,
+		"eq", &LuaEltWBip340::eq,
+		"wire_id", &LuaEltWBip340::wire_id,
+		"to_string", &LuaEltWBip340::to_string
 	);
 
 	// BitVec8
@@ -707,6 +1066,40 @@ void register_zk_bindings(sol::state_view& lua) {
 		"veq_var", &LuaLogic::veq_var
 	);
 
+	auto logic_bip340 = lua.new_usertype<LuaLogicBip340>("LogicBip340",
+		sol::constructors<LuaLogicBip340()>(),
+
+		"__name", sol::property(&LuaLogicBip340::__name),
+		"zero", &LuaLogicBip340::zero,
+		"one", &LuaLogicBip340::one,
+		"mone", &LuaLogicBip340::mone,
+		"elt", &LuaLogicBip340::elt,
+		"add", &LuaLogicBip340::add,
+		"sub", &LuaLogicBip340::sub,
+		"mul", sol::overload(
+			&LuaLogicBip340::mul,
+			&LuaLogicBip340::mul_scalar
+		),
+		"mul_scalar", &LuaLogicBip340::mul_scalar,
+		"konst", sol::overload(
+			&LuaLogicBip340::konst,
+			&LuaLogicBip340::konst_int
+		),
+		"ax", &LuaLogicBip340::ax,
+		"axy", &LuaLogicBip340::axy,
+		"axpy", &LuaLogicBip340::axpy,
+		"apy", &LuaLogicBip340::apy,
+		"expr", &LuaLogicBip340::expr,
+		"assert0", &LuaLogicBip340::assert0_elt,
+		"assert_eq", &LuaLogicBip340::assert_eq_elt,
+		"eltw_input", &LuaLogicBip340::eltw_input,
+		"private_inputs", &LuaLogicBip340::private_inputs,
+		"begin_full_field", &LuaLogicBip340::begin_full_field,
+		"PRIV", &LuaLogicBip340::PRIV,
+		"FULL", &LuaLogicBip340::FULL,
+		"compile", &LuaLogicBip340::compile
+	);
+
 	// ========================================================================
 	// Router Primitives
 	// ========================================================================
@@ -857,18 +1250,29 @@ int luaopen_zkcore(lua_State* L) {
 
 	// Factory: load circuit artifact from OCTET
 	zkcore_table["load_circuit_artifact"] = &proofs::lua::LuaCircuitArtifact::lua_load_from_octet;
+	zkcore_table["load_circuit_artifact_bip340"] =
+		&proofs::lua::LuaCircuitArtifactBip340::lua_load_from_octet;
 
-	zkcore_table.set_function("create_logic",
+	zkcore_table.set_function("create_logic_p256",
 		sol::factories([]() { return std::make_unique<proofs::lua::LuaLogic>(); }));
-	// Alias: simpler entrypoint
+	zkcore_table.set_function("create_logic_bip340",
+		sol::factories([]() { return std::make_unique<proofs::lua::LuaLogicBip340>(); }));
+	zkcore_table["create_logic"] = zkcore_table["create_logic_p256"];
 	zkcore_table["logic"] = zkcore_table["create_logic"];
 
 	zkcore_table.set_function("create_gf2128_logic",
 		sol::factories([]() { return std::make_unique<proofs::lua::LuaGF2128Logic>(); }));
 
 	zkcore_table["build_witness_inputs"] = &proofs::lua::lua_build_witness_inputs;
+	zkcore_table["build_witness_inputs_bip340"] =
+		&proofs::lua::lua_build_witness_inputs_bip340;
 	zkcore_table["prove_circuit"] = &proofs::lua::lua_prove_circuit;
+	zkcore_table["prove_circuit_bip340"] = &proofs::lua::lua_prove_circuit_bip340;
 	zkcore_table["verify_circuit"] = &proofs::lua::lua_verify_circuit;
+	zkcore_table["verify_circuit_bip340"] = &proofs::lua::lua_verify_circuit_bip340;
+	zkcore_table["bip340_circuit_native"] = &proofs::lua::lua_bip340_circuit;
+	zkcore_table["bip340_compute_inputs_native"] =
+		&proofs::lua::lua_bip340_compute_inputs;
 
 	// Register witness bindings in the ZKCORE table
 	// Push the zkcore_table to the stack first

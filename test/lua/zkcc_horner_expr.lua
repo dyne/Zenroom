@@ -22,7 +22,7 @@ local zkcc = require'crypto_zkcc'
 
 print('=== Expr Circuit: Horner cubic ===')
 
-local L = zkcc.named_logic()
+local L = zkcc.named_logic("p256")
 
 -- Inputs: public z, private a,b,c,d,x (all field elements)
 local z = L:public_input{ name = 'z', desc = 'polynomial result', type = 'field' }

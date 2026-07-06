@@ -23,6 +23,7 @@
 
 #include "sol.hpp"
 #include "ec/p256.h"
+#include "ec/p256k1.h"
 #include "algebra/fp_p256.h"
 #include "algebra/fp2.h"
 #include "gf2k/gf2_128.h"
@@ -71,39 +72,39 @@ static constexpr size_t kLigeroNreq = 128;  // ~86 bits statistical soundness
 // Field Element Wrappers
 // ============================================================================
 
-// Wrapper for Fp256 field elements
-class LuaFp256Elt {
+template <class Field_>
+class LuaFieldEltT {
 public:
-	using Field = Fp256Base;
+	using Field = Field_;
 	using Elt = Field::Elt;
 
 	Elt value;
 	const Field* field;
 
-	LuaFp256Elt(const Elt& v, const Field* f) : value(v), field(f) {}
+	LuaFieldEltT(const Elt& v, const Field* f) : value(v), field(f) {}
 
 	// Arithmetic operations
-	LuaFp256Elt add(const LuaFp256Elt& other) const {
-		return LuaFp256Elt(field->addf(value, other.value), field);
+	LuaFieldEltT add(const LuaFieldEltT& other) const {
+		return LuaFieldEltT(field->addf(value, other.value), field);
 	}
 
-	LuaFp256Elt sub(const LuaFp256Elt& other) const {
-		return LuaFp256Elt(field->subf(value, other.value), field);
+	LuaFieldEltT sub(const LuaFieldEltT& other) const {
+		return LuaFieldEltT(field->subf(value, other.value), field);
 	}
 
-	LuaFp256Elt mul(const LuaFp256Elt& other) const {
-		return LuaFp256Elt(field->mulf(value, other.value), field);
+	LuaFieldEltT mul(const LuaFieldEltT& other) const {
+		return LuaFieldEltT(field->mulf(value, other.value), field);
 	}
 
-	LuaFp256Elt neg() const {
-		return LuaFp256Elt(field->negf(value), field);
+	LuaFieldEltT neg() const {
+		return LuaFieldEltT(field->negf(value), field);
 	}
 
 	// Overloaded operators
-	LuaFp256Elt operator+(const LuaFp256Elt& other) const { return add(other); }
-	LuaFp256Elt operator-(const LuaFp256Elt& other) const { return sub(other); }
-	LuaFp256Elt operator*(const LuaFp256Elt& other) const { return mul(other); }
-	LuaFp256Elt operator-() const { return neg(); }
+	LuaFieldEltT operator+(const LuaFieldEltT& other) const { return add(other); }
+	LuaFieldEltT operator-(const LuaFieldEltT& other) const { return sub(other); }
+	LuaFieldEltT operator*(const LuaFieldEltT& other) const { return mul(other); }
+	LuaFieldEltT operator-() const { return neg(); }
 
 	// String representation
 	std::string to_string() const {
@@ -113,6 +114,9 @@ public:
 	// Type identification for Lua type() function
 	static const char* __name() { return "zkcc.fp256elt"; }
 };
+
+using LuaFp256Elt = LuaFieldEltT<Fp256Base>;
+using LuaFp256k1Elt = LuaFieldEltT<Fp256k1Base>;
 
 // Wrapper for GF2_128 field elements
 class LuaGF2128Elt {
@@ -256,16 +260,17 @@ public:
 };
 
 // Circuit Artifact - compiled/loaded circuit
-class LuaCircuitArtifact {
+template <class Field_, FieldID FieldTag>
+class LuaCircuitArtifactT {
 public:
-	using Field = Fp256Base;
+	using Field = Field_;
 	using CircuitType = Circuit<Field>;
 
 	Field field;
 	std::unique_ptr<CircuitType> circuit;
 	std::vector<typename Field::Elt> inputs;  // Stores both public and private inputs
 
-	LuaCircuitArtifact(std::unique_ptr<CircuitType> compiled)
+	LuaCircuitArtifactT(std::unique_ptr<CircuitType> compiled)
 		: field(), circuit(std::move(compiled)) {
 		if (circuit) {
 			inputs.resize(circuit->ninputs, field.zero());
@@ -273,12 +278,12 @@ public:
 	}
 
 	// Move constructor
-	LuaCircuitArtifact(LuaCircuitArtifact&& other) noexcept
+	LuaCircuitArtifactT(LuaCircuitArtifactT&& other) noexcept
 		: field(), circuit(std::move(other.circuit)), inputs(std::move(other.inputs)) {}
 
 	// Delete copy constructor
-	LuaCircuitArtifact(const LuaCircuitArtifact&) = delete;
-	LuaCircuitArtifact& operator=(const LuaCircuitArtifact&) = delete;
+	LuaCircuitArtifactT(const LuaCircuitArtifactT&) = delete;
+	LuaCircuitArtifactT& operator=(const LuaCircuitArtifactT&) = delete;
 
 	// Metrics
 	size_t ninput() const { return circuit ? circuit->ninputs : 0; }
@@ -289,7 +294,7 @@ public:
 
 	// Export to OCTET
 	static int lua_octet(lua_State* L) {
-		LuaCircuitArtifact* self = sol::stack::get<LuaCircuitArtifact*>(L, 1);
+		LuaCircuitArtifactT* self = sol::stack::get<LuaCircuitArtifactT*>(L, 1);
 
 		if (!self->circuit) {
 			lerror(L,"No circuit artifact");
@@ -297,7 +302,7 @@ public:
 		}
 
 		// Serialize circuit to bytes
-		CircuitRep<Field> rep(self->field, FieldID::P256_ID);
+		CircuitRep<Field> rep(self->field, FieldTag);
 		std::vector<uint8_t> bytes;
 		rep.to_bytes(*self->circuit, bytes);
 
@@ -308,7 +313,7 @@ public:
 
 	// Get circuit ID
 	static int lua_circuit_id(lua_State* L) {
-		LuaCircuitArtifact* self = sol::stack::get<LuaCircuitArtifact*>(L, 1);
+		LuaCircuitArtifactT* self = sol::stack::get<LuaCircuitArtifactT*>(L, 1);
 
 		if (!self->circuit) {
 			lerror(L,"No circuit artifact");
@@ -322,7 +327,7 @@ public:
 
 	// Set input from OCTET (index and value)
 	static int lua_set_input(lua_State* L) {
-		LuaCircuitArtifact* self = sol::stack::get<LuaCircuitArtifact*>(L, 1);
+		LuaCircuitArtifactT* self = sol::stack::get<LuaCircuitArtifactT*>(L, 1);
 
 		if (!self->circuit) {
 			lerror(L,"No circuit artifact");
@@ -354,7 +359,8 @@ public:
 		}
 
 		// Convert OCTET to field element
-		self->inputs[idx] = self->field.to_montgomery(nat_from_octet<Fp256Nat>(value_oct));
+		self->inputs[idx] = self->field.to_montgomery(
+			nat_from_octet<typename Field::N>(value_oct));
 
 		o_free(L, value_oct);
 		return 0;
@@ -362,7 +368,7 @@ public:
 
 	// Get input as OCTET
 	static int lua_get_input(lua_State* L) {
-		LuaCircuitArtifact* self = sol::stack::get<LuaCircuitArtifact*>(L, 1);
+		LuaCircuitArtifactT* self = sol::stack::get<LuaCircuitArtifactT*>(L, 1);
 
 		if (!self->circuit) {
 			lerror(L,"No circuit artifact");
@@ -397,7 +403,7 @@ public:
 		}
 
 		ReadBuffer buf((const uint8_t*)o_val(oct), o_len(oct));
-		CircuitRep<Field> rep(Fp256Base(), FieldID::P256_ID);
+		CircuitRep<Field> rep(Field(), FieldTag);
 		auto loaded_circuit = rep.from_bytes(buf, false);
 
 		o_free(L, oct);
@@ -409,7 +415,7 @@ public:
 
 		// Create LuaCircuitArtifact using SOL's stack push
 		sol::state_view lua(L);
-		sol::stack::push(L, LuaCircuitArtifact(std::move(loaded_circuit)));
+		sol::stack::push(L, LuaCircuitArtifactT(std::move(loaded_circuit)));
 
 		return 1;
 	}
@@ -418,28 +424,36 @@ public:
 	static const char* __name() { return "zkcc.circuit_artifact"; }
 };
 
+using LuaCircuitArtifact = LuaCircuitArtifactT<Fp256Base, FieldID::P256_ID>;
+using LuaCircuitArtifactBip340 =
+	LuaCircuitArtifactT<Fp256k1Base, FieldID::SECP_ID>;
+
 // Witness bundle: full input vector and public slice
-class LuaWitnessInputs {
+template <class Field_>
+class LuaWitnessInputsT {
 public:
-	using Field = Fp256Base;
+	using Field = Field_;
 	const Field* field;
 	std::unique_ptr<Dense<Field>> all;
 	std::unique_ptr<Dense<Field>> pub;
 
-	LuaWitnessInputs(size_t ninputs, size_t npub)
+	LuaWitnessInputsT(size_t ninputs, size_t npub)
 		: field(nullptr),
 		  all(std::make_unique<Dense<Field>>(1, ninputs)),
 		  pub(std::make_unique<Dense<Field>>(1, npub)) {}
 
-	LuaWitnessInputs(LuaWitnessInputs&&) noexcept = default;
-	LuaWitnessInputs& operator=(LuaWitnessInputs&&) noexcept = default;
+	LuaWitnessInputsT(LuaWitnessInputsT&&) noexcept = default;
+	LuaWitnessInputsT& operator=(LuaWitnessInputsT&&) noexcept = default;
 
-	LuaWitnessInputs(const LuaWitnessInputs&) = delete;
-	LuaWitnessInputs& operator=(const LuaWitnessInputs&) = delete;
+	LuaWitnessInputsT(const LuaWitnessInputsT&) = delete;
+	LuaWitnessInputsT& operator=(const LuaWitnessInputsT&) = delete;
 
 	// Type identification for Lua type() function
 	static const char* __name() { return "zkcc.witness_inputs"; }
 };
+
+using LuaWitnessInputs = LuaWitnessInputsT<Fp256Base>;
+using LuaWitnessInputsBip340 = LuaWitnessInputsT<Fp256k1Base>;
 
 // Build circuit artifact from template
 static int lua_build_circuit_artifact(lua_State* L) {
@@ -474,10 +488,15 @@ static int lua_build_circuit_artifact(lua_State* L) {
 
 // Build Dense witness arrays from inputs
 int lua_build_witness_inputs(lua_State* L);
+int lua_build_witness_inputs_bip340(lua_State* L);
 
 // Prove/verify helpers
 int lua_prove_circuit(lua_State* L);
 int lua_verify_circuit(lua_State* L);
+int lua_prove_circuit_bip340(lua_State* L);
+int lua_verify_circuit_bip340(lua_State* L);
+int lua_bip340_circuit(lua_State* L);
+int lua_bip340_compute_inputs(lua_State* L);
 
 // ============================================================================
 // High-Level Boolean Logic API
@@ -550,40 +569,41 @@ public:
 };
 
 // Wrapper for EltW (field element wire)
-class LuaEltW {
+template <class LogicType_>
+class LuaEltWT {
 public:
-	using Field = Fp256Base;
-	using Backend = CustomCompilerBackend<Field>;
-	using LogicType = Logic<Field, Backend>;
+	using LogicType = LogicType_;
 	using EltW = typename LogicType::EltW;
+	using Field = typename LogicType::Field;
+	using LuaFieldElt = LuaFieldEltT<Field>;
 
 	EltW wire;
 	const LogicType* logic;
 
-	LuaEltW(const EltW& w, const LogicType* l) : wire(w), logic(l) {}
+	LuaEltWT(const EltW& w, const LogicType* l) : wire(w), logic(l) {}
 
 	size_t wire_id() const {
 		return wire;
 	}
 
 	// Arithmetic operations
-	LuaEltW add(const LuaEltW& other) const {
-		return LuaEltW(logic->add(wire, other.wire), logic);
+	LuaEltWT add(const LuaEltWT& other) const {
+		return LuaEltWT(logic->add(wire, other.wire), logic);
 	}
 
-	LuaEltW sub(const LuaEltW& other) const {
-		return LuaEltW(logic->sub(wire, other.wire), logic);
+	LuaEltWT sub(const LuaEltWT& other) const {
+		return LuaEltWT(logic->sub(wire, other.wire), logic);
 	}
 
-	LuaEltW mul(const LuaEltW& other) const {
-		return LuaEltW(logic->mul(wire, other.wire), logic);
+	LuaEltWT mul(const LuaEltWT& other) const {
+		return LuaEltWT(logic->mul(wire, other.wire), logic);
 	}
 
-	LuaEltW mul_scalar(const LuaFp256Elt& k) const {
-		return LuaEltW(logic->mul(k.value, wire), logic);
+	LuaEltWT mul_scalar(const LuaFieldElt& k) const {
+		return LuaEltWT(logic->mul(k.value, wire), logic);
 	}
 
-	bool eq(const LuaEltW& other) const {
+	bool eq(const LuaEltWT& other) const {
 		// Create a wire that checks if the two field elements are equal
 		// We can't evaluate this at binding time, so we'll add a constraint
 		// that the difference is zero and return a placeholder value
@@ -594,11 +614,11 @@ public:
 	}
 
 	// Overloaded operators for Lua
-	LuaEltW operator+(const LuaEltW& other) const { return add(other); }
-	LuaEltW operator-(const LuaEltW& other) const { return sub(other); }
-	LuaEltW operator*(const LuaEltW& other) const { return mul(other); }
-	LuaEltW operator*(const LuaFp256Elt& k) const { return mul_scalar(k); }
-	bool operator==(const LuaEltW& other) const { return eq(other); }
+	LuaEltWT operator+(const LuaEltWT& other) const { return add(other); }
+	LuaEltWT operator-(const LuaEltWT& other) const { return sub(other); }
+	LuaEltWT operator*(const LuaEltWT& other) const { return mul(other); }
+	LuaEltWT operator*(const LuaFieldElt& k) const { return mul_scalar(k); }
+	bool operator==(const LuaEltWT& other) const { return eq(other); }
 
 	// Type identification for Lua type() function
 	static const char* __name() { return "zkcc.eltw"; }
@@ -610,6 +630,12 @@ public:
 		return std::string(buffer);
 	}
 };
+
+using LuaP256LogicType = Logic<Fp256Base, CustomCompilerBackend<Fp256Base>>;
+using LuaBip340LogicType =
+	Logic<Fp256k1Base, CustomCompilerBackend<Fp256k1Base>>;
+using LuaEltW = LuaEltWT<LuaP256LogicType>;
+using LuaEltWBip340 = LuaEltWT<LuaBip340LogicType>;
 
 // Wrapper for bit vectors
 template <size_t N>
@@ -1613,6 +1639,119 @@ public:
 
 	// Type identification for Lua type() function
 	static const char* __name() { return "zkcc.logic"; }
+};
+
+// Minimal secp256k1 logic wrapper used by the zkcc-bip340 plan.
+// This intentionally exposes only the field-oriented surface needed by
+// named_logic(), small arithmetic circuits, and the BIP340 artifact path.
+class LuaLogicBip340 {
+public:
+	using Field = Fp256k1Base;
+	using Backend = CustomCompilerBackend<Field>;
+	using LogicType = Logic<Field, Backend>;
+
+	Field field;
+	std::unique_ptr<QuadCircuit<Field>> circuit;
+	std::unique_ptr<Backend> backend;
+	std::unique_ptr<LogicType> logic;
+
+	LuaLogicBip340() {
+		circuit = std::make_unique<QuadCircuit<Field>>(field);
+		backend = std::make_unique<Backend>(circuit.get());
+		logic = std::make_unique<LogicType>(backend.get(), field);
+	}
+
+	void private_inputs() { circuit->private_input(); }
+	void begin_full_field() { circuit->begin_full_field(); }
+	void PRIV() { private_inputs(); }
+	void FULL() { begin_full_field(); }
+
+	LuaCircuitArtifactBip340 compile(size_t nc = 1) {
+		auto compiled = circuit->mkcircuit(nc);
+		if (!compiled) {
+			lerror(((zenroom_t*)ZEN)->lua, "compile(): failed to build circuit");
+		}
+		return LuaCircuitArtifactBip340(std::move(compiled));
+	}
+
+	LuaFp256k1Elt zero() const { return LuaFp256k1Elt(logic->zero(), &field); }
+	LuaFp256k1Elt one() const { return LuaFp256k1Elt(logic->one(), &field); }
+	LuaFp256k1Elt mone() const { return LuaFp256k1Elt(logic->mone(), &field); }
+	LuaFp256k1Elt elt(uint64_t a) const { return LuaFp256k1Elt(logic->elt(a), &field); }
+
+	LuaEltWBip340 add(const LuaEltWBip340& a, const LuaEltWBip340& b) {
+		return LuaEltWBip340(logic->add(a.wire, b.wire), logic.get());
+	}
+
+	LuaEltWBip340 sub(const LuaEltWBip340& a, const LuaEltWBip340& b) {
+		return LuaEltWBip340(logic->sub(a.wire, b.wire), logic.get());
+	}
+
+	LuaEltWBip340 mul(const LuaEltWBip340& a, const LuaEltWBip340& b) {
+		return LuaEltWBip340(logic->mul(a.wire, b.wire), logic.get());
+	}
+
+	LuaEltWBip340 mul_scalar(const LuaFp256k1Elt& k, const LuaEltWBip340& b) {
+		return LuaEltWBip340(logic->mul(k.value, b.wire), logic.get());
+	}
+
+	LuaEltWBip340 konst(const LuaFp256k1Elt& a) {
+		return LuaEltWBip340(logic->konst(a.value), logic.get());
+	}
+
+	LuaEltWBip340 konst_int(uint64_t a) {
+		return LuaEltWBip340(logic->konst(a), logic.get());
+	}
+
+	LuaEltWBip340 ax(const LuaFp256k1Elt& a, const LuaEltWBip340& x) {
+		return LuaEltWBip340(logic->ax(a.value, x.wire), logic.get());
+	}
+
+	LuaEltWBip340 axy(const LuaFp256k1Elt& a, const LuaEltWBip340& x,
+					  const LuaEltWBip340& y) {
+		return LuaEltWBip340(logic->axy(a.value, x.wire, y.wire), logic.get());
+	}
+
+	LuaEltWBip340 axpy(const LuaEltWBip340& y, const LuaFp256k1Elt& a,
+					   const LuaEltWBip340& x) {
+		return LuaEltWBip340(logic->axpy(y.wire, a.value, x.wire), logic.get());
+	}
+
+	LuaEltWBip340 apy(const LuaEltWBip340& y, const LuaFp256k1Elt& a) {
+		return LuaEltWBip340(logic->apy(y.wire, a.value), logic.get());
+	}
+
+	LuaEltWBip340 expr(sol::protected_function fn, sol::table env) {
+		sol::state_view lua(env.lua_state());
+		sol::table proxy = lua.create_table();
+		for (const auto& kv : env) {
+			proxy[kv.first] = kv.second;
+		}
+		sol::protected_function_result res = fn(proxy);
+		if (!res.valid()) {
+			sol::error err = res;
+			lerror(lua.lua_state(), "expr: %s", err.what());
+		}
+		sol::object obj = res;
+		if (!obj.is<LuaEltWBip340>()) {
+			lerror(lua.lua_state(), "expr: expected EltW result");
+		}
+		return obj.as<LuaEltWBip340>();
+	}
+
+	LuaEltWBip340 assert0_elt(const LuaEltWBip340& a) {
+		return LuaEltWBip340(logic->assert0(a.wire), logic.get());
+	}
+
+	LuaEltWBip340 assert_eq_elt(const LuaEltWBip340& a, const LuaEltWBip340& b) {
+		return LuaEltWBip340(logic->assert_eq(a.wire, b.wire), logic.get());
+	}
+
+	LuaEltWBip340 eltw_input() {
+		return LuaEltWBip340(logic->eltw_input(), logic.get());
+	}
+
+	static const char* __name() { return "zkcc.logic_bip340"; }
 };
 
 // ============================================================================

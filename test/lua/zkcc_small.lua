@@ -11,7 +11,7 @@ print('=== Full Flow Proof Test (positional inputs) ===')
 -- named_logic + public/private_input for descriptive schemas.
 
 -- Build a simple circuit: public z, private x,y, assert z = x + y
-local L = zkcc.logic()
+local L = zkcc.logic("p256")
 local z = L:eltw_input() -- public input
 L:private_inputs()       -- boundary between public/private
 local x = L:eltw_input() -- private input 0 (index 2)

@@ -3,7 +3,7 @@
 
 local zkcc = require'crypto_zkcc'
 
-local L = zkcc.logic()
+local L = zkcc.logic("p256")
 local BA = L:create_bit_adder32()
 
 local MAX_BLOCKS = 1

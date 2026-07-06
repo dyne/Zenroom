@@ -50,6 +50,7 @@ ldadd += ${pwd}/lib/zstd/libzstd.a
 ldadd += $(pwd)/lib/mayo/libmayo.a
 ldadd += -lstdc++
 ZKCC_LDADD := ${pwd}/lib/zk-circuit-lang/libzk-circuit-lang.a
+ZKCC_LDADD += ${pwd}/lib/longfellow-zk/liblongfellow-zk.a
 
 # ----------------
 # zenroom defaults

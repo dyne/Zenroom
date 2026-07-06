@@ -11,7 +11,7 @@ local zkcc = require'crypto_zkcc'
 print('=== Arithmetic progression: closed-form sum ===')
 
 -- Declare inputs (named, typed, described)
-local L = zkcc.named_logic()
+local L = zkcc.named_logic("p256")
 local count = L:public_input{ name = 'count', desc = 'number of terms', type = 'field' }
 local step  = L:private_input{ name = 'step', desc = 'common difference', type = 'field' }
 local sum   = L:public_input{ name = 'sum', desc = 'claimed total', type = 'field' }
