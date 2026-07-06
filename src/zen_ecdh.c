@@ -654,7 +654,7 @@ static int ecdh_aead_encrypt(lua_State *L) {
 	in = o_arg(L, 2); SAFE_GOTO(in, "Could not allocate message");
 	iv = o_arg(L, 3); SAFE_GOTO(iv, "Could not allocate iv");
 	SAFE_GOTO(iv->len >= 12, "Invalid argument, IV must be at least 12 bytes");
-	h = o_arg(L, 4); HEDLEY_ASSUME(h != NULL); SAFE_GOTO(h, "Could not allocate header");
+	h = o_arg(L, 4); SAFE_GOTO(h, "Could not allocate header");
 	// output is padded to next word
 	octet *out = o_new(L, in->len+16); SAFE_GOTO(out, "Could not create ciphertext");
 	octet *t = o_new(L, 16); SAFE_GOTO(t, "Could not create authentication tag");
