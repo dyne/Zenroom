@@ -65,9 +65,8 @@ void nat_to_octet(lua_State* L, const Nat& n) {
         bytes[i] = le_bytes[Nat::kBytes - 1 - i];
     }
     
-    // Push as OCTET
-    extern octet* o_push(lua_State*, const char*, size_t);
-    ::o_push(L, (char*)bytes, Nat::kBytes);
+    // Push as OCTET (copy into GC-owned buffer, not aliased stack memory)
+    ::push_buffer_to_octet(L, (char*)bytes, Nat::kBytes);
 }
 
 // Convert field element to OCTET (from Montgomery form)
