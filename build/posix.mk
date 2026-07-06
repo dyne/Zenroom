@@ -37,7 +37,7 @@ TARGET_BUILD_DEPS += ${ZKCC_BUILD_DEPS}
 TARGET_LDADD += ${ZKCC_LDADD}
 cflags += -DZEN_ENABLE_ZKCC=1
 else
-LUA_EMBED_EXCLUDES += crypto_zkcc.lua
+LUA_EMBED_EXCLUDES += crypto_zkcc.lua crypto_zkcc_bip340.lua
 ZEN_SOURCES := $(filter-out src/lua_modules.o,${ZEN_SOURCES}) \
 	src/lua_modules_library.o
 endif
