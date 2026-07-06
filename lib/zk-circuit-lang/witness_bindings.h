@@ -36,6 +36,11 @@ int sha256_compute_message(lua_State* L);
 // Returns: boolean success, then witness object if success
 int ecdsa_create_witness(lua_State* L);
 
+// BIP340 witness generation
+// Args: signature (64 bytes), public key (32 bytes), message (OCTET)
+// Returns: table with public values and full witness arrays as OCTETs
+int bip340_compute_witness(lua_State* L);
+
 // ECDSA witness accessors (require witness object on stack)
 int ecdsa_get_rx(lua_State* L);
 int ecdsa_get_ry(lua_State* L);
