@@ -20,6 +20,11 @@
 
 local native = require'zkcore'
 local M = {}
+local TEMPLATE_DEFAULT = "bip340"
+local TEMPLATE_FIELD_ID = {
+    p256 = 1,
+    bip340 = 10,
+}
 
 -- Weak-keyed table to store artifact schemas
 local artifact_schema = setmetatable({}, { __mode = "k" })
@@ -48,6 +53,19 @@ local function has_string_keys(tbl)
         end
     end
     return false
+end
+
+local function normalize_template(template)
+    if template == nil then
+        return TEMPLATE_DEFAULT
+    end
+    if type(template) ~= "string" then
+        error("template must be a string", 3)
+    end
+    if not TEMPLATE_FIELD_ID[template] then
+        error("unknown template: " .. tostring(template), 3)
+    end
+    return template
 end
 
 -- ===========================================================================
@@ -93,6 +111,8 @@ local function snapshot_schema(state, artifact)
         private = copy_entries(state.private),
         full = copy_entries(state.full),
         order = copy_entries(state.order),
+        template = state.template,
+        field_id = state.field_id,
         version = state.version,
         author = state.author,
         source = state.source,
@@ -389,6 +409,8 @@ local function new_state()
     return {
         inputs = 0,
         decl_order = 0,
+        template = TEMPLATE_DEFAULT,
+        field_id = TEMPLATE_FIELD_ID[TEMPLATE_DEFAULT],
         public = {},
         private = {},
         full = {},
@@ -584,10 +606,21 @@ function NamedLogic:info(artifact)
     }
 end
 
-local function new_named_logic()
+local function new_named_logic(template)
+    local normalized = normalize_template(template)
     return setmetatable({
-        _logic = M.logic(),
-        _state = new_state(),
+        _logic = M.logic(normalized),
+        _state = {
+            inputs = 0,
+            decl_order = 0,
+            template = normalized,
+            field_id = TEMPLATE_FIELD_ID[normalized],
+            public = {},
+            private = {},
+            full = {},
+            order = {},
+            by_name = {},
+        },
         _bound = false,
     }, NamedLogic)
 end
@@ -597,6 +630,79 @@ end
 -- ===========================================================================
 
 M.named_logic = new_named_logic
+
+local function repeat_named_entries(entries, prefix, count, kind, input_type)
+    for i = 1, count do
+        entries[#entries + 1] = {
+            kind = kind,
+            name = string.format("%s_%03d", prefix, i),
+            type = input_type,
+            desc = prefix,
+            index = #entries + 1,
+            decl_order = #entries + 1,
+        }
+    end
+end
+
+local function append_named_entry(entries, name, kind, input_type)
+    entries[#entries + 1] = {
+        kind = kind,
+        name = name,
+        type = input_type,
+        desc = name,
+        index = #entries + 1,
+        decl_order = #entries + 1,
+    }
+end
+
+local function make_bip340_schema(artifact)
+    local public = {}
+    local private = {}
+    local full = {}
+
+    append_named_entry(public, "rx", "public", "field")
+    append_named_entry(public, "px", "public", "field")
+    append_named_entry(public, "e", "public", "field")
+
+    repeat_named_entries(private, "bits_s", 256, "private", "field")
+    repeat_named_entries(private, "int_sx", 255, "private", "field")
+    repeat_named_entries(private, "int_sy", 255, "private", "field")
+    repeat_named_entries(private, "int_sz", 255, "private", "field")
+    repeat_named_entries(private, "bits_e", 256, "private", "field")
+    repeat_named_entries(private, "int_ex", 255, "private", "field")
+    repeat_named_entries(private, "int_ey", 255, "private", "field")
+    repeat_named_entries(private, "int_ez", 255, "private", "field")
+    append_named_entry(private, "py", "private", "field")
+    append_named_entry(private, "ry", "private", "field")
+    append_named_entry(private, "rz_inv", "private", "field")
+    repeat_named_entries(private, "bits_ry", 256, "private", "field")
+
+    local schema = {
+        public = public,
+        private = private,
+        full = full,
+        order = {},
+        template = "bip340",
+        field_id = TEMPLATE_FIELD_ID.bip340,
+        counts = {
+            public = #public,
+            private = #private,
+            full = 0,
+        },
+    }
+
+    for _, entry in ipairs(public) do
+        schema.order[#schema.order + 1] = entry
+    end
+    for _, entry in ipairs(private) do
+        schema.order[#schema.order + 1] = entry
+    end
+
+    rebuild_indexes(schema)
+    schema.total = (artifact and artifact.ninput and (artifact.ninput - 1)) or #schema.order
+    schema.npub = (artifact and artifact.npub_input and (artifact.npub_input - 1)) or #public
+    return schema
+end
 
 -- Unwrap named artifacts and resolve named inputs in options tables
 local function unwrap_opts(opts, public_only)
@@ -657,21 +763,36 @@ end
 if M.build_witness_inputs then
     local native_build = M.build_witness_inputs
     M.build_witness_inputs = function(opts)
-        return native_build(unwrap_opts(opts))
+        local resolved = unwrap_opts(opts)
+        local schema = artifact_schema[resolved.circuit] or resolved.circuit.schema
+        if schema and schema.template == "bip340" then
+            return native.build_witness_inputs_bip340(resolved)
+        end
+        return native_build(resolved)
     end
 end
 
 if M.prove_circuit then
     local native_prove = M.prove_circuit
     M.prove_circuit = function(opts)
-        return native_prove(unwrap_opts(opts))
+        local resolved = unwrap_opts(opts)
+        local schema = artifact_schema[resolved.circuit] or resolved.circuit.schema
+        if schema and schema.template == "bip340" then
+            return native.prove_circuit_bip340(resolved)
+        end
+        return native_prove(resolved)
     end
 end
 
 if M.verify_circuit then
     local native_verify = M.verify_circuit
     M.verify_circuit = function(opts)
-        return native_verify(unwrap_opts(opts, true))
+        local resolved = unwrap_opts(opts, true)
+        local schema = artifact_schema[resolved.circuit] or resolved.circuit.schema
+        if schema and schema.template == "bip340" then
+            return native.verify_circuit_bip340(resolved)
+        end
+        return native_verify(resolved)
     end
 end
 
@@ -733,9 +854,19 @@ end
 
 -- Wrap Logic instances to add convenience methods
 if M.create_logic then
-    local native_create = M.create_logic
-    M.create_logic = function()
-        local logic_native = native_create()
+    local native_create_p256 = M.create_logic_p256 or M.create_logic
+    local native_create_bip340 = M.create_logic_bip340
+    M.create_logic = function(template)
+        local normalized = normalize_template(template)
+        local logic_native
+        if normalized == "bip340" then
+            if not native_create_bip340 then
+                error("bip340 logic is not available", 2)
+            end
+            logic_native = native_create_bip340()
+        else
+            logic_native = native_create_p256()
+        end
         
         -- Create a Lua table wrapper that delegates to the native usertype
         local logic_wrapper = {}
@@ -765,6 +896,33 @@ if M.create_logic then
         setmetatable(logic_wrapper, mt)
         
         return logic_wrapper
+    end
+end
+
+M.logic = M.create_logic
+
+function M.bip340_circuit()
+    local artifact = native.bip340_circuit_native()
+    return wrap_artifact(artifact, make_bip340_schema(artifact))
+end
+
+if M.load_circuit_artifact_bip340 then
+    local native_load_bip340 = M.load_circuit_artifact_bip340
+    M.load_circuit_artifact_bip340 = function(octet)
+        local artifact = native_load_bip340(octet)
+        return wrap_artifact(artifact, make_bip340_schema(artifact))
+    end
+end
+
+if M.witness and native.bip340_compute_inputs_native then
+    M.witness.bip340_compute_inputs = function(circuit, sig, pk, msg)
+        local raw_circuit = is_named_artifact(circuit) and circuit:raw() or circuit
+        local inputs, public_inputs =
+            native.bip340_compute_inputs_native(raw_circuit, sig, pk, msg)
+        return {
+            inputs = inputs,
+            public_inputs = public_inputs,
+        }
     end
 end
 
