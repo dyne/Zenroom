@@ -6,4 +6,5 @@ load ../bats_setup
     Z zkcc_sha256.lua
     Z zkcc_arith_progression.lua
     Z zkcc_flatsha256_proof.lua
+    Z zkcc_bip340.lua
 }
