@@ -191,7 +191,7 @@ octet* o_alloc(lua_State *L, int size) {
 	o->max = size;
 	o->len = 0;
 	o->val[0] = 0x0;
-	// o->ref = 0;
+	o->ref = 0;
 	return(o);
 }
 
@@ -201,9 +201,17 @@ void o_free(lua_State *L, const octet *o) {
 	octet *t = (octet*)o; // remove const static check
 	t->ref--;
 	if(t->ref>0) return;
-	if(HEDLEY_LIKELY(t->val!=NULL)) zfree(t->val);
-	zfree(t);
-	return;
+	if(HEDLEY_LIKELY(t->val!=NULL)) {
+		zfree(t->val);
+		t->val = NULL;
+	}
+	// Heap-allocated octets (from o_alloc) have ref=0 initially;
+	// after decrement ref==-1 → free the struct.
+	// Userdata-backed octets (from o_new) have ref=1 initially;
+	// after o_arg increments and GC/o_free decrements, ref reaches
+	// 0 here. Lua GC manages the userdata struct; do NOT free it.
+	if(t->ref < 0)
+		zfree(t);
 }
 
 // REMEMBER: newuserdata already pushes the object in lua's stack
@@ -387,7 +395,10 @@ int o_destroy(lua_State *L) {
 	octet *o = (octet*)ud;
 	o->ref--;
 	if(o->ref > 0) return 0;
-	if(o->val) zfree(o->val);
+	if(o->val) {
+		zfree(o->val);
+		o->val = NULL;
+	}
 //	zfree(o);
 	return 0;
 }
