@@ -127,7 +127,7 @@ end
 
 print("=== Building Lua-authored BIP340 circuit ===")
 
-local lua_circuit = zkcc.bip340_lua_circuit_compile()
+local lua_circuit = zkcc.bip340_circuit_compile()
 local schema = lua_circuit.schema
 
 print(string.format("  template: %s", schema.template))
