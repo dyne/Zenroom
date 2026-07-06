@@ -46,6 +46,7 @@ typedef struct {
 HEDLEY_NON_NULL(1)
 void secp_clone_free(lua_State *L, HEDLEY_NO_ESCAPE const secp *e);
 
+HEDLEY_RETURNS_NON_NULL
 HEDLEY_NON_NULL(1)
 HEDLEY_WARN_UNUSED_RESULT
 secp *secp_new(lua_State *L);

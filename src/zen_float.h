@@ -22,6 +22,7 @@
 #define __ZEN_FLOAT_H__
 
 /* Creates a fresh userdata-backed FLOAT and pushes it onto the Lua stack. */
+HEDLEY_RETURNS_NON_NULL
 float* float_new(lua_State *L);
 
 /* Clones an existing FLOAT into fresh userdata and pushes the clone. */

@@ -41,6 +41,7 @@ typedef struct {
 } big;
 
 /* Creates a fresh userdata-backed BIG and pushes it onto the Lua stack. */
+HEDLEY_RETURNS_NON_NULL
 HEDLEY_WARN_UNUSED_RESULT
 HEDLEY_NON_NULL(1)
 big* big_new(lua_State *L);
