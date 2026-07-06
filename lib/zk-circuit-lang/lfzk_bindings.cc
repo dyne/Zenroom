@@ -1097,7 +1097,22 @@ void register_zk_bindings(sol::state_view& lua) {
 		"begin_full_field", &LuaLogicBip340::begin_full_field,
 		"PRIV", &LuaLogicBip340::PRIV,
 		"FULL", &LuaLogicBip340::FULL,
-		"compile", &LuaLogicBip340::compile
+		"compile", &LuaLogicBip340::compile,
+
+		// BIP340 granular gadget primitives
+		"bip340_assert_point_on_curve",
+			&LuaLogicBip340::bip340_assert_point_on_curve,
+		"bip340_addE", &LuaLogicBip340::bip340_addE,
+		"bip340_doubleE", &LuaLogicBip340::bip340_doubleE,
+		"bip340_scalar_mult", &LuaLogicBip340::bip340_scalar_mult,
+		"bip340_assert_scalar_lt_order",
+			&LuaLogicBip340::bip340_assert_scalar_lt_order,
+		"bip340_assert_field_from_bits_msb",
+			&LuaLogicBip340::bip340_assert_field_from_bits_msb,
+		"bip340_assert_even_from_bits_msb",
+			&LuaLogicBip340::bip340_assert_even_from_bits_msb,
+		"bip340_gx", &LuaLogicBip340::bip340_gx,
+		"bip340_gy", &LuaLogicBip340::bip340_gy
 	);
 
 	// ========================================================================
