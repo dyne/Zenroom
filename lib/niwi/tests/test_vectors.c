@@ -7,6 +7,7 @@
  */
 
 #include "src/encoding.h"
+#include "src/challenge_schedule.h"
 #include "src/hash.h"
 #include "src/npro.h"
 
@@ -133,6 +134,25 @@ static size_t generate_vectors(char *out, size_t out_cap) {
     niwi_hash_one_shot(NIWI_TAG_LEAF, opening, sizeof(opening), digest);
     line_append(out, out_cap, &off, "commitment.leaf.fixed_preimage", digest, 32);
     line_append(out, out_cap, &off, "commitment.leaf.preimage", opening, sizeof(opening));
+
+    niwi_challenge_schedule_t schedule;
+    uint8_t commitment[32], circuit[32], statement[32], root[32], response[32];
+    for (size_t i = 0; i < 32; i++) {
+        commitment[i] = (uint8_t)(0x10 + i);
+        circuit[i] = (uint8_t)(0x20 + i);
+        statement[i] = (uint8_t)(0x30 + i);
+        root[i] = (uint8_t)(0x40 + i);
+        response[i] = (uint8_t)(0x50 + i);
+    }
+    assert(niwi_schedule_init(&schedule, 1, 0, 0) == 0);
+    assert(niwi_schedule_bind_share_commitment(&schedule, commitment) == 0);
+    assert(niwi_schedule_bind_statement(&schedule, circuit, statement, root) == 0);
+    assert(niwi_schedule_derive_challenge1(&schedule, digest) == 0);
+    line_append(out, out_cap, &off, "schedule.challenge1", digest, 32);
+    assert(niwi_schedule_open_share(&schedule, opening) == 0);
+    assert(niwi_schedule_bind_response(&schedule, response) == 0);
+    assert(niwi_schedule_derive_challenge2(&schedule, digest) == 0);
+    line_append(out, out_cap, &off, "schedule.challenge2", digest, 32);
 
     return off;
 }

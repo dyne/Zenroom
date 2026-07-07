@@ -26,7 +26,7 @@ NIWI_AR ?= ar
 
 NIWI_AMCL := ../../lib/milagro-crypto-c/build/lib/libamcl_core.a
 
-NIWI_SOURCES := src/niwi.c.o src/encoding.c.o src/hash.c.o src/npro.c.o src/commitment.c.o src/extract.c.o \
+NIWI_SOURCES := src/niwi.c.o src/encoding.c.o src/hash.c.o src/npro.c.o src/commitment.c.o src/challenge_schedule.c.o src/extract.c.o \
                 src/secp256k1/secp256k1_curve.cc.o src/secp256k1/secp256k1_witness.cc.o
 
 all: libniwi.a
@@ -37,7 +37,7 @@ libniwi.a: $(NIWI_SOURCES)
 
 clean:
 	rm -f src/*.c.o tests/*.o src/secp256k1/*.cc.o
-	rm -f *.a test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof_serde test_extract test_vectors test_bench test_secp256k1
+	rm -f *.a test_abi test_encoding test_hash test_npro test_commitment test_challenge_schedule test_niwi_proof_serde test_extract test_vectors test_bench test_secp256k1
 
 %.c.o: %.c
 	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -c -o $@ $<
@@ -47,12 +47,13 @@ clean:
 
 # ---- Tests ----
 
-test: test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof_serde test_extract test_vectors test_secp256k1
+test: test_abi test_encoding test_hash test_npro test_commitment test_challenge_schedule test_niwi_proof_serde test_extract test_vectors test_secp256k1
 	./test_abi
 	./test_encoding
 	./test_hash
 	./test_npro
 	./test_commitment
+	./test_challenge_schedule
 	./test_niwi_proof_serde
 	./test_extract
 	./test_vectors
@@ -73,6 +74,9 @@ test_npro: tests/test_npro.c.o libniwi.a
 
 test_commitment: tests/test_commitment.c.o libniwi.a
 	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_commitment.c.o -L. -lniwi $(NIWI_AMCL)
+
+test_challenge_schedule: tests/test_challenge_schedule.c.o libniwi.a
+	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_challenge_schedule.c.o -L. -lniwi $(NIWI_AMCL)
 
 test_niwi_proof_serde: tests/test_niwi_proof_serde.c.o libniwi.a
 	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_niwi_proof_serde.c.o -L. -lniwi $(NIWI_AMCL)
