@@ -66,6 +66,7 @@ static const octet *table_get_octet(lua_State *L, int table_idx,
  * Usage: proof = zkcore.prove_circuit_niwi({
  *     circuit = <circuit artifact>,
  *     inputs = <witness inputs>,
+ *     public_inputs = <optional public statement inputs>,
  *     seed = <optional OCTET seed>
  * })
  *
@@ -92,6 +93,9 @@ static int lua_prove_circuit_niwi(lua_State *L) {
         return 0;
     }
 
+    const octet *pub_oct = table_get_octet(L, 1, "public_inputs");
+    if (!pub_oct) pub_oct = inputs_oct;
+
     /* Extract optional seed. */
     const octet *seed_oct = table_get_octet(L, 1, "seed");
 
@@ -100,6 +104,7 @@ static int lua_prove_circuit_niwi(lua_State *L) {
         (const uint8_t *)o_val(circuit_oct), o_len(circuit_oct));
     if (!ctx) {
         o_free(L, seed_oct);
+        if (pub_oct != inputs_oct) o_free(L, pub_oct);
         o_free(L, inputs_oct);
         o_free(L, circuit_oct);
         lerror(L, "prove_circuit_niwi: failed to create context");
@@ -110,10 +115,8 @@ static int lua_prove_circuit_niwi(lua_State *L) {
     uint8_t *proof_out = NULL;
     size_t proof_len = 0;
 
-    /* For now, pass inputs as both public and private.
-     * TODO: separate public/private from the inputs table. */
     int rc = niwi_prove(ctx,
-                         (const uint8_t *)o_val(inputs_oct), o_len(inputs_oct),
+                         (const uint8_t *)o_val(pub_oct), o_len(pub_oct),
                          (const uint8_t *)o_val(inputs_oct), o_len(inputs_oct),
                          &proof_out, &proof_len);
 
@@ -122,6 +125,7 @@ static int lua_prove_circuit_niwi(lua_State *L) {
     if (rc != 0) {
         niwi_ctx_free(ctx);
         o_free(L, seed_oct);
+        if (pub_oct != inputs_oct) o_free(L, pub_oct);
         o_free(L, inputs_oct);
         o_free(L, circuit_oct);
         if (err)
@@ -136,6 +140,7 @@ static int lua_prove_circuit_niwi(lua_State *L) {
     niwi_free_buffer(proof_out);
     niwi_ctx_free(ctx);
     o_free(L, seed_oct);
+    if (pub_oct != inputs_oct) o_free(L, pub_oct);
     o_free(L, inputs_oct);
     o_free(L, circuit_oct);
 
@@ -227,7 +232,8 @@ static int lua_niwi_profile(lua_State *L) {
 /*
  * Usage: proof, gamma = zkcore.prove_with_observation_test({
  *     circuit = <circuit artifact>,
- *     inputs = <witness inputs>
+ *     inputs = <witness inputs>,
+ *     public_inputs = <optional public statement inputs>
  * })
  *
  * Returns: two OCTETs (proof, gamma).
@@ -240,6 +246,7 @@ static int lua_prove_with_observation_test(lua_State *L) {
 
     const octet *circuit_oct = table_get_octet(L, 1, "circuit");
     const octet *inputs_oct  = table_get_octet(L, 1, "inputs");
+    const octet *pub_oct     = NULL;
 
     if (!circuit_oct || !inputs_oct) {
         o_free(L, inputs_oct);
@@ -247,10 +254,13 @@ static int lua_prove_with_observation_test(lua_State *L) {
         lerror(L, "prove_with_observation_test: missing required fields");
         return 0;
     }
+    pub_oct = table_get_octet(L, 1, "public_inputs");
+    if (!pub_oct) pub_oct = inputs_oct;
 
     niwi_ctx_t *ctx = niwi_ctx_create(
         (const uint8_t *)o_val(circuit_oct), o_len(circuit_oct));
     if (!ctx) {
+        if (pub_oct != inputs_oct) o_free(L, pub_oct);
         o_free(L, inputs_oct);
         o_free(L, circuit_oct);
         lerror(L, "prove_with_observation_test: failed to create context");
@@ -261,7 +271,7 @@ static int lua_prove_with_observation_test(lua_State *L) {
     size_t proof_len = 0, gamma_len = 0;
 
     int rc = niwi_prove_observed(ctx,
-                                  (const uint8_t *)o_val(inputs_oct), o_len(inputs_oct),
+                                  (const uint8_t *)o_val(pub_oct), o_len(pub_oct),
                                   (const uint8_t *)o_val(inputs_oct), o_len(inputs_oct),
                                   &proof_out, &proof_len,
                                   &gamma_out, &gamma_len);
@@ -269,6 +279,7 @@ static int lua_prove_with_observation_test(lua_State *L) {
     if (rc != 0) {
         const char *err = niwi_last_error(ctx);
         niwi_ctx_free(ctx);
+        if (pub_oct != inputs_oct) o_free(L, pub_oct);
         o_free(L, inputs_oct);
         o_free(L, circuit_oct);
         lerror(L, "prove_with_observation_test: %s",
@@ -283,6 +294,7 @@ static int lua_prove_with_observation_test(lua_State *L) {
     niwi_free_buffer(proof_out);
     niwi_free_buffer(gamma_out);
     niwi_ctx_free(ctx);
+    if (pub_oct != inputs_oct) o_free(L, pub_oct);
     o_free(L, inputs_oct);
     o_free(L, circuit_oct);
 

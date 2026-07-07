@@ -82,9 +82,6 @@ niwi_extract_t *niwi_extract_create(
     const uint8_t *gamma, size_t gamma_len,
     const uint8_t *public_inputs, size_t pub_len) {
 
-    (void)public_inputs;
-    (void)pub_len;
-
     if (!proof || !gamma) return NULL;
 
     niwi_extract_t *ex = (niwi_extract_t *)calloc(1, sizeof(*ex));
@@ -120,6 +117,17 @@ niwi_extract_t *niwi_extract_create(
 
     /* Statement digest */
     memcpy(ex->statement_digest, proof + off, 32); off += 32;
+    if (public_inputs || pub_len != 0) {
+        uint8_t expected_statement[32];
+        niwi_hash_one_shot(NIWI_TAG_STMT, public_inputs, pub_len,
+                           expected_statement);
+        if (memcmp(ex->statement_digest, expected_statement, 32) != 0) {
+            ex->error_code = NIWI_EXTRACT_ERR_VERIFY;
+            snprintf(ex->error_msg, sizeof(ex->error_msg),
+                     "public statement digest mismatch");
+            return ex;
+        }
+    }
 
     /* KLP22 commitment + opening */
     memcpy(ex->klp22_commitment, proof + off, 32); off += 32;
