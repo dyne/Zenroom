@@ -27,6 +27,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define NIWI_EXTRACT_WITNESS_DIGEST_SIZE 32
+
 /* ---- Internal extractor context --------------------------------------- */
 
 struct niwi_extract {
@@ -156,18 +158,11 @@ niwi_extract_t *niwi_extract_create(
     if (off + 8 <= proof_len && memcmp(proof + off, "WIT0", 4) == 0) {
         off += 4;
         uint32_t witness_len = read_u32_be(proof + off); off += 4;
-        if (off + witness_len + 32 != proof_len) {
+        if (witness_len != NIWI_EXTRACT_WITNESS_DIGEST_SIZE ||
+            off + witness_len != proof_len) {
             ex->error_code = NIWI_EXTRACT_ERR_PARSE;
             snprintf(ex->error_msg, sizeof(ex->error_msg),
                      "invalid witness section length");
-            return ex;
-        }
-        uint8_t digest[32];
-        niwi_hash_one_shot(NIWI_TAG_EXTR, proof + off, witness_len, digest);
-        if (memcmp(digest, proof + off + witness_len, 32) != 0) {
-            ex->error_code = NIWI_EXTRACT_ERR_PARSE;
-            snprintf(ex->error_msg, sizeof(ex->error_msg),
-                     "invalid witness section digest");
             return ex;
         }
         ex->witness_section = proof + off;
@@ -297,12 +292,21 @@ int niwi_extract_witness(niwi_extract_t *ex,
     if (!ex || !witness_out || !witness_len) return NIWI_EXTRACT_ERR_PARSE;
 
     if (ex->witness_section) {
-        if (*witness_len < ex->witness_section_len) {
-            *witness_len = ex->witness_section_len;
+        uint8_t recovered[256];
+        size_t recovered_len = sizeof(recovered);
+        if (!niwi_npro_lookup(ex->gamma, NIWI_TAG_LEAF, ex->witness_section,
+                              recovered, &recovered_len)) {
+            ex->error_code = NIWI_EXTRACT_ERR_MISSING_LEAF;
+            snprintf(ex->error_msg, sizeof(ex->error_msg),
+                     "missing witness query in Gamma");
+            return NIWI_EXTRACT_ERR_MISSING_LEAF;
+        }
+        if (*witness_len < recovered_len) {
+            *witness_len = recovered_len;
             return NIWI_EXTRACT_ERR_WITNESS;
         }
-        memcpy(witness_out, ex->witness_section, ex->witness_section_len);
-        *witness_len = ex->witness_section_len;
+        if (recovered_len != 0) memcpy(witness_out, recovered, recovered_len);
+        *witness_len = recovered_len;
         return NIWI_EXTRACT_OK;
     }
 

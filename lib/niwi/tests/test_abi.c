@@ -123,10 +123,8 @@ static void test_prove_verify_extract(void) {
     size_t witness_len = 0;
     assert(niwi_extract(ctx, proof, proof_len, NULL, 0,
                         public_inputs, sizeof(public_inputs),
-                        &witness, &witness_len) == 0);
-    assert(witness_len == sizeof(private_inputs));
-    assert(memcmp(witness, private_inputs, sizeof(private_inputs)) == 0);
-    niwi_free_buffer(witness);
+                        &witness, &witness_len) != 0);
+    assert(witness == NULL);
     niwi_free_buffer(proof);
     niwi_ctx_free(ctx);
     printf("  PASS test_prove_verify_extract\n");
@@ -161,6 +159,15 @@ static void test_prove_observed(void) {
     assert(memcmp(witness, private_inputs, sizeof(private_inputs)) == 0);
 
     niwi_free_buffer(witness);
+
+    gamma[gamma_len - 1] ^= 0x01;
+    witness = NULL;
+    witness_len = 0;
+    assert(niwi_extract(ctx, proof, proof_len, gamma, gamma_len,
+                        public_inputs, sizeof(public_inputs),
+                        &witness, &witness_len) != 0);
+    assert(witness == NULL);
+
     niwi_free_buffer(gamma);
     niwi_free_buffer(proof);
     niwi_ctx_free(ctx);

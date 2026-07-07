@@ -29,6 +29,7 @@
 #define NIWI_PROOF_HEADER_SIZE (4 + 4 + 4 + 32 + 32 + NIWI_KLP22_COMMIT_SIZE + NIWI_KLP22_OPENING_SIZE)
 #define NIWI_PROOF_PARAM_SIZE (7 * 4)
 #define NIWI_PROOF_WITNESS_TAG "WIT0"
+#define NIWI_PROOF_WITNESS_DIGEST_SIZE 32
 
 static void write_u32_be(uint8_t *out, uint32_t v) {
     out[0] = (uint8_t)((v >> 24) & 0xff);
@@ -110,15 +111,23 @@ static int build_proof(niwi_ctx_t *ctx,
                        circuit_digest);
     niwi_hash_one_shot(NIWI_TAG_STMT, public_inputs, pub_len,
                        statement_digest);
-    niwi_hash_one_shot(NIWI_TAG_EXTR, private_inputs, priv_len,
+    niwi_hash_one_shot(NIWI_TAG_LEAF, private_inputs, priv_len,
                        witness_digest);
 
-    if (niwi_klp22_commit(statement_digest, 32, commitment, opening) != 0) {
+    uint8_t commit_preimage[64];
+    uint8_t commit_message[32];
+    memcpy(commit_preimage, statement_digest, 32);
+    memcpy(commit_preimage + 32, witness_digest, 32);
+    niwi_hash_one_shot(NIWI_TAG_EXTR, commit_preimage, sizeof(commit_preimage),
+                       commit_message);
+    if (niwi_klp22_commit(commit_message, sizeof(commit_message),
+                          commitment, opening) != 0) {
         set_error(ctx, "niwi_prove: failed to commit challenge share");
         return -1;
     }
 
-    size_t len = NIWI_PROOF_HEADER_SIZE + NIWI_PROOF_PARAM_SIZE + 4 + 4 + priv_len + 32;
+    size_t len = NIWI_PROOF_HEADER_SIZE + NIWI_PROOF_PARAM_SIZE +
+                 4 + 4 + NIWI_PROOF_WITNESS_DIGEST_SIZE;
     uint8_t *proof = (uint8_t *)calloc(1, len);
     if (!proof) {
         set_error(ctx, "niwi_prove: out of memory");
@@ -146,10 +155,9 @@ static int build_proof(niwi_ctx_t *ctx,
     write_u32_be(proof + off, 0); off += 4; /* mc_pathlen */
 
     memcpy(proof + off, NIWI_PROOF_WITNESS_TAG, 4); off += 4;
-    write_u32_be(proof + off, (uint32_t)priv_len); off += 4;
-    if (priv_len != 0) memcpy(proof + off, private_inputs, priv_len);
-    off += priv_len;
-    memcpy(proof + off, witness_digest, 32); off += 32;
+    write_u32_be(proof + off, NIWI_PROOF_WITNESS_DIGEST_SIZE); off += 4;
+    memcpy(proof + off, witness_digest, NIWI_PROOF_WITNESS_DIGEST_SIZE);
+    off += NIWI_PROOF_WITNESS_DIGEST_SIZE;
 
     *proof_out = proof;
     *proof_len = off;
@@ -161,7 +169,8 @@ static int verify_proof_envelope(niwi_ctx_t *ctx,
                                  const uint8_t *proof, size_t proof_len,
                                  const uint8_t *public_inputs, size_t pub_len) {
     if (!ctx || !proof || (!public_inputs && pub_len != 0)) return -1;
-    if (proof_len < NIWI_PROOF_HEADER_SIZE + NIWI_PROOF_PARAM_SIZE + 4 + 4 + 32) {
+    if (proof_len < NIWI_PROOF_HEADER_SIZE + NIWI_PROOF_PARAM_SIZE +
+                    4 + 4 + NIWI_PROOF_WITNESS_DIGEST_SIZE) {
         set_error(ctx, "niwi_verify: proof too short");
         return -1;
     }
@@ -205,10 +214,6 @@ static int verify_proof_envelope(niwi_ctx_t *ctx,
     off += NIWI_KLP22_COMMIT_SIZE;
     const uint8_t *opening = proof + off;
     off += NIWI_KLP22_OPENING_SIZE;
-    if (niwi_klp22_verify(commitment, expected_statement, 32, opening) != 0) {
-        set_error(ctx, "niwi_verify: invalid KLP22 opening");
-        return -1;
-    }
 
     off += NIWI_PROOF_PARAM_SIZE;
     if (off + 8 + 32 > proof_len || memcmp(proof + off, NIWI_PROOF_WITNESS_TAG, 4) != 0) {
@@ -217,16 +222,21 @@ static int verify_proof_envelope(niwi_ctx_t *ctx,
     }
     off += 4;
     uint32_t witness_len = read_u32_be(proof + off); off += 4;
-    if (off + witness_len + 32 != proof_len) {
+    if (witness_len != NIWI_PROOF_WITNESS_DIGEST_SIZE ||
+        off + witness_len != proof_len) {
         set_error(ctx, "niwi_verify: non-canonical witness section length");
         return -1;
     }
 
-    uint8_t witness_digest[32];
-    niwi_hash_one_shot(NIWI_TAG_EXTR, proof + off, witness_len, witness_digest);
-    off += witness_len;
-    if (memcmp(proof + off, witness_digest, 32) != 0) {
-        set_error(ctx, "niwi_verify: witness digest mismatch");
+    uint8_t commit_preimage[64];
+    uint8_t commit_message[32];
+    memcpy(commit_preimage, expected_statement, 32);
+    memcpy(commit_preimage + 32, proof + off, 32);
+    niwi_hash_one_shot(NIWI_TAG_EXTR, commit_preimage, sizeof(commit_preimage),
+                       commit_message);
+    if (niwi_klp22_verify(commitment, commit_message, sizeof(commit_message),
+                          opening) != 0) {
+        set_error(ctx, "niwi_verify: invalid KLP22 opening");
         return -1;
     }
 
@@ -300,26 +310,45 @@ int niwi_extract(niwi_ctx_t *ctx,
                  const uint8_t *gamma, size_t gamma_len,
                  const uint8_t *public_inputs, size_t pub_len,
                  uint8_t **witness_out, size_t *witness_len) {
-    if (!ctx || !witness_out || !witness_len) return -1;
+    if (!ctx || !gamma || !witness_out || !witness_len) return -1;
     if (verify_proof_envelope(ctx, proof, proof_len, public_inputs, pub_len) != 0)
         return -1;
-    if (!gamma && gamma_len != 0) return -1;
+    if (gamma_len == 0) {
+        set_error(ctx, "niwi_extract: missing Gamma");
+        return -1;
+    }
 
     size_t off = NIWI_PROOF_HEADER_SIZE + NIWI_PROOF_PARAM_SIZE;
     off += 4;
     uint32_t wl = read_u32_be(proof + off); off += 4;
-    if (off + wl + 32 != proof_len) {
+    if (wl != NIWI_PROOF_WITNESS_DIGEST_SIZE || off + wl != proof_len) {
         set_error(ctx, "niwi_extract: invalid witness section");
         return -1;
     }
-    uint8_t *out = (uint8_t *)malloc(wl ? wl : 1);
+    niwi_npro_t *npro = niwi_npro_deserialize_gamma(gamma, gamma_len);
+    if (!npro) {
+        set_error(ctx, "niwi_extract: failed to parse Gamma");
+        return -1;
+    }
+
+    uint8_t recovered[256];
+    size_t recovered_len = sizeof(recovered);
+    if (!niwi_npro_lookup(npro, NIWI_TAG_LEAF, proof + off,
+                          recovered, &recovered_len)) {
+        niwi_npro_free(npro);
+        set_error(ctx, "niwi_extract: missing witness query in Gamma");
+        return -1;
+    }
+    niwi_npro_free(npro);
+
+    uint8_t *out = (uint8_t *)malloc(recovered_len ? recovered_len : 1);
     if (!out) {
         set_error(ctx, "niwi_extract: out of memory");
         return -1;
     }
-    if (wl != 0) memcpy(out, proof + off, wl);
+    if (recovered_len != 0) memcpy(out, recovered, recovered_len);
     *witness_out = out;
-    *witness_len = wl;
+    *witness_len = recovered_len;
     ctx->error[0] = '\0';
     return 0;
 }
