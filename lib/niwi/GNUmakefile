@@ -61,7 +61,7 @@ test: test_abi test_encoding test_hash test_npro test_commitment test_challenge_
 	@echo "=== All lib/niwi tests passed ==="
 
 test_abi: tests/test_abi.c.o libniwi.a
-	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_abi.c.o -L. -lniwi
+	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_abi.c.o -L. -lniwi $(NIWI_AMCL)
 
 test_encoding: tests/test_encoding.c.o libniwi.a
 	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_encoding.c.o -L. -lniwi

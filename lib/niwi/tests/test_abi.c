@@ -48,14 +48,13 @@ static void test_last_error(void) {
     const char *e = niwi_last_error(ctx);
     assert(e == NULL);
 
-    /* Trigger an error. */
-    uint8_t *out = NULL; size_t out_len = 0;
-    int rc = niwi_prove(ctx, NULL, 0, NULL, 0, &out, &out_len);
+    uint8_t proof[] = {'b', 'a', 'd'};
+    int rc = niwi_verify(ctx, proof, sizeof(proof), NULL, 0);
     assert(rc != 0);
 
     e = niwi_last_error(ctx);
     assert(e != NULL);
-    assert(strstr(e, "not yet implemented") != NULL);
+    assert(strstr(e, "short") != NULL);
     printf("  PASS test_last_error: %s\n", e);
 
     niwi_ctx_free(ctx);
@@ -87,47 +86,85 @@ static void test_free_buffer(void) {
     printf("  PASS test_free_buffer\n");
 }
 
-static void test_all_stubs_return_error(void) {
+static void test_prove_verify_extract(void) {
     niwi_ctx_t *ctx = niwi_ctx_create(dummy_artifact, sizeof(dummy_artifact));
     assert(ctx != NULL);
+    const uint8_t public_inputs[] = {'p', 'u', 'b'};
+    const uint8_t private_inputs[] = {'w', 'i', 't', 'n', 'e', 's', 's'};
+    uint8_t *proof = NULL;
+    size_t proof_len = 0;
 
-    /* prove */
-    {
-        uint8_t *out = NULL; size_t out_len = 0;
-        int rc = niwi_prove(ctx, NULL, 0, NULL, 0, &out, &out_len);
-        assert(rc != 0);
-        assert(out == NULL);
-        assert(out_len == 0);
-    }
+    int rc = niwi_prove(ctx, public_inputs, sizeof(public_inputs),
+                        private_inputs, sizeof(private_inputs),
+                        &proof, &proof_len);
+    assert(rc == 0);
+    assert(proof != NULL);
+    assert(proof_len > 0);
+    assert(niwi_verify(ctx, proof, proof_len,
+                       public_inputs, sizeof(public_inputs)) == 0);
 
-    /* prove_observed */
-    {
-        uint8_t *out = NULL, *gamma = NULL;
-        size_t out_len = 0, gamma_len = 0;
-        int rc = niwi_prove_observed(ctx, NULL, 0, NULL, 0,
-                                     &out, &out_len, &gamma, &gamma_len);
-        assert(rc != 0);
-        assert(out == NULL);
-        assert(gamma == NULL);
-    }
+    const uint8_t wrong_public[] = {'b', 'a', 'd'};
+    assert(niwi_verify(ctx, proof, proof_len,
+                       wrong_public, sizeof(wrong_public)) != 0);
 
-    /* verify */
-    {
-        int rc = niwi_verify(ctx, NULL, 0, NULL, 0);
-        assert(rc != 0);
-    }
+    niwi_ctx_t *wrong_ctx = niwi_ctx_create((const uint8_t *)"other", 5);
+    assert(wrong_ctx != NULL);
+    assert(niwi_verify(wrong_ctx, proof, proof_len,
+                       public_inputs, sizeof(public_inputs)) != 0);
+    niwi_ctx_free(wrong_ctx);
 
-    /* extract */
-    {
-        uint8_t *out = NULL; size_t out_len = 0;
-        int rc = niwi_extract(ctx, NULL, 0, NULL, 0, NULL, 0,
-                              &out, &out_len);
-        assert(rc != 0);
-        assert(out == NULL);
-    }
+    uint8_t saved = proof[proof_len - 1];
+    proof[proof_len - 1] ^= 0x01;
+    assert(niwi_verify(ctx, proof, proof_len,
+                       public_inputs, sizeof(public_inputs)) != 0);
+    proof[proof_len - 1] = saved;
 
-    printf("  PASS test_all_stubs_return_error\n");
+    uint8_t *witness = NULL;
+    size_t witness_len = 0;
+    assert(niwi_extract(ctx, proof, proof_len, NULL, 0,
+                        public_inputs, sizeof(public_inputs),
+                        &witness, &witness_len) == 0);
+    assert(witness_len == sizeof(private_inputs));
+    assert(memcmp(witness, private_inputs, sizeof(private_inputs)) == 0);
+    niwi_free_buffer(witness);
+    niwi_free_buffer(proof);
     niwi_ctx_free(ctx);
+    printf("  PASS test_prove_verify_extract\n");
+}
+
+static void test_prove_observed(void) {
+    niwi_ctx_t *ctx = niwi_ctx_create(dummy_artifact, sizeof(dummy_artifact));
+    assert(ctx != NULL);
+    const uint8_t public_inputs[] = {'p'};
+    const uint8_t private_inputs[] = {'w'};
+    uint8_t *proof = NULL;
+    uint8_t *gamma = NULL;
+    size_t proof_len = 0;
+    size_t gamma_len = 0;
+
+    assert(niwi_prove_observed(ctx, public_inputs, sizeof(public_inputs),
+                               private_inputs, sizeof(private_inputs),
+                               &proof, &proof_len, &gamma, &gamma_len) == 0);
+    assert(proof != NULL);
+    assert(gamma != NULL);
+    assert(proof_len > 0);
+    assert(gamma_len > 0);
+    assert(niwi_verify(ctx, proof, proof_len,
+                       public_inputs, sizeof(public_inputs)) == 0);
+
+    uint8_t *witness = NULL;
+    size_t witness_len = 0;
+    assert(niwi_extract(ctx, proof, proof_len, gamma, gamma_len,
+                        public_inputs, sizeof(public_inputs),
+                        &witness, &witness_len) == 0);
+    assert(witness_len == sizeof(private_inputs));
+    assert(memcmp(witness, private_inputs, sizeof(private_inputs)) == 0);
+
+    niwi_free_buffer(witness);
+    niwi_free_buffer(gamma);
+    niwi_free_buffer(proof);
+    niwi_ctx_free(ctx);
+    printf("  PASS test_prove_observed\n");
 }
 
 int main(void) {
@@ -138,7 +175,8 @@ int main(void) {
     test_last_error_null();
     test_protocol_version();
     test_free_buffer();
-    test_all_stubs_return_error();
+    test_prove_verify_extract();
+    test_prove_observed();
     printf("All C ABI tests passed.\n");
     return 0;
 }

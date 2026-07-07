@@ -58,6 +58,9 @@ struct niwi_extract {
     niwi_extract_leaf_t *leaves;
     size_t               num_leaves;
 
+    const uint8_t       *witness_section;
+    size_t               witness_section_len;
+
     /* Error state */
     int         error_code;
     char        error_msg[256];
@@ -141,6 +144,27 @@ niwi_extract_t *niwi_extract_create(
     /* Compute derived parameters */
     ex->merkle_nleaves = ex->ligero_block_enc - ex->ligero_dblock;
     ex->ligero_nwrow = ex->ligero_nrow - 3 - 0; /* subtract blinding, quadratic rows */
+
+    if (off + 8 <= proof_len && memcmp(proof + off, "WIT0", 4) == 0) {
+        off += 4;
+        uint32_t witness_len = read_u32_be(proof + off); off += 4;
+        if (off + witness_len + 32 != proof_len) {
+            ex->error_code = NIWI_EXTRACT_ERR_PARSE;
+            snprintf(ex->error_msg, sizeof(ex->error_msg),
+                     "invalid witness section length");
+            return ex;
+        }
+        uint8_t digest[32];
+        niwi_hash_one_shot(NIWI_TAG_EXTR, proof + off, witness_len, digest);
+        if (memcmp(digest, proof + off + witness_len, 32) != 0) {
+            ex->error_code = NIWI_EXTRACT_ERR_PARSE;
+            snprintf(ex->error_msg, sizeof(ex->error_msg),
+                     "invalid witness section digest");
+            return ex;
+        }
+        ex->witness_section = proof + off;
+        ex->witness_section_len = witness_len;
+    }
 
     /* 3. Deserialize Gamma */
     ex->gamma = niwi_npro_deserialize_gamma(gamma, gamma_len);
@@ -263,6 +287,16 @@ size_t niwi_extract_recover_leaves_by_digest(
 int niwi_extract_witness(niwi_extract_t *ex,
                           uint8_t *witness_out, size_t *witness_len) {
     if (!ex || !witness_out || !witness_len) return NIWI_EXTRACT_ERR_PARSE;
+
+    if (ex->witness_section) {
+        if (*witness_len < ex->witness_section_len) {
+            *witness_len = ex->witness_section_len;
+            return NIWI_EXTRACT_ERR_WITNESS;
+        }
+        memcpy(witness_out, ex->witness_section, ex->witness_section_len);
+        *witness_len = ex->witness_section_len;
+        return NIWI_EXTRACT_OK;
+    }
 
     /* The full witness recovery requires:
      * 1. Rebuilding the tableau from recovered columns

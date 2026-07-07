@@ -1,33 +1,15 @@
 -- This file is part of Zenroom (https://zenroom.dyne.org)
 --
 -- Copyright (C) 2026 Dyne.org foundation
--- designed, written and maintained by Denis Roio <jaromil@dyne.org>
---
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU Affero General Public License as
--- published by the Free Software Foundation, either version 3 of the
--- License, or (at your option) any later version.
---
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU Affero General Public License for more details.
---
--- You should have received a copy of the GNU Affero General Public License
--- along with this program.  If not, see <https://www.gnu.org/licenses/>.
---
-
--- NIWI regression test — exercises the Lua API boundary.
---
--- Tests: require('niwi'), niwi_profile, prove_circuit_niwi (stub),
--- verify_circuit_niwi (stub), prove_with_observation_test,
--- extract_from_gamma_test, error paths, missing args,
--- wrong types, and protocol version stability.
+-- SPDX-License-Identifier: AGPL-3.0-or-later
 
 local niwi = require('niwi')
 assert(niwi, "niwi module not loaded")
 
--- 1. Protocol version
+local circuit = O.from_string("dummy-circuit")
+local inputs = O.from_string("private-inputs")
+local wrong_inputs = O.from_string("wrong-inputs")
+
 local p = niwi.niwi_profile()
 assert(type(p) == "table", "niwi_profile must return a table")
 assert(p.version == "niwi-v1", "expected version niwi-v1")
@@ -35,60 +17,62 @@ assert(p.protocol_id == 0, "expected protocol_id 0")
 assert(niwi.PROTOCOL_VERSION == "niwi-v1", "PROTOCOL_VERSION mismatch")
 print("PASS 1: niwi_profile")
 
--- 2. prove_circuit_niwi — stub returns error, must not crash
-local ok, err = pcall(niwi.prove_circuit_niwi, { circuit = "dummy", inputs = "dummy" })
--- The stub returns with a Lua error (via lerror), so pcall catches it
-print("PASS 2: prove_circuit_niwi stub (pcall ok=" .. tostring(ok) .. ")")
-
--- 3. prove_circuit_niwi — missing circuit
-local ok2 = pcall(niwi.prove_circuit_niwi, { inputs = "dummy" })
-print("PASS 3: prove_circuit_niwi missing circuit")
-
--- 4. prove_circuit_niwi — non-table arg
-local ok3 = pcall(niwi.prove_circuit_niwi, "not a table")
-print("PASS 4: prove_circuit_niwi non-table arg")
-
--- 5. verify_circuit_niwi — stub
-local ok4, err4 = pcall(niwi.verify_circuit_niwi, {
-    circuit = "dummy", proof = "dummy", public_inputs = "dummy"
+local proof = niwi.prove_circuit_niwi({
+    circuit = circuit,
+    inputs = inputs,
 })
-print("PASS 5: verify_circuit_niwi stub (pcall ok=" .. tostring(ok4) .. ")")
+assert(type(proof) == "zenroom.octet", "proof must be an octet")
+assert(#proof > 0, "proof must be non-empty")
+print("PASS 2: prove_circuit_niwi")
 
--- 6. verify_circuit_niwi — missing proof
-local ok5 = pcall(niwi.verify_circuit_niwi, { circuit = "dummy", public_inputs = "dummy" })
-print("PASS 6: verify_circuit_niwi missing proof")
+local ok = niwi.verify_circuit_niwi({
+    circuit = circuit,
+    proof = proof,
+    public_inputs = inputs,
+})
+assert(ok == true, "expected NIWI proof to verify")
+print("PASS 3: verify_circuit_niwi")
 
--- 7. verify_circuit_niwi — non-table arg
-local ok6 = pcall(niwi.verify_circuit_niwi, 42)
-print("PASS 7: verify_circuit_niwi non-table arg")
+local wrong_ok = niwi.verify_circuit_niwi({
+    circuit = circuit,
+    proof = proof,
+    public_inputs = wrong_inputs,
+})
+assert(wrong_ok == false, "wrong public inputs must not verify")
+print("PASS 4: verify rejects wrong public inputs")
 
--- 8. prove_with_observation_test — stub (test-only API availability check)
-if niwi.prove_with_observation_test then
-    local ok7 = pcall(niwi.prove_with_observation_test, { circuit = "dummy", inputs = "dummy" })
-    print("PASS 8: prove_with_observation_test available")
-else
-    print("SKIP 8: prove_with_observation_test not registered (production build)")
-end
+local proof_obs, gamma = niwi.prove_with_observation_test({
+    circuit = circuit,
+    inputs = inputs,
+})
+assert(type(proof_obs) == "zenroom.octet", "observed proof must be octet")
+assert(type(gamma) == "zenroom.octet", "gamma must be octet")
+assert(#proof_obs > 0, "observed proof must be non-empty")
+assert(#gamma > 0, "gamma must be non-empty")
+print("PASS 5: prove_with_observation_test")
 
--- 9. extract_from_gamma_test — stub
-if niwi.extract_from_gamma_test then
-    local ok8 = pcall(niwi.extract_from_gamma_test, {
-        proof = "dummy", gamma = "dummy", public_inputs = "dummy"
-    })
-    print("PASS 9: extract_from_gamma_test available")
-else
-    print("SKIP 9: extract_from_gamma_test not registered (production build)")
-end
+local witness = niwi.extract_from_gamma_test({
+    proof = proof_obs,
+    gamma = gamma,
+    public_inputs = inputs,
+})
+assert(type(witness) == "zenroom.octet", "witness must be octet")
+assert(witness:string() == inputs:string(), "extracted witness mismatch")
+print("PASS 6: extract_from_gamma_test")
 
--- 10. Type checks: functions must be functions
+local missing_ok = pcall(niwi.prove_circuit_niwi, { inputs = inputs })
+assert(missing_ok == false, "missing circuit should error")
+print("PASS 7: prove_circuit_niwi missing circuit")
+
+local type_ok = pcall(niwi.verify_circuit_niwi, 42)
+assert(type_ok == false, "non-table verify should error")
+print("PASS 8: verify_circuit_niwi non-table arg")
+
 assert(type(niwi.prove_circuit_niwi) == "function")
 assert(type(niwi.verify_circuit_niwi) == "function")
 assert(type(niwi.niwi_profile) == "function")
-print("PASS 10: all production functions are functions")
-
--- 11. PROTOCOL_VERSION must be a string
 assert(type(niwi.PROTOCOL_VERSION) == "string")
-print("PASS 11: PROTOCOL_VERSION is a string")
+print("PASS 9: API shape")
 
 print("")
 print("All NIWI regression tests passed")
