@@ -19,6 +19,7 @@
  */
 
 #include "niwi.h"
+#include "npro.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -174,6 +175,87 @@ static void test_prove_observed(void) {
     printf("  PASS test_prove_observed\n");
 }
 
+static uint8_t *serialize_npro(niwi_npro_t *npro, size_t *gamma_len) {
+    size_t len = niwi_npro_gamma_size(npro);
+    uint8_t *gamma = (uint8_t *)malloc(len);
+    assert(gamma != NULL);
+    assert(niwi_npro_serialize_gamma(npro, gamma, len) == len);
+    *gamma_len = len;
+    return gamma;
+}
+
+static void assert_extract_fails(niwi_ctx_t *ctx,
+                                 const uint8_t *proof, size_t proof_len,
+                                 uint8_t *gamma, size_t gamma_len,
+                                 const uint8_t *public_inputs,
+                                 size_t pub_len) {
+    uint8_t *witness = NULL;
+    size_t witness_len = 0;
+    assert(niwi_extract(ctx, proof, proof_len, gamma, gamma_len,
+                        public_inputs, pub_len,
+                        &witness, &witness_len) != 0);
+    assert(witness == NULL);
+}
+
+static void test_adversarial_gamma(void) {
+    niwi_ctx_t *ctx = niwi_ctx_create(dummy_artifact, sizeof(dummy_artifact));
+    assert(ctx != NULL);
+    const uint8_t public_inputs[] = {'p'};
+    const uint8_t private_inputs[] = {'w'};
+    uint8_t *proof = NULL;
+    size_t proof_len = 0;
+
+    assert(niwi_prove(ctx, public_inputs, sizeof(public_inputs),
+                      private_inputs, sizeof(private_inputs),
+                      &proof, &proof_len) == 0);
+
+    uint8_t digest[32];
+    size_t gamma_len = 0;
+
+    niwi_npro_t *missing = niwi_npro_create(1);
+    assert(missing != NULL);
+    assert(niwi_npro_query(missing, "NL05", (const uint8_t *)"x", 1,
+                           digest) == 0);
+    niwi_npro_set_cutoff(missing);
+    uint8_t *gamma = serialize_npro(missing, &gamma_len);
+    assert_extract_fails(ctx, proof, proof_len, gamma, gamma_len,
+                         public_inputs, sizeof(public_inputs));
+    free(gamma);
+    niwi_npro_free(missing);
+
+    niwi_npro_t *post_cutoff = niwi_npro_create(1);
+    assert(post_cutoff != NULL);
+    niwi_npro_set_cutoff(post_cutoff);
+    assert(niwi_npro_query(post_cutoff, "NL05",
+                           private_inputs, sizeof(private_inputs),
+                           digest) == 0);
+    gamma = serialize_npro(post_cutoff, &gamma_len);
+    assert_extract_fails(ctx, proof, proof_len, gamma, gamma_len,
+                         public_inputs, sizeof(public_inputs));
+    free(gamma);
+    niwi_npro_free(post_cutoff);
+
+    niwi_npro_t *ambiguous = niwi_npro_create(1);
+    assert(ambiguous != NULL);
+    assert(niwi_npro_query(ambiguous, "NL05",
+                           private_inputs, sizeof(private_inputs),
+                           digest) == 0);
+    uint8_t other_digest[32];
+    assert(niwi_npro_query(ambiguous, "NL05", (const uint8_t *)"x", 1,
+                           other_digest) == 0);
+    niwi_npro_set_cutoff(ambiguous);
+    gamma = serialize_npro(ambiguous, &gamma_len);
+    memcpy(gamma + 8 + (4 + 1 + 1 + 32) + 4 + 1 + 1, digest, 32);
+    assert_extract_fails(ctx, proof, proof_len, gamma, gamma_len,
+                         public_inputs, sizeof(public_inputs));
+    free(gamma);
+    niwi_npro_free(ambiguous);
+
+    niwi_free_buffer(proof);
+    niwi_ctx_free(ctx);
+    printf("  PASS test_adversarial_gamma\n");
+}
+
 int main(void) {
     printf("lib/niwi C ABI tests:\n");
     test_create_free();
@@ -184,6 +266,7 @@ int main(void) {
     test_free_buffer();
     test_prove_verify_extract();
     test_prove_observed();
+    test_adversarial_gamma();
     printf("All C ABI tests passed.\n");
     return 0;
 }
