@@ -404,7 +404,8 @@ public:
 		}
 
 		ReadBuffer buf((const uint8_t*)o_val(oct), o_len(oct));
-		CircuitRep<Field> rep(Field(), FieldTag);
+		Field field;
+		CircuitRep<Field> rep(field, FieldTag);
 		auto loaded_circuit = rep.from_bytes(buf, false);
 
 		o_free(L, oct);
