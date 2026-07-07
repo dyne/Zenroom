@@ -245,6 +245,10 @@ int niwi_npro_lookup(const niwi_npro_t *npro,
     if (!npro || !domain || !output_digest || !input || !input_len)
         return 0;
 
+    int found = 0;
+    size_t found_len = 0;
+    uint8_t found_input[256];
+
     for (size_t i = 0; i < npro->count; i++) {
         const niwi_npro_query_t *q = &npro->queries[i];
 
@@ -253,11 +257,15 @@ int niwi_npro_lookup(const niwi_npro_t *npro,
 
         if (memcmp(q->domain, domain, 4) == 0 &&
             memcmp(q->output, output_digest, 32) == 0) {
-            memcpy(input, q->input, q->input_len);
-            *input_len = q->input_len;
-            return 1;
+            if (found) return 0; /* ambiguous Gamma */
+            memcpy(found_input, q->input, q->input_len);
+            found_len = q->input_len;
+            found = 1;
         }
     }
 
-    return 0;
+    if (!found) return 0;
+    memcpy(input, found_input, found_len);
+    *input_len = found_len;
+    return 1;
 }

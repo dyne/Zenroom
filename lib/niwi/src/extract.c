@@ -220,6 +220,44 @@ size_t niwi_extract_recover_leaves(
     return recovered;
 }
 
+size_t niwi_extract_recover_leaves_by_digest(
+    niwi_extract_t *ex,
+    const uint32_t *col_indices,
+    const uint8_t (*digests)[32],
+    size_t num_indices,
+    niwi_extract_leaf_t *leaves_out, size_t max_leaves) {
+
+    if (!ex || !col_indices || !digests || !leaves_out) return 0;
+    if (num_indices == 0 || num_indices > max_leaves) return 0;
+
+    for (size_t i = 0; i < num_indices; i++) {
+        niwi_extract_leaf_t *leaf = &leaves_out[i];
+        memset(leaf, 0, sizeof(*leaf));
+        leaf->index = col_indices[i];
+        memcpy(leaf->digest, digests[i], 32);
+
+        uint8_t input[NIWI_EXTRACT_MAX_LEAF_DATA];
+        size_t input_len = sizeof(input);
+        int found = niwi_npro_lookup(ex->gamma, NIWI_TAG_LEAF,
+                                     leaf->digest, input, &input_len);
+        if (!found || input_len > sizeof(leaf->data)) {
+            ex->error_code = NIWI_EXTRACT_ERR_MISSING_LEAF;
+            snprintf(ex->error_msg, sizeof(ex->error_msg),
+                     "missing or ambiguous leaf preimage for column %u",
+                     leaf->index);
+            return 0;
+        }
+
+        memcpy(leaf->data, input, input_len);
+        leaf->data_len = input_len;
+        leaf->recovered = 1;
+    }
+
+    ex->error_code = NIWI_EXTRACT_OK;
+    ex->error_msg[0] = '\0';
+    return num_indices;
+}
+
 /* ---- Witness recovery ------------------------------------------------- */
 
 int niwi_extract_witness(niwi_extract_t *ex,

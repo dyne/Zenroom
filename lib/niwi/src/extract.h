@@ -107,6 +107,18 @@ size_t niwi_extract_recover_leaves(
     const uint32_t *col_indices, size_t num_indices,
     niwi_extract_leaf_t *leaves_out, size_t max_leaves);
 
+/* Recover leaves when the caller has already parsed the expected leaf
+ * digests from the proof's Merkle openings.  This is the narrow extraction
+ * primitive used until full NIWI proof-body parsing owns Merkle paths.
+ * Returns the number of leaves recovered, or 0 if any requested digest is
+ * missing, post-cutoff, ambiguous, or malformed. */
+size_t niwi_extract_recover_leaves_by_digest(
+    niwi_extract_t *ex,
+    const uint32_t *col_indices,
+    const uint8_t (*digests)[32],
+    size_t num_indices,
+    niwi_extract_leaf_t *leaves_out, size_t max_leaves);
+
 #ifdef __cplusplus
 }
 #endif

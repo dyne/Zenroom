@@ -112,6 +112,44 @@ static uint8_t *build_dummy_gamma(size_t *gamma_len) {
     return gamma;
 }
 
+static uint8_t *build_leaf_gamma(size_t *gamma_len, uint8_t digests[3][32]) {
+    niwi_npro_t *npro = niwi_npro_create(1);
+    assert(npro);
+
+    niwi_npro_query(npro, "NL05", (const uint8_t *)"leaf0", 5, digests[0]);
+    niwi_npro_query(npro, "NL05", (const uint8_t *)"leaf1", 5, digests[1]);
+    niwi_npro_query(npro, "NL05", (const uint8_t *)"leaf2", 5, digests[2]);
+    niwi_npro_set_cutoff(npro);
+
+    size_t sz = niwi_npro_gamma_size(npro);
+    uint8_t *gamma = (uint8_t *)malloc(sz);
+    assert(gamma);
+    assert(niwi_npro_serialize_gamma(npro, gamma, sz) == sz);
+
+    niwi_npro_free(npro);
+    *gamma_len = sz;
+    return gamma;
+}
+
+static uint8_t *build_post_cutoff_leaf_gamma(size_t *gamma_len, uint8_t digest[32]) {
+    niwi_npro_t *npro = niwi_npro_create(1);
+    assert(npro);
+
+    uint8_t ignored[32];
+    niwi_npro_query(npro, "NL05", (const uint8_t *)"pre", 3, ignored);
+    niwi_npro_set_cutoff(npro);
+    niwi_npro_query(npro, "NL05", (const uint8_t *)"post", 4, digest);
+
+    size_t sz = niwi_npro_gamma_size(npro);
+    uint8_t *gamma = (uint8_t *)malloc(sz);
+    assert(gamma);
+    assert(niwi_npro_serialize_gamma(npro, gamma, sz) == sz);
+
+    niwi_npro_free(npro);
+    *gamma_len = sz;
+    return gamma;
+}
+
 /* ---- Test: create/free lifecycle ------------------------------------- */
 
 static void test_create_free(void) {
@@ -272,6 +310,153 @@ static void test_leaf_recovery(void) {
     printf("  PASS test_leaf_recovery\n");
 }
 
+static void test_leaf_recovery_by_digest(void) {
+    uint8_t proof[8192];
+    size_t proof_len;
+    build_dummy_proof_header(proof, &proof_len);
+
+    uint8_t digests[3][32];
+    size_t gamma_len;
+    uint8_t *gamma = build_leaf_gamma(&gamma_len, digests);
+
+    niwi_extract_t *ex = niwi_extract_create(
+        proof, proof_len, gamma, gamma_len, NULL, 0);
+    assert(ex != NULL);
+
+    uint32_t col_indices[] = {0, 1, 2};
+    niwi_extract_leaf_t leaves[3];
+    size_t n = niwi_extract_recover_leaves_by_digest(
+        ex, col_indices, digests, 3, leaves, 3);
+    assert(n == 3);
+    for (size_t i = 0; i < 3; i++) {
+        assert(leaves[i].index == i);
+        assert(leaves[i].recovered == 1);
+        assert(leaves[i].data_len == 5);
+        assert(memcmp(leaves[i].data, i == 0 ? "leaf0" : i == 1 ? "leaf1" : "leaf2", 5) == 0);
+        assert(memcmp(leaves[i].digest, digests[i], 32) == 0);
+    }
+
+    niwi_extract_free(ex);
+    free(gamma);
+    printf("  PASS test_leaf_recovery_by_digest\n");
+}
+
+static void test_leaf_missing_digest(void) {
+    uint8_t proof[8192];
+    size_t proof_len;
+    build_dummy_proof_header(proof, &proof_len);
+
+    uint8_t digests[3][32];
+    size_t gamma_len;
+    uint8_t *gamma = build_leaf_gamma(&gamma_len, digests);
+    memset(digests[1], 0x42, 32);
+
+    niwi_extract_t *ex = niwi_extract_create(
+        proof, proof_len, gamma, gamma_len, NULL, 0);
+    assert(ex != NULL);
+
+    uint32_t col_indices[] = {0, 1, 2};
+    niwi_extract_leaf_t leaves[3];
+    size_t n = niwi_extract_recover_leaves_by_digest(
+        ex, col_indices, digests, 3, leaves, 3);
+    assert(n == 0);
+    assert(niwi_extract_error(ex) != NULL);
+
+    niwi_extract_free(ex);
+    free(gamma);
+    printf("  PASS test_leaf_missing_digest\n");
+}
+
+static void test_leaf_post_cutoff_rejected(void) {
+    uint8_t proof[8192];
+    size_t proof_len;
+    build_dummy_proof_header(proof, &proof_len);
+
+    uint8_t digest[32];
+    size_t gamma_len;
+    uint8_t *gamma = build_post_cutoff_leaf_gamma(&gamma_len, digest);
+
+    niwi_extract_t *ex = niwi_extract_create(
+        proof, proof_len, gamma, gamma_len, NULL, 0);
+    assert(ex != NULL);
+
+    uint32_t col_indices[] = {0};
+    niwi_extract_leaf_t leaf[1];
+    size_t n = niwi_extract_recover_leaves_by_digest(
+        ex, col_indices, (const uint8_t (*)[32])&digest, 1, leaf, 1);
+    assert(n == 0);
+
+    niwi_extract_free(ex);
+    free(gamma);
+    printf("  PASS test_leaf_post_cutoff_rejected\n");
+}
+
+static void test_leaf_wrong_domain_rejected(void) {
+    uint8_t proof[8192];
+    size_t proof_len;
+    build_dummy_proof_header(proof, &proof_len);
+
+    niwi_npro_t *npro = niwi_npro_create(1);
+    uint8_t digest[32];
+    niwi_npro_query(npro, "BAD0", (const uint8_t *)"leaf0", 5, digest);
+    niwi_npro_set_cutoff(npro);
+    size_t gamma_len = niwi_npro_gamma_size(npro);
+    uint8_t *gamma = (uint8_t *)malloc(gamma_len);
+    assert(gamma);
+    assert(niwi_npro_serialize_gamma(npro, gamma, gamma_len) == gamma_len);
+    niwi_npro_free(npro);
+
+    niwi_extract_t *ex = niwi_extract_create(
+        proof, proof_len, gamma, gamma_len, NULL, 0);
+    assert(ex != NULL);
+
+    uint32_t col_indices[] = {0};
+    niwi_extract_leaf_t leaf[1];
+    size_t n = niwi_extract_recover_leaves_by_digest(
+        ex, col_indices, (const uint8_t (*)[32])&digest, 1, leaf, 1);
+    assert(n == 0);
+
+    niwi_extract_free(ex);
+    free(gamma);
+    printf("  PASS test_leaf_wrong_domain_rejected\n");
+}
+
+static void test_leaf_ambiguous_digest_rejected(void) {
+    uint8_t proof[8192];
+    size_t proof_len;
+    build_dummy_proof_header(proof, &proof_len);
+
+    niwi_npro_t *npro = niwi_npro_create(1);
+    uint8_t first_digest[32], second_digest[32];
+    niwi_npro_query(npro, "NL05", (const uint8_t *)"leaf0", 5, first_digest);
+    niwi_npro_query(npro, "NL05", (const uint8_t *)"other", 5, second_digest);
+    niwi_npro_set_cutoff(npro);
+
+    size_t gamma_len = niwi_npro_gamma_size(npro);
+    uint8_t *gamma = (uint8_t *)malloc(gamma_len);
+    assert(gamma);
+    assert(niwi_npro_serialize_gamma(npro, gamma, gamma_len) == gamma_len);
+    niwi_npro_free(npro);
+
+    /* Force the second query to claim the first digest. */
+    size_t second_digest_off = 8 + (4 + 1 + 5 + 32) + 4 + 1 + 5;
+    memcpy(gamma + second_digest_off, first_digest, 32);
+
+    niwi_extract_t *ex = niwi_extract_create(
+        proof, proof_len, gamma, gamma_len, NULL, 0);
+    assert(ex != NULL);
+
+    uint32_t col_indices[] = {0};
+    niwi_extract_leaf_t leaf[1];
+    size_t n = niwi_extract_recover_leaves_by_digest(
+        ex, col_indices, (const uint8_t (*)[32])&first_digest, 1, leaf, 1);
+    assert(n == 0);
+
+    niwi_extract_free(ex);
+    free(gamma);
+    printf("  PASS test_leaf_ambiguous_digest_rejected\n");
+}
+
 /* ---- Test: extract from invalid Gamma ---------------------------------*/
 
 static void test_invalid_gamma(void) {
@@ -304,6 +489,11 @@ int main(void) {
     test_gamma_with_cutoff();
     test_witness_recovery_stub();
     test_leaf_recovery();
+    test_leaf_recovery_by_digest();
+    test_leaf_missing_digest();
+    test_leaf_post_cutoff_rejected();
+    test_leaf_wrong_domain_rejected();
+    test_leaf_ambiguous_digest_rejected();
     test_invalid_gamma();
     printf("All extract tests passed.\n");
     return 0;
