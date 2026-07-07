@@ -191,21 +191,29 @@ int lua_prove_circuit(lua_State* L) {
 	FFTExtConvolutionFactory<Field, Fp2<Field>> fft(F, F2, omega, 1ull << 31);
 	ReedSolomonFactory<Field, FFTExtConvolutionFactory<Field, Fp2<Field>>> rsf(fft, F);
 
-	ZkProof<Field> zk(*art->circuit, kLigeroRate, kLigeroNreq);
-	ZkProver<Field, decltype(rsf)> prover(*art->circuit, F, rsf);
+	// Keep Longfellow RAII objects inside this scope. Proof failures are
+	// expected for invalid witnesses, but lua_error longjmps past C++
+	// destructors on this C binding boundary.
+	std::vector<uint8_t> buf;
+	bool ok = false;
+	{
+		ZkProof<Field> zk(*art->circuit, kLigeroRate, kLigeroNreq);
+		ZkProver<Field, decltype(rsf)> prover(*art->circuit, F, rsf);
 
-	Transcript tp(seed_buf, seed_len, /*version=*/4);
-	SeededRandomEngine rng(seed_buf, seed_len);
+		Transcript tp(seed_buf, seed_len, /*version=*/4);
+		SeededRandomEngine rng(seed_buf, seed_len);
 
-	prover.commit(zk, *witness->all, tp, rng);
-	bool ok = prover.prove(zk, *witness->all, tp);
+		prover.commit(zk, *witness->all, tp, rng);
+		ok = prover.prove(zk, *witness->all, tp);
+		if (ok) {
+			zk.write(buf, F);
+		}
+	}
 	if (!ok) {
 		lerror(L, "prove_circuit: proof generation failed");
 		return 0;
 	}
 
-	std::vector<uint8_t> buf;
-	zk.write(buf, F);
 	push_buffer_to_octet(L, reinterpret_cast<char*>(buf.data()), buf.size());
 	return 1;
 }
@@ -256,21 +264,29 @@ int lua_prove_circuit_bip340(lua_State* L) {
 	ConvolutionFactory factory(F);
 	RSFactory rsf(factory, F);
 
-	ZkProof<Field> zk(*art->circuit, kLigeroRate, kLigeroNreq, block_enc);
-	ZkProver<Field, RSFactory> prover(*art->circuit, F, rsf);
+	// Keep Longfellow RAII objects inside this scope. Proof failures are
+	// expected for invalid witnesses, but lua_error longjmps past C++
+	// destructors on this C binding boundary.
+	std::vector<uint8_t> buf;
+	bool ok = false;
+	{
+		ZkProof<Field> zk(*art->circuit, kLigeroRate, kLigeroNreq, block_enc);
+		ZkProver<Field, RSFactory> prover(*art->circuit, F, rsf);
 
-	Transcript tp(seed_buf, seed_len, /*version=*/4);
-	SeededRandomEngine rng(seed_buf, seed_len);
+		Transcript tp(seed_buf, seed_len, /*version=*/4);
+		SeededRandomEngine rng(seed_buf, seed_len);
 
-	prover.commit(zk, *witness->all, tp, rng);
-	bool ok = prover.prove(zk, *witness->all, tp);
+		prover.commit(zk, *witness->all, tp, rng);
+		ok = prover.prove(zk, *witness->all, tp);
+		if (ok) {
+			zk.write(buf, F);
+		}
+	}
 	if (!ok) {
 		lerror(L, "prove_circuit: proof generation failed");
 		return 0;
 	}
 
-	std::vector<uint8_t> buf;
-	zk.write(buf, F);
 	push_buffer_to_octet(L, reinterpret_cast<char*>(buf.data()), buf.size());
 	return 1;
 }
