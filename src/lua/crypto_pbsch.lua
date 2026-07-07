@@ -101,7 +101,7 @@ function pbsch.encode_s_msg(sig0, sig1, nu_u, nu_u_prime, nu_s)
     assert(#nu_u_prime:str() == 32, "nu_u' must be 32 bytes")
     assert(#nu_s:str() == 32, "nu_s must be 32 bytes")
     local tuple = sig0 .. sig1 .. nu_u .. nu_u_prime .. nu_s
-    return HASH.new('sha256'):process(tuple):final()
+    return sha256(tuple)
 end
 
 -- ===========================================================================
@@ -160,7 +160,7 @@ function pbsch.sign0(session, message)
     -- r = SHA-256("PBSch/sign0" || X || X' || message)
     local seed = "PBSch/sign0" .. session.X:str() .. session.X_prime:str()
                   .. message:str()
-    session.r = OCTET.from_string(HASH.new('sha256'):process(seed):final():str())
+    session.r = sha256(seed)
 
     -- R = r·G (TODO: needs native secp256k1 scalar mult exposed)
     -- For now placeholder; will be replaced when native SECP scalar mult
