@@ -37,7 +37,7 @@ libniwi.a: $(NIWI_SOURCES)
 
 clean:
 	rm -f src/*.c.o tests/*.o src/secp256k1/*.cc.o
-	rm -f *.a test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof_serde test_extract test_bench test_secp256k1
+	rm -f *.a test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof_serde test_extract test_vectors test_bench test_secp256k1
 
 %.c.o: %.c
 	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -c -o $@ $<
@@ -47,7 +47,7 @@ clean:
 
 # ---- Tests ----
 
-test: test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof_serde test_extract test_secp256k1
+test: test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof_serde test_extract test_vectors test_secp256k1
 	./test_abi
 	./test_encoding
 	./test_hash
@@ -55,6 +55,7 @@ test: test_abi test_encoding test_hash test_npro test_commitment test_niwi_proof
 	./test_commitment
 	./test_niwi_proof_serde
 	./test_extract
+	./test_vectors
 	./test_secp256k1
 	@echo "=== All lib/niwi tests passed ==="
 
@@ -78,6 +79,12 @@ test_niwi_proof_serde: tests/test_niwi_proof_serde.c.o libniwi.a
 
 test_extract: tests/test_extract.c.o libniwi.a
 	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_extract.c.o -L. -lniwi $(NIWI_AMCL)
+
+test_vectors: tests/test_vectors.c.o libniwi.a
+	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_vectors.c.o -L. -lniwi $(NIWI_AMCL)
+
+generate-vectors: test_vectors
+	./test_vectors --write
 
 # SECP256K1 tests require C++ and the liblongfellow-zk dependency.
 # We link against the archive but this test is standalone — it does not
