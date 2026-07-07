@@ -452,6 +452,39 @@ public:
 
 	// Type identification for Lua type() function
 	static const char* __name() { return "zkcc.witness_inputs"; }
+
+	static int lua_octet(lua_State* L) {
+		LuaWitnessInputsT* self = sol::stack::get<LuaWitnessInputsT*>(L, 1);
+		if (!self || !self->field || !self->all) {
+			lerror(L,"No witness inputs");
+			return 0;
+		}
+		return push_dense_octet(L, *self->field, *self->all);
+	}
+
+	static int lua_public_octet(lua_State* L) {
+		LuaWitnessInputsT* self = sol::stack::get<LuaWitnessInputsT*>(L, 1);
+		if (!self || !self->field || !self->pub) {
+			lerror(L,"No public witness inputs");
+			return 0;
+		}
+		return push_dense_octet(L, *self->field, *self->pub);
+	}
+
+private:
+	static int push_dense_octet(lua_State* L, const Field& field,
+								const Dense<Field>& dense) {
+		std::vector<uint8_t> bytes;
+		bytes.reserve(dense.v_.size() * 32);
+		for (const auto& elt : dense.v_) {
+			uint8_t buf[32];
+			auto nat = field.from_montgomery(elt);
+			nat.to_bytes(buf);
+			bytes.insert(bytes.end(), buf, buf + sizeof(buf));
+		}
+		push_buffer_to_octet(L, (char*)bytes.data(), bytes.size());
+		return 1;
+	}
 };
 
 using LuaWitnessInputs = LuaWitnessInputsT<Fp256Base>;

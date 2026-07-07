@@ -691,6 +691,8 @@ void register_zk_bindings(sol::state_view& lua) {
 		// Type identification field
 		"__name", sol::property(&LuaWitnessInputs::__name),
 
+		"octet", &LuaWitnessInputs::lua_octet,
+		"public_octet", &LuaWitnessInputs::lua_public_octet,
 		"ninputs", [](LuaWitnessInputs& w) { return w.all ? w.all->n1_ : 0; },
 		"npub", [](LuaWitnessInputs& w) { return w.pub ? w.pub->n1_ : 0; }
 	);
@@ -716,6 +718,8 @@ void register_zk_bindings(sol::state_view& lua) {
 			sol::constructors<LuaWitnessInputsBip340(size_t, size_t)>(),
 
 			"__name", sol::property(&LuaWitnessInputsBip340::__name),
+			"octet", &LuaWitnessInputsBip340::lua_octet,
+			"public_octet", &LuaWitnessInputsBip340::lua_public_octet,
 			"ninputs", [](LuaWitnessInputsBip340& w) { return w.all ? w.all->n1_ : 0; },
 			"npub", [](LuaWitnessInputsBip340& w) { return w.pub ? w.pub->n1_ : 0; }
 		);
