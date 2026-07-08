@@ -61,6 +61,10 @@ niwi_npro_t *niwi_npro_create(int observe) {
 
 void niwi_npro_free(niwi_npro_t *npro) {
     if (!npro) return;
+    if (npro->queries) {
+        for (size_t i = 0; i < npro->count; i++)
+            free(npro->queries[i].input);
+    }
     free(npro->queries);
     free(npro);
 }
@@ -72,7 +76,8 @@ int niwi_npro_query(niwi_npro_t *npro,
                     const uint8_t *input, size_t input_len,
                     uint8_t output[32]) {
     if (!npro || !domain || !output) return -1;
-    if (input_len > 255) return -1;
+    if (!input && input_len != 0) return -1;
+    if (input_len > UINT32_MAX) return -1;
 
     /* Compute the domain-separated hash. */
     niwi_hash_one_shot(domain, input, input_len, output);
@@ -95,8 +100,12 @@ int niwi_npro_query(niwi_npro_t *npro,
         niwi_npro_query_t *q = &npro->queries[npro->count];
         memcpy(q->domain, domain, 4);
         q->input_len = input_len;
-        if (input_len > 0)
+        q->input = NULL;
+        if (input_len > 0) {
+            q->input = (uint8_t *)malloc(input_len);
+            if (!q->input) return -1;
             memcpy(q->input, input, input_len);
+        }
         memcpy(q->output, output, 32);
         q->seq = npro->seq;
         npro->count++;
@@ -129,7 +138,7 @@ size_t niwi_npro_gamma_size(const niwi_npro_t *npro) {
     size_t size = 4 + 4; /* count + cutoff */
     for (size_t i = 0; i < npro->count; i++) {
         size += 4;              /* domain */
-        size += 1;              /* input length */
+        size += 4;              /* input length */
         size += npro->queries[i].input_len;
         size += 32;             /* output */
     }
@@ -165,7 +174,11 @@ size_t niwi_npro_serialize_gamma(const niwi_npro_t *npro,
         memcpy(out + off, q->domain, 4); off += 4;
 
         /* input length + input */
-        out[off++] = (uint8_t)q->input_len;
+        uint32_t input_len = (uint32_t)q->input_len;
+        out[off++] = (uint8_t)((input_len >> 24) & 0xff);
+        out[off++] = (uint8_t)((input_len >> 16) & 0xff);
+        out[off++] = (uint8_t)((input_len >>  8) & 0xff);
+        out[off++] = (uint8_t)((input_len      ) & 0xff);
         if (q->input_len > 0) {
             memcpy(out + off, q->input, q->input_len);
             off += q->input_len;
@@ -205,6 +218,7 @@ niwi_npro_t *niwi_npro_deserialize_gamma(const uint8_t *data, size_t len) {
     npro->cutoff = cutoff;
     npro->seq = count;
     npro->cap = count > NPRO_INITIAL_CAP ? count : NPRO_INITIAL_CAP;
+    free(npro->queries);
     npro->queries = (niwi_npro_query_t *)calloc(npro->cap,
                                                  sizeof(*npro->queries));
     if (!npro->queries) {
@@ -213,17 +227,24 @@ niwi_npro_t *niwi_npro_deserialize_gamma(const uint8_t *data, size_t len) {
     }
 
     for (uint32_t i = 0; i < count; i++) {
-        if (off + 4 + 1 > len) { niwi_npro_free(npro); return NULL; }
+        if (off + 4 + 4 > len) { niwi_npro_free(npro); return NULL; }
 
         niwi_npro_query_t *q = &npro->queries[i];
         memcpy(q->domain, data + off, 4); off += 4;
 
-        q->input_len = data[off++];
-        if (q->input_len > 255) { niwi_npro_free(npro); return NULL; }
+        uint32_t input_len = ((uint32_t)data[off] << 24) |
+                             ((uint32_t)data[off+1] << 16) |
+                             ((uint32_t)data[off+2] << 8) |
+                             ((uint32_t)data[off+3]);
+        off += 4;
+        q->input_len = input_len;
 
         if (off + q->input_len + 32 > len) { niwi_npro_free(npro); return NULL; }
 
+        q->input = NULL;
         if (q->input_len > 0) {
+            q->input = (uint8_t *)malloc(q->input_len);
+            if (!q->input) { niwi_npro_free(npro); return NULL; }
             memcpy(q->input, data + off, q->input_len);
             off += q->input_len;
         }
@@ -242,12 +263,13 @@ int niwi_npro_lookup(const niwi_npro_t *npro,
                      const char domain[4],
                      const uint8_t output_digest[32],
                      uint8_t *input, size_t *input_len) {
-    if (!npro || !domain || !output_digest || !input || !input_len)
+    if (!npro || !domain || !output_digest || !input_len)
         return 0;
 
     int found = 0;
     size_t found_len = 0;
-    uint8_t found_input[256];
+    const uint8_t *found_input = NULL;
+    size_t input_cap = input ? *input_len : 0;
 
     for (size_t i = 0; i < npro->count; i++) {
         const niwi_npro_query_t *q = &npro->queries[i];
@@ -258,14 +280,17 @@ int niwi_npro_lookup(const niwi_npro_t *npro,
         if (memcmp(q->domain, domain, 4) == 0 &&
             memcmp(q->output, output_digest, 32) == 0) {
             if (found) return 0; /* ambiguous Gamma */
-            memcpy(found_input, q->input, q->input_len);
+            found_input = q->input;
             found_len = q->input_len;
             found = 1;
         }
     }
 
     if (!found) return 0;
-    memcpy(input, found_input, found_len);
     *input_len = found_len;
+    if (input) {
+        if (input_cap < found_len) return 0;
+        if (found_len != 0) memcpy(input, found_input, found_len);
+    }
     return 1;
 }

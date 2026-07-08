@@ -353,21 +353,43 @@ static int lua_extract_from_gamma_test(lua_State *L) {
         return 0;
     }
 
-    uint8_t witness_buf[65536];
-    size_t wlen = sizeof(witness_buf);
-    int rc = niwi_extract_witness(ex, witness_buf, &wlen);
+    size_t wlen = 0;
+    int rc = niwi_extract_witness(ex, NULL, &wlen);
+    if (rc != NIWI_EXTRACT_ERR_WITNESS || wlen == 0) {
+        niwi_extract_free(ex);
+        o_free(L, pub_oct);
+        o_free(L, gamma_oct);
+        o_free(L, proof_oct);
+        lerror(L, "extract_from_gamma_test: extraction failed");
+        return 0;
+    }
+
+    uint8_t *witness_buf = (uint8_t *)malloc(wlen);
+    if (!witness_buf) {
+        niwi_extract_free(ex);
+        o_free(L, pub_oct);
+        o_free(L, gamma_oct);
+        o_free(L, proof_oct);
+        lerror(L, "extract_from_gamma_test: out of memory");
+        return 0;
+    }
+
+    size_t out_len = wlen;
+    rc = niwi_extract_witness(ex, witness_buf, &out_len);
 
     niwi_extract_free(ex);
     o_free(L, pub_oct);
     o_free(L, gamma_oct);
     o_free(L, proof_oct);
 
-    if (rc != NIWI_EXTRACT_OK) {
+    if (rc != NIWI_EXTRACT_OK || out_len != wlen) {
+        free(witness_buf);
         lerror(L, "extract_from_gamma_test: extraction failed");
         return 0;
     }
 
     push_octet_copy(L, witness_buf, wlen);
+    free(witness_buf);
     return 1;
 }
 

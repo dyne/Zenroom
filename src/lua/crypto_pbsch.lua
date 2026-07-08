@@ -73,6 +73,12 @@ end
 
 --- Assemble the RPBSch public statement: X || X' || C || S.
 -- All inputs are OCTETs. Returns a 130-byte OCTET.
+--
+-- Prototype note: 2025-1992 defines the statement as also carrying R, c,
+-- phi, and ck, with C = Cmt.Com(ck, (m, alpha, beta); rho). The current
+-- Pedersen C helper commits only the 32-byte message representative. The
+-- missing paper-exact fields are tracked in the NIWI plan and must be added
+-- when replacing the fast Lua RPBSch fixture with the real OR circuit.
 function pbsch.assemble_statement(X, X_prime, C, S)
     assert(#X:str() == 32, "X must be 32 bytes")
     assert(#X_prime:str() == 32, "X' must be 32 bytes")
@@ -86,8 +92,9 @@ end
 -- ===========================================================================
 
 --- Encode Cmt-C tuple: (m, alpha, beta) -> 32-byte scalar.
--- For v1: m passes through; alpha and beta are witness-only (used in
--- R' = R + alpha*G + beta*X, not in the commitment).
+-- Fast prototype: m passes through; alpha and beta are witness-only.
+-- Paper target: Cmt.Com(ck, (m, alpha, beta); rho). Do not treat this
+-- helper as the final extractable commitment encoding.
 function pbsch.encode_c_msg(m, alpha, beta)
     return m
 end

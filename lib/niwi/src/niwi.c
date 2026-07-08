@@ -331,22 +331,29 @@ int niwi_extract(niwi_ctx_t *ctx,
         return -1;
     }
 
-    uint8_t recovered[256];
-    size_t recovered_len = sizeof(recovered);
+    size_t recovered_len = 0;
     if (!niwi_npro_lookup(npro, NIWI_TAG_LEAF, proof + off,
-                          recovered, &recovered_len)) {
+                          NULL, &recovered_len)) {
         niwi_npro_free(npro);
         set_error(ctx, "niwi_extract: missing witness query in Gamma");
         return -1;
     }
-    niwi_npro_free(npro);
 
     uint8_t *out = (uint8_t *)malloc(recovered_len ? recovered_len : 1);
     if (!out) {
+        niwi_npro_free(npro);
         set_error(ctx, "niwi_extract: out of memory");
         return -1;
     }
-    if (recovered_len != 0) memcpy(out, recovered, recovered_len);
+    size_t out_cap = recovered_len;
+    if (!niwi_npro_lookup(npro, NIWI_TAG_LEAF, proof + off,
+                          out, &out_cap) || out_cap != recovered_len) {
+        free(out);
+        niwi_npro_free(npro);
+        set_error(ctx, "niwi_extract: failed to copy witness query");
+        return -1;
+    }
+    niwi_npro_free(npro);
     *witness_out = out;
     *witness_len = recovered_len;
     ctx->error[0] = '\0';

@@ -289,23 +289,30 @@ size_t niwi_extract_recover_leaves_by_digest(
 
 int niwi_extract_witness(niwi_extract_t *ex,
                           uint8_t *witness_out, size_t *witness_len) {
-    if (!ex || !witness_out || !witness_len) return NIWI_EXTRACT_ERR_PARSE;
+    if (!ex || !witness_len) return NIWI_EXTRACT_ERR_PARSE;
 
     if (ex->witness_section) {
-        uint8_t recovered[256];
-        size_t recovered_len = sizeof(recovered);
+        size_t recovered_len = 0;
         if (!niwi_npro_lookup(ex->gamma, NIWI_TAG_LEAF, ex->witness_section,
-                              recovered, &recovered_len)) {
+                              NULL, &recovered_len)) {
             ex->error_code = NIWI_EXTRACT_ERR_MISSING_LEAF;
             snprintf(ex->error_msg, sizeof(ex->error_msg),
                      "missing witness query in Gamma");
             return NIWI_EXTRACT_ERR_MISSING_LEAF;
         }
-        if (*witness_len < recovered_len) {
+        if (!witness_out || *witness_len < recovered_len) {
             *witness_len = recovered_len;
             return NIWI_EXTRACT_ERR_WITNESS;
         }
-        if (recovered_len != 0) memcpy(witness_out, recovered, recovered_len);
+        size_t out_cap = *witness_len;
+        if (!niwi_npro_lookup(ex->gamma, NIWI_TAG_LEAF, ex->witness_section,
+                              witness_out, &out_cap) ||
+            out_cap != recovered_len) {
+            ex->error_code = NIWI_EXTRACT_ERR_MISSING_LEAF;
+            snprintf(ex->error_msg, sizeof(ex->error_msg),
+                     "failed to copy witness query from Gamma");
+            return NIWI_EXTRACT_ERR_MISSING_LEAF;
+        }
         *witness_len = recovered_len;
         return NIWI_EXTRACT_OK;
     }

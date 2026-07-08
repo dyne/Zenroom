@@ -35,7 +35,7 @@ typedef struct niwi_npro niwi_npro_t;
 /* A single recorded query. */
 typedef struct {
     char     domain[4];     /* 4-byte domain tag */
-    uint8_t  input[256];    /* canonical input (variable-length, up to 255) */
+    uint8_t *input;         /* canonical input (variable-length) */
     size_t   input_len;
     uint8_t  output[32];    /* SHA-256 output */
     uint32_t seq;           /* monotonic sequence number */
@@ -87,7 +87,7 @@ size_t niwi_npro_gamma_size(const niwi_npro_t *npro);
  *   u32:  cutoff sequence number (all queries < cutoff are proof queries)
  *   per query:
  *     4-byte domain tag
- *     u8:  input length (max 255)
+ *     u32: input length
  *     input bytes
  *     32-byte output
  * Returns the number of bytes written, or 0 on overflow. */
@@ -100,9 +100,10 @@ niwi_npro_t *niwi_npro_deserialize_gamma(const uint8_t *data, size_t len);
 
 /* ---- Extractor API ---------------------------------------------------- */
 
-/* Look up a query by domain and output digest.  Returns 1 and fills
- * *input and *input_len if found.  *input must point to a buffer of
- * at least 256 bytes.  Returns 0 if not found. */
+/* Look up a query by domain and output digest.  *input_len is the input
+ * buffer capacity on entry and the recovered length on success.  If input is
+ * NULL, the function only reports the recovered length.  Returns 1 on a unique
+ * hit, or 0 if missing, ambiguous, or the caller's buffer is too small. */
 int niwi_npro_lookup(const niwi_npro_t *npro,
                      const char domain[4],
                      const uint8_t output_digest[32],
