@@ -35,6 +35,19 @@
 #define NIWI_TABLEAU_LEAF_TAG "TBL0"
 #define NIWI_TABLEAU_LEAF_HEADER_SIZE (4 + 4 + 4 + 4)
 #define NIWI_PROOF_TABLEAU_SIZE (4 + 4 + NIWI_PROOF_TABLEAU_LEAF_COUNT * NIWI_PROOF_TABLEAU_ENTRY_SIZE)
+#define NIWI_PROOF_RELATION_TAG "REL0"
+#define NIWI_PROOF_RELATION_SIZE (4 + 4 + 32)
+
+struct niwi_ctx {
+    uint8_t *artifact;
+    size_t   artifact_len;
+    niwi_relation_id_t relation_id;
+    niwi_relation_validate_fn validate;
+    void *validate_user_data;
+    char     error[256];
+};
+
+static void set_error(niwi_ctx_t *ctx, const char *msg);
 
 static void write_u32_be(uint8_t *out, uint32_t v) {
     out[0] = (uint8_t)((v >> 24) & 0xff);
@@ -122,14 +135,77 @@ static int parse_tableau_section(const uint8_t *proof, size_t proof_len,
     return 0;
 }
 
-struct niwi_ctx {
-    uint8_t *artifact;
-    size_t   artifact_len;
-    niwi_relation_id_t relation_id;
-    niwi_relation_validate_fn validate;
-    void *validate_user_data;
-    char     error[256];
-};
+static void compute_relation_digest(niwi_relation_id_t relation_id,
+                                    const uint8_t circuit_digest[32],
+                                    const uint8_t statement_digest[32],
+                                    const uint8_t tableau_digest[32],
+                                    uint8_t out[32]) {
+    uint8_t preimage[4 + 32 + 32 + 32];
+    write_u32_be(preimage, (uint32_t)relation_id);
+    memcpy(preimage + 4, circuit_digest, 32);
+    memcpy(preimage + 36, statement_digest, 32);
+    memcpy(preimage + 68, tableau_digest, 32);
+    niwi_hash_one_shot(NIWI_TAG_PROOF, preimage, sizeof(preimage), out);
+}
+
+static int append_relation_section(niwi_ctx_t *ctx,
+                                   const uint8_t circuit_digest[32],
+                                   const uint8_t statement_digest[32],
+                                   const uint8_t tableau_digest[32],
+                                   uint8_t *proof, size_t proof_len,
+                                   size_t *off) {
+    if (!ctx || !proof || !off) return -1;
+    if (*off + NIWI_PROOF_RELATION_SIZE > proof_len) return -1;
+    if (ctx->relation_id == NIWI_RELATION_NONE) return -1;
+
+    uint8_t relation_digest[32];
+    compute_relation_digest(ctx->relation_id, circuit_digest,
+                            statement_digest, tableau_digest,
+                            relation_digest);
+    memcpy(proof + *off, NIWI_PROOF_RELATION_TAG, 4); *off += 4;
+    write_u32_be(proof + *off, (uint32_t)ctx->relation_id); *off += 4;
+    memcpy(proof + *off, relation_digest, 32); *off += 32;
+    return 0;
+}
+
+static int parse_relation_section(niwi_ctx_t *ctx,
+                                  const uint8_t *proof, size_t proof_len,
+                                  size_t *off,
+                                  const uint8_t circuit_digest[32],
+                                  const uint8_t statement_digest[32],
+                                  const uint8_t tableau_digest[32],
+                                  int require_relation) {
+    if (!ctx || !proof || !off) return -1;
+    if (*off == proof_len) {
+        if (require_relation) {
+            set_error(ctx, "niwi_verify: missing relation proof section");
+            return -1;
+        }
+        return 0;
+    }
+    if (*off + NIWI_PROOF_RELATION_SIZE != proof_len ||
+        memcmp(proof + *off, NIWI_PROOF_RELATION_TAG, 4) != 0) {
+        set_error(ctx, "niwi_verify: invalid trailing proof section");
+        return -1;
+    }
+    *off += 4;
+    uint32_t relation_id = read_u32_be(proof + *off); *off += 4;
+    if (ctx->relation_id == NIWI_RELATION_NONE ||
+        relation_id != (uint32_t)ctx->relation_id) {
+        set_error(ctx, "niwi_verify: relation id mismatch");
+        return -1;
+    }
+
+    uint8_t expected[32];
+    compute_relation_digest(ctx->relation_id, circuit_digest,
+                            statement_digest, tableau_digest, expected);
+    if (memcmp(proof + *off, expected, 32) != 0) {
+        set_error(ctx, "niwi_verify: relation proof digest mismatch");
+        return -1;
+    }
+    *off += 32;
+    return 0;
+}
 
 niwi_ctx_t *niwi_ctx_create(const uint8_t *circuit_artifact, size_t len) {
     return niwi_ctx_create_with_relation(circuit_artifact, len,
@@ -215,7 +291,8 @@ static int validate_relation(niwi_ctx_t *ctx,
 static int build_proof(niwi_ctx_t *ctx,
                        const uint8_t *public_inputs, size_t pub_len,
                        const uint8_t *private_inputs, size_t priv_len,
-                       uint8_t **proof_out, size_t *proof_len) {
+                       uint8_t **proof_out, size_t *proof_len,
+                       int relation_backed) {
     if (!ctx || !proof_out || !proof_len) return -1;
     if (!public_inputs && pub_len != 0) return -1;
     if (!private_inputs && priv_len != 0) return -1;
@@ -255,7 +332,8 @@ static int build_proof(niwi_ctx_t *ctx,
     }
 
     size_t len = NIWI_PROOF_HEADER_SIZE + NIWI_PROOF_PARAM_SIZE +
-                 NIWI_PROOF_TABLEAU_SIZE;
+                 NIWI_PROOF_TABLEAU_SIZE +
+                 (relation_backed ? NIWI_PROOF_RELATION_SIZE : 0);
     uint8_t *proof = (uint8_t *)calloc(1, len);
     if (!proof) {
         free(tableau_leaf);
@@ -291,6 +369,15 @@ static int build_proof(niwi_ctx_t *ctx,
     memcpy(proof + off, tableau_digest, 32);
     off += 32;
 
+    if (relation_backed &&
+        append_relation_section(ctx, circuit_digest, statement_digest,
+                                tableau_digest, proof, len, &off) != 0) {
+        free(tableau_leaf);
+        free(proof);
+        set_error(ctx, "niwi_prove: failed to build relation proof section");
+        return -1;
+    }
+
     free(tableau_leaf);
     *proof_out = proof;
     *proof_len = off;
@@ -300,7 +387,8 @@ static int build_proof(niwi_ctx_t *ctx,
 
 static int verify_proof_envelope(niwi_ctx_t *ctx,
                                  const uint8_t *proof, size_t proof_len,
-                                 const uint8_t *public_inputs, size_t pub_len) {
+                                 const uint8_t *public_inputs, size_t pub_len,
+                                 int require_relation) {
     if (!ctx || !proof || (!public_inputs && pub_len != 0)) return -1;
     if (proof_len < NIWI_PROOF_HEADER_SIZE + NIWI_PROOF_PARAM_SIZE +
                     NIWI_PROOF_TABLEAU_SIZE) {
@@ -352,11 +440,11 @@ static int verify_proof_envelope(niwi_ctx_t *ctx,
     uint8_t tableau_digest[32];
     uint32_t tableau_leaf_len = 0;
     if (parse_tableau_section(proof, proof_len, &off,
-                              tableau_digest, &tableau_leaf_len) != 0 ||
-        off != proof_len) {
+                              tableau_digest, &tableau_leaf_len) != 0) {
         set_error(ctx, "niwi_verify: invalid tableau section");
         return -1;
     }
+    (void)tableau_leaf_len;
 
     uint8_t commit_preimage[64];
     uint8_t commit_message[32];
@@ -370,6 +458,15 @@ static int verify_proof_envelope(niwi_ctx_t *ctx,
         return -1;
     }
 
+    if (parse_relation_section(ctx, proof, proof_len, &off,
+                               expected_circuit, expected_statement,
+                               tableau_digest, require_relation) != 0)
+        return -1;
+    if (off != proof_len) {
+        set_error(ctx, "niwi_verify: trailing bytes");
+        return -1;
+    }
+
     ctx->error[0] = '\0';
     return 0;
 }
@@ -379,7 +476,7 @@ int niwi_envelope_prove_unchecked(niwi_ctx_t *ctx,
                                   const uint8_t *private_inputs, size_t priv_len,
                                   uint8_t **proof_out, size_t *proof_len) {
     return build_proof(ctx, public_inputs, pub_len, private_inputs, priv_len,
-                       proof_out, proof_len);
+                       proof_out, proof_len, 0);
 }
 
 int niwi_prove(niwi_ctx_t *ctx,
@@ -390,9 +487,8 @@ int niwi_prove(niwi_ctx_t *ctx,
                           private_inputs, priv_len,
                           "niwi_prove: relation validation failed") != 0)
         return -1;
-    return niwi_envelope_prove_unchecked(ctx, public_inputs, pub_len,
-                                         private_inputs, priv_len,
-                                         proof_out, proof_len);
+    return build_proof(ctx, public_inputs, pub_len, private_inputs, priv_len,
+                       proof_out, proof_len, 1);
 }
 
 int niwi_envelope_prove_observed_unchecked(
@@ -403,7 +499,7 @@ int niwi_envelope_prove_observed_unchecked(
     uint8_t **gamma_out, size_t *gamma_len) {
     if (!gamma_out || !gamma_len) return -1;
     if (build_proof(ctx, public_inputs, pub_len, private_inputs, priv_len,
-                    proof_out, proof_len) != 0)
+                    proof_out, proof_len, 0) != 0)
         return -1;
 
     niwi_npro_t *npro = niwi_npro_create(1);
@@ -458,21 +554,64 @@ int niwi_prove_observed(niwi_ctx_t *ctx,
                           private_inputs, priv_len,
                           "niwi_prove_observed: relation validation failed") != 0)
         return -1;
-    return niwi_envelope_prove_observed_unchecked(
-        ctx, public_inputs, pub_len, private_inputs, priv_len,
-        proof_out, proof_len, gamma_out, gamma_len);
+    if (!gamma_out || !gamma_len) return -1;
+    if (build_proof(ctx, public_inputs, pub_len, private_inputs, priv_len,
+                    proof_out, proof_len, 1) != 0)
+        return -1;
+
+    niwi_npro_t *npro = niwi_npro_create(1);
+    if (!npro) {
+        niwi_free_buffer(*proof_out);
+        *proof_out = NULL;
+        *proof_len = 0;
+        set_error(ctx, "niwi_prove_observed: failed to create NPRO");
+        return -1;
+    }
+    uint8_t *tableau_leaf = NULL;
+    size_t tableau_leaf_len = 0;
+    uint8_t leaf_digest[32];
+    if (build_tableau_leaf(private_inputs, priv_len,
+                           &tableau_leaf, &tableau_leaf_len) != 0 ||
+        niwi_npro_query(npro, NIWI_TAG_LEAF, tableau_leaf, tableau_leaf_len,
+                        leaf_digest) != 0) {
+        free(tableau_leaf);
+        niwi_npro_free(npro);
+        niwi_free_buffer(*proof_out);
+        *proof_out = NULL;
+        *proof_len = 0;
+        set_error(ctx, "niwi_prove_observed: failed to record witness leaf");
+        return -1;
+    }
+    free(tableau_leaf);
+    niwi_npro_set_cutoff(npro);
+    size_t gs = niwi_npro_gamma_size(npro);
+    uint8_t *gamma = (uint8_t *)malloc(gs);
+    if (!gamma || niwi_npro_serialize_gamma(npro, gamma, gs) != gs) {
+        free(gamma);
+        niwi_npro_free(npro);
+        niwi_free_buffer(*proof_out);
+        *proof_out = NULL;
+        *proof_len = 0;
+        set_error(ctx, "niwi_prove_observed: failed to serialize Gamma");
+        return -1;
+    }
+    niwi_npro_free(npro);
+    *gamma_out = gamma;
+    *gamma_len = gs;
+    ctx->error[0] = '\0';
+    return 0;
 }
 
 int niwi_envelope_verify(niwi_ctx_t *ctx,
                          const uint8_t *proof, size_t proof_len,
                          const uint8_t *public_inputs, size_t pub_len) {
-    return verify_proof_envelope(ctx, proof, proof_len, public_inputs, pub_len);
+    return verify_proof_envelope(ctx, proof, proof_len, public_inputs, pub_len, 0);
 }
 
 int niwi_verify(niwi_ctx_t *ctx,
                 const uint8_t *proof, size_t proof_len,
                 const uint8_t *public_inputs, size_t pub_len) {
-    return niwi_envelope_verify(ctx, proof, proof_len, public_inputs, pub_len);
+    return verify_proof_envelope(ctx, proof, proof_len, public_inputs, pub_len, 1);
 }
 
 int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
@@ -481,7 +620,7 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
                                     const uint8_t *public_inputs, size_t pub_len,
                                     uint8_t **witness_out, size_t *witness_len) {
     if (!ctx || !gamma || !witness_out || !witness_len) return -1;
-    if (verify_proof_envelope(ctx, proof, proof_len, public_inputs, pub_len) != 0)
+    if (verify_proof_envelope(ctx, proof, proof_len, public_inputs, pub_len, 0) != 0)
         return -1;
     if (gamma_len == 0) {
         set_error(ctx, "niwi_extract: missing Gamma");
@@ -492,9 +631,16 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
     uint8_t tableau_digest[32];
     uint32_t expected_leaf_len = 0;
     if (parse_tableau_section(proof, proof_len, &off,
-                              tableau_digest, &expected_leaf_len) != 0 ||
-        off != proof_len) {
+                              tableau_digest, &expected_leaf_len) != 0) {
         set_error(ctx, "niwi_extract: invalid tableau section");
+        return -1;
+    }
+    if (off < proof_len &&
+        parse_relation_section(ctx, proof, proof_len, &off,
+                               proof + 12, proof + 44, tableau_digest, 0) != 0)
+        return -1;
+    if (off != proof_len) {
+        set_error(ctx, "niwi_extract: trailing bytes");
         return -1;
     }
     niwi_npro_t *npro = niwi_npro_deserialize_gamma(gamma, gamma_len);
@@ -552,6 +698,8 @@ int niwi_extract(niwi_ctx_t *ctx,
                  uint8_t **witness_out, size_t *witness_len) {
     uint8_t *witness = NULL;
     size_t len = 0;
+    if (verify_proof_envelope(ctx, proof, proof_len, public_inputs, pub_len, 1) != 0)
+        return -1;
     if (niwi_envelope_extract_unchecked(ctx, proof, proof_len, gamma, gamma_len,
                                         public_inputs, pub_len,
                                         &witness, &len) != 0)

@@ -213,6 +213,46 @@ static int lua_prove_bip340_relation(lua_State *L) {
     return 1;
 }
 
+static int lua_verify_bip340_relation(lua_State *L) {
+    if (!lua_istable(L, 1)) {
+        lerror(L, "verify_bip340_relation: expected table argument");
+        return 0;
+    }
+
+    const octet *circuit_oct = table_get_octet(L, 1, "circuit");
+    const octet *proof_oct = table_get_octet(L, 1, "proof");
+    const octet *pub_oct = table_get_octet(L, 1, "public_inputs");
+    if (!circuit_oct || !proof_oct || !pub_oct) {
+        o_free(L, pub_oct);
+        o_free(L, proof_oct);
+        o_free(L, circuit_oct);
+        lerror(L, "verify_bip340_relation: missing required fields");
+        return 0;
+    }
+
+    niwi_ctx_t *ctx = create_ctx_from_circuit(
+        L, circuit_oct, NIWI_RELATION_ZKCC_BIP340, "verify_bip340_relation");
+    if (!ctx) {
+        o_free(L, pub_oct);
+        o_free(L, proof_oct);
+        o_free(L, circuit_oct);
+        return 0;
+    }
+
+    int rc = niwi_verify(
+        ctx,
+        (const uint8_t *)o_val(proof_oct), o_len(proof_oct),
+        (const uint8_t *)o_val(pub_oct), o_len(pub_oct));
+
+    niwi_ctx_free(ctx);
+    o_free(L, pub_oct);
+    o_free(L, proof_oct);
+    o_free(L, circuit_oct);
+
+    lua_pushboolean(L, rc == 0);
+    return 1;
+}
+
 /* ---- verify_envelope -------------------------------------------------- */
 
 /*
@@ -661,6 +701,7 @@ static int lua_pbsch_pedersen_verify(lua_State *L) {
 static const luaL_Reg niwi_functions[] = {
     {"prove_envelope_unchecked",                         lua_prove_envelope_unchecked},
     {"prove_bip340_relation",                            lua_prove_bip340_relation},
+    {"verify_bip340_relation",                           lua_verify_bip340_relation},
     {"verify_envelope",                                  lua_verify_envelope},
     {"niwi_profile",                                     lua_niwi_profile},
     {"prove_envelope_with_observation_unchecked_test",   lua_prove_envelope_with_observation_unchecked_test},

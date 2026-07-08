@@ -39,6 +39,15 @@ static int test_relation_validate(void *user_data,
 
 static uint8_t *serialize_npro(niwi_npro_t *npro, size_t *gamma_len);
 
+static int proof_has_tag(const uint8_t *proof, size_t proof_len,
+                         const char tag[4]) {
+    if (!proof || proof_len < 4) return 0;
+    for (size_t i = 0; i + 4 <= proof_len; i++) {
+        if (memcmp(proof + i, tag, 4) == 0) return 1;
+    }
+    return 0;
+}
+
 static void test_create_free(void) {
     niwi_ctx_t *ctx = niwi_ctx_create(dummy_artifact, sizeof(dummy_artifact));
     assert(ctx != NULL);
@@ -111,6 +120,7 @@ static void test_prove_verify_extract(void) {
     assert(rc == 0);
     assert(proof != NULL);
     assert(proof_len > 0);
+    assert(!proof_has_tag(proof, proof_len, "REL0"));
     assert(niwi_envelope_verify(ctx, proof, proof_len,
                                 public_inputs, sizeof(public_inputs)) == 0);
 
@@ -162,6 +172,7 @@ static void test_relation_checked_prove(void) {
                       private_inputs, sizeof(private_inputs),
                       &proof, &proof_len) == 0);
     assert(proof != NULL);
+    assert(proof_has_tag(proof, proof_len, "REL0"));
     assert(niwi_verify(ctx, proof, proof_len,
                        public_inputs, sizeof(public_inputs)) == 0);
     niwi_free_buffer(proof);
@@ -187,6 +198,7 @@ static void test_prove_observed(void) {
     assert(gamma != NULL);
     assert(proof_len > 0);
     assert(gamma_len > 0);
+    assert(!proof_has_tag(proof, proof_len, "REL0"));
     assert(niwi_envelope_verify(ctx, proof, proof_len,
                                 public_inputs, sizeof(public_inputs)) == 0);
 
@@ -274,8 +286,10 @@ static void test_extract_validates_recovered_relation(void) {
                ctx, public_inputs, sizeof(public_inputs),
                invalid_private, sizeof(invalid_private),
                &proof, &proof_len, &gamma, &gamma_len) == 0);
+    assert(niwi_envelope_verify(ctx, proof, proof_len,
+                                public_inputs, sizeof(public_inputs)) == 0);
     assert(niwi_verify(ctx, proof, proof_len,
-                       public_inputs, sizeof(public_inputs)) == 0);
+                       public_inputs, sizeof(public_inputs)) != 0);
 
     uint8_t *witness = NULL;
     size_t witness_len = 0;
@@ -288,6 +302,41 @@ static void test_extract_validates_recovered_relation(void) {
     niwi_free_buffer(proof);
     niwi_ctx_free(ctx);
     printf("  PASS test_extract_validates_recovered_relation\n");
+}
+
+static void test_production_rejects_unchecked_envelope(void) {
+    niwi_ctx_t *ctx = niwi_ctx_create_with_relation(
+        dummy_artifact, sizeof(dummy_artifact),
+        NIWI_RELATION_ZKCC_P256, test_relation_validate, NULL);
+    assert(ctx != NULL);
+    const uint8_t public_inputs[] = {'p'};
+    const uint8_t private_inputs[] = {'w'};
+    uint8_t *proof = NULL;
+    uint8_t *gamma = NULL;
+    size_t proof_len = 0;
+    size_t gamma_len = 0;
+
+    assert(niwi_envelope_prove_observed_unchecked(
+               ctx, public_inputs, sizeof(public_inputs),
+               private_inputs, sizeof(private_inputs),
+               &proof, &proof_len, &gamma, &gamma_len) == 0);
+    assert(!proof_has_tag(proof, proof_len, "REL0"));
+    assert(niwi_envelope_verify(ctx, proof, proof_len,
+                                public_inputs, sizeof(public_inputs)) == 0);
+    assert(niwi_verify(ctx, proof, proof_len,
+                       public_inputs, sizeof(public_inputs)) != 0);
+
+    uint8_t *witness = NULL;
+    size_t witness_len = 0;
+    assert(niwi_extract(ctx, proof, proof_len, gamma, gamma_len,
+                        public_inputs, sizeof(public_inputs),
+                        &witness, &witness_len) != 0);
+    assert(witness == NULL);
+
+    niwi_free_buffer(gamma);
+    niwi_free_buffer(proof);
+    niwi_ctx_free(ctx);
+    printf("  PASS test_production_rejects_unchecked_envelope\n");
 }
 
 static uint8_t *serialize_npro(niwi_npro_t *npro, size_t *gamma_len) {
@@ -384,6 +433,7 @@ int main(void) {
     test_prove_observed();
     test_wit0_shortcut_is_not_trusted();
     test_extract_validates_recovered_relation();
+    test_production_rejects_unchecked_envelope();
     test_adversarial_gamma();
     printf("All C ABI tests passed.\n");
     return 0;

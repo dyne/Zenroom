@@ -152,6 +152,9 @@ function Niwi.verify_circuit_niwi(opts)
     if type(opts) ~= "table" then
         return native.verify_envelope(opts)
     end
+    if relation_template(opts) == "bip340" then
+        return native.verify_bip340_relation(circuit_public_opts(opts))
+    end
     local out = {}
     for k, v in pairs(opts) do out[k] = v end
     out.circuit = circuit_octet(opts)
@@ -202,6 +205,7 @@ end
 -- operate on proof envelopes instead of relation-checked circuit objects.
 Niwi.prove_envelope_unchecked = native.prove_envelope_unchecked
 Niwi.prove_bip340_relation = native.prove_bip340_relation
+Niwi.verify_bip340_relation = native.verify_bip340_relation
 Niwi.verify_envelope = native.verify_envelope
 Niwi.prove_envelope_with_observation_unchecked_test =
     native.prove_envelope_with_observation_unchecked_test
