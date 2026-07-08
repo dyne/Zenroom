@@ -81,9 +81,15 @@ local sk = oct('0000000000000000000000000000000000000000000000000000000000000003
 local sk_prime = oct('B7E151628AED2A6ABF7158809CF4F3C762E7160F38B4DA56A784D9045190CFEF')
 local X = schnorr.pubgen(sk)
 local X_prime = schnorr.pubgen(sk_prime)
-local statement = pbsch.assemble_statement(X, X_prime, C, S)
+local R_stmt = fill('88', 32)
+local c_stmt = fill('99', 32)
+local phi_stmt = fill('ab', 32)
+local ck_stmt = niwi.pbsch_pedersen_h()
+local statement = pbsch.assemble_statement(X, X_prime, R_stmt, c_stmt,
+                                           C, phi_stmt, ck_stmt, S)
 assert(type(statement) == 'zenroom.octet', 'statement must be an octet')
-assert(#statement == 130, 'statement must be X || X_prime || C || S')
+assert(#statement == 258,
+       "statement must be X || X_prime || R || c || C || phi || ck || S")
 
 local session = pbsch.setup{ x = X, x_prime = X_prime, sk = sk, deterministic = true }
 assert(session.state == 'setup', 'session must start in setup state')

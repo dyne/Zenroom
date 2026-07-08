@@ -16,16 +16,13 @@
 -- You should have received a copy of the GNU Affero General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 --
--- RPBSch fast prototype glue.
+-- RPBSch branch-circuit prototype glue.
 --
 -- This module deliberately reuses the finished BIP-340 zkcc circuit and the
 -- NIWI proof envelope instead of pretending to implement the full RPBSch OR
 -- circuit from 2025-1992. It is useful because it proves and extracts real
 -- BIP-340 circuit witnesses for both RPBSch branches under one shared PBSch
 -- statement, but it leaves the following paper-exact work open:
---   * encode statement = (X, X', R, c, C, phi, ck, S), not only X||X'||C||S;
---   * commit C to (m, alpha, beta), not only the 32-byte message representative;
---   * verify the Pedersen C/S openings inside the zkcc relation;
 --   * compose the two branches with a private OR selector in one circuit;
 --   * replace the Pedersen prototype with straight-line extractable Cmt.
 
@@ -37,6 +34,7 @@ local schnorr = require'crypto_schnorr_signature'
 if not pbsch or not zkcc or not niwi or not schnorr then return nil end
 
 local rpbsch = {}
+local Secp = SECP
 
 rpbsch.BRANCH_HONEST = 1
 rpbsch.BRANCH_TRAPDOOR = 2
@@ -80,6 +78,67 @@ local function build_bip340_inputs(circuit, sig, pk, msg)
     return zkcc.witness.bip340_compute_inputs(circuit, sig, pk, msg)
 end
 
+local function statement_phi(f)
+    return hash32("Zenroom/RPBSch/phi/v1",
+                  (f.m .. f.alpha .. f.beta .. f.nu_s ..
+                   f.nu_u .. f.nu_u_prime):str())
+end
+
+local function statement_octets(f)
+    return pbsch.assemble_statement(f.X, f.X_prime, f.R, f.c, f.C,
+                                    f.phi, f.ck, f.S)
+end
+
+local function has_branch_relation_fields(f)
+    return f and type(f.X) == "zenroom.octet" and
+           type(f.X_prime) == "zenroom.octet" and
+           type(f.R) == "zenroom.octet" and
+           type(f.c) == "zenroom.octet" and
+           type(f.C) == "zenroom.octet" and
+           type(f.phi) == "zenroom.octet" and
+           type(f.ck) == "zenroom.octet" and
+           type(f.S) == "zenroom.octet" and
+           type(f.statement) == "zenroom.octet" and
+           type(f.m) == "zenroom.octet" and
+           type(f.alpha) == "zenroom.octet" and
+           type(f.beta) == "zenroom.octet" and
+           type(f.rho_c) == "zenroom.octet" and
+           type(f.rho_s) == "zenroom.octet" and
+           type(f.nu_s) == "zenroom.octet" and
+           type(f.nu_u) == "zenroom.octet" and
+           type(f.nu_u_prime) == "zenroom.octet" and
+           type(f.sigma0) == "zenroom.octet" and
+           type(f.sigma1) == "zenroom.octet"
+end
+
+--- Validate the current branch relation profile around PBSch commitments.
+-- This is intentionally branch-circuit level: it verifies the public
+-- statement shape and the C/S commitment openings before accepting the
+-- branch's BIP-340 NIWI proof.  Selector composition remains a later step.
+function rpbsch.validate_branch_relation(fixture)
+    if not has_branch_relation_fields(fixture) then return false end
+    if not fixture.ck or fixture.ck:string() ~= pbsch.commitment_key():string() then
+        return false
+    end
+    if fixture.phi:string() ~= statement_phi(fixture):string() then
+        return false
+    end
+    if fixture.statement:string() ~= statement_octets(fixture):string() then
+        return false
+    end
+    if not pbsch.verify_c(fixture.C,
+                          pbsch.encode_c_msg(fixture.m, fixture.alpha, fixture.beta),
+                          fixture.rho_c) then
+        return false
+    end
+    if not pbsch.verify_s(fixture.S, fixture.sigma0, fixture.sigma1,
+                          fixture.nu_u, fixture.nu_u_prime, fixture.nu_s,
+                          fixture.rho_s) then
+        return false
+    end
+    return true
+end
+
 --- Build a deterministic two-branch fixture.
 -- Test-vector source: locally generated with Zenroom's SECP/BIP340 primitives
 -- from fixed secret keys, fixed messages, and fixed aux randomness.
@@ -108,14 +167,23 @@ function rpbsch.fixture()
     local sigma1 = schnorr.sign(sk_prime, msg1, aux2)
 
     local C = pbsch.commit_c(pbsch.encode_c_msg(m, alpha, beta), rho_c)
-    local S = pbsch.commit_s(sigma0, sigma1, nu_u, nu_u_prime, nu_s, rho_s)
-    local statement = pbsch.assemble_statement(X, X_prime, C, S)
+    local S_commit = pbsch.commit_s(sigma0, sigma1, nu_u, nu_u_prime, nu_s, rho_s)
+    local R = OCTET.from_hex(sigma:hex():sub(1, 64))
+    local c = Secp.bip340_challenge_reduce(
+        Secp.bip340_tagged_hash("BIP0340/challenge", R .. X .. m))
+    local ck = pbsch.commitment_key()
+    local phi = statement_phi{
+        m = m, alpha = alpha, beta = beta,
+        nu_s = nu_s, nu_u = nu_u, nu_u_prime = nu_u_prime,
+    }
+    local statement = pbsch.assemble_statement(X, X_prime, R, c, C, phi, ck, S_commit)
 
     return {
         X = X, X_prime = X_prime,
         m = m, alpha = alpha, beta = beta,
         rho_c = rho_c, rho_s = rho_s,
-        C = C, S = S, statement = statement,
+        R = R, c = c, C = C, phi = phi, ck = ck, S = S_commit,
+        statement = statement,
         nu_s = nu_s, nu_u = nu_u, nu_u_prime = nu_u_prime,
         sigma = sigma, sigma0 = sigma0, sigma1 = sigma1,
         msg0 = msg0, msg1 = msg1,
@@ -205,10 +273,14 @@ function rpbsch.prove_branch(circuit, fixture, branch)
 end
 
 --- Verify a branch proof record and bind it to the shared RPBSch statement.
--- The statement binding is application-level in this prototype. The real
--- RPBSch circuit must expose the statement digest as public input.
+-- The current branch profile validates statement shape plus C/S openings
+-- before verifying the BIP-340 NIWI proof.  The final RPBSch circuit must
+-- move this and the BIP-340 branch selector into one zkcc relation.
 function rpbsch.verify_record(circuit, fixture, record)
     if not record or not valid_branch(record.branch) then
+        return false
+    end
+    if not rpbsch.validate_branch_relation(fixture) then
         return false
     end
     if record.statement:string() ~= fixture.statement:string() then

@@ -24,7 +24,7 @@
 --   - PBSch commitment assembly (Cmt.Com) on top of native Pedersen
 --   - Protocol message/state validation
 --   - Figure 4 PBSch state machine orchestration
---   - Statement assembly (X || X' || C || S)
+--   - Statement assembly (X || X' || R || c || C || phi || ck || S)
 --   - Profile validation and mode rejection
 --
 -- Native primitives (exposed via require('niwi')):
@@ -50,6 +50,7 @@ pbsch.C_SIZE    = 33
 pbsch.S_SIZE    = 33
 pbsch.RAND_SIZE = 32
 pbsch.MSG_SIZE  = 32
+pbsch.STATEMENT_SIZE = 258
 
 local function fail(message)
     error(message, 2)
@@ -123,18 +124,22 @@ end
 -- Statement assembly
 -- ===========================================================================
 
---- Assemble the RPBSch public statement: X || X' || C || S.
--- All inputs are OCTETs. Returns a 130-byte OCTET.
---
--- Prototype note: 2025-1992 defines the statement as also carrying R, c,
--- phi, and ck. The missing fields are tracked in the NIWI plan and must be
--- added when replacing the fast Lua RPBSch fixture with the real OR circuit.
-function pbsch.assemble_statement(X, X_prime, C, S)
+function pbsch.commitment_key()
+    return niwi.pbsch_pedersen_h()
+end
+
+--- Assemble the RPBSch public statement: X || X' || R || c || C || phi || ck || S.
+-- All inputs are OCTETs. Returns a 258-byte OCTET.
+function pbsch.assemble_statement(X, X_prime, R, c, C, phi, ck, S)
     assert(#X:str() == 32, "X must be 32 bytes")
     assert(#X_prime:str() == 32, "X' must be 32 bytes")
+    assert(#R:str() == 32, "R must be 32 bytes")
+    assert(#c:str() == 32, "c must be 32 bytes")
     assert(#C:str() == pbsch.C_SIZE, "C must be " .. pbsch.C_SIZE .. " bytes")
+    assert(#phi:str() == 32, "phi must be 32 bytes")
+    assert(#ck:str() == 32, "ck must be 32 bytes")
     assert(#S:str() == pbsch.S_SIZE, "S must be " .. pbsch.S_SIZE .. " bytes")
-    return X .. X_prime .. C .. S
+    return X .. X_prime .. R .. c .. C .. phi .. ck .. S
 end
 
 -- ===========================================================================

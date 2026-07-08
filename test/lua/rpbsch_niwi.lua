@@ -22,7 +22,8 @@ print('=== RPBSch BIP340 NIWI fixture ===')
 
 local circuit = zkcc.bip340_circuit()
 local fixture = rpbsch.fixture()
-assert(#fixture.statement == 130, 'prototype statement must be X || X_prime || C || S')
+assert(#fixture.statement == 258,
+       'statement must be X || X_prime || R || c || C || phi || ck || S')
 assert(pbsch.verify_c(fixture.C, pbsch.encode_c_msg(fixture.m, fixture.alpha, fixture.beta),
                       fixture.rho_c), 'C opening rejected')
 assert(pbsch.verify_s(fixture.S, fixture.sigma0, fixture.sigma1, fixture.nu_u,
@@ -58,6 +59,29 @@ local changed_statement = rpbsch.fixture()
 changed_statement.statement = flip_last_nibble(changed_statement.statement)
 assert(rpbsch.verify_record(circuit, changed_statement, branch1[1]) == false,
        'changed RPBSch statement accepted')
+
+local bad_c_opening = rpbsch.fixture()
+bad_c_opening.rho_c = flip_last_nibble(bad_c_opening.rho_c)
+assert(rpbsch.verify_record(circuit, bad_c_opening, branch1[1]) == false,
+       'changed C opening accepted')
+
+local bad_s_opening = rpbsch.fixture()
+bad_s_opening.rho_s = flip_last_nibble(bad_s_opening.rho_s)
+assert(rpbsch.verify_record(circuit, bad_s_opening, branch1[1]) == false,
+       'changed S opening accepted')
+
+local bad_ck = rpbsch.fixture()
+bad_ck.ck = flip_last_nibble(bad_ck.ck)
+bad_ck.statement = pbsch.assemble_statement(bad_ck.X, bad_ck.X_prime,
+                                            bad_ck.R, bad_ck.c, bad_ck.C,
+                                            bad_ck.phi, bad_ck.ck, bad_ck.S)
+assert(rpbsch.verify_record(circuit, bad_ck, branch1[1]) == false,
+       'changed commitment key accepted')
+
+local missing_relation_field = rpbsch.fixture()
+missing_relation_field.phi = nil
+assert(rpbsch.verify_record(circuit, missing_relation_field, branch1[1]) == false,
+       'missing relation field accepted')
 
 local bad_public_record = {
   branch = branch1[1].branch,
