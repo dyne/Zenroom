@@ -231,4 +231,29 @@ function rpbsch.valid_signature(check)
     return schnorr.verify(check.pk, check.msg, check.sig)
 end
 
+--- Validate the deterministic final PBSch signature used by the fixture.
+-- Fast prototype: this is a direct BIP-340 signature under X on m. The full
+-- PBSch implementation must derive it through the blind nonce/challenge flow.
+function rpbsch.valid_final_signature(fixture)
+    return schnorr.verify(fixture.X, fixture.m, fixture.sigma)
+end
+
+--- Build the current end-to-end PBSch smoke fixture.
+-- Returns real C/S commitments, a real BIP-340 final signature, and an NIWI
+-- proof for the honest RPBSch branch. This is intentionally a fixture, not the
+-- final Figure 4 state machine.
+function rpbsch.end_to_end_fixture()
+    local circuit = zkcc.bip340_circuit()
+    local fixture = rpbsch.fixture()
+    local records = rpbsch.prove_branch(circuit, fixture, rpbsch.BRANCH_HONEST)
+    if not records then
+        return nil, "failed to prove honest RPBSch branch"
+    end
+    return {
+        circuit = circuit,
+        fixture = fixture,
+        proof_records = records,
+    }
+end
+
 return rpbsch
