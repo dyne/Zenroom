@@ -1,7 +1,7 @@
 -- End-to-end zkcc artifact -> NIWI proof envelope smoke test.
 
 local zkcc = require'crypto_zkcc'
-local niwi = require'niwi'
+local niwi = require'crypto_niwi'
 
 print('=== zkcc NIWI smoke test ===')
 
@@ -28,6 +28,15 @@ local witness = zkcc.build_witness_inputs{
   },
 }
 
+local bad_witness = zkcc.build_witness_inputs{
+  circuit = artifact,
+  inputs = {
+    [1] = oct_u64(10),
+    [2] = oct_u64(3),
+    [3] = oct_u64(8),
+  },
+}
+
 local public_witness = zkcc.build_witness_inputs{
   circuit = artifact,
   inputs = {
@@ -35,10 +44,19 @@ local public_witness = zkcc.build_witness_inputs{
   },
 }
 
+local bad_prove_ok = pcall(function()
+  niwi.prove_circuit_niwi{
+    circuit = artifact,
+    inputs = bad_witness,
+    public_inputs = public_witness,
+  }
+end)
+assert(bad_prove_ok == false, 'NIWI proving must reject witnesses that do not satisfy the circuit')
+
 local proof = niwi.prove_circuit_niwi{
-  circuit = circuit,
-  inputs = witness:octet(),
-  public_inputs = public_witness:public_octet(),
+  circuit = artifact,
+  inputs = witness,
+  public_inputs = public_witness,
 }
 assert(type(proof) == "zenroom.octet", 'NIWI proof must be an octet')
 assert(#proof > 0, 'NIWI proof must be non-empty')
@@ -64,9 +82,9 @@ local wrong_ok = niwi.verify_circuit_niwi{
 assert(wrong_ok == false, 'NIWI verification must reject wrong public input')
 
 local observed_proof, gamma = niwi.prove_with_observation_test{
-  circuit = circuit,
-  inputs = witness:octet(),
-  public_inputs = public_witness:public_octet(),
+  circuit = artifact,
+  inputs = witness,
+  public_inputs = public_witness,
 }
 assert(niwi.verify_circuit_niwi{
   circuit = circuit,

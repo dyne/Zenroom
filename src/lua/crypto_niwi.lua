@@ -37,22 +37,116 @@ if not native then
     return nil
 end
 
--- Niwi is a direct re-export of the native bindings.
--- We don't add wrapper logic here — all validation and error handling
--- is done in the C layer.
 local Niwi = {}
+local zkcc_ok, zkcc = pcall(require, 'crypto_zkcc')
+if not zkcc_ok then zkcc = nil end
+
+local function is_octet(value)
+    return type(value) == "zenroom.octet"
+end
+
+local function has_method(value, name)
+    if value == nil or is_octet(value) then return false end
+    local ok, method = pcall(function() return value[name] end)
+    return ok and type(method) == "function"
+end
+
+local function as_octet(value, method_name, label)
+    if is_octet(value) then return value end
+    if has_method(value, method_name) then
+        return value[method_name](value)
+    end
+    error(label .. " must be an OCTET or expose :" .. method_name .. "()", 3)
+end
+
+local function native_opts(opts)
+    local out = {}
+    for k, v in pairs(opts) do out[k] = v end
+    out.circuit = as_octet(opts.circuit, "octet", "circuit")
+    out.inputs = as_octet(opts.inputs, "octet", "inputs")
+    if opts.public_inputs then
+        out.public_inputs = as_octet(opts.public_inputs, "public_octet",
+                                     "public_inputs")
+    end
+    return out
+end
+
+local function can_validate_relation(opts)
+    return zkcc and not is_octet(opts.circuit) and not is_octet(opts.inputs)
+end
+
+local function validate_relation(opts)
+    if not can_validate_relation(opts) then return end
+    local ok_raw, raw_circuit = pcall(function() return opts.circuit:raw() end)
+    local circuit = ok_raw and raw_circuit or opts.circuit
+    local schema = opts.circuit.schema
+    -- Relation validation is intentionally delegated to the existing zkcc
+    -- prover until lib/niwi owns a native circuit evaluator. The generated
+    -- legacy proof is discarded; this is only a witness-satisfaction gate.
+    if schema and schema.template == "bip340" then
+        zkcc.native.prove_circuit_bip340{
+            circuit = circuit,
+            inputs = opts.inputs,
+            seed = opts.seed,
+        }
+        return
+    end
+    zkcc.prove_circuit{
+        circuit = circuit,
+        inputs = opts.inputs,
+        seed = opts.seed,
+    }
+end
 
 -- Production API
-Niwi.prove_circuit_niwi  = native.prove_circuit_niwi
-Niwi.verify_circuit_niwi = native.verify_circuit_niwi
+function Niwi.prove_circuit_niwi(opts)
+    if type(opts) ~= "table" then
+        return native.prove_circuit_niwi(opts)
+    end
+    -- Passing live zkcc artifact/witness objects enables relation validation.
+    -- Raw OCTETs are accepted as the low-level NIWI envelope API.
+    validate_relation(opts)
+    return native.prove_circuit_niwi(native_opts(opts))
+end
+
+function Niwi.verify_circuit_niwi(opts)
+    if type(opts) ~= "table" then
+        return native.verify_circuit_niwi(opts)
+    end
+    local out = {}
+    for k, v in pairs(opts) do out[k] = v end
+    out.circuit = as_octet(opts.circuit, "octet", "circuit")
+    if opts.public_inputs then
+        out.public_inputs = as_octet(opts.public_inputs, "public_octet",
+                                     "public_inputs")
+    end
+    return native.verify_circuit_niwi(out)
+end
 Niwi.niwi_profile         = native.niwi_profile
 
 -- Test-only API (available only in DEBUG/test builds)
 if native.prove_with_observation_test then
-    Niwi.prove_with_observation_test = native.prove_with_observation_test
+    function Niwi.prove_with_observation_test(opts)
+        if type(opts) ~= "table" then
+            return native.prove_with_observation_test(opts)
+        end
+        validate_relation(opts)
+        return native.prove_with_observation_test(native_opts(opts))
+    end
 end
 if native.extract_from_gamma_test then
-    Niwi.extract_from_gamma_test = native.extract_from_gamma_test
+    function Niwi.extract_from_gamma_test(opts)
+        if type(opts) ~= "table" then
+            return native.extract_from_gamma_test(opts)
+        end
+        local out = {}
+        for k, v in pairs(opts) do out[k] = v end
+        if opts.public_inputs then
+            out.public_inputs = as_octet(opts.public_inputs, "public_octet",
+                                         "public_inputs")
+        end
+        return native.extract_from_gamma_test(out)
+    end
 end
 
 -- Protocol metadata

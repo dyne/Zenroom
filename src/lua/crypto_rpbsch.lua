@@ -31,7 +31,7 @@
 
 local pbsch = require'crypto_pbsch'
 local zkcc = require'crypto_zkcc'
-local niwi = require'niwi'
+local niwi = require'crypto_niwi'
 local schnorr = require'crypto_schnorr_signature'
 
 if not pbsch or not zkcc or not niwi or not schnorr then return nil end
@@ -156,16 +156,20 @@ end
 --- Build serialized zkcc witness/public input bytes for a branch.
 function rpbsch.branch_witnesses(circuit, fixture, branch)
     require_branch(branch)
+    local ok_raw, raw = pcall(function() return circuit:raw() end)
+    local witness_circuit = ok_raw and raw or circuit
     local out = {}
     for _, check in ipairs(rpbsch.branch_checks(fixture, branch)) do
-        local built, err = build_bip340_inputs(circuit, check.sig, check.pk, check.msg)
+        local built, err = build_bip340_inputs(witness_circuit, check.sig, check.pk, check.msg)
         if not built then
             return nil, err
         end
         out[#out + 1] = {
             label = check.label,
+            witness_inputs = built.inputs,
             witness = built.inputs:octet(),
-            public_inputs = built.public_inputs:public_octet(),
+            public_inputs = built.public_inputs,
+            public_inputs_octet = built.public_inputs:public_octet(),
         }
     end
     return out
@@ -174,7 +178,6 @@ end
 --- Prove one RPBSch branch through the current BIP-340 NIWI fixture.
 function rpbsch.prove_branch(circuit, fixture, branch)
     require_branch(branch)
-    local circuit_bytes = circuit:octet()
     local witnesses, err = rpbsch.branch_witnesses(circuit, fixture, branch)
     if not witnesses then
         return nil, err
@@ -183,8 +186,8 @@ function rpbsch.prove_branch(circuit, fixture, branch)
     local records = {}
     for _, item in ipairs(witnesses) do
         local proof, gamma = niwi.prove_with_observation_test{
-            circuit = circuit_bytes,
-            inputs = item.witness,
+            circuit = circuit,
+            inputs = item.witness_inputs,
             public_inputs = item.public_inputs,
         }
         records[#records + 1] = {
@@ -193,7 +196,7 @@ function rpbsch.prove_branch(circuit, fixture, branch)
             statement = fixture.statement,
             proof = proof,
             gamma = gamma,
-            public_inputs = item.public_inputs,
+            public_inputs = item.public_inputs_octet,
             expected_witness = item.witness,
         }
     end
@@ -211,7 +214,7 @@ function rpbsch.verify_record(circuit, fixture, record)
         return false
     end
     return niwi.verify_circuit_niwi{
-        circuit = circuit:octet(),
+        circuit = circuit,
         proof = record.proof,
         public_inputs = record.public_inputs,
     }
