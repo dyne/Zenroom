@@ -67,25 +67,6 @@ static void build_dummy_proof_header(uint8_t *buf, size_t *len) {
         buf[off++] = (uint8_t)((v      ) & 0xff);
     }
 
-    /* Add some dummy data to make a complete-looking proof */
-    /* y_ldt: block * 48 bytes (field) */
-    memset(buf + off, 0, 16 * 48); off += 16 * 48;
-
-    /* y_dot: dblock * 48 */
-    memset(buf + off, 0, 31 * 48); off += 31 * 48;
-
-    /* y_quad_0: r * 48 */
-    memset(buf + off, 0, 8 * 48); off += 8 * 48;
-
-    /* y_quad_2: (dblock - block) * 48 */
-    memset(buf + off, 0, 15 * 48); off += 15 * 48;
-
-    /* req: nrow * nreq * 8 (subfield) */
-    memset(buf + off, 0, 32 * 8 * 8); off += 32 * 8 * 8;
-
-    /* Merkle root */
-    memset(buf + off, 0xCC, 32); off += 32;
-
     *len = off;
 }
 
@@ -148,6 +129,56 @@ static uint8_t *build_post_cutoff_leaf_gamma(size_t *gamma_len, uint8_t digest[3
     niwi_npro_free(npro);
     *gamma_len = sz;
     return gamma;
+}
+
+static void append_u32_be(uint8_t *buf, size_t *off, uint32_t v) {
+    buf[(*off)++] = (uint8_t)((v >> 24) & 0xff);
+    buf[(*off)++] = (uint8_t)((v >> 16) & 0xff);
+    buf[(*off)++] = (uint8_t)((v >> 8) & 0xff);
+    buf[(*off)++] = (uint8_t)(v & 0xff);
+}
+
+static uint8_t *build_tableau_gamma(size_t *gamma_len,
+                                    const uint8_t *witness,
+                                    size_t witness_len,
+                                    uint8_t digest[32],
+                                    uint32_t *leaf_len) {
+    uint8_t leaf[128];
+    size_t off = 0;
+    assert(witness_len <= sizeof(leaf) - 16);
+    memcpy(leaf + off, "TBL0", 4); off += 4;
+    append_u32_be(leaf, &off, 0);
+    append_u32_be(leaf, &off, 0);
+    append_u32_be(leaf, &off, (uint32_t)witness_len);
+    memcpy(leaf + off, witness, witness_len); off += witness_len;
+    *leaf_len = (uint32_t)off;
+
+    niwi_npro_t *npro = niwi_npro_create(1);
+    assert(npro);
+    niwi_npro_query(npro, "NL05", leaf, off, digest);
+    niwi_npro_set_cutoff(npro);
+
+    size_t sz = niwi_npro_gamma_size(npro);
+    uint8_t *gamma = (uint8_t *)malloc(sz);
+    assert(gamma);
+    assert(niwi_npro_serialize_gamma(npro, gamma, sz) == sz);
+
+    niwi_npro_free(npro);
+    *gamma_len = sz;
+    return gamma;
+}
+
+static void append_tableau_section(uint8_t *proof, size_t *proof_len,
+                                   const uint8_t digest[32],
+                                   uint32_t leaf_len) {
+    size_t off = *proof_len;
+    memcpy(proof + off, "TAB0", 4); off += 4;
+    append_u32_be(proof, &off, 1);
+    append_u32_be(proof, &off, 0);
+    append_u32_be(proof, &off, 0);
+    append_u32_be(proof, &off, leaf_len);
+    memcpy(proof + off, digest, 32); off += 32;
+    *proof_len = off;
 }
 
 /* ---- Test: create/free lifecycle ------------------------------------- */
@@ -256,9 +287,9 @@ static void test_gamma_with_cutoff(void) {
     printf("  PASS test_gamma_with_cutoff\n");
 }
 
-/* ---- Test: witness recovery stub ------------------------------------- */
+/* ---- Test: witness recovery requires tableau leaves ------------------- */
 
-static void test_witness_recovery_stub(void) {
+static void test_witness_recovery_requires_tableau(void) {
     uint8_t proof[8192];
     size_t proof_len;
     build_dummy_proof_header(proof, &proof_len);
@@ -273,12 +304,42 @@ static void test_witness_recovery_stub(void) {
     uint8_t witness[64];
     size_t wlen = sizeof(witness);
     int rc = niwi_extract_witness(ex, witness, &wlen);
-    assert(rc == NIWI_EXTRACT_OK);
-    assert(wlen == 32); /* placeholder */
+    assert(rc == NIWI_EXTRACT_ERR_WITNESS);
+    assert(wlen == 0);
 
     niwi_extract_free(ex);
     free(gamma);
-    printf("  PASS test_witness_recovery_stub\n");
+    printf("  PASS test_witness_recovery_requires_tableau\n");
+}
+
+static void test_tableau_witness_recovery(void) {
+    uint8_t proof[8192];
+    size_t proof_len;
+    build_dummy_proof_header(proof, &proof_len);
+
+    const uint8_t expected[] = {'w', 'i', 't'};
+    uint8_t digest[32];
+    uint32_t leaf_len = 0;
+    size_t gamma_len;
+    uint8_t *gamma = build_tableau_gamma(&gamma_len, expected,
+                                         sizeof(expected), digest,
+                                         &leaf_len);
+    append_tableau_section(proof, &proof_len, digest, leaf_len);
+
+    niwi_extract_t *ex = niwi_extract_create(
+        proof, proof_len, gamma, gamma_len, NULL, 0);
+    assert(ex != NULL);
+
+    uint8_t witness[64];
+    size_t wlen = sizeof(witness);
+    int rc = niwi_extract_witness(ex, witness, &wlen);
+    assert(rc == NIWI_EXTRACT_OK);
+    assert(wlen == sizeof(expected));
+    assert(memcmp(witness, expected, sizeof(expected)) == 0);
+
+    niwi_extract_free(ex);
+    free(gamma);
+    printf("  PASS test_tableau_witness_recovery\n");
 }
 
 /* ---- Test: leaf recovery pattern ------------------------------------- */
@@ -487,7 +548,8 @@ int main(void) {
     test_wrong_magic();
     test_proof_too_short();
     test_gamma_with_cutoff();
-    test_witness_recovery_stub();
+    test_witness_recovery_requires_tableau();
+    test_tableau_witness_recovery();
     test_leaf_recovery();
     test_leaf_recovery_by_digest();
     test_leaf_missing_digest();

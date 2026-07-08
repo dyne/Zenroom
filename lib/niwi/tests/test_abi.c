@@ -37,6 +37,8 @@ static int test_relation_validate(void *user_data,
            priv_len == 1 && private_inputs[0] == 'w' ? 0 : -1;
 }
 
+static uint8_t *serialize_npro(niwi_npro_t *npro, size_t *gamma_len);
+
 static void test_create_free(void) {
     niwi_ctx_t *ctx = niwi_ctx_create(dummy_artifact, sizeof(dummy_artifact));
     assert(ctx != NULL);
@@ -198,7 +200,7 @@ static void test_prove_observed(void) {
 
     niwi_free_buffer(witness);
 
-    gamma[16] ^= 0x01; /* mutate recorded input, keep recorded digest */
+    gamma[20] ^= 0x01; /* mutate recorded tableau input, keep recorded digest */
     witness = NULL;
     witness_len = 0;
     assert(niwi_envelope_extract_unchecked(ctx, proof, proof_len, gamma, gamma_len,
@@ -219,6 +221,73 @@ static void test_prove_observed(void) {
     niwi_free_buffer(proof);
     niwi_ctx_free(ctx);
     printf("  PASS test_prove_observed\n");
+}
+
+static void test_wit0_shortcut_is_not_trusted(void) {
+    niwi_ctx_t *ctx = niwi_ctx_create(dummy_artifact, sizeof(dummy_artifact));
+    assert(ctx != NULL);
+    const uint8_t public_inputs[] = {'p'};
+    const uint8_t private_inputs[] = {'w'};
+    uint8_t *proof = NULL;
+    size_t proof_len = 0;
+
+    assert(niwi_envelope_prove_unchecked(ctx, public_inputs, sizeof(public_inputs),
+                                         private_inputs, sizeof(private_inputs),
+                                         &proof, &proof_len) == 0);
+
+    niwi_npro_t *raw = niwi_npro_create(1);
+    assert(raw != NULL);
+    uint8_t digest[32];
+    assert(niwi_npro_query(raw, "NL05", private_inputs, sizeof(private_inputs),
+                           digest) == 0);
+    niwi_npro_set_cutoff(raw);
+    size_t gamma_len = 0;
+    uint8_t *gamma = serialize_npro(raw, &gamma_len);
+
+    uint8_t *witness = NULL;
+    size_t witness_len = 0;
+    assert(niwi_envelope_extract_unchecked(ctx, proof, proof_len, gamma, gamma_len,
+                                           public_inputs, sizeof(public_inputs),
+                                           &witness, &witness_len) != 0);
+    assert(witness == NULL);
+
+    free(gamma);
+    niwi_npro_free(raw);
+    niwi_free_buffer(proof);
+    niwi_ctx_free(ctx);
+    printf("  PASS test_wit0_shortcut_is_not_trusted\n");
+}
+
+static void test_extract_validates_recovered_relation(void) {
+    niwi_ctx_t *ctx = niwi_ctx_create_with_relation(
+        dummy_artifact, sizeof(dummy_artifact),
+        NIWI_RELATION_ZKCC_P256, test_relation_validate, NULL);
+    assert(ctx != NULL);
+    const uint8_t public_inputs[] = {'p'};
+    const uint8_t invalid_private[] = {'x'};
+    uint8_t *proof = NULL;
+    uint8_t *gamma = NULL;
+    size_t proof_len = 0;
+    size_t gamma_len = 0;
+
+    assert(niwi_envelope_prove_observed_unchecked(
+               ctx, public_inputs, sizeof(public_inputs),
+               invalid_private, sizeof(invalid_private),
+               &proof, &proof_len, &gamma, &gamma_len) == 0);
+    assert(niwi_verify(ctx, proof, proof_len,
+                       public_inputs, sizeof(public_inputs)) == 0);
+
+    uint8_t *witness = NULL;
+    size_t witness_len = 0;
+    assert(niwi_extract(ctx, proof, proof_len, gamma, gamma_len,
+                        public_inputs, sizeof(public_inputs),
+                        &witness, &witness_len) != 0);
+    assert(witness == NULL);
+
+    niwi_free_buffer(gamma);
+    niwi_free_buffer(proof);
+    niwi_ctx_free(ctx);
+    printf("  PASS test_extract_validates_recovered_relation\n");
 }
 
 static uint8_t *serialize_npro(niwi_npro_t *npro, size_t *gamma_len) {
@@ -313,6 +382,8 @@ int main(void) {
     test_prove_verify_extract();
     test_relation_checked_prove();
     test_prove_observed();
+    test_wit0_shortcut_is_not_trusted();
+    test_extract_validates_recovered_relation();
     test_adversarial_gamma();
     printf("All C ABI tests passed.\n");
     return 0;

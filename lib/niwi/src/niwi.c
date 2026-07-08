@@ -29,8 +29,12 @@
 
 #define NIWI_PROOF_HEADER_SIZE (4 + 4 + 4 + 32 + 32 + NIWI_KLP22_COMMIT_SIZE + NIWI_KLP22_OPENING_SIZE)
 #define NIWI_PROOF_PARAM_SIZE (7 * 4)
-#define NIWI_PROOF_WITNESS_TAG "WIT0"
-#define NIWI_PROOF_WITNESS_DIGEST_SIZE 32
+#define NIWI_PROOF_TABLEAU_TAG "TAB0"
+#define NIWI_PROOF_TABLEAU_LEAF_COUNT 1
+#define NIWI_PROOF_TABLEAU_ENTRY_SIZE (4 + 4 + 4 + 32)
+#define NIWI_TABLEAU_LEAF_TAG "TBL0"
+#define NIWI_TABLEAU_LEAF_HEADER_SIZE (4 + 4 + 4 + 4)
+#define NIWI_PROOF_TABLEAU_SIZE (4 + 4 + NIWI_PROOF_TABLEAU_LEAF_COUNT * NIWI_PROOF_TABLEAU_ENTRY_SIZE)
 
 static void write_u32_be(uint8_t *out, uint32_t v) {
     out[0] = (uint8_t)((v >> 24) & 0xff);
@@ -44,6 +48,78 @@ static uint32_t read_u32_be(const uint8_t *in) {
            ((uint32_t)in[1] << 16) |
            ((uint32_t)in[2] << 8) |
            ((uint32_t)in[3]);
+}
+
+static int build_tableau_leaf(const uint8_t *private_inputs, size_t priv_len,
+                              uint8_t **leaf_out, size_t *leaf_len) {
+    /* Paper-tracking note: this is the typed extraction leaf for the current
+     * envelope.  It removes the trusted WIT0 witness shortcut, but the next
+     * native Ligero step must replace this single contiguous row with the
+     * real column/tableau layout recovered from proof openings. */
+    if (!leaf_out || !leaf_len) return -1;
+    if (!private_inputs && priv_len != 0) return -1;
+    if (priv_len > UINT32_MAX) return -1;
+    if (priv_len > SIZE_MAX - NIWI_TABLEAU_LEAF_HEADER_SIZE) return -1;
+
+    size_t len = NIWI_TABLEAU_LEAF_HEADER_SIZE + priv_len;
+    uint8_t *leaf = (uint8_t *)malloc(len ? len : 1);
+    if (!leaf) return -1;
+
+    size_t off = 0;
+    memcpy(leaf + off, NIWI_TABLEAU_LEAF_TAG, 4); off += 4;
+    write_u32_be(leaf + off, 0); off += 4; /* witness row */
+    write_u32_be(leaf + off, 0); off += 4; /* byte offset in row */
+    write_u32_be(leaf + off, (uint32_t)priv_len); off += 4;
+    if (priv_len != 0) memcpy(leaf + off, private_inputs, priv_len);
+
+    *leaf_out = leaf;
+    *leaf_len = len;
+    return 0;
+}
+
+static int decode_tableau_leaf(const uint8_t *leaf, size_t leaf_len,
+                               uint8_t **witness_out, size_t *witness_len) {
+    if (!leaf || !witness_out || !witness_len) return -1;
+    if (leaf_len < NIWI_TABLEAU_LEAF_HEADER_SIZE) return -1;
+
+    size_t off = 0;
+    if (memcmp(leaf + off, NIWI_TABLEAU_LEAF_TAG, 4) != 0) return -1;
+    off += 4;
+    if (read_u32_be(leaf + off) != 0) return -1; /* only witness row 0 for now */
+    off += 4;
+    if (read_u32_be(leaf + off) != 0) return -1; /* contiguous assignment */
+    off += 4;
+    uint32_t len = read_u32_be(leaf + off);
+    off += 4;
+    if (off + len != leaf_len) return -1;
+
+    uint8_t *out = (uint8_t *)malloc(len ? len : 1);
+    if (!out) return -1;
+    if (len != 0) memcpy(out, leaf + off, len);
+    *witness_out = out;
+    *witness_len = len;
+    return 0;
+}
+
+static int parse_tableau_section(const uint8_t *proof, size_t proof_len,
+                                 size_t *off,
+                                 uint8_t digest_out[32],
+                                 uint32_t *leaf_len_out) {
+    if (!proof || !off || !digest_out || !leaf_len_out) return -1;
+    if (*off + NIWI_PROOF_TABLEAU_SIZE > proof_len) return -1;
+    if (memcmp(proof + *off, NIWI_PROOF_TABLEAU_TAG, 4) != 0) return -1;
+    *off += 4;
+    uint32_t count = read_u32_be(proof + *off); *off += 4;
+    if (count != NIWI_PROOF_TABLEAU_LEAF_COUNT) return -1;
+
+    uint32_t index = read_u32_be(proof + *off); *off += 4;
+    uint32_t row = read_u32_be(proof + *off); *off += 4;
+    uint32_t leaf_len = read_u32_be(proof + *off); *off += 4;
+    if (index != 0 || row != 0 || leaf_len < NIWI_TABLEAU_LEAF_HEADER_SIZE)
+        return -1;
+    memcpy(digest_out, proof + *off, 32); *off += 32;
+    *leaf_len_out = leaf_len;
+    return 0;
 }
 
 struct niwi_ctx {
@@ -147,7 +223,7 @@ static int build_proof(niwi_ctx_t *ctx,
 
     uint8_t circuit_digest[32];
     uint8_t statement_digest[32];
-    uint8_t witness_digest[32];
+    uint8_t tableau_digest[32];
     uint8_t commitment[NIWI_KLP22_COMMIT_SIZE];
     uint8_t opening[NIWI_KLP22_OPENING_SIZE];
 
@@ -155,25 +231,34 @@ static int build_proof(niwi_ctx_t *ctx,
                        circuit_digest);
     niwi_hash_one_shot(NIWI_TAG_STMT, public_inputs, pub_len,
                        statement_digest);
-    niwi_hash_one_shot(NIWI_TAG_LEAF, private_inputs, priv_len,
-                       witness_digest);
+    uint8_t *tableau_leaf = NULL;
+    size_t tableau_leaf_len = 0;
+    if (build_tableau_leaf(private_inputs, priv_len,
+                           &tableau_leaf, &tableau_leaf_len) != 0) {
+        set_error(ctx, "niwi_prove: failed to build witness tableau leaf");
+        return -1;
+    }
+    niwi_hash_one_shot(NIWI_TAG_LEAF, tableau_leaf, tableau_leaf_len,
+                       tableau_digest);
 
     uint8_t commit_preimage[64];
     uint8_t commit_message[32];
     memcpy(commit_preimage, statement_digest, 32);
-    memcpy(commit_preimage + 32, witness_digest, 32);
+    memcpy(commit_preimage + 32, tableau_digest, 32);
     niwi_hash_one_shot(NIWI_TAG_EXTR, commit_preimage, sizeof(commit_preimage),
                        commit_message);
     if (niwi_klp22_commit(commit_message, sizeof(commit_message),
                           commitment, opening) != 0) {
+        free(tableau_leaf);
         set_error(ctx, "niwi_prove: failed to commit challenge share");
         return -1;
     }
 
     size_t len = NIWI_PROOF_HEADER_SIZE + NIWI_PROOF_PARAM_SIZE +
-                 4 + 4 + NIWI_PROOF_WITNESS_DIGEST_SIZE;
+                 NIWI_PROOF_TABLEAU_SIZE;
     uint8_t *proof = (uint8_t *)calloc(1, len);
     if (!proof) {
+        free(tableau_leaf);
         set_error(ctx, "niwi_prove: out of memory");
         return -1;
     }
@@ -198,11 +283,15 @@ static int build_proof(niwi_ctx_t *ctx,
     write_u32_be(proof + off, 1); off += 4; /* nreq */
     write_u32_be(proof + off, 0); off += 4; /* mc_pathlen */
 
-    memcpy(proof + off, NIWI_PROOF_WITNESS_TAG, 4); off += 4;
-    write_u32_be(proof + off, NIWI_PROOF_WITNESS_DIGEST_SIZE); off += 4;
-    memcpy(proof + off, witness_digest, NIWI_PROOF_WITNESS_DIGEST_SIZE);
-    off += NIWI_PROOF_WITNESS_DIGEST_SIZE;
+    memcpy(proof + off, NIWI_PROOF_TABLEAU_TAG, 4); off += 4;
+    write_u32_be(proof + off, NIWI_PROOF_TABLEAU_LEAF_COUNT); off += 4;
+    write_u32_be(proof + off, 0); off += 4; /* column index */
+    write_u32_be(proof + off, 0); off += 4; /* witness row */
+    write_u32_be(proof + off, (uint32_t)tableau_leaf_len); off += 4;
+    memcpy(proof + off, tableau_digest, 32);
+    off += 32;
 
+    free(tableau_leaf);
     *proof_out = proof;
     *proof_len = off;
     ctx->error[0] = '\0';
@@ -214,7 +303,7 @@ static int verify_proof_envelope(niwi_ctx_t *ctx,
                                  const uint8_t *public_inputs, size_t pub_len) {
     if (!ctx || !proof || (!public_inputs && pub_len != 0)) return -1;
     if (proof_len < NIWI_PROOF_HEADER_SIZE + NIWI_PROOF_PARAM_SIZE +
-                    4 + 4 + NIWI_PROOF_WITNESS_DIGEST_SIZE) {
+                    NIWI_PROOF_TABLEAU_SIZE) {
         set_error(ctx, "niwi_verify: proof too short");
         return -1;
     }
@@ -260,22 +349,19 @@ static int verify_proof_envelope(niwi_ctx_t *ctx,
     off += NIWI_KLP22_OPENING_SIZE;
 
     off += NIWI_PROOF_PARAM_SIZE;
-    if (off + 8 + 32 > proof_len || memcmp(proof + off, NIWI_PROOF_WITNESS_TAG, 4) != 0) {
-        set_error(ctx, "niwi_verify: missing witness section");
-        return -1;
-    }
-    off += 4;
-    uint32_t witness_len = read_u32_be(proof + off); off += 4;
-    if (witness_len != NIWI_PROOF_WITNESS_DIGEST_SIZE ||
-        off + witness_len != proof_len) {
-        set_error(ctx, "niwi_verify: non-canonical witness section length");
+    uint8_t tableau_digest[32];
+    uint32_t tableau_leaf_len = 0;
+    if (parse_tableau_section(proof, proof_len, &off,
+                              tableau_digest, &tableau_leaf_len) != 0 ||
+        off != proof_len) {
+        set_error(ctx, "niwi_verify: invalid tableau section");
         return -1;
     }
 
     uint8_t commit_preimage[64];
     uint8_t commit_message[32];
     memcpy(commit_preimage, expected_statement, 32);
-    memcpy(commit_preimage + 32, proof + off, 32);
+    memcpy(commit_preimage + 32, tableau_digest, 32);
     niwi_hash_one_shot(NIWI_TAG_EXTR, commit_preimage, sizeof(commit_preimage),
                        commit_message);
     if (niwi_klp22_verify(commitment, commit_message, sizeof(commit_message),
@@ -328,9 +414,14 @@ int niwi_envelope_prove_observed_unchecked(
         set_error(ctx, "niwi_prove_observed: failed to create NPRO");
         return -1;
     }
+    uint8_t *tableau_leaf = NULL;
+    size_t tableau_leaf_len = 0;
     uint8_t leaf_digest[32];
-    if (niwi_npro_query(npro, NIWI_TAG_LEAF, private_inputs, priv_len,
+    if (build_tableau_leaf(private_inputs, priv_len,
+                           &tableau_leaf, &tableau_leaf_len) != 0 ||
+        niwi_npro_query(npro, NIWI_TAG_LEAF, tableau_leaf, tableau_leaf_len,
                         leaf_digest) != 0) {
+        free(tableau_leaf);
         niwi_npro_free(npro);
         niwi_free_buffer(*proof_out);
         *proof_out = NULL;
@@ -338,6 +429,7 @@ int niwi_envelope_prove_observed_unchecked(
         set_error(ctx, "niwi_prove_observed: failed to record witness leaf");
         return -1;
     }
+    free(tableau_leaf);
     niwi_npro_set_cutoff(npro);
     size_t gs = niwi_npro_gamma_size(npro);
     uint8_t *gamma = (uint8_t *)malloc(gs);
@@ -397,10 +489,12 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
     }
 
     size_t off = NIWI_PROOF_HEADER_SIZE + NIWI_PROOF_PARAM_SIZE;
-    off += 4;
-    uint32_t wl = read_u32_be(proof + off); off += 4;
-    if (wl != NIWI_PROOF_WITNESS_DIGEST_SIZE || off + wl != proof_len) {
-        set_error(ctx, "niwi_extract: invalid witness section");
+    uint8_t tableau_digest[32];
+    uint32_t expected_leaf_len = 0;
+    if (parse_tableau_section(proof, proof_len, &off,
+                              tableau_digest, &expected_leaf_len) != 0 ||
+        off != proof_len) {
+        set_error(ctx, "niwi_extract: invalid tableau section");
         return -1;
     }
     niwi_npro_t *npro = niwi_npro_deserialize_gamma(gamma, gamma_len);
@@ -410,30 +504,43 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
     }
 
     size_t recovered_len = 0;
-    if (!niwi_npro_lookup(npro, NIWI_TAG_LEAF, proof + off,
+    if (!niwi_npro_lookup(npro, NIWI_TAG_LEAF, tableau_digest,
                           NULL, &recovered_len)) {
         niwi_npro_free(npro);
-        set_error(ctx, "niwi_extract: missing witness query in Gamma");
+        set_error(ctx, "niwi_extract: missing tableau leaf query in Gamma");
+        return -1;
+    }
+    if (recovered_len != expected_leaf_len) {
+        niwi_npro_free(npro);
+        set_error(ctx, "niwi_extract: tableau leaf length mismatch");
         return -1;
     }
 
-    uint8_t *out = (uint8_t *)malloc(recovered_len ? recovered_len : 1);
-    if (!out) {
+    uint8_t *leaf = (uint8_t *)malloc(recovered_len ? recovered_len : 1);
+    if (!leaf) {
         niwi_npro_free(npro);
         set_error(ctx, "niwi_extract: out of memory");
         return -1;
     }
     size_t out_cap = recovered_len;
-    if (!niwi_npro_lookup(npro, NIWI_TAG_LEAF, proof + off,
-                          out, &out_cap) || out_cap != recovered_len) {
-        free(out);
+    if (!niwi_npro_lookup(npro, NIWI_TAG_LEAF, tableau_digest,
+                          leaf, &out_cap) || out_cap != recovered_len) {
+        free(leaf);
         niwi_npro_free(npro);
-        set_error(ctx, "niwi_extract: failed to copy witness query");
+        set_error(ctx, "niwi_extract: failed to copy tableau leaf query");
         return -1;
     }
     niwi_npro_free(npro);
-    *witness_out = out;
-    *witness_len = recovered_len;
+    uint8_t *witness = NULL;
+    size_t decoded_len = 0;
+    if (decode_tableau_leaf(leaf, recovered_len, &witness, &decoded_len) != 0) {
+        free(leaf);
+        set_error(ctx, "niwi_extract: malformed tableau leaf");
+        return -1;
+    }
+    free(leaf);
+    *witness_out = witness;
+    *witness_len = decoded_len;
     ctx->error[0] = '\0';
     return 0;
 }

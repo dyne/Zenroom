@@ -28,6 +28,9 @@
 #include <string.h>
 
 #define NIWI_EXTRACT_WITNESS_DIGEST_SIZE 32
+#define NIWI_EXTRACT_TABLEAU_TAG "TAB0"
+#define NIWI_EXTRACT_TABLEAU_LEAF_TAG "TBL0"
+#define NIWI_EXTRACT_TABLEAU_HEADER_SIZE (4 + 4 + 4 + 4)
 
 /* ---- Internal extractor context --------------------------------------- */
 
@@ -60,8 +63,9 @@ struct niwi_extract {
     niwi_extract_leaf_t *leaves;
     size_t               num_leaves;
 
-    const uint8_t       *witness_section;
-    size_t               witness_section_len;
+    uint8_t              tableau_digest[32];
+    uint32_t             tableau_leaf_len;
+    int                  has_tableau;
 
     /* Error state */
     int         error_code;
@@ -155,18 +159,23 @@ niwi_extract_t *niwi_extract_create(
     ex->merkle_nleaves = ex->ligero_block_enc - ex->ligero_dblock;
     ex->ligero_nwrow = ex->ligero_nrow - 3 - 0; /* subtract blinding, quadratic rows */
 
-    if (off + 8 <= proof_len && memcmp(proof + off, "WIT0", 4) == 0) {
+    if (off + 52 == proof_len && memcmp(proof + off, NIWI_EXTRACT_TABLEAU_TAG, 4) == 0) {
         off += 4;
-        uint32_t witness_len = read_u32_be(proof + off); off += 4;
-        if (witness_len != NIWI_EXTRACT_WITNESS_DIGEST_SIZE ||
-            off + witness_len != proof_len) {
+        uint32_t count = read_u32_be(proof + off); off += 4;
+        uint32_t index = read_u32_be(proof + off); off += 4;
+        uint32_t row = read_u32_be(proof + off); off += 4;
+        uint32_t leaf_len = read_u32_be(proof + off); off += 4;
+        if (count != 1 || index != 0 || row != 0 ||
+            leaf_len < NIWI_EXTRACT_TABLEAU_HEADER_SIZE ||
+            off + NIWI_EXTRACT_WITNESS_DIGEST_SIZE != proof_len) {
             ex->error_code = NIWI_EXTRACT_ERR_PARSE;
             snprintf(ex->error_msg, sizeof(ex->error_msg),
-                     "invalid witness section length");
+                     "invalid tableau section");
             return ex;
         }
-        ex->witness_section = proof + off;
-        ex->witness_section_len = witness_len;
+        memcpy(ex->tableau_digest, proof + off, NIWI_EXTRACT_WITNESS_DIGEST_SIZE);
+        ex->tableau_leaf_len = leaf_len;
+        ex->has_tableau = 1;
     }
 
     /* 3. Deserialize Gamma */
@@ -291,50 +300,62 @@ int niwi_extract_witness(niwi_extract_t *ex,
                           uint8_t *witness_out, size_t *witness_len) {
     if (!ex || !witness_len) return NIWI_EXTRACT_ERR_PARSE;
 
-    if (ex->witness_section) {
+    if (ex->has_tableau) {
         size_t recovered_len = 0;
-        if (!niwi_npro_lookup(ex->gamma, NIWI_TAG_LEAF, ex->witness_section,
+        if (!niwi_npro_lookup(ex->gamma, NIWI_TAG_LEAF, ex->tableau_digest,
                               NULL, &recovered_len)) {
             ex->error_code = NIWI_EXTRACT_ERR_MISSING_LEAF;
             snprintf(ex->error_msg, sizeof(ex->error_msg),
-                     "missing witness query in Gamma");
+                     "missing tableau leaf query in Gamma");
             return NIWI_EXTRACT_ERR_MISSING_LEAF;
         }
-        if (!witness_out || *witness_len < recovered_len) {
-            *witness_len = recovered_len;
+        if (recovered_len != ex->tableau_leaf_len ||
+            recovered_len < NIWI_EXTRACT_TABLEAU_HEADER_SIZE) {
+            ex->error_code = NIWI_EXTRACT_ERR_WITNESS;
+            snprintf(ex->error_msg, sizeof(ex->error_msg),
+                     "tableau leaf length mismatch");
             return NIWI_EXTRACT_ERR_WITNESS;
         }
-        size_t out_cap = *witness_len;
-        if (!niwi_npro_lookup(ex->gamma, NIWI_TAG_LEAF, ex->witness_section,
-                              witness_out, &out_cap) ||
-            out_cap != recovered_len) {
+        uint8_t *leaf = (uint8_t *)malloc(recovered_len ? recovered_len : 1);
+        if (!leaf) return NIWI_EXTRACT_ERR_MEMORY;
+        size_t leaf_cap = recovered_len;
+        if (!niwi_npro_lookup(ex->gamma, NIWI_TAG_LEAF, ex->tableau_digest,
+                              leaf, &leaf_cap) || leaf_cap != recovered_len) {
+            free(leaf);
             ex->error_code = NIWI_EXTRACT_ERR_MISSING_LEAF;
             snprintf(ex->error_msg, sizeof(ex->error_msg),
-                     "failed to copy witness query from Gamma");
+                     "failed to copy tableau leaf query from Gamma");
             return NIWI_EXTRACT_ERR_MISSING_LEAF;
         }
-        *witness_len = recovered_len;
+        size_t off = 0;
+        if (memcmp(leaf + off, NIWI_EXTRACT_TABLEAU_LEAF_TAG, 4) != 0) {
+            free(leaf);
+            return NIWI_EXTRACT_ERR_WITNESS;
+        }
+        off += 4;
+        if (read_u32_be(leaf + off) != 0) { free(leaf); return NIWI_EXTRACT_ERR_WITNESS; }
+        off += 4;
+        if (read_u32_be(leaf + off) != 0) { free(leaf); return NIWI_EXTRACT_ERR_WITNESS; }
+        off += 4;
+        uint32_t decoded_len = read_u32_be(leaf + off); off += 4;
+        if (off + decoded_len != recovered_len) {
+            free(leaf);
+            return NIWI_EXTRACT_ERR_WITNESS;
+        }
+        if (!witness_out || *witness_len < decoded_len) {
+            *witness_len = decoded_len;
+            free(leaf);
+            return NIWI_EXTRACT_ERR_WITNESS;
+        }
+        if (decoded_len != 0) memcpy(witness_out, leaf + off, decoded_len);
+        *witness_len = decoded_len;
+        free(leaf);
         return NIWI_EXTRACT_OK;
     }
 
-    /* The full witness recovery requires:
-     * 1. Rebuilding the tableau from recovered columns
-     * 2. Extracting witness rows (IW to IQ-1) at witness columns (R to R+W-1)
-     * 3. Deserializing field elements from the column data
-     * 4. Validating against the circuit (re-evaluating)
-     *
-     * This requires the C++ Longfellow Field type for field element
-     * deserialization.  The scaffolding below demonstrates the flow.
-     */
-
-    if (*witness_len < 32) {
-        *witness_len = 0;
-        return NIWI_EXTRACT_ERR_WITNESS;
-    }
-
-    /* Placeholder: return empty witness. */
-    memset(witness_out, 0, 32);
-    *witness_len = 32;
-
-    return NIWI_EXTRACT_OK;
+    *witness_len = 0;
+    ex->error_code = NIWI_EXTRACT_ERR_WITNESS;
+    snprintf(ex->error_msg, sizeof(ex->error_msg),
+             "proof does not contain extractable tableau leaves");
+    return NIWI_EXTRACT_ERR_WITNESS;
 }
