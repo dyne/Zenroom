@@ -193,6 +193,7 @@ function rpbsch.prove_branch(circuit, fixture, branch)
         records[#records + 1] = {
             branch = branch,
             label = item.label,
+            circuit = circuit,
             statement = fixture.statement,
             proof = proof,
             gamma = gamma,
@@ -223,6 +224,7 @@ end
 --- Extract and return the branch witness bytes from the observed Gamma.
 function rpbsch.extract_record(record)
     return niwi.extract_from_gamma_test{
+        circuit = record.circuit,
         proof = record.proof,
         gamma = record.gamma,
         public_inputs = record.public_inputs,

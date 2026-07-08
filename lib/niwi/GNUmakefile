@@ -25,9 +25,14 @@ NIWI_CFLAGS ?= -O2 -I../../src -I. -Isrc -Iinclude -I../../lib/longfellow-zk \
 NIWI_AR ?= ar
 
 NIWI_AMCL := ../../lib/milagro-crypto-c/build/lib/libamcl_core.a
+NIWI_ZK_DEPS := ../../lib/longfellow-zk/liblongfellow-zk.a \
+                ../../lib/zk-circuit-lang/libzk-circuit-lang.a \
+                ../../lib/zstd/libzstd.a \
+                $(NIWI_AMCL)
 
 NIWI_SOURCES := src/niwi.c.o src/encoding.c.o src/hash.c.o src/npro.c.o src/commitment.c.o src/challenge_schedule.c.o src/extract.c.o \
-                src/secp256k1/secp256k1_curve.cc.o src/secp256k1/secp256k1_witness.cc.o
+                src/secp256k1/secp256k1_curve.cc.o src/secp256k1/secp256k1_witness.cc.o \
+                src/relations/bip340_relation.cc.o
 
 all: libniwi.a
 
@@ -36,7 +41,7 @@ libniwi.a: $(NIWI_SOURCES)
 	$(NIWI_AR) -r $@ $(NIWI_SOURCES)
 
 clean:
-	rm -f src/*.c.o tests/*.o src/secp256k1/*.cc.o
+	rm -f src/*.c.o tests/*.o src/secp256k1/*.cc.o src/relations/*.cc.o
 	rm -f *.a test_abi test_encoding test_hash test_npro test_commitment test_challenge_schedule test_niwi_proof_serde test_extract test_vectors test_bench test_secp256k1
 
 %.c.o: %.c
@@ -47,7 +52,7 @@ clean:
 
 # ---- Tests ----
 
-test: test_abi test_encoding test_hash test_npro test_commitment test_challenge_schedule test_niwi_proof_serde test_extract test_vectors test_secp256k1
+test: test_abi test_encoding test_hash test_npro test_commitment test_challenge_schedule test_niwi_proof_serde test_extract test_vectors test_secp256k1 test_bip340_relation
 	./test_abi
 	./test_encoding
 	./test_hash
@@ -58,34 +63,35 @@ test: test_abi test_encoding test_hash test_npro test_commitment test_challenge_
 	./test_extract
 	./test_vectors
 	./test_secp256k1
+	./test_bip340_relation
 	@echo "=== All lib/niwi tests passed ==="
 
 test_abi: tests/test_abi.c.o libniwi.a
-	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_abi.c.o -L. -lniwi $(NIWI_AMCL)
+	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_abi.c.o -L. -lniwi $(NIWI_ZK_DEPS)
 
 test_encoding: tests/test_encoding.c.o libniwi.a
-	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_encoding.c.o -L. -lniwi
+	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_encoding.c.o -L. -lniwi $(NIWI_ZK_DEPS)
 
 test_hash: tests/test_hash.c.o libniwi.a
-	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_hash.c.o -L. -lniwi $(NIWI_AMCL)
+	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_hash.c.o -L. -lniwi $(NIWI_ZK_DEPS)
 
 test_npro: tests/test_npro.c.o libniwi.a
-	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_npro.c.o -L. -lniwi $(NIWI_AMCL)
+	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_npro.c.o -L. -lniwi $(NIWI_ZK_DEPS)
 
 test_commitment: tests/test_commitment.c.o libniwi.a
-	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_commitment.c.o -L. -lniwi $(NIWI_AMCL)
+	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_commitment.c.o -L. -lniwi $(NIWI_ZK_DEPS)
 
 test_challenge_schedule: tests/test_challenge_schedule.c.o libniwi.a
-	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_challenge_schedule.c.o -L. -lniwi $(NIWI_AMCL)
+	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_challenge_schedule.c.o -L. -lniwi $(NIWI_ZK_DEPS)
 
 test_niwi_proof_serde: tests/test_niwi_proof_serde.c.o libniwi.a
-	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_niwi_proof_serde.c.o -L. -lniwi $(NIWI_AMCL)
+	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_niwi_proof_serde.c.o -L. -lniwi $(NIWI_ZK_DEPS)
 
 test_extract: tests/test_extract.c.o libniwi.a
-	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_extract.c.o -L. -lniwi $(NIWI_AMCL)
+	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_extract.c.o -L. -lniwi $(NIWI_ZK_DEPS)
 
 test_vectors: tests/test_vectors.c.o libniwi.a
-	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -o $@ tests/test_vectors.c.o -L. -lniwi $(NIWI_AMCL)
+	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_vectors.c.o -L. -lniwi $(NIWI_ZK_DEPS)
 
 generate-vectors: test_vectors
 	./test_vectors --write
@@ -96,10 +102,10 @@ generate-vectors: test_vectors
 # are template-only; the only link requirement is libniwi.a for the
 # field/curve/scalar/witness object files.
 test_secp256k1: tests/test_secp256k1.cc.o libniwi.a
-	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_secp256k1.cc.o -L. -lniwi \
-		../../lib/longfellow-zk/liblongfellow-zk.a \
-		../../lib/zk-circuit-lang/libzk-circuit-lang.a \
-		../../lib/zstd/libzstd.a
+	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_secp256k1.cc.o -L. -lniwi $(NIWI_ZK_DEPS)
+
+test_bip340_relation: tests/test_bip340_relation.cc.o libniwi.a
+	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_bip340_relation.cc.o -L. -lniwi $(NIWI_ZK_DEPS)
 
 # ---- Benchmarks ----
 
@@ -107,4 +113,4 @@ bench: test_bench
 	./test_bench
 
 test_bench: tests/test_bench.c.o libniwi.a
-	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -O2 -o $@ tests/test_bench.c.o -L. -lniwi $(NIWI_AMCL) -lrt
+	$(NIWI_CXX) $(NIWI_CFLAGS) -O2 -o $@ tests/test_bench.c.o -L. -lniwi $(NIWI_ZK_DEPS) -lrt

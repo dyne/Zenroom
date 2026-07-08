@@ -22,6 +22,7 @@
 #include "commitment.h"
 #include "hash.h"
 #include "npro.h"
+#include "relations/bip340_relation.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -110,13 +111,25 @@ static int validate_relation(niwi_ctx_t *ctx,
                              const uint8_t *public_inputs, size_t pub_len,
                              const uint8_t *private_inputs, size_t priv_len,
                              const char *caller) {
-    if (!ctx || !ctx->validate || ctx->relation_id == NIWI_RELATION_NONE) {
+    if (!ctx || ctx->relation_id == NIWI_RELATION_NONE) {
         set_error(ctx, "niwi: missing relation validator");
         return -1;
     }
-    if (ctx->validate(ctx->validate_user_data,
-                      public_inputs, pub_len,
-                      private_inputs, priv_len) != 0) {
+
+    int rc = -1;
+    if (ctx->validate) {
+        rc = ctx->validate(ctx->validate_user_data,
+                           public_inputs, pub_len,
+                           private_inputs, priv_len);
+    } else if (ctx->relation_id == NIWI_RELATION_ZKCC_BIP340) {
+        rc = niwi_bip340_relation_validate(public_inputs, pub_len,
+                                           private_inputs, priv_len);
+    } else {
+        set_error(ctx, "niwi: missing relation validator");
+        return -1;
+    }
+
+    if (rc != 0) {
         set_error(ctx, caller);
         return -1;
     }

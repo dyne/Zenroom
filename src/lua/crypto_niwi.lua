@@ -40,6 +40,7 @@ end
 local Niwi = {}
 local zkcc_ok, zkcc = pcall(require, 'crypto_zkcc')
 if not zkcc_ok then zkcc = nil end
+local BIP340_RELATION_ARTIFACT = O.from_string("niwi/zkcc-bip340/v1")
 
 local function is_octet(value)
     return type(value) == "zenroom.octet"
@@ -51,7 +52,17 @@ local function has_method(value, name)
     return ok and type(method) == "function"
 end
 
+local function raw_value(value)
+    if value == nil or is_octet(value) then return value end
+    if has_method(value, "raw") then
+        local ok, raw = pcall(function() return value:raw() end)
+        if ok and raw then return raw end
+    end
+    return value
+end
+
 local function as_octet(value, method_name, label)
+    value = raw_value(value)
     if is_octet(value) then return value end
     if has_method(value, method_name) then
         return value[method_name](value)
@@ -59,10 +70,23 @@ local function as_octet(value, method_name, label)
     error(label .. " must be an OCTET or expose :" .. method_name .. "()", 3)
 end
 
+local function relation_template(opts)
+    if type(opts) ~= "table" or not opts.circuit then return nil end
+    local schema = opts.circuit.schema
+    return schema and schema.template or nil
+end
+
+local function circuit_octet(opts)
+    if relation_template(opts) == "bip340" then
+        return BIP340_RELATION_ARTIFACT
+    end
+    return as_octet(opts.circuit, "octet", "circuit")
+end
+
 local function native_opts(opts)
     local out = {}
     for k, v in pairs(opts) do out[k] = v end
-    out.circuit = as_octet(opts.circuit, "octet", "circuit")
+    out.circuit = circuit_octet(opts)
     out.inputs = as_octet(opts.inputs, "octet", "inputs")
     if opts.public_inputs then
         out.public_inputs = as_octet(opts.public_inputs, "public_octet",
@@ -71,8 +95,20 @@ local function native_opts(opts)
     return out
 end
 
+local function circuit_public_opts(opts)
+    local out = {}
+    for k, v in pairs(opts) do out[k] = v end
+    out.circuit = circuit_octet(opts)
+    if opts.public_inputs then
+        out.public_inputs = as_octet(opts.public_inputs, "public_octet",
+                                     "public_inputs")
+    end
+    return out
+end
+
 local function can_validate_relation(opts)
-    return zkcc and not is_octet(opts.circuit) and not is_octet(opts.inputs)
+    return zkcc and relation_template(opts) ~= "bip340" and
+           not is_octet(opts.circuit) and not is_octet(opts.inputs)
 end
 
 local function validate_relation(opts)
@@ -103,6 +139,9 @@ function Niwi.prove_circuit_niwi(opts)
     if type(opts) ~= "table" then
         return native.prove_envelope_unchecked(opts)
     end
+    if relation_template(opts) == "bip340" then
+        return native.prove_bip340_relation(native_opts(opts))
+    end
     -- Passing live zkcc artifact/witness objects enables relation validation.
     -- Raw OCTETs are accepted as the low-level NIWI envelope API.
     validate_relation(opts)
@@ -115,7 +154,7 @@ function Niwi.verify_circuit_niwi(opts)
     end
     local out = {}
     for k, v in pairs(opts) do out[k] = v end
-    out.circuit = as_octet(opts.circuit, "octet", "circuit")
+    out.circuit = circuit_octet(opts)
     if opts.public_inputs then
         out.public_inputs = as_octet(opts.public_inputs, "public_octet",
                                      "public_inputs")
@@ -130,6 +169,10 @@ if native.prove_envelope_with_observation_unchecked_test then
         if type(opts) ~= "table" then
             return native.prove_envelope_with_observation_unchecked_test(opts)
         end
+        if relation_template(opts) == "bip340" then
+            return native.prove_bip340_relation_with_observation_test(
+                native_opts(opts))
+        end
         validate_relation(opts)
         return native.prove_envelope_with_observation_unchecked_test(native_opts(opts))
     end
@@ -138,6 +181,12 @@ if native.extract_from_gamma_unchecked_test then
     function Niwi.extract_from_gamma_test(opts)
         if type(opts) ~= "table" then
             return native.extract_from_gamma_unchecked_test(opts)
+        end
+        if relation_template(opts) == "bip340" then
+            local out = circuit_public_opts(opts)
+            out.proof = as_octet(opts.proof, "octet", "proof")
+            out.gamma = as_octet(opts.gamma, "octet", "gamma")
+            return native.extract_bip340_relation_from_gamma_test(out)
         end
         local out = {}
         for k, v in pairs(opts) do out[k] = v end
@@ -152,11 +201,16 @@ end
 -- Expose explicit low-level names for tests and adapters that deliberately
 -- operate on proof envelopes instead of relation-checked circuit objects.
 Niwi.prove_envelope_unchecked = native.prove_envelope_unchecked
+Niwi.prove_bip340_relation = native.prove_bip340_relation
 Niwi.verify_envelope = native.verify_envelope
 Niwi.prove_envelope_with_observation_unchecked_test =
     native.prove_envelope_with_observation_unchecked_test
+Niwi.prove_bip340_relation_with_observation_test =
+    native.prove_bip340_relation_with_observation_test
 Niwi.extract_from_gamma_unchecked_test =
     native.extract_from_gamma_unchecked_test
+Niwi.extract_bip340_relation_from_gamma_test =
+    native.extract_bip340_relation_from_gamma_test
 
 -- Protocol metadata
 Niwi.PROTOCOL_VERSION = native.PROTOCOL_VERSION
