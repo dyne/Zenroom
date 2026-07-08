@@ -279,6 +279,9 @@ int niwi_npro_lookup(const niwi_npro_t *npro,
 
         if (memcmp(q->domain, domain, 4) == 0 &&
             memcmp(q->output, output_digest, 32) == 0) {
+            uint8_t recomputed[32];
+            niwi_hash_one_shot(q->domain, q->input, q->input_len, recomputed);
+            if (memcmp(recomputed, q->output, 32) != 0) continue;
             if (found) return 0; /* ambiguous Gamma */
             found_input = q->input;
             found_len = q->input_len;

@@ -161,6 +161,15 @@ static void test_prove_observed(void) {
 
     niwi_free_buffer(witness);
 
+    gamma[16] ^= 0x01; /* mutate recorded input, keep recorded digest */
+    witness = NULL;
+    witness_len = 0;
+    assert(niwi_extract(ctx, proof, proof_len, gamma, gamma_len,
+                        public_inputs, sizeof(public_inputs),
+                        &witness, &witness_len) != 0);
+    assert(witness == NULL);
+    gamma[16] ^= 0x01;
+
     gamma[gamma_len - 1] ^= 0x01;
     witness = NULL;
     witness_len = 0;
