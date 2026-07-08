@@ -2,9 +2,11 @@
 
 local pbsch = require'crypto_pbsch'
 local niwi = require'niwi'
+local schnorr = require'crypto_schnorr_signature'
 
 assert(pbsch, 'crypto_pbsch module not loaded')
 assert(niwi, 'niwi module not loaded')
+assert(schnorr, 'crypto_schnorr_signature module not loaded')
 
 local function oct(hex)
   return OCTET.from_hex(hex)
@@ -12,6 +14,12 @@ end
 
 local function fill(byte, n)
   return oct(string.rep(byte, n))
+end
+
+local function flip_last_nibble(value)
+  local hex = value:hex()
+  local last = tonumber(hex:sub(#hex, #hex), 16)
+  return OCTET.from_hex(hex:sub(1, #hex - 1) .. string.format('%x', last ~ 1))
 end
 
 print('=== PBSch vectors ===')
@@ -54,23 +62,44 @@ local same_nu_ok = pcall(function()
 end)
 assert(same_nu_ok == false, "equal nu_u and nu_u' must be rejected")
 
-local X = fill('88', 32)
-local X_prime = fill('99', 32)
+local sk = oct('0000000000000000000000000000000000000000000000000000000000000003')
+local sk_prime = oct('B7E151628AED2A6ABF7158809CF4F3C762E7160F38B4DA56A784D9045190CFEF')
+local X = schnorr.pubgen(sk)
+local X_prime = schnorr.pubgen(sk_prime)
 local statement = pbsch.assemble_statement(X, X_prime, C, S)
 assert(type(statement) == 'zenroom.octet', 'statement must be an octet')
 assert(#statement == 130, 'statement must be X || X_prime || C || S')
 
-local session = pbsch.setup{ x = X, x_prime = X_prime }
+local session = pbsch.setup{ x = X, x_prime = X_prime, sk = sk }
 assert(session.state == 'setup', 'session must start in setup state')
 local message = fill('aa', 32)
 local R = pbsch.sign0(session, message)
 assert(#R == 32 and session.state == 'sign0', 'sign0 must return 32-byte R')
-local Rp = pbsch.user1(session, fill('ab', 32), fill('ac', 32))
+
+local alpha
+local beta
+local Rp
+for i = 1, 32 do
+  alpha = sha256('pbsch test alpha ' .. tostring(i))
+  beta = sha256('pbsch test beta ' .. tostring(i))
+  local ok, candidate = pcall(function()
+    return pbsch.user1(session, alpha, beta)
+  end)
+  if ok then
+    Rp = candidate
+    break
+  end
+  session.state = 'sign0'
+end
+assert(Rp, 'test must find alpha/beta yielding even R prime')
 assert(#Rp == 32 and session.state == 'user1', 'user1 must return 32-byte R prime')
 local c = pbsch.sign2(session, Rp)
 assert(#c == 32 and session.state == 'sign2', 'sign2 must return 32-byte challenge')
 local sigma = pbsch.user3(session)
 assert(#sigma == 64 and session.state == 'finished', 'user3 must return BIP340-sized signature')
-assert(pbsch.verify(session, sigma, message) == true, 'placeholder verify must return true')
+assert(pbsch.verify(session, sigma, message) == true, 'PBSch signature must verify')
+assert(schnorr.verify(X, message, sigma) == true, 'PBSch signature must be valid BIP340')
+local bad_sigma = flip_last_nibble(sigma)
+assert(pbsch.verify(session, bad_sigma, message) == false, 'bad PBSch signature accepted')
 
 print('✓ PBSch primitive vectors passed')

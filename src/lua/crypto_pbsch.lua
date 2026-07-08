@@ -37,8 +37,12 @@
 
 local niwi = require('niwi')
 if not niwi then return nil end
+local schnorr = require('crypto_schnorr_signature')
+if not schnorr then return nil end
 
 local pbsch = {}
+local S = SECP
+local G = S.G()
 
 -- Protocol metadata
 pbsch.PROFILE   = "pbsch-v1-secp256k1"
@@ -46,6 +50,51 @@ pbsch.C_SIZE    = 33
 pbsch.S_SIZE    = 33
 pbsch.RAND_SIZE = 32
 pbsch.MSG_SIZE  = 32
+
+local function fail(message)
+    error(message, 2)
+end
+
+local function octet_eq(a, b)
+    return a and b and a:hex() == b:hex()
+end
+
+local function even_y(P)
+    return P:compressed():hex():sub(1, 2) == "02"
+end
+
+local function normalize_bip340_secret(sk)
+    if #sk ~= 32 then fail("secret key must be 32 bytes") end
+    if not S.bip340_seckey_valid(sk) then fail("invalid BIP-340 secret key") end
+    local d = sk
+    local P = G * d
+    if not even_y(P) then
+        d = S.bip340_scalar_negate(d)
+        P = G * d
+    end
+    return d, P:xonly()
+end
+
+local function lift_x(xonly, context)
+    local ok, P = pcall(function() return S.bip340_lift_x(xonly) end)
+    if not ok or not P then fail(context .. ": invalid x-only point") end
+    return P
+end
+
+local function challenge(rx, px, message)
+    local h = S.bip340_tagged_hash("BIP0340/challenge", rx .. px .. message)
+    return S.bip340_challenge_reduce(h)
+end
+
+local function derive_valid_scalar(seed)
+    local counter = 0
+    local k = sha256(seed .. tostring(counter))
+    while not S.bip340_seckey_valid(k) do
+        counter = counter + 1
+        k = sha256(seed .. tostring(counter))
+    end
+    return k
+end
 
 -- ===========================================================================
 -- Profile validation
@@ -63,6 +112,9 @@ function pbsch.validate_profile(profile)
     end
     if not profile.x_prime or #profile.x_prime:str() ~= 32 then
         return false, "profile.x_prime must be a 32-byte x-only public key"
+    end
+    if profile.sk and #profile.sk:str() ~= 32 then
+        return false, "profile.sk must be a 32-byte BIP-340 secret key"
     end
     return true
 end
@@ -140,14 +192,23 @@ end
 -- ===========================================================================
 
 --- Create a new PBSch session.
--- @param profile  { x = OCTET(32), x_prime = OCTET(32) }
+-- @param profile  { x = OCTET(32), x_prime = OCTET(32), sk = OCTET(32) optional }
 -- @return session table
 function pbsch.setup(profile)
     local ok, err = pbsch.validate_profile(profile)
     if not ok then error("pbsch.setup: " .. err) end
+    local sk
+    if profile.sk then
+        local normalized_sk, pk = normalize_bip340_secret(profile.sk)
+        if not octet_eq(pk, profile.x) then
+            fail("pbsch.setup: profile.sk does not match profile.x")
+        end
+        sk = normalized_sk
+    end
     return {
         X       = profile.x,
         X_prime = profile.x_prime,
+        sk      = sk,
         state   = "setup",
         retries = 0,
         max_retries = 10,
@@ -156,7 +217,7 @@ end
 
 --- Sign0: Signer generates ephemeral nonce R = r·G.
 -- In deterministic test mode, r is derived from session + message.
--- @return R_x (32-byte OCTET, x-only even-y)
+-- @return R_x (32-byte OCTET, x-only)
 function pbsch.sign0(session, message)
     assert(session.state == "setup",
            "sign0: expected state 'setup', got '" .. session.state .. "'")
@@ -167,12 +228,9 @@ function pbsch.sign0(session, message)
     -- r = SHA-256("PBSch/sign0" || X || X' || message)
     local seed = "PBSch/sign0" .. session.X:str() .. session.X_prime:str()
                   .. message:str()
-    session.r = sha256(seed)
-
-    -- R = r·G (TODO: needs native secp256k1 scalar mult exposed)
-    -- For now placeholder; will be replaced when native SECP scalar mult
-    -- is available through Lua bindings.
-    session.R = OCTET.random(32)
+    session.r = derive_valid_scalar(seed)
+    session.R_point = G * session.r
+    session.R = session.R_point:xonly()
 
     session.state = "sign0"
     return session.R
@@ -190,55 +248,81 @@ function pbsch.user1(session, alpha, beta)
     session.alpha = alpha
     session.beta  = beta
 
-    -- R' = R + alpha·G + beta·X  (TODO: needs native SECP point add/mul)
-    -- For now placeholder.
-    session.R_prime = OCTET.random(32)
-    session.R_prime_parity = 0  -- even
+    local X = lift_x(session.X, "user1")
+    local R_prime = session.R_point + (G * alpha) + (X * beta)
+    if R_prime:isinf() then
+        fail("user1: R prime is infinity; retry alpha/beta")
+    end
+    if not even_y(R_prime) then
+        fail("user1: R prime must have even y; retry alpha/beta")
+    end
+
+    session.X_point = X
+    session.R_prime_point = R_prime
+    session.R_prime = R_prime:xonly()
+    session.R_prime_parity = 0
 
     session.state = "user1"
     return session.R_prime
 end
 
 --- Sign2: Signer receives R', computes challenge c.
--- c = Hq(R'_x, X_x, m) + beta mod n  (TODO: needs BIP-340 challenge)
+-- c = Hq(R'_x, X_x, m) + beta mod n
 -- @return c (32-byte scalar OCTET)
 function pbsch.sign2(session, R_prime_x)
     assert(session.state == "user1",
            "sign2: expected state 'user1', got '" .. session.state .. "'")
     assert(#R_prime_x:str() == 32, "R_prime_x must be 32 bytes")
+    assert(session.sk, "sign2: session.sk is required for Lua PBSch signing")
+    assert(octet_eq(R_prime_x, session.R_prime),
+           "sign2: R_prime_x must match User1 output")
 
-    session.R_prime = R_prime_x
-
-    -- c = Hq(R'_x, X_x, m) + beta mod n
-    -- TODO: needs BIP-340 tagged_hash native binding
-    session.c = OCTET.random(32)  -- placeholder
+    local e = challenge(R_prime_x, session.X, session.message)
+    session.e = e
+    session.c = S.bip340_scalar_add(e, session.beta)
+    session.signer_s = S.bip340_scalar_add(
+        session.r,
+        S.bip340_scalar_mul(session.c, session.sk)
+    )
 
     session.state = "sign2"
     return session.c
 end
 
 --- User3: User derives final signature from c and alpha.
--- s = c + alpha mod n
+-- s' = s + alpha mod n, where signer response s = r + c*x.
 -- @return sigma (64-byte BIP-340 signature: R_x || s)
 function pbsch.user3(session)
     assert(session.state == "sign2",
            "user3: expected state 'sign2', got '" .. session.state .. "'")
 
-    -- s = c + alpha mod n  (TODO: needs native scalar add mod n)
-    local s = OCTET.random(32)  -- placeholder
+    local left = G * session.signer_s
+    local right = session.R_point + (session.X_point * session.c)
+    if left:compressed():hex() ~= right:compressed():hex() then
+        fail("user3: signer response does not satisfy sG = R + cX")
+    end
 
-    -- signature = R_x || s
-    local sigma = session.R:str() .. s:str()
+    local s = S.bip340_scalar_add(session.signer_s, session.alpha)
 
+    -- BIP-340 signature = x(R') || s'. The paper's blind-signature
+    -- transcript carries full points; this compact Lua API keeps full points
+    -- in-session and exposes only the x-only values needed by BIP-340 tests.
+    local sigma = session.R_prime .. s
+
+    session.s = s
+    session.signature = sigma
     session.state = "finished"
-    return OCTET.from_string(sigma)
+    return sigma
 end
 
 --- Verify a completed PBSch signature using native BIP-340 verification.
 -- @return true if valid
 function pbsch.verify(session, sigma, message)
-    -- TODO: call native BIP-340 verify
-    return true  -- placeholder
+    if not session or not session.X or not sigma or not message then return false end
+    local ok, verified = pcall(function()
+        return schnorr.verify(session.X, message, sigma)
+    end)
+    return ok and verified == true
 end
 
 return pbsch
