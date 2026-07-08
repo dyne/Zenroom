@@ -46,13 +46,24 @@ static uint32_t read_u32_be(const uint8_t *in) {
 }
 
 struct niwi_ctx {
-    /* Placeholder: owned copy of the circuit artifact. */
     uint8_t *artifact;
     size_t   artifact_len;
+    niwi_relation_id_t relation_id;
+    niwi_relation_validate_fn validate;
+    void *validate_user_data;
     char     error[256];
 };
 
 niwi_ctx_t *niwi_ctx_create(const uint8_t *circuit_artifact, size_t len) {
+    return niwi_ctx_create_with_relation(circuit_artifact, len,
+                                         NIWI_RELATION_NONE, NULL, NULL);
+}
+
+niwi_ctx_t *niwi_ctx_create_with_relation(
+    const uint8_t *circuit_artifact, size_t len,
+    niwi_relation_id_t relation_id,
+    niwi_relation_validate_fn validate,
+    void *validate_user_data) {
     if (!circuit_artifact && len != 0) return NULL;
 
     niwi_ctx_t *ctx = (niwi_ctx_t *)calloc(1, sizeof(*ctx));
@@ -66,6 +77,9 @@ niwi_ctx_t *niwi_ctx_create(const uint8_t *circuit_artifact, size_t len) {
         memcpy(ctx->artifact, circuit_artifact, len);
     }
     ctx->artifact_len = len;
+    ctx->relation_id = relation_id;
+    ctx->validate = validate;
+    ctx->validate_user_data = validate_user_data;
     ctx->error[0] = '\0';
     return ctx;
 }
@@ -90,6 +104,23 @@ const char *niwi_last_error(niwi_ctx_t *ctx) {
 
 const char *niwi_protocol_version(void) {
     return "niwi-v1";
+}
+
+static int validate_relation(niwi_ctx_t *ctx,
+                             const uint8_t *public_inputs, size_t pub_len,
+                             const uint8_t *private_inputs, size_t priv_len,
+                             const char *caller) {
+    if (!ctx || !ctx->validate || ctx->relation_id == NIWI_RELATION_NONE) {
+        set_error(ctx, "niwi: missing relation validator");
+        return -1;
+    }
+    if (ctx->validate(ctx->validate_user_data,
+                      public_inputs, pub_len,
+                      private_inputs, priv_len) != 0) {
+        set_error(ctx, caller);
+        return -1;
+    }
+    return 0;
 }
 
 static int build_proof(niwi_ctx_t *ctx,
@@ -244,19 +275,33 @@ static int verify_proof_envelope(niwi_ctx_t *ctx,
     return 0;
 }
 
-int niwi_prove(niwi_ctx_t *ctx,
-               const uint8_t *public_inputs, size_t pub_len,
-               const uint8_t *private_inputs, size_t priv_len,
-               uint8_t **proof_out, size_t *proof_len) {
+int niwi_envelope_prove_unchecked(niwi_ctx_t *ctx,
+                                  const uint8_t *public_inputs, size_t pub_len,
+                                  const uint8_t *private_inputs, size_t priv_len,
+                                  uint8_t **proof_out, size_t *proof_len) {
     return build_proof(ctx, public_inputs, pub_len, private_inputs, priv_len,
                        proof_out, proof_len);
 }
 
-int niwi_prove_observed(niwi_ctx_t *ctx,
-                        const uint8_t *public_inputs, size_t pub_len,
-                        const uint8_t *private_inputs, size_t priv_len,
-                        uint8_t **proof_out, size_t *proof_len,
-                        uint8_t **gamma_out, size_t *gamma_len) {
+int niwi_prove(niwi_ctx_t *ctx,
+               const uint8_t *public_inputs, size_t pub_len,
+               const uint8_t *private_inputs, size_t priv_len,
+               uint8_t **proof_out, size_t *proof_len) {
+    if (validate_relation(ctx, public_inputs, pub_len,
+                          private_inputs, priv_len,
+                          "niwi_prove: relation validation failed") != 0)
+        return -1;
+    return niwi_envelope_prove_unchecked(ctx, public_inputs, pub_len,
+                                         private_inputs, priv_len,
+                                         proof_out, proof_len);
+}
+
+int niwi_envelope_prove_observed_unchecked(
+    niwi_ctx_t *ctx,
+    const uint8_t *public_inputs, size_t pub_len,
+    const uint8_t *private_inputs, size_t priv_len,
+    uint8_t **proof_out, size_t *proof_len,
+    uint8_t **gamma_out, size_t *gamma_len) {
     if (!gamma_out || !gamma_len) return -1;
     if (build_proof(ctx, public_inputs, pub_len, private_inputs, priv_len,
                     proof_out, proof_len) != 0)
@@ -299,17 +344,37 @@ int niwi_prove_observed(niwi_ctx_t *ctx,
     return 0;
 }
 
-int niwi_verify(niwi_ctx_t *ctx,
-                const uint8_t *proof, size_t proof_len,
-                const uint8_t *public_inputs, size_t pub_len) {
+int niwi_prove_observed(niwi_ctx_t *ctx,
+                        const uint8_t *public_inputs, size_t pub_len,
+                        const uint8_t *private_inputs, size_t priv_len,
+                        uint8_t **proof_out, size_t *proof_len,
+                        uint8_t **gamma_out, size_t *gamma_len) {
+    if (validate_relation(ctx, public_inputs, pub_len,
+                          private_inputs, priv_len,
+                          "niwi_prove_observed: relation validation failed") != 0)
+        return -1;
+    return niwi_envelope_prove_observed_unchecked(
+        ctx, public_inputs, pub_len, private_inputs, priv_len,
+        proof_out, proof_len, gamma_out, gamma_len);
+}
+
+int niwi_envelope_verify(niwi_ctx_t *ctx,
+                         const uint8_t *proof, size_t proof_len,
+                         const uint8_t *public_inputs, size_t pub_len) {
     return verify_proof_envelope(ctx, proof, proof_len, public_inputs, pub_len);
 }
 
-int niwi_extract(niwi_ctx_t *ctx,
-                 const uint8_t *proof, size_t proof_len,
-                 const uint8_t *gamma, size_t gamma_len,
-                 const uint8_t *public_inputs, size_t pub_len,
-                 uint8_t **witness_out, size_t *witness_len) {
+int niwi_verify(niwi_ctx_t *ctx,
+                const uint8_t *proof, size_t proof_len,
+                const uint8_t *public_inputs, size_t pub_len) {
+    return niwi_envelope_verify(ctx, proof, proof_len, public_inputs, pub_len);
+}
+
+int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
+                                    const uint8_t *proof, size_t proof_len,
+                                    const uint8_t *gamma, size_t gamma_len,
+                                    const uint8_t *public_inputs, size_t pub_len,
+                                    uint8_t **witness_out, size_t *witness_len) {
     if (!ctx || !gamma || !witness_out || !witness_len) return -1;
     if (verify_proof_envelope(ctx, proof, proof_len, public_inputs, pub_len) != 0)
         return -1;
@@ -356,6 +421,28 @@ int niwi_extract(niwi_ctx_t *ctx,
     niwi_npro_free(npro);
     *witness_out = out;
     *witness_len = recovered_len;
+    ctx->error[0] = '\0';
+    return 0;
+}
+
+int niwi_extract(niwi_ctx_t *ctx,
+                 const uint8_t *proof, size_t proof_len,
+                 const uint8_t *gamma, size_t gamma_len,
+                 const uint8_t *public_inputs, size_t pub_len,
+                 uint8_t **witness_out, size_t *witness_len) {
+    uint8_t *witness = NULL;
+    size_t len = 0;
+    if (niwi_envelope_extract_unchecked(ctx, proof, proof_len, gamma, gamma_len,
+                                        public_inputs, pub_len,
+                                        &witness, &len) != 0)
+        return -1;
+    if (validate_relation(ctx, public_inputs, pub_len, witness, len,
+                          "niwi_extract: extracted witness does not satisfy relation") != 0) {
+        free(witness);
+        return -1;
+    }
+    *witness_out = witness;
+    *witness_len = len;
     ctx->error[0] = '\0';
     return 0;
 }

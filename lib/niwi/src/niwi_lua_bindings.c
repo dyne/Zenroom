@@ -60,10 +60,10 @@ static const octet *table_get_octet(lua_State *L, int table_idx,
     return o;
 }
 
-/* ---- prove_circuit_niwi ---------------------------------------------- */
+/* ---- prove_envelope_unchecked ---------------------------------------- */
 
 /*
- * Usage: proof = zkcore.prove_circuit_niwi({
+ * Usage: proof = zkcore.prove_envelope_unchecked({
  *     circuit = <circuit artifact>,
  *     inputs = <witness inputs>,
  *     public_inputs = <optional public statement inputs>,
@@ -72,16 +72,16 @@ static const octet *table_get_octet(lua_State *L, int table_idx,
  *
  * Returns: OCTET containing the NiwiProof.
  */
-static int lua_prove_circuit_niwi(lua_State *L) {
+static int lua_prove_envelope_unchecked(lua_State *L) {
     if (!lua_istable(L, 1)) {
-        lerror(L, "prove_circuit_niwi: expected table argument");
+        lerror(L, "prove_envelope_unchecked: expected table argument");
         return 0;
     }
 
     /* Extract circuit artifact. */
     const octet *circuit_oct = table_get_octet(L, 1, "circuit");
     if (!circuit_oct) {
-        lerror(L, "prove_circuit_niwi: missing 'circuit' field");
+        lerror(L, "prove_envelope_unchecked: missing 'circuit' field");
         return 0;
     }
 
@@ -89,7 +89,7 @@ static int lua_prove_circuit_niwi(lua_State *L) {
     const octet *inputs_oct = table_get_octet(L, 1, "inputs");
     if (!inputs_oct) {
         o_free(L, circuit_oct);
-        lerror(L, "prove_circuit_niwi: missing 'inputs' field");
+        lerror(L, "prove_envelope_unchecked: missing 'inputs' field");
         return 0;
     }
 
@@ -107,7 +107,7 @@ static int lua_prove_circuit_niwi(lua_State *L) {
         if (pub_oct != inputs_oct) o_free(L, pub_oct);
         o_free(L, inputs_oct);
         o_free(L, circuit_oct);
-        lerror(L, "prove_circuit_niwi: failed to create context");
+        lerror(L, "prove_envelope_unchecked: failed to create context");
         return 0;
     }
 
@@ -115,10 +115,11 @@ static int lua_prove_circuit_niwi(lua_State *L) {
     uint8_t *proof_out = NULL;
     size_t proof_len = 0;
 
-    int rc = niwi_prove(ctx,
-                         (const uint8_t *)o_val(pub_oct), o_len(pub_oct),
-                         (const uint8_t *)o_val(inputs_oct), o_len(inputs_oct),
-                         &proof_out, &proof_len);
+    int rc = niwi_envelope_prove_unchecked(
+        ctx,
+        (const uint8_t *)o_val(pub_oct), o_len(pub_oct),
+        (const uint8_t *)o_val(inputs_oct), o_len(inputs_oct),
+        &proof_out, &proof_len);
 
     const char *err = niwi_last_error(ctx);
 
@@ -129,9 +130,9 @@ static int lua_prove_circuit_niwi(lua_State *L) {
         o_free(L, inputs_oct);
         o_free(L, circuit_oct);
         if (err)
-            lerror(L, "prove_circuit_niwi: %s", err);
+            lerror(L, "prove_envelope_unchecked: %s", err);
         else
-            lerror(L, "prove_circuit_niwi: unknown error");
+            lerror(L, "prove_envelope_unchecked: unknown error");
         return 0;
     }
 
@@ -148,10 +149,10 @@ static int lua_prove_circuit_niwi(lua_State *L) {
     return 1;
 }
 
-/* ---- verify_circuit_niwi --------------------------------------------- */
+/* ---- verify_envelope -------------------------------------------------- */
 
 /*
- * Usage: ok = zkcore.verify_circuit_niwi({
+ * Usage: ok = zkcore.verify_envelope({
  *     circuit = <circuit artifact>,
  *     proof = <OCTET NiwiProof>,
  *     public_inputs = <OCTET public inputs>
@@ -159,9 +160,9 @@ static int lua_prove_circuit_niwi(lua_State *L) {
  *
  * Returns: boolean.
  */
-static int lua_verify_circuit_niwi(lua_State *L) {
+static int lua_verify_envelope(lua_State *L) {
     if (!lua_istable(L, 1)) {
-        lerror(L, "verify_circuit_niwi: expected table argument");
+        lerror(L, "verify_envelope: expected table argument");
         return 0;
     }
 
@@ -170,18 +171,18 @@ static int lua_verify_circuit_niwi(lua_State *L) {
     const octet *pub_oct      = table_get_octet(L, 1, "public_inputs");
 
     if (!circuit_oct) {
-        lerror(L, "verify_circuit_niwi: missing 'circuit' field");
+        lerror(L, "verify_envelope: missing 'circuit' field");
         return 0;
     }
     if (!proof_oct) {
         o_free(L, circuit_oct);
-        lerror(L, "verify_circuit_niwi: missing 'proof' field");
+        lerror(L, "verify_envelope: missing 'proof' field");
         return 0;
     }
     if (!pub_oct) {
         o_free(L, proof_oct);
         o_free(L, circuit_oct);
-        lerror(L, "verify_circuit_niwi: missing 'public_inputs' field");
+        lerror(L, "verify_envelope: missing 'public_inputs' field");
         return 0;
     }
 
@@ -191,13 +192,14 @@ static int lua_verify_circuit_niwi(lua_State *L) {
         o_free(L, pub_oct);
         o_free(L, proof_oct);
         o_free(L, circuit_oct);
-        lerror(L, "verify_circuit_niwi: failed to create context");
+        lerror(L, "verify_envelope: failed to create context");
         return 0;
     }
 
-    int rc = niwi_verify(ctx,
-                          (const uint8_t *)o_val(proof_oct), o_len(proof_oct),
-                          (const uint8_t *)o_val(pub_oct), o_len(pub_oct));
+    int rc = niwi_envelope_verify(
+        ctx,
+        (const uint8_t *)o_val(proof_oct), o_len(proof_oct),
+        (const uint8_t *)o_val(pub_oct), o_len(pub_oct));
 
     niwi_ctx_free(ctx);
     o_free(L, pub_oct);
@@ -227,10 +229,10 @@ static int lua_niwi_profile(lua_State *L) {
     return 1;
 }
 
-/* ---- prove_with_observation_test (test-only) ------------------------- */
+/* ---- prove_envelope_with_observation_unchecked_test (test-only) ------ */
 
 /*
- * Usage: proof, gamma = zkcore.prove_with_observation_test({
+ * Usage: proof, gamma = zkcore.prove_envelope_with_observation_unchecked_test({
  *     circuit = <circuit artifact>,
  *     inputs = <witness inputs>,
  *     public_inputs = <optional public statement inputs>
@@ -238,9 +240,9 @@ static int lua_niwi_profile(lua_State *L) {
  *
  * Returns: two OCTETs (proof, gamma).
  */
-static int lua_prove_with_observation_test(lua_State *L) {
+static int lua_prove_envelope_with_observation_unchecked_test(lua_State *L) {
     if (!lua_istable(L, 1)) {
-        lerror(L, "prove_with_observation_test: expected table argument");
+        lerror(L, "prove_envelope_with_observation_unchecked_test: expected table argument");
         return 0;
     }
 
@@ -251,7 +253,7 @@ static int lua_prove_with_observation_test(lua_State *L) {
     if (!circuit_oct || !inputs_oct) {
         o_free(L, inputs_oct);
         o_free(L, circuit_oct);
-        lerror(L, "prove_with_observation_test: missing required fields");
+        lerror(L, "prove_envelope_with_observation_unchecked_test: missing required fields");
         return 0;
     }
     pub_oct = table_get_octet(L, 1, "public_inputs");
@@ -263,18 +265,19 @@ static int lua_prove_with_observation_test(lua_State *L) {
         if (pub_oct != inputs_oct) o_free(L, pub_oct);
         o_free(L, inputs_oct);
         o_free(L, circuit_oct);
-        lerror(L, "prove_with_observation_test: failed to create context");
+        lerror(L, "prove_envelope_with_observation_unchecked_test: failed to create context");
         return 0;
     }
 
     uint8_t *proof_out = NULL, *gamma_out = NULL;
     size_t proof_len = 0, gamma_len = 0;
 
-    int rc = niwi_prove_observed(ctx,
-                                  (const uint8_t *)o_val(pub_oct), o_len(pub_oct),
-                                  (const uint8_t *)o_val(inputs_oct), o_len(inputs_oct),
-                                  &proof_out, &proof_len,
-                                  &gamma_out, &gamma_len);
+    int rc = niwi_envelope_prove_observed_unchecked(
+        ctx,
+        (const uint8_t *)o_val(pub_oct), o_len(pub_oct),
+        (const uint8_t *)o_val(inputs_oct), o_len(inputs_oct),
+        &proof_out, &proof_len,
+        &gamma_out, &gamma_len);
 
     if (rc != 0) {
         const char *err = niwi_last_error(ctx);
@@ -282,7 +285,7 @@ static int lua_prove_with_observation_test(lua_State *L) {
         if (pub_oct != inputs_oct) o_free(L, pub_oct);
         o_free(L, inputs_oct);
         o_free(L, circuit_oct);
-        lerror(L, "prove_with_observation_test: %s",
+        lerror(L, "prove_envelope_with_observation_unchecked_test: %s",
                err ? err : "unknown error");
         return 0;
     }
@@ -301,10 +304,10 @@ static int lua_prove_with_observation_test(lua_State *L) {
     return 2;
 }
 
-/* ---- extract_from_gamma_test (test-only) ----------------------------- */
+/* ---- extract_from_gamma_unchecked_test (test-only) ------------------- */
 
 /*
- * Usage: witness = zkcore.extract_from_gamma_test({
+ * Usage: witness = zkcore.extract_from_gamma_unchecked_test({
  *     proof = <OCTET NiwiProof>,
  *     gamma = <OCTET Gamma log>,
  *     public_inputs = <OCTET public inputs>
@@ -312,9 +315,9 @@ static int lua_prove_with_observation_test(lua_State *L) {
  *
  * Returns: OCTET witness.
  */
-static int lua_extract_from_gamma_test(lua_State *L) {
+static int lua_extract_from_gamma_unchecked_test(lua_State *L) {
     if (!lua_istable(L, 1)) {
-        lerror(L, "extract_from_gamma_test: expected table argument");
+        lerror(L, "extract_from_gamma_unchecked_test: expected table argument");
         return 0;
     }
 
@@ -326,7 +329,7 @@ static int lua_extract_from_gamma_test(lua_State *L) {
         o_free(L, pub_oct);
         o_free(L, gamma_oct);
         o_free(L, proof_oct);
-        lerror(L, "extract_from_gamma_test: missing required fields");
+        lerror(L, "extract_from_gamma_unchecked_test: missing required fields");
         return 0;
     }
 
@@ -339,7 +342,7 @@ static int lua_extract_from_gamma_test(lua_State *L) {
         o_free(L, pub_oct);
         o_free(L, gamma_oct);
         o_free(L, proof_oct);
-        lerror(L, "extract_from_gamma_test: failed to create extractor");
+        lerror(L, "extract_from_gamma_unchecked_test: failed to create extractor");
         return 0;
     }
 
@@ -349,7 +352,7 @@ static int lua_extract_from_gamma_test(lua_State *L) {
         o_free(L, pub_oct);
         o_free(L, gamma_oct);
         o_free(L, proof_oct);
-        lerror(L, "extract_from_gamma_test: %s", err);
+        lerror(L, "extract_from_gamma_unchecked_test: %s", err);
         return 0;
     }
 
@@ -360,7 +363,7 @@ static int lua_extract_from_gamma_test(lua_State *L) {
         o_free(L, pub_oct);
         o_free(L, gamma_oct);
         o_free(L, proof_oct);
-        lerror(L, "extract_from_gamma_test: extraction failed");
+        lerror(L, "extract_from_gamma_unchecked_test: extraction failed");
         return 0;
     }
 
@@ -370,7 +373,7 @@ static int lua_extract_from_gamma_test(lua_State *L) {
         o_free(L, pub_oct);
         o_free(L, gamma_oct);
         o_free(L, proof_oct);
-        lerror(L, "extract_from_gamma_test: out of memory");
+        lerror(L, "extract_from_gamma_unchecked_test: out of memory");
         return 0;
     }
 
@@ -384,7 +387,7 @@ static int lua_extract_from_gamma_test(lua_State *L) {
 
     if (rc != NIWI_EXTRACT_OK || out_len != wlen) {
         free(witness_buf);
-        lerror(L, "extract_from_gamma_test: extraction failed");
+        lerror(L, "extract_from_gamma_unchecked_test: extraction failed");
         return 0;
     }
 
@@ -477,14 +480,14 @@ static int lua_pbsch_pedersen_verify(lua_State *L) {
 /* ---- Module registration --------------------------------------------- */
 
 static const luaL_Reg niwi_functions[] = {
-    {"prove_circuit_niwi",          lua_prove_circuit_niwi},
-    {"verify_circuit_niwi",         lua_verify_circuit_niwi},
-    {"niwi_profile",                lua_niwi_profile},
-    {"prove_with_observation_test", lua_prove_with_observation_test},
-    {"extract_from_gamma_test",     lua_extract_from_gamma_test},
-    {"pbsch_pedersen_h",            lua_pbsch_pedersen_h},
-    {"pbsch_pedersen_commit",       lua_pbsch_pedersen_commit},
-    {"pbsch_pedersen_verify",       lua_pbsch_pedersen_verify},
+    {"prove_envelope_unchecked",                         lua_prove_envelope_unchecked},
+    {"verify_envelope",                                  lua_verify_envelope},
+    {"niwi_profile",                                     lua_niwi_profile},
+    {"prove_envelope_with_observation_unchecked_test",   lua_prove_envelope_with_observation_unchecked_test},
+    {"extract_from_gamma_unchecked_test",                lua_extract_from_gamma_unchecked_test},
+    {"pbsch_pedersen_h",                                 lua_pbsch_pedersen_h},
+    {"pbsch_pedersen_commit",                            lua_pbsch_pedersen_commit},
+    {"pbsch_pedersen_verify",                            lua_pbsch_pedersen_verify},
     {NULL, NULL}
 };
 

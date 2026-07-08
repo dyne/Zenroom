@@ -127,10 +127,8 @@ end
 -- All inputs are OCTETs. Returns a 130-byte OCTET.
 --
 -- Prototype note: 2025-1992 defines the statement as also carrying R, c,
--- phi, and ck, with C = Cmt.Com(ck, (m, alpha, beta); rho). The current
--- Pedersen C helper commits only the 32-byte message representative. The
--- missing paper-exact fields are tracked in the NIWI plan and must be added
--- when replacing the fast Lua RPBSch fixture with the real OR circuit.
+-- phi, and ck. The missing fields are tracked in the NIWI plan and must be
+-- added when replacing the fast Lua RPBSch fixture with the real OR circuit.
 function pbsch.assemble_statement(X, X_prime, C, S)
     assert(#X:str() == 32, "X must be 32 bytes")
     assert(#X_prime:str() == 32, "X' must be 32 bytes")
@@ -144,11 +142,14 @@ end
 -- ===========================================================================
 
 --- Encode Cmt-C tuple: (m, alpha, beta) -> 32-byte scalar.
--- Fast prototype: m passes through; alpha and beta are witness-only.
--- Paper target: Cmt.Com(ck, (m, alpha, beta); rho). Do not treat this
--- helper as the final extractable commitment encoding.
+-- This is the Lua profile's Pedersen message representative for
+-- Cmt.Com(ck, (m, alpha, beta); rho). It binds all tuple fields but is not
+-- the final straight-line extractable Cmt encoding from 2025-1992.
 function pbsch.encode_c_msg(m, alpha, beta)
-    return m
+    assert(#m:str() == 32, "m must be 32 bytes")
+    assert(#alpha:str() == 32, "alpha must be 32 bytes")
+    assert(#beta:str() == 32, "beta must be 32 bytes")
+    return sha256("PBSch/C/v1" .. m:str() .. alpha:str() .. beta:str())
 end
 
 --- Encode Cmt-S tuple: (sig0, sig1, nu_u, nu_u', nu_s) -> 32-byte scalar.
@@ -209,6 +210,7 @@ function pbsch.setup(profile)
         X       = profile.x,
         X_prime = profile.x_prime,
         sk      = sk,
+        deterministic = profile.deterministic == true,
         state   = "setup",
         retries = 0,
         max_retries = 10,
@@ -225,10 +227,16 @@ function pbsch.sign0(session, message)
 
     session.message = message
 
-    -- r = SHA-256("PBSch/sign0" || X || X' || message)
-    local seed = "PBSch/sign0" .. session.X:str() .. session.X_prime:str()
-                  .. message:str()
-    session.r = derive_valid_scalar(seed)
+    if session.deterministic then
+        -- Test-only deterministic mode for reproducible vector scripts.
+        local seed = "PBSch/sign0" .. session.X:str() .. session.X_prime:str()
+                      .. message:str()
+        session.r = derive_valid_scalar(seed)
+    else
+        repeat
+            session.r = OCTET.random(32)
+        until S.bip340_seckey_valid(session.r)
+    end
     session.R_point = G * session.r
     session.R = session.R_point:xonly()
 

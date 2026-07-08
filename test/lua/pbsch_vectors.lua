@@ -42,6 +42,21 @@ assert(pbsch.verify_c(C, m, rho) == true, 'valid C opening rejected')
 assert(pbsch.verify_c(C, wrong_m, rho) == false, 'wrong C message accepted')
 assert(pbsch.verify_c(C, m, wrong_rho) == false, 'wrong C randomness accepted')
 
+local alpha_a = fill('a1', 32)
+local beta_a = fill('b1', 32)
+local c_msg = pbsch.encode_c_msg(m, alpha_a, beta_a)
+assert(#c_msg == 32, 'encoded C message must be 32 bytes')
+assert(c_msg:string() ~= m:string(), 'encoded C message must bind more than m')
+assert(c_msg:string() ~= pbsch.encode_c_msg(m, fill('a2', 32), beta_a):string(),
+       'encoded C message must bind alpha')
+assert(c_msg:string() ~= pbsch.encode_c_msg(m, alpha_a, fill('b2', 32)):string(),
+       'encoded C message must bind beta')
+local C_tuple = pbsch.commit_c(c_msg, rho)
+assert(pbsch.verify_c(C_tuple, c_msg, rho) == true,
+       'valid tuple-encoded C opening rejected')
+assert(pbsch.verify_c(C_tuple, m, rho) == false,
+       'raw m must not open tuple-encoded C')
+
 local sig0 = fill('33', 64)
 local sig1 = fill('44', 64)
 local nu_u = fill('55', 32)
@@ -70,7 +85,7 @@ local statement = pbsch.assemble_statement(X, X_prime, C, S)
 assert(type(statement) == 'zenroom.octet', 'statement must be an octet')
 assert(#statement == 130, 'statement must be X || X_prime || C || S')
 
-local session = pbsch.setup{ x = X, x_prime = X_prime, sk = sk }
+local session = pbsch.setup{ x = X, x_prime = X_prime, sk = sk, deterministic = true }
 assert(session.state == 'setup', 'session must start in setup state')
 local message = fill('aa', 32)
 local R = pbsch.sign0(session, message)

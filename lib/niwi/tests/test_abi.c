@@ -29,6 +29,14 @@
 /* A dummy circuit artifact; the stub does not parse it. */
 static const uint8_t dummy_artifact[] = {0x01, 0x02, 0x03, 0x04};
 
+static int test_relation_validate(void *user_data,
+                                  const uint8_t *public_inputs, size_t pub_len,
+                                  const uint8_t *private_inputs, size_t priv_len) {
+    (void)user_data;
+    return pub_len == 1 && public_inputs[0] == 'p' &&
+           priv_len == 1 && private_inputs[0] == 'w' ? 0 : -1;
+}
+
 static void test_create_free(void) {
     niwi_ctx_t *ctx = niwi_ctx_create(dummy_artifact, sizeof(dummy_artifact));
     assert(ctx != NULL);
@@ -95,40 +103,68 @@ static void test_prove_verify_extract(void) {
     uint8_t *proof = NULL;
     size_t proof_len = 0;
 
-    int rc = niwi_prove(ctx, public_inputs, sizeof(public_inputs),
-                        private_inputs, sizeof(private_inputs),
-                        &proof, &proof_len);
+    int rc = niwi_envelope_prove_unchecked(ctx, public_inputs, sizeof(public_inputs),
+                                           private_inputs, sizeof(private_inputs),
+                                           &proof, &proof_len);
     assert(rc == 0);
     assert(proof != NULL);
     assert(proof_len > 0);
-    assert(niwi_verify(ctx, proof, proof_len,
-                       public_inputs, sizeof(public_inputs)) == 0);
+    assert(niwi_envelope_verify(ctx, proof, proof_len,
+                                public_inputs, sizeof(public_inputs)) == 0);
 
     const uint8_t wrong_public[] = {'b', 'a', 'd'};
-    assert(niwi_verify(ctx, proof, proof_len,
-                       wrong_public, sizeof(wrong_public)) != 0);
+    assert(niwi_envelope_verify(ctx, proof, proof_len,
+                                wrong_public, sizeof(wrong_public)) != 0);
 
     niwi_ctx_t *wrong_ctx = niwi_ctx_create((const uint8_t *)"other", 5);
     assert(wrong_ctx != NULL);
-    assert(niwi_verify(wrong_ctx, proof, proof_len,
-                       public_inputs, sizeof(public_inputs)) != 0);
+    assert(niwi_envelope_verify(wrong_ctx, proof, proof_len,
+                                public_inputs, sizeof(public_inputs)) != 0);
     niwi_ctx_free(wrong_ctx);
 
     uint8_t saved = proof[proof_len - 1];
     proof[proof_len - 1] ^= 0x01;
-    assert(niwi_verify(ctx, proof, proof_len,
-                       public_inputs, sizeof(public_inputs)) != 0);
+    assert(niwi_envelope_verify(ctx, proof, proof_len,
+                                public_inputs, sizeof(public_inputs)) != 0);
     proof[proof_len - 1] = saved;
 
     uint8_t *witness = NULL;
     size_t witness_len = 0;
-    assert(niwi_extract(ctx, proof, proof_len, NULL, 0,
-                        public_inputs, sizeof(public_inputs),
-                        &witness, &witness_len) != 0);
+    assert(niwi_envelope_extract_unchecked(ctx, proof, proof_len, NULL, 0,
+                                           public_inputs, sizeof(public_inputs),
+                                           &witness, &witness_len) != 0);
     assert(witness == NULL);
     niwi_free_buffer(proof);
     niwi_ctx_free(ctx);
     printf("  PASS test_prove_verify_extract\n");
+}
+
+static void test_relation_checked_prove(void) {
+    niwi_ctx_t *ctx = niwi_ctx_create_with_relation(
+        dummy_artifact, sizeof(dummy_artifact),
+        NIWI_RELATION_ZKCC_P256, test_relation_validate, NULL);
+    assert(ctx != NULL);
+
+    const uint8_t public_inputs[] = {'p'};
+    const uint8_t private_inputs[] = {'w'};
+    const uint8_t bad_private[] = {'x'};
+    uint8_t *proof = NULL;
+    size_t proof_len = 0;
+
+    assert(niwi_prove(ctx, public_inputs, sizeof(public_inputs),
+                      bad_private, sizeof(bad_private),
+                      &proof, &proof_len) != 0);
+    assert(proof == NULL);
+
+    assert(niwi_prove(ctx, public_inputs, sizeof(public_inputs),
+                      private_inputs, sizeof(private_inputs),
+                      &proof, &proof_len) == 0);
+    assert(proof != NULL);
+    assert(niwi_verify(ctx, proof, proof_len,
+                       public_inputs, sizeof(public_inputs)) == 0);
+    niwi_free_buffer(proof);
+    niwi_ctx_free(ctx);
+    printf("  PASS test_relation_checked_prove\n");
 }
 
 static void test_prove_observed(void) {
@@ -141,21 +177,22 @@ static void test_prove_observed(void) {
     size_t proof_len = 0;
     size_t gamma_len = 0;
 
-    assert(niwi_prove_observed(ctx, public_inputs, sizeof(public_inputs),
-                               private_inputs, sizeof(private_inputs),
-                               &proof, &proof_len, &gamma, &gamma_len) == 0);
+    assert(niwi_envelope_prove_observed_unchecked(
+               ctx, public_inputs, sizeof(public_inputs),
+               private_inputs, sizeof(private_inputs),
+               &proof, &proof_len, &gamma, &gamma_len) == 0);
     assert(proof != NULL);
     assert(gamma != NULL);
     assert(proof_len > 0);
     assert(gamma_len > 0);
-    assert(niwi_verify(ctx, proof, proof_len,
-                       public_inputs, sizeof(public_inputs)) == 0);
+    assert(niwi_envelope_verify(ctx, proof, proof_len,
+                                public_inputs, sizeof(public_inputs)) == 0);
 
     uint8_t *witness = NULL;
     size_t witness_len = 0;
-    assert(niwi_extract(ctx, proof, proof_len, gamma, gamma_len,
-                        public_inputs, sizeof(public_inputs),
-                        &witness, &witness_len) == 0);
+    assert(niwi_envelope_extract_unchecked(ctx, proof, proof_len, gamma, gamma_len,
+                                           public_inputs, sizeof(public_inputs),
+                                           &witness, &witness_len) == 0);
     assert(witness_len == sizeof(private_inputs));
     assert(memcmp(witness, private_inputs, sizeof(private_inputs)) == 0);
 
@@ -164,18 +201,18 @@ static void test_prove_observed(void) {
     gamma[16] ^= 0x01; /* mutate recorded input, keep recorded digest */
     witness = NULL;
     witness_len = 0;
-    assert(niwi_extract(ctx, proof, proof_len, gamma, gamma_len,
-                        public_inputs, sizeof(public_inputs),
-                        &witness, &witness_len) != 0);
+    assert(niwi_envelope_extract_unchecked(ctx, proof, proof_len, gamma, gamma_len,
+                                           public_inputs, sizeof(public_inputs),
+                                           &witness, &witness_len) != 0);
     assert(witness == NULL);
     gamma[16] ^= 0x01;
 
     gamma[gamma_len - 1] ^= 0x01;
     witness = NULL;
     witness_len = 0;
-    assert(niwi_extract(ctx, proof, proof_len, gamma, gamma_len,
-                        public_inputs, sizeof(public_inputs),
-                        &witness, &witness_len) != 0);
+    assert(niwi_envelope_extract_unchecked(ctx, proof, proof_len, gamma, gamma_len,
+                                           public_inputs, sizeof(public_inputs),
+                                           &witness, &witness_len) != 0);
     assert(witness == NULL);
 
     niwi_free_buffer(gamma);
@@ -200,9 +237,9 @@ static void assert_extract_fails(niwi_ctx_t *ctx,
                                  size_t pub_len) {
     uint8_t *witness = NULL;
     size_t witness_len = 0;
-    assert(niwi_extract(ctx, proof, proof_len, gamma, gamma_len,
-                        public_inputs, pub_len,
-                        &witness, &witness_len) != 0);
+    assert(niwi_envelope_extract_unchecked(ctx, proof, proof_len, gamma, gamma_len,
+                                           public_inputs, pub_len,
+                                           &witness, &witness_len) != 0);
     assert(witness == NULL);
 }
 
@@ -214,9 +251,9 @@ static void test_adversarial_gamma(void) {
     uint8_t *proof = NULL;
     size_t proof_len = 0;
 
-    assert(niwi_prove(ctx, public_inputs, sizeof(public_inputs),
-                      private_inputs, sizeof(private_inputs),
-                      &proof, &proof_len) == 0);
+    assert(niwi_envelope_prove_unchecked(ctx, public_inputs, sizeof(public_inputs),
+                                         private_inputs, sizeof(private_inputs),
+                                         &proof, &proof_len) == 0);
 
     uint8_t digest[32];
     size_t gamma_len = 0;
@@ -274,6 +311,7 @@ int main(void) {
     test_protocol_version();
     test_free_buffer();
     test_prove_verify_extract();
+    test_relation_checked_prove();
     test_prove_observed();
     test_adversarial_gamma();
     printf("All C ABI tests passed.\n");

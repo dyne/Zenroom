@@ -31,19 +31,39 @@ extern "C" {
 /* Opaque context holding a compiled circuit artifact. */
 typedef struct niwi_ctx niwi_ctx_t;
 
+typedef enum {
+    NIWI_RELATION_NONE = 0,
+    NIWI_RELATION_ZKCC_P256 = 1,
+    NIWI_RELATION_ZKCC_BIP340 = 2,
+    NIWI_RELATION_RPBSCH = 3
+} niwi_relation_id_t;
+
+typedef int (*niwi_relation_validate_fn)(
+    void *user_data,
+    const uint8_t *public_inputs, size_t pub_len,
+    const uint8_t *private_inputs, size_t priv_len);
+
 /* -------------------- Lifecycle ---------------------------------------- */
 
 /* Create a context from a compiled zkcc circuit artifact.
  * Returns NULL on failure; call niwi_last_error for details. */
 niwi_ctx_t *niwi_ctx_create(const uint8_t *circuit_artifact, size_t len);
 
+/* Create a relation-aware context. Production proving and extraction require
+ * a validator until lib/niwi owns native circuit evaluation for the relation. */
+niwi_ctx_t *niwi_ctx_create_with_relation(
+    const uint8_t *circuit_artifact, size_t len,
+    niwi_relation_id_t relation_id,
+    niwi_relation_validate_fn validate,
+    void *validate_user_data);
+
 /* Free a context and all associated resources. */
 void niwi_ctx_free(niwi_ctx_t *ctx);
 
 /* -------------------- Prove (production) ------------------------------- */
 
-/* Prove private inputs satisfy the circuit under public inputs.
- * Uses secure system randomness.
+/* Prove private inputs satisfy the configured relation under public inputs.
+ * Uses secure system randomness. Requires a relation validator in ctx.
  * On success, *proof_out and *proof_len are set; caller must free with
  * niwi_free_buffer. Returns 0 on success, non-zero on failure. */
 int niwi_prove(niwi_ctx_t *ctx,
@@ -72,14 +92,39 @@ int niwi_verify(niwi_ctx_t *ctx,
 
 /* -------------------- Extract (test-only) ------------------------------ */
 
-/* Extract a witness from a proof and Gamma (NPRO query log).
- * Only available in test builds. The extracted witness is a private
- * input assignment for the circuit. */
+/* Extract a witness from a proof and Gamma (NPRO query log), then validate it
+ * against the configured relation before returning it. Only available in test
+ * builds. The extracted witness is a private input assignment for the circuit. */
 int niwi_extract(niwi_ctx_t *ctx,
                  const uint8_t *proof, size_t proof_len,
                  const uint8_t *gamma, size_t gamma_len,
                  const uint8_t *public_inputs, size_t pub_len,
                  uint8_t **witness_out, size_t *witness_len);
+
+/* Low-level proof envelope helpers. These bind circuit/public/witness bytes
+ * but do not evaluate the relation. Use only from adapters that have already
+ * validated the witness or from tests of envelope serialization. */
+int niwi_envelope_prove_unchecked(niwi_ctx_t *ctx,
+                                  const uint8_t *public_inputs, size_t pub_len,
+                                  const uint8_t *private_inputs, size_t priv_len,
+                                  uint8_t **proof_out, size_t *proof_len);
+
+int niwi_envelope_prove_observed_unchecked(
+    niwi_ctx_t *ctx,
+    const uint8_t *public_inputs, size_t pub_len,
+    const uint8_t *private_inputs, size_t priv_len,
+    uint8_t **proof_out, size_t *proof_len,
+    uint8_t **gamma_out, size_t *gamma_len);
+
+int niwi_envelope_verify(niwi_ctx_t *ctx,
+                         const uint8_t *proof, size_t proof_len,
+                         const uint8_t *public_inputs, size_t pub_len);
+
+int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
+                                    const uint8_t *proof, size_t proof_len,
+                                    const uint8_t *gamma, size_t gamma_len,
+                                    const uint8_t *public_inputs, size_t pub_len,
+                                    uint8_t **witness_out, size_t *witness_len);
 
 /* -------------------- Utilities ---------------------------------------- */
 

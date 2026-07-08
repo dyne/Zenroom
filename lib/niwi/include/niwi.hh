@@ -26,6 +26,7 @@
 #include <cstdint>
 #include <memory>
 #include <span>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -91,7 +92,7 @@ inline void free_buffer(std::vector<uint8_t> &buf) {
     }
 }
 
-/* Prove and return the proof bytes. Throws on failure. */
+/* Prove a relation-checked witness and return the proof bytes. Throws on failure. */
 inline std::vector<uint8_t> prove(niwi_ctx_t *ctx,
                                   std::span<const uint8_t> public_inputs,
                                   std::span<const uint8_t> private_inputs) {
@@ -108,12 +109,32 @@ inline std::vector<uint8_t> prove(niwi_ctx_t *ctx,
     return result;
 }
 
+/* Build a proof envelope after the caller has checked the relation. */
+inline std::vector<uint8_t> prove_envelope_unchecked(
+        niwi_ctx_t *ctx,
+        std::span<const uint8_t> public_inputs,
+        std::span<const uint8_t> private_inputs) {
+    uint8_t *out = nullptr;
+    size_t out_len = 0;
+    if (niwi_envelope_prove_unchecked(
+            ctx, public_inputs.data(), public_inputs.size(),
+            private_inputs.data(), private_inputs.size(),
+            &out, &out_len) != 0) {
+        throw std::runtime_error(
+            std::string("niwi_envelope_prove_unchecked failed: ") +
+            niwi_last_error(ctx));
+    }
+    std::vector<uint8_t> result(out, out + out_len);
+    niwi_free_buffer(out);
+    return result;
+}
+
 /* Verify a proof. Returns true if valid. */
 inline bool verify(niwi_ctx_t *ctx,
                    std::span<const uint8_t> proof,
                    std::span<const uint8_t> public_inputs) {
-    return niwi_verify(ctx, proof.data(), proof.size(),
-                       public_inputs.data(), public_inputs.size()) == 0;
+    return niwi_envelope_verify(ctx, proof.data(), proof.size(),
+                                public_inputs.data(), public_inputs.size()) == 0;
 }
 
 } // namespace niwi

@@ -3,7 +3,7 @@
 -- Copyright (C) 2026 Dyne.org foundation
 -- SPDX-License-Identifier: AGPL-3.0-or-later
 
-local niwi = require('niwi')
+local niwi = require('crypto_niwi')
 assert(niwi, "niwi module not loaded")
 
 local circuit = O.from_string("dummy-circuit")
@@ -84,6 +84,12 @@ assert(type(niwi.verify_circuit_niwi) == "function")
 assert(type(niwi.niwi_profile) == "function")
 assert(type(niwi.PROTOCOL_VERSION) == "string")
 print("PASS 10: API shape")
+
+assert(type(niwi.prove_envelope_unchecked) == "function")
+assert(type(niwi.verify_envelope) == "function")
+assert(type(niwi.prove_envelope_with_observation_unchecked_test) == "function")
+assert(type(niwi.extract_from_gamma_unchecked_test) == "function")
+print("PASS 11: explicit unchecked envelope API shape")
 
 print("")
 print("All NIWI regression tests passed")

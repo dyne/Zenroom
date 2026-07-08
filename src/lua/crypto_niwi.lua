@@ -20,7 +20,7 @@
 -- NIWI Lua adapter — wraps lib/niwi native bindings.
 --
 -- Production interface:
---   local niwi = require('niwi')
+--   local niwi = require('crypto_niwi')
 --   proof = niwi.prove_circuit_niwi{ circuit=..., inputs=... }
 --   ok    = niwi.verify_circuit_niwi{ circuit=..., proof=..., public_inputs=... }
 --   info  = niwi.niwi_profile()
@@ -101,17 +101,17 @@ end
 -- Production API
 function Niwi.prove_circuit_niwi(opts)
     if type(opts) ~= "table" then
-        return native.prove_circuit_niwi(opts)
+        return native.prove_envelope_unchecked(opts)
     end
     -- Passing live zkcc artifact/witness objects enables relation validation.
     -- Raw OCTETs are accepted as the low-level NIWI envelope API.
     validate_relation(opts)
-    return native.prove_circuit_niwi(native_opts(opts))
+    return native.prove_envelope_unchecked(native_opts(opts))
 end
 
 function Niwi.verify_circuit_niwi(opts)
     if type(opts) ~= "table" then
-        return native.verify_circuit_niwi(opts)
+        return native.verify_envelope(opts)
     end
     local out = {}
     for k, v in pairs(opts) do out[k] = v end
@@ -120,24 +120,24 @@ function Niwi.verify_circuit_niwi(opts)
         out.public_inputs = as_octet(opts.public_inputs, "public_octet",
                                      "public_inputs")
     end
-    return native.verify_circuit_niwi(out)
+    return native.verify_envelope(out)
 end
 Niwi.niwi_profile         = native.niwi_profile
 
 -- Test-only API (available only in DEBUG/test builds)
-if native.prove_with_observation_test then
+if native.prove_envelope_with_observation_unchecked_test then
     function Niwi.prove_with_observation_test(opts)
         if type(opts) ~= "table" then
-            return native.prove_with_observation_test(opts)
+            return native.prove_envelope_with_observation_unchecked_test(opts)
         end
         validate_relation(opts)
-        return native.prove_with_observation_test(native_opts(opts))
+        return native.prove_envelope_with_observation_unchecked_test(native_opts(opts))
     end
 end
-if native.extract_from_gamma_test then
+if native.extract_from_gamma_unchecked_test then
     function Niwi.extract_from_gamma_test(opts)
         if type(opts) ~= "table" then
-            return native.extract_from_gamma_test(opts)
+            return native.extract_from_gamma_unchecked_test(opts)
         end
         local out = {}
         for k, v in pairs(opts) do out[k] = v end
@@ -145,9 +145,18 @@ if native.extract_from_gamma_test then
             out.public_inputs = as_octet(opts.public_inputs, "public_octet",
                                          "public_inputs")
         end
-        return native.extract_from_gamma_test(out)
+        return native.extract_from_gamma_unchecked_test(out)
     end
 end
+
+-- Expose explicit low-level names for tests and adapters that deliberately
+-- operate on proof envelopes instead of relation-checked circuit objects.
+Niwi.prove_envelope_unchecked = native.prove_envelope_unchecked
+Niwi.verify_envelope = native.verify_envelope
+Niwi.prove_envelope_with_observation_unchecked_test =
+    native.prove_envelope_with_observation_unchecked_test
+Niwi.extract_from_gamma_unchecked_test =
+    native.extract_from_gamma_unchecked_test
 
 -- Protocol metadata
 Niwi.PROTOCOL_VERSION = native.PROTOCOL_VERSION
