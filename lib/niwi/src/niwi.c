@@ -1055,8 +1055,9 @@ static int parse_longfellow_body(niwi_ctx_t *ctx,
                                  const uint8_t *public_inputs, size_t pub_len,
                                  int require_for_relation) {
     if (!ctx || !proof || !off || *off > proof_len) return -1;
-    int needs_body = require_for_relation &&
-                     ctx->relation_id == NIWI_RELATION_ZKCC_BIP340;
+    int needs_body = require_for_relation && !ctx->validate &&
+                     (ctx->relation_id == NIWI_RELATION_ZKCC_BIP340 ||
+                      ctx->relation_id == NIWI_RELATION_ZKCC_P256);
     if (*off == proof_len) {
         if (needs_body) {
             set_error(ctx, "niwi_verify: missing Longfellow proof body");
@@ -1081,6 +1082,13 @@ static int parse_longfellow_body(niwi_ctx_t *ctx,
     if (ctx->relation_id == NIWI_RELATION_ZKCC_BIP340 &&
         niwi_bip340_ligero_verify(public_inputs, pub_len,
                                    proof + *off, body_len) != 0) {
+        set_error(ctx, "niwi_verify: invalid Longfellow proof body");
+        return -1;
+    }
+    if (ctx->relation_id == NIWI_RELATION_ZKCC_P256 &&
+        niwi_zkcc_p256_ligero_verify(ctx->artifact, ctx->artifact_len,
+                                      public_inputs, pub_len,
+                                      proof + *off, body_len) != 0) {
         set_error(ctx, "niwi_verify: invalid Longfellow proof body");
         return -1;
     }
@@ -1512,11 +1520,23 @@ static int build_proof(niwi_ctx_t *ctx,
         4 + 4 + tableau_count * NIWI_PROOF_TABLEAU_ENTRY_SIZE;
     uint8_t *longfellow_body = NULL;
     size_t longfellow_body_len = 0;
-    if (relation_backed && ctx->relation_id == NIWI_RELATION_ZKCC_BIP340 &&
+    if (relation_backed && !ctx->validate &&
+        ctx->relation_id == NIWI_RELATION_ZKCC_BIP340 &&
         niwi_bip340_ligero_prove(public_inputs, pub_len,
                                   private_inputs, priv_len,
                                   &longfellow_body,
                                   &longfellow_body_len) != 0) {
+        free(tableau_entries);
+        set_error(ctx, "niwi_prove: failed to build Longfellow proof body");
+        return -1;
+    }
+    if (relation_backed && !ctx->validate &&
+        ctx->relation_id == NIWI_RELATION_ZKCC_P256 &&
+        niwi_zkcc_p256_ligero_prove(ctx->artifact, ctx->artifact_len,
+                                     public_inputs, pub_len,
+                                     private_inputs, priv_len,
+                                     &longfellow_body,
+                                     &longfellow_body_len) != 0) {
         free(tableau_entries);
         set_error(ctx, "niwi_prove: failed to build Longfellow proof body");
         return -1;

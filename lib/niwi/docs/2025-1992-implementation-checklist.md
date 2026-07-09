@@ -8,11 +8,11 @@ needed before claiming production, paper-exact RPBSch.
 | Paper component | Current code | Tests | Status |
 | --- | --- | --- | --- |
 | Relation-backed proving | `lib/niwi/src/niwi.c`, `src/lua/crypto_niwi.lua` | `make -C lib/niwi test`, `test/lua/zkcc_niwi_smoke.lua` | Implemented for BIP340 and generic P256 zkcc relations |
-| Native proof body | `LIG0` / `LZK0` in `lib/niwi/src/niwi.c` | `lib/niwi/tests/test_abi.c`, `lib/niwi/tests/test_bip340_relation.cc`, `lib/niwi/tests/test_ligero_bip340.cc` | Versioned, relation-bound, carries tableau entries and explicit `NRSP` response objects. BIP340 additionally carries a checked Longfellow/Ligero `ZkProof` body in `LZK0`; generic P256 and RPBSch still use the narrower scaffold body |
-| Tableau root, response, and selected opening | `LIG0` in `lib/niwi/src/niwi.c` | `test_relation_checked_prove`, `test_relation_merkle_path_for_multi_leaf_tableau`, `test_native_ligero_profile_vectors` | Native verifier recomputes the Merkle root, parses and checks `NRSP`, recomputes the response digest, verifies tableau-digest row and column evaluations over the current square-ish bounded-row profile, recomputes the dimension-bound `param_id`, derives the Fiat-Shamir opening index, checks the selected `TBL1` leaf preimage, and verifies the selected Merkle path; remaining generalization is replacing this scaffold for non-BIP340 relations with checked Longfellow/Ligero bodies |
+| Native proof body | `LIG0` / `LZK0` in `lib/niwi/src/niwi.c` | `lib/niwi/tests/test_abi.c`, `lib/niwi/tests/test_zkcc_p256_relation.cc`, `lib/niwi/tests/test_bip340_relation.cc`, `lib/niwi/tests/test_ligero_bip340.cc` | Versioned, relation-bound, carries tableau entries and explicit `NRSP` response objects. BIP340 and generic P-256 zkcc proofs additionally carry checked Longfellow/Ligero `ZkProof` bodies in `LZK0`; RPBSch still uses the narrower scaffold body |
+| Tableau root, response, and selected opening | `LIG0` in `lib/niwi/src/niwi.c` | `test_relation_checked_prove`, `test_relation_merkle_path_for_multi_leaf_tableau`, `test_native_ligero_profile_vectors` | Native verifier recomputes the Merkle root, parses and checks `NRSP`, recomputes the response digest, verifies tableau-digest row and column evaluations over the current square-ish bounded-row profile, recomputes the dimension-bound `param_id`, derives the Fiat-Shamir opening index, checks the selected `TBL1` leaf preimage, and verifies the selected Merkle path; remaining generalization is replacing this scaffold for RPBSch with a checked Longfellow/Ligero body |
 | Relation witness tableau leaves | `TBL1` in `lib/niwi/src/niwi.c` | `test_relation_observed_uses_bound_tableau_leaves` | Production observed leaves bind relation id and public statement digest; unchecked fixtures retain legacy `TBL0` |
 | Unchecked envelope isolation | `src/lua/crypto_niwi.lua`, native `niwi` module | `test/lua/niwi_regression.lua` | Production Lua rejects raw unchecked envelopes |
-| Native generic zkcc evaluation | `lib/niwi/src/relations/zkcc_p256_relation.cc` | `test/lua/zkcc_niwi_smoke.lua` | Direct circuit evaluation, no Lua or legacy proof object |
+| Native generic zkcc evaluation | `lib/niwi/src/relations/zkcc_p256_relation.cc` | `test/lua/zkcc_niwi_smoke.lua`, `lib/niwi/tests/test_zkcc_p256_relation.cc` | Direct circuit evaluation, no Lua or legacy proof object; production proofs carry checked Longfellow/Ligero `LZK0` bodies |
 
 ## Extraction
 
@@ -80,6 +80,9 @@ needed before claiming production, paper-exact RPBSch.
   and zkcc paths, valid official vectors run through NIWI prove/verify/extract,
   and production BIP340 proofs now verify an embedded Longfellow/Ligero proof
   body.
+- Generic P-256 zkcc proofs now also verify embedded Longfellow/Ligero proof
+  bodies for compiled artifacts, using Longfellow's deterministic parameter
+  search for each circuit.
 
 ## Review Command Set
 

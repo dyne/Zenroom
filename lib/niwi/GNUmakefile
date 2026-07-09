@@ -45,7 +45,7 @@ libniwi.a: $(NIWI_SOURCES)
 
 clean:
 	rm -f src/*.c.o tests/*.o src/secp256k1/*.cc.o src/relations/*.cc.o
-	rm -f *.a test_abi test_encoding test_hash test_npro test_commitment test_challenge_schedule test_niwi_proof_serde test_extract test_vectors test_bench test_secp256k1
+	rm -f *.a test_abi test_encoding test_hash test_npro test_commitment test_challenge_schedule test_niwi_proof_serde test_extract test_vectors test_bench test_secp256k1 test_zkcc_p256_relation test_bip340_relation test_ligero_param test_ligero_bip340
 
 %.c.o: %.c
 	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -c -o $@ $<
@@ -55,7 +55,7 @@ clean:
 
 # ---- Tests ----
 
-test: test_abi test_encoding test_hash test_npro test_commitment test_challenge_schedule test_niwi_proof_serde test_extract test_vectors test_secp256k1 test_bip340_relation test_ligero_param test_ligero_bip340
+test: test_abi test_encoding test_hash test_npro test_commitment test_challenge_schedule test_niwi_proof_serde test_extract test_vectors test_secp256k1 test_zkcc_p256_relation test_bip340_relation test_ligero_param test_ligero_bip340
 	./test_abi
 	./test_encoding
 	./test_hash
@@ -66,6 +66,7 @@ test: test_abi test_encoding test_hash test_npro test_commitment test_challenge_
 	./test_extract
 	./test_vectors
 	./test_secp256k1
+	./test_zkcc_p256_relation
 	./test_bip340_relation
 	./test_ligero_param
 	./test_ligero_bip340
@@ -108,6 +109,9 @@ generate-vectors: test_vectors
 # field/curve/scalar/witness object files.
 test_secp256k1: tests/test_secp256k1.cc.o libniwi.a
 	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_secp256k1.cc.o -L. -lniwi $(NIWI_ZK_DEPS)
+
+test_zkcc_p256_relation: tests/test_zkcc_p256_relation.cc.o libniwi.a
+	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_zkcc_p256_relation.cc.o -L. -lniwi $(NIWI_ZK_DEPS)
 
 test_bip340_relation: tests/test_bip340_relation.cc.o libniwi.a
 	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_bip340_relation.cc.o -L. -lniwi $(NIWI_ZK_DEPS)
