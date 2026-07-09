@@ -35,8 +35,9 @@
 #define NIWI_TABLEAU_LEAF_TAG "TBL0"
 #define NIWI_TABLEAU_LEAF_HEADER_SIZE (4 + 4 + 4 + 4)
 #define NIWI_PROOF_TABLEAU_SIZE (4 + 4 + NIWI_PROOF_TABLEAU_LEAF_COUNT * NIWI_PROOF_TABLEAU_ENTRY_SIZE)
-#define NIWI_PROOF_RELATION_TAG "REL0"
-#define NIWI_PROOF_RELATION_SIZE (4 + 4 + 32)
+#define NIWI_PROOF_NATIVE_BODY_TAG "LIG0"
+#define NIWI_PROOF_NATIVE_BODY_PAYLOAD_SIZE (4 + 32 + 32 + 32 + 32)
+#define NIWI_PROOF_NATIVE_BODY_SIZE (4 + 4 + NIWI_PROOF_NATIVE_BODY_PAYLOAD_SIZE)
 
 struct niwi_ctx {
     uint8_t *artifact;
@@ -148,44 +149,75 @@ static void compute_relation_digest(niwi_relation_id_t relation_id,
     niwi_hash_one_shot(NIWI_TAG_PROOF, preimage, sizeof(preimage), out);
 }
 
-static int append_relation_section(niwi_ctx_t *ctx,
-                                   const uint8_t circuit_digest[32],
-                                   const uint8_t statement_digest[32],
-                                   const uint8_t tableau_digest[32],
-                                   uint8_t *proof, size_t proof_len,
-                                   size_t *off) {
+static void compute_native_body_challenges(const uint8_t relation_digest[32],
+                                           const uint8_t tableau_digest[32],
+                                           uint8_t challenge1[32],
+                                           uint8_t challenge2[32]) {
+    uint8_t preimage1[64];
+    memcpy(preimage1, relation_digest, 32);
+    memcpy(preimage1 + 32, tableau_digest, 32);
+    niwi_hash_one_shot(NIWI_TAG_FSCH, preimage1, sizeof(preimage1),
+                       challenge1);
+
+    uint8_t preimage2[64];
+    memcpy(preimage2, challenge1, 32);
+    memcpy(preimage2 + 32, tableau_digest, 32);
+    niwi_hash_one_shot(NIWI_TAG_PROOF, preimage2, sizeof(preimage2),
+                       challenge2);
+}
+
+static int append_native_proof_body(niwi_ctx_t *ctx,
+                                    const uint8_t circuit_digest[32],
+                                    const uint8_t statement_digest[32],
+                                    const uint8_t tableau_digest[32],
+                                    uint8_t *proof, size_t proof_len,
+                                    size_t *off) {
     if (!ctx || !proof || !off) return -1;
-    if (*off + NIWI_PROOF_RELATION_SIZE > proof_len) return -1;
+    if (*off + NIWI_PROOF_NATIVE_BODY_SIZE > proof_len) return -1;
     if (ctx->relation_id == NIWI_RELATION_NONE) return -1;
 
     uint8_t relation_digest[32];
+    uint8_t challenge1[32];
+    uint8_t challenge2[32];
     compute_relation_digest(ctx->relation_id, circuit_digest,
                             statement_digest, tableau_digest,
                             relation_digest);
-    memcpy(proof + *off, NIWI_PROOF_RELATION_TAG, 4); *off += 4;
+    compute_native_body_challenges(relation_digest, tableau_digest,
+                                   challenge1, challenge2);
+
+    memcpy(proof + *off, NIWI_PROOF_NATIVE_BODY_TAG, 4); *off += 4;
+    write_u32_be(proof + *off, NIWI_PROOF_NATIVE_BODY_PAYLOAD_SIZE); *off += 4;
     write_u32_be(proof + *off, (uint32_t)ctx->relation_id); *off += 4;
+    memcpy(proof + *off, tableau_digest, 32); *off += 32;
     memcpy(proof + *off, relation_digest, 32); *off += 32;
+    memcpy(proof + *off, challenge1, 32); *off += 32;
+    memcpy(proof + *off, challenge2, 32); *off += 32;
     return 0;
 }
 
-static int parse_relation_section(niwi_ctx_t *ctx,
-                                  const uint8_t *proof, size_t proof_len,
-                                  size_t *off,
-                                  const uint8_t circuit_digest[32],
-                                  const uint8_t statement_digest[32],
-                                  const uint8_t tableau_digest[32],
-                                  int require_relation) {
+static int parse_native_proof_body(niwi_ctx_t *ctx,
+                                   const uint8_t *proof, size_t proof_len,
+                                   size_t *off,
+                                   const uint8_t circuit_digest[32],
+                                   const uint8_t statement_digest[32],
+                                   const uint8_t tableau_digest[32],
+                                   int require_relation) {
     if (!ctx || !proof || !off) return -1;
     if (*off == proof_len) {
         if (require_relation) {
-            set_error(ctx, "niwi_verify: missing relation proof section");
+            set_error(ctx, "niwi_verify: missing native proof body");
             return -1;
         }
         return 0;
     }
-    if (*off + NIWI_PROOF_RELATION_SIZE != proof_len ||
-        memcmp(proof + *off, NIWI_PROOF_RELATION_TAG, 4) != 0) {
+    if (*off + NIWI_PROOF_NATIVE_BODY_SIZE != proof_len ||
+        memcmp(proof + *off, NIWI_PROOF_NATIVE_BODY_TAG, 4) != 0) {
         set_error(ctx, "niwi_verify: invalid trailing proof section");
+        return -1;
+    }
+    *off += 4;
+    if (read_u32_be(proof + *off) != NIWI_PROOF_NATIVE_BODY_PAYLOAD_SIZE) {
+        set_error(ctx, "niwi_verify: invalid native proof body length");
         return -1;
     }
     *off += 4;
@@ -196,11 +228,32 @@ static int parse_relation_section(niwi_ctx_t *ctx,
         return -1;
     }
 
+    if (memcmp(proof + *off, tableau_digest, 32) != 0) {
+        set_error(ctx, "niwi_verify: native proof tableau mismatch");
+        return -1;
+    }
+    *off += 32;
+
     uint8_t expected[32];
     compute_relation_digest(ctx->relation_id, circuit_digest,
                             statement_digest, tableau_digest, expected);
     if (memcmp(proof + *off, expected, 32) != 0) {
-        set_error(ctx, "niwi_verify: relation proof digest mismatch");
+        set_error(ctx, "niwi_verify: native proof relation mismatch");
+        return -1;
+    }
+    *off += 32;
+
+    uint8_t challenge1[32];
+    uint8_t challenge2[32];
+    compute_native_body_challenges(expected, tableau_digest,
+                                   challenge1, challenge2);
+    if (memcmp(proof + *off, challenge1, 32) != 0) {
+        set_error(ctx, "niwi_verify: native proof challenge mismatch");
+        return -1;
+    }
+    *off += 32;
+    if (memcmp(proof + *off, challenge2, 32) != 0) {
+        set_error(ctx, "niwi_verify: native proof query challenge mismatch");
         return -1;
     }
     *off += 32;
@@ -333,7 +386,7 @@ static int build_proof(niwi_ctx_t *ctx,
 
     size_t len = NIWI_PROOF_HEADER_SIZE + NIWI_PROOF_PARAM_SIZE +
                  NIWI_PROOF_TABLEAU_SIZE +
-                 (relation_backed ? NIWI_PROOF_RELATION_SIZE : 0);
+                 (relation_backed ? NIWI_PROOF_NATIVE_BODY_SIZE : 0);
     uint8_t *proof = (uint8_t *)calloc(1, len);
     if (!proof) {
         free(tableau_leaf);
@@ -370,11 +423,11 @@ static int build_proof(niwi_ctx_t *ctx,
     off += 32;
 
     if (relation_backed &&
-        append_relation_section(ctx, circuit_digest, statement_digest,
-                                tableau_digest, proof, len, &off) != 0) {
+        append_native_proof_body(ctx, circuit_digest, statement_digest,
+                                 tableau_digest, proof, len, &off) != 0) {
         free(tableau_leaf);
         free(proof);
-        set_error(ctx, "niwi_prove: failed to build relation proof section");
+        set_error(ctx, "niwi_prove: failed to build native proof body");
         return -1;
     }
 
@@ -458,9 +511,9 @@ static int verify_proof_envelope(niwi_ctx_t *ctx,
         return -1;
     }
 
-    if (parse_relation_section(ctx, proof, proof_len, &off,
-                               expected_circuit, expected_statement,
-                               tableau_digest, require_relation) != 0)
+    if (parse_native_proof_body(ctx, proof, proof_len, &off,
+                                expected_circuit, expected_statement,
+                                tableau_digest, require_relation) != 0)
         return -1;
     if (off != proof_len) {
         set_error(ctx, "niwi_verify: trailing bytes");
@@ -636,8 +689,8 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
         return -1;
     }
     if (off < proof_len &&
-        parse_relation_section(ctx, proof, proof_len, &off,
-                               proof + 12, proof + 44, tableau_digest, 0) != 0)
+        parse_native_proof_body(ctx, proof, proof_len, &off,
+                                proof + 12, proof + 44, tableau_digest, 0) != 0)
         return -1;
     if (off != proof_len) {
         set_error(ctx, "niwi_extract: trailing bytes");

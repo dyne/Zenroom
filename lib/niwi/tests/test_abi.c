@@ -172,7 +172,8 @@ static void test_relation_checked_prove(void) {
                       private_inputs, sizeof(private_inputs),
                       &proof, &proof_len) == 0);
     assert(proof != NULL);
-    assert(proof_has_tag(proof, proof_len, "REL0"));
+    assert(!proof_has_tag(proof, proof_len, "REL0"));
+    assert(proof_has_tag(proof, proof_len, "LIG0"));
     assert(niwi_verify(ctx, proof, proof_len,
                        public_inputs, sizeof(public_inputs)) == 0);
     niwi_free_buffer(proof);
