@@ -941,6 +941,7 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
                                    uint8_t tableau_digest_out[32],
                                    niwi_tableau_entry_t **entries_out,
                                    size_t *tableau_count_out,
+                                   niwi_ligero_response_t *response_out,
                                    int require_relation) {
     if (!ctx || !proof || !off || !tableau_digest_out || !tableau_count_out)
         return -1;
@@ -1195,6 +1196,7 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
         set_error(ctx, "niwi_verify: native proof Merkle path mismatch");
         return -1;
     }
+    if (response_out) *response_out = response;
     free(parsed_entries);
     memcpy(tableau_digest_out, claimed_tableau_digest, 32);
     *tableau_count_out = tableau_count;
@@ -1458,6 +1460,7 @@ static int verify_proof_envelope(niwi_ctx_t *ctx,
                                     expected_circuit, expected_statement,
                                     commitment, opening,
                                     tableau_digest, NULL, &tableau_count,
+                                    NULL,
                                     require_relation) != 0)
             return -1;
     } else {
@@ -1467,6 +1470,7 @@ static int verify_proof_envelope(niwi_ctx_t *ctx,
                                         expected_circuit, expected_statement,
                                         commitment, opening,
                                         tableau_digest, NULL, &tableau_count,
+                                        NULL,
                                         0) != 0)
                 return -1;
         } else {
@@ -1480,6 +1484,7 @@ static int verify_proof_envelope(niwi_ctx_t *ctx,
                                         expected_circuit, expected_statement,
                                         commitment, opening,
                                         tableau_digest, NULL, &tableau_count,
+                                        NULL,
                                         0) != 0)
                 return -1;
         }
@@ -1656,14 +1661,19 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
     uint8_t tableau_digest[32];
     niwi_tableau_entry_t *entries = NULL;
     size_t entry_count = 0;
+    niwi_ligero_response_t extracted_response;
+    memset(&extracted_response, 0, sizeof(extracted_response));
+    int has_native_response = 0;
     if (off + 4 <= proof_len &&
         memcmp(proof + off, NIWI_PROOF_NATIVE_BODY_TAG, 4) == 0) {
         if (parse_native_proof_body(ctx, proof, proof_len, &off,
                                     proof + 12, proof + 44,
                                     proof + 76, proof + 108,
                                     tableau_digest, &entries, &entry_count,
+                                    &extracted_response,
                                     0) != 0)
             return -1;
+        has_native_response = 1;
     } else {
         if (parse_tableau_section(proof, proof_len, &off,
                                   tableau_digest, &entries, &entry_count) != 0) {
@@ -1675,6 +1685,7 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
                                     proof + 12, proof + 44,
                                     proof + 76, proof + 108,
                                     tableau_digest, NULL, &entry_count,
+                                    NULL,
                                     0) != 0) {
             free(entries);
             return -1;
@@ -1694,7 +1705,18 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
 
     uint8_t *witness = NULL;
     uint8_t *covered = NULL;
+    niwi_tableau_entry_t *recovered_entries = NULL;
     size_t witness_total = 0;
+    if (has_native_response) {
+        recovered_entries = (niwi_tableau_entry_t *)
+            calloc(entry_count, sizeof(*recovered_entries));
+        if (!recovered_entries) {
+            free(entries);
+            niwi_npro_free(npro);
+            set_error(ctx, "niwi_extract: out of memory");
+            return -1;
+        }
+    }
     for (size_t i = 0; i < entry_count; i++) {
         size_t recovered_len = 0;
         if (!niwi_npro_lookup(npro, NIWI_TAG_LEAF, entries[i].digest,
@@ -1702,6 +1724,7 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
             recovered_len != entries[i].leaf_len) {
             free(covered);
             free(witness);
+            free(recovered_entries);
             free(entries);
             niwi_npro_free(npro);
             set_error(ctx, "niwi_extract: missing tableau leaf query in Gamma");
@@ -1712,6 +1735,7 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
         if (!leaf) {
             free(covered);
             free(witness);
+            free(recovered_entries);
             free(entries);
             niwi_npro_free(npro);
             set_error(ctx, "niwi_extract: out of memory");
@@ -1723,6 +1747,7 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
             free(leaf);
             free(covered);
             free(witness);
+            free(recovered_entries);
             free(entries);
             niwi_npro_free(npro);
             set_error(ctx, "niwi_extract: failed to copy tableau leaf query");
@@ -1746,10 +1771,26 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
             free(leaf);
             free(covered);
             free(witness);
+            free(recovered_entries);
             free(entries);
             niwi_npro_free(npro);
             set_error(ctx, "niwi_extract: malformed tableau leaf");
             return -1;
+        }
+        if (recovered_entries) {
+            recovered_entries[i] = entries[i];
+            niwi_hash_one_shot(NIWI_TAG_LEAF, leaf, recovered_len,
+                               recovered_entries[i].digest);
+            if (memcmp(recovered_entries[i].digest, entries[i].digest, 32) != 0) {
+                free(leaf);
+                free(covered);
+                free(witness);
+                free(recovered_entries);
+                free(entries);
+                niwi_npro_free(npro);
+                set_error(ctx, "niwi_extract: recovered tableau digest mismatch");
+                return -1;
+            }
         }
         if (!witness) {
             witness_total = total_len;
@@ -1759,6 +1800,7 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
                 free(leaf);
                 free(covered);
                 free(witness);
+                free(recovered_entries);
                 free(entries);
                 niwi_npro_free(npro);
                 set_error(ctx, "niwi_extract: out of memory");
@@ -1768,6 +1810,7 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
             free(leaf);
             free(covered);
             free(witness);
+            free(recovered_entries);
             free(entries);
             niwi_npro_free(npro);
             set_error(ctx, "niwi_extract: inconsistent tableau leaf length");
@@ -1777,6 +1820,7 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
             free(leaf);
             free(covered);
             free(witness);
+            free(recovered_entries);
             free(entries);
             niwi_npro_free(npro);
             set_error(ctx, "niwi_extract: tableau leaf out of range");
@@ -1788,6 +1832,7 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
                 free(leaf);
                 free(covered);
                 free(witness);
+                free(recovered_entries);
                 free(entries);
                 niwi_npro_free(npro);
                 set_error(ctx, "niwi_extract: overlapping tableau leaves");
@@ -1798,7 +1843,30 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
         if (chunk_len != 0) memcpy(witness + chunk_offset, chunk, chunk_len);
         free(leaf);
     }
+    if (has_native_response) {
+        uint8_t recovered_tableau_digest[32];
+        uint64_t recovered_eval = 0;
+        if (compute_tableau_digest(recovered_entries, entry_count,
+                                   recovered_tableau_digest) != 0 ||
+            memcmp(recovered_tableau_digest, tableau_digest, 32) != 0 ||
+            extracted_response.eval_count != entry_count ||
+            extracted_response.eval_start != 0 ||
+            extracted_response.eval_row != 0 ||
+            evaluate_tableau_digest_row(recovered_entries, entry_count,
+                                        extracted_response.eval_point,
+                                        &recovered_eval) != 0 ||
+            recovered_eval != extracted_response.eval_value) {
+            free(covered);
+            free(witness);
+            free(recovered_entries);
+            free(entries);
+            niwi_npro_free(npro);
+            set_error(ctx, "niwi_extract: recovered response mismatch");
+            return -1;
+        }
+    }
     niwi_npro_free(npro);
+    free(recovered_entries);
     free(entries);
 
     for (size_t i = 0; i < witness_total; i++) {

@@ -143,6 +143,8 @@ static uint8_t *build_tableau_gamma(size_t *gamma_len,
                                     size_t witness_len,
                                     uint8_t digest[32],
                                     uint32_t *leaf_len) {
+    /* Legacy unchecked fixture: production relation-backed extraction uses
+     * LIG0/TBL1 through niwi_extract in test_abi.c. */
     uint8_t leaf[128];
     size_t off = 0;
     assert(witness_len <= sizeof(leaf) - 16);
@@ -171,6 +173,7 @@ static uint8_t *build_tableau_gamma(size_t *gamma_len,
 static void append_tableau_section(uint8_t *proof, size_t *proof_len,
                                    const uint8_t digest[32],
                                    uint32_t leaf_len) {
+    /* Legacy unchecked TAB0 section for parser/serialization coverage only. */
     size_t off = *proof_len;
     memcpy(proof + off, "TAB0", 4); off += 4;
     append_u32_be(proof, &off, 1);
