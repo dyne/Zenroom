@@ -130,6 +130,17 @@ static uint32_t expected_ligero_rows(uint32_t leaf_count) {
     return rows;
 }
 
+static uint32_t expected_ligero_columns(uint32_t leaf_count,
+                                        uint32_t rows) {
+    assert(rows != 0);
+    return (leaf_count + rows - 1) / rows;
+}
+
+static uint32_t expected_ligero_param_id(uint32_t rows,
+                                         uint32_t columns) {
+    return 0x01000000u | (rows << 14) | columns;
+}
+
 static size_t find_proof_tag(const uint8_t *proof, size_t proof_len,
                              const char tag[4]) {
     if (!proof || proof_len < 4) return proof_len;
@@ -203,13 +214,16 @@ static void assert_current_native_profile(const native_ligero_meta_t *meta,
                                           uint32_t expected_path_len,
                                           uint32_t expected_opening_leaf_len) {
     uint32_t expected_rows = expected_ligero_rows(expected_tableau_count);
+    uint32_t expected_columns =
+        expected_ligero_columns(expected_tableau_count, expected_rows);
     uint32_t expected_eval_row = meta->response_query_index % expected_rows;
     uint32_t expected_eval_count =
         expected_eval_row >= expected_tableau_count ? 0 :
         ((expected_tableau_count - 1 - expected_eval_row) / expected_rows) + 1;
     assert(meta->version == 0x00010000);
     assert(meta->protocol_id == 0);
-    assert(meta->param_id == 1);
+    assert(meta->param_id ==
+           expected_ligero_param_id(expected_rows, expected_columns));
     assert(meta->rows == expected_rows);
     assert(meta->chunk_size == 32);
     assert(meta->tableau_count == expected_tableau_count);

@@ -16,6 +16,10 @@ The private witness byte string is split into 32-byte chunks. Empty witnesses
 still produce one chunk. The current profile chooses
 `row_count = ceil(sqrt(tableau_count))`, capped at 128 rows. Leaf index `i` is
 placed at `row = i mod row_count` and `column = floor(i / row_count)`.
+The serialized `param_id` is recomputed by the verifier as
+`0x01000000 | (row_count << 14) | column_count`, where
+`column_count = ceil(tableau_count / row_count)`. This binds the native proof
+body to the current Ligero dimension profile instead of a generic constant.
 
 Each relation-backed leaf is serialized as:
 
@@ -83,7 +87,7 @@ The current fixed values are:
 ```text
 version = 0x00010000
 protocol_id = 0
-param_id = 1
+param_id = 0x01000000 | (rows << 14) | columns
 rows = 1
 chunk_size = 32
 ```
@@ -183,9 +187,10 @@ H_NRSP(
 )
 ```
 
-This section is still narrower than full paper Ligero. The next profile step
-must replace the local square-ish dimension rule with the paper's parameter
-selection and low-degree tests.
+This section is still narrower than full paper Ligero. The current `param_id`
+binds the local row/column dimensions, but the next profile step must replace
+the local square-ish dimension rule with the paper's parameter selection and
+low-degree tests.
 
 ## Query And Opening
 
@@ -229,6 +234,7 @@ No Longfellow change is needed for the current minimal native Ligero profile.
 `lib/niwi/src/niwi.c` implements the local helpers
 `ligero_field_add`, `ligero_field_mul`, `ligero_digest_to_field`, and
 `evaluate_tableau_digest_row`, and `evaluate_tableau_digest_column` over the
-`2^64 - 59` field. A Longfellow adapter should only be introduced when the
-profile moves from this local dimension rule to the paper's parameterized
-Ligero dimensions and low-degree tests.
+`2^64 - 59` field. It also binds the local row/column profile through
+`param_id`. A Longfellow adapter should only be introduced when the profile
+moves from this local dimension rule to the paper's parameterized Ligero
+dimensions and low-degree tests.

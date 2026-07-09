@@ -9,7 +9,7 @@ needed before claiming production, paper-exact RPBSch.
 | --- | --- | --- | --- |
 | Relation-backed proving | `lib/niwi/src/niwi.c`, `src/lua/crypto_niwi.lua` | `make -C lib/niwi test`, `test/lua/zkcc_niwi_smoke.lua` | Implemented for BIP340 and generic P256 zkcc relations |
 | Native proof body | `LIG0` in `lib/niwi/src/niwi.c` | `lib/niwi/tests/test_abi.c` | Versioned, relation-bound, carries tableau entries, explicit `NRSP` response objects, and minimal algebraic row/column checks over tableau leaf digests; still narrower than the paper's parameterized Ligero proof body |
-| Tableau root, response, and selected opening | `LIG0` in `lib/niwi/src/niwi.c` | `test_relation_checked_prove`, `test_relation_merkle_path_for_multi_leaf_tableau`, `test_native_ligero_profile_vectors` | Native verifier recomputes the Merkle root, parses and checks `NRSP`, recomputes the response digest, verifies tableau-digest row and column evaluations over the current square-ish bounded-row profile, derives the Fiat-Shamir opening index, checks the selected `TBL1` leaf preimage, and verifies the selected Merkle path; remaining generalization is the paper's parameterized Ligero dimensions and low-degree tests |
+| Tableau root, response, and selected opening | `LIG0` in `lib/niwi/src/niwi.c` | `test_relation_checked_prove`, `test_relation_merkle_path_for_multi_leaf_tableau`, `test_native_ligero_profile_vectors` | Native verifier recomputes the Merkle root, parses and checks `NRSP`, recomputes the response digest, verifies tableau-digest row and column evaluations over the current square-ish bounded-row profile, recomputes the dimension-bound `param_id`, derives the Fiat-Shamir opening index, checks the selected `TBL1` leaf preimage, and verifies the selected Merkle path; remaining generalization is the paper's parameterized Ligero dimensions and low-degree tests |
 | Relation witness tableau leaves | `TBL1` in `lib/niwi/src/niwi.c` | `test_relation_observed_uses_bound_tableau_leaves` | Production observed leaves bind relation id and public statement digest; unchecked fixtures retain legacy `TBL0` |
 | Unchecked envelope isolation | `src/lua/crypto_niwi.lua`, native `niwi` module | `test/lua/niwi_regression.lua` | Production Lua rejects raw unchecked envelopes |
 | Native generic zkcc evaluation | `lib/niwi/src/relations/zkcc_p256_relation.cc` | `test/lua/zkcc_niwi_smoke.lua` | Direct circuit evaluation, no Lua or legacy proof object |
@@ -55,8 +55,8 @@ needed before claiming production, paper-exact RPBSch.
   verification/extraction read tableau entries from `LIG0`, and production
   observed leaves use `TBL1` to bind relation id and public statement digest
   into the extracted witness tableau. `LIG0` carries a native tableau Merkle
-  root, explicit `NRSP` row/column response object, verifier-recomputed response
-  digest, minimal tableau-digest row and column evaluations, Fiat-Shamir selected opening path,
+  root, dimension-bound `param_id`, explicit `NRSP` row/column response object,
+  verifier-recomputed response digest, minimal tableau-digest row and column evaluations, Fiat-Shamir selected opening path,
   selected `TBL1` leaf preimage, and KLP22 challenge schedule binding. The
   remaining NIWI core generalization is replacing the local square-ish tableau
   dimension rule with the paper's parameterized Ligero dimensions and low-degree

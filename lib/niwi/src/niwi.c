@@ -45,7 +45,7 @@
 #define NIWI_PROOF_NATIVE_BODY_TAG "LIG0"
 #define NIWI_PROOF_NATIVE_BODY_VERSION 0x00010000
 #define NIWI_PROOF_NATIVE_BODY_PROTOCOL_ID 0
-#define NIWI_PROOF_NATIVE_BODY_PARAM_ID 1
+#define NIWI_PROOF_NATIVE_BODY_PARAM_PROFILE 0x01000000u
 #define NIWI_TABLEAU_MAX_ROWS 128
 #define NIWI_PROOF_NATIVE_BODY_HEADER_WORDS 2
 #define NIWI_PROOF_NATIVE_BODY_FIXED_WORDS 10
@@ -183,6 +183,14 @@ static uint32_t tableau_row_count(size_t leaf_count) {
 static uint32_t tableau_column_count(size_t leaf_count, uint32_t row_count) {
     if (row_count == 0) return 0;
     return (uint32_t)((leaf_count + row_count - 1) / row_count);
+}
+
+static uint32_t ligero_param_id(uint32_t row_count, uint32_t column_count) {
+    if (row_count == 0 || row_count > NIWI_TABLEAU_MAX_ROWS ||
+        column_count == 0 || column_count > 0x3fffu)
+        return 0;
+    return NIWI_PROOF_NATIVE_BODY_PARAM_PROFILE |
+           (row_count << 14) | column_count;
 }
 
 static int build_tableau_leaf_fragment(const uint8_t *private_inputs,
@@ -862,6 +870,7 @@ static int compute_native_body_challenge1(
 
 static void compute_native_body_final_digest(
     niwi_relation_id_t relation_id,
+    uint32_t param_id,
     uint32_t tableau_count,
     uint32_t row_count,
     const uint8_t tableau_digest[32],
@@ -879,7 +888,7 @@ static void compute_native_body_final_digest(
     size_t off = 0;
     write_u32_be(preimage + off, NIWI_PROOF_NATIVE_BODY_VERSION); off += 4;
     write_u32_be(preimage + off, NIWI_PROOF_NATIVE_BODY_PROTOCOL_ID); off += 4;
-    write_u32_be(preimage + off, NIWI_PROOF_NATIVE_BODY_PARAM_ID); off += 4;
+    write_u32_be(preimage + off, param_id); off += 4;
     write_u32_be(preimage + off, row_count); off += 4;
     write_u32_be(preimage + off, NIWI_TABLEAU_CHUNK_SIZE); off += 4;
     write_u32_be(preimage + off, tableau_count); off += 4;
@@ -915,6 +924,9 @@ static int append_native_proof_body(niwi_ctx_t *ctx,
     if (ctx->relation_id == NIWI_RELATION_NONE) return -1;
     if (tableau_count == 0 || tableau_count > UINT32_MAX) return -1;
     uint32_t row_count = tableau_row_count(tableau_count);
+    uint32_t column_count = tableau_column_count(tableau_count, row_count);
+    uint32_t param_id = ligero_param_id(row_count, column_count);
+    if (param_id == 0) return -1;
     if (tableau_count > (SIZE_MAX - NIWI_PROOF_NATIVE_BODY_BASE_SIZE) /
                             NIWI_PROOF_TABLEAU_ENTRY_SIZE)
         return -1;
@@ -981,6 +993,7 @@ static int append_native_proof_body(niwi_ctx_t *ctx,
         return -1;
     }
     compute_native_body_final_digest(ctx->relation_id,
+                                     param_id,
                                      (uint32_t)tableau_count,
                                      row_count,
                                      tableau_digest, tableau_root,
@@ -996,7 +1009,7 @@ static int append_native_proof_body(niwi_ctx_t *ctx,
     write_u32_be(proof + *off, (uint32_t)payload_size); *off += 4;
     write_u32_be(proof + *off, NIWI_PROOF_NATIVE_BODY_VERSION); *off += 4;
     write_u32_be(proof + *off, NIWI_PROOF_NATIVE_BODY_PROTOCOL_ID); *off += 4;
-    write_u32_be(proof + *off, NIWI_PROOF_NATIVE_BODY_PARAM_ID); *off += 4;
+    write_u32_be(proof + *off, param_id); *off += 4;
     write_u32_be(proof + *off, row_count); *off += 4;
     write_u32_be(proof + *off, NIWI_TABLEAU_CHUNK_SIZE); *off += 4;
     write_u32_be(proof + *off, (uint32_t)tableau_count); *off += 4;
@@ -1074,10 +1087,7 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
         return -1;
     }
     *off += 4;
-    if (read_u32_be(proof + *off) != NIWI_PROOF_NATIVE_BODY_PARAM_ID) {
-        set_error(ctx, "niwi_verify: unsupported native proof body parameters");
-        return -1;
-    }
+    uint32_t param_id = read_u32_be(proof + *off);
     *off += 4;
     uint32_t row_count = read_u32_be(proof + *off);
     if (row_count == 0 || row_count > NIWI_TABLEAU_MAX_ROWS) {
@@ -1094,6 +1104,11 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
     if (tableau_count == 0 || tableau_count > NIWI_TABLEAU_MAX_LEAVES ||
         row_count != tableau_row_count(tableau_count)) {
         set_error(ctx, "niwi_verify: native proof tableau count mismatch");
+        return -1;
+    }
+    uint32_t column_count = tableau_column_count(tableau_count, row_count);
+    if (param_id != ligero_param_id(row_count, column_count)) {
+        set_error(ctx, "niwi_verify: unsupported native proof body parameters");
         return -1;
     }
     *off += 4;
@@ -1177,6 +1192,7 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
     *off += 32;
     uint8_t final_digest[32];
     compute_native_body_final_digest(ctx->relation_id,
+                                     param_id,
                                      (uint32_t)tableau_count,
                                      row_count,
                                      claimed_tableau_digest,
