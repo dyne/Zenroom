@@ -55,7 +55,7 @@ clean:
 
 # ---- Tests ----
 
-test: test_abi test_encoding test_hash test_npro test_commitment test_challenge_schedule test_niwi_proof_serde test_extract test_vectors test_secp256k1 test_bip340_relation
+test: test_abi test_encoding test_hash test_npro test_commitment test_challenge_schedule test_niwi_proof_serde test_extract test_vectors test_secp256k1 test_bip340_relation test_ligero_param
 	./test_abi
 	./test_encoding
 	./test_hash
@@ -67,6 +67,7 @@ test: test_abi test_encoding test_hash test_npro test_commitment test_challenge_
 	./test_vectors
 	./test_secp256k1
 	./test_bip340_relation
+	./test_ligero_param
 	@echo "=== All lib/niwi tests passed ==="
 
 test_abi: tests/test_abi.c.o libniwi.a
@@ -109,6 +110,9 @@ test_secp256k1: tests/test_secp256k1.cc.o libniwi.a
 
 test_bip340_relation: tests/test_bip340_relation.cc.o libniwi.a
 	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_bip340_relation.cc.o -L. -lniwi $(NIWI_ZK_DEPS)
+
+test_ligero_param: tests/test_ligero_param.cc.o libniwi.a
+	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_ligero_param.cc.o -L. -lniwi $(NIWI_ZK_DEPS)
 
 # ---- Benchmarks ----
 
