@@ -32,7 +32,9 @@
 --   niwi.pbsch_pedersen_commit(m, rho)   -> C       (33-byte OCTET)
 --   niwi.pbsch_pedersen_verify(C, m, rho)-> boolean
 --
--- Cmt status: binding Pedersen profile, not paper-exact Cmt.  See
+-- Cmt status: Pedersen-backed CMT1 opening envelope with straight-line
+-- extraction from opened proofs. RPBSch is not paper-exact until the native
+-- branch/selector relations verify C and S openings inside the relation. See
 -- lib/niwi/docs/pbsch-cmt-profile.md before making RPBSch proof claims.
 --
 -- The native layer owns: secp256k1 arithmetic, BIP-340 sign/verify,
@@ -54,6 +56,10 @@ pbsch.S_SIZE    = 33
 pbsch.RAND_SIZE = 32
 pbsch.MSG_SIZE  = 32
 pbsch.STATEMENT_SIZE = 258
+pbsch.CMT_PROFILE = "pbsch-cmt-pedersen-extractable-v1"
+pbsch.CMT_OPENING_SIZE = 100
+
+local CMT_OPENING_TAG = "CMT1"
 
 local function fail(message)
     error(message, 2)
@@ -174,7 +180,8 @@ end
 
 -- ===========================================================================
 -- PBSch commitment operations (thin wrappers around native Pedersen)
--- Transitional Cmt profile: binding Pedersen profile, not paper-exact Cmt.
+-- Pedersen-backed Cmt profile. Extraction comes from the CMT1 opening
+-- envelope below; native code owns scalar checks and curve arithmetic.
 -- ===========================================================================
 
 function pbsch.commit_c(m, rho)
@@ -183,6 +190,61 @@ end
 
 function pbsch.verify_c(C, m, rho)
     return niwi.pbsch_pedersen_verify(C, m, rho)
+end
+
+--- Build the current extractable Cmt opening envelope.
+-- This wraps the native Pedersen opening in a canonical, straight-line
+-- extractable envelope: CMT1 || ck || message || randomness.
+-- It is still a Pedersen-backed Cmt profile; RPBSch is not paper-exact until
+-- branch/selector relations verify this envelope inside the relation.
+function pbsch.cmt_opening(message, rho)
+    assert(#message:str() == 32, "message must be 32 bytes")
+    assert(#rho:str() == 32, "rho must be 32 bytes")
+    return OCTET.from_string(CMT_OPENING_TAG) ..
+           pbsch.commitment_key() .. message .. rho
+end
+
+local function parse_cmt_opening(opening)
+    if type(opening) ~= "zenroom.octet" then return nil end
+    local raw = opening:str()
+    if #raw ~= pbsch.CMT_OPENING_SIZE then return nil end
+    if raw:sub(1, 4) ~= CMT_OPENING_TAG then return nil end
+    return {
+        ck = OCTET.from_string(raw:sub(5, 36)),
+        message = OCTET.from_string(raw:sub(37, 68)),
+        rho = OCTET.from_string(raw:sub(69, 100)),
+    }
+end
+
+function pbsch.cmt_commit(message, rho)
+    local commitment = pbsch.commit_c(message, rho)
+    return {
+        profile = pbsch.CMT_PROFILE,
+        ck = pbsch.commitment_key(),
+        commitment = commitment,
+        opening = pbsch.cmt_opening(message, rho),
+    }
+end
+
+function pbsch.cmt_verify(commitment, opening)
+    if type(commitment) ~= "zenroom.octet" or #commitment:str() ~= pbsch.C_SIZE then
+        return false
+    end
+    local parsed = parse_cmt_opening(opening)
+    if not parsed then return false end
+    if parsed.ck:string() ~= pbsch.commitment_key():string() then return false end
+    return pbsch.verify_c(commitment, parsed.message, parsed.rho)
+end
+
+function pbsch.cmt_extract(commitment, opening)
+    if not pbsch.cmt_verify(commitment, opening) then return nil end
+    local parsed = parse_cmt_opening(opening)
+    return {
+        profile = pbsch.CMT_PROFILE,
+        ck = parsed.ck,
+        message = parsed.message,
+        rho = parsed.rho,
+    }
 end
 
 function pbsch.commit_s(sig0, sig1, nu_u, nu_u_prime, nu_s, rho)

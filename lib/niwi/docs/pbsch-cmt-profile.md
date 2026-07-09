@@ -1,11 +1,12 @@
 # PBSch Cmt Profile
 
-This document records the current PBSch commitment profile and the work
-needed before claiming the paper-exact Cmt from `niwi/2025-1992.pdf`.
+This document records the current PBSch commitment profile and the remaining
+work before claiming paper-exact RPBSch from `niwi/2025-1992.pdf`.
 
 ## Current Profile
 
-The current implementation uses a binding Pedersen profile over secp256k1:
+The current implementation uses a Pedersen-backed extractable opening profile
+over secp256k1:
 
 - `ck` is the x-only encoding of `H`, derived by
   `SHA-256("Zenroom/PBSch/PedersenH/v1" || iteration)` until lift succeeds
@@ -14,11 +15,17 @@ The current implementation uses a binding Pedersen profile over secp256k1:
 - `S` uses the same primitive with a different encoded message tuple.
 - Lua encodes the paper tuples into 32-byte representatives before calling
   the native primitive.
+- The opening envelope is `CMT1 || ck || message || randomness`.
+- Extraction is straight-line from an opened proof: parse the `CMT1` envelope,
+  verify `ck`, verify the native Pedersen opening, then return the typed
+  `message` and `randomness`.
+- Native code rejects non-canonical message and randomness scalars
+  (`scalar >= secp256k1_order`) before committing or verifying.
 
-This profile is useful for implementation progress because openings can be
-checked deterministically inside Lua/native relation adapters. It is not the
-paper-exact Cmt profile because Pedersen opening verification alone does not
-give the straight-line extraction interface assumed by the RPBSch proof.
+This profile gives the extraction interface needed for opened PBSch
+commitments while preserving the existing secp256k1 Pedersen commitment. It is
+still not enough to claim paper-exact RPBSch until the RPBSch branch and
+selector relations verify the `C` and `S` openings inside the native relation.
 
 ## Paper Requirement
 
@@ -29,27 +36,27 @@ For RPBSch paper-level claims, Cmt must expose:
 - verifier checks for commitment openings inside the relation;
 - a straight-line extraction mechanism matching the proof argument.
 
-Until that mechanism is implemented, code and tests must describe this as:
-
-> binding Pedersen profile, not paper-exact Cmt
+The first and fourth items are implemented by the current `CMT1` envelope. The
+remaining paper-level RPBSch work is relation integration: `C` and `S` opening
+checks must move from Lua boundary checks into branch and selector relations.
 
 ## Decision
 
-Keep the Pedersen profile as the transitional implementation, but do not
-claim paper-exact RPBSch from it. The next production step is to augment or
-replace it with the exact straight-line extractable Cmt profile required by
-`2025-1992`.
+Keep the Pedersen group commitment and augment it with the `CMT1`
+straight-line extractable opening envelope. Do not claim paper-exact RPBSch
+from this alone.
 
 The preferred path is:
 
 1. Keep `ck`, compressed commitment, scalar message, and scalar randomness
-   encodings unchanged if they satisfy the final profile.
-2. Add the extraction transcript/opening material required by the paper.
+   encodings unchanged.
+2. Use `CMT1 || ck || message || randomness` as the opened-proof extraction
+   material.
 3. Move `C` and `S` opening checks into the RPBSch relation circuits.
-4. Update this document and remove transitional warnings only after tests
+4. Remove the remaining RPBSch warnings only after branch and selector tests
    cover commit, open, verify, extract, malformed `ck`, malformed commitment,
    invalid scalar, wrong message, wrong randomness, and missing extraction
-   material.
+   material inside the native relation path.
 
 ## Implementation Map
 
@@ -57,6 +64,7 @@ The preferred path is:
 - Native primitive header: `lib/niwi/src/pbsch_commitment.h`
 - Lua PBSch tuple encoding and wrappers: `src/lua/crypto_pbsch.lua`
 - Current RPBSch branch fixture: `src/lua/crypto_rpbsch.lua`
+- Cmt profile tests: `test/lua/pbsch_cmt.lua`
 - Pedersen tests: `test/lua/pedersen.lua`
 - PBSch/RPBSch smoke tests: `test/lua/pbsch_end_to_end.lua`,
   `test/lua/rpbsch_niwi.lua`

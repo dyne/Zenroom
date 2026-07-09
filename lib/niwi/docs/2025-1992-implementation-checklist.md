@@ -36,8 +36,8 @@ needed before claiming production, paper-exact RPBSch.
 | Paper component | Current code | Tests | Status |
 | --- | --- | --- | --- |
 | Commitment key `ck` | `lib/niwi/src/pbsch_commitment.c` | `test/lua/pedersen.lua` | Deterministic Pedersen H derivation |
-| `C` and `S` opening checks | `src/lua/crypto_pbsch.lua`, `src/lua/crypto_rpbsch.lua` | `test/lua/rpbsch_niwi.lua` | Checked in Lua adapter boundary |
-| Straight-line extractable Cmt | `lib/niwi/docs/pbsch-cmt-profile.md` | Not implemented | Open. Current profile is binding Pedersen, not paper-exact Cmt |
+| `C` and `S` opening checks | `src/lua/crypto_pbsch.lua`, `src/lua/crypto_rpbsch.lua` | `test/lua/rpbsch_niwi.lua` | Checked in Lua adapter boundary; still open inside RPBSch relation |
+| Straight-line extractable Cmt | `src/lua/crypto_pbsch.lua`, `lib/niwi/src/pbsch_commitment.c`, `lib/niwi/docs/pbsch-cmt-profile.md` | `test/lua/pbsch_cmt.lua`, `test/lua/pedersen.lua` | Implemented as Pedersen-backed `CMT1` opening envelope; RPBSch remains non-paper-exact until branch/selector relations verify openings |
 
 ## RPBSch Relation
 
@@ -61,8 +61,9 @@ needed before claiming production, paper-exact RPBSch.
 - Current extraction reconstructs the committed tableau-fragment profile and
   revalidates the relation before returning success. Full paper-level Ligero
   body extraction remains open.
-- Current PBSch Cmt is a binding Pedersen profile. It is not the
-  straight-line extractable Cmt required for final RPBSch proof claims.
+- Current PBSch Cmt is a Pedersen-backed `CMT1` profile with straight-line
+  extraction from opened commitments. Final RPBSch proof claims still require
+  branch/selector relations to verify `C` and `S` openings natively.
 - Current RPBSch has branch fixtures and statement binding, but not a
   selector-composed native relation.
 - BIP340 is the strongest covered dependency: official vectors cover the SECP
@@ -84,10 +85,8 @@ make -f build/posix.mk
 ./zenroom test/lua/bip340_vectors.lua
 ./zenroom test/lua/zkcc_bip340.lua
 ./zenroom test/lua/bip340_niwi_native_relation.lua
+./zenroom test/lua/pbsch_cmt.lua
 ./zenroom test/lua/pedersen.lua
 ./zenroom test/lua/rpbsch_niwi.lua
 ./zenroom test/lua/pbsch_end_to_end.lua
 ```
-
-Known warnings: `lib/niwi/src/pbsch_commitment.c` currently emits a
-signedness warning in the local `sha256` helper and an unused-function warning.

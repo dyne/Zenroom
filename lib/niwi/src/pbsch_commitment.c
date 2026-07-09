@@ -54,15 +54,6 @@ static void ecp_mul_deterministic(ECP_SECP256K1 *P, BIG_256_28 e) {
 
 /* ---- Internal helpers -------------------------------------------------- */
 
-/* One-shot SHA-256. */
-static void sha256(uint8_t out[32], const uint8_t *data, size_t len) {
-    hash256 sha;
-    HASH256_init(&sha);
-    for (size_t i = 0; i < len; ++i)
-        HASH256_process(&sha, data[i]);
-    HASH256_hash(&sha, out);
-}
-
 /* Streaming SHA-256 for the iterative H-derivation loop. */
 static void h_init(hash256 *h) { HASH256_init(h); }
 static void h_update(hash256 *h, const uint8_t *data, size_t len) {
@@ -103,6 +94,14 @@ static int derive_h(ECP_SECP256K1 *H) {
     }
 }
 
+static int scalar_is_canonical(const uint8_t scalar[32]) {
+    BIG_256_28 value;
+    BIG_256_28 order;
+    BIG_256_28_fromBytes(value, (char *)scalar);
+    BIG_256_28_copy(order, (chunk *)CURVE_Order_SECP256K1);
+    return BIG_256_28_comp(value, order) < 0;
+}
+
 int niwi_pbsch_pedersen_h(uint8_t h_x_out[32]) {
     if (g_h_ready) { memcpy(h_x_out, g_h_x, 32); return 0; }
     ECP_SECP256K1 H;
@@ -124,13 +123,17 @@ int niwi_pbsch_pedersen_h(uint8_t h_x_out[32]) {
 
 /* ---- Pedersen primitives -----------------------------------------------
  *
- * Transitional Cmt profile: binding Pedersen profile, not paper-exact Cmt.
- * This file verifies openings but does not implement the straight-line
- * extraction mechanism required by 2025-1992 RPBSch. */
+ * PBSch Cmt profile: canonical binding Pedersen commitment over secp256k1.
+ * The straight-line extractable CMT1 opening envelope is built in Lua so the
+ * encoding remains readable; this native layer owns scalar validation and
+ * deterministic curve arithmetic. RPBSch is paper-exact only once branch and
+ * selector relations verify those openings inside the relation. */
 
 int niwi_pbsch_pedersen_commit(const uint8_t msg[32], const uint8_t rho[32],
                                uint8_t c_out[NIWI_PBSCH_CMP_SIZE]) {
     ECP_SECP256K1 H, C;
+    if (!msg || !rho || !c_out) return -1;
+    if (!scalar_is_canonical(msg) || !scalar_is_canonical(rho)) return -1;
     if (niwi_pbsch_pedersen_h(g_h_x) < 0) return -1;
 
     /* get H from cached x via setx(0) */
@@ -169,6 +172,7 @@ int niwi_pbsch_pedersen_commit(const uint8_t msg[32], const uint8_t rho[32],
 
 int niwi_pbsch_pedersen_verify(const uint8_t c[NIWI_PBSCH_CMP_SIZE],
                                const uint8_t msg[32], const uint8_t rho[32]) {
+    if (!c || !msg || !rho) return -1;
     uint8_t recomputed[33];
     if (niwi_pbsch_pedersen_commit(msg, rho, recomputed) != 0) return -1;
     return (memcmp(c, recomputed, 33) == 0) ? 0 : -1;
