@@ -43,6 +43,7 @@
 #define NIWI_TABLEAU_MAX_LEAVES 8192
 #define NIWI_TABLEAU_MAX_MERKLE_DEPTH 13
 #define NIWI_PROOF_NATIVE_BODY_TAG "LIG0"
+#define NIWI_PROOF_LONGFELLOW_BODY_TAG "LZK0"
 #define NIWI_PROOF_NATIVE_BODY_VERSION 0x00010000
 #define NIWI_PROOF_NATIVE_BODY_PROTOCOL_ID 0
 #define NIWI_PROOF_NATIVE_BODY_PARAM_PROFILE 0x01000000u
@@ -1048,6 +1049,45 @@ static int append_native_proof_body(niwi_ctx_t *ctx,
     return 0;
 }
 
+static int parse_longfellow_body(niwi_ctx_t *ctx,
+                                 const uint8_t *proof, size_t proof_len,
+                                 size_t *off,
+                                 const uint8_t *public_inputs, size_t pub_len,
+                                 int require_for_relation) {
+    if (!ctx || !proof || !off || *off > proof_len) return -1;
+    int needs_body = require_for_relation &&
+                     ctx->relation_id == NIWI_RELATION_ZKCC_BIP340;
+    if (*off == proof_len) {
+        if (needs_body) {
+            set_error(ctx, "niwi_verify: missing Longfellow proof body");
+            return -1;
+        }
+        return 0;
+    }
+    if (proof_len - *off < 8 ||
+        memcmp(proof + *off, NIWI_PROOF_LONGFELLOW_BODY_TAG, 4) != 0) {
+        if (needs_body) {
+            set_error(ctx, "niwi_verify: missing Longfellow proof body");
+            return -1;
+        }
+        return 0;
+    }
+    *off += 4;
+    uint32_t body_len = read_u32_be(proof + *off); *off += 4;
+    if ((size_t)body_len > proof_len - *off) {
+        set_error(ctx, "niwi_verify: invalid Longfellow proof body length");
+        return -1;
+    }
+    if (ctx->relation_id == NIWI_RELATION_ZKCC_BIP340 &&
+        niwi_bip340_ligero_verify(public_inputs, pub_len,
+                                   proof + *off, body_len) != 0) {
+        set_error(ctx, "niwi_verify: invalid Longfellow proof body");
+        return -1;
+    }
+    *off += body_len;
+    return 0;
+}
+
 static int parse_native_proof_body(niwi_ctx_t *ctx,
                                    const uint8_t *proof, size_t proof_len,
                                    size_t *off,
@@ -1470,15 +1510,34 @@ static int build_proof(niwi_ctx_t *ctx,
 
     size_t tableau_section_size =
         4 + 4 + tableau_count * NIWI_PROOF_TABLEAU_ENTRY_SIZE;
+    uint8_t *longfellow_body = NULL;
+    size_t longfellow_body_len = 0;
+    if (relation_backed && ctx->relation_id == NIWI_RELATION_ZKCC_BIP340 &&
+        niwi_bip340_ligero_prove(public_inputs, pub_len,
+                                  private_inputs, priv_len,
+                                  &longfellow_body,
+                                  &longfellow_body_len) != 0) {
+        free(tableau_entries);
+        set_error(ctx, "niwi_prove: failed to build Longfellow proof body");
+        return -1;
+    }
+    if (longfellow_body_len > UINT32_MAX) {
+        free(longfellow_body);
+        free(tableau_entries);
+        set_error(ctx, "niwi_prove: Longfellow proof body too large");
+        return -1;
+    }
     size_t native_body_size =
         NIWI_PROOF_NATIVE_BODY_BASE_SIZE +
         NIWI_TABLEAU_MAX_MERKLE_DEPTH * 32 +
         tableau_count * NIWI_PROOF_TABLEAU_ENTRY_SIZE +
         NIWI_TABLEAU_RELATION_LEAF_HEADER_SIZE + NIWI_TABLEAU_CHUNK_SIZE;
     size_t len = NIWI_PROOF_HEADER_SIZE + NIWI_PROOF_PARAM_SIZE +
-                 (relation_backed ? native_body_size : tableau_section_size);
+                 (relation_backed ? native_body_size : tableau_section_size) +
+                 (longfellow_body_len ? 8 + longfellow_body_len : 0);
     uint8_t *proof = (uint8_t *)calloc(1, len);
     if (!proof) {
+        free(longfellow_body);
         free(tableau_entries);
         set_error(ctx, "niwi_prove: out of memory");
         return -1;
@@ -1514,19 +1573,33 @@ static int build_proof(niwi_ctx_t *ctx,
             set_error(ctx, "niwi_prove: failed to build tableau section");
             return -1;
         }
-    } else if (
-        append_native_proof_body(ctx, circuit_digest, statement_digest,
-                                 tableau_digest, commitment, opening,
-                                 tableau_entries,
-                                 tableau_count,
-                                 private_inputs, priv_len,
-                                 proof, len, &off) != 0) {
+    } else if (append_native_proof_body(ctx, circuit_digest, statement_digest,
+                                        tableau_digest, commitment, opening,
+                                        tableau_entries,
+                                        tableau_count,
+                                        private_inputs, priv_len,
+                                        proof, len, &off) != 0) {
+        free(longfellow_body);
         free(tableau_entries);
         free(proof);
         set_error(ctx, "niwi_prove: failed to build native proof body");
         return -1;
     }
+    if (longfellow_body_len != 0) {
+        if (off + 8 + longfellow_body_len > len) {
+            free(longfellow_body);
+            free(tableau_entries);
+            free(proof);
+            set_error(ctx, "niwi_prove: failed to append Longfellow proof body");
+            return -1;
+        }
+        memcpy(proof + off, NIWI_PROOF_LONGFELLOW_BODY_TAG, 4); off += 4;
+        write_u32_be(proof + off, (uint32_t)longfellow_body_len); off += 4;
+        memcpy(proof + off, longfellow_body, longfellow_body_len);
+        off += longfellow_body_len;
+    }
 
+    free(longfellow_body);
     free(tableau_entries);
     *proof_out = proof;
     *proof_len = off;
@@ -1596,6 +1669,9 @@ static int verify_proof_envelope(niwi_ctx_t *ctx,
                                     NULL,
                                     require_relation) != 0)
             return -1;
+        if (parse_longfellow_body(ctx, proof, proof_len, &off,
+                                  public_inputs, pub_len, 1) != 0)
+            return -1;
     } else {
         if (off + 4 <= proof_len &&
             memcmp(proof + off, NIWI_PROOF_NATIVE_BODY_TAG, 4) == 0) {
@@ -1605,6 +1681,9 @@ static int verify_proof_envelope(niwi_ctx_t *ctx,
                                         tableau_digest, NULL, &tableau_count,
                                         NULL,
                                         0) != 0)
+                return -1;
+            if (parse_longfellow_body(ctx, proof, proof_len, &off,
+                                      public_inputs, pub_len, 0) != 0)
                 return -1;
         } else {
             if (parse_tableau_section(proof, proof_len, &off,
@@ -1619,6 +1698,9 @@ static int verify_proof_envelope(niwi_ctx_t *ctx,
                                         tableau_digest, NULL, &tableau_count,
                                         NULL,
                                         0) != 0)
+                return -1;
+            if (parse_longfellow_body(ctx, proof, proof_len, &off,
+                                      public_inputs, pub_len, 0) != 0)
                 return -1;
         }
     }
@@ -1806,6 +1888,9 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
                                     &extracted_response,
                                     0) != 0)
             return -1;
+        if (parse_longfellow_body(ctx, proof, proof_len, &off,
+                                  public_inputs, pub_len, 0) != 0)
+            return -1;
         has_native_response = 1;
     } else {
         if (parse_tableau_section(proof, proof_len, &off,
@@ -1820,6 +1905,11 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
                                     tableau_digest, NULL, &entry_count,
                                     NULL,
                                     0) != 0) {
+            free(entries);
+            return -1;
+        }
+        if (parse_longfellow_body(ctx, proof, proof_len, &off,
+                                  public_inputs, pub_len, 0) != 0) {
             free(entries);
             return -1;
         }

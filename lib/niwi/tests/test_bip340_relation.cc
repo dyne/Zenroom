@@ -48,6 +48,14 @@ static void append_field(std::vector<uint8_t>& out,
     out.insert(out.end(), buf, buf + sizeof(buf));
 }
 
+static size_t find_tag(const uint8_t *buf, size_t len, const char tag[4]) {
+    if (!buf || len < 4) return len;
+    for (size_t i = 0; i + 4 <= len; ++i) {
+        if (memcmp(buf + i, tag, 4) == 0) return i;
+    }
+    return len;
+}
+
 static void build_vector0_inputs(std::vector<uint8_t>& public_inputs,
                                  std::vector<uint8_t>& private_inputs) {
     const auto sig = hex_to_bytes(
@@ -124,6 +132,13 @@ static void test_native_bip340_relation_prove_and_extract(void) {
                                &proof, &proof_len, &gamma, &gamma_len) == 0);
     assert(proof != nullptr);
     assert(gamma != nullptr);
+    size_t lzk0 = find_tag(proof, proof_len, "LZK0");
+    assert(lzk0 != proof_len);
+    assert(niwi_verify(ctx, proof, proof_len, pub.data(), pub.size()) == 0);
+
+    proof[proof_len - 1] ^= 1u;
+    assert(niwi_verify(ctx, proof, proof_len, pub.data(), pub.size()) != 0);
+    proof[proof_len - 1] ^= 1u;
 
     uint8_t *extracted = nullptr;
     size_t extracted_len = 0;

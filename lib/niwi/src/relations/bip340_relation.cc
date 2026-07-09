@@ -8,13 +8,30 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
+#include <memory>
+#include <vector>
+
+#include "algebra/crt.h"
+#include "algebra/crt_convolution.h"
 #include "algebra/fp_p256k1.h"
+#include "algebra/reed_solomon.h"
+#include "arrays/dense.h"
+#include "circuits/bip340/bip340_guard.h"
 #include "circuits/bip340/bip340_verify.h"
+#include "circuits/compiler/compiler.h"
+#include "circuits/logic/compiler_backend.h"
 #include "circuits/logic/evaluation_backend.h"
 #include "circuits/logic/logic.h"
 #include "ec/p256k1.h"
+#include "random/secure_random_engine.h"
+#include "random/transcript.h"
+#include "util/readbuffer.h"
+#include "zk/zk_proof.h"
+#include "zk/zk_prover.h"
+#include "zk/zk_verifier.h"
 
 namespace {
 
@@ -24,11 +41,20 @@ using Logic = proofs::Logic<Field, Backend>;
 using Verify = proofs::Bip340Verify<Logic, Field, proofs::P256k1>;
 using Elt = Field::Elt;
 using EltW = Logic::EltW;
+using CompileBackend = proofs::CompilerBackend<Field>;
+using CompileLogic = proofs::Logic<Field, CompileBackend>;
+using CompileVerify =
+    proofs::Bip340Verify<CompileLogic, Field, proofs::P256k1>;
+using Crt = proofs::CRT256<Field>;
+using ConvolutionFactory = proofs::CrtConvolutionFactory<Crt, Field>;
+using RSFactory = proofs::ReedSolomonFactory<Field, ConvolutionFactory>;
 
 constexpr size_t kEltBytes = 32;
 constexpr size_t kPublicElts = 4;
 constexpr size_t kInputElts = 2305;
 constexpr size_t kBits = proofs::P256k1::kBits;
+constexpr size_t kLigeroRate = 4;
+constexpr size_t kLigeroNreq = 128;
 
 bool decode_field(const uint8_t *bytes, Elt *out) {
     Field::N nat = Field::N::of_bytes(bytes);
@@ -36,6 +62,54 @@ bool decode_field(const uint8_t *bytes, Elt *out) {
     Field::N back = proofs::p256k1_base.from_montgomery(elt);
     if (!(nat == back)) return false;
     *out = elt;
+    return true;
+}
+
+bool decode_dense(const uint8_t *bytes, size_t len, size_t expected_elts,
+                  proofs::Dense<Field> *out) {
+    if (!bytes || !out || len != expected_elts * kEltBytes) return false;
+    for (size_t i = 0; i < expected_elts; ++i) {
+        Elt elt;
+        if (!decode_field(bytes + i * kEltBytes, &elt)) return false;
+        out->v_[i] = elt;
+    }
+    return true;
+}
+
+std::unique_ptr<proofs::Circuit<Field>> build_bip340_circuit(void) {
+    proofs::QuadCircuit<Field> q(proofs::p256k1_base);
+    const CompileBackend backend(&q);
+    const CompileLogic logic(&backend, proofs::p256k1_base);
+    CompileVerify verifier(logic, proofs::p256k1);
+
+    auto rx = logic.eltw_input();
+    auto px = logic.eltw_input();
+    auto e = logic.eltw_input();
+
+    CompileVerify::Witness witness;
+    q.private_input();
+    witness.input(logic);
+    verifier.assert_verify(rx, px, e, witness);
+    return q.mkcircuit(1);
+}
+
+bool build_ligero_context(std::unique_ptr<proofs::Circuit<Field>> *circuit,
+                          size_t *block_enc,
+                          std::unique_ptr<ConvolutionFactory> *factory,
+                          std::unique_ptr<RSFactory> *rsf) {
+    if (!circuit || !block_enc || !factory || !rsf) return false;
+    *circuit = build_bip340_circuit();
+    if (!*circuit || (*circuit)->npub_in != kPublicElts ||
+        (*circuit)->ninputs != kInputElts)
+        return false;
+
+    *block_enc = (*circuit)->ninputs - (*circuit)->npub_in +
+                 (*circuit)->nc + 1;
+    if (!proofs::check_crt_block_enc<Crt>(*block_enc).empty())
+        return false;
+
+    *factory = std::make_unique<ConvolutionFactory>(proofs::p256k1_base);
+    *rsf = std::make_unique<RSFactory>(**factory, proofs::p256k1_base);
     return true;
 }
 
@@ -124,4 +198,98 @@ extern "C" int niwi_bip340_relation_validate(
 
     verifier.assert_verify(rx, px, e, witness);
     return backend.assertion_failed() ? -1 : 0;
+}
+
+extern "C" int niwi_bip340_ligero_prove(
+    const uint8_t *public_inputs, size_t pub_len,
+    const uint8_t *private_inputs, size_t priv_len,
+    uint8_t **proof_out, size_t *proof_len) {
+    if (!public_inputs || !private_inputs || !proof_out || !proof_len)
+        return -1;
+    *proof_out = nullptr;
+    *proof_len = 0;
+    if (pub_len != kPublicElts * kEltBytes ||
+        priv_len != kInputElts * kEltBytes ||
+        memcmp(public_inputs, private_inputs, pub_len) != 0)
+        return -1;
+
+    try {
+        std::unique_ptr<proofs::Circuit<Field>> circuit;
+        std::unique_ptr<ConvolutionFactory> factory;
+        std::unique_ptr<RSFactory> rsf;
+        size_t block_enc = 0;
+        if (!build_ligero_context(&circuit, &block_enc, &factory, &rsf))
+            return -1;
+
+        proofs::Dense<Field> witness(1, circuit->ninputs);
+        if (!decode_dense(private_inputs, priv_len, circuit->ninputs,
+                          &witness))
+            return -1;
+
+        proofs::ZkProof<Field> zk(*circuit, kLigeroRate, kLigeroNreq,
+                                  block_enc);
+        proofs::ZkProver<Field, RSFactory> prover(*circuit,
+                                                  proofs::p256k1_base,
+                                                  *rsf);
+
+        uint8_t seed[32] = {0};
+        proofs::SecureRandomEngine rng;
+        rng.bytes(seed, sizeof(seed));
+        proofs::Transcript tp(seed, sizeof(seed), 4);
+        prover.commit(zk, witness, tp, rng);
+        if (!prover.prove(zk, witness, tp)) return -1;
+
+        std::vector<uint8_t> serialized;
+        serialized.insert(serialized.end(), seed, seed + sizeof(seed));
+        zk.write(serialized, proofs::p256k1_base);
+        if (serialized.empty() || serialized.size() > SIZE_MAX)
+            return -1;
+
+        uint8_t *out = static_cast<uint8_t *>(malloc(serialized.size()));
+        if (!out) return -1;
+        memcpy(out, serialized.data(), serialized.size());
+        *proof_out = out;
+        *proof_len = serialized.size();
+        return 0;
+    } catch (...) {
+        return -1;
+    }
+}
+
+extern "C" int niwi_bip340_ligero_verify(
+    const uint8_t *public_inputs, size_t pub_len,
+    const uint8_t *proof, size_t proof_len) {
+    if (!public_inputs || !proof || pub_len != kPublicElts * kEltBytes ||
+        proof_len <= 32)
+        return -1;
+
+    try {
+        std::unique_ptr<proofs::Circuit<Field>> circuit;
+        std::unique_ptr<ConvolutionFactory> factory;
+        std::unique_ptr<RSFactory> rsf;
+        size_t block_enc = 0;
+        if (!build_ligero_context(&circuit, &block_enc, &factory, &rsf))
+            return -1;
+
+        proofs::Dense<Field> pub(1, circuit->npub_in);
+        if (!decode_dense(public_inputs, pub_len, circuit->npub_in, &pub))
+            return -1;
+
+        proofs::ReadBuffer rb(proof + 32, proof_len - 32);
+        proofs::ZkProof<Field> zk(*circuit, kLigeroRate, kLigeroNreq,
+                                  block_enc);
+        if (!zk.read(rb, proofs::p256k1_base) || rb.remaining() != 0)
+            return -1;
+
+        proofs::Transcript tv(proof, 32, 4);
+        proofs::ZkVerifier<Field, RSFactory> verifier(*circuit, *rsf,
+                                                      kLigeroRate,
+                                                      kLigeroNreq,
+                                                      block_enc,
+                                                      proofs::p256k1_base);
+        verifier.recv_commitment(zk, tv);
+        return verifier.verify(zk, pub, tv) ? 0 : -1;
+    } catch (...) {
+        return -1;
+    }
 }

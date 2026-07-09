@@ -102,6 +102,26 @@ digests, and one 124-byte `NRSP` response object. A one-leaf relation proof
 therefore has payload `420 + 48 + opening_leaf_len`; a two-leaf proof has
 `420 + 32 + (2 * 48) + opening_leaf_len` because the Merkle path has one digest.
 
+## LZK0 Body
+
+BIP340 relation proofs additionally carry a checked Longfellow/Ligero proof
+section immediately after `LIG0`:
+
+```text
+LZK0 ||
+  body_len: u32_be ||
+  seed: 32 bytes ||
+  serialized Longfellow ZkProof<Fp256k1Base>
+```
+
+The native verifier rebuilds the BIP340 circuit with the same
+`Bip340Verify<Logic<CompilerBackend>>` construction used by zkcc, parses the
+serialized `ZkProof`, and runs Longfellow `ZkVerifier` over the public BIP340
+field inputs. Mutating the `LZK0` body makes production verification fail. This
+is the first full Longfellow/Ligero low-degree proof body integration; generic
+P256 and RPBSch still use the `LIG0` scaffold body until their relation-specific
+Longfellow adapters are added.
+
 ## Challenges And Responses
 
 The KLP22 schedule is:

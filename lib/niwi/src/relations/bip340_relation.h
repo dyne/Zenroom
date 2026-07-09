@@ -25,6 +25,16 @@ extern "C" {
 int niwi_bip340_relation_validate(const uint8_t *public_inputs, size_t pub_len,
                                   const uint8_t *private_inputs, size_t priv_len);
 
+/* Build and verify a native Longfellow/Ligero ZkProof for the BIP340
+ * relation. The proof bytes are allocated with malloc and must be freed by the
+ * caller. */
+int niwi_bip340_ligero_prove(const uint8_t *public_inputs, size_t pub_len,
+                             const uint8_t *private_inputs, size_t priv_len,
+                             uint8_t **proof_out, size_t *proof_len);
+
+int niwi_bip340_ligero_verify(const uint8_t *public_inputs, size_t pub_len,
+                              const uint8_t *proof, size_t proof_len);
+
 #ifdef __cplusplus
 }
 #endif
