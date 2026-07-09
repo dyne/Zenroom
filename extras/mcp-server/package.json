@@ -1,0 +1,29 @@
+{
+  "name": "zenroom-mcp-server",
+  "version": "1.0.0",
+  "description": "Model Context Protocol server for Zenroom Zencode scripts",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "bun run index.ts",
+    "dev": "bun --watch index.ts",
+    "test": "bun test",
+    "test:watch": "bun test --watch"
+  },
+  "keywords": [
+    "zenroom",
+    "mcp",
+    "zencode",
+    "crypto",
+    "llm"
+  ],
+  "author": "Zenroom Team",
+  "license": "AGPL-3.0-or-later",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zenroom": "file:../../bindings/javascript"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.14"
+  }
+}
