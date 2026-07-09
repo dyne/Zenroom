@@ -66,7 +66,7 @@ LIG0 ||
   tableau_root: 32 bytes ||
   relation_digest: 32 bytes ||
   challenge1: 32 bytes ||
-  response_object: 72 bytes ||
+  response_object: 100 bytes ||
   response_digest: 32 bytes ||
   challenge2: 32 bytes ||
   opening_digest: 32 bytes ||
@@ -86,10 +86,10 @@ rows = 1
 chunk_size = 32
 ```
 
-The fixed `LIG0` payload prefix is 368 bytes: ten `u32_be` words, eight 32-byte
-digests, and one 72-byte `NRSP` response object. A one-leaf relation proof
-therefore has payload `368 + 48 + opening_leaf_len`; a two-leaf proof has
-`368 + 32 + (2 * 48) + opening_leaf_len` because the Merkle path has one digest.
+The fixed `LIG0` payload prefix is 396 bytes: ten `u32_be` words, eight 32-byte
+digests, and one 100-byte `NRSP` response object. A one-leaf relation proof
+therefore has payload `396 + 48 + opening_leaf_len`; a two-leaf proof has
+`396 + 32 + (2 * 48) + opening_leaf_len` because the Merkle path has one digest.
 
 ## Challenges And Responses
 
@@ -124,7 +124,12 @@ NRSP ||
   row: u32_be ||
   offset: u32_be ||
   leaf_len: u32_be ||
-  leaf_digest: 32 bytes
+  leaf_digest: 32 bytes ||
+  eval_row: u32_be ||
+  eval_start: u32_be ||
+  eval_count: u32_be ||
+  eval_point: u64_be ||
+  eval_value: u64_be
 ```
 
 The current fixed values are:
@@ -141,6 +146,14 @@ chunk_size = 32
 `first_u32_be(challenge1) mod tableau_count`. The verifier checks that the
 serialized query entry equals the corresponding tableau entry.
 
+The minimal arithmetic field is the local prime field
+`Fp`, where `p = 2^64 - 59`. A tableau coefficient is the first eight bytes of a
+leaf digest interpreted as `u64_be` and reduced modulo `p`. `eval_point` is the
+same reduction applied to `challenge1`. `eval_value` is the Horner evaluation of
+the one-row tableau digest polynomial at `eval_point`, covering entries
+`eval_start .. eval_start + eval_count - 1`. In the current profile
+`eval_row = 0`, `eval_start = 0`, and `eval_count = tableau_count`.
+
 The `response_digest` is:
 
 ```text
@@ -154,8 +167,8 @@ H_NRSP(
 ```
 
 This section is still narrower than full paper Ligero. The next profile step
-must add algebraic response values so the verifier checks polynomial row
-consistency, not only the query entry bound to the committed tableau.
+must generalize this local tableau-digest polynomial check to the paper's full
+Ligero row/column polynomial response layout.
 
 ## Query And Opening
 
@@ -174,6 +187,8 @@ The verifier checks all of the following:
   `query_count`.
 - `response_digest` recomputes from the parsed `NRSP` object.
 - the parsed `NRSP` query entry matches the `challenge1`-derived tableau entry.
+- `eval_point`, `eval_value`, and the covered range recompute from the public
+  tableau leaf digests.
 - `opening_index` matches the Fiat-Shamir query.
 - `opening_digest` matches the selected tableau entry.
 - `opening_leaf` hashes to `opening_digest`.
@@ -190,3 +205,12 @@ run native relation evaluation before returning success.
 
 Unchecked `TBL0` fixtures are retained only for serialization and parser tests.
 They are not production proof claims.
+
+## Longfellow Decision
+
+No Longfellow change is needed for the current minimal native Ligero profile.
+`lib/niwi/src/niwi.c` implements the local helpers
+`ligero_field_add`, `ligero_field_mul`, `ligero_digest_to_field`, and
+`evaluate_tableau_digest_row` over the `2^64 - 59` field. A Longfellow adapter
+should only be introduced when the profile moves from this tableau-digest
+polynomial check to the paper's full row/column polynomial response layout.
