@@ -37,6 +37,16 @@ static int test_relation_validate(void *user_data,
            priv_len == 1 && private_inputs[0] == 'w' ? 0 : -1;
 }
 
+static int test_relation_validate_nonempty(void *user_data,
+                                           const uint8_t *public_inputs,
+                                           size_t pub_len,
+                                           const uint8_t *private_inputs,
+                                           size_t priv_len) {
+    (void)user_data;
+    return pub_len == 1 && public_inputs[0] == 'p' &&
+           private_inputs && priv_len > 0 ? 0 : -1;
+}
+
 static uint8_t *serialize_npro(niwi_npro_t *npro, size_t *gamma_len);
 
 static int proof_has_tag(const uint8_t *proof, size_t proof_len,
@@ -215,7 +225,7 @@ static void test_relation_checked_prove(void) {
 
     size_t body = find_proof_tag(proof, proof_len, "LIG0");
     assert(body != proof_len);
-    assert(read_u32_be_test(proof + body + 4) == 256 + 48);
+    assert(read_u32_be_test(proof + body + 4) == 260 + 48);
     assert(read_u32_be_test(proof + body + 8) == 0x00010000);
     assert(read_u32_be_test(proof + body + 12) == 0);
     assert(read_u32_be_test(proof + body + 16) == 1);
@@ -240,13 +250,16 @@ static void test_relation_checked_prove(void) {
         body + 39);
     assert_relation_verify_rejects_mutation(
         ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
-        body + 72);
+        body + 43);
     assert_relation_verify_rejects_mutation(
         ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
-        body + 200);
+        body + 76);
     assert_relation_verify_rejects_mutation(
         ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
-        body + 264 + 16);
+        body + 204);
+    assert_relation_verify_rejects_mutation(
+        ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
+        body + 268 + 16);
 
     niwi_free_buffer(proof);
     niwi_ctx_free(ctx);
@@ -289,6 +302,44 @@ static void test_relation_observed_uses_bound_tableau_leaves(void) {
     niwi_free_buffer(proof);
     niwi_ctx_free(ctx);
     printf("  PASS test_relation_observed_uses_bound_tableau_leaves\n");
+}
+
+static void test_relation_merkle_path_for_multi_leaf_tableau(void) {
+    niwi_ctx_t *ctx = niwi_ctx_create_with_relation(
+        dummy_artifact, sizeof(dummy_artifact),
+        NIWI_RELATION_ZKCC_P256, test_relation_validate_nonempty, NULL);
+    assert(ctx != NULL);
+
+    const uint8_t public_inputs[] = {'p'};
+    const uint8_t private_inputs[] = {
+        'm', 'u', 'l', 't', 'i', '-', 'l', 'e',
+        'a', 'f', '-', 'w', 'i', 't', 'n', 'e',
+        's', 's', '-', '0', '1', '2', '3', '4',
+        '5', '6', '7', '8', '9', '-', 'a', 'b',
+        'c', 'd', 'e', 'f'
+    };
+    uint8_t *proof = NULL;
+    size_t proof_len = 0;
+
+    assert(niwi_prove(ctx, public_inputs, sizeof(public_inputs),
+                      private_inputs, sizeof(private_inputs),
+                      &proof, &proof_len) == 0);
+    assert(proof != NULL);
+    assert(niwi_verify(ctx, proof, proof_len,
+                       public_inputs, sizeof(public_inputs)) == 0);
+    assert(!proof_has_tag(proof, proof_len, "TAB0"));
+
+    size_t body = find_proof_tag(proof, proof_len, "LIG0");
+    assert(body != proof_len);
+    assert(read_u32_be_test(proof + body + 28) == 2);
+    assert(read_u32_be_test(proof + body + 40) == 1);
+    assert_relation_verify_rejects_mutation(
+        ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
+        body + 268);
+
+    niwi_free_buffer(proof);
+    niwi_ctx_free(ctx);
+    printf("  PASS test_relation_merkle_path_for_multi_leaf_tableau\n");
 }
 
 static void test_prove_observed(void) {
@@ -577,6 +628,7 @@ int main(void) {
     test_prove_verify_extract();
     test_relation_checked_prove();
     test_relation_observed_uses_bound_tableau_leaves();
+    test_relation_merkle_path_for_multi_leaf_tableau();
     test_prove_observed();
     test_observed_proof_uses_tableau_fragments();
     test_wit0_shortcut_is_not_trusted();

@@ -38,12 +38,13 @@
 #define NIWI_TABLEAU_RELATION_LEAF_HEADER_SIZE (4 + 4 + 4 + 32 + 4 + 4 + 4)
 #define NIWI_TABLEAU_CHUNK_SIZE 32
 #define NIWI_TABLEAU_MAX_LEAVES 4096
+#define NIWI_TABLEAU_MAX_MERKLE_DEPTH 12
 #define NIWI_PROOF_NATIVE_BODY_TAG "LIG0"
 #define NIWI_PROOF_NATIVE_BODY_VERSION 0x00010000
 #define NIWI_PROOF_NATIVE_BODY_PROTOCOL_ID 0
 #define NIWI_PROOF_NATIVE_BODY_PARAM_ID 1
 #define NIWI_PROOF_NATIVE_BODY_ROWS 1
-#define NIWI_PROOF_NATIVE_BODY_BASE_PAYLOAD_SIZE (8 * 4 + 7 * 32)
+#define NIWI_PROOF_NATIVE_BODY_BASE_PAYLOAD_SIZE (9 * 4 + 7 * 32)
 #define NIWI_PROOF_NATIVE_BODY_BASE_SIZE (4 + 4 + NIWI_PROOF_NATIVE_BODY_BASE_PAYLOAD_SIZE)
 
 typedef struct {
@@ -199,32 +200,88 @@ static int compute_tableau_digest(const niwi_tableau_entry_t *entries,
     return 0;
 }
 
-static int compute_tableau_root(const niwi_tableau_entry_t *entries,
-                                size_t count,
-                                uint8_t root_out[32]) {
-    if (!entries || !root_out || count == 0 ||
-        count > NIWI_TABLEAU_MAX_LEAVES)
-        return -1;
-    if (count > (SIZE_MAX - 4) / 32) return -1;
-
-    size_t len = 4 + count * 32;
-    uint8_t *buf = (uint8_t *)malloc(len);
-    if (!buf) return -1;
-    size_t off = 0;
-    write_u32_be(buf + off, (uint32_t)count); off += 4;
-    for (size_t i = 0; i < count; i++) {
-        memcpy(buf + off, entries[i].digest, 32);
-        off += 32;
-    }
-    niwi_hash_one_shot(NIWI_TAG_LEAF, buf, len, root_out);
-    free(buf);
-    return 0;
-}
-
 static uint32_t tableau_opening_index(const uint8_t challenge[32],
                                       size_t count) {
     uint32_t raw = read_u32_be(challenge);
     return count == 0 ? 0 : raw % (uint32_t)count;
+}
+
+static void hash_merkle_pair(const uint8_t left[32], const uint8_t right[32],
+                             uint8_t out[32]) {
+    uint8_t preimage[64];
+    memcpy(preimage, left, 32);
+    memcpy(preimage + 32, right, 32);
+    niwi_hash_one_shot(NIWI_TAG_EXTR, preimage, sizeof(preimage), out);
+}
+
+static int compute_tableau_merkle_path(
+    const niwi_tableau_entry_t *entries, size_t count, size_t opening_index,
+    uint8_t root_out[32],
+    uint8_t path_out[NIWI_TABLEAU_MAX_MERKLE_DEPTH][32],
+    size_t *path_len_out) {
+    if (!entries || !root_out || !path_len_out || count == 0 ||
+        count > NIWI_TABLEAU_MAX_LEAVES || opening_index >= count)
+        return -1;
+
+    uint8_t level[NIWI_TABLEAU_MAX_LEAVES][32];
+    uint8_t next[NIWI_TABLEAU_MAX_LEAVES][32];
+    for (size_t i = 0; i < count; i++)
+        memcpy(level[i], entries[i].digest, 32);
+
+    size_t n = count;
+    size_t idx = opening_index;
+    size_t depth = 0;
+    while (n > 1) {
+        if (depth >= NIWI_TABLEAU_MAX_MERKLE_DEPTH) return -1;
+        size_t sibling = (idx % 2 == 0) ? idx + 1 : idx - 1;
+        if (sibling >= n) sibling = idx;
+        if (path_out) memcpy(path_out[depth], level[sibling], 32);
+
+        size_t out_count = 0;
+        for (size_t i = 0; i < n; i += 2) {
+            size_t right = i + 1 < n ? i + 1 : i;
+            hash_merkle_pair(level[i], level[right], next[out_count]);
+            out_count++;
+        }
+        memcpy(level, next, out_count * 32);
+        idx /= 2;
+        n = out_count;
+        depth++;
+    }
+
+    memcpy(root_out, level[0], 32);
+    *path_len_out = depth;
+    return 0;
+}
+
+static int verify_tableau_merkle_path(
+    const uint8_t opening_digest[32], uint32_t opening_index,
+    size_t tableau_count,
+    const uint8_t path[NIWI_TABLEAU_MAX_MERKLE_DEPTH][32],
+    size_t path_len,
+    const uint8_t expected_root[32]) {
+    if (!opening_digest || !path || !expected_root ||
+        tableau_count == 0 || opening_index >= tableau_count ||
+        path_len > NIWI_TABLEAU_MAX_MERKLE_DEPTH)
+        return -1;
+
+    uint8_t acc[32];
+    memcpy(acc, opening_digest, 32);
+    size_t idx = opening_index;
+    size_t n = tableau_count;
+    if (n == 1 && path_len != 0) return -1;
+    for (size_t depth = 0; depth < path_len; depth++) {
+        uint8_t next[32];
+        if (idx % 2 == 0)
+            hash_merkle_pair(acc, path[depth], next);
+        else
+            hash_merkle_pair(path[depth], acc, next);
+        memcpy(acc, next, 32);
+        idx /= 2;
+        n = (n + 1) / 2;
+    }
+    if (n != 1) return -1;
+    return memcmp(acc, expected_root, 32) == 0 ? 0 : -1;
 }
 
 static int build_tableau_entries(const uint8_t *private_inputs, size_t priv_len,
@@ -455,9 +512,10 @@ static void compute_native_body_final_digest(
     const uint8_t challenge1[32],
     const uint8_t challenge2[32],
     uint32_t opening_index,
+    uint32_t path_len,
     const uint8_t opening_digest[32],
     uint8_t out[32]) {
-    uint8_t preimage[8 * 4 + 6 * 32];
+    uint8_t preimage[9 * 4 + 6 * 32];
     size_t off = 0;
     write_u32_be(preimage + off, NIWI_PROOF_NATIVE_BODY_VERSION); off += 4;
     write_u32_be(preimage + off, NIWI_PROOF_NATIVE_BODY_PROTOCOL_ID); off += 4;
@@ -467,6 +525,7 @@ static void compute_native_body_final_digest(
     write_u32_be(preimage + off, tableau_count); off += 4;
     write_u32_be(preimage + off, (uint32_t)relation_id); off += 4;
     write_u32_be(preimage + off, opening_index); off += 4;
+    write_u32_be(preimage + off, path_len); off += 4;
     memcpy(preimage + off, tableau_digest, 32); off += 32;
     memcpy(preimage + off, tableau_root, 32); off += 32;
     memcpy(preimage + off, relation_digest, 32); off += 32;
@@ -491,18 +550,15 @@ static int append_native_proof_body(niwi_ctx_t *ctx,
     if (tableau_count > (SIZE_MAX - NIWI_PROOF_NATIVE_BODY_BASE_SIZE) /
                             NIWI_PROOF_TABLEAU_ENTRY_SIZE)
         return -1;
-    size_t payload_size = NIWI_PROOF_NATIVE_BODY_BASE_PAYLOAD_SIZE +
-                          tableau_count * NIWI_PROOF_TABLEAU_ENTRY_SIZE;
-    if (payload_size > UINT32_MAX || *off + 8 + payload_size > proof_len)
-        return -1;
-
     uint8_t relation_digest[32];
     uint8_t tableau_root[32];
+    uint8_t merkle_path[NIWI_TABLEAU_MAX_MERKLE_DEPTH][32];
+    size_t path_len = 0;
     uint8_t challenge1[32];
     uint8_t challenge2[32];
     uint8_t final_digest[32];
-    if (compute_tableau_root(tableau_entries, tableau_count,
-                             tableau_root) != 0)
+    if (compute_tableau_merkle_path(tableau_entries, tableau_count, 0,
+                                    tableau_root, NULL, &path_len) != 0)
         return -1;
     compute_relation_digest(ctx->relation_id, circuit_digest,
                             statement_digest, tableau_digest,
@@ -512,14 +568,25 @@ static int append_native_proof_body(niwi_ctx_t *ctx,
                                    challenge1, challenge2);
     uint32_t opening_index =
         tableau_opening_index(challenge2, tableau_count);
+    if (compute_tableau_merkle_path(tableau_entries, tableau_count,
+                                    opening_index, tableau_root,
+                                    merkle_path, &path_len) != 0 ||
+        path_len > NIWI_TABLEAU_MAX_MERKLE_DEPTH)
+        return -1;
     const uint8_t *opening_digest =
         tableau_entries[opening_index].digest;
+    size_t payload_size = NIWI_PROOF_NATIVE_BODY_BASE_PAYLOAD_SIZE +
+                          path_len * 32 +
+                          tableau_count * NIWI_PROOF_TABLEAU_ENTRY_SIZE;
+    if (payload_size > UINT32_MAX || *off + 8 + payload_size > proof_len)
+        return -1;
     compute_native_body_final_digest(ctx->relation_id,
                                      (uint32_t)tableau_count,
                                      tableau_digest, tableau_root,
                                      relation_digest,
                                      challenge1, challenge2,
-                                     opening_index, opening_digest,
+                                     opening_index, (uint32_t)path_len,
+                                     opening_digest,
                                      final_digest);
 
     memcpy(proof + *off, NIWI_PROOF_NATIVE_BODY_TAG, 4); *off += 4;
@@ -532,6 +599,7 @@ static int append_native_proof_body(niwi_ctx_t *ctx,
     write_u32_be(proof + *off, (uint32_t)tableau_count); *off += 4;
     write_u32_be(proof + *off, (uint32_t)ctx->relation_id); *off += 4;
     write_u32_be(proof + *off, opening_index); *off += 4;
+    write_u32_be(proof + *off, (uint32_t)path_len); *off += 4;
     memcpy(proof + *off, tableau_digest, 32); *off += 32;
     memcpy(proof + *off, tableau_root, 32); *off += 32;
     memcpy(proof + *off, relation_digest, 32); *off += 32;
@@ -539,6 +607,10 @@ static int append_native_proof_body(niwi_ctx_t *ctx,
     memcpy(proof + *off, challenge2, 32); *off += 32;
     memcpy(proof + *off, opening_digest, 32); *off += 32;
     memcpy(proof + *off, final_digest, 32); *off += 32;
+    for (size_t i = 0; i < path_len; i++) {
+        memcpy(proof + *off, merkle_path[i], 32);
+        *off += 32;
+    }
     if (append_tableau_entries(proof, proof_len, off,
                                tableau_entries, tableau_count) != 0)
         return -1;
@@ -619,6 +691,11 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
         set_error(ctx, "niwi_verify: native proof opening index mismatch");
         return -1;
     }
+    uint32_t path_len = read_u32_be(proof + *off); *off += 4;
+    if (path_len > NIWI_TABLEAU_MAX_MERKLE_DEPTH) {
+        set_error(ctx, "niwi_verify: native proof Merkle path mismatch");
+        return -1;
+    }
 
     uint8_t claimed_tableau_digest[32];
     memcpy(claimed_tableau_digest, proof + *off, 32);
@@ -660,13 +737,23 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
                                      claimed_tableau_digest,
                                      claimed_tableau_root, expected,
                                      challenge1, challenge2,
-                                     opening_index, claimed_opening_digest,
+                                     opening_index, path_len,
+                                     claimed_opening_digest,
                                      final_digest);
     if (memcmp(proof + *off, final_digest, 32) != 0) {
         set_error(ctx, "niwi_verify: native proof final digest mismatch");
         return -1;
     }
     *off += 32;
+    if ((size_t)path_len > (payload_end - *off) / 32) {
+        set_error(ctx, "niwi_verify: native proof Merkle path mismatch");
+        return -1;
+    }
+    uint8_t merkle_path[NIWI_TABLEAU_MAX_MERKLE_DEPTH][32];
+    for (uint32_t i = 0; i < path_len; i++) {
+        memcpy(merkle_path[i], proof + *off, 32);
+        *off += 32;
+    }
 
     uint8_t computed_tableau_digest[32];
     niwi_tableau_entry_t *parsed_entries = NULL;
@@ -687,20 +774,8 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
         set_error(ctx, "niwi_verify: native proof tableau mismatch");
         return -1;
     }
-    uint8_t computed_tableau_root[32];
     niwi_tableau_entry_t *entries_for_root =
         entries_out ? *entries_out : parsed_entries;
-    if (compute_tableau_root(entries_for_root, tableau_count,
-                             computed_tableau_root) != 0) {
-        free(parsed_entries);
-        set_error(ctx, "niwi_verify: native proof tableau root mismatch");
-        return -1;
-    }
-    if (memcmp(claimed_tableau_root, computed_tableau_root, 32) != 0) {
-        free(parsed_entries);
-        set_error(ctx, "niwi_verify: native proof tableau root mismatch");
-        return -1;
-    }
     if (tableau_opening_index(challenge2, tableau_count) != opening_index) {
         free(parsed_entries);
         set_error(ctx, "niwi_verify: native proof opening index mismatch");
@@ -710,6 +785,13 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
                claimed_opening_digest, 32) != 0) {
         free(parsed_entries);
         set_error(ctx, "niwi_verify: native proof opening digest mismatch");
+        return -1;
+    }
+    if (verify_tableau_merkle_path(claimed_opening_digest, opening_index,
+                                   tableau_count, merkle_path, path_len,
+                                   claimed_tableau_root) != 0) {
+        free(parsed_entries);
+        set_error(ctx, "niwi_verify: native proof Merkle path mismatch");
         return -1;
     }
     free(parsed_entries);
@@ -851,6 +933,7 @@ static int build_proof(niwi_ctx_t *ctx,
         4 + 4 + tableau_count * NIWI_PROOF_TABLEAU_ENTRY_SIZE;
     size_t native_body_size =
         NIWI_PROOF_NATIVE_BODY_BASE_SIZE +
+        NIWI_TABLEAU_MAX_MERKLE_DEPTH * 32 +
         tableau_count * NIWI_PROOF_TABLEAU_ENTRY_SIZE;
     size_t len = NIWI_PROOF_HEADER_SIZE + NIWI_PROOF_PARAM_SIZE +
                  (relation_backed ? native_body_size : tableau_section_size);
