@@ -13,7 +13,9 @@ the paper's full native row/column tableau layout.
 ## Tableau
 
 The private witness byte string is split into 32-byte chunks. Empty witnesses
-still produce one chunk. The current profile has one witness row.
+still produce one chunk. The current profile uses one row for a one-leaf
+tableau and two rows for multi-leaf tableaux. Leaf index `i` is placed at
+`row = i mod row_count` and `column = floor(i / row_count)`.
 
 Each relation-backed leaf is serialized as:
 
@@ -86,6 +88,8 @@ rows = 1
 chunk_size = 32
 ```
 
+For multi-leaf proofs, the serialized `rows` value is currently `2`.
+
 The fixed `LIG0` payload prefix is 420 bytes: ten `u32_be` words, eight 32-byte
 digests, and one 124-byte `NRSP` response object. A one-leaf relation proof
 therefore has payload `420 + 48 + opening_leaf_len`; a two-leaf proof has
@@ -148,7 +152,9 @@ chunk_size = 32
 
 `query_index` is derived from `challenge1` as
 `first_u32_be(challenge1) mod tableau_count`. The verifier checks that the
-serialized query entry equals the corresponding tableau entry.
+serialized query entry equals the corresponding tableau entry. The row response
+uses `eval_row = query_index mod row_count` and evaluates that row across all
+present columns.
 
 The minimal arithmetic field is the local prime field
 `Fp`, where `p = 2^64 - 59`. A tableau coefficient is the first eight bytes of a
@@ -158,13 +164,11 @@ the one-row tableau digest polynomial at `eval_point`, covering entries
 `eval_start .. eval_start + eval_count - 1`. In the current profile
 `eval_row = 0`, `eval_start = 0`, and `eval_count = tableau_count`.
 
-The column response uses the same field. `column_index` is the
-`challenge1`-derived query index, `column_count = row_count`, `column_point` is
-the second eight bytes of `challenge1` reduced modulo `p`, and `column_value` is
-the Horner evaluation of the column polynomial. In the current one-row tableau
-this is a degree-zero check against the queried leaf digest; the serialized
-layout is already the row/column response shape needed by the later multi-row
-tableau.
+The column response uses the same field. `column_index` is
+`floor(query_index / row_count)`, `column_count` is the number of present leaves
+in that column, `column_point` is the second eight bytes of `challenge1`
+reduced modulo `p`, and `column_value` is the Horner evaluation of the column
+polynomial.
 
 The `response_digest` is:
 
@@ -179,8 +183,8 @@ H_NRSP(
 ```
 
 This section is still narrower than full paper Ligero. The next profile step
-must generalize the current one-row tableau into the paper's full row/column
-tableau layout and then evaluate column polynomials over multiple rows.
+must generalize the current two-row maximum into the paper's parameterized
+Ligero tableau dimensions and low-degree tests.
 
 ## Query And Opening
 
@@ -225,5 +229,5 @@ No Longfellow change is needed for the current minimal native Ligero profile.
 `ligero_field_add`, `ligero_field_mul`, `ligero_digest_to_field`, and
 `evaluate_tableau_digest_row`, and `evaluate_tableau_digest_column` over the
 `2^64 - 59` field. A Longfellow adapter should only be introduced when the
-profile moves from this one-row tableau profile to the paper's full multi-row
-row/column polynomial response layout.
+profile moves from this two-row local profile to the paper's parameterized
+Ligero dimensions and low-degree tests.

@@ -194,10 +194,15 @@ static void assert_current_native_profile(const native_ligero_meta_t *meta,
                                           uint32_t expected_tableau_count,
                                           uint32_t expected_path_len,
                                           uint32_t expected_opening_leaf_len) {
+    uint32_t expected_rows = expected_tableau_count > 1 ? 2 : 1;
+    uint32_t expected_eval_row = meta->response_query_index % expected_rows;
+    uint32_t expected_eval_count =
+        expected_eval_row >= expected_tableau_count ? 0 :
+        ((expected_tableau_count - 1 - expected_eval_row) / expected_rows) + 1;
     assert(meta->version == 0x00010000);
     assert(meta->protocol_id == 0);
     assert(meta->param_id == 1);
-    assert(meta->rows == 1);
+    assert(meta->rows == expected_rows);
     assert(meta->chunk_size == 32);
     assert(meta->tableau_count == expected_tableau_count);
     assert(meta->relation_id == NIWI_RELATION_ZKCC_P256);
@@ -206,9 +211,9 @@ static void assert_current_native_profile(const native_ligero_meta_t *meta,
     assert(meta->response_count == 2);
     assert(meta->query_count == 1);
     assert(meta->response_query_index < meta->tableau_count);
-    assert(meta->eval_row == 0);
+    assert(meta->eval_row == expected_eval_row);
     assert(meta->eval_start == 0);
-    assert(meta->eval_count == meta->tableau_count);
+    assert(meta->eval_count == expected_eval_count);
     assert(meta->column_index == meta->response_query_index);
     assert(meta->column_count == meta->rows);
     assert(meta->opening_leaf_len == meta->selected_entry_leaf_len);

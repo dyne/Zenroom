@@ -46,7 +46,7 @@
 #define NIWI_PROOF_NATIVE_BODY_VERSION 0x00010000
 #define NIWI_PROOF_NATIVE_BODY_PROTOCOL_ID 0
 #define NIWI_PROOF_NATIVE_BODY_PARAM_ID 1
-#define NIWI_PROOF_NATIVE_BODY_ROWS 1
+#define NIWI_TABLEAU_MAX_ROWS 2
 #define NIWI_PROOF_NATIVE_BODY_HEADER_WORDS 2
 #define NIWI_PROOF_NATIVE_BODY_FIXED_WORDS 10
 #define NIWI_PROOF_NATIVE_BODY_DIGEST_COUNT 8
@@ -171,9 +171,19 @@ static size_t tableau_leaf_count(size_t priv_len) {
     return (priv_len + NIWI_TABLEAU_CHUNK_SIZE - 1) / NIWI_TABLEAU_CHUNK_SIZE;
 }
 
+static uint32_t tableau_row_count(size_t leaf_count) {
+    return leaf_count > 1 ? NIWI_TABLEAU_MAX_ROWS : 1;
+}
+
+static uint32_t tableau_column_count(size_t leaf_count, uint32_t row_count) {
+    if (row_count == 0) return 0;
+    return (uint32_t)((leaf_count + row_count - 1) / row_count);
+}
+
 static int build_tableau_leaf_fragment(const uint8_t *private_inputs,
                                        size_t priv_len,
                                        size_t offset,
+                                       uint32_t row,
                                        int relation_backed,
                                        niwi_relation_id_t relation_id,
                                        const uint8_t statement_digest[32],
@@ -206,7 +216,7 @@ static int build_tableau_leaf_fragment(const uint8_t *private_inputs,
         write_u32_be(leaf + off, (uint32_t)relation_id); off += 4;
         memcpy(leaf + off, statement_digest, 32); off += 32;
     }
-    write_u32_be(leaf + off, 0); off += 4; /* witness row */
+    write_u32_be(leaf + off, row); off += 4;
     write_u32_be(leaf + off, (uint32_t)offset); off += 4;
     write_u32_be(leaf + off, (uint32_t)priv_len); off += 4;
     if (chunk_len != 0) memcpy(leaf + off, private_inputs + offset, chunk_len);
@@ -383,15 +393,18 @@ static int build_tableau_entries(const uint8_t *private_inputs, size_t priv_len,
 
     size_t count = tableau_leaf_count(priv_len);
     if (count == 0 || count > NIWI_TABLEAU_MAX_LEAVES) return -1;
+    uint32_t row_count = tableau_row_count(count);
     niwi_tableau_entry_t *entries =
         (niwi_tableau_entry_t *)calloc(count, sizeof(*entries));
     if (!entries) return -1;
 
     for (size_t i = 0; i < count; i++) {
         size_t offset = i * NIWI_TABLEAU_CHUNK_SIZE;
+        uint32_t row = (uint32_t)(i % row_count);
         uint8_t *leaf = NULL;
         size_t leaf_len = 0;
         if (build_tableau_leaf_fragment(private_inputs, priv_len, offset,
+                                        row,
                                         relation_backed, relation_id,
                                         statement_digest,
                                         &leaf, &leaf_len) != 0 ||
@@ -401,7 +414,7 @@ static int build_tableau_entries(const uint8_t *private_inputs, size_t priv_len,
             return -1;
         }
         entries[i].index = (uint32_t)i;
-        entries[i].row = 0;
+        entries[i].row = row;
         entries[i].offset = (uint32_t)offset;
         entries[i].leaf_len = (uint32_t)leaf_len;
         niwi_hash_one_shot(NIWI_TAG_LEAF, leaf, leaf_len, entries[i].digest);
@@ -428,13 +441,16 @@ static int record_tableau_queries(niwi_npro_t *npro,
 
     size_t count = tableau_leaf_count(priv_len);
     if (count == 0 || count > NIWI_TABLEAU_MAX_LEAVES) return -1;
+    uint32_t row_count = tableau_row_count(count);
 
     for (size_t i = 0; i < count; i++) {
         size_t offset = i * NIWI_TABLEAU_CHUNK_SIZE;
+        uint32_t row = (uint32_t)(i % row_count);
         uint8_t *leaf = NULL;
         size_t leaf_len = 0;
         uint8_t digest[32];
         if (build_tableau_leaf_fragment(private_inputs, priv_len, offset,
+                                        row,
                                         relation_backed, relation_id,
                                         statement_digest,
                                         &leaf, &leaf_len) != 0 ||
@@ -592,46 +608,65 @@ static uint64_t ligero_digest_to_field(const uint8_t digest[32]) {
 
 static int evaluate_tableau_digest_row(const niwi_tableau_entry_t *entries,
                                        size_t count,
+                                       uint32_t row_count,
+                                       uint32_t row,
                                        uint64_t point,
-                                       uint64_t *value_out) {
+                                       uint64_t *value_out,
+                                       uint32_t *eval_count_out) {
     if (!entries || !value_out || count == 0 ||
-        count > NIWI_TABLEAU_MAX_LEAVES)
+        count > NIWI_TABLEAU_MAX_LEAVES || row_count == 0 ||
+        row >= row_count)
         return -1;
     uint64_t acc = 0;
-    for (size_t i = count; i > 0; i--) {
+    uint32_t columns = tableau_column_count(count, row_count);
+    uint32_t used = 0;
+    for (uint32_t col = columns; col > 0; col--) {
+        size_t index = (size_t)(col - 1) * row_count + row;
+        if (index >= count) continue;
         acc = ligero_field_mul(acc, point);
-        acc = ligero_field_add(acc, ligero_digest_to_field(entries[i - 1].digest));
+        acc = ligero_field_add(acc, ligero_digest_to_field(entries[index].digest));
+        used++;
     }
+    if (used == 0) return -1;
     *value_out = acc;
+    if (eval_count_out) *eval_count_out = used;
     return 0;
 }
 
 static int evaluate_tableau_digest_column(const niwi_tableau_entry_t *entries,
                                           size_t count,
+                                          uint32_t row_count,
                                           uint32_t column_index,
                                           uint64_t point,
-                                          uint64_t *value_out) {
+                                          uint64_t *value_out,
+                                          uint32_t *eval_count_out) {
     if (!entries || !value_out || count == 0 ||
-        count > NIWI_TABLEAU_MAX_LEAVES || column_index >= count)
+        count > NIWI_TABLEAU_MAX_LEAVES || row_count == 0 ||
+        column_index >= tableau_column_count(count, row_count))
         return -1;
 
     uint64_t acc = 0;
-    for (size_t i = count; i > 0; i--) {
-        if (entries[i - 1].offset / NIWI_TABLEAU_CHUNK_SIZE != column_index)
-            continue;
+    uint32_t used = 0;
+    for (uint32_t row = row_count; row > 0; row--) {
+        size_t index = (size_t)column_index * row_count + (row - 1);
+        if (index >= count) continue;
         acc = ligero_field_mul(acc, point);
-        acc = ligero_field_add(acc, ligero_digest_to_field(entries[i - 1].digest));
+        acc = ligero_field_add(acc, ligero_digest_to_field(entries[index].digest));
+        used++;
     }
+    if (used == 0) return -1;
     *value_out = acc;
+    if (eval_count_out) *eval_count_out = used;
     return 0;
 }
 
 static int build_ligero_response(const uint8_t challenge1[32],
                                  const niwi_tableau_entry_t *entries,
                                  size_t count,
+                                 uint32_t row_count,
                                  niwi_ligero_response_t *response) {
     if (!challenge1 || !entries || !response || count == 0 ||
-        count > NIWI_TABLEAU_MAX_LEAVES)
+        count > NIWI_TABLEAU_MAX_LEAVES || row_count == 0)
         return -1;
     uint32_t query_index = tableau_opening_index(challenge1, count);
     const niwi_tableau_entry_t *entry = &entries[query_index];
@@ -640,27 +675,30 @@ static int build_ligero_response(const uint8_t challenge1[32],
     response->response_version = NIWI_PROOF_NATIVE_RESPONSE_VERSION;
     response->response_count = NIWI_PROOF_NATIVE_RESPONSE_COUNT;
     response->query_count = NIWI_PROOF_NATIVE_RESPONSE_QUERY_COUNT;
-    response->row_count = NIWI_PROOF_NATIVE_BODY_ROWS;
+    response->row_count = row_count;
     response->chunk_size = NIWI_TABLEAU_CHUNK_SIZE;
     response->query_index = query_index;
     response->row = entry->row;
     response->offset = entry->offset;
     response->leaf_len = entry->leaf_len;
     memcpy(response->leaf_digest, entry->digest, 32);
-    response->eval_row = 0;
+    response->eval_row = entry->row;
     response->eval_start = 0;
-    response->eval_count = (uint32_t)count;
     response->eval_point = ligero_digest_to_field(challenge1);
-    if (evaluate_tableau_digest_row(entries, count, response->eval_point,
-                                    &response->eval_value) != 0)
+    if (evaluate_tableau_digest_row(entries, count, row_count,
+                                    response->eval_row,
+                                    response->eval_point,
+                                    &response->eval_value,
+                                    &response->eval_count) != 0)
         return -1;
-    response->column_index = query_index;
-    response->column_count = NIWI_PROOF_NATIVE_BODY_ROWS;
+    response->column_index = query_index / row_count;
     response->column_point = ligero_field_reduce_u64(
         read_u64_be(challenge1 + 8));
-    if (evaluate_tableau_digest_column(entries, count, response->column_index,
+    if (evaluate_tableau_digest_column(entries, count, row_count,
+                                       response->column_index,
                                        response->column_point,
-                                       &response->column_value) != 0)
+                                       &response->column_value,
+                                       &response->column_count) != 0)
         return -1;
     return 0;
 }
@@ -726,11 +764,12 @@ static int parse_ligero_response(const uint8_t *proof, size_t proof_len,
     if (response->response_version != NIWI_PROOF_NATIVE_RESPONSE_VERSION ||
         response->response_count != NIWI_PROOF_NATIVE_RESPONSE_COUNT ||
         response->query_count != NIWI_PROOF_NATIVE_RESPONSE_QUERY_COUNT ||
-        response->row_count != NIWI_PROOF_NATIVE_BODY_ROWS ||
+        response->row_count == 0 ||
         response->chunk_size != NIWI_TABLEAU_CHUNK_SIZE ||
-        response->eval_row != 0 ||
+        response->eval_row >= response->row_count ||
         response->eval_start != 0 ||
-        response->column_count != NIWI_PROOF_NATIVE_BODY_ROWS ||
+        response->column_count == 0 ||
+        response->column_count > response->row_count ||
         response->eval_point >= NIWI_LIGERO_FIELD_MODULUS ||
         response->eval_value >= NIWI_LIGERO_FIELD_MODULUS ||
         response->column_point >= NIWI_LIGERO_FIELD_MODULUS ||
@@ -819,6 +858,7 @@ static int compute_native_body_challenge1(
 static void compute_native_body_final_digest(
     niwi_relation_id_t relation_id,
     uint32_t tableau_count,
+    uint32_t row_count,
     const uint8_t tableau_digest[32],
     const uint8_t tableau_root[32],
     const uint8_t relation_digest[32],
@@ -835,7 +875,7 @@ static void compute_native_body_final_digest(
     write_u32_be(preimage + off, NIWI_PROOF_NATIVE_BODY_VERSION); off += 4;
     write_u32_be(preimage + off, NIWI_PROOF_NATIVE_BODY_PROTOCOL_ID); off += 4;
     write_u32_be(preimage + off, NIWI_PROOF_NATIVE_BODY_PARAM_ID); off += 4;
-    write_u32_be(preimage + off, NIWI_PROOF_NATIVE_BODY_ROWS); off += 4;
+    write_u32_be(preimage + off, row_count); off += 4;
     write_u32_be(preimage + off, NIWI_TABLEAU_CHUNK_SIZE); off += 4;
     write_u32_be(preimage + off, tableau_count); off += 4;
     write_u32_be(preimage + off, (uint32_t)relation_id); off += 4;
@@ -869,6 +909,7 @@ static int append_native_proof_body(niwi_ctx_t *ctx,
     if (!private_inputs && priv_len != 0) return -1;
     if (ctx->relation_id == NIWI_RELATION_NONE) return -1;
     if (tableau_count == 0 || tableau_count > UINT32_MAX) return -1;
+    uint32_t row_count = tableau_row_count(tableau_count);
     if (tableau_count > (SIZE_MAX - NIWI_PROOF_NATIVE_BODY_BASE_SIZE) /
                             NIWI_PROOF_TABLEAU_ENTRY_SIZE)
         return -1;
@@ -893,6 +934,7 @@ static int append_native_proof_body(niwi_ctx_t *ctx,
                                        challenge1) != 0)
         return -1;
     if (build_ligero_response(challenge1, tableau_entries, tableau_count,
+                              row_count,
                               &response) != 0 ||
         serialize_ligero_response(&response, response_bytes) != 0 ||
         compute_native_response_digest(relation_digest, tableau_digest,
@@ -917,6 +959,7 @@ static int append_native_proof_body(niwi_ctx_t *ctx,
     size_t opening_leaf_len = 0;
     if (build_tableau_leaf_fragment(private_inputs, priv_len,
                                     tableau_entries[opening_index].offset,
+                                    tableau_entries[opening_index].row,
                                     1, ctx->relation_id, statement_digest,
                                     &opening_leaf, &opening_leaf_len) != 0 ||
         opening_leaf_len != tableau_entries[opening_index].leaf_len ||
@@ -934,6 +977,7 @@ static int append_native_proof_body(niwi_ctx_t *ctx,
     }
     compute_native_body_final_digest(ctx->relation_id,
                                      (uint32_t)tableau_count,
+                                     row_count,
                                      tableau_digest, tableau_root,
                                      relation_digest,
                                      challenge1, response_digest,
@@ -948,7 +992,7 @@ static int append_native_proof_body(niwi_ctx_t *ctx,
     write_u32_be(proof + *off, NIWI_PROOF_NATIVE_BODY_VERSION); *off += 4;
     write_u32_be(proof + *off, NIWI_PROOF_NATIVE_BODY_PROTOCOL_ID); *off += 4;
     write_u32_be(proof + *off, NIWI_PROOF_NATIVE_BODY_PARAM_ID); *off += 4;
-    write_u32_be(proof + *off, NIWI_PROOF_NATIVE_BODY_ROWS); *off += 4;
+    write_u32_be(proof + *off, row_count); *off += 4;
     write_u32_be(proof + *off, NIWI_TABLEAU_CHUNK_SIZE); *off += 4;
     write_u32_be(proof + *off, (uint32_t)tableau_count); *off += 4;
     write_u32_be(proof + *off, (uint32_t)ctx->relation_id); *off += 4;
@@ -1030,7 +1074,8 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
         return -1;
     }
     *off += 4;
-    if (read_u32_be(proof + *off) != NIWI_PROOF_NATIVE_BODY_ROWS) {
+    uint32_t row_count = read_u32_be(proof + *off);
+    if (row_count == 0 || row_count > NIWI_TABLEAU_MAX_ROWS) {
         set_error(ctx, "niwi_verify: native proof tableau row mismatch");
         return -1;
     }
@@ -1041,7 +1086,8 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
     }
     *off += 4;
     uint32_t tableau_count = read_u32_be(proof + *off);
-    if (tableau_count == 0 || tableau_count > NIWI_TABLEAU_MAX_LEAVES) {
+    if (tableau_count == 0 || tableau_count > NIWI_TABLEAU_MAX_LEAVES ||
+        row_count != tableau_row_count(tableau_count)) {
         set_error(ctx, "niwi_verify: native proof tableau count mismatch");
         return -1;
     }
@@ -1127,6 +1173,7 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
     uint8_t final_digest[32];
     compute_native_body_final_digest(ctx->relation_id,
                                      (uint32_t)tableau_count,
+                                     row_count,
                                      claimed_tableau_digest,
                                      claimed_tableau_root, expected,
                                      challenge1, claimed_response_digest,
@@ -1182,6 +1229,7 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
     niwi_ligero_response_t expected_response;
     uint8_t computed_response_digest[32];
     if (build_ligero_response(challenge1, entries_for_root, tableau_count,
+                              row_count,
                               &expected_response) != 0 ||
         response.query_index >= tableau_count ||
         response.query_index != expected_response.query_index ||
@@ -1900,21 +1948,30 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
         uint8_t recovered_tableau_digest[32];
         uint64_t recovered_eval = 0;
         uint64_t recovered_column_eval = 0;
+        uint32_t recovered_eval_count = 0;
+        uint32_t recovered_column_count = 0;
         if (compute_tableau_digest(recovered_entries, entry_count,
                                    recovered_tableau_digest) != 0 ||
             memcmp(recovered_tableau_digest, tableau_digest, 32) != 0 ||
-            extracted_response.eval_count != entry_count ||
+            extracted_response.row_count != tableau_row_count(entry_count) ||
             extracted_response.eval_start != 0 ||
-            extracted_response.eval_row != 0 ||
+            extracted_response.eval_row >= extracted_response.row_count ||
             evaluate_tableau_digest_row(recovered_entries, entry_count,
+                                        extracted_response.row_count,
+                                        extracted_response.eval_row,
                                         extracted_response.eval_point,
-                                        &recovered_eval) != 0 ||
+                                        &recovered_eval,
+                                        &recovered_eval_count) != 0 ||
+            extracted_response.eval_count != recovered_eval_count ||
             recovered_eval != extracted_response.eval_value ||
-            extracted_response.column_count != NIWI_PROOF_NATIVE_BODY_ROWS ||
+            extracted_response.column_count > extracted_response.row_count ||
             evaluate_tableau_digest_column(recovered_entries, entry_count,
+                                           extracted_response.row_count,
                                            extracted_response.column_index,
                                            extracted_response.column_point,
-                                           &recovered_column_eval) != 0 ||
+                                           &recovered_column_eval,
+                                           &recovered_column_count) != 0 ||
+            extracted_response.column_count != recovered_column_count ||
             recovered_column_eval != extracted_response.column_value) {
             free(covered);
             free(witness);
