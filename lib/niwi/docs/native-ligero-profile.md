@@ -49,7 +49,9 @@ leaf_digest: 32 bytes
 ```
 
 The `tableau_digest` is `H_EXTR(count || entries...)`, where each entry uses the
-canonical serialization above.
+canonical serialization above. The verifier also checks the native layout:
+`index` must be the entry position, `row = index mod rows`, and
+`offset = index * 32`.
 
 ## LIG0 Body
 
@@ -216,6 +218,8 @@ The verifier checks all of the following:
 - `opening_leaf` hashes to `opening_digest`.
 - `opening_leaf` decodes as `TBL1` with the same `relation_id`,
   `statement_digest`, row, offset, and length.
+- `opening_leaf` has a canonical chunk range: only the final chunk may be
+  shorter than 32 bytes.
 - the Merkle path opens `opening_digest` to `tableau_root`.
 
 ## Extraction Inputs

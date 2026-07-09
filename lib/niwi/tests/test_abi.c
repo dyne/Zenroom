@@ -84,6 +84,7 @@ static uint32_t read_u32_be_test(const uint8_t *in) {
     (TEST_NATIVE_LIG0_CHALLENGE2_OFFSET + TEST_NATIVE_LIG0_DIGEST_SIZE)
 #define TEST_NATIVE_LIG0_PATH_OFFSET \
     (TEST_NATIVE_LIG0_OPENING_DIGEST_OFFSET + 2 * TEST_NATIVE_LIG0_DIGEST_SIZE)
+#define TEST_NATIVE_TBL1_HEADER_SIZE 56
 
 static uint32_t proof_tableau_leaf_count(const uint8_t *proof,
                                          size_t proof_len) {
@@ -220,6 +221,10 @@ static void assert_current_native_profile(const native_ligero_meta_t *meta,
     uint32_t expected_eval_count =
         expected_eval_row >= expected_tableau_count ? 0 :
         ((expected_tableau_count - 1 - expected_eval_row) / expected_rows) + 1;
+    uint32_t expected_column_count =
+        expected_tableau_count - meta->column_index * expected_rows;
+    if (expected_column_count > expected_rows)
+        expected_column_count = expected_rows;
     assert(meta->version == 0x00010000);
     assert(meta->protocol_id == 0);
     assert(meta->param_id ==
@@ -237,13 +242,27 @@ static void assert_current_native_profile(const native_ligero_meta_t *meta,
     assert(meta->eval_start == 0);
     assert(meta->eval_count == expected_eval_count);
     assert(meta->column_index == meta->response_query_index / meta->rows);
-    assert(meta->column_count == meta->rows);
+    assert(meta->column_count == expected_column_count);
     assert(meta->opening_leaf_len == meta->selected_entry_leaf_len);
     if (expected_opening_leaf_len != 0)
         assert(meta->opening_leaf_len == expected_opening_leaf_len);
     assert(meta->payload_size ==
            TEST_NATIVE_LIG0_BASE_PAYLOAD_SIZE + expected_path_len * 32 +
            expected_tableau_count * 48 + meta->opening_leaf_len);
+}
+
+static void assert_native_tableau_entries_are_canonical(
+    const uint8_t *proof, const native_ligero_meta_t *meta) {
+    assert(proof != NULL);
+    assert(meta != NULL);
+    for (uint32_t i = 0; i < meta->tableau_count; i++) {
+        size_t off = meta->tableau_entries_offset + i * 48;
+        assert(read_u32_be_test(proof + off) == i);
+        assert(read_u32_be_test(proof + off + 4) == i % meta->rows);
+        assert(read_u32_be_test(proof + off + 8) == i * 32);
+        assert(read_u32_be_test(proof + off + 12) >=
+               TEST_NATIVE_TBL1_HEADER_SIZE);
+    }
 }
 
 static void test_create_free(void) {
@@ -381,6 +400,7 @@ static void test_relation_checked_prove(void) {
     native_ligero_meta_t meta;
     parse_native_ligero_meta(proof, proof_len, &meta);
     assert_current_native_profile(&meta, 1, 0, 57);
+    assert_native_tableau_entries_are_canonical(proof, &meta);
     assert(meta.opening_index == 0);
     assert(meta.tableau_entries_offset == body + TEST_NATIVE_LIG0_PATH_OFFSET);
     assert(meta.opening_leaf_offset == body + TEST_NATIVE_LIG0_PATH_OFFSET + 48);
@@ -528,6 +548,7 @@ static void test_relation_merkle_path_for_multi_leaf_tableau(void) {
     native_ligero_meta_t meta;
     parse_native_ligero_meta(proof, proof_len, &meta);
     assert_current_native_profile(&meta, 2, 1, 0);
+    assert_native_tableau_entries_are_canonical(proof, &meta);
     assert(meta.opening_index < meta.tableau_count);
     assert(meta.tableau_entries_offset == body + TEST_NATIVE_LIG0_PATH_OFFSET + 32);
     assert(meta.opening_leaf_offset ==
@@ -604,6 +625,7 @@ static void test_native_ligero_profile_vectors(void) {
                       &proof, &proof_len) == 0);
     parse_native_ligero_meta(proof, proof_len, &meta);
     assert_current_native_profile(&meta, 5, 3, 0);
+    assert_native_tableau_entries_are_canonical(proof, &meta);
     assert(meta.rows == 3);
     assert(meta.opening_index < meta.tableau_count);
 

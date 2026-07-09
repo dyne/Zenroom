@@ -545,10 +545,13 @@ static int append_tableau_entries(uint8_t *proof, size_t proof_len,
 
 static int parse_tableau_entries(const uint8_t *proof, size_t proof_len,
                                  size_t *off, size_t count,
+                                 uint32_t row_count,
+                                 int require_canonical_layout,
                                  niwi_tableau_entry_t **entries_out,
                                  uint8_t digest_out[32]) {
     if (!proof || !off || !digest_out || count == 0 ||
-        count > NIWI_TABLEAU_MAX_LEAVES)
+        count > NIWI_TABLEAU_MAX_LEAVES ||
+        (require_canonical_layout && row_count == 0))
         return -1;
     if (count > (proof_len - *off) / NIWI_PROOF_TABLEAU_ENTRY_SIZE)
         return -1;
@@ -565,7 +568,10 @@ static int parse_tableau_entries(const uint8_t *proof, size_t proof_len,
         entry.offset = read_u32_be(proof + *off); *off += 4;
         entry.leaf_len = read_u32_be(proof + *off); *off += 4;
         if (entry.index != i ||
-            entry.leaf_len < NIWI_TABLEAU_LEAF_HEADER_SIZE) {
+            entry.leaf_len < NIWI_TABLEAU_LEAF_HEADER_SIZE ||
+            (require_canonical_layout &&
+             (entry.row != (uint32_t)(i % row_count) ||
+              entry.offset != (uint32_t)(i * NIWI_TABLEAU_CHUNK_SIZE)))) {
             free(entries);
             return -1;
         }
@@ -1223,6 +1229,7 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
     niwi_tableau_entry_t **parsed_entries_out =
         entries_out ? entries_out : &parsed_entries;
     if (parse_tableau_entries(proof, payload_end, off, tableau_count,
+                              row_count, 1,
                               parsed_entries_out,
                               computed_tableau_digest) != 0) {
         set_error(ctx, "niwi_verify: invalid native proof tableau entries");
@@ -1306,7 +1313,11 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
                                      &chunk, &chunk_len) != 0 ||
         row != entries_for_root[opening_index].row ||
         leaf_offset != entries_for_root[opening_index].offset ||
-        opening_leaf_len != entries_for_root[opening_index].leaf_len) {
+        opening_leaf_len != entries_for_root[opening_index].leaf_len ||
+        leaf_offset > total_len ||
+        leaf_offset + chunk_len > total_len ||
+        (leaf_offset + chunk_len < total_len &&
+         chunk_len != NIWI_TABLEAU_CHUNK_SIZE)) {
         free(parsed_entries);
         set_error(ctx, "niwi_verify: native proof opening leaf mismatch");
         return -1;
