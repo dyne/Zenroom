@@ -8,8 +8,8 @@ needed before claiming production, paper-exact RPBSch.
 | Paper component | Current code | Tests | Status |
 | --- | --- | --- | --- |
 | Relation-backed proving | `lib/niwi/src/niwi.c`, `src/lua/crypto_niwi.lua` | `make -C lib/niwi test`, `test/lua/zkcc_niwi_smoke.lua` | Implemented for BIP340 and generic P256 zkcc relations |
-| Native proof body | `LIG0` in `lib/niwi/src/niwi.c` | `lib/niwi/tests/test_abi.c` | Versioned, relation-bound, carries tableau entries, explicit `NRSP` response objects, and a minimal algebraic row-evaluation check over tableau leaf digests; still narrower than the paper's full row/column Ligero proof body |
-| Tableau root, response, and selected opening | `LIG0` in `lib/niwi/src/niwi.c` | `test_relation_checked_prove`, `test_relation_merkle_path_for_multi_leaf_tableau`, `test_native_ligero_profile_vectors` | Native verifier recomputes the Merkle root, parses and checks `NRSP`, recomputes the response digest, verifies the tableau-digest polynomial row evaluation, derives the Fiat-Shamir opening index, checks the selected `TBL1` leaf preimage, and verifies the selected Merkle path; remaining generalization is the paper's full polynomial Ligero row/column response layout |
+| Native proof body | `LIG0` in `lib/niwi/src/niwi.c` | `lib/niwi/tests/test_abi.c` | Versioned, relation-bound, carries tableau entries, explicit `NRSP` response objects, and minimal algebraic row/column checks over tableau leaf digests; still narrower than the paper's full multi-row Ligero proof body |
+| Tableau root, response, and selected opening | `LIG0` in `lib/niwi/src/niwi.c` | `test_relation_checked_prove`, `test_relation_merkle_path_for_multi_leaf_tableau`, `test_native_ligero_profile_vectors` | Native verifier recomputes the Merkle root, parses and checks `NRSP`, recomputes the response digest, verifies tableau-digest row and column evaluations, derives the Fiat-Shamir opening index, checks the selected `TBL1` leaf preimage, and verifies the selected Merkle path; remaining generalization is the paper's full multi-row Ligero tableau layout |
 | Relation witness tableau leaves | `TBL1` in `lib/niwi/src/niwi.c` | `test_relation_observed_uses_bound_tableau_leaves` | Production observed leaves bind relation id and public statement digest; unchecked fixtures retain legacy `TBL0` |
 | Unchecked envelope isolation | `src/lua/crypto_niwi.lua`, native `niwi` module | `test/lua/niwi_regression.lua` | Production Lua rejects raw unchecked envelopes |
 | Native generic zkcc evaluation | `lib/niwi/src/relations/zkcc_p256_relation.cc` | `test/lua/zkcc_niwi_smoke.lua` | Direct circuit evaluation, no Lua or legacy proof object |
@@ -55,17 +55,17 @@ needed before claiming production, paper-exact RPBSch.
   verification/extraction read tableau entries from `LIG0`, and production
   observed leaves use `TBL1` to bind relation id and public statement digest
   into the extracted witness tableau. `LIG0` carries a native tableau Merkle
-  root, explicit `NRSP` response object, verifier-recomputed response digest,
-  minimal tableau-digest row evaluation, Fiat-Shamir selected opening path,
+  root, explicit `NRSP` row/column response object, verifier-recomputed response
+  digest, minimal tableau-digest row and column evaluations, Fiat-Shamir selected opening path,
   selected `TBL1` leaf preimage, and KLP22 challenge schedule binding. The
-  remaining NIWI core generalization is replacing the local tableau-digest row
-  evaluation profile with the paper's full Ligero row/column polynomial
-  response layout.
+  remaining NIWI core generalization is replacing the local one-row tableau
+  profile with the paper's full multi-row Ligero tableau layout.
 - Current extraction reconstructs the committed tableau-fragment profile,
-  recomputes the accepted `NRSP` row evaluation over Gamma-recovered leaves,
+  recomputes the accepted `NRSP` row and column evaluations over
+  Gamma-recovered leaves,
   and revalidates the relation before returning success. Full paper-level
-  Ligero body extraction remains open only for the broader row/column
-  polynomial layout above.
+  Ligero body extraction remains open only for the broader multi-row layout
+  above.
 - Current PBSch Cmt is a Pedersen-backed `CMT1` profile with straight-line
   extraction from opened commitments. Final RPBSch proof claims still require
   branch/selector relations to verify `C` and `S` openings natively.

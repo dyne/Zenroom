@@ -69,7 +69,7 @@ static uint32_t read_u32_be_test(const uint8_t *in) {
 #define TEST_NATIVE_LIG0_FIXED_WORDS 10
 #define TEST_NATIVE_LIG0_DIGEST_SIZE 32
 #define TEST_NATIVE_LIG0_DIGESTS_BEFORE_RESPONSE 4
-#define TEST_NATIVE_LIG0_RESPONSE_SIZE 100
+#define TEST_NATIVE_LIG0_RESPONSE_SIZE 124
 #define TEST_NATIVE_LIG0_BASE_PAYLOAD_SIZE \
     (TEST_NATIVE_LIG0_FIXED_WORDS * 4 + \
      8 * TEST_NATIVE_LIG0_DIGEST_SIZE + TEST_NATIVE_LIG0_RESPONSE_SIZE)
@@ -114,6 +114,8 @@ typedef struct {
     uint32_t eval_row;
     uint32_t eval_start;
     uint32_t eval_count;
+    uint32_t column_index;
+    uint32_t column_count;
     size_t path_offset;
     size_t tableau_entries_offset;
     size_t opening_leaf_offset;
@@ -162,6 +164,10 @@ static void parse_native_ligero_meta(const uint8_t *proof, size_t proof_len,
         proof + body + TEST_NATIVE_LIG0_RESPONSE_OFFSET + 76);
     meta->eval_count = read_u32_be_test(
         proof + body + TEST_NATIVE_LIG0_RESPONSE_OFFSET + 80);
+    meta->column_index = read_u32_be_test(
+        proof + body + TEST_NATIVE_LIG0_RESPONSE_OFFSET + 100);
+    meta->column_count = read_u32_be_test(
+        proof + body + TEST_NATIVE_LIG0_RESPONSE_OFFSET + 104);
     meta->path_offset = body + TEST_NATIVE_LIG0_PATH_OFFSET;
     meta->tableau_entries_offset = meta->path_offset + meta->path_len * 32;
     assert(meta->opening_index < meta->tableau_count);
@@ -197,12 +203,14 @@ static void assert_current_native_profile(const native_ligero_meta_t *meta,
     assert(meta->relation_id == NIWI_RELATION_ZKCC_P256);
     assert(meta->path_len == expected_path_len);
     assert(meta->response_version == 0x00010000);
-    assert(meta->response_count == 1);
+    assert(meta->response_count == 2);
     assert(meta->query_count == 1);
     assert(meta->response_query_index < meta->tableau_count);
     assert(meta->eval_row == 0);
     assert(meta->eval_start == 0);
     assert(meta->eval_count == meta->tableau_count);
+    assert(meta->column_index == meta->response_query_index);
+    assert(meta->column_count == meta->rows);
     assert(meta->opening_leaf_len == meta->selected_entry_leaf_len);
     if (expected_opening_leaf_len != 0)
         assert(meta->opening_leaf_len == expected_opening_leaf_len);
@@ -395,6 +403,15 @@ static void test_relation_checked_prove(void) {
     assert_relation_verify_rejects_mutation(
         ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
         body + TEST_NATIVE_LIG0_RESPONSE_OFFSET + 99);
+    assert_relation_verify_rejects_mutation(
+        ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
+        body + TEST_NATIVE_LIG0_RESPONSE_OFFSET + 107);
+    assert_relation_verify_rejects_mutation(
+        ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
+        body + TEST_NATIVE_LIG0_RESPONSE_OFFSET + 115);
+    assert_relation_verify_rejects_mutation(
+        ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
+        body + TEST_NATIVE_LIG0_RESPONSE_OFFSET + 123);
     assert_relation_verify_rejects_mutation(
         ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
         body + TEST_NATIVE_LIG0_RESPONSE_DIGEST_OFFSET);

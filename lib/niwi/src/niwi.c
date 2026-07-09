@@ -56,23 +56,29 @@
 #define NIWI_PROOF_NATIVE_BODY_LENGTH_SIZE 4
 #define NIWI_PROOF_NATIVE_RESPONSE_TAG "NRSP"
 #define NIWI_PROOF_NATIVE_RESPONSE_VERSION 0x00010000
-#define NIWI_PROOF_NATIVE_RESPONSE_COUNT 1
+#define NIWI_PROOF_NATIVE_RESPONSE_COUNT 2
 #define NIWI_PROOF_NATIVE_RESPONSE_QUERY_COUNT 1
 #define NIWI_PROOF_NATIVE_RESPONSE_HEADER_WORDS 5
 #define NIWI_PROOF_NATIVE_RESPONSE_ENTRY_WORDS 4
 #define NIWI_PROOF_NATIVE_RESPONSE_EVAL_WORDS 3
 #define NIWI_PROOF_NATIVE_RESPONSE_EVAL_U64S 2
+#define NIWI_PROOF_NATIVE_RESPONSE_COLUMN_WORDS 2
+#define NIWI_PROOF_NATIVE_RESPONSE_COLUMN_U64S 2
 #define NIWI_PROOF_NATIVE_RESPONSE_ENTRY_SIZE \
     (NIWI_PROOF_NATIVE_RESPONSE_ENTRY_WORDS * 4 + \
      NIWI_PROOF_NATIVE_BODY_DIGEST_SIZE)
 #define NIWI_PROOF_NATIVE_RESPONSE_EVAL_SIZE \
     (NIWI_PROOF_NATIVE_RESPONSE_EVAL_WORDS * 4 + \
      NIWI_PROOF_NATIVE_RESPONSE_EVAL_U64S * 8)
+#define NIWI_PROOF_NATIVE_RESPONSE_COLUMN_SIZE \
+    (NIWI_PROOF_NATIVE_RESPONSE_COLUMN_WORDS * 4 + \
+     NIWI_PROOF_NATIVE_RESPONSE_COLUMN_U64S * 8)
 #define NIWI_PROOF_NATIVE_RESPONSE_SIZE \
     (NIWI_PROOF_NATIVE_BODY_TAG_SIZE + \
      NIWI_PROOF_NATIVE_RESPONSE_HEADER_WORDS * 4 + \
      NIWI_PROOF_NATIVE_RESPONSE_ENTRY_SIZE + \
-     NIWI_PROOF_NATIVE_RESPONSE_EVAL_SIZE)
+     NIWI_PROOF_NATIVE_RESPONSE_EVAL_SIZE + \
+     NIWI_PROOF_NATIVE_RESPONSE_COLUMN_SIZE)
 #define NIWI_LIGERO_FIELD_MODULUS UINT64_C(18446744073709551557)
 #define NIWI_PROOF_NATIVE_BODY_BASE_PAYLOAD_SIZE \
     (NIWI_PROOF_NATIVE_BODY_FIXED_WORDS * 4 + \
@@ -107,6 +113,10 @@ typedef struct {
     uint32_t eval_count;
     uint64_t eval_point;
     uint64_t eval_value;
+    uint32_t column_index;
+    uint32_t column_count;
+    uint64_t column_point;
+    uint64_t column_value;
 } niwi_ligero_response_t;
 
 struct niwi_ctx {
@@ -596,6 +606,26 @@ static int evaluate_tableau_digest_row(const niwi_tableau_entry_t *entries,
     return 0;
 }
 
+static int evaluate_tableau_digest_column(const niwi_tableau_entry_t *entries,
+                                          size_t count,
+                                          uint32_t column_index,
+                                          uint64_t point,
+                                          uint64_t *value_out) {
+    if (!entries || !value_out || count == 0 ||
+        count > NIWI_TABLEAU_MAX_LEAVES || column_index >= count)
+        return -1;
+
+    uint64_t acc = 0;
+    for (size_t i = count; i > 0; i--) {
+        if (entries[i - 1].offset / NIWI_TABLEAU_CHUNK_SIZE != column_index)
+            continue;
+        acc = ligero_field_mul(acc, point);
+        acc = ligero_field_add(acc, ligero_digest_to_field(entries[i - 1].digest));
+    }
+    *value_out = acc;
+    return 0;
+}
+
 static int build_ligero_response(const uint8_t challenge1[32],
                                  const niwi_tableau_entry_t *entries,
                                  size_t count,
@@ -624,6 +654,14 @@ static int build_ligero_response(const uint8_t challenge1[32],
     if (evaluate_tableau_digest_row(entries, count, response->eval_point,
                                     &response->eval_value) != 0)
         return -1;
+    response->column_index = query_index;
+    response->column_count = NIWI_PROOF_NATIVE_BODY_ROWS;
+    response->column_point = ligero_field_reduce_u64(
+        read_u64_be(challenge1 + 8));
+    if (evaluate_tableau_digest_column(entries, count, response->column_index,
+                                       response->column_point,
+                                       &response->column_value) != 0)
+        return -1;
     return 0;
 }
 
@@ -647,6 +685,10 @@ static int serialize_ligero_response(const niwi_ligero_response_t *response,
     write_u32_be(out + off, response->eval_count); off += 4;
     write_u64_be(out + off, response->eval_point); off += 8;
     write_u64_be(out + off, response->eval_value); off += 8;
+    write_u32_be(out + off, response->column_index); off += 4;
+    write_u32_be(out + off, response->column_count); off += 4;
+    write_u64_be(out + off, response->column_point); off += 8;
+    write_u64_be(out + off, response->column_value); off += 8;
     return off == NIWI_PROOF_NATIVE_RESPONSE_SIZE ? 0 : -1;
 }
 
@@ -676,6 +718,10 @@ static int parse_ligero_response(const uint8_t *proof, size_t proof_len,
     response->eval_count = read_u32_be(proof + *off); *off += 4;
     response->eval_point = read_u64_be(proof + *off); *off += 8;
     response->eval_value = read_u64_be(proof + *off); *off += 8;
+    response->column_index = read_u32_be(proof + *off); *off += 4;
+    response->column_count = read_u32_be(proof + *off); *off += 4;
+    response->column_point = read_u64_be(proof + *off); *off += 8;
+    response->column_value = read_u64_be(proof + *off); *off += 8;
 
     if (response->response_version != NIWI_PROOF_NATIVE_RESPONSE_VERSION ||
         response->response_count != NIWI_PROOF_NATIVE_RESPONSE_COUNT ||
@@ -684,8 +730,11 @@ static int parse_ligero_response(const uint8_t *proof, size_t proof_len,
         response->chunk_size != NIWI_TABLEAU_CHUNK_SIZE ||
         response->eval_row != 0 ||
         response->eval_start != 0 ||
+        response->column_count != NIWI_PROOF_NATIVE_BODY_ROWS ||
         response->eval_point >= NIWI_LIGERO_FIELD_MODULUS ||
-        response->eval_value >= NIWI_LIGERO_FIELD_MODULUS)
+        response->eval_value >= NIWI_LIGERO_FIELD_MODULUS ||
+        response->column_point >= NIWI_LIGERO_FIELD_MODULUS ||
+        response->column_value >= NIWI_LIGERO_FIELD_MODULUS)
         return -1;
     return 0;
 }
@@ -1144,6 +1193,10 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
         response.eval_count != expected_response.eval_count ||
         response.eval_point != expected_response.eval_point ||
         response.eval_value != expected_response.eval_value ||
+        response.column_index != expected_response.column_index ||
+        response.column_count != expected_response.column_count ||
+        response.column_point != expected_response.column_point ||
+        response.column_value != expected_response.column_value ||
         memcmp(response.leaf_digest, expected_response.leaf_digest, 32) != 0 ||
         compute_native_response_digest(expected, claimed_tableau_digest,
                                        claimed_tableau_root,
@@ -1846,6 +1899,7 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
     if (has_native_response) {
         uint8_t recovered_tableau_digest[32];
         uint64_t recovered_eval = 0;
+        uint64_t recovered_column_eval = 0;
         if (compute_tableau_digest(recovered_entries, entry_count,
                                    recovered_tableau_digest) != 0 ||
             memcmp(recovered_tableau_digest, tableau_digest, 32) != 0 ||
@@ -1855,7 +1909,13 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
             evaluate_tableau_digest_row(recovered_entries, entry_count,
                                         extracted_response.eval_point,
                                         &recovered_eval) != 0 ||
-            recovered_eval != extracted_response.eval_value) {
+            recovered_eval != extracted_response.eval_value ||
+            extracted_response.column_count != NIWI_PROOF_NATIVE_BODY_ROWS ||
+            evaluate_tableau_digest_column(recovered_entries, entry_count,
+                                           extracted_response.column_index,
+                                           extracted_response.column_point,
+                                           &recovered_column_eval) != 0 ||
+            recovered_column_eval != extracted_response.column_value) {
             free(covered);
             free(witness);
             free(recovered_entries);

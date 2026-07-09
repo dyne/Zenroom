@@ -6,9 +6,9 @@ the local `LIG0` profile implemented in `lib/niwi`; it does not modify
 
 The profile is intentionally minimal. It binds a relation-backed witness
 tableau, a Merkle commitment to its leaves, a KLP22 Fiat-Shamir challenge
-schedule, an explicit verifier-parsed `NRSP` response object, and one selected
-opening leaf. Later work replaces the minimal row/query response with
-polynomial Ligero response values.
+schedule, an explicit verifier-parsed `NRSP` row/column response object, and
+one selected opening leaf. Later work replaces the current one-row tableau with
+the paper's full native row/column tableau layout.
 
 ## Tableau
 
@@ -66,7 +66,7 @@ LIG0 ||
   tableau_root: 32 bytes ||
   relation_digest: 32 bytes ||
   challenge1: 32 bytes ||
-  response_object: 100 bytes ||
+  response_object: 124 bytes ||
   response_digest: 32 bytes ||
   challenge2: 32 bytes ||
   opening_digest: 32 bytes ||
@@ -86,10 +86,10 @@ rows = 1
 chunk_size = 32
 ```
 
-The fixed `LIG0` payload prefix is 396 bytes: ten `u32_be` words, eight 32-byte
-digests, and one 100-byte `NRSP` response object. A one-leaf relation proof
-therefore has payload `396 + 48 + opening_leaf_len`; a two-leaf proof has
-`396 + 32 + (2 * 48) + opening_leaf_len` because the Merkle path has one digest.
+The fixed `LIG0` payload prefix is 420 bytes: ten `u32_be` words, eight 32-byte
+digests, and one 124-byte `NRSP` response object. A one-leaf relation proof
+therefore has payload `420 + 48 + opening_leaf_len`; a two-leaf proof has
+`420 + 32 + (2 * 48) + opening_leaf_len` because the Merkle path has one digest.
 
 ## Challenges And Responses
 
@@ -129,14 +129,18 @@ NRSP ||
   eval_start: u32_be ||
   eval_count: u32_be ||
   eval_point: u64_be ||
-  eval_value: u64_be
+  eval_value: u64_be ||
+  column_index: u32_be ||
+  column_count: u32_be ||
+  column_point: u64_be ||
+  column_value: u64_be
 ```
 
 The current fixed values are:
 
 ```text
 response_version = 0x00010000
-response_count = 1
+response_count = 2
 query_count = 1
 row_count = 1
 chunk_size = 32
@@ -154,6 +158,14 @@ the one-row tableau digest polynomial at `eval_point`, covering entries
 `eval_start .. eval_start + eval_count - 1`. In the current profile
 `eval_row = 0`, `eval_start = 0`, and `eval_count = tableau_count`.
 
+The column response uses the same field. `column_index` is the
+`challenge1`-derived query index, `column_count = row_count`, `column_point` is
+the second eight bytes of `challenge1` reduced modulo `p`, and `column_value` is
+the Horner evaluation of the column polynomial. In the current one-row tableau
+this is a degree-zero check against the queried leaf digest; the serialized
+layout is already the row/column response shape needed by the later multi-row
+tableau.
+
 The `response_digest` is:
 
 ```text
@@ -167,8 +179,8 @@ H_NRSP(
 ```
 
 This section is still narrower than full paper Ligero. The next profile step
-must generalize this local tableau-digest polynomial check to the paper's full
-Ligero row/column polynomial response layout.
+must generalize the current one-row tableau into the paper's full row/column
+tableau layout and then evaluate column polynomials over multiple rows.
 
 ## Query And Opening
 
@@ -187,8 +199,8 @@ The verifier checks all of the following:
   `query_count`.
 - `response_digest` recomputes from the parsed `NRSP` object.
 - the parsed `NRSP` query entry matches the `challenge1`-derived tableau entry.
-- `eval_point`, `eval_value`, and the covered range recompute from the public
-  tableau leaf digests.
+- row and column evaluation points, values, and covered ranges recompute from
+  the public tableau leaf digests.
 - `opening_index` matches the Fiat-Shamir query.
 - `opening_digest` matches the selected tableau entry.
 - `opening_leaf` hashes to `opening_digest`.
@@ -211,6 +223,7 @@ They are not production proof claims.
 No Longfellow change is needed for the current minimal native Ligero profile.
 `lib/niwi/src/niwi.c` implements the local helpers
 `ligero_field_add`, `ligero_field_mul`, `ligero_digest_to_field`, and
-`evaluate_tableau_digest_row` over the `2^64 - 59` field. A Longfellow adapter
-should only be introduced when the profile moves from this tableau-digest
-polynomial check to the paper's full row/column polynomial response layout.
+`evaluate_tableau_digest_row`, and `evaluate_tableau_digest_column` over the
+`2^64 - 59` field. A Longfellow adapter should only be introduced when the
+profile moves from this one-row tableau profile to the paper's full multi-row
+row/column polynomial response layout.
