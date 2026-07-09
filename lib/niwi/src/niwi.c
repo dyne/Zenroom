@@ -46,7 +46,7 @@
 #define NIWI_PROOF_NATIVE_BODY_VERSION 0x00010000
 #define NIWI_PROOF_NATIVE_BODY_PROTOCOL_ID 0
 #define NIWI_PROOF_NATIVE_BODY_PARAM_ID 1
-#define NIWI_TABLEAU_MAX_ROWS 2
+#define NIWI_TABLEAU_MAX_ROWS 128
 #define NIWI_PROOF_NATIVE_BODY_HEADER_WORDS 2
 #define NIWI_PROOF_NATIVE_BODY_FIXED_WORDS 10
 #define NIWI_PROOF_NATIVE_BODY_DIGEST_COUNT 8
@@ -172,7 +172,12 @@ static size_t tableau_leaf_count(size_t priv_len) {
 }
 
 static uint32_t tableau_row_count(size_t leaf_count) {
-    return leaf_count > 1 ? NIWI_TABLEAU_MAX_ROWS : 1;
+    if (leaf_count <= 1) return 1;
+    uint32_t rows = 1;
+    while ((size_t)rows * rows < leaf_count &&
+           rows < NIWI_TABLEAU_MAX_ROWS)
+        rows++;
+    return rows;
 }
 
 static uint32_t tableau_column_count(size_t leaf_count, uint32_t row_count) {

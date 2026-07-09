@@ -122,6 +122,14 @@ typedef struct {
     uint32_t selected_entry_leaf_len;
 } native_ligero_meta_t;
 
+static uint32_t expected_ligero_rows(uint32_t leaf_count) {
+    if (leaf_count <= 1) return 1;
+    uint32_t rows = 1;
+    while ((uint64_t)rows * rows < leaf_count && rows < 128)
+        rows++;
+    return rows;
+}
+
 static size_t find_proof_tag(const uint8_t *proof, size_t proof_len,
                              const char tag[4]) {
     if (!proof || proof_len < 4) return proof_len;
@@ -194,7 +202,7 @@ static void assert_current_native_profile(const native_ligero_meta_t *meta,
                                           uint32_t expected_tableau_count,
                                           uint32_t expected_path_len,
                                           uint32_t expected_opening_leaf_len) {
-    uint32_t expected_rows = expected_tableau_count > 1 ? 2 : 1;
+    uint32_t expected_rows = expected_ligero_rows(expected_tableau_count);
     uint32_t expected_eval_row = meta->response_query_index % expected_rows;
     uint32_t expected_eval_count =
         expected_eval_row >= expected_tableau_count ? 0 :
@@ -214,7 +222,7 @@ static void assert_current_native_profile(const native_ligero_meta_t *meta,
     assert(meta->eval_row == expected_eval_row);
     assert(meta->eval_start == 0);
     assert(meta->eval_count == expected_eval_count);
-    assert(meta->column_index == meta->response_query_index);
+    assert(meta->column_index == meta->response_query_index / meta->rows);
     assert(meta->column_count == meta->rows);
     assert(meta->opening_leaf_len == meta->selected_entry_leaf_len);
     if (expected_opening_leaf_len != 0)
@@ -537,6 +545,7 @@ static void test_native_ligero_profile_vectors(void) {
     };
     uint8_t *proof = NULL;
     uint8_t *other_proof = NULL;
+    uint8_t five_leaf_private[129];
     size_t proof_len = 0;
     size_t other_proof_len = 0;
     native_ligero_meta_t meta;
@@ -568,6 +577,20 @@ static void test_native_ligero_profile_vectors(void) {
                       &proof, &proof_len) == 0);
     parse_native_ligero_meta(proof, proof_len, &meta);
     assert_current_native_profile(&meta, 2, 1, 0);
+    assert(meta.opening_index < meta.tableau_count);
+
+    niwi_free_buffer(proof);
+    proof = NULL;
+    proof_len = 0;
+
+    for (size_t i = 0; i < sizeof(five_leaf_private); i++)
+        five_leaf_private[i] = (uint8_t)('a' + (i % 26));
+    assert(niwi_prove(ctx, public_inputs, sizeof(public_inputs),
+                      five_leaf_private, sizeof(five_leaf_private),
+                      &proof, &proof_len) == 0);
+    parse_native_ligero_meta(proof, proof_len, &meta);
+    assert_current_native_profile(&meta, 5, 3, 0);
+    assert(meta.rows == 3);
     assert(meta.opening_index < meta.tableau_count);
 
     niwi_free_buffer(proof);
