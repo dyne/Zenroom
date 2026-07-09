@@ -48,6 +48,23 @@ static int proof_has_tag(const uint8_t *proof, size_t proof_len,
     return 0;
 }
 
+static uint32_t read_u32_be_test(const uint8_t *in) {
+    return ((uint32_t)in[0] << 24) |
+           ((uint32_t)in[1] << 16) |
+           ((uint32_t)in[2] << 8) |
+           (uint32_t)in[3];
+}
+
+static uint32_t proof_tableau_leaf_count(const uint8_t *proof,
+                                         size_t proof_len) {
+    if (!proof || proof_len < 8) return 0;
+    for (size_t i = 0; i + 8 <= proof_len; i++) {
+        if (memcmp(proof + i, "TAB0", 4) == 0)
+            return read_u32_be_test(proof + i + 4);
+    }
+    return 0;
+}
+
 static void test_create_free(void) {
     niwi_ctx_t *ctx = niwi_ctx_create(dummy_artifact, sizeof(dummy_artifact));
     assert(ctx != NULL);
@@ -234,6 +251,41 @@ static void test_prove_observed(void) {
     niwi_free_buffer(proof);
     niwi_ctx_free(ctx);
     printf("  PASS test_prove_observed\n");
+}
+
+static void test_observed_proof_uses_tableau_fragments(void) {
+    niwi_ctx_t *ctx = niwi_ctx_create(dummy_artifact, sizeof(dummy_artifact));
+    assert(ctx != NULL);
+    const uint8_t public_inputs[] = {'p'};
+    const uint8_t private_inputs[] = {
+        'w', 'i', 't', 'n', 'e', 's', 's', '-', 'r', 'o', 'w', '-',
+        'f', 'r', 'a', 'g', 'm', 'e', 'n', 't', 'a', 't', 'i', 'o',
+        'n', '-', 'c', 'h', 'e', 'c', 'k', '-', '0', '1', '2', '3'
+    };
+    uint8_t *proof = NULL;
+    uint8_t *gamma = NULL;
+    size_t proof_len = 0;
+    size_t gamma_len = 0;
+
+    assert(niwi_envelope_prove_observed_unchecked(
+               ctx, public_inputs, sizeof(public_inputs),
+               private_inputs, sizeof(private_inputs),
+               &proof, &proof_len, &gamma, &gamma_len) == 0);
+    assert(proof_tableau_leaf_count(proof, proof_len) > 1);
+
+    uint8_t *witness = NULL;
+    size_t witness_len = 0;
+    assert(niwi_envelope_extract_unchecked(ctx, proof, proof_len, gamma, gamma_len,
+                                           public_inputs, sizeof(public_inputs),
+                                           &witness, &witness_len) == 0);
+    assert(witness_len == sizeof(private_inputs));
+    assert(memcmp(witness, private_inputs, sizeof(private_inputs)) == 0);
+
+    niwi_free_buffer(witness);
+    niwi_free_buffer(gamma);
+    niwi_free_buffer(proof);
+    niwi_ctx_free(ctx);
+    printf("  PASS test_observed_proof_uses_tableau_fragments\n");
 }
 
 static void test_wit0_shortcut_is_not_trusted(void) {
@@ -432,6 +484,7 @@ int main(void) {
     test_prove_verify_extract();
     test_relation_checked_prove();
     test_prove_observed();
+    test_observed_proof_uses_tableau_fragments();
     test_wit0_shortcut_is_not_trusted();
     test_extract_validates_recovered_relation();
     test_production_rejects_unchecked_envelope();

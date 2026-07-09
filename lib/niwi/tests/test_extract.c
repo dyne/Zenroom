@@ -176,6 +176,7 @@ static void append_tableau_section(uint8_t *proof, size_t *proof_len,
     append_u32_be(proof, &off, 1);
     append_u32_be(proof, &off, 0);
     append_u32_be(proof, &off, 0);
+    append_u32_be(proof, &off, 0);
     append_u32_be(proof, &off, leaf_len);
     memcpy(proof + off, digest, 32); off += 32;
     *proof_len = off;

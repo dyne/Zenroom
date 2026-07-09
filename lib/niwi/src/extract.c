@@ -31,6 +31,16 @@
 #define NIWI_EXTRACT_TABLEAU_TAG "TAB0"
 #define NIWI_EXTRACT_TABLEAU_LEAF_TAG "TBL0"
 #define NIWI_EXTRACT_TABLEAU_HEADER_SIZE (4 + 4 + 4 + 4)
+#define NIWI_EXTRACT_TABLEAU_ENTRY_SIZE (4 + 4 + 4 + 4 + 32)
+#define NIWI_EXTRACT_MAX_TABLEAU_LEAVES 4096
+
+typedef struct {
+    uint32_t index;
+    uint32_t row;
+    uint32_t offset;
+    uint32_t leaf_len;
+    uint8_t digest[32];
+} niwi_extract_tableau_entry_t;
 
 /* ---- Internal extractor context --------------------------------------- */
 
@@ -63,8 +73,8 @@ struct niwi_extract {
     niwi_extract_leaf_t *leaves;
     size_t               num_leaves;
 
-    uint8_t              tableau_digest[32];
-    uint32_t             tableau_leaf_len;
+    niwi_extract_tableau_entry_t *tableau_entries;
+    size_t               tableau_count;
     int                  has_tableau;
 
     /* Error state */
@@ -159,22 +169,41 @@ niwi_extract_t *niwi_extract_create(
     ex->merkle_nleaves = ex->ligero_block_enc - ex->ligero_dblock;
     ex->ligero_nwrow = ex->ligero_nrow - 3 - 0; /* subtract blinding, quadratic rows */
 
-    if (off + 52 == proof_len && memcmp(proof + off, NIWI_EXTRACT_TABLEAU_TAG, 4) == 0) {
+    if (off + 8 <= proof_len && memcmp(proof + off, NIWI_EXTRACT_TABLEAU_TAG, 4) == 0) {
         off += 4;
         uint32_t count = read_u32_be(proof + off); off += 4;
-        uint32_t index = read_u32_be(proof + off); off += 4;
-        uint32_t row = read_u32_be(proof + off); off += 4;
-        uint32_t leaf_len = read_u32_be(proof + off); off += 4;
-        if (count != 1 || index != 0 || row != 0 ||
-            leaf_len < NIWI_EXTRACT_TABLEAU_HEADER_SIZE ||
-            off + NIWI_EXTRACT_WITNESS_DIGEST_SIZE != proof_len) {
+        if (count == 0 || count > NIWI_EXTRACT_MAX_TABLEAU_LEAVES ||
+            (size_t)count > (proof_len - off) / NIWI_EXTRACT_TABLEAU_ENTRY_SIZE) {
             ex->error_code = NIWI_EXTRACT_ERR_PARSE;
             snprintf(ex->error_msg, sizeof(ex->error_msg),
                      "invalid tableau section");
             return ex;
         }
-        memcpy(ex->tableau_digest, proof + off, NIWI_EXTRACT_WITNESS_DIGEST_SIZE);
-        ex->tableau_leaf_len = leaf_len;
+        ex->tableau_entries = (niwi_extract_tableau_entry_t *)
+            calloc(count, sizeof(*ex->tableau_entries));
+        if (!ex->tableau_entries) {
+            ex->error_code = NIWI_EXTRACT_ERR_MEMORY;
+            snprintf(ex->error_msg, sizeof(ex->error_msg),
+                     "out of memory");
+            return ex;
+        }
+        for (uint32_t i = 0; i < count; i++) {
+            niwi_extract_tableau_entry_t *entry = &ex->tableau_entries[i];
+            entry->index = read_u32_be(proof + off); off += 4;
+            entry->row = read_u32_be(proof + off); off += 4;
+            entry->offset = read_u32_be(proof + off); off += 4;
+            entry->leaf_len = read_u32_be(proof + off); off += 4;
+            if (entry->index != i ||
+                entry->leaf_len < NIWI_EXTRACT_TABLEAU_HEADER_SIZE) {
+                ex->error_code = NIWI_EXTRACT_ERR_PARSE;
+                snprintf(ex->error_msg, sizeof(ex->error_msg),
+                         "invalid tableau entry");
+                return ex;
+            }
+            memcpy(entry->digest, proof + off, NIWI_EXTRACT_WITNESS_DIGEST_SIZE);
+            off += NIWI_EXTRACT_WITNESS_DIGEST_SIZE;
+        }
+        ex->tableau_count = count;
         ex->has_tableau = 1;
     }
 
@@ -195,6 +224,7 @@ void niwi_extract_free(niwi_extract_t *ex) {
     if (!ex) return;
     niwi_npro_free(ex->gamma);
     free(ex->leaves);
+    free(ex->tableau_entries);
     free(ex);
 }
 
@@ -301,55 +331,100 @@ int niwi_extract_witness(niwi_extract_t *ex,
     if (!ex || !witness_len) return NIWI_EXTRACT_ERR_PARSE;
 
     if (ex->has_tableau) {
-        size_t recovered_len = 0;
-        if (!niwi_npro_lookup(ex->gamma, NIWI_TAG_LEAF, ex->tableau_digest,
-                              NULL, &recovered_len)) {
-            ex->error_code = NIWI_EXTRACT_ERR_MISSING_LEAF;
-            snprintf(ex->error_msg, sizeof(ex->error_msg),
-                     "missing tableau leaf query in Gamma");
-            return NIWI_EXTRACT_ERR_MISSING_LEAF;
+        uint8_t *witness = NULL;
+        uint8_t *covered = NULL;
+        size_t total = 0;
+
+        for (size_t i = 0; i < ex->tableau_count; i++) {
+            niwi_extract_tableau_entry_t *entry = &ex->tableau_entries[i];
+            size_t recovered_len = 0;
+            if (!niwi_npro_lookup(ex->gamma, NIWI_TAG_LEAF, entry->digest,
+                                  NULL, &recovered_len) ||
+                recovered_len != entry->leaf_len) {
+                free(witness);
+                free(covered);
+                ex->error_code = NIWI_EXTRACT_ERR_MISSING_LEAF;
+                snprintf(ex->error_msg, sizeof(ex->error_msg),
+                         "missing tableau leaf query in Gamma");
+                return NIWI_EXTRACT_ERR_MISSING_LEAF;
+            }
+
+            uint8_t *leaf = (uint8_t *)malloc(recovered_len ? recovered_len : 1);
+            if (!leaf) {
+                free(witness);
+                free(covered);
+                return NIWI_EXTRACT_ERR_MEMORY;
+            }
+            size_t leaf_cap = recovered_len;
+            if (!niwi_npro_lookup(ex->gamma, NIWI_TAG_LEAF, entry->digest,
+                                  leaf, &leaf_cap) || leaf_cap != recovered_len) {
+                free(leaf);
+                free(witness);
+                free(covered);
+                ex->error_code = NIWI_EXTRACT_ERR_MISSING_LEAF;
+                snprintf(ex->error_msg, sizeof(ex->error_msg),
+                         "failed to copy tableau leaf query from Gamma");
+                return NIWI_EXTRACT_ERR_MISSING_LEAF;
+            }
+
+            size_t off = 0;
+            if (memcmp(leaf + off, NIWI_EXTRACT_TABLEAU_LEAF_TAG, 4) != 0) {
+                free(leaf); free(witness); free(covered);
+                return NIWI_EXTRACT_ERR_WITNESS;
+            }
+            off += 4;
+            uint32_t row = read_u32_be(leaf + off); off += 4;
+            uint32_t chunk_offset = read_u32_be(leaf + off); off += 4;
+            uint32_t decoded_total = read_u32_be(leaf + off); off += 4;
+            size_t chunk_len = recovered_len - off;
+            if (row != entry->row || chunk_offset != entry->offset ||
+                chunk_offset > decoded_total ||
+                chunk_len > (size_t)(decoded_total - chunk_offset)) {
+                free(leaf); free(witness); free(covered);
+                return NIWI_EXTRACT_ERR_WITNESS;
+            }
+
+            if (!witness) {
+                total = decoded_total;
+                witness = (uint8_t *)calloc(total ? total : 1, 1);
+                covered = (uint8_t *)calloc(total ? total : 1, 1);
+                if (!witness || !covered) {
+                    free(leaf); free(witness); free(covered);
+                    return NIWI_EXTRACT_ERR_MEMORY;
+                }
+            } else if (total != decoded_total) {
+                free(leaf); free(witness); free(covered);
+                return NIWI_EXTRACT_ERR_WITNESS;
+            }
+
+            for (size_t j = 0; j < chunk_len; j++) {
+                size_t pos = (size_t)chunk_offset + j;
+                if (pos >= total || covered[pos]) {
+                    free(leaf); free(witness); free(covered);
+                    return NIWI_EXTRACT_ERR_WITNESS;
+                }
+                covered[pos] = 1;
+            }
+            if (chunk_len != 0) memcpy(witness + chunk_offset, leaf + off, chunk_len);
+            free(leaf);
         }
-        if (recovered_len != ex->tableau_leaf_len ||
-            recovered_len < NIWI_EXTRACT_TABLEAU_HEADER_SIZE) {
-            ex->error_code = NIWI_EXTRACT_ERR_WITNESS;
-            snprintf(ex->error_msg, sizeof(ex->error_msg),
-                     "tableau leaf length mismatch");
+
+        for (size_t i = 0; i < total; i++) {
+            if (!covered[i]) {
+                free(witness);
+                free(covered);
+                return NIWI_EXTRACT_ERR_WITNESS;
+            }
+        }
+        free(covered);
+        if (!witness_out || *witness_len < total) {
+            *witness_len = total;
+            free(witness);
             return NIWI_EXTRACT_ERR_WITNESS;
         }
-        uint8_t *leaf = (uint8_t *)malloc(recovered_len ? recovered_len : 1);
-        if (!leaf) return NIWI_EXTRACT_ERR_MEMORY;
-        size_t leaf_cap = recovered_len;
-        if (!niwi_npro_lookup(ex->gamma, NIWI_TAG_LEAF, ex->tableau_digest,
-                              leaf, &leaf_cap) || leaf_cap != recovered_len) {
-            free(leaf);
-            ex->error_code = NIWI_EXTRACT_ERR_MISSING_LEAF;
-            snprintf(ex->error_msg, sizeof(ex->error_msg),
-                     "failed to copy tableau leaf query from Gamma");
-            return NIWI_EXTRACT_ERR_MISSING_LEAF;
-        }
-        size_t off = 0;
-        if (memcmp(leaf + off, NIWI_EXTRACT_TABLEAU_LEAF_TAG, 4) != 0) {
-            free(leaf);
-            return NIWI_EXTRACT_ERR_WITNESS;
-        }
-        off += 4;
-        if (read_u32_be(leaf + off) != 0) { free(leaf); return NIWI_EXTRACT_ERR_WITNESS; }
-        off += 4;
-        if (read_u32_be(leaf + off) != 0) { free(leaf); return NIWI_EXTRACT_ERR_WITNESS; }
-        off += 4;
-        uint32_t decoded_len = read_u32_be(leaf + off); off += 4;
-        if (off + decoded_len != recovered_len) {
-            free(leaf);
-            return NIWI_EXTRACT_ERR_WITNESS;
-        }
-        if (!witness_out || *witness_len < decoded_len) {
-            *witness_len = decoded_len;
-            free(leaf);
-            return NIWI_EXTRACT_ERR_WITNESS;
-        }
-        if (decoded_len != 0) memcpy(witness_out, leaf + off, decoded_len);
-        *witness_len = decoded_len;
-        free(leaf);
+        if (total != 0) memcpy(witness_out, witness, total);
+        *witness_len = total;
+        free(witness);
         return NIWI_EXTRACT_OK;
     }
 
