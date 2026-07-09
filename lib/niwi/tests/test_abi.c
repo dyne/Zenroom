@@ -215,7 +215,7 @@ static void test_relation_checked_prove(void) {
 
     size_t body = find_proof_tag(proof, proof_len, "LIG0");
     assert(body != proof_len);
-    assert(read_u32_be_test(proof + body + 4) == 188 + 48);
+    assert(read_u32_be_test(proof + body + 4) == 256 + 48);
     assert(read_u32_be_test(proof + body + 8) == 0x00010000);
     assert(read_u32_be_test(proof + body + 12) == 0);
     assert(read_u32_be_test(proof + body + 16) == 1);
@@ -235,6 +235,18 @@ static void test_relation_checked_prove(void) {
     assert_relation_verify_rejects_mutation(
         ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
         body + 31);
+    assert_relation_verify_rejects_mutation(
+        ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
+        body + 39);
+    assert_relation_verify_rejects_mutation(
+        ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
+        body + 72);
+    assert_relation_verify_rejects_mutation(
+        ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
+        body + 200);
+    assert_relation_verify_rejects_mutation(
+        ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
+        body + 264 + 16);
 
     niwi_free_buffer(proof);
     niwi_ctx_free(ctx);
