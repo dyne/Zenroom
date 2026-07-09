@@ -37,7 +37,11 @@
 #define NIWI_TABLEAU_CHUNK_SIZE 32
 #define NIWI_TABLEAU_MAX_LEAVES 4096
 #define NIWI_PROOF_NATIVE_BODY_TAG "LIG0"
-#define NIWI_PROOF_NATIVE_BODY_PAYLOAD_SIZE (4 + 32 + 32 + 32 + 32)
+#define NIWI_PROOF_NATIVE_BODY_VERSION 0x00010000
+#define NIWI_PROOF_NATIVE_BODY_PROTOCOL_ID 0
+#define NIWI_PROOF_NATIVE_BODY_PARAM_ID 1
+#define NIWI_PROOF_NATIVE_BODY_ROWS 1
+#define NIWI_PROOF_NATIVE_BODY_PAYLOAD_SIZE (7 * 4 + 5 * 32)
 #define NIWI_PROOF_NATIVE_BODY_SIZE (4 + 4 + NIWI_PROOF_NATIVE_BODY_PAYLOAD_SIZE)
 
 typedef struct {
@@ -302,32 +306,70 @@ static void compute_native_body_challenges(const uint8_t relation_digest[32],
                        challenge2);
 }
 
+static void compute_native_body_final_digest(
+    niwi_relation_id_t relation_id,
+    uint32_t tableau_count,
+    const uint8_t tableau_digest[32],
+    const uint8_t relation_digest[32],
+    const uint8_t challenge1[32],
+    const uint8_t challenge2[32],
+    uint8_t out[32]) {
+    uint8_t preimage[7 * 4 + 4 * 32];
+    size_t off = 0;
+    write_u32_be(preimage + off, NIWI_PROOF_NATIVE_BODY_VERSION); off += 4;
+    write_u32_be(preimage + off, NIWI_PROOF_NATIVE_BODY_PROTOCOL_ID); off += 4;
+    write_u32_be(preimage + off, NIWI_PROOF_NATIVE_BODY_PARAM_ID); off += 4;
+    write_u32_be(preimage + off, NIWI_PROOF_NATIVE_BODY_ROWS); off += 4;
+    write_u32_be(preimage + off, NIWI_TABLEAU_CHUNK_SIZE); off += 4;
+    write_u32_be(preimage + off, tableau_count); off += 4;
+    write_u32_be(preimage + off, (uint32_t)relation_id); off += 4;
+    memcpy(preimage + off, tableau_digest, 32); off += 32;
+    memcpy(preimage + off, relation_digest, 32); off += 32;
+    memcpy(preimage + off, challenge1, 32); off += 32;
+    memcpy(preimage + off, challenge2, 32); off += 32;
+    niwi_hash_one_shot(NIWI_TAG_PROOF, preimage, off, out);
+}
+
 static int append_native_proof_body(niwi_ctx_t *ctx,
                                     const uint8_t circuit_digest[32],
                                     const uint8_t statement_digest[32],
                                     const uint8_t tableau_digest[32],
+                                    size_t tableau_count,
                                     uint8_t *proof, size_t proof_len,
                                     size_t *off) {
     if (!ctx || !proof || !off) return -1;
     if (*off + NIWI_PROOF_NATIVE_BODY_SIZE > proof_len) return -1;
     if (ctx->relation_id == NIWI_RELATION_NONE) return -1;
+    if (tableau_count == 0 || tableau_count > UINT32_MAX) return -1;
 
     uint8_t relation_digest[32];
     uint8_t challenge1[32];
     uint8_t challenge2[32];
+    uint8_t final_digest[32];
     compute_relation_digest(ctx->relation_id, circuit_digest,
                             statement_digest, tableau_digest,
                             relation_digest);
     compute_native_body_challenges(relation_digest, tableau_digest,
                                    challenge1, challenge2);
+    compute_native_body_final_digest(ctx->relation_id,
+                                     (uint32_t)tableau_count,
+                                     tableau_digest, relation_digest,
+                                     challenge1, challenge2, final_digest);
 
     memcpy(proof + *off, NIWI_PROOF_NATIVE_BODY_TAG, 4); *off += 4;
     write_u32_be(proof + *off, NIWI_PROOF_NATIVE_BODY_PAYLOAD_SIZE); *off += 4;
+    write_u32_be(proof + *off, NIWI_PROOF_NATIVE_BODY_VERSION); *off += 4;
+    write_u32_be(proof + *off, NIWI_PROOF_NATIVE_BODY_PROTOCOL_ID); *off += 4;
+    write_u32_be(proof + *off, NIWI_PROOF_NATIVE_BODY_PARAM_ID); *off += 4;
+    write_u32_be(proof + *off, NIWI_PROOF_NATIVE_BODY_ROWS); *off += 4;
+    write_u32_be(proof + *off, NIWI_TABLEAU_CHUNK_SIZE); *off += 4;
+    write_u32_be(proof + *off, (uint32_t)tableau_count); *off += 4;
     write_u32_be(proof + *off, (uint32_t)ctx->relation_id); *off += 4;
     memcpy(proof + *off, tableau_digest, 32); *off += 32;
     memcpy(proof + *off, relation_digest, 32); *off += 32;
     memcpy(proof + *off, challenge1, 32); *off += 32;
     memcpy(proof + *off, challenge2, 32); *off += 32;
+    memcpy(proof + *off, final_digest, 32); *off += 32;
     return 0;
 }
 
@@ -337,6 +379,7 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
                                    const uint8_t circuit_digest[32],
                                    const uint8_t statement_digest[32],
                                    const uint8_t tableau_digest[32],
+                                   size_t tableau_count,
                                    int require_relation) {
     if (!ctx || !proof || !off) return -1;
     if (*off == proof_len) {
@@ -354,6 +397,36 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
     *off += 4;
     if (read_u32_be(proof + *off) != NIWI_PROOF_NATIVE_BODY_PAYLOAD_SIZE) {
         set_error(ctx, "niwi_verify: invalid native proof body length");
+        return -1;
+    }
+    *off += 4;
+    if (read_u32_be(proof + *off) != NIWI_PROOF_NATIVE_BODY_VERSION) {
+        set_error(ctx, "niwi_verify: unsupported native proof body version");
+        return -1;
+    }
+    *off += 4;
+    if (read_u32_be(proof + *off) != NIWI_PROOF_NATIVE_BODY_PROTOCOL_ID) {
+        set_error(ctx, "niwi_verify: unsupported native proof body protocol");
+        return -1;
+    }
+    *off += 4;
+    if (read_u32_be(proof + *off) != NIWI_PROOF_NATIVE_BODY_PARAM_ID) {
+        set_error(ctx, "niwi_verify: unsupported native proof body parameters");
+        return -1;
+    }
+    *off += 4;
+    if (read_u32_be(proof + *off) != NIWI_PROOF_NATIVE_BODY_ROWS) {
+        set_error(ctx, "niwi_verify: native proof tableau row mismatch");
+        return -1;
+    }
+    *off += 4;
+    if (read_u32_be(proof + *off) != NIWI_TABLEAU_CHUNK_SIZE) {
+        set_error(ctx, "niwi_verify: native proof tableau chunk mismatch");
+        return -1;
+    }
+    *off += 4;
+    if (read_u32_be(proof + *off) != tableau_count) {
+        set_error(ctx, "niwi_verify: native proof tableau count mismatch");
         return -1;
     }
     *off += 4;
@@ -390,6 +463,16 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
     *off += 32;
     if (memcmp(proof + *off, challenge2, 32) != 0) {
         set_error(ctx, "niwi_verify: native proof query challenge mismatch");
+        return -1;
+    }
+    *off += 32;
+    uint8_t final_digest[32];
+    compute_native_body_final_digest(ctx->relation_id,
+                                     (uint32_t)tableau_count,
+                                     tableau_digest, expected,
+                                     challenge1, challenge2, final_digest);
+    if (memcmp(proof + *off, final_digest, 32) != 0) {
+        set_error(ctx, "niwi_verify: native proof final digest mismatch");
         return -1;
     }
     *off += 32;
@@ -567,7 +650,8 @@ static int build_proof(niwi_ctx_t *ctx,
 
     if (relation_backed &&
         append_native_proof_body(ctx, circuit_digest, statement_digest,
-                                 tableau_digest, proof, len, &off) != 0) {
+                                 tableau_digest, tableau_count,
+                                 proof, len, &off) != 0) {
         free(tableau_entries);
         free(proof);
         set_error(ctx, "niwi_prove: failed to build native proof body");
@@ -640,7 +724,6 @@ static int verify_proof_envelope(niwi_ctx_t *ctx,
         set_error(ctx, "niwi_verify: invalid tableau section");
         return -1;
     }
-    (void)tableau_count;
 
     uint8_t commit_preimage[64];
     uint8_t commit_message[32];
@@ -656,7 +739,8 @@ static int verify_proof_envelope(niwi_ctx_t *ctx,
 
     if (parse_native_proof_body(ctx, proof, proof_len, &off,
                                 expected_circuit, expected_statement,
-                                tableau_digest, require_relation) != 0)
+                                tableau_digest, tableau_count,
+                                require_relation) != 0)
         return -1;
     if (off != proof_len) {
         set_error(ctx, "niwi_verify: trailing bytes");
@@ -818,7 +902,8 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
     }
     if (off < proof_len &&
         parse_native_proof_body(ctx, proof, proof_len, &off,
-                                proof + 12, proof + 44, tableau_digest, 0) != 0) {
+                                proof + 12, proof + 44, tableau_digest,
+                                entry_count, 0) != 0) {
         free(entries);
         return -1;
     }

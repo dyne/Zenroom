@@ -65,6 +65,24 @@ static uint32_t proof_tableau_leaf_count(const uint8_t *proof,
     return 0;
 }
 
+static size_t find_proof_tag(const uint8_t *proof, size_t proof_len,
+                             const char tag[4]) {
+    if (!proof || proof_len < 4) return proof_len;
+    for (size_t i = 0; i + 4 <= proof_len; i++) {
+        if (memcmp(proof + i, tag, 4) == 0) return i;
+    }
+    return proof_len;
+}
+
+static void assert_relation_verify_rejects_mutation(
+    niwi_ctx_t *ctx, uint8_t *proof, size_t proof_len,
+    const uint8_t *public_inputs, size_t pub_len, size_t offset) {
+    uint8_t saved = proof[offset];
+    proof[offset] ^= 0x01;
+    assert(niwi_verify(ctx, proof, proof_len, public_inputs, pub_len) != 0);
+    proof[offset] = saved;
+}
+
 static void test_create_free(void) {
     niwi_ctx_t *ctx = niwi_ctx_create(dummy_artifact, sizeof(dummy_artifact));
     assert(ctx != NULL);
@@ -193,6 +211,30 @@ static void test_relation_checked_prove(void) {
     assert(proof_has_tag(proof, proof_len, "LIG0"));
     assert(niwi_verify(ctx, proof, proof_len,
                        public_inputs, sizeof(public_inputs)) == 0);
+
+    size_t body = find_proof_tag(proof, proof_len, "LIG0");
+    assert(body != proof_len);
+    assert(read_u32_be_test(proof + body + 4) == 188);
+    assert(read_u32_be_test(proof + body + 8) == 0x00010000);
+    assert(read_u32_be_test(proof + body + 12) == 0);
+    assert(read_u32_be_test(proof + body + 16) == 1);
+    assert(read_u32_be_test(proof + body + 20) == 1);
+    assert(read_u32_be_test(proof + body + 24) == 32);
+    assert(read_u32_be_test(proof + body + 28) == 1);
+
+    assert_relation_verify_rejects_mutation(
+        ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
+        body + 11);
+    assert_relation_verify_rejects_mutation(
+        ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
+        body + 15);
+    assert_relation_verify_rejects_mutation(
+        ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
+        body + 19);
+    assert_relation_verify_rejects_mutation(
+        ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
+        body + 31);
+
     niwi_free_buffer(proof);
     niwi_ctx_free(ctx);
     printf("  PASS test_relation_checked_prove\n");
