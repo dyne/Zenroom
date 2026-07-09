@@ -9,6 +9,7 @@ needed before claiming production, paper-exact RPBSch.
 | --- | --- | --- | --- |
 | Relation-backed proving | `lib/niwi/src/niwi.c`, `src/lua/crypto_niwi.lua` | `make -C lib/niwi test`, `test/lua/zkcc_niwi_smoke.lua` | Implemented for BIP340 and generic P256 zkcc relations |
 | Native proof body | `LIG0` in `lib/niwi/src/niwi.c` | `lib/niwi/tests/test_abi.c` | Versioned, relation-bound, and carries tableau entries; still not yet a full paper NIWI/Ligero proof body |
+| Relation witness tableau leaves | `TBL1` in `lib/niwi/src/niwi.c` | `test_relation_observed_uses_bound_tableau_leaves` | Production observed leaves bind relation id and public statement digest; unchecked fixtures retain legacy `TBL0` |
 | Unchecked envelope isolation | `src/lua/crypto_niwi.lua`, native `niwi` module | `test/lua/niwi_regression.lua` | Production Lua rejects raw unchecked envelopes |
 | Native generic zkcc evaluation | `lib/niwi/src/relations/zkcc_p256_relation.cc` | `test/lua/zkcc_niwi_smoke.lua` | Direct circuit evaluation, no Lua or legacy proof object |
 
@@ -49,9 +50,10 @@ needed before claiming production, paper-exact RPBSch.
 
 ## Claims And Limits
 
-- Current NIWI proofs are relation-backed and versioned, and production
-  verification/extraction read tableau entries from `LIG0` rather than the
-  legacy `TAB0` compact section. The `LIG0` body is still not yet the full
+- Current NIWI proofs are relation-backed and versioned. Production
+  verification/extraction read tableau entries from `LIG0`, and production
+  observed leaves use `TBL1` to bind relation id and public statement digest
+  into the extracted witness tableau. The `LIG0` body is still not yet the full
   native NIWI/Ligero proof body described in the roadmap.
 - Current extraction reconstructs the committed tableau-fragment profile and
   revalidates the relation before returning success. Full paper-level Ligero

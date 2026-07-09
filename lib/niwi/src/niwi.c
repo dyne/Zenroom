@@ -33,7 +33,9 @@
 #define NIWI_PROOF_TABLEAU_TAG "TAB0"
 #define NIWI_PROOF_TABLEAU_ENTRY_SIZE (4 + 4 + 4 + 4 + 32)
 #define NIWI_TABLEAU_LEAF_TAG "TBL0"
+#define NIWI_TABLEAU_RELATION_LEAF_TAG "TBL1"
 #define NIWI_TABLEAU_LEAF_HEADER_SIZE (4 + 4 + 4 + 4)
+#define NIWI_TABLEAU_RELATION_LEAF_HEADER_SIZE (4 + 4 + 4 + 32 + 4 + 4 + 4)
 #define NIWI_TABLEAU_CHUNK_SIZE 32
 #define NIWI_TABLEAU_MAX_LEAVES 4096
 #define NIWI_PROOF_NATIVE_BODY_TAG "LIG0"
@@ -85,24 +87,38 @@ static size_t tableau_leaf_count(size_t priv_len) {
 static int build_tableau_leaf_fragment(const uint8_t *private_inputs,
                                        size_t priv_len,
                                        size_t offset,
+                                       int relation_backed,
+                                       niwi_relation_id_t relation_id,
+                                       const uint8_t statement_digest[32],
                                        uint8_t **leaf_out,
                                        size_t *leaf_len) {
     if (!leaf_out || !leaf_len) return -1;
     if (!private_inputs && priv_len != 0) return -1;
     if (priv_len > UINT32_MAX) return -1;
     if (offset > priv_len) return -1;
+    if (relation_backed && !statement_digest) return -1;
 
     size_t chunk_len = priv_len - offset;
     if (chunk_len > NIWI_TABLEAU_CHUNK_SIZE)
         chunk_len = NIWI_TABLEAU_CHUNK_SIZE;
     if (chunk_len > UINT32_MAX) return -1;
 
-    size_t len = NIWI_TABLEAU_LEAF_HEADER_SIZE + chunk_len;
+    size_t header_len = relation_backed ?
+        NIWI_TABLEAU_RELATION_LEAF_HEADER_SIZE :
+        NIWI_TABLEAU_LEAF_HEADER_SIZE;
+    size_t len = header_len + chunk_len;
     uint8_t *leaf = (uint8_t *)malloc(len ? len : 1);
     if (!leaf) return -1;
 
     size_t off = 0;
-    memcpy(leaf + off, NIWI_TABLEAU_LEAF_TAG, 4); off += 4;
+    memcpy(leaf + off, relation_backed ? NIWI_TABLEAU_RELATION_LEAF_TAG :
+                                         NIWI_TABLEAU_LEAF_TAG, 4);
+    off += 4;
+    if (relation_backed) {
+        write_u32_be(leaf + off, NIWI_PROOF_NATIVE_BODY_VERSION); off += 4;
+        write_u32_be(leaf + off, (uint32_t)relation_id); off += 4;
+        memcpy(leaf + off, statement_digest, 32); off += 32;
+    }
     write_u32_be(leaf + off, 0); off += 4; /* witness row */
     write_u32_be(leaf + off, (uint32_t)offset); off += 4;
     write_u32_be(leaf + off, (uint32_t)priv_len); off += 4;
@@ -114,6 +130,9 @@ static int build_tableau_leaf_fragment(const uint8_t *private_inputs,
 }
 
 static int decode_tableau_leaf_fragment(const uint8_t *leaf, size_t leaf_len,
+                                        int relation_backed,
+                                        niwi_relation_id_t relation_id,
+                                        const uint8_t statement_digest[32],
                                         uint32_t *row,
                                         uint32_t *offset,
                                         uint32_t *total_len,
@@ -124,8 +143,26 @@ static int decode_tableau_leaf_fragment(const uint8_t *leaf, size_t leaf_len,
     if (leaf_len < NIWI_TABLEAU_LEAF_HEADER_SIZE) return -1;
 
     size_t off = 0;
-    if (memcmp(leaf + off, NIWI_TABLEAU_LEAF_TAG, 4) != 0) return -1;
-    off += 4;
+    if (memcmp(leaf + off, NIWI_TABLEAU_LEAF_TAG, 4) == 0) {
+        if (relation_backed) return -1;
+        off += 4;
+    } else if (memcmp(leaf + off, NIWI_TABLEAU_RELATION_LEAF_TAG, 4) == 0) {
+        if (!relation_backed || !statement_digest ||
+            leaf_len < NIWI_TABLEAU_RELATION_LEAF_HEADER_SIZE)
+            return -1;
+        off += 4;
+        if (read_u32_be(leaf + off) != NIWI_PROOF_NATIVE_BODY_VERSION)
+            return -1;
+        off += 4;
+        if (read_u32_be(leaf + off) != (uint32_t)relation_id)
+            return -1;
+        off += 4;
+        if (memcmp(leaf + off, statement_digest, 32) != 0)
+            return -1;
+        off += 32;
+    } else {
+        return -1;
+    }
     *row = read_u32_be(leaf + off); off += 4;
     *offset = read_u32_be(leaf + off); off += 4;
     *total_len = read_u32_be(leaf + off); off += 4;
@@ -163,6 +200,9 @@ static int compute_tableau_digest(const niwi_tableau_entry_t *entries,
 }
 
 static int build_tableau_entries(const uint8_t *private_inputs, size_t priv_len,
+                                 int relation_backed,
+                                 niwi_relation_id_t relation_id,
+                                 const uint8_t statement_digest[32],
                                  niwi_tableau_entry_t **entries_out,
                                  size_t *count_out,
                                  uint8_t tableau_digest[32]) {
@@ -181,6 +221,8 @@ static int build_tableau_entries(const uint8_t *private_inputs, size_t priv_len,
         uint8_t *leaf = NULL;
         size_t leaf_len = 0;
         if (build_tableau_leaf_fragment(private_inputs, priv_len, offset,
+                                        relation_backed, relation_id,
+                                        statement_digest,
                                         &leaf, &leaf_len) != 0 ||
             leaf_len > UINT32_MAX) {
             free(leaf);
@@ -206,7 +248,10 @@ static int build_tableau_entries(const uint8_t *private_inputs, size_t priv_len,
 
 static int record_tableau_queries(niwi_npro_t *npro,
                                   const uint8_t *private_inputs,
-                                  size_t priv_len) {
+                                  size_t priv_len,
+                                  int relation_backed,
+                                  niwi_relation_id_t relation_id,
+                                  const uint8_t statement_digest[32]) {
     if (!npro) return -1;
     if (!private_inputs && priv_len != 0) return -1;
 
@@ -219,6 +264,8 @@ static int record_tableau_queries(niwi_npro_t *npro,
         size_t leaf_len = 0;
         uint8_t digest[32];
         if (build_tableau_leaf_fragment(private_inputs, priv_len, offset,
+                                        relation_backed, relation_id,
+                                        statement_digest,
                                         &leaf, &leaf_len) != 0 ||
             niwi_npro_query(npro, NIWI_TAG_LEAF, leaf, leaf_len, digest) != 0) {
             free(leaf);
@@ -681,6 +728,8 @@ static int build_proof(niwi_ctx_t *ctx,
     niwi_hash_one_shot(NIWI_TAG_STMT, public_inputs, pub_len,
                        statement_digest);
     if (build_tableau_entries(private_inputs, priv_len,
+                              relation_backed, ctx->relation_id,
+                              statement_digest,
                               &tableau_entries, &tableau_count,
                               tableau_digest) != 0) {
         set_error(ctx, "niwi_prove: failed to build witness tableau leaf");
@@ -905,7 +954,8 @@ int niwi_envelope_prove_observed_unchecked(
         set_error(ctx, "niwi_prove_observed: failed to create NPRO");
         return -1;
     }
-    if (record_tableau_queries(npro, private_inputs, priv_len) != 0) {
+    if (record_tableau_queries(npro, private_inputs, priv_len,
+                               0, NIWI_RELATION_NONE, NULL) != 0) {
         niwi_npro_free(npro);
         niwi_free_buffer(*proof_out);
         *proof_out = NULL;
@@ -954,7 +1004,12 @@ int niwi_prove_observed(niwi_ctx_t *ctx,
         set_error(ctx, "niwi_prove_observed: failed to create NPRO");
         return -1;
     }
-    if (record_tableau_queries(npro, private_inputs, priv_len) != 0) {
+    uint8_t statement_digest[32];
+    niwi_hash_one_shot(NIWI_TAG_STMT, public_inputs, pub_len,
+                       statement_digest);
+    if (record_tableau_queries(npro, private_inputs, priv_len,
+                               1, ctx->relation_id,
+                               statement_digest) != 0) {
         niwi_npro_free(npro);
         niwi_free_buffer(*proof_out);
         *proof_out = NULL;
@@ -1086,7 +1141,12 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
         uint32_t total_len = 0;
         const uint8_t *chunk = NULL;
         size_t chunk_len = 0;
-        if (decode_tableau_leaf_fragment(leaf, recovered_len, &row,
+        int relation_leaf =
+            recovered_len >= 4 &&
+            memcmp(leaf, NIWI_TABLEAU_RELATION_LEAF_TAG, 4) == 0;
+        if (decode_tableau_leaf_fragment(leaf, recovered_len,
+                                         relation_leaf, ctx->relation_id,
+                                         proof + 44, &row,
                                          &chunk_offset, &total_len,
                                          &chunk, &chunk_len) != 0 ||
             row != entries[i].row || chunk_offset != entries[i].offset) {

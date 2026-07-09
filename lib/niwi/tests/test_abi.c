@@ -241,6 +241,44 @@ static void test_relation_checked_prove(void) {
     printf("  PASS test_relation_checked_prove\n");
 }
 
+static void test_relation_observed_uses_bound_tableau_leaves(void) {
+    niwi_ctx_t *ctx = niwi_ctx_create_with_relation(
+        dummy_artifact, sizeof(dummy_artifact),
+        NIWI_RELATION_ZKCC_P256, test_relation_validate, NULL);
+    assert(ctx != NULL);
+
+    const uint8_t public_inputs[] = {'p'};
+    const uint8_t private_inputs[] = {'w'};
+    uint8_t *proof = NULL;
+    uint8_t *gamma = NULL;
+    size_t proof_len = 0;
+    size_t gamma_len = 0;
+
+    assert(niwi_prove_observed(ctx, public_inputs, sizeof(public_inputs),
+                               private_inputs, sizeof(private_inputs),
+                               &proof, &proof_len, &gamma, &gamma_len) == 0);
+    assert(proof != NULL);
+    assert(gamma != NULL);
+    assert(proof_has_tag(proof, proof_len, "LIG0"));
+    assert(!proof_has_tag(proof, proof_len, "TAB0"));
+    assert(proof_has_tag(gamma, gamma_len, "TBL1"));
+    assert(!proof_has_tag(gamma, gamma_len, "TBL0"));
+
+    uint8_t *witness = NULL;
+    size_t witness_len = 0;
+    assert(niwi_extract(ctx, proof, proof_len, gamma, gamma_len,
+                        public_inputs, sizeof(public_inputs),
+                        &witness, &witness_len) == 0);
+    assert(witness_len == sizeof(private_inputs));
+    assert(memcmp(witness, private_inputs, sizeof(private_inputs)) == 0);
+    niwi_free_buffer(witness);
+
+    niwi_free_buffer(gamma);
+    niwi_free_buffer(proof);
+    niwi_ctx_free(ctx);
+    printf("  PASS test_relation_observed_uses_bound_tableau_leaves\n");
+}
+
 static void test_prove_observed(void) {
     niwi_ctx_t *ctx = niwi_ctx_create(dummy_artifact, sizeof(dummy_artifact));
     assert(ctx != NULL);
@@ -526,6 +564,7 @@ int main(void) {
     test_free_buffer();
     test_prove_verify_extract();
     test_relation_checked_prove();
+    test_relation_observed_uses_bound_tableau_leaves();
     test_prove_observed();
     test_observed_proof_uses_tableau_fragments();
     test_wit0_shortcut_is_not_trusted();
