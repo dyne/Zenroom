@@ -78,6 +78,45 @@ bad_ck.statement = pbsch.assemble_statement(bad_ck.X, bad_ck.X_prime,
 assert(rpbsch.verify_record(circuit, bad_ck, branch1[1]) == false,
        'changed commitment key accepted')
 
+local bad_phi = rpbsch.fixture()
+bad_phi.phi = flip_last_nibble(bad_phi.phi)
+bad_phi.statement = pbsch.assemble_statement(bad_phi.X, bad_phi.X_prime,
+                                             bad_phi.R, bad_phi.c, bad_phi.C,
+                                             bad_phi.phi, bad_phi.ck, bad_phi.S)
+assert(rpbsch.verify_record(circuit, bad_phi, branch1[1]) == false,
+       'changed phi accepted')
+
+local swapped_keys = rpbsch.fixture()
+swapped_keys.X, swapped_keys.X_prime = swapped_keys.X_prime, swapped_keys.X
+swapped_keys.statement = pbsch.assemble_statement(swapped_keys.X,
+                                                  swapped_keys.X_prime,
+                                                  swapped_keys.R,
+                                                  swapped_keys.c,
+                                                  swapped_keys.C,
+                                                  swapped_keys.phi,
+                                                  swapped_keys.ck,
+                                                  swapped_keys.S)
+assert(rpbsch.verify_record(circuit, swapped_keys, branch1[1]) == false,
+       'swapped X/X_prime accepted')
+
+local bad_c_statement = rpbsch.fixture()
+bad_c_statement.C = flip_last_nibble(bad_c_statement.C)
+bad_c_statement.statement = pbsch.assemble_statement(
+  bad_c_statement.X, bad_c_statement.X_prime, bad_c_statement.R,
+  bad_c_statement.c, bad_c_statement.C, bad_c_statement.phi,
+  bad_c_statement.ck, bad_c_statement.S)
+assert(rpbsch.verify_record(circuit, bad_c_statement, branch1[1]) == false,
+       'changed C accepted')
+
+local bad_s_statement = rpbsch.fixture()
+bad_s_statement.S = flip_last_nibble(bad_s_statement.S)
+bad_s_statement.statement = pbsch.assemble_statement(
+  bad_s_statement.X, bad_s_statement.X_prime, bad_s_statement.R,
+  bad_s_statement.c, bad_s_statement.C, bad_s_statement.phi,
+  bad_s_statement.ck, bad_s_statement.S)
+assert(rpbsch.verify_record(circuit, bad_s_statement, branch1[1]) == false,
+       'changed S accepted')
+
 local missing_relation_field = rpbsch.fixture()
 missing_relation_field.phi = nil
 assert(rpbsch.verify_record(circuit, missing_relation_field, branch1[1]) == false,
