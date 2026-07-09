@@ -249,7 +249,7 @@ extern "C" int niwi_rpbsch_relation_validate(
     if (!validate_commitments(st, w)) return -1;
 
     if (w.branch == kBranchHonest) {
-        if (w.check_count != 1) return -1;
+        if (w.check_count != 2) return -1;
         if (memcmp(w.sigma, st.R, 32) != 0) return -1;
         uint8_t expected_c[32];
         uint8_t expected_x[32];

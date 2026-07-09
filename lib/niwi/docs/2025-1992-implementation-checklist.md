@@ -46,8 +46,8 @@ needed before claiming production, paper-exact RPBSch.
 | Statement `(X, X', R, c, C, phi, ck, S)` | `src/lua/crypto_pbsch.lua`, `src/lua/crypto_rpbsch.lua` | `test/lua/rpbsch_niwi.lua`, `test/lua/pbsch_end_to_end.lua` | Encoded and mutation-tested |
 | Branch 1 relation | `src/lua/crypto_rpbsch.lua`, `lib/niwi/src/relations/rpbsch_relation.cc` | `test/lua/rpbsch_niwi.lua` | Native branch relation validates statement, C/S openings, and embedded BIP340 witness |
 | Branch 2 relation | `src/lua/crypto_rpbsch.lua`, `lib/niwi/src/relations/rpbsch_relation.cc` | `test/lua/rpbsch_niwi.lua` | Native branch relation validates statement, C/S openings, and two embedded BIP340 witnesses |
-| Selector-composed relation | Not implemented | Not implemented | Open. Required before RPBSch matches paper shape |
-| C/S opening checks inside relation | Lua only | `test/lua/rpbsch_niwi.lua` | Open for native/paper-exact relation |
+| Selector-composed relation | `src/lua/crypto_rpbsch.lua`, `lib/niwi/src/relations/rpbsch_relation.cc` | `test/lua/rpbsch_niwi.lua` | Implemented as a native fixed two-slot private selector relation; not a zkcc-authored selector circuit |
+| C/S opening checks inside relation | `lib/niwi/src/relations/rpbsch_relation.cc` | `test/lua/rpbsch_niwi.lua` | Native relation validates C/S openings before NIWI proving/extraction succeeds |
 
 ## Claims And Limits
 
@@ -66,8 +66,10 @@ needed before claiming production, paper-exact RPBSch.
 - Current PBSch Cmt is a Pedersen-backed `CMT1` profile with straight-line
   extraction from opened commitments. Final RPBSch proof claims still require
   branch/selector relations to verify `C` and `S` openings natively.
-- Current RPBSch has native branch relations and statement binding, but not a
-  selector-composed native relation.
+- Current RPBSch has native branch relations, statement binding, and a fixed
+  two-slot private selector relation. It is still not a zkcc-authored selector
+  circuit, and final paper claims remain gated by the full NIWI/Ligero proof
+  body work above.
 - BIP340 is the strongest covered dependency: official vectors cover the SECP
   and zkcc paths, and valid official vectors now run through NIWI
   prove/verify/extract.

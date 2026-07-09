@@ -7,6 +7,7 @@
 local rpbsch = require'crypto_rpbsch'
 local zkcc = require'crypto_zkcc'
 local pbsch = require'crypto_pbsch'
+local niwi = require'crypto_niwi'
 
 assert(rpbsch, 'crypto_rpbsch module not loaded')
 assert(zkcc, 'crypto_zkcc module not loaded')
@@ -73,6 +74,22 @@ local native_extracted2 =
   rpbsch.extract_branch_relation(native_proof2, native_gamma2, fixture.statement)
 assert(native_extracted2:string() == native_witness2:string(),
        'native RPBSch branch 2 extracted witness mismatch')
+assert(#native_witness1:str() == #native_witness2:str(),
+       'native RPBSch witness size leaks selector')
+assert(#native_proof1:str() == #native_proof2:str(),
+       'native RPBSch proof size leaks selector')
+
+local invalid_selector_witness = OCTET.from_hex(
+  native_witness1:hex():sub(1, 8) .. '00000003' ..
+  native_witness1:hex():sub(17))
+local invalid_selector_ok = pcall(function()
+  niwi.prove_rpbsch_relation{
+    circuit = niwi.rpbsch_relation_artifact(),
+    inputs = invalid_selector_witness,
+    public_inputs = fixture.statement,
+  }
+end)
+assert(invalid_selector_ok == false, 'native RPBSch accepted invalid selector')
 
 local bad_selector_ok = pcall(function()
   rpbsch.prove_branch(circuit, fixture, 3)

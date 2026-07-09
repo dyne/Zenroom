@@ -255,6 +255,12 @@ function rpbsch.branch_relation_witness(circuit, fixture, branch)
     require_branch(branch)
     local witnesses, err = rpbsch.branch_witnesses(circuit, fixture, branch)
     if not witnesses then return nil, err end
+    if branch == rpbsch.BRANCH_HONEST then
+        local padding, padding_err =
+            rpbsch.branch_witnesses(circuit, fixture, rpbsch.BRANCH_TRAPDOOR)
+        if not padding then return nil, padding_err end
+        witnesses[#witnesses + 1] = padding[1]
+    end
     local out = OCTET.from_string("RPB1") ..
                 u32_be(branch) ..
                 fixture.m .. fixture.alpha .. fixture.beta ..
