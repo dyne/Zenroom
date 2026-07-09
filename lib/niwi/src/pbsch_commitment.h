@@ -30,6 +30,10 @@ extern "C" {
 
 /* ---- PBSch Pedersen primitives (C layer) ---------------------------------
  *
+ * Cmt status: binding Pedersen profile, not paper-exact Cmt. This module does
+ * not provide the straight-line extractability mechanism required for final
+ * RPBSch claims; see lib/niwi/docs/pbsch-cmt-profile.md.
+ *
  * The Lua layer owns tuple encoding, protocol orchestration, and
  * commitment object assembly. This C module exposes only the three
  * primitive operations needed:

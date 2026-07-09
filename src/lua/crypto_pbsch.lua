@@ -32,6 +32,9 @@
 --   niwi.pbsch_pedersen_commit(m, rho)   -> C       (33-byte OCTET)
 --   niwi.pbsch_pedersen_verify(C, m, rho)-> boolean
 --
+-- Cmt status: binding Pedersen profile, not paper-exact Cmt.  See
+-- lib/niwi/docs/pbsch-cmt-profile.md before making RPBSch proof claims.
+--
 -- The native layer owns: secp256k1 arithmetic, BIP-340 sign/verify,
 -- circuit constraints, NIWI proof objects.
 
@@ -171,6 +174,7 @@ end
 
 -- ===========================================================================
 -- PBSch commitment operations (thin wrappers around native Pedersen)
+-- Transitional Cmt profile: binding Pedersen profile, not paper-exact Cmt.
 -- ===========================================================================
 
 function pbsch.commit_c(m, rho)

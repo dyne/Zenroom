@@ -24,7 +24,7 @@
 -- BIP-340 circuit witnesses for both RPBSch branches under one shared PBSch
 -- statement, but it leaves the following paper-exact work open:
 --   * compose the two branches with a private OR selector in one circuit;
---   * replace the Pedersen prototype with straight-line extractable Cmt.
+--   * replace the binding Pedersen profile with paper-exact Cmt.
 
 local pbsch = require'crypto_pbsch'
 local zkcc = require'crypto_zkcc'

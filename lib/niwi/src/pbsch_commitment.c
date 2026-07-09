@@ -122,7 +122,11 @@ int niwi_pbsch_pedersen_h(uint8_t h_x_out[32]) {
     return 0;
 }
 
-/* ---- Pedersen primitives ----------------------------------------------- */
+/* ---- Pedersen primitives -----------------------------------------------
+ *
+ * Transitional Cmt profile: binding Pedersen profile, not paper-exact Cmt.
+ * This file verifies openings but does not implement the straight-line
+ * extraction mechanism required by 2025-1992 RPBSch. */
 
 int niwi_pbsch_pedersen_commit(const uint8_t msg[32], const uint8_t rho[32],
                                uint8_t c_out[NIWI_PBSCH_CMP_SIZE]) {
