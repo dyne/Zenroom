@@ -6,9 +6,9 @@ the local `LIG0` profile implemented in `lib/niwi`; it does not modify
 
 The profile is intentionally minimal. It binds a relation-backed witness
 tableau, a Merkle commitment to its leaves, a KLP22 Fiat-Shamir challenge
-schedule, a verifier-recomputed `NRSP` response digest, and one selected
-opening leaf. Later work replaces the compact `NRSP` digest section with
-explicit verifier-checked Ligero response objects.
+schedule, an explicit verifier-parsed `NRSP` response object, and one selected
+opening leaf. Later work replaces the minimal row/query response with
+polynomial Ligero response values.
 
 ## Tableau
 
@@ -66,6 +66,7 @@ LIG0 ||
   tableau_root: 32 bytes ||
   relation_digest: 32 bytes ||
   challenge1: 32 bytes ||
+  response_object: 72 bytes ||
   response_digest: 32 bytes ||
   challenge2: 32 bytes ||
   opening_digest: 32 bytes ||
@@ -85,10 +86,10 @@ rows = 1
 chunk_size = 32
 ```
 
-The fixed `LIG0` payload prefix is 296 bytes: ten `u32_be` words and eight
-32-byte digests. A one-leaf relation proof therefore has payload
-`296 + 48 + opening_leaf_len`; a two-leaf proof has
-`296 + 32 + (2 * 48) + opening_leaf_len` because the Merkle path has one digest.
+The fixed `LIG0` payload prefix is 368 bytes: ten `u32_be` words, eight 32-byte
+digests, and one 72-byte `NRSP` response object. A one-leaf relation proof
+therefore has payload `368 + 48 + opening_leaf_len`; a two-leaf proof has
+`368 + 32 + (2 * 48) + opening_leaf_len` because the Merkle path has one digest.
 
 ## Challenges And Responses
 
@@ -110,22 +111,51 @@ derive challenge2
 H_PROOF(relation_id || circuit_digest || statement_digest || tableau_digest)
 ```
 
-The current compact `NRSP` response digest is:
+The current `NRSP` response object is:
+
+```text
+NRSP ||
+  response_version: u32_be ||
+  response_count: u32_be ||
+  query_count: u32_be ||
+  row_count: u32_be ||
+  chunk_size: u32_be ||
+  query_index: u32_be ||
+  row: u32_be ||
+  offset: u32_be ||
+  leaf_len: u32_be ||
+  leaf_digest: 32 bytes
+```
+
+The current fixed values are:
+
+```text
+response_version = 0x00010000
+response_count = 1
+query_count = 1
+row_count = 1
+chunk_size = 32
+```
+
+`query_index` is derived from `challenge1` as
+`first_u32_be(challenge1) mod tableau_count`. The verifier checks that the
+serialized query entry equals the corresponding tableau entry.
+
+The `response_digest` is:
 
 ```text
 H_NRSP(
-  tableau_count ||
   relation_digest ||
   tableau_digest ||
+  tableau_root ||
   challenge1 ||
-  tableau_entries...
+  response_object
 )
 ```
 
-This section is the known remaining production gap. The next profile step must
-add explicit `response_count`, `query_count`, query entries, and algebraic
-response values so the verifier checks concrete response objects rather than a
-compact digest.
+This section is still narrower than full paper Ligero. The next profile step
+must add algebraic response values so the verifier checks polynomial row
+consistency, not only the query entry bound to the committed tableau.
 
 ## Query And Opening
 
@@ -140,7 +170,10 @@ The verifier checks all of the following:
 - `relation_id` matches the active native relation.
 - `relation_digest`, `challenge1`, `challenge2`, and `final_digest` recompute.
 - `tableau_digest` recomputes from all tableau entries.
-- `response_digest` recomputes from the current compact `NRSP` profile.
+- the `NRSP` response object parses with non-zero `response_count` and
+  `query_count`.
+- `response_digest` recomputes from the parsed `NRSP` object.
+- the parsed `NRSP` query entry matches the `challenge1`-derived tableau entry.
 - `opening_index` matches the Fiat-Shamir query.
 - `opening_digest` matches the selected tableau entry.
 - `opening_leaf` hashes to `opening_digest`.

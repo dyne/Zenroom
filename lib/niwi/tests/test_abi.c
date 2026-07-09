@@ -65,6 +65,26 @@ static uint32_t read_u32_be_test(const uint8_t *in) {
            (uint32_t)in[3];
 }
 
+#define TEST_NATIVE_LIG0_PAYLOAD_OFFSET 8
+#define TEST_NATIVE_LIG0_FIXED_WORDS 10
+#define TEST_NATIVE_LIG0_DIGEST_SIZE 32
+#define TEST_NATIVE_LIG0_DIGESTS_BEFORE_RESPONSE 4
+#define TEST_NATIVE_LIG0_RESPONSE_SIZE 72
+#define TEST_NATIVE_LIG0_BASE_PAYLOAD_SIZE \
+    (TEST_NATIVE_LIG0_FIXED_WORDS * 4 + \
+     8 * TEST_NATIVE_LIG0_DIGEST_SIZE + TEST_NATIVE_LIG0_RESPONSE_SIZE)
+#define TEST_NATIVE_LIG0_RESPONSE_OFFSET \
+    (TEST_NATIVE_LIG0_PAYLOAD_OFFSET + TEST_NATIVE_LIG0_FIXED_WORDS * 4 + \
+     TEST_NATIVE_LIG0_DIGESTS_BEFORE_RESPONSE * TEST_NATIVE_LIG0_DIGEST_SIZE)
+#define TEST_NATIVE_LIG0_RESPONSE_DIGEST_OFFSET \
+    (TEST_NATIVE_LIG0_RESPONSE_OFFSET + TEST_NATIVE_LIG0_RESPONSE_SIZE)
+#define TEST_NATIVE_LIG0_CHALLENGE2_OFFSET \
+    (TEST_NATIVE_LIG0_RESPONSE_DIGEST_OFFSET + TEST_NATIVE_LIG0_DIGEST_SIZE)
+#define TEST_NATIVE_LIG0_OPENING_DIGEST_OFFSET \
+    (TEST_NATIVE_LIG0_CHALLENGE2_OFFSET + TEST_NATIVE_LIG0_DIGEST_SIZE)
+#define TEST_NATIVE_LIG0_PATH_OFFSET \
+    (TEST_NATIVE_LIG0_OPENING_DIGEST_OFFSET + 2 * TEST_NATIVE_LIG0_DIGEST_SIZE)
+
 static uint32_t proof_tableau_leaf_count(const uint8_t *proof,
                                          size_t proof_len) {
     if (!proof || proof_len < 8) return 0;
@@ -87,6 +107,10 @@ typedef struct {
     uint32_t opening_index;
     uint32_t path_len;
     uint32_t opening_leaf_len;
+    uint32_t response_version;
+    uint32_t response_count;
+    uint32_t query_count;
+    uint32_t response_query_index;
     size_t path_offset;
     size_t tableau_entries_offset;
     size_t opening_leaf_offset;
@@ -106,7 +130,7 @@ static void parse_native_ligero_meta(const uint8_t *proof, size_t proof_len,
                                      native_ligero_meta_t *meta) {
     size_t body = find_proof_tag(proof, proof_len, "LIG0");
     assert(body != proof_len);
-    assert(body + 8 + 296 <= proof_len);
+    assert(body + 8 + TEST_NATIVE_LIG0_BASE_PAYLOAD_SIZE <= proof_len);
 
     meta->payload_size = read_u32_be_test(proof + body + 4);
     meta->version = read_u32_be_test(proof + body + 8);
@@ -119,7 +143,17 @@ static void parse_native_ligero_meta(const uint8_t *proof, size_t proof_len,
     meta->opening_index = read_u32_be_test(proof + body + 36);
     meta->path_len = read_u32_be_test(proof + body + 40);
     meta->opening_leaf_len = read_u32_be_test(proof + body + 44);
-    meta->path_offset = body + 304;
+    assert(memcmp(proof + body + TEST_NATIVE_LIG0_RESPONSE_OFFSET,
+                  "NRSP", 4) == 0);
+    meta->response_version = read_u32_be_test(
+        proof + body + TEST_NATIVE_LIG0_RESPONSE_OFFSET + 4);
+    meta->response_count = read_u32_be_test(
+        proof + body + TEST_NATIVE_LIG0_RESPONSE_OFFSET + 8);
+    meta->query_count = read_u32_be_test(
+        proof + body + TEST_NATIVE_LIG0_RESPONSE_OFFSET + 12);
+    meta->response_query_index = read_u32_be_test(
+        proof + body + TEST_NATIVE_LIG0_RESPONSE_OFFSET + 24);
+    meta->path_offset = body + TEST_NATIVE_LIG0_PATH_OFFSET;
     meta->tableau_entries_offset = meta->path_offset + meta->path_len * 32;
     assert(meta->opening_index < meta->tableau_count);
     meta->selected_entry_leaf_len = read_u32_be_test(
@@ -153,11 +187,15 @@ static void assert_current_native_profile(const native_ligero_meta_t *meta,
     assert(meta->tableau_count == expected_tableau_count);
     assert(meta->relation_id == NIWI_RELATION_ZKCC_P256);
     assert(meta->path_len == expected_path_len);
+    assert(meta->response_version == 0x00010000);
+    assert(meta->response_count == 1);
+    assert(meta->query_count == 1);
+    assert(meta->response_query_index < meta->tableau_count);
     assert(meta->opening_leaf_len == meta->selected_entry_leaf_len);
     if (expected_opening_leaf_len != 0)
         assert(meta->opening_leaf_len == expected_opening_leaf_len);
     assert(meta->payload_size ==
-           296 + expected_path_len * 32 +
+           TEST_NATIVE_LIG0_BASE_PAYLOAD_SIZE + expected_path_len * 32 +
            expected_tableau_count * 48 + meta->opening_leaf_len);
 }
 
@@ -297,8 +335,8 @@ static void test_relation_checked_prove(void) {
     parse_native_ligero_meta(proof, proof_len, &meta);
     assert_current_native_profile(&meta, 1, 0, 57);
     assert(meta.opening_index == 0);
-    assert(meta.tableau_entries_offset == body + 304);
-    assert(meta.opening_leaf_offset == body + 304 + 48);
+    assert(meta.tableau_entries_offset == body + TEST_NATIVE_LIG0_PATH_OFFSET);
+    assert(meta.opening_leaf_offset == body + TEST_NATIVE_LIG0_PATH_OFFSET + 48);
 
     assert_relation_verify_rejects_mutation(
         ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
@@ -323,19 +361,34 @@ static void test_relation_checked_prove(void) {
         body + 80);
     assert_relation_verify_rejects_mutation(
         ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
-        body + 176);
+        body + TEST_NATIVE_LIG0_RESPONSE_OFFSET);
     assert_relation_verify_rejects_mutation(
         ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
-        body + 208);
+        body + TEST_NATIVE_LIG0_RESPONSE_OFFSET + 11);
     assert_relation_verify_rejects_mutation(
         ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
-        body + 240);
+        body + TEST_NATIVE_LIG0_RESPONSE_OFFSET + 15);
     assert_relation_verify_rejects_mutation(
         ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
-        body + 304 + 16);
+        body + TEST_NATIVE_LIG0_RESPONSE_OFFSET + 24);
     assert_relation_verify_rejects_mutation(
         ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
-        body + 304 + 48 + 16);
+        body + TEST_NATIVE_LIG0_RESPONSE_OFFSET + 40);
+    assert_relation_verify_rejects_mutation(
+        ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
+        body + TEST_NATIVE_LIG0_RESPONSE_DIGEST_OFFSET);
+    assert_relation_verify_rejects_mutation(
+        ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
+        body + TEST_NATIVE_LIG0_CHALLENGE2_OFFSET);
+    assert_relation_verify_rejects_mutation(
+        ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
+        body + TEST_NATIVE_LIG0_OPENING_DIGEST_OFFSET);
+    assert_relation_verify_rejects_mutation(
+        ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
+        body + TEST_NATIVE_LIG0_PATH_OFFSET + 16);
+    assert_relation_verify_rejects_mutation(
+        ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
+        body + TEST_NATIVE_LIG0_PATH_OFFSET + 48 + 16);
 
     niwi_free_buffer(proof);
     niwi_ctx_free(ctx);
@@ -411,11 +464,12 @@ static void test_relation_merkle_path_for_multi_leaf_tableau(void) {
     parse_native_ligero_meta(proof, proof_len, &meta);
     assert_current_native_profile(&meta, 2, 1, 0);
     assert(meta.opening_index < meta.tableau_count);
-    assert(meta.tableau_entries_offset == body + 304 + 32);
-    assert(meta.opening_leaf_offset == body + 304 + 32 + 2 * 48);
+    assert(meta.tableau_entries_offset == body + TEST_NATIVE_LIG0_PATH_OFFSET + 32);
+    assert(meta.opening_leaf_offset ==
+           body + TEST_NATIVE_LIG0_PATH_OFFSET + 32 + 2 * 48);
     assert_relation_verify_rejects_mutation(
         ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
-        body + 304);
+        body + TEST_NATIVE_LIG0_PATH_OFFSET);
 
     niwi_free_buffer(proof);
     niwi_ctx_free(ctx);
@@ -430,6 +484,7 @@ static void test_native_ligero_profile_vectors(void) {
 
     const uint8_t public_inputs[] = {'p'};
     const uint8_t one_leaf_private[] = {'w'};
+    const uint8_t other_one_leaf_private[] = {'x'};
     const uint8_t two_leaf_private[] = {
         '0', '1', '2', '3', '4', '5', '6', '7',
         '8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
@@ -438,7 +493,9 @@ static void test_native_ligero_profile_vectors(void) {
         'x'
     };
     uint8_t *proof = NULL;
+    uint8_t *other_proof = NULL;
     size_t proof_len = 0;
+    size_t other_proof_len = 0;
     native_ligero_meta_t meta;
 
     assert(niwi_prove(ctx, public_inputs, sizeof(public_inputs),
@@ -447,6 +504,18 @@ static void test_native_ligero_profile_vectors(void) {
     parse_native_ligero_meta(proof, proof_len, &meta);
     assert_current_native_profile(&meta, 1, 0, 57);
     assert(meta.opening_index == 0);
+    assert(niwi_prove(ctx, public_inputs, sizeof(public_inputs),
+                      other_one_leaf_private, sizeof(other_one_leaf_private),
+                      &other_proof, &other_proof_len) == 0);
+    assert(other_proof != NULL);
+    assert(memcmp(proof + find_proof_tag(proof, proof_len, "LIG0") +
+                      TEST_NATIVE_LIG0_RESPONSE_DIGEST_OFFSET,
+                  other_proof + find_proof_tag(other_proof, other_proof_len, "LIG0") +
+                      TEST_NATIVE_LIG0_RESPONSE_DIGEST_OFFSET,
+                  TEST_NATIVE_LIG0_DIGEST_SIZE) != 0);
+    niwi_free_buffer(other_proof);
+    other_proof = NULL;
+    other_proof_len = 0;
     niwi_free_buffer(proof);
     proof = NULL;
     proof_len = 0;
