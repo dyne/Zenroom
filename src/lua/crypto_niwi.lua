@@ -125,6 +125,10 @@ local function proof_has_ligero_body(opts)
     return opts.proof:string():find("LIG0", 1, true) ~= nil
 end
 
+local function relation_backed_error()
+    error("crypto_niwi: production API requires a relation-backed zkcc object", 3)
+end
+
 local function validate_relation(opts)
     if not can_validate_relation(opts) then return end
     local ok_raw, raw_circuit = pcall(function() return opts.circuit:raw() end)
@@ -151,7 +155,7 @@ end
 -- Production API
 function Niwi.prove_circuit_niwi(opts)
     if type(opts) ~= "table" then
-        return native.prove_envelope_unchecked(opts)
+        error("prove_circuit_niwi: expected table argument", 2)
     end
     if relation_template(opts) == "bip340" then
         return native.prove_bip340_relation(native_opts(opts))
@@ -159,15 +163,12 @@ function Niwi.prove_circuit_niwi(opts)
     if has_native_zkcc_relation(opts) then
         return native.prove_zkcc_relation(native_opts(opts))
     end
-    -- Passing live zkcc artifact/witness objects enables relation validation.
-    -- Raw OCTETs are accepted as the low-level NIWI envelope API.
-    validate_relation(opts)
-    return native.prove_envelope_unchecked(native_opts(opts))
+    relation_backed_error()
 end
 
 function Niwi.verify_circuit_niwi(opts)
     if type(opts) ~= "table" then
-        return native.verify_envelope(opts)
+        error("verify_circuit_niwi: expected table argument", 2)
     end
     if relation_template(opts) == "bip340" then
         return native.verify_bip340_relation(circuit_public_opts(opts))
@@ -175,14 +176,7 @@ function Niwi.verify_circuit_niwi(opts)
     if proof_has_ligero_body(opts) and type(native.verify_zkcc_relation) == "function" then
         return native.verify_zkcc_relation(circuit_public_opts(opts))
     end
-    local out = {}
-    for k, v in pairs(opts) do out[k] = v end
-    out.circuit = circuit_octet(opts)
-    if opts.public_inputs then
-        out.public_inputs = as_octet(opts.public_inputs, "public_octet",
-                                     "public_inputs")
-    end
-    return native.verify_envelope(out)
+    relation_backed_error()
 end
 Niwi.niwi_profile         = native.niwi_profile
 
@@ -232,22 +226,16 @@ if native.extract_from_gamma_unchecked_test then
     end
 end
 
--- Expose explicit low-level names for tests and adapters that deliberately
--- operate on proof envelopes instead of relation-checked circuit objects.
-Niwi.prove_envelope_unchecked = native.prove_envelope_unchecked
 Niwi.prove_zkcc_relation = native.prove_zkcc_relation
 Niwi.verify_zkcc_relation = native.verify_zkcc_relation
 Niwi.prove_bip340_relation = native.prove_bip340_relation
 Niwi.verify_bip340_relation = native.verify_bip340_relation
-Niwi.verify_envelope = native.verify_envelope
 Niwi.prove_envelope_with_observation_unchecked_test =
     native.prove_envelope_with_observation_unchecked_test
 Niwi.prove_zkcc_relation_with_observation_test =
     native.prove_zkcc_relation_with_observation_test
 Niwi.prove_bip340_relation_with_observation_test =
     native.prove_bip340_relation_with_observation_test
-Niwi.extract_from_gamma_unchecked_test =
-    native.extract_from_gamma_unchecked_test
 Niwi.extract_zkcc_relation_from_gamma_test =
     native.extract_zkcc_relation_from_gamma_test
 Niwi.extract_bip340_relation_from_gamma_test =
