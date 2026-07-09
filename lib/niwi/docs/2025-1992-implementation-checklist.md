@@ -61,8 +61,8 @@ needed before claiming production, paper-exact RPBSch.
   selected `TBL1` leaf preimage, and KLP22 challenge schedule binding. For
   BIP340, `LZK0` now carries a checked Longfellow/Ligero proof body with
   low-degree, dot, quadratic, requested-column, and Merkle checks. The remaining
-  NIWI core generalization is adding equivalent checked Longfellow bodies for
-  generic P256 and RPBSch, then retiring their local scaffold profile.
+  NIWI core generalization is adding an equivalent checked Longfellow body for
+  RPBSch, then retiring its local scaffold profile.
 - Current extraction reconstructs the committed tableau-fragment profile,
   recomputes the accepted `NRSP` row and column evaluations over
   Gamma-recovered leaves,
