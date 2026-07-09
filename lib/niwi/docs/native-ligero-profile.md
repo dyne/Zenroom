@@ -1,0 +1,159 @@
+# Native Ligero Profile
+
+This document defines the current Zenroom NIWI native proof body profile. It is
+the local `LIG0` profile implemented in `lib/niwi`; it does not modify
+`lib/longfellow-zk`.
+
+The profile is intentionally minimal. It binds a relation-backed witness
+tableau, a Merkle commitment to its leaves, a KLP22 Fiat-Shamir challenge
+schedule, a verifier-recomputed `NRSP` response digest, and one selected
+opening leaf. Later work replaces the compact `NRSP` digest section with
+explicit verifier-checked Ligero response objects.
+
+## Tableau
+
+The private witness byte string is split into 32-byte chunks. Empty witnesses
+still produce one chunk. The current profile has one witness row.
+
+Each relation-backed leaf is serialized as:
+
+```text
+TBL1 ||
+  version: u32_be ||
+  relation_id: u32_be ||
+  statement_digest: 32 bytes ||
+  row: u32_be ||
+  offset: u32_be ||
+  total_witness_len: u32_be ||
+  chunk: 0..32 bytes
+```
+
+The `statement_digest` is `H_STMT(public_inputs)`. `relation_id` must match the
+native relation selected by the `niwi_ctx_t`. The leaf digest is
+`H_LEAF(serialized_leaf)`.
+
+The proof body also carries one tableau entry for each leaf:
+
+```text
+index: u32_be ||
+row: u32_be ||
+offset: u32_be ||
+leaf_len: u32_be ||
+leaf_digest: 32 bytes
+```
+
+The `tableau_digest` is `H_EXTR(count || entries...)`, where each entry uses the
+canonical serialization above.
+
+## LIG0 Body
+
+The native body is:
+
+```text
+LIG0 ||
+  payload_size: u32_be ||
+  version: u32_be ||
+  protocol_id: u32_be ||
+  param_id: u32_be ||
+  rows: u32_be ||
+  chunk_size: u32_be ||
+  tableau_count: u32_be ||
+  relation_id: u32_be ||
+  opening_index: u32_be ||
+  path_len: u32_be ||
+  opening_leaf_len: u32_be ||
+  tableau_digest: 32 bytes ||
+  tableau_root: 32 bytes ||
+  relation_digest: 32 bytes ||
+  challenge1: 32 bytes ||
+  response_digest: 32 bytes ||
+  challenge2: 32 bytes ||
+  opening_digest: 32 bytes ||
+  final_digest: 32 bytes ||
+  merkle_path: path_len * 32 bytes ||
+  tableau_entries: tableau_count * 48 bytes ||
+  opening_leaf: opening_leaf_len bytes
+```
+
+The current fixed values are:
+
+```text
+version = 0x00010000
+protocol_id = 0
+param_id = 1
+rows = 1
+chunk_size = 32
+```
+
+The fixed `LIG0` payload prefix is 296 bytes: ten `u32_be` words and eight
+32-byte digests. A one-leaf relation proof therefore has payload
+`296 + 48 + opening_leaf_len`; a two-leaf proof has
+`296 + 32 + (2 * 48) + opening_leaf_len` because the Merkle path has one digest.
+
+## Challenges And Responses
+
+The KLP22 schedule is:
+
+```text
+init(version=1, security=0, protocol_id=0)
+bind share commitment
+bind circuit_digest, statement_digest, tableau_root
+derive challenge1
+open share
+bind response_digest
+derive challenge2
+```
+
+`relation_digest` is:
+
+```text
+H_PROOF(relation_id || circuit_digest || statement_digest || tableau_digest)
+```
+
+The current compact `NRSP` response digest is:
+
+```text
+H_NRSP(
+  tableau_count ||
+  relation_digest ||
+  tableau_digest ||
+  challenge1 ||
+  tableau_entries...
+)
+```
+
+This section is the known remaining production gap. The next profile step must
+add explicit `response_count`, `query_count`, query entries, and algebraic
+response values so the verifier checks concrete response objects rather than a
+compact digest.
+
+## Query And Opening
+
+The selected `opening_index` is derived from `challenge2`:
+
+```text
+opening_index = first_u32_be(challenge2) mod tableau_count
+```
+
+The verifier checks all of the following:
+
+- `relation_id` matches the active native relation.
+- `relation_digest`, `challenge1`, `challenge2`, and `final_digest` recompute.
+- `tableau_digest` recomputes from all tableau entries.
+- `response_digest` recomputes from the current compact `NRSP` profile.
+- `opening_index` matches the Fiat-Shamir query.
+- `opening_digest` matches the selected tableau entry.
+- `opening_leaf` hashes to `opening_digest`.
+- `opening_leaf` decodes as `TBL1` with the same `relation_id`,
+  `statement_digest`, row, offset, and length.
+- the Merkle path opens `opening_digest` to `tableau_root`.
+
+## Extraction Inputs
+
+Extraction consumes the proof, public inputs, and observed Gamma queries. For
+relation-backed proofs, production extraction must recover `TBL1` leaves by
+their committed digests, reconstruct the witness bytes in row/offset order, and
+run native relation evaluation before returning success.
+
+Unchecked `TBL0` fixtures are retained only for serialization and parser tests.
+They are not production proof claims.
