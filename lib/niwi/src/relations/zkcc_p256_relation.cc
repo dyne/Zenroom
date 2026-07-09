@@ -10,20 +10,13 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "algebra/convolution.h"
-#include "algebra/fft.h"
 #include "algebra/fp_p256.h"
-#include "algebra/fp2.h"
-#include "algebra/reed_solomon.h"
 #include "arrays/dense.h"
 #include "ec/p256.h"
 #include "proto/circuit.h"
-#include "random/random.h"
-#include "random/transcript.h"
 #include "sumcheck/circuit.h"
+#include "sumcheck/prover_layers.h"
 #include "util/readbuffer.h"
-#include "zk/zk_proof.h"
-#include "zk/zk_prover.h"
 
 namespace {
 
@@ -31,20 +24,6 @@ using Field = proofs::Fp256Base;
 using Circuit = proofs::Circuit<Field>;
 
 constexpr size_t kEltBytes = 32;
-constexpr size_t kLigeroRate = 4;
-constexpr size_t kLigeroNreq = 128;
-
-static constexpr char kRootX[] =
-    "112649224146410281873500457609690258373018840430489408729223714171582664"
-    "680802";
-static constexpr char kRootY[] =
-    "84087994358540907695740461427818660560182168997182378749313018254450460212"
-    "908";
-
-class ZeroRandomEngine : public proofs::RandomEngine {
- public:
-  void bytes(uint8_t *buf, size_t n) override { memset(buf, 0, n); }
-};
 
 bool decode_dense(const Field &field, const uint8_t *bytes, size_t len,
                   size_t expected_elts, proofs::Dense<Field> *out) {
@@ -72,26 +51,15 @@ bool load_circuit(const uint8_t *artifact, size_t artifact_len, Field *field,
 bool validate_with_native_longfellow(const Circuit &circuit,
                                      const Field &field,
                                      const proofs::Dense<Field> &witness) {
-  using Fp2 = proofs::Fp2<Field>;
-  using FFT = proofs::FFTExtConvolutionFactory<Field, Fp2>;
-  using RS = proofs::ReedSolomonFactory<Field, FFT>;
-
-  Fp2 field2(field);
-  auto omega = field2.of_string(kRootX, kRootY);
-  FFT fft(field, field2, omega, 1ull << 31);
-  RS rsf(fft, field);
-
-  /* This is native and avoids the Lua zkcc.prove_circuit gate.  It still uses
-   * Longfellow's prover path as the temporary relation-satisfaction oracle.
-   * The next production hardening step is a direct Circuit evaluator that
-   * checks constraints without constructing a legacy proof object. */
-  proofs::ZkProof<Field> zk(circuit, kLigeroRate, kLigeroNreq);
-  proofs::ZkProver<Field, RS> prover(circuit, field, rsf);
-  uint8_t seed[32] = {0};
-  proofs::Transcript transcript(seed, sizeof(seed), /*version=*/4);
-  ZeroRandomEngine rng;
-  prover.commit(zk, witness, transcript, rng);
-  return prover.prove(zk, witness, transcript);
+  proofs::ProverLayers<Field> evaluator(field);
+  typename proofs::ProverLayers<Field>::inputs layers;
+  auto outputs = evaluator.eval_circuit(&layers, &circuit, witness.clone(),
+                                        field);
+  if (outputs == nullptr) return false;
+  for (size_t i = 0; i < outputs->n1_; ++i) {
+    if (outputs->v_[i] != field.zero()) return false;
+  }
+  return true;
 }
 
 }  // namespace
