@@ -19,6 +19,7 @@
  */
 
 #include "niwi.h"
+#include "challenge_schedule.h"
 #include "commitment.h"
 #include "hash.h"
 #include "npro.h"
@@ -44,7 +45,7 @@
 #define NIWI_PROOF_NATIVE_BODY_PROTOCOL_ID 0
 #define NIWI_PROOF_NATIVE_BODY_PARAM_ID 1
 #define NIWI_PROOF_NATIVE_BODY_ROWS 1
-#define NIWI_PROOF_NATIVE_BODY_BASE_PAYLOAD_SIZE (9 * 4 + 7 * 32)
+#define NIWI_PROOF_NATIVE_BODY_BASE_PAYLOAD_SIZE (9 * 4 + 8 * 32)
 #define NIWI_PROOF_NATIVE_BODY_BASE_SIZE (4 + 4 + NIWI_PROOF_NATIVE_BODY_BASE_PAYLOAD_SIZE)
 
 typedef struct {
@@ -483,24 +484,86 @@ static void compute_relation_digest(niwi_relation_id_t relation_id,
     niwi_hash_one_shot(NIWI_TAG_PROOF, preimage, sizeof(preimage), out);
 }
 
-static void compute_native_body_challenges(const uint8_t relation_digest[32],
-                                           const uint8_t tableau_digest[32],
-                                           const uint8_t tableau_root[32],
-                                           uint8_t challenge1[32],
-                                           uint8_t challenge2[32]) {
-    uint8_t preimage1[96];
-    memcpy(preimage1, relation_digest, 32);
-    memcpy(preimage1 + 32, tableau_digest, 32);
-    memcpy(preimage1 + 64, tableau_root, 32);
-    niwi_hash_one_shot(NIWI_TAG_FSCH, preimage1, sizeof(preimage1),
-                       challenge1);
+static int compute_native_response_digest(
+    const uint8_t relation_digest[32],
+    const uint8_t tableau_digest[32],
+    const uint8_t challenge1[32],
+    const niwi_tableau_entry_t *entries,
+    size_t count,
+    uint8_t response_digest[32]) {
+    if (!relation_digest || !tableau_digest || !challenge1 ||
+        !entries || !response_digest || count == 0 ||
+        count > NIWI_TABLEAU_MAX_LEAVES)
+        return -1;
+    if (count > (SIZE_MAX - (4 + 32 + 32 + 32)) /
+                    NIWI_PROOF_TABLEAU_ENTRY_SIZE)
+        return -1;
 
-    uint8_t preimage2[96];
-    memcpy(preimage2, challenge1, 32);
-    memcpy(preimage2 + 32, tableau_digest, 32);
-    memcpy(preimage2 + 64, tableau_root, 32);
-    niwi_hash_one_shot(NIWI_TAG_PROOF, preimage2, sizeof(preimage2),
-                       challenge2);
+    size_t len = 4 + 32 + 32 + 32 +
+                 count * NIWI_PROOF_TABLEAU_ENTRY_SIZE;
+    uint8_t *buf = (uint8_t *)malloc(len);
+    if (!buf) return -1;
+    size_t off = 0;
+    write_u32_be(buf + off, (uint32_t)count); off += 4;
+    memcpy(buf + off, relation_digest, 32); off += 32;
+    memcpy(buf + off, tableau_digest, 32); off += 32;
+    memcpy(buf + off, challenge1, 32); off += 32;
+    for (size_t i = 0; i < count; i++) {
+        write_u32_be(buf + off, entries[i].index); off += 4;
+        write_u32_be(buf + off, entries[i].row); off += 4;
+        write_u32_be(buf + off, entries[i].offset); off += 4;
+        write_u32_be(buf + off, entries[i].leaf_len); off += 4;
+        memcpy(buf + off, entries[i].digest, 32); off += 32;
+    }
+    niwi_hash_one_shot("NRSP", buf, len, response_digest);
+    free(buf);
+    return 0;
+}
+
+static int compute_native_body_challenges(
+    const uint8_t commitment[NIWI_KLP22_COMMIT_SIZE],
+    const uint8_t opening[NIWI_KLP22_OPENING_SIZE],
+    const uint8_t circuit_digest[32],
+    const uint8_t statement_digest[32],
+    const uint8_t tableau_root[32],
+    const uint8_t response_digest[32],
+    uint8_t challenge1[32],
+    uint8_t challenge2[32]) {
+    niwi_challenge_schedule_t schedule;
+    if (!commitment || !opening || !circuit_digest || !statement_digest ||
+        !tableau_root || !response_digest || !challenge1 || !challenge2)
+        return -1;
+    if (niwi_schedule_init(&schedule, 1, 0,
+                           NIWI_PROOF_NATIVE_BODY_PROTOCOL_ID) != 0 ||
+        niwi_schedule_bind_share_commitment(&schedule, commitment) != 0 ||
+        niwi_schedule_bind_statement(&schedule, circuit_digest,
+                                     statement_digest, tableau_root) != 0 ||
+        niwi_schedule_derive_challenge1(&schedule, challenge1) != 0 ||
+        niwi_schedule_open_share(&schedule, opening) != 0 ||
+        niwi_schedule_bind_response(&schedule, response_digest) != 0 ||
+        niwi_schedule_derive_challenge2(&schedule, challenge2) != 0)
+        return -1;
+    return 0;
+}
+
+static int compute_native_body_challenge1(
+    const uint8_t commitment[NIWI_KLP22_COMMIT_SIZE],
+    const uint8_t circuit_digest[32],
+    const uint8_t statement_digest[32],
+    const uint8_t tableau_root[32],
+    uint8_t challenge1[32]) {
+    niwi_challenge_schedule_t schedule;
+    if (!commitment || !circuit_digest || !statement_digest ||
+        !tableau_root || !challenge1)
+        return -1;
+    if (niwi_schedule_init(&schedule, 1, 0,
+                           NIWI_PROOF_NATIVE_BODY_PROTOCOL_ID) != 0 ||
+        niwi_schedule_bind_share_commitment(&schedule, commitment) != 0 ||
+        niwi_schedule_bind_statement(&schedule, circuit_digest,
+                                     statement_digest, tableau_root) != 0 ||
+        niwi_schedule_derive_challenge1(&schedule, challenge1) != 0)
+        return -1;
+    return 0;
 }
 
 static void compute_native_body_final_digest(
@@ -510,12 +573,13 @@ static void compute_native_body_final_digest(
     const uint8_t tableau_root[32],
     const uint8_t relation_digest[32],
     const uint8_t challenge1[32],
+    const uint8_t response_digest[32],
     const uint8_t challenge2[32],
     uint32_t opening_index,
     uint32_t path_len,
     const uint8_t opening_digest[32],
     uint8_t out[32]) {
-    uint8_t preimage[9 * 4 + 6 * 32];
+    uint8_t preimage[9 * 4 + 7 * 32];
     size_t off = 0;
     write_u32_be(preimage + off, NIWI_PROOF_NATIVE_BODY_VERSION); off += 4;
     write_u32_be(preimage + off, NIWI_PROOF_NATIVE_BODY_PROTOCOL_ID); off += 4;
@@ -530,6 +594,7 @@ static void compute_native_body_final_digest(
     memcpy(preimage + off, tableau_root, 32); off += 32;
     memcpy(preimage + off, relation_digest, 32); off += 32;
     memcpy(preimage + off, challenge1, 32); off += 32;
+    memcpy(preimage + off, response_digest, 32); off += 32;
     memcpy(preimage + off, challenge2, 32); off += 32;
     memcpy(preimage + off, opening_digest, 32); off += 32;
     niwi_hash_one_shot(NIWI_TAG_PROOF, preimage, off, out);
@@ -539,6 +604,8 @@ static int append_native_proof_body(niwi_ctx_t *ctx,
                                     const uint8_t circuit_digest[32],
                                     const uint8_t statement_digest[32],
                                     const uint8_t tableau_digest[32],
+                                    const uint8_t commitment[NIWI_KLP22_COMMIT_SIZE],
+                                    const uint8_t opening[NIWI_KLP22_OPENING_SIZE],
                                     const niwi_tableau_entry_t *tableau_entries,
                                     size_t tableau_count,
                                     uint8_t *proof, size_t proof_len,
@@ -555,6 +622,7 @@ static int append_native_proof_body(niwi_ctx_t *ctx,
     uint8_t merkle_path[NIWI_TABLEAU_MAX_MERKLE_DEPTH][32];
     size_t path_len = 0;
     uint8_t challenge1[32];
+    uint8_t response_digest[32];
     uint8_t challenge2[32];
     uint8_t final_digest[32];
     if (compute_tableau_merkle_path(tableau_entries, tableau_count, 0,
@@ -563,9 +631,20 @@ static int append_native_proof_body(niwi_ctx_t *ctx,
     compute_relation_digest(ctx->relation_id, circuit_digest,
                             statement_digest, tableau_digest,
                             relation_digest);
-    compute_native_body_challenges(relation_digest, tableau_digest,
-                                   tableau_root,
-                                   challenge1, challenge2);
+    if (compute_native_body_challenge1(commitment, circuit_digest,
+                                       statement_digest, tableau_root,
+                                       challenge1) != 0)
+        return -1;
+    if (compute_native_response_digest(relation_digest, tableau_digest,
+                                       challenge1, tableau_entries,
+                                       tableau_count,
+                                       response_digest) != 0)
+        return -1;
+    if (compute_native_body_challenges(commitment, opening,
+                                       circuit_digest, statement_digest,
+                                       tableau_root, response_digest,
+                                       challenge1, challenge2) != 0)
+        return -1;
     uint32_t opening_index =
         tableau_opening_index(challenge2, tableau_count);
     if (compute_tableau_merkle_path(tableau_entries, tableau_count,
@@ -584,7 +663,8 @@ static int append_native_proof_body(niwi_ctx_t *ctx,
                                      (uint32_t)tableau_count,
                                      tableau_digest, tableau_root,
                                      relation_digest,
-                                     challenge1, challenge2,
+                                     challenge1, response_digest,
+                                     challenge2,
                                      opening_index, (uint32_t)path_len,
                                      opening_digest,
                                      final_digest);
@@ -604,6 +684,7 @@ static int append_native_proof_body(niwi_ctx_t *ctx,
     memcpy(proof + *off, tableau_root, 32); *off += 32;
     memcpy(proof + *off, relation_digest, 32); *off += 32;
     memcpy(proof + *off, challenge1, 32); *off += 32;
+    memcpy(proof + *off, response_digest, 32); *off += 32;
     memcpy(proof + *off, challenge2, 32); *off += 32;
     memcpy(proof + *off, opening_digest, 32); *off += 32;
     memcpy(proof + *off, final_digest, 32); *off += 32;
@@ -622,6 +703,8 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
                                    size_t *off,
                                    const uint8_t circuit_digest[32],
                                    const uint8_t statement_digest[32],
+                                   const uint8_t commitment[NIWI_KLP22_COMMIT_SIZE],
+                                   const uint8_t opening[NIWI_KLP22_OPENING_SIZE],
                                    uint8_t tableau_digest_out[32],
                                    niwi_tableau_entry_t **entries_out,
                                    size_t *tableau_count_out,
@@ -715,14 +798,29 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
 
     uint8_t challenge1[32];
     uint8_t challenge2[32];
-    compute_native_body_challenges(expected, claimed_tableau_digest,
-                                   claimed_tableau_root,
-                                   challenge1, challenge2);
+    uint8_t claimed_response_digest[32];
+    if (compute_native_body_challenge1(commitment, circuit_digest,
+                                       statement_digest,
+                                       claimed_tableau_root,
+                                       challenge1) != 0) {
+        set_error(ctx, "niwi_verify: native proof challenge mismatch");
+        return -1;
+    }
     if (memcmp(proof + *off, challenge1, 32) != 0) {
         set_error(ctx, "niwi_verify: native proof challenge mismatch");
         return -1;
     }
     *off += 32;
+    memcpy(claimed_response_digest, proof + *off, 32);
+    *off += 32;
+    if (compute_native_body_challenges(commitment, opening,
+                                       circuit_digest, statement_digest,
+                                       claimed_tableau_root,
+                                       claimed_response_digest,
+                                       challenge1, challenge2) != 0) {
+        set_error(ctx, "niwi_verify: native proof query challenge mismatch");
+        return -1;
+    }
     if (memcmp(proof + *off, challenge2, 32) != 0) {
         set_error(ctx, "niwi_verify: native proof query challenge mismatch");
         return -1;
@@ -736,7 +834,8 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
                                      (uint32_t)tableau_count,
                                      claimed_tableau_digest,
                                      claimed_tableau_root, expected,
-                                     challenge1, challenge2,
+                                     challenge1, claimed_response_digest,
+                                     challenge2,
                                      opening_index, path_len,
                                      claimed_opening_digest,
                                      final_digest);
@@ -776,6 +875,16 @@ static int parse_native_proof_body(niwi_ctx_t *ctx,
     }
     niwi_tableau_entry_t *entries_for_root =
         entries_out ? *entries_out : parsed_entries;
+    uint8_t computed_response_digest[32];
+    if (compute_native_response_digest(expected, claimed_tableau_digest,
+                                       challenge1, entries_for_root,
+                                       tableau_count,
+                                       computed_response_digest) != 0 ||
+        memcmp(claimed_response_digest, computed_response_digest, 32) != 0) {
+        free(parsed_entries);
+        set_error(ctx, "niwi_verify: native proof response mismatch");
+        return -1;
+    }
     if (tableau_opening_index(challenge2, tableau_count) != opening_index) {
         free(parsed_entries);
         set_error(ctx, "niwi_verify: native proof opening index mismatch");
@@ -976,7 +1085,8 @@ static int build_proof(niwi_ctx_t *ctx,
         }
     } else if (
         append_native_proof_body(ctx, circuit_digest, statement_digest,
-                                 tableau_digest, tableau_entries,
+                                 tableau_digest, commitment, opening,
+                                 tableau_entries,
                                  tableau_count,
                                  proof, len, &off) != 0) {
         free(tableau_entries);
@@ -1049,6 +1159,7 @@ static int verify_proof_envelope(niwi_ctx_t *ctx,
     if (require_relation) {
         if (parse_native_proof_body(ctx, proof, proof_len, &off,
                                     expected_circuit, expected_statement,
+                                    commitment, opening,
                                     tableau_digest, NULL, &tableau_count,
                                     require_relation) != 0)
             return -1;
@@ -1057,6 +1168,7 @@ static int verify_proof_envelope(niwi_ctx_t *ctx,
             memcmp(proof + off, NIWI_PROOF_NATIVE_BODY_TAG, 4) == 0) {
             if (parse_native_proof_body(ctx, proof, proof_len, &off,
                                         expected_circuit, expected_statement,
+                                        commitment, opening,
                                         tableau_digest, NULL, &tableau_count,
                                         0) != 0)
                 return -1;
@@ -1069,6 +1181,7 @@ static int verify_proof_envelope(niwi_ctx_t *ctx,
             if (off < proof_len &&
                 parse_native_proof_body(ctx, proof, proof_len, &off,
                                         expected_circuit, expected_statement,
+                                        commitment, opening,
                                         tableau_digest, NULL, &tableau_count,
                                         0) != 0)
                 return -1;
@@ -1250,6 +1363,7 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
         memcmp(proof + off, NIWI_PROOF_NATIVE_BODY_TAG, 4) == 0) {
         if (parse_native_proof_body(ctx, proof, proof_len, &off,
                                     proof + 12, proof + 44,
+                                    proof + 76, proof + 108,
                                     tableau_digest, &entries, &entry_count,
                                     0) != 0)
             return -1;
@@ -1262,6 +1376,7 @@ int niwi_envelope_extract_unchecked(niwi_ctx_t *ctx,
         if (off < proof_len &&
             parse_native_proof_body(ctx, proof, proof_len, &off,
                                     proof + 12, proof + 44,
+                                    proof + 76, proof + 108,
                                     tableau_digest, NULL, &entry_count,
                                     0) != 0) {
             free(entries);
