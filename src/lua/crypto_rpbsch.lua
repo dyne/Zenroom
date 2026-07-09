@@ -16,15 +16,12 @@
 -- You should have received a copy of the GNU Affero General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 --
--- RPBSch branch-circuit prototype glue.
+-- RPBSch branch-relation glue.
 --
--- This module deliberately reuses the finished BIP-340 zkcc circuit and the
--- NIWI proof envelope instead of pretending to implement the full RPBSch OR
--- circuit from 2025-1992. It is useful because it proves and extracts real
--- BIP-340 circuit witnesses for both RPBSch branches under one shared PBSch
--- statement, but it leaves the following paper-exact work open:
---   * compose the two branches with a private OR selector in one circuit;
---   * replace the binding Pedersen profile with paper-exact Cmt.
+-- This module keeps orchestration and witness serialization readable in Lua,
+-- while native lib/niwi validates branch statements, C/S openings, and the
+-- embedded BIP-340 zkcc witnesses. Paper-exact selector composition remains
+-- open: the two branch relations still need one private-selector relation.
 
 local pbsch = require'crypto_pbsch'
 local zkcc = require'crypto_zkcc'
@@ -45,6 +42,11 @@ end
 
 local function hash32(tag, bytes)
     return sha256(tag .. bytes)
+end
+
+local function u32_be(n)
+    assert(n >= 0 and n <= 4294967295, "u32 out of range")
+    return OCTET.from_hex(string.format("%08x", n))
 end
 
 local function assert_octet_len(name, value, len)
@@ -243,7 +245,71 @@ function rpbsch.branch_witnesses(circuit, fixture, branch)
     return out
 end
 
---- Prove one RPBSch branch through the current BIP-340 NIWI fixture.
+--- Serialize the native RPBSch branch witness.
+-- Layout:
+--   "RPB1" || branch:u32 ||
+--   m || alpha || beta || rho_c || rho_s || nu_s || nu_u || nu_u' ||
+--   sigma || sigma0 || sigma1 ||
+--   check_count:u32 || repeated(pub_len:u32 || pub || witness_len:u32 || witness)
+function rpbsch.branch_relation_witness(circuit, fixture, branch)
+    require_branch(branch)
+    local witnesses, err = rpbsch.branch_witnesses(circuit, fixture, branch)
+    if not witnesses then return nil, err end
+    local out = OCTET.from_string("RPB1") ..
+                u32_be(branch) ..
+                fixture.m .. fixture.alpha .. fixture.beta ..
+                fixture.rho_c .. fixture.rho_s ..
+                fixture.nu_s .. fixture.nu_u .. fixture.nu_u_prime ..
+                fixture.sigma .. fixture.sigma0 .. fixture.sigma1 ..
+                u32_be(#witnesses)
+    for _, item in ipairs(witnesses) do
+        out = out ..
+              u32_be(#item.public_inputs_octet:str()) ..
+              item.public_inputs_octet ..
+              u32_be(#item.witness:str()) ..
+              item.witness
+    end
+    return out
+end
+
+function rpbsch.prove_branch_relation(circuit, fixture, branch)
+    local witness, err = rpbsch.branch_relation_witness(circuit, fixture, branch)
+    if not witness then return nil, err end
+    return niwi.prove_rpbsch_relation{
+        circuit = niwi.rpbsch_relation_artifact(),
+        inputs = witness,
+        public_inputs = fixture.statement,
+    }
+end
+
+function rpbsch.prove_branch_relation_with_observation_test(circuit, fixture, branch)
+    local witness, err = rpbsch.branch_relation_witness(circuit, fixture, branch)
+    if not witness then return nil, err end
+    return niwi.prove_rpbsch_relation_with_observation_test{
+        circuit = niwi.rpbsch_relation_artifact(),
+        inputs = witness,
+        public_inputs = fixture.statement,
+    }
+end
+
+function rpbsch.verify_branch_relation(proof, statement)
+    return niwi.verify_rpbsch_relation{
+        circuit = niwi.rpbsch_relation_artifact(),
+        proof = proof,
+        public_inputs = statement,
+    }
+end
+
+function rpbsch.extract_branch_relation(proof, gamma, statement)
+    return niwi.extract_rpbsch_relation_from_gamma_test{
+        circuit = niwi.rpbsch_relation_artifact(),
+        proof = proof,
+        gamma = gamma,
+        public_inputs = statement,
+    }
+end
+
+--- Prove one RPBSch branch through the older per-BIP340 NIWI fixture.
 function rpbsch.prove_branch(circuit, fixture, branch)
     require_branch(branch)
     local witnesses, err = rpbsch.branch_witnesses(circuit, fixture, branch)

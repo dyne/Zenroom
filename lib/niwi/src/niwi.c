@@ -24,6 +24,7 @@
 #include "hash.h"
 #include "npro.h"
 #include "relations/bip340_relation.h"
+#include "relations/rpbsch_relation.h"
 #include "relations/zkcc_p256_relation.h"
 
 #include <stdlib.h>
@@ -38,8 +39,8 @@
 #define NIWI_TABLEAU_LEAF_HEADER_SIZE (4 + 4 + 4 + 4)
 #define NIWI_TABLEAU_RELATION_LEAF_HEADER_SIZE (4 + 4 + 4 + 32 + 4 + 4 + 4)
 #define NIWI_TABLEAU_CHUNK_SIZE 32
-#define NIWI_TABLEAU_MAX_LEAVES 4096
-#define NIWI_TABLEAU_MAX_MERKLE_DEPTH 12
+#define NIWI_TABLEAU_MAX_LEAVES 8192
+#define NIWI_TABLEAU_MAX_MERKLE_DEPTH 13
 #define NIWI_PROOF_NATIVE_BODY_TAG "LIG0"
 #define NIWI_PROOF_NATIVE_BODY_VERSION 0x00010000
 #define NIWI_PROOF_NATIVE_BODY_PROTOCOL_ID 0
@@ -1048,6 +1049,9 @@ static int validate_relation(niwi_ctx_t *ctx,
         rc = niwi_zkcc_p256_relation_validate(
             ctx->artifact, ctx->artifact_len,
             public_inputs, pub_len, private_inputs, priv_len);
+    } else if (ctx->relation_id == NIWI_RELATION_RPBSCH) {
+        rc = niwi_rpbsch_relation_validate(public_inputs, pub_len,
+                                           private_inputs, priv_len);
     } else {
         set_error(ctx, "niwi: missing relation validator");
         return -1;

@@ -50,6 +50,30 @@ for _, record in ipairs(branch2) do
          record.label .. ' extracted witness mismatch')
 end
 
+local native_witness1 = rpbsch.branch_relation_witness(
+  circuit, fixture, rpbsch.BRANCH_HONEST)
+local native_proof1, native_gamma1 =
+  rpbsch.prove_branch_relation_with_observation_test(
+    circuit, fixture, rpbsch.BRANCH_HONEST)
+assert(rpbsch.verify_branch_relation(native_proof1, fixture.statement),
+       'native RPBSch branch 1 relation rejected')
+local native_extracted1 =
+  rpbsch.extract_branch_relation(native_proof1, native_gamma1, fixture.statement)
+assert(native_extracted1:string() == native_witness1:string(),
+       'native RPBSch branch 1 extracted witness mismatch')
+
+local native_witness2 = rpbsch.branch_relation_witness(
+  circuit, fixture, rpbsch.BRANCH_TRAPDOOR)
+local native_proof2, native_gamma2 =
+  rpbsch.prove_branch_relation_with_observation_test(
+    circuit, fixture, rpbsch.BRANCH_TRAPDOOR)
+assert(rpbsch.verify_branch_relation(native_proof2, fixture.statement),
+       'native RPBSch branch 2 relation rejected')
+local native_extracted2 =
+  rpbsch.extract_branch_relation(native_proof2, native_gamma2, fixture.statement)
+assert(native_extracted2:string() == native_witness2:string(),
+       'native RPBSch branch 2 extracted witness mismatch')
+
 local bad_selector_ok = pcall(function()
   rpbsch.prove_branch(circuit, fixture, 3)
 end)
@@ -59,16 +83,26 @@ local changed_statement = rpbsch.fixture()
 changed_statement.statement = flip_last_nibble(changed_statement.statement)
 assert(rpbsch.verify_record(circuit, changed_statement, branch1[1]) == false,
        'changed RPBSch statement accepted')
+assert(rpbsch.verify_branch_relation(native_proof1, changed_statement.statement) == false,
+       'native RPBSch accepted changed statement')
 
 local bad_c_opening = rpbsch.fixture()
 bad_c_opening.rho_c = flip_last_nibble(bad_c_opening.rho_c)
 assert(rpbsch.verify_record(circuit, bad_c_opening, branch1[1]) == false,
        'changed C opening accepted')
+local bad_c_native_ok = pcall(function()
+  rpbsch.prove_branch_relation(circuit, bad_c_opening, rpbsch.BRANCH_HONEST)
+end)
+assert(bad_c_native_ok == false, 'native RPBSch accepted changed C opening')
 
 local bad_s_opening = rpbsch.fixture()
 bad_s_opening.rho_s = flip_last_nibble(bad_s_opening.rho_s)
 assert(rpbsch.verify_record(circuit, bad_s_opening, branch1[1]) == false,
        'changed S opening accepted')
+local bad_s_native_ok = pcall(function()
+  rpbsch.prove_branch_relation(circuit, bad_s_opening, rpbsch.BRANCH_HONEST)
+end)
+assert(bad_s_native_ok == false, 'native RPBSch accepted changed S opening')
 
 local bad_ck = rpbsch.fixture()
 bad_ck.ck = flip_last_nibble(bad_ck.ck)

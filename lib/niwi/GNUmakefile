@@ -24,15 +24,18 @@ NIWI_CFLAGS ?= -O2 -I../../src -I. -Isrc -Iinclude -I../../lib/longfellow-zk \
                -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
 NIWI_AR ?= ar
 
-NIWI_AMCL := ../../lib/milagro-crypto-c/build/lib/libamcl_core.a
+NIWI_AMCL := ../../lib/milagro-crypto-c/build/lib/libamcl_curve_SECP256K1.a \
+             ../../lib/milagro-crypto-c/build/lib/libamcl_core.a
 NIWI_ZK_DEPS := ../../lib/longfellow-zk/liblongfellow-zk.a \
                 ../../lib/zk-circuit-lang/libzk-circuit-lang.a \
                 ../../lib/zstd/libzstd.a \
                 $(NIWI_AMCL)
 
 NIWI_SOURCES := src/niwi.c.o src/encoding.c.o src/hash.c.o src/npro.c.o src/commitment.c.o src/challenge_schedule.c.o src/extract.c.o \
+                src/pbsch_commitment.c.o \
                 src/secp256k1/secp256k1_curve.cc.o src/secp256k1/secp256k1_witness.cc.o \
-                src/relations/bip340_relation.cc.o src/relations/zkcc_p256_relation.cc.o
+                src/relations/bip340_relation.cc.o src/relations/zkcc_p256_relation.cc.o \
+                src/relations/rpbsch_relation.cc.o
 
 all: libniwi.a
 

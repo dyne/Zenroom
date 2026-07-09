@@ -41,6 +41,7 @@ local Niwi = {}
 local zkcc_ok, zkcc = pcall(require, 'crypto_zkcc')
 if not zkcc_ok then zkcc = nil end
 local BIP340_RELATION_ARTIFACT = O.from_string("niwi/zkcc-bip340/v1")
+local RPBSCH_RELATION_ARTIFACT = O.from_string("niwi/rpbsch-branch/v1")
 
 local function is_octet(value)
     return type(value) == "zenroom.octet"
@@ -230,16 +231,23 @@ Niwi.prove_zkcc_relation = native.prove_zkcc_relation
 Niwi.verify_zkcc_relation = native.verify_zkcc_relation
 Niwi.prove_bip340_relation = native.prove_bip340_relation
 Niwi.verify_bip340_relation = native.verify_bip340_relation
+Niwi.rpbsch_relation_artifact = function() return RPBSCH_RELATION_ARTIFACT end
+Niwi.prove_rpbsch_relation = native.prove_rpbsch_relation
+Niwi.verify_rpbsch_relation = native.verify_rpbsch_relation
 Niwi.prove_envelope_with_observation_unchecked_test =
     native.prove_envelope_with_observation_unchecked_test
 Niwi.prove_zkcc_relation_with_observation_test =
     native.prove_zkcc_relation_with_observation_test
 Niwi.prove_bip340_relation_with_observation_test =
     native.prove_bip340_relation_with_observation_test
+Niwi.prove_rpbsch_relation_with_observation_test =
+    native.prove_rpbsch_relation_with_observation_test
 Niwi.extract_zkcc_relation_from_gamma_test =
     native.extract_zkcc_relation_from_gamma_test
 Niwi.extract_bip340_relation_from_gamma_test =
     native.extract_bip340_relation_from_gamma_test
+Niwi.extract_rpbsch_relation_from_gamma_test =
+    native.extract_rpbsch_relation_from_gamma_test
 
 -- Protocol metadata
 Niwi.PROTOCOL_VERSION = native.PROTOCOL_VERSION
