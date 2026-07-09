@@ -208,13 +208,14 @@ static void test_relation_checked_prove(void) {
                       &proof, &proof_len) == 0);
     assert(proof != NULL);
     assert(!proof_has_tag(proof, proof_len, "REL0"));
+    assert(!proof_has_tag(proof, proof_len, "TAB0"));
     assert(proof_has_tag(proof, proof_len, "LIG0"));
     assert(niwi_verify(ctx, proof, proof_len,
                        public_inputs, sizeof(public_inputs)) == 0);
 
     size_t body = find_proof_tag(proof, proof_len, "LIG0");
     assert(body != proof_len);
-    assert(read_u32_be_test(proof + body + 4) == 188);
+    assert(read_u32_be_test(proof + body + 4) == 188 + 48);
     assert(read_u32_be_test(proof + body + 8) == 0x00010000);
     assert(read_u32_be_test(proof + body + 12) == 0);
     assert(read_u32_be_test(proof + body + 16) == 1);
