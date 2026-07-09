@@ -32,7 +32,7 @@ NIWI_ZK_DEPS := ../../lib/longfellow-zk/liblongfellow-zk.a \
 
 NIWI_SOURCES := src/niwi.c.o src/encoding.c.o src/hash.c.o src/npro.c.o src/commitment.c.o src/challenge_schedule.c.o src/extract.c.o \
                 src/secp256k1/secp256k1_curve.cc.o src/secp256k1/secp256k1_witness.cc.o \
-                src/relations/bip340_relation.cc.o
+                src/relations/bip340_relation.cc.o src/relations/zkcc_p256_relation.cc.o
 
 all: libniwi.a
 

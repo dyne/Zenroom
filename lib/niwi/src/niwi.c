@@ -23,6 +23,7 @@
 #include "hash.h"
 #include "npro.h"
 #include "relations/bip340_relation.h"
+#include "relations/zkcc_p256_relation.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -464,6 +465,10 @@ static int validate_relation(niwi_ctx_t *ctx,
     } else if (ctx->relation_id == NIWI_RELATION_ZKCC_BIP340) {
         rc = niwi_bip340_relation_validate(public_inputs, pub_len,
                                            private_inputs, priv_len);
+    } else if (ctx->relation_id == NIWI_RELATION_ZKCC_P256) {
+        rc = niwi_zkcc_p256_relation_validate(
+            ctx->artifact, ctx->artifact_len,
+            public_inputs, pub_len, private_inputs, priv_len);
     } else {
         set_error(ctx, "niwi: missing relation validator");
         return -1;

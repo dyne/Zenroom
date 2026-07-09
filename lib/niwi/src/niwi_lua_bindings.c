@@ -253,6 +253,97 @@ static int lua_verify_bip340_relation(lua_State *L) {
     return 1;
 }
 
+static int lua_prove_zkcc_relation(lua_State *L) {
+    if (!lua_istable(L, 1)) {
+        lerror(L, "prove_zkcc_relation: expected table argument");
+        return 0;
+    }
+
+    const octet *circuit_oct = table_get_octet(L, 1, "circuit");
+    const octet *inputs_oct = table_get_octet(L, 1, "inputs");
+    const octet *pub_oct = table_get_octet(L, 1, "public_inputs");
+    if (!circuit_oct || !inputs_oct || !pub_oct) {
+        o_free(L, pub_oct);
+        o_free(L, inputs_oct);
+        o_free(L, circuit_oct);
+        lerror(L, "prove_zkcc_relation: missing required fields");
+        return 0;
+    }
+
+    niwi_ctx_t *ctx = create_ctx_from_circuit(
+        L, circuit_oct, NIWI_RELATION_ZKCC_P256, "prove_zkcc_relation");
+    if (!ctx) {
+        o_free(L, pub_oct);
+        o_free(L, inputs_oct);
+        o_free(L, circuit_oct);
+        return 0;
+    }
+
+    uint8_t *proof_out = NULL;
+    size_t proof_len = 0;
+    int rc = niwi_prove(ctx,
+                        (const uint8_t *)o_val(pub_oct), o_len(pub_oct),
+                        (const uint8_t *)o_val(inputs_oct), o_len(inputs_oct),
+                        &proof_out, &proof_len);
+    if (rc != 0) {
+        const char *err = niwi_last_error(ctx);
+        niwi_ctx_free(ctx);
+        o_free(L, pub_oct);
+        o_free(L, inputs_oct);
+        o_free(L, circuit_oct);
+        lerror(L, "prove_zkcc_relation: %s", err ? err : "unknown error");
+        return 0;
+    }
+
+    push_octet_copy(L, proof_out, proof_len);
+    niwi_free_buffer(proof_out);
+    niwi_ctx_free(ctx);
+    o_free(L, pub_oct);
+    o_free(L, inputs_oct);
+    o_free(L, circuit_oct);
+    return 1;
+}
+
+static int lua_verify_zkcc_relation(lua_State *L) {
+    if (!lua_istable(L, 1)) {
+        lerror(L, "verify_zkcc_relation: expected table argument");
+        return 0;
+    }
+
+    const octet *circuit_oct = table_get_octet(L, 1, "circuit");
+    const octet *proof_oct = table_get_octet(L, 1, "proof");
+    const octet *pub_oct = table_get_octet(L, 1, "public_inputs");
+    if (!circuit_oct || !proof_oct || !pub_oct) {
+        o_free(L, pub_oct);
+        o_free(L, proof_oct);
+        o_free(L, circuit_oct);
+        lerror(L, "verify_zkcc_relation: missing required fields");
+        return 0;
+    }
+
+    niwi_ctx_t *ctx = create_ctx_from_circuit(
+        L, circuit_oct, NIWI_RELATION_ZKCC_P256, "verify_zkcc_relation");
+    if (!ctx) {
+        o_free(L, pub_oct);
+        o_free(L, proof_oct);
+        o_free(L, circuit_oct);
+        return 0;
+    }
+
+    int rc = niwi_verify(
+        ctx,
+        (const uint8_t *)o_val(proof_oct), o_len(proof_oct),
+        (const uint8_t *)o_val(pub_oct), o_len(pub_oct));
+
+    niwi_ctx_free(ctx);
+    o_free(L, pub_oct);
+    o_free(L, proof_oct);
+    o_free(L, circuit_oct);
+
+    lua_pushboolean(L, rc == 0);
+    return 1;
+}
+
 /* ---- verify_envelope -------------------------------------------------- */
 
 /*
@@ -464,6 +555,62 @@ static int lua_prove_bip340_relation_with_observation_test(lua_State *L) {
     return 2;
 }
 
+static int lua_prove_zkcc_relation_with_observation_test(lua_State *L) {
+    if (!lua_istable(L, 1)) {
+        lerror(L, "prove_zkcc_relation_with_observation_test: expected table argument");
+        return 0;
+    }
+
+    const octet *circuit_oct = table_get_octet(L, 1, "circuit");
+    const octet *inputs_oct = table_get_octet(L, 1, "inputs");
+    const octet *pub_oct = table_get_octet(L, 1, "public_inputs");
+    if (!circuit_oct || !inputs_oct || !pub_oct) {
+        o_free(L, pub_oct);
+        o_free(L, inputs_oct);
+        o_free(L, circuit_oct);
+        lerror(L, "prove_zkcc_relation_with_observation_test: missing required fields");
+        return 0;
+    }
+
+    niwi_ctx_t *ctx = create_ctx_from_circuit(
+        L, circuit_oct, NIWI_RELATION_ZKCC_P256,
+        "prove_zkcc_relation_with_observation_test");
+    if (!ctx) {
+        o_free(L, pub_oct);
+        o_free(L, inputs_oct);
+        o_free(L, circuit_oct);
+        return 0;
+    }
+
+    uint8_t *proof_out = NULL, *gamma_out = NULL;
+    size_t proof_len = 0, gamma_len = 0;
+    int rc = niwi_prove_observed(
+        ctx,
+        (const uint8_t *)o_val(pub_oct), o_len(pub_oct),
+        (const uint8_t *)o_val(inputs_oct), o_len(inputs_oct),
+        &proof_out, &proof_len, &gamma_out, &gamma_len);
+    if (rc != 0) {
+        const char *err = niwi_last_error(ctx);
+        niwi_ctx_free(ctx);
+        o_free(L, pub_oct);
+        o_free(L, inputs_oct);
+        o_free(L, circuit_oct);
+        lerror(L, "prove_zkcc_relation_with_observation_test: %s",
+               err ? err : "unknown error");
+        return 0;
+    }
+
+    push_octet_copy(L, proof_out, proof_len);
+    push_octet_copy(L, gamma_out, gamma_len);
+    niwi_free_buffer(proof_out);
+    niwi_free_buffer(gamma_out);
+    niwi_ctx_free(ctx);
+    o_free(L, pub_oct);
+    o_free(L, inputs_oct);
+    o_free(L, circuit_oct);
+    return 2;
+}
+
 /* ---- extract_from_gamma_unchecked_test (test-only) ------------------- */
 
 /*
@@ -615,6 +762,65 @@ static int lua_extract_bip340_relation_from_gamma_test(lua_State *L) {
     return 1;
 }
 
+static int lua_extract_zkcc_relation_from_gamma_test(lua_State *L) {
+    if (!lua_istable(L, 1)) {
+        lerror(L, "extract_zkcc_relation_from_gamma_test: expected table argument");
+        return 0;
+    }
+
+    const octet *circuit_oct = table_get_octet(L, 1, "circuit");
+    const octet *proof_oct = table_get_octet(L, 1, "proof");
+    const octet *gamma_oct = table_get_octet(L, 1, "gamma");
+    const octet *pub_oct = table_get_octet(L, 1, "public_inputs");
+    if (!circuit_oct || !proof_oct || !gamma_oct || !pub_oct) {
+        o_free(L, pub_oct);
+        o_free(L, gamma_oct);
+        o_free(L, proof_oct);
+        o_free(L, circuit_oct);
+        lerror(L, "extract_zkcc_relation_from_gamma_test: missing required fields");
+        return 0;
+    }
+
+    niwi_ctx_t *ctx = create_ctx_from_circuit(
+        L, circuit_oct, NIWI_RELATION_ZKCC_P256,
+        "extract_zkcc_relation_from_gamma_test");
+    if (!ctx) {
+        o_free(L, pub_oct);
+        o_free(L, gamma_oct);
+        o_free(L, proof_oct);
+        o_free(L, circuit_oct);
+        return 0;
+    }
+
+    uint8_t *witness = NULL;
+    size_t witness_len = 0;
+    int rc = niwi_extract(ctx,
+                          (const uint8_t *)o_val(proof_oct), o_len(proof_oct),
+                          (const uint8_t *)o_val(gamma_oct), o_len(gamma_oct),
+                          (const uint8_t *)o_val(pub_oct), o_len(pub_oct),
+                          &witness, &witness_len);
+    if (rc != 0) {
+        const char *err = niwi_last_error(ctx);
+        niwi_ctx_free(ctx);
+        o_free(L, pub_oct);
+        o_free(L, gamma_oct);
+        o_free(L, proof_oct);
+        o_free(L, circuit_oct);
+        lerror(L, "extract_zkcc_relation_from_gamma_test: %s",
+               err ? err : "unknown error");
+        return 0;
+    }
+
+    push_octet_copy(L, witness, witness_len);
+    niwi_free_buffer(witness);
+    niwi_ctx_free(ctx);
+    o_free(L, pub_oct);
+    o_free(L, gamma_oct);
+    o_free(L, proof_oct);
+    o_free(L, circuit_oct);
+    return 1;
+}
+
 /* ---- PBSch Pedersen primitives --------------------------------------- */
 
 /* niwi_pbsch_pedersen_h() -> OCTET (32 bytes) */
@@ -700,13 +906,17 @@ static int lua_pbsch_pedersen_verify(lua_State *L) {
 
 static const luaL_Reg niwi_functions[] = {
     {"prove_envelope_unchecked",                         lua_prove_envelope_unchecked},
+    {"prove_zkcc_relation",                              lua_prove_zkcc_relation},
+    {"verify_zkcc_relation",                             lua_verify_zkcc_relation},
     {"prove_bip340_relation",                            lua_prove_bip340_relation},
     {"verify_bip340_relation",                           lua_verify_bip340_relation},
     {"verify_envelope",                                  lua_verify_envelope},
     {"niwi_profile",                                     lua_niwi_profile},
     {"prove_envelope_with_observation_unchecked_test",   lua_prove_envelope_with_observation_unchecked_test},
+    {"prove_zkcc_relation_with_observation_test",        lua_prove_zkcc_relation_with_observation_test},
     {"prove_bip340_relation_with_observation_test",      lua_prove_bip340_relation_with_observation_test},
     {"extract_from_gamma_unchecked_test",                lua_extract_from_gamma_unchecked_test},
+    {"extract_zkcc_relation_from_gamma_test",            lua_extract_zkcc_relation_from_gamma_test},
     {"extract_bip340_relation_from_gamma_test",          lua_extract_bip340_relation_from_gamma_test},
     {"pbsch_pedersen_h",                                 lua_pbsch_pedersen_h},
     {"pbsch_pedersen_commit",                            lua_pbsch_pedersen_commit},

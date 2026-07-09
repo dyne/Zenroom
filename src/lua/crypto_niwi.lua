@@ -111,6 +111,20 @@ local function can_validate_relation(opts)
            not is_octet(opts.circuit) and not is_octet(opts.inputs)
 end
 
+local function has_native_zkcc_relation(opts)
+    return relation_template(opts) ~= "bip340" and
+           type(native.prove_zkcc_relation) == "function" and
+           type(native.verify_zkcc_relation) == "function" and
+           not is_octet(opts.circuit) and not is_octet(opts.inputs)
+end
+
+local function proof_has_ligero_body(opts)
+    if type(opts) ~= "table" or not opts.proof or not is_octet(opts.proof) then
+        return false
+    end
+    return opts.proof:string():find("LIG0", 1, true) ~= nil
+end
+
 local function validate_relation(opts)
     if not can_validate_relation(opts) then return end
     local ok_raw, raw_circuit = pcall(function() return opts.circuit:raw() end)
@@ -142,6 +156,9 @@ function Niwi.prove_circuit_niwi(opts)
     if relation_template(opts) == "bip340" then
         return native.prove_bip340_relation(native_opts(opts))
     end
+    if has_native_zkcc_relation(opts) then
+        return native.prove_zkcc_relation(native_opts(opts))
+    end
     -- Passing live zkcc artifact/witness objects enables relation validation.
     -- Raw OCTETs are accepted as the low-level NIWI envelope API.
     validate_relation(opts)
@@ -154,6 +171,9 @@ function Niwi.verify_circuit_niwi(opts)
     end
     if relation_template(opts) == "bip340" then
         return native.verify_bip340_relation(circuit_public_opts(opts))
+    end
+    if proof_has_ligero_body(opts) and type(native.verify_zkcc_relation) == "function" then
+        return native.verify_zkcc_relation(circuit_public_opts(opts))
     end
     local out = {}
     for k, v in pairs(opts) do out[k] = v end
@@ -176,6 +196,10 @@ if native.prove_envelope_with_observation_unchecked_test then
             return native.prove_bip340_relation_with_observation_test(
                 native_opts(opts))
         end
+        if has_native_zkcc_relation(opts) and
+           type(native.prove_zkcc_relation_with_observation_test) == "function" then
+            return native.prove_zkcc_relation_with_observation_test(native_opts(opts))
+        end
         validate_relation(opts)
         return native.prove_envelope_with_observation_unchecked_test(native_opts(opts))
     end
@@ -191,6 +215,13 @@ if native.extract_from_gamma_unchecked_test then
             out.gamma = as_octet(opts.gamma, "octet", "gamma")
             return native.extract_bip340_relation_from_gamma_test(out)
         end
+        if proof_has_ligero_body(opts) and opts.circuit and
+           type(native.extract_zkcc_relation_from_gamma_test) == "function" then
+            local out = circuit_public_opts(opts)
+            out.proof = as_octet(opts.proof, "octet", "proof")
+            out.gamma = as_octet(opts.gamma, "octet", "gamma")
+            return native.extract_zkcc_relation_from_gamma_test(out)
+        end
         local out = {}
         for k, v in pairs(opts) do out[k] = v end
         if opts.public_inputs then
@@ -204,15 +235,21 @@ end
 -- Expose explicit low-level names for tests and adapters that deliberately
 -- operate on proof envelopes instead of relation-checked circuit objects.
 Niwi.prove_envelope_unchecked = native.prove_envelope_unchecked
+Niwi.prove_zkcc_relation = native.prove_zkcc_relation
+Niwi.verify_zkcc_relation = native.verify_zkcc_relation
 Niwi.prove_bip340_relation = native.prove_bip340_relation
 Niwi.verify_bip340_relation = native.verify_bip340_relation
 Niwi.verify_envelope = native.verify_envelope
 Niwi.prove_envelope_with_observation_unchecked_test =
     native.prove_envelope_with_observation_unchecked_test
+Niwi.prove_zkcc_relation_with_observation_test =
+    native.prove_zkcc_relation_with_observation_test
 Niwi.prove_bip340_relation_with_observation_test =
     native.prove_bip340_relation_with_observation_test
 Niwi.extract_from_gamma_unchecked_test =
     native.extract_from_gamma_unchecked_test
+Niwi.extract_zkcc_relation_from_gamma_test =
+    native.extract_zkcc_relation_from_gamma_test
 Niwi.extract_bip340_relation_from_gamma_test =
     native.extract_bip340_relation_from_gamma_test
 

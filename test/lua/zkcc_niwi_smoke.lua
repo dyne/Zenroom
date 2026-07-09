@@ -44,6 +44,11 @@ local public_witness = zkcc.build_witness_inputs{
   },
 }
 
+local legacy_prove_circuit = zkcc.prove_circuit
+zkcc.prove_circuit = function()
+  error('legacy zkcc.prove_circuit relation gate must not be called')
+end
+
 local bad_prove_ok = pcall(function()
   niwi.prove_circuit_niwi{
     circuit = artifact,
@@ -93,10 +98,13 @@ assert(niwi.verify_circuit_niwi{
 }, 'observed NIWI proof verification failed')
 
 local extracted = niwi.extract_from_gamma_test{
+  circuit = circuit,
   proof = observed_proof,
   gamma = gamma,
   public_inputs = public_witness:public_octet(),
 }
 assert(extracted:string() == witness:octet():string(), 'extracted zkcc witness mismatch')
+
+zkcc.prove_circuit = legacy_prove_circuit
 
 print('✓ NIWI proved, verified, and extracted a zkcc circuit witness')
