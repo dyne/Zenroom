@@ -225,13 +225,14 @@ static void test_relation_checked_prove(void) {
 
     size_t body = find_proof_tag(proof, proof_len, "LIG0");
     assert(body != proof_len);
-    assert(read_u32_be_test(proof + body + 4) == 292 + 48);
+    assert(read_u32_be_test(proof + body + 4) == 296 + 48 + 57);
     assert(read_u32_be_test(proof + body + 8) == 0x00010000);
     assert(read_u32_be_test(proof + body + 12) == 0);
     assert(read_u32_be_test(proof + body + 16) == 1);
     assert(read_u32_be_test(proof + body + 20) == 1);
     assert(read_u32_be_test(proof + body + 24) == 32);
     assert(read_u32_be_test(proof + body + 28) == 1);
+    assert(read_u32_be_test(proof + body + 44) == 57);
 
     assert_relation_verify_rejects_mutation(
         ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
@@ -253,19 +254,22 @@ static void test_relation_checked_prove(void) {
         body + 43);
     assert_relation_verify_rejects_mutation(
         ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
-        body + 76);
+        body + 80);
     assert_relation_verify_rejects_mutation(
         ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
-        body + 172);
+        body + 176);
     assert_relation_verify_rejects_mutation(
         ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
-        body + 204);
+        body + 208);
     assert_relation_verify_rejects_mutation(
         ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
-        body + 236);
+        body + 240);
     assert_relation_verify_rejects_mutation(
         ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
-        body + 300 + 16);
+        body + 304 + 16);
+    assert_relation_verify_rejects_mutation(
+        ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
+        body + 304 + 48 + 16);
 
     niwi_free_buffer(proof);
     niwi_ctx_free(ctx);
@@ -341,7 +345,7 @@ static void test_relation_merkle_path_for_multi_leaf_tableau(void) {
     assert(read_u32_be_test(proof + body + 40) == 1);
     assert_relation_verify_rejects_mutation(
         ctx, proof, proof_len, public_inputs, sizeof(public_inputs),
-        body + 300);
+        body + 304);
 
     niwi_free_buffer(proof);
     niwi_ctx_free(ctx);
