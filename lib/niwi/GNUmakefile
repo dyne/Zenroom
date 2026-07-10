@@ -45,7 +45,7 @@ libniwi.a: $(NIWI_SOURCES)
 
 clean:
 	rm -f src/*.c.o tests/*.o src/secp256k1/*.cc.o src/relations/*.cc.o
-	rm -f *.a test_abi test_encoding test_hash test_npro test_commitment test_challenge_schedule test_niwi_proof_serde test_extract test_vectors test_bench test_secp256k1 test_zkcc_p256_relation test_bip340_relation test_rpbsch_adapter test_ligero_param test_ligero_bip340
+	rm -f *.a test_abi test_encoding test_hash test_npro test_commitment test_challenge_schedule test_niwi_proof_serde test_extract test_vectors test_bench test_secp256k1 test_zkcc_p256_relation test_bip340_relation test_rpbsch_adapter test_ligero_param test_ligero_bip340 test_rpbsch_sha_circuit
 
 %.c.o: %.c
 	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -c -o $@ $<
@@ -55,7 +55,7 @@ clean:
 
 # ---- Tests ----
 
-test: test_abi test_encoding test_hash test_npro test_commitment test_challenge_schedule test_niwi_proof_serde test_extract test_vectors test_secp256k1 test_zkcc_p256_relation test_bip340_relation test_rpbsch_adapter test_ligero_param test_ligero_bip340
+test: test_abi test_encoding test_hash test_npro test_commitment test_challenge_schedule test_niwi_proof_serde test_extract test_vectors test_secp256k1 test_zkcc_p256_relation test_bip340_relation test_rpbsch_adapter test_ligero_param test_ligero_bip340 test_rpbsch_sha_circuit
 	./test_abi
 	./test_encoding
 	./test_hash
@@ -71,6 +71,7 @@ test: test_abi test_encoding test_hash test_npro test_commitment test_challenge_
 	./test_rpbsch_adapter
 	./test_ligero_param
 	./test_ligero_bip340
+	./test_rpbsch_sha_circuit
 	@echo "=== All lib/niwi tests passed ==="
 
 test_abi: tests/test_abi.c.o libniwi.a
@@ -125,6 +126,9 @@ test_ligero_param: tests/test_ligero_param.cc.o libniwi.a
 
 test_ligero_bip340: tests/test_ligero_bip340.cc.o libniwi.a
 	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_ligero_bip340.cc.o -L. -lniwi $(NIWI_ZK_DEPS)
+
+test_rpbsch_sha_circuit: tests/test_rpbsch_sha_circuit.cc.o libniwi.a
+	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_rpbsch_sha_circuit.cc.o -L. -lniwi $(NIWI_ZK_DEPS)
 
 # ---- Benchmarks ----
 
