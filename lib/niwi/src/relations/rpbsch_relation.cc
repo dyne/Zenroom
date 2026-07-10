@@ -32,35 +32,43 @@ void sha256_raw(const uint8_t *data, size_t len, uint8_t out[32]) {
     sha.DigestData(out);
 }
 
-bool hash_concat3(const char *tag, const uint8_t *a,
-                  const uint8_t *b, const uint8_t *c,
-                  uint8_t out[32]) {
-    const size_t tag_len = strlen(tag);
-    uint8_t buf[16 + 32 * 3];
-    if (tag_len > 16) return false;
-    memcpy(buf, tag, tag_len);
-    memcpy(buf + tag_len, a, 32);
-    memcpy(buf + tag_len + 32, b, 32);
-    memcpy(buf + tag_len + 64, c, 32);
-    sha256_raw(buf, tag_len + 96, out);
-    return true;
+void build_c_message_preimage(const uint8_t *m, const uint8_t *alpha,
+                              const uint8_t *beta,
+                              uint8_t out[kCMessagePreimageSize]) {
+    static const char tag[] = "PBSch/C/v1";
+    size_t off = 0;
+    memcpy(out + off, tag, sizeof(tag) - 1); off += sizeof(tag) - 1;
+    memcpy(out + off, m, 32); off += 32;
+    memcpy(out + off, alpha, 32); off += 32;
+    memcpy(out + off, beta, 32);
 }
 
 bool encode_c_msg(const uint8_t *m, const uint8_t *alpha,
                   const uint8_t *beta, uint8_t out[32]) {
-    return hash_concat3("PBSch/C/v1", m, alpha, beta, out);
+    uint8_t buf[kCMessagePreimageSize];
+    build_c_message_preimage(m, alpha, beta, buf);
+    sha256_raw(buf, sizeof(buf), out);
+    return true;
+}
+
+void build_s_message_preimage(const uint8_t *sigma0, const uint8_t *sigma1,
+                              const uint8_t *nu_u,
+                              const uint8_t *nu_u_prime,
+                              const uint8_t *nu_s,
+                              uint8_t out[kSMessagePreimageSize]) {
+    size_t off = 0;
+    memcpy(out + off, sigma0, 64); off += 64;
+    memcpy(out + off, sigma1, 64); off += 64;
+    memcpy(out + off, nu_u, 32); off += 32;
+    memcpy(out + off, nu_u_prime, 32); off += 32;
+    memcpy(out + off, nu_s, 32);
 }
 
 void encode_s_msg(const uint8_t *sigma0, const uint8_t *sigma1,
                   const uint8_t *nu_u, const uint8_t *nu_u_prime,
                   const uint8_t *nu_s, uint8_t out[32]) {
-    uint8_t buf[64 + 64 + 32 + 32 + 32];
-    size_t off = 0;
-    memcpy(buf + off, sigma0, 64); off += 64;
-    memcpy(buf + off, sigma1, 64); off += 64;
-    memcpy(buf + off, nu_u, 32); off += 32;
-    memcpy(buf + off, nu_u_prime, 32); off += 32;
-    memcpy(buf + off, nu_s, 32); off += 32;
+    uint8_t buf[kSMessagePreimageSize];
+    build_s_message_preimage(sigma0, sigma1, nu_u, nu_u_prime, nu_s, buf);
     sha256_raw(buf, sizeof(buf), out);
 }
 

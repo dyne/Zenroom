@@ -41,6 +41,7 @@ constexpr size_t kMaxBlocks = 3;
 constexpr size_t kPaddedBytes = kMaxBlocks * 64;
 constexpr size_t kTupleMaxBlocks = 2;
 constexpr size_t kPhiMaxBlocks = 4;
+constexpr size_t kSMsgMaxBlocks = 4;
 
 void fill_byte(proofs::DenseFiller<Field>& filler, uint8_t byte) {
     filler.push_back(byte, 8, proofs::p256k1_base);
@@ -352,6 +353,88 @@ void test_tuple_message_sha_circuit(void) {
     std::printf("  PASS test_tuple_message_sha_circuit\n");
 }
 
+void test_c_message_sha_circuit(void) {
+    auto circuit = build_sha256_circuit<kTupleMaxBlocks>();
+    assert(circuit != nullptr);
+    assert(circuit->npub_in == 257);
+
+    uint8_t m[32];
+    uint8_t alpha[32];
+    uint8_t beta[32];
+    uint8_t digest[32];
+    uint8_t preimage[niwi::rpbsch::kCMessagePreimageSize];
+    for (size_t i = 0; i < sizeof(m); ++i) {
+        m[i] = static_cast<uint8_t>(0x20u + i);
+        alpha[i] = static_cast<uint8_t>(0x44u + i * 3u);
+        beta[i] = static_cast<uint8_t>(0x68u + i * 5u);
+    }
+
+    niwi::rpbsch::build_c_message_preimage(m, alpha, beta, preimage);
+    assert(niwi::rpbsch::encode_c_msg(m, alpha, beta, digest));
+
+    proofs::Dense<Field> witness(1, circuit->ninputs);
+    proofs::Dense<Field> pub(1, circuit->npub_in);
+    build_inputs<kTupleMaxBlocks>(digest, preimage, sizeof(preimage),
+                                  &witness, &pub);
+    assert(evaluates(*circuit, witness));
+
+    uint8_t bad_digest[32];
+    memcpy(bad_digest, digest, sizeof(bad_digest));
+    bad_digest[8] ^= 0x01u;
+    proofs::Dense<Field> bad_witness(1, circuit->ninputs);
+    proofs::Dense<Field> bad_pub(1, circuit->npub_in);
+    build_inputs<kTupleMaxBlocks>(bad_digest, preimage, sizeof(preimage),
+                                  &bad_witness, &bad_pub);
+    assert(!evaluates(*circuit, bad_witness));
+
+    std::printf("  PASS test_c_message_sha_circuit\n");
+}
+
+void test_s_message_sha_circuit(void) {
+    auto circuit = build_sha256_circuit<kSMsgMaxBlocks>();
+    assert(circuit != nullptr);
+    assert(circuit->npub_in == 257);
+
+    uint8_t sigma0[64];
+    uint8_t sigma1[64];
+    uint8_t nu_u[32];
+    uint8_t nu_u_prime[32];
+    uint8_t nu_s[32];
+    uint8_t digest[32];
+    uint8_t preimage[niwi::rpbsch::kSMessagePreimageSize];
+    for (size_t i = 0; i < sizeof(sigma0); ++i) {
+        sigma0[i] = static_cast<uint8_t>(0x24u + i);
+        sigma1[i] = static_cast<uint8_t>(0x64u + i * 3u);
+    }
+    for (size_t i = 0; i < sizeof(nu_u); ++i) {
+        nu_u[i] = static_cast<uint8_t>(0xa4u + i * 5u);
+        nu_u_prime[i] = static_cast<uint8_t>(0xc4u + i * 7u);
+        nu_s[i] = static_cast<uint8_t>(0xe4u + i * 11u);
+    }
+
+    niwi::rpbsch::build_s_message_preimage(
+        sigma0, sigma1, nu_u, nu_u_prime, nu_s, preimage);
+    niwi::rpbsch::encode_s_msg(sigma0, sigma1, nu_u, nu_u_prime, nu_s,
+                               digest);
+
+    proofs::Dense<Field> witness(1, circuit->ninputs);
+    proofs::Dense<Field> pub(1, circuit->npub_in);
+    build_inputs<kSMsgMaxBlocks>(digest, preimage, sizeof(preimage),
+                                 &witness, &pub);
+    assert(evaluates(*circuit, witness));
+
+    uint8_t bad_preimage[sizeof(preimage)];
+    memcpy(bad_preimage, preimage, sizeof(preimage));
+    bad_preimage[33] ^= 0x01u;
+    proofs::Dense<Field> bad_witness(1, circuit->ninputs);
+    proofs::Dense<Field> bad_pub(1, circuit->npub_in);
+    build_inputs<kSMsgMaxBlocks>(digest, bad_preimage, sizeof(bad_preimage),
+                                 &bad_witness, &bad_pub);
+    assert(!evaluates(*circuit, bad_witness));
+
+    std::printf("  PASS test_s_message_sha_circuit\n");
+}
+
 void test_statement_phi_sha_circuit(void) {
     auto circuit = build_sha256_circuit<kPhiMaxBlocks>();
     assert(circuit != nullptr);
@@ -523,6 +606,8 @@ int main(void) {
     std::printf("lib/niwi RPBSch SHA circuit tests:\n");
     test_bip340_challenge_sha_circuit();
     test_tuple_message_sha_circuit();
+    test_c_message_sha_circuit();
+    test_s_message_sha_circuit();
     test_statement_phi_sha_circuit();
     test_bip340_challenge_reduction_circuit();
     test_bip340_full_challenge_circuit();

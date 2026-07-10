@@ -70,6 +70,48 @@ void test_tuple_message_preimage_matches_relation_hash(void) {
     std::printf("  PASS test_tuple_message_preimage_matches_relation_hash\n");
 }
 
+void test_c_message_preimage_matches_relation_hash(void) {
+    uint8_t m[32];
+    uint8_t alpha[32];
+    uint8_t beta[32];
+    uint8_t preimage[niwi::rpbsch::kCMessagePreimageSize];
+    uint8_t helper[32];
+    uint8_t reference[32];
+    fill_seq(m, sizeof(m), 9);
+    fill_seq(alpha, sizeof(alpha), 51);
+    fill_seq(beta, sizeof(beta), 93);
+
+    niwi::rpbsch::build_c_message_preimage(m, alpha, beta, preimage);
+    sha256_raw(preimage, sizeof(preimage), helper);
+    assert(niwi::rpbsch::encode_c_msg(m, alpha, beta, reference));
+    assert(memcmp(helper, reference, sizeof(helper)) == 0);
+    std::printf("  PASS test_c_message_preimage_matches_relation_hash\n");
+}
+
+void test_s_message_preimage_matches_relation_hash(void) {
+    uint8_t sigma0[64];
+    uint8_t sigma1[64];
+    uint8_t nu_u[32];
+    uint8_t nu_u_prime[32];
+    uint8_t nu_s[32];
+    uint8_t preimage[niwi::rpbsch::kSMessagePreimageSize];
+    uint8_t helper[32];
+    uint8_t reference[32];
+    fill_seq(sigma0, sizeof(sigma0), 11);
+    fill_seq(sigma1, sizeof(sigma1), 77);
+    fill_seq(nu_u, sizeof(nu_u), 143);
+    fill_seq(nu_u_prime, sizeof(nu_u_prime), 177);
+    fill_seq(nu_s, sizeof(nu_s), 211);
+
+    niwi::rpbsch::build_s_message_preimage(
+        sigma0, sigma1, nu_u, nu_u_prime, nu_s, preimage);
+    sha256_raw(preimage, sizeof(preimage), helper);
+    niwi::rpbsch::encode_s_msg(sigma0, sigma1, nu_u, nu_u_prime, nu_s,
+                               reference);
+    assert(memcmp(helper, reference, sizeof(helper)) == 0);
+    std::printf("  PASS test_s_message_preimage_matches_relation_hash\n");
+}
+
 void test_statement_phi_preimage_matches_relation_hash(void) {
     uint8_t m[32];
     uint8_t alpha[32];
@@ -109,6 +151,8 @@ int main(void) {
     std::printf("lib/niwi RPBSch adapter tests:\n");
     test_bip340_challenge_preimage_layout();
     test_tuple_message_preimage_matches_relation_hash();
+    test_c_message_preimage_matches_relation_hash();
+    test_s_message_preimage_matches_relation_hash();
     test_statement_phi_preimage_matches_relation_hash();
     std::printf("All RPBSch adapter tests passed.\n");
     return 0;

@@ -21,6 +21,8 @@ constexpr size_t kBip340PrivateSize = 2305 * 32;
 constexpr size_t kBip340FullPublicSize = 3 * 32;
 constexpr size_t kBip340FullPrivateSize = 8001 * 32;
 constexpr size_t kBip340ChallengePreimageSize = 160;
+constexpr size_t kCMessagePreimageSize = sizeof("PBSch/C/v1") - 1 + 3 * 32;
+constexpr size_t kSMessagePreimageSize = 64 + 64 + 32 + 32 + 32;
 constexpr size_t kTupleMessagePreimageSize =
     sizeof("Zenroom/RPBSch/tuple-message/v1") - 1 + 64;
 constexpr size_t kStatementPhiPreimageSize =
@@ -69,9 +71,19 @@ bool parse_witness(const uint8_t *private_inputs, size_t priv_len,
 bool encode_c_msg(const uint8_t *m, const uint8_t *alpha,
                   const uint8_t *beta, uint8_t out[32]);
 
+void build_c_message_preimage(const uint8_t *m, const uint8_t *alpha,
+                              const uint8_t *beta,
+                              uint8_t out[kCMessagePreimageSize]);
+
 void encode_s_msg(const uint8_t *sigma0, const uint8_t *sigma1,
                   const uint8_t *nu_u, const uint8_t *nu_u_prime,
                   const uint8_t *nu_s, uint8_t out[32]);
+
+void build_s_message_preimage(const uint8_t *sigma0, const uint8_t *sigma1,
+                              const uint8_t *nu_u,
+                              const uint8_t *nu_u_prime,
+                              const uint8_t *nu_s,
+                              uint8_t out[kSMessagePreimageSize]);
 
 void tuple_message(const uint8_t *nu_s, const uint8_t *nu_u,
                    uint8_t out[32]);
