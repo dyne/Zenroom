@@ -19,6 +19,8 @@
 #include "circuits/bip340/bip340_guard.h"
 #include "circuits/bip340/bip340_verify.h"
 #include "circuits/bip340/bip340_witness.h"
+#include "circuits/logic/bit_plucker_encoder.h"
+#include "circuits/sha/flatsha256_witness.h"
 #include "ec/p256k1.h"
 #include "algebra/crt.h"
 #include "algebra/crt_convolution.h"
@@ -580,6 +582,213 @@ int lua_bip340_compute_inputs(lua_State* L) {
 	if (idx != art->circuit->ninputs) {
 		lerror(L, "bip340_compute_inputs: witness size mismatch");
 		return 0;
+	}
+
+	sol::stack::push(L, std::move(prover));
+	sol::stack::push(L, std::move(verifier));
+	return 2;
+}
+
+namespace {
+
+static constexpr size_t kBip340ChallengeBlocks = 3;
+static constexpr size_t kBip340ChallengePreimageSize = 160;
+static constexpr size_t kBip340ChallengePaddedBytes =
+	kBip340ChallengeBlocks * 64;
+
+void append_bip340_field(std::vector<Fp256k1Base::Elt>& out,
+						 const Fp256k1Base::Elt& elt) {
+	out.push_back(elt);
+}
+
+void append_bip340_bit(std::vector<Fp256k1Base::Elt>& out, uint8_t bit) {
+	out.push_back(p256k1_base.of_scalar(bit & 1u));
+}
+
+void append_bip340_u32_bits(std::vector<Fp256k1Base::Elt>& out,
+							uint32_t word) {
+	for (size_t i = 0; i < 32; ++i) {
+		append_bip340_bit(out, static_cast<uint8_t>((word >> i) & 1u));
+	}
+}
+
+void append_bip340_byte_bits(std::vector<Fp256k1Base::Elt>& out,
+							 uint8_t byte) {
+	for (size_t i = 0; i < 8; ++i) {
+		append_bip340_bit(out, static_cast<uint8_t>((byte >> i) & 1u));
+	}
+}
+
+void append_bip340_digest_target(std::vector<Fp256k1Base::Elt>& out,
+								 const uint8_t digest[32]) {
+	for (size_t j = 0; j < 8; ++j) {
+		append_bip340_u32_bits(out, SHA256_ru32be(digest + 4 * (7 - j)));
+	}
+}
+
+void append_bip340_sha_block(
+	std::vector<Fp256k1Base::Elt>& out,
+	const FlatSHA256Witness::BlockWitness& bw) {
+	BitPluckerEncoder<Fp256k1Base, 4> encoder(p256k1_base);
+	for (size_t k = 0; k < 48; ++k) {
+		for (const auto& elt : encoder.mkpacked_v32(bw.outw[k])) {
+			append_bip340_field(out, elt);
+		}
+	}
+	for (size_t k = 0; k < 64; ++k) {
+		for (const auto& elt : encoder.mkpacked_v32(bw.oute[k])) {
+			append_bip340_field(out, elt);
+		}
+		for (const auto& elt : encoder.mkpacked_v32(bw.outa[k])) {
+			append_bip340_field(out, elt);
+		}
+	}
+	for (size_t k = 0; k < 8; ++k) {
+		for (const auto& elt : encoder.mkpacked_v32(bw.h1[k])) {
+			append_bip340_field(out, elt);
+		}
+	}
+}
+
+void append_bip340_verify_witness(std::vector<Fp256k1Base::Elt>& out,
+								  const Bip340Witness& witness) {
+	for (size_t i = 0; i < Bip340Witness::kBits; ++i) {
+		append_bip340_field(out, witness.bits_s_[i]);
+		if (i < Bip340Witness::kBits - 1) {
+			append_bip340_field(out, witness.int_sx_[i]);
+			append_bip340_field(out, witness.int_sy_[i]);
+			append_bip340_field(out, witness.int_sz_[i]);
+		}
+	}
+	for (size_t i = 0; i < Bip340Witness::kBits; ++i) {
+		append_bip340_field(out, witness.bits_e_[i]);
+		if (i < Bip340Witness::kBits - 1) {
+			append_bip340_field(out, witness.int_ex_[i]);
+			append_bip340_field(out, witness.int_ey_[i]);
+			append_bip340_field(out, witness.int_ez_[i]);
+		}
+	}
+	append_bip340_field(out, witness.py_);
+	append_bip340_field(out, witness.ry_);
+	append_bip340_field(out, witness.rz_inv_);
+	for (size_t i = 0; i < Bip340Witness::kBits; ++i) {
+		append_bip340_field(out, witness.bits_ry_[i]);
+	}
+}
+
+void bip340_challenge_preimage(const uint8_t sig[64], const uint8_t pk[32],
+							   const uint8_t msg[32],
+							   uint8_t out[kBip340ChallengePreimageSize]) {
+	static const char tag[] = "BIP0340/challenge";
+	uint8_t tag_hash[32];
+	SHA256 tag_sha;
+	tag_sha.Update(reinterpret_cast<const uint8_t*>(tag), strlen(tag));
+	tag_sha.DigestData(tag_hash);
+
+	size_t off = 0;
+	memcpy(out + off, tag_hash, 32); off += 32;
+	memcpy(out + off, tag_hash, 32); off += 32;
+	memcpy(out + off, sig, 32); off += 32;
+	memcpy(out + off, pk, 32); off += 32;
+	memcpy(out + off, msg, 32);
+}
+
+void bip340_challenge_digest(const uint8_t sig[64], const uint8_t pk[32],
+							 const uint8_t msg[32], uint8_t out[32]) {
+	uint8_t preimage[kBip340ChallengePreimageSize];
+	bip340_challenge_preimage(sig, pk, msg, preimage);
+	SHA256 sha;
+	sha.Update(preimage, sizeof(preimage));
+	sha.DigestData(out);
+}
+
+}  // namespace
+
+int lua_bip340_compute_full_challenge_inputs(lua_State* L) {
+	const octet* sig_oct = o_arg(L, 1);
+	const octet* pk_oct = o_arg(L, 2);
+	const octet* msg_oct = o_arg(L, 3);
+	if (!sig_oct || !pk_oct || !msg_oct) {
+		if (sig_oct) o_free(L, sig_oct);
+		if (pk_oct) o_free(L, pk_oct);
+		if (msg_oct) o_free(L, msg_oct);
+		lerror(L, "bip340_compute_full_challenge_inputs: expected signature, public key, 32-byte message");
+		return 0;
+	}
+	if (o_len(sig_oct) != 64 || o_len(pk_oct) != 32 || o_len(msg_oct) != 32) {
+		o_free(L, sig_oct);
+		o_free(L, pk_oct);
+		o_free(L, msg_oct);
+		lerror(L, "bip340_compute_full_challenge_inputs: expected 64-byte signature, 32-byte public key, 32-byte message");
+		return 0;
+	}
+
+	const auto* sig = reinterpret_cast<const uint8_t*>(o_val(sig_oct));
+	const auto* pk = reinterpret_cast<const uint8_t*>(o_val(pk_oct));
+	const auto* msg = reinterpret_cast<const uint8_t*>(o_val(msg_oct));
+
+	Bip340Witness bip340(p256k1);
+	if (!bip340.compute(sig, pk, msg, o_len(msg_oct))) {
+		o_free(L, sig_oct);
+		o_free(L, pk_oct);
+		o_free(L, msg_oct);
+		lerror(L, "bip340_compute_full_challenge_inputs: witness computation failed");
+		return 0;
+	}
+
+	auto rx = p256k1_base.to_montgomery(Bip340Witness::nat_from_be_bytes(sig));
+	auto px = p256k1_base.to_montgomery(Bip340Witness::nat_from_be_bytes(pk));
+
+	std::vector<Fp256k1Base::Elt> values;
+	values.reserve(8192);
+	append_bip340_field(values, p256k1_base.one());
+	append_bip340_field(values, rx);
+	append_bip340_field(values, px);
+	const size_t npub = values.size();
+	append_bip340_field(values, bip340.e_);
+
+	uint8_t digest[32];
+	uint8_t preimage[kBip340ChallengePreimageSize];
+	bip340_challenge_preimage(sig, pk, msg, preimage);
+	bip340_challenge_digest(sig, pk, msg, digest);
+	append_bip340_digest_target(values, digest);
+
+	uint8_t nblocks = 0;
+	uint8_t padded[kBip340ChallengePaddedBytes];
+	FlatSHA256Witness::BlockWitness blocks[kBip340ChallengeBlocks];
+	FlatSHA256Witness::transform_and_witness_message(
+		sizeof(preimage), preimage, kBip340ChallengeBlocks, nblocks, padded,
+		blocks);
+	if (nblocks != kBip340ChallengeBlocks) {
+		o_free(L, sig_oct);
+		o_free(L, pk_oct);
+		o_free(L, msg_oct);
+		lerror(L, "bip340_compute_full_challenge_inputs: SHA witness block count mismatch");
+		return 0;
+	}
+	for (size_t i = 64; i < sizeof(padded); ++i) {
+		append_bip340_byte_bits(values, padded[i]);
+	}
+	for (const auto& block : blocks) {
+		append_bip340_sha_block(values, block);
+	}
+	append_bip340_verify_witness(values, bip340);
+
+	o_free(L, sig_oct);
+	o_free(L, pk_oct);
+	o_free(L, msg_oct);
+
+	LuaWitnessInputsBip340 prover(values.size(), npub);
+	LuaWitnessInputsBip340 verifier(values.size(), npub);
+	prover.field = &p256k1_base;
+	verifier.field = &p256k1_base;
+	for (size_t i = 0; i < values.size(); ++i) {
+		prover.all->v_[i] = values[i];
+		verifier.all->v_[i] = i < npub ? values[i] : p256k1_base.zero();
+	}
+	for (size_t i = 0; i < npub; ++i) {
+		prover.pub->v_[i] = values[i];
+		verifier.pub->v_[i] = values[i];
 	}
 
 	sol::stack::push(L, std::move(prover));
@@ -1310,6 +1519,8 @@ int luaopen_zkcore(lua_State* L) {
 	zkcore_table["bip340_circuit_native"] = &proofs::lua::lua_bip340_circuit;
 	zkcore_table["bip340_compute_inputs_native"] =
 		&proofs::lua::lua_bip340_compute_inputs;
+	zkcore_table["bip340_compute_full_challenge_inputs_native"] =
+		&proofs::lua::lua_bip340_compute_full_challenge_inputs;
 
 	// Register witness bindings in the ZKCORE table
 	// Push the zkcore_table to the stack first

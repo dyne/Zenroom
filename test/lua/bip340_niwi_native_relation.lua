@@ -100,6 +100,49 @@ end
 
 local niwi = require'crypto_niwi'
 
+do
+  local vec = valid_vectors[1]
+  local sig = OCTET.from_hex(vec.sig)
+  local pk = OCTET.from_hex(vec.pk)
+  local msg = from_hex_or_empty(vec.msg)
+  local full = zkcc.witness.bip340_compute_full_challenge_inputs(sig, pk, msg)
+  assert(#full.public_inputs:public_octet() == 96,
+         'full BIP340 public input layout must omit public e')
+  assert(#full.inputs:octet() > #first_built.inputs:octet(),
+         'full BIP340 witness must include challenge SHA material')
+
+  local proof, gamma = niwi.prove_bip340_relation_with_observation_test{
+    circuit = O.from_string('niwi/zkcc-bip340/v1'),
+    inputs = full.inputs:octet(),
+    public_inputs = full.public_inputs:public_octet(),
+  }
+  assert(type(proof) == 'zenroom.octet' and #proof > 0,
+         'full BIP340 proof must be non-empty')
+  assert(type(gamma) == 'zenroom.octet' and #gamma > 0,
+         'full BIP340 gamma must be non-empty')
+  assert(niwi.verify_bip340_relation{
+    circuit = O.from_string('niwi/zkcc-bip340/v1'),
+    proof = proof,
+    public_inputs = full.public_inputs:public_octet(),
+  }, 'full BIP340 NIWI proof must verify')
+
+  local extracted = niwi.extract_from_gamma_test{
+    circuit = circuit,
+    proof = proof,
+    gamma = gamma,
+    public_inputs = full.public_inputs,
+  }
+  assert(extracted:string() == full.inputs:octet():string(),
+         'full BIP340 extraction returned wrong witness')
+
+  local bad_public = flip_last_nibble(full.public_inputs:public_octet())
+  assert(niwi.verify_bip340_relation{
+    circuit = O.from_string('niwi/zkcc-bip340/v1'),
+    proof = proof,
+    public_inputs = bad_public,
+  } == false, 'full BIP340 proof accepted changed public input')
+end
+
 for _, vec in ipairs(built_vectors) do
   local built = vec.built
 

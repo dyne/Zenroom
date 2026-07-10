@@ -532,6 +532,7 @@ int lua_prove_circuit_bip340(lua_State* L);
 int lua_verify_circuit_bip340(lua_State* L);
 int lua_bip340_circuit(lua_State* L);
 int lua_bip340_compute_inputs(lua_State* L);
+int lua_bip340_compute_full_challenge_inputs(lua_State* L);
 
 // ============================================================================
 // High-Level Boolean Logic API
