@@ -5,6 +5,7 @@
  */
 
 #include "relations/rpbsch_relation.h"
+#include "relations/rpbsch_relation_internal.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -16,46 +17,7 @@
 #include "relations/bip340_relation.h"
 #include "util/crypto.h"
 
-namespace {
-
-constexpr size_t kStatementSize = 258;
-constexpr size_t kScalarSize = 32;
-constexpr size_t kCommitmentSize = 33;
-constexpr size_t kSignatureSize = 64;
-constexpr size_t kBip340PublicSize = 4 * 32;
-constexpr size_t kBip340PrivateSize = 2305 * 32;
-
-constexpr uint32_t kBranchHonest = 1;
-constexpr uint32_t kBranchTrapdoor = 2;
-
-struct Statement {
-    const uint8_t *X;
-    const uint8_t *X_prime;
-    const uint8_t *R;
-    const uint8_t *c;
-    const uint8_t *C;
-    const uint8_t *phi;
-    const uint8_t *ck;
-    const uint8_t *S;
-};
-
-struct Witness {
-    uint32_t branch;
-    const uint8_t *m;
-    const uint8_t *alpha;
-    const uint8_t *beta;
-    const uint8_t *rho_c;
-    const uint8_t *rho_s;
-    const uint8_t *nu_s;
-    const uint8_t *nu_u;
-    const uint8_t *nu_u_prime;
-    const uint8_t *sigma;
-    const uint8_t *sigma0;
-    const uint8_t *sigma1;
-    uint32_t check_count;
-    const uint8_t *check_pub[2];
-    const uint8_t *check_priv[2];
-};
+namespace niwi::rpbsch {
 
 uint32_t read_u32_be(const uint8_t *p) {
     return ((uint32_t)p[0] << 24) |
@@ -237,48 +199,49 @@ bool validate_commitments(const Statement& st, const Witness& w) {
     return true;
 }
 
-}  // namespace
-
-extern "C" int niwi_rpbsch_relation_validate(
-    const uint8_t *public_inputs, size_t pub_len,
-    const uint8_t *private_inputs, size_t priv_len) {
-    Statement st;
-    Witness w;
-    if (!parse_statement(public_inputs, pub_len, &st)) return -1;
-    if (!parse_witness(private_inputs, priv_len, &w)) return -1;
-    if (!validate_commitments(st, w)) return -1;
-
+bool validate_selected_branch(const Statement& st, const Witness& w) {
     if (w.branch == kBranchHonest) {
-        if (w.check_count != 2) return -1;
-        if (memcmp(w.sigma, st.R, 32) != 0) return -1;
+        if (w.check_count != 2) return false;
+        if (memcmp(w.sigma, st.R, 32) != 0) return false;
         uint8_t expected_c[32];
         uint8_t expected_x[32];
         if (!field_bytes_from_be(st.c, expected_c) ||
             !field_bytes_from_be(st.X, expected_x))
-            return -1;
+            return false;
         if (memcmp(w.check_pub[0] + 64, expected_x, 32) != 0 ||
             memcmp(w.check_pub[0] + 96, expected_c, 32) != 0)
-            return -1;
-        if (!validate_bip340_check(w.check_pub[0], w.check_priv[0],
-                                   w.sigma, st.X, w.m, 32))
-            return -1;
-        return 0;
+            return false;
+        return validate_bip340_check(w.check_pub[0], w.check_priv[0],
+                                     w.sigma, st.X, w.m, 32);
     }
 
     if (w.branch == kBranchTrapdoor) {
-        if (w.check_count != 2) return -1;
+        if (w.check_count != 2) return false;
         uint8_t msg0[32];
         uint8_t msg1[32];
         tuple_message(w.nu_s, w.nu_u, msg0);
         tuple_message(w.nu_s, w.nu_u_prime, msg1);
-        if (!validate_bip340_check(w.check_pub[0], w.check_priv[0],
-                                   w.sigma0, st.X_prime, msg0, 32))
-            return -1;
-        if (!validate_bip340_check(w.check_pub[1], w.check_priv[1],
-                                   w.sigma1, st.X_prime, msg1, 32))
-            return -1;
-        return 0;
+        return validate_bip340_check(w.check_pub[0], w.check_priv[0],
+                                     w.sigma0, st.X_prime, msg0, 32) &&
+               validate_bip340_check(w.check_pub[1], w.check_priv[1],
+                                     w.sigma1, st.X_prime, msg1, 32);
     }
 
-    return -1;
+    return false;
+}
+
+}  // namespace niwi::rpbsch
+
+extern "C" int niwi_rpbsch_relation_validate(
+    const uint8_t *public_inputs, size_t pub_len,
+    const uint8_t *private_inputs, size_t priv_len) {
+    niwi::rpbsch::Statement st;
+    niwi::rpbsch::Witness w;
+    if (!niwi::rpbsch::parse_statement(public_inputs, pub_len, &st))
+        return -1;
+    if (!niwi::rpbsch::parse_witness(private_inputs, priv_len, &w))
+        return -1;
+    if (!niwi::rpbsch::validate_commitments(st, w))
+        return -1;
+    return niwi::rpbsch::validate_selected_branch(st, w) ? 0 : -1;
 }
