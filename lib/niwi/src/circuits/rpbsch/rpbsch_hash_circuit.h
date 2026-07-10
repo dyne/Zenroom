@@ -23,6 +23,25 @@ namespace niwi::rpbsch {
 
 using RpbschHashField = proofs::Fp256k1Base;
 
+/* RPBSch LZK v1 circuit contract.
+ *
+ * Public statement bytes are exactly:
+ *   X || X_prime || R || c || C || phi || ck || S
+ * with field sizes:
+ *   32 || 32      || 32 || 32 || 33 || 32  || 32 || 33.
+ *
+ * Private witness bytes must follow the native RPBSch relation profile:
+ *   selector,
+ *   m, alpha, beta, rho_c, rho_s, nu_s, nu_u, nu_u_prime,
+ *   sigma, sigma0, sigma1,
+ *   C/S hash witnesses,
+ *   C/S Pedersen opening witnesses,
+ *   fixed-size full BIP340 branch-check witnesses.
+ *
+ * This v1 profile uses fixed 32-byte messages and the current binding
+ * Pedersen Cmt profile. It is the circuit contract for building the future
+ * checked RPBSch LZK0 body, not a paper-exact RPBSch claim by itself.
+ */
 namespace detail {
 
 template <size_t MaxBlocks>

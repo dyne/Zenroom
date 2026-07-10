@@ -19,6 +19,10 @@ local function flip_last_nibble(octet)
   return OCTET.from_hex(prefix .. string.format("%x", (last ~ 1) & 0xf))
 end
 
+local function contains_tag(octet, tag)
+  return octet:string():find(tag, 1, true) ~= nil
+end
+
 print('=== RPBSch BIP340 NIWI fixture ===')
 
 local circuit = zkcc.bip340_circuit()
@@ -66,6 +70,11 @@ local native_extracted1 =
   rpbsch.extract_branch_relation(native_proof1, native_gamma1, fixture.statement)
 assert(native_extracted1:string() == native_witness1:string(),
        'native RPBSch branch 1 extracted witness mismatch')
+assert(contains_tag(native_proof1, 'LIG0'),
+       'native RPBSch proof must carry current native LIG0 scaffold')
+-- This must flip only when the real checked RPBSch Longfellow body lands.
+assert(not contains_tag(native_proof1, 'LZK0'),
+       'native RPBSch must not claim a checked LZK0 body yet')
 
 local native_witness2 = rpbsch.branch_relation_witness(
   circuit, fixture, rpbsch.BRANCH_TRAPDOOR)
@@ -78,6 +87,11 @@ local native_extracted2 =
   rpbsch.extract_branch_relation(native_proof2, native_gamma2, fixture.statement)
 assert(native_extracted2:string() == native_witness2:string(),
        'native RPBSch branch 2 extracted witness mismatch')
+assert(contains_tag(native_proof2, 'LIG0'),
+       'native RPBSch proof must carry current native LIG0 scaffold')
+-- This must flip only when the real checked RPBSch Longfellow body lands.
+assert(not contains_tag(native_proof2, 'LZK0'),
+       'native RPBSch must not claim a checked LZK0 body yet')
 assert(#native_witness1:str() == #native_witness2:str(),
        'native RPBSch witness size leaks selector')
 assert(#native_proof1:str() == #native_proof2:str(),
