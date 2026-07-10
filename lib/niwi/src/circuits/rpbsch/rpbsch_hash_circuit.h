@@ -8,7 +8,10 @@
 #define NIWI_CIRCUITS_RPBSCH_HASH_CIRCUIT_H
 
 #include <memory>
+#include <string.h>
 
+#include "circuits/bip340/bip340_gadgets.h"
+#include "circuits/bip340/bip340_verify.h"
 #include "circuits/compiler/compiler.h"
 #include "circuits/logic/bit_plucker.h"
 #include "circuits/logic/compiler_backend.h"
@@ -55,6 +58,13 @@ build_sha256_digest_circuit(void) {
     return q.mkcircuit(1);
 }
 
+inline void bip340_tag_hash(uint8_t out[32]) {
+    static const char tag[] = "BIP0340/challenge";
+    proofs::SHA256 sha;
+    sha.Update(reinterpret_cast<const uint8_t *>(tag), strlen(tag));
+    sha.DigestData(out);
+}
+
 }  // namespace detail
 
 /** Build the SHA-256 relation for an RPBSch tuple-message preimage. */
@@ -79,6 +89,73 @@ build_s_message_sha_circuit(void) {
 inline std::unique_ptr<proofs::Circuit<RpbschHashField>>
 build_statement_phi_sha_circuit(void) {
     return detail::build_sha256_digest_circuit<4>();
+}
+
+/**
+ * Build the fixed-message BIP340 branch-check relation used by RPBSch.
+ *
+ * Public inputs are one, R.x, and P.x. Private inputs then provide the
+ * challenge scalar, SHA-256 challenge digest/preimage witness, and the
+ * Longfellow BIP340 verification witness.
+ */
+inline std::unique_ptr<proofs::Circuit<RpbschHashField>>
+build_bip340_full_challenge_circuit(void) {
+    using Field = RpbschHashField;
+    using Backend = proofs::CompilerBackend<Field>;
+    using Logic = proofs::Logic<Field, Backend>;
+    using BitPlucker = proofs::BitPlucker<Logic, 4>;
+    using FlatSha = proofs::FlatSHA256Circuit<Logic, BitPlucker>;
+    using Bip340Gadgets = proofs::Bip340Gadgets<Logic, Field, proofs::P256k1>;
+    using Bip340Verify = proofs::Bip340Verify<Logic, Field, proofs::P256k1>;
+    constexpr size_t kBlocks = 3;
+    constexpr size_t kPaddedBytes = kBlocks * 64;
+
+    proofs::QuadCircuit<Field> q(proofs::p256k1_base);
+    const Backend backend(&q);
+    const Logic logic(&backend, proofs::p256k1_base);
+    const FlatSha sha(logic);
+    const Bip340Gadgets gadgets(logic, proofs::p256k1);
+    const Bip340Verify verifier(logic, proofs::p256k1);
+
+    auto rx = logic.eltw_input();
+    auto px = logic.eltw_input();
+    q.private_input();
+
+    auto e = logic.eltw_input();
+    typename Logic::v256 digest = logic.template vinput<256>();
+    typename Logic::v8 preimage[kPaddedBytes];
+    for (size_t i = 0; i < kPaddedBytes; ++i) {
+        preimage[i] = logic.template vinput<8>();
+    }
+    typename FlatSha::BlockWitness sha_blocks[kBlocks];
+    for (size_t i = 0; i < kBlocks; ++i) {
+        sha_blocks[i].input(logic);
+    }
+    typename Bip340Verify::Witness witness;
+    witness.input(logic);
+
+    uint8_t tag_hash[32];
+    detail::bip340_tag_hash(tag_hash);
+    for (size_t i = 0; i < 32; ++i) {
+        logic.vassert_eq(preimage[i], tag_hash[i]);
+        logic.vassert_eq(preimage[32 + i], tag_hash[i]);
+    }
+
+    typename Logic::v256 rx_bits;
+    typename Logic::v256 px_bits;
+    for (size_t i = 0; i < proofs::P256k1::kBits; ++i) {
+        rx_bits[i] = preimage[64 + 31 - i / 8][i % 8];
+        px_bits[i] = preimage[96 + 31 - i / 8][i % 8];
+    }
+    gadgets.assert_field_from_bits_lsb(rx_bits, rx);
+    gadgets.assert_field_from_bits_lsb(px_bits, px);
+
+    typename Logic::v8 blocks;
+    logic.bits(8, blocks.data(), kBlocks);
+    sha.assert_message_hash(kBlocks, blocks, preimage, digest, sha_blocks);
+    gadgets.assert_challenge_scalar_from_digest(digest, e);
+    verifier.assert_verify(rx, px, e, witness);
+    return q.mkcircuit(1);
 }
 
 }  // namespace niwi::rpbsch
