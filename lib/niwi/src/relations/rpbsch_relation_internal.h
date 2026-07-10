@@ -23,6 +23,8 @@ constexpr size_t kBip340FullPrivateSize = 8001 * 32;
 constexpr size_t kBip340ChallengePreimageSize = 160;
 constexpr size_t kTupleMessagePreimageSize =
     sizeof("Zenroom/RPBSch/tuple-message/v1") - 1 + 64;
+constexpr size_t kStatementPhiPreimageSize =
+    sizeof("Zenroom/RPBSch/phi/v1") - 1 + 6 * 32;
 
 constexpr uint32_t kBranchHonest = 1;
 constexpr uint32_t kBranchTrapdoor = 2;
@@ -76,6 +78,11 @@ void tuple_message(const uint8_t *nu_s, const uint8_t *nu_u,
 
 void build_tuple_message_preimage(const uint8_t *nu_s, const uint8_t *nu_u,
                                   uint8_t out[kTupleMessagePreimageSize]);
+
+void build_statement_phi_preimage(
+    const uint8_t *m, const uint8_t *alpha, const uint8_t *beta,
+    const uint8_t *nu_s, const uint8_t *nu_u, const uint8_t *nu_u_prime,
+    uint8_t out[kStatementPhiPreimageSize]);
 
 void statement_phi(const Witness& w, uint8_t out[32]);
 

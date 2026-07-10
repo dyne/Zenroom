@@ -70,12 +70,46 @@ void test_tuple_message_preimage_matches_relation_hash(void) {
     std::printf("  PASS test_tuple_message_preimage_matches_relation_hash\n");
 }
 
+void test_statement_phi_preimage_matches_relation_hash(void) {
+    uint8_t m[32];
+    uint8_t alpha[32];
+    uint8_t beta[32];
+    uint8_t nu_s[32];
+    uint8_t nu_u[32];
+    uint8_t nu_u_prime[32];
+    uint8_t preimage[niwi::rpbsch::kStatementPhiPreimageSize];
+    uint8_t helper[32];
+    uint8_t reference[32];
+    fill_seq(m, sizeof(m), 7);
+    fill_seq(alpha, sizeof(alpha), 40);
+    fill_seq(beta, sizeof(beta), 73);
+    fill_seq(nu_s, sizeof(nu_s), 106);
+    fill_seq(nu_u, sizeof(nu_u), 139);
+    fill_seq(nu_u_prime, sizeof(nu_u_prime), 172);
+
+    niwi::rpbsch::Witness w{};
+    w.m = m;
+    w.alpha = alpha;
+    w.beta = beta;
+    w.nu_s = nu_s;
+    w.nu_u = nu_u;
+    w.nu_u_prime = nu_u_prime;
+
+    niwi::rpbsch::build_statement_phi_preimage(
+        m, alpha, beta, nu_s, nu_u, nu_u_prime, preimage);
+    sha256_raw(preimage, sizeof(preimage), helper);
+    niwi::rpbsch::statement_phi(w, reference);
+    assert(memcmp(helper, reference, sizeof(helper)) == 0);
+    std::printf("  PASS test_statement_phi_preimage_matches_relation_hash\n");
+}
+
 }  // namespace
 
 int main(void) {
     std::printf("lib/niwi RPBSch adapter tests:\n");
     test_bip340_challenge_preimage_layout();
     test_tuple_message_preimage_matches_relation_hash();
+    test_statement_phi_preimage_matches_relation_hash();
     std::printf("All RPBSch adapter tests passed.\n");
     return 0;
 }

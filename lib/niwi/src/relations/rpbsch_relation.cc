@@ -78,17 +78,25 @@ void build_tuple_message_preimage(const uint8_t *nu_s, const uint8_t *nu_u,
     memcpy(out + sizeof(tag) - 1 + 32, nu_u, 32);
 }
 
-void statement_phi(const Witness& w, uint8_t out[32]) {
+void build_statement_phi_preimage(
+    const uint8_t *m, const uint8_t *alpha, const uint8_t *beta,
+    const uint8_t *nu_s, const uint8_t *nu_u, const uint8_t *nu_u_prime,
+    uint8_t out[kStatementPhiPreimageSize]) {
     static const char tag[] = "Zenroom/RPBSch/phi/v1";
-    uint8_t buf[sizeof(tag) - 1 + 32 * 6];
     size_t off = 0;
-    memcpy(buf + off, tag, sizeof(tag) - 1); off += sizeof(tag) - 1;
-    memcpy(buf + off, w.m, 32); off += 32;
-    memcpy(buf + off, w.alpha, 32); off += 32;
-    memcpy(buf + off, w.beta, 32); off += 32;
-    memcpy(buf + off, w.nu_s, 32); off += 32;
-    memcpy(buf + off, w.nu_u, 32); off += 32;
-    memcpy(buf + off, w.nu_u_prime, 32);
+    memcpy(out + off, tag, sizeof(tag) - 1); off += sizeof(tag) - 1;
+    memcpy(out + off, m, 32); off += 32;
+    memcpy(out + off, alpha, 32); off += 32;
+    memcpy(out + off, beta, 32); off += 32;
+    memcpy(out + off, nu_s, 32); off += 32;
+    memcpy(out + off, nu_u, 32); off += 32;
+    memcpy(out + off, nu_u_prime, 32);
+}
+
+void statement_phi(const Witness& w, uint8_t out[32]) {
+    uint8_t buf[kStatementPhiPreimageSize];
+    build_statement_phi_preimage(w.m, w.alpha, w.beta, w.nu_s, w.nu_u,
+                                 w.nu_u_prime, buf);
     sha256_raw(buf, sizeof(buf), out);
 }
 

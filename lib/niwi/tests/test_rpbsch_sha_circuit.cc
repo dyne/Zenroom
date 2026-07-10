@@ -40,6 +40,7 @@ using Bip340Verify = proofs::Bip340Verify<Logic, Field, proofs::P256k1>;
 constexpr size_t kMaxBlocks = 3;
 constexpr size_t kPaddedBytes = kMaxBlocks * 64;
 constexpr size_t kTupleMaxBlocks = 2;
+constexpr size_t kPhiMaxBlocks = 4;
 
 void fill_byte(proofs::DenseFiller<Field>& filler, uint8_t byte) {
     filler.push_back(byte, 8, proofs::p256k1_base);
@@ -351,6 +352,61 @@ void test_tuple_message_sha_circuit(void) {
     std::printf("  PASS test_tuple_message_sha_circuit\n");
 }
 
+void test_statement_phi_sha_circuit(void) {
+    auto circuit = build_sha256_circuit<kPhiMaxBlocks>();
+    assert(circuit != nullptr);
+    assert(circuit->npub_in == 257);
+
+    uint8_t m[32];
+    uint8_t alpha[32];
+    uint8_t beta[32];
+    uint8_t nu_s[32];
+    uint8_t nu_u[32];
+    uint8_t nu_u_prime[32];
+    for (size_t i = 0; i < sizeof(m); ++i) {
+        m[i] = static_cast<uint8_t>(0x10u + i);
+        alpha[i] = static_cast<uint8_t>(0x30u + i * 3u);
+        beta[i] = static_cast<uint8_t>(0x50u + i * 5u);
+        nu_s[i] = static_cast<uint8_t>(0x70u + i * 7u);
+        nu_u[i] = static_cast<uint8_t>(0x90u + i * 11u);
+        nu_u_prime[i] = static_cast<uint8_t>(0xb0u + i * 13u);
+    }
+
+    niwi::rpbsch::Witness w{};
+    w.m = m;
+    w.alpha = alpha;
+    w.beta = beta;
+    w.nu_s = nu_s;
+    w.nu_u = nu_u;
+    w.nu_u_prime = nu_u_prime;
+
+    uint8_t digest[32];
+    niwi::rpbsch::statement_phi(w, digest);
+    uint8_t preimage[niwi::rpbsch::kStatementPhiPreimageSize];
+    niwi::rpbsch::build_statement_phi_preimage(m, alpha, beta, nu_s, nu_u,
+                                               nu_u_prime, preimage);
+
+    proofs::Dense<Field> witness(1, circuit->ninputs);
+    proofs::Dense<Field> pub(1, circuit->npub_in);
+    build_inputs<kPhiMaxBlocks>(digest, preimage, sizeof(preimage),
+                                &witness, &pub);
+    for (size_t i = 0; i < pub.n1_; ++i) {
+        assert(witness.v_[i] == pub.v_[i]);
+    }
+    assert(evaluates(*circuit, witness));
+
+    uint8_t bad_preimage[sizeof(preimage)];
+    memcpy(bad_preimage, preimage, sizeof(preimage));
+    bad_preimage[sizeof(bad_preimage) - 1] ^= 0x01u;
+    proofs::Dense<Field> bad_witness(1, circuit->ninputs);
+    proofs::Dense<Field> bad_pub(1, circuit->npub_in);
+    build_inputs<kPhiMaxBlocks>(digest, bad_preimage, sizeof(bad_preimage),
+                                &bad_witness, &bad_pub);
+    assert(!evaluates(*circuit, bad_witness));
+
+    std::printf("  PASS test_statement_phi_sha_circuit\n");
+}
+
 void test_bip340_challenge_reduction_circuit(void) {
     auto circuit = build_challenge_reduction_circuit();
     assert(circuit != nullptr);
@@ -467,6 +523,7 @@ int main(void) {
     std::printf("lib/niwi RPBSch SHA circuit tests:\n");
     test_bip340_challenge_sha_circuit();
     test_tuple_message_sha_circuit();
+    test_statement_phi_sha_circuit();
     test_bip340_challenge_reduction_circuit();
     test_bip340_full_challenge_circuit();
     std::printf("All RPBSch SHA circuit tests passed.\n");
