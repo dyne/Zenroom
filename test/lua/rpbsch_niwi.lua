@@ -33,9 +33,13 @@ assert(pbsch.verify_s(fixture.S, fixture.sigma0, fixture.sigma1, fixture.nu_u,
 
 local branch1 = rpbsch.prove_branch(circuit, fixture, rpbsch.BRANCH_HONEST)
 assert(branch1 and #branch1 == 1, 'branch 1 must produce one NIWI BIP340 proof')
+assert(#branch1[1].public_inputs == 96,
+       'RPBSch branch 1 must use full challenge-bound BIP340 public inputs')
 
 local branch2 = rpbsch.prove_branch(circuit, fixture, rpbsch.BRANCH_TRAPDOOR)
 assert(branch2 and #branch2 == 2, 'branch 2 must produce two NIWI BIP340 proofs')
+assert(#branch2[1].public_inputs == 96 and #branch2[2].public_inputs == 96,
+       'RPBSch branch 2 must use full challenge-bound BIP340 public inputs')
 
 for _, record in ipairs(branch1) do
   assert(rpbsch.verify_record(circuit, fixture, record), record.label .. ' rejected')

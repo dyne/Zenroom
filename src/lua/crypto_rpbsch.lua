@@ -77,6 +77,9 @@ local function build_bip340_inputs(circuit, sig, pk, msg)
     if not schnorr.verify(pk, msg, sig) then
         return nil, "invalid BIP-340 signature"
     end
+    if zkcc.witness.bip340_compute_full_challenge_inputs and #msg == 32 then
+        return zkcc.witness.bip340_compute_full_challenge_inputs(sig, pk, msg)
+    end
     return zkcc.witness.bip340_compute_inputs(circuit, sig, pk, msg)
 end
 

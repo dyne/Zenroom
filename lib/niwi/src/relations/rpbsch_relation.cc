@@ -129,13 +129,19 @@ bool parse_witness(const uint8_t *p, size_t len, Witness *w) {
     for (uint32_t i = 0; i < w->check_count; ++i) {
         if (len - off < 4) return false;
         uint32_t pub_len = read_u32_be(p + off); off += 4;
-        if (pub_len != kBip340PublicSize || len - off < pub_len + 4)
+        if ((pub_len != kBip340PublicSize &&
+             pub_len != kBip340FullPublicSize) ||
+            len - off < pub_len + 4)
             return false;
         w->check_pub[i] = p + off; off += pub_len;
+        w->check_pub_len[i] = pub_len;
         uint32_t priv_len = read_u32_be(p + off); off += 4;
-        if (priv_len != kBip340PrivateSize || len - off < priv_len)
+        if ((priv_len != kBip340PrivateSize &&
+             priv_len != kBip340FullPrivateSize) ||
+            len - off < priv_len)
             return false;
         w->check_priv[i] = p + off; off += priv_len;
+        w->check_priv_len[i] = priv_len;
     }
     return off == len;
 }
@@ -199,15 +205,22 @@ void compute_bip340_challenge(const uint8_t sig[64], const uint8_t pk[32],
     sha256_raw(preimage, sizeof(preimage), out);
 }
 
-bool validate_bip340_check(const uint8_t *pub, const uint8_t *priv,
+bool validate_bip340_check(const uint8_t *pub, size_t pub_len,
+                           const uint8_t *priv, size_t priv_len,
                            const uint8_t sig[64], const uint8_t pk[32],
                            const uint8_t *msg, size_t msg_len) {
     uint8_t expected[kBip340PublicSize];
     if (!expected_bip340_public(sig, pk, msg, msg_len, expected))
         return false;
-    if (memcmp(pub, expected, sizeof(expected)) != 0) return false;
-    return niwi_bip340_relation_validate(pub, kBip340PublicSize,
-                                         priv, kBip340PrivateSize) == 0;
+    if (pub_len == kBip340PublicSize &&
+        memcmp(pub, expected, kBip340PublicSize) != 0)
+        return false;
+    if (pub_len == kBip340FullPublicSize &&
+        memcmp(pub, expected, kBip340FullPublicSize) != 0)
+        return false;
+    if (pub_len != kBip340PublicSize && pub_len != kBip340FullPublicSize)
+        return false;
+    return niwi_bip340_relation_validate(pub, pub_len, priv, priv_len) == 0;
 }
 
 bool validate_commitments(const Statement& st, const Witness& w) {
@@ -238,10 +251,14 @@ bool validate_selected_branch(const Statement& st, const Witness& w) {
         if (!field_bytes_from_be(st.c, expected_c) ||
             !field_bytes_from_be(st.X, expected_x))
             return false;
-        if (memcmp(w.check_pub[0] + 64, expected_x, 32) != 0 ||
-            memcmp(w.check_pub[0] + 96, expected_c, 32) != 0)
+        uint8_t expected_pub[kBip340PublicSize];
+        if (!expected_bip340_public(w.sigma, st.X, w.m, 32, expected_pub))
             return false;
-        return validate_bip340_check(w.check_pub[0], w.check_priv[0],
+        if (memcmp(expected_pub + 64, expected_x, 32) != 0 ||
+            memcmp(expected_pub + 96, expected_c, 32) != 0)
+            return false;
+        return validate_bip340_check(w.check_pub[0], w.check_pub_len[0],
+                                     w.check_priv[0], w.check_priv_len[0],
                                      w.sigma, st.X, w.m, 32);
     }
 
@@ -251,9 +268,11 @@ bool validate_selected_branch(const Statement& st, const Witness& w) {
         uint8_t msg1[32];
         tuple_message(w.nu_s, w.nu_u, msg0);
         tuple_message(w.nu_s, w.nu_u_prime, msg1);
-        return validate_bip340_check(w.check_pub[0], w.check_priv[0],
+        return validate_bip340_check(w.check_pub[0], w.check_pub_len[0],
+                                     w.check_priv[0], w.check_priv_len[0],
                                      w.sigma0, st.X_prime, msg0, 32) &&
-               validate_bip340_check(w.check_pub[1], w.check_priv[1],
+               validate_bip340_check(w.check_pub[1], w.check_pub_len[1],
+                                     w.check_priv[1], w.check_priv_len[1],
                                      w.sigma1, st.X_prime, msg1, 32);
     }
 

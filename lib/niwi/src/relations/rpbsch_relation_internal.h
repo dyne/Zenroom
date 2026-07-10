@@ -18,6 +18,8 @@ constexpr size_t kCommitmentSize = 33;
 constexpr size_t kSignatureSize = 64;
 constexpr size_t kBip340PublicSize = 4 * 32;
 constexpr size_t kBip340PrivateSize = 2305 * 32;
+constexpr size_t kBip340FullPublicSize = 3 * 32;
+constexpr size_t kBip340FullPrivateSize = 8001 * 32;
 constexpr size_t kBip340ChallengePreimageSize = 160;
 constexpr size_t kTupleMessagePreimageSize =
     sizeof("Zenroom/RPBSch/tuple-message/v1") - 1 + 64;
@@ -52,6 +54,8 @@ struct Witness {
     uint32_t check_count;
     const uint8_t *check_pub[2];
     const uint8_t *check_priv[2];
+    size_t check_pub_len[2];
+    size_t check_priv_len[2];
 };
 
 bool parse_statement(const uint8_t *public_inputs, size_t pub_len,
@@ -86,7 +90,8 @@ bool expected_bip340_public(const uint8_t sig[64], const uint8_t pk[32],
                             const uint8_t *msg, size_t msg_len,
                             uint8_t out[kBip340PublicSize]);
 
-bool validate_bip340_check(const uint8_t *pub, const uint8_t *priv,
+bool validate_bip340_check(const uint8_t *pub, size_t pub_len,
+                           const uint8_t *priv, size_t priv_len,
                            const uint8_t sig[64], const uint8_t pk[32],
                            const uint8_t *msg, size_t msg_len);
 
