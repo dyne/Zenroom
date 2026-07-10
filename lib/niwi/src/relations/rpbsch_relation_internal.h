@@ -18,6 +18,9 @@ constexpr size_t kCommitmentSize = 33;
 constexpr size_t kSignatureSize = 64;
 constexpr size_t kBip340PublicSize = 4 * 32;
 constexpr size_t kBip340PrivateSize = 2305 * 32;
+constexpr size_t kBip340ChallengePreimageSize = 160;
+constexpr size_t kTupleMessagePreimageSize =
+    sizeof("Zenroom/RPBSch/tuple-message/v1") - 1 + 64;
 
 constexpr uint32_t kBranchHonest = 1;
 constexpr uint32_t kBranchTrapdoor = 2;
@@ -67,7 +70,17 @@ void encode_s_msg(const uint8_t *sigma0, const uint8_t *sigma1,
 void tuple_message(const uint8_t *nu_s, const uint8_t *nu_u,
                    uint8_t out[32]);
 
+void build_tuple_message_preimage(const uint8_t *nu_s, const uint8_t *nu_u,
+                                  uint8_t out[kTupleMessagePreimageSize]);
+
 void statement_phi(const Witness& w, uint8_t out[32]);
+
+void build_bip340_challenge_preimage(
+    const uint8_t sig[64], const uint8_t pk[32],
+    const uint8_t msg[32], uint8_t out[kBip340ChallengePreimageSize]);
+
+void compute_bip340_challenge(const uint8_t sig[64], const uint8_t pk[32],
+                              const uint8_t msg[32], uint8_t out[32]);
 
 bool expected_bip340_public(const uint8_t sig[64], const uint8_t pk[32],
                             const uint8_t *msg, size_t msg_len,

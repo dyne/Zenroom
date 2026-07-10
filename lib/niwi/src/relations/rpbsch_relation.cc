@@ -65,12 +65,17 @@ void encode_s_msg(const uint8_t *sigma0, const uint8_t *sigma1,
 }
 
 void tuple_message(const uint8_t *nu_s, const uint8_t *nu_u, uint8_t out[32]) {
-    static const char tag[] = "Zenroom/RPBSch/tuple-message/v1";
-    uint8_t buf[sizeof(tag) - 1 + 64];
-    memcpy(buf, tag, sizeof(tag) - 1);
-    memcpy(buf + sizeof(tag) - 1, nu_s, 32);
-    memcpy(buf + sizeof(tag) - 1 + 32, nu_u, 32);
+    uint8_t buf[kTupleMessagePreimageSize];
+    build_tuple_message_preimage(nu_s, nu_u, buf);
     sha256_raw(buf, sizeof(buf), out);
+}
+
+void build_tuple_message_preimage(const uint8_t *nu_s, const uint8_t *nu_u,
+                                  uint8_t out[kTupleMessagePreimageSize]) {
+    static const char tag[] = "Zenroom/RPBSch/tuple-message/v1";
+    memcpy(out, tag, sizeof(tag) - 1);
+    memcpy(out + sizeof(tag) - 1, nu_s, 32);
+    memcpy(out + sizeof(tag) - 1 + 32, nu_u, 32);
 }
 
 void statement_phi(const Witness& w, uint8_t out[32]) {
@@ -154,6 +159,7 @@ void field_bytes_from_elt(const proofs::Fp256k1Base& field,
 bool expected_bip340_public(const uint8_t sig[64], const uint8_t pk[32],
                             const uint8_t *msg, size_t msg_len,
                             uint8_t out[kBip340PublicSize]) {
+    if (msg_len != 32) return false;
     proofs::Bip340Witness witness(proofs::p256k1);
     if (!witness.compute(sig, pk, msg, msg_len)) return false;
     uint8_t rx[32];
@@ -167,6 +173,30 @@ bool expected_bip340_public(const uint8_t sig[64], const uint8_t pk[32],
     field_bytes_from_elt(proofs::p256k1_base, witness.e_, e);
     memcpy(out + 96, e, 32);
     return true;
+}
+
+void build_bip340_challenge_preimage(
+    const uint8_t sig[64], const uint8_t pk[32],
+    const uint8_t msg[32], uint8_t out[kBip340ChallengePreimageSize]) {
+    static const char tag[] = "BIP0340/challenge";
+    uint8_t tag_hash[32];
+    proofs::SHA256 tag_sha;
+    tag_sha.Update(reinterpret_cast<const uint8_t *>(tag), strlen(tag));
+    tag_sha.DigestData(tag_hash);
+
+    size_t off = 0;
+    memcpy(out + off, tag_hash, 32); off += 32;
+    memcpy(out + off, tag_hash, 32); off += 32;
+    memcpy(out + off, sig, 32); off += 32;
+    memcpy(out + off, pk, 32); off += 32;
+    memcpy(out + off, msg, 32);
+}
+
+void compute_bip340_challenge(const uint8_t sig[64], const uint8_t pk[32],
+                              const uint8_t msg[32], uint8_t out[32]) {
+    uint8_t preimage[kBip340ChallengePreimageSize];
+    build_bip340_challenge_preimage(sig, pk, msg, preimage);
+    sha256_raw(preimage, sizeof(preimage), out);
 }
 
 bool validate_bip340_check(const uint8_t *pub, const uint8_t *priv,
