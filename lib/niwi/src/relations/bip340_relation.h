@@ -16,9 +16,21 @@ extern "C" {
 
 /* Validate dense zkcc BIP-340 public/private inputs.
  *
- * The layout is the native bip340_compute_inputs layout:
+ * Compatibility layout, used by existing zkcc.bip340_compute_inputs:
  *   public_inputs = one || rx || px || e
  *   private_inputs = public_inputs || Bip340Verify::Witness::input()
+ *
+ * Full-challenge layout, used by production paths that prove BIP-340's
+ * tagged challenge computation in-circuit:
+ *   public_inputs = one || rx || px
+ *   private_inputs =
+ *       public_inputs || e ||
+ *       BIP0340/challenge tagged-SHA256 digest bits ||
+ *       padded challenge-preimage suffix bits ||
+ *       FlatSHA256 block witnesses ||
+ *       Bip340Verify::Witness::input()
+ * The fixed BIP0340/challenge tag-hash prefix is a circuit constant.
+ *
  * with each field element encoded as a 32-byte little-endian canonical
  * secp256k1 base-field value.
  */
