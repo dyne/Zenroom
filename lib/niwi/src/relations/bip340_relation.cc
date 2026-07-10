@@ -28,6 +28,7 @@
 #include "circuits/logic/evaluation_backend.h"
 #include "circuits/logic/logic.h"
 #include "circuits/sha/flatsha256_circuit.h"
+#include "circuits/rpbsch/rpbsch_hash_circuit.h"
 #include "ec/p256k1.h"
 #include "random/secure_random_engine.h"
 #include "random/transcript.h"
@@ -50,11 +51,6 @@ using CompileBackend = proofs::CompilerBackend<Field>;
 using CompileLogic = proofs::Logic<Field, CompileBackend>;
 using CompileVerify =
     proofs::Bip340Verify<CompileLogic, Field, proofs::P256k1>;
-using CompileGadgets =
-    proofs::Bip340Gadgets<CompileLogic, Field, proofs::P256k1>;
-using CompileBitPlucker = proofs::BitPlucker<CompileLogic, 4>;
-using CompileFlatSha =
-    proofs::FlatSHA256Circuit<CompileLogic, CompileBitPlucker>;
 using Crt = proofs::CRT256<Field>;
 using ConvolutionFactory = proofs::CrtConvolutionFactory<Crt, Field>;
 using RSFactory = proofs::ReedSolomonFactory<Field, ConvolutionFactory>;
@@ -63,8 +59,6 @@ constexpr size_t kEltBytes = 32;
 constexpr size_t kPublicElts = 4;
 constexpr size_t kInputElts = 2305;
 constexpr size_t kFullPublicElts = 3;
-constexpr size_t kBip340ChallengeBlocks = 3;
-constexpr size_t kBip340ChallengePaddedBytes = kBip340ChallengeBlocks * 64;
 constexpr size_t kBits = proofs::P256k1::kBits;
 constexpr size_t kLigeroRate = 4;
 constexpr size_t kLigeroNreq = 128;
@@ -106,62 +100,6 @@ std::unique_ptr<proofs::Circuit<Field>> build_bip340_circuit(void) {
     return q.mkcircuit(1);
 }
 
-void bip340_tag_hash(uint8_t out[32]) {
-    static const char tag[] = "BIP0340/challenge";
-    proofs::SHA256 sha;
-    sha.Update(reinterpret_cast<const uint8_t *>(tag), strlen(tag));
-    sha.DigestData(out);
-}
-
-std::unique_ptr<proofs::Circuit<Field>> build_bip340_full_challenge_circuit(void) {
-    proofs::QuadCircuit<Field> q(proofs::p256k1_base);
-    const CompileBackend backend(&q);
-    const CompileLogic logic(&backend, proofs::p256k1_base);
-    const CompileFlatSha sha(logic);
-    const CompileGadgets gadgets(logic, proofs::p256k1);
-    const CompileVerify verifier(logic, proofs::p256k1);
-
-    auto rx = logic.eltw_input();
-    auto px = logic.eltw_input();
-    q.private_input();
-
-    auto e = logic.eltw_input();
-    CompileLogic::v256 digest = logic.template vinput<256>();
-    CompileLogic::v8 preimage[kBip340ChallengePaddedBytes];
-    uint8_t tag_hash[32];
-    bip340_tag_hash(tag_hash);
-    for (size_t i = 0; i < 32; ++i) {
-        preimage[i] = logic.template vbit<8>(tag_hash[i]);
-        preimage[32 + i] = logic.template vbit<8>(tag_hash[i]);
-    }
-    for (size_t i = 64; i < kBip340ChallengePaddedBytes; ++i) {
-        preimage[i] = logic.template vinput<8>();
-    }
-    CompileFlatSha::BlockWitness sha_blocks[kBip340ChallengeBlocks];
-    for (size_t i = 0; i < kBip340ChallengeBlocks; ++i) {
-        sha_blocks[i].input(logic);
-    }
-    CompileVerify::Witness witness;
-    witness.input(logic);
-
-    CompileLogic::v256 rx_bits;
-    CompileLogic::v256 px_bits;
-    for (size_t i = 0; i < kBits; ++i) {
-        rx_bits[i] = preimage[64 + 31 - i / 8][i % 8];
-        px_bits[i] = preimage[96 + 31 - i / 8][i % 8];
-    }
-    gadgets.assert_field_from_bits_lsb(rx_bits, rx);
-    gadgets.assert_field_from_bits_lsb(px_bits, px);
-
-    CompileLogic::v8 blocks;
-    logic.bits(8, blocks.data(), kBip340ChallengeBlocks);
-    sha.assert_message_hash(kBip340ChallengeBlocks, blocks, preimage, digest,
-                            sha_blocks);
-    gadgets.assert_challenge_scalar_from_digest(digest, e);
-    verifier.assert_verify(rx, px, e, witness);
-    return q.mkcircuit(1);
-}
-
 enum class Bip340Profile {
     kPublicChallenge,
     kFullChallenge,
@@ -174,7 +112,7 @@ bool build_ligero_context(Bip340Profile profile,
                           std::unique_ptr<RSFactory> *rsf) {
     if (!circuit || !block_enc || !factory || !rsf) return false;
     *circuit = profile == Bip340Profile::kFullChallenge
-        ? build_bip340_full_challenge_circuit()
+        ? niwi::rpbsch::build_bip340_full_challenge_circuit()
         : build_bip340_circuit();
     if (!*circuit)
         return false;
@@ -231,7 +169,7 @@ extern "C" int niwi_bip340_relation_validate(
     if (pub_len == kFullPublicElts * kEltBytes) {
         try {
             std::unique_ptr<proofs::Circuit<Field>> circuit =
-                build_bip340_full_challenge_circuit();
+                niwi::rpbsch::build_bip340_full_challenge_circuit();
             if (!circuit || priv_len != circuit->ninputs * kEltBytes)
                 return -1;
             if (memcmp(public_inputs, private_inputs, pub_len) != 0)

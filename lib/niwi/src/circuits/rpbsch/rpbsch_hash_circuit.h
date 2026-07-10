@@ -124,7 +124,13 @@ build_bip340_full_challenge_circuit(void) {
     auto e = logic.eltw_input();
     typename Logic::v256 digest = logic.template vinput<256>();
     typename Logic::v8 preimage[kPaddedBytes];
-    for (size_t i = 0; i < kPaddedBytes; ++i) {
+    uint8_t tag_hash[32];
+    detail::bip340_tag_hash(tag_hash);
+    for (size_t i = 0; i < 32; ++i) {
+        preimage[i] = logic.template vbit<8>(tag_hash[i]);
+        preimage[32 + i] = logic.template vbit<8>(tag_hash[i]);
+    }
+    for (size_t i = 64; i < kPaddedBytes; ++i) {
         preimage[i] = logic.template vinput<8>();
     }
     typename FlatSha::BlockWitness sha_blocks[kBlocks];
@@ -133,13 +139,6 @@ build_bip340_full_challenge_circuit(void) {
     }
     typename Bip340Verify::Witness witness;
     witness.input(logic);
-
-    uint8_t tag_hash[32];
-    detail::bip340_tag_hash(tag_hash);
-    for (size_t i = 0; i < 32; ++i) {
-        logic.vassert_eq(preimage[i], tag_hash[i]);
-        logic.vassert_eq(preimage[32 + i], tag_hash[i]);
-    }
 
     typename Logic::v256 rx_bits;
     typename Logic::v256 px_bits;

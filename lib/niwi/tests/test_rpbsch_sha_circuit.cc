@@ -208,7 +208,7 @@ void fill_bip340_challenge_sha_witness(proofs::DenseFiller<Field>& filler,
     proofs::FlatSHA256Witness::transform_and_witness_message(
         160, preimage, kMaxBlocks, nblocks, padded, blocks);
     assert(nblocks == kMaxBlocks);
-    for (size_t i = 0; i < sizeof(padded); ++i) {
+    for (size_t i = 64; i < sizeof(padded); ++i) {
         fill_byte(filler, padded[i]);
     }
     for (size_t i = 0; i < kMaxBlocks; ++i) {
