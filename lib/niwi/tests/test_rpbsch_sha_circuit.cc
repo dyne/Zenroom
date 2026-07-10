@@ -12,6 +12,7 @@
 
 #include "arrays/dense.h"
 #include "circuits/bip340/bip340_gadgets.h"
+#include "circuits/bip340/bip340_verify.h"
 #include "circuits/bip340/bip340_witness.h"
 #include "circuits/compiler/compiler.h"
 #include "circuits/logic/bit_plucker.h"
@@ -23,6 +24,7 @@
 #include "ec/p256k1.h"
 #include "relations/rpbsch_relation_internal.h"
 #include "sumcheck/prover_layers.h"
+#include "util/crypto.h"
 
 namespace {
 
@@ -33,8 +35,10 @@ using BitPlucker = proofs::BitPlucker<Logic, 4>;
 using FlatSha = proofs::FlatSHA256Circuit<Logic, BitPlucker>;
 using ShaBlockWitness = proofs::FlatSHA256Witness::BlockWitness;
 using Bip340Gadgets = proofs::Bip340Gadgets<Logic, Field, proofs::P256k1>;
+using Bip340Verify = proofs::Bip340Verify<Logic, Field, proofs::P256k1>;
 
 constexpr size_t kMaxBlocks = 3;
+constexpr size_t kPaddedBytes = kMaxBlocks * 64;
 constexpr size_t kTupleMaxBlocks = 2;
 
 void fill_byte(proofs::DenseFiller<Field>& filler, uint8_t byte) {
@@ -77,6 +81,13 @@ Field::Elt challenge_scalar_from_digest(const uint8_t digest[32]) {
         e.sub(order);
     }
     return proofs::p256k1_base.to_montgomery(e);
+}
+
+void bip340_tag_hash(uint8_t out[32]) {
+    static const char tag[] = "BIP0340/challenge";
+    proofs::SHA256 sha;
+    sha.Update(reinterpret_cast<const uint8_t *>(tag), strlen(tag));
+    sha.DigestData(out);
 }
 
 void fill_sha_block(proofs::DenseFiller<Field>& filler,
@@ -131,6 +142,55 @@ std::unique_ptr<proofs::Circuit<Field>> build_challenge_reduction_circuit(void) 
 
     Logic::v256 digest = logic.template vinput<256>();
     gadgets.assert_challenge_scalar_from_digest(digest, e);
+    return q.mkcircuit(1);
+}
+
+std::unique_ptr<proofs::Circuit<Field>> build_bip340_full_challenge_circuit(void) {
+    proofs::QuadCircuit<Field> q(proofs::p256k1_base);
+    const Backend backend(&q);
+    const Logic logic(&backend, proofs::p256k1_base);
+    const FlatSha sha(logic);
+    const Bip340Gadgets gadgets(logic, proofs::p256k1);
+    const Bip340Verify verifier(logic, proofs::p256k1);
+
+    auto rx = logic.eltw_input();
+    auto px = logic.eltw_input();
+    q.private_input();
+
+    auto e = logic.eltw_input();
+    Logic::v256 digest = logic.template vinput<256>();
+    Logic::v8 preimage[kPaddedBytes];
+    for (size_t i = 0; i < kPaddedBytes; ++i) {
+        preimage[i] = logic.template vinput<8>();
+    }
+    FlatSha::BlockWitness sha_blocks[kMaxBlocks];
+    for (size_t i = 0; i < kMaxBlocks; ++i) {
+        sha_blocks[i].input(logic);
+    }
+    Bip340Verify::Witness bip340_witness;
+    bip340_witness.input(logic);
+
+    uint8_t tag_hash[32];
+    bip340_tag_hash(tag_hash);
+    for (size_t i = 0; i < 32; ++i) {
+        logic.vassert_eq(preimage[i], tag_hash[i]);
+        logic.vassert_eq(preimage[32 + i], tag_hash[i]);
+    }
+
+    Logic::v256 rx_bits;
+    Logic::v256 px_bits;
+    for (size_t i = 0; i < 256; ++i) {
+        rx_bits[i] = preimage[64 + 31 - i / 8][i % 8];
+        px_bits[i] = preimage[96 + 31 - i / 8][i % 8];
+    }
+    gadgets.assert_field_from_bits_lsb(rx_bits, rx);
+    gadgets.assert_field_from_bits_lsb(px_bits, px);
+
+    Logic::v8 blocks;
+    logic.bits(8, blocks.data(), kMaxBlocks);
+    sha.assert_message_hash(kMaxBlocks, blocks, preimage, digest, sha_blocks);
+    gadgets.assert_challenge_scalar_from_digest(digest, e);
+    verifier.assert_verify(rx, px, e, bip340_witness);
     return q.mkcircuit(1);
 }
 
@@ -190,6 +250,25 @@ void build_reduction_inputs(const uint8_t digest[32], Field::Elt e,
     witness_filler.push_back(e);
     fill_digest_target(witness_filler, digest);
     assert(witness_filler.size() == witness->n1_);
+}
+
+void fill_bip340_challenge_sha_witness(proofs::DenseFiller<Field>& filler,
+                                       const uint8_t preimage[160],
+                                       const uint8_t digest[32]) {
+    fill_digest_target(filler, digest);
+
+    uint8_t nblocks = 0;
+    uint8_t padded[kPaddedBytes];
+    ShaBlockWitness blocks[kMaxBlocks];
+    proofs::FlatSHA256Witness::transform_and_witness_message(
+        160, preimage, kMaxBlocks, nblocks, padded, blocks);
+    assert(nblocks == kMaxBlocks);
+    for (size_t i = 0; i < sizeof(padded); ++i) {
+        fill_byte(filler, padded[i]);
+    }
+    for (size_t i = 0; i < kMaxBlocks; ++i) {
+        fill_sha_block(filler, blocks[i]);
+    }
 }
 
 void test_bip340_challenge_sha_circuit(void) {
@@ -305,6 +384,83 @@ void test_bip340_challenge_reduction_circuit(void) {
     std::printf("  PASS test_bip340_challenge_reduction_circuit\n");
 }
 
+void test_bip340_full_challenge_circuit(void) {
+    auto circuit = build_bip340_full_challenge_circuit();
+    assert(circuit != nullptr);
+    assert(circuit->npub_in == 3);
+
+    uint8_t sig[64] = {
+        0xE9, 0x07, 0x83, 0x1F, 0x80, 0x84, 0x8D, 0x10,
+        0x69, 0xA5, 0x37, 0x1B, 0x40, 0x24, 0x10, 0x36,
+        0x4B, 0xDF, 0x1C, 0x5F, 0x83, 0x07, 0xB0, 0x08,
+        0x4C, 0x55, 0xF1, 0xCE, 0x2D, 0xCA, 0x82, 0x15,
+        0x25, 0xF6, 0x6A, 0x4A, 0x85, 0xEA, 0x8B, 0x71,
+        0xE4, 0x82, 0xA7, 0x4F, 0x38, 0x2D, 0x2C, 0xE5,
+        0xEB, 0xEE, 0xE8, 0xFD, 0xB2, 0x17, 0x2F, 0x47,
+        0x7D, 0xF4, 0x90, 0x0D, 0x31, 0x05, 0x36, 0xC0,
+    };
+    uint8_t pk[32] = {
+        0xF9, 0x30, 0x8A, 0x01, 0x92, 0x58, 0xC3, 0x10,
+        0x49, 0x34, 0x4F, 0x85, 0xF8, 0x9D, 0x52, 0x29,
+        0xB5, 0x31, 0xC8, 0x45, 0x83, 0x6F, 0x99, 0xB0,
+        0x86, 0x01, 0xF1, 0x13, 0xBC, 0xE0, 0x36, 0xF9,
+    };
+    uint8_t msg[32] = {0};
+
+    uint8_t digest[32];
+    uint8_t preimage[niwi::rpbsch::kBip340ChallengePreimageSize];
+    niwi::rpbsch::build_bip340_challenge_preimage(sig, pk, msg, preimage);
+    niwi::rpbsch::compute_bip340_challenge(sig, pk, msg, digest);
+
+    proofs::Bip340Witness bip340_witness(proofs::p256k1);
+    assert(bip340_witness.compute(sig, pk, msg, sizeof(msg)));
+
+    auto rx = proofs::p256k1_base.to_montgomery(
+        proofs::Bip340Witness::nat_from_be_bytes(sig));
+    auto px = proofs::p256k1_base.to_montgomery(
+        proofs::Bip340Witness::nat_from_be_bytes(pk));
+
+    proofs::Dense<Field> witness(1, circuit->ninputs);
+    proofs::Dense<Field> pub(1, circuit->npub_in);
+
+    proofs::DenseFiller<Field> pub_filler(pub);
+    fill_one(pub_filler);
+    pub_filler.push_back(rx);
+    pub_filler.push_back(px);
+    assert(pub_filler.size() == pub.n1_);
+
+    proofs::DenseFiller<Field> witness_filler(witness);
+    fill_one(witness_filler);
+    witness_filler.push_back(rx);
+    witness_filler.push_back(px);
+    witness_filler.push_back(bip340_witness.e_);
+    fill_bip340_challenge_sha_witness(witness_filler, preimage, digest);
+    bip340_witness.fill_witness(witness_filler);
+    assert(witness_filler.size() == witness.n1_);
+    assert(evaluates(*circuit, witness));
+
+    uint8_t bad_preimage[sizeof(preimage)];
+    memcpy(bad_preimage, preimage, sizeof(preimage));
+    bad_preimage[96] ^= 0x01u;
+    proofs::Dense<Field> bad_witness(1, circuit->ninputs);
+    proofs::Dense<Field> bad_pub(1, circuit->npub_in);
+    proofs::DenseFiller<Field> bad_pub_filler(bad_pub);
+    fill_one(bad_pub_filler);
+    bad_pub_filler.push_back(rx);
+    bad_pub_filler.push_back(px);
+    proofs::DenseFiller<Field> bad_witness_filler(bad_witness);
+    fill_one(bad_witness_filler);
+    bad_witness_filler.push_back(rx);
+    bad_witness_filler.push_back(px);
+    bad_witness_filler.push_back(bip340_witness.e_);
+    fill_bip340_challenge_sha_witness(bad_witness_filler, bad_preimage,
+                                      digest);
+    bip340_witness.fill_witness(bad_witness_filler);
+    assert(!evaluates(*circuit, bad_witness));
+
+    std::printf("  PASS test_bip340_full_challenge_circuit\n");
+}
+
 }  // namespace
 
 int main(void) {
@@ -312,6 +468,7 @@ int main(void) {
     test_bip340_challenge_sha_circuit();
     test_tuple_message_sha_circuit();
     test_bip340_challenge_reduction_circuit();
+    test_bip340_full_challenge_circuit();
     std::printf("All RPBSch SHA circuit tests passed.\n");
     return 0;
 }
