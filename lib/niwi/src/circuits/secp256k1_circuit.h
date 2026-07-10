@@ -100,9 +100,7 @@ class Secp256k1Circuit {
     auto yy  = lc_.mul(y, y);  /* y*y */
     auto xx  = lc_.mul(x, x);  /* x*x */
     auto xxx = lc_.mul(x, xx); /* x^3 */
-    auto ax  = lc_.mul(a_, x);
-    auto axb = lc_.add(ax, b_);
-    auto rhs = lc_.add(axb, xxx);
+    auto rhs = lc_.add(xxx, b_); /* secp256k1: a = 0 */
     lc_.assert_eq(yy, rhs);
   }
 
@@ -111,57 +109,53 @@ class Secp256k1Circuit {
    * The second point is given in affine form (z=1 implied). */
   void point_equality(EltW x1, EltW y1, EltW z1,
                       EltW x2_aff, EltW y2_aff) const {
-    lc_.assert_eq(&x1, lc_.mul(&z1, x2_aff));
-    lc_.assert_eq(&y1, lc_.mul(&z1, y2_aff));
+    lc_.assert_eq(x1, lc_.mul(z1, x2_aff));
+    lc_.assert_eq(y1, lc_.mul(z1, y2_aff));
   }
 
-  /* Projective point addition (complete formula, works for all inputs).
-   * Algorithm 1 from the Longfellow elliptic_curve.h.
-   * Because a=0 for secp256k1, the compiler will optimize away a-related
-   * multiplications (mul(0, *) = 0). */
+  /* Projective point addition, Algorithm 1 from Longfellow elliptic_curve.h. */
   void addE(EltW& X3, EltW& Y3, EltW& Z3,
             EltW X1, EltW Y1, EltW Z1,
             EltW X2, EltW Y2, EltW Z2) const {
-    EltW t0 = lc_.mul(&X1, X2);
-    EltW t1 = lc_.mul(&Y1, Y2);
-    EltW t2 = lc_.mul(&Z1, Z2);
-    EltW t3 = lc_.add(&X1, Y1);
-    EltW t4 = lc_.add(&X2, Y2);
-    t3 = lc_.mul(&t3, t4);
-    t4 = lc_.add(&t0, t1);
-    t3 = lc_.sub(&t3, t4);
-    t4 = lc_.add(&X1, Z1);
-    EltW t5 = lc_.add(&X2, Z2);
-    t4 = lc_.mul(&t4, t5);
-    t5 = lc_.add(&t0, t2);
-    t4 = lc_.sub(&t4, t5);
-    t5 = lc_.add(&Y1, Z1);
-    EltW X3t = lc_.add(&Y2, Z2);
-    t5 = lc_.mul(&t5, X3t);
-    X3t = lc_.add(&t1, t2);
-    t5 = lc_.sub(&t5, X3t);
+    EltW t0 = lc_.mul(X1, X2);
+    EltW t1 = lc_.mul(Y1, Y2);
+    EltW t2 = lc_.mul(Z1, Z2);
+    EltW t3 = lc_.add(X1, Y1);
+    EltW t4 = lc_.add(X2, Y2);
+    t3 = lc_.mul(t3, t4);
+    t4 = lc_.add(t0, t1);
+    t3 = lc_.sub(t3, t4);
+    t4 = lc_.add(X1, Z1);
+    EltW t5 = lc_.add(X2, Z2);
+    t4 = lc_.mul(t4, t5);
+    t5 = lc_.add(t0, t2);
+    t4 = lc_.sub(t4, t5);
+    t5 = lc_.add(Y1, Z1);
+    EltW X3t = lc_.add(Y2, Z2);
+    t5 = lc_.mul(t5, X3t);
+    X3t = lc_.add(t1, t2);
+    t5 = lc_.sub(t5, X3t);
     /* a=0 → a·t4 = 0, so Z3t = k3b·t2 */
     EltW Z3t = lc_.mul(k3b_, t2);
-    X3t = lc_.sub(&t1, Z3t);
-    Z3t = lc_.add(&t1, Z3t);
-    EltW Y3t = lc_.mul(&X3t, Z3t);
-    t1 = lc_.add(&t0, t0);
-    t1 = lc_.add(&t1, t0);   /* t1 = 3·t0 */
-    /* t2 = a·t2 = 0 (a=0) */
-    /* t4 = k3b·t4 */
+    X3t = lc_.sub(t1, Z3t);
+    Z3t = lc_.add(t1, Z3t);
+    EltW Y3t = lc_.mul(X3t, Z3t);
+    t1 = lc_.add(t0, t0);
+    t1 = lc_.add(t1, t0);   /* t1 = 3·t0 */
+    t2 = lc_.mul(a_, t2);
     t4 = lc_.mul(k3b_, t4);
-    t1 = lc_.add(&t1, t2);   /* t1 = 3·t0 + 0 = 3·t0 */
-    t2 = lc_.sub(&t0, t2);   /* t2 = t0 - 0 = t0 */
-    /* t2 = a·t2 = 0 */
-    /* t4 = t4 + 0 = t4 */
-    t0 = lc_.mul(&t1, t4);
-    Y3t = lc_.add(&Y3t, t0);
-    t0 = lc_.mul(&t5, t4);
-    X3t = lc_.mul(&t3, X3t);
-    X3t = lc_.sub(&X3t, t0);
-    t0 = lc_.mul(&t3, t1);
-    Z3t = lc_.mul(&t5, Z3t);
-    Z3t = lc_.add(&Z3t, t0);
+    t1 = lc_.add(t1, t2);
+    t2 = lc_.sub(t0, t2);
+    t2 = lc_.mul(a_, t2);
+    t4 = lc_.add(t4, t2);
+    t0 = lc_.mul(t1, t4);
+    Y3t = lc_.add(Y3t, t0);
+    t0 = lc_.mul(t5, t4);
+    X3t = lc_.mul(t3, X3t);
+    X3t = lc_.sub(X3t, t0);
+    t0 = lc_.mul(t3, t1);
+    Z3t = lc_.mul(t5, Z3t);
+    Z3t = lc_.add(Z3t, t0);
 
     X3 = X3t; Y3 = Y3t; Z3 = Z3t;
   }
@@ -171,34 +165,37 @@ class Secp256k1Circuit {
    * a=0 simplifies away a-related terms. */
   void doubleE(EltW& X3, EltW& Y3, EltW& Z3,
                EltW X, EltW Y, EltW Z) const {
-    EltW t0 = lc_.mul(&X, X);
-    EltW t1 = lc_.mul(&Y, Y);
-    EltW t2 = lc_.mul(&Z, Z);
-    EltW t3 = lc_.mul(&X, Y);
-    t3 = lc_.add(&t3, t3);
-    EltW Z3t = lc_.mul(&X, Z);
-    Z3t = lc_.add(&Z3t, Z3t);
-    /* a·Z3t = 0 (a=0) */
+    EltW t0 = lc_.mul(X, X);
+    EltW t1 = lc_.mul(Y, Y);
+    EltW t2 = lc_.mul(Z, Z);
+    EltW t3 = lc_.mul(X, Y);
+    t3 = lc_.add(t3, t3);
+    EltW Z3t = lc_.mul(X, Z);
+    Z3t = lc_.add(Z3t, Z3t);
+    EltW X3t = lc_.mul(a_, Z3t);
     EltW Y3t = lc_.mul(k3b_, t2);
-    EltW X3t = lc_.sub(&t1, Y3t);
-    Y3t = lc_.add(&t1, Y3t);
-    Y3t = lc_.mul(&X3t, Y3t);
-    X3t = lc_.mul(&t3, X3t);
+    Y3t = lc_.add(X3t, Y3t);
+    X3t = lc_.sub(t1, Y3t);
+    Y3t = lc_.add(t1, Y3t);
+    Y3t = lc_.mul(X3t, Y3t);
+    X3t = lc_.mul(t3, X3t);
     Z3t = lc_.mul(k3b_, Z3t);
-    t3 = lc_.sub(&t0, t2);   /* a·t2=0 so t3 = t0 */
-    t3 = lc_.add(&t3, Z3t);
-    Z3t = lc_.add(&t0, t0);
-    t0 = lc_.add(&Z3t, t0);
-    t0 = lc_.add(&t0, t2);   /* t0 = 3·t0 + 0 = 3·t0 */
-    t0 = lc_.mul(&t0, t3);
-    Y3t = lc_.add(&Y3t, t0);
-    t2 = lc_.mul(&Y, Z);
-    t2 = lc_.add(&t2, t2);
-    t0 = lc_.mul(&t2, t3);
-    X3t = lc_.sub(&X3t, t0);
-    Z3t = lc_.mul(&t2, t1);
-    Z3t = lc_.add(&Z3t, Z3t);
-    Z3t = lc_.add(&Z3t, Z3t);
+    t2 = lc_.mul(a_, t2);
+    t3 = lc_.sub(t0, t2);
+    t3 = lc_.mul(a_, t3);
+    t3 = lc_.add(t3, Z3t);
+    Z3t = lc_.add(t0, t0);
+    t0 = lc_.add(Z3t, t0);
+    t0 = lc_.add(t0, t2);
+    t0 = lc_.mul(t0, t3);
+    Y3t = lc_.add(Y3t, t0);
+    t2 = lc_.mul(Y, Z);
+    t2 = lc_.add(t2, t2);
+    t0 = lc_.mul(t2, t3);
+    X3t = lc_.sub(X3t, t0);
+    Z3t = lc_.mul(t2, t1);
+    Z3t = lc_.add(Z3t, Z3t);
+    Z3t = lc_.add(Z3t, Z3t);
 
     X3 = X3t; Y3 = Y3t; Z3 = Z3t;
   }
@@ -206,10 +203,29 @@ class Secp256k1Circuit {
   /* Assert x ≠ 0 by providing an inverse witness inv such that x·inv = 1. */
   void assert_nonzero(EltW x, EltW inv) const {
     auto one = lc_.konst(lc_.one());
-    lc_.assert_eq(&one, lc_.mul(&x, inv));
+    lc_.assert_eq(one, lc_.mul(x, inv));
   }
 
-  /* ---- X-only lift constraint ---------------------------------------- */
+  /* ---- Point lift constraints ---------------------------------------- */
+
+  /* Check that y_bits is a big-endian bit decomposition of y_witness. */
+  void assert_y_bits(EltW y_witness, const EltW y_bits[kBits]) const {
+    EltW zero = lc_.konst(lc_.zero());
+    EltW reconstructed = zero;
+    for (size_t i = 0; i < kBits; ++i) {
+      lc_.assert_is_bit(y_bits[i]);
+      reconstructed = lc_.add(reconstructed, reconstructed);
+      reconstructed = lc_.add(reconstructed, y_bits[i]);
+    }
+    lc_.assert_eq(reconstructed, y_witness);
+  }
+
+  /* Check that (x, y_witness) is a curve point and y_bits opens y_witness. */
+  void assert_lift(EltW x, EltW y_witness,
+                   const EltW y_bits[kBits]) const {
+    is_on_curve(x, y_witness);
+    assert_y_bits(y_witness, y_bits);
+  }
 
   /* Given an x-only public key coordinate pk_x, verify that:
    *   - x < p (both public keys and nonce points are 32-byte field elements)
@@ -225,15 +241,8 @@ class Secp256k1Circuit {
    */
   void x_only_lift(EltW x, EltW y_witness,
                    const EltW y_bits[kBits]) const {
-    is_on_curve(x, y_witness);
+    assert_lift(x, y_witness, y_bits);
     EltW zero = lc_.konst(lc_.zero());
-    EltW reconstructed = zero;
-    for (size_t i = 0; i < kBits; ++i) {
-      lc_.assert_is_bit(y_bits[i]);
-      reconstructed = lc_.add(reconstructed, reconstructed);
-      reconstructed = lc_.add(reconstructed, y_bits[i]);
-    }
-    lc_.assert_eq(reconstructed, y_witness);
     lc_.assert_eq(y_bits[kBits - 1], zero);
   }
 

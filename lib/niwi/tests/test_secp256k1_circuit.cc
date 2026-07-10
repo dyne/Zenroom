@@ -53,7 +53,15 @@ bool evaluates(const proofs::Circuit<Field>& circuit,
     proofs::ProverLayers<Field>::inputs inputs;
     auto final = layers.eval_circuit(&inputs, &circuit, witness.clone(),
                                      niwi::secp256k1_base);
-    return final != nullptr;
+    if (final == nullptr) {
+        return false;
+    }
+    for (size_t i = 0; i < final->n0_ * final->n1_; ++i) {
+        if (final->v_[i] != niwi::secp256k1_base.zero()) {
+            return false;
+        }
+    }
+    return true;
 }
 
 void fill_x_only_inputs(const Field::Elt& x, const Field::Elt& y,
@@ -94,11 +102,28 @@ void test_x_only_lift_enforces_even_y(void) {
     std::printf("  PASS test_x_only_lift_enforces_even_y\n");
 }
 
+void test_x_only_lift_enforces_curve_membership(void) {
+    auto circuit = build_x_only_lift_circuit();
+    assert(circuit != nullptr);
+
+    auto g = niwi::secp256k1.generator();
+    niwi::secp256k1.normalize(g);
+    auto bad_x = niwi::secp256k1_base.addf(g.x, niwi::secp256k1_base.one());
+
+    proofs::Dense<Field> witness(1, circuit->ninputs);
+    proofs::Dense<Field> pub(1, circuit->npub_in);
+    fill_x_only_inputs(bad_x, g.y, &witness, &pub);
+    assert(!evaluates(*circuit, witness));
+
+    std::printf("  PASS test_x_only_lift_enforces_curve_membership\n");
+}
+
 }  // namespace
 
 int main(void) {
     std::printf("lib/niwi secp256k1 circuit tests:\n");
     test_x_only_lift_enforces_even_y();
+    test_x_only_lift_enforces_curve_membership();
     std::printf("All secp256k1 circuit tests passed.\n");
     return 0;
 }
