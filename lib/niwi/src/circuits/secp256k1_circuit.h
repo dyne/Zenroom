@@ -89,7 +89,7 @@ class Secp256k1Circuit {
     b_  = lc_.konst(ec.b_);
     gx_ = lc_.konst(ec.gx_);
     gy_ = lc_.konst(ec.gy_);
-    k3_ = lc_.elt(3);
+    k3_ = lc_.konst(lc_.elt(3));
     k3b_ = lc_.konst(ec.k3b);
   }
 
@@ -97,13 +97,13 @@ class Secp256k1Circuit {
 
   /* Check y^2 == x^3 + a·x + b. */
   void is_on_curve(EltW x, EltW y) const {
-    auto yy  = lc_.mul(&x, y);  /* y*y */
-    auto xx  = lc_.mul(&x, x);  /* x*x */
-    auto xxx = lc_.mul(&x, xx); /* x^3 */
+    auto yy  = lc_.mul(y, y);  /* y*y */
+    auto xx  = lc_.mul(x, x);  /* x*x */
+    auto xxx = lc_.mul(x, xx); /* x^3 */
     auto ax  = lc_.mul(a_, x);
-    auto axb = lc_.add(&ax, b_);
-    auto rhs = lc_.add(&axb, xxx);
-    lc_.assert_eq(&yy, rhs);
+    auto axb = lc_.add(ax, b_);
+    auto rhs = lc_.add(axb, xxx);
+    lc_.assert_eq(yy, rhs);
   }
 
   /* Point equality in projective form:
@@ -223,10 +223,18 @@ class Secp256k1Circuit {
    * also on curve and exactly one has even y. So we verify the witness y
    * satisfies the curve equation and that its least-significant bit is 0.
    */
-  void x_only_lift(EltW x, EltW y_witness) const {
+  void x_only_lift(EltW x, EltW y_witness,
+                   const EltW y_bits[kBits]) const {
     is_on_curve(x, y_witness);
-    /* TODO: parity check — enforce LSB of y is 0 (even) */
-    /* This requires bit decomposition of y_witness to extract LSB */
+    EltW zero = lc_.konst(lc_.zero());
+    EltW reconstructed = zero;
+    for (size_t i = 0; i < kBits; ++i) {
+      lc_.assert_is_bit(y_bits[i]);
+      reconstructed = lc_.add(reconstructed, reconstructed);
+      reconstructed = lc_.add(reconstructed, y_bits[i]);
+    }
+    lc_.assert_eq(reconstructed, y_witness);
+    lc_.assert_eq(y_bits[kBits - 1], zero);
   }
 
   /* ---- Double-scalar multiplication verification ----------------------
@@ -358,8 +366,8 @@ class Secp256k1Circuit {
 
  private:
   const LogicCircuit& lc_;
-  Elt a_, b_, gx_, gy_;
-  Elt k3_, k3b_;  /* Field constants: 3 and 3*b */
+  EltW a_, b_, gx_, gy_;
+  EltW k3_, k3b_;  /* Field constants: 3 and 3*b */
 };
 
 }  // namespace niwi
