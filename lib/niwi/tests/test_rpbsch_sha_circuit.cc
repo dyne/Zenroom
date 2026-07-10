@@ -21,6 +21,7 @@
 #include "circuits/logic/logic.h"
 #include "circuits/sha/flatsha256_circuit.h"
 #include "circuits/sha/flatsha256_witness.h"
+#include "circuits/rpbsch/rpbsch_hash_circuit.h"
 #include "ec/p256k1.h"
 #include "relations/rpbsch_relation_internal.h"
 #include "sumcheck/prover_layers.h"
@@ -316,7 +317,7 @@ void test_bip340_challenge_sha_circuit(void) {
 }
 
 void test_tuple_message_sha_circuit(void) {
-    auto circuit = build_sha256_circuit<kTupleMaxBlocks>();
+    auto circuit = niwi::rpbsch::build_tuple_message_sha_circuit();
     assert(circuit != nullptr);
     assert(circuit->npub_in == 257);
 
@@ -354,7 +355,7 @@ void test_tuple_message_sha_circuit(void) {
 }
 
 void test_c_message_sha_circuit(void) {
-    auto circuit = build_sha256_circuit<kTupleMaxBlocks>();
+    auto circuit = niwi::rpbsch::build_c_message_sha_circuit();
     assert(circuit != nullptr);
     assert(circuit->npub_in == 257);
 
@@ -391,7 +392,7 @@ void test_c_message_sha_circuit(void) {
 }
 
 void test_s_message_sha_circuit(void) {
-    auto circuit = build_sha256_circuit<kSMsgMaxBlocks>();
+    auto circuit = niwi::rpbsch::build_s_message_sha_circuit();
     assert(circuit != nullptr);
     assert(circuit->npub_in == 257);
 
@@ -436,7 +437,7 @@ void test_s_message_sha_circuit(void) {
 }
 
 void test_statement_phi_sha_circuit(void) {
-    auto circuit = build_sha256_circuit<kPhiMaxBlocks>();
+    auto circuit = niwi::rpbsch::build_statement_phi_sha_circuit();
     assert(circuit != nullptr);
     assert(circuit->npub_in == 257);
 
