@@ -134,6 +134,12 @@ local function big_to_scalar(x)
     return OCTET.from_hex(string.rep("0", 64 - #hex) .. hex)
 end
 
+local function int_to_scalar(n)
+    assert(type(n) == "number" and n >= 0 and n < 9007199254740992,
+           "integer scalar out of range")
+    return OCTET.from_hex(string.format("%064x", n))
+end
+
 local function scalar_addmul(a, b, c)
     local order = BIG.new(OCTET.from_hex(SECP_ORDER_HEX))
     local acc = BIG.add(BIG.new(a), BIG.modmul(BIG.new(b), BIG.new(c), order))
@@ -155,6 +161,11 @@ end
 local function be_u16(n)
     assert(n >= 0 and n <= 65535, "u16 out of range")
     return OCTET.from_hex(string.format("%04x", n))
+end
+
+local function cmt3_challenge_ok(ch)
+    return type(ch) == "number" and ch >= 0 and ch < (1 << pbsch.CMT3_T) and
+           math.floor(ch) == ch
 end
 
 local function read_u16_be(o)
@@ -429,6 +440,45 @@ function pbsch.cmt3_verify(commitment, proof)
         if not commitment_point(parsed.A[i]) then return false end
     end
     return false
+end
+
+function pbsch.cmt3_sigma_commit(a, b)
+    assert(scalar_is_canonical(a), "a must be a canonical scalar")
+    assert(scalar_is_canonical(b), "b must be a canonical scalar")
+    local H = S.bip340_lift_x(pbsch.commitment_key())
+    return (G * a + H * b):compressed()
+end
+
+function pbsch.cmt3_sigma_respond(a, b, ch, message, rho)
+    assert(scalar_is_canonical(a), "a must be a canonical scalar")
+    assert(scalar_is_canonical(b), "b must be a canonical scalar")
+    assert(cmt3_challenge_ok(ch), "challenge out of range")
+    assert(scalar_is_canonical(message), "message must be a canonical scalar")
+    assert(scalar_is_canonical(rho), "rho must be a canonical scalar")
+    local ch_scalar = int_to_scalar(ch)
+    return scalar_addmul(a, ch_scalar, message),
+           scalar_addmul(b, ch_scalar, rho)
+end
+
+function pbsch.cmt3_sigma_verify(commitment, A, ch, z_m, z_r)
+    if type(commitment) ~= "zenroom.octet" or #commitment:str() ~= pbsch.C_SIZE then
+        return false
+    end
+    if type(A) ~= "zenroom.octet" or #A:str() ~= pbsch.C_SIZE then
+        return false
+    end
+    if not cmt3_challenge_ok(ch) then return false end
+    if not scalar_is_canonical(z_m) or not scalar_is_canonical(z_r) then
+        return false
+    end
+    local C = commitment_point(commitment)
+    local A_point = commitment_point(A)
+    if not C or not A_point then return false end
+    local H = S.bip340_lift_x(pbsch.commitment_key())
+    local ch_scalar = int_to_scalar(ch)
+    local lhs = G * z_m + H * z_r
+    local rhs = A_point + C * ch_scalar
+    return lhs == rhs
 end
 
 function pbsch.commit_s(sig0, sig1, nu_u, nu_u_prime, nu_s, rho)

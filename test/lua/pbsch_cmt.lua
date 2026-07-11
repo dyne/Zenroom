@@ -83,6 +83,32 @@ assert(pbsch.cmt3_verify(record.commitment,
                          malformed_cmt3:sub(1, pbsch.CMT3_PROOF_SIZE - 1)) == false,
        "truncated CMT3 proof accepted")
 
+local sigma_a = sha256("PBSch/CMT3/test/a")
+local sigma_b = sha256("PBSch/CMT3/test/b")
+local sigma_ch = 37
+local sigma_A = pbsch.cmt3_sigma_commit(sigma_a, sigma_b)
+local sigma_z_m, sigma_z_r =
+    pbsch.cmt3_sigma_respond(sigma_a, sigma_b, sigma_ch, m, rho)
+assert(pbsch.cmt3_sigma_verify(record.commitment, sigma_A, sigma_ch,
+                               sigma_z_m, sigma_z_r),
+       "valid CMT3 Sigma transcript rejected")
+assert(not pbsch.cmt3_sigma_verify(flip_last_nibble(record.commitment),
+                                   sigma_A, sigma_ch, sigma_z_m, sigma_z_r),
+       "CMT3 Sigma accepted wrong commitment")
+assert(not pbsch.cmt3_sigma_verify(record.commitment,
+                                   flip_last_nibble(sigma_A),
+                                   sigma_ch, sigma_z_m, sigma_z_r),
+       "CMT3 Sigma accepted wrong A")
+assert(not pbsch.cmt3_sigma_verify(record.commitment, sigma_A,
+                                   sigma_ch + 1, sigma_z_m, sigma_z_r),
+       "CMT3 Sigma accepted wrong challenge")
+assert(not pbsch.cmt3_sigma_verify(record.commitment, sigma_A, sigma_ch,
+                                   flip_last_nibble(sigma_z_m), sigma_z_r),
+       "CMT3 Sigma accepted wrong z_m")
+assert(not pbsch.cmt3_sigma_verify(record.commitment, sigma_A, sigma_ch,
+                                   sigma_z_m, flip_last_nibble(sigma_z_r)),
+       "CMT3 Sigma accepted wrong z_r")
+
 assert(not pbsch.cmt_verify(record.commitment, pbsch.cmt_opening(wrong_m, rho)),
        "wrong message opening accepted")
 assert(not pbsch.cmt_verify(record.commitment, pbsch.cmt_opening(m, wrong_rho)),
