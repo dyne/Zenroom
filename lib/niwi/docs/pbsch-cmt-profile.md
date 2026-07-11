@@ -28,6 +28,11 @@ The implementation keeps versioned Pedersen-backed profiles over secp256k1:
   `message` and `randomness`.
 - Native code rejects non-canonical message and randomness scalars
   (`scalar >= secp256k1_order`) before committing or verifying.
+- Lua code performs secp256k1 scalar algebra only through `SECP` helpers
+  (`bip340_scalar_add`, `bip340_scalar_mul`, `bip340_scalar_negate`, and
+  `bip340_scalar_div`). Lua `BIG` must not be used for PBSch/RPBSch
+  secp256k1 scalar arithmetic because it is not the secp256k1 field API in
+  this runtime.
 
 This profile gives the extraction interface needed for opened PBSch
 commitments while preserving the existing secp256k1 Pedersen commitment. The

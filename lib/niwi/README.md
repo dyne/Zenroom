@@ -16,6 +16,13 @@ C = m * G + rho * H
 `G` is the secp256k1 generator. `H` is derived deterministically as the even-y
 lift of `SHA-256("Zenroom/PBSch/PedersenH/v1" || iteration)`.
 
+Lua PBSch/RPBSch code must treat secp256k1 scalar arithmetic as part of the
+`SECP` API. Use `SECP.bip340_scalar_add`, `SECP.bip340_scalar_mul`,
+`SECP.bip340_scalar_negate`, and `SECP.bip340_scalar_div` for scalar field
+operations. Do not use Lua `BIG` for secp256k1 scalar algebra: in this runtime
+`BIG` is a big-integer class tied to the BLS381 configuration, not the
+secp256k1 field API.
+
 The implementation keeps three versioned Cmt profiles:
 
 | Profile | Status | Purpose | Default use |
@@ -68,4 +75,3 @@ Run focused Cmt/RPBSch checks with:
 ./zenroom test/lua/rpbsch_niwi.lua
 make -C lib/niwi test
 ```
-
