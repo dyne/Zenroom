@@ -54,6 +54,24 @@ production default is CMT3 once the API can carry the public Cmt proof object.
 The native Longfellow relation still proves the underlying Pedersen openings
 from private witness material.
 
+The current production boundary for RPBSch is the Lua relation-backed API. It
+must validate the full public Cmt object before any native relation call by
+carrying an `RPB2` statement envelope:
+
+```
+RPB2 || len(core_statement) || core_statement ||
+        len(C_proof) || C_proof ||
+        len(S_proof) || S_proof
+```
+
+The native 258-byte statement ABI remains `X || X' || R || c || C || phi || ck
+|| S`; the envelope is the Lua-side paper object that binds the two CMT3 proof
+bodies to that core statement. Direct native C APIs are low-level building
+blocks, not complete RPBSch production verification. Native CMT3 verification
+can be promoted from fast accept path to canonical verifier only after it has
+parity against Lua-generated and native-generated CMT3 proofs, including
+negative mutation tests.
+
 ## CMT3 Fischlin05 Profile
 
 `CMT3` is the best paper-level default for PBSch/RPBSch once implemented. It

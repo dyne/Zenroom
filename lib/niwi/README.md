@@ -52,6 +52,23 @@ calling native NIWI proof generation. The native RPBSch Longfellow relation
 continues to prove the algebraic Pedersen opening equations for the compressed
 commitment points `C` and `S`.
 
+The production RPBSch boundary is therefore the Lua relation-backed path, not
+the low-level native C helpers by themselves. Lua must carry and validate the
+`RPB2` envelope:
+
+```
+RPB2 || len(core_statement) || core_statement ||
+        len(C_proof) || C_proof ||
+        len(S_proof) || S_proof
+```
+
+before calling native relation proving or verification. Direct native calls are
+building blocks for the relation and tests. The seeded native CMT3 prover is the
+fast production-friendly generator for deterministic fixtures and future API
+work; native CMT3 verification is currently only a fast accept path for native
+seeded proofs, with Lua verification remaining the canonical verifier until
+native verifier parity is proven against all Lua-generated CMT3 proofs.
+
 Changing CMT3 parameters changes the proof system and must use a new profile id.
 Do not silently change `b`, `t`, `r`, or `S` under
 `pbsch-cmt-pedersen-fischlin05-v1`.
