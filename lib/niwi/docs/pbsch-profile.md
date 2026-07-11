@@ -263,9 +263,10 @@ constant shape but is not required to satisfy the unselected branch relation.
 
 This v1 profile has the following known limitations:
 
-1. **Cmt is a prototype**: The commitment uses a simple hash-based
-   opening proof instead of a Fischlin-style extractable commitment.
-   See `pbsch-verification-matrix.md` for the security implications.
+1. **Cmt is not final**: CMT2 is a public Fiat-Shamir Pedersen-opening proof,
+   and Lua RPBSch production helpers now require valid CMT2 proofs for `C` and
+   `S`. It is still not the final Fischlin/Pas-style straight-line extractable
+   commitment needed for paper-exact claims.
 
 2. **P(φ, m) = 1 only**: No custom predicates are supported.
 
@@ -279,5 +280,6 @@ This v1 profile has the following known limitations:
    deferred to a future profile (`pbsch-v2`).
 
 6. **Cmt is not paper-exact yet**: The checked RPBSch `LZK0` body now uses a
-   private OR selector, but the commitment profile is still Pedersen-backed
-   `CMT1`, not the final straight-line extractable Cmt profile.
+   private OR selector, and the Lua adapter requires CMT2 opening proofs, but
+   the commitment profile is not the final straight-line extractable Cmt
+   profile.

@@ -21,8 +21,9 @@
 -- This module keeps orchestration and witness serialization readable in Lua,
 -- while native lib/niwi validates branch statements, C/S openings, and the
 -- embedded BIP-340 witnesses. Production native proofs now carry checked LZK0
--- bodies with a fixed-shape private OR selector. The remaining paper-exact
--- gap is the Cmt profile, which is still Pedersen-backed CMT1.
+-- bodies with a fixed-shape private OR selector. C/S now carry CMT2 public
+-- opening proofs at the Lua adapter boundary; the remaining paper-exact gap is
+-- replacing that proof body with the final straight-line extractable Cmt.
 
 local pbsch = require'crypto_pbsch'
 local zkcc = require'crypto_zkcc'
@@ -101,9 +102,11 @@ local function has_branch_relation_fields(f)
            type(f.R) == "zenroom.octet" and
            type(f.c) == "zenroom.octet" and
            type(f.C) == "zenroom.octet" and
+           type(f.C_proof) == "zenroom.octet" and
            type(f.phi) == "zenroom.octet" and
            type(f.ck) == "zenroom.octet" and
            type(f.S) == "zenroom.octet" and
+           type(f.S_proof) == "zenroom.octet" and
            type(f.statement) == "zenroom.octet" and
            type(f.m) == "zenroom.octet" and
            type(f.alpha) == "zenroom.octet" and
@@ -137,9 +140,15 @@ function rpbsch.validate_branch_relation(fixture)
                           fixture.rho_c) then
         return false
     end
+    if not pbsch.cmt2_verify(fixture.C, fixture.C_proof) then
+        return false
+    end
     if not pbsch.verify_s(fixture.S, fixture.sigma0, fixture.sigma1,
                           fixture.nu_u, fixture.nu_u_prime, fixture.nu_s,
                           fixture.rho_s) then
+        return false
+    end
+    if not pbsch.cmt2_verify(fixture.S, fixture.S_proof) then
         return false
     end
     return true
@@ -172,8 +181,12 @@ function rpbsch.fixture()
     local sigma0 = schnorr.sign(sk_prime, msg0, aux1)
     local sigma1 = schnorr.sign(sk_prime, msg1, aux2)
 
-    local C = pbsch.commit_c(pbsch.encode_c_msg(m, alpha, beta), rho_c)
+    local c_msg = pbsch.encode_c_msg(m, alpha, beta)
+    local s_msg = pbsch.encode_s_msg(sigma0, sigma1, nu_u, nu_u_prime, nu_s)
+    local C = pbsch.commit_c(c_msg, rho_c)
+    local C_proof = pbsch.cmt2_prove(C, c_msg, rho_c)
     local S_commit = pbsch.commit_s(sigma0, sigma1, nu_u, nu_u_prime, nu_s, rho_s)
+    local S_proof = pbsch.cmt2_prove(S_commit, s_msg, rho_s)
     local R = OCTET.from_hex(sigma:hex():sub(1, 64))
     local c = Secp.bip340_challenge_reduce(
         Secp.bip340_tagged_hash("BIP0340/challenge", R .. X .. m))
@@ -189,6 +202,7 @@ function rpbsch.fixture()
         m = m, alpha = alpha, beta = beta,
         rho_c = rho_c, rho_s = rho_s,
         R = R, c = c, C = C, phi = phi, ck = ck, S = S_commit,
+        C_proof = C_proof, S_proof = S_proof,
         statement = statement,
         nu_s = nu_s, nu_u = nu_u, nu_u_prime = nu_u_prime,
         sigma = sigma, sigma0 = sigma0, sigma1 = sigma1,
@@ -283,6 +297,9 @@ function rpbsch.branch_relation_witness(circuit, fixture, branch)
 end
 
 function rpbsch.prove_branch_relation(circuit, fixture, branch)
+    if not rpbsch.validate_branch_relation(fixture) then
+        error("invalid RPBSch relation fixture", 2)
+    end
     local witness, err = rpbsch.branch_relation_witness(circuit, fixture, branch)
     if not witness then return nil, err end
     return niwi.prove_rpbsch_relation{
@@ -293,6 +310,9 @@ function rpbsch.prove_branch_relation(circuit, fixture, branch)
 end
 
 function rpbsch.prove_branch_relation_with_observation_test(circuit, fixture, branch)
+    if not rpbsch.validate_branch_relation(fixture) then
+        error("invalid RPBSch relation fixture", 2)
+    end
     local witness, err = rpbsch.branch_relation_witness(circuit, fixture, branch)
     if not witness then return nil, err end
     return niwi.prove_rpbsch_relation_with_observation_test{

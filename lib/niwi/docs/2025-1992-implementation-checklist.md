@@ -38,7 +38,8 @@ needed before claiming production, paper-exact RPBSch.
 | --- | --- | --- | --- |
 | Commitment key `ck` | `lib/niwi/src/pbsch_commitment.c` | `test/lua/pedersen.lua` | Deterministic Pedersen H derivation |
 | `C` and `S` opening checks | `lib/niwi/src/circuits/rpbsch/rpbsch_relation_circuit.h`, `lib/niwi/src/relations/rpbsch_ligero_relation.cc`, `src/lua/crypto_pbsch.lua` | `lib/niwi/tests/test_rpbsch_commitment_circuit.cc`, `lib/niwi/tests/test_rpbsch_branch_circuit.cc`, `test/lua/rpbsch_niwi.lua` | Checked in the native Longfellow RPBSch relation and still checked at the Lua/native adapter boundary |
-| Straight-line extractable Cmt | `src/lua/crypto_pbsch.lua`, `lib/niwi/src/pbsch_commitment.c`, `lib/niwi/docs/pbsch-cmt-profile.md` | `test/lua/pbsch_cmt.lua`, `test/lua/pedersen.lua` | Implemented as Pedersen-backed `CMT1` opening envelope. This is still the binding Pedersen profile, not the paper's final straight-line extractable Cmt construction |
+| Public Cmt opening proof surface | `src/lua/crypto_pbsch.lua`, `src/lua/crypto_rpbsch.lua`, `lib/niwi/docs/pbsch-cmt-profile.md` | `test/lua/pbsch_cmt.lua`, `test/lua/rpbsch_niwi.lua` | `CMT2` is a versioned public Fiat-Shamir Pedersen-opening proof. Lua RPBSch fixtures now carry and verify `C` and `S` CMT2 proofs before production proof generation |
+| Straight-line extractable Cmt | `src/lua/crypto_pbsch.lua`, `lib/niwi/src/pbsch_commitment.c`, `lib/niwi/docs/pbsch-cmt-profile.md` | `test/lua/pbsch_cmt.lua`, `test/lua/pedersen.lua`, `test/lua/rpbsch_niwi.lua` | Still open for paper-exact claims: `CMT1` is private opened-proof extraction material and `CMT2` v1 is an ordinary Fiat-Shamir opening proof, not the final Fischlin/Pas-style straight-line extractable Cmt construction |
 
 ## RPBSch Relation
 
@@ -67,10 +68,11 @@ needed before claiming production, paper-exact RPBSch.
   and revalidates the relation before returning success. Full paper-level
   Ligero body extraction remains open only for the broader parameterized layout
   above.
-- Current PBSch Cmt is a Pedersen-backed `CMT1` profile with straight-line
-  extraction from opened commitments. The native RPBSch relation verifies `C`
-  and `S` openings, but the Cmt construction is still not the paper's final
-  straight-line extractable Cmt.
+- Current PBSch Cmt has a Pedersen-backed `CMT1` private opening envelope and
+  a versioned `CMT2` public Fiat-Shamir opening proof. Lua RPBSch production
+  helpers require valid `C` and `S` CMT2 proofs, and the native RPBSch relation
+  verifies the underlying `C` and `S` openings. The Cmt construction is still
+  not the paper's final Fischlin/Pas-style straight-line extractable Cmt.
 - Current RPBSch has native branch relations, statement binding, a private
   OR selector relation, and checked `LZK0`. Final paper claims remain gated by
   finishing the paper-exact Cmt profile.

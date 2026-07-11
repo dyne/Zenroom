@@ -38,6 +38,11 @@ the next step, but the v1 proof is the ordinary Fiat-Shamir transform of the
 Pedersen-opening Sigma protocol, not the Fischlin/Pas-style straight-line
 extractable transform required by the paper.
 
+Lua RPBSch fixtures carry CMT2 proofs for both `C` and `S`, and production Lua
+proof helpers reject fixtures with missing or invalid CMT2 proofs before
+entering native proof generation. The native Longfellow relation still proves
+the underlying Pedersen openings from private witness material.
+
 ## Paper Requirement
 
 Section 3 and Appendix A.5 of `niwi/2025-1992.pdf` require a non-interactive

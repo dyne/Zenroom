@@ -37,9 +37,13 @@ assert(#fixture.statement == 258,
        'statement must be X || X_prime || R || c || C || phi || ck || S')
 assert(pbsch.verify_c(fixture.C, pbsch.encode_c_msg(fixture.m, fixture.alpha, fixture.beta),
                       fixture.rho_c), 'C opening rejected')
+assert(pbsch.cmt2_verify(fixture.C, fixture.C_proof),
+       'C public opening proof rejected')
 assert(pbsch.verify_s(fixture.S, fixture.sigma0, fixture.sigma1, fixture.nu_u,
                       fixture.nu_u_prime, fixture.nu_s, fixture.rho_s),
        'S opening rejected')
+assert(pbsch.cmt2_verify(fixture.S, fixture.S_proof),
+       'S public opening proof rejected')
 
 local branch1 = rpbsch.prove_branch(circuit, fixture, rpbsch.BRANCH_HONEST)
 assert(branch1 and #branch1 == 1, 'branch 1 must produce one NIWI BIP340 proof')
@@ -139,6 +143,16 @@ local bad_c_native_ok = pcall(function()
 end)
 assert(bad_c_native_ok == false, 'native RPBSch accepted changed C opening')
 
+local bad_c_proof = rpbsch.fixture()
+bad_c_proof.C_proof = flip_last_byte(bad_c_proof.C_proof)
+assert(rpbsch.verify_record(circuit, bad_c_proof, branch1[1]) == false,
+       'changed C public opening proof accepted')
+local bad_c_proof_native_ok = pcall(function()
+  rpbsch.prove_branch_relation(circuit, bad_c_proof, rpbsch.BRANCH_HONEST)
+end)
+assert(bad_c_proof_native_ok == false,
+       'native RPBSch wrapper accepted changed C public opening proof')
+
 local bad_s_opening = rpbsch.fixture()
 bad_s_opening.rho_s = flip_last_nibble(bad_s_opening.rho_s)
 assert(rpbsch.verify_record(circuit, bad_s_opening, branch1[1]) == false,
@@ -147,6 +161,16 @@ local bad_s_native_ok = pcall(function()
   rpbsch.prove_branch_relation(circuit, bad_s_opening, rpbsch.BRANCH_HONEST)
 end)
 assert(bad_s_native_ok == false, 'native RPBSch accepted changed S opening')
+
+local bad_s_proof = rpbsch.fixture()
+bad_s_proof.S_proof = flip_last_byte(bad_s_proof.S_proof)
+assert(rpbsch.verify_record(circuit, bad_s_proof, branch1[1]) == false,
+       'changed S public opening proof accepted')
+local bad_s_proof_native_ok = pcall(function()
+  rpbsch.prove_branch_relation(circuit, bad_s_proof, rpbsch.BRANCH_HONEST)
+end)
+assert(bad_s_proof_native_ok == false,
+       'native RPBSch wrapper accepted changed S public opening proof')
 
 local bad_ck = rpbsch.fixture()
 bad_ck.ck = flip_last_nibble(bad_ck.ck)
