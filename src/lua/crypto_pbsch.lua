@@ -195,6 +195,11 @@ local function cmt3_all_A(A)
 end
 
 local function cmt3_threshold_hash(ck, commitment, all_A, i, ch, z_m, z_r)
+    if niwi.pbsch_cmt3_hash_value then
+        local h = niwi.pbsch_cmt3_hash_value(ck, commitment, all_A, i, ch,
+                                             z_m, z_r)
+        if h then return h end
+    end
     local digest = sha256("Zenroom/PBSch/CMT3/Fischlin05/v1" ..
                           (ck .. commitment .. all_A ..
                            be_u16(i) .. be_u16(ch) .. z_m .. z_r):str())
@@ -531,6 +536,33 @@ local function parse_cmt3_proof(proof)
     return parsed
 end
 
+local function parse_cmt3_query_transcript(queries)
+    if type(queries) ~= "zenroom.octet" or #queries:str() < 6 then return nil end
+    if queries:sub(1, 4):string() ~= "CQ3Q" then return nil end
+    local count = read_u16_be(queries:sub(5, 6))
+    if not count then return nil end
+    local row_size = 466
+    if #queries:str() ~= 6 + count * row_size then return nil end
+
+    local out = {}
+    local off = 7
+    for _ = 1, count do
+        local q = {}
+        q.commitment = queries:sub(off, off + 32); off = off + 33
+        q.ck = queries:sub(off, off + 31); off = off + 32
+        q.all_A = queries:sub(off, off + 329); off = off + 330
+        q.i = read_u16_be(queries:sub(off, off + 1)); off = off + 2
+        q.ch = read_u16_be(queries:sub(off, off + 1)); off = off + 2
+        q.z_m = queries:sub(off, off + 31); off = off + 32
+        q.z_r = queries:sub(off, off + 31); off = off + 32
+        q.h = read_u16_be(queries:sub(off, off + 1)); off = off + 2
+        q.selected = queries:sub(off, off):hex() == "01"; off = off + 1
+        if not q.i or not q.ch or not q.h then return nil end
+        table.insert(out, q)
+    end
+    return out
+end
+
 --- Verify a CMT3 Fischlin05 Pedersen-opening proof.
 -- Full transcript verification is implemented in the CMT3 proof task. The
 -- parser and structural guards live here so malformed proofs reject before
@@ -627,28 +659,22 @@ local function cmt3_build_proof(commitment, message, rho, opts, observe)
         local threshold_sum = 0
         for i = 1, pbsch.CMT3_R do
             local best_ch, best_z_m, best_z_r, best_hash = nil, nil, nil, nil
+            local alt_ch, alt_z_m, alt_z_r, alt_hash = nil, nil, nil, nil
             local z_m = a[i]
             local z_r = b[i]
             for ch = 0, (1 << pbsch.CMT3_T) - 1 do
                 local h = cmt3_threshold_hash(ck, commitment, all_A, i,
                                               ch, z_m, z_r)
-                if observe then
-                    table.insert(queries, {
-                        commitment = commitment,
-                        ck = ck,
-                        all_A = all_A,
-                        i = i,
-                        ch = ch,
-                        z_m = z_m,
-                        z_r = z_r,
-                        h = h,
-                        selected = false,
-                    })
-                end
                 if not best_hash or h < best_hash then
+                    if observe and best_ch and not alt_ch then
+                        alt_ch, alt_z_m, alt_z_r, alt_hash =
+                            best_ch, best_z_m, best_z_r, best_hash
+                    end
                     best_ch, best_z_m, best_z_r, best_hash = ch, z_m, z_r, h
+                elseif observe and not alt_ch then
+                    alt_ch, alt_z_m, alt_z_r, alt_hash = ch, z_m, z_r, h
                 end
-                if best_hash == 0 and (not observe or ch ~= best_ch) then break end
+                if best_hash == 0 and (not observe or alt_ch) then break end
                 z_m = scalar_add(z_m, message)
                 z_r = scalar_add(z_r, rho)
             end
@@ -656,14 +682,29 @@ local function cmt3_build_proof(commitment, message, rho, opts, observe)
             selected_z_m[i] = best_z_m
             selected_z_r[i] = best_z_r
             if observe then
-                for n = #queries, 1, -1 do
-                    local q = queries[n]
-                    if q.commitment:string() == commitment:string() and
-                       q.all_A:string() == all_A:string() and
-                       q.i == i and q.ch == best_ch then
-                        q.selected = true
-                        break
-                    end
+                table.insert(queries, {
+                    commitment = commitment,
+                    ck = ck,
+                    all_A = all_A,
+                    i = i,
+                    ch = best_ch,
+                    z_m = best_z_m,
+                    z_r = best_z_r,
+                    h = best_hash,
+                    selected = true,
+                })
+                if alt_ch then
+                    table.insert(queries, {
+                        commitment = commitment,
+                        ck = ck,
+                        all_A = all_A,
+                        i = i,
+                        ch = alt_ch,
+                        z_m = alt_z_m,
+                        z_r = alt_z_r,
+                        h = alt_hash,
+                        selected = false,
+                    })
                 end
             end
             threshold_sum = threshold_sum + best_hash
@@ -690,6 +731,14 @@ function pbsch.cmt3_prove(commitment, message, rho, opts)
 end
 
 function pbsch.cmt3_prove_with_observation_test(commitment, message, rho, opts)
+    if opts and opts.seed and niwi.pbsch_cmt3_prove_seeded_observed then
+        local proof, transcript =
+            niwi.pbsch_cmt3_prove_seeded_observed(commitment, message, rho,
+                                                  opts.seed)
+        local queries = parse_cmt3_query_transcript(transcript)
+        assert(queries, "invalid native CMT3 query transcript")
+        return proof, queries
+    end
     return cmt3_build_proof(commitment, message, rho, opts, true)
 end
 

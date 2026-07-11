@@ -208,6 +208,36 @@ static uint16_t cmt3_hash_value(const uint8_t ck[32],
     return (uint16_t)((((uint16_t)digest[0] << 8) | digest[1]) & 0x01ff);
 }
 
+uint16_t niwi_pbsch_cmt3_hash_value(
+    const uint8_t ck[32], const uint8_t c[NIWI_PBSCH_CMP_SIZE],
+    const uint8_t all_A[10 * NIWI_PBSCH_CMP_SIZE], uint16_t i,
+    uint16_t ch, const uint8_t z_m[32], const uint8_t z_r[32]) {
+    if (!ck || !c || !all_A || !z_m || !z_r) return 0xffff;
+    return cmt3_hash_value(ck, c, all_A, i, ch, z_m, z_r);
+}
+
+static size_t cmt3_write_query_row(
+    uint8_t *out, const uint8_t c[NIWI_PBSCH_CMP_SIZE],
+    const uint8_t ck[32], const uint8_t all_A[10 * NIWI_PBSCH_CMP_SIZE],
+    uint16_t i, uint16_t ch, const uint8_t z_m[32],
+    const uint8_t z_r[32], uint16_t h, uint8_t selected) {
+    size_t off = 0;
+    memcpy(out + off, c, NIWI_PBSCH_CMP_SIZE); off += NIWI_PBSCH_CMP_SIZE;
+    memcpy(out + off, ck, 32); off += 32;
+    memcpy(out + off, all_A, 10 * NIWI_PBSCH_CMP_SIZE);
+    off += 10 * NIWI_PBSCH_CMP_SIZE;
+    out[off++] = (uint8_t)(i >> 8);
+    out[off++] = (uint8_t)(i & 0xff);
+    out[off++] = (uint8_t)(ch >> 8);
+    out[off++] = (uint8_t)(ch & 0xff);
+    memcpy(out + off, z_m, 32); off += 32;
+    memcpy(out + off, z_r, 32); off += 32;
+    out[off++] = (uint8_t)(h >> 8);
+    out[off++] = (uint8_t)(h & 0xff);
+    out[off++] = selected ? 1 : 0;
+    return off;
+}
+
 static void cmt3_sigma_commit(const ECP_SECP256K1 *H, const BIG_256_28 a,
                               const BIG_256_28 b, ECP_SECP256K1 *A) {
     ECP_SECP256K1 G, bH;
@@ -382,6 +412,142 @@ int niwi_pbsch_cmt3_prove_seeded(
                 memcpy(proof_out + off, selected_z_r[i], 32); off += 32;
             }
             return off == NIWI_PBSCH_CMT3_PROOF_SIZE ? 0 : -1;
+        }
+    }
+
+    return -1;
+}
+
+int niwi_pbsch_cmt3_prove_seeded_observed(
+    const uint8_t c[NIWI_PBSCH_CMP_SIZE], const uint8_t msg[32],
+    const uint8_t rho[32], const uint8_t seed[32],
+    uint8_t proof_out[NIWI_PBSCH_CMT3_PROOF_SIZE],
+    uint8_t queries_out[NIWI_PBSCH_CMT3_QUERY_MAX_SIZE],
+    size_t *queries_len) {
+    enum { R = 10, T = 12, S_BOUND = 10 };
+    if (!queries_len) return -1;
+    *queries_len = 0;
+    if (!c || !msg || !rho || !seed || !proof_out || !queries_out) return -1;
+    if (!scalar_is_canonical(msg) || !scalar_is_canonical(rho)) return -1;
+    if (niwi_pbsch_pedersen_verify_lf(c, msg, rho) != 0) return -1;
+
+    uint8_t ck[32];
+    if (niwi_pbsch_pedersen_h(ck) != 0) return -1;
+
+    ECP_SECP256K1 H;
+    BIG_256_28 hx, m_big, r_big;
+    BIG_256_28_fromBytes(hx, (char *)ck);
+    if (!ECP_SECP256K1_setx(&H, hx, 0)) return -1;
+    ECP_SECP256K1_affine(&H);
+    BIG_256_28_fromBytes(m_big, (char *)msg);
+    BIG_256_28_fromBytes(r_big, (char *)rho);
+
+    for (uint32_t attempt = 0; attempt < 1024; ++attempt) {
+        BIG_256_28 a[R], b[R];
+        ECP_SECP256K1 A[R];
+        uint8_t all_A[R * NIWI_PBSCH_CMP_SIZE];
+        uint16_t selected_ch[R], selected_hash[R];
+        uint16_t alt_ch[R], alt_hash[R];
+        uint8_t selected_z_m[R][32], selected_z_r[R][32];
+        uint8_t alt_z_m[R][32], alt_z_r[R][32];
+        uint8_t has_alt[R];
+        uint32_t threshold_sum = 0;
+
+        memset(has_alt, 0, sizeof(has_alt));
+        for (uint16_t i = 0; i < R; ++i) {
+            if (derive_scalar(seed, attempt, i + 1, 'a', a[i]) != 0 ||
+                derive_scalar(seed, attempt, i + 1, 'b', b[i]) != 0) {
+                return -1;
+            }
+            cmt3_sigma_commit(&H, a[i], b[i], &A[i]);
+            point_compressed(&A[i], all_A + i * NIWI_PBSCH_CMP_SIZE);
+        }
+
+        for (uint16_t i = 0; i < R; ++i) {
+            uint16_t best_ch = 0;
+            uint16_t best_hash = 0xffff;
+            uint8_t best_z_m[32], best_z_r[32];
+            int has_best = 0;
+
+            for (uint16_t ch = 0; ch < (1u << T); ++ch) {
+                BIG_256_28 z_m_big, z_r_big;
+                uint8_t z_m[32], z_r[32];
+                uint16_t h;
+
+                scalar_addmul(z_m_big, a[i], ch, m_big);
+                scalar_addmul(z_r_big, b[i], ch, r_big);
+                scalar_to_bytes(z_m_big, z_m);
+                scalar_to_bytes(z_r_big, z_r);
+                h = cmt3_hash_value(ck, c, all_A, i + 1, ch, z_m, z_r);
+                if (!has_best || h < best_hash) {
+                    if (has_best && !has_alt[i]) {
+                        alt_ch[i] = best_ch;
+                        alt_hash[i] = best_hash;
+                        memcpy(alt_z_m[i], best_z_m, 32);
+                        memcpy(alt_z_r[i], best_z_r, 32);
+                        has_alt[i] = 1;
+                    }
+                    best_ch = ch;
+                    best_hash = h;
+                    memcpy(best_z_m, z_m, 32);
+                    memcpy(best_z_r, z_r, 32);
+                    has_best = 1;
+                } else if (!has_alt[i]) {
+                    alt_ch[i] = ch;
+                    alt_hash[i] = h;
+                    memcpy(alt_z_m[i], z_m, 32);
+                    memcpy(alt_z_r[i], z_r, 32);
+                    has_alt[i] = 1;
+                }
+                if (best_hash == 0 && has_alt[i]) break;
+            }
+
+            selected_ch[i] = best_ch;
+            selected_hash[i] = best_hash;
+            memcpy(selected_z_m[i], best_z_m, 32);
+            memcpy(selected_z_r[i], best_z_r, 32);
+            threshold_sum += best_hash;
+            if (threshold_sum > S_BOUND) break;
+        }
+
+        if (threshold_sum <= S_BOUND) {
+            size_t off = 0;
+            memcpy(proof_out + off, "CMT3", 4); off += 4;
+            proof_out[off++] = 0x01;
+            memcpy(proof_out + off, ck, 32); off += 32;
+            memcpy(proof_out + off, all_A, sizeof(all_A)); off += sizeof(all_A);
+            for (uint16_t i = 0; i < R; ++i) {
+                proof_out[off++] = (uint8_t)(selected_ch[i] >> 8);
+                proof_out[off++] = (uint8_t)(selected_ch[i] & 0xff);
+            }
+            for (uint16_t i = 0; i < R; ++i) {
+                memcpy(proof_out + off, selected_z_m[i], 32); off += 32;
+            }
+            for (uint16_t i = 0; i < R; ++i) {
+                memcpy(proof_out + off, selected_z_r[i], 32); off += 32;
+            }
+            if (off != NIWI_PBSCH_CMT3_PROOF_SIZE) return -1;
+
+            size_t qoff = 0;
+            uint16_t rows = 0;
+            memcpy(queries_out + qoff, "CQ3Q", 4); qoff += 4;
+            qoff += 2;
+            for (uint16_t i = 0; i < R; ++i) {
+                qoff += cmt3_write_query_row(
+                    queries_out + qoff, c, ck, all_A, i + 1, selected_ch[i],
+                    selected_z_m[i], selected_z_r[i], selected_hash[i], 1);
+                rows++;
+                if (has_alt[i]) {
+                    qoff += cmt3_write_query_row(
+                        queries_out + qoff, c, ck, all_A, i + 1, alt_ch[i],
+                        alt_z_m[i], alt_z_r[i], alt_hash[i], 0);
+                    rows++;
+                }
+            }
+            queries_out[4] = (uint8_t)(rows >> 8);
+            queries_out[5] = (uint8_t)(rows & 0xff);
+            *queries_len = qoff;
+            return 0;
         }
     }
 

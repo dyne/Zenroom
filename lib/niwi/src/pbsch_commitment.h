@@ -95,11 +95,27 @@ int niwi_pbsch_pedersen_verify_lf(const uint8_t c[NIWI_PBSCH_CMP_SIZE],
  * challenge-search loop out of Lua.
  */
 #define NIWI_PBSCH_CMT3_PROOF_SIZE 1027
+#define NIWI_PBSCH_CMT3_QUERY_ROW_SIZE 466
+#define NIWI_PBSCH_CMT3_QUERY_MAX_ROWS 20
+#define NIWI_PBSCH_CMT3_QUERY_MAX_SIZE \
+    (6 + NIWI_PBSCH_CMT3_QUERY_ROW_SIZE * NIWI_PBSCH_CMT3_QUERY_MAX_ROWS)
 
 int niwi_pbsch_cmt3_prove_seeded(
     const uint8_t c[NIWI_PBSCH_CMP_SIZE], const uint8_t msg[32],
     const uint8_t rho[32], const uint8_t seed[32],
     uint8_t proof_out[NIWI_PBSCH_CMT3_PROOF_SIZE]);
+
+int niwi_pbsch_cmt3_prove_seeded_observed(
+    const uint8_t c[NIWI_PBSCH_CMP_SIZE], const uint8_t msg[32],
+    const uint8_t rho[32], const uint8_t seed[32],
+    uint8_t proof_out[NIWI_PBSCH_CMT3_PROOF_SIZE],
+    uint8_t queries_out[NIWI_PBSCH_CMT3_QUERY_MAX_SIZE],
+    size_t *queries_len);
+
+uint16_t niwi_pbsch_cmt3_hash_value(
+    const uint8_t ck[32], const uint8_t c[NIWI_PBSCH_CMP_SIZE],
+    const uint8_t all_A[10 * NIWI_PBSCH_CMP_SIZE], uint16_t i,
+    uint16_t ch, const uint8_t z_m[32], const uint8_t z_r[32]);
 
 int niwi_pbsch_cmt3_verify(const uint8_t c[NIWI_PBSCH_CMP_SIZE],
                            const uint8_t proof[NIWI_PBSCH_CMT3_PROOF_SIZE]);

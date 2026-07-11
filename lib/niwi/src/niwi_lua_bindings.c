@@ -1233,6 +1233,78 @@ static int lua_pbsch_cmt3_prove_seeded(lua_State *L) {
     return 1;
 }
 
+/* niwi_pbsch_cmt3_prove_seeded_observed(c, msg, rho, seed) -> proof, queries */
+static int lua_pbsch_cmt3_prove_seeded_observed(lua_State *L) {
+    const octet *c = o_arg(L, 1);
+    const octet *msg = o_arg(L, 2);
+    const octet *rho = o_arg(L, 3);
+    const octet *seed = o_arg(L, 4);
+    if (!c || o_len(c) != 33) {
+        o_free(L, seed); o_free(L, rho); o_free(L, msg); o_free(L, c);
+        lerror(L, "pbsch_cmt3_prove_seeded_observed: c must be 33 bytes");
+        return 0;
+    }
+    if (!msg || o_len(msg) != 32) {
+        o_free(L, seed); o_free(L, rho); o_free(L, msg); o_free(L, c);
+        lerror(L, "pbsch_cmt3_prove_seeded_observed: msg must be 32 bytes");
+        return 0;
+    }
+    if (!rho || o_len(rho) != 32) {
+        o_free(L, seed); o_free(L, rho); o_free(L, msg); o_free(L, c);
+        lerror(L, "pbsch_cmt3_prove_seeded_observed: rho must be 32 bytes");
+        return 0;
+    }
+    if (!seed || o_len(seed) != 32) {
+        o_free(L, seed); o_free(L, rho); o_free(L, msg); o_free(L, c);
+        lerror(L, "pbsch_cmt3_prove_seeded_observed: seed must be 32 bytes");
+        return 0;
+    }
+
+    uint8_t proof[NIWI_PBSCH_CMT3_PROOF_SIZE];
+    uint8_t queries[NIWI_PBSCH_CMT3_QUERY_MAX_SIZE];
+    size_t queries_len = 0;
+    if (niwi_pbsch_cmt3_prove_seeded_observed(
+            (const uint8_t *)o_val(c), (const uint8_t *)o_val(msg),
+            (const uint8_t *)o_val(rho), (const uint8_t *)o_val(seed),
+            proof, queries, &queries_len) != 0) {
+        o_free(L, seed); o_free(L, rho); o_free(L, msg); o_free(L, c);
+        lerror(L, "pbsch_cmt3_prove_seeded_observed: failed");
+        return 0;
+    }
+    push_octet_copy(L, proof, sizeof(proof));
+    push_octet_copy(L, queries, queries_len);
+    o_free(L, seed); o_free(L, rho); o_free(L, msg); o_free(L, c);
+    return 2;
+}
+
+/* niwi_pbsch_cmt3_hash_value(ck, c, all_A, i, ch, z_m, z_r) -> integer */
+static int lua_pbsch_cmt3_hash_value(lua_State *L) {
+    const octet *ck = o_arg(L, 1);
+    const octet *c = o_arg(L, 2);
+    const octet *all_A = o_arg(L, 3);
+    lua_Integer i = luaL_checkinteger(L, 4);
+    lua_Integer ch = luaL_checkinteger(L, 5);
+    const octet *z_m = o_arg(L, 6);
+    const octet *z_r = o_arg(L, 7);
+    if (!ck || o_len(ck) != 32 || !c || o_len(c) != 33 ||
+        !all_A || o_len(all_A) != 10 * NIWI_PBSCH_CMP_SIZE ||
+        i < 1 || i > 10 || ch < 0 || ch >= 4096 ||
+        !z_m || o_len(z_m) != 32 || !z_r || o_len(z_r) != 32) {
+        o_free(L, z_r); o_free(L, z_m); o_free(L, all_A);
+        o_free(L, c); o_free(L, ck);
+        lua_pushnil(L);
+        return 1;
+    }
+    uint16_t h = niwi_pbsch_cmt3_hash_value(
+        (const uint8_t *)o_val(ck), (const uint8_t *)o_val(c),
+        (const uint8_t *)o_val(all_A), (uint16_t)i, (uint16_t)ch,
+        (const uint8_t *)o_val(z_m), (const uint8_t *)o_val(z_r));
+    o_free(L, z_r); o_free(L, z_m); o_free(L, all_A);
+    o_free(L, c); o_free(L, ck);
+    lua_pushinteger(L, h);
+    return 1;
+}
+
 /* niwi_pbsch_cmt3_verify(c: OCTET(33), proof: OCTET(1027)) -> bool */
 static int lua_pbsch_cmt3_verify(lua_State *L) {
     const octet *c = o_arg(L, 1);
@@ -1277,6 +1349,8 @@ static const luaL_Reg niwi_functions[] = {
     {"pbsch_pedersen_commit_lf",                         lua_pbsch_pedersen_commit_lf},
     {"pbsch_pedersen_verify_lf",                         lua_pbsch_pedersen_verify_lf},
     {"pbsch_cmt3_prove_seeded",                          lua_pbsch_cmt3_prove_seeded},
+    {"pbsch_cmt3_prove_seeded_observed",                 lua_pbsch_cmt3_prove_seeded_observed},
+    {"pbsch_cmt3_hash_value",                             lua_pbsch_cmt3_hash_value},
     {"pbsch_cmt3_verify",                                lua_pbsch_cmt3_verify},
     {NULL, NULL}
 };
