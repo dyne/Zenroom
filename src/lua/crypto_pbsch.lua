@@ -77,7 +77,6 @@ local CMT2_PROOF_TAG = "CMT2"
 local CMT3_PROOF_TAG = "CMT3"
 local SECP_ORDER_HEX =
     "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"
-local SECP_ORDER_BIG = BIG.new(OCTET.from_hex(SECP_ORDER_HEX))
 
 local function fail(message)
     error(message, 2)
@@ -129,12 +128,6 @@ local function scalar_is_canonical(s)
     return s:hex():lower() < SECP_ORDER_HEX
 end
 
-local function big_to_scalar(x)
-    local hex = x:octet():hex()
-    if #hex > 64 then fail("scalar overflow") end
-    return OCTET.from_hex(string.rep("0", 64 - #hex) .. hex)
-end
-
 local function int_to_scalar(n)
     assert(type(n) == "number" and n >= 0 and n < 9007199254740992,
            "integer scalar out of range")
@@ -142,21 +135,19 @@ local function int_to_scalar(n)
 end
 
 local function scalar_addmul(a, b, c)
-    local acc = BIG.add(BIG.new(a), BIG.modmul(BIG.new(b), BIG.new(c),
-                                          SECP_ORDER_BIG))
-    return big_to_scalar(BIG.mod(acc, SECP_ORDER_BIG))
+    return S.bip340_scalar_add(a, S.bip340_scalar_mul(b, c))
 end
 
-local function scalar_add_big(a, b)
-    return BIG.mod(BIG.add(a, b), SECP_ORDER_BIG)
+local function scalar_add(a, b)
+    return S.bip340_scalar_add(a, b)
 end
 
-local function scalar_sub_big(a, b)
-    return BIG.modsub(a, b, SECP_ORDER_BIG)
+local function scalar_sub(a, b)
+    return S.bip340_scalar_add(a, S.bip340_scalar_negate(b))
 end
 
-local function scalar_div_big(a, b)
-    return a:moddiv(b, SECP_ORDER_BIG)
+local function scalar_div(a, b)
+    return S.bip340_scalar_div(a, b)
 end
 
 local function cmt2_challenge(ck, commitment, A)
@@ -544,8 +535,6 @@ local function cmt3_build_proof(commitment, message, rho, opts, observe)
     end
 
     local ck = pbsch.commitment_key()
-    local message_big = BIG.new(message)
-    local rho_big = BIG.new(rho)
     for attempt = 0, 1023 do
         local queries = observe and {} or nil
         local A, a, b = {}, {}, {}
@@ -559,11 +548,9 @@ local function cmt3_build_proof(commitment, message, rho, opts, observe)
         local threshold_sum = 0
         for i = 1, pbsch.CMT3_R do
             local best_ch, best_z_m, best_z_r, best_hash = nil, nil, nil, nil
-            local z_m_big = BIG.new(a[i])
-            local z_r_big = BIG.new(b[i])
+            local z_m = a[i]
+            local z_r = b[i]
             for ch = 0, (1 << pbsch.CMT3_T) - 1 do
-                local z_m = big_to_scalar(z_m_big)
-                local z_r = big_to_scalar(z_r_big)
                 local h = cmt3_threshold_hash(ck, commitment, all_A, i,
                                               ch, z_m, z_r)
                 if observe then
@@ -583,8 +570,8 @@ local function cmt3_build_proof(commitment, message, rho, opts, observe)
                     best_ch, best_z_m, best_z_r, best_hash = ch, z_m, z_r, h
                 end
                 if best_hash == 0 and (not observe or ch ~= best_ch) then break end
-                z_m_big = scalar_add_big(z_m_big, message_big)
-                z_r_big = scalar_add_big(z_r_big, rho_big)
+                z_m = scalar_add(z_m, message)
+                z_r = scalar_add(z_r, rho)
             end
             selected_ch[i] = best_ch
             selected_z_m[i] = best_z_m
@@ -647,17 +634,13 @@ function pbsch.cmt3_extract_from_queries(commitment, proof, queries)
             if h == q.h and
                pbsch.cmt3_sigma_verify(commitment, parsed.A[q.i], q.ch,
                                        q.z_m, q.z_r) then
-                local delta_ch = scalar_sub_big(BIG.new(parsed.ch[q.i]),
-                                                BIG.new(q.ch))
-                if delta_ch ~= BIG.new(0) then
-                    local delta_m = scalar_sub_big(BIG.new(parsed.z_m[q.i]),
-                                                  BIG.new(q.z_m))
-                    local delta_r = scalar_sub_big(BIG.new(parsed.z_r[q.i]),
-                                                  BIG.new(q.z_r))
-                    local message = big_to_scalar(scalar_div_big(delta_m,
-                                                                 delta_ch))
-                    local rho = big_to_scalar(scalar_div_big(delta_r,
-                                                             delta_ch))
+                local delta_ch = scalar_sub(int_to_scalar(parsed.ch[q.i]),
+                                            int_to_scalar(q.ch))
+                if delta_ch:hex() ~= string.rep("0", 64) then
+                    local delta_m = scalar_sub(parsed.z_m[q.i], q.z_m)
+                    local delta_r = scalar_sub(parsed.z_r[q.i], q.z_r)
+                    local message = scalar_div(delta_m, delta_ch)
+                    local rho = scalar_div(delta_r, delta_ch)
                     if pbsch.verify_c(commitment, message, rho) then
                         return {
                             profile = pbsch.CMT3_PROFILE,

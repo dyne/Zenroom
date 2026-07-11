@@ -86,6 +86,17 @@ assert(pbsch.cmt3_verify(record.commitment,
 local sigma_a = sha256("PBSch/CMT3/test/a")
 local sigma_b = sha256("PBSch/CMT3/test/b")
 local sigma_ch = 37
+local scalar_three = OCTET.from_hex(string.rep("0", 63) .. "3")
+local scalar_five = OCTET.from_hex(string.rep("0", 63) .. "5")
+local scalar_div = SECP.bip340_scalar_div(SECP.bip340_scalar_mul(scalar_three,
+                                                                 scalar_five),
+                                          scalar_five)
+assert(scalar_div:string() == scalar_three:string(),
+       "SECP scalar division did not invert multiplication modulo n")
+local zero_divisor_ok = pcall(function()
+    SECP.bip340_scalar_div(scalar_three, OCTET.zero(32))
+end)
+assert(zero_divisor_ok == false, "SECP scalar division accepted zero divisor")
 local sigma_A = pbsch.cmt3_sigma_commit(sigma_a, sigma_b)
 local sigma_z_m, sigma_z_r =
     pbsch.cmt3_sigma_respond(sigma_a, sigma_b, sigma_ch, m, rho)
