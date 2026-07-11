@@ -25,6 +25,7 @@
 #include "npro.h"
 #include "relations/bip340_relation.h"
 #include "relations/rpbsch_relation.h"
+#include "relations/rpbsch_ligero_relation.h"
 #include "relations/zkcc_p256_relation.h"
 
 #include <stdint.h>
@@ -1057,7 +1058,8 @@ static int parse_longfellow_body(niwi_ctx_t *ctx,
     if (!ctx || !proof || !off || *off > proof_len) return -1;
     int needs_body = require_for_relation && !ctx->validate &&
                      (ctx->relation_id == NIWI_RELATION_ZKCC_BIP340 ||
-                      ctx->relation_id == NIWI_RELATION_ZKCC_P256);
+                      ctx->relation_id == NIWI_RELATION_ZKCC_P256 ||
+                      ctx->relation_id == NIWI_RELATION_RPBSCH);
     if (*off == proof_len) {
         if (needs_body) {
             set_error(ctx, "niwi_verify: missing Longfellow proof body");
@@ -1089,6 +1091,12 @@ static int parse_longfellow_body(niwi_ctx_t *ctx,
         niwi_zkcc_p256_ligero_verify(ctx->artifact, ctx->artifact_len,
                                       public_inputs, pub_len,
                                       proof + *off, body_len) != 0) {
+        set_error(ctx, "niwi_verify: invalid Longfellow proof body");
+        return -1;
+    }
+    if (ctx->relation_id == NIWI_RELATION_RPBSCH &&
+        niwi_rpbsch_ligero_verify(public_inputs, pub_len,
+                                  proof + *off, body_len) != 0) {
         set_error(ctx, "niwi_verify: invalid Longfellow proof body");
         return -1;
     }
@@ -1537,6 +1545,16 @@ static int build_proof(niwi_ctx_t *ctx,
                                      private_inputs, priv_len,
                                      &longfellow_body,
                                      &longfellow_body_len) != 0) {
+        free(tableau_entries);
+        set_error(ctx, "niwi_prove: failed to build Longfellow proof body");
+        return -1;
+    }
+    if (relation_backed && !ctx->validate &&
+        ctx->relation_id == NIWI_RELATION_RPBSCH &&
+        niwi_rpbsch_ligero_prove(public_inputs, pub_len,
+                                 private_inputs, priv_len,
+                                 &longfellow_body,
+                                 &longfellow_body_len) != 0) {
         free(tableau_entries);
         set_error(ctx, "niwi_prove: failed to build Longfellow proof body");
         return -1;

@@ -23,6 +23,12 @@ local function contains_tag(octet, tag)
   return octet:string():find(tag, 1, true) ~= nil
 end
 
+local function flip_last_byte(octet)
+  local s = octet:string()
+  local last = s:byte(#s)
+  return OCTET.from_string(s:sub(1, #s - 1) .. string.char(last ~ 1))
+end
+
 print('=== RPBSch BIP340 NIWI fixture ===')
 
 local circuit = zkcc.bip340_circuit()
@@ -72,9 +78,11 @@ assert(native_extracted1:string() == native_witness1:string(),
        'native RPBSch branch 1 extracted witness mismatch')
 assert(contains_tag(native_proof1, 'LIG0'),
        'native RPBSch proof must carry current native LIG0 scaffold')
--- This must flip only when the real checked RPBSch Longfellow body lands.
-assert(not contains_tag(native_proof1, 'LZK0'),
-       'native RPBSch must not claim a checked LZK0 body yet')
+assert(contains_tag(native_proof1, 'LZK0'),
+       'native RPBSch proof must carry checked LZK0 body')
+assert(rpbsch.verify_branch_relation(flip_last_byte(native_proof1),
+                                     fixture.statement) == false,
+       'mutated RPBSch LZK0/native proof accepted')
 
 local native_witness2 = rpbsch.branch_relation_witness(
   circuit, fixture, rpbsch.BRANCH_TRAPDOOR)
@@ -89,13 +97,14 @@ assert(native_extracted2:string() == native_witness2:string(),
        'native RPBSch branch 2 extracted witness mismatch')
 assert(contains_tag(native_proof2, 'LIG0'),
        'native RPBSch proof must carry current native LIG0 scaffold')
--- This must flip only when the real checked RPBSch Longfellow body lands.
-assert(not contains_tag(native_proof2, 'LZK0'),
-       'native RPBSch must not claim a checked LZK0 body yet')
+assert(contains_tag(native_proof2, 'LZK0'),
+       'native RPBSch proof must carry checked LZK0 body')
 assert(#native_witness1:str() == #native_witness2:str(),
        'native RPBSch witness size leaks selector')
-assert(#native_proof1:str() == #native_proof2:str(),
-       'native RPBSch proof size leaks selector')
+-- The checked Longfellow body uses randomized proof compression, so exact
+-- serialized proof byte length is not a stable selector-leak regression.
+assert(contains_tag(native_proof1, 'LZK0') and contains_tag(native_proof2, 'LZK0'),
+       'native RPBSch checked proof body missing')
 
 local invalid_selector_witness = OCTET.from_hex(
   native_witness1:hex():sub(1, 8) .. '00000003' ..

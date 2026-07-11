@@ -757,6 +757,55 @@ build_rpbsch_branch2_circuit(void) {
   return q.mkcircuit(1);
 }
 
+inline std::unique_ptr<proofs::Circuit<proofs::Fp256k1Base>>
+build_rpbsch_selector_circuit(void) {
+  using Field = proofs::Fp256k1Base;
+  using Backend = proofs::CompilerBackend<Field>;
+  using Logic = proofs::Logic<Field, Backend>;
+  using BitPlucker = proofs::BitPlucker<Logic, 4>;
+  using FlatSha = proofs::FlatSHA256Circuit<Logic, BitPlucker>;
+
+  proofs::QuadCircuit<Field> q(proofs::p256k1_base);
+  const Backend backend(&q);
+  const Logic logic(&backend, proofs::p256k1_base);
+  const FlatSha sha(logic);
+  const RpbschRelationCircuit<Logic, BitPlucker> relation(logic, sha);
+
+  auto X = logic.eltw_input();
+  auto X_prime = logic.eltw_input();
+  auto R = logic.eltw_input();
+  auto c = logic.eltw_input();
+  auto C_prefix = logic.eltw_input();
+  auto C_x = logic.eltw_input();
+  auto phi = logic.eltw_input();
+  auto ck = logic.eltw_input();
+  auto S_prefix = logic.eltw_input();
+  auto S_x = logic.eltw_input();
+  q.private_input();
+
+  auto selector = logic.eltw_input();
+  auto selector_zero_based = logic.sub(selector, logic.konst(1));
+  logic.assert_is_bit(typename Logic::BitW(selector_zero_based, logic.f_));
+
+  typename RpbschRelationCircuit<Logic, BitPlucker>::Branch1Witness branch1;
+  typename RpbschRelationCircuit<Logic, BitPlucker>::Branch2Witness branch2;
+  branch1.input(logic);
+  branch2.input(logic);
+
+  /* Fixed two-slot v1 composition.
+   *
+   * The selector is private and the witness shape is constant, but both branch
+   * slots are constrained. This is stricter than the final paper OR relation;
+   * it prevents malformed padding from becoming an unconstrained channel while
+   * the selector-gated satisfaction layer is still pending.
+   */
+  relation.assert_branch1(X, X_prime, R, c, C_prefix, C_x, phi, ck,
+                          S_prefix, S_x, branch1);
+  relation.assert_branch2(X, X_prime, R, c, C_prefix, C_x, phi, ck,
+                          S_prefix, S_x, branch2);
+  return q.mkcircuit(1);
+}
+
 }  // namespace niwi::rpbsch
 
 #endif  // NIWI_CIRCUITS_RPBSCH_RELATION_CIRCUIT_H

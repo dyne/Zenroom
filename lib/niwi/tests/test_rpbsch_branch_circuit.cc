@@ -500,6 +500,43 @@ void fill_branch2_inputs(const Fixture& f, proofs::Dense<Field> *witness,
     assert(wf.size() == witness->n1_);
 }
 
+void fill_selector_inputs(const Fixture& f, uint8_t selector,
+                          proofs::Dense<Field> *witness,
+                          proofs::Dense<Field> *pub,
+                          size_t *branch2_offset) {
+    auto branch1_circuit = niwi::rpbsch::build_rpbsch_branch1_circuit();
+    auto branch2_circuit = niwi::rpbsch::build_rpbsch_branch2_circuit();
+    proofs::Dense<Field> branch1_witness(1, branch1_circuit->ninputs);
+    proofs::Dense<Field> branch1_pub(1, branch1_circuit->npub_in);
+    proofs::Dense<Field> branch2_witness(1, branch2_circuit->ninputs);
+    proofs::Dense<Field> branch2_pub(1, branch2_circuit->npub_in);
+    fill_branch1_inputs(f, &branch1_witness, &branch1_pub);
+    fill_branch2_inputs(f, &branch2_witness, &branch2_pub);
+    assert(branch1_pub.n1_ == pub->n1_);
+    assert(branch2_pub.n1_ == pub->n1_);
+    for (size_t i = 0; i < pub->n1_; ++i) {
+        assert(branch1_pub.v_[i] == branch2_pub.v_[i]);
+    }
+
+    proofs::DenseFiller<Field> pub_filler(*pub);
+    for (size_t i = 0; i < branch1_pub.n1_; ++i) {
+        pub_filler.push_back(branch1_pub.v_[i]);
+    }
+    assert(pub_filler.size() == pub->n1_);
+
+    proofs::DenseFiller<Field> wf(*witness);
+    for (size_t i = 0; i < pub->n1_; ++i) wf.push_back(pub->v_[i]);
+    wf.push_back(proofs::p256k1_base.of_scalar(selector));
+    for (size_t i = branch1_circuit->npub_in; i < branch1_witness.n1_; ++i) {
+        wf.push_back(branch1_witness.v_[i]);
+    }
+    if (branch2_offset) *branch2_offset = wf.size();
+    for (size_t i = branch2_circuit->npub_in; i < branch2_witness.n1_; ++i) {
+        wf.push_back(branch2_witness.v_[i]);
+    }
+    assert(wf.size() == witness->n1_);
+}
+
 void test_branch1_circuit_shape(void) {
     auto circuit = niwi::rpbsch::build_rpbsch_branch1_circuit();
     assert(circuit != nullptr);
@@ -514,6 +551,14 @@ void test_branch2_circuit_shape(void) {
     assert(circuit->npub_in == 11);
     assert(circuit->ninputs > circuit->npub_in);
     std::printf("  PASS test_branch2_circuit_shape\n");
+}
+
+void test_selector_circuit_shape(void) {
+    auto circuit = niwi::rpbsch::build_rpbsch_selector_circuit();
+    assert(circuit != nullptr);
+    assert(circuit->npub_in == 11);
+    assert(circuit->ninputs > circuit->npub_in);
+    std::printf("  PASS test_selector_circuit_shape\n");
 }
 
 void test_branch1_valid_and_negative_statement_fields(void) {
@@ -587,14 +632,49 @@ void test_branch2_valid_and_negative_statement_fields(void) {
     std::printf("  PASS test_branch2_valid_and_negative_statement_fields\n");
 }
 
+void test_selector_valid_and_rejects_bad_slots(void) {
+    auto circuit = niwi::rpbsch::build_rpbsch_selector_circuit();
+    Fixture f = fixture();
+
+    size_t branch2_offset = 0;
+    proofs::Dense<Field> selector1(1, circuit->ninputs);
+    proofs::Dense<Field> pub1(1, circuit->npub_in);
+    fill_selector_inputs(f, 1, &selector1, &pub1, &branch2_offset);
+    assert(evaluates(*circuit, selector1));
+
+    proofs::Dense<Field> selector2(1, circuit->ninputs);
+    proofs::Dense<Field> pub2(1, circuit->npub_in);
+    fill_selector_inputs(f, 2, &selector2, &pub2, nullptr);
+    assert(evaluates(*circuit, selector2));
+
+    proofs::Dense<Field> bad_selector(1, circuit->ninputs);
+    proofs::Dense<Field> bad_selector_pub(1, circuit->npub_in);
+    fill_selector_inputs(f, 3, &bad_selector, &bad_selector_pub, nullptr);
+    assert(!evaluates(*circuit, bad_selector));
+
+    auto bad_branch1 = selector1.clone();
+    bad_branch1->v_[circuit->npub_in + 1] = proofs::p256k1_base.addf(
+        bad_branch1->v_[circuit->npub_in + 1], proofs::p256k1_base.one());
+    assert(!evaluates(*circuit, *bad_branch1));
+
+    auto bad_branch2_padding = selector1.clone();
+    bad_branch2_padding->v_[branch2_offset] = proofs::p256k1_base.addf(
+        bad_branch2_padding->v_[branch2_offset], proofs::p256k1_base.one());
+    assert(!evaluates(*circuit, *bad_branch2_padding));
+
+    std::printf("  PASS test_selector_valid_and_rejects_bad_slots\n");
+}
+
 }  // namespace
 
 int main(void) {
     std::printf("lib/niwi RPBSch branch circuit tests:\n");
     test_branch1_circuit_shape();
     test_branch2_circuit_shape();
+    test_selector_circuit_shape();
     test_branch1_valid_and_negative_statement_fields();
     test_branch2_valid_and_negative_statement_fields();
+    test_selector_valid_and_rejects_bad_slots();
     std::printf("All RPBSch branch circuit tests passed.\n");
     return 0;
 }

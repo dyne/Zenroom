@@ -35,7 +35,7 @@ NIWI_SOURCES := src/niwi.c.o src/encoding.c.o src/hash.c.o src/npro.c.o src/comm
                 src/pbsch_commitment.c.o src/pbsch_commitment_lf.cc.o \
                 src/secp256k1/secp256k1_curve.cc.o src/secp256k1/secp256k1_witness.cc.o \
                 src/relations/bip340_relation.cc.o src/relations/zkcc_p256_relation.cc.o \
-                src/relations/rpbsch_relation.cc.o
+                src/relations/rpbsch_relation.cc.o src/relations/rpbsch_ligero_relation.cc.o
 
 all: libniwi.a
 
