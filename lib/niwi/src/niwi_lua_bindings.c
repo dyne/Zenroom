@@ -1323,6 +1323,35 @@ static int lua_pbsch_cmt3_verify(lua_State *L) {
     return 1;
 }
 
+/* niwi_rpbsch_validate_full_statement(envelope: OCTET) -> table|nil */
+static int lua_rpbsch_validate_full_statement(lua_State *L) {
+    const octet *envelope = o_arg(L, 1);
+    niwi_rpbsch_statement_t parsed;
+
+    if (!envelope ||
+        niwi_rpbsch_validate_full_statement((const uint8_t *)o_val(envelope),
+                                            o_len(envelope), &parsed) != 0) {
+        o_free(L, envelope);
+        lua_pushnil(L);
+        return 1;
+    }
+
+    lua_newtable(L);
+    push_octet_copy(L, parsed.core, sizeof(parsed.core));
+    lua_setfield(L, -2, "core_statement");
+    push_octet_copy(L, parsed.C, sizeof(parsed.C));
+    lua_setfield(L, -2, "C");
+    push_octet_copy(L, parsed.S, sizeof(parsed.S));
+    lua_setfield(L, -2, "S");
+    push_octet_copy(L, parsed.C_proof, sizeof(parsed.C_proof));
+    lua_setfield(L, -2, "C_proof");
+    push_octet_copy(L, parsed.S_proof, sizeof(parsed.S_proof));
+    lua_setfield(L, -2, "S_proof");
+
+    o_free(L, envelope);
+    return 1;
+}
+
 /* ---- Module registration --------------------------------------------- */
 
 static const luaL_Reg niwi_functions[] = {
@@ -1352,6 +1381,7 @@ static const luaL_Reg niwi_functions[] = {
     {"pbsch_cmt3_prove_seeded_observed",                 lua_pbsch_cmt3_prove_seeded_observed},
     {"pbsch_cmt3_hash_value",                             lua_pbsch_cmt3_hash_value},
     {"pbsch_cmt3_verify",                                lua_pbsch_cmt3_verify},
+    {"rpbsch_validate_full_statement",                    lua_rpbsch_validate_full_statement},
     {NULL, NULL}
 };
 

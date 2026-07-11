@@ -24,6 +24,11 @@ NIWI_CFLAGS ?= -O2 -I../../src -I. -Isrc -Iinclude -I../../lib/longfellow-zk \
                -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
 NIWI_AR ?= ar
 
+# libniwi.a is linked into libzenroom.so by the top-level linux-lib target.
+# Keep the archive objects PIC even when the archive is first built through
+# linux-exe with non-library top-level flags.
+NIWI_CFLAGS += -fPIC
+
 NIWI_AMCL := ../../lib/milagro-crypto-c/build/lib/libamcl_curve_SECP256K1.a \
              ../../lib/milagro-crypto-c/build/lib/libamcl_core.a
 NIWI_ZK_DEPS := ../../lib/longfellow-zk/liblongfellow-zk.a \
@@ -44,7 +49,7 @@ libniwi.a: $(NIWI_SOURCES)
 	$(NIWI_AR) -r $@ $(NIWI_SOURCES)
 
 clean:
-	rm -f src/*.c.o tests/*.o src/secp256k1/*.cc.o src/relations/*.cc.o
+	rm -f src/*.c.o src/*.cc.o tests/*.o src/secp256k1/*.cc.o src/relations/*.cc.o
 	rm -f *.a test_abi test_encoding test_hash test_npro test_commitment test_challenge_schedule test_niwi_proof_serde test_extract test_vectors test_bench test_secp256k1 test_secp256k1_circuit test_zkcc_p256_relation test_bip340_relation test_rpbsch_adapter test_ligero_param test_ligero_bip340 test_rpbsch_sha_circuit test_rpbsch_commitment_circuit test_rpbsch_branch_circuit
 
 %.c.o: %.c

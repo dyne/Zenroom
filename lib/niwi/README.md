@@ -36,6 +36,15 @@ public Cmt proof object. Keep `CMT1` and `CMT2` available for compatibility and
 regression coverage, but do not claim paper-exact RPBSch for paths that only
 use those profiles.
 
+## Native protocol boundary
+
+Lua expresses the paper protocol through typed records, envelopes, and readable
+protocol wiring. C enforces algebra, transcript, and proof invariants. In
+production paths, native code owns challenge loops, gate/tableau loops, SECP
+arithmetic, binary transcript hashing, relation evaluation, CMT3
+verification/extraction, and production proof bodies. Lua may assemble and name
+protocol objects, but native APIs are the authority for cryptographic truth.
+
 ## How to switch profiles
 
 Lua callers should use the profile-specific helpers in `src/lua/crypto_pbsch.lua`:

@@ -72,6 +72,15 @@ can be promoted from fast accept path to canonical verifier only after it has
 parity against Lua-generated and native-generated CMT3 proofs, including
 negative mutation tests.
 
+## Native protocol boundary
+
+Lua expresses the paper protocol through typed records, envelopes, and readable
+protocol wiring. C enforces algebra, transcript, and proof invariants. In
+production paths, native code owns challenge loops, gate/tableau loops, SECP
+arithmetic, binary transcript hashing, relation evaluation, CMT3
+verification/extraction, and production proof bodies. Lua may assemble and name
+protocol objects, but native APIs are the authority for cryptographic truth.
+
 ## CMT3 Fischlin05 Profile
 
 `CMT3` is the best paper-level default for PBSch/RPBSch once implemented. It

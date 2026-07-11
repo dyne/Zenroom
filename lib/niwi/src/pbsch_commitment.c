@@ -554,6 +554,11 @@ int niwi_pbsch_cmt3_prove_seeded_observed(
     return -1;
 }
 
+static uint32_t read_u32_be(const uint8_t *p) {
+    return ((uint32_t)p[0] << 24) | ((uint32_t)p[1] << 16) |
+           ((uint32_t)p[2] << 8) | (uint32_t)p[3];
+}
+
 int niwi_pbsch_cmt3_verify(const uint8_t c[NIWI_PBSCH_CMP_SIZE],
                            const uint8_t proof[NIWI_PBSCH_CMT3_PROOF_SIZE]) {
     enum { R = 10, T = 12, S_BOUND = 10 };
@@ -620,5 +625,44 @@ int niwi_pbsch_cmt3_verify(const uint8_t c[NIWI_PBSCH_CMP_SIZE],
         if (threshold_sum > S_BOUND) return -1;
     }
 
+    return 0;
+}
+
+int niwi_rpbsch_parse_full_statement(const uint8_t *buf, size_t len,
+                                     niwi_rpbsch_statement_t *out) {
+    size_t off = 0;
+
+    if (!buf || !out || len != NIWI_RPBSCH_FULL_STATEMENT_SIZE) return -1;
+    if (memcmp(buf, "RPB2", 4) != 0) return -1;
+    off = 4;
+
+    if (read_u32_be(buf + off) != NIWI_RPBSCH_CORE_STATEMENT_SIZE) return -1;
+    off += 4;
+    memcpy(out->core, buf + off, NIWI_RPBSCH_CORE_STATEMENT_SIZE);
+    memcpy(out->C, buf + off + 128, NIWI_PBSCH_CMP_SIZE);
+    memcpy(out->S, buf + off + 225, NIWI_PBSCH_CMP_SIZE);
+    off += NIWI_RPBSCH_CORE_STATEMENT_SIZE;
+
+    if (read_u32_be(buf + off) != NIWI_PBSCH_CMT3_PROOF_SIZE) return -1;
+    off += 4;
+    memcpy(out->C_proof, buf + off, NIWI_PBSCH_CMT3_PROOF_SIZE);
+    off += NIWI_PBSCH_CMT3_PROOF_SIZE;
+
+    if (read_u32_be(buf + off) != NIWI_PBSCH_CMT3_PROOF_SIZE) return -1;
+    off += 4;
+    memcpy(out->S_proof, buf + off, NIWI_PBSCH_CMT3_PROOF_SIZE);
+    off += NIWI_PBSCH_CMT3_PROOF_SIZE;
+
+    return off == len ? 0 : -1;
+}
+
+int niwi_rpbsch_validate_full_statement(const uint8_t *buf, size_t len,
+                                        niwi_rpbsch_statement_t *out) {
+    niwi_rpbsch_statement_t parsed;
+    niwi_rpbsch_statement_t *dst = out ? out : &parsed;
+
+    if (niwi_rpbsch_parse_full_statement(buf, len, dst) != 0) return -1;
+    if (niwi_pbsch_cmt3_verify(dst->C, dst->C_proof) != 0) return -1;
+    if (niwi_pbsch_cmt3_verify(dst->S, dst->S_proof) != 0) return -1;
     return 0;
 }

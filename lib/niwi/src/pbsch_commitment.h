@@ -120,6 +120,26 @@ uint16_t niwi_pbsch_cmt3_hash_value(
 int niwi_pbsch_cmt3_verify(const uint8_t c[NIWI_PBSCH_CMP_SIZE],
                            const uint8_t proof[NIWI_PBSCH_CMT3_PROOF_SIZE]);
 
+#define NIWI_RPBSCH_CORE_STATEMENT_SIZE 258
+#define NIWI_RPBSCH_FULL_STATEMENT_SIZE \
+    (4 + 4 + NIWI_RPBSCH_CORE_STATEMENT_SIZE + \
+     4 + NIWI_PBSCH_CMT3_PROOF_SIZE + \
+     4 + NIWI_PBSCH_CMT3_PROOF_SIZE)
+
+typedef struct niwi_rpbsch_statement_s {
+    uint8_t core[NIWI_RPBSCH_CORE_STATEMENT_SIZE];
+    uint8_t C[NIWI_PBSCH_CMP_SIZE];
+    uint8_t S[NIWI_PBSCH_CMP_SIZE];
+    uint8_t C_proof[NIWI_PBSCH_CMT3_PROOF_SIZE];
+    uint8_t S_proof[NIWI_PBSCH_CMT3_PROOF_SIZE];
+} niwi_rpbsch_statement_t;
+
+int niwi_rpbsch_parse_full_statement(const uint8_t *buf, size_t len,
+                                     niwi_rpbsch_statement_t *out);
+
+int niwi_rpbsch_validate_full_statement(const uint8_t *buf, size_t len,
+                                        niwi_rpbsch_statement_t *out);
+
 #ifdef __cplusplus
 }
 #endif

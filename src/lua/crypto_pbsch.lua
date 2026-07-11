@@ -322,6 +322,13 @@ function pbsch.parse_full_statement(envelope)
 end
 
 function pbsch.validate_full_statement(envelope)
+    -- Native validation is the production authority for RPB2 parsing and CMT3
+    -- proof/body binding. Keep the Lua parser below as readability fallback for
+    -- runtimes that do not expose the native helper.
+    if niwi.rpbsch_validate_full_statement then
+        return niwi.rpbsch_validate_full_statement(envelope)
+    end
+
     local parsed = pbsch.parse_full_statement(envelope)
     if not parsed then return nil end
     if not pbsch.cmt3_verify(parsed.C, parsed.C_proof) then return nil end
