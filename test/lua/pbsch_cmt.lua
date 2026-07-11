@@ -129,6 +129,28 @@ assert(not pbsch.cmt3_sigma_verify(OCTET.zero(33), sigma_A,
                                    sigma_ch, sigma_z_m, sigma_z_r),
        "CMT3 Sigma accepted invalid commitment point")
 
+local cmt3_proof = pbsch.cmt3_prove(record.commitment, m, rho, {
+    seed = sha256("PBSch/CMT3/test/proof"),
+})
+assert(#cmt3_proof:str() == pbsch.CMT3_PROOF_SIZE,
+       "unexpected CMT3 proof size")
+assert(pbsch.cmt3_verify(record.commitment, cmt3_proof),
+       "valid CMT3 proof rejected")
+assert(not pbsch.cmt3_verify(flip_last_nibble(record.commitment), cmt3_proof),
+       "CMT3 proof accepted for wrong commitment")
+assert(not pbsch.cmt3_verify(record.commitment, flip_last_nibble(cmt3_proof)),
+       "mutated CMT3 proof accepted")
+local bad_cmt3_A = cmt3_proof:sub(1, 37) ..
+                   flip_last_nibble(cmt3_proof:sub(38, 70)) ..
+                   cmt3_proof:sub(71, pbsch.CMT3_PROOF_SIZE)
+assert(not pbsch.cmt3_verify(record.commitment, bad_cmt3_A),
+       "CMT3 proof accepted mutated A")
+local bad_cmt3_ch = cmt3_proof:sub(1, 367) ..
+                    OCTET.from_hex("1000") ..
+                    cmt3_proof:sub(370, pbsch.CMT3_PROOF_SIZE)
+assert(not pbsch.cmt3_verify(record.commitment, bad_cmt3_ch),
+       "CMT3 proof accepted challenge 4096")
+
 assert(not pbsch.cmt_verify(record.commitment, pbsch.cmt_opening(wrong_m, rho)),
        "wrong message opening accepted")
 assert(not pbsch.cmt_verify(record.commitment, pbsch.cmt_opening(m, wrong_rho)),

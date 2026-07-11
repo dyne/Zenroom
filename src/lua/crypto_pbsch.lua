@@ -77,6 +77,7 @@ local CMT2_PROOF_TAG = "CMT2"
 local CMT3_PROOF_TAG = "CMT3"
 local SECP_ORDER_HEX =
     "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"
+local SECP_ORDER_BIG = BIG.new(OCTET.from_hex(SECP_ORDER_HEX))
 
 local function fail(message)
     error(message, 2)
@@ -141,9 +142,13 @@ local function int_to_scalar(n)
 end
 
 local function scalar_addmul(a, b, c)
-    local order = BIG.new(OCTET.from_hex(SECP_ORDER_HEX))
-    local acc = BIG.add(BIG.new(a), BIG.modmul(BIG.new(b), BIG.new(c), order))
-    return big_to_scalar(BIG.mod(acc, order))
+    local acc = BIG.add(BIG.new(a), BIG.modmul(BIG.new(b), BIG.new(c),
+                                          SECP_ORDER_BIG))
+    return big_to_scalar(BIG.mod(acc, SECP_ORDER_BIG))
+end
+
+local function scalar_add_big(a, b)
+    return BIG.mod(BIG.add(a, b), SECP_ORDER_BIG)
 end
 
 local function cmt2_challenge(ck, commitment, A)
@@ -171,6 +176,32 @@ end
 local function read_u16_be(o)
     if type(o) ~= "zenroom.octet" or #o:str() ~= 2 then return nil end
     return tonumber(o:hex(), 16)
+end
+
+local function cmt3_all_A(A)
+    local out = A[1]
+    for i = 2, pbsch.CMT3_R do out = out .. A[i] end
+    return out
+end
+
+local function cmt3_threshold_hash(ck, commitment, all_A, i, ch, z_m, z_r)
+    local digest = sha256("Zenroom/PBSch/CMT3/Fischlin05/v1" ..
+                          (ck .. commitment .. all_A ..
+                           be_u16(i) .. be_u16(ch) .. z_m .. z_r):str())
+    return tonumber(digest:sub(1, 2):hex(), 16) % (1 << pbsch.CMT3_B)
+end
+
+local function cmt3_nonce(seed, attempt, i, which)
+    if seed then
+        return derive_valid_scalar("PBSch/CMT3/" .. which .. "/" ..
+                                   attempt .. "/" .. i .. "/" .. seed:hex())
+    end
+    local k = OCTET.random(32)
+    while not scalar_is_canonical(k) or k:hex() ==
+          "0000000000000000000000000000000000000000000000000000000000000000" do
+        k = OCTET.random(32)
+    end
+    return k
 end
 
 -- ===========================================================================
@@ -436,10 +467,20 @@ function pbsch.cmt3_verify(commitment, proof)
     local parsed = parse_cmt3_proof(proof)
     if not parsed then return false end
     if parsed.ck:string() ~= pbsch.commitment_key():string() then return false end
+    local all_A = cmt3_all_A(parsed.A)
+    local threshold_sum = 0
     for i = 1, pbsch.CMT3_R do
         if not commitment_point(parsed.A[i]) then return false end
+        if not pbsch.cmt3_sigma_verify(commitment, parsed.A[i],
+                                       parsed.ch[i], parsed.z_m[i],
+                                       parsed.z_r[i]) then
+            return false
+        end
+        threshold_sum = threshold_sum +
+            cmt3_threshold_hash(parsed.ck, commitment, all_A, i,
+                                parsed.ch[i], parsed.z_m[i], parsed.z_r[i])
     end
-    return false
+    return threshold_sum <= pbsch.CMT3_S
 end
 
 function pbsch.cmt3_sigma_commit(a, b)
@@ -479,6 +520,77 @@ function pbsch.cmt3_sigma_verify(commitment, A, ch, z_m, z_r)
     local lhs = G * z_m + H * z_r
     local rhs = A_point + C * ch_scalar
     return lhs == rhs
+end
+
+function pbsch.cmt3_prove(commitment, message, rho, opts)
+    opts = opts or {}
+    assert(type(commitment) == "zenroom.octet" and #commitment:str() == pbsch.C_SIZE,
+           "commitment must be 33 bytes")
+    assert(scalar_is_canonical(message), "message must be a canonical scalar")
+    assert(scalar_is_canonical(rho), "rho must be a canonical scalar")
+    assert(pbsch.verify_c(commitment, message, rho),
+           "commitment does not match opening")
+    if opts.seed then
+        assert(type(opts.seed) == "zenroom.octet", "seed must be an OCTET")
+    end
+
+    local ck = pbsch.commitment_key()
+    local message_big = BIG.new(message)
+    local rho_big = BIG.new(rho)
+    for attempt = 0, 1023 do
+        local A, a, b = {}, {}, {}
+        for i = 1, pbsch.CMT3_R do
+            a[i] = cmt3_nonce(opts.seed, attempt, i, "a")
+            b[i] = cmt3_nonce(opts.seed, attempt, i, "b")
+            A[i] = pbsch.cmt3_sigma_commit(a[i], b[i])
+        end
+        local all_A = cmt3_all_A(A)
+        local selected_ch, selected_z_m, selected_z_r = {}, {}, {}
+        local threshold_sum = 0
+        for i = 1, pbsch.CMT3_R do
+            local best_ch, best_z_m, best_z_r, best_hash = nil, nil, nil, nil
+            local z_m_big = BIG.new(a[i])
+            local z_r_big = BIG.new(b[i])
+            for ch = 0, (1 << pbsch.CMT3_T) - 1 do
+                local z_m = big_to_scalar(z_m_big)
+                local z_r = big_to_scalar(z_r_big)
+                local h = cmt3_threshold_hash(ck, commitment, all_A, i,
+                                              ch, z_m, z_r)
+                if not best_hash or h < best_hash then
+                    best_ch, best_z_m, best_z_r, best_hash = ch, z_m, z_r, h
+                end
+                if h == 0 then break end
+                z_m_big = scalar_add_big(z_m_big, message_big)
+                z_r_big = scalar_add_big(z_r_big, rho_big)
+            end
+            selected_ch[i] = best_ch
+            selected_z_m[i] = best_z_m
+            selected_z_r[i] = best_z_r
+            threshold_sum = threshold_sum + best_hash
+            if threshold_sum > pbsch.CMT3_S then break end
+        end
+        if threshold_sum <= pbsch.CMT3_S then
+            local out = OCTET.from_string(CMT3_PROOF_TAG) ..
+                        OCTET.from_hex("01") .. ck .. all_A
+            for i = 1, pbsch.CMT3_R do out = out .. be_u16(selected_ch[i]) end
+            for i = 1, pbsch.CMT3_R do out = out .. selected_z_m[i] end
+            for i = 1, pbsch.CMT3_R do out = out .. selected_z_r[i] end
+            return out
+        end
+    end
+    fail("CMT3 prover did not find an accepting Fischlin proof")
+end
+
+function pbsch.cmt3_commit(message, rho, opts)
+    local commitment = pbsch.commit_c(message, rho)
+    local proof = pbsch.cmt3_prove(commitment, message, rho, opts)
+    return {
+        profile = pbsch.CMT3_PROFILE,
+        ck = pbsch.commitment_key(),
+        commitment = commitment,
+        proof = proof,
+        opening = pbsch.cmt_opening(message, rho),
+    }
 end
 
 function pbsch.commit_s(sig0, sig1, nu_u, nu_u_prime, nu_s, rho)
