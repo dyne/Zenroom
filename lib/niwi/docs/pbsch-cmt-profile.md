@@ -31,34 +31,52 @@ construction.
 
 ## Paper Requirement
 
-For RPBSch paper-level claims, Cmt must expose:
+Section 3 and Appendix A.5 of `niwi/2025-1992.pdf` require a non-interactive
+straight-line extractable commitment `Cmt = (Setup, Com, Dec)`. The concrete
+NPRO instantiation described there is not plain Pedersen. It is:
+
+- a standard Pedersen commitment `c' = m * G + r * H`;
+- a public proof `pi_c'` that proves knowledge of `(m, r)` opening `c'`;
+- the proof is obtained from the Pedersen-opening Sigma protocol with a
+  Fischlin/Pas-style transform, giving straight-line extraction from the NPRO
+  transcript;
+- the full commitment is `c = (c', pi_c')`;
+- `Dec` checks both the Pedersen opening and acceptance of `pi_c'`.
+
+For RPBSch paper-level claims, Cmt must therefore expose:
 
 - canonical `ck` encoding bound into the public statement;
-- canonical message and opening encodings for `C` and `S`;
-- verifier checks for commitment openings inside the relation;
-- a straight-line extraction mechanism matching the proof argument.
+- canonical tuple-to-scalar encodings for `C` and `S`;
+- verifier checks for commitment openings inside the RPBSch relation;
+- a public, non-interactive extractable proof of opening attached to each
+  commitment, or an explicitly justified equivalent to the paper's
+  `(c', pi_c')` construction;
+- straight-line extraction from the commitment/proof NPRO transcript, not only
+  from the NIWI witness after proof extraction.
 
-The first, second, and third items are implemented by the current native
-profile. The remaining paper-level RPBSch work is the exact Cmt construction:
-the Pedersen-backed `CMT1` envelope must be replaced or justified against the
-paper's straight-line extractability requirement.
+The first three items are implemented by the current native profile. The
+remaining paper-level RPBSch work is the exact Cmt construction: the
+Pedersen-backed `CMT1` envelope must become a new profile with a public
+extractable proof of opening, or the implementation must carry a written proof
+that NIWI-witness extraction is an acceptable equivalent for the paper claim.
 
 ## Decision
 
-Keep the Pedersen group commitment and augment it with the `CMT1`
-straight-line extractable opening envelope. Do not claim paper-exact RPBSch
-from this alone.
-
-The preferred path is:
+Keep the secp256k1 Pedersen group commitment and introduce a new versioned Cmt
+profile for paper-aligned extraction. Do not mutate `CMT1`, because existing
+tests and Lua helpers use it as a private opening envelope:
 
 1. Keep `ck`, compressed commitment, scalar message, and scalar randomness
    encodings unchanged.
-2. Use `CMT1 || ck || message || randomness` as the opened-proof extraction
-   material.
-3. Keep `C` and `S` opening checks inside the RPBSch relation circuits.
-4. Remove the remaining RPBSch warnings only after the Cmt construction itself
-   matches the paper profile and the selector relation is OR-gated rather than
-   the stricter fixed two-slot v1 profile.
+2. Keep `CMT1 || ck || message || randomness` as private opened-proof
+   extraction material for tests and current relation witnesses.
+3. Add a future `CMT2` profile for the paper commitment body:
+   `CMT2 || c_prime || pi_c_prime`, where `c_prime` is the existing compressed
+   Pedersen point and `pi_c_prime` is a straight-line extractable WI proof of
+   opening.
+4. Keep `C` and `S` opening checks inside the RPBSch relation circuits.
+5. Remove the remaining RPBSch warnings only after `CMT2` exists, is verified
+   where commitments are accepted, and has tests for extraction failure.
 
 ## Implementation Map
 
