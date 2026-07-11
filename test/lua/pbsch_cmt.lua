@@ -140,6 +140,14 @@ assert(not pbsch.cmt3_sigma_verify(OCTET.zero(33), sigma_A,
                                    sigma_ch, sigma_z_m, sigma_z_r),
        "CMT3 Sigma accepted invalid commitment point")
 
+local native_cmt3_proof = pbsch.cmt3_prove(record.commitment, m, rho, {
+    seed = sha256("PBSch/CMT3/test/native-proof"),
+})
+assert(#native_cmt3_proof:str() == pbsch.CMT3_PROOF_SIZE,
+       "unexpected native CMT3 proof size")
+assert(pbsch.cmt3_verify(record.commitment, native_cmt3_proof),
+       "valid native CMT3 proof rejected")
+
 local cmt3_proof, cmt3_queries = pbsch.cmt3_prove_with_observation_test(record.commitment, m, rho, {
     seed = sha256("PBSch/CMT3/test/proof"),
 })

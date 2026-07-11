@@ -460,6 +460,9 @@ end
 -- parser and structural guards live here so malformed proofs reject before
 -- curve arithmetic.
 function pbsch.cmt3_verify(commitment, proof)
+    if niwi.pbsch_cmt3_verify and niwi.pbsch_cmt3_verify(commitment, proof) then
+        return true
+    end
     if type(commitment) ~= "zenroom.octet" or #commitment:str() ~= pbsch.C_SIZE then
         return false
     end
@@ -603,6 +606,9 @@ local function cmt3_build_proof(commitment, message, rho, opts, observe)
 end
 
 function pbsch.cmt3_prove(commitment, message, rho, opts)
+    if opts and opts.seed and niwi.pbsch_cmt3_prove_seeded then
+        return niwi.pbsch_cmt3_prove_seeded(commitment, message, rho, opts.seed)
+    end
     local proof = cmt3_build_proof(commitment, message, rho, opts, false)
     return proof
 end

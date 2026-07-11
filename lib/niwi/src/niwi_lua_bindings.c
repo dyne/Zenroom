@@ -1192,6 +1192,65 @@ static int lua_pbsch_pedersen_verify_lf(lua_State *L) {
     return 1;
 }
 
+/* niwi_pbsch_cmt3_prove_seeded(c: OCTET(33), msg: OCTET(32), rho: OCTET(32), seed: OCTET(32)) -> OCTET(1027) */
+static int lua_pbsch_cmt3_prove_seeded(lua_State *L) {
+    const octet *c = o_arg(L, 1);
+    const octet *msg = o_arg(L, 2);
+    const octet *rho = o_arg(L, 3);
+    const octet *seed = o_arg(L, 4);
+    if (!c || o_len(c) != 33) {
+        o_free(L, seed); o_free(L, rho); o_free(L, msg); o_free(L, c);
+        lerror(L, "pbsch_cmt3_prove_seeded: c must be 33 bytes");
+        return 0;
+    }
+    if (!msg || o_len(msg) != 32) {
+        o_free(L, seed); o_free(L, rho); o_free(L, msg); o_free(L, c);
+        lerror(L, "pbsch_cmt3_prove_seeded: msg must be 32 bytes");
+        return 0;
+    }
+    if (!rho || o_len(rho) != 32) {
+        o_free(L, seed); o_free(L, rho); o_free(L, msg); o_free(L, c);
+        lerror(L, "pbsch_cmt3_prove_seeded: rho must be 32 bytes");
+        return 0;
+    }
+    if (!seed || o_len(seed) != 32) {
+        o_free(L, seed); o_free(L, rho); o_free(L, msg); o_free(L, c);
+        lerror(L, "pbsch_cmt3_prove_seeded: seed must be 32 bytes");
+        return 0;
+    }
+
+    uint8_t proof[NIWI_PBSCH_CMT3_PROOF_SIZE];
+    if (niwi_pbsch_cmt3_prove_seeded(
+            (const uint8_t *)o_val(c), (const uint8_t *)o_val(msg),
+            (const uint8_t *)o_val(rho), (const uint8_t *)o_val(seed),
+            proof) != 0) {
+        o_free(L, seed); o_free(L, rho); o_free(L, msg); o_free(L, c);
+        lerror(L, "pbsch_cmt3_prove_seeded: failed");
+        return 0;
+    }
+    push_octet_copy(L, proof, sizeof(proof));
+    o_free(L, seed); o_free(L, rho); o_free(L, msg); o_free(L, c);
+    return 1;
+}
+
+/* niwi_pbsch_cmt3_verify(c: OCTET(33), proof: OCTET(1027)) -> bool */
+static int lua_pbsch_cmt3_verify(lua_State *L) {
+    const octet *c = o_arg(L, 1);
+    const octet *proof = o_arg(L, 2);
+    if (!c || o_len(c) != 33 || !proof ||
+        o_len(proof) != NIWI_PBSCH_CMT3_PROOF_SIZE) {
+        o_free(L, proof); o_free(L, c);
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+    int ok = niwi_pbsch_cmt3_verify((const uint8_t *)o_val(c),
+                                    (const uint8_t *)o_val(proof));
+    o_free(L, proof);
+    o_free(L, c);
+    lua_pushboolean(L, ok == 0);
+    return 1;
+}
+
 /* ---- Module registration --------------------------------------------- */
 
 static const luaL_Reg niwi_functions[] = {
@@ -1217,6 +1276,8 @@ static const luaL_Reg niwi_functions[] = {
     {"pbsch_pedersen_verify",                            lua_pbsch_pedersen_verify},
     {"pbsch_pedersen_commit_lf",                         lua_pbsch_pedersen_commit_lf},
     {"pbsch_pedersen_verify_lf",                         lua_pbsch_pedersen_verify_lf},
+    {"pbsch_cmt3_prove_seeded",                          lua_pbsch_cmt3_prove_seeded},
+    {"pbsch_cmt3_verify",                                lua_pbsch_cmt3_verify},
     {NULL, NULL}
 };
 

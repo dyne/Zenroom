@@ -64,6 +64,18 @@ static void h_final(hash256 *h, uint8_t out[32]) {
     HASH256_hash(h, (char *)out);
 }
 
+static void h_u16_be(hash256 *h, uint16_t n) {
+    uint8_t b[2] = {(uint8_t)(n >> 8), (uint8_t)(n & 0xff)};
+    h_update(h, b, sizeof(b));
+}
+
+static void h_u32_be(hash256 *h, uint32_t n) {
+    uint8_t b[4] = {
+        (uint8_t)(n >> 24), (uint8_t)(n >> 16),
+        (uint8_t)(n >> 8), (uint8_t)(n & 0xff)};
+    h_update(h, b, sizeof(b));
+}
+
 /* ---- H generator ------------------------------------------------------- */
 
 static uint8_t g_h_x[32];
@@ -100,6 +112,112 @@ static int scalar_is_canonical(const uint8_t scalar[32]) {
     BIG_256_28_fromBytes(value, (char *)scalar);
     BIG_256_28_copy(order, (chunk *)CURVE_Order_SECP256K1);
     return BIG_256_28_comp(value, order) < 0;
+}
+
+static int scalar_is_nonzero_canonical(const uint8_t scalar[32]) {
+    BIG_256_28 value, zero, order;
+    BIG_256_28_zero(zero);
+    BIG_256_28_fromBytes(value, (char *)scalar);
+    BIG_256_28_copy(order, (chunk *)CURVE_Order_SECP256K1);
+    return BIG_256_28_comp(value, zero) != 0 &&
+           BIG_256_28_comp(value, order) < 0;
+}
+
+static int point_from_compressed(ECP_SECP256K1 *P,
+                                 const uint8_t c[NIWI_PBSCH_CMP_SIZE]) {
+    if (!P || !c || (c[0] != 0x02 && c[0] != 0x03)) return -1;
+    BIG_256_28 x;
+    BIG_256_28_fromBytes(x, (char *)(c + 1));
+    return ECP_SECP256K1_setx(P, x, c[0] & 1) ? 0 : -1;
+}
+
+static void point_compressed(const ECP_SECP256K1 *P,
+                             uint8_t out[NIWI_PBSCH_CMP_SIZE]) {
+    BIG_256_28 x, y;
+    ECP_SECP256K1 Q;
+    ECP_SECP256K1_copy(&Q, (ECP_SECP256K1 *)P);
+    ECP_SECP256K1_affine(&Q);
+    ECP_SECP256K1_get(x, y, &Q);
+    out[0] = (BIG_256_28_parity(y) == 1) ? 0x03 : 0x02;
+    BIG_256_28_toBytes((char *)(out + 1), x);
+}
+
+static void scalar_to_bytes(const BIG_256_28 x, uint8_t out[32]) {
+    BIG_256_28 t;
+    BIG_256_28_copy(t, (chunk *)x);
+    BIG_256_28_norm(t);
+    BIG_256_28_toBytes((char *)out, t);
+}
+
+static void scalar_addmul(BIG_256_28 out, const BIG_256_28 a,
+                          uint16_t ch, const BIG_256_28 m) {
+    BIG_256_28 order, ch_big, prod;
+    DBIG_256_28 dprod;
+    BIG_256_28_copy(order, (chunk *)CURVE_Order_SECP256K1);
+    BIG_256_28_zero(ch_big);
+    BIG_256_28_inc(ch_big, ch);
+    BIG_256_28_norm(ch_big);
+    BIG_256_28_mul(dprod, ch_big, (chunk *)m);
+    BIG_256_28_dmod(prod, dprod, order);
+    BIG_256_28_add(out, (chunk *)a, prod);
+    BIG_256_28_norm(out);
+    BIG_256_28_mod(out, order);
+}
+
+static int derive_scalar(const uint8_t seed[32], uint32_t attempt,
+                         uint16_t i, uint8_t which, BIG_256_28 out) {
+    static const char tag[] = "Zenroom/PBSch/CMT3/native-nonce/v1";
+    uint8_t digest[32];
+    for (uint32_t counter = 0; counter < 65536; ++counter) {
+        hash256 h;
+        h_init(&h);
+        h_update(&h, (const uint8_t *)tag, strlen(tag));
+        h_update(&h, seed, 32);
+        h_u32_be(&h, attempt);
+        h_u16_be(&h, i);
+        h_update(&h, &which, 1);
+        h_u32_be(&h, counter);
+        h_final(&h, digest);
+        if (scalar_is_nonzero_canonical(digest)) {
+            BIG_256_28_fromBytes(out, (char *)digest);
+            return 0;
+        }
+    }
+    return -1;
+}
+
+static uint16_t cmt3_hash_value(const uint8_t ck[32],
+                                const uint8_t c[NIWI_PBSCH_CMP_SIZE],
+                                const uint8_t all_A[10 * NIWI_PBSCH_CMP_SIZE],
+                                uint16_t i, uint16_t ch,
+                                const uint8_t z_m[32],
+                                const uint8_t z_r[32]) {
+    static const char domain[] = "Zenroom/PBSch/CMT3/Fischlin05/v1";
+    uint8_t digest[32];
+    hash256 h;
+    h_init(&h);
+    h_update(&h, (const uint8_t *)domain, strlen(domain));
+    h_update(&h, ck, 32);
+    h_update(&h, c, NIWI_PBSCH_CMP_SIZE);
+    h_update(&h, all_A, 10 * NIWI_PBSCH_CMP_SIZE);
+    h_u16_be(&h, i);
+    h_u16_be(&h, ch);
+    h_update(&h, z_m, 32);
+    h_update(&h, z_r, 32);
+    h_final(&h, digest);
+    return (uint16_t)((((uint16_t)digest[0] << 8) | digest[1]) & 0x01ff);
+}
+
+static void cmt3_sigma_commit(const ECP_SECP256K1 *H, const BIG_256_28 a,
+                              const BIG_256_28 b, ECP_SECP256K1 *A) {
+    ECP_SECP256K1 G, bH;
+    ECP_SECP256K1_generator(&G);
+    ecp_mul_deterministic(&G, (chunk *)a);
+    ECP_SECP256K1_copy(&bH, (ECP_SECP256K1 *)H);
+    ecp_mul_deterministic(&bH, (chunk *)b);
+    ECP_SECP256K1_add(&G, &bH);
+    ECP_SECP256K1_affine(&G);
+    ECP_SECP256K1_copy(A, &G);
 }
 
 int niwi_pbsch_pedersen_h(uint8_t h_x_out[32]) {
@@ -176,4 +294,165 @@ int niwi_pbsch_pedersen_verify(const uint8_t c[NIWI_PBSCH_CMP_SIZE],
     uint8_t recomputed[33];
     if (niwi_pbsch_pedersen_commit(msg, rho, recomputed) != 0) return -1;
     return (memcmp(c, recomputed, 33) == 0) ? 0 : -1;
+}
+
+int niwi_pbsch_cmt3_prove_seeded(
+    const uint8_t c[NIWI_PBSCH_CMP_SIZE], const uint8_t msg[32],
+    const uint8_t rho[32], const uint8_t seed[32],
+    uint8_t proof_out[NIWI_PBSCH_CMT3_PROOF_SIZE]) {
+    enum { R = 10, T = 12, S_BOUND = 10 };
+    if (!c || !msg || !rho || !seed || !proof_out) return -1;
+    if (!scalar_is_canonical(msg) || !scalar_is_canonical(rho)) return -1;
+    if (niwi_pbsch_pedersen_verify_lf(c, msg, rho) != 0) return -1;
+
+    uint8_t ck[32];
+    if (niwi_pbsch_pedersen_h(ck) != 0) return -1;
+
+    ECP_SECP256K1 H;
+    BIG_256_28 hx, m_big, r_big;
+    BIG_256_28_fromBytes(hx, (char *)ck);
+    if (!ECP_SECP256K1_setx(&H, hx, 0)) return -1;
+    ECP_SECP256K1_affine(&H);
+    BIG_256_28_fromBytes(m_big, (char *)msg);
+    BIG_256_28_fromBytes(r_big, (char *)rho);
+
+    for (uint32_t attempt = 0; attempt < 1024; ++attempt) {
+        BIG_256_28 a[R], b[R];
+        ECP_SECP256K1 A[R];
+        uint8_t all_A[R * NIWI_PBSCH_CMP_SIZE];
+        uint16_t selected_ch[R];
+        uint8_t selected_z_m[R][32];
+        uint8_t selected_z_r[R][32];
+        uint32_t threshold_sum = 0;
+
+        for (uint16_t i = 0; i < R; ++i) {
+            if (derive_scalar(seed, attempt, i + 1, 'a', a[i]) != 0 ||
+                derive_scalar(seed, attempt, i + 1, 'b', b[i]) != 0) {
+                return -1;
+            }
+            cmt3_sigma_commit(&H, a[i], b[i], &A[i]);
+            point_compressed(&A[i], all_A + i * NIWI_PBSCH_CMP_SIZE);
+        }
+
+        for (uint16_t i = 0; i < R; ++i) {
+            uint16_t best_ch = 0;
+            uint16_t best_hash = 0xffff;
+            uint8_t best_z_m[32], best_z_r[32];
+
+            for (uint16_t ch = 0; ch < (1u << T); ++ch) {
+                BIG_256_28 z_m_big, z_r_big;
+                uint8_t z_m[32], z_r[32];
+                uint16_t h;
+
+                scalar_addmul(z_m_big, a[i], ch, m_big);
+                scalar_addmul(z_r_big, b[i], ch, r_big);
+                scalar_to_bytes(z_m_big, z_m);
+                scalar_to_bytes(z_r_big, z_r);
+                h = cmt3_hash_value(ck, c, all_A, i + 1, ch, z_m, z_r);
+                if (h < best_hash) {
+                    best_hash = h;
+                    best_ch = ch;
+                    memcpy(best_z_m, z_m, 32);
+                    memcpy(best_z_r, z_r, 32);
+                }
+                if (h == 0) break;
+            }
+
+            selected_ch[i] = best_ch;
+            memcpy(selected_z_m[i], best_z_m, 32);
+            memcpy(selected_z_r[i], best_z_r, 32);
+            threshold_sum += best_hash;
+            if (threshold_sum > S_BOUND) break;
+        }
+
+        if (threshold_sum <= S_BOUND) {
+            size_t off = 0;
+            memcpy(proof_out + off, "CMT3", 4); off += 4;
+            proof_out[off++] = 0x01;
+            memcpy(proof_out + off, ck, 32); off += 32;
+            memcpy(proof_out + off, all_A, sizeof(all_A)); off += sizeof(all_A);
+            for (uint16_t i = 0; i < R; ++i) {
+                proof_out[off++] = (uint8_t)(selected_ch[i] >> 8);
+                proof_out[off++] = (uint8_t)(selected_ch[i] & 0xff);
+            }
+            for (uint16_t i = 0; i < R; ++i) {
+                memcpy(proof_out + off, selected_z_m[i], 32); off += 32;
+            }
+            for (uint16_t i = 0; i < R; ++i) {
+                memcpy(proof_out + off, selected_z_r[i], 32); off += 32;
+            }
+            return off == NIWI_PBSCH_CMT3_PROOF_SIZE ? 0 : -1;
+        }
+    }
+
+    return -1;
+}
+
+int niwi_pbsch_cmt3_verify(const uint8_t c[NIWI_PBSCH_CMP_SIZE],
+                           const uint8_t proof[NIWI_PBSCH_CMT3_PROOF_SIZE]) {
+    enum { R = 10, T = 12, S_BOUND = 10 };
+    if (!c || !proof) return -1;
+    if (point_from_compressed(&(ECP_SECP256K1){0}, c) != 0) return -1;
+    if (memcmp(proof, "CMT3", 4) != 0 || proof[4] != 0x01) return -1;
+
+    const uint8_t *ck = proof + 5;
+    uint8_t expected_ck[32];
+    if (niwi_pbsch_pedersen_h(expected_ck) != 0 ||
+        memcmp(ck, expected_ck, 32) != 0) {
+        return -1;
+    }
+
+    const uint8_t *all_A = proof + 37;
+    const uint8_t *ch_bytes = all_A + R * NIWI_PBSCH_CMP_SIZE;
+    const uint8_t *z_m = ch_bytes + 2 * R;
+    const uint8_t *z_r = z_m + 32 * R;
+    ECP_SECP256K1 C, H;
+    BIG_256_28 hx;
+    uint32_t threshold_sum = 0;
+
+    if (point_from_compressed(&C, c) != 0) return -1;
+    BIG_256_28_fromBytes(hx, (char *)ck);
+    if (!ECP_SECP256K1_setx(&H, hx, 0)) return -1;
+    ECP_SECP256K1_affine(&H);
+
+    for (uint16_t i = 0; i < R; ++i) {
+        const uint8_t *A_bytes = all_A + i * NIWI_PBSCH_CMP_SIZE;
+        const uint8_t *zi_m = z_m + i * 32;
+        const uint8_t *zi_r = z_r + i * 32;
+        uint16_t ch = (uint16_t)(((uint16_t)ch_bytes[2 * i] << 8) |
+                                 ch_bytes[2 * i + 1]);
+        ECP_SECP256K1 A, lhs, rhs, zH;
+        BIG_256_28 zm_big, zr_big, ch_big;
+        uint16_t h;
+
+        if (ch >= (1u << T) ||
+            !scalar_is_canonical(zi_m) || !scalar_is_canonical(zi_r) ||
+            point_from_compressed(&A, A_bytes) != 0) {
+            return -1;
+        }
+
+        BIG_256_28_fromBytes(zm_big, (char *)zi_m);
+        BIG_256_28_fromBytes(zr_big, (char *)zi_r);
+        ECP_SECP256K1_generator(&lhs);
+        ecp_mul_deterministic(&lhs, zm_big);
+        ECP_SECP256K1_copy(&zH, &H);
+        ecp_mul_deterministic(&zH, zr_big);
+        ECP_SECP256K1_add(&lhs, &zH);
+        ECP_SECP256K1_affine(&lhs);
+
+        BIG_256_28_zero(ch_big);
+        BIG_256_28_inc(ch_big, ch);
+        BIG_256_28_norm(ch_big);
+        ECP_SECP256K1_copy(&rhs, &C);
+        ecp_mul_deterministic(&rhs, ch_big);
+        ECP_SECP256K1_add(&rhs, &A);
+        ECP_SECP256K1_affine(&rhs);
+        if (!ECP_SECP256K1_equals(&lhs, &rhs)) return -1;
+
+        h = cmt3_hash_value(ck, c, all_A, i + 1, ch, zi_m, zi_r);
+        threshold_sum += h;
+        if (threshold_sum > S_BOUND) return -1;
+    }
+
+    return 0;
 }

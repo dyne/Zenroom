@@ -87,6 +87,23 @@ int niwi_pbsch_pedersen_verify_lf(const uint8_t c[NIWI_PBSCH_CMP_SIZE],
                                   const uint8_t msg[32],
                                   const uint8_t rho[32]);
 
+/* CMT3 Fischlin05 public proof for a Pedersen opening.
+ *
+ * This is the native fast path for the paper-facing Lua CMT3 profile:
+ * CMT3 || profile_byte || ck || A[10] || ch[10] || z_m[10] || z_r[10].
+ * It keeps the public proof format owned by Lua, but moves the tight
+ * challenge-search loop out of Lua.
+ */
+#define NIWI_PBSCH_CMT3_PROOF_SIZE 1027
+
+int niwi_pbsch_cmt3_prove_seeded(
+    const uint8_t c[NIWI_PBSCH_CMP_SIZE], const uint8_t msg[32],
+    const uint8_t rho[32], const uint8_t seed[32],
+    uint8_t proof_out[NIWI_PBSCH_CMT3_PROOF_SIZE]);
+
+int niwi_pbsch_cmt3_verify(const uint8_t c[NIWI_PBSCH_CMP_SIZE],
+                           const uint8_t proof[NIWI_PBSCH_CMT3_PROOF_SIZE]);
+
 #ifdef __cplusplus
 }
 #endif
