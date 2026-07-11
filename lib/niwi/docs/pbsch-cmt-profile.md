@@ -1,11 +1,11 @@
 # PBSch Cmt Profile
 
-This document records the current PBSch commitment profile and the remaining
-work before claiming paper-exact RPBSch from `niwi/2025-1992.pdf`.
+This document records the current PBSch commitment profiles and the remaining
+work for paper-exact RPBSch from `niwi/2025-1992.pdf`.
 
 ## Current Profile
 
-The current implementation has two Pedersen-backed profiles over secp256k1:
+The implementation keeps versioned Pedersen-backed profiles over secp256k1:
 
 - `ck` is the x-only encoding of `H`, derived by
   `SHA-256("Zenroom/PBSch/PedersenH/v1" || iteration)` until lift succeeds
@@ -19,6 +19,10 @@ The current implementation has two Pedersen-backed profiles over secp256k1:
 - `CMT2` is a public Fiat-Shamir proof of a Pedersen opening:
   `CMT2 || ck || A || e || z_m || z_r`, where `A = a * G + b * H`,
   `e = H(ck, C, A)`, `z_m = a + e * m`, and `z_r = b + e * rho`.
+- `CMT3` is the paper-facing profile under implementation. It keeps the same
+  compressed Pedersen point `c'`, but replaces the CMT2 Fiat-Shamir proof with
+  a Fischlin05 straight-line extractable proof of knowledge for the Pedersen
+  opening.
 - Extraction is straight-line from an opened proof: parse the `CMT1` envelope,
   verify `ck`, verify the native Pedersen opening, then return the typed
   `message` and `randomness`.
@@ -38,10 +42,57 @@ the next step, but the v1 proof is the ordinary Fiat-Shamir transform of the
 Pedersen-opening Sigma protocol, not the Fischlin/Pas-style straight-line
 extractable transform required by the paper.
 
-Lua RPBSch fixtures carry CMT2 proofs for both `C` and `S`, and production Lua
-proof helpers reject fixtures with missing or invalid CMT2 proofs before
-entering native proof generation. The native Longfellow relation still proves
-the underlying Pedersen openings from private witness material.
+Lua RPBSch fixtures currently carry CMT2 proofs for both `C` and `S`, and
+production Lua proof helpers reject fixtures with missing or invalid CMT2 proofs
+before entering native proof generation. The CMT3 plan moves that production
+default to the Fischlin05 proof body. The native Longfellow relation still
+proves the underlying Pedersen openings from private witness material.
+
+## CMT3 Fischlin05 Profile
+
+`CMT3` is the best paper-level default for PBSch/RPBSch once implemented. It
+maps the concrete requirement in `niwi/2025-1992.pdf` Appendix A.5 to the
+Fischlin transform in `niwi/Fischl05b.pdf` Construction 1:
+
+- base commitment: `c' = m * G + rho * H`;
+- base Sigma protocol commitment: `A_i = a_i * G + b_i * H`;
+- challenge space: `ch_i` is an integer with `0 <= ch_i < 2^12`;
+- response: `z_m_i = a_i + ch_i * m mod q` and
+  `z_r_i = b_i + ch_i * rho mod q`;
+- transcript verification:
+  `z_m_i * G + z_r_i * H == A_i + ch_i * c'`;
+- threshold hash domain:
+  `Zenroom/PBSch/CMT3/Fischlin05/v1`;
+- threshold hash input:
+  `ck || c' || A_1 || ... || A_r || i || ch_i || z_m_i || z_r_i`;
+- initial profile parameters: `b=9`, `t=12`, `r=10`, `S=10`;
+- verifier accepts only if every transcript verifies and the sum of the ten
+  9-bit threshold hash values is at most `S`.
+
+The full CMT3 proof serialization is fixed as:
+
+```
+CMT3 || profile_byte || ck || A[10] || ch[10] || z_m[10] || z_r[10]
+```
+
+where each `A` is a 33-byte compressed secp256k1 point, each `ch` is a 2-byte
+unsigned big-endian integer, and each response is a canonical 32-byte scalar.
+The initial `profile_byte` is `0x01` for `b=9,t=12,r=10,S=10`. Changing those
+parameters requires a new profile id.
+
+Straight-line extraction uses the observed NPRO query transcript. For an
+accepted proof, the extractor scans queries with the same
+`ck || c' || A_1 || ... || A_r || i` prefix and looks for a second valid
+transcript with a different challenge. From two accepting transcripts for the
+same `A_i`, extraction computes:
+
+```
+m   = (z_m_i - z_m_i') / (ch_i - ch_i') mod q
+rho = (z_r_i - z_r_i') / (ch_i - ch_i') mod q
+```
+
+The extracted opening is returned only if recomputing the Pedersen commitment
+matches `c'`.
 
 ## Paper Requirement
 
@@ -84,20 +135,21 @@ tests and Lua helpers use it as a private opening envelope:
    encodings unchanged.
 2. Keep `CMT1 || ck || message || randomness` as private opened-proof
    extraction material for tests and current relation witnesses.
-3. Add `CMT2` as the versioned public proof surface. The current v1 body is
-   `CMT2 || ck || A || e || z_m || z_r` and verifies knowledge of the opening.
-   The paper-exact successor must replace or extend `pi_c_prime` with the
-   Fischlin/Pas-style straight-line extractable proof, without changing `CMT1`.
-4. Keep `C` and `S` opening checks inside the RPBSch relation circuits.
-5. Remove the remaining RPBSch warnings only after `CMT2` exists, is verified
-   where commitments are accepted, and has tests for extraction failure.
+3. Keep `CMT2` as the versioned public Fiat-Shamir proof surface for
+   compatibility and debugging.
+4. Add `CMT3` as the paper-facing default:
+   `CMT3 || profile_byte || ck || A[10] || ch[10] || z_m[10] || z_r[10]`.
+   This is the concrete `pi_c_prime` body for the first Fischlin05 profile.
+5. Keep `C` and `S` opening checks inside the RPBSch relation circuits.
+6. Remove the remaining RPBSch Cmt warnings only after CMT3 exists, is verified
+   where commitments are accepted, and has observed-query extraction tests.
 
 ## Implementation Map
 
 - Native Pedersen primitive: `lib/niwi/src/pbsch_commitment.c`
 - Native primitive header: `lib/niwi/src/pbsch_commitment.h`
 - Lua PBSch tuple encoding and wrappers: `src/lua/crypto_pbsch.lua`
-- CMT2 public opening proof helpers: `src/lua/crypto_pbsch.lua`
+- CMT2/CMT3 public opening proof helpers: `src/lua/crypto_pbsch.lua`
 - Current RPBSch branch fixture: `src/lua/crypto_rpbsch.lua`
 - Cmt profile tests: `test/lua/pbsch_cmt.lua`
 - Pedersen tests: `test/lua/pedersen.lua`
