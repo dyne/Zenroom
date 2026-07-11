@@ -59,9 +59,14 @@ pbsch.RAND_SIZE = 32
 pbsch.MSG_SIZE  = 32
 pbsch.STATEMENT_SIZE = 258
 pbsch.CMT_PROFILE = "pbsch-cmt-pedersen-extractable-v1"
+pbsch.CMT2_PROFILE = "pbsch-cmt-pedersen-fs-opening-v1"
 pbsch.CMT_OPENING_SIZE = 100
+pbsch.CMT2_PROOF_SIZE = 165
 
 local CMT_OPENING_TAG = "CMT1"
+local CMT2_PROOF_TAG = "CMT2"
+local SECP_ORDER_HEX =
+    "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"
 
 local function fail(message)
     error(message, 2)
@@ -106,6 +111,35 @@ local function derive_valid_scalar(seed)
         k = sha256(seed .. tostring(counter))
     end
     return k
+end
+
+local function scalar_is_canonical(s)
+    if type(s) ~= "zenroom.octet" or #s:str() ~= 32 then return false end
+    return s:hex():lower() < SECP_ORDER_HEX
+end
+
+local function big_to_scalar(x)
+    local hex = x:octet():hex()
+    if #hex > 64 then fail("scalar overflow") end
+    return OCTET.from_hex(string.rep("0", 64 - #hex) .. hex)
+end
+
+local function scalar_addmul(a, b, c)
+    local order = BIG.new(OCTET.from_hex(SECP_ORDER_HEX))
+    local acc = BIG.add(BIG.new(a), BIG.modmul(BIG.new(b), BIG.new(c), order))
+    return big_to_scalar(BIG.mod(acc, order))
+end
+
+local function cmt2_challenge(ck, commitment, A)
+    return S.bip340_challenge_reduce(
+        S.bip340_tagged_hash(
+            "Zenroom/PBSch/CMT2/Sigma/v1", ck .. commitment .. A))
+end
+
+local function commitment_point(commitment)
+    local ok, point = pcall(function() return S.new(commitment) end)
+    if not ok or not point then return nil end
+    return point
 end
 
 -- ===========================================================================
@@ -208,13 +242,12 @@ end
 
 local function parse_cmt_opening(opening)
     if type(opening) ~= "zenroom.octet" then return nil end
-    local raw = opening:str()
-    if #raw ~= pbsch.CMT_OPENING_SIZE then return nil end
-    if raw:sub(1, 4) ~= CMT_OPENING_TAG then return nil end
+    if #opening:str() ~= pbsch.CMT_OPENING_SIZE then return nil end
+    if opening:sub(1, 4):string() ~= CMT_OPENING_TAG then return nil end
     return {
-        ck = OCTET.from_string(raw:sub(5, 36)),
-        message = OCTET.from_string(raw:sub(37, 68)),
-        rho = OCTET.from_string(raw:sub(69, 100)),
+        ck = opening:sub(5, 36),
+        message = opening:sub(37, 68),
+        rho = opening:sub(69, 100),
     }
 end
 
@@ -246,6 +279,81 @@ function pbsch.cmt_extract(commitment, opening)
         ck = parsed.ck,
         message = parsed.message,
         rho = parsed.rho,
+    }
+end
+
+--- Build a public proof of knowledge of a Pedersen opening.
+-- CMT2 is intentionally versioned separately from CMT1. This v1 proof is the
+-- ordinary Fiat-Shamir transform of the Pedersen-opening Sigma protocol:
+-- A = aG + bH, e = H(ck, C, A), z_m = a + e*m, z_r = b + e*r.
+-- It is circuit-representable and verifies publicly, but it is not yet the
+-- Fischlin/Pas straight-line extractable transform required for paper-exact
+-- Cmt. See lib/niwi/docs/pbsch-cmt-profile.md.
+function pbsch.cmt2_prove(commitment, message, rho)
+    assert(type(commitment) == "zenroom.octet" and #commitment:str() == pbsch.C_SIZE,
+           "commitment must be 33 bytes")
+    assert(scalar_is_canonical(message), "message must be a canonical scalar")
+    assert(scalar_is_canonical(rho), "rho must be a canonical scalar")
+    assert(pbsch.verify_c(commitment, message, rho),
+           "commitment does not match opening")
+
+    local ck = pbsch.commitment_key()
+    local H = S.bip340_lift_x(ck)
+    local a = derive_valid_scalar("PBSch/CMT2/a/" .. commitment:hex() .. message:hex())
+    local b = derive_valid_scalar("PBSch/CMT2/b/" .. commitment:hex() .. rho:hex())
+    local A = G * a + H * b
+    local A_bytes = A:compressed()
+    local e = cmt2_challenge(ck, commitment, A_bytes)
+    local z_m = scalar_addmul(a, e, message)
+    local z_r = scalar_addmul(b, e, rho)
+    return OCTET.from_string(CMT2_PROOF_TAG) .. ck .. A_bytes .. e .. z_m .. z_r
+end
+
+local function parse_cmt2_proof(proof)
+    if type(proof) ~= "zenroom.octet" then return nil end
+    if #proof:str() ~= pbsch.CMT2_PROOF_SIZE then return nil end
+    if proof:sub(1, 4):string() ~= CMT2_PROOF_TAG then return nil end
+    return {
+        ck = proof:sub(5, 36),
+        A = proof:sub(37, 69),
+        e = proof:sub(70, 101),
+        z_m = proof:sub(102, 133),
+        z_r = proof:sub(134, 165),
+    }
+end
+
+function pbsch.cmt2_verify(commitment, proof)
+    if type(commitment) ~= "zenroom.octet" or #commitment:str() ~= pbsch.C_SIZE then
+        return false
+    end
+    local parsed = parse_cmt2_proof(proof)
+    if not parsed then return false end
+    if parsed.ck:string() ~= pbsch.commitment_key():string() then return false end
+    if not scalar_is_canonical(parsed.e) or
+       not scalar_is_canonical(parsed.z_m) or
+       not scalar_is_canonical(parsed.z_r) then
+        return false
+    end
+    local C = commitment_point(commitment)
+    local A = commitment_point(parsed.A)
+    if not C or not A then return false end
+    local expected_e = cmt2_challenge(parsed.ck, commitment, parsed.A)
+    if expected_e:string() ~= parsed.e:string() then return false end
+    local H = S.bip340_lift_x(parsed.ck)
+    local lhs = G * parsed.z_m + H * parsed.z_r
+    local rhs = A + C * parsed.e
+    return lhs == rhs
+end
+
+function pbsch.cmt2_commit(message, rho)
+    local commitment = pbsch.commit_c(message, rho)
+    local proof = pbsch.cmt2_prove(commitment, message, rho)
+    return {
+        profile = pbsch.CMT2_PROFILE,
+        ck = pbsch.commitment_key(),
+        commitment = commitment,
+        proof = proof,
+        opening = pbsch.cmt_opening(message, rho),
     }
 end
 

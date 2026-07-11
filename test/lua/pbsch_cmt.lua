@@ -32,6 +32,22 @@ assert(extracted, "valid extractable Cmt did not extract")
 assert(extracted.message:string() == m:string(), "extracted message mismatch")
 assert(extracted.rho:string() == rho:string(), "extracted randomness mismatch")
 
+local proof = pbsch.cmt2_prove(record.commitment, m, rho)
+assert(#proof:str() == pbsch.CMT2_PROOF_SIZE, "unexpected CMT2 proof size")
+assert(pbsch.cmt2_verify(record.commitment, proof),
+       "valid CMT2 opening proof rejected")
+assert(not pbsch.cmt2_verify(flip_last_nibble(record.commitment), proof),
+       "CMT2 proof accepted for wrong commitment")
+assert(not pbsch.cmt2_verify(record.commitment, flip_last_nibble(proof)),
+       "mutated CMT2 proof accepted")
+
+local cmt2_record = pbsch.cmt2_commit(m, rho)
+assert(cmt2_record.profile == pbsch.CMT2_PROFILE)
+assert(cmt2_record.commitment:string() == record.commitment:string(),
+       "CMT2 commitment point mismatch")
+assert(pbsch.cmt2_verify(cmt2_record.commitment, cmt2_record.proof),
+       "CMT2 commit proof rejected")
+
 assert(not pbsch.cmt_verify(record.commitment, pbsch.cmt_opening(wrong_m, rho)),
        "wrong message opening accepted")
 assert(not pbsch.cmt_verify(record.commitment, pbsch.cmt_opening(m, wrong_rho)),
