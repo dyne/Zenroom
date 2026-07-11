@@ -126,8 +126,8 @@ int niwi_pbsch_pedersen_h(uint8_t h_x_out[32]) {
  * PBSch Cmt profile: canonical binding Pedersen commitment over secp256k1.
  * The straight-line extractable CMT1 opening envelope is built in Lua so the
  * encoding remains readable; this native layer owns scalar validation and
- * deterministic curve arithmetic. RPBSch is paper-exact only once branch and
- * selector relations verify those openings inside the relation. */
+ * deterministic curve arithmetic. Native RPBSch LZK0 verifies these openings,
+ * but the profile is still not the paper-exact Cmt construction. */
 
 int niwi_pbsch_pedersen_commit(const uint8_t msg[32], const uint8_t rho[32],
                                uint8_t c_out[NIWI_PBSCH_CMP_SIZE]) {

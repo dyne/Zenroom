@@ -23,9 +23,11 @@ over secp256k1:
   (`scalar >= secp256k1_order`) before committing or verifying.
 
 This profile gives the extraction interface needed for opened PBSch
-commitments while preserving the existing secp256k1 Pedersen commitment. It is
-still not enough to claim paper-exact RPBSch until the RPBSch branch and
-selector relations verify the `C` and `S` openings inside the native relation.
+commitments while preserving the existing secp256k1 Pedersen commitment. The
+native RPBSch Longfellow relation now verifies the `C` and `S` openings, but
+this is still not enough to claim paper-exact RPBSch because the Cmt profile
+remains the binding Pedersen profile rather than the paper's final Cmt
+construction.
 
 ## Paper Requirement
 
@@ -36,9 +38,10 @@ For RPBSch paper-level claims, Cmt must expose:
 - verifier checks for commitment openings inside the relation;
 - a straight-line extraction mechanism matching the proof argument.
 
-The first and fourth items are implemented by the current `CMT1` envelope. The
-remaining paper-level RPBSch work is relation integration: `C` and `S` opening
-checks must move from Lua boundary checks into branch and selector relations.
+The first, second, and third items are implemented by the current native
+profile. The remaining paper-level RPBSch work is the exact Cmt construction:
+the Pedersen-backed `CMT1` envelope must be replaced or justified against the
+paper's straight-line extractability requirement.
 
 ## Decision
 
@@ -52,11 +55,10 @@ The preferred path is:
    encodings unchanged.
 2. Use `CMT1 || ck || message || randomness` as the opened-proof extraction
    material.
-3. Move `C` and `S` opening checks into the RPBSch relation circuits.
-4. Remove the remaining RPBSch warnings only after branch and selector tests
-   cover commit, open, verify, extract, malformed `ck`, malformed commitment,
-   invalid scalar, wrong message, wrong randomness, and missing extraction
-   material inside the native relation path.
+3. Keep `C` and `S` opening checks inside the RPBSch relation circuits.
+4. Remove the remaining RPBSch warnings only after the Cmt construction itself
+   matches the paper profile and the selector relation is OR-gated rather than
+   the stricter fixed two-slot v1 profile.
 
 ## Implementation Map
 

@@ -31,9 +31,9 @@ review gate before release.
 | B2 | Cmt proof-equivalence boundary | Valid C/S, wrong Pedersen point, wrong opening, changed tuple, missing proof bytes | valid openings accepted | partitioned openings rejected | `lib/niwi` C test + Lua mutation tests | ⬜ prototyped: Pedersen-only until Fischlin |
 | B3 | BIP-340 circuit correctness | vendored CSV vectors, x-only lift, even-y, range checks, wrong msg/key/sig | positive vectors accepted | negative vectors rejected with correct reason | `lib/niwi` C++ circuit test | ⬜ |
 | B4 | BIP-340 circuit cost | constraint count, proof size, witness gen time, prove time, verify time for 1 sig and 2 sigs | measured and recorded | N/A | benchmark | ⬜ |
-| B5 | RPBSch branch 1 correctness | valid branch-1 proof, α/β/R/m/C mutations | honest witness accepted | mutated witness rejected | `lib/niwi` C++ circuit test | ⬜ |
-| B6 | RPBSch branch 2 correctness | valid branch-2 proof, νᵤ=νᵤ', bad sig, bad S | trapdoor witness accepted | equal-νᵤ, bad sig, bad S rejected | `lib/niwi` C++ circuit test | ⬜ |
-| B7 | OR composition hiding | valid both branches, mixed witnesses, selector non-boolean | both valid witnesses accepted | mixed witness rejected, non-bool selector rejected | `lib/niwi` C++ circuit test | ⬜ |
+| B5 | RPBSch branch 1 correctness | valid branch-1 proof, α/β/R/m/C mutations | honest witness accepted | mutated witness rejected | `lib/niwi` C++ circuit test | ✅ v1 |
+| B6 | RPBSch branch 2 correctness | valid branch-2 proof, νᵤ=νᵤ', bad sig, bad S | trapdoor witness accepted | equal-νᵤ, bad sig, bad S rejected | `lib/niwi` C++ circuit test | ✅ v1 |
+| B7 | Selector composition | valid fixed two-slot witness, malformed selected/unselected slots, selector non-boolean | both valid branch slots accepted with private selector | malformed slots and non-bool selector rejected | `lib/niwi` C++ circuit test | ✅ v1 stricter than paper OR |
 | B8 | PBSch end-to-end | full Figure 4 session, valid BIP-340 final sig, wrong state, replayed messages | valid session produces valid sig | out-of-order state rejected | Lua test | ⬜ |
 | B9 | Deterministic vectors | byte-exact vectors for setup, keygen, all messages, final sig | vectors match across rebuilds | mutation changes output | Lua vector test | ⬜ |
 

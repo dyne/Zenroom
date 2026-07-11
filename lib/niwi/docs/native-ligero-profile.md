@@ -104,8 +104,8 @@ therefore has payload `420 + 48 + opening_leaf_len`; a two-leaf proof has
 
 ## LZK0 Body
 
-BIP340 and generic P-256 zkcc relation proofs additionally carry a checked
-Longfellow/Ligero proof section immediately after `LIG0`:
+BIP340, generic P-256 zkcc, and RPBSch relation proofs additionally carry a
+checked Longfellow/Ligero proof section immediately after `LIG0`:
 
 ```text
 LZK0 ||
@@ -114,14 +114,14 @@ LZK0 ||
   serialized Longfellow ZkProof<Fp256k1Base>
 ```
 
-The native verifier either rebuilds the BIP340 circuit with the same
-`Bip340Verify<Logic<CompilerBackend>>` construction used by zkcc, or parses the
-compiled P-256 zkcc artifact. It then parses the serialized `ZkProof` and runs
-Longfellow `ZkVerifier` over the public field inputs. Mutating the `LZK0` body
-makes production verification fail. BIP340 uses the audited secp256k1 CRT
+The native verifier rebuilds the BIP340 circuit with the same
+`Bip340Verify<Logic<CompilerBackend>>` construction used by zkcc, parses the
+compiled P-256 zkcc artifact, or rebuilds the RPBSch fixed two-slot selector
+circuit. It then parses the serialized `ZkProof` and runs Longfellow
+`ZkVerifier` over the public field inputs. Mutating the `LZK0` body makes
+production verification fail. BIP340 and RPBSch use the audited secp256k1 CRT
 encoding profile; generic P-256 uses Longfellow's deterministic parameter
-search for the compiled circuit. RPBSch still uses the `LIG0` scaffold body
-until its relation-specific Longfellow adapter is added.
+search for the compiled circuit.
 
 ## Challenges And Responses
 

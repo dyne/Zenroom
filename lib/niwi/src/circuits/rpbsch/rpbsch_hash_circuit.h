@@ -39,8 +39,8 @@ using RpbschHashField = proofs::Fp256k1Base;
  *   fixed-size full BIP340 branch-check witnesses.
  *
  * This v1 profile uses fixed 32-byte messages and the current binding
- * Pedersen Cmt profile. It is the circuit contract for building the future
- * checked RPBSch LZK0 body, not a paper-exact RPBSch claim by itself.
+ * Pedersen Cmt profile. It is the circuit contract for the checked RPBSch
+ * LZK0 body, not a paper-exact RPBSch claim by itself.
  */
 namespace detail {
 

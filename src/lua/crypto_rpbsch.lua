@@ -20,8 +20,9 @@
 --
 -- This module keeps orchestration and witness serialization readable in Lua,
 -- while native lib/niwi validates branch statements, C/S openings, and the
--- embedded BIP-340 zkcc witnesses. Paper-exact selector composition remains
--- open: the two branch relations still need one private-selector relation.
+-- embedded BIP-340 witnesses. Production native proofs now carry checked LZK0
+-- bodies. Paper-exact selector composition remains open: native v1 constrains
+-- both branch slots under a private selector instead of OR-gating one branch.
 
 local pbsch = require'crypto_pbsch'
 local zkcc = require'crypto_zkcc'
@@ -349,8 +350,9 @@ end
 
 --- Verify a branch proof record and bind it to the shared RPBSch statement.
 -- The current branch profile validates statement shape plus C/S openings
--- before verifying the BIP-340 NIWI proof.  The final RPBSch circuit must
--- move this and the BIP-340 branch selector into one zkcc relation.
+-- before verifying the older per-BIP340 NIWI proof records. Production native
+-- RPBSch proofs use checked LZK0; these record helpers stay as readable
+-- regression fixtures.
 function rpbsch.verify_record(circuit, fixture, record)
     if not record or not valid_branch(record.branch) then
         return false

@@ -8,8 +8,8 @@ needed before claiming production, paper-exact RPBSch.
 | Paper component | Current code | Tests | Status |
 | --- | --- | --- | --- |
 | Relation-backed proving | `lib/niwi/src/niwi.c`, `src/lua/crypto_niwi.lua` | `make -C lib/niwi test`, `test/lua/zkcc_niwi_smoke.lua` | Implemented for BIP340 and generic P256 zkcc relations |
-| Native proof body | `LIG0` / `LZK0` in `lib/niwi/src/niwi.c` | `lib/niwi/tests/test_abi.c`, `lib/niwi/tests/test_zkcc_p256_relation.cc`, `lib/niwi/tests/test_bip340_relation.cc`, `lib/niwi/tests/test_ligero_bip340.cc` | Versioned, relation-bound, carries tableau entries and explicit `NRSP` response objects. BIP340 and generic P-256 zkcc proofs additionally carry checked Longfellow/Ligero `ZkProof` bodies in `LZK0`; RPBSch still uses the narrower scaffold body |
-| Tableau root, response, and selected opening | `LIG0` in `lib/niwi/src/niwi.c` | `test_relation_checked_prove`, `test_relation_merkle_path_for_multi_leaf_tableau`, `test_native_ligero_profile_vectors` | Native verifier recomputes the Merkle root, parses and checks `NRSP`, recomputes the response digest, verifies tableau-digest row and column evaluations over the current square-ish bounded-row profile, recomputes the dimension-bound `param_id`, derives the Fiat-Shamir opening index, checks the selected `TBL1` leaf preimage, and verifies the selected Merkle path; remaining generalization is replacing this scaffold for RPBSch with a checked Longfellow/Ligero body |
+| Native proof body | `LIG0` / `LZK0` in `lib/niwi/src/niwi.c` | `lib/niwi/tests/test_abi.c`, `lib/niwi/tests/test_zkcc_p256_relation.cc`, `lib/niwi/tests/test_bip340_relation.cc`, `lib/niwi/tests/test_ligero_bip340.cc`, `test/lua/rpbsch_niwi.lua` | Versioned, relation-bound, carries tableau entries and explicit `NRSP` response objects. BIP340, generic P-256 zkcc, and RPBSch production proofs carry checked Longfellow/Ligero `ZkProof` bodies in `LZK0` |
+| Tableau root, response, and selected opening | `LIG0` in `lib/niwi/src/niwi.c` | `test_relation_checked_prove`, `test_relation_merkle_path_for_multi_leaf_tableau`, `test_native_ligero_profile_vectors`, `test/lua/rpbsch_niwi.lua` | Native verifier recomputes the Merkle root, parses and checks `NRSP`, recomputes the response digest, verifies tableau-digest row and column evaluations over the current square-ish bounded-row profile, recomputes the dimension-bound `param_id`, derives the Fiat-Shamir opening index, checks the selected `TBL1` leaf preimage, and verifies the selected Merkle path. RPBSch now also requires the checked `LZK0` body |
 | Relation witness tableau leaves | `TBL1` in `lib/niwi/src/niwi.c` | `test_relation_observed_uses_bound_tableau_leaves` | Production observed leaves bind relation id and public statement digest; unchecked fixtures retain legacy `TBL0` |
 | Unchecked envelope isolation | `src/lua/crypto_niwi.lua`, native `niwi` module | `test/lua/niwi_regression.lua` | Production Lua rejects raw unchecked envelopes |
 | Native generic zkcc evaluation | `lib/niwi/src/relations/zkcc_p256_relation.cc` | `test/lua/zkcc_niwi_smoke.lua`, `lib/niwi/tests/test_zkcc_p256_relation.cc` | Direct circuit evaluation, no Lua or legacy proof object; production proofs carry checked Longfellow/Ligero `LZK0` bodies |
@@ -37,18 +37,18 @@ needed before claiming production, paper-exact RPBSch.
 | Paper component | Current code | Tests | Status |
 | --- | --- | --- | --- |
 | Commitment key `ck` | `lib/niwi/src/pbsch_commitment.c` | `test/lua/pedersen.lua` | Deterministic Pedersen H derivation |
-| `C` and `S` opening checks | `src/lua/crypto_pbsch.lua`, `src/lua/crypto_rpbsch.lua` | `test/lua/rpbsch_niwi.lua` | Checked in Lua adapter boundary; still open inside RPBSch relation |
-| Straight-line extractable Cmt | `src/lua/crypto_pbsch.lua`, `lib/niwi/src/pbsch_commitment.c`, `lib/niwi/docs/pbsch-cmt-profile.md` | `test/lua/pbsch_cmt.lua`, `test/lua/pedersen.lua` | Implemented as Pedersen-backed `CMT1` opening envelope; RPBSch remains non-paper-exact until branch/selector relations verify openings |
+| `C` and `S` opening checks | `lib/niwi/src/circuits/rpbsch/rpbsch_relation_circuit.h`, `lib/niwi/src/relations/rpbsch_ligero_relation.cc`, `src/lua/crypto_pbsch.lua` | `lib/niwi/tests/test_rpbsch_commitment_circuit.cc`, `lib/niwi/tests/test_rpbsch_branch_circuit.cc`, `test/lua/rpbsch_niwi.lua` | Checked in the native Longfellow RPBSch relation and still checked at the Lua/native adapter boundary |
+| Straight-line extractable Cmt | `src/lua/crypto_pbsch.lua`, `lib/niwi/src/pbsch_commitment.c`, `lib/niwi/docs/pbsch-cmt-profile.md` | `test/lua/pbsch_cmt.lua`, `test/lua/pedersen.lua` | Implemented as Pedersen-backed `CMT1` opening envelope. This is still the binding Pedersen profile, not the paper's final straight-line extractable Cmt construction |
 
 ## RPBSch Relation
 
 | Paper component | Current code | Tests | Status |
 | --- | --- | --- | --- |
 | Statement `(X, X', R, c, C, phi, ck, S)` | `src/lua/crypto_pbsch.lua`, `src/lua/crypto_rpbsch.lua` | `test/lua/rpbsch_niwi.lua`, `test/lua/pbsch_end_to_end.lua` | Encoded and mutation-tested |
-| Branch 1 relation | `src/lua/crypto_rpbsch.lua`, `lib/niwi/src/relations/rpbsch_relation.cc` | `test/lua/rpbsch_niwi.lua` | Native branch relation validates statement, C/S openings, and embedded BIP340 witness |
-| Branch 2 relation | `src/lua/crypto_rpbsch.lua`, `lib/niwi/src/relations/rpbsch_relation.cc` | `test/lua/rpbsch_niwi.lua` | Native branch relation validates statement, C/S openings, and two embedded BIP340 witnesses |
-| Selector-composed relation | `src/lua/crypto_rpbsch.lua`, `lib/niwi/src/relations/rpbsch_relation.cc` | `test/lua/rpbsch_niwi.lua` | Implemented as a native fixed two-slot private selector relation; not a zkcc-authored selector circuit |
-| C/S opening checks inside relation | `lib/niwi/src/relations/rpbsch_relation.cc` | `test/lua/rpbsch_niwi.lua` | Native relation validates C/S openings before NIWI proving/extraction succeeds |
+| Branch 1 relation | `lib/niwi/src/circuits/rpbsch/rpbsch_relation_circuit.h`, `lib/niwi/src/relations/rpbsch_ligero_relation.cc` | `lib/niwi/tests/test_rpbsch_branch_circuit.cc`, `test/lua/rpbsch_niwi.lua` | Native Longfellow branch relation validates statement, C/S openings, phi, final BIP340 challenge/signature, and rejects targeted mutations |
+| Branch 2 relation | `lib/niwi/src/circuits/rpbsch/rpbsch_relation_circuit.h`, `lib/niwi/src/relations/rpbsch_ligero_relation.cc` | `lib/niwi/tests/test_rpbsch_branch_circuit.cc`, `test/lua/rpbsch_niwi.lua` | Native Longfellow branch relation validates statement, C/S openings, phi, tuple-message hashes, and two BIP340 challenge/signature checks |
+| Selector-composed relation | `lib/niwi/src/circuits/rpbsch/rpbsch_relation_circuit.h`, `lib/niwi/src/relations/rpbsch_ligero_relation.cc` | `lib/niwi/tests/test_rpbsch_branch_circuit.cc`, `test/lua/rpbsch_niwi.lua` | Implemented as a fixed two-slot private selector profile: selector is private/range-checked and both branch slots are constrained. This is stricter than the paper OR-gated selector and remains a paper-exact gap |
+| C/S opening checks inside relation | `lib/niwi/src/circuits/rpbsch/rpbsch_relation_circuit.h`, `lib/niwi/src/relations/rpbsch_ligero_relation.cc` | `lib/niwi/tests/test_rpbsch_commitment_circuit.cc`, `lib/niwi/tests/test_rpbsch_branch_circuit.cc`, `test/lua/rpbsch_niwi.lua` | Native Longfellow relation validates C/S openings before NIWI proving/extraction succeeds |
 
 ## Claims And Limits
 
@@ -59,10 +59,8 @@ needed before claiming production, paper-exact RPBSch.
   root, dimension-bound `param_id`, explicit `NRSP` row/column response object,
   verifier-recomputed response digest, minimal tableau-digest row and column evaluations, Fiat-Shamir selected opening path,
   selected `TBL1` leaf preimage, and KLP22 challenge schedule binding. For
-  BIP340, `LZK0` now carries a checked Longfellow/Ligero proof body with
-  low-degree, dot, quadratic, requested-column, and Merkle checks. The remaining
-  NIWI core generalization is adding an equivalent checked Longfellow body for
-  RPBSch, then retiring its local scaffold profile.
+  BIP340 and RPBSch, `LZK0` now carries a checked Longfellow/Ligero proof body
+  with low-degree, dot, quadratic, requested-column, and Merkle checks.
 - Current extraction reconstructs the committed tableau-fragment profile,
   recomputes the accepted `NRSP` row and column evaluations over
   Gamma-recovered leaves,
@@ -70,12 +68,13 @@ needed before claiming production, paper-exact RPBSch.
   Ligero body extraction remains open only for the broader parameterized layout
   above.
 - Current PBSch Cmt is a Pedersen-backed `CMT1` profile with straight-line
-  extraction from opened commitments. Final RPBSch proof claims still require
-  branch/selector relations to verify `C` and `S` openings natively.
+  extraction from opened commitments. The native RPBSch relation verifies `C`
+  and `S` openings, but the Cmt construction is still not the paper's final
+  straight-line extractable Cmt.
 - Current RPBSch has native branch relations, statement binding, and a fixed
-  two-slot private selector relation. It is still not a zkcc-authored selector
-  circuit, and final paper claims remain gated by the full NIWI/Ligero proof
-  body work above.
+  two-slot private selector relation with checked `LZK0`. Final paper claims
+  remain gated by replacing this stricter both-slots-valid profile with a true
+  OR-gated selector and by finishing the paper-exact Cmt profile.
 - BIP340 is the strongest covered dependency: official vectors cover the SECP
   and zkcc paths, valid official vectors run through NIWI prove/verify/extract,
   and production BIP340 proofs now verify an embedded Longfellow/Ligero proof
