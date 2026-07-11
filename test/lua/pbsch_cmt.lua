@@ -108,6 +108,26 @@ assert(not pbsch.cmt3_sigma_verify(record.commitment, sigma_A, sigma_ch,
 assert(not pbsch.cmt3_sigma_verify(record.commitment, sigma_A, sigma_ch,
                                    sigma_z_m, flip_last_nibble(sigma_z_r)),
        "CMT3 Sigma accepted wrong z_r")
+local secp_order = OCTET.from_hex(
+    "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141")
+assert(not pbsch.cmt3_sigma_verify(record.commitment, sigma_A, 4096,
+                                   sigma_z_m, sigma_z_r),
+       "CMT3 Sigma accepted challenge 4096")
+assert(not pbsch.cmt3_sigma_verify(record.commitment, sigma_A, 65535,
+                                   sigma_z_m, sigma_z_r),
+       "CMT3 Sigma accepted challenge 65535")
+assert(not pbsch.cmt3_sigma_verify(record.commitment, sigma_A, sigma_ch,
+                                   secp_order, sigma_z_r),
+       "CMT3 Sigma accepted z_m equal to order")
+assert(not pbsch.cmt3_sigma_verify(record.commitment, sigma_A, sigma_ch,
+                                   sigma_z_m, secp_order),
+       "CMT3 Sigma accepted z_r equal to order")
+assert(not pbsch.cmt3_sigma_verify(record.commitment, OCTET.zero(33),
+                                   sigma_ch, sigma_z_m, sigma_z_r),
+       "CMT3 Sigma accepted invalid A point")
+assert(not pbsch.cmt3_sigma_verify(OCTET.zero(33), sigma_A,
+                                   sigma_ch, sigma_z_m, sigma_z_r),
+       "CMT3 Sigma accepted invalid commitment point")
 
 assert(not pbsch.cmt_verify(record.commitment, pbsch.cmt_opening(wrong_m, rho)),
        "wrong message opening accepted")
