@@ -42,11 +42,12 @@ the next step, but the v1 proof is the ordinary Fiat-Shamir transform of the
 Pedersen-opening Sigma protocol, not the Fischlin/Pas-style straight-line
 extractable transform required by the paper.
 
-Lua RPBSch fixtures currently carry CMT2 proofs for both `C` and `S`, and
-production Lua proof helpers reject fixtures with missing or invalid CMT2 proofs
-before entering native proof generation. The CMT3 plan moves that production
-default to the Fischlin05 proof body. The native Longfellow relation still
-proves the underlying Pedersen openings from private witness material.
+CMT2 stays available for compatibility, debugging, and regression tests. New
+paper-facing PBSch/RPBSch helpers must not select it as their production Cmt
+body because it lacks the Fischlin/Pas straight-line extraction argument. The
+production default is CMT3 once the API can carry the public Cmt proof object.
+The native Longfellow relation still proves the underlying Pedersen openings
+from private witness material.
 
 ## CMT3 Fischlin05 Profile
 

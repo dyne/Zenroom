@@ -356,9 +356,10 @@ end
 -- CMT2 is intentionally versioned separately from CMT1. This v1 proof is the
 -- ordinary Fiat-Shamir transform of the Pedersen-opening Sigma protocol:
 -- A = aG + bH, e = H(ck, C, A), z_m = a + e*m, z_r = b + e*r.
--- It is circuit-representable and verifies publicly, but it is not yet the
--- Fischlin/Pas straight-line extractable transform required for paper-exact
--- Cmt. See lib/niwi/docs/pbsch-cmt-profile.md.
+-- It is circuit-representable and verifies publicly, but it is compatibility
+-- and debugging material only. Paper-facing PBSch/RPBSch helpers must use CMT3,
+-- whose Fischlin05 transcript gives the straight-line extractability profile
+-- expected by the paper. See lib/niwi/docs/pbsch-cmt-profile.md.
 function pbsch.cmt2_prove(commitment, message, rho)
     assert(type(commitment) == "zenroom.octet" and #commitment:str() == pbsch.C_SIZE,
            "commitment must be 33 bytes")
