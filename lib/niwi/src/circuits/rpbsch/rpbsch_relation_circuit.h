@@ -9,6 +9,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <array>
 #include <memory>
 
 #include "circuits/bip340/bip340_gadgets.h"
@@ -404,6 +405,83 @@ class RpbschRelationCircuit {
     verifier_.assert_verify(w.r1, X_prime, w.e1, w.bip340_1);
   }
 
+  void assert_selector_or(typename LogicCircuit::BitW selector_bit, EltW X,
+                          EltW X_prime, EltW R, EltW c, EltW C_prefix,
+                          EltW C_x, EltW phi, EltW ck, EltW S_prefix,
+                          EltW S_x, const Branch1Witness& b1,
+                          const Branch2Witness& b2) const {
+    Bytes32 m = mux(selector_bit, b2.m_bytes, b1.m_bytes);
+    Bytes32 alpha = mux(selector_bit, b2.alpha_bytes, b1.alpha_bytes);
+    Bytes32 beta = mux(selector_bit, b2.beta_bytes, b1.beta_bytes);
+    Bytes32 rho_c_bytes = mux(selector_bit, b2.rho_c_bytes, b1.rho_c_bytes);
+    Bytes32 rho_s_bytes = mux(selector_bit, b2.rho_s_bytes, b1.rho_s_bytes);
+    Bytes32 nu_s = mux(selector_bit, b2.nu_s_bytes, b1.nu_s_bytes);
+    Bytes32 nu_u = mux(selector_bit, b2.nu_u_bytes, b1.nu_u_bytes);
+    Bytes32 nu_u_prime =
+        mux(selector_bit, b2.nu_u_prime_bytes, b1.nu_u_prime_bytes);
+    SignatureBytes sigma0 = mux(selector_bit, b2.sigma0, b1.sigma0);
+    SignatureBytes sigma1 = mux(selector_bit, b2.sigma1, b1.sigma1);
+    Sha2Witness c_sha = mux(selector_bit, b2.c_sha, b1.c_sha);
+    Sha4Witness s_sha = mux(selector_bit, b2.s_sha, b1.s_sha);
+    Sha4Witness phi_sha = mux(selector_bit, b2.phi_sha, b1.phi_sha);
+    PedersenOpeningWitness c_opening =
+        mux(selector_bit, b2.c_opening, b1.c_opening);
+    PedersenOpeningWitness s_opening =
+        mux(selector_bit, b2.s_opening, b1.s_opening);
+    auto c_y_bits = mux_array(selector_bit, b2.c_y_bits, b1.c_y_bits);
+    auto s_y_bits = mux_array(selector_bit, b2.s_y_bits, b1.s_y_bits);
+
+    assert_common_statement(
+        C_prefix, C_x, phi, ck, S_prefix, S_x,
+        mux(selector_bit, b2.c_y, b1.c_y),
+        c_y_bits.data(),
+        mux(selector_bit, b2.s_y, b1.s_y),
+        s_y_bits.data(),
+        mux(selector_bit, b2.m, b1.m),
+        mux(selector_bit, b2.alpha, b1.alpha),
+        mux(selector_bit, b2.beta, b1.beta),
+        mux(selector_bit, b2.rho_c, b1.rho_c),
+        mux(selector_bit, b2.rho_s, b1.rho_s),
+        mux(selector_bit, b2.nu_s, b1.nu_s),
+        mux(selector_bit, b2.nu_u, b1.nu_u),
+        mux(selector_bit, b2.nu_u_prime, b1.nu_u_prime),
+        mux(selector_bit, b2.c_msg, b1.c_msg),
+        mux(selector_bit, b2.s_msg, b1.s_msg), m, alpha, beta, rho_c_bytes,
+        rho_s_bytes, nu_s, nu_u, nu_u_prime, sigma0, sigma1,
+        mux(selector_bit, b2.c_digest, b1.c_digest),
+        mux(selector_bit, b2.s_digest, b1.s_digest),
+        mux(selector_bit, b2.phi_digest, b1.phi_digest), c_sha, s_sha,
+        phi_sha, c_opening, s_opening);
+
+    Bytes32 b2_r0 = signature_prefix_bytes(b2.sigma0);
+    Bytes32 b2_r1 = signature_prefix_bytes(b2.sigma1);
+    assert_selected_bip340(selector_bit,
+                           mux(selector_bit, b2.r0, R),
+                           mux(selector_bit, X_prime, X),
+                           mux(selector_bit, b2.e0, c),
+                           mux(selector_bit, b2_r0, b1.r_bytes),
+                           mux(selector_bit, b2.x_prime_bytes, b1.x_bytes),
+                           mux(selector_bit, b2.msg0_bytes, b1.m_bytes),
+                           mux(selector_bit, b2.bip340_0_digest,
+                               b1.bip340_digest),
+                           mux(selector_bit, b2.bip340_0_sha,
+                               b1.bip340_sha),
+                           mux(selector_bit, b2.bip340_0, b1.bip340));
+
+    assert_selected_bip340(selector_bit,
+                           mux(selector_bit, b2.r1, R),
+                           mux(selector_bit, X_prime, X),
+                           mux(selector_bit, b2.e1, c),
+                           mux(selector_bit, b2_r1, b1.r_bytes),
+                           mux(selector_bit, b2.x_prime_bytes, b1.x_bytes),
+                           mux(selector_bit, b2.msg1_bytes, b1.m_bytes),
+                           mux(selector_bit, b2.bip340_1_digest,
+                               b1.bip340_digest),
+                           mux(selector_bit, b2.bip340_1_sha,
+                               b1.bip340_sha),
+                           mux(selector_bit, b2.bip340_1, b1.bip340));
+  }
+
  private:
   const LogicCircuit& lc_;
   const FlatSha& sha_;
@@ -671,6 +749,217 @@ class RpbschRelationCircuit {
                              witness.blocks);
   }
 
+  void assert_selected_bip340(
+      typename LogicCircuit::BitW selector_bit, EltW selected_R,
+      EltW selected_X, EltW selected_e, const Bytes32& selected_r_bytes,
+      const Bytes32& selected_x_bytes, const Bytes32& selected_msg,
+      const v256& selected_digest, const Sha3Witness& selected_sha,
+      const typename Bip340Verify::Witness& selected_witness) const {
+    (void)selector_bit;
+    assert_bip340_challenge(selected_digest, selected_R, selected_X,
+                            selected_r_bytes, selected_x_bytes, selected_msg,
+                            selected_sha);
+    gadgets_.assert_challenge_scalar_from_digest(selected_digest, selected_e);
+    verifier_.assert_verify(selected_R, selected_X, selected_e,
+                            selected_witness);
+  }
+
+  EltW mux(typename LogicCircuit::BitW selector_bit, EltW if_branch2,
+           EltW if_branch1) const {
+    return lc_.mux(selector_bit, if_branch2, if_branch1);
+  }
+
+  v8 mux(typename LogicCircuit::BitW selector_bit, const v8& if_branch2,
+         const v8& if_branch1) const {
+    v8 out;
+    for (size_t i = 0; i < 8; ++i) {
+      out[i] = lc_.mux(selector_bit, if_branch2[i], if_branch1[i]);
+    }
+    return out;
+  }
+
+  v256 mux(typename LogicCircuit::BitW selector_bit, const v256& if_branch2,
+           const v256& if_branch1) const {
+    v256 out;
+    for (size_t i = 0; i < kBits; ++i) {
+      out[i] = lc_.mux(selector_bit, if_branch2[i], if_branch1[i]);
+    }
+    return out;
+  }
+
+  template <size_t N>
+  std::array<EltW, N> mux(typename LogicCircuit::BitW selector_bit,
+                          const std::array<EltW, N>& if_branch2,
+                          const std::array<EltW, N>& if_branch1) const {
+    std::array<EltW, N> out;
+    for (size_t i = 0; i < N; ++i) {
+      out[i] = mux(selector_bit, if_branch2[i], if_branch1[i]);
+    }
+    return out;
+  }
+
+  Bytes32 mux(typename LogicCircuit::BitW selector_bit,
+              const Bytes32& if_branch2, const Bytes32& if_branch1) const {
+    Bytes32 out;
+    for (size_t i = 0; i < 32; ++i) {
+      out.bytes[i] = mux(selector_bit, if_branch2.bytes[i],
+                         if_branch1.bytes[i]);
+    }
+    return out;
+  }
+
+  SignatureBytes mux(typename LogicCircuit::BitW selector_bit,
+                     const SignatureBytes& if_branch2,
+                     const SignatureBytes& if_branch1) const {
+    SignatureBytes out;
+    for (size_t i = 0; i < 64; ++i) {
+      out.bytes[i] = mux(selector_bit, if_branch2.bytes[i],
+                         if_branch1.bytes[i]);
+    }
+    return out;
+  }
+
+  Sha2Witness mux(typename LogicCircuit::BitW selector_bit,
+                  const Sha2Witness& if_branch2,
+                  const Sha2Witness& if_branch1) const {
+    Sha2Witness out;
+    for (size_t i = 0; i < 2; ++i) {
+      out.blocks[i] = mux(selector_bit, if_branch2.blocks[i],
+                          if_branch1.blocks[i]);
+    }
+    return out;
+  }
+
+  Sha3Witness mux(typename LogicCircuit::BitW selector_bit,
+                  const Sha3Witness& if_branch2,
+                  const Sha3Witness& if_branch1) const {
+    Sha3Witness out;
+    for (size_t i = 0; i < 3; ++i) {
+      out.blocks[i] = mux(selector_bit, if_branch2.blocks[i],
+                          if_branch1.blocks[i]);
+    }
+    return out;
+  }
+
+  Sha4Witness mux(typename LogicCircuit::BitW selector_bit,
+                  const Sha4Witness& if_branch2,
+                  const Sha4Witness& if_branch1) const {
+    Sha4Witness out;
+    for (size_t i = 0; i < 4; ++i) {
+      out.blocks[i] = mux(selector_bit, if_branch2.blocks[i],
+                          if_branch1.blocks[i]);
+    }
+    return out;
+  }
+
+  typename FlatSha::BlockWitness mux(
+      typename LogicCircuit::BitW selector_bit,
+      const typename FlatSha::BlockWitness& if_branch2,
+      const typename FlatSha::BlockWitness& if_branch1) const {
+    typename FlatSha::BlockWitness out;
+    for (size_t i = 0; i < 48; ++i) {
+      out.outw[i] = mux(selector_bit, if_branch2.outw[i],
+                        if_branch1.outw[i]);
+    }
+    for (size_t i = 0; i < 64; ++i) {
+      out.oute[i] = mux(selector_bit, if_branch2.oute[i],
+                        if_branch1.oute[i]);
+      out.outa[i] = mux(selector_bit, if_branch2.outa[i],
+                        if_branch1.outa[i]);
+    }
+    for (size_t i = 0; i < 8; ++i) {
+      out.h1[i] = mux(selector_bit, if_branch2.h1[i], if_branch1.h1[i]);
+    }
+    return out;
+  }
+
+  ScalarMultWitness mux(typename LogicCircuit::BitW selector_bit,
+                        const ScalarMultWitness& if_branch2,
+                        const ScalarMultWitness& if_branch1) const {
+    ScalarMultWitness out;
+    for (size_t i = 0; i < kBits; ++i) {
+      out.bits[i] = mux(selector_bit, if_branch2.bits[i],
+                        if_branch1.bits[i]);
+      if (i < kBits - 1) {
+        out.int_x[i] = mux(selector_bit, if_branch2.int_x[i],
+                           if_branch1.int_x[i]);
+        out.int_y[i] = mux(selector_bit, if_branch2.int_y[i],
+                           if_branch1.int_y[i]);
+        out.int_z[i] = mux(selector_bit, if_branch2.int_z[i],
+                           if_branch1.int_z[i]);
+      }
+    }
+    return out;
+  }
+
+  Point mux(typename LogicCircuit::BitW selector_bit, const Point& if_branch2,
+            const Point& if_branch1) const {
+    return {mux(selector_bit, if_branch2.x, if_branch1.x),
+            mux(selector_bit, if_branch2.y, if_branch1.y),
+            mux(selector_bit, if_branch2.z, if_branch1.z)};
+  }
+
+  PedersenOpeningWitness mux(typename LogicCircuit::BitW selector_bit,
+                             const PedersenOpeningWitness& if_branch2,
+                             const PedersenOpeningWitness& if_branch1) const {
+    return {mux(selector_bit, if_branch2.msg, if_branch1.msg),
+            mux(selector_bit, if_branch2.rho, if_branch1.rho),
+            mux(selector_bit, if_branch2.msg_point, if_branch1.msg_point),
+            mux(selector_bit, if_branch2.rho_point, if_branch1.rho_point),
+            mux(selector_bit, if_branch2.sum_z_inv,
+                if_branch1.sum_z_inv)};
+  }
+
+  typename Bip340Verify::Witness mux(
+      typename LogicCircuit::BitW selector_bit,
+      const typename Bip340Verify::Witness& if_branch2,
+      const typename Bip340Verify::Witness& if_branch1) const {
+    typename Bip340Verify::Witness out;
+    for (size_t i = 0; i < kBits; ++i) {
+      out.bits_s[i] = mux(selector_bit, if_branch2.bits_s[i],
+                          if_branch1.bits_s[i]);
+      out.bits_e[i] = mux(selector_bit, if_branch2.bits_e[i],
+                          if_branch1.bits_e[i]);
+      out.bits_ry[i] = mux(selector_bit, if_branch2.bits_ry[i],
+                           if_branch1.bits_ry[i]);
+      if (i < kBits - 1) {
+        out.int_sx[i] = mux(selector_bit, if_branch2.int_sx[i],
+                            if_branch1.int_sx[i]);
+        out.int_sy[i] = mux(selector_bit, if_branch2.int_sy[i],
+                            if_branch1.int_sy[i]);
+        out.int_sz[i] = mux(selector_bit, if_branch2.int_sz[i],
+                            if_branch1.int_sz[i]);
+        out.int_ex[i] = mux(selector_bit, if_branch2.int_ex[i],
+                            if_branch1.int_ex[i]);
+        out.int_ey[i] = mux(selector_bit, if_branch2.int_ey[i],
+                            if_branch1.int_ey[i]);
+        out.int_ez[i] = mux(selector_bit, if_branch2.int_ez[i],
+                            if_branch1.int_ez[i]);
+      }
+    }
+    out.py = mux(selector_bit, if_branch2.py, if_branch1.py);
+    out.ry = mux(selector_bit, if_branch2.ry, if_branch1.ry);
+    out.rz_inv = mux(selector_bit, if_branch2.rz_inv, if_branch1.rz_inv);
+    return out;
+  }
+
+  template <size_t N>
+  std::array<EltW, N> mux_array(typename LogicCircuit::BitW selector_bit,
+                                const EltW (&if_branch2)[N],
+                                const EltW (&if_branch1)[N]) const {
+    std::array<EltW, N> out;
+    for (size_t i = 0; i < N; ++i) {
+      out[i] = mux(selector_bit, if_branch2[i], if_branch1[i]);
+    }
+    return out;
+  }
+
+  Bytes32 signature_prefix_bytes(const SignatureBytes& sig) const {
+    Bytes32 out;
+    for (size_t i = 0; i < 32; ++i) out.bytes[i] = sig.bytes[i];
+    return out;
+  }
+
   void copy_bytes(v8 *out, size_t& off, const Bytes32& bytes) const {
     for (const auto& byte : bytes.bytes) out[off++] = byte;
   }
@@ -785,24 +1074,17 @@ build_rpbsch_selector_circuit(void) {
 
   auto selector = logic.eltw_input();
   auto selector_zero_based = logic.sub(selector, logic.konst(1));
-  logic.assert_is_bit(typename Logic::BitW(selector_zero_based, logic.f_));
+  typename Logic::BitW selector_bit(selector_zero_based, logic.f_);
+  logic.assert_is_bit(selector_bit);
 
   typename RpbschRelationCircuit<Logic, BitPlucker>::Branch1Witness branch1;
   typename RpbschRelationCircuit<Logic, BitPlucker>::Branch2Witness branch2;
   branch1.input(logic);
   branch2.input(logic);
 
-  /* Fixed two-slot v1 composition.
-   *
-   * The selector is private and the witness shape is constant, but both branch
-   * slots are constrained. This is stricter than the final paper OR relation;
-   * it prevents malformed padding from becoming an unconstrained channel while
-   * the selector-gated satisfaction layer is still pending.
-   */
-  relation.assert_branch1(X, X_prime, R, c, C_prefix, C_x, phi, ck,
-                          S_prefix, S_x, branch1);
-  relation.assert_branch2(X, X_prime, R, c, C_prefix, C_x, phi, ck,
-                          S_prefix, S_x, branch2);
+  relation.assert_selector_or(selector_bit, X, X_prime, R, c, C_prefix,
+                              C_x, phi, ck, S_prefix, S_x, branch1,
+                              branch2);
   return q.mkcircuit(1);
 }
 

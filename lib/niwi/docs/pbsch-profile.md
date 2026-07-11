@@ -255,9 +255,9 @@ The RPBSch circuit proves knowledge of either:
 - σ₁ is a valid BIP-340 signature under X' on message (νₛ, νᵤ')
 
 The current native v1 composition uses a private selector and a fixed two-slot
-proof shape, but it constrains both branch slots. This is stricter than the
-paper OR relation and prevents malformed padding from being unconstrained; the
-paper-exact OR-gated selector remains future work.
+proof shape. The circuit muxes the selected branch values into the audited
+SHA/BIP340/Pedersen gadgets, so inactive branch-specific padding is present for
+constant shape but is not required to satisfy the unselected branch relation.
 
 ## Limitations (prototype)
 
@@ -278,7 +278,6 @@ This v1 profile has the following known limitations:
 5. **Fischlin deferred**: The full Fischlin extractable-Cmt is
    deferred to a future profile (`pbsch-v2`).
 
-6. **Selector is stricter than paper OR**: The checked RPBSch `LZK0` body
-   currently requires both branch slots to be valid under a private selector
-   value. This is production-checkable but not yet the paper's exact
-   either-branch relation.
+6. **Cmt is not paper-exact yet**: The checked RPBSch `LZK0` body now uses a
+   private OR selector, but the commitment profile is still Pedersen-backed
+   `CMT1`, not the final straight-line extractable Cmt profile.

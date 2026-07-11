@@ -21,8 +21,8 @@
 -- This module keeps orchestration and witness serialization readable in Lua,
 -- while native lib/niwi validates branch statements, C/S openings, and the
 -- embedded BIP-340 witnesses. Production native proofs now carry checked LZK0
--- bodies. Paper-exact selector composition remains open: native v1 constrains
--- both branch slots under a private selector instead of OR-gating one branch.
+-- bodies with a fixed-shape private OR selector. The remaining paper-exact
+-- gap is the Cmt profile, which is still Pedersen-backed CMT1.
 
 local pbsch = require'crypto_pbsch'
 local zkcc = require'crypto_zkcc'

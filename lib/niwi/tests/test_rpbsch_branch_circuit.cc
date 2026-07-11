@@ -642,9 +642,10 @@ void test_selector_valid_and_rejects_bad_slots(void) {
     fill_selector_inputs(f, 1, &selector1, &pub1, &branch2_offset);
     assert(evaluates(*circuit, selector1));
 
+    size_t selector2_branch2_offset = 0;
     proofs::Dense<Field> selector2(1, circuit->ninputs);
     proofs::Dense<Field> pub2(1, circuit->npub_in);
-    fill_selector_inputs(f, 2, &selector2, &pub2, nullptr);
+    fill_selector_inputs(f, 2, &selector2, &pub2, &selector2_branch2_offset);
     assert(evaluates(*circuit, selector2));
 
     proofs::Dense<Field> bad_selector(1, circuit->ninputs);
@@ -657,10 +658,22 @@ void test_selector_valid_and_rejects_bad_slots(void) {
         bad_branch1->v_[circuit->npub_in + 1], proofs::p256k1_base.one());
     assert(!evaluates(*circuit, *bad_branch1));
 
-    auto bad_branch2_padding = selector1.clone();
-    bad_branch2_padding->v_[branch2_offset] = proofs::p256k1_base.addf(
-        bad_branch2_padding->v_[branch2_offset], proofs::p256k1_base.one());
-    assert(!evaluates(*circuit, *bad_branch2_padding));
+    auto bad_inactive_branch2 = selector1.clone();
+    bad_inactive_branch2->v_[branch2_offset] = proofs::p256k1_base.addf(
+        bad_inactive_branch2->v_[branch2_offset], proofs::p256k1_base.one());
+    assert(evaluates(*circuit, *bad_inactive_branch2));
+
+    auto bad_inactive_branch1 = selector2.clone();
+    bad_inactive_branch1->v_[circuit->npub_in + 1] = proofs::p256k1_base.addf(
+        bad_inactive_branch1->v_[circuit->npub_in + 1],
+        proofs::p256k1_base.one());
+    assert(evaluates(*circuit, *bad_inactive_branch1));
+
+    auto bad_selected_branch2 = selector2.clone();
+    bad_selected_branch2->v_[selector2_branch2_offset] = proofs::p256k1_base.addf(
+        bad_selected_branch2->v_[selector2_branch2_offset],
+        proofs::p256k1_base.one());
+    assert(!evaluates(*circuit, *bad_selected_branch2));
 
     std::printf("  PASS test_selector_valid_and_rejects_bad_slots\n");
 }

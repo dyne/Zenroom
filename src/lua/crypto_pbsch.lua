@@ -36,9 +36,8 @@
 --
 -- Cmt status: Pedersen-backed CMT1 opening envelope with straight-line
 -- extraction from opened proofs. Native RPBSch LZK0 verifies C and S openings,
--- but RPBSch is not paper-exact until Cmt matches the paper profile and the
--- selector is the paper OR relation. See lib/niwi/docs/pbsch-cmt-profile.md
--- before making RPBSch proof claims.
+-- but RPBSch is not paper-exact until Cmt matches the paper profile. See
+-- lib/niwi/docs/pbsch-cmt-profile.md before making RPBSch proof claims.
 --
 -- The native layer owns: secp256k1 arithmetic, BIP-340 sign/verify,
 -- circuit constraints, NIWI proof objects.
@@ -199,7 +198,7 @@ end
 -- This wraps the native Pedersen opening in a canonical, straight-line
 -- extractable envelope: CMT1 || ck || message || randomness.
 -- It is still a Pedersen-backed Cmt profile; RPBSch is not paper-exact until
--- Cmt matches the paper profile and the selector relation is OR-gated.
+-- Cmt matches the paper profile.
 function pbsch.cmt_opening(message, rho)
     assert(#message:str() == 32, "message must be 32 bytes")
     assert(#rho:str() == 32, "rho must be 32 bytes")

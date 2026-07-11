@@ -47,7 +47,7 @@ needed before claiming production, paper-exact RPBSch.
 | Statement `(X, X', R, c, C, phi, ck, S)` | `src/lua/crypto_pbsch.lua`, `src/lua/crypto_rpbsch.lua` | `test/lua/rpbsch_niwi.lua`, `test/lua/pbsch_end_to_end.lua` | Encoded and mutation-tested |
 | Branch 1 relation | `lib/niwi/src/circuits/rpbsch/rpbsch_relation_circuit.h`, `lib/niwi/src/relations/rpbsch_ligero_relation.cc` | `lib/niwi/tests/test_rpbsch_branch_circuit.cc`, `test/lua/rpbsch_niwi.lua` | Native Longfellow branch relation validates statement, C/S openings, phi, final BIP340 challenge/signature, and rejects targeted mutations |
 | Branch 2 relation | `lib/niwi/src/circuits/rpbsch/rpbsch_relation_circuit.h`, `lib/niwi/src/relations/rpbsch_ligero_relation.cc` | `lib/niwi/tests/test_rpbsch_branch_circuit.cc`, `test/lua/rpbsch_niwi.lua` | Native Longfellow branch relation validates statement, C/S openings, phi, tuple-message hashes, and two BIP340 challenge/signature checks |
-| Selector-composed relation | `lib/niwi/src/circuits/rpbsch/rpbsch_relation_circuit.h`, `lib/niwi/src/relations/rpbsch_ligero_relation.cc` | `lib/niwi/tests/test_rpbsch_branch_circuit.cc`, `test/lua/rpbsch_niwi.lua` | Implemented as a fixed two-slot private selector profile: selector is private/range-checked and both branch slots are constrained. This is stricter than the paper OR-gated selector and remains a paper-exact gap |
+| Selector-composed relation | `lib/niwi/src/circuits/rpbsch/rpbsch_relation_circuit.h`, `lib/niwi/src/relations/rpbsch_ligero_relation.cc` | `lib/niwi/tests/test_rpbsch_branch_circuit.cc`, `test/lua/rpbsch_niwi.lua` | Implemented as a fixed-shape private OR selector: selector is private/range-checked, selected branch constraints feed the audited SHA/BIP340/Pedersen gadgets, inactive branch-specific padding is not required to satisfy the unselected branch |
 | C/S opening checks inside relation | `lib/niwi/src/circuits/rpbsch/rpbsch_relation_circuit.h`, `lib/niwi/src/relations/rpbsch_ligero_relation.cc` | `lib/niwi/tests/test_rpbsch_commitment_circuit.cc`, `lib/niwi/tests/test_rpbsch_branch_circuit.cc`, `test/lua/rpbsch_niwi.lua` | Native Longfellow relation validates C/S openings before NIWI proving/extraction succeeds |
 
 ## Claims And Limits
@@ -71,10 +71,9 @@ needed before claiming production, paper-exact RPBSch.
   extraction from opened commitments. The native RPBSch relation verifies `C`
   and `S` openings, but the Cmt construction is still not the paper's final
   straight-line extractable Cmt.
-- Current RPBSch has native branch relations, statement binding, and a fixed
-  two-slot private selector relation with checked `LZK0`. Final paper claims
-  remain gated by replacing this stricter both-slots-valid profile with a true
-  OR-gated selector and by finishing the paper-exact Cmt profile.
+- Current RPBSch has native branch relations, statement binding, a private
+  OR selector relation, and checked `LZK0`. Final paper claims remain gated by
+  finishing the paper-exact Cmt profile.
 - BIP340 is the strongest covered dependency: official vectors cover the SECP
   and zkcc paths, valid official vectors run through NIWI prove/verify/extract,
   and production BIP340 proofs now verify an embedded Longfellow/Ligero proof

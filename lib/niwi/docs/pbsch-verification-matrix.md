@@ -33,7 +33,7 @@ review gate before release.
 | B4 | BIP-340 circuit cost | constraint count, proof size, witness gen time, prove time, verify time for 1 sig and 2 sigs | measured and recorded | N/A | benchmark | ⬜ |
 | B5 | RPBSch branch 1 correctness | valid branch-1 proof, α/β/R/m/C mutations | honest witness accepted | mutated witness rejected | `lib/niwi` C++ circuit test | ✅ v1 |
 | B6 | RPBSch branch 2 correctness | valid branch-2 proof, νᵤ=νᵤ', bad sig, bad S | trapdoor witness accepted | equal-νᵤ, bad sig, bad S rejected | `lib/niwi` C++ circuit test | ✅ v1 |
-| B7 | Selector composition | valid fixed two-slot witness, malformed selected/unselected slots, selector non-boolean | both valid branch slots accepted with private selector | malformed slots and non-bool selector rejected | `lib/niwi` C++ circuit test | ✅ v1 stricter than paper OR |
+| B7 | Selector composition | valid fixed-shape witness, malformed selected slot, malformed inactive slot, selector non-boolean | selected valid branch accepted and inactive branch-specific padding ignored | selected branch mutation and non-bool selector rejected | `lib/niwi` C++ circuit test | ✅ private OR selector |
 | B8 | PBSch end-to-end | full Figure 4 session, valid BIP-340 final sig, wrong state, replayed messages | valid session produces valid sig | out-of-order state rejected | Lua test | ⬜ |
 | B9 | Deterministic vectors | byte-exact vectors for setup, keygen, all messages, final sig | vectors match across rebuilds | mutation changes output | Lua vector test | ⬜ |
 

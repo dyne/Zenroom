@@ -116,8 +116,8 @@ LZK0 ||
 
 The native verifier rebuilds the BIP340 circuit with the same
 `Bip340Verify<Logic<CompilerBackend>>` construction used by zkcc, parses the
-compiled P-256 zkcc artifact, or rebuilds the RPBSch fixed two-slot selector
-circuit. It then parses the serialized `ZkProof` and runs Longfellow
+compiled P-256 zkcc artifact, or rebuilds the RPBSch fixed-shape private OR
+selector circuit. It then parses the serialized `ZkProof` and runs Longfellow
 `ZkVerifier` over the public field inputs. Mutating the `LZK0` body makes
 production verification fail. BIP340 and RPBSch use the audited secp256k1 CRT
 encoding profile; generic P-256 uses Longfellow's deterministic parameter
