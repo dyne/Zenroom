@@ -32,7 +32,7 @@ NIWI_ZK_DEPS := ../../lib/longfellow-zk/liblongfellow-zk.a \
                 $(NIWI_AMCL)
 
 NIWI_SOURCES := src/niwi.c.o src/encoding.c.o src/hash.c.o src/npro.c.o src/commitment.c.o src/challenge_schedule.c.o src/extract.c.o \
-                src/pbsch_commitment.c.o \
+                src/pbsch_commitment.c.o src/pbsch_commitment_lf.cc.o \
                 src/secp256k1/secp256k1_curve.cc.o src/secp256k1/secp256k1_witness.cc.o \
                 src/relations/bip340_relation.cc.o src/relations/zkcc_p256_relation.cc.o \
                 src/relations/rpbsch_relation.cc.o
@@ -45,7 +45,7 @@ libniwi.a: $(NIWI_SOURCES)
 
 clean:
 	rm -f src/*.c.o tests/*.o src/secp256k1/*.cc.o src/relations/*.cc.o
-	rm -f *.a test_abi test_encoding test_hash test_npro test_commitment test_challenge_schedule test_niwi_proof_serde test_extract test_vectors test_bench test_secp256k1 test_secp256k1_circuit test_zkcc_p256_relation test_bip340_relation test_rpbsch_adapter test_ligero_param test_ligero_bip340 test_rpbsch_sha_circuit test_rpbsch_commitment_circuit
+	rm -f *.a test_abi test_encoding test_hash test_npro test_commitment test_challenge_schedule test_niwi_proof_serde test_extract test_vectors test_bench test_secp256k1 test_secp256k1_circuit test_zkcc_p256_relation test_bip340_relation test_rpbsch_adapter test_ligero_param test_ligero_bip340 test_rpbsch_sha_circuit test_rpbsch_commitment_circuit test_rpbsch_branch_circuit
 
 %.c.o: %.c
 	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -c -o $@ $<
@@ -55,7 +55,7 @@ clean:
 
 # ---- Tests ----
 
-test: test_abi test_encoding test_hash test_npro test_commitment test_challenge_schedule test_niwi_proof_serde test_extract test_vectors test_secp256k1 test_secp256k1_circuit test_zkcc_p256_relation test_bip340_relation test_rpbsch_adapter test_ligero_param test_ligero_bip340 test_rpbsch_sha_circuit test_rpbsch_commitment_circuit
+test: test_abi test_encoding test_hash test_npro test_commitment test_challenge_schedule test_niwi_proof_serde test_extract test_vectors test_secp256k1 test_secp256k1_circuit test_zkcc_p256_relation test_bip340_relation test_rpbsch_adapter test_ligero_param test_ligero_bip340 test_rpbsch_sha_circuit test_rpbsch_commitment_circuit test_rpbsch_branch_circuit
 	./test_abi
 	./test_encoding
 	./test_hash
@@ -74,6 +74,7 @@ test: test_abi test_encoding test_hash test_npro test_commitment test_challenge_
 	./test_ligero_bip340
 	./test_rpbsch_sha_circuit
 	./test_rpbsch_commitment_circuit
+	./test_rpbsch_branch_circuit
 	@echo "=== All lib/niwi tests passed ==="
 
 test_abi: tests/test_abi.c.o libniwi.a
@@ -137,6 +138,9 @@ test_rpbsch_sha_circuit: tests/test_rpbsch_sha_circuit.cc.o libniwi.a
 
 test_rpbsch_commitment_circuit: tests/test_rpbsch_commitment_circuit.cc.o libniwi.a
 	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_rpbsch_commitment_circuit.cc.o -L. -lniwi $(NIWI_ZK_DEPS)
+
+test_rpbsch_branch_circuit: tests/test_rpbsch_branch_circuit.cc.o libniwi.a
+	$(NIWI_CXX) $(NIWI_CFLAGS) -o $@ tests/test_rpbsch_branch_circuit.cc.o -L. -lniwi $(NIWI_ZK_DEPS)
 
 # ---- Benchmarks ----
 

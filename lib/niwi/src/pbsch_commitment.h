@@ -72,6 +72,21 @@ int niwi_pbsch_pedersen_commit(const uint8_t msg[32], const uint8_t rho[32],
 int niwi_pbsch_pedersen_verify(const uint8_t c[NIWI_PBSCH_CMP_SIZE],
                                const uint8_t msg[32], const uint8_t rho[32]);
 
+/* Longfellow/secp canonical Pedersen commitment profile for NIWI relations.
+ *
+ * These functions use the same H.x derivation as niwi_pbsch_pedersen_h(), but
+ * all point arithmetic is performed with lib/niwi's Longfellow secp256k1
+ * curve implementation. RPBSch/PBSch NIWI proof bodies use this profile so
+ * witness generation and circuit evaluation share one curve model.
+ */
+int niwi_pbsch_pedersen_commit_lf(const uint8_t msg[32],
+                                  const uint8_t rho[32],
+                                  uint8_t c_out[NIWI_PBSCH_CMP_SIZE]);
+
+int niwi_pbsch_pedersen_verify_lf(const uint8_t c[NIWI_PBSCH_CMP_SIZE],
+                                  const uint8_t msg[32],
+                                  const uint8_t rho[32]);
+
 #ifdef __cplusplus
 }
 #endif

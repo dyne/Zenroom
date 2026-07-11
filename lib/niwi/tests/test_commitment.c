@@ -19,6 +19,7 @@
  */
 
 #include "commitment.h"
+#include "pbsch_commitment.h"
 
 #include <assert.h>
 #include <stdint.h>
@@ -153,6 +154,31 @@ static void test_leaf_tampered_preimage(void) {
     printf("  PASS test_leaf_tampered_preimage\n");
 }
 
+/* ---- PBSch commitment tests ------------------------------------------ */
+
+static void test_pbsch_lf_pedersen_commit_verify(void) {
+    uint8_t msg[32] = {0};
+    uint8_t rho[32] = {0};
+    uint8_t commitment[NIWI_PBSCH_CMP_SIZE];
+    msg[31] = 7;
+    rho[31] = 11;
+
+    int rc = niwi_pbsch_pedersen_commit_lf(msg, rho, commitment);
+    assert(rc == 0);
+    assert(commitment[0] == 0x02 || commitment[0] == 0x03);
+
+    rc = niwi_pbsch_pedersen_verify_lf(commitment, msg, rho);
+    assert(rc == 0);
+
+    uint8_t wrong_msg[32];
+    memcpy(wrong_msg, msg, sizeof(wrong_msg));
+    wrong_msg[31] = 8;
+    rc = niwi_pbsch_pedersen_verify_lf(commitment, wrong_msg, rho);
+    assert(rc != 0);
+
+    printf("  PASS test_pbsch_lf_pedersen_commit_verify\n");
+}
+
 /* ---- Main ------------------------------------------------------------- */
 
 int main(void) {
@@ -165,6 +191,7 @@ int main(void) {
     test_leaf_commit_verify();
     test_leaf_wrong_data();
     test_leaf_tampered_preimage();
+    test_pbsch_lf_pedersen_commit_verify();
     printf("All commitment tests passed.\n");
     return 0;
 }

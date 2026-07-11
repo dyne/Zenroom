@@ -251,9 +251,9 @@ bool validate_commitments(const Statement& st, const Witness& w) {
     encode_s_msg(w.sigma0, w.sigma1, w.nu_u, w.nu_u_prime, w.nu_s, s_msg);
     statement_phi(w, phi);
     if (memcmp(st.phi, phi, 32) != 0) return false;
-    if (niwi_pbsch_pedersen_verify(st.C, c_msg, w.rho_c) != 0)
+    if (niwi_pbsch_pedersen_verify_lf(st.C, c_msg, w.rho_c) != 0)
         return false;
-    if (niwi_pbsch_pedersen_verify(st.S, s_msg, w.rho_s) != 0)
+    if (niwi_pbsch_pedersen_verify_lf(st.S, s_msg, w.rho_s) != 0)
         return false;
     return true;
 }

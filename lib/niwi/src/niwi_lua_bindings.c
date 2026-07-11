@@ -1124,6 +1124,74 @@ static int lua_pbsch_pedersen_verify(lua_State *L) {
     return 1;
 }
 
+/* niwi_pbsch_pedersen_commit_lf(msg: OCTET(32), rho: OCTET(32)) -> OCTET(33) */
+static int lua_pbsch_pedersen_commit_lf(lua_State *L) {
+    const octet *msg = o_arg(L, 1);
+    const octet *rho = o_arg(L, 2);
+    if (!msg || o_len(msg) != 32) {
+        o_free(L, rho);
+        o_free(L, msg);
+        lerror(L, "pbsch_pedersen_commit_lf: msg must be 32 bytes");
+        return 0;
+    }
+    if (!rho || o_len(rho) != 32) {
+        o_free(L, rho);
+        o_free(L, msg);
+        lerror(L, "pbsch_pedersen_commit_lf: rho must be 32 bytes");
+        return 0;
+    }
+
+    uint8_t c[33];
+    if (niwi_pbsch_pedersen_commit_lf((const uint8_t *)o_val(msg),
+                                       (const uint8_t *)o_val(rho), c) != 0) {
+        o_free(L, rho);
+        o_free(L, msg);
+        lerror(L, "pbsch_pedersen_commit_lf: failed");
+        return 0;
+    }
+    push_octet_copy(L, c, 33);
+    o_free(L, rho);
+    o_free(L, msg);
+    return 1;
+}
+
+/* niwi_pbsch_pedersen_verify_lf(c: OCTET(33), msg: OCTET(32), rho: OCTET(32)) -> bool */
+static int lua_pbsch_pedersen_verify_lf(lua_State *L) {
+    const octet *c   = o_arg(L, 1);
+    const octet *msg = o_arg(L, 2);
+    const octet *rho = o_arg(L, 3);
+    if (!c || o_len(c) != 33) {
+        o_free(L, rho);
+        o_free(L, msg);
+        o_free(L, c);
+        lerror(L, "pbsch_pedersen_verify_lf: c must be 33 bytes");
+        return 0;
+    }
+    if (!msg || o_len(msg) != 32) {
+        o_free(L, rho);
+        o_free(L, msg);
+        o_free(L, c);
+        lerror(L, "pbsch_pedersen_verify_lf: msg must be 32 bytes");
+        return 0;
+    }
+    if (!rho || o_len(rho) != 32) {
+        o_free(L, rho);
+        o_free(L, msg);
+        o_free(L, c);
+        lerror(L, "pbsch_pedersen_verify_lf: rho must be 32 bytes");
+        return 0;
+    }
+
+    int ok = niwi_pbsch_pedersen_verify_lf((const uint8_t *)o_val(c),
+                                            (const uint8_t *)o_val(msg),
+                                            (const uint8_t *)o_val(rho));
+    o_free(L, rho);
+    o_free(L, msg);
+    o_free(L, c);
+    lua_pushboolean(L, ok == 0);
+    return 1;
+}
+
 /* ---- Module registration --------------------------------------------- */
 
 static const luaL_Reg niwi_functions[] = {
@@ -1147,6 +1215,8 @@ static const luaL_Reg niwi_functions[] = {
     {"pbsch_pedersen_h",                                 lua_pbsch_pedersen_h},
     {"pbsch_pedersen_commit",                            lua_pbsch_pedersen_commit},
     {"pbsch_pedersen_verify",                            lua_pbsch_pedersen_verify},
+    {"pbsch_pedersen_commit_lf",                         lua_pbsch_pedersen_commit_lf},
+    {"pbsch_pedersen_verify_lf",                         lua_pbsch_pedersen_verify_lf},
     {NULL, NULL}
 };
 

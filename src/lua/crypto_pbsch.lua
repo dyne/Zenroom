@@ -31,6 +31,8 @@
 --   niwi.pbsch_pedersen_h()              -> H_x     (32-byte OCTET)
 --   niwi.pbsch_pedersen_commit(m, rho)   -> C       (33-byte OCTET)
 --   niwi.pbsch_pedersen_verify(C, m, rho)-> boolean
+--   niwi.pbsch_pedersen_commit_lf/verify_lf are the NIWI proof-profile
+--   Longfellow/secp canonical versions used by PBSch/RPBSch relation proofs.
 --
 -- Cmt status: Pedersen-backed CMT1 opening envelope with straight-line
 -- extraction from opened proofs. RPBSch is not paper-exact until the native
@@ -185,11 +187,11 @@ end
 -- ===========================================================================
 
 function pbsch.commit_c(m, rho)
-    return niwi.pbsch_pedersen_commit(m, rho)
+    return niwi.pbsch_pedersen_commit_lf(m, rho)
 end
 
 function pbsch.verify_c(C, m, rho)
-    return niwi.pbsch_pedersen_verify(C, m, rho)
+    return niwi.pbsch_pedersen_verify_lf(C, m, rho)
 end
 
 --- Build the current extractable Cmt opening envelope.
@@ -250,13 +252,13 @@ end
 function pbsch.commit_s(sig0, sig1, nu_u, nu_u_prime, nu_s, rho)
     assert(nu_u:str() ~= nu_u_prime:str(), "nu_u must differ from nu_u'")
     local m = pbsch.encode_s_msg(sig0, sig1, nu_u, nu_u_prime, nu_s)
-    return niwi.pbsch_pedersen_commit(m, rho)
+    return niwi.pbsch_pedersen_commit_lf(m, rho)
 end
 
 function pbsch.verify_s(S, sig0, sig1, nu_u, nu_u_prime, nu_s, rho)
     assert(nu_u:str() ~= nu_u_prime:str(), "nu_u must differ from nu_u'")
     local m = pbsch.encode_s_msg(sig0, sig1, nu_u, nu_u_prime, nu_s)
-    return niwi.pbsch_pedersen_verify(S, m, rho)
+    return niwi.pbsch_pedersen_verify_lf(S, m, rho)
 end
 
 -- ===========================================================================
