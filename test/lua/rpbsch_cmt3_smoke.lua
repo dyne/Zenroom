@@ -11,9 +11,9 @@ assert(rpbsch, 'crypto_rpbsch module not loaded')
 assert(pbsch, 'crypto_pbsch module not loaded')
 
 local function flip_last_byte(octet)
-  local s = octet:string()
-  local last = s:byte(#s)
-  return OCTET.from_string(s:sub(1, #s - 1) .. string.char(last ~ 1))
+  local hex = octet:hex()
+  local last = tonumber(hex:sub(-2), 16)
+  return OCTET.from_hex(hex:sub(1, -3) .. string.format('%02x', last ~ 1))
 end
 
 local fixture = rpbsch.fixture()
@@ -38,5 +38,36 @@ local bad_s = rpbsch.fixture()
 bad_s.S_proof = flip_last_byte(bad_s.S_proof)
 assert(not rpbsch.validate_branch_relation(bad_s),
        'mutated S CMT3 proof accepted')
+
+local full_statement = pbsch.assemble_full_statement(
+  fixture.statement, fixture.C_proof, fixture.S_proof)
+local parsed = pbsch.parse_full_statement(full_statement)
+assert(parsed and parsed.core_statement:string() == fixture.statement:string(),
+       'full statement parse failed')
+assert(parsed.C:string() == fixture.C:string(), 'full statement C mismatch')
+assert(parsed.S:string() == fixture.S:string(), 'full statement S mismatch')
+local validated = pbsch.validate_full_statement(full_statement)
+assert(validated and validated.core_statement:string() == fixture.statement:string(),
+       'valid full statement rejected')
+assert(not pbsch.validate_full_statement(
+         full_statement:sub(1, #full_statement:str() - 1)),
+       'truncated full statement accepted')
+
+local swapped = pbsch.assemble_full_statement(
+  fixture.statement, fixture.S_proof, fixture.C_proof)
+assert(not pbsch.validate_full_statement(swapped),
+       'swapped C/S CMT3 proofs accepted')
+
+local changed_core = pbsch.assemble_full_statement(
+  flip_last_byte(fixture.statement), fixture.C_proof, fixture.S_proof)
+assert(not pbsch.validate_full_statement(changed_core),
+       'changed core statement accepted')
+
+local mismatched = rpbsch.fixture()
+mismatched.C_proof = fixture.S_proof
+local mismatched_envelope = pbsch.assemble_full_statement(
+  mismatched.statement, mismatched.C_proof, mismatched.S_proof)
+assert(not pbsch.validate_full_statement(mismatched_envelope),
+       'proof/core mismatch accepted')
 
 print('✓ RPBSch CMT3 smoke test passed')

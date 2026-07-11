@@ -75,6 +75,7 @@ pbsch.CMT3_PROOF_SIZE = 4 + 1 + 32 + 33 * pbsch.CMT3_R +
 local CMT_OPENING_TAG = "CMT1"
 local CMT2_PROOF_TAG = "CMT2"
 local CMT3_PROOF_TAG = "CMT3"
+local RPBSCH_FULL_STATEMENT_TAG = "RPB2"
 local SECP_ORDER_HEX =
     "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"
 
@@ -167,6 +168,16 @@ local function be_u16(n)
     return OCTET.from_hex(string.format("%04x", n))
 end
 
+local function be_u32(n)
+    assert(n >= 0 and n <= 4294967295, "u32 out of range")
+    return OCTET.from_hex(string.format("%08x", n))
+end
+
+local function read_u32_be(o)
+    if type(o) ~= "zenroom.octet" or #o:str() ~= 4 then return nil end
+    return tonumber(o:hex(), 16)
+end
+
 local function cmt3_challenge_ok(ch)
     return type(ch) == "number" and ch >= 0 and ch < (1 << pbsch.CMT3_T) and
            math.floor(ch) == ch
@@ -246,6 +257,71 @@ function pbsch.assemble_statement(X, X_prime, R, c, C, phi, ck, S)
     assert(#ck:str() == 32, "ck must be 32 bytes")
     assert(#S:str() == pbsch.S_SIZE, "S must be " .. pbsch.S_SIZE .. " bytes")
     return X .. X_prime .. R .. c .. C .. phi .. ck .. S
+end
+
+--- Assemble the Lua-side full RPBSch Cmt statement envelope.
+-- Native RPBSch relation code still receives the 258-byte core statement. This
+-- envelope binds the paper-facing public Cmt proof bodies to that core object:
+-- RPB2 || len(core) || core || len(C_proof) || C_proof || len(S_proof) || S_proof.
+function pbsch.assemble_full_statement(core_statement, C_proof, S_proof)
+    assert(type(core_statement) == "zenroom.octet" and
+           #core_statement:str() == pbsch.STATEMENT_SIZE,
+           "core statement must be " .. pbsch.STATEMENT_SIZE .. " bytes")
+    assert(type(C_proof) == "zenroom.octet" and
+           #C_proof:str() == pbsch.CMT3_PROOF_SIZE,
+           "C proof must be a CMT3 proof")
+    assert(type(S_proof) == "zenroom.octet" and
+           #S_proof:str() == pbsch.CMT3_PROOF_SIZE,
+           "S proof must be a CMT3 proof")
+    return OCTET.from_string(RPBSCH_FULL_STATEMENT_TAG) ..
+           be_u32(#core_statement:str()) .. core_statement ..
+           be_u32(#C_proof:str()) .. C_proof ..
+           be_u32(#S_proof:str()) .. S_proof
+end
+
+function pbsch.parse_full_statement(envelope)
+    if type(envelope) ~= "zenroom.octet" then return nil end
+    if #envelope:str() < 16 then return nil end
+    if envelope:sub(1, 4):string() ~= RPBSCH_FULL_STATEMENT_TAG then return nil end
+    local off = 5
+    local core_len = read_u32_be(envelope:sub(off, off + 3))
+    if core_len ~= pbsch.STATEMENT_SIZE then return nil end
+    off = off + 4
+    local core_end = off + core_len - 1
+    if core_end > #envelope:str() then return nil end
+    local core_statement = envelope:sub(off, core_end)
+    off = core_end + 1
+
+    local c_len = read_u32_be(envelope:sub(off, off + 3))
+    if c_len ~= pbsch.CMT3_PROOF_SIZE then return nil end
+    off = off + 4
+    local c_end = off + c_len - 1
+    if c_end > #envelope:str() then return nil end
+    local C_proof = envelope:sub(off, c_end)
+    off = c_end + 1
+
+    local s_len = read_u32_be(envelope:sub(off, off + 3))
+    if s_len ~= pbsch.CMT3_PROOF_SIZE then return nil end
+    off = off + 4
+    local s_end = off + s_len - 1
+    if s_end ~= #envelope:str() then return nil end
+    local S_proof = envelope:sub(off, s_end)
+
+    return {
+        core_statement = core_statement,
+        C_proof = C_proof,
+        S_proof = S_proof,
+        C = core_statement:sub(129, 161),
+        S = core_statement:sub(226, 258),
+    }
+end
+
+function pbsch.validate_full_statement(envelope)
+    local parsed = pbsch.parse_full_statement(envelope)
+    if not parsed then return nil end
+    if not pbsch.cmt3_verify(parsed.C, parsed.C_proof) then return nil end
+    if not pbsch.cmt3_verify(parsed.S, parsed.S_proof) then return nil end
+    return parsed
 end
 
 -- ===========================================================================
