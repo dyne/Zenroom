@@ -60,11 +60,21 @@ pbsch.MSG_SIZE  = 32
 pbsch.STATEMENT_SIZE = 258
 pbsch.CMT_PROFILE = "pbsch-cmt-pedersen-extractable-v1"
 pbsch.CMT2_PROFILE = "pbsch-cmt-pedersen-fs-opening-v1"
+pbsch.CMT3_PROFILE = "pbsch-cmt-pedersen-fischlin05-v1"
 pbsch.CMT_OPENING_SIZE = 100
 pbsch.CMT2_PROOF_SIZE = 165
+pbsch.CMT3_B = 9
+pbsch.CMT3_T = 12
+pbsch.CMT3_R = 10
+pbsch.CMT3_S = 10
+pbsch.CMT3_PROFILE_BYTE = 1
+pbsch.CMT3_PROOF_SIZE = 4 + 1 + 32 + 33 * pbsch.CMT3_R +
+                        2 * pbsch.CMT3_R + 32 * pbsch.CMT3_R +
+                        32 * pbsch.CMT3_R
 
 local CMT_OPENING_TAG = "CMT1"
 local CMT2_PROOF_TAG = "CMT2"
+local CMT3_PROOF_TAG = "CMT3"
 local SECP_ORDER_HEX =
     "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"
 
@@ -140,6 +150,16 @@ local function commitment_point(commitment)
     local ok, point = pcall(function() return S.new(commitment) end)
     if not ok or not point then return nil end
     return point
+end
+
+local function be_u16(n)
+    assert(n >= 0 and n <= 65535, "u16 out of range")
+    return OCTET.from_hex(string.format("%04x", n))
+end
+
+local function read_u16_be(o)
+    if type(o) ~= "zenroom.octet" or #o:str() ~= 2 then return nil end
+    return tonumber(o:hex(), 16)
 end
 
 -- ===========================================================================
@@ -355,6 +375,60 @@ function pbsch.cmt2_commit(message, rho)
         proof = proof,
         opening = pbsch.cmt_opening(message, rho),
     }
+end
+
+local function parse_cmt3_proof(proof)
+    if type(proof) ~= "zenroom.octet" then return nil end
+    if #proof:str() ~= pbsch.CMT3_PROOF_SIZE then return nil end
+    if proof:sub(1, 4):string() ~= CMT3_PROOF_TAG then return nil end
+    if proof:sub(5, 5):hex() ~= "01" then return nil end
+    local parsed = {
+        ck = proof:sub(6, 37),
+        A = {},
+        ch = {},
+        z_m = {},
+        z_r = {},
+    }
+    local off = 38
+    for i = 1, pbsch.CMT3_R do
+        parsed.A[i] = proof:sub(off, off + 32)
+        off = off + 33
+    end
+    for i = 1, pbsch.CMT3_R do
+        local ch = read_u16_be(proof:sub(off, off + 1))
+        if not ch or ch >= (1 << pbsch.CMT3_T) then return nil end
+        parsed.ch[i] = ch
+        off = off + 2
+    end
+    for i = 1, pbsch.CMT3_R do
+        parsed.z_m[i] = proof:sub(off, off + 31)
+        if not scalar_is_canonical(parsed.z_m[i]) then return nil end
+        off = off + 32
+    end
+    for i = 1, pbsch.CMT3_R do
+        parsed.z_r[i] = proof:sub(off, off + 31)
+        if not scalar_is_canonical(parsed.z_r[i]) then return nil end
+        off = off + 32
+    end
+    return parsed
+end
+
+--- Verify a CMT3 Fischlin05 Pedersen-opening proof.
+-- Full transcript verification is implemented in the CMT3 proof task. The
+-- parser and structural guards live here so malformed proofs reject before
+-- curve arithmetic.
+function pbsch.cmt3_verify(commitment, proof)
+    if type(commitment) ~= "zenroom.octet" or #commitment:str() ~= pbsch.C_SIZE then
+        return false
+    end
+    if not commitment_point(commitment) then return false end
+    local parsed = parse_cmt3_proof(proof)
+    if not parsed then return false end
+    if parsed.ck:string() ~= pbsch.commitment_key():string() then return false end
+    for i = 1, pbsch.CMT3_R do
+        if not commitment_point(parsed.A[i]) then return false end
+    end
+    return false
 end
 
 function pbsch.commit_s(sig0, sig1, nu_u, nu_u_prime, nu_s, rho)

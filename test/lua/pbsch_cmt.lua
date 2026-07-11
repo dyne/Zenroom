@@ -48,6 +48,41 @@ assert(cmt2_record.commitment:string() == record.commitment:string(),
 assert(pbsch.cmt2_verify(cmt2_record.commitment, cmt2_record.proof),
        "CMT2 commit proof rejected")
 
+assert(pbsch.CMT3_PROFILE == "pbsch-cmt-pedersen-fischlin05-v1",
+       "unexpected CMT3 profile")
+assert(pbsch.CMT3_PROOF_SIZE == 1027, "unexpected CMT3 proof size")
+assert(pbsch.CMT3_B == 9 and pbsch.CMT3_T == 12 and
+       pbsch.CMT3_R == 10 and pbsch.CMT3_S == 10,
+       "unexpected CMT3 Fischlin parameters")
+
+local function blank_cmt3_proof()
+    return OCTET.from_string("CMT3") ..
+           OCTET.from_hex("01") ..
+           pbsch.commitment_key() ..
+           OCTET.zero(33 * pbsch.CMT3_R) ..
+           OCTET.zero(2 * pbsch.CMT3_R) ..
+           OCTET.zero(32 * pbsch.CMT3_R) ..
+           OCTET.zero(32 * pbsch.CMT3_R)
+end
+
+local malformed_cmt3 = blank_cmt3_proof()
+assert(#malformed_cmt3:str() == pbsch.CMT3_PROOF_SIZE,
+       "test CMT3 proof has wrong size")
+assert(pbsch.cmt3_verify(record.commitment, malformed_cmt3) == false,
+       "blank CMT3 proof accepted")
+assert(pbsch.cmt3_verify(record.commitment,
+                         OCTET.from_string("BAD3") ..
+                         malformed_cmt3:sub(5, pbsch.CMT3_PROOF_SIZE)) == false,
+       "bad CMT3 tag accepted")
+assert(pbsch.cmt3_verify(record.commitment,
+                         malformed_cmt3:sub(1, 4) ..
+                         OCTET.from_hex("02") ..
+                         malformed_cmt3:sub(6, pbsch.CMT3_PROOF_SIZE)) == false,
+       "bad CMT3 profile byte accepted")
+assert(pbsch.cmt3_verify(record.commitment,
+                         malformed_cmt3:sub(1, pbsch.CMT3_PROOF_SIZE - 1)) == false,
+       "truncated CMT3 proof accepted")
+
 assert(not pbsch.cmt_verify(record.commitment, pbsch.cmt_opening(wrong_m, rho)),
        "wrong message opening accepted")
 assert(not pbsch.cmt_verify(record.commitment, pbsch.cmt_opening(m, wrong_rho)),
