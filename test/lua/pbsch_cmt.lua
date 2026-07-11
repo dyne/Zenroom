@@ -129,11 +129,13 @@ assert(not pbsch.cmt3_sigma_verify(OCTET.zero(33), sigma_A,
                                    sigma_ch, sigma_z_m, sigma_z_r),
        "CMT3 Sigma accepted invalid commitment point")
 
-local cmt3_proof = pbsch.cmt3_prove(record.commitment, m, rho, {
+local cmt3_proof, cmt3_queries = pbsch.cmt3_prove_with_observation_test(record.commitment, m, rho, {
     seed = sha256("PBSch/CMT3/test/proof"),
 })
 assert(#cmt3_proof:str() == pbsch.CMT3_PROOF_SIZE,
        "unexpected CMT3 proof size")
+assert(#cmt3_queries > pbsch.CMT3_R,
+       "observed CMT3 proof did not record alternate queries")
 assert(pbsch.cmt3_verify(record.commitment, cmt3_proof),
        "valid CMT3 proof rejected")
 assert(not pbsch.cmt3_verify(flip_last_nibble(record.commitment), cmt3_proof),
@@ -150,6 +152,60 @@ local bad_cmt3_ch = cmt3_proof:sub(1, 367) ..
                     cmt3_proof:sub(370, pbsch.CMT3_PROOF_SIZE)
 assert(not pbsch.cmt3_verify(record.commitment, bad_cmt3_ch),
        "CMT3 proof accepted challenge 4096")
+
+local cmt3_extracted =
+    pbsch.cmt3_extract_from_queries(record.commitment, cmt3_proof, cmt3_queries)
+assert(cmt3_extracted, "valid observed CMT3 proof did not extract")
+assert(cmt3_extracted.message:string() == m:string(),
+       "CMT3 extracted message mismatch")
+assert(cmt3_extracted.rho:string() == rho:string(),
+       "CMT3 extracted randomness mismatch")
+
+local selected_only = {}
+for _, q in ipairs(cmt3_queries) do
+    if q.selected then table.insert(selected_only, q) end
+end
+assert(not pbsch.cmt3_extract_from_queries(record.commitment, cmt3_proof,
+                                           selected_only),
+       "CMT3 extraction accepted without alternate challenges")
+
+local corrupted_queries = {}
+local corrupted = false
+for _, q in ipairs(cmt3_queries) do
+    if q.selected then
+        table.insert(corrupted_queries, q)
+    elseif not corrupted then
+        table.insert(corrupted_queries, {
+            commitment = q.commitment,
+            ck = q.ck,
+            all_A = q.all_A,
+            i = q.i,
+            ch = q.ch,
+            z_m = flip_last_nibble(q.z_m),
+            z_r = q.z_r,
+            h = q.h,
+        })
+        corrupted = true
+    end
+end
+assert(not pbsch.cmt3_extract_from_queries(record.commitment, cmt3_proof,
+                                           corrupted_queries),
+       "CMT3 extraction accepted corrupted alternate query")
+
+local noisy_queries = {{
+    commitment = flip_last_nibble(cmt3_queries[1].commitment),
+    ck = cmt3_queries[1].ck,
+    all_A = cmt3_queries[1].all_A,
+    i = cmt3_queries[1].i,
+    ch = cmt3_queries[1].ch,
+    z_m = cmt3_queries[1].z_m,
+    z_r = cmt3_queries[1].z_r,
+    h = cmt3_queries[1].h,
+}}
+for _, q in ipairs(cmt3_queries) do table.insert(noisy_queries, q) end
+assert(pbsch.cmt3_extract_from_queries(record.commitment, cmt3_proof,
+                                       noisy_queries),
+       "CMT3 extraction rejected valid queries with irrelevant noise")
 
 assert(not pbsch.cmt_verify(record.commitment, pbsch.cmt_opening(wrong_m, rho)),
        "wrong message opening accepted")

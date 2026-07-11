@@ -151,6 +151,14 @@ local function scalar_add_big(a, b)
     return BIG.mod(BIG.add(a, b), SECP_ORDER_BIG)
 end
 
+local function scalar_sub_big(a, b)
+    return BIG.modsub(a, b, SECP_ORDER_BIG)
+end
+
+local function scalar_div_big(a, b)
+    return a:moddiv(b, SECP_ORDER_BIG)
+end
+
 local function cmt2_challenge(ck, commitment, A)
     return S.bip340_challenge_reduce(
         S.bip340_tagged_hash(
@@ -522,7 +530,7 @@ function pbsch.cmt3_sigma_verify(commitment, A, ch, z_m, z_r)
     return lhs == rhs
 end
 
-function pbsch.cmt3_prove(commitment, message, rho, opts)
+local function cmt3_build_proof(commitment, message, rho, opts, observe)
     opts = opts or {}
     assert(type(commitment) == "zenroom.octet" and #commitment:str() == pbsch.C_SIZE,
            "commitment must be 33 bytes")
@@ -538,6 +546,7 @@ function pbsch.cmt3_prove(commitment, message, rho, opts)
     local message_big = BIG.new(message)
     local rho_big = BIG.new(rho)
     for attempt = 0, 1023 do
+        local queries = observe and {} or nil
         local A, a, b = {}, {}, {}
         for i = 1, pbsch.CMT3_R do
             a[i] = cmt3_nonce(opts.seed, attempt, i, "a")
@@ -556,16 +565,40 @@ function pbsch.cmt3_prove(commitment, message, rho, opts)
                 local z_r = big_to_scalar(z_r_big)
                 local h = cmt3_threshold_hash(ck, commitment, all_A, i,
                                               ch, z_m, z_r)
+                if observe then
+                    table.insert(queries, {
+                        commitment = commitment,
+                        ck = ck,
+                        all_A = all_A,
+                        i = i,
+                        ch = ch,
+                        z_m = z_m,
+                        z_r = z_r,
+                        h = h,
+                        selected = false,
+                    })
+                end
                 if not best_hash or h < best_hash then
                     best_ch, best_z_m, best_z_r, best_hash = ch, z_m, z_r, h
                 end
-                if h == 0 then break end
+                if best_hash == 0 and (not observe or ch ~= best_ch) then break end
                 z_m_big = scalar_add_big(z_m_big, message_big)
                 z_r_big = scalar_add_big(z_r_big, rho_big)
             end
             selected_ch[i] = best_ch
             selected_z_m[i] = best_z_m
             selected_z_r[i] = best_z_r
+            if observe then
+                for n = #queries, 1, -1 do
+                    local q = queries[n]
+                    if q.commitment:string() == commitment:string() and
+                       q.all_A:string() == all_A:string() and
+                       q.i == i and q.ch == best_ch then
+                        q.selected = true
+                        break
+                    end
+                end
+            end
             threshold_sum = threshold_sum + best_hash
             if threshold_sum > pbsch.CMT3_S then break end
         end
@@ -575,10 +608,69 @@ function pbsch.cmt3_prove(commitment, message, rho, opts)
             for i = 1, pbsch.CMT3_R do out = out .. be_u16(selected_ch[i]) end
             for i = 1, pbsch.CMT3_R do out = out .. selected_z_m[i] end
             for i = 1, pbsch.CMT3_R do out = out .. selected_z_r[i] end
-            return out
+            return out, queries
         end
     end
     fail("CMT3 prover did not find an accepting Fischlin proof")
+end
+
+function pbsch.cmt3_prove(commitment, message, rho, opts)
+    local proof = cmt3_build_proof(commitment, message, rho, opts, false)
+    return proof
+end
+
+function pbsch.cmt3_prove_with_observation_test(commitment, message, rho, opts)
+    return cmt3_build_proof(commitment, message, rho, opts, true)
+end
+
+function pbsch.cmt3_extract_from_queries(commitment, proof, queries)
+    if type(queries) ~= "table" then return nil end
+    if not pbsch.cmt3_verify(commitment, proof) then return nil end
+    local parsed = parse_cmt3_proof(proof)
+    if not parsed then return nil end
+    local all_A = cmt3_all_A(parsed.A)
+
+    for _, q in ipairs(queries) do
+        if type(q) == "table" and
+           type(q.commitment) == "zenroom.octet" and
+           type(q.ck) == "zenroom.octet" and
+           type(q.all_A) == "zenroom.octet" and
+           q.commitment:string() == commitment:string() and
+           q.ck:string() == parsed.ck:string() and
+           q.all_A:string() == all_A:string() and
+           type(q.i) == "number" and q.i >= 1 and q.i <= pbsch.CMT3_R and
+           cmt3_challenge_ok(q.ch) and q.ch ~= parsed.ch[q.i] and
+           scalar_is_canonical(q.z_m) and scalar_is_canonical(q.z_r) then
+            local h = cmt3_threshold_hash(parsed.ck, commitment, all_A, q.i,
+                                          q.ch, q.z_m, q.z_r)
+            if h == q.h and
+               pbsch.cmt3_sigma_verify(commitment, parsed.A[q.i], q.ch,
+                                       q.z_m, q.z_r) then
+                local delta_ch = scalar_sub_big(BIG.new(parsed.ch[q.i]),
+                                                BIG.new(q.ch))
+                if delta_ch ~= BIG.new(0) then
+                    local delta_m = scalar_sub_big(BIG.new(parsed.z_m[q.i]),
+                                                  BIG.new(q.z_m))
+                    local delta_r = scalar_sub_big(BIG.new(parsed.z_r[q.i]),
+                                                  BIG.new(q.z_r))
+                    local message = big_to_scalar(scalar_div_big(delta_m,
+                                                                 delta_ch))
+                    local rho = big_to_scalar(scalar_div_big(delta_r,
+                                                             delta_ch))
+                    if pbsch.verify_c(commitment, message, rho) then
+                        return {
+                            profile = pbsch.CMT3_PROFILE,
+                            ck = parsed.ck,
+                            message = message,
+                            rho = rho,
+                            index = q.i,
+                        }
+                    end
+                end
+            end
+        end
+    end
+    return nil
 end
 
 function pbsch.cmt3_commit(message, rho, opts)
