@@ -45,6 +45,21 @@ static void push_octet_copy(lua_State *L, const uint8_t *buf, size_t len) {
     push_buffer_to_octet(L, (char *)buf, len);
 }
 
+/* Copy niwi_last_error into a stack buffer, free ctx, return the copy.
+ * Prevents heap-use-after-free when the error string lives inside ctx. */
+static const char *capture_and_free_ctx(niwi_ctx_t *ctx, char *err_buf,
+                                        size_t err_buf_size) {
+    const char *raw = niwi_last_error(ctx);
+    if (raw) {
+        strncpy(err_buf, raw, err_buf_size - 1);
+        err_buf[err_buf_size - 1] = '\0';
+    } else {
+        err_buf[0] = '\0';
+    }
+    niwi_ctx_free(ctx);
+    return raw ? err_buf : NULL;
+}
+
 /* ---- Helper: get an OCTET from a table field ------------------------- */
 
 static const octet *table_get_octet(lua_State *L, int table_idx,
@@ -134,16 +149,16 @@ static int lua_prove_envelope_unchecked(lua_State *L) {
         (const uint8_t *)o_val(inputs_oct), o_len(inputs_oct),
         &proof_out, &proof_len);
 
-    const char *err = niwi_last_error(ctx);
 
     if (rc != 0) {
-        niwi_ctx_free(ctx);
+        char err_buf[256];
+        capture_and_free_ctx(ctx, err_buf, sizeof(err_buf));
         o_free(L, seed_oct);
         if (pub_oct != inputs_oct) o_free(L, pub_oct);
         o_free(L, inputs_oct);
         o_free(L, circuit_oct);
-        if (err)
-            lerror(L, "prove_envelope_unchecked: %s", err);
+        if (err_buf[0])
+            lerror(L, "prove_envelope_unchecked: %s", err_buf);
         else
             lerror(L, "prove_envelope_unchecked: unknown error");
         return 0;
@@ -195,12 +210,13 @@ static int lua_prove_bip340_relation(lua_State *L) {
                         (const uint8_t *)o_val(inputs_oct), o_len(inputs_oct),
                         &proof_out, &proof_len);
     if (rc != 0) {
-        const char *err = niwi_last_error(ctx);
-        niwi_ctx_free(ctx);
+        char err_buf[256];
+        capture_and_free_ctx(ctx, err_buf, sizeof(err_buf));
         o_free(L, pub_oct);
         o_free(L, inputs_oct);
         o_free(L, circuit_oct);
-        lerror(L, "prove_bip340_relation: %s", err ? err : "unknown error");
+        lerror(L, "prove_bip340_relation: %s",
+               err_buf[0] ? err_buf : "unknown error");
         return 0;
     }
 
@@ -286,12 +302,13 @@ static int lua_prove_zkcc_relation(lua_State *L) {
                         (const uint8_t *)o_val(inputs_oct), o_len(inputs_oct),
                         &proof_out, &proof_len);
     if (rc != 0) {
-        const char *err = niwi_last_error(ctx);
-        niwi_ctx_free(ctx);
+        char err_buf[256];
+        capture_and_free_ctx(ctx, err_buf, sizeof(err_buf));
         o_free(L, pub_oct);
         o_free(L, inputs_oct);
         o_free(L, circuit_oct);
-        lerror(L, "prove_zkcc_relation: %s", err ? err : "unknown error");
+        lerror(L, "prove_zkcc_relation: %s",
+               err_buf[0] ? err_buf : "unknown error");
         return 0;
     }
 
@@ -377,12 +394,13 @@ static int lua_prove_relation_common(lua_State *L, niwi_relation_id_t relation_i
                         (const uint8_t *)o_val(inputs_oct), o_len(inputs_oct),
                         &proof_out, &proof_len);
     if (rc != 0) {
-        const char *err = niwi_last_error(ctx);
-        niwi_ctx_free(ctx);
+        char err_buf[256];
+        capture_and_free_ctx(ctx, err_buf, sizeof(err_buf));
         o_free(L, pub_oct);
         o_free(L, inputs_oct);
         o_free(L, circuit_oct);
-        lerror(L, "%s: %s", caller, err ? err : "unknown error");
+        lerror(L, "%s: %s", caller,
+               err_buf[0] ? err_buf : "unknown error");
         return 0;
     }
 
@@ -467,12 +485,13 @@ static int lua_prove_relation_observed_common(lua_State *L,
         (const uint8_t *)o_val(inputs_oct), o_len(inputs_oct),
         &proof_out, &proof_len, &gamma_out, &gamma_len);
     if (rc != 0) {
-        const char *err = niwi_last_error(ctx);
-        niwi_ctx_free(ctx);
+        char err_buf[256];
+        capture_and_free_ctx(ctx, err_buf, sizeof(err_buf));
         o_free(L, pub_oct);
         o_free(L, inputs_oct);
         o_free(L, circuit_oct);
-        lerror(L, "%s: %s", caller, err ? err : "unknown error");
+        lerror(L, "%s: %s", caller,
+               err_buf[0] ? err_buf : "unknown error");
         return 0;
     }
 
@@ -524,13 +543,14 @@ static int lua_extract_relation_common(lua_State *L, niwi_relation_id_t relation
                           (const uint8_t *)o_val(pub_oct), o_len(pub_oct),
                           &witness, &witness_len);
     if (rc != 0) {
-        const char *err = niwi_last_error(ctx);
-        niwi_ctx_free(ctx);
+        char err_buf[256];
+        capture_and_free_ctx(ctx, err_buf, sizeof(err_buf));
         o_free(L, pub_oct);
         o_free(L, gamma_oct);
         o_free(L, proof_oct);
         o_free(L, circuit_oct);
-        lerror(L, "%s: %s", caller, err ? err : "unknown error");
+        lerror(L, "%s: %s", caller,
+               err_buf[0] ? err_buf : "unknown error");
         return 0;
     }
 
@@ -697,13 +717,13 @@ static int lua_prove_envelope_with_observation_unchecked_test(lua_State *L) {
         &gamma_out, &gamma_len);
 
     if (rc != 0) {
-        const char *err = niwi_last_error(ctx);
-        niwi_ctx_free(ctx);
+        char err_buf[256];
+        capture_and_free_ctx(ctx, err_buf, sizeof(err_buf));
         if (pub_oct != inputs_oct) o_free(L, pub_oct);
         o_free(L, inputs_oct);
         o_free(L, circuit_oct);
         lerror(L, "prove_envelope_with_observation_unchecked_test: %s",
-               err ? err : "unknown error");
+               err_buf[0] ? err_buf : "unknown error");
         return 0;
     }
 
@@ -756,13 +776,13 @@ static int lua_prove_bip340_relation_with_observation_test(lua_State *L) {
         (const uint8_t *)o_val(inputs_oct), o_len(inputs_oct),
         &proof_out, &proof_len, &gamma_out, &gamma_len);
     if (rc != 0) {
-        const char *err = niwi_last_error(ctx);
-        niwi_ctx_free(ctx);
+        char err_buf[256];
+        capture_and_free_ctx(ctx, err_buf, sizeof(err_buf));
         o_free(L, pub_oct);
         o_free(L, inputs_oct);
         o_free(L, circuit_oct);
         lerror(L, "prove_bip340_relation_with_observation_test: %s",
-               err ? err : "unknown error");
+               err_buf[0] ? err_buf : "unknown error");
         return 0;
     }
 
@@ -812,13 +832,13 @@ static int lua_prove_zkcc_relation_with_observation_test(lua_State *L) {
         (const uint8_t *)o_val(inputs_oct), o_len(inputs_oct),
         &proof_out, &proof_len, &gamma_out, &gamma_len);
     if (rc != 0) {
-        const char *err = niwi_last_error(ctx);
-        niwi_ctx_free(ctx);
+        char err_buf[256];
+        capture_and_free_ctx(ctx, err_buf, sizeof(err_buf));
         o_free(L, pub_oct);
         o_free(L, inputs_oct);
         o_free(L, circuit_oct);
         lerror(L, "prove_zkcc_relation_with_observation_test: %s",
-               err ? err : "unknown error");
+               err_buf[0] ? err_buf : "unknown error");
         return 0;
     }
 
@@ -963,14 +983,14 @@ static int lua_extract_bip340_relation_from_gamma_test(lua_State *L) {
                           (const uint8_t *)o_val(pub_oct), o_len(pub_oct),
                           &witness, &witness_len);
     if (rc != 0) {
-        const char *err = niwi_last_error(ctx);
-        niwi_ctx_free(ctx);
+        char err_buf[256];
+        capture_and_free_ctx(ctx, err_buf, sizeof(err_buf));
         o_free(L, pub_oct);
         o_free(L, gamma_oct);
         o_free(L, proof_oct);
         o_free(L, circuit_oct);
         lerror(L, "extract_bip340_relation_from_gamma_test: %s",
-               err ? err : "unknown error");
+               err_buf[0] ? err_buf : "unknown error");
         return 0;
     }
 
@@ -1022,14 +1042,14 @@ static int lua_extract_zkcc_relation_from_gamma_test(lua_State *L) {
                           (const uint8_t *)o_val(pub_oct), o_len(pub_oct),
                           &witness, &witness_len);
     if (rc != 0) {
-        const char *err = niwi_last_error(ctx);
-        niwi_ctx_free(ctx);
+        char err_buf[256];
+        capture_and_free_ctx(ctx, err_buf, sizeof(err_buf));
         o_free(L, pub_oct);
         o_free(L, gamma_oct);
         o_free(L, proof_oct);
         o_free(L, circuit_oct);
         lerror(L, "extract_zkcc_relation_from_gamma_test: %s",
-               err ? err : "unknown error");
+               err_buf[0] ? err_buf : "unknown error");
         return 0;
     }
 
