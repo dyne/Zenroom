@@ -21,9 +21,9 @@
 -- This module keeps orchestration and witness serialization readable in Lua,
 -- while native lib/niwi validates branch statements, C/S openings, and the
 -- embedded BIP-340 witnesses. Production native proofs now carry checked LZK0
--- bodies with a fixed-shape private OR selector. C/S now carry CMT2 public
--- opening proofs at the Lua adapter boundary; the remaining paper-exact gap is
--- replacing that proof body with the final straight-line extractable Cmt.
+-- bodies with a fixed-shape private OR selector. C/S carry CMT3 Fischlin05
+-- public opening proofs at the Lua adapter boundary while the native relation
+-- proves the underlying Pedersen opening equations.
 
 local pbsch = require'crypto_pbsch'
 local zkcc = require'crypto_zkcc'
@@ -34,6 +34,7 @@ if not pbsch or not zkcc or not niwi or not schnorr then return nil end
 
 local rpbsch = {}
 local Secp = SECP
+local fixture_cache = nil
 
 rpbsch.BRANCH_HONEST = 1
 rpbsch.BRANCH_TRAPDOOR = 2
@@ -120,6 +121,12 @@ local function has_branch_relation_fields(f)
            type(f.sigma1) == "zenroom.octet"
 end
 
+local function clone_fixture(f)
+    local out = {}
+    for k, v in pairs(f) do out[k] = v end
+    return out
+end
+
 --- Validate the current branch relation profile around PBSch commitments.
 -- This is intentionally branch-circuit level: it verifies the public
 -- statement shape and the C/S commitment openings before accepting the
@@ -140,7 +147,7 @@ function rpbsch.validate_branch_relation(fixture)
                           fixture.rho_c) then
         return false
     end
-    if not pbsch.cmt2_verify(fixture.C, fixture.C_proof) then
+    if not pbsch.cmt3_verify(fixture.C, fixture.C_proof) then
         return false
     end
     if not pbsch.verify_s(fixture.S, fixture.sigma0, fixture.sigma1,
@@ -148,7 +155,7 @@ function rpbsch.validate_branch_relation(fixture)
                           fixture.rho_s) then
         return false
     end
-    if not pbsch.cmt2_verify(fixture.S, fixture.S_proof) then
+    if not pbsch.cmt3_verify(fixture.S, fixture.S_proof) then
         return false
     end
     return true
@@ -158,6 +165,8 @@ end
 -- Test-vector source: locally generated with Zenroom's SECP/BIP340 primitives
 -- from fixed secret keys, fixed messages, and fixed aux randomness.
 function rpbsch.fixture()
+    if fixture_cache then return clone_fixture(fixture_cache) end
+
     local sk = oct("0000000000000000000000000000000000000000000000000000000000000003")
     local sk_prime = oct("B7E151628AED2A6ABF7158809CF4F3C762E7160F38B4DA56A784D9045190CFEF")
     local aux0 = oct("0000000000000000000000000000000000000000000000000000000000000000")
@@ -184,9 +193,13 @@ function rpbsch.fixture()
     local c_msg = pbsch.encode_c_msg(m, alpha, beta)
     local s_msg = pbsch.encode_s_msg(sigma0, sigma1, nu_u, nu_u_prime, nu_s)
     local C = pbsch.commit_c(c_msg, rho_c)
-    local C_proof = pbsch.cmt2_prove(C, c_msg, rho_c)
+    local C_proof = pbsch.cmt3_prove(C, c_msg, rho_c, {
+        seed = hash32("Zenroom/RPBSch/cmt3-C/v1", "C"),
+    })
     local S_commit = pbsch.commit_s(sigma0, sigma1, nu_u, nu_u_prime, nu_s, rho_s)
-    local S_proof = pbsch.cmt2_prove(S_commit, s_msg, rho_s)
+    local S_proof = pbsch.cmt3_prove(S_commit, s_msg, rho_s, {
+        seed = hash32("Zenroom/RPBSch/cmt3-S/v1", "S"),
+    })
     local R = OCTET.from_hex(sigma:hex():sub(1, 64))
     local c = Secp.bip340_challenge_reduce(
         Secp.bip340_tagged_hash("BIP0340/challenge", R .. X .. m))
@@ -197,7 +210,7 @@ function rpbsch.fixture()
     }
     local statement = pbsch.assemble_statement(X, X_prime, R, c, C, phi, ck, S_commit)
 
-    return {
+    fixture_cache = {
         X = X, X_prime = X_prime,
         m = m, alpha = alpha, beta = beta,
         rho_c = rho_c, rho_s = rho_s,
@@ -208,6 +221,7 @@ function rpbsch.fixture()
         sigma = sigma, sigma0 = sigma0, sigma1 = sigma1,
         msg0 = msg0, msg1 = msg1,
     }
+    return clone_fixture(fixture_cache)
 end
 
 --- Return the BIP-340 checks that stand in for one RPBSch branch.
