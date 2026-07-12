@@ -87,6 +87,20 @@ Changing CMT3 parameters changes the proof system and must use a new profile id.
 Do not silently change `b`, `t`, `r`, or `S` under
 `pbsch-cmt-pedersen-fischlin05-v1`.
 
+## Stable wire sizes
+
+The following sizes are fixed by the current CMT3/RPB2 profile. They are byte
+counts on the wire, not in-memory structure sizes.
+
+| Object | Stable size | Source |
+| --- | ---: | --- |
+| `CMT3` proof | 1027 bytes | `NIWI_PBSCH_CMT3_PROOF_SIZE` in `src/pbsch_commitment.h` |
+| `RPB2` full statement envelope | 2328 bytes | `NIWI_RPBSCH_FULL_STATEMENT_SIZE` in `src/pbsch_commitment.h` (`4 + 4 + 258 + 4 + 1027 + 4 + 1027`) |
+| RPBSch core statement | 258 bytes | `NIWI_RPBSCH_CORE_STATEMENT_SIZE` in `src/pbsch_commitment.h` |
+| Compressed `C` or `S` Pedersen commitment | 33 bytes | `NIWI_PBSCH_CMP_SIZE` in `src/pbsch_commitment.h` |
+| `LIG0` native proof body | variable/profile-dependent | `src/niwi.c` sizes the body from tableau count and Merkle-path depth. |
+| `LZK0` Longfellow/Ligero proof body | variable/profile-dependent | relation-specific serialized proof body in `src/niwi.c` and `src/relations/*.cc`. |
+
 ## Core relation entry points
 
 - BIP340 relation: `lib/blindzap/src/relations/bip340_relation.cc`
