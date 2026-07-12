@@ -38,8 +38,8 @@ needed before claiming production, paper-exact RPBSch.
 | --- | --- | --- | --- |
 | Commitment key `ck` | `lib/blindzap/src/pbsch_commitment.c` | `test/lua/pedersen.lua` | Deterministic Pedersen H derivation |
 | `C` and `S` opening checks | `lib/blindzap/src/circuits/rpbsch/rpbsch_relation_circuit.h`, `lib/blindzap/src/relations/rpbsch_ligero_relation.cc`, `src/lua/crypto_pbsch.lua` | `lib/blindzap/tests/test_rpbsch_commitment_circuit.cc`, `lib/blindzap/tests/test_rpbsch_branch_circuit.cc`, `test/lua/rpbsch_niwi.lua` | Checked in the native Longfellow RPBSch relation and still checked at the Lua/native adapter boundary |
-| Public Cmt opening proof surface | `src/lua/crypto_pbsch.lua`, `src/lua/crypto_rpbsch.lua`, `lib/blindzap/docs/pbsch-cmt-profile.md` | `test/lua/pbsch_cmt.lua`, `test/lua/rpbsch_niwi.lua` | `CMT2` is a versioned public Fiat-Shamir Pedersen-opening proof. Lua RPBSch fixtures now carry and verify `C` and `S` CMT2 proofs before production proof generation |
-| Straight-line extractable Cmt | `src/lua/crypto_pbsch.lua`, `lib/blindzap/src/pbsch_commitment.c`, `lib/blindzap/docs/pbsch-cmt-profile.md` | `test/lua/pbsch_cmt.lua`, `test/lua/pedersen.lua`, `test/lua/rpbsch_niwi.lua` | Still open for paper-exact claims: `CMT1` is private opened-proof extraction material and `CMT2` v1 is an ordinary Fiat-Shamir opening proof, not the final Fischlin/Pas-style straight-line extractable Cmt construction |
+| Public Cmt opening proof surface | `src/lua/crypto_pbsch.lua`, `src/lua/crypto_rpbsch.lua`, `lib/blindzap/src/pbsch_commitment.c`, `lib/blindzap/docs/pbsch-cmt-profile.md` | `test/lua/pbsch_cmt.lua`, `test/lua/rpbsch_niwi.lua`, `test/lua/rpbsch_cmt3_smoke.lua` | `CMT3` is the versioned public Fischlin05-style Pedersen-opening proof used by the RPBSch production helpers. Lua RPBSch fixtures carry and verify `C` and `S` CMT3 proofs before production proof generation |
+| Straight-line extractable Cmt | `src/lua/crypto_pbsch.lua`, `lib/blindzap/src/pbsch_commitment.c`, `lib/blindzap/docs/pbsch-cmt-profile.md` | `test/lua/pbsch_cmt.lua`, `test/lua/pedersen.lua`, `test/lua/rpbsch_niwi.lua`, `test/lua/rpbsch_cmt3_smoke.lua` | Profiled through CMT3 and pending final paper-exact review against `2025-1992.pdf` Def. 17 and secondary sources. `CMT1` remains private opened-proof extraction material and `CMT2` remains a deprecated ordinary Fiat-Shamir opening proof |
 
 ## RPBSch Relation
 
@@ -96,7 +96,7 @@ needed before claiming production, paper-exact RPBSch.
 | C/S commitment checks | CMT3 production helpers and native relation checks are present | `profiled`, not yet paper-exact Cmt claim |
 | NIWI proof body | `LIG0` native envelope and checked `LZK0` Longfellow body are present | `profiled` |
 | NPRO/Gamma extraction | Observable query log, tableau fragments, and relation revalidation are present | `profiled` |
-| BlindZap naming | Accepted for implementation/profile naming | directory rename pending |
+| BlindZap naming | Accepted for implementation/profile naming | `lib/blindzap` directory rename implemented |
 
 See `2025-1992-coherence-review.md` for the detailed paper-to-code matrix.
 
@@ -109,6 +109,7 @@ plus this checklist documentation.
 
 ```sh
 make -C lib/blindzap test
+make -C lib/blindzap bench-2025-1992-flow
 make -f build/posix.mk
 ./zenroom test/lua/niwi_regression.lua
 ./zenroom test/lua/zkcc_niwi_smoke.lua

@@ -34,6 +34,7 @@ Each module below names its source paper, repository dependency, and security ro
 | Observable NPRO | Pass/NPRO, 2025-1992 Def. 13 | lib/blindzap/src/npro/ | Records random oracle queries for extraction |
 | C ABI | lib/blindzap | lib/blindzap/include/niwi.h | Narrow C interface for Zenroom Lua binding |
 | Lua binding | lib/blindzap | src/lua/ (plain Lua C API, no sol++) | expose prove_circuit_niwi, verify_circuit_niwi, niwi_profile |
+| 2025/1992 flow benchmark | 2025-1992 Fig. 4 / RPBSch profile | `lib/blindzap/tests/test_2025_1992_flow_bench.c` | Measures native CMT3/RPB2 public-boundary operations with stable `BENCH paper_flow` rows |
 
 ## Deferred modules (milestone 2+)
 
@@ -55,6 +56,7 @@ lib/blindzap
 ├── lib/blindzap/src/hash/        (domain-separated SHA-256)
 ├── lib/blindzap/src/npro/        (observable random oracle)
 ├── lib/blindzap/include/niwi.h   (C ABI)
+├── lib/blindzap/tests/           (unit, relation, and benchmark coverage)
 ├── lib/longfellow-zk/        (read-only: circuit types, algebra, RS)
 ├── SHA-256                   (from zenroom C runtime)
 └── src/lua/                  (Lua bindings via plain C API)

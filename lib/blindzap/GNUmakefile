@@ -19,7 +19,7 @@
 
 NIWI_CC ?= gcc
 NIWI_CXX ?= g++
-NIWI_CFLAGS ?= -O2 -I../../src -I. -Isrc -Iinclude -I../../lib/longfellow-zk \
+NIWI_CFLAGS ?= -O2 -I. -Isrc -Iinclude -I../../src -I../../lib/longfellow-zk \
                -I../../lib/milagro-crypto-c/build/include \
                -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
 NIWI_CXXFLAGS ?= $(NIWI_CFLAGS) -fno-exceptions
@@ -51,7 +51,7 @@ libniwi.a: $(NIWI_SOURCES)
 
 clean:
 	rm -f src/*.c.o src/*.cc.o tests/*.o src/secp256k1/*.cc.o src/relations/*.cc.o
-	rm -f *.a test_abi test_encoding test_hash test_npro test_commitment test_challenge_schedule test_niwi_proof_serde test_extract test_vectors test_bench test_secp256k1 test_secp256k1_circuit test_zkcc_p256_relation test_bip340_relation test_rpbsch_adapter test_ligero_param test_ligero_bip340 test_rpbsch_sha_circuit test_rpbsch_commitment_circuit test_rpbsch_branch_circuit
+	rm -f *.a test_abi test_encoding test_hash test_npro test_commitment test_challenge_schedule test_niwi_proof_serde test_extract test_vectors test_bench test_2025_1992_flow_bench test_secp256k1 test_secp256k1_circuit test_zkcc_p256_relation test_bip340_relation test_rpbsch_adapter test_ligero_param test_ligero_bip340 test_rpbsch_sha_circuit test_rpbsch_commitment_circuit test_rpbsch_branch_circuit
 
 %.c.o: %.c
 	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -c -o $@ $<
@@ -153,5 +153,11 @@ test_rpbsch_branch_circuit: tests/test_rpbsch_branch_circuit.cc.o libniwi.a
 bench: test_bench
 	./test_bench
 
+bench-2025-1992-flow: test_2025_1992_flow_bench
+	./test_2025_1992_flow_bench
+
 test_bench: tests/test_bench.c.o libniwi.a
 	$(NIWI_CXX) $(NIWI_CFLAGS) -O2 -o $@ tests/test_bench.c.o -L. -lniwi $(NIWI_ZK_DEPS) -lrt
+
+test_2025_1992_flow_bench: tests/test_2025_1992_flow_bench.c.o libniwi.a
+	$(NIWI_CXX) $(NIWI_CFLAGS) -O2 -o $@ tests/test_2025_1992_flow_bench.c.o -L. -lniwi $(NIWI_ZK_DEPS) -lrt

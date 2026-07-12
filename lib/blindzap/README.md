@@ -106,3 +106,71 @@ Run focused Cmt/RPBSch checks with:
 ./zenroom test/lua/rpbsch_niwi.lua
 make -C lib/blindzap test
 ```
+
+## 2025/1992 paper-flow benchmark
+
+The public-boundary benchmark for the 2025/1992 RPBSch profile is:
+
+```sh
+make -C lib/blindzap bench-2025-1992-flow
+```
+
+It emits stable, grep-friendly rows like:
+
+```text
+BENCH paper_flow op=C_cmt3_prove_seeded iterations=20 total_ms=... per_us=... bytes_in=129 bytes_out=1027 rc=0
+BENCH paper_flow op=RPB2_validate_full_statement iterations=100 total_ms=... per_us=... bytes_in=2328 bytes_out=2378 rc=0
+```
+
+The target measures native operations that form the current CMT3/RPB2 boundary:
+commitment-key derivation, C/S Pedersen commitments, C/S CMT3 proof generation,
+C/S CMT3 verification, full-statement envelope encoding, parsing, and validation.
+Full RPBSch NIWI/Ligero proof-body timing remains covered by the relation-specific
+Ligero tests because a valid NIWI witness requires the Longfellow circuit fixture,
+not only the public C ABI.
+
+## RPBSch profile flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Lua as Lua RPBSch/PBSch helpers
+    participant CMT as Native CMT3 boundary
+    participant REL as Native RPBSch relation
+    participant LZK as Longfellow/Ligero proof body
+
+    User->>Lua: message, keys, Schnorr transcripts
+    Lua->>Lua: build typed witness and core statement
+    Lua->>CMT: derive ck and prove C opening
+    CMT-->>Lua: CMT3 proof for C
+    Lua->>CMT: prove S opening
+    CMT-->>Lua: CMT3 proof for S
+    Lua->>CMT: validate RPB2 envelope + C/S proofs
+    CMT-->>Lua: accepted core statement
+    Lua->>REL: prove/verify relation-backed statement
+    REL->>LZK: evaluate branch circuit and proof body
+    LZK-->>REL: checked proof result
+    REL-->>Lua: NIWI/Ligero proof or verification result
+```
+
+```mermaid
+flowchart LR
+    Paper[2025/1992 RPBSch construction]
+    Profile[BlindZap implementation profile]
+    Lua[Lua typed protocol wiring]
+    CMT3[Native CMT3 verifier/prover]
+    RPB2[RPB2 full statement envelope]
+    REL[Native RPBSch relation]
+    LZK[LIG0/LZK0 Longfellow proof body]
+
+    Paper --> Profile
+    Profile --> Lua
+    Lua --> CMT3
+    CMT3 --> RPB2
+    RPB2 --> REL
+    REL --> LZK
+
+    CMT3 -. measured by .-> Bench[bench-2025-1992-flow]
+    RPB2 -. measured by .-> Bench
+    REL -. covered by .-> Tests[relation-specific Ligero tests]
+```
