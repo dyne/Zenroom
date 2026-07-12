@@ -135,3 +135,11 @@ that fixture in the C boundary benchmark would be a larger fixture rewrite.
 | `npro_gamma_serialize` | not yet measured | Requires the observed proving fixture that supplies Gamma. |
 | `niwi_extract_rpbsch` | not yet measured | Requires a valid RPBSch proof and matching observed Gamma. |
 | `extracted_relation_revalidate` | not yet measured | Is internal to successful RPBSch extraction and cannot be separated without a new hook. |
+
+## Pedersen H Caching Decision
+
+No local Pedersen-H derivation cache is added at this stage. The current
+`commitment_key` benchmark row is below the clock resolution (`0.002 us` per
+iteration in the latest clean run), while CMT3 proving and verification dominate
+the measured boundary. Adding cache state without a measurable benefit would
+increase ownership and lifetime complexity without improving the paper flow.
