@@ -661,6 +661,8 @@ int niwi_rpbsch_validate_full_statement(const uint8_t *buf, size_t len,
     niwi_rpbsch_statement_t parsed;
     niwi_rpbsch_statement_t *dst = out ? out : &parsed;
 
+    /* Lua repeats these checks for API-facing defense in depth. Keep native
+     * parsing and proof binding here as the authoritative protocol boundary. */
     if (niwi_rpbsch_parse_full_statement(buf, len, dst) != 0) return -1;
     if (niwi_pbsch_cmt3_verify(dst->C, dst->C_proof) != 0) return -1;
     if (niwi_pbsch_cmt3_verify(dst->S, dst->S_proof) != 0) return -1;

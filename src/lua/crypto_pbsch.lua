@@ -34,10 +34,12 @@
 --   niwi.pbsch_pedersen_commit_lf/verify_lf are the NIWI proof-profile
 --   Longfellow/secp canonical versions used by PBSch/RPBSch relation proofs.
 --
--- Cmt status: Pedersen-backed CMT1 opening envelope with straight-line
--- extraction from opened proofs. Native RPBSch LZK0 verifies C and S openings,
--- but RPBSch is not paper-exact until Cmt matches the paper profile. See
--- lib/blindzap/docs/pbsch-cmt-profile.md before making RPBSch proof claims.
+-- Cmt status: CMT3 is the production public proof path for RPBSch C and S.
+-- CMT1 is a transitional private opening envelope for extraction compatibility;
+-- CMT2 is a transitional public Fiat-Shamir proof for tests and debugging.
+-- Native RPBSch LZK0 verifies C and S openings, but RPBSch is not paper-exact
+-- until Cmt matches the paper profile. See lib/blindzap/docs/pbsch-cmt-profile.md
+-- before making RPBSch proof claims.
 --
 -- The native layer owns: secp256k1 arithmetic, BIP-340 sign/verify,
 -- circuit constraints, NIWI proof objects.
@@ -377,7 +379,7 @@ function pbsch.verify_c(C, m, rho)
     return niwi.pbsch_pedersen_verify_lf(C, m, rho)
 end
 
---- Build the current extractable Cmt opening envelope.
+--- Build the transitional CMT1 extractable opening envelope.
 -- This wraps the native Pedersen opening in a canonical, straight-line
 -- extractable envelope: CMT1 || ck || message || randomness.
 -- It is still a Pedersen-backed Cmt profile; RPBSch is not paper-exact until
@@ -570,7 +572,7 @@ local function parse_cmt3_query_transcript(queries)
     return out
 end
 
---- Verify a CMT3 Fischlin05 Pedersen-opening proof.
+--- Verify a production CMT3 Fischlin05 Pedersen-opening proof.
 -- Full transcript verification is implemented in the CMT3 proof task. The
 -- parser and structural guards live here so malformed proofs reject before
 -- curve arithmetic.
