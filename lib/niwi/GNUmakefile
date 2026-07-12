@@ -22,6 +22,7 @@ NIWI_CXX ?= g++
 NIWI_CFLAGS ?= -O2 -I../../src -I. -Isrc -Iinclude -I../../lib/longfellow-zk \
                -I../../lib/milagro-crypto-c/build/include \
                -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
+NIWI_CXXFLAGS ?= $(NIWI_CFLAGS) -fno-exceptions
 NIWI_AR ?= ar
 
 # libniwi.a is linked into libzenroom.so by the top-level linux-lib target.
@@ -56,7 +57,7 @@ clean:
 	$(NIWI_CC) -std=c11 $(NIWI_CFLAGS) -c -o $@ $<
 
 %.cc.o: %.cc
-	$(NIWI_CXX) -std=c++20 $(NIWI_CFLAGS) -c -o $@ $<
+	$(NIWI_CXX) -std=c++20 $(NIWI_CXXFLAGS) -c -o $@ $<
 
 # ---- Tests ----
 

@@ -6,6 +6,8 @@
 
 #include "relations/rpbsch_ligero_relation.h"
 
+#include "niwi.h"
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -425,12 +427,11 @@ extern "C" int niwi_rpbsch_ligero_prove(
                                       private_inputs, priv_len) != 0)
         return -1;
 
-    try {
-        std::unique_ptr<proofs::Circuit<Field>> circuit;
-        std::unique_ptr<ConvolutionFactory> factory;
-        std::unique_ptr<RSFactory> rsf;
-        size_t block_enc = 0;
-        if (!build_ligero_context(&circuit, &block_enc, &factory, &rsf))
+    std::unique_ptr<proofs::Circuit<Field>> circuit;
+    std::unique_ptr<ConvolutionFactory> factory;
+    std::unique_ptr<RSFactory> rsf;
+    size_t block_enc = 0;
+    if (!build_ligero_context(&circuit, &block_enc, &factory, &rsf))
             return -1;
         proofs::Dense<Field> witness(1, circuit->ninputs);
         proofs::Dense<Field> pub(1, circuit->npub_in);
@@ -459,9 +460,6 @@ extern "C" int niwi_rpbsch_ligero_prove(
         *proof_out = out;
         *proof_len = serialized.size();
         return 0;
-    } catch (...) {
-        return -1;
-    }
 }
 
 extern "C" int niwi_rpbsch_ligero_verify(
@@ -472,12 +470,11 @@ extern "C" int niwi_rpbsch_ligero_verify(
     if (!niwi::rpbsch::parse_statement(public_inputs, pub_len, &st))
         return -1;
 
-    try {
-        std::unique_ptr<proofs::Circuit<Field>> circuit;
-        std::unique_ptr<ConvolutionFactory> factory;
-        std::unique_ptr<RSFactory> rsf;
-        size_t block_enc = 0;
-        if (!build_ligero_context(&circuit, &block_enc, &factory, &rsf))
+    std::unique_ptr<proofs::Circuit<Field>> circuit;
+    std::unique_ptr<ConvolutionFactory> factory;
+    std::unique_ptr<RSFactory> rsf;
+    size_t block_enc = 0;
+    if (!build_ligero_context(&circuit, &block_enc, &factory, &rsf))
             return -1;
         proofs::Dense<Field> pub(1, circuit->npub_in);
         fill_public_statement(st, &pub);
@@ -495,7 +492,4 @@ extern "C" int niwi_rpbsch_ligero_verify(
                                                       proofs::p256k1_base);
         verifier.recv_commitment(zk, tv);
         return verifier.verify(zk, pub, tv) ? 0 : -1;
-    } catch (...) {
-        return -1;
-    }
 }

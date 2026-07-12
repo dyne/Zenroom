@@ -6,6 +6,8 @@
 
 #include "relations/bip340_relation.h"
 
+#include "niwi.h"
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -167,8 +169,7 @@ extern "C" int niwi_bip340_relation_validate(
     const uint8_t *private_inputs, size_t priv_len) {
     if (!public_inputs || !private_inputs) return -1;
     if (pub_len == kFullPublicElts * kEltBytes) {
-        try {
-            std::unique_ptr<proofs::Circuit<Field>> circuit =
+        std::unique_ptr<proofs::Circuit<Field>> circuit =
                 niwi::rpbsch::build_bip340_full_challenge_circuit();
             if (!circuit || priv_len != circuit->ninputs * kEltBytes)
                 return -1;
@@ -187,9 +188,6 @@ extern "C" int niwi_bip340_relation_validate(
                               &witness))
                 return -1;
             return evaluate_dense(*circuit, witness) ? 0 : -1;
-        } catch (...) {
-            return -1;
-        }
     }
 
     if (pub_len != kPublicElts * kEltBytes) return -1;
@@ -273,12 +271,11 @@ extern "C" int niwi_bip340_ligero_prove(
     if (memcmp(public_inputs, private_inputs, pub_len) != 0)
         return -1;
 
-    try {
-        std::unique_ptr<proofs::Circuit<Field>> circuit;
-        std::unique_ptr<ConvolutionFactory> factory;
-        std::unique_ptr<RSFactory> rsf;
-        size_t block_enc = 0;
-        if (!build_ligero_context(profile, &circuit, &block_enc, &factory,
+    std::unique_ptr<proofs::Circuit<Field>> circuit;
+    std::unique_ptr<ConvolutionFactory> factory;
+    std::unique_ptr<RSFactory> rsf;
+    size_t block_enc = 0;
+    if (!build_ligero_context(profile, &circuit, &block_enc, &factory,
                                   &rsf))
             return -1;
         if (priv_len != circuit->ninputs * kEltBytes)
@@ -314,9 +311,6 @@ extern "C" int niwi_bip340_ligero_prove(
         *proof_out = out;
         *proof_len = serialized.size();
         return 0;
-    } catch (...) {
-        return -1;
-    }
 }
 
 extern "C" int niwi_bip340_ligero_verify(
@@ -331,13 +325,12 @@ extern "C" int niwi_bip340_ligero_verify(
         return -1;
     }
 
-    try {
-        std::unique_ptr<proofs::Circuit<Field>> circuit;
-        std::unique_ptr<ConvolutionFactory> factory;
-        std::unique_ptr<RSFactory> rsf;
-        size_t block_enc = 0;
-        if (!build_ligero_context(profile, &circuit, &block_enc, &factory,
-                                  &rsf))
+    std::unique_ptr<proofs::Circuit<Field>> circuit;
+    std::unique_ptr<ConvolutionFactory> factory;
+    std::unique_ptr<RSFactory> rsf;
+    size_t block_enc = 0;
+    if (!build_ligero_context(profile, &circuit, &block_enc, &factory,
+                              &rsf))
             return -1;
 
         proofs::Dense<Field> pub(1, circuit->npub_in);
@@ -358,7 +351,4 @@ extern "C" int niwi_bip340_ligero_verify(
                                                       proofs::p256k1_base);
         verifier.recv_commitment(zk, tv);
         return verifier.verify(zk, pub, tv) ? 0 : -1;
-    } catch (...) {
-        return -1;
-    }
 }

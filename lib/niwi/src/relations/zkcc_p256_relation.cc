@@ -6,6 +6,8 @@
 
 #include "relations/zkcc_p256_relation.h"
 
+#include "niwi.h"
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -128,11 +130,10 @@ extern "C" int niwi_zkcc_p256_ligero_prove(
   *proof_out = nullptr;
   *proof_len = 0;
 
-  try {
-    Field field;
-    std::unique_ptr<Circuit> circuit;
-    if (!load_circuit(artifact, artifact_len, &field, &circuit)) return -1;
-    if (circuit->ninputs == 0 || circuit->npub_in > circuit->ninputs)
+  Field field;
+  std::unique_ptr<Circuit> circuit;
+  if (!load_circuit(artifact, artifact_len, &field, &circuit)) return -1;
+  if (circuit->ninputs == 0 || circuit->npub_in > circuit->ninputs)
       return -1;
     if (priv_len != circuit->ninputs * kEltBytes ||
         pub_len != circuit->npub_in * kEltBytes ||
@@ -169,9 +170,6 @@ extern "C" int niwi_zkcc_p256_ligero_prove(
     *proof_out = out;
     *proof_len = serialized.size();
     return 0;
-  } catch (...) {
-    return -1;
-  }
 }
 
 extern "C" int niwi_zkcc_p256_ligero_verify(
@@ -180,11 +178,10 @@ extern "C" int niwi_zkcc_p256_ligero_verify(
     const uint8_t *proof, size_t proof_len) {
   if (!artifact || !public_inputs || !proof || proof_len <= 32) return -1;
 
-  try {
-    Field field;
-    std::unique_ptr<Circuit> circuit;
-    if (!load_circuit(artifact, artifact_len, &field, &circuit)) return -1;
-    if (circuit->ninputs == 0 || circuit->npub_in > circuit->ninputs)
+  Field field;
+  std::unique_ptr<Circuit> circuit;
+  if (!load_circuit(artifact, artifact_len, &field, &circuit)) return -1;
+  if (circuit->ninputs == 0 || circuit->npub_in > circuit->ninputs)
       return -1;
     if (pub_len != circuit->npub_in * kEltBytes) return -1;
 
@@ -207,7 +204,4 @@ extern "C" int niwi_zkcc_p256_ligero_verify(
                                                   zk.param.block_enc, field);
     verifier.recv_commitment(zk, tv);
     return verifier.verify(zk, pub, tv) ? 0 : -1;
-  } catch (...) {
-    return -1;
-  }
 }
