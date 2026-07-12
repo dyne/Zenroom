@@ -30,6 +30,10 @@ linux-exe: ## Dynamic executable for GNU/Linux
 linux-lib: ## Dynamic library for GNU/Linux
 	$(MAKE) -f build/posix.mk libzenroom.so LINUX=1 LIBRARY=1
 
+bench-rpbsch-niwi-warm: ## Prepared RPBSch NIWI benchmark (release build required)
+	@printf 'BENCH niwi_full meta target=native commit=%s compiler=%s cpu=%s\n' "$$(git rev-parse --short HEAD)" "$$(g++ --version | head -1)" "$$(sed -n 's/^model name[[:space:]]*:[[:space:]]*//p' /proc/cpuinfo | head -1)"
+	./zenroom test/lua/rpbsch_niwi_warm_bench.lua
+
 debug-asan: ## Address sanitizer debug build
 	$(MAKE) -f build/posix.mk LINUX=1 deps BUILD_DEPS="apply-patches milagro"
 	$(MAKE) -f build/posix.mk ASAN=1

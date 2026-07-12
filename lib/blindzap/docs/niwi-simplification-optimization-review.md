@@ -141,17 +141,24 @@ circuit artifact in all rows.
 ## Current Benchmark Gaps
 
 `bench-2025-1992-flow` intentionally measures the deterministic public
-CMT3/RPB2 boundary. The following rows remain unmeasured rather than using
-synthetic inputs: a valid measurement needs the existing C++ RPBSch relation
-witness, Longfellow/Ligero proof body, and observed Gamma fixture. Rebuilding
-that fixture in the C boundary benchmark would be a larger fixture rewrite.
+CMT3/RPB2 boundary. `make bench-rpbsch-niwi-warm` uses the existing Lua RPBSch
+fixture and a prepared relation context to measure the real full-proof path.
+It reports cold context preparation separately, then warm witness construction,
+prepared native prove/verify, and the unchanged high-level proof call.
+
+Representative native release runs on an Intel Core i9-12900HK with GCC 14.2
+reported 5.59--5.65 s one-time context preparation, 5.11--5.15 s prepared
+proof median, 5.17--5.19 s high-level proof median, and 1.97--2.00 s prepared
+verification median. Serialized proofs ranged from 2,508,592 to 2,509,712
+bytes across those runs; the compiled circuit is not part of that byte count.
+These numbers are host-specific and should be rerun for publication.
 
 | Benchmark row | Status | Reason |
 | --- | --- | --- |
-| `rpbsch_witness_encode_or_build` | not yet measured | The target has no canonical RPBSch private witness fixture. |
+| `rpbsch_witness_encode_or_build` | measured | `bench-rpbsch-niwi-warm` reports `rpbsch_witness_build` using the canonical deterministic Lua fixture. |
 | `rpbsch_relation_validate` | not yet measured | Requires a valid relation statement/witness pair, not only `RPB2`. |
-| `niwi_prove_rpbsch` | not yet measured | Requires the relation-backed Longfellow/Ligero proving fixture. |
-| `niwi_verify_rpbsch` | not yet measured | Requires a generated RPBSch `NIWI` proof with its checked `LZK0` body. |
+| `niwi_prove_rpbsch` | measured | `niwi_prove_rpbsch_warm` reports relation parsing, validation, witness filling, proof computation, and serialization after preparation. |
+| `niwi_verify_rpbsch` | measured | `niwi_verify_rpbsch_warm` reports statement/proof parsing and verification after preparation. |
 | `npro_gamma_serialize` | not yet measured | Requires the observed proving fixture that supplies Gamma. |
 | `niwi_extract_rpbsch` | not yet measured | Requires a valid RPBSch proof and matching observed Gamma. |
 | `extracted_relation_revalidate` | not yet measured | Is internal to successful RPBSch extraction and cannot be separated without a new hook. |

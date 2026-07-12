@@ -139,9 +139,20 @@ BENCH paper_flow op=RPB2_validate_full_statement iterations=100 total_ms=... per
 The target measures native operations that form the current CMT3/RPB2 boundary:
 commitment-key derivation, C/S Pedersen commitments, C/S CMT3 proof generation,
 C/S CMT3 verification, full-statement envelope encoding, parsing, and validation.
-Full RPBSch NIWI/Ligero proof-body timing remains covered by the relation-specific
-Ligero tests because a valid NIWI witness requires the Longfellow circuit fixture,
-not only the public C ABI.
+Prepared full RPBSch NIWI/Ligero measurements use the existing deterministic Lua
+fixture and must be run from a release build:
+
+```sh
+make clean
+make linux-exe linux-lib CCACHE=1 RELEASE=1
+make bench-rpbsch-niwi-warm
+```
+
+The target reports one-time context preparation separately from witness
+construction, prepared native prove/verify, and the unchanged high-level public
+proof call. Compiled circuit artifacts are never included in `proof_bytes`.
+Proof compression is randomized, so `proof_bytes` is a distribution rather
+than a fixed protocol constant.
 
 ## RPBSch profile flow
 

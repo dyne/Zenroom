@@ -240,6 +240,14 @@ function Niwi.prepare_rpbsch_relation()
     return rpbsch_context
 end
 
+function Niwi.prove_rpbsch_relation_prepared(context, inputs, public_inputs)
+    return native.prove_rpbsch_relation_prepared(context, inputs, public_inputs)
+end
+
+function Niwi.verify_rpbsch_relation_prepared(context, proof, public_inputs)
+    return native.verify_rpbsch_relation_prepared(context, proof, public_inputs)
+end
+
 local function is_canonical_rpbsch_artifact(circuit)
     return is_octet(circuit) and circuit:string() == RPBSCH_RELATION_ARTIFACT:string()
 end
