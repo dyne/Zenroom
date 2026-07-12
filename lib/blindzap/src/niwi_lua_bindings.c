@@ -35,6 +35,12 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define NIWI_CONTEXT_METATABLE "zenroom.niwi.context"
+
+typedef struct {
+    niwi_ctx_t *ctx;
+} niwi_lua_context_t;
+
 /* ---- OCTET helpers (from Zenroom's octet.h) -------------------------- */
 
 extern const char *o_val(const octet*);
@@ -86,6 +92,107 @@ static niwi_ctx_t *create_ctx_from_circuit(lua_State *L, const octet *circuit_oc
         return NULL;
     }
     return ctx;
+}
+
+static niwi_lua_context_t *check_rpbsch_context(lua_State *L, int idx,
+                                                const char *caller) {
+    niwi_lua_context_t *context = (niwi_lua_context_t *)luaL_testudata(
+        L, idx, NIWI_CONTEXT_METATABLE);
+    if (!context || !context->ctx) {
+        lerror(L, "%s: expected a live RPBSch relation context", caller);
+        return NULL;
+    }
+    return context;
+}
+
+static int lua_rpbsch_context_gc(lua_State *L) {
+    niwi_lua_context_t *context = (niwi_lua_context_t *)luaL_testudata(
+        L, 1, NIWI_CONTEXT_METATABLE);
+    if (context && context->ctx) {
+        niwi_ctx_free(context->ctx);
+        context->ctx = NULL;
+    }
+    return 0;
+}
+
+static int lua_prepare_rpbsch_relation(lua_State *L) {
+    if (lua_isnoneornil(L, 1)) {
+        lerror(L, "prepare_rpbsch_relation: missing circuit artifact");
+        return 0;
+    }
+    const octet *circuit_oct = o_arg(L, 1);
+    if (!circuit_oct) {
+        lerror(L, "prepare_rpbsch_relation: expected circuit artifact OCTET");
+        return 0;
+    }
+    niwi_ctx_t *ctx = create_ctx_from_circuit(
+        L, circuit_oct, NIWI_RELATION_RPBSCH, "prepare_rpbsch_relation");
+    o_free(L, circuit_oct);
+    if (!ctx) return 0;
+
+    niwi_lua_context_t *context = (niwi_lua_context_t *)lua_newuserdata(
+        L, sizeof(*context));
+    context->ctx = ctx;
+    luaL_getmetatable(L, NIWI_CONTEXT_METATABLE);
+    lua_setmetatable(L, -2);
+    return 1;
+}
+
+static int lua_prove_rpbsch_relation_prepared(lua_State *L) {
+    niwi_lua_context_t *context = check_rpbsch_context(
+        L, 1, "prove_rpbsch_relation_prepared");
+    if (!context) return 0;
+    if (lua_isnoneornil(L, 2) || lua_isnoneornil(L, 3)) {
+        lerror(L, "prove_rpbsch_relation_prepared: missing required OCTETs");
+        return 0;
+    }
+    const octet *inputs_oct = o_arg(L, 2);
+    const octet *pub_oct = o_arg(L, 3);
+    uint8_t *proof_out = NULL;
+    size_t proof_len = 0;
+    int rc = niwi_prove(context->ctx,
+                        (const uint8_t *)o_val(pub_oct), o_len(pub_oct),
+                        (const uint8_t *)o_val(inputs_oct), o_len(inputs_oct),
+                        &proof_out, &proof_len);
+    if (rc != 0) {
+        char err_buf[256];
+        const char *err = niwi_last_error(context->ctx);
+        if (err) {
+            strncpy(err_buf, err, sizeof(err_buf) - 1);
+            err_buf[sizeof(err_buf) - 1] = '\0';
+        } else {
+            err_buf[0] = '\0';
+        }
+        o_free(L, pub_oct);
+        o_free(L, inputs_oct);
+        lerror(L, "prove_rpbsch_relation_prepared: %s",
+               err_buf[0] ? err_buf : "unknown error");
+        return 0;
+    }
+    push_octet_copy(L, proof_out, proof_len);
+    niwi_free_buffer(proof_out);
+    o_free(L, pub_oct);
+    o_free(L, inputs_oct);
+    return 1;
+}
+
+static int lua_verify_rpbsch_relation_prepared(lua_State *L) {
+    niwi_lua_context_t *context = check_rpbsch_context(
+        L, 1, "verify_rpbsch_relation_prepared");
+    if (!context) return 0;
+    if (lua_isnoneornil(L, 2) || lua_isnoneornil(L, 3)) {
+        lerror(L, "verify_rpbsch_relation_prepared: missing required OCTETs");
+        return 0;
+    }
+    const octet *proof_oct = o_arg(L, 2);
+    const octet *pub_oct = o_arg(L, 3);
+    int rc = niwi_verify(context->ctx,
+                         (const uint8_t *)o_val(proof_oct), o_len(proof_oct),
+                         (const uint8_t *)o_val(pub_oct), o_len(pub_oct));
+    o_free(L, pub_oct);
+    o_free(L, proof_oct);
+    lua_pushboolean(L, rc == 0);
+    return 1;
 }
 
 /* ---- prove_envelope_unchecked ---------------------------------------- */
@@ -1382,6 +1489,9 @@ static const luaL_Reg niwi_functions[] = {
     {"verify_bip340_relation",                           lua_verify_bip340_relation},
     {"prove_rpbsch_relation",                            lua_prove_rpbsch_relation},
     {"verify_rpbsch_relation",                           lua_verify_rpbsch_relation},
+    {"prepare_rpbsch_relation",                          lua_prepare_rpbsch_relation},
+    {"prove_rpbsch_relation_prepared",                   lua_prove_rpbsch_relation_prepared},
+    {"verify_rpbsch_relation_prepared",                  lua_verify_rpbsch_relation_prepared},
     {"verify_envelope",                                  lua_verify_envelope},
     {"niwi_profile",                                     lua_niwi_profile},
     {"prove_envelope_with_observation_unchecked_test",   lua_prove_envelope_with_observation_unchecked_test},
@@ -1406,6 +1516,13 @@ static const luaL_Reg niwi_functions[] = {
 };
 
 int luaopen_niwi(lua_State *L) {
+    static const luaL_Reg context_methods[] = {
+        {"__gc", lua_rpbsch_context_gc},
+        {NULL, NULL}
+    };
+    luaL_newmetatable(L, NIWI_CONTEXT_METATABLE);
+    luaL_setfuncs(L, context_methods, 0);
+    lua_pop(L, 1);
     luaL_newlib(L, niwi_functions);
 
     /* Add protocol information */

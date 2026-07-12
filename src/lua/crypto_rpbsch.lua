@@ -323,6 +323,10 @@ function rpbsch.prove_branch_relation(circuit, fixture, branch)
     }
 end
 
+function rpbsch.prepare_relation_context()
+    return niwi.prepare_rpbsch_relation()
+end
+
 function rpbsch.prove_branch_relation_with_observation_test(circuit, fixture, branch)
     if not rpbsch.validate_branch_relation(fixture) then
         error("invalid RPBSch relation fixture", 2)

@@ -42,6 +42,7 @@ local zkcc_ok, zkcc = pcall(require, 'crypto_zkcc')
 if not zkcc_ok then zkcc = nil end
 local BIP340_RELATION_ARTIFACT = O.from_string("niwi/zkcc-bip340/v1")
 local RPBSCH_RELATION_ARTIFACT = O.from_string("niwi/rpbsch-branch/v1")
+local rpbsch_context = nil
 
 local function is_octet(value)
     return type(value) == "zenroom.octet"
@@ -232,8 +233,42 @@ Niwi.verify_zkcc_relation = native.verify_zkcc_relation
 Niwi.prove_bip340_relation = native.prove_bip340_relation
 Niwi.verify_bip340_relation = native.verify_bip340_relation
 Niwi.rpbsch_relation_artifact = function() return RPBSCH_RELATION_ARTIFACT end
-Niwi.prove_rpbsch_relation = native.prove_rpbsch_relation
-Niwi.verify_rpbsch_relation = native.verify_rpbsch_relation
+function Niwi.prepare_rpbsch_relation()
+    if not rpbsch_context then
+        rpbsch_context = native.prepare_rpbsch_relation(RPBSCH_RELATION_ARTIFACT)
+    end
+    return rpbsch_context
+end
+
+local function is_canonical_rpbsch_artifact(circuit)
+    return is_octet(circuit) and circuit:string() == RPBSCH_RELATION_ARTIFACT:string()
+end
+
+function Niwi.prove_rpbsch_relation(opts)
+    if type(opts) ~= "table" then
+        error("prove_rpbsch_relation: expected table argument", 2)
+    end
+    if not is_canonical_rpbsch_artifact(opts.circuit) then
+        return native.prove_rpbsch_relation(opts)
+    end
+    return native.prove_rpbsch_relation_prepared(
+        Niwi.prepare_rpbsch_relation(),
+        as_octet(opts.inputs, "octet", "inputs"),
+        as_octet(opts.public_inputs, "public_octet", "public_inputs"))
+end
+
+function Niwi.verify_rpbsch_relation(opts)
+    if type(opts) ~= "table" then
+        error("verify_rpbsch_relation: expected table argument", 2)
+    end
+    if not is_canonical_rpbsch_artifact(opts.circuit) then
+        return native.verify_rpbsch_relation(opts)
+    end
+    return native.verify_rpbsch_relation_prepared(
+        Niwi.prepare_rpbsch_relation(),
+        as_octet(opts.proof, "octet", "proof"),
+        as_octet(opts.public_inputs, "public_octet", "public_inputs"))
+end
 Niwi.prove_envelope_with_observation_unchecked_test =
     native.prove_envelope_with_observation_unchecked_test
 Niwi.prove_zkcc_relation_with_observation_test =

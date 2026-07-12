@@ -74,6 +74,14 @@ end
 
 local native_witness1 = rpbsch.branch_relation_witness(
   circuit, fixture, rpbsch.BRANCH_HONEST)
+local prepared_proof1 = rpbsch.prove_branch_relation(
+  circuit, fixture, rpbsch.BRANCH_HONEST)
+local prepared_proof2 = rpbsch.prove_branch_relation(
+  circuit, fixture, rpbsch.BRANCH_HONEST)
+assert(rpbsch.verify_branch_relation(prepared_proof1, fixture.statement),
+       'first prepared RPBSch branch relation rejected')
+assert(rpbsch.verify_branch_relation(prepared_proof2, fixture.statement),
+       'second prepared RPBSch branch relation rejected')
 local native_proof1, native_gamma1 =
   rpbsch.prove_branch_relation_with_observation_test(
     circuit, fixture, rpbsch.BRANCH_HONEST)
