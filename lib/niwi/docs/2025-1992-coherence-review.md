@@ -179,10 +179,43 @@ Rejected or secondary candidates:
 | `Niwisign` | pronounceable but hides the blind-signature context |
 | `RPB-Zap` | closest to RPBSch but not comfortably pronounceable |
 
+## Test Coverage Trace
+
+Last focused verification: 2026-07-12 on branch `niwi-lib` after a clean native build.
+
+Commands run:
+
+```sh
+make clean
+make linux-exe linux-lib CCACHE=1
+./zenroom test/lua/rpbsch_cmt3_smoke.lua
+./zenroom test/lua/zkcc_niwi_smoke.lua
+make -C lib/niwi test_rpbsch_adapter test_rpbsch_branch_circuit \
+  test_rpbsch_commitment_circuit test_extract test_bip340_relation
+cd lib/niwi
+./test_rpbsch_adapter
+./test_rpbsch_branch_circuit
+./test_rpbsch_commitment_circuit
+./test_extract
+./test_bip340_relation
+```
+
+All commands passed.
+
+| Paper step | Positive test | Negative / mutation test | Remaining coverage note |
+| --- | --- | --- | --- |
+| RPBSch statement tuple | `rpbsch_cmt3_smoke.lua`; `test_rpbsch_adapter` | statement hash/preimage matching tests | byte-level format is implementation profile |
+| C/S commitment opening checks | `test_rpbsch_commitment_circuit`; `rpbsch_cmt3_smoke.lua` | bad statement/opening field mutations in branch tests | CMT3 straight-line claim still documented as profiled |
+| Branch 1 relation | `test_rpbsch_branch_circuit` | negative statement fields | BIP340/profile-specific |
+| Branch 2 relation | `test_rpbsch_branch_circuit` | bad slots / selector rejection | BIP340/profile-specific |
+| Private OR selector | `test_rpbsch_branch_circuit` | selector rejects bad slots | fixed-shape implementation profile |
+| NIWI prove/verify/extract smoke | `zkcc_niwi_smoke.lua` | extraction requires tableau / invalid gamma tests | generic zkcc smoke plus native extraction tests |
+| NPRO/Gamma extraction | `test_extract` | wrong domain, missing digest, ambiguous digest, post-cutoff leaves | current tableau-fragment extraction profile |
+| BIP340 relation body | `test_bip340_relation` | official invalid vector coverage in Lua zkcc tests | native tests prove/verify/extract valid vectors |
+
 ## Next Review Steps
 
-1. Fill the trace matrix with exact functions, tests, and statuses.
-2. Update the existing implementation checklist with paper-step statuses.
-3. Run focused coherence tests.
-4. Only after coherence is established, review simplification/optimization and
-   add the full-flow benchmark.
+1. Review simplification opportunities without changing protocol claims.
+2. Review optimization opportunities and map each to a benchmark row.
+3. Rename the implementation profile directory to `lib/blindzap`.
+4. Add the full-flow benchmark and README diagrams.
