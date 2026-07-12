@@ -158,6 +158,17 @@ relation.
 | Predicate compiler | Paper allows generic `P(phi, m)` | document current supported predicate/profile |
 | Naming | `lib/blindzap` describes primitive, not full implementation profile | rename implementation profile to BlindZap while preserving primitive names |
 
+## Conservative Follow-up Status
+
+The existing local corpus and code trace support the production-profile
+description below, but do not establish either unresolved property as a
+paper-exact claim.
+
+| Area | Trace result | Claim level retained |
+| --- | --- | --- |
+| CMT3 straight-line extractability | `CMT3` is the production RPBSch Cmt path and its opened-proof behavior is tested, but this review does not complete a Def. 17-to-CMT3 construction proof or a secondary-paper equivalence trace. | `profiled` |
+| Full Ligero extraction | Current extraction reconstructs and revalidates the checked tableau-fragment profile. The corpus trace does not establish recovery of the full paper-level Ligero body. | `profiled/non-claim` |
+
 ## Naming Decision
 
 Accepted implementation/profile name: **BlindZap**.

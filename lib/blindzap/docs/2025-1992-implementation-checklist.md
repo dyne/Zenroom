@@ -21,7 +21,7 @@ needed before claiming production, paper-exact RPBSch.
 | Gamma observation | `lib/blindzap/src/npro.c` | `lib/blindzap/tests/test_npro.c` | Implemented |
 | Tableau-fragment recovery | `lib/blindzap/src/niwi.c`, `lib/blindzap/src/extract.c` | `lib/blindzap/tests/test_abi.c`, `lib/blindzap/tests/test_extract.c` | Implemented for current tableau-leaf profile |
 | Relation revalidation after extraction | `niwi_extract` in `lib/blindzap/src/niwi.c` | `test_extract_validates_recovered_relation` | Implemented |
-| Full Ligero tableau extraction | `lib/blindzap/src/niwi.c` | Current tests cover fragments | Remaining paper-alignment work: replace compact tableau profile with full NIWI/Ligero body extraction |
+| Full Ligero tableau extraction | `lib/blindzap/src/niwi.c` | Current tests cover fragments | `profiled/non-claim`: current corpus trace does not establish full paper-level Ligero body recovery. |
 
 ## BIP340 Relation
 
@@ -97,6 +97,15 @@ needed before claiming production, paper-exact RPBSch.
 | NIWI proof body | `LIG0` native envelope and checked `LZK0` Longfellow body are present | `profiled` |
 | NPRO/Gamma extraction | Observable query log, tableau fragments, and relation revalidation are present | `profiled` |
 | BlindZap naming | Accepted for implementation/profile naming | `lib/blindzap` directory rename implemented |
+
+## Conservative Claim Follow-up
+
+The current local-paper trace does not upgrade either extraction claim. `CMT3`
+remains the production RPBSch Cmt profile, but its straight-line extractability
+remains `profiled` until Def. 17 and the cited secondary constructions are
+mapped proof-for-proof. Full Ligero extraction remains `profiled/non-claim`:
+the implementation extracts and revalidates the current tableau-fragment
+profile, not a paper-exact full Ligero body.
 
 See `2025-1992-coherence-review.md` for the detailed paper-to-code matrix.
 
