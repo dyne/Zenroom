@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include <memory>
+#include <new>
 #include <vector>
 
 #include "algebra/crt.h"
@@ -39,14 +40,21 @@
 #include "zk/zk_prover.h"
 #include "zk/zk_verifier.h"
 
-namespace {
-
 using Field = proofs::Fp256k1Base;
 using Point = proofs::P256k1::ECPoint;
 using ShaBlockWitness = proofs::FlatSHA256Witness::BlockWitness;
 using Crt = proofs::CRT256<Field>;
 using ConvolutionFactory = proofs::CrtConvolutionFactory<Crt, Field>;
 using RSFactory = proofs::ReedSolomonFactory<Field, ConvolutionFactory>;
+
+struct niwi_rpbsch_ligero_ctx {
+    std::unique_ptr<proofs::Circuit<Field>> circuit;
+    std::unique_ptr<ConvolutionFactory> factory;
+    std::unique_ptr<RSFactory> rsf;
+    size_t block_enc;
+};
+
+namespace {
 
 constexpr size_t kEltBytes = 32;
 constexpr size_t kLigeroRate = 4;
@@ -394,28 +402,39 @@ bool evaluate_dense(const proofs::Circuit<Field>& circuit,
     return true;
 }
 
-bool build_ligero_context(std::unique_ptr<proofs::Circuit<Field>> *circuit,
-                          size_t *block_enc,
-                          std::unique_ptr<ConvolutionFactory> *factory,
-                          std::unique_ptr<RSFactory> *rsf) {
-    if (!circuit || !block_enc || !factory || !rsf) return false;
-    *circuit = niwi::rpbsch::build_rpbsch_selector_circuit();
-    if (!*circuit || (*circuit)->npub_in != 11) return false;
-    *block_enc = (*circuit)->ninputs - (*circuit)->npub_in +
-                 (*circuit)->nc + 1;
-    if (!proofs::check_crt_block_enc<Crt>(*block_enc).empty()) return false;
-    *factory = std::make_unique<ConvolutionFactory>(proofs::p256k1_base);
-    *rsf = std::make_unique<RSFactory>(**factory, proofs::p256k1_base);
+bool build_ligero_context(niwi_rpbsch_ligero_ctx_t *ctx) {
+    if (!ctx) return false;
+    ctx->circuit = niwi::rpbsch::build_rpbsch_selector_circuit();
+    if (!ctx->circuit || ctx->circuit->npub_in != 11) return false;
+    ctx->block_enc = ctx->circuit->ninputs - ctx->circuit->npub_in +
+                     ctx->circuit->nc + 1;
+    if (!proofs::check_crt_block_enc<Crt>(ctx->block_enc).empty()) return false;
+    ctx->factory = std::make_unique<ConvolutionFactory>(proofs::p256k1_base);
+    ctx->rsf = std::make_unique<RSFactory>(*ctx->factory,
+                                           proofs::p256k1_base);
     return true;
 }
 
 }  // namespace
 
-extern "C" int niwi_rpbsch_ligero_prove(
+extern "C" niwi_rpbsch_ligero_ctx_t *niwi_rpbsch_ligero_ctx_create(void) {
+    std::unique_ptr<niwi_rpbsch_ligero_ctx_t> ctx(
+        new (std::nothrow) niwi_rpbsch_ligero_ctx_t());
+    if (!ctx || !build_ligero_context(ctx.get())) return nullptr;
+    return ctx.release();
+}
+
+extern "C" void niwi_rpbsch_ligero_ctx_free(niwi_rpbsch_ligero_ctx_t *ctx) {
+    delete ctx;
+}
+
+extern "C" int niwi_rpbsch_ligero_prove_ctx(
+    niwi_rpbsch_ligero_ctx_t *ctx,
     const uint8_t *public_inputs, size_t pub_len,
     const uint8_t *private_inputs, size_t priv_len,
     uint8_t **proof_out, size_t *proof_len) {
-    if (!public_inputs || !private_inputs || !proof_out || !proof_len)
+    if (!ctx || !ctx->circuit || !ctx->rsf || !public_inputs ||
+        !private_inputs || !proof_out || !proof_len)
         return -1;
     *proof_out = nullptr;
     *proof_len = 0;
@@ -427,69 +446,83 @@ extern "C" int niwi_rpbsch_ligero_prove(
                                       private_inputs, priv_len) != 0)
         return -1;
 
-    std::unique_ptr<proofs::Circuit<Field>> circuit;
-    std::unique_ptr<ConvolutionFactory> factory;
-    std::unique_ptr<RSFactory> rsf;
-    size_t block_enc = 0;
-    if (!build_ligero_context(&circuit, &block_enc, &factory, &rsf))
-            return -1;
-        proofs::Dense<Field> witness(1, circuit->ninputs);
-        proofs::Dense<Field> pub(1, circuit->npub_in);
-        if (!fill_selector_witness(st, w, *circuit, &witness, &pub) ||
-            !evaluate_dense(*circuit, witness))
-            return -1;
+    proofs::Dense<Field> witness(1, ctx->circuit->ninputs);
+    proofs::Dense<Field> pub(1, ctx->circuit->npub_in);
+    if (!fill_selector_witness(st, w, *ctx->circuit, &witness, &pub) ||
+        !evaluate_dense(*ctx->circuit, witness))
+        return -1;
 
-        proofs::ZkProof<Field> zk(*circuit, kLigeroRate, kLigeroNreq,
-                                  block_enc);
-        proofs::ZkProver<Field, RSFactory> prover(*circuit,
-                                                  proofs::p256k1_base,
-                                                  *rsf);
-        uint8_t seed[32] = {0};
-        proofs::SecureRandomEngine rng;
-        rng.bytes(seed, sizeof(seed));
-        proofs::Transcript tp(seed, sizeof(seed), 4);
-        prover.commit(zk, witness, tp, rng);
-        if (!prover.prove(zk, witness, tp)) return -1;
+    proofs::ZkProof<Field> zk(*ctx->circuit, kLigeroRate, kLigeroNreq,
+                              ctx->block_enc);
+    proofs::ZkProver<Field, RSFactory> prover(*ctx->circuit,
+                                              proofs::p256k1_base,
+                                              *ctx->rsf);
+    uint8_t seed[32] = {0};
+    proofs::SecureRandomEngine rng;
+    rng.bytes(seed, sizeof(seed));
+    proofs::Transcript tp(seed, sizeof(seed), 4);
+    prover.commit(zk, witness, tp, rng);
+    if (!prover.prove(zk, witness, tp)) return -1;
 
-        std::vector<uint8_t> serialized;
-        serialized.insert(serialized.end(), seed, seed + sizeof(seed));
-        zk.write(serialized, proofs::p256k1_base);
-        uint8_t *out = static_cast<uint8_t *>(malloc(serialized.size()));
-        if (!out) return -1;
-        memcpy(out, serialized.data(), serialized.size());
-        *proof_out = out;
-        *proof_len = serialized.size();
-        return 0;
+    std::vector<uint8_t> serialized;
+    serialized.insert(serialized.end(), seed, seed + sizeof(seed));
+    zk.write(serialized, proofs::p256k1_base);
+    uint8_t *out = static_cast<uint8_t *>(malloc(serialized.size()));
+    if (!out) return -1;
+    memcpy(out, serialized.data(), serialized.size());
+    *proof_out = out;
+    *proof_len = serialized.size();
+    return 0;
+}
+
+extern "C" int niwi_rpbsch_ligero_verify_ctx(
+    niwi_rpbsch_ligero_ctx_t *ctx,
+    const uint8_t *public_inputs, size_t pub_len,
+    const uint8_t *proof, size_t proof_len) {
+    if (!ctx || !ctx->circuit || !ctx->rsf || !public_inputs || !proof ||
+        proof_len <= 32)
+        return -1;
+    niwi::rpbsch::Statement st;
+    if (!niwi::rpbsch::parse_statement(public_inputs, pub_len, &st))
+        return -1;
+
+    proofs::Dense<Field> pub(1, ctx->circuit->npub_in);
+    fill_public_statement(st, &pub);
+
+    proofs::ReadBuffer rb(proof + 32, proof_len - 32);
+    proofs::ZkProof<Field> zk(*ctx->circuit, kLigeroRate, kLigeroNreq,
+                              ctx->block_enc);
+    if (!zk.read(rb, proofs::p256k1_base) || rb.remaining() != 0)
+        return -1;
+    proofs::Transcript tv(proof, 32, 4);
+    proofs::ZkVerifier<Field, RSFactory> verifier(*ctx->circuit, *ctx->rsf,
+                                                  kLigeroRate, kLigeroNreq,
+                                                  ctx->block_enc,
+                                                  proofs::p256k1_base);
+    verifier.recv_commitment(zk, tv);
+    return verifier.verify(zk, pub, tv) ? 0 : -1;
+}
+
+extern "C" int niwi_rpbsch_ligero_prove(
+    const uint8_t *public_inputs, size_t pub_len,
+    const uint8_t *private_inputs, size_t priv_len,
+    uint8_t **proof_out, size_t *proof_len) {
+    niwi_rpbsch_ligero_ctx_t *ctx = niwi_rpbsch_ligero_ctx_create();
+    if (!ctx) return -1;
+    int rc = niwi_rpbsch_ligero_prove_ctx(ctx, public_inputs, pub_len,
+                                          private_inputs, priv_len,
+                                          proof_out, proof_len);
+    niwi_rpbsch_ligero_ctx_free(ctx);
+    return rc;
 }
 
 extern "C" int niwi_rpbsch_ligero_verify(
     const uint8_t *public_inputs, size_t pub_len,
     const uint8_t *proof, size_t proof_len) {
-    if (!public_inputs || !proof || proof_len <= 32) return -1;
-    niwi::rpbsch::Statement st;
-    if (!niwi::rpbsch::parse_statement(public_inputs, pub_len, &st))
-        return -1;
-
-    std::unique_ptr<proofs::Circuit<Field>> circuit;
-    std::unique_ptr<ConvolutionFactory> factory;
-    std::unique_ptr<RSFactory> rsf;
-    size_t block_enc = 0;
-    if (!build_ligero_context(&circuit, &block_enc, &factory, &rsf))
-            return -1;
-        proofs::Dense<Field> pub(1, circuit->npub_in);
-        fill_public_statement(st, &pub);
-
-        proofs::ReadBuffer rb(proof + 32, proof_len - 32);
-        proofs::ZkProof<Field> zk(*circuit, kLigeroRate, kLigeroNreq,
-                                  block_enc);
-        if (!zk.read(rb, proofs::p256k1_base) || rb.remaining() != 0)
-            return -1;
-        proofs::Transcript tv(proof, 32, 4);
-        proofs::ZkVerifier<Field, RSFactory> verifier(*circuit, *rsf,
-                                                      kLigeroRate,
-                                                      kLigeroNreq,
-                                                      block_enc,
-                                                      proofs::p256k1_base);
-        verifier.recv_commitment(zk, tv);
-        return verifier.verify(zk, pub, tv) ? 0 : -1;
+    niwi_rpbsch_ligero_ctx_t *ctx = niwi_rpbsch_ligero_ctx_create();
+    if (!ctx) return -1;
+    int rc = niwi_rpbsch_ligero_verify_ctx(ctx, public_inputs, pub_len,
+                                           proof, proof_len);
+    niwi_rpbsch_ligero_ctx_free(ctx);
+    return rc;
 }

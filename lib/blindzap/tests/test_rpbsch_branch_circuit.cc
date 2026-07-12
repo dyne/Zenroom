@@ -17,6 +17,7 @@
 #include "circuits/sha/flatsha256_witness.h"
 #include "ec/p256k1.h"
 #include "pbsch_commitment.h"
+#include "relations/rpbsch_ligero_relation.h"
 #include "relations/rpbsch_relation_internal.h"
 #include "sumcheck/prover_layers.h"
 
@@ -678,6 +679,13 @@ void test_selector_valid_and_rejects_bad_slots(void) {
     std::printf("  PASS test_selector_valid_and_rejects_bad_slots\n");
 }
 
+void test_selector_ligero_context_lifecycle(void) {
+    niwi_rpbsch_ligero_ctx_t *ctx = niwi_rpbsch_ligero_ctx_create();
+    assert(ctx != nullptr);
+    niwi_rpbsch_ligero_ctx_free(ctx);
+    std::printf("  PASS test_selector_ligero_context_lifecycle\n");
+}
+
 }  // namespace
 
 int main(void) {
@@ -688,6 +696,7 @@ int main(void) {
     test_branch1_valid_and_negative_statement_fields();
     test_branch2_valid_and_negative_statement_fields();
     test_selector_valid_and_rejects_bad_slots();
+    test_selector_ligero_context_lifecycle();
     std::printf("All RPBSch branch circuit tests passed.\n");
     return 0;
 }
