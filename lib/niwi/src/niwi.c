@@ -82,6 +82,7 @@
      NIWI_PROOF_NATIVE_RESPONSE_EVAL_SIZE + \
      NIWI_PROOF_NATIVE_RESPONSE_COLUMN_SIZE)
 #define NIWI_LIGERO_FIELD_MODULUS UINT64_C(18446744073709551557)
+#define NIWI_LIGERO_FIELD_CARRY UINT64_C(59)
 #define NIWI_PROOF_NATIVE_BODY_BASE_PAYLOAD_SIZE \
     (NIWI_PROOF_NATIVE_BODY_FIXED_WORDS * 4 + \
      NIWI_PROOF_NATIVE_BODY_DIGEST_COUNT * NIWI_PROOF_NATIVE_BODY_DIGEST_SIZE + \
@@ -612,15 +613,29 @@ static uint64_t ligero_field_reduce_u64(uint64_t v) {
 }
 
 static uint64_t ligero_field_add(uint64_t a, uint64_t b) {
-    __uint128_t sum = (__uint128_t)a + b;
-    sum %= NIWI_LIGERO_FIELD_MODULUS;
-    return (uint64_t)sum;
+    uint64_t sum = a + b;
+    if (sum < a) {
+        /* NIWI_LIGERO_FIELD_MODULUS is 2^64 - 59, so folding the
+         * carry back into the field is equivalent to adding 59. */
+        return sum + NIWI_LIGERO_FIELD_CARRY;
+    }
+    return ligero_field_reduce_u64(sum);
 }
 
 static uint64_t ligero_field_mul(uint64_t a, uint64_t b) {
-    __uint128_t product = (__uint128_t)a * b;
+#if defined(__SIZEOF_INT128__) && !defined(NIWI_FORCE_NO_UINT128)
+    unsigned __int128 product = (unsigned __int128)a * b;
     product %= NIWI_LIGERO_FIELD_MODULUS;
     return (uint64_t)product;
+#else
+    uint64_t acc = 0;
+    while (b != 0) {
+        if ((b & 1u) != 0) acc = ligero_field_add(acc, a);
+        b >>= 1;
+        if (b != 0) a = ligero_field_add(a, a);
+    }
+    return acc;
+#endif
 }
 
 static uint64_t ligero_digest_to_field(const uint8_t digest[32]) {
