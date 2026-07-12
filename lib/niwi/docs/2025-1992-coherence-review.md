@@ -116,12 +116,45 @@ relation.
    but does not yet report the full Figure 4 / RPBSch path with input/output
    sizes.
 
+## Paper-To-Code Trace Matrix
+
+| Paper step | Implementation function(s) | Tests / fixtures | Status | Notes |
+| --- | --- | --- | --- | --- |
+| Schnorr/group setup and BIP340 checks | `src/lua/crypto_pbsch.lua` BIP340 helpers; `niwi_bip340_relation_validate`; `niwi_bip340_ligero_prove`; `niwi_bip340_ligero_verify` | `test/lua/zkcc_bip340.lua`; `lib/niwi/tests/test_bip340_relation.cc`; `lib/niwi/tests/test_ligero_bip340.cc` | `profiled` | Paper uses Schnorr over generated groups; implementation profiles this as BIP340/secp256k1 with x-only/even-y checks. |
+| Commitment key `ck` | `niwi_pbsch_pedersen_h`; Lua `pbsch.commitment_key()` | `test/lua/pedersen.lua`; `test/lua/pbsch_cmt.lua` | `profiled` | Deterministic Pedersen H derivation is an implementation profile for `ck`. |
+| C commitment `(m, alpha, beta)` | Lua CMT helpers in `crypto_pbsch.lua`; native `niwi_pbsch_cmt3_prove_seeded`; `niwi_pbsch_cmt3_verify` | `test/lua/pbsch_cmt.lua`; `test/lua/rpbsch_cmt3_smoke.lua` | `profiled` | Current CMT3 is the production profile; paper-exact straight-line Cmt claim remains under review. |
+| S commitment `(sigma0, sigma1, nu_u, nu_u', nu_s)` | same CMT3 native/Lua helpers plus RPBSch full statement envelope | `test/lua/rpbsch_cmt3_smoke.lua`; RPBSch relation tests | `profiled` | Native relation verifies C/S openings in checked LZK body. |
+| Public statement `(X, X', R, c, C, phi, ck, S)` | `niwi_rpbsch_parse_full_statement`; `niwi_rpbsch_validate_full_statement`; Lua `pbsch.parse_full_statement`; `pbsch.validate_full_statement` | `test/lua/rpbsch_cmt3_smoke.lua`; `test/lua/rpbsch_niwi.lua` | `exact/profiled` | Tuple matches the paper; byte encoding is implementation-specific and versioned. |
+| Witness tuple | `rpbsch_ligero_relation.cc` parse/fill helpers; Lua `rpbsch.branch_relation_witness` | `lib/niwi/tests/test_rpbsch_adapter.cc`; `test/lua/rpbsch_niwi.lua` | `profiled` | Witness fields map to paper tuple; circuit layout is fixed-shape implementation profile. |
+| Branch 1 relation | `niwi_rpbsch_relation_validate`; RPBSch branch circuit in `rpbsch_relation_circuit.h`; `niwi_rpbsch_ligero_prove` | `lib/niwi/tests/test_rpbsch_branch_circuit.cc`; `test/lua/rpbsch_niwi.lua` | `profiled` | Checks predicate/message, challenge equation, and C opening under the BIP340/CMT3 profile. |
+| Branch 2 relation | same native RPBSch relation and branch circuit | `lib/niwi/tests/test_rpbsch_branch_circuit.cc` | `profiled` | Checks distinct tuple messages, S opening, and two BIP340 verifications. |
+| Private OR selector | `rpbsch_ligero_relation.cc`; `rpbsch_relation_circuit.h` | `lib/niwi/tests/test_rpbsch_branch_circuit.cc` | `profiled` | Implements paper disjunction as fixed-shape private selector relation. |
+| NIWI prove | `niwi_prove`; `niwi_prove_observed`; `niwi_rpbsch_ligero_prove` | `test/lua/zkcc_niwi_smoke.lua`; `test/lua/rpbsch_niwi.lua`; `lib/niwi/tests/test_ligero_bip340.cc` | `profiled` | Production RPBSch proofs carry checked Longfellow/Ligero `LZK0` bodies. |
+| NIWI verify | `niwi_verify`; `niwi_rpbsch_ligero_verify` | same proof tests plus mutation tests | `profiled` | Verifier checks relation-backed proof body, native envelope, and relation binding. |
+| NPRO/Gamma observation | `niwi_prove_observed`; `niwi_npro_*` in `npro.c` | `lib/niwi/tests/test_npro.c`; `lib/niwi/tests/test_extract.c` | `profiled` | Implements observable random-oracle transcript used by extraction. |
+| Straight-line extraction | `niwi_extract`; `niwi_envelope_extract_unchecked`; `extract.c` | `lib/niwi/tests/test_extract.c`; adversarial Gamma tests | `profiled/non-claim` | Extracts current tableau-fragment profile and revalidates relation. Full paper-level Cmt/Ligero extraction claim remains guarded. |
+| Extracted relation revalidation | `niwi_extract` plus relation validators | `lib/niwi/tests/test_extract.c` | `profiled` | Prevents accepting Gamma fragments that do not reconstruct a valid relation witness. |
+| Lua-facing PBSch/RPBSch flow | `crypto_pbsch.lua`; `crypto_rpbsch.lua`; `crypto_niwi.lua`; native Lua bindings | `test/lua/pbsch_end_to_end.lua`; `test/lua/rpbsch_cmt3_smoke.lua`; `test/lua/rpbsch_niwi.lua` | `profiled` | Production helper flow aligns to Fig. 4 but uses the BIP340/CMT3/Longfellow implementation profile. |
+
+## Serialization And Domain-Separation Trace
+
+| Object / tag | Implementation | Paper role | Status |
+| --- | --- | --- | --- |
+| `CMT3` | `crypto_pbsch.lua`; `pbsch_commitment.c` | Cmt proof/opening profile for `C` and `S` | `profiled` |
+| `LIG0` | `lib/niwi/src/niwi.c` native proof body | NIWI native envelope, tableau/response metadata | `profiled` |
+| `LZK0` | `lib/niwi/src/niwi.c`; relation `.cc` files | checked Longfellow/Ligero proof body | `profiled` |
+| `NRSP` | `lib/niwi/src/niwi.c` | native response object for extracted/checkable Ligero fragments | `profiled` |
+| `TBL0` | `lib/niwi/src/niwi.c` | legacy/unchecked tableau leaf | `non-claim` |
+| `TBL1` | `lib/niwi/src/niwi.c` | relation-bound tableau leaf | `profiled` |
+| `NIWI_TAG_*` | `lib/niwi/src/hash.h` | domain separation for protocol, statement, challenge, leaves | `profiled` |
+| Full statement envelope | `pbsch_commitment.{c,h}` and Lua parser | public statement serialization | `profiled` |
+
 ## Gaps / Non-claims To Resolve
 
 | Area | Current risk | Required review action |
 | --- | --- | --- |
-| Cmt straight-line extractability | Current CMT3 may be profile-specific rather than paper-exact | trace to Def. 17 / secondary sources and document status |
-| Full Ligero extraction | Existing docs mention compact tableau/fragments | verify if current `LIG0`/`LZK0` extraction matches paper-level claim or remains profiled |
+| Cmt straight-line extractability | Current CMT3 is a production profile, not yet documented as paper-exact | trace to Def. 17 / secondary sources and keep claims scoped |
+| Full Ligero extraction | Current extraction reconstructs checked fragments/body profile | verify if sufficient for the paper-level claim or keep as profiled implementation |
 | Predicate compiler | Paper allows generic `P(phi, m)` | document current supported predicate/profile |
 | Naming | `lib/niwi` describes primitive, not full implementation profile | rename implementation profile to BlindZap while preserving primitive names |
 

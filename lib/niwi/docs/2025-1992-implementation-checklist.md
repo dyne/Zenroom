@@ -68,14 +68,17 @@ needed before claiming production, paper-exact RPBSch.
   and revalidates the relation before returning success. Full paper-level
   Ligero body extraction remains open only for the broader parameterized layout
   above.
-- Current PBSch Cmt has a Pedersen-backed `CMT1` private opening envelope and
-  a versioned `CMT2` public Fiat-Shamir opening proof. Lua RPBSch production
-  helpers require valid `C` and `S` CMT2 proofs, and the native RPBSch relation
-  verifies the underlying `C` and `S` openings. The Cmt construction is still
-  not the paper's final Fischlin/Pas-style straight-line extractable Cmt.
+- Current PBSch Cmt has a Pedersen-backed historical `CMT1` private opening
+  envelope, a deprecated `CMT2` public Fiat-Shamir opening proof, and the
+  production `CMT3` Fischlin-style profile used by RPBSch helpers. Lua RPBSch
+  production helpers require valid `C` and `S` CMT3 proofs, and the native
+  RPBSch relation verifies the underlying `C` and `S` openings. The Cmt
+  construction remains a profiled implementation until its straight-line
+  extractability is fully traced to `2025-1992.pdf` Def. 17 and secondary
+  sources.
 - Current RPBSch has native branch relations, statement binding, a private
-  OR selector relation, and checked `LZK0`. Final paper claims remain gated by
-  finishing the paper-exact Cmt profile.
+  OR selector relation, and checked `LZK0`. Final paper-exact claims remain
+  gated by the coherence review in `2025-1992-coherence-review.md`.
 - BIP340 is the strongest covered dependency: official vectors cover the SECP
   and zkcc paths, valid official vectors run through NIWI prove/verify/extract,
   and production BIP340 proofs now verify an embedded Longfellow/Ligero proof
@@ -83,6 +86,19 @@ needed before claiming production, paper-exact RPBSch.
 - Generic P-256 zkcc proofs now also verify embedded Longfellow/Ligero proof
   bodies for compiled artifacts, using Longfellow's deterministic parameter
   search for each circuit.
+
+## 2026-07-12 Trace Status Update
+
+| Paper component | Current implementation status | Claim level |
+| --- | --- | --- |
+| RPBSch statement `(X, X', R, c, C, phi, ck, S)` | Native parser/validator and Lua fallback are present | `profiled`, tuple-aligned |
+| RPBSch witness/disjunction | Native branch relation and private OR selector are present | `profiled` |
+| C/S commitment checks | CMT3 production helpers and native relation checks are present | `profiled`, not yet paper-exact Cmt claim |
+| NIWI proof body | `LIG0` native envelope and checked `LZK0` Longfellow body are present | `profiled` |
+| NPRO/Gamma extraction | Observable query log, tableau fragments, and relation revalidation are present | `profiled` |
+| BlindZap naming | Accepted for implementation/profile naming | directory rename pending |
+
+See `2025-1992-coherence-review.md` for the detailed paper-to-code matrix.
 
 ## Review Command Set
 
