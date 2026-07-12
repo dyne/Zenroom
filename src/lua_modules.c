@@ -66,8 +66,8 @@ extern int luaopen_mayo(lua_State *L);
 extern int luaopen_secp(lua_State *L);
 #ifdef ZEN_ENABLE_ZKCC
 extern int luaopen_zkcore(lua_State *L);
-extern int luaopen_niwi(lua_State *L);
 #endif
+extern int luaopen_niwi(lua_State *L);
 
 
 // really loaded in lib/lua54/linit.c
@@ -216,9 +216,9 @@ int zen_require(lua_State *L) {
 #ifdef ZEN_ENABLE_ZKCC
 	else if(strcasecmp(s, "zkcore")  ==0) {
 		luaL_requiref(L, s, luaopen_zkcore, 1); }
+#endif
 	else if(strcasecmp(s, "niwi")  ==0) {
 		luaL_requiref(L, s, luaopen_niwi, 1); }
-#endif
 	else {
 		// shall we bail out and abort execution here?
 		warning(L, "required extension not found: %s", s);
