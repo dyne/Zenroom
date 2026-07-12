@@ -73,6 +73,26 @@ baseline.  The likely hot paths are relation proof generation/verification,
 RPBSch circuit construction, CMT3 proof generation, statement/witness encoding,
 NPRO/Gamma serialization, and extraction.
 
+### Prepared RPBSch NIWI benchmark contract
+
+The reusable RPBSch context benchmark reports these rows.  It keeps one-time
+preparation separate from operations that are reusable in a long-lived process:
+
+```text
+BENCH niwi_full op=rpbsch_context_prepare iterations=1 total_ms=... bytes_out=0
+BENCH niwi_full op=rpbsch_witness_build iterations=N per_ms=... bytes_out=...
+BENCH niwi_full op=niwi_prove_rpbsch_warm iterations=N per_ms=... proof_bytes=...
+BENCH niwi_full op=niwi_verify_rpbsch_warm iterations=N per_ms=... proof_bytes=...
+```
+
+`rpbsch_context_prepare` includes selector-circuit construction plus
+Reed-Solomon and convolution setup.  It is paid once when the relation context
+is created.  Warm proving includes relation parsing and validation, witness
+filling, proof computation, and serialization, but never circuit construction.
+Warm verification includes statement/proof parsing and cryptographic
+verification, but never circuit construction.  Proof bytes exclude the compiled
+circuit artifact in all rows.
+
 | Area | Likely cost driver | Category | Benchmark row(s) needed | Notes |
 | --- | --- | --- | --- | --- |
 | RPBSch NIWI proof generation | Longfellow/Ligero proving over the fixed-shape RPBSch relation | `needs benchmark` | `niwi_prove_rpbsch`, `rpbsch_relation_validate`, `rpbsch_witness_encode_or_build` | Expected dominant cost. Measure before changing circuit shape. |

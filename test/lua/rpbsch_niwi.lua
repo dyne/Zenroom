@@ -33,6 +33,9 @@ print('=== RPBSch BIP340 NIWI fixture ===')
 
 local circuit = zkcc.bip340_circuit()
 local fixture = rpbsch.fixture()
+local prepared_context = rpbsch.prepare_relation_context()
+assert(prepared_context == rpbsch.prepare_relation_context(),
+       'RPBSch prepared relation context must be cached per Lua VM')
 assert(#fixture.statement == 258,
        'statement must be X || X_prime || R || c || C || phi || ck || S')
 assert(pbsch.verify_c(fixture.C, pbsch.encode_c_msg(fixture.m, fixture.alpha, fixture.beta),
