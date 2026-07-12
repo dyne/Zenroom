@@ -1,7 +1,7 @@
 # hard-code build information
 .PHONY: FORCE
 
-lib/niwi/src/pbsch_commitment.o lib/niwi/src/niwi_lua_bindings.o: FORCE
+lib/blindzap/src/pbsch_commitment.o lib/blindzap/src/niwi_lua_bindings.o: FORCE
 
 FORCE:
 
@@ -102,9 +102,9 @@ libniwi:
 	CXX="${cxx}" \
 	NIWI_CC="${cc}" \
 	NIWI_CXX="${cxx}" \
-	NIWI_CFLAGS="-I${pwd}/lib/niwi/include -I${pwd}/lib/niwi/src -I${pwd}/lib/longfellow-zk -I${pwd}/lib/milagro-crypto-c/build/include -I${pwd}/lib/lua54/src -I${pwd}/src ${cflags}" \
+	NIWI_CFLAGS="-I${pwd}/lib/blindzap/include -I${pwd}/lib/blindzap/src -I${pwd}/lib/longfellow-zk -I${pwd}/lib/milagro-crypto-c/build/include -I${pwd}/lib/lua54/src -I${pwd}/src ${cflags}" \
 	AR=${ar} \
-	$(MAKE) -C ${pwd}/lib/niwi
+	$(MAKE) -C ${pwd}/lib/blindzap
 
 zstd:
 	echo "-- Building ZSTD compression lib"

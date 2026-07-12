@@ -17,7 +17,7 @@
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 --
 
--- NIWI Lua adapter — wraps lib/niwi native bindings.
+-- NIWI Lua adapter — wraps lib/blindzap native bindings.
 --
 -- Production interface:
 --   local niwi = require('crypto_niwi')
@@ -136,7 +136,7 @@ local function validate_relation(opts)
     local circuit = ok_raw and raw_circuit or opts.circuit
     local schema = opts.circuit.schema
     -- Relation validation is intentionally delegated to the existing zkcc
-    -- prover until lib/niwi owns a native circuit evaluator. The generated
+    -- prover until lib/blindzap owns a native circuit evaluator. The generated
     -- legacy proof is discarded; this is only a witness-satisfaction gate.
     if schema and schema.template == "bip340" then
         zkcc.native.prove_circuit_bip340{

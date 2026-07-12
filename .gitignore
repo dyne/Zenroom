@@ -80,7 +80,8 @@ luac54
 
 # gestalt agentic env
 .gestalt
-lib/niwi/*.a
-lib/niwi/src/*.o
-lib/niwi/tests/*.o
-lib/niwi/test_*
+lib/blindzap/*.a
+lib/blindzap/src/*.o
+lib/blindzap/tests/*.o
+lib/blindzap/test_*
+lib/zstd/obj/

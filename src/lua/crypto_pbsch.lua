@@ -37,7 +37,7 @@
 -- Cmt status: Pedersen-backed CMT1 opening envelope with straight-line
 -- extraction from opened proofs. Native RPBSch LZK0 verifies C and S openings,
 -- but RPBSch is not paper-exact until Cmt matches the paper profile. See
--- lib/niwi/docs/pbsch-cmt-profile.md before making RPBSch proof claims.
+-- lib/blindzap/docs/pbsch-cmt-profile.md before making RPBSch proof claims.
 --
 -- The native layer owns: secp256k1 arithmetic, BIP-340 sign/verify,
 -- circuit constraints, NIWI proof objects.
@@ -438,7 +438,7 @@ end
 -- It is circuit-representable and verifies publicly, but it is compatibility
 -- and debugging material only. Paper-facing PBSch/RPBSch helpers must use CMT3,
 -- whose Fischlin05 transcript gives the straight-line extractability profile
--- expected by the paper. See lib/niwi/docs/pbsch-cmt-profile.md.
+-- expected by the paper. See lib/blindzap/docs/pbsch-cmt-profile.md.
 function pbsch.cmt2_prove(commitment, message, rho)
     assert(type(commitment) == "zenroom.octet" and #commitment:str() == pbsch.C_SIZE,
            "commitment must be 33 bytes")

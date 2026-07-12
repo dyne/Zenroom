@@ -19,7 +19,7 @@
 -- RPBSch branch-relation glue.
 --
 -- This module keeps orchestration and witness serialization readable in Lua,
--- while native lib/niwi validates branch statements, C/S openings, and the
+-- while native lib/blindzap validates branch statements, C/S openings, and the
 -- embedded BIP-340 witnesses. Production native proofs now carry checked LZK0
 -- bodies with a fixed-shape private OR selector. C/S carry CMT3 Fischlin05
 -- public opening proofs at the Lua adapter boundary while the native relation

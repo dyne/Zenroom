@@ -18,7 +18,7 @@
 --
 
 -- DEPRECATED: This file is a legacy zkcc wrapper.
--- Use require('niwi') instead, which calls the native lib/niwi bindings.
+-- Use require('niwi') instead, which calls the native lib/blindzap bindings.
 --
 -- For backward compatibility during the transition, this file
 -- re-exports the native niwi module.

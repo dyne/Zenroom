@@ -24,7 +24,7 @@ SPDX-FileCopyrightText = "2017-2026 Dyne.org foundation"
 SPDX-License-Identifier = "AGPL-3.0-or-later"
 
 [[annotations]]
-path = ["lib/niwi/**", "niwi/niwi.lua", "src/lua/crypto_niwi.lua", "test/lua/niwi_regression.lua"]
+path = ["lib/blindzap/**", "niwi/niwi.lua", "src/lua/crypto_niwi.lua", "test/lua/niwi_regression.lua"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Dyne.org foundation"
 SPDX-License-Identifier = "AGPL-3.0-or-later"
