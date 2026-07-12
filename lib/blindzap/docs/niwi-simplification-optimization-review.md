@@ -117,3 +117,21 @@ NPRO/Gamma serialization, and extraction.
 | `npro_gamma_serialize` | Gamma size and serialization cost. |
 | `niwi_extract_rpbsch` | Extraction latency and output size. |
 | `extracted_relation_revalidate` | Cost of safety revalidation after extraction. |
+
+## Current Benchmark Gaps
+
+`bench-2025-1992-flow` intentionally measures the deterministic public
+CMT3/RPB2 boundary. The following rows remain unmeasured rather than using
+synthetic inputs: a valid measurement needs the existing C++ RPBSch relation
+witness, Longfellow/Ligero proof body, and observed Gamma fixture. Rebuilding
+that fixture in the C boundary benchmark would be a larger fixture rewrite.
+
+| Benchmark row | Status | Reason |
+| --- | --- | --- |
+| `rpbsch_witness_encode_or_build` | not yet measured | The target has no canonical RPBSch private witness fixture. |
+| `rpbsch_relation_validate` | not yet measured | Requires a valid relation statement/witness pair, not only `RPB2`. |
+| `niwi_prove_rpbsch` | not yet measured | Requires the relation-backed Longfellow/Ligero proving fixture. |
+| `niwi_verify_rpbsch` | not yet measured | Requires a generated RPBSch `NIWI` proof with its checked `LZK0` body. |
+| `npro_gamma_serialize` | not yet measured | Requires the observed proving fixture that supplies Gamma. |
+| `niwi_extract_rpbsch` | not yet measured | Requires a valid RPBSch proof and matching observed Gamma. |
+| `extracted_relation_revalidate` | not yet measured | Is internal to successful RPBSch extraction and cannot be separated without a new hook. |
