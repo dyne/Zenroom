@@ -66,8 +66,54 @@ rename and benchmark are in place:
 4. Replacing Lua-readable protocol assembly with opaque native calls: may reduce
    duplication but would harm auditability of the Zencode/Lua protocol flow.
 
-## Optimization Review Placeholder
+## Optimization Review
 
-Optimization opportunities are documented below after benchmark row mapping.
-The main rule is: do not optimize relation/proof code until the full-flow
-benchmark identifies the dominant cost.
+Do not optimize relation/proof code until `bench-2025-1992-flow` provides a
+baseline.  The likely hot paths are relation proof generation/verification,
+RPBSch circuit construction, CMT3 proof generation, statement/witness encoding,
+NPRO/Gamma serialization, and extraction.
+
+| Area | Likely cost driver | Category | Benchmark row(s) needed | Notes |
+| --- | --- | --- | --- | --- |
+| RPBSch NIWI proof generation | Longfellow/Ligero proving over the fixed-shape RPBSch relation | `needs benchmark` | `niwi_prove_rpbsch`, `rpbsch_relation_validate`, `rpbsch_witness_encode_or_build` | Expected dominant cost. Measure before changing circuit shape. |
+| RPBSch NIWI verification | Longfellow/Ligero verifier and native envelope checks | `needs benchmark` | `niwi_verify_rpbsch` | Verification may be cheaper than proving but still high enough for user-facing latency. |
+| BIP340 full-challenge circuit reuse | repeated circuit construction / challenge reduction wiring | `needs benchmark` | `rpbsch_relation_validate`, `niwi_prove_rpbsch` | Existing shared full-challenge circuit should be preserved; cache only if benchmark shows construction overhead. |
+| CMT3 proving for C and S | repeated Fischlin rounds, Pedersen commitments, challenge hashing | `needs benchmark` | `cmt3_prove_C`, `cmt3_prove_S`, `cmt3_verify_C`, `cmt3_verify_S` | Candidate for native batching or precomputed H point if proof generation is visible in total latency. |
+| Pedersen H derivation | repeated deterministic derivation / lift | `safe now` if localized | `commitment_key_derivation`, CMT3 rows | Cache within a local call graph only; avoid global mutable state. |
+| Statement parsing and validation | repeated length/tag checks in Lua and C | `not worth it` unless benchmark says otherwise | `rpbsch_statement_parse`, `rpbsch_full_statement_validate` | These checks are boundary hardening; optimize only if unexpectedly expensive. |
+| NPRO/Gamma serialization | transcript allocation and linear serialization | `needs benchmark` | `npro_gamma_serialize` | Likely small compared with proof generation, but important for extraction-size reporting. |
+| Extraction | tableau lookup, Merkle path checks, relation revalidation | `needs benchmark` | `niwi_extract_rpbsch`, `extracted_relation_revalidate` | Optimize only after separating extraction from relation revalidation timing. |
+| Portable Ligero field fallback | double-and-add multiplication when no uint128 | `needs platform benchmark` | future musl/arm_hf CI benchmark | Correctness first; only optimize if arm_hf runtime matters. |
+| `niwi_lua_bindings.c` OCTET copies | Lua/native boundary copies | `not worth it` initially | full Lua smoke outside C benchmark | Safety/ownership clarity matters more than micro-optimizing copies. |
+
+## Optimization Candidates By Priority
+
+1. **Measure RPBSch prove/verify first.**  If `niwi_prove_rpbsch` dominates,
+   inspect circuit construction and Longfellow parameter selection before any
+   serialization micro-optimization.
+2. **Measure CMT3 proof generation separately.**  If C/S proofs are visible,
+   consider precomputing fixed points or batching scalar operations inside a
+   single native helper.
+3. **Measure extraction as two phases.**  Keep `niwi_extract_rpbsch` and
+   `extracted_relation_revalidate` separate so we know whether Gamma/tableau
+   recovery or relation validation dominates.
+4. **Do not optimize Lua fallback parsers.**  Native validation is production
+   authority and parsing cost should be negligible compared with proof work.
+5. **Do not remove duplicate validation for speed.**  Boundary checks are part
+   of the safety model.
+
+## Benchmark Rows Required Before Optimization Code Changes
+
+| Benchmark row | Optimization question answered |
+| --- | --- |
+| `commitment_key_derivation` | Is deterministic `ck`/H derivation worth caching? |
+| `cmt3_prove_C`, `cmt3_prove_S` | Is CMT3 proving a material part of total latency? |
+| `cmt3_verify_C`, `cmt3_verify_S` | Is proof checking visible enough to batch or cache? |
+| `rpbsch_statement_encode`, `rpbsch_statement_parse`, `rpbsch_full_statement_validate` | Are boundary parsers negligible as expected? |
+| `rpbsch_witness_encode_or_build` | Does witness assembly deserve native consolidation? |
+| `rpbsch_relation_validate` | Is relation validation expensive before proving? |
+| `niwi_prove_rpbsch` | Main proving latency and output size. |
+| `niwi_verify_rpbsch` | Main verifier latency. |
+| `npro_gamma_serialize` | Gamma size and serialization cost. |
+| `niwi_extract_rpbsch` | Extraction latency and output size. |
+| `extracted_relation_revalidate` | Cost of safety revalidation after extraction. |
