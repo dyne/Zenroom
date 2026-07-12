@@ -28,7 +28,8 @@
 extern "C" {
 #endif
 
-/* Opaque context holding a compiled circuit artifact. */
+/* Opaque context holding a compiled circuit artifact and relation runtime.
+ * Contexts are sequentially reusable but are not concurrently callable. */
 typedef struct niwi_ctx niwi_ctx_t;
 
 typedef enum {
@@ -49,8 +50,10 @@ typedef int (*niwi_relation_validate_fn)(
  * Returns NULL on failure; call niwi_last_error for details. */
 niwi_ctx_t *niwi_ctx_create(const uint8_t *circuit_artifact, size_t len);
 
-/* Create a relation-aware context. Production proving and extraction require
- * a validator until lib/blindzap owns native circuit evaluation for the relation. */
+/* Create a relation-aware context. Relation-specific preparation happens once
+ * here and is reused by successive operations. Production proving and
+ * extraction require a validator until lib/blindzap owns native circuit
+ * evaluation for the relation. */
 niwi_ctx_t *niwi_ctx_create_with_relation(
     const uint8_t *circuit_artifact, size_t len,
     niwi_relation_id_t relation_id,
