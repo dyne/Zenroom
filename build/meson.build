@@ -58,10 +58,25 @@ endforeach
 endif
 
 if suite.contains('zkcc')
-  test('lua_zkcc',
+  test('lua_zkcc_fast',
        bats_bin,
-       args: [test_dir+'lua/zkcc.bats'],
+       args: [test_dir+'lua/zkcc_fast.bats'],
+       timeout: 120
+      )
+  test('lua_zkcc_flatsha256',
+       bats_bin,
+       args: [test_dir+'lua/zkcc_flatsha256.bats'],
        timeout: 240
+      )
+  test('lua_zkcc_bip340',
+       bats_bin,
+       args: [test_dir+'lua/zkcc_bip340.bats'],
+       timeout: 300
+      )
+  test('lua_zkcc_bip340_lua_circuit',
+       bats_bin,
+       args: [test_dir+'lua/zkcc_bip340_lua_circuit.bats'],
+       timeout: 300
       )
 endif
 
