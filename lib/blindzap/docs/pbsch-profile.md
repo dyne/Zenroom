@@ -74,15 +74,19 @@ The RPBSch public statement consists of:
 |-----------|-------|------------------------------------------------|
 | X         | 32    | Signer public key (x-only, even-y)             |
 | X'        | 32    | Auxiliary signer public key (x-only, even-y)   |
+| R         | 32    | Final signature nonce x-coordinate             |
+| c         | 32    | BIP-340 challenge scalar                        |
 | C         | 33    | Pedersen commitment to (m, ρ)                  |
+| phi       | 32    | Predicate-binding digest                        |
+| ck        | 32    | Pedersen commitment key                         |
 | S         | 33    | Pedersen commitment to (σ₀, σ₁, νᵤ, νᵤ', νₛ)  |
 
 ### Statement serialization
 
-The 130-byte statement is the concatenation:
+The 258-byte core statement is the concatenation:
 
 ```
-statement = X || X' || C || S
+statement = X || X' || R || c || C || phi || ck || S
 ```
 
 ### Field details
@@ -263,10 +267,10 @@ constant shape but is not required to satisfy the unselected branch relation.
 
 This v1 profile has the following known limitations:
 
-1. **Cmt is not final**: CMT2 is a public Fiat-Shamir Pedersen-opening proof,
-   and Lua RPBSch production helpers now require valid CMT2 proofs for `C` and
-   `S`. It is still not the final Fischlin/Pas-style straight-line extractable
-   commitment needed for paper-exact claims.
+1. **Cmt is not paper-exact**: CMT3 is the production Fischlin05
+   Pedersen-opening proof, and Lua RPBSch production helpers require valid CMT3
+   proofs for `C` and `S`. It is not yet the final Pas-style straight-line
+   extractable commitment needed for paper-exact claims.
 
 2. **P(φ, m) = 1 only**: No custom predicates are supported.
 
@@ -276,10 +280,10 @@ This v1 profile has the following known limitations:
 4. **No Bitcoin transaction binding**: This profile does not include
    Bitcoin sighash or transaction serialization.
 
-5. **Fischlin deferred**: The full Fischlin extractable-Cmt is
+5. **Pas-style extraction deferred**: The final paper-exact extractable-Cmt is
    deferred to a future profile (`pbsch-v2`).
 
 6. **Cmt is not paper-exact yet**: The checked RPBSch `LZK0` body now uses a
-   private OR selector, and the Lua adapter requires CMT2 opening proofs, but
+   private OR selector, and the Lua adapter requires CMT3 opening proofs, but
    the commitment profile is not the final straight-line extractable Cmt
    profile.

@@ -154,6 +154,20 @@ static void test_leaf_tampered_preimage(void) {
     printf("  PASS test_leaf_tampered_preimage\n");
 }
 
+static void test_leaf_rejects_oversized_data(void) {
+    uint8_t data[33] = {0};
+    uint8_t commitment[NIWI_LEAF_COMMIT_SIZE];
+    uint8_t preimage[64];
+
+    int rc = niwi_leaf_commit(data, sizeof(data), commitment, preimage);
+    assert(rc != 0);
+
+    rc = niwi_leaf_verify(commitment, data, sizeof(data), preimage);
+    assert(rc != 0);
+
+    printf("  PASS test_leaf_rejects_oversized_data\n");
+}
+
 /* ---- PBSch commitment tests ------------------------------------------ */
 
 static void test_pbsch_lf_pedersen_commit_verify(void) {
@@ -191,6 +205,7 @@ int main(void) {
     test_leaf_commit_verify();
     test_leaf_wrong_data();
     test_leaf_tampered_preimage();
+    test_leaf_rejects_oversized_data();
     test_pbsch_lf_pedersen_commit_verify();
     printf("All commitment tests passed.\n");
     return 0;

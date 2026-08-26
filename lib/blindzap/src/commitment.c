@@ -110,13 +110,12 @@ int niwi_leaf_commit(const uint8_t *leaf_data, size_t leaf_len,
                       uint8_t commitment_out[NIWI_LEAF_COMMIT_SIZE],
                       uint8_t preimage_out[64]) {
     if (!leaf_data || !commitment_out || !preimage_out) return -1;
-    if (leaf_len > 64) return -1;
+    if (leaf_len > 32) return -1;
 
     /* Build preimage: padded leaf data (32 bytes) || randomness (32 bytes) */
     memset(preimage_out, 0, 64);
     if (leaf_len > 0) {
-        size_t copy = leaf_len < 32 ? leaf_len : 32;
-        memcpy(preimage_out, leaf_data, copy);
+        memcpy(preimage_out, leaf_data, leaf_len);
     }
     scaffold_random(preimage_out + 32, NIWI_LEAF_RAND_SIZE);
 
@@ -130,14 +129,13 @@ int niwi_leaf_verify(const uint8_t commitment[NIWI_LEAF_COMMIT_SIZE],
                       const uint8_t *leaf_data, size_t leaf_len,
                       const uint8_t preimage[64]) {
     if (!commitment || !leaf_data || !preimage) return -1;
-    if (leaf_len > 64) return -1;
+    if (leaf_len > 32) return -1;
 
     /* Verify preimage matches expected padded layout. */
     uint8_t expected[64];
     memset(expected, 0, 64);
     if (leaf_len > 0) {
-        size_t copy = leaf_len < 32 ? leaf_len : 32;
-        memcpy(expected, leaf_data, copy);
+        memcpy(expected, leaf_data, leaf_len);
     }
     memcpy(expected + 32, preimage + 32, 32);
 

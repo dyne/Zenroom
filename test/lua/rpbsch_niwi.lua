@@ -87,6 +87,16 @@ local native_proof1, native_gamma1 =
     circuit, fixture, rpbsch.BRANCH_HONEST)
 assert(rpbsch.verify_branch_relation(native_proof1, fixture.statement),
        'native RPBSch branch 1 relation rejected')
+local full_statement = pbsch.assemble_full_statement(
+  fixture.statement, fixture.C_proof, fixture.S_proof)
+assert(rpbsch.verify_full_statement(native_proof1, full_statement),
+       'valid full RPBSch statement and branch proof rejected')
+assert(not rpbsch.verify_full_statement(flip_last_byte(native_proof1),
+                                        full_statement),
+       'mutated branch proof accepted by full statement verifier')
+assert(not rpbsch.verify_full_statement(native_proof1,
+                                        flip_last_byte(full_statement)),
+       'mutated CMT3 envelope accepted by full statement verifier')
 local native_extracted1 =
   rpbsch.extract_branch_relation(native_proof1, native_gamma1, fixture.statement)
 assert(native_extracted1:string() == native_witness1:string(),

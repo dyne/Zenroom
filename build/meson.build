@@ -47,7 +47,7 @@ endif
 
 ## BATS tests in test/lua
 if suite.contains('lua')
-tests = [ 'native', 'primitives', 'crypto' ]
+tests = [ 'native', 'primitives', 'crypto', 'pbsch' ]
 foreach test_suite : tests
     test('lua_'+test_suite.underscorify(),
 	 bats_bin,

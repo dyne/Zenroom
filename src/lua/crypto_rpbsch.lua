@@ -348,6 +348,13 @@ function rpbsch.verify_branch_relation(proof, statement)
     }
 end
 
+--- Validate the CMT3-bound statement envelope and verify its branch proof.
+function rpbsch.verify_full_statement(proof, envelope)
+    local validated = pbsch.validate_full_statement(envelope)
+    if not validated then return false end
+    return rpbsch.verify_branch_relation(proof, validated.core_statement)
+end
+
 function rpbsch.extract_branch_relation(proof, gamma, statement)
     return niwi.extract_rpbsch_relation_from_gamma_test{
         circuit = niwi.rpbsch_relation_artifact(),

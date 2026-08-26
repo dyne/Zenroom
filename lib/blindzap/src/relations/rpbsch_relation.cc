@@ -280,6 +280,7 @@ bool validate_selected_branch(const Statement& st, const Witness& w) {
 
     if (w.branch == kBranchTrapdoor) {
         if (w.check_count != 2) return false;
+        if (memcmp(w.nu_u, w.nu_u_prime, 32) == 0) return false;
         uint8_t msg0[32];
         uint8_t msg1[32];
         tuple_message(w.nu_s, w.nu_u, msg0);
