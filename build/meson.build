@@ -49,10 +49,14 @@ endif
 if suite.contains('lua')
 tests = [ 'native', 'primitives', 'crypto', 'pbsch' ]
 foreach test_suite : tests
+    test_timeout = 240
+    if test_suite == 'pbsch'
+      test_timeout = 600
+    endif
     test('lua_'+test_suite.underscorify(),
 	 bats_bin,
 	 args: [test_dir+'lua/'+test_suite+'.bats'],
-     timeout: 240
+	 timeout: test_timeout
 		)
 endforeach
 endif

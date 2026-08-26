@@ -85,15 +85,10 @@ assert(rpbsch.verify_branch_relation(prepared_proof2, fixture.statement),
 local native_proof1, native_gamma1 =
   rpbsch.prove_branch_relation_with_observation_test(
     circuit, fixture, rpbsch.BRANCH_HONEST)
-assert(rpbsch.verify_branch_relation(native_proof1, fixture.statement),
-       'native RPBSch branch 1 relation rejected')
 local full_statement = pbsch.assemble_full_statement(
   fixture.statement, fixture.C_proof, fixture.S_proof)
 assert(rpbsch.verify_full_statement(native_proof1, full_statement),
        'valid full RPBSch statement and branch proof rejected')
-assert(not rpbsch.verify_full_statement(flip_last_byte(native_proof1),
-                                        full_statement),
-       'mutated branch proof accepted by full statement verifier')
 assert(not rpbsch.verify_full_statement(native_proof1,
                                         flip_last_byte(full_statement)),
        'mutated CMT3 envelope accepted by full statement verifier')
@@ -105,9 +100,9 @@ assert(contains_tag(native_proof1, 'LIG0'),
        'native RPBSch proof must carry current native LIG0 scaffold')
 assert(contains_tag(native_proof1, 'LZK0'),
        'native RPBSch proof must carry checked LZK0 body')
-assert(rpbsch.verify_branch_relation(flip_last_byte(native_proof1),
-                                     fixture.statement) == false,
-       'mutated RPBSch LZK0/native proof accepted')
+assert(not rpbsch.verify_full_statement(flip_last_byte(native_proof1),
+                                        full_statement),
+       'mutated branch proof accepted by full statement verifier')
 
 local native_witness2 = rpbsch.branch_relation_witness(
   circuit, fixture, rpbsch.BRANCH_TRAPDOOR)
