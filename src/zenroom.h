@@ -225,6 +225,26 @@ typedef struct {
 	int exitcode;
 } zenroom_t;
 
+/*
+ * VM-owned randomness service.
+ *
+ * The compatibility backend is Milagro's csprng, kept opaque so consumers do
+ * not need to depend on its type.  A successful call to zen_rng_fill() draws
+ * exactly len bytes in request order; it does not buffer or prefetch bytes.
+ * Zero-length requests succeed and may use a NULL buffer.  All other NULL
+ * buffers, uninitialised contexts, and entropy-source failures return -1.
+ * Contexts are independent and must not be shared between threads without
+ * caller-provided synchronisation.
+ */
+typedef int (*zen_rng_callback)(void *context, void *buffer, size_t len);
+
+int zen_entropy_fill(void *buffer, size_t len);
+int zen_rng_init(zenroom_t *context, const void *seed, size_t seed_len);
+int zen_rng_reseed(zenroom_t *context, const void *seed, size_t seed_len);
+int zen_rng_fill(zenroom_t *context, void *buffer, size_t len);
+int zen_rng_callback_fill(void *context, void *buffer, size_t len);
+void zen_rng_clear(zenroom_t *context);
+
 // ZENCODE EXEC SCOPE
 #define SCOPE_FULL 0
 #define SCOPE_GIVEN 1
