@@ -356,8 +356,7 @@ void zen_teardown(zenroom_t *ZZ) {
 
 	// stateful RNG instance for deterministic mode
 	if(ZZ->random_generator) {
-		free(ZZ->random_generator);
-		ZZ->random_generator = NULL;
+		zen_rng_clear(ZZ);
 	}
 
 	if(L && ZZ->logformat == LOG_JSON) json_end(L);

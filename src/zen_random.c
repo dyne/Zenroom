@@ -40,8 +40,6 @@
 #include <zen_error.h>
 #include <lua_functions.h>
 
-#include <time.h>
-
 #include <amcl.h>
 
 // easier name (csprng comes from amcl.h in milagro)
@@ -57,41 +55,84 @@
 #include <zen_octet.h>
 #include <randombytes.h>
 
+static void zen_rng_zeroize(void *buffer, size_t len) {
+	volatile uint8_t *out = buffer;
+	while(len--) *out++ = 0;
+}
 
-void* rng_alloc(zenroom_t *ZZ) {
-	RNG *rng = (RNG*)zmalloc(sizeof(csprng));
+int zen_entropy_fill(void *buffer, size_t len) {
+	if(len == 0) return 0;
+	if(!buffer) return -1;
+	return randombytes(buffer, len) == 0 ? 0 : -1;
+}
+
+int zen_rng_init(zenroom_t *Z, const void *seed, size_t seed_len) {
+	/* The RNG outlives any temporary allocator policy, so own it directly. */
+	RNG *rng = (RNG*)malloc(sizeof(csprng));
 	if(!rng) {
 		_err( "Error allocating new random number generator");
+		return -1;
+	}
+	Z->random_generator = rng;
+	if(zen_rng_reseed(Z, seed, seed_len) != 0) {
+		zen_rng_clear(Z);
+		return -1;
+	}
+	return 0;
+}
+
+int zen_rng_reseed(zenroom_t *Z, const void *seed, size_t seed_len) {
+	if(!Z || !Z->random_generator || !seed || seed_len == 0 || seed_len > INT_MAX) return -1;
+	/* RAND_seed mutates its raw input: always preserve caller-owned seed data. */
+	char *raw = malloc(seed_len);
+	if(!raw) return -1;
+	memcpy(raw, seed, seed_len);
+	AMCL_(RAND_seed)((RNG *)Z->random_generator, (int)seed_len, raw);
+	zen_rng_zeroize(raw, seed_len);
+	free(raw);
+	return 0;
+}
+
+int zen_rng_fill(zenroom_t *Z, void *buffer, size_t len) {
+	if(len == 0) return 0;
+	if(!Z || !Z->random_generator || !buffer) return -1;
+	uint8_t *out = buffer;
+	for(size_t i = 0; i < len; i++) out[i] = RAND_byte((RNG *)Z->random_generator);
+	return 0;
+}
+
+int zen_rng_callback_fill(void *context, void *buffer, size_t len) {
+	return zen_rng_fill((zenroom_t *)context, buffer, len);
+}
+
+void zen_rng_clear(zenroom_t *Z) {
+	if(!Z || !Z->random_generator) return;
+	RAND_clean((RNG *)Z->random_generator);
+	zen_rng_zeroize(Z->random_generator, sizeof(RNG));
+	free(Z->random_generator);
+	Z->random_generator = NULL;
+}
+
+void* rng_alloc(zenroom_t *Z) {
+	if(!Z) return NULL;
+	/* Cortex-M retains its established deterministic zero-seed startup path.
+	 * Its board-specific entropy adapter is not validated by this runtime. */
+#ifndef ARCH_CORTEX
+	if(!Z->random_external && zen_entropy_fill(Z->random_seed, RANDOM_SEED_LEN) != 0) {
+		_err("Error gathering operating-system entropy");
 		return NULL;
 	}
-
-	// random seed provided externally 
-	if(ZZ->random_external) {
-#ifndef ARCH_CORTEX
-	} else {
-		// gather system random using randombytes()
-		randombytes(ZZ->random_seed,RANDOM_SEED_LEN-4);
-		// using time() from milagro
-		unsign32 ttmp = (unsign32)time(NULL);
-		ZZ->random_seed[60] = (ttmp >> 24) & 0xff;
-		ZZ->random_seed[61] = (ttmp >> 16) & 0xff;
-		ZZ->random_seed[62] = (ttmp >>  8) & 0xff;
-		ZZ->random_seed[63] =  ttmp & 0xff;
 #endif
-	}
-	// RAND_seed is destructive, preserve seed here
-	char tseed[RANDOM_SEED_LEN];
-	memcpy(tseed,ZZ->random_seed,RANDOM_SEED_LEN);
-	AMCL_(RAND_seed)(rng, RANDOM_SEED_LEN, tseed);
-	// return into ZZ->random_generator
-	return(rng);
+	return zen_rng_init(Z, Z->random_seed, RANDOM_SEED_LEN) == 0
+		? Z->random_generator : NULL;
 }
 
 
 static int rng_uint8(lua_State *L) {
 	BEGIN();
 	zenroom_t *Z = zen_get_context(L);
-	uint8_t res = RAND_byte(Z->random_generator);
+	uint8_t res;
+	if(zen_rng_fill(Z, &res, sizeof(res)) != 0) return luaL_error(L, "Random generator unavailable");
 	lua_pushinteger(L, (lua_Integer)res);
 	END(1);
 }
@@ -99,9 +140,9 @@ static int rng_uint8(lua_State *L) {
 static int rng_uint16(lua_State *L) {
 	BEGIN();
 	zenroom_t *Z = zen_get_context(L);
-	uint16_t res =
-		RAND_byte(Z->random_generator)
-		| (uint32_t) RAND_byte(Z->random_generator) << 8;
+	uint8_t bytes[2];
+	if(zen_rng_fill(Z, bytes, sizeof(bytes)) != 0) return luaL_error(L, "Random generator unavailable");
+	uint16_t res = bytes[0] | (uint16_t)bytes[1] << 8;
 	lua_pushinteger(L, (lua_Integer)res);
 	END(1);
 }
@@ -109,11 +150,10 @@ static int rng_uint16(lua_State *L) {
 static int rng_int32(lua_State *L) {
 	BEGIN();
 	zenroom_t *Z = zen_get_context(L);
-	uint32_t res =
-		RAND_byte(Z->random_generator)
-		| (uint32_t) RAND_byte(Z->random_generator) << 8
-		| (uint32_t) RAND_byte(Z->random_generator) << 16
-		| (uint32_t) RAND_byte(Z->random_generator) << 24;
+	uint8_t bytes[4];
+	if(zen_rng_fill(Z, bytes, sizeof(bytes)) != 0) return luaL_error(L, "Random generator unavailable");
+	uint32_t res = bytes[0] | (uint32_t)bytes[1] << 8 |
+		(uint32_t)bytes[2] << 16 | (uint32_t)bytes[3] << 24;
 	lua_pushinteger(L, (lua_Integer)res);
 	END(1);
 }
@@ -127,19 +167,21 @@ static int rng_seed(lua_State *L) {
 		lua_pushnil(L);
 		goto end;
 	}
-	AMCL_(RAND_seed)(Z->random_generator, in->len, in->val);
+	if(zen_rng_reseed(Z, in->val, in->len) != 0) {
+		zerror(L, "Random seed error: unsupported seed length (%u bytes)", in->len);
+		lua_pushnil(L);
+		goto end;
+	}
 	o_dup(L,in); // push seed to Lua stack for setglobal
 	lua_setglobal(L, "RNGSEED");
 	octet *rr = o_new(L, PRNG_PREROLL);
 	for(register int i=0;i<PRNG_PREROLL;i++)
-		rr->val[i] = RAND_byte(Z->random_generator);
+		if(zen_rng_fill(Z, &rr->val[i], 1) != 0) return luaL_error(L, "Random generator unavailable");
 	rr->len = PRNG_PREROLL;
 	// HEREoct(rr);
 	// plus 4 bytes used by Lua init
-	RAND_byte(Z->random_generator);
-	RAND_byte(Z->random_generator);
-	RAND_byte(Z->random_generator);
-	RAND_byte(Z->random_generator);
+	uint8_t discarded[4];
+	if(zen_rng_fill(Z, discarded, sizeof(discarded)) != 0) return luaL_error(L, "Random generator unavailable");
 	// return "runtime random" fingerprint
 	end:
 	o_free(L,in);
@@ -169,7 +211,7 @@ void zen_add_random(lua_State *L) {
 		register int i;
 		register char *p = Z->runtime_random256;
 		for(i=0;i<PRNG_PREROLL;i++,p++)
-		  *p = RAND_byte(Z->random_generator);
+		  if(zen_rng_fill(Z, p, 1) != 0) luaL_error(L, "Random generator unavailable");
 	}
 
 }
