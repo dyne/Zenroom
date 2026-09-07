@@ -45,7 +45,7 @@ ZEN:add_schema(
     {
         larkg_public_key = {import=larkg_public_key_f},
         larkg_derived_public_key = {import=larkg_public_key_f},
-        larkg_cred = {import=larkg_cred_f},
+        larkg_credential = {import=larkg_cred_f},
         larkg_rho = {import=function(obj) return schema_get(obj, '.') end}
     }
 )

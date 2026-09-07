@@ -17,7 +17,7 @@ $(LIB): $(OBJECTS)
 RANDOMBYTES=../../../src/randombytes.c
 
 test_larkg: test_larkg.o $(OBJECTS) $(RANDOMBYTES:.c=.o)
-	$(CC) $(CFLAGS) -o $@ test_larkg.o $(OBJECTS) $(RANDOMBYTES:.c=.o) -lm
+	$(CC) $(CFLAGS) -o $@ test_larkg.o $(OBJECTS) $(RANDOMBYTES:.c=.o)
 
 ../../../src/randombytes.o: $(RANDOMBYTES)
 	$(CC) $(CFLAGS) -fPIC -c -o $@ $(RANDOMBYTES)
@@ -28,3 +28,4 @@ test_larkg.o: test_larkg.c $(HEADERS)
 clean:
 	$(RM) $(OBJECTS)
 	$(RM) $(LIB)
+	$(RM) test_larkg test_larkg.o

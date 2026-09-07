@@ -6,6 +6,7 @@
 #include "../lib/pqclean/kyber512/kyber_larkg.h"
 #include "../lib/pqclean/kyber512/skem.h"
 #include "../lib/pqclean/kyber512/params.h"
+#include "../lib/pqclean/kyber512/verify.h"
 
 #define LARKG_SK_BYTES KYBER_LARKG_SECRETKEYBYTES
 #define LARKG_PK_BYTES KYBER_INDCPA_PUBLICKEYBYTES
@@ -99,6 +100,11 @@ static int larkg_derive_pk(lua_State *L) {
 
 	rho = o_arg(L, 2); SAFE_GOTO(rho, "Could not allocate LARKG rho seed");
 	SAFE_GOTO(rho->len == KYBER_SYMBYTES, "Invalid LARKG rho seed length");
+	SAFE_GOTO(PQCLEAN_KYBER512_CLEAN_verify(
+			(const uint8_t *)rho->val,
+			(const uint8_t *)pk->val + KYBER_POLYVECBYTES,
+			KYBER_SYMBYTES) == 0,
+		"LARKG rho does not match the public key");
 
 	lua_createtable(L, 0, 1);
 
@@ -147,12 +153,10 @@ static int larkg_derive_sk(lua_State *L) {
 
 	octet *next_sk = o_new(L, LARKG_SK_BYTES); SAFE_GOTO(next_sk, "Could not allocate LARKG next secret key");
 
-	int ret;
-	// Retry on rejection (-1) abort on auth failure (-2)
-	do {
-		ret = PQCLEAN_KYBER512_CLEAN_larkg_derive_sk((uint8_t *)next_sk->val, (const uint8_t *)sk->val, &cred);
-	} while (ret == -1);
-
+	int ret = PQCLEAN_KYBER512_CLEAN_larkg_derive_sk(
+		(uint8_t *)next_sk->val, (const uint8_t *)sk->val, &cred);
+	SAFE_GOTO(ret != -1,
+		"LARKG credential rejected; derive a fresh public key and credential");
 	SAFE_GOTO(ret == 0, "LARKG authentication failed");
 	next_sk->len = LARKG_SK_BYTES;
 
