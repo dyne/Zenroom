@@ -16,6 +16,15 @@ ZEN_SOURCES := src/zenroom.o src/zen_error.o src/lua_functions.o		\
     src/p256-m.o src/zen_p256.o src/zen_rsa.o src/zen_bbs.o				\
     src/zen_longfellow.o src/zen_mayo.o src/zen_secp.o src/zen_larkg.o
 
+# LARKG is not a supported cryptographic construction until its distribution,
+# rejection envelope, and depth bound have an accepted contract.  Keep its
+# public Lua/Zencode entry points out of normal builds; a reviewer may request
+# the legacy implementation explicitly for experimental evaluation only.
+ZEN_ENABLE_EXPERIMENTAL_LARKG ?= 0
+ifneq ($(filter 0 1,$(ZEN_ENABLE_EXPERIMENTAL_LARKG)),$(ZEN_ENABLE_EXPERIMENTAL_LARKG))
+$(error ZEN_ENABLE_EXPERIMENTAL_LARKG must be 0 or 1)
+endif
+
 ZEN_INCLUDES += -Isrc -Ilib/lua54/src -Ilib -I/usr/local/include	\
 -Ilib/milagro-crypto-c/build/include -Ilib/milagro-crypto-c/include	\
 -Ilib/ed25519-donna -Ilib/longfellow-zk -Ilib/mayo -Wall -Wextra
@@ -68,6 +77,13 @@ cflags_protection := -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overf
 cflags_asan := -fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fsanitize=leak
 cflags_debug := -Og -ggdb -DDEBUG=1 -Wall -Wextra -pedantic
 cflags := ${ZEN_INCLUDES}
+
+ifeq ($(ZEN_ENABLE_EXPERIMENTAL_LARKG),1)
+cflags += -DZEN_ENABLE_EXPERIMENTAL_LARKG=1
+else
+ZEN_SOURCES := $(filter-out src/zen_larkg.o,${ZEN_SOURCES})
+LUA_EMBED_EXCLUDES += zencode_larkg.lua
+endif
 musl := build/musl
 platform := posix
 

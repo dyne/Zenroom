@@ -64,7 +64,9 @@ extern int luaopen_varint(lua_State *L);
 extern int luaopen_longfellow(lua_State *L);
 extern int luaopen_mayo(lua_State *L);
 extern int luaopen_secp(lua_State *L);
+#ifdef ZEN_ENABLE_EXPERIMENTAL_LARKG
 extern int luaopen_larkg(lua_State *L);
+#endif
 #ifdef ZEN_ENABLE_ZKCC
 extern int luaopen_zkcore(lua_State *L);
 #endif
@@ -213,8 +215,10 @@ int zen_require(lua_State *L) {
 		luaL_requiref(L, s, luaopen_mayo, 1); }
 	else if(strcasecmp(s, "secp")  ==0) {
 		luaL_requiref(L, s, luaopen_secp, 1); }
+#ifdef ZEN_ENABLE_EXPERIMENTAL_LARKG
 	else if(strcasecmp(s, "larkg")  ==0) {
 		luaL_requiref(L, s, luaopen_larkg, 1); }
+#endif
 #ifdef ZEN_ENABLE_ZKCC
 	else if(strcasecmp(s, "zkcore")  ==0) {
 		luaL_requiref(L, s, luaopen_zkcore, 1); }

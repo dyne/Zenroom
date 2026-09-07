@@ -1,0 +1,25 @@
+# Compatibility assertion and KAT artifacts at branch baseline e9f31e67.
+#
+# This intentionally contains no generated LARKG credential, key, or
+# acceptance transcript: the current LARKG implementation consumes OS RNG and
+# its acceptance loop is known to be unreviewed.  Hashes protect the existing
+# assertions while the later independent oracle supplies reviewed vectors.
+d5f7f65c41286f163b9f1e41b6384372b3f2f43382a0b5eb6c33f401dba5180e  test/zencode/larkg.bats
+2ce6e7dc0e55d7bf65f8f9ea5c0cc0cf490a0d57f2020234128ba8b5ad4b2345  test/zencode/kyber.bats
+7b49d8c10df2c65fd04fbf1c6e9f8c6f0833dafbe7c917dc5fbd5b1551454fc1  test/determinism/run.bats
+f4e381bcda521c03e15303f036b964286af82b9a5e4e1bab3be78324884b07c8  test/vectors/qp.bats
+e7859ee1b9b4b7d64974a38ecc5cffbba923793c7a3c4c7627f79765fa6faa3a  test/vectors/check_kyber.lua
+d9d8a3225db13d031c966d899ee245421c6137ade8ef8ef45ee1449430f63821  test/vectors/check_ml_kem512.lua
+a017070bf639930e7660ff1275dbcfc144d1197dfbd7e82f76eba97e9d462b0b  test/vectors/check_ml_dsa44.lua
+38e28daf6e1ecd884ff1a7fee6dd098368dae7004dcf122a463b137e9cacd1d2  test/vectors/check_dilithium.lua
+2f70a5ed58ed971b6a238008840a8f3bf8a5601c2cd146ad7bd9c88e7019c8f0  test/vectors/kyber512.rsp
+1c889d5a3298007216339cefbf45ad98096895f8a147c726a7ac95409596c439  test/vectors/ml_kem512.rsp
+6e86babbf7f36a2e1972eb0422ce9caec2a2fc1a6cb14636f3dad17702f9dffd  test/vectors/ml_kem768.rsp
+33c77c93c4f8002ed3a3858348bb1092cc02ae469144a1a3ffe7382ec4d0c28b  test/vectors/ml_dsa44.rsp
+38ed991c5ca11e39ab23945ca37af89e059d16c5474bf8ba96b15cb4e948af2a  test/vectors/dilithium2.rsp
+828e5c3e0632f03a2a3d25fe552a29b0a1372b7e7327d4a56ed0bb24696930ac  test/vectors/mayo5.rsp
+954ad33f4f14c812a6ce9834dfa536c7f65f5258a44f93aece4b3524db610184  test/api/sign.bats
+fdf3bcbeb9987c6822788a8f603b549db4eb0df3ebb4f70d06284c85744d9191  test/api/sign_keygen.c
+a2084870f8506c4b9d40085d837d707af13feea3da64c75a20952b2c6534b737  test/api/sign_pubgen.c
+b010f602af7d4ff81933cabe85dcc123f4fe0d19a4a53b1f03d4f69e92a7d854  test/api/sign_create.c
+2b537e75d3301794c74c3454a0b9fdd49dd40792af03475f3379b1c254d0e2ce  test/api/sign_verify.c

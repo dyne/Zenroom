@@ -25,6 +25,7 @@ src/zen_ecp_factory.h
 # generated test files
 test/**/*.json
 test/**/*.zen
+!test/larkg/oracle-vectors.json
 
 # build targets in zenroom
 *.[oa]

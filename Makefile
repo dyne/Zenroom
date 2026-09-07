@@ -75,15 +75,29 @@ node-wasm: ## WebAssembly (WASM) for Javascript in-browser (Emscripten)
 	yarn --cwd bindings/javascript
 	yarn --cwd bindings/javascript build
 
-check: check-rng-no-bypass ## Run tests using the current binary executable build
+check: check-larkg-compatibility check-rng-no-bypass ## Run tests using the current binary executable build
 	meson setup meson/ build/ -D \
 	"tests=['determinism','vectors','lua','zkcc','zencode','blockchain','bindings','api']"
 	ninja -C meson test
 
-.PHONY: check-rng-no-bypass
+.PHONY: compatibility-larkg check-larkg-compatibility check-larkg-experimental-gate check-larkg-error-growth check-larkg-oracle-vectors check-rng-no-bypass
 
 check-rng-no-bypass: ## Reject unapproved runtime OS RNG calls
 	./test/rng/no-bypass.sh
+
+compatibility-larkg: ## Verify frozen LARKG-adjacent compatibility assertions
+	ZEN_ENABLE_EXPERIMENTAL_LARKG=$(ZEN_ENABLE_EXPERIMENTAL_LARKG) ./test/larkg/compatibility.sh
+
+check-larkg-compatibility: compatibility-larkg check-larkg-experimental-gate check-larkg-error-growth check-larkg-oracle-vectors
+
+check-larkg-experimental-gate: ## Check source-level experimental LARKG registration
+	./test/larkg/experimental-gate.sh --static
+
+check-larkg-error-growth: ## Check the LARKG depth-zero bound fixture
+	./test/larkg/error-growth-gate.sh
+
+check-larkg-oracle-vectors: ## Check independent LARKG contract vectors
+	./test/larkg/oracle-vector-gate.sh
 wrap-js: # Generate the ./zenroom exec wrapper on node-wasm builds
 	$(info Generate JS wrapper in ./zenroom)
 	@sed 's@=ROOT=@'"${pwd}"'@' test/zexe_js_wrapper.sh > zenroom

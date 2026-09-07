@@ -68,7 +68,9 @@ endif
 ## BATS tests in test/zencode
 if suite.contains('zencode')
   # excluded tests
-  exclude = 'bindings_exec bindings_logfmt cookbook_hash_pdf ethereum rsa longfellow'
+  # LARKG is an explicit build-time experiment.  Its behavioural suite runs
+  # only from the opt-in compatibility target, never from default builds.
+  exclude = 'bindings_exec bindings_logfmt cookbook_hash_pdf ethereum rsa longfellow larkg'
   zencode_cmd = run_command(
     find_program('bash'),
     '-c',
