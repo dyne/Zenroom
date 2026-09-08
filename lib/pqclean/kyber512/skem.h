@@ -23,18 +23,40 @@ typedef struct {
 
 // SK size for the receiver (includes seed for rejection sampling)
 #define KYBER_LARKG_SECRETKEYBYTES (KYBER_POLYVECBYTES + KYBER_SYMBYTES)
+#define LARKG_SECRET_KEY_VERSION 1U
+#define LARKG_MAX_SUPPORTED_DEPTH 0U
+#define LARKG_SECRET_METADATA_OFFSET KYBER_POLYVECBYTES
 
 void PQCLEAN_KYBER512_CLEAN_skem_init(skem_context *ctx, const uint8_t rho[KYBER_SYMBYTES]);
 
-void PQCLEAN_KYBER512_CLEAN_skem_keygen(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
+/*
+ * Decode the NTT-domain receiver secret stored in a LARKG secret key to its
+ * canonical, centered coefficient representation.  This is the only
+ * representation suitable for CBD density checks: serialized secret keys
+ * remain NTT-domain Kyber polyvec encodings.
+ */
+void PQCLEAN_KYBER512_CLEAN_skem_secret_to_normal(
+    polyvec *normal,
+    const uint8_t sk[KYBER_LARKG_SECRETKEYBYTES]);
+
+/* Reject non-canonical 12-bit polynomial encodings before any transform. */
+int PQCLEAN_KYBER512_CLEAN_skem_secret_is_canonical(
+    const uint8_t sk[KYBER_LARKG_SECRETKEYBYTES]);
+
+void PQCLEAN_KYBER512_CLEAN_skem_secret_set_depth(
+    uint8_t sk[KYBER_LARKG_SECRETKEYBYTES], uint8_t depth);
+int PQCLEAN_KYBER512_CLEAN_skem_secret_depth(
+    const uint8_t sk[KYBER_LARKG_SECRETKEYBYTES], uint8_t *depth);
+
+int PQCLEAN_KYBER512_CLEAN_skem_keygen(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
                                             uint8_t sk[KYBER_LARKG_SECRETKEYBYTES],
                                             const skem_context *ctx);
 
-void PQCLEAN_KYBER512_CLEAN_skem_keygen_enc(uint8_t pkp[KYBER_POLYVECBYTES],
+int PQCLEAN_KYBER512_CLEAN_skem_keygen_enc(uint8_t pkp[KYBER_POLYVECBYTES],
                                             uint8_t skp[KYBER_INDCPA_SECRETKEYBYTES],
                                             const skem_context *ctx);
 
-void PQCLEAN_KYBER512_CLEAN_skem_encaps(uint8_t c_out[KYBER_POLYCOMPRESSEDBYTES],
+int PQCLEAN_KYBER512_CLEAN_skem_encaps(uint8_t c_out[KYBER_POLYCOMPRESSEDBYTES],
                                         uint8_t K[KYBER_SSBYTES],
                                         const uint8_t skp[KYBER_INDCPA_SECRETKEYBYTES],
                                         const uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES]);

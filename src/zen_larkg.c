@@ -74,7 +74,8 @@ static int larkg_keygen(lua_State *L) {
 
 	skem_context ctx;
 	_ctx_from_rho(&ctx, rho);
-	PQCLEAN_KYBER512_CLEAN_skem_keygen((uint8_t *)pk->val, (uint8_t *)sk->val, &ctx);
+	if (PQCLEAN_KYBER512_CLEAN_skem_keygen((uint8_t *)pk->val, (uint8_t *)sk->val, &ctx) != 0)
+		THROW("LARKG key generation failed to obtain randomness");
 
 	pk->len = LARKG_PK_BYTES;
 	sk->len = LARKG_SK_BYTES;

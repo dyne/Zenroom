@@ -6,10 +6,14 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef LARKG_TEST_RANDOM_FAILURE
+int randombytes(void *buf, size_t n) {
+    memset(buf, 0xa5, n);
+    return -1;
+}
+#else
 extern int randombytes(void *buf, size_t n);
-
-#define MAX_DERIVATION_ATTEMPTS 10000
-#define RATCHET_ROUNDS 3
+#endif
 
 static int check_keypair(const uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
                          const uint8_t sk[KYBER_LARKG_SECRETKEYBYTES]) {
@@ -25,44 +29,95 @@ static int check_keypair(const uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
     return memcmp(message, recovered, sizeof(message)) == 0;
 }
 
+static int check_secret_representation(
+    const uint8_t sk[KYBER_LARKG_SECRETKEYBYTES]) {
+    polyvec encoded;
+    polyvec normal;
+
+    PQCLEAN_KYBER512_CLEAN_polyvec_frombytes(&encoded, sk);
+    PQCLEAN_KYBER512_CLEAN_skem_secret_to_normal(&normal, sk);
+
+    for (size_t i = 0; i < KYBER_K; i++) {
+        for (size_t j = 0; j < KYBER_N; j++) {
+            if (normal.vec[i].coeffs[j] < -KYBER_ETA1 ||
+                normal.vec[i].coeffs[j] > KYBER_ETA1) {
+                return 0;
+            }
+        }
+    }
+    PQCLEAN_KYBER512_CLEAN_polyvec_ntt(&normal);
+
+    for (size_t i = 0; i < KYBER_K; i++) {
+        PQCLEAN_KYBER512_CLEAN_poly_reduce(&normal.vec[i]);
+        PQCLEAN_KYBER512_CLEAN_poly_reduce(&encoded.vec[i]);
+    }
+    return memcmp(&encoded, &normal, sizeof(encoded)) == 0;
+}
+
+static int check_secret_corruption_rejected(
+    const uint8_t sk[KYBER_LARKG_SECRETKEYBYTES]) {
+    uint8_t malformed[KYBER_LARKG_SECRETKEYBYTES];
+    uint8_t next_sk[KYBER_LARKG_SECRETKEYBYTES];
+    larkg_cred_t credential = {0};
+
+    memcpy(malformed, sk, sizeof(malformed));
+    malformed[0] = 0xff;
+    malformed[1] = (uint8_t)((malformed[1] & 0xf0) | 0x0f);
+    if (PQCLEAN_KYBER512_CLEAN_skem_secret_is_canonical(malformed)) {
+        return 0;
+    }
+    return PQCLEAN_KYBER512_CLEAN_larkg_derive_sk(
+               next_sk, malformed, &credential) == LARKG_PARAMETER_MISMATCH;
+}
+
 int main(void) {
     uint8_t rho[KYBER_SYMBYTES];
     uint8_t current_pk[KYBER_INDCPA_PUBLICKEYBYTES];
     uint8_t current_sk[KYBER_LARKG_SECRETKEYBYTES];
     skem_context ctx;
 
+#ifdef LARKG_TEST_RANDOM_FAILURE
+    larkg_cred_t credential;
+    uint8_t next_pk[KYBER_INDCPA_PUBLICKEYBYTES];
+    memset(current_pk, 0xa5, sizeof(current_pk));
+    memset(current_sk, 0xa5, sizeof(current_sk));
+    memset(rho, 0, sizeof(rho));
+    PQCLEAN_KYBER512_CLEAN_skem_init(&ctx, rho);
+    if (PQCLEAN_KYBER512_CLEAN_skem_keygen(current_pk, current_sk, &ctx) == 0 ||
+        memcmp(current_pk, (uint8_t[KYBER_INDCPA_PUBLICKEYBYTES]){0}, sizeof(current_pk)) != 0 ||
+        memcmp(current_sk, (uint8_t[KYBER_LARKG_SECRETKEYBYTES]){0}, sizeof(current_sk)) != 0) {
+        fputs("LARKG RNG failure leaked key-generation output\n", stderr);
+        return 1;
+    }
+    memset(&credential, 0xa5, sizeof(credential));
+    memset(next_pk, 0xa5, sizeof(next_pk));
+    if (PQCLEAN_KYBER512_CLEAN_larkg_derive_pk(next_pk, &credential,
+                                                current_pk, &ctx) != LARKG_ENTROPY_FAILURE ||
+        memcmp(credential.B_prime, (uint8_t[KYBER_POLYVECBYTES]){0},
+               sizeof(credential.B_prime)) != 0) {
+        fputs("LARKG RNG failure leaked derivation credential output\n", stderr);
+        return 1;
+    }
+    return 0;
+#endif
+
     randombytes(rho, sizeof(rho));
     PQCLEAN_KYBER512_CLEAN_skem_init(&ctx, rho);
-    PQCLEAN_KYBER512_CLEAN_skem_keygen(current_pk, current_sk, &ctx);
-
-    for (int round = 0; round < RATCHET_ROUNDS; round++) {
-        uint8_t next_pk[KYBER_INDCPA_PUBLICKEYBYTES];
-        uint8_t next_sk[KYBER_LARKG_SECRETKEYBYTES];
-        larkg_cred_t credential;
-        int result = -1;
-
-        for (int attempt = 0;
-             attempt < MAX_DERIVATION_ATTEMPTS && result == -1;
-             attempt++) {
-            PQCLEAN_KYBER512_CLEAN_larkg_derive_pk(
-                next_pk, &credential, current_pk, &ctx);
-            result = PQCLEAN_KYBER512_CLEAN_larkg_derive_sk(
-                next_sk, current_sk, &credential);
-        }
-
-        if (result != 0) {
-            fprintf(stderr,
-                    "LARKG ratchet round %d did not accept within %d attempts\n",
-                    round + 1, MAX_DERIVATION_ATTEMPTS);
-            return 1;
-        }
-        if (!check_keypair(next_pk, next_sk)) {
-            fprintf(stderr, "LARKG ratchet round %d keypair mismatch\n", round + 1);
-            return 1;
-        }
-
-        memcpy(current_pk, next_pk, sizeof(current_pk));
-        memcpy(current_sk, next_sk, sizeof(current_sk));
+    if (PQCLEAN_KYBER512_CLEAN_skem_keygen(current_pk, current_sk, &ctx) != 0) {
+        fputs("LARKG initial key generation exhausted entropy\n", stderr);
+        return 1;
+    }
+    if (!check_secret_representation(current_sk)) {
+        fputs("LARKG secret serialization does not round-trip through normal coefficients\n", stderr);
+        return 1;
+    }
+    if (!check_secret_corruption_rejected(current_sk)) {
+        fputs("LARKG accepted a non-canonical secret-key encoding\n", stderr);
+        return 1;
+    }
+    if (!check_keypair(current_pk, current_sk)) {
+        fputs("LARKG initial keypair does not decrypt\n", stderr);
+        return 1;
     }
 
     {
@@ -72,10 +127,15 @@ int main(void) {
 
         PQCLEAN_KYBER512_CLEAN_larkg_derive_pk(
             next_pk, &credential, current_pk, &ctx);
+        if (PQCLEAN_KYBER512_CLEAN_larkg_derive_sk(
+                next_sk, current_sk, &credential) != LARKG_PARAMETER_MISMATCH) {
+            fputs("LARKG accepted a derivation despite the depth-zero contract\n", stderr);
+            return 1;
+        }
         credential.mu[0] ^= 1;
         if (PQCLEAN_KYBER512_CLEAN_larkg_derive_sk(
-                next_sk, current_sk, &credential) != -2) {
-            fputs("LARKG accepted a corrupted authentication tag\n", stderr);
+                next_sk, current_sk, &credential) != LARKG_PARAMETER_MISMATCH) {
+            fputs("LARKG leaked authentication processing beyond the depth-zero gate\n", stderr);
             return 1;
         }
     }

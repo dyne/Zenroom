@@ -19,6 +19,12 @@ RANDOMBYTES=../../../src/randombytes.c
 test_larkg: test_larkg.o $(OBJECTS) $(RANDOMBYTES:.c=.o)
 	$(CC) $(CFLAGS) -o $@ test_larkg.o $(OBJECTS) $(RANDOMBYTES:.c=.o)
 
+test_larkg_rng_failure: test_larkg_rng_failure.o $(OBJECTS)
+	$(CC) $(CFLAGS) -o $@ test_larkg_rng_failure.o $(OBJECTS)
+
+test_larkg_rng_failure.o: test_larkg.c $(HEADERS)
+	$(CC) $(CFLAGS) -DLARKG_TEST_RANDOM_FAILURE -fPIC -c -o $@ test_larkg.c
+
 ../../../src/randombytes.o: $(RANDOMBYTES)
 	$(CC) $(CFLAGS) -fPIC -c -o $@ $(RANDOMBYTES)
 
@@ -28,4 +34,4 @@ test_larkg.o: test_larkg.c $(HEADERS)
 clean:
 	$(RM) $(OBJECTS)
 	$(RM) $(LIB)
-	$(RM) test_larkg test_larkg.o
+	$(RM) test_larkg test_larkg_rng_failure test_larkg.o test_larkg_rng_failure.o

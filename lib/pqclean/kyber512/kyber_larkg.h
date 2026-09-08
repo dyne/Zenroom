@@ -11,6 +11,13 @@ typedef struct {
 	uint8_t mu[32];							// Authentication tag (hash of shared secret)
 } larkg_cred_t;
 
+enum {
+    LARKG_REJECTED = -1,
+    LARKG_AUTHENTICATION_FAILED = -2,
+    LARKG_PARAMETER_MISMATCH = -3,
+    LARKG_ENTROPY_FAILURE = -4
+};
+
 int PQCLEAN_KYBER512_CLEAN_larkg_derive_pk(uint8_t next_pk[KYBER_INDCPA_PUBLICKEYBYTES],
 					larkg_cred_t *cred_out,
 					const uint8_t current_pk[KYBER_INDCPA_PUBLICKEYBYTES],

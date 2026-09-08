@@ -118,8 +118,12 @@ def vectors():
         "wire_contract": {
             "byte_order": "toy values are signed JSON integers; production Kyber poly bytes are 12-bit little-endian packs",
             "public_key": "polyvec bytes || rho[32] (Kyber512: 768 || 32)",
-            "secret_key": "NTT polyvec bytes || last k_seed[32] (Kyber512: 768 || 32)",
+            "secret_key": "NTT polyvec bytes || version[1] || depth[1] || reserved[30] (Kyber512: 768 || 32)",
             "credential": "B_prime[768] || c[128] || mu[32], total 928 bytes",
+        },
+        "ratchet_policy": {
+            "maximum_supported_depth": 0,
+            "retired_smoke_test": "The former three-round experimental smoke test asserted an unsupported positive-depth construction. Version-1 secret keys reject every derivation with parameter mismatch until a reviewed positive-depth construction replaces this policy.",
         },
         "skem": {
             "keygen": {"secret": initial["secret"], "error": initial["error"],
@@ -158,7 +162,7 @@ def main():
     # detects every serialized-artifact change, including whitespace changes.
     assert json.loads(expected) == vectors(), "oracle semantics changed"
     assert hashlib.sha256(expected.encode()).hexdigest() == (
-        "244c7e9ac35daf21825ab04ac40a4a7943c11c7bd7f619ba61076ca583aa9ee0"
+        "0d3e833ac5453ca257e45a7d22df4eda7ece88e77b531a4f69cdb36f4e81660b"
     ), "checked-in oracle vectors changed"
 
 

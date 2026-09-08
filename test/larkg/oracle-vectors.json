@@ -46,6 +46,10 @@
       "chain2:K=[-1,0],E=[1,-1]"
     ]
   },
+  "ratchet_policy": {
+    "maximum_supported_depth": 0,
+    "retired_smoke_test": "The former three-round experimental smoke test asserted an unsupported positive-depth construction. Version-1 secret keys reject every derivation with parameter mismatch until a reviewed positive-depth construction replaces this policy."
+  },
   "skem": {
     "encapsulation": {"ciphertext": {"u": [2, 2], "v": 9}, "recovered_message": 1},
     "keygen": {"error": [0, 1], "public": [1, 16], "secret": [1, -1]}
@@ -54,6 +58,6 @@
     "byte_order": "toy values are signed JSON integers; production Kyber poly bytes are 12-bit little-endian packs",
     "credential": "B_prime[768] || c[128] || mu[32], total 928 bytes",
     "public_key": "polyvec bytes || rho[32] (Kyber512: 768 || 32)",
-    "secret_key": "NTT polyvec bytes || last k_seed[32] (Kyber512: 768 || 32)"
+    "secret_key": "NTT polyvec bytes || version[1] || depth[1] || reserved[30] (Kyber512: 768 || 32)"
   }
 }

@@ -7,6 +7,7 @@
 #include "params.h"
 #include "poly.h"
 #include "polyvec.h"
+#include "reduce.h"
 #include "symmetric.h"
 #include <string.h>
 #include <stddef.h>
@@ -76,6 +77,59 @@ static void skem_unpack_sk(polyvec *sk,
     PQCLEAN_KYBER512_CLEAN_polyvec_frombytes(sk, packedsk);
 }
 
+void PQCLEAN_KYBER512_CLEAN_skem_secret_to_normal(
+    polyvec *normal,
+    const uint8_t sk[KYBER_LARKG_SECRETKEYBYTES]) {
+    skem_unpack_sk(normal, sk);
+    PQCLEAN_KYBER512_CLEAN_polyvec_invntt_tomont(normal);
+
+    for (size_t i = 0; i < KYBER_K; i++) {
+        for (size_t j = 0; j < KYBER_N; j++) {
+            int16_t coefficient = PQCLEAN_KYBER512_CLEAN_barrett_reduce(
+                PQCLEAN_KYBER512_CLEAN_montgomery_reduce(
+                    normal->vec[i].coeffs[j]));
+
+            /* Keep the normal-domain form unique and directly comparable to
+             * the signed CBD support {-3, ..., 3}. */
+            if (coefficient > KYBER_Q / 2) {
+                coefficient -= KYBER_Q;
+            }
+            normal->vec[i].coeffs[j] = coefficient;
+        }
+    }
+}
+
+int PQCLEAN_KYBER512_CLEAN_skem_secret_is_canonical(
+    const uint8_t sk[KYBER_LARKG_SECRETKEYBYTES]) {
+    for (size_t offset = 0; offset < KYBER_POLYVECBYTES; offset += 3) {
+        uint16_t first = (uint16_t)sk[offset] |
+                         ((uint16_t)(sk[offset + 1] & 0x0f) << 8);
+        uint16_t second = ((uint16_t)sk[offset + 1] >> 4) |
+                          ((uint16_t)sk[offset + 2] << 4);
+
+        if (first >= KYBER_Q || second >= KYBER_Q) {
+            return 0;
+        }
+    }
+    return sk[LARKG_SECRET_METADATA_OFFSET] == LARKG_SECRET_KEY_VERSION;
+}
+
+void PQCLEAN_KYBER512_CLEAN_skem_secret_set_depth(
+    uint8_t sk[KYBER_LARKG_SECRETKEYBYTES], uint8_t depth) {
+    memset(sk + LARKG_SECRET_METADATA_OFFSET, 0, KYBER_SYMBYTES);
+    sk[LARKG_SECRET_METADATA_OFFSET] = LARKG_SECRET_KEY_VERSION;
+    sk[LARKG_SECRET_METADATA_OFFSET + 1] = depth;
+}
+
+int PQCLEAN_KYBER512_CLEAN_skem_secret_depth(
+    const uint8_t sk[KYBER_LARKG_SECRETKEYBYTES], uint8_t *depth) {
+    if (!PQCLEAN_KYBER512_CLEAN_skem_secret_is_canonical(sk)) {
+        return 0;
+    }
+    *depth = sk[LARKG_SECRET_METADATA_OFFSET + 1];
+    return 1;
+}
+
 /*************************************************
 * Name:        PQCLEAN_KYBER512_CLEAN_skem_init
 *
@@ -104,14 +158,18 @@ void PQCLEAN_KYBER512_CLEAN_skem_init(skem_context *ctx,
 * 			   uint8_t *sk: pointer to output private key
 * 			   const skem_context *ctx: pointer to the global context
 **************************************************/
-void PQCLEAN_KYBER512_CLEAN_skem_keygen(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES], 
+int PQCLEAN_KYBER512_CLEAN_skem_keygen(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
 											uint8_t sk[KYBER_LARKG_SECRETKEYBYTES], 
 											const skem_context *ctx) {
 	uint8_t buf[2 * KYBER_SYMBYTES];
 	uint8_t nonce = 0;
 	polyvec e, skpv, pkpv;
 
-	randombytes(buf, KYBER_SYMBYTES);
+	if (randombytes(buf, KYBER_SYMBYTES) != 0) {
+		memset(pk, 0, KYBER_INDCPA_PUBLICKEYBYTES);
+		memset(sk, 0, KYBER_LARKG_SECRETKEYBYTES);
+		return -1;
+	}
 	hash_g(buf, buf, KYBER_SYMBYTES);
 	
 	// Generate the error vector s ∈ R^k
@@ -137,8 +195,10 @@ void PQCLEAN_KYBER512_CLEAN_skem_keygen(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
 
 	// Encode pk and sk to byte arrays
 	skem_pack_sk(sk, &skpv);
-	memcpy(sk + KYBER_POLYVECBYTES, buf, KYBER_SYMBYTES); // Append s_seed to the secret key for rejection sampling
+	PQCLEAN_KYBER512_CLEAN_skem_secret_set_depth(sk, 0);
 	skem_pack_pk(pk, &pkpv, ctx->rho);
+	memset(buf, 0, sizeof(buf));
+	return 0;
 }
 
 /*************************************************
@@ -150,14 +210,18 @@ void PQCLEAN_KYBER512_CLEAN_skem_keygen(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
 * 			   uint8_t *skp: pointer to output secret key for encapsulation
 * 			   const skem_context *ctx: pointer to the global context
 **************************************************/
-void PQCLEAN_KYBER512_CLEAN_skem_keygen_enc(uint8_t pkp[KYBER_POLYVECBYTES], 
+int PQCLEAN_KYBER512_CLEAN_skem_keygen_enc(uint8_t pkp[KYBER_POLYVECBYTES],
 											uint8_t skp[KYBER_INDCPA_SECRETKEYBYTES], 
 											const skem_context *ctx) {
 	uint8_t coins[KYBER_SYMBYTES];
 	uint8_t nonce = 0;
 	polyvec r, e1, u;
 
-	randombytes(coins, KYBER_SYMBYTES);
+	if (randombytes(coins, KYBER_SYMBYTES) != 0) {
+		memset(pkp, 0, KYBER_POLYVECBYTES);
+		memset(skp, 0, KYBER_INDCPA_SECRETKEYBYTES);
+		return -1;
+	}
 	
 	// Generate the error vector r ∈ R^k
 	for (int i = 0; i < KYBER_K; i++) {
@@ -181,6 +245,8 @@ void PQCLEAN_KYBER512_CLEAN_skem_keygen_enc(uint8_t pkp[KYBER_POLYVECBYTES],
 	// Encode pkp and skp to byte arrays
 	PQCLEAN_KYBER512_CLEAN_polyvec_tobytes(pkp, &u);
 	skem_pack_sk(skp, &r);
+	memset(coins, 0, sizeof(coins));
+	return 0;
 }
 
 /*************************************************
@@ -193,7 +259,7 @@ void PQCLEAN_KYBER512_CLEAN_skem_keygen_enc(uint8_t pkp[KYBER_POLYVECBYTES],
 * 			   const uint8_t *skp: pointer to input secret key for encapsulation
 * 			   const uint8_t *pk: pointer to input public key for encapsulation
 **************************************************/
-void PQCLEAN_KYBER512_CLEAN_skem_encaps(uint8_t c_out[KYBER_POLYCOMPRESSEDBYTES], 
+int PQCLEAN_KYBER512_CLEAN_skem_encaps(uint8_t c_out[KYBER_POLYCOMPRESSEDBYTES],
 										uint8_t K[KYBER_SSBYTES], 
 										const uint8_t skp[KYBER_INDCPA_SECRETKEYBYTES], 
 										const uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES]) {
@@ -203,7 +269,11 @@ void PQCLEAN_KYBER512_CLEAN_skem_encaps(uint8_t c_out[KYBER_POLYCOMPRESSEDBYTES]
 	polyvec sp, pkpv;
 	poly v, e2, m_poly;
 
-	randombytes(buf, KYBER_SSBYTES);
+	if (randombytes(buf, KYBER_SSBYTES) != 0) {
+		memset(c_out, 0, KYBER_POLYCOMPRESSEDBYTES);
+		memset(K, 0, KYBER_SSBYTES);
+		return -1;
+	}
 	hash_h(K, buf, KYBER_SSBYTES);
 	
 	// Encode message as polynomial
@@ -211,7 +281,12 @@ void PQCLEAN_KYBER512_CLEAN_skem_encaps(uint8_t c_out[KYBER_POLYCOMPRESSEDBYTES]
 	skem_unpack_pk(&pkpv, pk);
 	skem_unpack_sk(&sp, skp);
 
-	randombytes(coins, KYBER_SYMBYTES);
+	if (randombytes(coins, KYBER_SYMBYTES) != 0) {
+		memset(c_out, 0, KYBER_POLYCOMPRESSEDBYTES);
+		memset(K, 0, KYBER_SSBYTES);
+		memset(buf, 0, sizeof(buf));
+		return -1;
+	}
 
 	// Generate the error polynomial e2 ∈ R
 	PQCLEAN_KYBER512_CLEAN_poly_getnoise_eta2(&e2, coins, nonce++);
@@ -225,6 +300,9 @@ void PQCLEAN_KYBER512_CLEAN_skem_encaps(uint8_t c_out[KYBER_POLYCOMPRESSEDBYTES]
 
 	// Ciphertext to bytes
 	PQCLEAN_KYBER512_CLEAN_poly_compress(c_out, &v);
+	memset(coins, 0, sizeof(coins));
+	memset(buf, 0, sizeof(buf));
+	return 0;
 }
 
 /*************************************************
