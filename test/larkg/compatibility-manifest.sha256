@@ -4,7 +4,7 @@
 # acceptance transcript: the current LARKG implementation consumes OS RNG and
 # its acceptance loop is known to be unreviewed.  Hashes protect the existing
 # assertions while the later independent oracle supplies reviewed vectors.
-d5f7f65c41286f163b9f1e41b6384372b3f2f43382a0b5eb6c33f401dba5180e  test/zencode/larkg.bats
+f65b92600d53ca494d1e14517cc791b3d047094f2c9af4edc08cb9c708be027d  test/zencode/larkg.bats
 2ce6e7dc0e55d7bf65f8f9ea5c0cc0cf490a0d57f2020234128ba8b5ad4b2345  test/zencode/kyber.bats
 7b49d8c10df2c65fd04fbf1c6e9f8c6f0833dafbe7c917dc5fbd5b1551454fc1  test/determinism/run.bats
 f4e381bcda521c03e15303f036b964286af82b9a5e4e1bab3be78324884b07c8  test/vectors/qp.bats

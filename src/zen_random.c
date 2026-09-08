@@ -60,6 +60,17 @@ static void zen_rng_zeroize(void *buffer, size_t len) {
 	while(len--) *out++ = 0;
 }
 
+static __thread zenroom_t *zen_rng_scope;
+zenroom_t *zen_rng_scope_push(zenroom_t *context) {
+	zenroom_t *previous = zen_rng_scope;
+	zen_rng_scope = context;
+	return previous;
+}
+void zen_rng_scope_pop(zenroom_t *previous) { zen_rng_scope = previous; }
+int zen_rng_scoped_fill(void *buffer, size_t len) {
+	return zen_rng_scope ? zen_rng_fill(zen_rng_scope, buffer, len) : -2;
+}
+
 int zen_entropy_fill(void *buffer, size_t len) {
 	if(len == 0) return 0;
 	if(!buffer) return -1;

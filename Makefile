@@ -80,7 +80,7 @@ check: check-larkg-compatibility check-rng-no-bypass ## Run tests using the curr
 	"tests=['determinism','vectors','lua','zkcc','zencode','blockchain','bindings','api']"
 	ninja -C meson test
 
-.PHONY: compatibility-larkg check-larkg-compatibility check-larkg-experimental-gate check-larkg-error-growth check-larkg-oracle-vectors check-rng-no-bypass
+.PHONY: compatibility-larkg check-larkg-compatibility check-larkg-native check-larkg-experimental-gate check-larkg-error-growth check-larkg-oracle-vectors check-rng-no-bypass
 
 check-rng-no-bypass: ## Reject unapproved runtime OS RNG calls
 	./test/rng/no-bypass.sh
@@ -88,7 +88,15 @@ check-rng-no-bypass: ## Reject unapproved runtime OS RNG calls
 compatibility-larkg: ## Verify frozen LARKG-adjacent compatibility assertions
 	ZEN_ENABLE_EXPERIMENTAL_LARKG=$(ZEN_ENABLE_EXPERIMENTAL_LARKG) ./test/larkg/compatibility.sh
 
-check-larkg-compatibility: compatibility-larkg check-larkg-experimental-gate check-larkg-error-growth check-larkg-oracle-vectors
+check-larkg-compatibility: compatibility-larkg check-larkg-native check-larkg-experimental-gate check-larkg-error-growth check-larkg-oracle-vectors
+
+check-larkg-native: ## Run mandatory LARKG core and entropy-failure units
+
+	$(MAKE) -C lib/pqclean/kyber512 test_larkg test_larkg_rng_failure
+
+	./lib/pqclean/kyber512/test_larkg
+
+	./lib/pqclean/kyber512/test_larkg_rng_failure
 
 check-larkg-experimental-gate: ## Check source-level experimental LARKG registration
 	./test/larkg/experimental-gate.sh --static

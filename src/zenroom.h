@@ -243,6 +243,10 @@ int zen_rng_init(zenroom_t *context, const void *seed, size_t seed_len);
 int zen_rng_reseed(zenroom_t *context, const void *seed, size_t seed_len);
 int zen_rng_fill(zenroom_t *context, void *buffer, size_t len);
 int zen_rng_callback_fill(void *context, void *buffer, size_t len);
+/* Scoped adapter for legacy vendor callbacks.  Nesting is restored by pop. */
+zenroom_t *zen_rng_scope_push(zenroom_t *context);
+void zen_rng_scope_pop(zenroom_t *previous);
+int zen_rng_scoped_fill(void *buffer, size_t len);
 void zen_rng_clear(zenroom_t *context);
 
 // ZENCODE EXEC SCOPE

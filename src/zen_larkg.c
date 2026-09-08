@@ -6,214 +6,142 @@
 #include "../lib/pqclean/kyber512/kyber_larkg.h"
 #include "../lib/pqclean/kyber512/skem.h"
 #include "../lib/pqclean/kyber512/params.h"
+#include "../lib/pqclean/kyber512/polyvec.h"
 #include "../lib/pqclean/kyber512/verify.h"
 
 #define LARKG_SK_BYTES KYBER_LARKG_SECRETKEYBYTES
 #define LARKG_PK_BYTES KYBER_INDCPA_PUBLICKEYBYTES
 #define LARKG_CRED_BYTES (sizeof(larkg_cred_t))
+/* Only this versioned, parameter-tagged format crosses the Lua boundary. */
+#define LARKG_WIRE_MAGIC 0x4cU
+#define LARKG_WIRE_VERSION 1U
+#define LARKG_WIRE_PARAMETER_KYBER512 1U
+#define LARKG_WIRE_HEADER_BYTES 4U
+#define LARKG_WIRE_PUBLIC 1U
+#define LARKG_WIRE_SECRET 2U
+#define LARKG_WIRE_CREDENTIAL 3U
+#define LARKG_PUBLIC_BYTES (LARKG_WIRE_HEADER_BYTES + 1U + LARKG_PK_BYTES)
+#define LARKG_SECRET_BYTES (LARKG_WIRE_HEADER_BYTES + LARKG_SK_BYTES + KYBER_SYMBYTES)
+#define LARKG_CREDENTIAL_BYTES (LARKG_WIRE_HEADER_BYTES + 1U + KYBER_SYMBYTES + LARKG_CRED_BYTES)
 
-// Imported from Zenroom
-extern int randombytes(void *buf, size_t n);
-
-// skem_context is shared global state
-// Here it is serialised as the 32 byte seed rho and is rebuilt on demand since gen_matrix is deterministic
-
-// --- Internal functions ---
-
-// Rebuild the skem_context from the seed rho
-static void _ctx_from_rho(skem_context *ctx, const octet *rho) {
-	PQCLEAN_KYBER512_CLEAN_skem_init(ctx, (const uint8_t *)rho->val);
+static int wire_payload(const octet *wire, uint8_t type, size_t length,
+                        const uint8_t **payload) {
+    if (!wire || (size_t)wire->len != LARKG_WIRE_HEADER_BYTES + length ||
+        (uint8_t)wire->val[0] != LARKG_WIRE_MAGIC ||
+        (uint8_t)wire->val[1] != LARKG_WIRE_VERSION ||
+        (uint8_t)wire->val[2] != LARKG_WIRE_PARAMETER_KYBER512 ||
+        (uint8_t)wire->val[3] != type) return 0;
+    *payload = (const uint8_t *)wire->val + LARKG_WIRE_HEADER_BYTES;
+    return 1;
+}
+static void wire_header(octet *wire, uint8_t type) {
+    wire->val[0] = LARKG_WIRE_MAGIC; wire->val[1] = LARKG_WIRE_VERSION;
+    wire->val[2] = LARKG_WIRE_PARAMETER_KYBER512; wire->val[3] = type;
+}
+static int canonical_polyvec(const uint8_t bytes[KYBER_POLYVECBYTES]) {
+    polyvec poly; uint8_t encoded[KYBER_POLYVECBYTES];
+    PQCLEAN_KYBER512_CLEAN_polyvec_frombytes(&poly, bytes);
+    PQCLEAN_KYBER512_CLEAN_polyvec_tobytes(encoded, &poly);
+    return PQCLEAN_KYBER512_CLEAN_verify(bytes, encoded, sizeof(encoded)) == 0;
+}
+static int public_from_wire(const octet *wire, const uint8_t **pk, uint8_t *generation) {
+    const uint8_t *payload;
+    if (!wire_payload(wire, LARKG_WIRE_PUBLIC, 1U + LARKG_PK_BYTES, &payload)) return 0;
+    *generation = payload[0]; *pk = payload + 1;
+    return canonical_polyvec(*pk);
+}
+static int secret_from_wire(const octet *wire, const uint8_t **sk,
+                            const uint8_t **rho, uint8_t *generation) {
+    const uint8_t *payload;
+    if (!wire_payload(wire, LARKG_WIRE_SECRET, LARKG_SK_BYTES + KYBER_SYMBYTES, &payload)) return 0;
+    *sk = payload; *rho = payload + LARKG_SK_BYTES;
+    return PQCLEAN_KYBER512_CLEAN_skem_secret_depth(*sk, generation);
+}
+static int credential_from_wire(const octet *wire, larkg_cred_t *credential,
+                                const uint8_t **rho, uint8_t *generation) {
+    const uint8_t *payload;
+    if (!wire_payload(wire, LARKG_WIRE_CREDENTIAL,
+                      1U + KYBER_SYMBYTES + LARKG_CRED_BYTES, &payload)) return 0;
+    *generation = payload[0]; *rho = payload + 1;
+    memcpy(credential->B_prime, payload + 1 + KYBER_SYMBYTES, KYBER_POLYVECBYTES);
+    memcpy(credential->c, payload + 1 + KYBER_SYMBYTES + KYBER_POLYVECBYTES, KYBER_POLYCOMPRESSEDBYTES);
+    memcpy(credential->mu, payload + 1 + KYBER_SYMBYTES + KYBER_POLYVECBYTES + KYBER_POLYCOMPRESSEDBYTES, KYBER_SSBYTES);
+    return canonical_polyvec(credential->B_prime);
+}
+static void context_from_rho(skem_context *ctx, const uint8_t *rho) {
+    PQCLEAN_KYBER512_CLEAN_skem_init(ctx, rho);
 }
 
-// Serialise larkg_cred_t to a octet: B_prime || c || mu
-static void _cred_to_octet(octet *oct, const larkg_cred_t *cred) {
-	size_t offset = 0;
-	memcpy(oct->val + offset, cred->B_prime, KYBER_POLYVECBYTES);
-	offset += KYBER_POLYVECBYTES;
-	memcpy(oct->val + offset, cred->c, KYBER_POLYCOMPRESSEDBYTES);
-	offset += KYBER_POLYCOMPRESSEDBYTES;
-	memcpy(oct->val + offset, cred->mu, KYBER_SSBYTES);
-	oct->len = offset + KYBER_SSBYTES;
-}
-
-// Deserialise larkg_cred_t from a octet: B_prime || c || mu
-static int _octet_to_cred(larkg_cred_t *cred, const octet *oct) {
-	if(oct->len != LARKG_CRED_BYTES) {
-		return 0;
-	}
-	size_t offset = 0;
-	memcpy(cred->B_prime, oct->val + offset, KYBER_POLYVECBYTES);
-	offset += KYBER_POLYVECBYTES;
-	memcpy(cred->c, oct->val + offset, KYBER_POLYCOMPRESSEDBYTES);
-	offset += KYBER_POLYCOMPRESSEDBYTES;
-	memcpy(cred->mu, oct->val + offset, KYBER_SSBYTES);
-	return 1;
-}
-
-// --- Lua bindings ---
-
-// Generate initial LARKG keypair (sk, pk) and the shared rho seed
 static int larkg_keygen(lua_State *L) {
-	
-	BEGIN();
-	char *failed_msg = NULL;
-
-	lua_createtable(L, 0, 3);
-
-	octet *sk = o_new(L, LARKG_SK_BYTES); SAFE_GOTO(sk, "Could not allocate LARKG secret key");
-	lua_setfield(L, -2, "private");
-
-	octet *pk = o_new(L, LARKG_PK_BYTES); SAFE_GOTO(pk, "Could not allocate LARKG public key");
-	lua_setfield(L, -2, "public");
-
-	octet *rho = o_new(L, KYBER_SYMBYTES); SAFE_GOTO(rho, "Could not allocate LARKG rho seed");
-	lua_setfield(L, -2, "rho");
-
-	randombytes((uint8_t *)rho->val, KYBER_SYMBYTES);
-	rho->len = KYBER_SYMBYTES;
-
-	skem_context ctx;
-	_ctx_from_rho(&ctx, rho);
-	if (PQCLEAN_KYBER512_CLEAN_skem_keygen((uint8_t *)pk->val, (uint8_t *)sk->val, &ctx) != 0)
-		THROW("LARKG key generation failed to obtain randomness");
-
-	pk->len = LARKG_PK_BYTES;
-	sk->len = LARKG_SK_BYTES;
-
+    BEGIN(); char *failed_msg = NULL; lua_createtable(L, 0, 3);
+	zenroom_t *Z = zen_get_context(L); zenroom_t *rng_previous = NULL;
+    octet *secret = o_new(L, LARKG_SECRET_BYTES); SAFE_GOTO(secret, "Could not allocate LARKG secret key"); lua_setfield(L, -2, "private");
+    octet *public = o_new(L, LARKG_PUBLIC_BYTES); SAFE_GOTO(public, "Could not allocate LARKG public key"); lua_setfield(L, -2, "public");
+    octet *rho = o_new(L, KYBER_SYMBYTES); SAFE_GOTO(rho, "Could not allocate LARKG rho seed"); lua_setfield(L, -2, "rho");
+    SAFE_GOTO(zen_rng_fill(Z, rho->val, KYBER_SYMBYTES) == 0, "LARKG key generation failed to obtain randomness");
+    rho->len = KYBER_SYMBYTES; skem_context ctx; uint8_t *secret_payload = (uint8_t *)secret->val + LARKG_WIRE_HEADER_BYTES;
+    context_from_rho(&ctx, (const uint8_t *)rho->val);
+    rng_previous = zen_rng_scope_push(Z);
+    int keygen_ret = PQCLEAN_KYBER512_CLEAN_skem_keygen((uint8_t *)public->val + LARKG_WIRE_HEADER_BYTES + 1, secret_payload, &ctx);
+    zen_rng_scope_pop(rng_previous); rng_previous = NULL;
+    SAFE_GOTO(keygen_ret == 0, "LARKG key generation failed");
+    wire_header(public, LARKG_WIRE_PUBLIC); public->val[LARKG_WIRE_HEADER_BYTES] = 0; public->len = LARKG_PUBLIC_BYTES;
+    wire_header(secret, LARKG_WIRE_SECRET); memcpy(secret_payload + LARKG_SK_BYTES, rho->val, KYBER_SYMBYTES); secret->len = LARKG_SECRET_BYTES;
 end:
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-
-	END(1);
+    if (rng_previous) zen_rng_scope_pop(rng_previous);
+    if (failed_msg) { THROW(failed_msg); } END(1);
 }
-
-// Derive the next public key (sender side)
 static int larkg_derive_pk(lua_State *L) {
-
-	BEGIN();
-	char *failed_msg = NULL;
-	const octet *pk = NULL;
-	const octet *rho = NULL;
-
-	pk = o_arg(L, 1); SAFE_GOTO(pk, "Could not allocate LARKG current public key");
-	SAFE_GOTO(pk->len == LARKG_PK_BYTES, "Invalid LARKG public key length");
-
-	rho = o_arg(L, 2); SAFE_GOTO(rho, "Could not allocate LARKG rho seed");
-	SAFE_GOTO(rho->len == KYBER_SYMBYTES, "Invalid LARKG rho seed length");
-	SAFE_GOTO(PQCLEAN_KYBER512_CLEAN_verify(
-			(const uint8_t *)rho->val,
-			(const uint8_t *)pk->val + KYBER_POLYVECBYTES,
-			KYBER_SYMBYTES) == 0,
-		"LARKG rho does not match the public key");
-
-	lua_createtable(L, 0, 1);
-
-	octet *next_pk = o_new(L, LARKG_PK_BYTES); SAFE_GOTO(next_pk, "Could not allocate LARKG next public key");
-	lua_setfield(L, -2, "next_public");
-
-	octet *cred_oct = o_new(L, LARKG_CRED_BYTES); SAFE_GOTO(cred_oct, "Could not allocate LARKG credential octet");
-	lua_setfield(L, -2, "credential");
-
-	skem_context ctx;
-	_ctx_from_rho(&ctx, rho);
-
-	larkg_cred_t cred;
-	int ret = PQCLEAN_KYBER512_CLEAN_larkg_derive_pk((uint8_t *)next_pk->val, &cred, (const uint8_t *)pk->val, &ctx);
-	SAFE_GOTO(ret == 0, "LARKG derive_pk failed");
-
-	next_pk->len = LARKG_PK_BYTES;
-	_cred_to_octet(cred_oct, &cred);
-
+    BEGIN(); char *failed_msg = NULL; const octet *public = o_arg(L, 1); const octet *rho = o_arg(L, 2);
+	zenroom_t *Z = zen_get_context(L); zenroom_t *rng_previous = NULL;
+    const uint8_t *pk; uint8_t generation;
+    SAFE_GOTO(public && rho, "Could not read LARKG public parameters");
+    SAFE_GOTO(public_from_wire(public, &pk, &generation), "Invalid LARKG public key encoding, version, or parameter");
+#if LARKG_MAX_SUPPORTED_DEPTH == 0
+    (void)generation;
+    SAFE_GOTO(0, "LARKG experimental construction does not support derivation");
+#else
+    SAFE_GOTO(generation < LARKG_MAX_SUPPORTED_DEPTH, "LARKG generation is stale; create a fresh key");
+#endif
+    SAFE_GOTO(rho->len == KYBER_SYMBYTES, "Invalid LARKG rho seed length");
+    SAFE_GOTO(PQCLEAN_KYBER512_CLEAN_verify((const uint8_t *)rho->val, pk + KYBER_POLYVECBYTES, KYBER_SYMBYTES) == 0, "LARKG rho does not match the public key");
+    lua_createtable(L, 0, 2); octet *next = o_new(L, LARKG_PUBLIC_BYTES); SAFE_GOTO(next, "Could not allocate LARKG next public key"); lua_setfield(L, -2, "next_public");
+    octet *credential = o_new(L, LARKG_CREDENTIAL_BYTES); SAFE_GOTO(credential, "Could not allocate LARKG credential"); lua_setfield(L, -2, "credential");
+    skem_context ctx; larkg_cred_t raw; context_from_rho(&ctx, (const uint8_t *)rho->val);
+    rng_previous = zen_rng_scope_push(Z);
+    int derive_ret = PQCLEAN_KYBER512_CLEAN_larkg_derive_pk((uint8_t *)next->val + LARKG_WIRE_HEADER_BYTES + 1, &raw, pk, &ctx);
+    zen_rng_scope_pop(rng_previous); rng_previous = NULL;
+    SAFE_GOTO(derive_ret == 0, "LARKG derive_pk failed");
+    wire_header(next, LARKG_WIRE_PUBLIC); next->val[LARKG_WIRE_HEADER_BYTES] = (char)(generation + 1U); next->len = LARKG_PUBLIC_BYTES;
+    wire_header(credential, LARKG_WIRE_CREDENTIAL); uint8_t *out = (uint8_t *)credential->val + LARKG_WIRE_HEADER_BYTES; out[0] = generation;
+    memcpy(out + 1, rho->val, KYBER_SYMBYTES); memcpy(out + 1 + KYBER_SYMBYTES, raw.B_prime, KYBER_POLYVECBYTES);
+    memcpy(out + 1 + KYBER_SYMBYTES + KYBER_POLYVECBYTES, raw.c, KYBER_POLYCOMPRESSEDBYTES);
+    memcpy(out + 1 + KYBER_SYMBYTES + KYBER_POLYVECBYTES + KYBER_POLYCOMPRESSEDBYTES, raw.mu, KYBER_SSBYTES); credential->len = LARKG_CREDENTIAL_BYTES;
 end:
-	o_free(L, rho);
-	o_free(L, pk);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-
-	END(1);
+    if (rng_previous) zen_rng_scope_pop(rng_previous);
+    o_free(L, rho); o_free(L, public); if (failed_msg) { THROW(failed_msg); } END(1);
 }
-
-// Derive the next secret key (receiver side)
 static int larkg_derive_sk(lua_State *L) {
-	
-	BEGIN();
-	char *failed_msg = NULL;
-	const octet *sk = NULL;
-	const octet *cred_oct = NULL;
-
-	sk = o_arg(L, 1); SAFE_GOTO(sk, "Could not allocate LARKG current secret key");
-	SAFE_GOTO(sk->len == LARKG_SK_BYTES, "Invalid LARKG secret key length");
-
-	cred_oct = o_arg(L, 2); SAFE_GOTO(cred_oct, "Could not allocate LARKG credential octet");
-	SAFE_GOTO(cred_oct->len == LARKG_CRED_BYTES, "Invalid LARKG credential octet length");
-
-	larkg_cred_t cred;
-	SAFE_GOTO(_octet_to_cred(&cred, cred_oct), "Failed to deserialise LARKG credential");
-
-	octet *next_sk = o_new(L, LARKG_SK_BYTES); SAFE_GOTO(next_sk, "Could not allocate LARKG next secret key");
-
-	int ret = PQCLEAN_KYBER512_CLEAN_larkg_derive_sk(
-		(uint8_t *)next_sk->val, (const uint8_t *)sk->val, &cred);
-	SAFE_GOTO(ret != -1,
-		"LARKG credential rejected; derive a fresh public key and credential");
-	SAFE_GOTO(ret == 0, "LARKG authentication failed");
-	next_sk->len = LARKG_SK_BYTES;
-
+    BEGIN(); char *failed_msg = NULL; const octet *secret = o_arg(L, 1); const octet *wire = o_arg(L, 2);
+    const uint8_t *sk, *secret_rho, *credential_rho; uint8_t secret_generation, credential_generation; larkg_cred_t credential;
+    SAFE_GOTO(secret && wire, "Could not read LARKG secret key or credential");
+    SAFE_GOTO(secret_from_wire(secret, &sk, &secret_rho, &secret_generation), "Invalid LARKG secret key encoding, version, parameter, or depth");
+    SAFE_GOTO(credential_from_wire(wire, &credential, &credential_rho, &credential_generation), "Invalid LARKG credential encoding, version, or parameter");
+    SAFE_GOTO(secret_generation == credential_generation && PQCLEAN_KYBER512_CLEAN_verify(secret_rho, credential_rho, KYBER_SYMBYTES) == 0, "LARKG credential rejected; derive a fresh public key and credential");
+    octet *next = o_new(L, LARKG_SECRET_BYTES); SAFE_GOTO(next, "Could not allocate LARKG next secret key");
+    uint8_t *out = (uint8_t *)next->val + LARKG_WIRE_HEADER_BYTES; int ret = PQCLEAN_KYBER512_CLEAN_larkg_derive_sk(out, sk, &credential);
+    SAFE_GOTO(ret != LARKG_REJECTED, "LARKG credential rejected; derive a fresh public key and credential");
+    SAFE_GOTO(ret != LARKG_PARAMETER_MISMATCH, "LARKG generation is stale; create a fresh key");
+    SAFE_GOTO(ret == 0, "LARKG authentication failed");
+    wire_header(next, LARKG_WIRE_SECRET); memcpy(out + LARKG_SK_BYTES, secret_rho, KYBER_SYMBYTES); next->len = LARKG_SECRET_BYTES;
 end:
-	o_free(L, cred_oct);
-	o_free(L, sk);
-	if(failed_msg) {
-		THROW(failed_msg);
-	}
-
-	END(1);
+    o_free(L, wire); o_free(L, secret); if (failed_msg) { THROW(failed_msg); } END(1);
 }
-
-// --- Size checks ---
-
-static int larkg_sk_check(lua_State *L) {
-	BEGIN();
-	const octet *sk = o_arg(L, 1); SAFE(sk, "Could not allocate LARKG secret key");
-	lua_pushboolean(L, sk->len == LARKG_SK_BYTES);
-	o_free(L, sk);
-	END(1);
-}
-
-static int larkg_pk_check(lua_State *L) {
-	BEGIN();
-	const octet *pk = o_arg(L, 1); SAFE(pk, "Could not allocate LARKG public key");
-	lua_pushboolean(L, pk->len == LARKG_PK_BYTES);
-	o_free(L, pk);
-	END(1);
-}
-
-static int larkg_cred_check(lua_State *L) {
-	BEGIN();
-	const octet *cred_oct = o_arg(L, 1); SAFE(cred_oct, "Could not allocate LARKG credential octet");
-	lua_pushboolean(L, cred_oct->len == LARKG_CRED_BYTES);
-	o_free(L, cred_oct);
-	END(1);
-}
-
-
+static int larkg_sk_check(lua_State *L) { BEGIN(); const octet *wire = o_arg(L, 1); SAFE(wire, "Could not read LARKG secret key"); const uint8_t *sk, *rho; uint8_t generation; lua_pushboolean(L, secret_from_wire(wire, &sk, &rho, &generation)); o_free(L, wire); END(1); }
+static int larkg_pk_check(lua_State *L) { BEGIN(); const octet *wire = o_arg(L, 1); SAFE(wire, "Could not read LARKG public key"); const uint8_t *pk; uint8_t generation; lua_pushboolean(L, public_from_wire(wire, &pk, &generation)); o_free(L, wire); END(1); }
+static int larkg_cred_check(lua_State *L) { BEGIN(); const octet *wire = o_arg(L, 1); SAFE(wire, "Could not read LARKG credential"); const uint8_t *rho; uint8_t generation; larkg_cred_t credential; lua_pushboolean(L, credential_from_wire(wire, &credential, &rho, &generation)); o_free(L, wire); END(1); }
+static int larkg_rho_check(lua_State *L) { BEGIN(); const octet *rho = o_arg(L, 1); SAFE(rho, "Could not read LARKG rho seed"); lua_pushboolean(L, rho->len == KYBER_SYMBYTES); o_free(L, rho); END(1); }
 int luaopen_larkg(lua_State *L) {
-	(void)L;
-	const struct luaL_Reg larkg_class[] = {
-		{"keygen", larkg_keygen},
-		{"derive_pk", larkg_derive_pk},
-		{"derive_sk", larkg_derive_sk},
-		{"seccheck", larkg_sk_check},
-		{"pubcheck", larkg_pk_check},
-		{"credcheck", larkg_cred_check},
-		{NULL, NULL}
-	};
-
-	const struct luaL_Reg larkg_methods[] = {
-		{NULL, NULL}
-	};
-
-	zen_add_class(L, "larkg", larkg_class, larkg_methods);
-	return 1;
+    (void)L; const struct luaL_Reg functions[] = {{"keygen", larkg_keygen}, {"derive_pk", larkg_derive_pk}, {"derive_sk", larkg_derive_sk}, {"seccheck", larkg_sk_check}, {"pubcheck", larkg_pk_check}, {"credcheck", larkg_cred_check}, {"rhocheck", larkg_rho_check}, {NULL, NULL}};
+    const struct luaL_Reg methods[] = {{NULL, NULL}}; zen_add_class(L, "larkg", functions, methods); return 1;
 }

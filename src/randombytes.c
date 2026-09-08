@@ -22,6 +22,12 @@
 
 
 #include "randombytes.h"
+#include "zenroom.h"
+
+/* PQClean's standalone native units link this file without zen_random.c. */
+#if defined(__GNUC__) || defined(__clang__)
+extern int zen_rng_scoped_fill(void *buffer, size_t len) __attribute__((weak));
+#endif
 
 #if defined(ARCH_WIN)
 /* Windows */
@@ -256,6 +262,10 @@ static int randombytes_bsd_randombytes(void *buf, size_t n)
 #include <string.h>
 int randombytes(void *buf, size_t n)
 {
+	if (zen_rng_scoped_fill) {
+		int scoped = zen_rng_scoped_fill(buf, n);
+		if (scoped != -2) return scoped;
+	}
 	if(!n) return 0;
 #if defined(__EMSCRIPTEN__)
 # pragma message("Using crypto api from NodeJS")

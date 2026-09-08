@@ -13,6 +13,7 @@ runtime_objects=(
     src/zen_qp.o
     src/zen_mayo.o
     src/zen_longfellow.o
+	 src/zen_larkg.o
 )
 
 match_lines() {

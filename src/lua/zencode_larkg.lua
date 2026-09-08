@@ -41,12 +41,21 @@ local function larkg_cred_f(obj)
     return res
 end
 
+local function larkg_rho_f(obj)
+    local res = schema_get(obj, '.')
+    zencode_assert(
+        LARKG.rhocheck(res),
+        'LARKG rho is not valid'
+    )
+    return res
+end
+
 ZEN:add_schema(
     {
         larkg_public_key = {import=larkg_public_key_f},
         larkg_derived_public_key = {import=larkg_public_key_f},
         larkg_credential = {import=larkg_cred_f},
-        larkg_rho = {import=function(obj) return schema_get(obj, '.') end}
+        larkg_rho = {import=larkg_rho_f}
     }
 )
 

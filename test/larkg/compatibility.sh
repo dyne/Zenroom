@@ -19,7 +19,7 @@ case "${1:-}" in
     --self-test)
         temp_manifest=$(mktemp)
         trap 'rm -f "$temp_manifest"' EXIT
-        sed '0,/^d5f7/s/d5f7/0000/' "$root/$manifest" > "$temp_manifest"
+        sed '0,/^[[:xdigit:]]\{64\}  /s/^[[:xdigit:]]\{4\}/0000/' "$root/$manifest" > "$temp_manifest"
         if (cd "$root" && sha256sum --check --status "$temp_manifest"); then
             printf '%s\n' 'compatibility manifest mutation was not detected' >&2
             exit 1
