@@ -15,6 +15,21 @@ Each `zenroom_t` owns its generator; callers must provide synchronization when
 sharing a context across threads.  Forked processes must initialize their own
 context rather than sharing inherited generator state.
 
+Contexts passed to `zen_rng_init` must be zero-initialized.  Initializing an
+already initialized context fails without replacing or leaking its generator;
+call `zen_rng_clear` before reinitializing, or use `zen_rng_reseed` to restart
+the existing stream.
+
+## Compatibility exceptions
+
+Runtime consumers that only need bytes use the checked service.  A narrow set
+of native Milagro calls still receives the opaque generator because its ABI
+requires `csprng *`: `BIG_randomnum`, ECDH key generation and randomized
+signing, and RSA key generation and OAEP encoding.  Reimplementing those
+algorithms around byte buffers would alter their rejection sampling or seeded
+stream consumption.  The source and relocation audit allowlists only these
+call sites plus the RNG backend and VM lifecycle implementation.
+
 ## Entropy and backend selection
 
 For a VM without an explicit seed, `zen_entropy_fill` obtains all 64 seed bytes

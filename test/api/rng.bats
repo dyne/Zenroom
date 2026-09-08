@@ -14,6 +14,13 @@ load ../bats_setup
     assert_success
 }
 
+@test "RNG service :: runtime consumers preserve fixed-seed streams" {
+    run "$ZENROOM_EXECUTABLE" \
+        -c rngseed=hex:000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f \
+        "$T/rng_consumers.lua"
+    assert_success
+}
+
 @test "RNG service :: SNTRUP callback failure is closed" {
     local ldadd="-L$R -lzenroom"
     local cflags="${CFLAGS:-} -I$R/src -I$R/lib/pqclean/sntrup761"

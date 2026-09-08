@@ -77,3 +77,21 @@ for i,h in ipairs(hash_algos) do
    print(h.." OK")
 end
 
+print " per-hash RNG deterministic reseed and teardown"
+local rng_seed = O.from_hex('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f')
+local function check_hash_rng(H)
+   assert(H:random_int8() == 205, "HASH RNG int8 stream changed")
+   assert(H:random_int16() == 19626, "HASH RNG int16 stream changed")
+   assert(H:random_int32() == 1705168537, "HASH RNG int32 stream changed")
+end
+local H1 = HASH.new('sha256')
+local H2 = HASH.new('sha512')
+H1:random_seed(rng_seed)
+H2:random_seed(rng_seed)
+check_hash_rng(H1)
+check_hash_rng(H2)
+H1:random_seed(rng_seed)
+check_hash_rng(H1)
+H1, H2 = nil, nil
+collectgarbage('collect')
+print "HASH RNG OK"

@@ -471,7 +471,9 @@ static int new_random(lua_State *L) {
 	lua_Number n = lua_tonumberx(L, 1, &tn);
 	octet *o = o_new(L,(int)n); SAFE(o, CREATE_OCT_ERR);
 	zenroom_t *Z = zen_get_context(L);
-	OCT_rand(o, Z->random_generator, (int)n);
+	SAFE(zen_rng_fill(Z, o->val, (size_t)n) == 0,
+		 "Random generator unavailable");
+	o->len = (int)n;
 	END(1);
 }
 

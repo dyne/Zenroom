@@ -25,7 +25,6 @@
 #include <lua_functions.h>
 #include <zen_octet.h>
 #include <ed25519.h>
-#include <randombytes.h>
 
 /// <h1>Ed25519 signature scheme (ED)</h1>
 // This module provides algorithms and functions for an elliptic curve signature scheme. It uses the Elliptic Curve Ed25519. Ed25519 is an elliptic curve used in elliptic-curve cryptography (ECC) designed for use with the Elliptic-curve Diffie–Hellman (ECDH) key agreement scheme.
@@ -61,9 +60,8 @@ static int ed_secgen(lua_State *L) {
 	zenroom_t *Z = zen_get_context(L);
 	register const size_t sksize = sizeof(ed25519_secret_key);
 	octet *sk = o_new(L, sksize); SAFE(sk, "Could not create secret key");
-	register size_t i;
-	for(i=0; i < sksize; i++)
-		sk->val[i] = RAND_byte(Z->random_generator);
+	SAFE(zen_rng_fill(Z, sk->val, sksize) == 0,
+		 "Random generator unavailable");
 	sk->len = sksize;
 	END(1);
 }
