@@ -35,8 +35,10 @@ int PQCLEAN_KYBER512_CLEAN_crypto_kem_keypair_derand(unsigned char *pk,
 }
 
 int PQCLEAN_KYBER512_CLEAN_crypto_kem_keypair(unsigned char *pk, unsigned char *sk) {
-    unsigned char coins[2 * KYBER_SYMBYTES] = {0};
-    return PQCLEAN_KYBER512_CLEAN_crypto_kem_keypair_derand(pk, sk, coins);
+    (void)pk;
+    (void)sk;
+    /* This compatibility API cannot obtain checked caller-owned randomness. */
+    return -1;
 }
 
 /*************************************************
@@ -100,8 +102,11 @@ int PQCLEAN_KYBER512_CLEAN_crypto_kem_enc_derand(unsigned char *ct,
 
 int PQCLEAN_KYBER512_CLEAN_crypto_kem_enc(unsigned char *ct, unsigned char *ss,
         const unsigned char *pk) {
-    unsigned char coins[KYBER_SYMBYTES] = {0};
-    return PQCLEAN_KYBER512_CLEAN_crypto_kem_enc_derand(ct, ss, pk, coins);
+    (void)ct;
+    (void)ss;
+    (void)pk;
+    /* Fail closed instead of deriving reusable ciphertext coins from zeros. */
+    return -1;
 }
 
 /*************************************************

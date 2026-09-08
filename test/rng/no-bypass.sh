@@ -2,9 +2,10 @@
 set -Eeuo pipefail
 
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-entropy_pattern='(randombytes|RAND_bytes|getrandom|arc4random)[[:space:]]*\('
+entropy_pattern='(randombytes|RAND_bytes|getrandom|arc4random(_buf)?)[[:space:]]*\('
 backend_pattern='(RAND_byte|RAND_clean|OCT_rand|CREATE_CSPRNG|KILL_CSPRNG)[[:space:]]*\(|AMCL_\(RAND_seed\)[[:space:]]*\('
 generator_pattern='(->|\.)[[:space:]]*random_generator'
+global_context_pattern='zen_get_global_context[[:space:]]*\('
 
 # Runtime bridges must not retain relocations to a direct OS-RNG entry point or
 # to a legacy vendor convenience API.  The vendor archives deliberately retain
@@ -63,6 +64,21 @@ audit_backend_bypass() {
             # Sole compatibility-backend implementation.
             "$root/src/zen_random.c":*) ;;
             *) printf 'forbidden direct backend RNG access: %s\n' "$hit" >&2; return 1 ;;
+        esac
+    done <<< "$hits"
+}
+
+audit_global_context_access() {
+    local path=$1
+    local hits hit
+    hits=$(search_sources "$path" "$global_context_pattern" || true)
+    while IFS= read -r hit; do
+        [[ -z $hit ]] && continue
+        case "$hit" in
+            # Compatibility implementation and declaration only.  Runtime
+            # consumers must recover their owning context from lua_State.
+            "$root/src/zen_error.c":*|"$root/src/zen_error.h":*) ;;
+            *) printf 'forbidden process-global VM context access: %s\n' "$hit" >&2; return 1 ;;
         esac
     done <<< "$hits"
 }
@@ -186,6 +202,13 @@ if [[ ${1:-} == --self-test ]]; then
         printf '%s\n' 'RNG bypass self-test unexpectedly passed' >&2
         exit 1
     fi
+    mkdir "$scratch/arc4random"
+    printf 'void example(void) { arc4random_buf(0, 1); }\n' \
+        > "$scratch/arc4random/forbidden.c"
+    if audit_entropy_bypass "$scratch/arc4random"; then
+        printf '%s\n' 'arc4random_buf bypass self-test unexpectedly passed' >&2
+        exit 1
+    fi
     printf '#include <amcl.h>\nvoid example(csprng *r) { (void)RAND_byte(r); }\n' \
         > "$scratch/forbidden-backend.c"
     if audit_backend_bypass "$scratch"; then
@@ -196,6 +219,13 @@ if [[ ${1:-} == --self-test ]]; then
         > "$scratch/forbidden-generator.c"
     if audit_generator_access "$scratch"; then
         printf '%s\n' 'Opaque generator access self-test unexpectedly passed' >&2
+        exit 1
+    fi
+    mkdir "$scratch/global-context"
+    printf 'void example(void) { (void)zen_get_global_context(); }\n' \
+        > "$scratch/global-context/forbidden.c"
+    if audit_global_context_access "$scratch/global-context"; then
+        printf '%s\n' 'Global VM context self-test unexpectedly passed' >&2
         exit 1
     fi
     mkdir "$scratch/allowlisted"
@@ -235,6 +265,7 @@ fi
 
 audit_entropy_bypass "$root/src"
 audit_backend_bypass "$root/src"
+audit_global_context_access "$root/src"
 audit_generator_access "$root/src"
 audit_backend_relocations
 audit_runtime_relocations

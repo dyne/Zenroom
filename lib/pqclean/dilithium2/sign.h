@@ -8,6 +8,7 @@
 
 void PQCLEAN_DILITHIUM2_CLEAN_challenge(poly *c, const uint8_t seed[SEEDBYTES]);
 
+/* Disabled: use PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair_derand(). */
 int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair(uint8_t *pk, uint8_t *sk);
 int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair_derand(uint8_t *pk, uint8_t *sk,
                                                          const uint8_t seed[32]);

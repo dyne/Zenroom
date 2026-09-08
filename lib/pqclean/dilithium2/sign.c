@@ -67,8 +67,11 @@ int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair_derand(uint8_t *pk, uint8_t *sk
 }
 
 int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair(uint8_t *pk, uint8_t *sk) {
-    uint8_t seed[SEEDBYTES] = {0};
-    return PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair_derand(pk, sk, seed);
+    (void)pk;
+    (void)sk;
+    /* Randomness is caller-owned in Zenroom.  This legacy API has no checked
+     * RNG boundary, so fail instead of emitting a predictable fixed keypair. */
+    return -1;
 }
 
 /*************************************************
