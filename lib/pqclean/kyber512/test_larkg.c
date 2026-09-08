@@ -7,9 +7,13 @@
 #include <string.h>
 
 #ifdef LARKG_TEST_RANDOM_FAILURE
+static size_t randombytes_calls;
+static size_t randombytes_fail_on_call = 1;
+
 int randombytes(void *buf, size_t n) {
+    randombytes_calls++;
     memset(buf, 0xa5, n);
-    return -1;
+    return randombytes_calls == randombytes_fail_on_call ? -1 : 0;
 }
 #else
 extern int randombytes(void *buf, size_t n);
@@ -89,12 +93,20 @@ int main(void) {
         fputs("LARKG RNG failure leaked key-generation output\n", stderr);
         return 1;
     }
+
+    /* derive_pk draws once in keygen_enc, twice in encaps, then once for E'.
+     * Fail that fourth draw directly so the final entropy site cannot regress
+     * to consuming its buffer and reporting success. */
+    randombytes_calls = 0;
+    randombytes_fail_on_call = 4;
     memset(&credential, 0xa5, sizeof(credential));
     memset(next_pk, 0xa5, sizeof(next_pk));
     if (PQCLEAN_KYBER512_CLEAN_larkg_derive_pk(next_pk, &credential,
                                                 current_pk, &ctx) != LARKG_ENTROPY_FAILURE ||
-        memcmp(credential.B_prime, (uint8_t[KYBER_POLYVECBYTES]){0},
-               sizeof(credential.B_prime)) != 0) {
+        randombytes_calls != randombytes_fail_on_call ||
+        memcmp(&credential, &(larkg_cred_t){0}, sizeof(credential)) != 0 ||
+        memcmp(next_pk, (uint8_t[KYBER_INDCPA_PUBLICKEYBYTES]){0},
+               sizeof(next_pk)) != 0) {
         fputs("LARKG RNG failure leaked derivation credential output\n", stderr);
         return 1;
     }

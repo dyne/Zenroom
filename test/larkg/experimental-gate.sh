@@ -13,8 +13,11 @@ fail() {
 
 static_gate() {
     grep -Fq 'ZEN_ENABLE_EXPERIMENTAL_LARKG ?= 0' "$root/build/init.mk" || fail 'missing default-off selector'
-    grep -Fq 'ZEN_SOURCES := $(filter-out src/zen_larkg.o,${ZEN_SOURCES})' "$root/build/init.mk" || fail 'ungated LARKG object'
+    grep -Fq 'ZEN_SOURCES := $(filter-out src/zen_larkg.o' "$root/build/init.mk" || fail 'ungated LARKG object'
     grep -Fq 'LUA_EMBED_EXCLUDES += zencode_larkg.lua' "$root/build/init.mk" || fail 'ungated LARKG scenario'
+    grep -Fq 'src/lua_modules_cli_larkg.o' "$root/build/init.mk" || fail 'registration object is not mode-specific'
+    grep -Fq 'src/lua_modules_cli_default.o' "$root/build/init.mk" || fail 'default registration object is not mode-specific'
+    grep -Fq 'force-larkg-build-mode-link' "$root/build/posix.mk" || fail 'final link does not track build mode'
     grep -Fq '#ifdef ZEN_ENABLE_EXPERIMENTAL_LARKG' "$root/src/lua_modules.c" || fail 'ungated native registration'
     grep -Fq 'longfellow larkg' "$root/build/meson.build" || fail 'default Meson suite includes LARKG'
 }

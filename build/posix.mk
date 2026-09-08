@@ -37,9 +37,9 @@ TARGET_BUILD_DEPS += ${ZKCC_BUILD_DEPS}
 TARGET_LDADD += ${ZKCC_LDADD}
 cflags += -DZEN_ENABLE_ZKCC=1
 else
-LUA_EMBED_EXCLUDES += crypto_zkcc.lua crypto_zkcc_bip340.lua
-ZEN_SOURCES := $(filter-out src/lua_modules.o,${ZEN_SOURCES}) \
-	src/lua_modules_library.o
+	LUA_EMBED_EXCLUDES += crypto_zkcc.lua crypto_zkcc_bip340.lua
+	ZEN_SOURCES := $(filter-out src/lua_modules.o src/lua_modules_cli_default.o src/lua_modules_cli_larkg.o,${ZEN_SOURCES}) \
+		$(if $(filter 1,$(ZEN_ENABLE_EXPERIMENTAL_LARKG)),src/lua_modules_library_larkg.o,src/lua_modules_library_default.o)
 endif
 
 all: deps zenroom lua-exec zencode-exec
@@ -49,26 +49,29 @@ deps: ${TARGET_BUILD_DEPS}
 # main() for zencode-exec and lua-exec
 aux_source  := src/zencode-exec
 cli_sources := src/cli-zenroom.o src/repl.o
-zenroom: ${ZEN_SOURCES} ${cli_sources}
+.PHONY: force-larkg-build-mode-link
+force-larkg-build-mode-link:
+
+zenroom: force-larkg-build-mode-link ${ZEN_SOURCES} ${cli_sources}
 	$(info === Building the zenroom CLI)
 	${cxx} ${cflags} ${ZEN_SOURCES} ${cli_sources} \
 		-o $@ ${ldflags} ${TARGET_LDADD} -lreadline
 
 lua-exec: cflags += -DLUA_EXEC
-lua-exec: ${ZEN_SOURCES}
+lua-exec: force-larkg-build-mode-link ${ZEN_SOURCES}
 	$(info === Building the lua-exec utility)
 	${zenroom_cc} ${cflags} -DLUA_EXEC \
 		-c ${aux_source}.c -o ${aux_source}.o
 	${cxx} ${cflags} ${ZEN_SOURCES} ${aux_source}.o \
 		-o $@ ${ldflags} ${TARGET_LDADD}
 
-zencode-exec: ${ZEN_SOURCES}
+zencode-exec: force-larkg-build-mode-link ${ZEN_SOURCES}
 	$(info === Building the zencode-exec utility)
 	${zenroom_cc} ${cflags} -c ${aux_source}.c -o ${aux_source}.o
 	${cxx} ${cflags} ${ZEN_SOURCES} ${aux_source}.o \
 		-o $@ ${ldflags} ${TARGET_LDADD}
 
-src/lua_modules_library.o: src/lua_modules.c
+src/lua_modules_library_default.o: src/lua_modules.c
 	${zenroom_cc} ${cflags} -c $< -o $@ \
 		-DVERSION=\"${VERSION}\" \
 		-DCURRENT_YEAR=\"${CURRENT_YEAR}\" \
@@ -76,15 +79,39 @@ src/lua_modules_library.o: src/lua_modules.c
 		-DBRANCH=\"${BRANCH}\" \
 		-DCFLAGS="${cflags}"
 
-libzenroom.so: deps ${ZEN_SOURCES}
+src/lua_modules_library_larkg.o: src/lua_modules.c
+	${zenroom_cc} ${cflags} -c $< -o $@ \
+		-DVERSION=\"${VERSION}\" \
+		-DCURRENT_YEAR=\"${CURRENT_YEAR}\" \
+		-DCOMMIT=\"${COMMIT}\" \
+		-DBRANCH=\"${BRANCH}\" \
+		-DCFLAGS="${cflags}"
+
+libzenroom.so: force-larkg-build-mode-link deps ${ZEN_SOURCES}
 	$(info === Building the zenroom shared library)
 	${cxx} ${cflags} -shared ${ZEN_SOURCES} \
 		-o $@ ${ldflags} ${TARGET_LDADD}
 
 # OSX specific target
-libzenroom.dylib: deps ${ZEN_SOURCES}
+libzenroom.dylib: force-larkg-build-mode-link deps ${ZEN_SOURCES}
 	$(info === Building the zenroom shared dynamic library)
 	${cxx} ${cflags} -shared ${ZEN_SOURCES} -dynamiclib \
 		-o $@ ${ldflags} ${TARGET_LDADD}
+
+src/lua_modules_cli_larkg.o: src/lua_modules.c
+	${zenroom_cc} ${cflags} -c $< -o $@ \
+		-DVERSION=\"${VERSION}\" \
+		-DCURRENT_YEAR=\"${CURRENT_YEAR}\" \
+		-DCOMMIT=\"${COMMIT}\" \
+		-DBRANCH=\"${BRANCH}\" \
+		-DCFLAGS="${cflags}"
+
+src/lua_modules_cli_default.o: src/lua_modules.c
+	${zenroom_cc} ${cflags} -c $< -o $@ \
+		-DVERSION=\"${VERSION}\" \
+		-DCURRENT_YEAR=\"${CURRENT_YEAR}\" \
+		-DCOMMIT=\"${COMMIT}\" \
+		-DBRANCH=\"${BRANCH}\" \
+		-DCFLAGS="${cflags}"
 
 include build/deps.mk

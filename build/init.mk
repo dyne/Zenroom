@@ -80,8 +80,11 @@ cflags := ${ZEN_INCLUDES}
 
 ifeq ($(ZEN_ENABLE_EXPERIMENTAL_LARKG),1)
 cflags += -DZEN_ENABLE_EXPERIMENTAL_LARKG=1
+ZEN_SOURCES := $(filter-out src/lua_modules.o,${ZEN_SOURCES}) \
+	src/lua_modules_cli_larkg.o
 else
-ZEN_SOURCES := $(filter-out src/zen_larkg.o,${ZEN_SOURCES})
+ZEN_SOURCES := $(filter-out src/zen_larkg.o src/lua_modules.o,${ZEN_SOURCES}) \
+	src/lua_modules_cli_default.o
 LUA_EMBED_EXCLUDES += zencode_larkg.lua
 endif
 musl := build/musl

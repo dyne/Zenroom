@@ -82,7 +82,7 @@ static int bigint_multiply_power(uint32_t *value, uint32_t base, int exponent) {
         uint32_t factor = 1U + use_base * (base - 1U);
         ok &= bigint_multiply_small(value, factor);
     }
-    return 1;
+    return ok;
 }
 
 static int larkg_rej_sampling(const polyvec *S_raw,
@@ -166,6 +166,10 @@ int PQCLEAN_KYBER512_CLEAN_larkg_derive_pk(uint8_t next_pk[KYBER_INDCPA_PUBLICKE
 	uint8_t S_prime_bytes[KYBER_INDCPA_SECRETKEYBYTES];
 	uint8_t k_seed[KYBER_SSBYTES];
 	uint8_t rand_buf[KYBER_SYMBYTES];
+	int result = LARKG_ENTROPY_FAILURE;
+
+	memset(next_pk, 0, KYBER_INDCPA_PUBLICKEYBYTES);
+	memset(cred_out, 0, sizeof(*cred_out));
 
 	polyvec B_poly, K_poly, E_prime_poly, P_poly;
 	polyvec matrix_A[KYBER_K];
@@ -173,10 +177,10 @@ int PQCLEAN_KYBER512_CLEAN_larkg_derive_pk(uint8_t next_pk[KYBER_INDCPA_PUBLICKE
 	PQCLEAN_KYBER512_CLEAN_polyvec_frombytes(&B_poly, current_pk);
 
 	// Ln 1
-	if (PQCLEAN_KYBER512_CLEAN_skem_keygen_enc(cred_out->B_prime, S_prime_bytes, ctx) != 0) return LARKG_ENTROPY_FAILURE;
+	if (PQCLEAN_KYBER512_CLEAN_skem_keygen_enc(cred_out->B_prime, S_prime_bytes, ctx) != 0) goto cleanup;
 
 	// Ln 2
-	if (PQCLEAN_KYBER512_CLEAN_skem_encaps(cred_out->c, k_seed, S_prime_bytes, current_pk) != 0) return LARKG_ENTROPY_FAILURE;
+	if (PQCLEAN_KYBER512_CLEAN_skem_encaps(cred_out->c, k_seed, S_prime_bytes, current_pk) != 0) goto cleanup;
 
 	// Ln 3
 	for (int i = 0; i < KYBER_K; i++) {
@@ -188,7 +192,7 @@ int PQCLEAN_KYBER512_CLEAN_larkg_derive_pk(uint8_t next_pk[KYBER_INDCPA_PUBLICKE
     larkg_auth_tag(cred_out->mu, k_seed);
 
 	// Ln 5
-	randombytes(rand_buf, KYBER_SYMBYTES);
+	if (randombytes(rand_buf, KYBER_SYMBYTES) != 0) goto cleanup;
 	for (int i = 0; i < KYBER_K; i++) {
 		PQCLEAN_KYBER512_CLEAN_poly_getnoise_eta1(&E_prime_poly.vec[i], rand_buf, i);
 		PQCLEAN_KYBER512_CLEAN_poly_ntt(&E_prime_poly.vec[i]);
@@ -211,7 +215,16 @@ int PQCLEAN_KYBER512_CLEAN_larkg_derive_pk(uint8_t next_pk[KYBER_INDCPA_PUBLICKE
 	PQCLEAN_KYBER512_CLEAN_polyvec_tobytes(next_pk, &P_poly);
 	memcpy(next_pk + KYBER_POLYVECBYTES, rho, KYBER_SYMBYTES);
 
-	return 0;
+	result = 0;
+cleanup:
+	memset(S_prime_bytes, 0, sizeof(S_prime_bytes));
+	memset(k_seed, 0, sizeof(k_seed));
+	memset(rand_buf, 0, sizeof(rand_buf));
+	if (result != 0) {
+		memset(next_pk, 0, KYBER_INDCPA_PUBLICKEYBYTES);
+		memset(cred_out, 0, sizeof(*cred_out));
+	}
+	return result;
 }
 
 /*************************************************

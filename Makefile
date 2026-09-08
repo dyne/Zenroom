@@ -80,7 +80,7 @@ check: check-larkg-compatibility check-rng-no-bypass ## Run tests using the curr
 	"tests=['determinism','vectors','lua','zkcc','zencode','blockchain','bindings','api']"
 	ninja -C meson test
 
-.PHONY: compatibility-larkg check-larkg-compatibility check-larkg-native check-larkg-experimental-gate check-larkg-error-growth check-larkg-oracle-vectors check-rng-no-bypass
+.PHONY: compatibility-larkg check-larkg-compatibility check-larkg-native check-larkg-experimental-gate check-larkg-build-modes check-larkg-error-growth check-larkg-oracle-vectors check-rng-no-bypass
 
 check-rng-no-bypass: ## Reject unapproved runtime OS RNG calls
 	./test/rng/no-bypass.sh
@@ -100,6 +100,9 @@ check-larkg-native: ## Run mandatory LARKG core and entropy-failure units
 
 check-larkg-experimental-gate: ## Check source-level experimental LARKG registration
 	./test/larkg/experimental-gate.sh --static
+
+check-larkg-build-modes: ## Build and verify both LARKG modes without cleaning
+	./test/larkg/build-mode-gate.sh
 
 check-larkg-error-growth: ## Check the LARKG depth-zero bound fixture
 	./test/larkg/error-growth-gate.sh
