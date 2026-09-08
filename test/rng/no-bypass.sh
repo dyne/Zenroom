@@ -73,7 +73,7 @@ audit_runtime_relocations() {
 
 audit_archive_residues() {
     # Classified, unregistered upstream compatibility residues:
-    # - pqclean: SNTRUP system-RNG wrapper;
+    # - pqclean: SNTRUP system-RNG wrapper, sKEM and experimental LARKG;
     # - MAYO: legacy no-randomizer signing/keygen wrappers;
     # - Longfellow: SecureRandomEngine used only by the legacy C ABI wrapper.
     #   The old generator-backed BATS fixture is intentionally disabled, so it
@@ -88,6 +88,8 @@ audit_archive_residues() {
         [[ -z $hit ]] && continue
         case "$hit" in
             "$root/lib/pqclean/libqpz.a":kem.o:|\
+            "$root/lib/pqclean/libqpz.a":skem.o:|\
+            "$root/lib/pqclean/libqpz.a":kyber_larkg.o:|\
             "$root/lib/mayo/libmayo.a":mayo.o:|\
             "$root/lib/longfellow-zk/liblongfellow-zk.a":crypto.cc.o:) ;;
             *) printf 'unclassified archive RNG residue: %s\n' "$hit" >&2; return 1 ;;
