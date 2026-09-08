@@ -45,6 +45,8 @@
 #define PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_BYTES          2420
 #define PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_ALGNAME        "Dilithium2"
 extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair(uint8_t *pk, uint8_t *sk);
+extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair_derand(uint8_t *pk, uint8_t *sk,
+	const uint8_t seed[32]);
 extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_pub_gen(uint8_t *pk, uint8_t *sk);
 extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_signature(
 	uint8_t *sig, size_t *siglen,
@@ -69,8 +71,12 @@ extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_open(
 #define PQCLEAN_KYBER512_CLEAN_CRYPTO_ALGNAME         "Kyber512"
 #define KYBER_SSBYTES                                 32   /* size in bytes of shared key */
 extern int PQCLEAN_KYBER512_CLEAN_crypto_kem_keypair(uint8_t *pk, uint8_t *sk);
+extern int PQCLEAN_KYBER512_CLEAN_crypto_kem_keypair_derand(uint8_t *pk, uint8_t *sk,
+	const uint8_t coins[64]);
 extern int PQCLEAN_KYBER512_CLEAN_crypto_pub_gen(uint8_t *pk, uint8_t *sk);
 extern int PQCLEAN_KYBER512_CLEAN_crypto_kem_enc(uint8_t *ct, uint8_t *ss, const uint8_t *pk);
+extern int PQCLEAN_KYBER512_CLEAN_crypto_kem_enc_derand(uint8_t *ct, uint8_t *ss,
+	const uint8_t *pk, const uint8_t coins[32]);
 extern int PQCLEAN_KYBER512_CLEAN_crypto_kem_dec(uint8_t *ss, const uint8_t *ct, const uint8_t *sk);
 
 /*
@@ -125,8 +131,12 @@ extern int mlkem1024_dec(uint8_t *ss, const uint8_t *ct, const uint8_t *sk);
 #define PQCLEAN_SNTRUP761_CLEAN_CRYPTO_BYTES           32
 #define PQCLEAN_SNTRUP761_CLEAN_CRYPTO_ALGNAME         "sntrup761"
 extern int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_keypair(uint8_t *pk, uint8_t *sk);
+extern int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_keypair_rng(uint8_t *pk, uint8_t *sk,
+    zen_rng_callback fill, void *context);
 extern int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_pubgen(uint8_t *pk, uint8_t *sk);
 extern int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_enc(uint8_t *ct, uint8_t *ss, const uint8_t *pk);
+extern int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_enc_rng(uint8_t *ct, uint8_t *ss, const uint8_t *pk,
+    zen_rng_callback fill, void *context);
 extern int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_dec(uint8_t *ss, const uint8_t *ct, const uint8_t *sk);
 
 
@@ -148,14 +158,17 @@ extern int pqcrystals_ml_dsa_44_zen_pub_gen(uint8_t *pk, uint8_t *sk);
 static int qp_signature_keygen(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
+	uint8_t seed[32];
 	lua_createtable(L, 0, 2);
 	octet *private = o_new(L, PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_SECRETKEYBYTES); SAFE_GOTO(private, "Could not create private key");
 	lua_setfield(L, -2, "private");
 	octet *public = o_new(L, PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE_GOTO(public, "Could not create public key");
 	lua_setfield(L, -2, "public");
 
-	PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair((unsigned char*)public->val,
-						     (unsigned char*)private->val);
+	zenroom_t *Z = zen_get_global_context();
+	SAFE_GOTO(zen_rng_fill(Z, seed, sizeof(seed)) == 0, "Random generator unavailable");
+	SAFE_GOTO(PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair_derand((unsigned char*)public->val,
+					     (unsigned char*)private->val, seed) == 0, "Could not create key pair");
 	public->len = PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES;
 	private->len = PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_SECRETKEYBYTES;
 end:
@@ -327,13 +340,19 @@ end:
 /*#######################################*/
 static int qp_kem_keygen(lua_State *L) {
 	BEGIN();
+	uint8_t coins[64];
 	lua_createtable(L, 0, 2);
 	octet *private = o_new(L, PQCLEAN_KYBER512_CLEAN_CRYPTO_SECRETKEYBYTES); SAFE(private, "Could not create private key");
 	lua_setfield(L, -2, "private");
 	octet *public = o_new(L, PQCLEAN_KYBER512_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE(public, "Could not create public key");
 	lua_setfield(L, -2, "public");
 
-	PQCLEAN_KYBER512_CLEAN_crypto_kem_keypair((unsigned char*)public->val, (unsigned char*)private->val);
+	zenroom_t *Z = zen_get_context(L);
+	if(zen_rng_fill(Z, coins, sizeof(coins)) != 0)
+		return luaL_error(L, "QP Kyber RNG unavailable");
+	if(PQCLEAN_KYBER512_CLEAN_crypto_kem_keypair_derand((unsigned char*)public->val,
+		(unsigned char*)private->val, coins) != 0)
+		return luaL_error(L, "QP Kyber derand keypair failed");
 	public->len = PQCLEAN_KYBER512_CLEAN_CRYPTO_PUBLICKEYBYTES;
 	private->len = PQCLEAN_KYBER512_CLEAN_CRYPTO_SECRETKEYBYTES;
 	END(1);
@@ -396,6 +415,7 @@ static int qp_kem_ctcheck(lua_State *L) {
 static int qp_enc(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
+	uint8_t coins[32];
 	const octet *pk = NULL;
 	octet *ss = NULL, *ct = NULL;
 	pk = o_arg(L, 1); SAFE_GOTO(pk, "Could not allocate public key");
@@ -405,10 +425,12 @@ static int qp_enc(lua_State *L) {
 	lua_setfield(L, -2, "secret"); // shared secret
 	ct = o_new(L, PQCLEAN_KYBER512_CLEAN_CRYPTO_CIPHERTEXTBYTES); SAFE_GOTO(ct, "Could not create kem ciphertext");
 	lua_setfield(L, -2, "cipher");
-	SAFE_GOTO(!PQCLEAN_KYBER512_CLEAN_crypto_kem_enc(
+	zenroom_t *Z = zen_get_context(L);
+	SAFE_GOTO(zen_rng_fill(Z, coins, sizeof(coins)) == 0, "Random generator unavailable");
+	SAFE_GOTO(!PQCLEAN_KYBER512_CLEAN_crypto_kem_enc_derand(
 		(unsigned char*)ct->val,
 		(unsigned char*)ss->val,
-		(unsigned char*)pk->val),
+		(unsigned char*)pk->val, coins),
 		"Could not encrypt the shared secret"
 	);
 	ss->len = KYBER_SSBYTES;
@@ -515,9 +537,7 @@ static int mlkem_keygen(lua_State *L) {
 		memcpy(randbytes,rnd->val,32);
 	} else {
 		zenroom_t *Z = zen_get_context(L);
-		for(uint8_t i=0;i<32;i++) {
-			randbytes[i] = RAND_byte(Z->random_generator);
-		}
+		SAFE(zen_rng_fill(Z, randbytes, 32) == 0, "Random generator unavailable");
 	}
 	ud = luaL_testudata(L,2,"zenroom.octet");
 	if (ud){
@@ -526,9 +546,7 @@ static int mlkem_keygen(lua_State *L) {
 		memcpy(&randbytes[32],rnd->val,32);
 	} else {
 		zenroom_t *Z = zen_get_context(L);
-		for(uint8_t i=32;i<64;i++) {
-			randbytes[i] = RAND_byte(Z->random_generator);
-		}
+		SAFE(zen_rng_fill(Z, randbytes + 32, 32) == 0, "Random generator unavailable");
 	}
 	octet *private, *public;
 	const char *s = lua_tostring(L, 3);
@@ -826,9 +844,7 @@ static int mlkem_enc(lua_State *L) {
 		memcpy(randbytes,rnd->val,32);
 	} else {
 		zenroom_t *Z = zen_get_context(L);
-		for(uint8_t i = 0; i < 32; i++) {
-			randbytes[i] = RAND_byte(Z -> random_generator);
-		}
+		SAFE_GOTO(zen_rng_fill(Z, randbytes, sizeof(randbytes)) == 0, "Random generator unavailable");
 	}
 	const char *s = lua_tostring(L, 3);
 	if(!s) s = "mlkem512";
@@ -984,16 +1000,22 @@ end:
 /*#######################################*/
 static int qp_sntrup_kem_keygen(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	lua_createtable(L, 0, 2);
 	octet *private = o_new(L, PQCLEAN_SNTRUP761_CLEAN_CRYPTO_SECRETKEYBYTES); SAFE(private, "Could not create private key");
 	lua_setfield(L, -2, "private");
 	octet *public = o_new(L, PQCLEAN_SNTRUP761_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE(public, "Could not create public key");
 	lua_setfield(L, -2, "public");
 
-	PQCLEAN_SNTRUP761_CLEAN_crypto_kem_keypair((unsigned char*)public->val,
-						   (unsigned char*)private->val);
+	zenroom_t *Z = zen_get_global_context();
+	SAFE_GOTO(PQCLEAN_SNTRUP761_CLEAN_crypto_kem_keypair_rng((unsigned char*)public->val,
+		(unsigned char*)private->val, zen_rng_callback_fill, Z) == 0, "Could not create key pair");
 	public->len = PQCLEAN_SNTRUP761_CLEAN_CRYPTO_PUBLICKEYBYTES;
 	private->len = PQCLEAN_SNTRUP761_CLEAN_CRYPTO_SECRETKEYBYTES;
+end:
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
@@ -1060,10 +1082,11 @@ static int qp_sntrup_kem_enc(lua_State *L) {
 	lua_setfield(L, -2, "secret"); // shared secret
 	ct = o_new(L, PQCLEAN_SNTRUP761_CLEAN_CRYPTO_CIPHERTEXTBYTES); SAFE_GOTO(ct, "Could not allocate kem ciphertext");
 	lua_setfield(L, -2, "cipher");
-	SAFE_GOTO(!PQCLEAN_SNTRUP761_CLEAN_crypto_kem_enc(
+	zenroom_t *Z = zen_get_context(L);
+	SAFE_GOTO(!PQCLEAN_SNTRUP761_CLEAN_crypto_kem_enc_rng(
 		(unsigned char*)ct->val,
 		(unsigned char*)ss->val,
-		(unsigned char*)pk->val),
+		(unsigned char*)pk->val, zen_rng_callback_fill, Z),
 		"Could not encrypt the shared secret"
 	)
 	ss->len = PQCLEAN_SNTRUP761_CLEAN_CRYPTO_BYTES;
@@ -1167,7 +1190,7 @@ static int ml_dsa_44_keypair(lua_State *L)   {
 	}
 	else {
 		zenroom_t *Z = zen_get_context(L);
-		for(uint8_t i=0;i<32;i++) randbytes[i] = RAND_byte(Z->random_generator);
+		SAFE(zen_rng_fill(Z, randbytes, sizeof(randbytes)) == 0, "Random generator unavailable");
 	}
 	pqcrystals_ml_dsa_44_zen_keypair((unsigned char*)public->val,
 						     (unsigned char*)private->val, randbytes);
@@ -1264,9 +1287,9 @@ static int ml_dsa_44_signature(lua_State *L) {
 		if(sum == 0) {
 			for(uint8_t i=0;i<32;i++) randbytes[i] = 0;			
 		}
-		else for(uint8_t i=0;i<32;i++) randbytes[i] = RAND_byte(Z->random_generator);
+		else SAFE_GOTO(zen_rng_fill(Z, randbytes, sizeof(randbytes)) == 0, "Random generator unavailable");
 	}
-	else for(uint8_t i=0;i<32;i++) randbytes[i] = RAND_byte(Z->random_generator);
+	else SAFE_GOTO(zen_rng_fill(Z, randbytes, sizeof(randbytes)) == 0, "Random generator unavailable");
 	
 	void *ud =luaL_testudata(L,3,"zenroom.octet");
 	if (ud){

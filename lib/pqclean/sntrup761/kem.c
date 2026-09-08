@@ -74,11 +74,11 @@ static void Hash(unsigned char *out, const unsigned char *in, int inlen) {
 
 /* ----- higher-level randomness */
 
-static void Short_random(small *out) {
+static int Short_random(small *out, PQCLEAN_SNTRUP761_CLEAN_rng_fill fill, void *context) {
     uint32 L[ppadsort];
     int i;
 
-    randombytes((unsigned char *) L, 4 * p);
+    if (fill(context, L, 4 * p) != 0) return -1;
     crypto_decode_pxint32(L, (unsigned char *) L);
     for (i = 0; i < w; ++i) {
         L[i] = L[i] & (uint32) - 2;
@@ -93,17 +93,19 @@ static void Short_random(small *out) {
     for (i = 0; i < p; ++i) {
         out[i] = (small) ((L[i] & 3) - 1);
     }
+    return 0;
 }
 
-static void Small_random(small *out) {
+static int Small_random(small *out, PQCLEAN_SNTRUP761_CLEAN_rng_fill fill, void *context) {
     uint32 L[p];
     int i;
 
-    randombytes((unsigned char *) L, sizeof L);
+    if (fill(context, L, sizeof L) != 0) return -1;
     crypto_decode_pxint32(L, (unsigned char *) L);
     for (i = 0; i < p; ++i) {
         out[i] = (small) ((((L[i] & 0x3fffffff) * 3) >> 30) - 1);
     }
+    return 0;
 }
 
 /* ----- Streamlined NTRU Prime */
@@ -136,10 +138,11 @@ static void Hide(unsigned char *x, unsigned char *c, unsigned char *r_enc, const
 }
 
 
-int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_keypair(uint8_t *pk, uint8_t *sk) {
+int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_keypair_rng(uint8_t *pk, uint8_t *sk,
+        PQCLEAN_SNTRUP761_CLEAN_rng_fill fill, void *context) {
     small g[p];
     for (;;) {
-        Small_random(g);
+        if (Small_random(g, fill, context) != 0) return -1;
         {
             small v[p + 1];
             small vp;
@@ -154,7 +157,7 @@ int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_keypair(uint8_t *pk, uint8_t *sk) {
     }
     {
         small f[p];
-        Short_random(f);
+        if (Short_random(f, fill, context) != 0) return -1;
         Small_encode(sk, f);
         {
             Fq h[p + 1];
@@ -172,9 +175,18 @@ int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_keypair(uint8_t *pk, uint8_t *sk) {
         sk[SecretKeys_bytes - 1] = 4;
         Hash(sk + SecretKeys_bytes + PublicKeys_bytes + Small_bytes, sk + SecretKeys_bytes - 1, 1 + PublicKeys_bytes);
         sk[SecretKeys_bytes - 1] = sksave;
-        randombytes(sk + SecretKeys_bytes + PublicKeys_bytes, Small_bytes);
+        if (fill(context, sk + SecretKeys_bytes + PublicKeys_bytes, Small_bytes) != 0) return -1;
     }
     return 0;
+}
+
+static int system_rng_fill(void *context, void *output, size_t length) {
+    (void)context;
+    return randombytes(output, length);
+}
+
+int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_keypair(uint8_t *pk, uint8_t *sk) {
+    return PQCLEAN_SNTRUP761_CLEAN_crypto_kem_keypair_rng(pk, sk, system_rng_fill, NULL);
 }
 
 int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_pubgen(uint8_t *pk, uint8_t *sk) {
@@ -185,7 +197,8 @@ int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_pubgen(uint8_t *pk, uint8_t *sk) {
   return 0;
 }
 
-int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_enc(uint8_t *c, uint8_t *k, const uint8_t *pk) {
+int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_enc_rng(uint8_t *c, uint8_t *k, const uint8_t *pk,
+        PQCLEAN_SNTRUP761_CLEAN_rng_fill fill, void *context) {
     unsigned char cache[Hash_bytes];
     int i;
     {
@@ -198,7 +211,7 @@ int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_enc(uint8_t *c, uint8_t *k, const uint8_t
     }
     {
         Inputs r;
-        Short_random(r);
+        if (Short_random(r, fill, context) != 0) return -1;
         {
             unsigned char r_enc[Small_bytes + 1];
             unsigned char x[1 + Hash_bytes + Ciphertexts_bytes + Confirm_bytes];
@@ -211,6 +224,10 @@ int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_enc(uint8_t *c, uint8_t *k, const uint8_t
         }
     }
     return 0;
+}
+
+int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_enc(uint8_t *c, uint8_t *k, const uint8_t *pk) {
+    return PQCLEAN_SNTRUP761_CLEAN_crypto_kem_enc_rng(c, k, pk, system_rng_fill, NULL);
 }
 
 int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_dec(uint8_t *k, const uint8_t *c, const uint8_t *sk) {

@@ -331,6 +331,11 @@ int mayo_keypair(const mayo_params_t *p, unsigned char *pk, unsigned char *sk);
 int mayo_sign_signature(const mayo_params_t *p, unsigned char *sig,
 			  size_t *siglen, const unsigned char *m,
 			  size_t mlen, const unsigned char *csk);
+#define mayo_sign_signature_with_randomizer MAYO_NAMESPACE(mayo_sign_signature_with_randomizer)
+int mayo_sign_signature_with_randomizer(const mayo_params_t *p, unsigned char *sig,
+			  size_t *siglen, const unsigned char *m,
+			  size_t mlen, const unsigned char *csk,
+			  const unsigned char *randomizer);
 
 /**
  * MAYO signature generation.
@@ -458,4 +463,3 @@ int mayo_verify(const mayo_params_t *p, const unsigned char *m,
 				const unsigned char *pk);
 
 #endif
-

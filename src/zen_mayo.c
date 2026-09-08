@@ -15,9 +15,7 @@ static int zen_mayo_secgen(lua_State *L) {
 	zenroom_t *Z = zen_get_context(L);
 	register const size_t sksize = CRYPTO_SECRETKEYBYTES; 
 	octet *sk = o_new(L, sksize); SAFE(sk, "Could not create secret key");
-	register size_t i;
-	for(i=0; i < sksize; i++)
-		sk->val[i] = RAND_byte(Z->random_generator);
+	SAFE(zen_rng_fill(Z, sk->val, sksize) == 0, "Random generator unavailable");
 	sk->len = sksize;
 	END(1);
 }
@@ -75,12 +73,15 @@ static int zen_mayo_sign(lua_State *L) {
 	SAFE_GOTO(sk->len == CRYPTO_SECRETKEYBYTES, "Invalid size for MAYO_5 secret key");
 	m = o_arg(L, 2); SAFE_GOTO(m, "Could not allocate message");
 	octet *sig = o_new(L, CRYPTO_BYTES); SAFE_GOTO(sig, "Could not create signature");
+	unsigned char randomizer[SALT_BYTES_MAX];
+	zenroom_t *Z = zen_get_context(L);
+	SAFE_GOTO(zen_rng_fill(Z, randomizer, PARAM_salt_bytes(NULL)) == 0, "Random generator unavailable");
 	SAFE_GOTO(
-		!crypto_sign_signature(
+		!mayo_sign_signature_with_randomizer(NULL,
 			(unsigned char*)sig->val,
 			(size_t*)&sig->len,
 			(unsigned char*)m->val, m->len,
-			(unsigned char*)sk->val
+			(unsigned char*)sk->val, randomizer
 		) || sig->len <= 0,
 		"Could not sign the message"
 	);
@@ -112,15 +113,21 @@ static int zen_mayo_signed_message(lua_State *L) {
 	SAFE_GOTO(sk->len == CRYPTO_SECRETKEYBYTES, "Invalid size for MAYO_5 secret key");
 	m = o_arg(L, 2); SAFE_GOTO(m, "Could not allocate message");
 	octet *sig = o_new(L, CRYPTO_BYTES + m->len); SAFE_GOTO(sig, "Could not create signature");
+	unsigned char randomizer[SALT_BYTES_MAX];
+	zenroom_t *Z = zen_get_context(L);
+	SAFE_GOTO(zen_rng_fill(Z, randomizer, PARAM_salt_bytes(NULL)) == 0, "Random generator unavailable");
 	SAFE_GOTO(
-		!crypto_sign(
+		!mayo_sign_signature_with_randomizer(NULL,
 			(unsigned char*)sig->val,
 			(size_t*)&sig->len,
 			(unsigned char*)m->val, m->len,
-			(unsigned char*)sk->val
+			(unsigned char*)sk->val, randomizer
 		) || sig->len <= 0,
 		"Could not sign the message"
 	);
+	SAFE_GOTO(sig->len == CRYPTO_BYTES, "Invalid MAYO signature size");
+	memcpy(sig->val + sig->len, m->val, m->len);
+	sig->len += m->len;
 end:
 	o_free(L, m);
 	o_free(L, sk);

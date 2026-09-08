@@ -31,6 +31,7 @@
 #include "circuits/mac/mac_reference.h"
 #include "circuits/mac/mac_witness.h"
 #include "circuits/mdoc/mdoc_decompress.h"
+#include "circuits/mdoc/mdoc_rng_adapter.h"
 #include "circuits/mdoc/mdoc_witness.h"
 #include "ec/p256.h"
 #include "gf2k/gf2_128.h"
@@ -214,7 +215,7 @@ MdocProverErrorCode fill_witness(
     const uint8_t* mdoc, size_t mdoc_len, const Elt& pkX, const Elt& pkY,
     const uint8_t* tr, size_t tr_len, const RequestedAttribute* attrs,
     size_t attrs_len, const uint8_t* now, ProverState& state,
-    SecureRandomEngine& rng, const f_128& Fs, size_t version) {
+    RandomEngine& rng, const f_128& Fs, size_t version) {
   using MdocHW = MdocHashWitness<P256, f_128>;
   using MdocSW = MdocSignatureWitness<P256, Fp256Scalar>;
 
@@ -395,14 +396,15 @@ using MdocSWw = MdocSignatureWitness<P256, Fp256Scalar>;
 // This implementation uses 2 separate circuits over 2 fields to verify
 // the signature and the hash components of the mdoc.
 // It is the caller's job to free the memory pointed to by prf.
-MdocProverErrorCode run_mdoc_prover(
+MdocProverErrorCode run_mdoc_prover_with_rng(
     const uint8_t* bcp, size_t bcsz, /* circuit data */
     const uint8_t* mdoc, size_t mdoc_len, const char* pkx,
     const char* pky,                          /* string rep of public key */
     const uint8_t* transcript, size_t tr_len, /* session transcript */
     const RequestedAttribute* attrs, size_t attrs_len,
     const char* now, /* time formatted as "2023-11-02T09:00:00Z" */
-    uint8_t** prf, size_t* proof_len, const ZkSpecStruct* zk_spec) {
+    uint8_t** prf, size_t* proof_len, const ZkSpecStruct* zk_spec,
+    MdocRandomCallback random_callback, void* random_context) {
   if (bcp == nullptr || mdoc == nullptr || pkx == nullptr || pky == nullptr ||
       transcript == nullptr || attrs == nullptr || now == nullptr ||
       prf == nullptr || proof_len == nullptr || zk_spec == nullptr) {
@@ -461,7 +463,10 @@ MdocProverErrorCode run_mdoc_prover(
   DenseFiller<Fp256Base> sig_filler(W_sig);
   DenseFiller<f_128> hash_filler(W_hash);
 
-  SecureRandomEngine rng;
+  CallbackRandomEngine callback_rng(random_callback, random_context);
+  SecureRandomEngine secure_rng;
+  RandomEngine& rng = random_callback == nullptr
+      ? static_cast<RandomEngine&>(secure_rng) : static_cast<RandomEngine&>(callback_rng);
   ProverState state;
   MdocProverErrorCode ok = fill_witness(
       sig_filler, hash_filler, mdoc, mdoc_len, pkX, pkY, transcript, tr_len,
@@ -470,6 +475,7 @@ MdocProverErrorCode run_mdoc_prover(
     log(ERROR, "fill_witness failed");
     return ok;
   }
+  if (callback_rng.failed()) return MDOC_PROVER_GENERAL_FAILURE;
 
   // ========= Run prover ==============
   // Use the transcript from the session to select the random oracle.
@@ -490,6 +496,7 @@ MdocProverErrorCode run_mdoc_prover(
 
   hash_p.commit(h_zk, W_hash, tp, rng);
   sig_p.commit(sig_zk, W_sig, tp, rng);
+  if (callback_rng.failed()) return MDOC_PROVER_GENERAL_FAILURE;
 
   log(INFO,
       "commit created. h[nl:%zu, ni:%zu], s[nl:%zu, ni:%zu] hc[b:%zu r:%zu] "
@@ -515,6 +522,7 @@ MdocProverErrorCode run_mdoc_prover(
   if (!sig_p.prove(sig_zk, W_sig, tp)) {
     return MDOC_PROVER_GENERAL_FAILURE;
   };
+  if (callback_rng.failed()) return MDOC_PROVER_GENERAL_FAILURE;
   log(INFO, "ZK signature proof done");
 
   // Serialize proof to bytes.
@@ -537,6 +545,16 @@ MdocProverErrorCode run_mdoc_prover(
   }
   memcpy(*prf, buf.data(), buf.size());
   return MDOC_PROVER_SUCCESS;
+}
+
+MdocProverErrorCode run_mdoc_prover(
+    const uint8_t* bcp, size_t bcsz, const uint8_t* mdoc, size_t mdoc_len,
+    const char* pkx, const char* pky, const uint8_t* transcript, size_t tr_len,
+    const RequestedAttribute* attrs, size_t attrs_len, const char* now,
+    uint8_t** prf, size_t* proof_len, const ZkSpecStruct* zk_spec) {
+  return run_mdoc_prover_with_rng(bcp, bcsz, mdoc, mdoc_len, pkx, pky,
+      transcript, tr_len, attrs, attrs_len, now, prf, proof_len, zk_spec,
+      nullptr, nullptr);
 }
 
 MdocVerifierErrorCode run_mdoc_verifier(

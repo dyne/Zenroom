@@ -46,6 +46,8 @@ typedef struct {
   size_t namespace_len, id_len, cbor_value_len;
 } RequestedAttribute;
 
+typedef int (*MdocRandomCallback)(void* context, void* output, size_t length);
+
 // Return codes for the run_mdoc_prover method.
 typedef enum {
   MDOC_PROVER_SUCCESS = 0,
@@ -162,6 +164,12 @@ MdocProverErrorCode run_mdoc_prover(
     const RequestedAttribute* attrs, size_t attrs_len,
     const char* now, /* time formatted as "2023-11-02T09:00:00Z" */
     uint8_t** prf, size_t* proof_len, const ZkSpecStruct* zk_spec_version);
+MdocProverErrorCode run_mdoc_prover_with_rng(
+    const uint8_t* bcp, size_t bcsz, const uint8_t* mdoc, size_t mdoc_len,
+    const char* pkx, const char* pky, const uint8_t* transcript, size_t tr_len,
+    const RequestedAttribute* attrs, size_t attrs_len, const char* now,
+    uint8_t** prf, size_t* proof_len, const ZkSpecStruct* zk_spec_version,
+    MdocRandomCallback random_callback, void* random_context);
 
 // The run_mdoc2_verifier method accepts a byte representation of the circuit,
 // the public key of the issuer, the transcript, an array of RequestedAttribute

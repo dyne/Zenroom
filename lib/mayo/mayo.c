@@ -359,9 +359,10 @@ int mayo_expand_sk(const mayo_params_t *p, const unsigned char *csk,
 	return ret;
 }
 
-int mayo_sign_signature(const mayo_params_t *p, unsigned char *sig,
+int mayo_sign_signature_with_randomizer(const mayo_params_t *p, unsigned char *sig,
 			  size_t *siglen, const unsigned char *m,
-			  size_t mlen, const unsigned char *csk) {
+			  size_t mlen, const unsigned char *csk,
+			  const unsigned char *randomizer) {
 	int ret = MAYO_OK;
 	unsigned char tenc[M_BYTES_MAX], t[M_MAX]; // no secret data
 	unsigned char y[M_MAX];                    // secret data
@@ -417,6 +418,9 @@ int mayo_sign_signature(const mayo_params_t *p, unsigned char *sig,
 #endif
 
 	// choose the randomizer
+	if (randomizer) {
+		memcpy(tmp + param_digest_bytes, randomizer, param_salt_bytes);
+	} else {
 	#if defined(PQM4) || defined(HAVE_RANDOMBYTES_NORETVAL)
 	randombytes(tmp + param_digest_bytes, param_salt_bytes);
 	#else
@@ -425,6 +429,7 @@ int mayo_sign_signature(const mayo_params_t *p, unsigned char *sig,
 		goto err;
 	}
 	#endif
+	}
 
 	// hashing to salt
 	memcpy(tmp + param_digest_bytes + param_salt_bytes, seed_sk,
@@ -500,6 +505,12 @@ err:
 	mayo_secure_clear(tmp, sizeof(tmp));
 	mayo_secure_clear(Mtmp, sizeof(Mtmp));
 	return ret;
+}
+
+int mayo_sign_signature(const mayo_params_t *p, unsigned char *sig,
+			  size_t *siglen, const unsigned char *m,
+			  size_t mlen, const unsigned char *csk) {
+	return mayo_sign_signature_with_randomizer(p, sig, siglen, m, mlen, csk, NULL);
 }
 
 int mayo_sign(const mayo_params_t *p, unsigned char *sm,
@@ -737,4 +748,3 @@ int mayo_verify(const mayo_params_t *p, const unsigned char *m,
 	}
 	return MAYO_ERR; // bad signature
 }
-

@@ -1,7 +1,10 @@
 #ifndef PQCLEAN_SNTRUP761_CLEAN_API_H
 #define PQCLEAN_SNTRUP761_CLEAN_API_H
 
+#include <stddef.h>
 #include <stdint.h>
+
+typedef int (*PQCLEAN_SNTRUP761_CLEAN_rng_fill)(void *context, void *output, size_t length);
 
 
 #define PQCLEAN_SNTRUP761_CLEAN_CRYPTO_ALGNAME "sntrup761"
@@ -12,7 +15,11 @@
 #define PQCLEAN_SNTRUP761_CLEAN_CRYPTO_BYTES 32
 
 int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_keypair(uint8_t *pk, uint8_t *sk);
+int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_keypair_rng(uint8_t *pk, uint8_t *sk,
+    PQCLEAN_SNTRUP761_CLEAN_rng_fill fill, void *context);
 int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_pubgen(uint8_t *pk, uint8_t *sk);
 int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_enc(uint8_t *c, uint8_t *k, const uint8_t *pk);
+int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_enc_rng(uint8_t *c, uint8_t *k, const uint8_t *pk,
+    PQCLEAN_SNTRUP761_CLEAN_rng_fill fill, void *context);
 int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_dec(uint8_t *k, const uint8_t *c, const uint8_t *sk);
 #endif

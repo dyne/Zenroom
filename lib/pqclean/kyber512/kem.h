@@ -4,12 +4,16 @@
 
 
 int PQCLEAN_KYBER512_CLEAN_crypto_kem_keypair(unsigned char *pk, unsigned char *sk);
+int PQCLEAN_KYBER512_CLEAN_crypto_kem_keypair_derand(unsigned char *pk, unsigned char *sk,
+        const unsigned char coins[2 * KYBER_SYMBYTES]);
 
 int PQCLEAN_KYBER512_CLEAN_crypto_pub_gen(unsigned char *pk, unsigned char *sk);
 
 int PQCLEAN_KYBER512_CLEAN_crypto_kem_enc(unsigned char *ct,
         unsigned char *ss,
         const unsigned char *pk);
+int PQCLEAN_KYBER512_CLEAN_crypto_kem_enc_derand(unsigned char *ct, unsigned char *ss,
+        const unsigned char *pk, const unsigned char coins[KYBER_SYMBYTES]);
 
 int PQCLEAN_KYBER512_CLEAN_crypto_kem_dec(unsigned char *ss,
         const unsigned char *ct,
