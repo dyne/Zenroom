@@ -26,7 +26,6 @@ audit() {
             "$root/src/randombytes.h":*) ;;
             "$root/src/zen_random.c":*:randombytes\(*) ;;
             "$root/src/api_sign.c":*:randombytes\(*) ;;
-            "$root/src/zen_larkg.c":*:randombytes\(*) ;;
             *) printf 'forbidden RNG bypass: %s\n' "$hit" >&2; return 1 ;;
         esac
     done <<< "$hits"
@@ -54,7 +53,7 @@ audit_runtime_relocations() {
 
 audit_archive_residues() {
     # Classified, unregistered upstream compatibility residues:
-    # - pqclean: SNTRUP system-RNG wrapper, sKEM and experimental LARKG;
+    # - pqclean: SNTRUP system-RNG wrapper;
     # - MAYO: legacy no-randomizer signing/keygen wrappers;
     # - Longfellow: SecureRandomEngine used only by the legacy C ABI wrapper.
     #   The old generator-backed BATS fixture is intentionally disabled, so it
@@ -69,8 +68,6 @@ audit_archive_residues() {
         [[ -z $hit ]] && continue
         case "$hit" in
             "$root/lib/pqclean/libqpz.a":kem.o:|\
-            "$root/lib/pqclean/libqpz.a":skem.o:|\
-            "$root/lib/pqclean/libqpz.a":kyber_larkg.o:|\
             "$root/lib/mayo/libmayo.a":mayo.o:|\
             "$root/lib/longfellow-zk/liblongfellow-zk.a":crypto.cc.o:) ;;
             *) printf 'unclassified archive RNG residue: %s\n' "$hit" >&2; return 1 ;;
