@@ -23,7 +23,7 @@ lua_cc := ${cc}
 zenroom_cc := ${cc}
 zstd_cc := ${cc}
 longfellow_cxx := ${cxx}
-longfellow_cflags := -I ${pwd}/src -I. -I../zstd -fPIC -DLIBRARY -msimd128
+longfellow_cflags := -I ${pwd}/src -I. -I.. -I../zstd -fPIC -DLIBRARY -msimd128
 zk-circuit-lang_cxxflags := -I ${pwd}/src -I. -I../zstd -fPIC -DLIBRARY -msimd128 -I ../lua54/src -I../longfellow-zk
 
 system := Javascript

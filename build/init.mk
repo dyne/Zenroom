@@ -105,7 +105,9 @@ mlkem_cc ?= ${cc}
 #-----------------
 # longfellow-zk settings
 longfellow_cxx ?= ${cxx}
-longfellow_cflags += -I ${pwd}/src -I. -I../zstd -fPIC -DLIBRARY
+# Longfellow's public headers include <longfellow-zk/...>; its in-tree build
+# runs from lib/longfellow-zk, so the parent lib directory is required too.
+longfellow_cflags += -I ${pwd}/src -I. -I.. -I../zstd -fPIC -DLIBRARY
 ARCH ?= $(shell uname -m)
 ifeq ($(shell uname -s),Darwin)
     longfellow_cflags += -Xarch_x86_64 -mpclmul -Xarch_arm64  ""
