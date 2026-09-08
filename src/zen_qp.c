@@ -165,7 +165,7 @@ static int qp_signature_keygen(lua_State *L) {
 	octet *public = o_new(L, PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE_GOTO(public, "Could not create public key");
 	lua_setfield(L, -2, "public");
 
-	zenroom_t *Z = zen_get_global_context();
+	zenroom_t *Z = zen_get_context(L);
 	SAFE_GOTO(zen_rng_fill(Z, seed, sizeof(seed)) == 0, "Random generator unavailable");
 	SAFE_GOTO(PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair_derand((unsigned char*)public->val,
 					     (unsigned char*)private->val, seed) == 0, "Could not create key pair");
@@ -1007,7 +1007,7 @@ static int qp_sntrup_kem_keygen(lua_State *L) {
 	octet *public = o_new(L, PQCLEAN_SNTRUP761_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE(public, "Could not create public key");
 	lua_setfield(L, -2, "public");
 
-	zenroom_t *Z = zen_get_global_context();
+	zenroom_t *Z = zen_get_context(L);
 	SAFE_GOTO(PQCLEAN_SNTRUP761_CLEAN_crypto_kem_keypair_rng((unsigned char*)public->val,
 		(unsigned char*)private->val, zen_rng_callback_fill, Z) == 0, "Could not create key pair");
 	public->len = PQCLEAN_SNTRUP761_CLEAN_CRYPTO_PUBLICKEYBYTES;

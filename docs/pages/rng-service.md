@@ -30,6 +30,11 @@ algorithms around byte buffers would alter their rejection sampling or seeded
 stream consumption.  The source and relocation audit allowlists only these
 call sites plus the RNG backend and VM lifecycle implementation.
 
+Legacy PQClean key-generation and encapsulation entry points that cannot accept
+caller-owned randomness fail with a nonzero result.  Zenroom uses their
+derandomized or callback variants after filling coins through the VM service;
+the compatibility entry points never substitute a fixed seed.
+
 ## Entropy and backend selection
 
 For a VM without an explicit seed, `zen_entropy_fill` obtains all 64 seed bytes

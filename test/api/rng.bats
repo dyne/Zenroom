@@ -14,6 +14,19 @@ load ../bats_setup
     assert_success
 }
 
+@test "RNG service :: unseeded PQ compatibility APIs fail closed" {
+    local ldadd="-L$R -lzenroom"
+    local cflags="${CFLAGS:-} -I$R/src"
+    if strings "$R/libzenroom.so" | grep -q "__asan_init"; then
+        ldadd="$ldadd -fsanitize=address,undefined"
+        cflags="$cflags -fsanitize=address,undefined"
+    fi
+    cc $cflags -ggdb -o pq_compat_rng_failure \
+        "$T/pq_compat_rng_failure.c" $ldadd
+    run env LD_LIBRARY_PATH="$R" ./pq_compat_rng_failure
+    assert_success
+}
+
 @test "RNG service :: runtime consumers preserve fixed-seed streams" {
     run "$ZENROOM_EXECUTABLE" \
         -c rngseed=hex:000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f \

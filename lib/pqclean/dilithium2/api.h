@@ -10,6 +10,7 @@
 #define PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_ALGNAME "Dilithium2"
 
 
+/* Disabled: use the caller-randomized keypair API exposed by the integration. */
 int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair(uint8_t *pk, uint8_t *sk);
 
 int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_signature(
