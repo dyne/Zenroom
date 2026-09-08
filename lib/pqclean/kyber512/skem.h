@@ -11,7 +11,7 @@
 /*************************************************
 * Name:        skem_context
 *
-* Description: Global context for the Split-KEM scheme. 
+* Description: Global context for the Split-KEM scheme.
 * Contains the globally shared seed rho and the pre-computed
 * matrices A and A^T.
 **************************************************/

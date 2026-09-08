@@ -55,9 +55,10 @@ static uint32_t bigint_less_than(const uint32_t *a, const uint32_t *b) {
 }
 
 static uint32_t larkg_abs_clamped(int16_t coefficient, uint32_t *invalid) {
-    int32_t value = coefficient;
-    int32_t sign = value >> 31;
-    uint32_t magnitude = (uint32_t)((value ^ sign) - sign);
+    uint32_t value = (uint32_t)(int32_t)coefficient;
+    uint32_t sign = value >> 31;
+    uint32_t sign_mask = 0U - sign;
+    uint32_t magnitude = (value ^ sign_mask) + sign;
     uint32_t out_of_support = magnitude > 3;
     uint32_t mask = 0U - out_of_support;
     *invalid |= out_of_support;

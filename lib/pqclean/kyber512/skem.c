@@ -28,8 +28,8 @@ extern void PQCLEAN_KYBER512_CLEAN_gen_matrix(polyvec *a, const uint8_t seed[KYB
 * 			   polyvec *pk: pointer to input vector of polynomials (public key)
 * 	 		   const uint8_t *seed: pointer to input public seed (rho)
 **************************************************/
-static void skem_pack_pk(uint8_t r[KYBER_INDCPA_PUBLICKEYBYTES], 
-						 polyvec *pk, 
+static void skem_pack_pk(uint8_t r[KYBER_INDCPA_PUBLICKEYBYTES],
+						 polyvec *pk,
 						 const uint8_t seed[KYBER_SYMBYTES]) {
     PQCLEAN_KYBER512_CLEAN_polyvec_tobytes(r, pk);
     for (size_t i = 0; i < KYBER_SYMBYTES; i++) {
@@ -46,7 +46,7 @@ static void skem_pack_pk(uint8_t r[KYBER_INDCPA_PUBLICKEYBYTES],
 * Arguments:   polyvec *pk: pointer to output vector of polynomials (public key)
 * 			   const uint8_t *packedpk: pointer to input serialized public key
 **************************************************/
-static void skem_unpack_pk(polyvec *pk, 
+static void skem_unpack_pk(polyvec *pk,
 						   const uint8_t packedpk[KYBER_INDCPA_PUBLICKEYBYTES]) {
     PQCLEAN_KYBER512_CLEAN_polyvec_frombytes(pk, packedpk);
 }
@@ -59,7 +59,7 @@ static void skem_unpack_pk(polyvec *pk,
 * Arguments:   uint8_t *r: pointer to output serialized secret key
 * 			   polyvec *sk: pointer to input vector of polynomials (secret key)
 **************************************************/
-static void skem_pack_sk(uint8_t r[KYBER_INDCPA_SECRETKEYBYTES], 
+static void skem_pack_sk(uint8_t r[KYBER_INDCPA_SECRETKEYBYTES],
 						 polyvec *sk) {
     PQCLEAN_KYBER512_CLEAN_polyvec_tobytes(r, sk);
 }
@@ -72,7 +72,7 @@ static void skem_pack_sk(uint8_t r[KYBER_INDCPA_SECRETKEYBYTES],
 * Arguments:   polyvec *sk: pointer to output vector of polynomials (secret key)
 * 			   const uint8_t *packedsk: pointer to input serialized secret key
 **************************************************/
-static void skem_unpack_sk(polyvec *sk, 
+static void skem_unpack_sk(polyvec *sk,
 						   const uint8_t packedsk[KYBER_INDCPA_SECRETKEYBYTES]) {
     PQCLEAN_KYBER512_CLEAN_polyvec_frombytes(sk, packedsk);
 }
@@ -138,9 +138,9 @@ int PQCLEAN_KYBER512_CLEAN_skem_secret_depth(
 * Arguments:   skem_context *ctx: pointer to the context to be initialized
 * 			   const uint8_t *rho: pointer to the shared 32-byte seed
 **************************************************/
-void PQCLEAN_KYBER512_CLEAN_skem_init(skem_context *ctx, 
+void PQCLEAN_KYBER512_CLEAN_skem_init(skem_context *ctx,
 									  const uint8_t rho[KYBER_SYMBYTES]) {
-    
+
 	// Store rho in the context
 	memcpy(ctx->rho, rho, KYBER_SYMBYTES);
 
@@ -159,7 +159,7 @@ void PQCLEAN_KYBER512_CLEAN_skem_init(skem_context *ctx,
 * 			   const skem_context *ctx: pointer to the global context
 **************************************************/
 int PQCLEAN_KYBER512_CLEAN_skem_keygen(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
-											uint8_t sk[KYBER_LARKG_SECRETKEYBYTES], 
+											uint8_t sk[KYBER_LARKG_SECRETKEYBYTES],
 											const skem_context *ctx) {
 	uint8_t buf[2 * KYBER_SYMBYTES];
 	uint8_t nonce = 0;
@@ -171,7 +171,7 @@ int PQCLEAN_KYBER512_CLEAN_skem_keygen(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
 		return -1;
 	}
 	hash_g(buf, buf, KYBER_SYMBYTES);
-	
+
 	// Generate the error vector s ∈ R^k
 	for (int i = 0; i < KYBER_K; i++) {
 		PQCLEAN_KYBER512_CLEAN_poly_getnoise_eta1(&skpv.vec[i], buf, nonce++);
@@ -211,7 +211,7 @@ int PQCLEAN_KYBER512_CLEAN_skem_keygen(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
 * 			   const skem_context *ctx: pointer to the global context
 **************************************************/
 int PQCLEAN_KYBER512_CLEAN_skem_keygen_enc(uint8_t pkp[KYBER_POLYVECBYTES],
-											uint8_t skp[KYBER_INDCPA_SECRETKEYBYTES], 
+											uint8_t skp[KYBER_INDCPA_SECRETKEYBYTES],
 											const skem_context *ctx) {
 	uint8_t coins[KYBER_SYMBYTES];
 	uint8_t nonce = 0;
@@ -222,7 +222,7 @@ int PQCLEAN_KYBER512_CLEAN_skem_keygen_enc(uint8_t pkp[KYBER_POLYVECBYTES],
 		memset(skp, 0, KYBER_INDCPA_SECRETKEYBYTES);
 		return -1;
 	}
-	
+
 	// Generate the error vector r ∈ R^k
 	for (int i = 0; i < KYBER_K; i++) {
 		PQCLEAN_KYBER512_CLEAN_poly_getnoise_eta1(&r.vec[i], coins, nonce++);
@@ -260,8 +260,8 @@ int PQCLEAN_KYBER512_CLEAN_skem_keygen_enc(uint8_t pkp[KYBER_POLYVECBYTES],
 * 			   const uint8_t *pk: pointer to input public key for encapsulation
 **************************************************/
 int PQCLEAN_KYBER512_CLEAN_skem_encaps(uint8_t c_out[KYBER_POLYCOMPRESSEDBYTES],
-										uint8_t K[KYBER_SSBYTES], 
-										const uint8_t skp[KYBER_INDCPA_SECRETKEYBYTES], 
+										uint8_t K[KYBER_SSBYTES],
+										const uint8_t skp[KYBER_INDCPA_SECRETKEYBYTES],
 										const uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES]) {
 	uint8_t coins[KYBER_SYMBYTES];
 	uint8_t buf[KYBER_SYMBYTES];
@@ -275,7 +275,7 @@ int PQCLEAN_KYBER512_CLEAN_skem_encaps(uint8_t c_out[KYBER_POLYCOMPRESSEDBYTES],
 		return -1;
 	}
 	hash_h(K, buf, KYBER_SSBYTES);
-	
+
 	// Encode message as polynomial
 	PQCLEAN_KYBER512_CLEAN_poly_frommsg(&m_poly, K);
 	skem_unpack_pk(&pkpv, pk);
@@ -290,7 +290,7 @@ int PQCLEAN_KYBER512_CLEAN_skem_encaps(uint8_t c_out[KYBER_POLYCOMPRESSEDBYTES],
 
 	// Generate the error polynomial e2 ∈ R
 	PQCLEAN_KYBER512_CLEAN_poly_getnoise_eta2(&e2, coins, nonce++);
-	
+
 	// Compute v = pk * sp + e2 + m_poly and reduce coefficients
 	PQCLEAN_KYBER512_CLEAN_polyvec_basemul_acc_montgomery(&v, &pkpv, &sp);
 	PQCLEAN_KYBER512_CLEAN_poly_invntt_tomont(&v);
@@ -315,9 +315,9 @@ int PQCLEAN_KYBER512_CLEAN_skem_encaps(uint8_t c_out[KYBER_POLYCOMPRESSEDBYTES],
 * 			   const uint8_t *c_in: pointer to input cipher text
 * 			   const uint8_t *pkp: pointer to input public key for encapsulation
 **************************************************/
-void PQCLEAN_KYBER512_CLEAN_skem_decaps(uint8_t m[KYBER_INDCPA_MSGBYTES], 
-										const uint8_t sk[KYBER_LARKG_SECRETKEYBYTES], 
-										const uint8_t c_in[KYBER_POLYCOMPRESSEDBYTES], 
+void PQCLEAN_KYBER512_CLEAN_skem_decaps(uint8_t m[KYBER_INDCPA_MSGBYTES],
+										const uint8_t sk[KYBER_LARKG_SECRETKEYBYTES],
+										const uint8_t c_in[KYBER_POLYCOMPRESSEDBYTES],
 										const uint8_t pkp[KYBER_POLYVECBYTES]) {
 	polyvec u, skpv;
 	poly v, mp;
