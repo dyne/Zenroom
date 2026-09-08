@@ -1,10 +1,10 @@
 #include <stdint.h>
+#include <string.h>
 #include "params.h"
 #include "sign.h"
 #include "packing.h"
 #include "polyvec.h"
 #include "poly.h"
-#include "randombytes.h"
 #include "symmetric.h"
 #include "fips202.h"
 
@@ -28,8 +28,10 @@ int crypto_sign_keypair(uint8_t *pk, uint8_t *sk) {
   polyvecl s1, s1hat;
   polyveck s2, t1, t0;
 
-  /* Get randomness for rho, rhoprime and key */
-  randombytes(seedbuf, SEEDBYTES);
+  /* This legacy convenience entry point is linked only for verification
+   * helpers.  Runtime callers use zen_sign.c and supply explicit coins.
+   * Do not silently reach process-global entropy from this archive. */
+  memset(seedbuf, 0, SEEDBYTES);
   seedbuf[SEEDBYTES+0] = K;
   seedbuf[SEEDBYTES+1] = L;
   shake256(seedbuf, 2*SEEDBYTES + CRHBYTES, seedbuf, SEEDBYTES+2);
@@ -121,7 +123,8 @@ static int crypto_sign_signature_ctx(uint8_t *sig,
   shake256_inc_squeeze(mu, CRHBYTES, &state);
 
 #ifdef DILITHIUM_RANDOMIZED_SIGNING
-  randombytes(rnd, RNDBYTES);
+  /* Randomized runtime signing is provided by zen_sign.c with caller coins. */
+  memset(rnd, 0, RNDBYTES);
 #else
   for(n=0;n<RNDBYTES;n++)
     rnd[n] = 0;

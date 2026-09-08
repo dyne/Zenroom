@@ -37,39 +37,44 @@
 #include <mutt_sprintf.h>
 
 #include <ed25519.h>
-#include <randombytes.h>
-
-#include <time.h>
 #include <amcl.h>
 
 #define RANDOM_SEED_LEN 64
 #define MAX_KEY_BUF 12288
 
+static void api_zeroize(void *buffer, size_t len) {
+	volatile uint8_t *out = buffer;
+	while(len--) *out++ = 0;
+}
+
 static void *api_rng_alloc(const char *hexseed) {
-	csprng *rng = (csprng*)malloc(sizeof(csprng));
-	if(!rng) {
-		_err("%s : cannot allocate the random generator", __func__);
-		return NULL;
-	}
-	char tseed[RANDOM_SEED_LEN];
+	uint8_t tseed[RANDOM_SEED_LEN];
+	int result;
 	if(hexseed) {
 		int seedlen = strlen(hexseed);
 		if(seedlen!=128) {
 			_err("%s : seed is not 64 bytes long (128 chars in hex): %u",__func__,seedlen);
-			free(rng);
+			api_zeroize(tseed, sizeof(tseed));
 			return NULL;
 		}
-		hex2buf(tseed, hexseed);
+		hex2buf((char*)tseed, hexseed);
 	} else {
-		randombytes(tseed,RANDOM_SEED_LEN-4);
-		unsign32 ttmp = (unsign32)time(NULL);
-		tseed[60] = (ttmp >> 24) & 0xff;
-		tseed[61] = (ttmp >> 16) & 0xff;
-		tseed[62] = (ttmp >>  8) & 0xff;
-		tseed[63] =  ttmp & 0xff;
+		if(zen_entropy_fill(tseed, sizeof(tseed)) != 0) {
+			api_zeroize(tseed, sizeof(tseed));
+			return NULL;
+		}
 	}
-	AMCL_(RAND_seed)(rng, RANDOM_SEED_LEN, tseed);
-	return(rng);
+	zenroom_t context = {0};
+	result = zen_rng_init(&context, tseed, sizeof(tseed));
+	api_zeroize(tseed, sizeof(tseed));
+	if(result != 0) return NULL;
+	return context.random_generator;
+}
+
+static void api_rng_free(csprng *rng) {
+	zenroom_t context = {0};
+	context.random_generator = rng;
+	zen_rng_clear(&context);
 }
 
 static int api_write_error(char *stderr_buf, size_t stderr_len,
@@ -419,7 +424,7 @@ int zenroom_sign_keygen_tobuf(const char *algo, const char *rngseed,
 		res = api_write_hex_to_buf(sk, sksize, stdout_buf, stdout_len,
 								   stderr_buf, stderr_len, __func__);
 		free(sk);
-		free(rng);
+		api_rng_free(rng);
 		return res;
 	}
 	if(strcmp(algo,"p256")==0) {

@@ -6,9 +6,8 @@
 #include "sign.h"
 #include "symmetric.h"
 #include <stdint.h>
+#include <string.h>
 
-// Imported from zenroom
-extern int randombytes(void *buf, size_t n);
 
 /*************************************************
 * Name:        PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair
@@ -22,7 +21,8 @@ extern int randombytes(void *buf, size_t n);
 *
 * Returns 0 (success)
 **************************************************/
-int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair(uint8_t *pk, uint8_t *sk) {
+int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair_derand(uint8_t *pk, uint8_t *sk,
+                                                         const uint8_t seed[SEEDBYTES]) {
     uint8_t seedbuf[2 * SEEDBYTES + CRHBYTES];
     uint8_t tr[SEEDBYTES];
     const uint8_t *rho, *rhoprime, *key;
@@ -31,7 +31,7 @@ int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair(uint8_t *pk, uint8_t *sk) {
     polyveck s2, t1, t0;
 
     /* Get randomness for rho, rhoprime and key */
-    randombytes(seedbuf, SEEDBYTES);
+    memcpy(seedbuf, seed, SEEDBYTES);
     shake256(seedbuf, 2 * SEEDBYTES + CRHBYTES, seedbuf, SEEDBYTES);
     rho = seedbuf;
     rhoprime = rho + SEEDBYTES;
@@ -64,6 +64,11 @@ int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair(uint8_t *pk, uint8_t *sk) {
     PQCLEAN_DILITHIUM2_CLEAN_pack_sk(sk, rho, tr, key, &t0, &s1, &s2);
 
     return 0;
+}
+
+int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair(uint8_t *pk, uint8_t *sk) {
+    uint8_t seed[SEEDBYTES] = {0};
+    return PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair_derand(pk, sk, seed);
 }
 
 /*************************************************

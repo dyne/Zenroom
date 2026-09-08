@@ -5,9 +5,8 @@
 #include "verify.h"
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
-// Imported from zenroom
-extern int randombytes(void *buf, size_t n);
 
 /*************************************************
 * Name:        PQCLEAN_KYBER512_CLEAN_crypto_kem_keypair
@@ -22,17 +21,22 @@ extern int randombytes(void *buf, size_t n);
 *
 * Returns 0 (success)
 **************************************************/
-int PQCLEAN_KYBER512_CLEAN_crypto_kem_keypair(unsigned char *pk,
-        unsigned char *sk) {
+int PQCLEAN_KYBER512_CLEAN_crypto_kem_keypair_derand(unsigned char *pk,
+        unsigned char *sk, const unsigned char coins[2 * KYBER_SYMBYTES]) {
     size_t i;
-    PQCLEAN_KYBER512_CLEAN_indcpa_keypair(pk, sk);
+    PQCLEAN_KYBER512_CLEAN_indcpa_keypair_derand(pk, sk, coins);
     for (i = 0; i < KYBER_INDCPA_PUBLICKEYBYTES; i++) {
         sk[i + KYBER_INDCPA_SECRETKEYBYTES] = pk[i];
     }
     hash_h(sk + KYBER_SECRETKEYBYTES - 2 * KYBER_SYMBYTES, pk, KYBER_PUBLICKEYBYTES);
     /* Value z for pseudo-random output on reject */
-    randombytes(sk + KYBER_SECRETKEYBYTES - KYBER_SYMBYTES, KYBER_SYMBYTES);
+    memcpy(sk + KYBER_SECRETKEYBYTES - KYBER_SYMBYTES, coins + KYBER_SYMBYTES, KYBER_SYMBYTES);
     return 0;
+}
+
+int PQCLEAN_KYBER512_CLEAN_crypto_kem_keypair(unsigned char *pk, unsigned char *sk) {
+    unsigned char coins[2 * KYBER_SYMBYTES] = {0};
+    return PQCLEAN_KYBER512_CLEAN_crypto_kem_keypair_derand(pk, sk, coins);
 }
 
 /*************************************************
@@ -69,14 +73,14 @@ int PQCLEAN_KYBER512_CLEAN_crypto_pub_gen(unsigned char *pk, unsigned char *sk){
 *
 * Returns 0 (success)
 **************************************************/
-int PQCLEAN_KYBER512_CLEAN_crypto_kem_enc(unsigned char *ct,
+int PQCLEAN_KYBER512_CLEAN_crypto_kem_enc_derand(unsigned char *ct,
         unsigned char *ss,
-        const unsigned char *pk) {
+        const unsigned char *pk, const unsigned char coins[KYBER_SYMBYTES]) {
     uint8_t buf[2 * KYBER_SYMBYTES];
     /* Will contain key, coins */
     uint8_t kr[2 * KYBER_SYMBYTES];
 
-    randombytes(buf, KYBER_SYMBYTES);
+    memcpy(buf, coins, KYBER_SYMBYTES);
     /* Don't release system RNG output */
     hash_h(buf, buf, KYBER_SYMBYTES);
 
@@ -92,6 +96,12 @@ int PQCLEAN_KYBER512_CLEAN_crypto_kem_enc(unsigned char *ct,
     /* hash concatenation of pre-k and H(c) to k */
     kdf(ss, kr, 2 * KYBER_SYMBYTES);
     return 0;
+}
+
+int PQCLEAN_KYBER512_CLEAN_crypto_kem_enc(unsigned char *ct, unsigned char *ss,
+        const unsigned char *pk) {
+    unsigned char coins[KYBER_SYMBYTES] = {0};
+    return PQCLEAN_KYBER512_CLEAN_crypto_kem_enc_derand(ct, ss, pk, coins);
 }
 
 /*************************************************

@@ -61,18 +61,11 @@ static ZkSpecStruct *_get_zkspec(lua_State *L, int idx) {
 // 		zerror(L,"Cannot generate ZK circuit");
 // 		END(0);
 // 	}
-// 	// char circuit_hash_hex[129];
-// 	func(L,"Generating ZK circuit v%lu with %lu attributes",
-// 		zk_spec->version, zk_spec->num_attributes);
-// 	// buf2hex(circuit_hash_hex, zk_spec->circuit_hash, 64);
-// 	// circuit_hash_hex[64] = 0x0;
-// 	func(L,"%s %s",zk_spec->system, zk_spec->circuit_hash);
 // 	res = generate_circuit(zk_spec, &circuit, &circuit_len);
 // 	if(res != CIRCUIT_GENERATION_SUCCESS) {
 // 		zerror(L,"Internal error generating circuit: %i",res);
 // 		END(0);
 // 	}
-// 	// pushes the buffer in lua's stack
 // 	o_push(L, circuit, circuit_len);
 // 	lua_pushstring(L,zk_spec->system);
 // 	lua_pushnumber(L,zk_spec->version);
@@ -212,11 +205,11 @@ static RequestedAttribute* _get_attributes(lua_State* L, int index, size_t* coun
             lua_pop(L, 1); /* skip non-table element */
             continue;
         }
-		if(!_get_kv(L, entries[i-1].id, "id", LONGFELLOW_ATTR_ID_MAX,
-			    &entries[i-1].id_len) ||
+        if(!_get_kv(L, entries[i-1].id, "id", LONGFELLOW_ATTR_ID_MAX,
+		    &entries[i-1].id_len) ||
 		   !_get_kv(L, entries[i-1].cbor_value, "value",
-			    LONGFELLOW_ATTR_VALUE_MAX,
-			    &entries[i-1].cbor_value_len)) {
+		    LONGFELLOW_ATTR_VALUE_MAX,
+		    &entries[i-1].cbor_value_len)) {
 			lua_pop(L, 1);
 			zfree(entries);
 			return NULL;
@@ -326,14 +319,15 @@ static int mdoc_prove(lua_State *L) {
 	//     const RequestedAttribute *attrs, size_t attrs_len,
 	//     const char *now, // time formatted as "2023-11-02T09:00:00Z"
 	//     uint8_t **prf, size_t *proof_len, const ZkSpecStruct *zk_spec) {
-	res = run_mdoc_prover((const uint8_t *)circuit->val, circuit->len,
+	zenroom_t *Z = zen_get_context(L);
+	res = run_mdoc_prover_with_rng((const uint8_t *)circuit->val, circuit->len,
 						  (const uint8_t *)mdoc->val, mdoc->len,
 						  pkx, pky,
 						  (const uint8_t *)trans->val, trans->len,
 						  attrs, attrs_len,
 						  now_str,
 						  &proof_bytes, &proof_bytelen,
-						  zkspec);
+						  zkspec, zen_rng_callback_fill, Z);
 	if(res != MDOC_PROVER_SUCCESS) {
 		warning(L, "MDOC prover error: %s",
 				_prover_error_to_string(res));

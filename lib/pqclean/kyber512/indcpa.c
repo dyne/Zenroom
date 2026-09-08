@@ -6,9 +6,8 @@
 #include "symmetric.h"
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
-// Imported from zenroom
-extern int randombytes(void *buf, size_t n);
 
 /*************************************************
 * Name:        pack_pk
@@ -203,8 +202,8 @@ void PQCLEAN_KYBER512_CLEAN_gen_matrix(polyvec *a, const uint8_t seed[KYBER_SYMB
 *              - uint8_t *sk: pointer to output private key
                               (of length KYBER_INDCPA_SECRETKEYBYTES bytes)
 **************************************************/
-void PQCLEAN_KYBER512_CLEAN_indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
-        uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES]) {
+void PQCLEAN_KYBER512_CLEAN_indcpa_keypair_derand(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
+        uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES], const uint8_t coins[KYBER_SYMBYTES]) {
     unsigned int i;
     uint8_t buf[2 * KYBER_SYMBYTES];
     const uint8_t *publicseed = buf;
@@ -212,7 +211,7 @@ void PQCLEAN_KYBER512_CLEAN_indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTE
     uint8_t nonce = 0;
     polyvec a[KYBER_K], e, pkpv, skpv;
 
-    randombytes(buf, KYBER_SYMBYTES);
+    memcpy(buf, coins, KYBER_SYMBYTES);
     hash_g(buf, buf, KYBER_SYMBYTES);
 
     gen_a(a, publicseed);
@@ -238,6 +237,12 @@ void PQCLEAN_KYBER512_CLEAN_indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTE
 
     pack_sk(sk, &skpv);
     pack_pk(pk, &pkpv, publicseed);
+}
+
+void PQCLEAN_KYBER512_CLEAN_indcpa_keypair(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
+        uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES]) {
+    uint8_t coins[KYBER_SYMBYTES] = {0};
+    PQCLEAN_KYBER512_CLEAN_indcpa_keypair_derand(pk, sk, coins);
 }
 
 /*************************************************
