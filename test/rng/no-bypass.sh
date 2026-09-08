@@ -15,10 +15,29 @@ runtime_objects=(
     src/zen_longfellow.o
 )
 
+match_lines() {
+    local expression=$1
+    if command -v rg >/dev/null 2>&1; then
+        rg "$expression"
+    else
+        grep -E "$expression"
+    fi
+}
+
+search_sources() {
+    local path=$1
+    if command -v rg >/dev/null 2>&1; then
+        rg -n --glob '*.[ch]' -o "$pattern" "$path"
+    else
+        find "$path" -type f \( -name '*.c' -o -name '*.h' \) \
+            -exec grep -EnH -o "$pattern" {} +
+    fi
+}
+
 audit() {
     local path=$1
     local hits
-    hits=$(rg -n --glob '*.[ch]' -o "$pattern" "$path" || true)
+    hits=$(search_sources "$path" || true)
     while IFS= read -r hit; do
         [[ -z $hit ]] && continue
         case "$hit" in
@@ -34,7 +53,7 @@ audit() {
 audit_runtime_object() {
     local object=$1
     local hits
-    hits=$(objdump -r "$object" | rg "$runtime_forbidden" || true)
+    hits=$(objdump -r "$object" | match_lines "$runtime_forbidden" || true)
     if [[ -n $hits ]]; then
         printf 'forbidden reachable RNG relocation in %s:\n%s\n' "$object" "$hits" >&2
         return 1
@@ -95,7 +114,9 @@ fi
 audit "$root/src"
 audit_runtime_relocations
 audit_archive_residues
-if [[ -f $root/libzenroom.so ]] && nm -D --undefined-only "$root/libzenroom.so" | rg -q 'RAND_bytes|getrandom|arc4random'; then
+if [[ -f $root/libzenroom.so ]] &&
+    nm -D --undefined-only "$root/libzenroom.so" |
+        match_lines 'RAND_bytes|getrandom|arc4random' >/dev/null; then
     printf '%s\n' 'forbidden unresolved OS RNG symbol in libzenroom.so' >&2
     exit 1
 fi
