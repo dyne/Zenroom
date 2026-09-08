@@ -1300,10 +1300,9 @@ static int scalar_gen_with_pub(zenroom_t *Z, const octet *k, uint8_t sbytes[32],
 				sbytes[i]=k->val[i];
 			}
 		} else {
-			octet o;
-			o.val = (char*)sbytes;
-			o.len = o.max = 32;
-			OCT_rand(&o, Z->random_generator, 32);
+			if(zen_rng_fill(Z, sbytes, 32) != 0) {
+				return -1;
+			}
 		}
 
 		ret = scalar_from_bytes(s, sbytes);

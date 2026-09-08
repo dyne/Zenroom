@@ -24,6 +24,7 @@
 #include <string.h>
 #include <strings.h>
 #include <inttypes.h>
+#include <stdbool.h>
 
 #if defined(_WIN32)
 #include <malloc.h>
@@ -37,8 +38,6 @@
 #include <mutt_sprintf.h>
 
 #include <ed25519.h>
-#include <amcl.h>
-
 #define RANDOM_SEED_LEN 64
 #define MAX_KEY_BUF 12288
 
@@ -47,34 +46,27 @@ static void api_zeroize(void *buffer, size_t len) {
 	while(len--) *out++ = 0;
 }
 
-static void *api_rng_alloc(const char *hexseed) {
+static int api_rng_setup(zenroom_t *context, const char *hexseed) {
 	uint8_t tseed[RANDOM_SEED_LEN];
 	int result;
+	if(!context) return -1;
 	if(hexseed) {
 		int seedlen = strlen(hexseed);
 		if(seedlen!=128) {
 			_err("%s : seed is not 64 bytes long (128 chars in hex): %u",__func__,seedlen);
 			api_zeroize(tseed, sizeof(tseed));
-			return NULL;
+			return -1;
 		}
 		hex2buf((char*)tseed, hexseed);
 	} else {
 		if(zen_entropy_fill(tseed, sizeof(tseed)) != 0) {
 			api_zeroize(tseed, sizeof(tseed));
-			return NULL;
+			return -1;
 		}
 	}
-	zenroom_t context = {0};
-	result = zen_rng_init(&context, tseed, sizeof(tseed));
+	result = zen_rng_init(context, tseed, sizeof(tseed));
 	api_zeroize(tseed, sizeof(tseed));
-	if(result != 0) return NULL;
-	return context.random_generator;
-}
-
-static void api_rng_free(csprng *rng) {
-	zenroom_t context = {0};
-	context.random_generator = rng;
-	zen_rng_clear(&context);
+	return result;
 }
 
 static int api_write_error(char *stderr_buf, size_t stderr_len,
@@ -403,28 +395,30 @@ int zenroom_sign_keygen_tobuf(const char *algo, const char *rngseed,
 	if(strcmp(algo,"eddsa")==0) {
 		register const size_t sksize = sizeof(ed25519_secret_key);
 		uint8_t *sk = malloc(sksize);
-		csprng *rng = NULL;
-		register size_t i;
+		zenroom_t rng_context = {0};
 		int res;
 		if(!sk) {
 			if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
 			return api_write_error(stderr_buf, stderr_len,
 								   "%s :: cannot allocate output buffer", __func__);
 		}
-		rng = api_rng_alloc(rngseed);
-		if(!rng) {
+		if(api_rng_setup(&rng_context, rngseed) != 0) {
 			free(sk);
 			if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
 			return api_write_error(stderr_buf, stderr_len,
 								   "%s :: error initializing the random generator", __func__);
 		}
-		for(i=0; i < sksize; i++) {
-			sk[i] = RAND_byte(rng);
+		if(zen_rng_fill(&rng_context, sk, sksize) != 0) {
+			free(sk);
+			zen_rng_clear(&rng_context);
+			if (stdout_buf && stdout_len > 0) stdout_buf[0] = 0x0;
+			return api_write_error(stderr_buf, stderr_len,
+								   "%s :: error reading the random generator", __func__);
 		}
 		res = api_write_hex_to_buf(sk, sksize, stdout_buf, stdout_len,
 								   stderr_buf, stderr_len, __func__);
 		free(sk);
-		api_rng_free(rng);
+		zen_rng_clear(&rng_context);
 		return res;
 	}
 	if(strcmp(algo,"p256")==0) {

@@ -24,6 +24,7 @@
 #include <lua.h>
 #include <amcl.h>
 #include <rmd160.h>
+#include <zenroom.h>
 
 #define SHA256 32
 #define SHA512 64
@@ -51,7 +52,7 @@ typedef struct {
   sha3 *keccak256;
   sha3 *shake256;
   dword *rmd160;
-  csprng *rng; // zencode runtime random
+  zenroom_t *rng; // independently seeded random context
   int ref;
   // ...
 } hash;

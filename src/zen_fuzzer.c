@@ -24,11 +24,35 @@
 
 #include <zen_error.h>
 
-#include <amcl.h>
-
 #include <zenroom.h>
 #include <zen_error.h>
 #include <zen_octet.h>
+
+static int fuzz_random_u8(zenroom_t *Z, uint8_t *value) {
+	return zen_rng_fill(Z, value, sizeof(*value));
+}
+
+static int fuzz_random_u16(zenroom_t *Z, uint16_t *value) {
+	uint8_t bytes[2];
+	if(zen_rng_fill(Z, bytes, sizeof(bytes)) != 0) return -1;
+	*value = bytes[0] | (uint16_t)bytes[1] << 8;
+	return 0;
+}
+
+static int fuzz_random_u32(zenroom_t *Z, uint32_t *value) {
+	uint8_t bytes[4];
+	if(zen_rng_fill(Z, bytes, sizeof(bytes)) != 0) return -1;
+	*value = bytes[0] | (uint32_t)bytes[1] << 8 |
+		(uint32_t)bytes[2] << 16 | (uint32_t)bytes[3] << 24;
+	return 0;
+}
+
+#define FUZZ_RANDOM_U8(value) \
+	SAFE_GOTO(fuzz_random_u8(Z, &(value)) == 0, "Random generator unavailable")
+#define FUZZ_RANDOM_U16(value) \
+	SAFE_GOTO(fuzz_random_u16(Z, &(value)) == 0, "Random generator unavailable")
+#define FUZZ_RANDOM_U32(value) \
+	SAFE_GOTO(fuzz_random_u32(Z, &(value)) == 0, "Random generator unavailable")
 
 int fuzz_byte_random(lua_State *L) {
 	BEGIN();
@@ -37,29 +61,27 @@ int fuzz_byte_random(lua_State *L) {
 	SAFE_GOTO(o->len < INT_MAX, "Invalid argument, octet too big");
 	octet *res = o_dup(L,o); SAFE_GOTO(res, DUPLICATE_OCT_ERR);
 	zenroom_t *Z = zen_get_context(L);
-	uint8_t rnd = RAND_byte(Z->random_generator);
+	uint8_t rnd;
+	FUZZ_RANDOM_U8(rnd);
 	if(res->len < 256) {
-		uint8_t point8 = RAND_byte(Z->random_generator);
+		uint8_t point8;
+		FUZZ_RANDOM_U8(point8);
 		while((uint8_t)res->val[point8%res->len] == rnd) {
-			rnd = RAND_byte(Z->random_generator);
+			FUZZ_RANDOM_U8(rnd);
 		}
 		res->val[point8 % res->len] = rnd;	
 	} else if(res->len < 65535) {
-		uint16_t point16 =
-			RAND_byte(Z->random_generator)
-			| (uint32_t) RAND_byte(Z->random_generator) << 8;
+		uint16_t point16;
+		FUZZ_RANDOM_U16(point16);
 		while ((uint8_t)res->val[point16 % res->len] == rnd) {
-			rnd = RAND_byte(Z->random_generator);
+			FUZZ_RANDOM_U8(rnd);
 		}
 		res->val[point16%res->len] = rnd;
 	} else if(res->len < INT_MAX) {
-		uint32_t point32 =
-			RAND_byte(Z->random_generator)
-			| (uint32_t) RAND_byte(Z->random_generator) << 8
-			| (uint32_t) RAND_byte(Z->random_generator) << 16
-			| (uint32_t) RAND_byte(Z->random_generator) << 24;
+		uint32_t point32;
+		FUZZ_RANDOM_U32(point32);
 		while ((uint8_t)res->val[point32 % res->len] == rnd) {
-			rnd = RAND_byte(Z->random_generator);
+			FUZZ_RANDOM_U8(rnd);
 		}
 		res->val[point32%res->len] = rnd;
 	}
@@ -80,20 +102,18 @@ int fuzz_byte_xor(lua_State *L) {
 	octet *res = o_dup(L,o); SAFE_GOTO(res, DUPLICATE_OCT_ERR);
 	zenroom_t *Z = zen_get_context(L);
 	if(res->len < 256) {
-		uint8_t point8 = RAND_byte(Z->random_generator) % res->len;
+		uint8_t point8;
+		FUZZ_RANDOM_U8(point8);
+		point8 %= res->len;
 		res->val[point8] ^= 0xff;
 	} else if(res->len < 65535) {
-		uint16_t point16 =
-			RAND_byte(Z->random_generator)
-			| (uint32_t) RAND_byte(Z->random_generator) << 8;
+		uint16_t point16;
+		FUZZ_RANDOM_U16(point16);
 		point16 %= res->len;
 		res->val[point16] ^= 0xff;
 	} else if(res->len < INT_MAX) {
-		uint32_t point32 =
-			RAND_byte(Z->random_generator)
-			| (uint32_t) RAND_byte(Z->random_generator) << 8
-			| (uint32_t) RAND_byte(Z->random_generator) << 16
-			| (uint32_t) RAND_byte(Z->random_generator) << 24;
+		uint32_t point32;
+		FUZZ_RANDOM_U32(point32);
 		point32 %= res->len;
 		res->val[point32] ^= 0xff;
 	}
@@ -114,23 +134,25 @@ int fuzz_bit_random(lua_State *L) {
 	octet *res = o_dup(L,o); SAFE_GOTO(res, DUPLICATE_OCT_ERR);
 	zenroom_t *Z = zen_get_context(L);
 	if(res->len < 256) {
-		uint8_t point8 = RAND_byte(Z->random_generator);
-		uint8_t bit_position = RAND_byte(Z->random_generator) % 8;
+		uint8_t point8, bit_position;
+		FUZZ_RANDOM_U8(point8);
+		FUZZ_RANDOM_U8(bit_position);
+		bit_position %= 8;
 		res->val[point8%res->len] ^= (1 << bit_position);
 	}
 	else if(res->len <  65535) {
-		uint16_t point16 =
-			RAND_byte(Z->random_generator)
-			| (uint32_t) RAND_byte(Z->random_generator) << 8;
-		uint8_t bit_position = RAND_byte(Z->random_generator) % 8;
+		uint16_t point16;
+		uint8_t bit_position;
+		FUZZ_RANDOM_U16(point16);
+		FUZZ_RANDOM_U8(bit_position);
+		bit_position %= 8;
 		res->val[point16%res->len] ^= (1 << bit_position);
 	} else if(res->len < INT_MAX) {
-		uint32_t point32 =
-			RAND_byte(Z->random_generator)
-			| (uint32_t) RAND_byte(Z->random_generator) << 8
-			| (uint32_t) RAND_byte(Z->random_generator) << 16
-			| (uint32_t) RAND_byte(Z->random_generator) << 24;
-		uint8_t bit_position = RAND_byte(Z->random_generator) % 8;
+		uint32_t point32;
+		uint8_t bit_position;
+		FUZZ_RANDOM_U32(point32);
+		FUZZ_RANDOM_U8(bit_position);
+		bit_position %= 8;
 		res->val[point32%res->len] ^= (1 << bit_position);
 	}
 end:
@@ -196,33 +218,24 @@ int fuzz_byte_circular_shift_random(lua_State *L) {
 	octet *res = o_dup(L,o); SAFE_GOTO(res, DUPLICATE_OCT_ERR);
 	zenroom_t *Z = zen_get_context(L);
 	if(res->len < 256) {
-		uint8_t point8 = RAND_byte(Z->random_generator);
+		uint8_t point8;
+		FUZZ_RANDOM_U8(point8);
 		while (point8 % res->len ==  (uint8_t)0) {
-			point8 = RAND_byte(Z->random_generator);
+			FUZZ_RANDOM_U8(point8);
 		}
 		OCT_circular_shl_bytes(res, (point8 % res->len));
 	} else if(res->len < 65535) {
-		uint16_t point16 =
-			RAND_byte(Z->random_generator)
-			| (uint32_t) RAND_byte(Z->random_generator) << 8;
+		uint16_t point16;
+		FUZZ_RANDOM_U16(point16);
 		while (point16 % res->len == (uint16_t) 0) {
-			point16 = 
-				RAND_byte(Z->random_generator) 
-				| (uint32_t)RAND_byte(Z->random_generator) << 8;
+			FUZZ_RANDOM_U16(point16);
 		}
 		OCT_circular_shl_bytes(res, (point16%res->len));
 	} else if(res->len < INT_MAX) {
-		uint32_t point32 =
-			RAND_byte(Z->random_generator)
-			| (uint32_t) RAND_byte(Z->random_generator) << 8
-			| (uint32_t) RAND_byte(Z->random_generator) << 16
-			| (uint32_t) RAND_byte(Z->random_generator) << 24;
+		uint32_t point32;
+		FUZZ_RANDOM_U32(point32);
 		while (point32 % res->len == (uint32_t) 0) {
-			point32 =
-				RAND_byte(Z->random_generator)
-				| (uint32_t) RAND_byte(Z->random_generator) << 8
-				| (uint32_t) RAND_byte(Z->random_generator) << 16
-				| (uint32_t) RAND_byte(Z->random_generator) << 24;
+			FUZZ_RANDOM_U32(point32);
 		}
 		OCT_circular_shl_bytes(res, (point32%res->len));
 	}
@@ -246,29 +259,36 @@ int fuzz_bit_circular_shift_random(lua_State *L) {
 	uint32_t shift_bits = 0;
 
 	if (res->len < 256) {
-		shift_bits = (RAND_byte(Z->random_generator) % res->len) * 8 + (RAND_byte(Z->random_generator) % 8);
+		uint8_t point8, bit_position;
+		FUZZ_RANDOM_U8(point8);
+		FUZZ_RANDOM_U8(bit_position);
+		shift_bits = (point8 % res->len) * 8 + (bit_position % 8);
 		while (shift_bits % total_bits ==  (uint32_t) 0) {
-			shift_bits = (RAND_byte(Z->random_generator) % res->len) * 8 + (RAND_byte(Z->random_generator) % 8);
+			FUZZ_RANDOM_U8(point8);
+			FUZZ_RANDOM_U8(bit_position);
+			shift_bits = (point8 % res->len) * 8 + (bit_position % 8);
 		}
 	}
 	else if (res->len < 65535) {
-		uint16_t point16 = 
-			RAND_byte(Z->random_generator)
-			| (uint32_t)RAND_byte(Z->random_generator) << 8;
-		shift_bits = (point16 % res->len) * 8 + (RAND_byte(Z->random_generator) % 8);
+		uint16_t point16;
+		uint8_t bit_position;
+		FUZZ_RANDOM_U16(point16);
+		FUZZ_RANDOM_U8(bit_position);
+		shift_bits = (point16 % res->len) * 8 + (bit_position % 8);
 		while (shift_bits % total_bits == (uint32_t) 0) {
-			shift_bits = (point16 % res->len) * 8 + (RAND_byte(Z->random_generator) % 8);
+			FUZZ_RANDOM_U8(bit_position);
+			shift_bits = (point16 % res->len) * 8 + (bit_position % 8);
 		}
 	}
 	else if (res->len < INT_MAX) {
-		uint32_t point32 =
-			RAND_byte(Z->random_generator)
-			| (uint32_t) RAND_byte(Z->random_generator) << 8
-			| (uint32_t) RAND_byte(Z->random_generator) << 16
-			| (uint32_t) RAND_byte(Z->random_generator) << 24;
-		shift_bits = (point32 % res->len) * 8 + (RAND_byte(Z->random_generator) % 8);
+		uint32_t point32;
+		uint8_t bit_position;
+		FUZZ_RANDOM_U32(point32);
+		FUZZ_RANDOM_U8(bit_position);
+		shift_bits = (point32 % res->len) * 8 + (bit_position % 8);
 		while (shift_bits % total_bits == (uint32_t) 0) {
-			shift_bits = (point32 % res->len) * 8 + (RAND_byte(Z->random_generator) % 8);
+			FUZZ_RANDOM_U8(bit_position);
+			shift_bits = (point32 % res->len) * 8 + (bit_position % 8);
 		}
 	}
 
@@ -280,4 +300,3 @@ end:
 	}
 	END(1);
 }
-

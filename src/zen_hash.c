@@ -244,7 +244,11 @@ int hash_destroy(lua_State *L) {
 	if(HEDLEY_UNLIKELY(h==NULL)) return(0);
 	h->ref--;
 	if(h->ref>0) return(0);
-	if(h->rng) zfree(h->rng);
+	if(h->rng) {
+		zen_rng_clear(h->rng);
+		zfree(h->rng);
+		h->rng = NULL;
+	}
 	switch(h->algo) {
 	case _SHA256: zfree(h->sha256); break;
 	case _SHA384: zfree(h->sha384); break;
@@ -582,11 +586,23 @@ static int hash_srand(lua_State *L) {
 	const hash *h = hash_arg(L, 1); SAFE_GOTO(h, ALLOCATE_HASH_ERR);
 	seed = o_arg(L, 2); SAFE_GOTO(seed, ALLOCATE_OCT_ERR);
 	if(!h->rng) {
-		((hash*)h)->rng = (csprng*)zmalloc(sizeof(csprng)); SAFE_GOTO(h->rng, MALLOC_ERROR);
+		zenroom_t *rng = (zenroom_t*)zmalloc(sizeof(*rng));
+		SAFE_GOTO(rng, MALLOC_ERROR);
+		memset(rng, 0, sizeof(*rng));
+		((hash*)h)->rng = rng;
+		if(zen_rng_init(rng, seed->val, (size_t)seed->len) != 0) {
+			zfree(rng);
+			((hash*)h)->rng = NULL;
+			SAFE_GOTO(0, "Could not initialize HASH random number generator");
+		}
+	} else {
+		SAFE_GOTO(zen_rng_reseed(h->rng, seed->val, (size_t)seed->len) == 0,
+				  "Could not reseed HASH random number generator");
 	}
-	AMCL_(RAND_seed)(h->rng, seed->len, seed->val);
 	// fast-forward to runtime_random (256 bytes) and 4 bytes lua
-	for(register int i=0;i<PRNG_PREROLL+4;i++) RAND_byte(h->rng);
+	uint8_t discarded[PRNG_PREROLL + 4];
+	SAFE_GOTO(zen_rng_fill(h->rng, discarded, sizeof(discarded)) == 0,
+			  "HASH random number generator unavailable");
  end:
 	o_free(L, seed);
 	hash_release(L, h);
@@ -606,7 +622,9 @@ static int rand_uint8(lua_State *L) {
 	char *failed_msg = NULL;
 	const hash *h = hash_arg(L,1); SAFE_GOTO(h, ALLOCATE_HASH_ERR);
 	SAFE_GOTO(h->rng, "HASH random number generator lacks seed");
-	uint8_t res = RAND_byte(h->rng);
+	uint8_t res;
+	SAFE_GOTO(zen_rng_fill(h->rng, &res, sizeof(res)) == 0,
+			  "HASH random number generator unavailable");
 	lua_pushinteger(L, (lua_Integer)res);
  end:
 	hash_release(L, h);
@@ -627,9 +645,10 @@ static int rand_uint16(lua_State *L) {
 	char *failed_msg = NULL;
 	const hash *h = hash_arg(L,1); SAFE_GOTO(h, ALLOCATE_HASH_ERR);
 	SAFE_GOTO(h->rng, "HASH random number generator lacks seed");
-	uint16_t res =
-		RAND_byte(h->rng)
-		| (uint32_t) RAND_byte(h->rng) << 8;
+	uint8_t bytes[2];
+	SAFE_GOTO(zen_rng_fill(h->rng, bytes, sizeof(bytes)) == 0,
+			  "HASH random number generator unavailable");
+	uint16_t res = bytes[0] | (uint16_t)bytes[1] << 8;
 	lua_pushinteger(L, (lua_Integer)res);
  end:
 	hash_release(L, h);
@@ -650,11 +669,11 @@ static int rand_uint32(lua_State *L) {
 	char *failed_msg = NULL;
 	const hash *h = hash_arg(L,1); SAFE_GOTO(h, ALLOCATE_HASH_ERR);
 	SAFE_GOTO(h->rng, "HASH random number generator lacks seed");
-	uint32_t res =
-		RAND_byte(h->rng)
-		| (uint32_t) RAND_byte(h->rng) << 8
-		| (uint32_t) RAND_byte(h->rng) << 16
-		| (uint32_t) RAND_byte(h->rng) << 24;
+	uint8_t bytes[4];
+	SAFE_GOTO(zen_rng_fill(h->rng, bytes, sizeof(bytes)) == 0,
+			  "HASH random number generator unavailable");
+	uint32_t res = bytes[0] | (uint32_t)bytes[1] << 8 |
+		(uint32_t)bytes[2] << 16 | (uint32_t)bytes[3] << 24;
 	lua_pushinteger(L, (lua_Integer)res);
  end:
 	hash_release(L, h);
