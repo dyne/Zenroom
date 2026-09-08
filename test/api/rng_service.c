@@ -13,6 +13,7 @@ int main(void) {
 	for(size_t i = 0; i < sizeof(seed); i++) seed[i] = (uint8_t)i;
 	if(zen_entropy_fill(NULL, 0) != 0 || zen_entropy_fill(NULL, 1) == 0) return 1;
 	if(zen_rng_fill(NULL, NULL, 0) != 0 || zen_rng_fill(NULL, seed, 1) == 0) return 2;
+	if(zen_rng_init(NULL, seed, sizeof(seed)) == 0) return 3;
 	if(zen_rng_init(&first, seed, sizeof(seed)) != 0) return 3;
 	if(zen_rng_init(&second, seed, sizeof(seed)) != 0) return 4;
 	if(zen_rng_fill(&first, split, 1) != 0 ||

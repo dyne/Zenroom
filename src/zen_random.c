@@ -67,6 +67,7 @@ int zen_entropy_fill(void *buffer, size_t len) {
 }
 
 int zen_rng_init(zenroom_t *Z, const void *seed, size_t seed_len) {
+	if(!Z || !seed || seed_len == 0 || seed_len > INT_MAX) return -1;
 	/* The RNG outlives any temporary allocator policy, so own it directly. */
 	RNG *rng = (RNG*)malloc(sizeof(csprng));
 	if(!rng) {
