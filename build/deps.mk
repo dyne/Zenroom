@@ -1,4 +1,10 @@
 # hard-code build information
+.PHONY: FORCE
+
+lib/blindzap/src/pbsch_commitment.o lib/blindzap/src/niwi_lua_bindings.o: FORCE
+
+FORCE:
+
 .c.o:
 	$(zenroom_cc) \
 	$(cflags) \
@@ -89,6 +95,16 @@ ed25519-donna:
 	CFLAGS="${cflags}" \
 	LDFLAGS="${ldflags}" \
 	$(MAKE) -C ${pwd}/lib/ed25519-donna
+
+libniwi:
+	$(info -- Building NIWI library)
+	CC="${cc}" \
+	CXX="${cxx}" \
+	NIWI_CC="${cc}" \
+	NIWI_CXX="${cxx}" \
+	NIWI_CFLAGS="-I${pwd}/lib/blindzap/include -I${pwd}/lib/blindzap/src -I${pwd}/lib/longfellow-zk -I${pwd}/lib/milagro-crypto-c/build/include -I${pwd}/lib/lua54/src -I${pwd}/src ${cflags}" \
+	AR=${ar} \
+	$(MAKE) -C ${pwd}/lib/blindzap
 
 zstd:
 	echo "-- Building ZSTD compression lib"

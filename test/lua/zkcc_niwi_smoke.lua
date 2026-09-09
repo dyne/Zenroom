@@ -1,0 +1,110 @@
+-- End-to-end zkcc artifact -> NIWI proof envelope smoke test.
+
+local zkcc = require'crypto_zkcc'
+local niwi = require'crypto_niwi'
+
+print('=== zkcc NIWI smoke test ===')
+
+local L = zkcc.logic("p256")
+local z = L:eltw_input()
+L:private_inputs()
+local x = L:eltw_input()
+local y = L:eltw_input()
+L:assert_eq(L:add(x, y), z)
+
+local artifact = L:compile(1)
+local circuit = artifact:octet()
+
+local function oct_u64(n)
+  return OCTET.from_hex(string.format('%064x', n))
+end
+
+local witness = zkcc.build_witness_inputs{
+  circuit = artifact,
+  inputs = {
+    [1] = oct_u64(10),
+    [2] = oct_u64(3),
+    [3] = oct_u64(7),
+  },
+}
+
+local bad_witness = zkcc.build_witness_inputs{
+  circuit = artifact,
+  inputs = {
+    [1] = oct_u64(10),
+    [2] = oct_u64(3),
+    [3] = oct_u64(8),
+  },
+}
+
+local public_witness = zkcc.build_witness_inputs{
+  circuit = artifact,
+  inputs = {
+    [1] = oct_u64(10),
+  },
+}
+
+local legacy_prove_circuit = zkcc.prove_circuit
+zkcc.prove_circuit = function()
+  error('legacy zkcc.prove_circuit relation gate must not be called')
+end
+
+local bad_prove_ok = pcall(function()
+  niwi.prove_circuit_niwi{
+    circuit = artifact,
+    inputs = bad_witness,
+    public_inputs = public_witness,
+  }
+end)
+assert(bad_prove_ok == false, 'NIWI proving must reject witnesses that do not satisfy the circuit')
+
+local proof = niwi.prove_circuit_niwi{
+  circuit = artifact,
+  inputs = witness,
+  public_inputs = public_witness,
+}
+assert(type(proof) == "zenroom.octet", 'NIWI proof must be an octet')
+assert(#proof > 0, 'NIWI proof must be non-empty')
+
+local ok = niwi.verify_circuit_niwi{
+  circuit = circuit,
+  proof = proof,
+  public_inputs = public_witness:public_octet(),
+}
+assert(ok == true, 'NIWI proof verification failed')
+
+local wrong_public = zkcc.build_witness_inputs{
+  circuit = artifact,
+  inputs = {
+    [1] = oct_u64(11),
+  },
+}
+local wrong_ok = niwi.verify_circuit_niwi{
+  circuit = circuit,
+  proof = proof,
+  public_inputs = wrong_public:public_octet(),
+}
+assert(wrong_ok == false, 'NIWI verification must reject wrong public input')
+
+local observed_proof, gamma = niwi.prove_with_observation_test{
+  circuit = artifact,
+  inputs = witness,
+  public_inputs = public_witness,
+}
+assert(niwi.verify_circuit_niwi{
+  circuit = circuit,
+  proof = observed_proof,
+  public_inputs = public_witness:public_octet(),
+}, 'observed NIWI proof verification failed')
+
+local extracted = niwi.extract_from_gamma_test{
+  circuit = circuit,
+  proof = observed_proof,
+  gamma = gamma,
+  public_inputs = public_witness:public_octet(),
+}
+assert(extracted:string() == witness:octet():string(), 'extracted zkcc witness mismatch')
+
+zkcc.prove_circuit = legacy_prove_circuit
+
+print('✓ NIWI proved, verified, and extracted a zkcc circuit witness')

@@ -118,6 +118,26 @@ class Bip340Gadgets {
     lc_.assert1(lc_.vlt(bits_lsb, bits_n_));
   }
 
+  /// Assert that the BIP-340 challenge scalar is the SHA-256 digest reduced
+  /// modulo the secp256k1 order.  The digest is in LSB-first numeric bit order,
+  /// matching FlatSHA256Circuit::assert_hash target layout.
+  void assert_challenge_scalar_from_digest(const Bitvec& digest_lsb,
+                                           EltW e) const {
+    Bitvec digest_minus_n = lc_.vadd(lc_.vnot(bits_n_), digest_lsb);
+    Bitvec one;
+    one[0] = lc_.bit(1);
+    for (size_t i = 1; i < kBits; ++i) {
+      one[i] = lc_.bit(0);
+    }
+    digest_minus_n = lc_.vadd(digest_minus_n, one);
+
+    const auto digest_lt_n = lc_.vlt(digest_lsb, bits_n_);
+    Bitvec reduced;
+    lc_.vmux(lc_.lnot(digest_lt_n), reduced, digest_minus_n, digest_lsb);
+    lc_.assert1(lc_.vlt(reduced, bits_n_));
+    assert_field_from_bits_lsb(reduced, e);
+  }
+
   /// Assert that `bits` (MSB-first) reconstructs to the field element `value`.
   /// value = Σ bits[i] * 2^(kBits-1-i).
   void assert_field_from_bits_msb(const EltW bits[kBits],
@@ -128,6 +148,17 @@ class Bip340Gadgets {
     for (int i = static_cast<int>(kBits) - 1; i >= 0; --i) {
       check = lc_.add(check, lc_.mul(bits[i], pow));
       pow = lc_.add(pow, pow);  // pow *= 2
+    }
+    lc_.assert_eq(check, value);
+  }
+
+  /// Assert that `bits` (LSB-first) reconstructs to the field element `value`.
+  void assert_field_from_bits_lsb(const Bitvec& bits, EltW value) const {
+    EltW check = lc_.konst(lc_.zero());
+    EltW pow = lc_.konst(lc_.one());
+    for (size_t i = 0; i < kBits; ++i) {
+      check = lc_.add(check, lc_.mul(lc_.eval(bits[i]), pow));
+      pow = lc_.add(pow, pow);
     }
     lc_.assert_eq(check, value);
   }

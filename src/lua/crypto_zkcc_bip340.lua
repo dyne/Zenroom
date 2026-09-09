@@ -37,6 +37,20 @@ function M.setup(zkcc)
         end
     end
 
+    if zkcc.witness and zkcc.native.bip340_compute_full_challenge_inputs_native then
+        --- Build BIP340 inputs for the full challenge-bound native relation.
+        -- This helper intentionally supports 32-byte messages only because it
+        -- mirrors the current native BIP340/RPBSch circuit shape.
+        zkcc.witness.bip340_compute_full_challenge_inputs = function(sig, pk, msg)
+            local inputs, public_inputs =
+                zkcc.native.bip340_compute_full_challenge_inputs_native(sig, pk, msg)
+            return {
+                inputs = inputs,
+                public_inputs = public_inputs,
+            }
+        end
+    end
+
     -- =======================================================================
     -- Lua-authored BIP340 circuit helpers
     -- =======================================================================

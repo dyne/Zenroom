@@ -910,6 +910,42 @@ end:
 }
 
 /***
+    Divide two 32-byte scalars modulo n. Returns 32-byte OCTET.
+
+    @function bip340_scalar_div
+    @param a 32-byte OCTET
+    @param b 32-byte non-zero OCTET
+    @return 32-byte OCTET (a / b) mod n
+*/
+static int lua_bip340_scalar_div(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	const octet *oa = NULL;
+	const octet *ob = NULL;
+	oa = o_arg(L, 1); SAFE_GOTO(oa, ALLOCATE_OCT_ERR);
+	ob = o_arg(L, 2); SAFE_GOTO(ob, ALLOCATE_OCT_ERR);
+	SAFE_GOTO(oa->len == SECP_BYTES && ob->len == SECP_BYTES, "scalars must be 32 bytes");
+	BIG_256_28 a, b, n, zero, q;
+	BIG_256_28_fromBytesLen(a, (char *)oa->val, SECP_BYTES);
+	BIG_256_28_fromBytesLen(b, (char *)ob->val, SECP_BYTES);
+	BIG_256_28_copy(n, (chunk *)CURVE_Order_SECP256K1);
+	BIG_256_28_zero(zero);
+	BIG_256_28_mod(a, n);
+	BIG_256_28_mod(b, n);
+	SAFE_GOTO(BIG_256_28_comp(b, zero) != 0, "scalar divisor must be non-zero");
+	BIG_256_28_moddiv(q, a, b, n);
+	BIG_256_28_norm(q);
+	secp_big_to_oct(L, q);
+end:
+	o_free(L, oa);
+	o_free(L, ob);
+	if (failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+/***
     Negate a 32-byte scalar modulo n. Returns 32-byte OCTET.
 
     @function bip340_scalar_negate
@@ -1002,6 +1038,7 @@ int luaopen_secp(lua_State *L) {
 		{"bip340_lift_x", lua_bip340_lift_x},
 		{"bip340_scalar_add", lua_bip340_scalar_add},
 		{"bip340_scalar_mul", lua_bip340_scalar_mul},
+		{"bip340_scalar_div", lua_bip340_scalar_div},
 		{"bip340_scalar_negate", lua_bip340_scalar_negate},
 		{"bip340_challenge_reduce", lua_bip340_challenge_reduce},
 		{NULL, NULL}};
