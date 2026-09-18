@@ -755,7 +755,7 @@ jobs:
           version=$(git describe --tags --abbrev=0)
           yarn version --new-version ${version:1} --no-git-tag-version
       - run: |
-          npm install -g npm@latest
+          npm install -g npm@11.19.1
           npm publish . --tag latest
 
   pypi-release:
