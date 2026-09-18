@@ -28,7 +28,6 @@ rm -rf zenroom-android zenroom-android.aar
 build() {
 	local target="$1"
 	local platform="android21"
-	local cflags=""
 	local abi=""
 	local ndk_libs_path="toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/"
 	ndk_libs="$1-linux-android"
@@ -40,22 +39,18 @@ build() {
 		ARCH="armv7l"
 	}
 	[ "$1" == "aarch64" ] && {
-		cflags="-march=armv8-a+crypto"
 		abi="arm64-v8a"
 	}
 	[ "$1" == "i686" ] && {
-		cflags="-mpclmul"
 		abi="x86"
 	}
 	[ "$1" == "x86_64" ] && {
-		cflags="-mpclmul"
 		abi="x86_64"
 	}
 	make clean
 	rm -f bindings/java/zenroom_jni.o
 	mkdir -p zenroom-android/jni/${abi}
 	make -f build/android.mk all ${BUILD_MODE} \
-		 longfellow_cflags="${cflags}" \
 		 ARCH="${ARCH}" \
 		 ANDROID_ABI="${abi}" ANDROID_TARGET="${target}" \
 		 ANDROID_PLATFORM="${platform}" \

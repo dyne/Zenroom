@@ -75,15 +75,18 @@ node-wasm: ## WebAssembly (WASM) for Javascript in-browser (Emscripten)
 	yarn --cwd bindings/javascript
 	yarn --cwd bindings/javascript build
 
-check: check-rng-no-bypass ## Run tests using the current binary executable build
+check: check-rng-no-bypass check-build-config ## Run tests using the current binary executable build
 	meson setup meson/ build/ -D \
 	"tests=['determinism','vectors','lua','zkcc','zencode','blockchain','bindings','api']"
 	ninja -C meson test
 
-.PHONY: check-rng-no-bypass
+.PHONY: check-rng-no-bypass check-build-config
 
 check-rng-no-bypass: ## Reject unapproved runtime OS RNG calls
 	./test/rng/no-bypass.sh
+
+check-build-config: ## Check cross-build configuration invariants
+	test/bats/bin/bats test/build/android_flags.bats
 wrap-js: # Generate the ./zenroom exec wrapper on node-wasm builds
 	$(info Generate JS wrapper in ./zenroom)
 	@sed 's@=ROOT=@'"${pwd}"'@' test/zexe_js_wrapper.sh > zenroom
