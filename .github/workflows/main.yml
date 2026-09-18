@@ -256,6 +256,9 @@ jobs:
           make win-exe CCACHE=1
           make clean -C src
           make win-dll CCACHE=1
+      - name: Test Win64 package
+        run: |
+          build/package-win64.sh
 
   osx-test:
     name: 🍎 Apple OSX check tests
@@ -618,12 +621,7 @@ jobs:
           make win-dll RELEASE=1 CCACHE=1
       - name: Pack build results
         run: |
-          mkdir -p zenroom-win64
-          cp zenroom.exe        zenroom-win64/
-          cp zencode-exec.exe   zenroom-win64/
-          mv libzenroom_dll.lib zenroom-win64/
-          mv zenroom.dll        zenroom-win64/
-          zip -r zenroom-win64.zip zenroom-win64
+          build/package-win64.sh
       - name: Upload artifact win x86_64
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
