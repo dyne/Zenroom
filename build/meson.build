@@ -47,21 +47,40 @@ endif
 
 ## BATS tests in test/lua
 if suite.contains('lua')
-tests = [ 'native', 'primitives', 'crypto' ]
+tests = [ 'native', 'primitives', 'crypto', 'pbsch' ]
 foreach test_suite : tests
+    test_timeout = 240
+    if test_suite == 'pbsch'
+      test_timeout = 600
+    endif
     test('lua_'+test_suite.underscorify(),
 	 bats_bin,
 	 args: [test_dir+'lua/'+test_suite+'.bats'],
-     timeout: 240
+	 timeout: test_timeout
 		)
 endforeach
 endif
 
 if suite.contains('zkcc')
-  test('lua_zkcc',
+  test('lua_zkcc_fast',
        bats_bin,
-       args: [test_dir+'lua/zkcc.bats'],
+       args: [test_dir+'lua/zkcc_fast.bats'],
+       timeout: 120
+      )
+  test('lua_zkcc_flatsha256',
+       bats_bin,
+       args: [test_dir+'lua/zkcc_flatsha256.bats'],
        timeout: 240
+      )
+  test('lua_zkcc_bip340',
+       bats_bin,
+       args: [test_dir+'lua/zkcc_bip340.bats'],
+       timeout: 300
+      )
+  test('lua_zkcc_bip340_lua_circuit',
+       bats_bin,
+       args: [test_dir+'lua/zkcc_bip340_lua_circuit.bats'],
+       timeout: 300
       )
 endif
 

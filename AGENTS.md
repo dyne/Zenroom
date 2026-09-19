@@ -137,6 +137,40 @@ Preserve:
 - registration through [`src/lua_modules.c`](/home/jrml/devel/zenroom/src/lua_modules.c)
 - stable userdata names and octet conversion behavior
 
+### OCTET Ownership In Lua Bindings
+
+When writing native Lua bindings that accept or return OCTETs, follow the
+ownership rules in [`src/zen_octet.c`](/home/jrml/devel/zenroom/src/zen_octet.c):
+
+- `o_arg(L, n)` returns an owned handle for the binding function. It may
+  increment a userdata refcount or allocate a conversion clone. Always call
+  `o_free(L, o)` exactly once before returning or before raising `lerror(...)`.
+- `o_free(L, NULL)` is allowed, so cleanup paths can free optional OCTETs
+  unconditionally.
+- `o_push(L, buf, len)` does **not** copy `buf`. It creates Lua userdata whose
+  GC will later free that exact pointer. Use it only for heap buffers that are
+  intentionally transferred to Lua ownership and will not be freed by C after
+  the push. Never pass stack arrays, static buffers, or buffers you will free
+  yourself.
+- For ordinary return values, prefer `push_buffer_to_octet(L, buf, len)` or
+  `o_new(L, len)` plus copy. These allocate Lua-owned storage and copy bytes
+  safely.
+- `o_dup(L, o)` clones an existing OCTET into a new Lua userdata and pushes it.
+  Use it when returning a copy of an input OCTET.
+- If reading OCTETs from a table, check for `nil` before `o_arg(...)`; otherwise
+  missing fields become valid zero-length OCTETs and errors become misleading.
+
+Use this pattern:
+
+```c
+const octet *in = o_arg(L, 1);
+uint8_t out[32];
+native_fill_from((const uint8_t *)o_val(in), o_len(in), out);
+push_buffer_to_octet(L, (char *)out, 32);
+o_free(L, in);
+return 1;
+```
+
 
 ## Public Native API Layer
 
