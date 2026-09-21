@@ -1,0 +1,7 @@
+Scenario 'ecdh': Verify the signature
+Given that I am 'Bob'
+Given that I have a 'public key' from 'Alice'
+Given that I have a 'string' named 'message'
+Given that I have a 'ecdh signature'
+When I verify the 'ecdh signature' of 'message' from 'Alice'
+Then print 'signature is valid' as 'string'
